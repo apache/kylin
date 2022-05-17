@@ -79,8 +79,8 @@ public class OptimizeBuildJob extends SparkApplication {
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
     private Map<Long, Short> cuboidShardNum = Maps.newConcurrentMap();
     private Map<Long, Long> cuboidsRowCount = Maps.newConcurrentMap();
-    Map<Long, Long> cuboidIdToPreciseRows = Maps.newConcurrentMap();
-    Map<Long, Long> cuboidIdToPreciseSize = Maps.newConcurrentMap();
+    Map<Long, Long> cuboidIdToPreciseRows;
+    Map<Long, Long> cuboidIdToPreciseSize;
 
     private Configuration conf = HadoopUtil.getCurrentConfiguration();
     private CubeManager cubeManager;
@@ -106,6 +106,9 @@ public class OptimizeBuildJob extends SparkApplication {
         optSeg = cubeInstance.getSegmentById(segmentId);
         originalSeg = cubeInstance.getOriginalSegmentToOptimize(optSeg);
         originalSegInfo = ManagerHub.getSegmentInfo(config, cubeId, originalSeg.getUuid());
+        // copy the original statistics
+        cuboidIdToPreciseSize = originalSeg.getCuboidStaticsSize();
+        cuboidIdToPreciseRows = originalSeg.getCuboidStaticsRows();
 
         calculateCuboidFromBaseCuboid();
         buildCuboidFromParent(cubeId);
