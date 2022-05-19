@@ -19,8 +19,14 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.IUserGroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -40,8 +46,16 @@ public class KylinUserGroupController extends BasicController {
 
     @RequestMapping(value = "/groups", method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
-    public List<String> listUserAuthorities(@RequestParam(value = "project", required = false) String project)
+    public EnvelopeResponse<String> listUserAuthorities(@RequestParam(value = "project", required = false) String project)
             throws IOException {
-        return userGroupService.listAllAuthorities(project);
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Set<String>> usersWithGroup = new HashMap<>();
+        List<String> groups = userGroupService.listAllAuthorities(project);
+        for (String g : groups) {
+            usersWithGroup.put(g, Sets.newHashSet());
+        }
+        data.put("groups", usersWithGroup);
+        data.put("size", groups.size());
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 }
