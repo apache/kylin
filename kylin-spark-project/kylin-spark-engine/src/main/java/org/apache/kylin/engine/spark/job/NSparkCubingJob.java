@@ -98,7 +98,8 @@ public class NSparkCubingJob extends CubingJob {
         job.setParam(MetadataConstants.P_DATA_RANGE_END, String.valueOf(endTime));
         job.setParam(MetadataConstants.P_OUTPUT_META_URL, job.cube.getConfig().getMetadataUrl().toString());
         job.setParam(MetadataConstants.P_CUBOID_NUMBER, String.valueOf(job.cube.getDescriptor().getAllCuboids().size()));
-
+        job.setDeployEnvName(KylinConfig.getInstanceFromEnv().getDeployEnv());
+        job.setNotifyList(job.cube.getDescriptor().getNotifyList());
         //set param for job metrics
         job.setParam(MetadataConstants.P_JOB_TYPE, jobType.toString());
         JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, job.cube);
@@ -114,14 +115,17 @@ public class NSparkCubingJob extends CubingJob {
         return MetaDumpUtil.collectCubeMetadata(cubeInstance);
     }
 
+    @Override
     public String getDeployEnvName() {
         return getParam(DEPLOY_ENV_NAME);
     }
 
+    @Override
     public long findSourceRecordCount() {
         return Long.parseLong(findExtraInfo(SOURCE_RECORD_COUNT, "0"));
     }
 
+    @Override
     public long getMapReduceWaitTime() {
         return getExtraInfoAsLong(MAP_REDUCE_WAIT_TIME, 0L);
     }
