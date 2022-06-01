@@ -82,6 +82,8 @@ public class NSparkOptimizingJob extends CubingJob {
         job.setParam(MetadataConstants.P_OUTPUT_META_URL, cube.getConfig().getMetadataUrl().toString());
         job.setParam(MetadataConstants.P_JOB_TYPE, String.valueOf(jobType));
         job.setParam(MetadataConstants.P_CUBOID_NUMBER, String.valueOf(cube.getDescriptor().getAllCuboids().size()));
+        job.setDeployEnvName(KylinConfig.getInstanceFromEnv().getDeployEnv());
+        job.setNotifyList(cube.getDescriptor().getNotifyList());
 
         // Phase 1: Prepare base cuboid data from old segment
         JobStepFactory.addStep(job, JobStepType.FILTER_RECOMMEND_CUBOID, cube);
@@ -102,6 +104,7 @@ public class NSparkOptimizingJob extends CubingJob {
         return MetaDumpUtil.collectCubeMetadata(cubeInstance);
     }
 
+    @Override
     public String getDeployEnvName() {
         return getParam(DEPLOY_ENV_NAME);
     }
