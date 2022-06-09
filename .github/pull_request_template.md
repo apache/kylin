@@ -6,8 +6,8 @@ Describe the big picture of your changes here to communicate to the maintainers 
 
 As most of the development works are on Kylin 4, we need to switch it as main branch. Apache Kylin community changes the branch settings on Github since 2021-08-04 :
 
-1. The original branch _kylin-on-parquet-v2_ for **Kylin 4.X** (Parquet Storage) has been renamed to branch **main**, and configured as the **default** branch;
-2. The original branch _master_ for **Kylin 3.X** (HBase Storage) has been renamed to branch **kylin3** ;
+1. The default branch _main_ is for **Kylin 4.x** (Parquet storage);
+2. The original branch _master_ for **Kylin 3.x** (HBase storage) has been renamed to **kylin3** ;
 
 Please check [Intro to Kylin 4 architecture](https://kylin.apache.org/blog/2021/07/02/Apache-Kylin4-A-new-storage-and-compute-architecture/) and [INFRA-22166](https://issues.apache.org/jira/browse/INFRA-22166) if you are interested.
 
@@ -34,4 +34,4 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 
 ## Further comments
 
-If this is a relatively large or complex change, kick off the discussion at user@kylin or dev@kylin by explaining why you chose the solution you did and what alternatives you considered, etc...
+If this is a relatively large or complex change, kick off the discussion at user@kylin.apache.org or dev@kylin.apache.org by explaining why you chose the solution you did and what alternatives you considered, etc...

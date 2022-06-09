@@ -45,6 +45,7 @@ RUN yum -y install lsof.x86_64 wget.x86_64 tar.x86_64 git.x86_64 which.x86_64 ne
 
 #install mysql
 RUN wget https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm \
+    && rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022 \
     && rpm -Uvh mysql80-community-release-el7-3.noarch.rpm \
     && yum-config-manager --disable mysql80-community \
     && yum-config-manager --enable mysql57-community \

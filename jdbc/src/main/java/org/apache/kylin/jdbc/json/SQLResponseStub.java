@@ -58,6 +58,8 @@ public class SQLResponseStub implements Serializable {
 
     private boolean storageCacheUsed = false;
 
+    private String queryId;
+
     public SQLResponseStub() {
     }
 
@@ -151,6 +153,14 @@ public class SQLResponseStub implements Serializable {
 
     public void setStorageCacheUsed(boolean storageCacheUsed) {
         this.storageCacheUsed = storageCacheUsed;
+    }
+
+    public String getQueryId() {
+        return queryId;
+    }
+
+    public void setQueryId(String queryId) {
+        this.queryId = queryId;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

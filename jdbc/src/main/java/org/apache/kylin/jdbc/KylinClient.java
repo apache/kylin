@@ -314,7 +314,7 @@ public class KylinClient implements IRemoteClient {
             List<KMetaCatalog> catalogs = convertMetaCatalogs(schemas);
             return new KMetaProject(project, catalogs);
         } finally {
-           get.releaseConnection(); 
+           get.releaseConnection();
         }
     }
 
@@ -406,7 +406,7 @@ public class KylinClient implements IRemoteClient {
         List<ColumnMetaData> metas = convertColumnMeta(queryResp);
         List<Object> data = convertResultData(queryResp, metas);
 
-        return new QueryResult(metas, data);
+        return new QueryResult(metas, data, queryResp.getQueryId());
     }
 
     private List<StatementParameter> convertParameters(List<Object> paramValues) {

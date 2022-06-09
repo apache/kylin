@@ -197,7 +197,12 @@ class CubeSnapshotBuilder extends Logging {
           val lookupTablePKS = joinDesc.PKS.map(lookupTablePK => lookupTablePK.columnName)
           val countDistinctColumn = df.agg(countDistinct(lookupTablePKS.head, lookupTablePKS.tail: _*)).collect().map(_.getLong(0)).head
           if (countColumn != countDistinctColumn) {
-            throw new IllegalStateException(s"Failed to build lookup table ${lookupTableName} snapshot for Dup key found, key= ${lookupTablePKS.mkString(",")}")
+            if (seg.kylinconf.isIgnoringNullInCheckDupKeyEnabled && countDistinctColumn + 1 == countColumn) {
+              // if only one row with null value, then countDistinctColumn + 1 will equals to countColumn
+              logInfo("Using config: kylin.job.ignoring-null-in-check-dup-key-enabled=true to ignore only one null count.")
+            } else {
+              throw new IllegalStateException(s"Failed to build lookup table ${lookupTableName} snapshot for Dup key found, key= ${lookupTablePKS.mkString(",")}")
+            }
           }
         } else {
           logInfo("Skip check duplicate primary key on table : " + tableInfo.identity)
