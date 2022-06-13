@@ -76,7 +76,7 @@ kylin.metadata.url=kylin_metadata@jdbc,driverClassName=com.mysql.jdbc.Driver,url
 kylin.env.zookeeper-connect-string=ip:2181
 ```
 
-你需要修改其中的 Mysql 用户名和密码，以及存储元数据的database和table。请参考 [配置 Mysql 为 Metastore](/_docs40/tutorial/mysql_metastore.html)  了解 Mysql 作为 Metastore 的详细配置。
+你需要修改其中的 Mysql 用户名和密码，以及存储元数据的database和table。请参考 [配置 Mysql 为 Metastore](/cn/docs/tutorial/mysql_metastore.html)  了解 Mysql 作为 Metastore 的详细配置。
 
 #### step5、环境检查
 
