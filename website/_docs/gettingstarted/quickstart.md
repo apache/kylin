@@ -83,7 +83,7 @@ kylin.env.zookeeper-connect-string=ip:2181
 ```
 
 You need to change the Mysql user name and password, as well as the database and table where the metadata is stored.
-Please refer to [Configure Mysql as Metastore](/_docs/tutorial/mysql_metastore.html) learn about the detailed configuration of MySQL as a Metastore.
+Please refer to [Configure Mysql as Metastore](/docs/tutorial/mysql_metastore.html) learn about the detailed configuration of MySQL as a Metastore.
 
 #### Step5. Environmental Inspection
 Kylin runs on a Hadoop cluster and has certain requirements for the version, access permissions and CLASSPATH of each component. 
