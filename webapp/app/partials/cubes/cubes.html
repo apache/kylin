@@ -31,6 +31,8 @@
             <input type="text" placeholder="Search by name" class="nav-search-input" ng-model="listParams.cubeName" />
             <i class="ace-icon fa fa-search blue" ng-click="cubeList.removeAll();reload()"></i>
           </span>
+        <!--Refresh cube list-->
+        <button class="btn btn-success btn-xs" style="margin-left: 10px" ng-click="cubeList.removeAll();reload()"><i class="fa fa-refresh"></i></button>
       </form>
       </div>
     </div>
