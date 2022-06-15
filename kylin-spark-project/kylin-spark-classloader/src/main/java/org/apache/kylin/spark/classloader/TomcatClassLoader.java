@@ -25,19 +25,22 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.apache.catalina.loader.ParallelWebappClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TomcatClassLoader extends ParallelWebappClassLoader {
-    private static final String[] PARENT_CL_PRECEDENT_CLASSES = new String[] {
+    private static final String[] PARENT_CL_PRECEDENT_CLASSES = new String[]{
             // Java standard library:
             "com.sun.", "launcher.", "javax.", "org.ietf", "java", "org.omg", "org.w3c", "org.xml", "sunw.",
             // logging
-            "org.slf4j", "org.apache.commons.logging", "org.apache.log4j", "org.apache.catalina", "org.apache.tomcat"};
-    private static final String[] THIS_CL_PRECEDENT_CLASSES = new String[] {"org.apache.kylin",
+            "org.slf4j", "org.apache.commons.logging", "org.apache.log4j", "org.apache.catalina", "org.apache.tomcat",
+            // hk2 library
+            "org.glassfish.hk2"};
+    private static final String[] THIS_CL_PRECEDENT_CLASSES = new String[]{"org.apache.kylin",
             "org.apache.calcite"};
-    private static final String[] CODE_GEN_CLASS = new String[] {"org.apache.spark.sql.catalyst.expressions.Object",
+    private static final String[] CODE_GEN_CLASS = new String[]{"org.apache.spark.sql.catalyst.expressions.Object",
             "Baz"};
 
     private static final Set<String> wontFindClasses = new HashSet<>();
