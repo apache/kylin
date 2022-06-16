@@ -447,6 +447,18 @@ public class NSparkExecutable extends AbstractExecutable {
     }
 
     private void wrapLog4jConf(StringBuilder sb, KylinConfig config) {
+        if (config.isDefaultLogSparkDriverProperties()) {
+            logger.info("Current using default log4j properties for spark driver in using `ConsoleAppender`." +
+                    "Please modify `kylin.spark.driver.log4j.properties` to be `spark-driver-log4j.properties`" +
+                    "for uploading log file to hdfs.");
+        }
+
+        if (config.isDefaultLogSparkExecutorProperties()) {
+            logger.info("Current using default log4j properties for spark executor in using `ConsoleAppender`." +
+                    "Please modify `kylin.spark.executor.log4j.properties` to be `spark-executor-log4j.properties`" +
+                    "for uploading log file to hdfs.");
+        }
+
         final String localLog4j = config.getLogSparkDriverPropertiesFile();
         final String log4jName = Paths.get(localLog4j).getFileName().toString();
         if (isYarnCluster) {
