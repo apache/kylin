@@ -89,6 +89,8 @@ public class CubeBuildJob extends SparkApplication {
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
     private Map<Long, Short> cuboidShardNum = Maps.newConcurrentMap();
     private Map<Long, Long> cuboidsRowCount = Maps.newConcurrentMap();
+    private Map<Long, Long> cuboidIdToPreciseRows = Maps.newConcurrentMap();
+    private Map<Long, Long> cuboidIdToPreciseSize = Maps.newConcurrentMap();
     private Map<Long, Long> recommendCuboidMap = new HashMap<>();
 
     public static void main(String[] args) {
@@ -124,7 +126,7 @@ public class CubeBuildJob extends SparkApplication {
             long startMills = System.currentTimeMillis();
             spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(statisticsSeg.toBuildLayouts()));
             sourceChooser = new ParentSourceChooser(spanningTree, statisticsSeg, newSegment, jobId, ss, config, false);
-            sourceChooser.setNeedStatistics();
+            sourceChooser.toStatistics();
             sourceChooser.decideFlatTableSource(null);
             Map<Long, HLLCounter> hllMap = new HashMap<>();
             for (Tuple2<Object, AggInfo> cuboidData : sourceChooser.aggInfo()) {
@@ -231,6 +233,8 @@ public class CubeBuildJob extends SparkApplication {
                 long diff = (layoutEntity.getRows() - recommendCuboidMap.get(layoutEntity.getId()));
                 deviation = diff / (layoutEntity.getRows() + 0.0d);
             }
+
+            collectPreciseStatics(cuboidIdToPreciseRows, cuboidIdToPreciseSize, layoutEntity);
             cuboidStatics.add(String.format(Locale.getDefault(), template, layoutEntity.getId(),
                     layoutEntity.getRows(), layoutEntity.getByteSize(), deviation));
         }
@@ -258,12 +262,21 @@ public class CubeBuildJob extends SparkApplication {
         segment.setInputRecords(sourceRowCount);
         segment.setSnapshots(new ConcurrentHashMap<>(segmentInfo.getSnapShot2JavaMap()));
         segment.setCuboidShardNums(cuboidShardNum);
+        segment.setCuboidStaticsRowsBytes(cuboidIdToPreciseRows);
+        segment.setCuboidStaticsSizeBytes(cuboidIdToPreciseSize);
         Map<String, String> additionalInfo = segment.getAdditionalInfo();
         additionalInfo.put("storageType", "" + IStorageAware.ID_PARQUET);
         segment.setAdditionalInfo(additionalInfo);
         cubeSegments.add(segment);
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
         cubeManager.updateCube(update, true);
+    }
+
+    private void collectPreciseStatics(Map<Long, Long> cuboidIdToPreciseRows, Map<Long, Long> cuboidIdToPreciseSize,
+                                       LayoutEntity layoutEntity) {
+        // Hold the precise statics of cuboid in segment
+        cuboidIdToPreciseRows.put(layoutEntity.getId(), layoutEntity.getRows());
+        cuboidIdToPreciseSize.put(layoutEntity.getId(), layoutEntity.getByteSize());
     }
 
     private void collectPersistedTablePath(List<String> persistedFlatTable, ParentSourceChooser sourceChooser) {
@@ -279,8 +292,9 @@ public class CubeBuildJob extends SparkApplication {
         CubeInstance cubeCopy = cubeInstance.latestCopyForWrite();
         CubeUpdate update = new CubeUpdate(cubeCopy);
 
-        if (recommendCuboidMap != null && !recommendCuboidMap.isEmpty())
+        if (recommendCuboidMap != null && !recommendCuboidMap.isEmpty()) {
             update.setCuboids(recommendCuboidMap);
+        }
 
         List<CubeSegment> cubeSegments = Lists.newArrayList();
         for (Map.Entry<String, Object> entry : toUpdateSegmentSourceSize.entrySet()) {

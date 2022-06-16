@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -86,65 +86,73 @@ public class CubeStatsReader {
     final Map<Long, HLLCounter> cuboidRowEstimatesHLL;
     final CuboidScheduler cuboidScheduler;
     public final long sourceRowCount;
+    private boolean isPrecise = false;
 
-    public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
-        this(cubeSegment, cubeSegment.getCuboidScheduler(), kylinConfig);
+    public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig, boolean enableHll) throws IOException {
+        this(cubeSegment, cubeSegment.getCuboidScheduler(), kylinConfig, enableHll);
     }
 
     /**
      * @param cuboidScheduler if it's null, part of it's functions will not be supported
      */
-    public CubeStatsReader(CubeSegment cubeSegment, CuboidScheduler cuboidScheduler, KylinConfig kylinConfig)
+    public CubeStatsReader(CubeSegment cubeSegment, CuboidScheduler cuboidScheduler, KylinConfig kylinConfig, boolean enableHll)
             throws IOException {
         this.seg = cubeSegment;
         this.cuboidScheduler = cuboidScheduler;
-        ResourceStore store = ResourceStore.getStore(kylinConfig);
-        String statsKey = cubeSegment.getStatisticsResourcePath();
-        RawResource resource = store.getResource(statsKey);
-        if (resource != null) {
-            File tmpSeqFile = writeTmpSeqFile(resource.content());
-            Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
-            logger.info("Reading statistics from {}", path);
-            CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
-            tmpSeqFile.delete();
 
-            this.samplingPercentage = cubeStatsResult.getPercentage();
-            this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
-            this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
-            this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
-            this.sourceRowCount = cubeStatsResult.getSourceRecordCount();
-        } else {
-            // throw new IllegalStateException("Missing resource at " + statsKey);
-            logger.warn("{} is not exists.", statsKey);
-            this.samplingPercentage = -1;
+        if (!enableHll && seg.getCuboidStaticsSize() != null
+                && !seg.getCuboidStaticsSize().isEmpty()
+                && seg.getCuboidStaticsRows() != null
+                && !seg.getCuboidStaticsRows().isEmpty()) {
+            logger.info("Reading precise statics from segment {}", seg.getUuid());
+            this.isPrecise = true;
+            this.samplingPercentage = 100;
             this.mapperNumberOfFirstBuild = -1;
             this.mapperOverlapRatioOfFirstBuild = -1.0;
             this.cuboidRowEstimatesHLL = null;
             this.sourceRowCount = -1L;
+        } else {
+            ResourceStore store = ResourceStore.getStore(kylinConfig);
+            String statsKey = seg.getStatisticsResourcePath();
+            RawResource resource = store.getResource(statsKey);
+            if (resource != null) {
+                File tmpSeqFile = writeTmpSeqFile(resource.content());
+                Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
+                logger.info("Reading statistics from {}", path);
+                CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
+                tmpSeqFile.delete();
+
+                this.samplingPercentage = cubeStatsResult.getPercentage();
+                this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
+                this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
+                this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
+                this.sourceRowCount = cubeStatsResult.getSourceRecordCount();
+            } else {
+                // throw new IllegalStateException("Missing resource at " + statsKey);
+                logger.warn("{} is not exists.", statsKey);
+                this.samplingPercentage = -1;
+                this.mapperNumberOfFirstBuild = -1;
+                this.mapperOverlapRatioOfFirstBuild = -1.0;
+                this.cuboidRowEstimatesHLL = null;
+                this.sourceRowCount = -1L;
+            }
         }
     }
 
-    /**
-     * Read statistics from
-     * @param path
-     * rather than
-     * @param cubeSegment
-     *
-     * Since the statistics are from
-     * @param path
-     * cuboid scheduler should be provided by default
-     */
-    public CubeStatsReader(CubeSegment cubeSegment, CuboidScheduler cuboidScheduler, KylinConfig kylinConfig, Path path)
-            throws IOException {
-        CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
+    public Map<Long, Long> getPreciseCuboidsRowsMap() {
+        return this.seg.getCuboidStaticsRows();
+    }
 
-        this.seg = cubeSegment;
-        this.cuboidScheduler = cuboidScheduler;
-        this.samplingPercentage = cubeStatsResult.getPercentage();
-        this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
-        this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
-        this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
-        this.sourceRowCount = cubeStatsResult.getSourceRecordCount();
+    public Map<Long, Double> getPreciseCuboidsSizeMap() {
+        return handlePreciseCuboidsSize(this.seg.getCuboidStaticsSize());
+    }
+
+    private Map<Long, Double> handlePreciseCuboidsSize(Map<Long, Long> cuboidSizeMap) {
+        Map<Long, Double> sizeMap = Maps.newHashMap();
+        for (Map.Entry<Long, Long> entry: cuboidSizeMap.entrySet()) {
+            sizeMap.put(entry.getKey(), 1.0 * entry.getValue()/(1024L * 1024L));
+        }
+        return sizeMap;
     }
 
     private File writeTmpSeqFile(InputStream inputStream) throws IOException {
@@ -320,12 +328,8 @@ public class CubeStatsReader {
                 sizeMap.put(cuboidId, oriValue * rate);
             }
         }
-
         logger.info("cube size is {} after optimize", SumHelper.sumDouble(sizeMap.values()));
-
-        return;
     }
-
 
     /**
      * Estimate the cuboid's size
@@ -353,8 +357,9 @@ public class CubeStatsReader {
         double percentileSpace = 0;
         int topNSpace = 0;
         for (MeasureDesc measureDesc : cubeSegment.getCubeDesc().getMeasures()) {
-            if (rowCount == 0)
+            if (rowCount == 0) {
                 break;
+            }
             DataType returnType = measureDesc.getFunction().getReturnDataType();
             if (measureDesc.getFunction().getExpression().equals(FunctionDesc.FUNC_COUNT_DISTINCT)) {
                 long estimateDistinctCount = sourceRowCount / rowCount;
@@ -381,19 +386,29 @@ public class CubeStatsReader {
     }
 
     private void print(PrintWriter out) {
-        Map<Long, Long> cuboidRows = getCuboidRowEstimatesHLL();
-        Map<Long, Double> cuboidSizes = getCuboidSizeMap();
+        Map<Long, Long> cuboidRows;
+        Map<Long, Double> cuboidSizes;
+        if (isPrecise) {
+            cuboidRows = getPreciseCuboidsRowsMap();
+            cuboidSizes = getPreciseCuboidsSizeMap();
+        } else {
+            cuboidRows = getCuboidRowEstimatesHLL();
+            cuboidSizes = getCuboidSizeMap();
+        }
         List<Long> cuboids = new ArrayList<Long>(cuboidRows.keySet());
         Collections.sort(cuboids);
 
+        String estimatedOrPrecise =  isPrecise? "precise" : "estimated";
         out.println("============================================================================");
         out.println("Statistics of " + seg);
         out.println();
-        out.println(
-                "Cube statistics hll precision: " + cuboidRowEstimatesHLL.values().iterator().next().getPrecision());
+        if (!isPrecise) {
+            out.println("Cube statistics hll precision: "
+                    + cuboidRowEstimatesHLL.values().iterator().next().getPrecision());
+        }
         out.println("Total cuboids: " + cuboidRows.size());
-        out.println("Total estimated rows: " + SumHelper.sumLong(cuboidRows.values()));
-        out.println("Total estimated size(MB): " + SumHelper.sumDouble(cuboidSizes.values()));
+        out.println("Total " + estimatedOrPrecise + " rows: " + SumHelper.sumLong(cuboidRows.values()));
+        out.println("Total " + estimatedOrPrecise + " size(MB): " + SumHelper.sumDouble(cuboidSizes.values()));
         out.println("Sampling percentage:  " + samplingPercentage);
         out.println("Mapper overlap ratio: " + mapperOverlapRatioOfFirstBuild);
         out.println("Mapper number: " + mapperNumberOfFirstBuild);
@@ -419,21 +434,14 @@ public class CubeStatsReader {
         return ret;
     }
 
-    public List<Long> getCuboidsByLayer(int level) {
-        if (cuboidScheduler == null) {
-            throw new UnsupportedOperationException("cuboid scheduler is null");
-        }
-        List<List<Long>> layeredCuboids = cuboidScheduler.getCuboidsByLayer();
-        return layeredCuboids.get(level);
-    }
-
     private void printCuboidInfoTreeEntry(Map<Long, Long> cuboidRows, Map<Long, Double> cuboidSizes, PrintWriter out) {
         if (cuboidScheduler == null) {
             throw new UnsupportedOperationException("cuboid scheduler is null");
         }
         long baseCuboid = Cuboid.getBaseCuboidId(seg.getCubeDesc());
         int dimensionCount = Long.bitCount(baseCuboid);
-        printCuboidInfoTree(-1L, baseCuboid, cuboidScheduler, cuboidRows, cuboidSizes, dimensionCount, 0, out);
+        printCuboidInfoTree(-1L, baseCuboid, cuboidScheduler, cuboidRows, cuboidSizes, dimensionCount, 0, out,
+                this.isPrecise);
     }
 
     private void printKVInfo(PrintWriter writer) {
@@ -445,19 +453,21 @@ public class CubeStatsReader {
     }
 
     private static void printCuboidInfoTree(long parent, long cuboidID, final CuboidScheduler scheduler,
-            Map<Long, Long> cuboidRows, Map<Long, Double> cuboidSizes, int dimensionCount, int depth, PrintWriter out) {
-        printOneCuboidInfo(parent, cuboidID, cuboidRows, cuboidSizes, dimensionCount, depth, out);
+            Map<Long, Long> cuboidRows, Map<Long, Double> cuboidSizes, int dimensionCount, int depth, PrintWriter out,
+                                            boolean isPrecise) {
+        printOneCuboidInfo(parent, cuboidID, cuboidRows, cuboidSizes, dimensionCount, depth, out, isPrecise);
 
         List<Long> children = scheduler.getSpanningCuboid(cuboidID);
         Collections.sort(children);
 
         for (Long child : children) {
-            printCuboidInfoTree(cuboidID, child, scheduler, cuboidRows, cuboidSizes, dimensionCount, depth + 1, out);
+            printCuboidInfoTree(cuboidID, child, scheduler, cuboidRows, cuboidSizes, dimensionCount, depth + 1,
+                    out, isPrecise);
         }
     }
 
     private static void printOneCuboidInfo(long parent, long cuboidID, Map<Long, Long> cuboidRows,
-            Map<Long, Double> cuboidSizes, int dimensionCount, int depth, PrintWriter out) {
+            Map<Long, Double> cuboidSizes, int dimensionCount, int depth, PrintWriter out, boolean isPrecise) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < depth; i++) {
             sb.append("    ");
@@ -465,16 +475,21 @@ public class CubeStatsReader {
         String cuboidName = Cuboid.getDisplayName(cuboidID, dimensionCount);
         sb.append("|---- Cuboid ").append(cuboidName);
 
-        long rowCount = cuboidRows.get(cuboidID);
-        double size = cuboidSizes.get(cuboidID);
-        sb.append(", est row: ").append(rowCount).append(", est MB: ").append(formatDouble(size));
+        long rowCount = cuboidRows.get(cuboidID) == null ? 0: cuboidRows.get(cuboidID);
+        double size = cuboidSizes.get(cuboidID)== null ? 0.0: cuboidSizes.get(cuboidID);
+        String markPreciseOrEstimate =  isPrecise ? "precise" : "est";
+        sb.append(", ").append(markPreciseOrEstimate).append(" row: ").append(rowCount)
+                .append(", ").append(markPreciseOrEstimate).append(" MB: ")
+                .append(formatDouble(size));
 
         if (parent != -1) {
-            sb.append(", shrink: ").append(formatDouble(100.0 * cuboidRows.get(cuboidID) / cuboidRows.get(parent)))
-                    .append("%");
+            double shrink = -0.0;
+            if (cuboidRows.get(parent) != null) {
+                shrink = 100.0 * cuboidRows.get(cuboidID) / cuboidRows.get(parent);
+            }
+            sb.append(", shrink: ").append(formatDouble(shrink)).append("%");
         }
-
-        out.println(sb.toString());
+        out.println(sb);
     }
 
     private static String formatDouble(double input) {
@@ -544,7 +559,7 @@ public class CubeStatsReader {
                 new BufferedWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8)));
         for (CubeSegment seg : segments) {
             try {
-                new CubeStatsReader(seg, config).print(out);
+                new CubeStatsReader(seg, config, false).print(out);
             } catch (Exception e) {
                 logger.info("CubeStatsReader for Segment {} failed, skip it.", seg.getName());
             }

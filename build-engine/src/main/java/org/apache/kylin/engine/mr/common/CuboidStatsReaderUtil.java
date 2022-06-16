@@ -74,7 +74,7 @@ public class CuboidStatsReaderUtil {
         List<CubeSegment> segmentList = cube.getSegments(SegmentStatusEnum.READY);
         Map<Long, Double> sizeMerged = Maps.newHashMapWithExpectedSize(statistics.size());
         for (CubeSegment pSegment : segmentList) {
-            CubeStatsReader pReader = new CubeStatsReader(pSegment, null, pSegment.getConfig());
+            CubeStatsReader pReader = new CubeStatsReader(pSegment, null, pSegment.getConfig(), true);
             Map<Long, Double> pSizeMap = CubeStatsReader.getCuboidSizeMapFromRowCount(pSegment, statistics,
                     pReader.sourceRowCount);
             for (Long pCuboid : statistics.keySet()) {
@@ -102,7 +102,7 @@ public class CuboidStatsReaderUtil {
         Map<Long, HLLCounter> cuboidHLLMapMerged = Maps.newHashMapWithExpectedSize(cuboidSet.size());
         Map<Long, Double> sizeMapMerged = Maps.newHashMapWithExpectedSize(cuboidSet.size());
         for (CubeSegment pSegment : segmentList) {
-            CubeStatsReader pReader = new CubeStatsReader(pSegment, null, pSegment.getConfig());
+            CubeStatsReader pReader = new CubeStatsReader(pSegment, null, pSegment.getConfig(), true);
             Map<Long, HLLCounter> pHLLMap = pReader.getCuboidRowHLLCounters();
             if (pHLLMap == null || pHLLMap.isEmpty()) {
                 logger.info("Cuboid Statistics for segment " + pSegment.getName() + " is not enabled.");
@@ -147,7 +147,7 @@ public class CuboidStatsReaderUtil {
             return null;
         }
 
-        CubeStatsReader cubeStatsReader = new CubeStatsReader(cubeSegment, null, cubeSegment.getConfig());
+        CubeStatsReader cubeStatsReader = new CubeStatsReader(cubeSegment, null, cubeSegment.getConfig(), true);
         if (cubeStatsReader.getCuboidRowEstimatesHLL() == null
                 || cubeStatsReader.getCuboidRowEstimatesHLL().isEmpty()) {
             logger.info("Cuboid Statistics is not enabled.");

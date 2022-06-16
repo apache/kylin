@@ -112,8 +112,8 @@ public class UpdateMetadataUtil {
             toUpdateSeg.getSnapshots().putAll(origSeg.getSnapshots());
             toUpdateSeg.getRowkeyStats().addAll(origSeg.getRowkeyStats());
 
-            CubeStatsReader optSegStatsReader = new CubeStatsReader(toUpdateSeg, config);
-            CubeStatsReader origSegStatsReader = new CubeStatsReader(origSeg, config);
+            CubeStatsReader optSegStatsReader = new CubeStatsReader(toUpdateSeg, config, true);
+            CubeStatsReader origSegStatsReader = new CubeStatsReader(origSeg, config, true);
             Map<Long, HLLCounter> cuboidHLLMap = Maps.newHashMap();
             if (origSegStatsReader.getCuboidRowHLLCounters() == null) {
                 logger.warn(

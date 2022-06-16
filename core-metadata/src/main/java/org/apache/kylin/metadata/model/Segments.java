@@ -109,8 +109,9 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         for (int i = this.size() - 1; i >= 0; i--) {
             T seg = this.get(i);
             if (seg.getLastBuildTime() > 0) {
-                if (latest == null || seg.getLastBuildTime() > latest.getLastBuildTime())
+                if (latest == null || seg.getLastBuildTime() > latest.getLastBuildTime()) {
                     latest = seg;
+                }
             }
         }
         return latest;
@@ -277,10 +278,10 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             }
         }
 
-        if (result.size() <= 1)
+        if (result.size() <= 1) {
             return null;
-        else
-            return (Pair<T, T>) Pair.newPair(result.getFirst(), result.getLast());
+        }
+        return (Pair<T, T>) Pair.newPair(result.getFirst(), result.getLast());
     }
 
     /**
@@ -295,8 +296,9 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         if (newSegment != null && !tobe.contains(newSegment)) {
             tobe.add(newSegment);
         }
-        if (tobe.size() == 0)
+        if (tobe.size() == 0) {
             return tobe;
+        }
 
         // sort by source offset
         Collections.sort(tobe);
@@ -468,7 +470,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
 
     public Pair<Boolean, Boolean> fitInSegments(ISegment newOne) {
         if (this.isEmpty()) {
-          return Pair.newPair(false, false);        
+          return Pair.newPair(false, false);
         }
 
         ISegment first = this.get(0);

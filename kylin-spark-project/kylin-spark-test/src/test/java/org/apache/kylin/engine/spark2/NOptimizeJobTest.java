@@ -110,7 +110,7 @@ public class NOptimizeJobTest extends LocalWithSparkSessionTest {
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         for (CubeSegment segment : cube.getSegments()) {
             Assert.assertEquals(SegmentStatusEnum.READY, segment.getStatus());
-            CubeStatsReader segStatsReader = new CubeStatsReader(segment, config);
+            CubeStatsReader segStatsReader = new CubeStatsReader(segment, config, true);
             Assert.assertEquals(recommendCuboids, segStatsReader.getCuboidRowHLLCounters().keySet());
             String cuboidPath = PathManager.getSegmentParquetStoragePath(cube, segment.getName(), segment.getStorageLocationIdentifier());
             Assert.assertTrue(fs.exists(new Path(cuboidPath)));
