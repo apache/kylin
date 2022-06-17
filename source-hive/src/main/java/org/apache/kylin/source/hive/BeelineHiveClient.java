@@ -191,7 +191,14 @@ public class BeelineHiveClient implements IHiveClient {
 
     @Override
     public void executeHQL(String hql) throws IOException {
-        throw new UnsupportedOperationException();
+        try {
+            stmt.execute(hql);
+        } catch (Exception e) {
+            throw new IOException("Failed to execute hql [" + hql + "]" , e);
+        }finally {
+            DBUtils.closeQuietly(stmt);
+            DBUtils.closeQuietly(cnct);
+        }
     }
 
     @Override

@@ -41,7 +41,9 @@ import org.apache.kylin.metrics.lib.ActiveReservoirReporter;
 import org.apache.kylin.metrics.lib.Record;
 import org.apache.kylin.metrics.lib.impl.TimePropertyEnum;
 import org.apache.kylin.metrics.lib.impl.hive.HiveProducerRecord.RecordKey;
+import org.apache.kylin.source.hive.HiveClientFactory;
 import org.apache.kylin.source.hive.HiveMetaStoreClientFactory;
+import org.apache.kylin.source.hive.IHiveClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -198,30 +200,12 @@ public class HiveProducer {
             }
             hql.append(")");
             logger.debug("create partition by {}.", hql);
-            Driver driver = null;
-            CliSessionState session = null;
             try {
-                driver = new Driver(hiveConf);
-                session = new CliSessionState(hiveConf);
-                SessionState.start(session);
-                CommandProcessorResponse res = driver.run(hql.toString());
-                if (res.getResponseCode() != 0) {
-                    logger.warn("Fail to add partition. HQL: {}; Cause by: {}",
-                            hql.toString(),
-                            res.toString());
-                }
-                session.close();
-                driver.close();
+                IHiveClient hiveClient = HiveClientFactory.getHiveClient();
+                hiveClient.executeHQL(hql.toString());
             } catch (Exception ex) {
                 // Do not let hive exception stop HiveProducer from writing file, so catch and report it here
                 logger.error("create partition failed, please create it manually : " + hql, ex);
-            } finally {
-                if (session != null) {
-                    session.close();
-                }
-                if (driver != null) {
-                    driver.close();
-                }
             }
         }
 
