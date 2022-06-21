@@ -110,7 +110,7 @@ public abstract class AbstractCacheFileSystem extends FilterFileSystem {
             LOG.info("Create filesystem {} for scheme {} .",
                     schemeClassMap.get(uri.getScheme()), uri.getScheme());
         } catch (ClassNotFoundException e) {
-            throw new IOException("Can not found FileSystem Clazz for scheme: " + uri.getScheme());
+            throw new IOException("Can not found FileSystem Clazz for scheme: " + uri.getScheme() + " Exception is: " + e.getMessage());
         }
         return fs;
     }

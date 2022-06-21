@@ -21,6 +21,7 @@ package org.apache.kylin.cache.utils;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -78,10 +79,10 @@ public class ConsistentHash<T> {
     }
 
     private int getKeyHash(final String k) {
-        return keyHash.hashBytes(k.getBytes()).asInt();
+        return keyHash.hashBytes(k.getBytes(Charset.defaultCharset())).asInt();
     }
 
     private int getKetamaHash(final String k) {
-        return nodeHash.hashBytes(k.getBytes()).asInt();
+        return nodeHash.hashBytes(k.getBytes(Charset.defaultCharset())).asInt();
     }
 }
