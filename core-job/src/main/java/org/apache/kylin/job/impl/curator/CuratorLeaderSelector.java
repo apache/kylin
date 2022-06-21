@@ -109,8 +109,9 @@ public class CuratorLeaderSelector extends LeaderSelectorListenerAdapter impleme
             logger.error("Other exception occurred when initialization DefaultScheduler:", th);
         } finally {
             logger.warn(this.name + " relinquishing leadership.");
-            if (defaultScheduler != null)
+            if (defaultScheduler != null) {
                 defaultScheduler.shutdown();
+            }
         }
     }
 }

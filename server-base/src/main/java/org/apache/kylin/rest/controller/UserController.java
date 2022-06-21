@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -64,12 +65,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
+import static org.apache.kylin.cache.cachemanager.CacheConstants.USER_CACHE;
+
 /**
  * Handle user authentication request to protected kylin rest resources by
  * spring security.
- * 
+ *
  * @author xduo
- * 
+ *
  */
 @Controller
 @RequestMapping(value = "/user")
@@ -93,6 +96,9 @@ public class UserController extends BasicController {
     @Autowired
     @Qualifier("userGroupService")
     private UserGroupService userGroupService;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     private Pattern passwordPattern;
     private Pattern bcryptPattern;
@@ -181,10 +187,12 @@ public class UserController extends BasicController {
         try {
             ManagedUser existing = get(userName);
             if (existing != null) {
-                if (user.getPassword() == null)
+                if (user.getPassword() == null) {
                     user.setPassword(existing.getPassword());
-                if (user.getAuthorities() == null || user.getAuthorities().isEmpty())
+                }
+                if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
                     user.setGrantedAuthorities(existing.getAuthorities());
+                }
             }
         } catch (UsernameNotFoundException ex) {
             // that is OK, we create new
@@ -195,6 +203,8 @@ public class UserController extends BasicController {
 
         completeAuthorities(user);
         userService.updateUser(user);
+        // when update user then need to clear authenticated user cache
+        cacheManager.getCache(USER_CACHE).clear();
         return get(userName);
     }
 
@@ -237,15 +247,17 @@ public class UserController extends BasicController {
     }
 
     private String pwdEncode(String pwd) {
-        if (bcryptPattern.matcher(pwd).matches())
+        if (bcryptPattern.matcher(pwd).matches()) {
             return pwd;
+        }
 
         return pwdEncoder.encode(pwd);
     }
 
     private void checkUserName(String userName) {
-        if (userName == null || userName.isEmpty())
+        if (userName == null || userName.isEmpty()) {
             throw new BadRequestException("empty user name");
+        }
     }
 
     private void checkNewPwdRule(String newPwd) {
@@ -280,8 +292,9 @@ public class UserController extends BasicController {
         checkUserName(userName);
 
         UserDetails details = userService.loadUserByUsername(userName);
-        if (details == null)
+        if (details == null) {
             return null;
+        }
         return (ManagedUser) details;
     }
 
@@ -328,6 +341,8 @@ public class UserController extends BasicController {
 
         checkUserName(userName);
         userService.deleteUser(userName);
+        // when delete user then need to clear authenticated user cache
+        cacheManager.getCache(USER_CACHE).clear();
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, userName, "");
     }
 

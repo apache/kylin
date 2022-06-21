@@ -19,11 +19,11 @@
 package org.apache.kylin.engine.mr.common;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -39,7 +39,7 @@ public class StatisticsDecisionUtil {
     protected static final Logger logger = LoggerFactory.getLogger(StatisticsDecisionUtil.class);
 
     public static void decideCubingAlgorithm(CubingJob cubingJob, CubeSegment seg) throws IOException {
-        CubeStatsReader cubeStats = new CubeStatsReader(seg, null, seg.getConfig());
+        CubeStatsReader cubeStats = new CubeStatsReader(seg, null, seg.getConfig(), true);
         decideCubingAlgorithm(cubingJob, seg, cubeStats.getMapperOverlapRatioOfFirstBuild(),
                 cubeStats.getMapperNumberOfFirstBuild());
     }
@@ -95,15 +95,14 @@ public class StatisticsDecisionUtil {
 
     // For triggering cube planner phase one
     public static Map<Long, Long> optimizeCubingPlan(CubeSegment segment) throws IOException {
-        if (isAbleToOptimizeCubingPlan(segment)) {
-            logger.info("It's able to trigger cuboid planner algorithm.");
-        } else {
-            return new HashMap<>();
+        if (!isAbleToOptimizeCubingPlan(segment)) {
+            return Maps.newHashMap();
         }
 
+        logger.info("It's able to trigger cuboid planner algorithm.");
         Map<Long, Long> recommendCuboidsWithStats = CuboidRecommenderUtil.getRecommendCuboidList(segment);
         if (recommendCuboidsWithStats == null || recommendCuboidsWithStats.isEmpty()) {
-            return new HashMap<>();
+            return Maps.newHashMap();
         }
 
         CubeInstance cube = segment.getCubeInstance();
@@ -115,8 +114,9 @@ public class StatisticsDecisionUtil {
 
     public static boolean isAbleToOptimizeCubingPlan(CubeSegment segment) {
         CubeInstance cube = segment.getCubeInstance();
-        if (!cube.getConfig().isCubePlannerEnabled())
+        if (!cube.getConfig().isCubePlannerEnabled()) {
             return false;
+        }
 
         if (cube.getSegments(SegmentStatusEnum.READY_PENDING).size() > 0) {
             logger.info("Has read pending segments and will not enable cube planner.");

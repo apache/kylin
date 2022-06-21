@@ -61,6 +61,8 @@ public class CubeMergeJob extends SparkApplication {
     private List<CubeSegment> mergingSegments = Lists.newArrayList();
     private List<SegmentInfo> mergingSegInfos = Lists.newArrayList();
     private Map<Long, Short> cuboidShardNum = Maps.newConcurrentMap();
+    Map<Long, Long> cuboidIdToPreciseRows = Maps.newConcurrentMap();
+    Map<Long, Long> cuboidIdToPreciseSize = Maps.newConcurrentMap();
 
     @Override
     protected void doExecute() throws Exception {
@@ -134,7 +136,6 @@ public class CubeMergeJob extends SparkApplication {
             for (int i = 0; i < cuboids.size(); i++) {
                 LayoutEntity cuboid = cuboids.apply(i);
                 long layoutId = cuboid.getId();
-
                 CubeMergeAssist assist = mergeCuboidsAssist.get(layoutId);
                 if (assist == null) {
                     assist = new CubeMergeAssist();
@@ -191,7 +192,8 @@ public class CubeMergeJob extends SparkApplication {
         JobMetricsUtils.registerQueryExecutionListener(ss, queryExecutionId);
 
         BuildUtils.fillCuboidInfo(layout, path);
-
+        cuboidIdToPreciseSize.put(layoutId, layout.getByteSize());
+        cuboidIdToPreciseRows.put(layoutId, layout.getRows());
         return layout;
     }
 
@@ -202,9 +204,9 @@ public class CubeMergeJob extends SparkApplication {
 
         List<CubeSegment> cubeSegments = Lists.newArrayList();
         CubeSegment segment = cubeCopy.getSegmentById(segmentId);
-        long totalSourceSize = 0l;
-        long totalInputRecords = 0l;
-        long totalInputRecordsSize = 0l;
+        long totalSourceSize = 0L;
+        long totalInputRecords = 0L;
+        long totalInputRecordsSize = 0L;
         for (CubeMergeAssist assist : mergeCuboidsAssist.values()) {
             totalSourceSize += assist.getLayout().getByteSize();
         }
@@ -221,6 +223,8 @@ public class CubeMergeJob extends SparkApplication {
         Map<String, String> additionalInfo = segment.getAdditionalInfo();
         additionalInfo.put("storageType", "" + IStorageAware.ID_PARQUET);
         segment.setAdditionalInfo(additionalInfo);
+        segment.setCuboidStaticsRowsBytes(cuboidIdToPreciseRows);
+        segment.setCuboidStaticsSizeBytes(cuboidIdToPreciseSize);
         cubeSegments.add(segment);
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
         cubeManager.updateCube(update, true);
