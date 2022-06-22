@@ -20,42 +20,39 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <name>Apache Kylin 4.X - Common</name>
+    <artifactId>kylin-soft-affinity-cache</artifactId>
     <packaging>jar</packaging>
-    <artifactId>kylin-spark-common</artifactId>
-    <version>4.0.2-SNAPSHOT</version>
+    <name>Apache Kylin 4.X - Soft Affinity and Cache</name>
 
     <parent>
-        <artifactId>kylin-spark-project</artifactId>
         <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-spark-project</artifactId>
         <version>4.0.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <alluxio.version>2.7.4</alluxio.version>
+    </properties>
+
     <dependencies>
         <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-core-metadata</artifactId>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-core-common</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-spark-metadata</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-soft-affinity-cache</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-yarn-api</artifactId>
+            <groupId>org.alluxio</groupId>
+            <artifactId>alluxio-shaded-client</artifactId>
+            <version>${alluxio.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

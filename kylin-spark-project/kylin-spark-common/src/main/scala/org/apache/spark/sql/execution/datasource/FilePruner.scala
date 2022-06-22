@@ -211,15 +211,20 @@ class FilePruner(cubeInstance: CubeInstance,
   var cached = new java.util.HashMap[(Seq[Expression], Seq[Expression]), Seq[PartitionDirectory]]()
 
   private def getFileStatusBySeg(seg: SegmentDirectory, fsc: FileStatusCache): SegmentDirectory = {
+    var startT = System.currentTimeMillis()
     val path = new Path(toPath(seg.segmentName, seg.identifier))
     val fs = path.getFileSystem(session.sparkContext.hadoopConfiguration)
+    logInfo(s"Get segment filesystem: ${System.currentTimeMillis() - startT}")
+    startT = System.currentTimeMillis()
     if (fs.isDirectory(path) && fs.exists(path)) {
       val maybeStatuses = fsc.getLeafFiles(path)
       if (maybeStatuses.isDefined) {
+        logInfo(s"Get segment status from cache: ${System.currentTimeMillis() - startT}")
         SegmentDirectory(seg.segmentName, seg.identifier, maybeStatuses.get)
       } else {
         val statuses = fs.listStatus(path)
         fsc.putLeafFiles(path, statuses)
+        logInfo(s"Get segment status and cache: ${System.currentTimeMillis() - startT}")
         SegmentDirectory(seg.segmentName, seg.identifier, statuses)
       }
     } else {
@@ -239,17 +244,21 @@ class FilePruner(cubeInstance: CubeInstance,
     val timePartitionFilters = getSegmentFilter(dataFilters, timePartitionColumn)
     logInfo(s"Applying time partition filters: ${timePartitionFilters.mkString(",")}")
 
+    var startT = System.currentTimeMillis()
     val fsc = ShardFileStatusCache.getFileStatusCache(session)
+    logInfo(s"Get file status cache: ${System.currentTimeMillis() - startT}")
 
     // segment pruning
     var selected = afterPruning("segment", timePartitionFilters, segmentDirs) {
       pruneSegments
     }
 
+    startT = System.currentTimeMillis()
     // fetch segment directories info in parallel
     selected = selected.par.map(seg => {
       getFileStatusBySeg(seg, fsc)
     }).filter(_.files.nonEmpty).seq
+    logInfo(s"Get segment status: ${System.currentTimeMillis() - startT}")
 
     // shards pruning
     selected = afterPruning("shard", dataFilters, selected) {
