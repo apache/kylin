@@ -76,6 +76,10 @@ if [ -z "$WORKING_DIR" ]
 then
     quit "Please set kylin.env.hdfs-working-dir in kylin.properties"
 fi
+if [[ ${WORKING_DIR:0:3} -eq "s3a" ]]
+then
+    WORKING_DIR=${WORKING_DIR/"s3a"/"s3"}
+fi
 
 echo "Checking hdfs working dir"
 hadoop ${hadoop_conf_param} fs -mkdir -p $WORKING_DIR
@@ -90,6 +94,10 @@ fi
 SPARK_EVENTLOG_DIR=`bash $KYLIN_HOME/bin/get-properties.sh kylin.engine.spark-conf.spark.eventLog.dir`
 if [ -n "$SPARK_EVENTLOG_DIR" ]
 then
+    if [[ ${SPARK_EVENTLOG_DIR:0:3} -eq "s3a" ]]
+    then
+        SPARK_EVENTLOG_DIR=${SPARK_EVENTLOG_DIR/"s3a"/"s3"}
+    fi
     hadoop ${hadoop_conf_param} fs -mkdir -p $SPARK_EVENTLOG_DIR
     if [ $? != 0 ]
     then
@@ -100,6 +108,10 @@ fi
 SPARK_HISTORYLOG_DIR=`bash $KYLIN_HOME/bin/get-properties.sh kylin.engine.spark-conf.spark.history.fs.logDirectory`
 if [ -n "$SPARK_HISTORYLOG_DIR" ]
 then
+    if [[ ${SPARK_HISTORYLOG_DIR:0:3} -eq "s3a" ]]
+    then
+        SPARK_HISTORYLOG_DIR=${SPARK_HISTORYLOG_DIR/"s3a"/"s3"}
+    fi
     hadoop ${hadoop_conf_param} fs -mkdir -p $SPARK_HISTORYLOG_DIR
     if [ $? != 0 ]
     then
