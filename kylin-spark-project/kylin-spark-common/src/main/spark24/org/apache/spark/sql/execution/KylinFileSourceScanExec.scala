@@ -41,6 +41,13 @@ class KylinFileSourceScanExec(
   override val tableIdentifier: Option[TableIdentifier]) extends FileSourceScanExec(
   relation, output, requiredSchema, partitionFilters, None, dataFilters, tableIdentifier) {
 
+  override lazy val metrics =
+    Map("numOutputRows" -> SQLMetrics.createMetric(sparkContext, "number of output rows"),
+      "bytesRead" -> SQLMetrics.createMetric(sparkContext, "bytes of input rows read"),
+      "numFiles" -> SQLMetrics.createMetric(sparkContext, "number of files"),
+      "metadataTime" -> SQLMetrics.createMetric(sparkContext, "metadata time (ms)"),
+      "scanTime" -> SQLMetrics.createTimingMetric(sparkContext, "scan time"))
+
   @transient private lazy val selectedPartitions: Seq[PartitionDirectory] = {
     val optimizerMetadataTimeNs = relation.location.metadataOpsTimeNs.getOrElse(0L)
     val startTime = System.nanoTime()
@@ -152,7 +159,7 @@ class KylinFileSourceScanExec(
       FilePartition(shardId, filesToPartitionId.getOrElse(shardId, Nil).toArray)
     }
 
-    new FileScanRDD(fsRelation.sparkSession, readFile, filePartitions)
+    new KylinFileScanRDD(fsRelation.sparkSession, readFile, filePartitions, longMetric("bytesRead"))
   }
 
   /**
@@ -224,7 +231,7 @@ class KylinFileSourceScanExec(
     }
     closePartition()
 
-    new FileScanRDD(fsRelation.sparkSession, readFile, partitions)
+    new KylinFileScanRDD(fsRelation.sparkSession, readFile, partitions, longMetric("bytesRead"))
   }
 
   private def getBlockLocations(file: FileStatus): Array[BlockLocation] = file match {
