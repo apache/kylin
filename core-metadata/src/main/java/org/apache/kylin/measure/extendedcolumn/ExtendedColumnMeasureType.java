@@ -100,7 +100,6 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
                 continue;
             }
             FunctionDesc extendColumnFunc = measureDesc.getFunction();
-            List<TblColRef> hosts = getExtendedColumnHosts(extendColumnFunc);
             TblColRef extended = getExtendedColumn(extendColumnFunc);
 
             if (!sqlDigest.groupbyColumns.contains(extended)) {
@@ -109,7 +108,6 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
 
             sqlDigest.aggregations.add(extendColumnFunc);
             sqlDigest.groupbyColumns.remove(extended);
-            sqlDigest.groupbyColumns.addAll(hosts);
             sqlDigest.metricColumns.add(extended);
         }
     }
