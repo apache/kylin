@@ -433,7 +433,7 @@ object SparkTypeUtil extends Logging {
           StructField("measure", DoubleType),
           StructField("dim", StructType(fields))
         )))
-      case "MAX" | "MIN" =>
+      case "MAX" | "MIN" | "RAW" =>
         function.pra.head.dataType
       case _ => toSparkType(function.returnType.toKylinDataType)
     }
