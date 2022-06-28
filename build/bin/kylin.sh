@@ -215,6 +215,7 @@ function retrieveStartCommand() {
     # get KYLIN_EXTRA_START_OPTS
     if [ -f "${KYLIN_HOME}/conf/setenv.sh" ]; then
         source ${KYLIN_HOME}/conf/setenv.sh
+        KYLIN_EXTRA_START_OPTS="$KYLIN_EXTRA_START_OPTS -Dcalcite.keep-in-clause=true"
     fi
 
     security_ldap_truststore=`bash ${dir}/get-properties.sh kylin.security.ldap.connection-truststore`
