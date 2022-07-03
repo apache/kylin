@@ -47,10 +47,10 @@ public class ControllerSplitter {
     private static void chopOff(File f, String annoPtn) throws IOException {
         
         System.out.println("Processing " + f);
-        
-        FileInputStream is = new FileInputStream(f);
-        List<String> lines = IOUtils.readLines(is, "UTF-8");
-        is.close();
+        List<String> lines = new ArrayList<>(0);
+        try (FileInputStream is = new FileInputStream(f)) {
+           lines = IOUtils.readLines(is, "UTF-8");
+        }
         List<String> outLines = new ArrayList<>(lines.size());
         
         boolean del = false;

@@ -77,10 +77,12 @@ public class KylinUserManager {
         public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey)
                 throws IOException {
             try (AutoReadWriteLock.AutoLock l = lock.lockForWrite()) {
-                if (event == Broadcaster.Event.DROP)
+                if (event == Broadcaster.Event.DROP) {
                     userMap.removeLocal(cacheKey);
-                else
+                } else {
+                    // update metadata
                     crud.reloadQuietly(cacheKey);
+                }
             }
         }
     }

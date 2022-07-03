@@ -75,7 +75,7 @@ KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $log
     $locationProvider.html5Mode(true);
 
     //configure $http to view a login whenever a 401 unauthorized response arrives
-    $httpProvider.responseInterceptors.push(function ($rootScope, $q) {
+    $httpProvider.responseInterceptors.push(function ($rootScope, $q, $location) {
       return function (promise) {
         return promise.then(
           //success -> don't intercept
@@ -84,7 +84,8 @@ KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $log
           },
           //error -> if 401 save the request and broadcast an event
           function (response) {
-            if (response.status === 401 && !(response.config.url.indexOf("user/authentication") !== -1 && response.config.method === 'POST')) {
+            var isLogin = $location.$$path === "/login"
+            if (response.status === 401 && !(response.config.url.indexOf("user/authentication") !== -1 && response.config.method === 'POST') && !isLogin) {
               var deferred = $q.defer(),
                 req = {
                   config: response.config,

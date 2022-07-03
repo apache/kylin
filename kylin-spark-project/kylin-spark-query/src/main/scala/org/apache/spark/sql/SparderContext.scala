@@ -18,30 +18,28 @@
 
 package org.apache.spark.sql
 
-import java.lang.{Boolean => JBoolean, String => JString}
-import java.nio.file.Paths
-
-import org.apache.spark.memory.MonitorEnv
-import org.apache.spark.util.Utils
-import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent}
-import org.apache.kylin.query.UdfManager
-import org.apache.spark.internal.Logging
-import org.apache.spark.sql.catalyst.parser.ParseException
-import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
-import org.apache.spark.sql.KylinSession._
-import java.util.concurrent.atomic.AtomicReference
-
 import org.apache.commons.io.FileUtils
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.ToolUtil
+import org.apache.kylin.query.UdfManager
 import org.apache.kylin.query.monitor.SparderContextCanary
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.deploy.StandaloneAppClient
-import org.apache.spark.sql.SparderContext.master_app_url
-import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
+import org.apache.spark.internal.Logging
+import org.apache.spark.memory.MonitorEnv
+import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent}
+import org.apache.spark.sql.KylinSession._
+import org.apache.spark.sql.catalyst.parser.ParseException
+import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.datasource.{KylinSourceStrategy, ShardFileStatusCache}
 import org.apache.spark.sql.metrics.SparderMetricsListener
+import org.apache.spark.util.Utils
 import org.apache.spark.utils.YarnInfoFetcherUtils
+import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
+
+import java.lang.{Boolean => JBoolean, String => JString}
+import java.nio.file.Paths
+import java.util.concurrent.atomic.AtomicReference
 
 // scalastyle:off
 object SparderContext extends Logging {
@@ -192,6 +190,9 @@ object SparderContext extends Logging {
                 case _ =>
                   master_app_url = YarnInfoFetcherUtils.getTrackingUrl(appid)
               }
+
+              // pre-init FileSystem, fix s3a issue
+              kylinConf.getHdfsWorkingDirectoryInternal(spark.sparkContext.hadoopConfiguration)
             } catch {
               case throwable: Throwable =>
                 logError("Error for initializing spark ", throwable)

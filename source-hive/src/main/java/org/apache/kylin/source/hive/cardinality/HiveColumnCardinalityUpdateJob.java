@@ -150,16 +150,21 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
 
             CompressionCodec codec = factory.getCodec(item.getPath());
             InputStream stream = null;
-
-            // check if we have a compression codec we need to use
-            if (codec != null) {
-                stream = codec.createInputStream(fileSystem.open(item.getPath()));
-            } else {
-                stream = fileSystem.open(item.getPath());
-            }
-
             StringWriter writer = new StringWriter();
-            IOUtils.copy(stream, writer, "UTF-8");
+            try {
+                // check if we have a compression codec we need to use
+                if (codec != null) {
+                    stream = codec.createInputStream(fileSystem.open(item.getPath()));
+                } else {
+                    stream = fileSystem.open(item.getPath());
+                }
+
+                IOUtils.copy(stream, writer, "UTF-8");
+            } finally {
+                if (stream != null) {
+                    stream.close();
+                }
+            }
             String raw = writer.toString();
             for (String str : StringUtil.split(raw, "\n")) {
                 results.add(str);

@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.annotation.ConfigTag;
@@ -264,7 +265,6 @@ public abstract class KylinConfigBase implements Serializable {
     final protected void reloadKylinConfig(Properties properties) {
         this.properties = BCC.check(properties);
         setProperty("kylin.metadata.url.identifier", getMetadataUrlPrefix());
-        setProperty("kylin.log.spark-executor-properties-file", getLogSparkExecutorPropertiesFile());
     }
 
     private Map<Integer, String> convertKeyToInteger(Map<String, String> map) {
@@ -295,6 +295,10 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHdfsWorkingDirectory() {
+        return getHdfsWorkingDirectoryInternal(HadoopUtil.getCurrentConfiguration());
+    }
+
+    public String getHdfsWorkingDirectoryInternal(Configuration hadoopConf) {
         if (cachedHdfsWorkingDirectory != null) {
             return cachedHdfsWorkingDirectory;
         }
@@ -306,7 +310,7 @@ public abstract class KylinConfigBase implements Serializable {
             throw new IllegalArgumentException("kylin.env.hdfs-working-dir must be absolute, but got " + root);
 
         try {
-            FileSystem fs = path.getFileSystem(HadoopUtil.getCurrentConfiguration());
+            FileSystem fs = path.getFileSystem(hadoopConf);
             path = fs.makeQualified(path);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -2516,11 +2520,27 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getLogSparkDriverPropertiesFile() {
-        return getLogPropertyFile("spark-driver-log4j.properties");
+        return getLogPropertyFile(getLogSparkDriverProperties());
+    }
+
+    public boolean isDefaultLogSparkDriverProperties() {
+        return "spark-driver-log4j-default.properties".equals(getLogSparkDriverProperties());
+    }
+
+    public String getLogSparkDriverProperties() {
+        return getOptional("kylin.spark.driver.log4j.properties", "spark-driver-log4j-default.properties");
     }
 
     public String getLogSparkExecutorPropertiesFile() {
-        return getLogPropertyFile("spark-executor-log4j.properties");
+        return getLogPropertyFile(getLogSparkExecutorProperties());
+    }
+
+    public boolean isDefaultLogSparkExecutorProperties() {
+        return "spark-executor-log4j-default.properties".equals(getLogSparkExecutorProperties());
+    }
+
+    public String getLogSparkExecutorProperties() {
+        return getOptional("kylin.spark.executor.log4j.properties", "spark-executor-log4j-default.properties");
     }
 
     private String getLogPropertyFile(String filename) {
@@ -2622,14 +2642,14 @@ public abstract class KylinConfigBase implements Serializable {
                 String executorLogPath = "";
                 String driverLogPath = "";
                 File executorLogFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
-                        "spark-executor-log4j.properties");
+                        getLogSparkExecutorProperties());
                 if (executorLogFile != null) {
                     executorLogPath = executorLogFile.getCanonicalPath();
                 }
                 path = executorLogPath;
                 if (isYarnCluster) {
                     File driverLogFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
-                            "spark-driver-log4j.properties");
+                            getLogSparkDriverProperties());
                     if (driverLogFile != null) {
                         driverLogPath = driverLogFile.getCanonicalPath();
                     }

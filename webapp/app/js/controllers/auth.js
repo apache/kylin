@@ -94,5 +94,9 @@ KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base6
     });
   };
 
+  AuthenticationService.ping(function () {
+    $location.path(UserService.getHomePage());
+  });
+
   $scope.init();
 });
