@@ -2822,4 +2822,8 @@ public abstract class KylinConfigBase implements Serializable {
     public String getEncryptCipherIvSpec() {
         return getOptional("kylin.security.encrypt.cipher.ivSpec", "AAAAAAAAAAAAAAAA");
     }
+
+    public boolean isEnabledNoAggQuery() {
+        return Boolean.parseBoolean(getOptional("kylin.query.enable-no-aggregate-query", FALSE));
+    }
 }
