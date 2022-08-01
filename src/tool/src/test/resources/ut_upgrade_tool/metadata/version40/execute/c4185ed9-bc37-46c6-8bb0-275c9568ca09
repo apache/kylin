@@ -1,0 +1,113 @@
+{
+  "uuid" : "c4185ed9-bc37-46c6-8bb0-275c9568ca09",
+  "last_modified" : 1585806316905,
+  "create_time" : 1585806102134,
+  "version" : "4.0.0.0",
+  "name" : "TABLE_SAMPLING",
+  "tasks" : [ {
+    "uuid" : "c4185ed9-bc37-46c6-8bb0-275c9568ca09_00",
+    "last_modified" : 0,
+    "create_time" : 1585806102134,
+    "version" : "4.0.0.0",
+    "name" : "Detect Resource",
+    "tasks" : null,
+    "type" : "org.apache.kylin.engine.spark.job.NResourceDetectStep",
+    "params" : {
+      "distMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/c4185ed9-bc37-46c6-8bb0-275c9568ca09/00/meta",
+      "submitter" : "ADMIN",
+      "jobId" : "c4185ed9-bc37-46c6-8bb0-275c9568ca09",
+      "outputMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/c4185ed9-bc37-46c6-8bb0-275c9568ca09/00/meta_output",
+      "project" : "version40",
+      "className" : "org.apache.kylin.engine.spark.job.ResourceDetectBeforeSampling",
+      "table" : "SSB.CUSTOMER",
+      "parentId" : "c4185ed9-bc37-46c6-8bb0-275c9568ca09",
+      "samplingRows" : "20000000"
+    },
+    "segments" : [ ],
+    "job_type" : "TABLE_SAMPLING",
+    "data_range_start" : 0,
+    "data_range_end" : 0,
+    "target_model" : null,
+    "target_segments" : [ ],
+    "output" : {
+      "content" : null,
+      "log_path" : null,
+      "status" : "SUCCEED",
+      "info" : {
+        "yarn_job_wait_time" : "0",
+        "yarn_job_run_time" : "4227"
+      },
+      "last_modified" : 0,
+      "createTime" : 1585806102134,
+      "start_time" : 1585806240718,
+      "end_time" : 1585806259674,
+      "wait_time" : 0
+    }
+  }, {
+    "uuid" : "c4185ed9-bc37-46c6-8bb0-275c9568ca09_01",
+    "last_modified" : 0,
+    "create_time" : 1585806102134,
+    "version" : "4.0.0.0",
+    "name" : "Table Sampling",
+    "tasks" : null,
+    "type" : "org.apache.kylin.engine.spark.job.NTableSamplingJob$SamplingStep",
+    "params" : {
+      "distMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/c4185ed9-bc37-46c6-8bb0-275c9568ca09/01/meta",
+      "submitter" : "ADMIN",
+      "jobId" : "c4185ed9-bc37-46c6-8bb0-275c9568ca09",
+      "outputMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/c4185ed9-bc37-46c6-8bb0-275c9568ca09/01/meta_output",
+      "project" : "version40",
+      "className" : "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob",
+      "table" : "SSB.CUSTOMER",
+      "parentId" : "c4185ed9-bc37-46c6-8bb0-275c9568ca09",
+      "samplingRows" : "20000000"
+    },
+    "segments" : [ ],
+    "job_type" : "TABLE_SAMPLING",
+    "data_range_start" : 0,
+    "data_range_end" : 0,
+    "target_model" : null,
+    "target_segments" : [ ],
+    "output" : {
+      "content" : null,
+      "log_path" : null,
+      "status" : "SUCCEED",
+      "info" : {
+        "yarn_application_id" : "application_1583304191931_0183",
+        "yarn_job_wait_time" : "0",
+        "yarn_application_tracking_url" : "http://127.0.0.1:8088/proxy/application_1583304191931_0183/",
+        "yarn_job_run_time" : "16643"
+      },
+      "last_modified" : 0,
+      "createTime" : 1585806102134,
+      "start_time" : 1585806259902,
+      "end_time" : 1585806316121,
+      "wait_time" : 0
+    }
+  } ],
+  "type" : "org.apache.kylin.engine.spark.job.NTableSamplingJob",
+  "params" : {
+    "submitter" : "ADMIN",
+    "jobId" : "c4185ed9-bc37-46c6-8bb0-275c9568ca09",
+    "project" : "version40",
+    "table" : "SSB.CUSTOMER",
+    "samplingRows" : "20000000"
+  },
+  "segments" : [ ],
+  "job_type" : "TABLE_SAMPLING",
+  "data_range_start" : 0,
+  "data_range_end" : 0,
+  "target_model" : "SSB.CUSTOMER",
+  "target_segments" : [ ],
+  "output" : {
+    "content" : null,
+    "log_path" : null,
+    "status" : "SUCCEED",
+    "info" : { },
+    "last_modified" : 0,
+    "createTime" : 1585806102134,
+    "start_time" : 1585806239779,
+    "end_time" : 1585806316977,
+    "wait_time" : 0
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "uuid": "12124840-b3e3-43db-bcab-2b78da666d02",
+  "last_modified": 1509805113845,
+  "version": "2.3.0.20500",
+  "dataflow": "acfde546-2cc9-4eec-bc92-e3bd46d4e2ee",
+  "segment_id": 0,
+  "layout_instances": [
+    {
+      "layout_id": 1,
+      "status": "READY",
+      "build_job_id": 0,
+      "rows": 1,
+      "byte_size": 0,
+      "source_rows": 1,
+      "source_byte_size": 1,
+      "create_time" : 1438323200000
+    },
+    {
+      "layout_id": 20000000001,
+      "status": "READY",
+      "build_job_id": 0,
+      "rows": 1,
+      "byte_size": 0,
+      "source_rows": 1,
+      "source_byte_size": 1,
+      "create_time" : 1438323200000
+    }
+  ]
+}

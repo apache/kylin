@@ -1,0 +1,21 @@
+{
+  "uuid" : "583e5918-5d40-4099-9dc5-d953e1275d3c",
+  "name" : "TEST_DECIMAL",
+  "data_gen" : "1",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "ID",
+    "index": "T"
+  }, {
+    "id" : "2",
+    "name" : "PRICE",
+    "datatype" : "decimal(35,6)",
+    "data_gen" : "RAND",
+    "index": "T"
+  }],
+  "database" : "DEFAULT",
+  "last_modified" : 0,
+  "source_type" : 9
+}

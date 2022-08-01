@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<DATASOURCE_DEF NAME="SnowFlake" ID="snowflake" DIALECT="snowflake">
+    <PROPERTY NAME="sql.default-converted-enabled" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-no-offset" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-fetch-no-rows" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-no-orderby-with-fetch" VALUE="true"/>
+    <PROPERTY NAME="sql.keyword-default-escape" VALUE="true"/>
+    <PROPERTY NAME="sql.keyword-default-uppercase" VALUE="true"/>
+    <PROPERTY NAME="sql.case-sensitive" VALUE="false"/>
+    <PROPERTY NAME="metadata.enable-cache" VALUE="false"/>
+    <PROPERTY NAME="source.validation-query" VALUE="select 1"/>
+    <PROPERTY NAME="sql.paging-type" VALUE="LIMIT_OFFSET"/>
+    <PROPERTY NAME="sql.enable-quote-all-identifiers" VALUE="true"/>
+
+    <!--LTrim-->
+    <FUNCTION_DEF ID="76" EXPRESSION="LTRIM($0)"/>
+    <!--RTrim-->
+    <FUNCTION_DEF ID="80" EXPRESSION="RTRIM($0)"/>
+    <!--Log10-->
+    <FUNCTION_DEF ID="49" EXPRESSION="LOG(10,$0)"/>
+    <!--Randbetween-->
+    <FUNCTION_DEF ID="54" EXPRESSION="(($1- $0)*RANDOM()+$0)"/>
+    <!--Quotient-->
+    <FUNCTION_DEF ID="52" EXPRESSION="CAST(($0)/NULLIF($1, 0) AS INTEGER)"/>
+    <!--Length-->
+    <FUNCTION_DEF ID="25" EXPRESSION="LENGTH($0)"/>
+    <!--Random number-->
+    <FUNCTION_DEF ID="83" EXPRESSION="RANDOM()"/>
+    <!--RunningStdevP-->
+    <FUNCTION_DEF ID="23" EXPRESSION="STDDEV_POP($0)"/>
+
+</DATASOURCE_DEF>

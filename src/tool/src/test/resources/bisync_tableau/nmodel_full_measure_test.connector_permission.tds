@@ -1,0 +1,143 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<datasource formatted-name="federated.0e6gjbn18cj0a41an9pi309itkyi" inline="true" source-platform="win" version="10.0">
+  <connection class="federated">
+    <named-connections>
+      <named-connection caption="localhost" name="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf">
+        <connection class="kyligence_odbc" dbname="default" odbc-connect-string-extras="PROJECT=default;CUBE=ut_inner_join_cube_partial" port="7070" schema="DEFAULT" server="localhost" username="ADMIN"/>
+      </named-connection>
+    </named-connections>
+    <relation join="inner" type="join">
+      <clause type="join">
+        <expression op="=">
+          <expression op="[BUYER_ACCOUNT].[ACCOUNT_COUNTRY]"/>
+          <expression op="[BUYER_COUNTRY].[COUNTRY]"/>
+        </expression>
+      </clause>
+      <relation join="inner" type="join">
+        <clause type="join">
+          <expression op="=">
+            <expression op="[SELLER_ACCOUNT].[ACCOUNT_COUNTRY]"/>
+            <expression op="[SELLER_COUNTRY].[COUNTRY]"/>
+          </expression>
+        </clause>
+        <relation join="inner" type="join">
+          <clause type="join">
+            <expression op="=">
+              <expression op="[TEST_ORDER].[BUYER_ID]"/>
+              <expression op="[BUYER_ACCOUNT].[ACCOUNT_ID]"/>
+            </expression>
+          </clause>
+          <relation join="inner" type="join">
+            <clause type="join">
+              <expression op="=">
+                <expression op="[TEST_KYLIN_FACT].[SELLER_ID]"/>
+                <expression op="[SELLER_ACCOUNT].[ACCOUNT_ID]"/>
+              </expression>
+            </clause>
+            <relation join="inner" type="join">
+              <clause type="join">
+                <expression op="=">
+                  <expression op="[TEST_KYLIN_FACT].[LSTG_SITE_ID]"/>
+                  <expression op="[TEST_SITES].[SITE_ID]"/>
+                </expression>
+              </clause>
+              <relation join="inner" type="join">
+                <clause type="join">
+                  <expression op="AND">
+                    <expression op="=">
+                      <expression op="[TEST_KYLIN_FACT].[LEAF_CATEG_ID]"/>
+                      <expression op="[TEST_CATEGORY_GROUPINGS].[LEAF_CATEG_ID]"/>
+                    </expression>
+                    <expression op="=">
+                      <expression op="[TEST_KYLIN_FACT].[LSTG_SITE_ID]"/>
+                      <expression op="[TEST_CATEGORY_GROUPINGS].[SITE_ID]"/>
+                    </expression>
+                  </expression>
+                </clause>
+                <relation join="inner" type="join">
+                  <clause type="join">
+                    <expression op="=">
+                      <expression op="[TEST_KYLIN_FACT].[CAL_DT]"/>
+                      <expression op="[TEST_CAL_DT].[CAL_DT]"/>
+                    </expression>
+                  </clause>
+                  <relation join="inner" type="join">
+                    <clause type="join">
+                      <expression op="=">
+                        <expression op="[TEST_KYLIN_FACT].[SLR_SEGMENT_CD]"/>
+                        <expression op="[TEST_SELLER_TYPE_DIM].[SELLER_TYPE_CD]"/>
+                      </expression>
+                    </clause>
+                    <relation join="inner" type="join">
+                      <clause type="join">
+                        <expression op="=">
+                          <expression op="[TEST_KYLIN_FACT].[ORDER_ID]"/>
+                          <expression op="[TEST_ORDER].[ORDER_ID]"/>
+                        </expression>
+                      </clause>
+                      <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_KYLIN_FACT" table="[DEFAULT].[TEST_KYLIN_FACT]"/>
+                      <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_ORDER" table="[DEFAULT].[TEST_ORDER]"/>
+                    </relation>
+                    <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_SELLER_TYPE_DIM" table="[EDW].[TEST_SELLER_TYPE_DIM]"/>
+                  </relation>
+                  <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_CAL_DT" table="[EDW].[TEST_CAL_DT]"/>
+                </relation>
+                <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_CATEGORY_GROUPINGS" table="[DEFAULT].[TEST_CATEGORY_GROUPINGS]"/>
+              </relation>
+              <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_SITES" table="[EDW].[TEST_SITES]"/>
+            </relation>
+            <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="SELLER_ACCOUNT" table="[DEFAULT].[TEST_ACCOUNT]"/>
+          </relation>
+          <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="BUYER_ACCOUNT" table="[DEFAULT].[TEST_ACCOUNT]"/>
+        </relation>
+        <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="SELLER_COUNTRY" table="[DEFAULT].[TEST_COUNTRY]"/>
+      </relation>
+      <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="BUYER_COUNTRY" table="[DEFAULT].[TEST_COUNTRY]"/>
+    </relation>
+    <cols>
+      <map key="[CAL_DT]" value="[TEST_KYLIN_FACT].[CAL_DT]"/>
+      <map key="[ORDER_ID (TEST_KYLIN_FACT)]" value="[TEST_KYLIN_FACT].[ORDER_ID]"/>
+      <map key="[PRICE]" value="[TEST_KYLIN_FACT].[PRICE]"/>
+      <map key="[ORDER_ID (TEST_ORDER)]" value="[TEST_ORDER].[ORDER_ID]"/>
+      <map key="[ITEM_COUNT]" value="[TEST_KYLIN_FACT].[ITEM_COUNT]"/>
+      <map key="[TEST_DATE_ENC]" value="[TEST_ORDER].[TEST_DATE_ENC]"/>
+      <map key="[LEAF_CATEG_ID]" value="[TEST_KYLIN_FACT].[LEAF_CATEG_ID]"/>
+      <map key="[TEST_TIME_ENC]" value="[TEST_ORDER].[TEST_TIME_ENC]"/>
+    </cols>
+  </connection>
+  <aliases enabled="yes"/>
+  <column caption="CAL_DT" datatype="date" name="[CAL_DT]" role="dimension" type="ordinal"/>
+  <column caption="ORDER_ID" datatype="integer" name="[ORDER_ID (TEST_KYLIN_FACT)]" role="dimension" type="ordinal"/>
+  <column caption="PRICE" datatype="real" name="[PRICE]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="ORDER_ID" datatype="integer" name="[ORDER_ID (TEST_ORDER)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="ITEM_COUNT" datatype="integer" name="[ITEM_COUNT]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="TEST_DATE_ENC" datatype="date" name="[TEST_DATE_ENC]" role="dimension" type="ordinal"/>
+  <column caption="LEAF_CATEG_ID" datatype="integer" name="[LEAF_CATEG_ID]" role="dimension" type="ordinal"/>
+  <column caption="TEST_TIME_ENC" datatype="datetime" name="[TEST_TIME_ENC]" role="dimension" type="nominal"/>
+  <column caption="TRANS_CNT" datatype="integer" name="[TRANS_CNT]" role="measure" type="quantitative">
+    <calculation class="tableau" formula="COUNT(1)"/>
+  </column>
+  <column caption="GMV_SUM" datatype="real" name="[GMV_SUM]" role="measure" type="quantitative">
+    <calculation class="tableau" formula="SUM([PRICE])"/>
+  </column>
+  <column caption="GMV_MIN" datatype="real" name="[GMV_MIN]" role="measure" type="quantitative">
+    <calculation class="tableau" formula="MIN([PRICE])"/>
+  </column>
+  <column caption="GMV_MAX" datatype="real" name="[GMV_MAX]" role="measure" type="quantitative">
+    <calculation class="tableau" formula="MAX([PRICE])"/>
+  </column>
+  <column caption="ITEM_COUNT_SUM" datatype="integer" name="[ITEM_COUNT_SUM]" role="measure" type="quantitative">
+    <calculation class="tableau" formula="SUM([ITEM_COUNT])"/>
+  </column>
+  <column caption="ITEM_COUNT_MAX" datatype="integer" name="[ITEM_COUNT_MAX]" role="measure" type="quantitative">
+    <calculation class="tableau" formula="MAX([ITEM_COUNT])"/>
+  </column>
+  <drill-paths>
+    <drill-path name="[LEAF_CATEG_ID]">
+      <field>[LEAF_CATEG_ID]</field>
+    </drill-path>
+  </drill-paths>
+  <semantic-values>
+    <semantic-value key="[Country].[Name]" value="&quot;美国&quot;"/>
+  </semantic-values>
+</datasource>

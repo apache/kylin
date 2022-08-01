@@ -1,0 +1,74 @@
+{
+  "uuid" : "25f7dcc0-0ddd-4a47-9e64-1fbd20cac4f5",
+  "last_modified" : 1585557580002,
+  "create_time" : 1585557578065,
+  "version" : "4.0.0.0",
+  "alias" : "rename_model_2",
+  "owner" : "rename_user_1",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.KYLIN_ACCOUNT",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "ACCOUNT_ID",
+    "column" : "KYLIN_ACCOUNT.ACCOUNT_ID"
+  }, {
+    "id" : 1,
+    "name" : "ACCOUNT_SELLER_LEVEL",
+    "column" : "KYLIN_ACCOUNT.ACCOUNT_SELLER_LEVEL"
+  }, {
+    "id" : 2,
+    "name" : "ACCOUNT_COUNTRY",
+    "column" : "KYLIN_ACCOUNT.ACCOUNT_COUNTRY"
+  }, {
+    "id" : 3,
+    "name" : "ACCOUNT_CONTACT",
+    "column" : "KYLIN_ACCOUNT.ACCOUNT_CONTACT"
+  }, {
+    "id" : 4,
+    "name" : "ACCOUNT_BUYER_LEVEL",
+    "column" : "KYLIN_ACCOUNT.ACCOUNT_BUYER_LEVEL"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  } ],
+  "column_correlations" : [ ],
+  "multilevel_partition_cols" : [ ],
+  "computed_columns" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "KYLIN_ACCOUNT" : {
+        "x" : 460.999993218316,
+        "y" : 171.83332655164932,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  }
+}

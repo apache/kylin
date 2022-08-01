@@ -1,0 +1,16 @@
+{
+  "@class" : "io.kyligence.kap.event.model.PostMergeOrRefreshSegmentEvent",
+  "uuid" : "ac3a2686-6c4d-4c73-b689-f873481dce9a",
+  "last_modified" : 0,
+  "create_time" : 1585806635614,
+  "version" : "4.0.0.0",
+  "model_id" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+  "isGlobal" : false,
+  "params" : { },
+  "msg" : null,
+  "sequence_id" : 25,
+  "owner" : "ADMIN",
+  "runTimes" : 0,
+  "job_id" : "6f3a3264-aa15-4413-8275-8f9f45015e79",
+  "segment_id" : "196443b7-19ab-4201-878f-79f421ff7a0c"
+}

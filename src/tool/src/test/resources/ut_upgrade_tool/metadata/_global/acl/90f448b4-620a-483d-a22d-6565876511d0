@@ -1,0 +1,20 @@
+{
+  "uuid" : "662b6f51-5e70-452b-8169-bd8de3431606",
+  "last_modified" : 1585557307775,
+  "create_time" : 1585557302204,
+  "version" : "4.0.0.0",
+  "domainObjectInfo" : {
+    "type" : "org.apache.kylin.metadata.project.ProjectInstance",
+    "id" : "90f448b4-620a-483d-a22d-6565876511d0"
+  },
+  "parentDomainObjectInfo" : null,
+  "ownerInfo" : {
+    "sid" : "ADMIN",
+    "principal" : true
+  },
+  "entriesInheriting" : false,
+  "entries" : [ {
+    "p" : "rename_user_1",
+    "m" : 32
+  } ]
+}

@@ -1,0 +1,216 @@
+{
+  "uuid": "ae64d06b-b6cf-4c28-a6a8-a402cae988ff",
+  "version": "2.0.0",
+  "name": "kylin_sales_cube",
+  "columns": [
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_SALES",
+      "column": "TRANS_ID"
+    },
+    {
+      "index": "sorted",
+      "encoding": "date",
+      "table": "KYLIN_SALES",
+      "column": "PART_DT"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_SALES",
+      "column": "LSTG_FORMAT_NAME"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_SALES",
+      "column": "LEAF_CATEG_ID"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_SALES",
+      "column": "LSTG_SITE_ID"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_SALES",
+      "column": "SELLER_ID"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_SALES",
+      "column": "BUYER_ID"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_SALES",
+      "column": "OPS_USER_ID"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_SALES",
+      "column": "OPS_REGION"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_CAL_DT",
+      "column": "CAL_DT"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_CAL_DT",
+      "column": "WEEK_BEG_DT"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_CATEGORY_GROUPINGS",
+      "column": "LEAF_CATEG_ID"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_CATEGORY_GROUPINGS",
+      "column": "SITE_ID"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_CATEGORY_GROUPINGS",
+      "column": "USER_DEFINED_FIELD1"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_CATEGORY_GROUPINGS",
+      "column": "USER_DEFINED_FIELD3"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_CATEGORY_GROUPINGS",
+      "column": "META_CATEG_NAME"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_CATEGORY_GROUPINGS",
+      "column": "CATEG_LVL2_NAME"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_CATEGORY_GROUPINGS",
+      "column": "CATEG_LVL3_NAME"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "SELLER_ACCOUNT",
+      "column": "ACCOUNT_ID"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "SELLER_ACCOUNT",
+      "column": "ACCOUNT_BUYER_LEVEL"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "SELLER_ACCOUNT",
+      "column": "ACCOUNT_SELLER_LEVEL"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "SELLER_ACCOUNT",
+      "column": "ACCOUNT_COUNTRY"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "SELLER_ACCOUNT",
+      "column": "ACCOUNT_CONTACT"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "BUYER_ACCOUNT",
+      "column": "ACCOUNT_ID"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "BUYER_ACCOUNT",
+      "column": "ACCOUNT_BUYER_LEVEL"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "BUYER_ACCOUNT",
+      "column": "ACCOUNT_SELLER_LEVEL"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "BUYER_ACCOUNT",
+      "column": "ACCOUNT_COUNTRY"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "BUYER_ACCOUNT",
+      "column": "ACCOUNT_CONTACT"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "SELLER_COUNTRY",
+      "column": "COUNTRY"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "SELLER_COUNTRY",
+      "column": "NAME"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "BUYER_COUNTRY",
+      "column": "COUNTRY"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "BUYER_COUNTRY",
+      "column": "NAME"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_SALES",
+      "column": "PRICE"
+    },
+    {
+      "index": "discrete",
+      "encoding": "orderedbytes",
+      "table": "KYLIN_SALES",
+      "column": "ITEM_COUNT"
+    }
+  ],
+  "last_modified": 1486975519997,
+  "model_name": "kylin_sales_model",
+  "engine_type": 100,
+  "storage_type": 100,
+  "auto_merge_time_ranges": null
+}

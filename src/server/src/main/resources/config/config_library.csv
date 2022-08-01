@@ -1,0 +1,566 @@
+﻿paramName,paramType,paramMeaningCn,paramMeaningEn,restartEffect,systemScope
+kylin.env.zk-kerberos-enabled,boolean,zookeeper是否配置kerberos,Are zookeeper configured Kerberos?,TRUE,TRUE
+kylin.acl.project-internal-default-permission-granted,boolean,用户/用户组被添加至项目后，是否自动授予该项目下的所有表及行列的访问权限,"After the user/user group is added to the project, whether to automatically grant all the access permissions of the table and ranks under the project",TRUE,TRUE
+kylin.auditlog.replay-groupby-project-reload-enable,boolean,按项目进行 reply audit log,REPLY AUDIT LOG according to the project,TRUE,TRUE
+kylin.auditlog.replay-need-consecutive-log,boolean,audit log 的 id 是否是连续的,Is the ID of Audit log continuous,TRUE,TRUE
+kylin.build.resource.check-enabled,boolean,是否需要检查集群资源,Do you need to check cluster resources,TRUE,TRUE
+kylin.build.resource.check-retry-limit-minutes,Int,检查集群资源的超时时间,Check the timeout of cluster resources,TRUE,TRUE
+kylin.build.resource.consecutive-idle-state-num,Int,构建资源连续空闲数,Build resource continuous and leisure numbers,TRUE,TRUE
+kylin.build.resource.load-rate-threshold,Double,构建资源负载率,Construct a resource load rate,TRUE,TRUE
+kylin.build.resource.read-transactional-table-enabled,boolean,是否开启读事务表,Whether to enable read transaction table,TRUE,TRUE
+kylin.build.resource.state-check-interval-seconds,String,检查构建资源运行周期,Check the construction cycle of resource operation,TRUE,TRUE
+kylin.build.skip-fresh-alluxio,boolean,跳过刷新 alluxio,Skip the refresh alluxio,TRUE,TRUE
+kylin.cache.config,String,缓存配置文件,Cache configuration file,TRUE,TRUE
+kylin.cache.redis.batch-count,Int,redis 批量扫描数量,Redis batch scanning quantity,TRUE,TRUE
+kylin.cache.redis.cluster-enabled,boolean,redis 是否开启集群,Whether redis opens the cluster,TRUE,TRUE
+kylin.cache.redis.connection-timeout,Int,redis 连接超时时间,Redis connection timeout time,TRUE,TRUE
+kylin.cache.redis.enabled,boolean,是否开启 redis 缓存,Whether to turn on Redis cache,TRUE,TRUE
+kylin.cache.redis.exception-expire-time,Long,失败查询的过期时间,Failure query expiration time,TRUE,TRUE
+kylin.cache.redis.expire-time,Long,查询的过期时间,Expiration time of query,TRUE,TRUE
+kylin.cache.redis.expire-time-unit,String,查询过期时间的单位,Inquiry unit that expires time,TRUE,TRUE
+kylin.cache.redis.hosts,String,redis 的连接地址,The connection address of redis,TRUE,TRUE
+kylin.cache.redis.max-attempts,Int,redis 最大尝试次数,Redis maximum number of attempts,TRUE,TRUE
+kylin.cache.redis.max-idle,Int,redis 最大空闲连接数,Redis maximum idle connection number,TRUE,TRUE
+kylin.cache.redis.max-total,Int,redis 线程池最大连接数,The maximum number of connections of redis thread pool,TRUE,TRUE
+kylin.cache.redis.max-wait,Long,redis 线程池最大等待数,Redis thread pool maximum waiting number,TRUE,TRUE
+kylin.cache.redis.min-idle,Int,redis 最小空闲连接数,Redis minimum idle connection number,TRUE,TRUE
+kylin.cache.redis.password,String,redis 密码,Redis password,TRUE,TRUE
+kylin.cache.redis.so-timeout,Int,redis socket 超时时间,Redis socket timeout time,TRUE,TRUE
+kylin.canary.sqlcontext-enabled,boolean,是否开启 spark canary,Whether to open Spark Canary,TRUE,TRUE
+kylin.canary.sqlcontext-error-response-ms,Int,spark canary vip探测作业超时时长,Spark Canary VIP detection operation is timeout,TRUE,TRUE
+kylin.canary.sqlcontext-period-min,Int,spark canary vip探测作业运行周期,Spark Canary VIP detection operation cycle,TRUE,TRUE
+kylin.canary.sqlcontext-threshold-to-restart-spark,Int,spark canary vip探测作业连续异常次数触发重启,SPARK Canary VIP detection operations continuous abnormal number triggering restart,TRUE,TRUE
+kylin.capacity.notification-emails,String,容量计费邮件通知地址,Capacity billing email notification address,TRUE,TRUE
+kylin.capacity.notification-enabled,boolean,容量计费邮件通知是否开启,Capacity billing email notification whether to open,TRUE,TRUE
+kylin.capacity.over-capacity-threshold,Double,容量超出阈值，发送邮件通知,"The capacity exceeds the threshold, send email notification",TRUE,TRUE
+kylin.capacity.sample-rows,Long,容量计费采样行数,Capacity billing sampling row,TRUE,TRUE
+kylin.circuit-breaker.enabled,boolean,断路器是否开启,Whether the circuit breaker is turned on,TRUE,TRUE
+kylin.circuit-breaker.threshold.fq,Int,fq条数超过该值，后端抛出异常,"FQ number exceeds this value, and the back end is thrown abnormal",TRUE,TRUE
+kylin.circuit-breaker.threshold.model,Int,model个数超过该值，后端抛出异常,"The number of modes exceeds this value, and the back end is thrown abnormal",TRUE,TRUE
+kylin.circuit-breaker.threshold.project,Int,project个数超过该值，后端抛出异常,"The number of projects exceeds this value, and the back end is thrown abnormal",TRUE,TRUE
+kylin.circuit-breaker.threshold.query-result-row-count,Long,该参数为SQL查询返回的结果集的最大行数，默认为2000000，若超过最大行数，后端将抛出异常。,"The maximum number of rows returned by the SQL query is 2000,000. If it exceeds the maximum number of rows, the back end will be thrown abnormal.",TRUE,TRUE
+kylin.circuit-breaker.threshold.sql-pattern-to-blacklist,Int,fq黑名单条数超过该值，后端抛出异常,"FQ black names exceed this value, and the back end is thrown abnormal",TRUE,TRUE
+kylin.cube.aggrgroup.is-base-cuboid-always-valid,boolean,前端：选择是否需要添加一个包含所有聚合组内已定义的维度和度量的索引；后端：是否增加Base Cuboid,Front end: Select whether to add an index that contains the defined and measured dimensions in all aggregates; back -end: whether to add Base Cuboid,TRUE,TRUE
+kylin.cube.aggrgroup.is-mandatory-only-valid,boolean,是否允许 cube 中只包含基础索引,Whether to allow Cube contains only Base,TRUE,TRUE
+kylin.cube.aggrgroup.max-combination,Int,配置时，最大聚合索引数,"During configuration, the maximum polymer",TRUE,TRUE
+kylin.cube.cuboid-spanning-tree,String,索引生成树实现类,Index generate tree implementation class,TRUE,TRUE
+kylin.cube.frequency-time-window,Int,索引热度统计的时间窗口，默认 30 天。超过该时长且使用次数小于5次的layout会被删除。,"The time window for indexing heat statistics is 30 days by default. Layout, which is over that time and less than 5 times, is deleted.",TRUE,TRUE
+kylin.cube.intersect-count-array-separator,String,CountDistinct列分隔符,Countdistinct column segmentation,TRUE,TRUE
+kylin.cube.low-frequency-threshold,Int,使用次数小于5次且超过30天未更新的layout会被删除,"Layout, which is less than 5 times and has not been updated for more than 30 days, will be deleted",TRUE,TRUE
+kylin.diag.extraction.start-time-days,Int,诊断包默认获取最近3天的数据,Diagnostic package defaults to obtain data in the last 3 days,TRUE,TRUE
+kylin.diag.obf.level,String,OBF 或者 RAW,OBF or raw,TRUE,TRUE
+kylin.diag.package.timeout-seconds,Long,诊断包超时时长,Diagnostic package timeout time,TRUE,TRUE
+kylin.diag.task-timeout,Long,诊断包步骤超时时间,Diagnostic package step timeout time,TRUE,TRUE
+kylin.diag.task-timeout-black-list,String,跳过超时检查的诊断包任务,Diagnostic package task of skipping timeout check,TRUE,TRUE
+kylin.dictionary.globalV2-bucket-overhead-factor,Double,字典构建相关配置,Dictionary construction related configuration,TRUE,TRUE
+kylin.dictionary.globalV2-init-load-factor,Double,字典构建相关配置,Dictionary construction related configuration,TRUE,TRUE
+kylin.dictionary.globalV2-max-versions,Int,字典构建相关配置,Dictionary construction related configuration,TRUE,TRUE
+kylin.dictionary.globalV2-min-hash-partitions,Int,字典构建相关配置,Dictionary construction related configuration,TRUE,TRUE
+kylin.dictionary.globalV2-store-class-name,String,字典解析的类名,Dictionary parser class name,TRUE,TRUE
+kylin.dictionary.globalV2-threshold-bucket-size,Int,字典构建相关配置,Dictionary construction related configuration,TRUE,TRUE
+kylin.dictionary.globalV2-version-ttl,Long,字典构建相关配置,Dictionary construction related configuration,TRUE,TRUE
+kylin.dictionary.null-encoding-opt-threshold,Long,字典构建相关配置,Dictionary construction related configuration,TRUE,TRUE
+kylin.engine-yarn.queue.in.task.available,String,构建可用的 queue 列表,Build available queue lists,TRUE,TRUE
+kylin.engine-yarn.queue.in.task.enabled,boolean,是否开启构建可用 queue 配置,Whether to open the construction can be configured with queue configuration,TRUE,TRUE
+kylin.engine.adaptive-spanning-tree-batch-size,Int,自适应 spanning tree 批处理大小,Adaptive SPANNING TREE batch processing size,TRUE,TRUE
+kylin.engine.adaptive-spanning-tree-enabled,boolean,是否开启自适应 spanning tree,Whether to open the adaptive spanning tree,TRUE,TRUE
+kylin.engine.adaptive-spanning-tree-threshold,double,自适应 spanning tree 阈值,Adaptive spanning tree threshold,TRUE,TRUE
+kylin.engine.base-executor-instance,Int,spark构建作业基础instance个数,SPARK builds the number of job foundations Instance,TRUE,TRUE
+kylin.engine.build-excluded-table,boolean,平表是否包含屏蔽表,Whether the flat table contains excluded tables,TRUE,TRUE
+kylin.engine.check-partition-col-enabled,boolean,构建时是否分区列检查,Whether to check whether it is a partitioned when constructed,TRUE,TRUE
+kylin.engine.cluster-manager-timeout-threshold,String,集群管理的超时时间,Cluster manager timeout threshold,TRUE,TRUE
+kylin.engine.count.lookup-table-max-time,Long,计算平表数量的超市时间,Timeout threshold for count lookup table,TRUE,TRUE
+kylin.engine.driver-memory-base,Int,spark构建作业基础driver内存,Spark builds the basic driver memory,TRUE,TRUE
+kylin.engine.driver-memory-maximum,Int,spark构建作业最大driver内存,Spark builds the largest driver memory,TRUE,TRUE
+kylin.engine.driver-memory-strategy,String,spark构建作业内存自动化调整策略,Spark builds operating memory automation adjustment strategy,TRUE,TRUE
+kylin.engine.driver-memory-table-sampling,Int,spark抽样作业的driver内存,Driver memory of spark sampling operation,TRUE,TRUE
+kylin.engine.executor-instance-strategy,String,spark构建作业Executor instance策略,Spark builds an Executor Instance strategy,TRUE,TRUE
+kylin.engine.extra-jars-path,String,构建任务额外的jar包路径,Build an additional JAR package path,TRUE,TRUE
+kylin.engine.global-dict-check-enabled,boolean,是否开启全局字典检查,Whether to open a global dictionary check,TRUE,TRUE
+kylin.engine.index-column-flattable-enabled,boolean,是否开启平表中只包含索引列,Whether to open the flat watch contains only index columns,TRUE,TRUE
+kylin.engine.inferior-flattable-enabled,boolean,是否开启亚平表功能,Whether to enable inferior flat table,TRUE,TRUE
+kylin.engine.inferior-flattable-storage-level,String,亚平表数据的缓存级别,Storage level for inferior flat table,TRUE,TRUE
+kylin.engine.log.local-working-directory,String,KC 环境中，日志的工作路径,"In the KC environment, the working path of the log",TRUE,TRUE
+kylin.engine.lookup-table-default-count-value,Long,维度表的默认行数,Default number of the dimension table,TRUE,TRUE
+kylin.engine.max-allocation-proportion,Double,yarn集群队列中的内存最大使用比例,Maximum use ratio in the Yarn cluster queue,TRUE,TRUE
+kylin.engine.max-retry-time,Int,spark构建作业的重试次数,SPARK to construct homework renewal times,TRUE,TRUE
+kylin.engine.need-collect-lookup-table-info,boolean,是否获取维度表的信息,Whether to obtain the information of the dimension table,TRUE,TRUE
+kylin.engine.persist-flattable-enabled,Boolean,构建时是否保存平表,Whether the flat watch is saved when constructing,TRUE,TRUE
+kylin.engine.persist-flatview,Boolean,是否保存视图表平表,Whether to save the view table flat table,TRUE,TRUE
+kylin.engine.resource-request-over-limit-proportion,Double,executor 最大可请求资源的倍数,Executor's maximum requestable resource multiple,TRUE,TRUE
+kylin.engine.retry-memory-gradient,Double,spark构建作业driver内存增大策略,Spark builds the operation of Driver memory increase strategy,TRUE,TRUE
+kylin.engine.retry-overheadMemory-gradient,Double,spark构建作业driver overhead内存增大策略,Spark builds the operation of Driver Overhead memory increase strategy,TRUE,TRUE
+kylin.engine.sanity-check-enabled,boolean,是否打开构建任务数据检查,Whether to open the construction task data check,TRUE,TRUE
+kylin.engine.segment-exec-max-threads,Int,segmnet 最大线程数,SEGMNET maximum thread number,TRUE,TRUE
+kylin.engine.segment-exec-parallel-enabled,boolean,是否允许 segment 并行构建,Whether to allow segment to be constructed parallel,TRUE,TRUE
+kylin.engine.shard-num-json,String,指定列的shard个数,Specify the number of sHARD,TRUE,TRUE
+kylin.engine.spark-conf.spark.executor.cores,Int,每个Executor的cpu核数,EXECUTOR CPU cores,TRUE,TRUE
+kylin.engine.spark-conf.spark.executor.extraJavaOptions,String,指定Executor一些额外的java配置,Specify some extra Java configurations of Executor,TRUE,TRUE
+kylin.engine.spark-conf.spark.executor.instances,Int,Executor的个数,The number of executor,TRUE,TRUE
+kylin.engine.spark-conf.spark.executor.memory,String,Executor的内存大小，还需要考虑其他参数spark.executor.memoryOverhead,The memory size of Executor also needs to consider other parameters Spark.executor.MemoryOVERHEAD,TRUE,TRUE
+kylin.engine.spark-conf.spark.sql.shuffle.partitions,Int,JOIN或聚合数据时指定partition数量,Specify the number of partitions when join or aggregate data,TRUE,TRUE
+kylin.engine.spark-conf.spark.yarn.access.hadoopFileSystems,String,Spark应用程序(构建作业)将访问的安全Hadoop文件系统,SPARK application (build operation) will be visited security HADOOP file system,TRUE,TRUE
+kylin.engine.spark-conf.spark.yarn.am.extraJavaOptions,String,指定yarn的NodeManager的一些额外java配置,Specify some additional Java configuration of yarn's nodemanager,TRUE,TRUE
+kylin.engine.spark-conf.spark.yarn.queue,String,配置项目spark构建作业的yarn队列,Configuration project Spark built the Yarn queue,TRUE,TRUE
+kylin.engine.spark.build-class-name,String,spark构建作业实现类,Spark build operational implementation category,TRUE,TRUE
+kylin.engine.spark.cluster-manager-class-name,String,资源调度集群的适配类,Adaptation category of resource scheduling cluster,TRUE,TRUE
+kylin.engine.spark.job-jar,String,执行spark作业的jar包,JAR package executing spark work,TRUE,TRUE
+kylin.engine.spark.merge-class-name,String,spark合并segment作业实现类,spark combined with segment job implementation class,TRUE,TRUE
+kylin.engine.spark.sampling-class-name,String,spark抽样作业实现类,SPARK sampling job implementation class,TRUE,TRUE
+kylin.engine.spark.snapshot-build-class-name,String,构建 snapshot job 的类名,Build the name of Snapshot Job,TRUE,TRUE
+kylin.engine.spark.task-core-factor,Int,多少 spark 任务使用一个 core,How many spark tasks use a core,TRUE,TRUE
+kylin.engine.spark.task-impact-instance-enabled,boolean,spark 构建作业是否根据任务数量来计算core数量,Whether spark builds a job based on the number of tasks calculates the number of cores,TRUE,TRUE
+kylin.engine.steps.skip,String,值为`io.kyligence.kap.engine.spark.job.NResourceDetectStep` 时代表关闭资源探测，KC 如果配置此值将无法自动伸缩构建节点，所以建议永远不要配置,"The value is `IO. Kyligence.kap.engine.Spark.job.nRsourceDeteCTStep` Anti -resource detection. If you configure this value, it will not be automatically expanded to build nodes, so it is recommended not to configure the configuration.",TRUE,TRUE
+kylin.engine.streaming-base-ckeckpoint-location,String,实时OLAP构建作业的check point目录,Real -time OLAP CHCK POINT directory that builds homework,TRUE,TRUE
+kylin.engine.streaming-duration,Long,实时OLAP构建定时触发，单位毫秒,"Real -time OLAP builds regular triggers, the unit milliseconds",TRUE,TRUE
+kylin.engine.streaming-metrics-enabled,boolean,实时OLAP构建监控是否开启,Real -time OLAP Construction Monitoring Whether it is turned on,TRUE,TRUE
+kylin.engine.streaming-segment-clean-interval,String,流式 segment 清理周期,Streaming segment cleanup cycle,TRUE,TRUE
+kylin.engine.streaming-segment-merge-interval,String,流式 segment 合并周期,Streaming segment merger cycle,TRUE,TRUE
+kylin.engine.streaming-segment-merge-ratio,Double,流式 segment 合并比率,Streaming segment merger ratio,TRUE,TRUE
+kylin.engine.streaming-segment-merge-threshold,Int,实时OLAP构建触发合并segment的条件,Real -time OLAP constructs the condition for triggering the combination of segment,TRUE,TRUE
+kylin.engine.streaming-trigger-once,boolean,实时OLAP构建仅触发一次,Real -time OLAP construction only triggers once,TRUE,TRUE
+kylin.engine.submit-hadoop-conf-dir,String,hadoop conf 目录,Hadoop Conf directory,TRUE,TRUE
+kylin.env,String,Kyligence Enterprise 部署模式,Kyligence Enterprise deployment mode,TRUE,TRUE
+kylin.env.channel,String,判断当前部署环境,Determine the current deployment environment,TRUE,TRUE
+kylin.env.engine-write-fs,String,配置构建写集群,Configuration Construction Writing Cluster,TRUE,TRUE
+kylin.env.hdfs-data-working-dir,String,数据存储路径，可以和working-dir分开,Data storage paths can be separated from Working-DIR,TRUE,TRUE
+kylin.env.hdfs-working-dir,String,hdfs上的工作根目录,The roots of the work on hdfs,TRUE,TRUE
+kylin.env.max-keep-log-file-number,String,kylin log最大文件数量,kylin log maximum number of files,TRUE,TRUE
+kylin.env.max-keep-log-file-threshold-mb,String,kylin log每个文件大小,kylin log every file size,TRUE,TRUE
+kylin.env.metadata.only-for-read,boolean,metadata为只读,Metadata is read only,TRUE,TRUE
+kylin.env.smart-mode-enabled,boolean,是否打开智能模式,Whether to open the smart mode,TRUE,TRUE
+kylin.env.smart-thread-num,Int,Sql 推荐最大线程数,SQL Recommend the maximum number of threads,TRUE,TRUE
+kylin.env.zookeeper-acl-enabled,boolean,是否开启zk acl认证,Whether to turn on ZK ACL certification,TRUE,TRUE
+kylin.env.zookeeper-base-path,boolean,zk 主目录,ZK main directory,TRUE,TRUE
+kylin.env.zookeeper-base-sleep-time,String,zk重连时等待时间,ZK time to wait for time,TRUE,TRUE
+kylin.env.zookeeper-connect-string,String,ZooKeeper 的地址,Zookeeper's address,TRUE,TRUE
+kylin.env.zookeeper-connection-client-timeout-threshold,String,zookeeper 最大连接超时时间,Zookeeper's maximum connection timeout time,TRUE,TRUE
+kylin.env.zookeeper-max-retries,Int,zk重连最大重试次数,ZK Re -Lianlian's maximum number of reviews,TRUE,TRUE
+kylin.env.zookeeper-session-client-timeout-threshold,String,zookeeper 客户端回话超时时间,Zookeeper client return timeout time,TRUE,TRUE
+kylin.env.zookeeper.zk-acl,String,zk acl配置,ZK ACL configuration,TRUE,TRUE
+kylin.env.zookeeper.zk-auth,String,zk acl认证用户，密码,"ZK ACL certified user, password",TRUE,TRUE
+kylin.favorite.auto-check-accelerate-batch-size,Int,分批检查项目加速sql状态的每批大小,Check the size of each batch of SQL status in batches,TRUE,TRUE
+kylin.favorite.auto-mark-detection-interval-minutes,Int,单位分钟，自动推荐的时间周期,"The unit minute, the automatic recommendation time cycle",TRUE,TRUE
+kylin.favorite.batch-accelerate-size,Int,分批加速sql列表的每批大小,Each batch of SQL lists in batches,TRUE,TRUE
+kylin.favorite.import-sql-max-size,Int,SQL建模时导入sql的最大值,The maximum value of SQL when SQL is modeling,TRUE,TRUE
+kylin.favorite.query-accelerate-threshold,Int,存在一定条数查询可以推荐时，提示用户进智能加速,"When there are a certain number query, you can recommend it, prompting the user to enter the intelligent acceleration",TRUE,TRUE
+kylin.favorite.query-accelerate-tips-enable,boolean,是否开启智能推荐提示,Whether to open the smart recommendation prompt,TRUE,TRUE
+kylin.favorite.query-history-accelerate-batch-size,Int,一次拉取查询历史大小,Get the history of history at a time,TRUE,TRUE
+kylin.favorite.query-history-accelerate-interval,String,推荐拉取查询历史频率,It is recommended to pull the query historical frequency,TRUE,TRUE
+kylin.favorite.query-history-accelerate-max-size,Int,推荐最大加速数据量,Recommend the maximum acceleration data,TRUE,TRUE
+kylin.favorite.query-history-max-scan-interval,Int,保留最近一段时间内的查询历史，默认一个月,"Keep the history of query in the last period of time, default for a month",TRUE,TRUE
+kylin.favorite.query-history-scan-period-minutes,Int,单位分钟，获取最近一段时间内的查询历史,"In the unit minute, get the history of query in the recent period of time",TRUE,TRUE
+kylin.favorite.statistics-collection-interval-minutes,Int,单位分钟，更新推荐信息的时间周期,"In the unit minute, update the time cycle of the recommended information",TRUE,TRUE
+kylin.garbage.storage.cuboid-layout-survival-time-threshold,String,过期索引的阈值，超过此阈值且使用频率过低的自动推荐的索引会被清理，默认值为 7d，表示 7 天。,"The index of an automatic recommendation of an automatic recommendation of the expiration index with this threshold and the use frequency is too low will be cleaned, and the default value is 7D, which means 7 days.",TRUE,TRUE
+kylin.garbage.storage.executable-survival-time-threshold,String,清理作业列表，默认保留最近30天的作业,Clean up the homework list and retain the last 30 days of homework,TRUE,TRUE
+kylin.garbage.storage.sourceusage-survival-time-threshold,String,垃圾清理容量计费最大保存时间,Maximum preservation time for garbage cleaning capacity,TRUE,TRUE
+kylin.guardian.api-fail-threshold,Int,API反馈状态异常异常阈值,API feedback status abnormal threshold,TRUE,TRUE
+kylin.guardian.check-init-delay,Int,KG开始检测时间,KG starts detection time,TRUE,TRUE
+kylin.guardian.check-interval,Int,KG周期检测间隔,KG cycle detection interval,TRUE,TRUE
+kylin.guardian.checkers,String,置检查的规则,Rules for checking inspections,TRUE,TRUE
+kylin.guardian.downgrade-mode-parallel-query-threshold,Int,并行查询最大阈值,The maximum threshold of parallel query,TRUE,TRUE
+kylin.guardian.downgrade-on-full-gc-busy-enabled,boolean,Full GC时长占比过大时处理KE规则繁忙处理开关,"Full GC duration is too large to process KE rules, busy processing switch",TRUE,TRUE
+kylin.guardian.enabled,boolean,KG守护进程是否开启,Is the KG Guardian process open?,TRUE,TRUE
+kylin.guardian.full-gc-busy-high-watermark,Double,Full GC时长占比过大时处理KE规则FullGC占比高繁忙阈值,Full GC duration is too large to process KE rules FullGC accounts for high busy threshold,TRUE,TRUE
+kylin.guardian.full-gc-busy-low-watermark,Double,Full GC时长占比过大时处理KE规则FullGC占比低繁忙阈值,Full GC duration is too large to process KE rules FullGC accounts for low busy threshold,TRUE,TRUE
+kylin.guardian.full-gc-check-factor,Int,Full GC时长占比过大时处理KE规则检测时长,FULL GC duration to process KE rules detection duration when the proportion is too large,TRUE,TRUE
+kylin.guardian.full-gc-duration-ratio-restart-enabled,boolean,Full GC时长占比过大时处理KE规则过载重启开关,Full GC duration is too large to process the KE rule overload and restart the switch,TRUE,TRUE
+kylin.guardian.full-gc-duration-ratio-threshold,Double,Full GC时长占比过大时处理KE规则FullGC占比过载阈值,"Full GC duration to process KE rules when the proportion is too large, FullGC accounts for overload threshold",TRUE,TRUE
+kylin.guardian.ha-check-init-delay,Int,开始检测KE时间,Start detect KE time,TRUE,TRUE
+kylin.guardian.ha-check-interval,Int,KG检测KE周期间隔,KG detection KE weekly interval,TRUE,TRUE
+kylin.guardian.ha-enabled,boolean,KE保证KG HA开关,KE guarantee KG HA switch,TRUE,TRUE
+kylin.guardian.kill-slow-query-fail-restart-enabled,boolean,杀死超时查询失败次数过多时重启KE规则开关,The kill timeout query fails too much time to restart the KE rules switch,TRUE,TRUE
+kylin.guardian.kill-slow-query-fail-threshold,Int,杀死超时查询失败次数过多时重启KE规则杀死失败次数阈值,Killout time query fails too much time to restart the KE rules to kill the failure number of the number of failures,TRUE,TRUE
+kylin.guardian.restart-spark-fail-restart-enabled,boolean,Spark重启失败次数过多时重启KE规则开关,"SPARK restarts too many times, restart the KE rules switch",TRUE,TRUE
+kylin.guardian.restart-spark-fail-threshold,Int,Spark重启失败次数过多时重启KE规则重启失败阈值,"SPARK restart failure times when there are too many times, restart the KE rules restart the failure threshold",TRUE,TRUE
+kylin.health.metastore-error-response-ms,Int,metastore健康检查，超时时长,"Metastore health checkup, timeout time",TRUE,TRUE
+kylin.health.metastore-warning-response-ms,Int,metastore健康检查，警告状态时长,"Metastore health check, warning state durability",TRUE,TRUE
+kylin.index.base-index-auto-update,boolean,是否自动更新基础索引,Whether to automatically update the basic index,TRUE,TRUE
+kylin.index.beyond-similarity-bias-threshold,Long,差值参数。指的是父子索引的记录数之差，超过该值就认为该父子索引不相似，默认值 1 亿。,"Differential parameters. It refers to the difference between the number of records of the father and son's index. When the value is exceeded, it is considered that the father and son's indexes are not similar, and the default value is 100 million.",TRUE,TRUE
+kylin.index.frequency-strategy.consider-table-index,boolean,低频使用清理策略是否应用在表索引,Whether the low -frequency cleaning strategy is applied to the index,TRUE,TRUE
+kylin.index.include-strategy.consider-table-index,boolean,索引优化策略使用应用在表索引,Index optimization strategy uses application in table index,TRUE,TRUE
+kylin.index.optimization-level,Int,垃圾清理级别,Garbage cleaning level,TRUE,TRUE
+kylin.index.similarity-ratio-threshold,Double,比例参数，相似规则中，父子索引之间的行数比例，通过子索引/父索引得到。默认值为0.9。,"In the similar rules, the proportion of rows between father and son indexes is obtained through sub -index/parent indexes. The default value is 0.9.",TRUE,TRUE
+kylin.influxdb.address,String,influxdb连接地址,Influxdb connection address,TRUE,TRUE
+kylin.influxdb.flush-duration,Int,influxdb数据flush周期,Influxdb data FLUSH cycle,TRUE,TRUE
+kylin.influxdb.https.enabled,boolean,infxludb 是否开启了 https,Whether INFXLUDB has opened HTTPS,TRUE,TRUE
+kylin.influxdb.password,String,influxdb密码,Influxdb password,TRUE,TRUE
+kylin.influxdb.username,String,influxdb用户,Influxdb user,TRUE,TRUE
+kylin.job.auto-set-concurrent-jobs,boolean,是否使用自动并发计算功能,Whether to use automatic concurrent calculation function,TRUE,TRUE
+kylin.job.check-quota-storage-enabled,boolean,构建任务调度器是否检查容量,Construct whether the task scheduler checks the capacity,TRUE,TRUE
+kylin.job.delete-job-tmp-when-retry,boolean,重试时删除临时路径,Delete the temporary path when retrying,TRUE,TRUE
+kylin.job.event.poll-interval-second,Int,处理构建作业事件的周期，默认60s,"Treatment of the cycle of the construction of the operation, the default 60s default",TRUE,TRUE
+kylin.job.finished-notifier-url,String,job结束后回调URL,"After the JOB end, call back the URL",TRUE,TRUE
+kylin.job.flat-table-join-without-lookup,boolean,是否打平表无需join维度表,Whether you are flattened without the Join dimension table,TRUE,TRUE
+kylin.job.infer-filters-enabled,boolean,是否开启推荐过滤器,Whether to open a recommended filter,TRUE,TRUE
+kylin.job.log-print-enabled,boolean,构建作业是否打印日志到kylin.log,Build an assignment to printed logs to kylin.log,TRUE,TRUE
+kylin.job.max-concurrent-jobs,Int,最大并发作业数（默认无效），kylin.job.auto-set-concurrent-jobs控制是否使用自动设置并发，默认为TRUE,"Maximum concurrent operation (default invalid), kylin.job.auto-set-confurrent-jobs control whether to use automatic settings and concurrency, default to TRUE",TRUE,TRUE
+kylin.job.max-local-consumption-ratio,double,并发执行作业，最大占用构建节点空闲内存比例,"Practice operations, maximize the proportion of idle memory of node nodes",TRUE,TRUE
+kylin.job.notification-admin-emails,String,设置需要被通知人员的电子邮箱地址,Set the email address of the person who needs to be notified,TRUE,TRUE
+kylin.job.notification-enabled,boolean,是否开启邮件通知功能,Whether to open the email notification function,TRUE,TRUE
+kylin.job.notification-mail-enable-starttls,boolean,是否使用TLS方式发送邮件,Whether to send emails with TLS,TRUE,TRUE
+kylin.job.notification-mail-host,String,设置该项为邮件的SMTP服务器地址,Set the SMTP server address of the email,TRUE,TRUE
+kylin.job.notification-mail-password,String,设置该项为邮件的SMTP登录密码,Set the SMTP login password of the email,TRUE,TRUE
+kylin.job.notification-mail-port,Int,设置该项为邮件的SMTP服务器端口号,Set the SMTP server port number of this item,TRUE,TRUE
+kylin.job.notification-mail-sender,String,设置该项为邮件的发送邮箱地址,Set this item to send the mailbox address of the email,TRUE,TRUE
+kylin.job.notification-mail-username,String,设置该项为邮件的SMTP登录用户名,Set the SMTP login user name of the email,TRUE,TRUE
+kylin.job.notification-on-empty-data-load,boolean,构建作业判断加载空数据是否邮件通知用户,Build homework judgment to load empty data whether to notify the user,TRUE,TRUE
+kylin.job.notification-on-job-error,boolean,构建作业判断作业异常是否邮件通知用户,Build homework judgment or whether the operation is anomalies to notify the user,TRUE,TRUE
+kylin.job.notification-on-source-records-change,boolean,构建作业判断数据源数据条数变化是否邮件通知用户,Build the job judgment data source data number change whether the mail notify the user,TRUE,TRUE
+kylin.job.remote-cli-hostname,String,远程执行命令行的主机,The host of the remote execution command line,TRUE,TRUE
+kylin.job.remote-cli-password,String,远程执行命令行主机的密码,The password of the remote execution command line host,TRUE,TRUE
+kylin.job.remote-cli-port,Int,远程执行命令行的主机的端口,The port of the host of the remote execution command line,TRUE,TRUE
+kylin.job.remote-cli-username,port,远程执行命令行的主机的用户名,Username of the host of remote execution command line,TRUE,TRUE
+kylin.job.remote-ssh-port,Int,远程执行 ssh 端口,Remote execution SSH port,TRUE,TRUE
+kylin.job.retry,Int,任务自动重试次数，默认值为 0，即任务出错时不会进行自动重试。,"The number of automatic trials of the task, the default value is 0, that is, the automatic review will not be performed when the task is wrong.",TRUE,TRUE
+kylin.job.retry-exception-classes,String,指定异常类型来确定作业是否重跑，默认重跑,"Specify the exception type to determine whether the job is re -run, the default running",TRUE,TRUE
+kylin.job.retry-interval,Int,任务重试的间隔，默认值为 30000，单位毫秒。当配置了上述任务重试次数后，该参数才生效。,"The interval between the task retry is 30,000, and the unit is milliseconds. The parameter takes effect when the number of tasks are configured.",TRUE,TRUE
+kylin.job.scheduler.poll-interval-second,Int,调度器获取作业执行的周期,The scheduler obtains the cycle of operation execution,TRUE,TRUE
+kylin.job.skip-record-execution-time,boolean,是否跳过记录 job 执行时间,Do you skip records of JOB execution time,TRUE,TRUE
+kylin.job.tracking-url-ip-address-enabled,boolean,是否获取构建作业的spark tracking url,Whether to get the SPARK TRACKING URL,TRUE,TRUE
+kylin.job.tracking-url-pattern,String,spark作业tracking url的格式,The format of spark operation tracking url,TRUE,TRUE
+kylin.job.update-job-info-timeout,Long,调用更新 job 状态的超时时间,Call the timeout of the update of the job status,TRUE,TRUE
+kylin.job.use-remote-cli,Boolean,是否执行远程命令,Whether to execute remote commands,TRUE,TRUE
+kylin.job.yarn-app-rest-check-status-url,String,yarn app状态检测的链接，RM链接,"Link to yarn app status detection, RM link",TRUE,TRUE
+kylin.kerberos.cache,String,kerberos 缓存文件,Kerberos cache file,TRUE,TRUE
+kylin.kerberos.enabled,boolean,是否使用Kerberos,Whether to use Kerberos,TRUE,TRUE
+kylin.kerberos.jaas-conf,String,kerberos jaas.conf文件,Kerberos jaas.conf file,TRUE,TRUE
+kylin.kerberos.keytab,String,Kerberos对应的keytab文件,Keytab file corresponding to Kerberos,TRUE,TRUE
+kylin.kerberos.krb5-conf,String,kerberos krb5.conf文件,Kerberos krb5.conf file,TRUE,TRUE
+kylin.kerberos.monitor-interval-minutes,Long,定时检查zk Kerberos 连接是否可用,Check whether the zk kerberos connection is available,TRUE,TRUE
+kylin.kerberos.platform,String,使用Kerberos对接的平台,Platform with Kerberos docking,TRUE,TRUE
+kylin.kerberos.principal,String,kerberos prncipal配置,Kerberos PRNCIPAL configuration,TRUE,TRUE
+kylin.kerberos.project-level-enabled,boolean,项目级kerberous配置开关,Project -level Kerberous configuration switch,TRUE,TRUE
+kylin.kerberos.ticket-refresh-interval-minutes,Long,zk Kerberos ticket更新周期,ZK KERBEROS TICKET update cycle,TRUE,TRUE
+kylin.kerberos.zookeeper-server-principal,String,zk Kerberos principal,zk Kerberos principal,TRUE,TRUE
+kylin.lightning.cluster-id,Long,KC 环境中，集群 id,"In the KC environment, cluster ID",TRUE,TRUE
+kylin.lightning.server.zookeeper-node,String,KC环境中，zookeeper 的路径,"In the KC environment, the path of zookeeper",TRUE,TRUE
+kylin.metadata.audit-log.batch-size,Int,读取audit log批次大小,Read the Audit Log batch size,TRUE,TRUE
+kylin.metadata.audit-log.batch-timeout,String,审计日志执行 sql 的超时时间,The audit log executes the timeout of SQL,TRUE,TRUE
+kylin.metadata.audit-log.catchup-interval,String,audit log同步频率,Audit log synchronous frequency,TRUE,TRUE
+kylin.metadata.audit-log.catchup-max-timeout,String,执行 catch up 审计日志的最大超时时间,The maximum timeout of executing the CATCH UP audit log,TRUE,TRUE
+kylin.metadata.audit-log.catchup-timeout,String,读取audit log超时时间,Read the Audit Log timeout time,TRUE,TRUE
+kylin.metadata.audit-log.enabled,boolean,jdbcmetastore是否开启audit log,JDBCMETASTOR,TRUE,TRUE
+kylin.metadata.audit-log.max-size,Long,audit log最大条数,Audit log maximum number,TRUE,TRUE
+kylin.metadata.backup-count-threshold,Int,保留在hdfs上备份元数据的个数，默认最近7天备份的元数据,"Reserved the number of backup data data on HDFS, default metadata that has been backup in the last 7 days",TRUE,TRUE
+kylin.metadata.broken-model-deleted-on-smart-mode,boolean,智能模式broken模型可被系统自动删除,Intelligent mode Broken model can be automatically deleted by the system,TRUE,TRUE
+kylin.metadata.cache.max-duration,Int,元数据缓存的最大时间,The maximum time of metadata cache,TRUE,TRUE
+kylin.metadata.cache.max-num,Int,元数据缓存的最大个数,The largest number of metadata cache,TRUE,TRUE
+kylin.metadata.check-copy-on-write,boolean,配置元数据是否写时复制,Copy when configured metadata,TRUE,TRUE
+kylin.metadata.compress.enabled,boolean,是否开启元数据压缩,Whether to turn on metadata compress,TRUE,TRUE
+kylin.metadata.distributed-lock-impl,String,分布式锁工厂类,Distributed lock factory,TRUE,TRUE
+kylin.metadata.first-day-of-week,String,一周的第一天,The first day of a week,TRUE,TRUE
+kylin.metadata.history-source-usage-cron,String,更新容量计费的 cron 表达式,Update CRON expression of capacity billing,TRUE,TRUE
+kylin.metadata.history-source-usage-unwrap-computed-column,boolean,是否将可计算列展开计算容量,Whether the calculated column is expanded to calculate the capacity,TRUE,TRUE
+kylin.metadata.key-case-insensitive,boolean,当本地用户、用户组较多影响到接口响应时，可以将该参数设置为 true，可以提高部分接口的响应速度,"When local users and user groups affect the interface response, the parameter can be set to true, which can improve the response speed of some interfaces",TRUE,TRUE
+kylin.metadata.ops-cron,boolean,定时备份元数据、垃圾清理的定时任务 cron 表达式，默认值是 0 0 0 * * *,"Timing backup metad data, the timing task of garbage clearance CRON expression, the default value is 0 0 0 * * * *",TRUE,TRUE
+kylin.metadata.random-admin-password.enabled,boolean,admin使用随机密码,admin uses random passwords,TRUE,TRUE
+kylin.metadata.semi-automatic-mode,boolean,前端：当前project 是否含有半自动的标志；后端：是否默认使用半自动档,Front end: whether the current Project contains semi -automatic signs; back -end: Whether the semi -automatic file is used by default,TRUE,TRUE
+kylin.metadata.url,String,Kyligence Enterprise 元数据库路径。,Kyligence Enterprise metad database path.,TRUE,TRUE
+kylin.metadata.validate-computed-column,boolean,是否检验可计算列,Whether to test can be calculated,TRUE,TRUE
+kylin.metrics.daily-influx-db,String,按天归档influxdb数据的数据库,Database of InfluxDB data by the day,TRUE,TRUE
+kylin.metrics.daily-max-retry-times,Int,按天归档influxdb数据时异常后重试次数,Archive by the day when INFLUXDB data is abnormal,TRUE,TRUE
+kylin.metrics.daily-run-hour,Int,按天归档influxdb数据在当天几点运行,"Archive by the day of the day InfluxDB data, when the day, how many points are on that day",TRUE,TRUE
+kylin.metrics.influx-db,String,Influxdb监控数据存储的数据库,Influxdb monitoring data stored database,TRUE,TRUE
+kylin.metrics.influx-rpc-service-bind-address,String,Influxdb监控数据备份的主机的端口,Influxdb Monitoring data backup host port,TRUE,TRUE
+kylin.metrics.polling-interval-secs,Int,Influxdb监控数据上报周期,INFLUXDB monitoring data report cycle,TRUE,TRUE
+kylin.metrics.prometheus-enabled,boolean,是否开启 prometheus,Whether to turn on Prometheus,TRUE,TRUE
+kylin.model.dimension-measure-name.max-length,Int,dimension、measure名称最大长度,"Dimension, Measure name maximum length",TRUE,TRUE
+kylin.model.export.port,Int,导出模型的端口,Export model port,TRUE,TRUE
+kylin.model.multi-partition-enabled,boolean,是否开启多级分区,Whether to open a multi -level partition,TRUE,TRUE
+kylin.model.multi-partition-key-mapping-provider-class,String,多级分区 key 映射实现类,Multi -level partition Key mapping implementation class,TRUE,TRUE
+kylin.model.recommendation-page-size,Int,每页显示的优化建议数,The number of optimization suggestions displayed per page,TRUE,TRUE
+kylin.model.skip-flattable-check,boolean,保存模型时是否跳过平表检查,"When saving the model, skip the flat watch inspection",TRUE,TRUE
+kylin.model.suggest-model-sql-interval,Int,每批推荐之间等待时间，单位s,"Waiting time between each batch, unit S",TRUE,TRUE
+kylin.model.suggest-model-sql-limit,Int,导入SQL建模最大导入行数,Import the maximum import of SQL modeling,TRUE,TRUE
+kylin.monitor.cluster-crash-threshold,Double,SLA监控集群crash状态时，异常节点的比例,"When SLA monitoring cluster CRASH state, the proportion of abnormal nodes",TRUE,TRUE
+kylin.monitor.db,String,SLA监控数据存储数据库,SLA monitoring data storage database,TRUE,TRUE
+kylin.monitor.enabled,boolean,是否开启SLA监控功能,Whether to turn on the SLA monitoring function,TRUE,TRUE
+kylin.monitor.interval,Long,SLA监控数据上报周期,SLA monitoring data report cycle,TRUE,TRUE
+kylin.monitor.job-pending-error-rate,Double,SLA监控异常作业和等待作业占近一个小时所有作业的比例，用于判断构建功能是否异常,"SLA monitoring abnormal homework and waiting homework accounted for nearly an hour of all jobs, which is used to determine whether the construction function is abnormal",TRUE,TRUE
+kylin.monitor.job-pending-error-total,Long,SLA监控作业异常和等待数量，用于在作业状态变化异常时，检查构建功能是否异常,SLA monitoring operations abnormal and waiting quantity. It is used to check whether the construction function is abnormally changed when the operating state changes abnormally.,TRUE,TRUE
+kylin.monitor.job-statistic-interval,Long,SLA监控作业检查周期，默认为每个小时统计近一个小时的作业数量变化,"SLA monitoring job inspection cycle, defaults to changes in the number of homework in nearly an hour per hour",TRUE,TRUE
+kylin.monitor.replication-factor,Int,SLA监控influxdb数据存储几份，默认只存储一份数据，无备份,"SLA monitor INFLUXDB data to store several copies, and only one piece of data is stored in default without backup",TRUE,TRUE
+kylin.monitor.retention-duration,String,SLA监控influxdb数据过期周期,SLA surveillance InfluxDB data expiration cycle,TRUE,TRUE
+kylin.monitor.retention-policy,String,SLA监控influxdb数据过期策略,SLA monitor InfluxDB data expiration strategy,TRUE,TRUE
+kylin.monitor.shard-duration,String,SLA监控influxdb数据分片大小,SLA monitor INFLUXDB data shard size,TRUE,TRUE
+kylin.monitor.user-default,boolean,SLA监控influxdb数据库初始化配置，是否使用默认,"SLA monitor InfluxDB database initialization configuration, whether to use the default",TRUE,TRUE
+kylin.query.agg-computed-column-rewrite,boolean,可计算列是否可以重写,Can the calculated column be rewritten,TRUE,TRUE
+kylin.query.async-profiler-enabled,boolean,是否开启 spark 异步分析,Whether to open SPARK asynchronous analysis,TRUE,TRUE
+kylin.query.async-profiler-profile-timeout,String,spark 异步分析超时时间,spark asynchronous analysis timeout time,TRUE,TRUE
+kylin.query.async-profiler-result-timeout,String,spark 异步分析收集结果超时时间,Spark asynchronous analysis collection resultsout timeout time,TRUE,TRUE
+kylin.query.async-query.submit-hadoop-conf-dir,String,异步查询的 hadoop conf dir,Hadoop Conf Dir asynchronous query,TRUE,TRUE
+kylin.query.async.result-retain-days,String,异步查询结果保存天数,Asynchronous query results save days,TRUE,TRUE
+kylin.query.auto-model-view-enabled,boolean,是否自动开启 model as view,Whether to automatically open the model as view,TRUE,TRUE
+kylin.query.batch-get-row-acl-enabled,boolean,是否开启批量获取行列级权限,Whether to open the batch to obtain the ranks level authority,TRUE,TRUE
+kylin.query.bitmap-values-upper-bound,Int,bitmap最大返回记录数,Bitmap maximum return record number,TRUE,TRUE
+kylin.query.blacklist-enabled,boolean,是否开启 sql 黑名单,Whether to turn on SQL blacklist,TRUE,TRUE
+kylin.query.cache-enabled,boolean,是否开启查询缓存,Whether to turn on the query cache,TRUE,TRUE
+kylin.query.cache-threshold-duration,Long,单位毫秒，查询延迟小于该值的不会被缓存,"The unit in milliseconds, the query delayed less than the value will not be cached",TRUE,TRUE
+kylin.query.cache-threshold-scan-bytes,Long,单位字节，查询扫描的数据量小于该值的不会被缓存,"In the unit byte, the amount of data scanned is less than that of this value, and the value will not be cached",TRUE,TRUE
+kylin.query.cache-threshold-scan-count,Long,查询扫描的行数小于该值的不会被缓存,The number of rows of inquiry scanning is smaller than that value will not be cached,TRUE,TRUE
+kylin.query.calcite-convert-multiple-columns-in-to-or-enabled,boolean,是否开启 calcite convert-multiple-columns-in-to-or,Whether to open Calcite Convert-Multiple-Columns-in-to-OR,TRUE,TRUE
+kylin.query.calcite-in-clause-enabled,boolean,是否开启 calcite keep-in-clause,Whether to open Calcite Keep-in-Clause,TRUE,TRUE
+kylin.query.calcite.aggregate-pushdown-enabled,boolean,是否开启聚合查询下压,Whether to turn on the aggregate query downward pressure,TRUE,TRUE
+kylin.query.calcite.enumerable-rules-enabled,boolean,是否开启 calcite enumerable rules,Whether to turn on Calcite Enumerable Rules,TRUE,TRUE
+kylin.query.calcite.extras-props.conformance,String,calcite 一致性,Calcite consistency,TRUE,TRUE
+kylin.query.calcite.extras-props.quoting,String,calcite关键字引号,Calcite keyword quotation,TRUE,TRUE
+kylin.query.calcite.reduce-rules-enabled,boolean,是否开启 calcite reduce rules,Whether to open Calcite Reduce Rules,TRUE,TRUE
+kylin.query.calcite.remove-rule,String,calcite删除规则,Calcite delete rules,TRUE,TRUE
+kylin.query.cartesian-partition-num-threshold-factor,Int,计算 spark.sql.cartesianPartitionNumThreshold 值的一个乘积因子,Calculates a multiplicative factor for the spark.sql.cartesianPartitionNumThreshold value,TRUE,TRUE
+kylin.query.char-display-size-enabled,boolean,是否展示 char 类型列的大小,Whether to show the size of the Char type column,TRUE,TRUE
+kylin.query.computed-column-max-recursion-times,Int,可计算列最大嵌套层数,The maximum number of nested layers can be calculated,TRUE,TRUE
+kylin.query.convert-count-distinct-expression-enabled,boolean,是否开启转换 count distinct 类型表达式规则,Whether to turn on the conversion of the COUNT DISTITCT type expression rules,TRUE,TRUE
+kylin.query.convert-create-table-to-with,boolean,是否开启将 create table 转换为 with,Whether to turn on the converting Create Table to With,TRUE,TRUE
+kylin.query.convert-sum-expression-enabled,boolean,SUM expression功能是否开启,Whether the SUM Expression function is turned on,TRUE,TRUE
+kylin.query.engine.default-decimal-scale,Int,decimal 类型默认的 scale,Decimal type default scale,TRUE,TRUE
+kylin.query.engine.need-replace-agg,boolean,精确击中索引时跳过 aggregate,Skip Aggregate when the index is accurately hit,TRUE,TRUE
+kylin.query.engine.push-down.enable-prepare-statement-with-params,boolean,下压是否支持带参数的查询,Whether the lower pressure supports the query with parameters,TRUE,TRUE
+kylin.query.engine.run-constant-query-locally,boolean,常量计算在本地运行,Constant calculation is running locally,TRUE,TRUE
+kylin.query.engine.sparder-additional-files,String,sparder启动需要依赖的文件,SPARDER startup files that need to be dependent,TRUE,TRUE
+kylin.query.engine.sparder-additional-jars,String,sparder启动需要依赖的jar包,Sparder startup JAR package that needs to be dependent,TRUE,TRUE
+kylin.query.engine.sparder-enabled,boolean,是否启用sparder引擎,Whether to enable the Sparder engine,TRUE,TRUE
+kylin.query.engine.spark-scheduler-mode,String,spark 调度模式,spark scheduling mode,TRUE,TRUE
+kylin.query.engine.spark-sql-shuffle-partitions,Int,spark sql 中 join 或 aggregations 时的分区数,The number of partitions in spark sql when join or aggregations,TRUE,TRUE
+kylin.query.engine.split-group-sets-into-union,boolean,是否对 grouping sets 进行拆开处理,Whether the Grouping Sets is disassembled and processed,TRUE,TRUE
+kylin.query.escape-default-keyword,boolean,"Kyligence Enterprise 会自动为 default 转为""DEFAULT""。","Kyligence Enterprise will automatically convert to ""Default"" for Default.",TRUE,TRUE
+kylin.query.exception-cache-enabled,boolean,是否缓存失败的查询,Whether to cache failure query,TRUE,TRUE
+kylin.query.exception-cache-threshold-duration,Int,需要缓存异常查询的最小查询时间,The minimum query time that needs to be cached abnormal query,TRUE,TRUE
+kylin.query.exception-cache-threshold-times,Int,需要缓存异常查询的最大失败次数,The maximum failure of cache abnormal query,TRUE,TRUE
+kylin.query.fast-bitmap-enabled,boolean,精确击中索引的查询优化（查询中包含维度刚好跟选中的索引的维度一致）,The query optimization of the precise strike index (the inquiry contains the dimension of the dimension just as the dimension of the selected index),TRUE,TRUE
+kylin.query.force-limit,Int,限制查询返回结果的条数，默认不限制,"Limit query query number of returned results, default without restrictions",TRUE,TRUE
+kylin.query.heterogeneous-segment-enabled,boolean,查询支持异构segment,Query supports heterogeneous segment,TRUE,TRUE
+kylin.query.ignore-unknown-function,boolean,是否忽略未知的函数,Whether the unknown function is ignored,TRUE,TRUE
+kylin.query.implicit-computed-column-convert,boolean,是否开启隐式可计算列转换,Whether to open the hidden type can be calculated column conversion,TRUE,TRUE
+kylin.query.init-sparder-async,boolean,异步启动查询spark,Asynchronous startup query spark,TRUE,TRUE
+kylin.query.intersect.separator,String,intersect_count 分隔符,interest_count separator,TRUE,TRUE
+kylin.query.jdbc-escape-enabled,boolean,是否开启 jdbc 转义,Whether to turn on jdbc,TRUE,TRUE
+kylin.query.join-match-optimization-enabled,boolean,是否开启 join 条件优化,Whether to open the join condition optimization,TRUE,TRUE
+kylin.query.large-query-threshold,Long,查询结果集大于该值的不会被缓存,"If the query result set is greater than the value, it will not be cached",TRUE,TRUE
+kylin.query.load-counter-capacity,Int,spark负载采样队列大小,spark load sampling queue size,TRUE,TRUE
+kylin.query.load-counter-period-seconds,String,spark负载采样频率,spark load sampling frequency,TRUE,TRUE
+kylin.query.match-partial-inner-join-model,boolean,该参数默认为false ，指多表 inner join 的模型不支持回答 inner join 部分匹配的 SQL。举例如下：假设 A、B、C 为三张表，默认情况下，A inner join B 的 SQL 只能用 A inner join B 的模型或者 A inner join B left join C 的模型来回答，不能用 A inner join B inner join C 的模型来回答。若将该参数设置为 true，A inner join B 的 SQL 可以用 A inner join B 的模型或者 A inner join B left join C 来回答，也可以用 A inner join B inner join C 的模型来回答,"The parameter defaults to False, refers to the multi -table Inner Join model does not support the SQL matching Inner Join partial matching. For example: Assuming A, B, and C are three tables. By default, the SQL of A Inner Join B can only be answered with a model of A Inner Join B or a model of A Inner Join B Left Join C. Join B Inner Join C's model answers. If the parameter is set to True, the SQL of A Inner Join B can be answered with a model of A Inner Join B or A Inner Join B Left Join C.",TRUE,TRUE
+kylin.query.match-partial-non-equi-join-model,boolean,是否允许部分匹配non-equi join,Whether to partially matches Non-Equi Join,TRUE,TRUE
+kylin.query.max-dimension-count-distinct,Int,countdistinct 最多维度,countdistinct most dimensions,TRUE,TRUE
+kylin.query.memory-limit-during-collect-mb,Long,收集数据阶段 driver 端使用的最大内存,Collect the maximum memory used on the Driver stage during the data phase,TRUE,TRUE
+kylin.query.metadata.expose-computed-column,boolean,是否展示可计算列,Whether to display the calculation column,TRUE,TRUE
+kylin.query.non-equi-join-model-enabled,boolean,是否支持non equi join的模型,Whether to support Non Equi Join model,TRUE,TRUE
+kylin.query.optimized-sum-cast-double-rule-enabled,boolean,替换massage中的无脑正则sum(cast(expr as double)) -> sum(expr),Replace the regular SUM (CAST (EXPR As Double)) -> Sum (Expr) in Massage,TRUE,TRUE
+kylin.query.parser.escaped-string-literals,boolean,是否对字符中的'\'进行转义， false 不转义,"Whether the '\' in the character is transferred, FALSE is not righteous",TRUE,TRUE
+kylin.query.project-concurrent-running-threshold,Int,项目下并行查询的数量上限,The upper limit of the number of parallel queries in the project,TRUE,TRUE
+kylin.query.pushdown-enabled,boolean,是否开启下压查询,Whether to turn on a downward query,TRUE,TRUE
+kylin.query.pushdown.auto-set-shuffle-partitions-enabled,boolean,是否自动设置查询引起的partition个数,Whether to automatically set the number of partitions caused by query,TRUE,TRUE
+kylin.query.pushdown.base-shuffle-partition-size,Int,spark查询引擎的基础partition 大小，默认48Mb,"Spark query engine's basic partition size, default 48MB",TRUE,TRUE
+kylin.query.pushdown.cache-enabled,boolean,是否开启pushdown下压查询缓存,Whether to turn on the pushdown under pressure query cache,TRUE,TRUE
+kylin.query.pushdown.converter-class-names,String,下压查询的转换类,Conversion class of downward query,TRUE,TRUE
+kylin.query.pushdown.hive-extra-class-path,String,额外的hive class path,Extra Hive Class Path,TRUE,TRUE
+kylin.query.pushdown.jdbc.driver,String,配置jdbc下压的jdbc 驱动,Configure the JDBC driver under the JDBC,TRUE,TRUE
+kylin.query.pushdown.jdbc.password,String,配置jdbc下压的密码,Configure the password of the under -pressure jdbc,TRUE,TRUE
+kylin.query.pushdown.jdbc.pool-max-idle,Int,配置jdbc下压，连接池最大idle,"Configure jdbc down pressure, connect the maximum idle of the connection pool",TRUE,TRUE
+kylin.query.pushdown.jdbc.pool-max-total,Int,配置jdbc下压，连接池大小,"Configure jdbc down pressure, connect the size of the pool",TRUE,TRUE
+kylin.query.pushdown.jdbc.pool-min-idle,Int,配置jdbc下压，连接池最小idle,"Configure jdbc down pressure, connect the minimum idle of the connection pool",TRUE,TRUE
+kylin.query.pushdown.jdbc.url,String,配置jdbc下压的jdbc url,Configure JDBC URL under the jdbc,TRUE,TRUE
+kylin.query.pushdown.jdbc.username,String,配置jdbc下压的用户名,Configure the username under jdbc under pressure,TRUE,TRUE
+kylin.query.pushdown.partition-check.runner-class-name,String,检查分区列的实现,Check the implementation of the partition column,TRUE,TRUE
+kylin.query.pushdown.runner-class-name,String,下压查询实现类,Under pressure query implementation class,TRUE,TRUE
+kylin.query.query-history-download-batch-size,Int,下载查询历史的批大小,Download the batch of history,TRUE,TRUE
+kylin.query.query-history-download-max-size,Int,下载查询历史的最大条数,Download the maximum number of history,TRUE,TRUE
+kylin.query.query-history-download-timeout-seconds,String,下载查询历史的超时时间,Download the timeout of history,TRUE,TRUE
+kylin.query.query-history-stat-batch-size,Int,查询历史更新元数据的批大小,Query the batch size of the historical update metadata,TRUE,TRUE
+kylin.query.query-history-stat-interval,String,查询历史命中索引的统计 默认30分钟,Query of the statistics of the index of historical hits the default 30 minutes,TRUE,TRUE
+kylin.query.query-history-stat-update-max-size,Int,查询历史更新元数据的最大条数,Query the maximum number of historical update metadata,TRUE,TRUE
+kylin.query.query-with-execute-as,boolean,支持使用其他用户查询,Support the use of other user queries,TRUE,TRUE
+kylin.query.queryhistory.buffer-size,Int,查询历史刷入数据库前buffer大小,Query history Buffer size before the database,TRUE,TRUE
+kylin.query.queryhistory.max-size,Int,查询历史最大保留行数,Query the maximum number of history of history,TRUE,TRUE
+kylin.query.queryhistory.project-max-size,Int,单个项目查询历史最大保留行数,The maximum number of reservations for a single project inquiry history,TRUE,TRUE
+kylin.query.queryhistory.scheduler-interval,String,查询历史持久化的频率,Inquiry the frequency of historical persistence,TRUE,TRUE
+kylin.query.queryhistory.survival-time-threshold,String,查询历史数据最大有效时间,Query the maximum effective time of historical data,TRUE,TRUE
+kylin.query.read-source-with-default-parallelism,boolean,是否并行读分区,Whether to read the partition in parallel,TRUE,TRUE
+kylin.query.realization-filter,String,查询过滤器实现类,Query filter implementation class,TRUE,TRUE
+kylin.query.realization.chooser.thread-core-num,Int,选择 relization 的核心线程池大小,Choose the core thread pool of the RELIZATION,TRUE,TRUE
+kylin.query.realization.chooser.thread-max-num,Int,选择 relization 的最大线程池大小,Select the largest thread pool of Relition,TRUE,TRUE
+kylin.query.replace-count-column-with-count-star,boolean,该参数默认为false ，指在模型中设置 COUNT(column) 度量后，包含 COUNT(column) 的 SQL 语句才可以击中模型。若没有设置相应的 COUNT(column) 度量，但仍然希望在 SQL 中调用该函数，可以将该参数设置为 true，此时系统将使用 COUNT(constant) 度量来近似代替对应的 COUNT(column) 度量。 COUNT(constant) 将计算包括 Null 值的所有值。,"The parameter defaults to False, which means that after setting the count (color) measurement in the model, the SQL statement containing the count (column) can be hit to hit the model. If there is no corresponding Count (color) merge, but still want to call the function in SQL, the parameter can be set to true. At this time, the system will use the count (constant) to be approximately instead of the corresponding count (column). Count (Constant) will calculate all the values ​​of the NULL value.",TRUE,TRUE
+kylin.query.return-empty-result-on-select-star,boolean,select * 时返回空结果,SELECT * Return to the empty result,TRUE,TRUE
+kylin.query.schema-cache-enabled,boolean,是否开启schema缓存,Whether to turn on the SCHEMA cache,TRUE,TRUE
+kylin.query.security.acl-tcr-enabled,boolean,是否开启表行列权限,Whether to open the list of the table,TRUE,TRUE
+kylin.query.skip-encode-integer-enabled,boolean,整数类型跳过字典编码优化,Our integer type jump dictionary encoding optimization,TRUE,TRUE
+kylin.query.slowquery-detect-interval,Int,慢查询检测周期，默认3s,"Slow query detection cycle, default 3S",TRUE,TRUE
+kylin.query.timeout-seconds,Int,配置查询超时时长，默认5分钟,"Configuration query timeout time, 5 minutes by default",TRUE,TRUE
+kylin.query.transaction-enable,boolean,查询是否支持事务,Query whether it supports transactions,TRUE,TRUE
+kylin.query.transformers,String,查询sql转换器,Query SQL converter,TRUE,TRUE
+kylin.query.ui.proxy-location,String,spark ui 代理的根路径,The root path of Spark UI proxy,TRUE,TRUE
+kylin.query.unique-async-query-yarn-queue-enabled,boolean,是否支持异步查询是否单独队列,Whether to support asynchronous queries whether to queue alone,TRUE,TRUE
+kylin.query.use-tableindex-answer-non-raw-query,boolean,该参数默认为false ，指聚合查询只可以用聚合索引回答，若将该参数设置为 true，此时系统允许使用对应的明细索引来回答聚合查询。,"The parameter defaults to false, refers to the aggregate query that can only be answered with a polymerization index. If the parameter is set to true, the system allows the use of the corresponding detailed leaf to answer the aggregation query.",TRUE,TRUE
+kylin.query.vip-role,String,配置高优先级查询用户,Configure high priority query user,TRUE,TRUE
+kylin.ratelimit.permits-per-minutes,Long,限制某些函数调用的频率，默认每分钟10次,"Limit the frequency of some functions call, default 10 times per minute",TRUE,TRUE
+kylin.restclient.connection.default-max-per-route,Int,http请求到达指定机器的最大连接数，200/20可以有10个路由,"HTTP request to reach the maximum number of connections to the specified machine, there can be 10 routes in 200/20",TRUE,TRUE
+kylin.restclient.connection.max-total,Int,http请求连接池最大连接数,HTTP request connection pool maximum number of connections,TRUE,TRUE
+kylin.scheduler.schedule-job-timeout-minute,Int,作业超时时长，默认没有超时,"The job is timeout, and there is no timeout for default",TRUE,TRUE
+kylin.scheduler.schedule-limit-per-minute,Int,限制调度器事件处理的频率，默认每分钟10次,"Limit the frequency of processing the scheduling event, 10 times per minute by default",TRUE,TRUE
+kylin.second-storage.diag-log-matcher,String,分层存储诊断包的日志文件匹配规则,Log file matching rules for layered storage diagnostic packages,TRUE,TRUE
+kylin.second-storage.diag-max-compressed-file,Int,分层存储诊断包允许的最大压缩文件个数,The number of maximum compression files allowed by layered storage diagnostic packages,TRUE,TRUE
+kylin.second-storage.load-deduplication-window,Int,分层存储的重复数据删除窗口,Repeated data delete window for layered storage,TRUE,TRUE
+kylin.second-storage.load-retry,Int,重试次数,number of retries,TRUE,TRUE
+kylin.second-storage.load-retry-interval,Int,重试时间,Retry time,TRUE,TRUE
+kylin.second-storage.ssh-identity-path,String,分层存储的私钥路径,Private key path for layered storage,TRUE,TRUE
+kylin.security.acl.admin-role,String,将一个 LDAP 群组映射成管理员角色（大小写敏感）,Imam into a LDAP group into an administrator role (sensitivity),TRUE,TRUE
+kylin.security.allow-non-admin-generate-query-diag-package,boolean,是否允许非管理员打查询诊断包,Whether the non -administrator is allowed to query the diagnostic package,TRUE,TRUE
+kylin.security.allow-project-admin-grant-acl,boolean,是否允许每个项目中的项目管理员给用户或用户组分配表/行/列访问权限,Whether the project administrator in each project is allowed to distribute the table/row/line access permission to the user or user group,TRUE,TRUE
+kylin.security.custom.authentication-provider-class-name,String,三方认证下认证实现类,Three -party certification implementation class,TRUE,TRUE
+kylin.security.custom.authenticaton-provider-class-name,String,第三方用户认证系统集成，用于校验登录用户是否合法等,"Third -party user authentication system integration is used to verify whether the user is legal, etc.",TRUE,TRUE
+kylin.security.custom.logout-success-handler,String,第三方用户认证系统集成，用户登出成功的回调,"Third -party user authentication system integration, users log in successfully",TRUE,TRUE
+kylin.security.custom.user-group-service-class-name,String,第三方用户认证系统集成，用于返回用户组列表，返回用户组成员等,"Third -party user authentication system integration is used to return the list of user groups, return user group members, etc.",TRUE,TRUE
+kylin.security.custom.user-service-class-name,String,第三方用户认证系统集成，用于返回用户列表，检查用户是否存在，返回管理员列表等,"Third -party user authentication system integration is used to return to the user list, check whether the user exists, the list of administrators, etc.",TRUE,TRUE
+kylin.security.ldap.connection-password,String,LDAP服务器连接密码,LDAP server connection password,TRUE,TRUE
+kylin.security.ldap.connection-server,String,LDAP服务器地址,LDAP server address,TRUE,TRUE
+kylin.security.ldap.connection-username,String,LDAP服务器连接用户,LDAP server connect users,TRUE,TRUE
+kylin.security.ldap.group-identifier-attr,String,LDAP 组的唯一属性,The sole attribute of the LDAP group,TRUE,TRUE
+kylin.security.ldap.group-member-attr,String,LDAP 组成员的唯一属性,The only attribute of the LDAP group members,TRUE,TRUE
+kylin.security.ldap.group-member-search-filter,String,用于查找权限组中用户成员的规则，按照权限组名称和类型匹配,"Used to find the rules of user members in the permissions group, match the names and types of the permissions group",TRUE,TRUE
+kylin.security.ldap.group-search-filter,String,用于查找权限组的类型,The type used to find the right group,TRUE,TRUE
+kylin.security.ldap.service-group-search-base,String,LDAP 中查询组的范围,The range of the query group in LDAP,TRUE,TRUE
+kylin.security.ldap.service-search-base,String,LDAP 中服务账号的查找范围,The search range of the service account in LDAP,TRUE,TRUE
+kylin.security.ldap.service-search-pattern,String,LDAP 中服务账号的查找规则,Finding rules for service accounts in LDAP,TRUE,TRUE
+kylin.security.ldap.user-group-search-base,String,权限组的查找范围,Finding range of permissions group,TRUE,TRUE
+kylin.security.ldap.user-group-search-filter,String,LDAP 中查找用户所属权限组的规则,Find the rules of the user's permissions group in LDAP,TRUE,TRUE
+kylin.security.ldap.user-identifier-attr,String,LDAP 中用户的唯一属性,The only attribute of users in ldap,TRUE,TRUE
+kylin.security.ldap.user-search-base,String,用户的查找范围,User's search range,TRUE,TRUE
+kylin.security.ldap.user-search-filter,String,用于查找用户的类型,Used to find the type of user,TRUE,TRUE
+kylin.security.ldap.user-search-pattern,String,LDAP 中查找用户的规则,The rules of finding the user in LDAP,TRUE,TRUE
+kylin.security.profile,String,前端：用户管理不适用于当前安全配置；后端：spring安全配置,Front end: User management is not applicable to the current security configuration; back -end: Spring security configuration,TRUE,TRUE
+kylin.security.user-password-encoder,String,password加密类的实现,Password encryption class implementation,TRUE,TRUE
+kylin.server.aad-client-id,String,azure active directory 的客户端 id,Azure Active Directory client ID,TRUE,TRUE
+kylin.server.aad-tenant-id,String,azure active directory 的租户 id,Azure Active Directory's tenant ID,TRUE,TRUE
+kylin.server.aad-token-clock-skew-seconds,Int,azure active directory 的时钟偏移值,Azure Active Directory's clock offset value,TRUE,TRUE
+kylin.server.aad-username-claim,String,azure active directory 的用户名声明属性,Azure Active Directory's username declaration attribute,TRUE,TRUE
+kylin.server.auth-user-cache.expire-seconds,Int,用户信息缓存时间（秒）,User information cache time (second),TRUE,TRUE
+kylin.server.auth-user-cache.max-entries,Int,最大缓存用户数目,The maximum number of cache users,TRUE,TRUE
+kylin.server.cluster-name,String,服务发现集群名称,Service discovery cluster name,TRUE,TRUE
+kylin.server.cors.allow-all,boolean,是否允许跨域请求,Whether to allow cross -domain requests,TRUE,TRUE
+kylin.server.external-acl-provider,String,额外权限检查实现,Extra permission check implementation,TRUE,TRUE
+kylin.server.https.enable,boolean,开启 HTTPS 连接配置,Open the https connection configuration,TRUE,TRUE
+kylin.server.https.key-alias,String,密钥对的别名，可选配置项，如果没有则不需要设置,"The alias of the key pair, optional configuration item, if not, there is no need to set",TRUE,TRUE
+kylin.server.https.keystore-file,String,https证书文件所在的位置,The location of the https certificate file,TRUE,TRUE
+kylin.server.https.keystore-password,String,https 证书文件密码,https certificate file password,TRUE,TRUE
+kylin.server.https.keystore-type,String,证书的格式，目前 Tomcat 8 只支持JKS，PKCS11，PKCS12这三种格式,"The format of the certificate, currently Tomcat 8 supports JKS, PKCS11, and PKCS12.",TRUE,TRUE
+kylin.server.https.port,Int,https端口号,https port number,TRUE,TRUE
+kylin.server.leader-race.enabled,boolean,是否打开HA开关,Whether to turn on the HA switch,TRUE,TRUE
+kylin.server.leader-race.heart-beat-interval,Int,HA更新心跳频率，单位s,"HA update heartbeat frequency, unit S",TRUE,TRUE
+kylin.server.leader-race.heart-beat-timeout,Int,HA心跳超时时长，单位s,"HA's heartbeat time timeout, unit S",TRUE,TRUE
+kylin.server.mode,String,Kyligence Enterprise 实例的运行模式，参数值可以是 all 或 query 中的一个，默认值为 all。,"The running mode of the Kyligence Enterprise instance can be one of the parameter values ​​in ALL or Query, and the default value is ALL.",TRUE,TRUE
+kylin.server.renew-batch-size,Int,epoch renew批量更新一次最多更新的个数,EPOCH Renew Batch Update Most Updated Number,TRUE,TRUE
+kylin.server.renew-epoch-pool-size,Int,renew epoch 的线程池大小,Renew epoch's thread pool size,TRUE,TRUE
+kylin.server.streaming-change-meta,boolean,流式事务可以修改元数据,Streaming transactions can modify metadata data,TRUE,TRUE
+kylin.snapshot.manual-management-enabled,boolean,是否开启手动管理快照,Whether to turn on manual management snapshot,TRUE,TRUE
+kylin.snapshot.max-versions,Int,保留最近几个版本号的snapshot,Keep the last version number Snapshot,TRUE,TRUE
+kylin.snapshot.parallel-build-enabled,boolean,snapshot是否允许并发构建,Whether Snapshot allows concurrent construction,TRUE,TRUE
+kylin.snapshot.parallel-build-timeout-seconds,Int,snapshot并发构建超时时长,SNAPSHOT concurrently construct timeout,TRUE,TRUE
+kylin.snapshot.partition-build-max-thread,Int,快照分区构建的最大线程数,The maximum number of threads constructed by the snapshot partition,TRUE,TRUE
+kylin.snapshot.shard-size-mb,Int,snapshot数据块大小,Snapshot data block size,TRUE,TRUE
+kylin.snapshot.version-ttl,Long,snapshot版本号,Snapshot version number,TRUE,TRUE
+kylin.source.default,Int,配置默认数据源类型,Configure the default data source type,TRUE,TRUE
+kylin.source.hive.beeline-params,String,beeline 的参数,Beeline's parameters,TRUE,TRUE
+kylin.source.hive.client,String,hive 客户端，cli 或 beeline,"Hive client, CLI or Beeline",TRUE,TRUE
+kylin.source.hive.connection-password,String,无，代码有引用,"None, the code has reference",TRUE,TRUE
+kylin.source.hive.connection-url,String,无，代码有引用,"None, the code has reference",TRUE,TRUE
+kylin.source.hive.connection-user,String,无，代码有引用,"None, the code has reference",TRUE,TRUE
+kylin.source.hive.database-access-filter-enabled,boolean,是否开启 hive 数据库权限过滤,Whether to open the HIVE database authority filtering,TRUE,TRUE
+kylin.source.hive.default-char-precision,Int,char类型精度,CHAR type accuracy,TRUE,TRUE
+kylin.source.hive.default-decimal-precision,Int,decimal的精度,Decimal accuracy,TRUE,TRUE
+kylin.source.hive.default-decimal-scale,Int,decimal的保留几位小数点,Decimal retention several decimal points,TRUE,TRUE
+kylin.source.hive.default-varchar-precision,Int,数据类型varchar的精度,The accuracy of data type varchar,TRUE,TRUE
+kylin.source.hive.flat-table-field-delimiter,String,hive 平表属性分隔符,hive flat watch attribute separation symbol,TRUE,TRUE
+kylin.source.hive.flat-table-storage-format,String,hive 平表存储格式,Hive flat watch storage format,TRUE,TRUE
+kylin.source.hive.table-access-filter-enabled,boolean,是否开启 hive 表权限过滤,Whether to open the HIVE table permissions filtration,TRUE,TRUE
+kylin.source.jdbc.adaptor,String,jdbc 连接器类名,JDBC connector name,TRUE,TRUE
+kylin.source.jdbc.connect-retry-sleep-interval,String,jdbc 连接重试间隔时间,JDBC connection heavy test interval time,TRUE,TRUE
+kylin.source.jdbc.connect-retry-times,Int,jdbc 连接重试最大次数,JDBC connection to the maximum number,TRUE,TRUE
+kylin.source.jdbc.connection-url,String,JDBC 连接字符串,Jdbc connection string,TRUE,TRUE
+kylin.source.jdbc.connector-class-name,String,jdbc 连接类名,JDBC connection class name,TRUE,TRUE
+kylin.source.jdbc.dialect,String,JDBC 方言,JDBC dialect,TRUE,TRUE
+kylin.source.jdbc.driver,String,JDBC 驱动类名,JDBC driver category name,TRUE,TRUE
+kylin.source.jdbc.pass,String,JDBC 连接密码,Jdbc connection password,TRUE,TRUE
+kylin.source.jdbc.source.enable,boolean,是否开启 jdbc 数据源,Whether to turn on the JDBC data source,TRUE,TRUE
+kylin.source.jdbc.user,String,JDBC 连接用户名,JDBC connect user name,TRUE,TRUE
+kylin.source.kafka.poll-message-timeout-ms,String,拉取 kafka 数据超时时间,Pull Kafka dataout time timeout,TRUE,TRUE
+kylin.source.load-hive-tablename-enabled,boolean,前端：加载Hive表元数据-立即刷新按钮的展示，后端：是否支持加载Hive表,"Front end: Load the HIVE table metadata-immediately refresh the display of the button, back end: whether to support loading the Hive table",TRUE,TRUE
+kylin.source.load-hive-tablename-interval-seconds,Long,定时加载hive表信息到内存，前端可以根据列表加载对应的hive表到KE,Load the hive table information to the memory regularly. The front end can load the corresponding Hive table to KE according to the list,TRUE,TRUE
+kylin.source.name-case-sensitive-enabled,boolean,数据源列名是否敏感,Is the data source name sensitive?,TRUE,TRUE
+kylin.spark-conf.auto-prior,boolean,是否需要自动配置 spark conf,Do you need to automatically configure Spark Conf,TRUE,TRUE
+kylin.storage.columnar.dimension-range-filter-enabled,boolean,是否开启维度范围过滤,Whether to open the dimension range filter,TRUE,TRUE
+kylin.storage.columnar.expose-sharding-trait,boolean,查询时是否需要暴露数据源的特征,Do you need the characteristics of the exposure of the data source during the query,TRUE,TRUE
+kylin.storage.columnar.file-system,String,数据存储路径需指向查询集群 HDFS,Data storage paths need to point to query cluster HDFS,TRUE,TRUE
+kylin.storage.columnar.file-system.journal.embedded-enable,boolean,获取 alluxio 地址的方式，true 从配置文件，false 从 zk,"The way to acquire alluxio server address. Acquire from config if true, otherwise from zookeeper",TRUE,TRUE
+kylin.storage.columnar.hdfs-dir,String,写集群目录，默认读集群也是该目录,"Write the cluster directory, the default reading cluster is also the directory",TRUE,TRUE
+kylin.storage.columnar.partition-split-size-mb,Int,查询引擎spark作业的partition大小,PARTITION size of the engine SPARK operation,TRUE,TRUE
+kylin.storage.columnar.repartition-threshold-size-mb,Int,分区时最大文件长度,The maximum file length during partition,TRUE,TRUE
+kylin.storage.columnar.shard-countdistinct-rowcount,Long,存在countdistinct时，shard 分片时参考的行数量阈值,"When there is a counTISTINCT, the number of lines of lines reference when shad",TRUE,TRUE
+kylin.storage.columnar.shard-rowcount,Long,无countdistinct时，shard 分片时参考的行数量阈值,"When there is no countDistinct, the number of row thresholds reference when shard slices",TRUE,TRUE
+kylin.storage.columnar.shard-size-mb,Int,shard分片时参考的数据量阈值,Reference data threshold for reference when sHARD slices,TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.driver.memory,String,Spark应用程序(sparder) driver内存,Spark application (sparder) driver memory,TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.executor.cores,Int,spark conf配置，executor需要的cpu核心数量,"Spark Conf configuration, the number of CPU cores required by Executor",TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.executor.extraJavaOptions,String,Spark应用程序(sparder) executor额外java配置项,Spark application (sparder) Executor extra Java configuration item,TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.executor.instances,Int,spark conf 配置，executor的实例数量,"SPARK Conf configuration, number of Executor instances",TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.executor.memory,String,Spark应用程序(sparder) executor 处理数据用到的内存,Spark application (sparder) Executor processing data used,TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.executor.memoryOverhead,String,Spark应用程序(sparder) executor jvm本身需要用到的内存,Spark application (Sparder) Executor JVM itself needs memory itself,TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.master,String,Spark应用程序(sparder)指定执行模式,Spark application (sparder) specify execution mode,TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.shuffle.service.enabled,boolean,Spark应用程序(sparder)启用 External Shuffle Service 相关服务,Spark application (sparder) enables EXTERNAL Shuffle Service related services,TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.yarn.access.hadoopFileSystems,String,Spark应用程序(sparder)将访问的安全Hadoop文件系统,Spark application (Sparder) will be visited security Hadoop file system,TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.yarn.am.memory,String,Spark应用程序(sparder) yarn-client模式 app master内存,Spark application (Sparder) Yarn-Client mode App Master memory,TRUE,TRUE
+kylin.storage.columnar.spark-conf.spark.yarn.queue,String,Spark应用程序(sparder)的yarn队列,The Yarn queue of sparder (sparder),TRUE,TRUE
+kylin.storage.columnar.spark-env.HADOOP_CONF_DIR,String,查询集群的 HADOOP_CONF_DIR,Query the cluster of the Hadoop_conf_dir,TRUE,TRUE
+kylin.storage.default,Int,无，代码有引用,"None, the code has reference",TRUE,TRUE
+kylin.storage.default-storage-type,Int,默认存储类型,Default storage type,TRUE,TRUE
+kylin.storage.provider,String,统计对应文件系统指定目录的文件数量和大小,Statistics the number and size of the file specified by the file system specifies the directory of the file system,TRUE,TRUE
+kylin.storage.quota-in-giga-bytes,Double,每个项目存储配额，默认10T，单位G,"Each project storage quota, default 10T, unit G",TRUE,TRUE
+kylin.storage.resource-survival-time-threshold,String,时光机文件保护时间,Time machine file protection time,TRUE,TRUE
+kylin.storage.source-quota-in-giga-bytes,Double,容量计费容量大小,Capacity billing capacity,TRUE,TRUE
+kylin.storage.time-machine-enabled,boolean,时光机功能开关,Time machine function switch,TRUE,TRUE
+kylin.streaming.job-retry-enabled,boolean,是否开启流式任务重试,Whether to turn on the streaming task to try it out,TRUE,TRUE
+kylin.streaming.job-retry-interval,String,流式任务重试间隔,Streaming task heavy test interval,TRUE,TRUE
+kylin.streaming.job-retry-max-interval,String,流式任务重试最大间隔,The maximum interval of the stream task for retry,TRUE,TRUE
+kylin.streaming.job-status-watch-enabled,boolean,是否开启流式任务监控,Whether to turn on streaming task monitoring,TRUE,TRUE
+kylin.streaming.job.max-concurrent-jobs,Int,流式任务最大并行数,The maximum parallel number of streaming tasks,TRUE,TRUE
+kylin.streaming.jobstats.survival-time-threshold,String,流式任务最大保存时间,Streaming task maximum preservation time,TRUE,TRUE
+kylin.streaming.kafka-conf.maxOffsetsPerTrigger,String,单次拉取的最大偏移量,The maximum offset of a single pull,TRUE,TRUE
+kylin.streaming.watermark,String,流式任务水印,Streaming task watermark,TRUE,TRUE
+kylin.swagger.enabled,boolean,是否开启 swagger,Whether to turn on Swagger,TRUE,TRUE
+kylin.task.jstack-dump-enabled,boolean,定时dump jstack信息开关,Timing dump jstack information switch,TRUE,TRUE
+kylin.task.jstack-dump-interval-minutes,Long,dump频率，单位min,"DUMP frequency, unit min",TRUE,TRUE
+kylin.task.jstack-dump-log-files-max-count,Long,dump保留的最大文件个数,The maximum number of files retained by dump,TRUE,TRUE
+kylin.tool.clean-diag-tmp-file,boolean,是否清理 spark 临时日志,Whether to clean the spark temporary log,TRUE,TRUE
+kylin.tool.license-extractor,String,需要证提取器类名,Need to prove the name of the extractor,TRUE,TRUE
+kylin.tool.mount-spark-log-dir,String,spark 日志挂载路径,spark log lamp path,TRUE,TRUE
+kylin.tool.spark-log-extractor,String,spark 日志提取器类名,SPARK log extractor class name,TRUE,TRUE
+kylin.tool.system-profile-extractor,String,系统 profile 提取器类名,System Profile extractor class name,TRUE,TRUE
+kylin.tool.turn-on-maintainmodel-retry-times,Int,命令行打开维护模式重试次数,Command line to open the maintenance mode for retry times,TRUE,TRUE
+kylin.use.external.catalog,String,外部 catalog 类名,External catalog class name,TRUE,TRUE
+kylin.web.export-allow-admin,boolean,前端：是否显示导出CSV按钮；后端：是否允许管理员导出查询结果,Front end: Whether to display the export CSV button; back end: Whether the administrator is allowed to export the query results,TRUE,TRUE
+kylin.web.export-allow-other,boolean,是否允许非 Admin 用户导出查询结果到 CSV 文件，默认值是 true。,"Whether the non -admin user is allowed to export the query results to the CSV file, the default value is true.",TRUE,TRUE
+kylin.web.properties.whitelist,String,提供给前端使用的配置项列表,Configuration items provided to the front -end use,TRUE,TRUE
+kylin.web.session.jdbc-encode-enabled,boolean,session id存入数据库中是否加密,Session ID is encrypted into the database,TRUE,TRUE
+kylin.web.session.secure-random-create-enabled,boolean,session id存入数据库中是否加密,Session ID is encrypted into the database,TRUE,TRUE
+kylin.web.timezone,String,Kyligence Enterprise 的 REST 服务所使用的时区。默认值为本地机器的系统的时区。,The time zone used by Kyligence Enterprise's REST service. The default value is the time zone of the system of the local machine.,TRUE,TRUE
+server.port,Int,服务启动的端口,The port of the service start,TRUE,TRUE
+spring.session.store-type,String,spring session 存储类型,Spring session storage type,TRUE,TRUE
+kylin.engine.dynamic-resource-plan-enabled,boolean,在FI平台使用动态资源计划时候，有可能导致无法分配资源，从而构建失败,"When using a dynamic resource plan on the FI platform, it may lead to the failure to allocate resources and build a failure",TRUE,TRUE
+kylin.engine.spark-conf.spark.sql.adaptive.coalescePartitions.minPartitionNum,Int,此参数默认值为 Application 的 Default Parallelism，计算公式为 instance * core，设置此参数为较低值（建议为1）时，可修正由于默认值过大而造成的最终分区数量过大（产生过多tasks），进而影响到整体构建性能。,"The default value of this parameter is the Default Paullelism of Application. The calculation formula is Instance * Core. When setting this parameter to a lower value (Suggestion is 1), the number of final partitions caused by excessive default value can Tasks), which affects the overall construction performance.",TRUE,TRUE
+kylin.second-storage.node-replica,Int,分层存储节点副本数量,Number of copies of storage nodes,TRUE,TRUE
+kylin.cube.merge-segment-storage-threshold,Double,"segment合并阈值检查百分比，取值范围为[0,1]，为0时代表不执行检查逻辑","Segment merged threshold inspection percentage, the range of the value is [0,1], which is not performed by the 0 era.",TRUE,TRUE
+kylin.query.engine.clean-spark-ui-zombie-job-enabled,boolean,清理查询 spark 应用的僵尸job,Clean up the zombie job of spark application,TRUE,TRUE
+kylin.job.use-bigint-as-timestamp-for-partition-column,boolean,支持timestamp格式的bigint作为时间分区列，之前行为支持，改动后默认不支持，可以设置为true回滚为之前行为,"BIGINT supports the TimeStamp format as the time partition column. The previous behavior supports, the default is not supported after the change, it can be set to roll back as the previous behavior",TRUE,TRUE
+kylin.job.concurrency-fetch-datasource-size-enabled,boolean,是否并发获取源数据文件数量,Whether the number of data files is issued concurrently,TRUE,TRUE
+kylin.job.concurrency-fetch-datasource-size-thread_number,Int,并发获取源数据文件的并发数,Equipment to obtain the number of concurrent data files,TRUE,TRUE
+kylin.job.callback-language,String,构建回调输出错误信息的中英文切换配置,Construct a Chinese -English switching configuration with a callback output error message,TRUE,TRUE
+kylin.source.hive.add-backtick-to-hive-table-name,boolean,查询hive时是否为hive表表名加上`转义,Check whether the hive watch name is added to the hive,TRUE,TRUE
+kylin.history-server.enable,boolean,是否开启spark history 服务,Whether to turn on the Spark History service,TRUE,TRUE
+kylin.engine.snapshot.specified-spark-conf-enabled,boolean,默认关闭，开启后，未开启 snapshot 单独管理的情况下，构建 segment 过程中可以为刷新 snapshot 使用指定的 spark conf 参数 kylin.engine.snapshot.spark-conf.*,"After the default is closed, after the opening, without opening the Snapshot separate management, the design of the SPARK CONF parameter can be refreshed in the SEGMENT process.",TRUE,TRUE
+kylin.source.hive.support-special-symbol-in-hive-column,boolean,默认关闭，开启后支持hive列包含特殊字符（#@-+等等），不开启只支持数值字符-,"Turn off by default. After opening, the HIVE column contains special characters (#@-+, etc.).",TRUE,TRUE
+kylin.streaming.job-meta-retained-time,String,默认2h，实时任务hdfs元数据的保留时间，超过则会被清理,"By default 2H, the retention time of real -time task HDFS metadata will be cleaned up if it exceeds",TRUE,TRUE
+kylin.streaming.meta-scheme,String,"可选""jdbc""，表示实时任务从jdbc读取还是从Hdfs读取元数据","Optional ""JDBC"", indicating that real -time tasks are read from JDBC or from HDFS read metadata",TRUE,TRUE
+kylin.engine.cluster-manager-health-check-max-times,Int,"KC 环境中, 轮询 spark master 的次数, 默认值: 10 , 10 表示10次轮询都无法连接spark master, 即达到 120s * 10 后停止任务, -1 表示不行进行检测, 一般情况下填写非零正整数用于调整轮询次数","In the KC environment, the number of times of inquiry spark master. Under normal circumstances, fill in the non -zero -conditioned integer to adjust the number of rim inquiries """,TRUE,TRUE
+kylin.engine.cluster-manager-heal-check-interval-second,Int,"KC 环境中, 构建任务 spark driver 轮询连接 spark master 的时间间隔, 默认值 120 : 120S轮训一次, 需与 kylin.engine.cluster-manager-health-check-max-times 搭配使用, 只允许填写非零正整数, 若数值过小, 会对 spark master 造成压力","In the KC environment, the time interval between the SPARK DRIVER rotation of the Spark Driver rotate the Spark Master. The default value is 120: 120s. It needs to be used with Kylin.engine.Cluster-HEALTH-Check-Max-Times. Positive integer, if the value is too small, it will put pressure on the spark master",TRUE,TRUE
+kylin.env.log-rotate-check-cron,String,日志滚动的 cron 表达式,cron for log rotate,FALSE,TRUE
+kylin.env.log-rotate-enabled,boolean,是否开启日志滚动,whether to enable log rotate,FALSE,TRUE
+kylin.model.measure-name-check-enabled,boolean,是否校验度量名称,whether to validate measure's name,FALSE,TRUE
+kylin.security.acl.row-filter-limit-threshold,int,行级权限过滤条件的最大个数,max count for row filter values,FALSE,TRUE

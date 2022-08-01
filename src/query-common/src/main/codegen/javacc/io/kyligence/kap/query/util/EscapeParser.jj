@@ -1,0 +1,831 @@
+options {
+    IGNORE_CASE = true;
+    STATIC = false;
+    UNICODE_INPUT=true;
+}
+
+PARSER_BEGIN(EscapeParser)
+package org.apache.kylin.query.util;
+
+import java.io.StringReader;
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class EscapeParser {
+
+    private static final String CEIL_FLOOR_EXCEPTION_MSG = "%s(exp to timeunit) encounters timeunit %s, but only supports %s";
+    private static final String EXTRACT_FROM_EXCEPTION_MSG = "extract(timeunit from exp) encounters timeunit %s, but only supports %s";
+    private static final String TIMESTAMP_DIFF_ADD_EXCEPTION_MSG = "%s(timeunit, exp1, exp2) encounters timeunit %s, but only supports %s";
+    private static final String COMMA_STR = ",";
+    private static final String SPACE_STR = " ";
+    private static final char SPACE_CHAR = ' ';
+    private static final String QUOTE_STR = "'";
+    private static final ImmutableSet<String> OPERATORS = ImmutableSet.of("+", "-", "*", "/", "%", "=",
+        ">=", "<=", "!=", "<>", "||");
+
+    private EscapeDialect dialect = EscapeDialect.DEFAULT;
+
+    public static void main(String[] args) throws ParseException {
+        System.out.println("Input SQL:");
+        Scanner reader = new Scanner(System.in, Charset.defaultCharset().name());
+        String sql = reader.nextLine();
+        reader.close();
+        EscapeParser parser = new EscapeParser(new StringReader(sql));
+        String parseResult = parser.Input();
+        System.out.println("Translated SQL:");
+        System.out.println(parseResult);
+    }
+
+    public EscapeParser(EscapeDialect newDialect, String sql) {
+        this(new StringReader(sql));
+        this.dialect = newDialect;
+    }
+
+    private static String normalize(String str) {
+        if (str.equals(COMMA_STR)) {
+            str = str + SPACE_STR;
+        } else if (OPERATORS.contains(str)) {
+            str = SPACE_STR + str + SPACE_STR;
+        }
+        return str;
+    }
+
+    private static boolean needDropPreSpace(String str) {
+        return COMMA_STR.equals(str) || OPERATORS.contains(str)
+            || (StringUtils.isBlank(str) && !SPACE_STR.equals(str));
+    }
+
+    private static void appendExpression(StringBuilder sb, String innerString) {
+        if (sb.length() != 0) {
+            int last = sb.length() - 1;
+            if (sb.charAt(last) != SPACE_CHAR && innerString.startsWith(QUOTE_STR)) {
+                sb.append(SPACE_STR);
+            }
+        }
+
+        int len = sb.length();
+        if (!SPACE_STR.equals(innerString) || (len != 0 && sb.charAt(len - 1) != SPACE_CHAR)) {
+            sb.append(innerString);
+        }
+    }
+}
+
+PARSER_END(EscapeParser)
+
+<ESCAPE, FUNCTION, TIMEUNIT>
+SKIP :
+{
+  < SKIP_SPACE : <SPACE> >
+}
+
+<NILADIC>
+SKIP :
+{
+    <PAREN: ((<SPACE>)* <LPAREN> (<SPACE>)* <RPAREN>)? > : DEFAULT
+}
+
+< DEFAULT >
+TOKEN :
+{
+  < LBRACE : "{" > : ESCAPE
+| < RBRACE : "}" >
+| < RPAREN : ")" >
+| < LPAREN : "(" >
+| < COMMA : "," >
+| < SPACE : [" ", "\t","\n", "\r"] >
+| < QUOTE: "'" >
+// possible strings copied from calcite
+|
+    < BINARY_STRING_LITERAL: ["x","X"] <QUOTE> ( (~["'"]) | ("''"))* <QUOTE> >
+|
+    < QUOTED_STRING: <QUOTE> ( (~["'"]) | ("''"))* <QUOTE> >
+|
+    < PREFIXED_STRING_LITERAL: ("_" <CHARSETNAME> | "N") <QUOTED_STRING> >
+|
+    < UNICODE_STRING_LITERAL: "U" "&" <QUOTED_STRING> >
+|
+    < #CHARSETNAME: (["a"-"z","A"-"Z","0"-"9"])
+    (["a"-"z","A"-"Z","0"-"9",":",".","-","_"])*
+    >
+| < DOUBLE_QUOTE : "\"">
+| < QUOTED_IDENTIFIER: <DOUBLE_QUOTE> ( (~["\"","\n","\r"]) | ("\"\"") )+ <DOUBLE_QUOTE> >
+| < HINT_BEG: "/*" >
+| < HINT_END: "*/" >
+| < HINT: <HINT_BEG> (~["\n", "\r"])* <HINT_END> >
+| < UNSIGNED_INTEGER_LITERAL: (["0"-"9"])+ >
+| < APPROX_NUMERIC_LITERAL:(<UNSIGNED_INTEGER_LITERAL> | <DECIMAL_NUMERIC_LITERAL>) <EXPONENT> >
+| < DECIMAL_NUMERIC_LITERAL:(["0"-"9"])+(".")?(["0"-"9"])*| "."(["0"-"9"])+>
+| < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+| < DOT : "." >
+| < CEIL : "CEIL" >
+| < FLOOR : "FLOOR" >
+| < TO : "TO" >
+| < SUBSTRING : "SUBSTRING" >
+| < SUBSTR :  "SUBSTR" >
+| < FROM : "FROM" >
+| < FOR : "FOR" >
+| < CAST : "CAST" >
+| < AS : "AS" >
+| < TIMESTAMPADD : "TIMESTAMPADD" >
+| < TIMESTAMPDIFF : "TIMESTAMPDIFF" >
+| < EXTRACT : "EXTRACT" >
+| < OVERLAY : "OVERLAY" >
+| < PLACING : "PLACING" >
+| < GROUPING : "GROUPING" >
+| < SETS : "SETS" >
+| < PI : "PI" > : NILADIC
+| < ANY : (~[ "{", "}", " ", "(", ")", ",", "'", "\t", "\n", "\r", "\"", ".",
+    "=", ">", "<", "?", ":", "!", "+", "-", "*", "/", "%", "|", "^", "$" ])+ >
+}
+
+<DEFAULT> TOKEN :
+{
+    < EQ: "=" >
+|   < GT: ">" >
+|   < LT: "<" >
+|   < HOOK: "?" >
+|   < COLON: ":" >
+|   < LE: "<=" >
+|   < GE: ">=" >
+|   < NE: "<>" >
+|   < BANGEQUAL : "!=" >
+|   < NOT: "!" >
+|   < PLUS: "+" >
+|   < MINUS: "-" >
+|   < STAR: "*" >
+|   < SLASH: "/" >
+|   < MOD: "%" >
+|   < CONCAT: "||" >
+|   < VERTICAL_BAR: "|" >
+|   < CARET: "^" >
+|   < DOLLAR: "$" >
+}
+
+< ESCAPE >
+TOKEN :
+{
+  < FN : "fn" > : FUNCTION
+| < TS : "ts" > : DEFAULT
+| < D : "d" > : DEFAULT
+| < DATE : "date" > : DEFAULT
+| < T : "t" > : DEFAULT
+| < TIME : "time" > : DEFAULT
+}
+
+< FUNCTION >
+TOKEN :
+{
+  < FUNCTION_NAME : <ANY> > : DEFAULT
+}
+
+/** Root production. */
+String Input() :
+{
+    String innerString;
+    StringBuilder transformedStr = new StringBuilder();
+}
+{
+    (
+    LOOKAHEAD(2)
+    innerString = Expression()
+    {
+        if(transformedStr.length() != 0) {
+            int lastIndex = transformedStr.length() - 1;
+            if (transformedStr.charAt(lastIndex) == SPACE_CHAR && needDropPreSpace(innerString)) {
+                transformedStr.deleteCharAt(lastIndex);
+            }
+            innerString = normalize(innerString);
+        }
+        appendExpression(transformedStr, innerString);
+    }
+    )+
+    <EOF>
+    {
+        return transformedStr.toString();
+    }
+}
+
+/** Brace counting production. */
+String Expression() :
+{
+    String innerString = "";
+}
+{
+    {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new ParseException("EscapeParser is interrupted");
+        }
+    }
+    (
+        innerString = EscapeExpress()
+    | innerString = SubstringExpression()
+    | innerString = OverlayExpression()
+    | innerString = GroupingSetsExpression()
+    | innerString = TsDiffOrAddExpression()
+    | innerString = Hint()
+    | innerString = Numeric()
+    | innerString = CastExpression()
+    | innerString = ExtractExpression()
+    | innerString = CeilFloorExpress()
+    | innerString = ParenExpress()
+    | innerString = QuotedString()
+    | innerString = DoubleQuotedString()
+    | innerString = BangEqual()
+    | innerString = Comma()
+    | innerString = Space()
+    | innerString = PiFunction()
+    | innerString = Punctuation()
+    | innerString = From()
+    | innerString = For()
+    | innerString = To()
+    | innerString = As()
+    | innerString = Any()
+    )
+    {
+        return innerString;
+    }
+}
+
+String Comma() :
+{}
+{
+    < COMMA >
+    {
+        log.trace("meet token <COMMA>");
+        return getToken(0).image;
+    }
+}
+
+String Space() :
+{}
+{
+    < SPACE >
+    {
+        log.trace("meet token <SPACE>");
+        return getToken(0).image;
+    }
+}
+
+String Punctuation() :
+{}
+{
+    (<DOT> | <LE> |<GE> | <NE> | <BANGEQUAL> | <EQ> | <GT> | <LT> | <NOT> | <HOOK> | <COLON> | <PLUS>
+        | <MINUS> | <STAR> | <SLASH> | <MOD> | <CONCAT> | <CARET> | <DOLLAR> | <VERTICAL_BAR> )
+    {
+        log.trace("meet token {}", getToken(0).toString());
+        return getToken(0).image;
+    }
+}
+
+String From() :
+{}
+{
+    < FROM >
+    {
+        log.trace("met token <FROM>");
+        return getToken(0).image;
+    }
+}
+
+String For() :
+{}
+{
+    < FOR >
+    {
+        log.trace("met token <FOR>");
+        return getToken(0).image;
+    }
+}
+
+String To() :
+{}
+{
+    < TO >
+    {
+        log.trace("met token <TO>");
+        return getToken(0).image;
+    }
+}
+
+String As() :
+{}
+{
+    < AS >
+    {
+        log.trace("met token <AS>");
+        return getToken(0).image;
+    }
+}
+
+String DoubleQuotedString() :
+{}
+{
+    <QUOTED_IDENTIFIER>
+    {
+        return dialect.transformDoubleQuoteString(getToken(0).image);
+    }
+}
+
+String QuotedString() :
+{
+    String s;
+}
+{
+    <BINARY_STRING_LITERAL>
+    {
+        log.trace("meet token in <BINARY_STRING_LITERAL>: " + getToken(0).image);
+        return getToken(0).image;
+    }
+    | <QUOTED_STRING>
+    {
+        log.trace("meet token in <QUOTED_STRING>: " + getToken(0).image);
+        return getToken(0).image;
+    }
+    | <PREFIXED_STRING_LITERAL>
+    {
+        log.trace("meet token in <PREFIXED_STRING_LITERAL>: " + getToken(0).image);
+        return getToken(0).image;
+    }
+    | <UNICODE_STRING_LITERAL>
+    {
+        log.trace("meet token in <UNICODE_STRING_LITERAL>: " + getToken(0).image);
+        return getToken(0).image;
+    }
+}
+
+String Any() :
+{}
+{
+    < ANY >
+    {
+        log.trace("meet token in <ANY>: " + getToken(0).image);
+        return getToken(0).image;
+    }
+}
+
+String ParenExpress() :
+{
+    String innerString;
+    StringBuilder transformed = new StringBuilder();
+}
+{
+    < LPAREN >
+    (
+        innerString = Expression()
+        {
+        if(transformed.length() != 0) {
+            int lastIndex = transformed.length() - 1;
+            if (transformed.charAt(lastIndex) == SPACE_CHAR && needDropPreSpace(innerString)) {
+                transformed.deleteCharAt(lastIndex);
+            }
+            innerString = normalize(innerString);
+        }
+        appendExpression(transformed, innerString);
+        }
+    )*
+    < RPAREN >
+    {
+        return "(" + transformed.toString() + ")";
+    }
+}
+
+String EscapeExpress() :
+{
+    String innerString;
+}
+{
+    < LBRACE >
+    (< SPACE >)*
+    (
+        innerString = EscapeFunction()
+    |   innerString = EscapeTimestamp()
+    |   innerString = EscapeDate()
+    |   innerString = EscapeTime()
+    )
+    (< SPACE >)*
+    < RBRACE >
+    {
+        return innerString;
+    }
+}
+
+String CastExpression() :
+{
+    String function;
+    List<String> parameters = Lists.newArrayList();
+}
+{
+    <CAST>
+    {
+        function = getToken(0).image;
+    }
+    (<SPACE> )* <LPAREN> (<SPACE>)*
+    {
+        parameters.add(ParameterExpression().trim());
+    }
+    (<SPACE>)*
+    <AS>
+    {
+        parameters.add(getToken(0).image);
+    }
+    (<SPACE>)*
+    {
+        String type = dialect.transformDataType(ParameterExpression().trim());
+        parameters.add(type);
+    }
+    (< SPACE >)* <RPAREN>
+    {
+        return String.format(Locale.ROOT, "%s(%s)", function, String.join(SPACE_STR, parameters));
+    }
+}
+
+String ExtractExpression() :
+{
+    String functionName;
+    String parameter;
+    ImmutableSet<String> timeunitSet = ImmutableSet.of("YEAR", "QUARTER", "MONTH", "WEEK",
+        "DAY", "HOUR", "MINUTE", "SECOND", "DOW", "DOY");
+}
+{
+    <EXTRACT> (<SPACE> )* <LPAREN> (<SPACE> )*
+    {
+    functionName = ParameterExpression().trim();
+    if (!timeunitSet.contains(functionName.toUpperCase(Locale.ROOT))) {
+        throw new IllegalArgumentException(String.format(Locale.ROOT, EXTRACT_FROM_EXCEPTION_MSG,
+            functionName, String.join(", ", timeunitSet)));
+    }
+    if (functionName.equalsIgnoreCase("DAY")) {
+        functionName = "DAYOFMONTH";
+    } else if (functionName.equalsIgnoreCase("DOW")) {
+        functionName = "DAYOFWEEK";
+    } else if (functionName.equalsIgnoreCase("DOY")) {
+        functionName = "DAYOFYEAR";
+    }
+}
+    (<SPACE>)* <FROM> (<SPACE>)*
+    {
+        parameter = ParameterExpression().trim();
+    }
+    (< SPACE >)* <RPAREN>
+    {
+        return dialect.transformFN(functionName, new String[]{ parameter });
+    }
+}
+
+String TsDiffOrAddExpression() :
+{
+    String functionName;
+    List<String> parameters = Lists.newArrayList();
+    ImmutableSet<String> timeunitSet = ImmutableSet.of("YEAR", "QUARTER", "MONTH", "WEEK",
+       "DAY", "HOUR", "MINUTE", "SECOND", "SQL_TSI_SECOND", "SQL_TSI_MINUTE", "SQL_TSI_HOUR",
+       "SQL_TSI_DAY", "SQL_TSI_WEEK", "SQL_TSI_MONTH", "SQL_TSI_QUARTER","SQL_TSI_YEAR");
+}
+{
+    (<TIMESTAMPDIFF> | <TIMESTAMPADD>)
+    {
+        functionName = getToken(0).image;
+    }
+    (< SPACE >)* <LPAREN> (< SPACE >)*
+    {
+        String timeunit = ParameterExpression().trim();
+        if (timeunit.startsWith(QUOTE_STR) && timeunit.endsWith(QUOTE_STR) && timeunit.length() > 2) {
+            timeunit = timeunit.substring(1, timeunit.length() - 1);
+        }
+        if (!timeunitSet.contains(timeunit.toUpperCase(Locale.ROOT))) {
+            throw new IllegalStateException(String.format(Locale.ROOT, TIMESTAMP_DIFF_ADD_EXCEPTION_MSG,
+                functionName, timeunit, String.join(", ", timeunitSet)));
+        }
+        if (timeunit.toUpperCase(Locale.ROOT).startsWith("SQL_TSI_")) {
+            timeunit = timeunit.toUpperCase(Locale.ROOT).replace("SQL_TSI_", "");
+        }
+        parameters.add(dialect.transformTimeunitOfTimestampDiffOrAdd(timeunit));
+    }
+    (< SPACE >)* <COMMA> (< SPACE >)*
+    {
+        parameters.add(ParameterExpression().trim());
+    }
+    (< SPACE >)* <COMMA> (< SPACE >)*
+    {
+        parameters.add(ParameterExpression().trim());
+    }
+    (< SPACE >)* <RPAREN>
+    {
+        return dialect.transformFN(functionName, parameters.toArray(new String [ 0 ]));
+    }
+}
+
+String SubstringExpression():
+{
+    String functionName;
+    List<String> parameters = Lists.newArrayList();
+    List<String> params = Lists.newArrayList();
+}
+{
+    (< SUBSTR > | < SUBSTRING > )
+    {
+        functionName = getToken(0).image;
+    }
+    (< SPACE >)* <LPAREN> (< SPACE >)*
+    {
+       parameters.add(ParameterExpression().trim());
+    }
+    (< SPACE >)* (<FROM> | <COMMA>) (<SPACE> )*
+    {
+        parameters.add(ParameterExpression().trim());
+    }
+    (
+        (< SPACE >)* (< FOR > | <COMMA>) (< SPACE >)*
+        {
+           parameters.add(ParameterExpression().trim());
+        }
+    )?
+    (< SPACE >)* < RPAREN >
+    {
+        return dialect.transformFN(functionName, parameters.toArray(new String [ 0 ]));
+    }
+}
+
+String OverlayExpression():
+{
+    String functionName;
+    List<String> parameters = Lists.newArrayList();
+    List<String> params = Lists.newArrayList();
+}
+{
+    < OVERLAY>
+    {
+        functionName = getToken(0).image;
+    }
+    (< SPACE >)* <LPAREN> (< SPACE >)*
+    {
+       parameters.add(ParameterExpression().trim());
+    }
+    (< SPACE >)* <PLACING> (< SPACE >)*
+    {
+        parameters.add(ParameterExpression().trim());
+    }
+    (< SPACE >)* (<FROM> | <COMMA>) (<SPACE> )*
+    {
+        parameters.add(ParameterExpression().trim());
+    }
+    (
+        (< SPACE >)* (< FOR > | <COMMA>) (< SPACE >)*
+        {
+           parameters.add(ParameterExpression().trim());
+        }
+    )?
+    (< SPACE >)* < RPAREN >
+    {
+        return dialect.transformFN(functionName, parameters.toArray(new String [ 0 ]));
+    }
+}
+
+String GroupingSetsExpression() :
+{
+    String function;
+    List <String> parameters = Lists.newArrayList();
+}
+{
+    <GROUPING>
+    {
+        function = getToken(0).image;
+    }
+    (
+        (<SPACE>)*
+        <SETS>
+        {
+            log.trace("recognized grouping sets");
+            function = getToken(0).image;
+        }
+    )?
+    {
+        log.trace("recognized grouping function");
+    }
+    (<SPACE>)* <LPAREN> (< SPACE >)*
+    {
+        parameters.add(ParameterExpression().trim());
+    }
+    (
+        (< SPACE >)* <COMMA> (< SPACE >)*
+        {
+            parameters.add(ParameterExpression().trim());
+        }
+    )*
+    (<SPACE>)* <RPAREN>
+    {
+        return dialect.transformFN(function, parameters.toArray(new String [ 0 ]));
+    }
+}
+
+String CeilFloorExpress() :
+{
+     String functionName;
+     List <String> parameters = Lists.newArrayList();
+     ImmutableSet<String> timeunitSet = ImmutableSet.of("YEAR", "QUARTER", "MONTH", "WEEK",
+                           "DAY", "HOUR", "MINUTE", "SECOND");
+}
+{
+    ( < CEIL > | < FLOOR > )
+    {
+        functionName = getToken(0).image;
+    }
+    (< SPACE >)* <LPAREN> (< SPACE >)*
+    {
+       parameters.add(ParameterExpression().trim());
+    }
+    (< SPACE >)*
+    (
+        <TO> (<SPACE>)*
+        {
+            String timeUnit = ParameterExpression().trim();
+            if (!timeunitSet.contains(timeUnit.toUpperCase(Locale.ROOT))) {
+                throw new IllegalStateException(String.format(Locale.ROOT, CEIL_FLOOR_EXCEPTION_MSG,
+                    functionName, timeUnit, String.join(", ", timeunitSet)));
+            }
+            parameters.add(timeUnit);
+        }
+        (<SPACE>)*
+    )?
+    <RPAREN>
+    {
+        return dialect.transformFN(functionName, parameters.toArray(new String [ 0 ]));
+    }
+}
+
+String PiFunction() :
+{
+    String function;
+}
+{
+    <PI>
+    {
+        return dialect.transformNiladicFunction("PI");
+    }
+}
+
+String Hint():
+{}
+{
+    <HINT>
+    {
+        log.trace("meet token <HINT>");
+        return getToken(0).image;
+    }
+}
+
+String Numeric():
+{}
+{
+    (<UNSIGNED_INTEGER_LITERAL> | <DECIMAL_NUMERIC_LITERAL> | <APPROX_NUMERIC_LITERAL>)
+    {
+        log.trace("meet token <APPROX_NUMERIC_LITERAL>");
+        return getToken(0).image;
+    }
+}
+
+String EscapeFunction() :
+{
+    String functionName;
+    String param;
+    List <String> parameters = Lists.newArrayList();
+    ImmutableSet<String> tsFunctions = ImmutableSet.of("TIMESTAMPDIFF", "TIMESTAMPADD");
+}
+{
+    < FN >< FUNCTION_NAME >
+    {
+        functionName = getToken(0).image;
+    }
+    < LPAREN > (<SPACE>)*
+    (
+        param = ParameterExpression()
+        {
+            if (tsFunctions.contains(functionName.trim().toUpperCase(Locale.ROOT))) {
+                if (param.toUpperCase(Locale.ROOT).startsWith("SQL_TSI_")) {
+                    param = param.toUpperCase(Locale.ROOT).replace("SQL_TSI_", "");
+                }
+                parameters.add(dialect.transformTimeunitOfTimestampDiffOrAdd(param));
+            } else {
+                parameters.add(param);
+            }
+        }
+        (
+            < COMMA > EscapeFunctionParameter(parameters)
+        )*
+    )?
+    < RPAREN >
+    {
+        return dialect.transformFN(functionName, parameters.toArray(new String [ 0 ]));
+    }
+}
+
+void EscapeFunctionParameter(List<String> paramCollection) :
+{
+    String parameter = "";
+}
+{
+    (
+        parameter = ParameterExpression()
+    )
+    {
+        paramCollection.add(parameter.trim());
+    }
+}
+
+String ParameterExpression() :
+{
+    String innerString = "";
+    String nextString = "";
+}
+{
+    (
+        innerString = EscapeExpress()
+    | innerString = SubstringExpression()
+    | innerString = OverlayExpression()
+    | innerString = GroupingSetsExpression()
+    | innerString = CastExpression()
+    | innerString = TsDiffOrAddExpression()
+    | innerString = ExtractExpression()
+    | innerString = CeilFloorExpress()
+    | innerString = Numeric()
+    | innerString = Hint()
+    | innerString = ParenExpress()
+    | innerString = QuotedString()
+    | innerString = DoubleQuotedString()
+    | innerString = Space()
+    | innerString = PiFunction()
+    | innerString = Punctuation()
+    | innerString = Any()
+    )
+    (
+        LOOKAHEAD(2)
+        nextString = ParameterExpression()
+    )?
+    {
+        return innerString + nextString;
+    }
+}
+
+String EscapeTimestamp() :
+{
+    String timestampExpr;
+}
+{
+    < TS >
+    (< SPACE >)*
+    (
+        timestampExpr = QuotedString()
+    )
+    {
+        return "TIMESTAMP " + timestampExpr;
+    }
+}
+
+String EscapeDate() :
+{
+    String timestampExpr;
+}
+{
+    (< DATE > | <D>)
+    (< SPACE >)*
+    (
+        timestampExpr = QuotedString()
+    )
+    {
+        return "DATE " + timestampExpr;
+    }
+}
+
+String EscapeTime() :
+{
+    String timestampExpr;
+}
+{
+    (< T > | <TIME>)
+    (< SPACE >)*
+    (
+        timestampExpr = QuotedString()
+    )
+    {
+        return "TIME " + timestampExpr;
+    }
+}
+
+String BangEqual() :
+{
+}
+{
+    <BANGEQUAL>
+    {
+        return "<>";
+    }
+}

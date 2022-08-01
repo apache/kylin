@@ -1,0 +1,13 @@
+{
+  "uuid" : "9efd4d20-464f-43bd-bb2d-d286cf8606fb",
+  "version" : "2.0.0",
+  "name" : "kylin_sales_cube",
+  "status" : "DISABLED",
+  "owner" : "ADMIN",
+  "cost" : 50,
+  "segments" : [ ],
+  "last_modified" : 1486975520012,
+  "descriptor" : "kylin_sales_cube",
+  "shard_num" : 0,
+  "create_time_utc" : 1486975520009
+}

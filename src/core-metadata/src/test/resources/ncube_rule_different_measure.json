@@ -1,0 +1,296 @@
+{
+  "uuid": "84e5fd14-09ce-41bc-9364-5d8d46e6481a",
+  "last_modified": 1509531215483,
+  "version": "2.3.0.20500",
+  "description": "test_description",
+  "rule_based_index": {
+    "dimensions": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "measures": [
+      100000,
+      100001,
+      100002,
+      100003,
+      100004,
+      100005,
+      100007,
+      100008,
+      100009,
+      100010,
+      100011,
+      100012,
+      100013,
+      100014,
+      100015,
+      100016
+    ],
+    "aggregation_groups": [
+      {
+        "includes": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          13,
+          14,
+          15
+        ],
+        "measures": [
+          100000,
+          100001,
+          100002,
+          100003
+        ],
+        "select_rule": {
+          "hierarchy_dims": [
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          "mandatory_dims": [
+            0,
+            1,
+            2
+          ],
+          "joint_dims": [
+            [
+              7,
+              8
+            ],
+            [
+              9,
+              13,
+              14
+            ]
+          ]
+        }
+      },
+      {
+        "includes": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          13,
+          14,
+          15
+        ],
+        "measures": [
+          100000,
+          100001,
+          100004,
+          100005,
+          100016
+        ],
+        "select_rule": {
+          "hierarchy_dims": [
+            [
+              1,
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          "mandatory_dims": [
+            0,
+            6
+          ],
+          "joint_dims": [
+            [
+              7,
+              8
+            ],
+            [
+              9,
+              13
+            ]
+          ]
+        }
+      },
+      {
+        "includes": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          13,
+          14,
+          15
+        ],
+        "measures": [
+          100011,
+          100012,
+          100013,
+          100014
+        ],
+        "select_rule": {
+          "hierarchy_dims": [
+            [
+              4,
+              5
+            ],
+            [
+              6,
+              7
+            ]
+          ],
+          "mandatory_dims": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "joint_dims": [
+            [
+              8,
+              9
+            ],
+            [
+              13,
+              14
+            ]
+          ]
+        }
+      },
+      {
+        "includes": [
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "measures": [
+          100005,
+          100007,
+          100008
+        ],
+        "select_rule": {
+          "hierarchy_dims": [
+            [
+              16,
+              17,
+              18
+            ]
+          ],
+          "mandatory_dims": [],
+          "joint_dims": [
+            [
+              19,
+              20
+            ]
+          ]
+        }
+      },
+      {
+        "includes": [
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "measures": [
+          100000,
+          100001,
+          100002
+        ],
+        "select_rule": {
+          "hierarchy_dims": [],
+          "mandatory_dims": [
+            16
+          ],
+          "joint_dims": [
+            [
+              19,
+              20
+            ]
+          ]
+        }
+      },
+      {
+        "includes": [
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "measures": [
+          100013,
+          100014,
+          100015,
+          100016
+        ],
+        "select_rule": {
+          "hierarchy_dims": [
+            [
+              16,
+              17,
+              18
+            ]
+          ],
+          "mandatory_dims": [
+            19
+          ],
+          "joint_dims": []
+        }
+      }
+    ],
+    "storage_type": 20
+  },
+  "override_properties": {},
+  "next_aggregation_index_id": 12000,
+  "next_table_index_id": 20000000000,
+  "segment_range_start": 0,
+  "segment_range_end": 9223372036854775807,
+  "auto_merge_time_ranges": null,
+  "retention_range": 0,
+  "notify_list": null,
+  "status_need_notify": [],
+  "engine_type": 0
+}

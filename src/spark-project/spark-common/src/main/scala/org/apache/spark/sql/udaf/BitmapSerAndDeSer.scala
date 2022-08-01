@@ -1,0 +1,76 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.spark.sql.udaf
+
+import java.nio.{BufferOverflowException, ByteBuffer}
+import org.apache.spark.internal.Logging
+import org.roaringbitmap.longlong.Roaring64NavigableMap
+
+import scala.annotation.tailrec
+import scala.util.{Failure, Success, Try}
+
+
+class BitmapSerAndDeSer extends Logging {
+
+  def serialize(buffer: Roaring64NavigableMap): Array[Byte] = {
+    buffer.runOptimize()
+    serialize(buffer, 1024 * 1024)
+  }
+
+  @tailrec
+  final def serialize(buffer: Roaring64NavigableMap, capacity: Int): Array[Byte] = {
+    Try {
+      val byteBuffer = ByteBuffer.allocate(capacity)
+      buffer.serialize(byteBuffer)
+      byteBuffer.flip()
+      if( byteBuffer.limit() == byteBuffer.capacity()) {
+        byteBuffer.array()
+      } else {
+        val result = new Array[Byte](byteBuffer.limit())
+        byteBuffer.get(result, 0, byteBuffer.limit())
+        result
+      }
+    } match {
+      case Success(value) => value
+      case Failure(e: BufferOverflowException ) =>
+        logInfo(s"Resize buffer size to ${capacity * 2}")
+        serialize(buffer, capacity * 2)
+      case Failure(e) => throw e
+    }
+  }
+
+  def deserialize(bytes: Array[Byte]): Roaring64NavigableMap = {
+    val bitMap = new Roaring64NavigableMap()
+    if (bytes.nonEmpty) {
+      bitMap.deserialize(ByteBuffer.wrap(bytes))
+    }
+    bitMap
+  }
+}
+
+// TODO: remove BitmapSerAndDeSerObj and use BitmapSerAndDeSer eventually
+object BitmapSerAndDeSerObj extends  BitmapSerAndDeSer
+
+object BitmapSerAndDeSer {
+  private val serAndDeSer: ThreadLocal[BitmapSerAndDeSer] = new ThreadLocal[BitmapSerAndDeSer]() {
+    override def initialValue(): BitmapSerAndDeSer = new BitmapSerAndDeSer
+  }
+
+  def get(): BitmapSerAndDeSer = serAndDeSer.get()
+}

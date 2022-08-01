@@ -1,0 +1,35 @@
+{
+  "uuid" : "cc087b95-78b9-f3f6-ee2d-8b4bdc4fbb2b",
+  "last_modified" : 1632293787433,
+  "create_time" : 1632293787433,
+  "version" : "%default_version%",
+  "name" : "learn_kylin",
+  "owner" : "ADMIN",
+  "status" : "ENABLED",
+  "create_time_utc" : 1632293787433,
+  "default_database" : "DEFAULT",
+  "description" : "",
+  "principal" : null,
+  "keytab" : null,
+  "maintain_model_type" : "MANUAL_MAINTAIN",
+  "override_kylin_properties" : {
+    "kylin.metadata.semi-automatic-mode" : "false",
+    "kylin.query.metadata.expose-computed-column" : "true",
+    "kylin.source.default" : "9"
+  },
+  "segment_config" : {
+    "auto_merge_enabled" : false,
+    "auto_merge_time_ranges" : [ "WEEK", "MONTH", "QUARTER", "YEAR" ],
+    "volatile_range" : {
+      "volatile_range_number" : 0,
+      "volatile_range_enabled" : false,
+      "volatile_range_type" : "DAY"
+    },
+    "retention_range" : {
+      "retention_range_number" : 1,
+      "retention_range_enabled" : false,
+      "retention_range_type" : "MONTH"
+    },
+    "create_empty_segment_enabled" : false
+  }
+}

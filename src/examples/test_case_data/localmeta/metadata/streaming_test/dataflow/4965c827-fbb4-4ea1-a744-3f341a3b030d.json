@@ -1,0 +1,60 @@
+{
+  "uuid" : "4965c827-fbb4-4ea1-a744-3f341a3b030d",
+  "last_modified" : 1622215812977,
+  "create_time" : 1622186665129,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "owner" : "ADMIN",
+  "mp_values" : [ ],
+  "create_time_utc" : 1622186665129,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 3,
+  "last_query_time" : 1622190359865,
+  "layout_query_hit_count" : {
+    "0" : {
+      "1622131200000" : 2
+    },
+    "20001" : {
+      "1622131200000" : 1
+    }
+  },
+  "event_error" : false,
+  "segments" : [ {
+    "id" : "3e560d22-b749-48c3-9f64-d4230207f120",
+    "name" : "1622186700000_1622186700000",
+    "create_time_utc" : 1622186713838,
+    "status" : "READY",
+    "segRange" : {
+      "@class" : "org.apache.kylin.metadata.model.SegmentRange$KafkaOffsetPartitionedSegmentRange",
+      "source_offset_start" : 1622186700000,
+      "source_offset_end" : 1622186700000,
+      "source_partition_offset_start" : { },
+      "source_partition_offset_end" : {
+        "2" : 274506,
+        "1" : 274512,
+        "0" : 274507
+      }
+    },
+    "timeRange" : null,
+    "dimension_range_info_map" : { },
+    "parameters" : null,
+    "dictionaries" : null,
+    "snapshots" : null,
+    "last_build_time" : 0,
+    "source_count" : 0,
+    "source_bytes_size" : 135859,
+    "column_source_bytes" : { },
+    "ori_snapshot_size" : { },
+    "additionalInfo" : { },
+    "is_realtime_segment" : false,
+    "is_encoding_data_skew" : false,
+    "is_snapshot_ready" : false,
+    "is_dict_ready" : false,
+    "is_flat_table_ready" : false,
+    "is_fact_view_ready" : false,
+    "multi_partitions" : [ ],
+    "max_bucket_id" : -1
+  } ],
+  "storage_location_identifier" : null
+}

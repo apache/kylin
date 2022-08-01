@@ -1,0 +1,42 @@
+{
+  "uuid": "9a21150d-ce37-4888-b4aa-3b9a68c5fdb3",
+  "last_modified": 1644576074914,
+  "create_time": 1632409753670,
+  "version": "4.0.0.0",
+  "name": "original_project_cc_linebreak",
+  "owner": "ramesh.anaji-siddappa@ubs.com",
+  "status": "ENABLED",
+  "create_time_utc": 1632409753671,
+  "default_database": "DEFAULT",
+  "description": "Project for Coriander_PnL_Reporting",
+  "principal": null,
+  "keytab": null,
+  "maintain_model_type": "MANUAL_MAINTAIN",
+  "override_kylin_properties": {
+    "kylin.source.default": "9",
+    "kylin.metadata.semi-automatic-mode": "false",
+    "kylin.query.metadata.expose-computed-column": "true",
+    "kylin.model.multi-partition-enabled": "true",
+    "kylin.snapshot.manual-management-enabled": "true"
+  },
+  "segment_config": {
+    "auto_merge_enabled": false,
+    "auto_merge_time_ranges": [
+      "WEEK",
+      "MONTH",
+      "QUARTER",
+      "YEAR"
+    ],
+    "volatile_range": {
+      "volatile_range_number": 0,
+      "volatile_range_enabled": false,
+      "volatile_range_type": "DAY"
+    },
+    "retention_range": {
+      "retention_range_number": 1,
+      "retention_range_enabled": false,
+      "retention_range_type": "MONTH"
+    },
+    "create_empty_segment_enabled": false
+  }
+}

@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+
+<DATASOURCE_DEF NAME="SqlServer12" ID="mssql" DIALECT="mssql">
+    <PROPERTY NAME="sql.default-converted-enabled" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-no-offset" VALUE="false"/>
+    <PROPERTY NAME="sql.allow-fetch-no-rows" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-no-orderby-with-fetch" VALUE="false"/>
+    <PROPERTY NAME="sql.keyword-default-escape" VALUE="true"/>
+    <PROPERTY NAME="sql.keyword-default-uppercase" VALUE="true"/>
+
+    <!--GeoMean-->
+    <FUNCTION_DEF ID="2" EXPRESSION="EXP(AVG(LOG($0)))"/>
+    <!--Var-->
+    <FUNCTION_DEF ID="4"
+                  EXPRESSION="(CASE WHEN SUM($0- $0+1)=1 THEN 0 ELSE ((SUM($0*$0)-((SUM($0)*SUM($0))/(SUM($0- $0+1))))/(SUM($0- $0+1)-1)) END)"/>
+    <!--CurrentDate-->
+    <FUNCTION_DEF ID="5" EXPRESSION="CURRENT_TIMESTAMP"/>
+    <!--DayOfMonth-->
+    <FUNCTION_DEF ID="8" EXPRESSION="DATEPART(D, $0)"/>
+    <!--DayOfYear-->
+    <FUNCTION_DEF ID="9" EXPRESSION="DATEPART(DY, $0)"/>
+    <!--Month-->
+    <FUNCTION_DEF ID="10" EXPRESSION="MONTH($0)"/>
+    <!--Quarter-->
+    <FUNCTION_DEF ID="11" EXPRESSION="DATEPART(Q,$0)"/>
+    <!--Year-->
+    <FUNCTION_DEF ID="12" EXPRESSION="DATEPART(YY,$0)"/>
+    <!--RunningStdevP-->
+    <FUNCTION_DEF ID="23" EXPRESSION="STDEVP($0) OVER($1)"/>
+    <!--Length-->
+    <FUNCTION_DEF ID="25" EXPRESSION="LEN($0)"/>
+    <!--Trim-->
+    <FUNCTION_DEF ID="29" EXPRESSION="LTRIM(RTRIM($0))"/>
+    <!--Acosh-->
+    <FUNCTION_DEF ID="33" EXPRESSION="LOG($0+SQRT($0-1)*SQRT($0+1))"/>
+    <!--Asinh-->
+    <FUNCTION_DEF ID="35" EXPRESSION="LOG($0+SQRT(POWER($0,2)+1))"/>
+    <!--Atan2-->
+    <FUNCTION_DEF ID="37" EXPRESSION="ATN2($1, $0)"/>
+    <!--Atanh-->
+    <FUNCTION_DEF ID="38" EXPRESSION="((LOG(1+$0)-LOG(1- $0))/2)"/>
+    <!--Cosh-->
+    <FUNCTION_DEF ID="41" EXPRESSION="(EXP($0)+EXP(-$0))/2"/>
+    <!--Degrees-->
+    <FUNCTION_DEF ID="42" EXPRESSION="DEGREES(CAST($0 AS DECIMAL))"/>
+    <!--Ln-->
+    <FUNCTION_DEF ID="47" EXPRESSION="LOG($0)"/>
+    <!--Log-->
+    <FUNCTION_DEF ID="48" EXPRESSION="(LOG($0)/LOG($1))"/>
+    <!--Mod-->
+    <FUNCTION_DEF ID="50" EXPRESSION="($0-FLOOR(($0)/NULLIF($1, 0))*($1))"/>
+    <!--Quotient-->
+    <FUNCTION_DEF ID="52" EXPRESSION="CAST(($0)/NULLIF($1, 0) AS INTEGER)"/>
+    <!--Radians-->
+    <FUNCTION_DEF ID="53" EXPRESSION="RADIANS(CAST($0 AS DECIMAL))"/>
+    <!--Randbetween-->
+    <FUNCTION_DEF ID="54" EXPRESSION="(($1- $0)*RAND()+$0)"/>
+    <!--Sinh-->
+    <FUNCTION_DEF ID="57" EXPRESSION="((EXP($0) - EXP($0*(-1)))/2)"/>
+    <!--Tanh-->
+    <FUNCTION_DEF ID="60" EXPRESSION="(-1+(2/(1+EXP(-2*$0))))"/>
+    <!--InverseFisher-->
+    <FUNCTION_DEF ID="62" EXPRESSION="((EXP(2*$0)-1)/(EXP(2*$0)+1))"/>
+    <!--Daysbetween-->
+    <FUNCTION_DEF ID="64" EXPRESSION="DATEDIFF(D, $0, $1)"/>
+    <!--DateAdd-->
+    <FUNCTION_DEF ID="65" EXPRESSION="DATEADD(D, $1, $0)"/>
+    <!--AddMonths-->
+    <FUNCTION_DEF ID="66" EXPRESSION="DATEADD(M, $1, $0)"/>
+    <!--DayofWeek-->
+    <FUNCTION_DEF ID="68" EXPRESSION="DATEPART(DW, $0)"/>
+    <!--Monthsbetween-->
+    <FUNCTION_DEF ID="69" EXPRESSION="DATEDIFF(M, $0, $1)"/>
+    <!--Week-->
+    <FUNCTION_DEF ID="70" EXPRESSION="DATEPART(WW, $0)"/>
+    <!--Concat-->
+    <FUNCTION_DEF ID="73" EXPRESSION="$0 + $1"/>
+    <!--LTrim-->
+    <FUNCTION_DEF ID="76" EXPRESSION="LTRIM($0)"/>
+    <!--Position-->
+    <FUNCTION_DEF ID="77" EXPRESSION="CHARINDEX($0,$1)"/>
+    <!--RTrim-->
+    <FUNCTION_DEF ID="80" EXPRESSION="RTRIM($0)"/>
+    <!--CORRELATION -->
+    <FUNCTION_DEF ID="82" EXPRESSION="(Avg(CAST($0 as DECIMAL) * CAST($1 as DECIMAL)) - Avg(CAST($0 as DECIMAL)) * Avg(CAST($1 as DECIMAL))) / (StDevP($0) * StDevP($1))"/>
+
+    <TYPE_DEF ID="Any" EXPRESSION="ANY"/>
+
+    <TYPE_DEF ID="Integer" EXPRESSION="INTEGER"/>
+    <TYPE_DEF ID="Int" EXPRESSION="INT"/>
+    <TYPE_DEF ID="BigInt" EXPRESSION="BIGINT"/>
+    <TYPE_DEF ID="TinyInt" EXPRESSION="TINYINT"/>
+    <TYPE_DEF ID="SmallInt" EXPRESSION="SMALLINT"/>
+    <TYPE_DEF ID="Short" EXPRESSION="SMALLINT"/>
+    <TYPE_DEF ID="Long" EXPRESSION="BIGINT"/>
+
+    <TYPE_DEF ID="Numeric" EXPRESSION="NUMERIC(#p, #s)"/>
+    <TYPE_DEF ID="Decimal" EXPRESSION="DECIMAL(#p, #s)"/>
+    <TYPE_DEF ID="Real" EXPRESSION="REAL"/>
+    <TYPE_DEF ID="Double" EXPRESSION="FLOAT"/>
+    <TYPE_DEF ID="Float" EXPRESSION="FLOAT"/>
+
+    <TYPE_DEF ID="Char" EXPRESSION="CHAR(#p)"/>
+    <TYPE_DEF ID="VarChar" EXPRESSION="VARCHAR(#p)"/>
+    <TYPE_DEF ID="String" EXPRESSION="TEXT"/>
+
+    <TYPE_DEF ID="Binary" EXPRESSION="BINARY"/>
+    <TYPE_DEF ID="Byte" EXPRESSION="BIT"/>
+    <TYPE_DEF ID="Boolean" EXPRESSION="BIT"/>
+
+    <TYPE_DEF ID="Date" EXPRESSION="DATE"/>
+    <TYPE_DEF ID="Time" EXPRESSION="TIME"/>
+    <TYPE_DEF ID="DateTime" EXPRESSION="DATETIME"/>
+    <TYPE_DEF ID="TimeStamp" EXPRESSION="TIMESTAMP"/>
+</DATASOURCE_DEF>

@@ -1,0 +1,23 @@
+{
+ 
+  "uuid": "2eaca32a-a33e-4b69-83dd-0bb8b1f8c91b",
+  "name": "ssb",
+  "realizations": [
+    {
+      "name": "ssb",
+      "type": "CUBE",
+      "realization": "ssb"
+    }
+  ], 
+  "tables" : [
+    "SSB.CUSTOMER",
+    "SSB.DATES",
+    "SSB.LINEORDER",
+    "SSB.PART",
+    "SSB.SUPPLIER",
+    "SSB.P_LINEORDER"
+  ],
+  "models":[
+	"ssb"
+  ]
+}

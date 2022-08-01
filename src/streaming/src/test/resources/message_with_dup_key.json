@@ -1,0 +1,45 @@
+{
+  "createdAt": "Jul 20, 2016 9:59:17 AM",
+  "id": 755703618762862600,
+  "text": "dejamos",
+  "isTruncated": false,
+  "inReplyToStatusId": -1,
+  "inReplyToUserId": -1,
+  "favoriteCount": 0,
+  "retweetCount": 0,
+  "isPossiblySensitive": false,
+  "lang": "es",
+  "contributorsIDs": [],
+  "urlEntities": [],
+  "mediaEntities": [
+    {
+      "id": 755703584084328400,
+      "sizes": {
+        "0": {
+          "width": 150,
+          "height": 150,
+          "resize": 101
+        },
+        "1": {
+          "width": 520,
+          "height": 680,
+          "resize": 100
+        }
+      },
+      "type": "photo",
+      "start": 48,
+      "end": 71
+    }
+  ],
+  "symbolEntities": [],
+  "currentUserRetweetId": -1,
+  "user_id": 123456,
+  "user": {
+    "id": 4853763947,
+    "description": "Noticias",
+    "is_Default_Profile_Image": false,
+    "isProtected": false
+  },
+  "user_id_1": 654321,
+  "order_time": 1559735677057
+}

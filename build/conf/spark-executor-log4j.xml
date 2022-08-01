@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration name="Log4j1">
+    <Appenders>
+        <Console name="stderr" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %m%n"/>
+        </Console>
+        <ExecutorHdfsAppender name="hdfs"
+                              workingDir="${sys:kylin.hdfs.working.dir:-}"
+                              metadataId="${sys:kap.metadata.identifier:-}"
+                              category="${sys:kap.spark.category:-}"
+                              identifier="${sys:kap.spark.identifier:-}"
+                              jobName="${sys:kap.spark.jobName:-}"
+                              project="${sys:kap.spark.project:-}"
+                              rollingPeriod="5"
+                              logQueueCapacity="5000"
+                              flushInterval="5000">
+            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %m%n"/>
+        </ExecutorHdfsAppender>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="hdfs"/>
+            <AppenderRef ref="stderr"/>
+        </Root>
+    </Loggers>
+</Configuration>

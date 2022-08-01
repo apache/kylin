@@ -1,0 +1,15 @@
+{
+  "@class" : "io.kyligence.kap.event.model.PostAddCuboidEvent",
+  "uuid" : "9574fb41-bdf0-4bdb-9445-510eebdf25e9",
+  "last_modified" : 0,
+  "create_time" : 1585806630206,
+  "version" : "4.0.0.0",
+  "model_id" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+  "isGlobal" : false,
+  "params" : { },
+  "msg" : null,
+  "sequence_id" : 20,
+  "owner" : "ADMIN",
+  "runTimes" : 0,
+  "job_id" : "cd27acf6-8c2a-42a6-890c-bf813c665ef3"
+}

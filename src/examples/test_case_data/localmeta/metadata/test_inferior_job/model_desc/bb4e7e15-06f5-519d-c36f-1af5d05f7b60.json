@@ -1,0 +1,1128 @@
+{
+  "uuid" : "bb4e7e15-06f5-519d-c36f-1af5d05f7b60",
+  "last_modified" : 1649659451555,
+  "create_time" : 1649659450752,
+  "version" : "4.0.0.0",
+  "alias" : "YPB200C1000WYYYYMM_inferior",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "YPB200C1000WYYYYMM.A1",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "A1.YEAR_MONTH",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyyMM",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "B019",
+    "column" : "A1.B019",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "B007",
+    "column" : "A1.B007",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "E004",
+    "column" : "A1.E004",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "E016",
+    "column" : "A1.E016",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "DATE",
+    "column" : "A1.DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "A002",
+    "column" : "A1.A002",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "A014",
+    "column" : "A1.A014",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "F009",
+    "column" : "A1.F009",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "H002",
+    "column" : "A1.H002",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "H014",
+    "column" : "A1.H014",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "I006",
+    "column" : "A1.I006"
+  }, {
+    "id" : 11,
+    "name" : "I018",
+    "column" : "A1.I018"
+  }, {
+    "id" : 12,
+    "name" : "D012",
+    "column" : "A1.D012",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "B008",
+    "column" : "A1.B008",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "E003",
+    "column" : "A1.E003",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "C020",
+    "column" : "A1.C020",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "E015",
+    "column" : "A1.E015",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "G010",
+    "column" : "A1.G010",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 18,
+    "name" : "J009",
+    "column" : "A1.J009"
+  }, {
+    "id" : 19,
+    "name" : "A013",
+    "column" : "A1.A013",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 20,
+    "name" : "A001",
+    "column" : "A1.A001",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 21,
+    "name" : "H013",
+    "column" : "A1.H013",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 22,
+    "name" : "I005",
+    "column" : "A1.I005"
+  }, {
+    "id" : 23,
+    "name" : "I017",
+    "column" : "A1.I017"
+  }, {
+    "id" : 24,
+    "name" : "H001",
+    "column" : "A1.H001",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 25,
+    "name" : "D011",
+    "column" : "A1.D011",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 26,
+    "name" : "B009",
+    "column" : "A1.B009",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 27,
+    "name" : "E006",
+    "column" : "A1.E006",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 28,
+    "name" : "E018",
+    "column" : "A1.E018",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 29,
+    "name" : "J008",
+    "column" : "A1.J008"
+  }, {
+    "id" : 30,
+    "name" : "A012",
+    "column" : "A1.A012",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 31,
+    "name" : "F019",
+    "column" : "A1.F019",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 32,
+    "name" : "F007",
+    "column" : "A1.F007",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 33,
+    "name" : "I004",
+    "column" : "A1.I004"
+  }, {
+    "id" : 34,
+    "name" : "I016",
+    "column" : "A1.I016"
+  }, {
+    "id" : 35,
+    "name" : "H012",
+    "column" : "A1.H012",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 36,
+    "name" : "D002",
+    "column" : "A1.D002",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 37,
+    "name" : "D014",
+    "column" : "A1.D014",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 38,
+    "name" : "E005",
+    "column" : "A1.E005",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 39,
+    "name" : "E017",
+    "column" : "A1.E017",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 40,
+    "name" : "J019",
+    "column" : "A1.J019"
+  }, {
+    "id" : 41,
+    "name" : "A011",
+    "column" : "A1.A011",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 42,
+    "name" : "J007",
+    "column" : "A1.J007"
+  }, {
+    "id" : 43,
+    "name" : "C010",
+    "column" : "A1.C010",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 44,
+    "name" : "G020",
+    "column" : "A1.G020",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 45,
+    "name" : "YEAR_MONTH",
+    "column" : "A1.YEAR_MONTH",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 46,
+    "name" : "F008",
+    "column" : "A1.F008",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 47,
+    "name" : "I003",
+    "column" : "A1.I003"
+  }, {
+    "id" : 48,
+    "name" : "I015",
+    "column" : "A1.I015"
+  }, {
+    "id" : 49,
+    "name" : "H011",
+    "column" : "A1.H011",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 50,
+    "name" : "D013",
+    "column" : "A1.D013",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 51,
+    "name" : "D001",
+    "column" : "A1.D001",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 52,
+    "name" : "J010",
+    "column" : "A1.J010"
+  }, {
+    "id" : 53,
+    "name" : "E008",
+    "column" : "A1.E008",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 54,
+    "name" : "G001",
+    "column" : "A1.G001",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 55,
+    "name" : "A010",
+    "column" : "A1.A010",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 56,
+    "name" : "G013",
+    "column" : "A1.G013",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 57,
+    "name" : "C011",
+    "column" : "A1.C011",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 58,
+    "name" : "H006",
+    "column" : "A1.H006",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 59,
+    "name" : "H018",
+    "column" : "A1.H018",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 60,
+    "name" : "D004",
+    "column" : "A1.D004",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 61,
+    "name" : "D016",
+    "column" : "A1.D016",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 62,
+    "name" : "G014",
+    "column" : "A1.G014",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 63,
+    "name" : "E007",
+    "column" : "A1.E007",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 64,
+    "name" : "E019",
+    "column" : "A1.E019",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 65,
+    "name" : "G002",
+    "column" : "A1.G002",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 66,
+    "name" : "ACI_YEAR_MONTH",
+    "column" : "A1.ACI_YEAR_MONTH",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 67,
+    "name" : "C012",
+    "column" : "A1.C012",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 68,
+    "name" : "H017",
+    "column" : "A1.H017",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 69,
+    "name" : "H005",
+    "column" : "A1.H005",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 70,
+    "name" : "B020",
+    "column" : "A1.B020",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 71,
+    "name" : "D015",
+    "column" : "A1.D015",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 72,
+    "name" : "I009",
+    "column" : "A1.I009"
+  }, {
+    "id" : 73,
+    "name" : "D003",
+    "column" : "A1.D003",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 74,
+    "name" : "F010",
+    "column" : "A1.F010",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 75,
+    "name" : "J020",
+    "column" : "A1.J020"
+  }, {
+    "id" : 76,
+    "name" : "A020",
+    "column" : "A1.A020",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 77,
+    "name" : "G011",
+    "column" : "A1.G011",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 78,
+    "name" : "C001",
+    "column" : "A1.C001",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 79,
+    "name" : "C013",
+    "column" : "A1.C013",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 80,
+    "name" : "H004",
+    "column" : "A1.H004",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 81,
+    "name" : "H016",
+    "column" : "A1.H016",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 82,
+    "name" : "D006",
+    "column" : "A1.D006",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 83,
+    "name" : "D018",
+    "column" : "A1.D018",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 84,
+    "name" : "I008",
+    "column" : "A1.I008"
+  }, {
+    "id" : 85,
+    "name" : "YEAR",
+    "column" : "A1.YEAR",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 86,
+    "name" : "C014",
+    "column" : "A1.C014",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 87,
+    "name" : "G012",
+    "column" : "A1.G012",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 88,
+    "name" : "C002",
+    "column" : "A1.C002",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 89,
+    "name" : "H015",
+    "column" : "A1.H015",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 90,
+    "name" : "TIMESTAMP",
+    "column" : "A1.TIMESTAMP",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 91,
+    "name" : "D017",
+    "column" : "A1.D017",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 92,
+    "name" : "E009",
+    "column" : "A1.E009",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 93,
+    "name" : "H003",
+    "column" : "A1.H003",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 94,
+    "name" : "I007",
+    "column" : "A1.I007"
+  }, {
+    "id" : 95,
+    "name" : "B010",
+    "column" : "A1.B010",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 96,
+    "name" : "D005",
+    "column" : "A1.D005",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 97,
+    "name" : "I019",
+    "column" : "A1.I019"
+  }, {
+    "id" : 98,
+    "name" : "F020",
+    "column" : "A1.F020",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 99,
+    "name" : "D008",
+    "column" : "A1.D008",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 100,
+    "name" : "G005",
+    "column" : "A1.G005",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 101,
+    "name" : "J002",
+    "column" : "A1.J002"
+  }, {
+    "id" : 102,
+    "name" : "G017",
+    "column" : "A1.G017",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 103,
+    "name" : "J014",
+    "column" : "A1.J014"
+  }, {
+    "id" : 104,
+    "name" : "C003",
+    "column" : "A1.C003",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 105,
+    "name" : "C015",
+    "column" : "A1.C015",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 106,
+    "name" : "E020",
+    "column" : "A1.E020",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 107,
+    "name" : "F013",
+    "column" : "A1.F013",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 108,
+    "name" : "I010",
+    "column" : "A1.I010"
+  }, {
+    "id" : 109,
+    "name" : "B011",
+    "column" : "A1.B011",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 110,
+    "name" : "F001",
+    "column" : "A1.F001",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 111,
+    "name" : "ACI_DATE",
+    "column" : "A1.ACI_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 112,
+    "name" : "G018",
+    "column" : "A1.G018",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 113,
+    "name" : "J001",
+    "column" : "A1.J001"
+  }, {
+    "id" : 114,
+    "name" : "D019",
+    "column" : "A1.D019",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 115,
+    "name" : "J013",
+    "column" : "A1.J013"
+  }, {
+    "id" : 116,
+    "name" : "G006",
+    "column" : "A1.G006",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 117,
+    "name" : "C004",
+    "column" : "A1.C004",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 118,
+    "name" : "C016",
+    "column" : "A1.C016",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 119,
+    "name" : "F002",
+    "column" : "A1.F002",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 120,
+    "name" : "F014",
+    "column" : "A1.F014",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 121,
+    "name" : "H009",
+    "column" : "A1.H009",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 122,
+    "name" : "A009",
+    "column" : "A1.A009",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 123,
+    "name" : "B012",
+    "column" : "A1.B012",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 124,
+    "name" : "D007",
+    "column" : "A1.D007",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 125,
+    "name" : "J012",
+    "column" : "A1.J012"
+  }, {
+    "id" : 126,
+    "name" : "G003",
+    "column" : "A1.G003",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 127,
+    "name" : "G015",
+    "column" : "A1.G015",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 128,
+    "name" : "C005",
+    "column" : "A1.C005",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 129,
+    "name" : "C017",
+    "column" : "A1.C017",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 130,
+    "name" : "E010",
+    "column" : "A1.E010",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 131,
+    "name" : "I020",
+    "column" : "A1.I020"
+  }, {
+    "id" : 132,
+    "name" : "A008",
+    "column" : "A1.A008",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 133,
+    "name" : "H008",
+    "column" : "A1.H008",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 134,
+    "name" : "B001",
+    "column" : "A1.B001",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 135,
+    "name" : "F011",
+    "column" : "A1.F011",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 136,
+    "name" : "B013",
+    "column" : "A1.B013",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 137,
+    "name" : "J011",
+    "column" : "A1.J011"
+  }, {
+    "id" : 138,
+    "name" : "G004",
+    "column" : "A1.G004",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 139,
+    "name" : "G016",
+    "column" : "A1.G016",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 140,
+    "name" : "D009",
+    "column" : "A1.D009",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 141,
+    "name" : "C006",
+    "column" : "A1.C006",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 142,
+    "name" : "A019",
+    "column" : "A1.A019",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 143,
+    "name" : "H019",
+    "column" : "A1.H019",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 144,
+    "name" : "A007",
+    "column" : "A1.A007",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 145,
+    "name" : "C018",
+    "column" : "A1.C018",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 146,
+    "name" : "H007",
+    "column" : "A1.H007",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 147,
+    "name" : "F012",
+    "column" : "A1.F012",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 148,
+    "name" : "B002",
+    "column" : "A1.B002",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 149,
+    "name" : "B014",
+    "column" : "A1.B014",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 150,
+    "name" : "E012",
+    "column" : "A1.E012",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 151,
+    "name" : "G009",
+    "column" : "A1.G009",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 152,
+    "name" : "ACI_START_DATE",
+    "column" : "A1.ACI_START_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 153,
+    "name" : "J006",
+    "column" : "A1.J006"
+  }, {
+    "id" : 154,
+    "name" : "J018",
+    "column" : "A1.J018"
+  }, {
+    "id" : 155,
+    "name" : "A006",
+    "column" : "A1.A006",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 156,
+    "name" : "D020",
+    "column" : "A1.D020",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 157,
+    "name" : "F005",
+    "column" : "A1.F005",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 158,
+    "name" : "A018",
+    "column" : "A1.A018",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 159,
+    "name" : "C007",
+    "column" : "A1.C007",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 160,
+    "name" : "C019",
+    "column" : "A1.C019",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 161,
+    "name" : "I002",
+    "column" : "A1.I002"
+  }, {
+    "id" : 162,
+    "name" : "F017",
+    "column" : "A1.F017",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 163,
+    "name" : "I014",
+    "column" : "A1.I014"
+  }, {
+    "id" : 164,
+    "name" : "B015",
+    "column" : "A1.B015",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 165,
+    "name" : "H010",
+    "column" : "A1.H010",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 166,
+    "name" : "B003",
+    "column" : "A1.B003",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 167,
+    "name" : "J005",
+    "column" : "A1.J005"
+  }, {
+    "id" : 168,
+    "name" : "J017",
+    "column" : "A1.J017"
+  }, {
+    "id" : 169,
+    "name" : "E011",
+    "column" : "A1.E011",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 170,
+    "name" : "A017",
+    "column" : "A1.A017",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 171,
+    "name" : "A005",
+    "column" : "A1.A005",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 172,
+    "name" : "I001",
+    "column" : "A1.I001"
+  }, {
+    "id" : 173,
+    "name" : "C008",
+    "column" : "A1.C008",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 174,
+    "name" : "I013",
+    "column" : "A1.I013"
+  }, {
+    "id" : 175,
+    "name" : "F006",
+    "column" : "A1.F006",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 176,
+    "name" : "F018",
+    "column" : "A1.F018",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 177,
+    "name" : "B004",
+    "column" : "A1.B004",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 178,
+    "name" : "B016",
+    "column" : "A1.B016",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 179,
+    "name" : "G007",
+    "column" : "A1.G007",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 180,
+    "name" : "E002",
+    "column" : "A1.E002",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 181,
+    "name" : "G019",
+    "column" : "A1.G019",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 182,
+    "name" : "B017",
+    "column" : "A1.B017",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 183,
+    "name" : "E014",
+    "column" : "A1.E014",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 184,
+    "name" : "J004",
+    "column" : "A1.J004"
+  }, {
+    "id" : 185,
+    "name" : "J016",
+    "column" : "A1.J016"
+  }, {
+    "id" : 186,
+    "name" : "A004",
+    "column" : "A1.A004",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 187,
+    "name" : "F015",
+    "column" : "A1.F015",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 188,
+    "name" : "A016",
+    "column" : "A1.A016",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 189,
+    "name" : "D010",
+    "column" : "A1.D010",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 190,
+    "name" : "F003",
+    "column" : "A1.F003",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 191,
+    "name" : "I012",
+    "column" : "A1.I012"
+  }, {
+    "id" : 192,
+    "name" : "C009",
+    "column" : "A1.C009",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 193,
+    "name" : "H020",
+    "column" : "A1.H020",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 194,
+    "name" : "B005",
+    "column" : "A1.B005",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 195,
+    "name" : "E001",
+    "column" : "A1.E001",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 196,
+    "name" : "E013",
+    "column" : "A1.E013",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 197,
+    "name" : "G008",
+    "column" : "A1.G008",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 198,
+    "name" : "B006",
+    "column" : "A1.B006",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 199,
+    "name" : "B018",
+    "column" : "A1.B018",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 200,
+    "name" : "J015",
+    "column" : "A1.J015"
+  }, {
+    "id" : 201,
+    "name" : "J003",
+    "column" : "A1.J003"
+  }, {
+    "id" : 202,
+    "name" : "A015",
+    "column" : "A1.A015",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 203,
+    "name" : "A003",
+    "column" : "A1.A003",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 204,
+    "name" : "F004",
+    "column" : "A1.F004",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 205,
+    "name" : "F016",
+    "column" : "A1.F016",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 206,
+    "name" : "I011",
+    "column" : "A1.I011"
+  }, {
+    "id" : 207,
+    "name" : "MONTH",
+    "column" : "A1.MONTH",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "J020_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "A1.J020"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "J020_MIN",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "A1.J020"
+      } ],
+      "returntype" : "integer"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100002,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "J020_MAX",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "A1.J020"
+      } ],
+      "returntype" : "integer"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100003,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "J020_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "A1.J020"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100004,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "computed_columns" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "A1" : {
+        "x" : 456.2222205268012,
+        "y" : 162.55555894639758,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null
+}

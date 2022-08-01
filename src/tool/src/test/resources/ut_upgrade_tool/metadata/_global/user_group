@@ -1,0 +1,12 @@
+{
+    "groups":[
+        "ALL_USERS",
+        "ROLE_ADMIN",
+        "ROLE_ANALYST",
+        "ROLE_MODELER"
+    ],
+    "uuid":"0e721230-0e32-49dd-a868-58bb21573d02",
+    "last_modified":0,
+    "create_time":1597907150258,
+    "version":"4.0.0.0"
+}

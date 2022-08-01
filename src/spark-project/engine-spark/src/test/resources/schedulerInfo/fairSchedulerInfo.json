@@ -1,0 +1,225 @@
+{
+  "scheduler": {
+    "schedulerInfo": {
+      "type": "fairScheduler",
+      "rootQueue": {
+        "maxApps": 2147483647,
+        "minResources": {
+          "memory": 0,
+          "vCores": 0
+        },
+        "maxResources": {
+          "memory": 185988,
+          "vCores": 128
+        },
+        "usedResources": {
+          "memory": 55296,
+          "vCores": 45
+        },
+        "steadyFairResources": {
+          "memory": 185988,
+          "vCores": 128
+        },
+        "fairResources": {
+          "memory": 185988,
+          "vCores": 128
+        },
+        "clusterResources": {
+          "memory": 185988,
+          "vCores": 128
+        },
+        "pendingContainers": 29,
+        "allocatedContainers": 13,
+        "reservedContainers": 0,
+        "queueName": "root",
+        "schedulingPolicy": "DRF",
+        "childQueues": {
+          "queue": [
+            {
+              "type": "fairSchedulerLeafQueueInfo",
+              "maxApps": 2147483647,
+              "minResources": {
+                "memory": 0,
+                "vCores": 0
+              },
+              "maxResources": {
+                "memory": 185988,
+                "vCores": 128
+              },
+              "usedResources": {
+                "memory": 0,
+                "vCores": 0
+              },
+              "steadyFairResources": {
+                "memory": 18,
+                "vCores": 0
+              },
+              "fairResources": {
+                "memory": 0,
+                "vCores": 0
+              },
+              "clusterResources": {
+                "memory": 185988,
+                "vCores": 128
+              },
+              "pendingContainers": 0,
+              "allocatedContainers": 0,
+              "reservedContainers": 0,
+              "queueName": "root.default",
+              "schedulingPolicy": "DRF",
+              "preemptable": true,
+              "numPendingApps": 0,
+              "numActiveApps": 0
+            },
+            {
+              "maxApps": 2147483647,
+              "minResources": {
+                "memory": 0,
+                "vCores": 0
+              },
+              "maxResources": {
+                "memory": 185988,
+                "vCores": 128
+              },
+              "usedResources": {
+                "memory": 55296,
+                "vCores": 45
+              },
+              "steadyFairResources": {
+                "memory": 185970,
+                "vCores": 128
+              },
+              "fairResources": {
+                "memory": 185988,
+                "vCores": 128
+              },
+              "clusterResources": {
+                "memory": 185988,
+                "vCores": 128
+              },
+              "pendingContainers": 29,
+              "allocatedContainers": 13,
+              "reservedContainers": 0,
+              "queueName": "root.users",
+              "schedulingPolicy": "DRF",
+              "childQueues": {
+                "queue": [
+                  {
+                    "type": "fairSchedulerLeafQueueInfo",
+                    "maxApps": 2147483647,
+                    "minResources": {
+                      "memory": 55296,
+                      "vCores": 36
+                    },
+                    "maxResources": {
+                      "memory": 74752,
+                      "vCores": 48
+                    },
+                    "usedResources": {
+                      "memory": 0,
+                      "vCores": 0
+                    },
+                    "steadyFairResources": {
+                      "memory": 74752,
+                      "vCores": 48
+                    },
+                    "fairResources": {
+                      "memory": 0,
+                      "vCores": 0
+                    },
+                    "clusterResources": {
+                      "memory": 185988,
+                      "vCores": 128
+                    },
+                    "pendingContainers": 0,
+                    "allocatedContainers": 0,
+                    "reservedContainers": 0,
+                    "queueName": "root.users.kylin",
+                    "schedulingPolicy": "DRF",
+                    "preemptable": true,
+                    "numPendingApps": 0,
+                    "numActiveApps": 0
+                  },
+                  {
+                    "type": "fairSchedulerLeafQueueInfo",
+                    "maxApps": 2147483647,
+                    "minResources": {
+                      "memory": 18432,
+                      "vCores": 12
+                    },
+                    "maxResources": {
+                      "memory": 36864,
+                      "vCores": 24
+                    },
+                    "usedResources": {
+                      "memory": 22528,
+                      "vCores": 21
+                    },
+                    "steadyFairResources": {
+                      "memory": 36864,
+                      "vCores": 24
+                    },
+                    "fairResources": {
+                      "memory": 36864,
+                      "vCores": 24
+                    },
+                    "clusterResources": {
+                      "memory": 185988,
+                      "vCores": 128
+                    },
+                    "pendingContainers": 0,
+                    "allocatedContainers": 5,
+                    "reservedContainers": 0,
+                    "queueName": "root.users.dogfood",
+                    "schedulingPolicy": "DRF",
+                    "preemptable": true,
+                    "numPendingApps": 0,
+                    "numActiveApps": 1
+                  },
+                  {
+                    "type": "fairSchedulerLeafQueueInfo",
+                    "maxApps": 2147483647,
+                    "minResources": {
+                      "memory": 18432,
+                      "vCores": 12
+                    },
+                    "maxResources": {
+                      "memory": 36864,
+                      "vCores": 24
+                    },
+                    "usedResources": {
+                      "memory": 32768,
+                      "vCores": 24
+                    },
+                    "steadyFairResources": {
+                      "memory": 36864,
+                      "vCores": 24
+                    },
+                    "fairResources": {
+                      "memory": 36864,
+                      "vCores": 24
+                    },
+                    "clusterResources": {
+                      "memory": 185988,
+                      "vCores": 128
+                    },
+                    "pendingContainers": 29,
+                    "allocatedContainers": 8,
+                    "reservedContainers": 0,
+                    "queueName": "root.users.root",
+                    "schedulingPolicy": "DRF",
+                    "preemptable": true,
+                    "numPendingApps": 18,
+                    "numActiveApps": 4
+                  }
+                ]
+              },
+              "preemptable": true
+            }
+          ]
+        },
+        "preemptable": true
+      }
+    }
+  }
+}

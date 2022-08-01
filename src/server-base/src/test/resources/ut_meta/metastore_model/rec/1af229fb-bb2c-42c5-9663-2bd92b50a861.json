@@ -1,0 +1,165 @@
+[ {
+  "id" : 1,
+  "project" : "default",
+  "modelID" : "1af229fb-bb2c-42c5-9663-2bd92b50a861",
+  "uniqueFlag" : "tmp_1611120761911_1",
+  "semanticVersion" : 0,
+  "type" : "COMPUTED_COLUMN",
+  "recEntity" : {
+    "id" : 0,
+    "create_time" : 1611120762208,
+    "unique_content" : "`P_LINEORDER`.`LO_LINENUMBER` + 1",
+    "uuid" : "tmp_1611120761911_1",
+    "cc" : {
+      "tableIdentity" : "SSB.P_LINEORDER",
+      "tableAlias" : "P_LINEORDER",
+      "columnName" : "CC_AUTO__1611120761911_1",
+      "expression" : "\"P_LINEORDER\".\"LO_LINENUMBER\" + 1",
+      "innerExpression" : "`P_LINEORDER`.`LO_LINENUMBER` + 1",
+      "datatype" : "BIGINT",
+      "comment" : "Auto suggested from: \"P_LINEORDER\".\"LO_LINENUMBER\" + 1",
+      "rec_uuid" : "tmp_1611120761911_1"
+    }
+  },
+  "state" : "INITIAL",
+  "createTime" : 1611120762208,
+  "updateTime" : 1611120762208,
+  "dependIDs" : [ 1 ],
+  "layoutMetric" : null,
+  "hitCount" : 0,
+  "cost" : 0.0,
+  "totalLatencyOfLastDay" : 0.0,
+  "totalTime" : 0.0,
+  "maxTime" : 0.0,
+  "minTime" : 0.0,
+  "queryHistoryInfo" : null,
+  "recSource" : null,
+  "reservedField2" : null,
+  "reservedField3" : null
+}, {
+  "id" : 2,
+  "project" : "default",
+  "modelID" : "1af229fb-bb2c-42c5-9663-2bd92b50a861",
+  "uniqueFlag" : "dimension_50d79dc7-f359-40da-b83d-9ce3a2c703b9",
+  "semanticVersion" : 0,
+  "type" : "DIMENSION",
+  "recEntity" : {
+    "id" : 0,
+    "create_time" : 1611120762331,
+    "unique_content" : "P_LINEORDER$16",
+    "uuid" : "dimension_50d79dc7-f359-40da-b83d-9ce3a2c703b9",
+    "column" : {
+      "id" : 0,
+      "name" : "LO_SHIPMODE",
+      "column" : "P_LINEORDER.LO_SHIPMODE",
+      "status" : "DIMENSION"
+    },
+    "data_type" : "varchar(4096)"
+  },
+  "state" : "INITIAL",
+  "createTime" : 1611120762331,
+  "updateTime" : 1611120762331,
+  "dependIDs" : [ 0 ],
+  "layoutMetric" : null,
+  "hitCount" : 0,
+  "cost" : 0.0,
+  "totalLatencyOfLastDay" : 0.0,
+  "totalTime" : 0.0,
+  "maxTime" : 0.0,
+  "minTime" : 0.0,
+  "queryHistoryInfo" : null,
+  "recSource" : null,
+  "reservedField2" : null,
+  "reservedField3" : null
+}, {
+  "id" : 3,
+  "project" : "default",
+  "modelID" : "1af229fb-bb2c-42c5-9663-2bd92b50a861",
+  "uniqueFlag" : "measure_21f75d82-f285-4002-961b-41adcc62260a",
+  "semanticVersion" : 0,
+  "type" : "MEASURE",
+  "recEntity" : {
+    "id" : 0,
+    "create_time" : 1611120762329,
+    "unique_content" : "SUM__tmp_1611120761911_1",
+    "uuid" : "measure_21f75d82-f285-4002-961b-41adcc62260a",
+    "measure" : {
+      "name" : "SUM_P_LINEORDER_CC_AUTO__1611120761911_1",
+      "function" : {
+        "expression" : "SUM",
+        "parameters" : [ {
+          "type" : "column",
+          "value" : "P_LINEORDER.CC_AUTO__1611120761911_1"
+        } ],
+        "returntype" : "bigint"
+      },
+      "id" : 100001
+    },
+    "param_order" : null
+  },
+  "state" : "INITIAL",
+  "createTime" : 1611120762329,
+  "updateTime" : 1611120762329,
+  "dependIDs" : [ -1 ],
+  "layoutMetric" : null,
+  "hitCount" : 0,
+  "cost" : 0.0,
+  "totalLatencyOfLastDay" : 0.0,
+  "totalTime" : 0.0,
+  "maxTime" : 0.0,
+  "minTime" : 0.0,
+  "queryHistoryInfo" : null,
+  "recSource" : null,
+  "reservedField2" : null,
+  "reservedField3" : null
+}, {
+  "id" : 4,
+  "project" : "default",
+  "modelID" : "1af229fb-bb2c-42c5-9663-2bd92b50a861",
+  "uniqueFlag" : "64ca9f45-c8eb-42e0-affd-5e1c92d68eae",
+  "semanticVersion" : 0,
+  "type" : "ADDITIONAL_LAYOUT",
+  "recEntity" : {
+    "id" : 0,
+    "create_time" : 1611120762377,
+    "unique_content" : null,
+    "uuid" : "64ca9f45-c8eb-42e0-affd-5e1c92d68eae",
+    "layout" : {
+      "id" : 10001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ -2, 100000, -3 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1611120762367,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    },
+    "is_agg" : true
+  },
+  "state" : "RECOMMENDED",
+  "createTime" : 1611120762377,
+  "updateTime" : 1611120763169,
+  "dependIDs" : [ -2, 100000, -3 ],
+  "layoutMetric" : {
+    "frequencyMap" : {
+      "1611072000000" : 1
+    },
+    "latencyMap" : {
+      "1611072000000" : 6498
+    }
+  },
+  "hitCount" : 1,
+  "cost" : 0.0,
+  "totalLatencyOfLastDay" : 0.0,
+  "totalTime" : 6498.0,
+  "maxTime" : 6498.0,
+  "minTime" : 6498.0,
+  "queryHistoryInfo" : null,
+  "recSource" : "QUERY_HISTORY",
+  "reservedField2" : null,
+  "reservedField3" : null
+} ]

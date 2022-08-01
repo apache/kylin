@@ -1,0 +1,41 @@
+{
+  "uuid" : "db94d30e-a5d4-4e49-a909-15ec2eaa348e",
+  "last_modified" : 0,
+  "create_time" : 1585557546095,
+  "version" : "4.0.0.0",
+  "name" : "KYLIN_ACCOUNT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ACCOUNT_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "ACCOUNT_BUYER_LEVEL",
+    "datatype" : "integer",
+    "comment" : "Account Buyer Level"
+  }, {
+    "id" : "3",
+    "name" : "ACCOUNT_SELLER_LEVEL",
+    "datatype" : "integer",
+    "comment" : "Account Seller Level"
+  }, {
+    "id" : "4",
+    "name" : "ACCOUNT_COUNTRY",
+    "datatype" : "varchar(4096)",
+    "comment" : "Account Country"
+  }, {
+    "id" : "5",
+    "name" : "ACCOUNT_CONTACT",
+    "datatype" : "varchar(4096)",
+    "comment" : "Account Contact Info"
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT"
+}

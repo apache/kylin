@@ -1,0 +1,179 @@
+version: "3.8"
+
+services:
+  namenode:
+    image: kyligence/hadoop:2.10.1
+    container_name: namenode
+    hostname: namenode
+    volumes:
+      - ./data/namenode:/hadoop/dfs/name
+    environment:
+      HADOOP_MODE: "namenode"
+      CLUSTER_NAME: "sandbox"
+    env_file:
+      - hadoop.env
+    networks:
+      - sandbox_cluster
+    ports:
+      - 8020:8020
+      - 50070:50070
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:50070/ || exit 1" ]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+
+  datanode:
+    image: kyligence/hadoop:2.10.1
+    container_name: datanode
+    hostname: datanode
+    volumes:
+      - ./data/datanode:/hadoop/dfs/data
+    environment:
+      HADOOP_MODE: "datanode"
+      SERVICE_PRECONDITION: "namenode:50070"
+    env_file:
+      - hadoop.env
+    networks:
+      - sandbox_cluster
+    ports:
+      - 50010:50010
+      - 50075:50075
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:50075/ || exit 1" ]
+      interval: 30s
+      timeout: 30s
+      retries: 4
+  resourcemanager:
+    image: kyligence/hadoop:2.10.1
+    container_name: resourcemanager
+    hostname: resourcemanager
+    environment:
+      HADOOP_MODE: "resourcemanager"
+      SERVICE_PRECONDITION: "namenode:50070 datanode:50075"
+    env_file:
+      - hadoop.env
+    networks:
+      - sandbox_cluster
+    ports:
+      - 8030:8030
+      - 8050:8050
+      - 8088:8088
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8088/ || exit 1" ]
+      interval: 30s
+      timeout: 30s
+      retries: 4
+  nodemanager:
+    image: kyligence/hadoop:2.10.1
+    container_name: nodemanager
+    hostname: nodemanager
+    environment:
+      HADOOP_MODE: "nodemanager"
+      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 resourcemanager:8088"
+    env_file:
+      - hadoop.env
+    networks:
+      - sandbox_cluster
+    ports:
+      - 8042:8042
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8042/ || exit 1" ]
+      interval: 30s
+      timeout: 30s
+      retries: 4
+  historyserver:
+    image: kyligence/hadoop:2.10.1
+    container_name: historyserver
+    hostname: historyserver
+    volumes:
+      - ./data/historyserver:/hadoop/yarn/timeline #
+    environment:
+      HADOOP_MODE: "historyserver"
+      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 resourcemanager:8088 nodemanager:8042"
+    env_file:
+      - hadoop.env
+    networks:
+      - sandbox_cluster
+    ports:
+      - 8188:8188
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8188/ || exit 1" ]
+      interval: 30s
+      timeout: 30s
+      retries: 4
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    hostname: mysql
+    restart: always
+    command: --lower_case_table_names=1
+    environment:
+      MYSQL_ROOT_PASSWORD: 'root'
+    networks:
+      - sandbox_cluster
+    ports:
+      - 3306:3306
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+  hivemetastore:
+    image: kyligence/hive:hadoop_2.10.1_hive_1.2.2
+    container_name: hivemetastore
+    hostname: hivemetastore
+    env_file:
+      - hadoop.env
+      - hive.env
+    environment:
+      SERVICE_PRECONDITION: "namenode:50070 mysql:3306"
+      MYSQL_METASTORE_USER: root
+      MYSQL_METASTORE_HOST: mysql
+      MYSQL_METASTORE_PORT: 3306
+      MYSQL_METASTORE_PWD: root
+      MYSQL_METASTORE_DB: hive
+    networks:
+      - sandbox_cluster
+    ports:
+      - 9083:9083
+  hiveserver:
+    image: kyligence/hive:hadoop_2.10.1_hive_1.2.2
+    container_name: hiveserver
+    hostname: hiveserver
+    env_file:
+      - hadoop.env
+      - hive.env
+    command: /opt/hive/bin/hiveserver2 --hiveconf hive.server2.enable.doAs=false
+    environment:
+      SERVICE_PRECONDITION: "namenode:50070 hivemetastore:9083"
+    networks:
+      - sandbox_cluster
+    ports:
+      - 10000:10000
+      - 7070:7070
+  zookeeper:
+    image: zookeeper:3.6
+    container_name: zookeeper
+    hostname: zookeeper
+    networks:
+      - sandbox_cluster
+    ports:
+      - 2181:2181
+
+#  kafka:
+#    image: bitnami/kafka:2.7.0
+#    container_name: kafka
+#    hostname: kafka
+#    volumes:
+#      - ./data/kafka:/bitnami/kafka
+#    environment:
+#      - KAFKA_BROKER_ID=1
+#      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+#      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+#      - ALLOW_PLAINTEXT_LISTENER=yes
+#    networks:
+#      - sandbox_cluster
+#    ports:
+#      - 9092:9092
+
+networks:
+  sandbox_cluster:

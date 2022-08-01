@@ -1,0 +1,59 @@
+{
+  "uuid" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+  "last_modified" : 1585806452783,
+  "create_time" : 1585806237247,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "owner" : "ADMIN",
+  "mp_values" : [ ],
+  "create_time_utc" : 1585806237247,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "event_error" : false,
+  "segments" : [ {
+    "id" : "7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b",
+    "name" : "FULL_BUILD",
+    "create_time_utc" : 1585806237249,
+    "status" : "READY",
+    "segRange" : {
+      "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+      "date_range_start" : 0,
+      "date_range_end" : 9223372036854775807
+    },
+    "timeRange" : null,
+    "parameters" : null,
+    "dictionaries" : null,
+    "snapshots" : {
+      "SSB.CUSTOMER" : "version40/table_snapshot/SSB.CUSTOMER/2fc34b79-6838-4518-bbf6-521ffa5999aa",
+      "SSB.SUPPLIER" : "version40/table_snapshot/SSB.SUPPLIER/85987586-cf05-483c-8779-7f9ce5f27254"
+    },
+    "last_build_time" : 1585806446439,
+    "source_count" : -1,
+    "source_bytes_size" : 5688888,
+    "additionalInfo" : { },
+    "is_encoding_data_skew" : false
+  }, {
+    "id" : "196443b7-19ab-4201-878f-79f421ff7a0c",
+    "name" : "FULL_BUILD",
+    "create_time_utc" : 1585806635612,
+    "status" : "NEW",
+    "segRange" : {
+      "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+      "date_range_start" : 0,
+      "date_range_end" : 9223372036854775807
+    },
+    "timeRange" : null,
+    "parameters" : null,
+    "dictionaries" : null,
+    "snapshots" : null,
+    "last_build_time" : 0,
+    "source_count" : -1,
+    "source_bytes_size" : -1,
+    "additionalInfo" : { },
+    "is_encoding_data_skew" : false
+  } ],
+  "storage_location_identifier" : null
+}

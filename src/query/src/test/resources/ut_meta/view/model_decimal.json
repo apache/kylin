@@ -1,0 +1,91 @@
+{
+  "uuid": "48da21a0-ee2f-4cd7-a95d-97978a17bc54",
+  "last_modified": 1630304181627,
+  "create_time": 1630304181567,
+  "version": "4.0.0.0",
+  "alias": "model_decimal",
+  "owner": "ADMIN",
+  "config_last_modifier": null,
+  "config_last_modified": 0,
+  "description": "",
+  "fact_table": "DEFAULT.TEST_DECIMAL",
+  "fact_table_alias": null,
+  "management_type": "MODEL_BASED",
+  "join_tables": [],
+  "partition_desc": null,
+  "capacity": "MEDIUM",
+  "segment_config": {
+    "auto_merge_enabled": null,
+    "auto_merge_time_ranges": null,
+    "volatile_range": null,
+    "retention_range": null,
+    "create_empty_segment_enabled": false
+  },
+  "data_check_desc": null,
+  "semantic_version": 0,
+  "storage_type": 0,
+  "model_type": "BATCH",
+  "all_named_columns": [
+    {
+      "id": 0,
+      "name": "ORDER_ID",
+      "column": "TEST_DECIMAL.ORDER_ID",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 1,
+      "name": "PRICE",
+      "column": "TEST_DECIMAL.PRICE"
+    }
+  ],
+  "all_measures": [
+    {
+      "name": "COUNT_ALL",
+      "function": {
+        "expression": "COUNT",
+        "parameters": [
+          {
+            "type": "constant",
+            "value": "1"
+          }
+        ],
+        "returntype": "bigint"
+      },
+      "column": null,
+      "comment": null,
+      "id": 100000
+    },
+    {
+      "name": "sum_price",
+      "function": {
+        "expression": "SUM",
+        "parameters": [
+          {
+            "type": "column",
+            "value": "TEST_DECIMAL.PRICE"
+          }
+        ],
+        "returntype": "decimal(35,6)"
+      },
+      "column": "PRICE",
+      "comment": null,
+      "id": 100001
+    }
+  ],
+  "recommendations_count": 0,
+  "computed_columns": [],
+  "canvas": {
+    "coordinate": {
+      "LINEORDER": {
+        "x": 395.7777743869358,
+        "y": 123.66666836208769,
+        "width": 220,
+        "height": 200
+      }
+    },
+    "zoom": 9
+  },
+  "multi_partition_desc": null,
+  "multi_partition_key_mapping": null,
+  "fusion_id": null
+}

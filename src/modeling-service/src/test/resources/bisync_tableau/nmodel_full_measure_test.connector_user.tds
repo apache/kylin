@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<datasource formatted-name="federated.0e6gjbn18cj0a41an9pi309itkyi" inline="true" source-platform="win" version="10.0">
+  <connection class="federated">
+    <named-connections>
+      <named-connection caption="localhost" name="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf">
+        <connection class="kyligence_odbc" dbname="default" odbc-connect-string-extras="PROJECT=default;CUBE=nmodel_full_measure_test" port="8080" schema="DEFAULT" server="localhost" username="ADMIN"/>
+      </named-connection>
+    </named-connections>
+    <relation join="left" type="join">
+      <clause type="join">
+        <expression op="=">
+          <expression op="[TEST_MEASURE].[ID1]"/>
+          <expression op="[TEST_MEASURE1].[ID1]"/>
+        </expression>
+      </clause>
+      <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_MEASURE" table="[DEFAULT].[TEST_MEASURE]"/>
+      <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_MEASURE1" table="[DEFAULT].[TEST_MEASURE1]"/>
+    </relation>
+    <cols>
+      <map key="[ID3]" value="[TEST_MEASURE].[ID3]"/>
+      <map key="[ID2]" value="[TEST_MEASURE].[ID2]"/>
+      <map key="[ID1 (TEST_MEASURE1)]" value="[TEST_MEASURE1].[ID1]"/>
+      <map key="[ID1 (TEST_MEASURE)]" value="[TEST_MEASURE].[ID1]"/>
+      <map key="[NAME3]" value="[TEST_MEASURE1].[NAME3]"/>
+      <map key="[NAME1]" value="[TEST_MEASURE1].[NAME1]"/>
+      <map key="[NAME2]" value="[TEST_MEASURE1].[NAME2]"/>
+    </cols>
+  </connection>
+  <aliases enabled="yes"/>
+  <column caption="ID3" datatype="integer" name="[ID3]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="ID2" datatype="integer" name="[ID2]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="ID1-2" datatype="integer" name="[ID1 (TEST_MEASURE1)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="ID1" datatype="integer" name="[ID1 (TEST_MEASURE)]" role="dimension" type="ordinal"/>
+  <column caption="NAME3" datatype="string" name="[NAME3]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="NAME1" datatype="string" name="[NAME1]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="NAME2" datatype="string" name="[NAME2]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="COUNT_STAR" datatype="integer" name="[COUNT_STAR]" role="measure" type="quantitative">
+    <calculation class="tableau" formula="COUNT(*)"/>
+  </column>
+  <column caption="SUM_1" datatype="integer" name="[SUM_1]" role="measure" type="quantitative">
+    <calculation class="tableau" formula="SUM(1)"/>
+  </column>
+  <column caption="SUM_2" datatype="real" name="[SUM_2]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="SUM(1.0)"/>
+  </column>
+  <column caption="SUM_3" datatype="real" name="[SUM_3]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="SUM(1.0)"/>
+  </column>
+  <drill-paths/>
+  <semantic-values>
+    <semantic-value key="[Country].[Name]" value="&quot;美国&quot;"/>
+  </semantic-values>
+</datasource>

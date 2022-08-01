@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration name="Log4j1">
+    <Appenders>
+        <RollingFile name="file" fileName="${env:KYLIN_HOME}/logs/guardian.log" append="true"
+                     filePattern="${env:KYLIN_HOME}/logs/guardian.log.%i">
+            <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c{2} : %m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="268435456"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+        <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="file"/>
+        </Root>
+        <Logger name="org.apache.kylin.ext" level="INFO"/>
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.springframework.security" level="INFO"/>
+        <Logger name="io.kyligence" level="INFO"/>
+        <Logger name="org.apache.kylin" level="INFO"/>
+    </Loggers>
+</Configuration>

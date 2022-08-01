@@ -1,0 +1,27 @@
+{
+  "uuid" : "7c9489b3-f5ae-42e7-8cb4-2611a5b2e9fc",
+  "last_modified" : 0,
+  "create_time" : 1585557546105,
+  "version" : "4.0.0.0",
+  "table_name" : "DEFAULT.KYLIN_CAL_DT",
+  "last_build_job_id" : null,
+  "frequency" : 0,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : 0,
+  "total_rows" : 0,
+  "mapper_rows" : [ ],
+  "data_source_properties" : {
+    "owner" : "root",
+    "create_time" : "1535362736000",
+    "total_file_size" : "0",
+    "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+    "location" : "hdfs://hdp26.hadoop.com:8020/apps/hive/warehouse/kylin_cal_dt",
+    "partition_column" : "",
+    "total_file_number" : "0",
+    "last_access_time" : "0"
+  },
+  "loading_range" : [ ],
+  "col_stats_path" : null
+}

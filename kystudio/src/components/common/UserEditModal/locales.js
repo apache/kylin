@@ -1,0 +1,33 @@
+export default {
+  'en': {
+    addUser: 'Add User',
+    editRole: 'Edit Role',
+    resetPassword: 'Change Password',
+    username: 'Username',
+    password: 'Password',
+    oldPassword: 'Current Password',
+    newPassword: 'Password',
+    confirmNewPassword: 'Confirm Password',
+    role: 'Role',
+    admin: 'Administrator',
+    user: 'User',
+    userGroupFilter: 'Search by user group name',
+    willCheckGroup: 'Candidates',
+    checkedGroup: 'Selected',
+    usernameEmpty: 'Please enter a username',
+    passwordEmpty: 'Please enter a password',
+    passwordLength: 'The password must contain at least 8 characters. Please re-enter.',
+    passwordConfirm: 'The password confirmation doesn\'t match.',
+    ok: 'OK',
+    cancel: 'Cancel',
+    groupMembership: 'Assign to Group',
+    passwordValid1: 'Contains at least 1 number',
+    passwordValid2: 'Contains at least 1 letter',
+    passwordValid3: 'Contains at least 1 symbol (~!@#$%^&*(){}|:"<>?[];\',./`)',
+    passwordValid4: 'Contains at least 8 characters',
+    usernamePld: 'Not support Chinese, nor special symbols (/:\\*?"<>|\')',
+    saveUserSuccess: 'Added the user successfully.',
+    updateUserOrGroupSuccess: 'Adjusted the assigned users and user groups successfully.',
+    updateUserSuccess: 'Updated the user successfully'
+  }
+}

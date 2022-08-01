@@ -1,0 +1,12 @@
+{
+  "uuid" : "4965c827-fbb4-4ea1-a744-3f341a3b030d",
+  "last_modified" : 0,
+  "create_time" : 1622186665125,
+  "version" : "4.0.0.0",
+  "project" : "streaming_test",
+  "alias" : null,
+  "model_mapping" : {
+    "4965c827-fbb4-4ea1-a744-3f341a3b030d" : null,
+    "cd2b9a23-699c-4699-b0dd-38c9412b3dfd" : { }
+  }
+}

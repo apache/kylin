@@ -1,0 +1,15 @@
+{
+  "uuid" : "141d7ce8-f292-44e0-b9fe-49e82c7e0c8a",
+  "last_modified" : 0,
+  "create_time" : 1618825403593,
+  "version" : "4.0.0.0",
+  "database" : "DEFAULT",
+  "name" : "SSB_TOPIC",
+  "project" : "streaming_test",
+  "kafka_bootstrap_servers" : "localhost:19092",
+  "subscribe" : "ssb-topic",
+  "starting_offsets" : "earliest",
+  "has_shadow_table" : false,
+  "hive_table_identity" : "",
+  "parser_name" : "org.apache.kylin.parser.TimedJsonStreamParser"
+}

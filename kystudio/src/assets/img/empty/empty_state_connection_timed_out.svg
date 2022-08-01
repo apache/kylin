@@ -1,0 +1,36 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle opacity="0.6" cx="50.0002" cy="50" r="42" fill="url(#paint0_linear)"/>
+<mask id="mask0" mask-type="alpha" maskUnits="userSpaceOnUse" x="8" y="8" width="85" height="84">
+<circle cx="50.0002" cy="50" r="42" fill="#F0F8FF"/>
+</mask>
+<g mask="url(#mask0)">
+<rect x="47.5605" y="6.55994" width="8.14" height="91.02" rx="0.74" fill="#CEE6FD"/>
+<path d="M46.0806 36.1599C46.0806 35.3425 46.7432 34.6799 47.5606 34.6799H55.7006C56.5179 34.6799 57.1806 35.3426 57.1806 36.1599V50.9599C57.1806 51.3686 56.8493 51.6999 56.4406 51.6999H46.8206C46.4119 51.6999 46.0806 51.3686 46.0806 50.9599V36.1599Z" fill="#9DCEFB"/>
+<path d="M56.9127 51.4954C57.0357 51.2494 56.8568 50.96 56.5817 50.96L46.6791 50.96C46.404 50.96 46.2251 51.2494 46.3482 51.4954L46.7182 52.2354C46.7808 52.3608 46.9089 52.44 47.0491 52.44L56.2117 52.44C56.3519 52.44 56.48 52.3608 56.5427 52.2354L56.9127 51.4954Z" fill="#2492F7"/>
+<rect opacity="0.3" width="8.14" height="1.48" transform="matrix(1 0 0 -1 47.5605 30.2399)" fill="#9DCEFB"/>
+<rect opacity="0.3" width="8.14" height="1.48" transform="matrix(1 0 0 -1 47.5605 53.9199)" fill="#9DCEFB"/>
+<rect opacity="0.3" width="8.14" height="1.48" transform="matrix(1 0 0 -1 47.5605 18.3999)" fill="#9DCEFB"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M9.11798 39.3141C0.27555 40.4324 -8.17164 39.6531 -13.2712 38.5838L-12.9675 37.1353C-8.01181 38.1744 0.269352 38.9414 8.93228 37.8458C17.6017 36.7493 26.5613 33.7999 32.982 27.4921L34.0192 28.5478C27.2766 35.172 17.9539 38.1966 9.11798 39.3141Z" fill="#2492F7"/>
+</g>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M74.2595 69.1946C70.5078 60.378 67.9104 47.3207 67.9104 28.7599H69.3904C69.3904 47.1991 71.9731 60.0417 75.6214 68.6151C79.273 77.1964 83.9565 81.4285 88.1244 82.8179L87.6564 84.2219C82.9444 82.6512 78.008 78.0034 74.2595 69.1946Z" fill="#2492F7"/>
+<path d="M90.1105 81.6699L89.0005 75.3799" stroke="#2492F7" stroke-width="1.48"/>
+<path d="M92.936 82.7798L97.376 79.0798" stroke="#2492F7" stroke-width="1.48"/>
+<path d="M93 85.7398L97.4331 89.0699" stroke="#2492F7" stroke-width="1.48"/>
+<path d="M86.7804 91.66L89.7406 86.5594" stroke="#2492F7" stroke-width="1.48"/>
+<rect x="73.4604" y="13.9598" width="2.96" height="43.66" rx="0.74" transform="rotate(90 73.4604 13.9598)" fill="#CEE6FD"/>
+<rect x="32.7605" y="10.2599" width="2.22" height="3.7" fill="#0867BF"/>
+<rect x="31.2805" y="8.03992" width="5.18" height="4.44" rx="0.74" fill="#2492F7"/>
+<rect x="68.2805" y="10.2599" width="2.22" height="3.7" fill="#0867BF"/>
+<rect x="66.8005" y="8.03992" width="5.18" height="4.44" rx="0.74" fill="#2492F7"/>
+<rect x="73.4604" y="25.7999" width="2.96" height="43.66" rx="0.74" transform="rotate(90 73.4604 25.7999)" fill="#CEE6FD"/>
+<rect x="32.7605" y="22.0999" width="2.22" height="3.7" fill="#0867BF"/>
+<rect x="31.2805" y="19.8799" width="5.18" height="4.44" rx="0.74" fill="#2492F7"/>
+<rect x="68.2805" y="22.0999" width="2.22" height="3.7" fill="#0867BF"/>
+<rect x="66.8005" y="19.8799" width="5.18" height="4.44" rx="0.74" fill="#2492F7"/>
+<defs>
+<linearGradient id="paint0_linear" x1="50.0002" y1="8" x2="50.0002" y2="92" gradientUnits="userSpaceOnUse">
+<stop stop-color="#F0F8FF"/>
+<stop offset="1" stop-color="#F2F9FF"/>
+</linearGradient>
+</defs>
+</svg>

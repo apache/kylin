@@ -1,0 +1,8 @@
+{
+  "date format not match": "KE-030001003",
+  "java.lang.OutOfMemoryError": "KE-030001004",
+  "No space left on device": "KE-030001005",
+  "java.lang.ClassNotFoundException": "KE-030001006",
+  "Can't get Kerberos realm": "KE-030001007",
+  "Unable connect spark master to reach timeout maximum time": "KE-030001009"
+}

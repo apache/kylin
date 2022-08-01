@@ -1,0 +1,32 @@
+{
+  "uuid" : "0547958f-37e0-440c-b6b4-ba79db5d07f5",
+  "last_modified" : 1585557396286,
+  "create_time" : 1585557396286,
+  "version" : "4.0.0.0",
+  "name" : "rename_project_2",
+  "owner" : "rename_user_1",
+  "status" : "ENABLED",
+  "create_time_utc" : 1585557396286,
+  "default_database" : "DEFAULT",
+  "description" : "",
+  "maintain_model_type" : "MANUAL_MAINTAIN",
+  "override_kylin_properties" : {
+    "kap.metadata.semi-automatic-mode" : "true",
+    "kap.query.metadata.expose-computed-column" : "true",
+    "kylin.source.default" : "9"
+  },
+  "segment_config" : {
+    "auto_merge_enabled" : true,
+    "auto_merge_time_ranges" : [ "WEEK", "MONTH", "QUARTER", "YEAR" ],
+    "volatile_range" : {
+      "volatile_range_number" : 0,
+      "volatile_range_enabled" : false,
+      "volatile_range_type" : "DAY"
+    },
+    "retention_range" : {
+      "retention_range_number" : 1,
+      "retention_range_enabled" : false,
+      "retention_range_type" : "MONTH"
+    }
+  }
+}

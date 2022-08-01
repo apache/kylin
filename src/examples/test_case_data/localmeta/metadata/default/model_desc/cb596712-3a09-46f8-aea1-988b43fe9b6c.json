@@ -1,0 +1,368 @@
+{
+  "uuid": "cb596712-3a09-46f8-aea1-988b43fe9b6c",
+  "alias": "nmodel_full_measure_test",
+  "fact_table": "DEFAULT.TEST_MEASURE",
+  "owner": "ADMIN",
+  "join_tables": [
+    {
+      "table": "DEFAULT.TEST_MEASURE1",
+      "join": {
+        "type": "LEFT",
+        "primary_key": [
+          "TEST_MEASURE1.ID1"
+        ],
+        "foreign_key": [
+          "TEST_MEASURE.ID1"
+        ]
+      }
+    }
+  ],
+  "all_named_columns": [
+    {
+      "id": "1",
+      "name": "ID1",
+      "column": "TEST_MEASURE.ID1",
+      "status": "DIMENSION"
+    },
+    {
+      "id": "2",
+      "name": "ID2",
+      "column": "TEST_MEASURE.ID2"
+    },
+    {
+      "id": "3",
+      "name": "ID3",
+      "column": "TEST_MEASURE.ID3"
+    },
+    {
+      "id": "4",
+      "name": "ID4",
+      "column": "TEST_MEASURE.ID4"
+    },
+    {
+      "id": "5",
+      "name": "PRICE1",
+      "column": "TEST_MEASURE.PRICE1"
+    },
+    {
+      "id": "6",
+      "name": "PRICE2",
+      "column": "TEST_MEASURE.PRICE2"
+    },
+    {
+      "id": "7",
+      "name": "PRICE3",
+      "column": "TEST_MEASURE.PRICE3"
+    },
+    {
+      "id": "8",
+      "name": "PRICE5",
+      "column": "TEST_MEASURE.PRICE5"
+    },
+    {
+      "id": "9",
+      "name": "PRICE6",
+      "column": "TEST_MEASURE.PRICE6"
+    },
+    {
+      "id": "10",
+      "name": "PRICE7",
+      "column": "TEST_MEASURE.PRICE7"
+    },
+    {
+      "id": "11",
+      "name": "NAME1",
+      "column": "TEST_MEASURE.NAME1"
+    },
+    {
+      "id": "12",
+      "name": "NAME2",
+      "column": "TEST_MEASURE.NAME2"
+    },
+    {
+      "id": "13",
+      "name": "NAME2",
+      "column": "TEST_MEASURE.NAME3"
+    },
+    {
+      "id": "14",
+      "name": "NAME4",
+      "column": "TEST_MEASURE.NAME4"
+    },
+    {
+      "id": "15",
+      "name": "TIME1",
+      "column": "TEST_MEASURE.TIME1"
+    },
+    {
+      "id": "16",
+      "name": "TIME2",
+      "column": "TEST_MEASURE.TIME2"
+    },
+    {
+      "id": "17",
+      "name": "FLAG",
+      "column": "TEST_MEASURE.FLAG"
+    },
+    {
+      "id": "18",
+      "name": "CC_PRICE1",
+      "column": "TEST_MEASURE.CC_PRICE1"
+    },
+    {
+      "id": "19",
+      "name": "CC_PRICE2",
+      "column": "TEST_MEASURE.CC_PRICE2"
+    },
+    {
+      "id": "20",
+      "name": "CC_PRICE3",
+      "column": "TEST_MEASURE.CC_PRICE3"
+    },
+    {
+      "id": "21",
+      "name": "CC_PRICE5",
+      "column": "TEST_MEASURE.CC_PRICE5"
+    },
+    {
+      "id": "22",
+      "name": "CC_PRICE6",
+      "column": "TEST_MEASURE.CC_PRICE6"
+    },
+    {
+      "id": "23",
+      "name": "CC_PRICE7",
+      "column": "TEST_MEASURE.CC_PRICE7"
+    },
+    {
+      "id": "24",
+      "name": "ID1-2",
+      "column": "TEST_MEASURE1.ID1"
+    },
+    {
+      "id": "25",
+      "name": "ID2-2",
+      "column": "TEST_MEASURE1.ID2"
+    },
+    {
+      "id": "26",
+      "name": "PRICE1-2",
+      "column": "TEST_MEASURE1.PRICE1"
+    },
+    {
+      "id": "27",
+      "name": "CC_CROSSTABLE_PRICE1",
+      "column": "TEST_MEASURE.CC_PRICE8"
+    },
+    {
+      "id": "28",
+      "name": "CC_CROSSTABLE_PRICE2",
+      "column": "TEST_MEASURE.CC_PRICE9"
+    },
+    {
+      "id": 29,
+      "name": "PRICE7",
+      "column": "TEST_MEASURE1.PRICE7"
+    },
+    {
+      "id": 30,
+      "name": "ID4",
+      "column": "TEST_MEASURE1.ID4"
+    },
+    {
+      "id": 31,
+      "name": "FLAG",
+      "column": "TEST_MEASURE1.FLAG"
+    },
+    {
+      "id": 32,
+      "name": "ID3",
+      "column": "TEST_MEASURE1.ID3"
+    },
+    {
+      "id": 33,
+      "name": "PRICE3",
+      "column": "TEST_MEASURE1.PRICE3"
+    },
+    {
+      "id": 34,
+      "name": "PRICE6",
+      "column": "TEST_MEASURE1.PRICE6"
+    },
+    {
+      "id": 35,
+      "name": "PRICE5",
+      "column": "TEST_MEASURE1.PRICE5"
+    },
+    {
+      "id": 36,
+      "name": "PRICE2",
+      "column": "TEST_MEASURE1.PRICE2"
+    },
+    {
+      "id": 37,
+      "name": "NAME3",
+      "column": "TEST_MEASURE1.NAME3"
+    },
+    {
+      "id": 38,
+      "name": "NAME4",
+      "column": "TEST_MEASURE1.NAME4"
+    },
+    {
+      "id": 39,
+      "name": "NAME1",
+      "column": "TEST_MEASURE1.NAME1"
+    },
+    {
+      "id": 40,
+      "name": "NAME2",
+      "column": "TEST_MEASURE1.NAME2"
+    },
+    {
+      "id": 41,
+      "name": "TIME2",
+      "column": "TEST_MEASURE1.TIME2"
+    },
+    {
+      "id": 42,
+      "name": "CC_PRICE10",
+      "column": "TEST_MEASURE.CC_PRICE10"
+    },
+    {
+      "id": 43,
+      "name": "TIME1",
+      "column": "TEST_MEASURE1.TIME1"
+    }
+  ],
+  "all_measures": [
+    {
+      "id": 100000,
+      "name": "COUNT_STAR",
+      "function": {
+        "expression": "COUNT",
+        "parameters": [{
+          "type": "constant",
+          "value": "*"
+        }],
+        "returntype": "bigint"
+      }
+    },
+    {
+      "id": 100001,
+      "name": "SUM_1",
+      "function": {
+        "expression": "SUM",
+        "parameters": [{
+          "type": "constant",
+          "value": "1"
+        }],
+        "returntype": "bigint"
+      }
+    },
+    {
+      "id": 100002,
+      "name": "SUM_2",
+      "function": {
+        "expression": "SUM",
+        "parameters": [{
+          "type": "constant",
+          "value": "1.0"
+        }],
+        "returntype": "double"
+      }
+    },
+    {
+      "id": 100003,
+      "name": "SUM_3",
+      "function": {
+        "expression": "SUM",
+        "parameters": [{
+          "type": "constant",
+          "value": "1.0"
+        }],
+        "returntype": "decimal(19,4)"
+      }
+    }
+  ],
+  "column_correlations": [],
+  "computed_columns": [
+    {
+      "tableIdentity": "DEFAULT.TEST_MEASURE",
+      "tableAlias": "TEST_MEASURE",
+      "columnName": "CC_PRICE1",
+      "expression": "TEST_MEASURE.PRICE1 + 1.1",
+      "datatype": "float",
+      "comment": "TEST_MEASURE.PRICE1 + 1.1"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_MEASURE",
+      "tableAlias": "TEST_MEASURE",
+      "columnName": "CC_PRICE2",
+      "expression": "TEST_MEASURE.PRICE2 + 2.1",
+      "datatype": "double",
+      "comment": "TEST_MEASURE.PRICE2 + 2.1"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_MEASURE",
+      "tableAlias": "TEST_MEASURE",
+      "columnName": "CC_PRICE3",
+      "expression": "TEST_MEASURE.PRICE3 + 3.1",
+      "datatype": "decimal(19,4)",
+      "comment": "TEST_MEASURE.PRICE3 + 3.1"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_MEASURE",
+      "tableAlias": "TEST_MEASURE",
+      "columnName": "CC_PRICE5",
+      "expression": "TEST_MEASURE.PRICE5 + 5",
+      "datatype": "short",
+      "comment": "TEST_MEASURE.PRICE5 + 5"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_MEASURE",
+      "tableAlias": "TEST_MEASURE",
+      "columnName": "CC_PRICE6",
+      "expression": "TEST_MEASURE.PRICE6 + 6",
+      "datatype": "tinyint",
+      "comment": "TEST_MEASURE.PRICE6 + 6"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_MEASURE",
+      "tableAlias": "TEST_MEASURE",
+      "columnName": "CC_PRICE7",
+      "expression": "TEST_MEASURE.PRICE7 + 1",
+      "datatype": "smallint",
+      "comment": "TEST_MEASURE.PRICE7 + 1"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_MEASURE",
+      "tableAlias": "TEST_MEASURE",
+      "columnName": "CC_PRICE8",
+      "expression": "TEST_MEASURE1.PRICE7 + 1",
+      "datatype": "smallint",
+      "comment": "TEST_MEASURE1.PRICE7 + 1"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_MEASURE",
+      "tableAlias": "TEST_MEASURE",
+      "columnName": "CC_PRICE9",
+      "expression": "TEST_MEASURE.PRICE7 + TEST_MEASURE1.PRICE7",
+      "datatype": "smallint",
+      "comment": "TEST_MEASURE.PRICE7 + TEST_MEASURE1.PRICE7"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_MEASURE",
+      "tableAlias": "TEST_MEASURE",
+      "columnName": "CC_PRICE10",
+      "expression": "TEST_MEASURE.CC_PRICE7 + TEST_MEASURE.CC_PRICE8",
+      "innerExpression": "((`TEST_MEASURE`.`PRICE7` + 1) + (`TEST_MEASURE`.`PRICE7` + 1))",
+      "datatype": "smallint",
+      "comment": "TEST_MEASURE.CC_PRICE7 + TEST_MEASURE.CC_PRICE8"
+    }
+  ],
+  "last_modified": 1422435345352,
+  "filter_condition": null,
+  "partition_desc": {
+  }
+}

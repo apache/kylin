@@ -1,0 +1,12 @@
+## this user access control file
+## At present, the attribute values support "boolean" and "String". In case of "boolean", means
+## that the login user can either access the column or not. In case of "String", indicate that
+## the records only fulfill the conditions will return
+
+login_user kylin_sales.user_id kylin_sales.region kylin_sales.price kylin_sales.lstg_format_name
+
+ADMIN yes Shanghai yes yes
+
+ANALYST ANALYST Beijing no yes
+
+MODELER MODELER Hongkong yes yes

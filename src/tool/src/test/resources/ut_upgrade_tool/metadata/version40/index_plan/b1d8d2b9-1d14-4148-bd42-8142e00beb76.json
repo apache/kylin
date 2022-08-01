@@ -1,0 +1,59 @@
+{
+  "uuid" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+  "last_modified" : 1585806452783,
+  "create_time" : 1585806237199,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "rule_based_index" : null,
+  "indexes" : [ {
+    "id" : 20000000000,
+    "dimensions" : [ 7, 8, 6, 4, 12, 11 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000000001,
+      "name" : "TableIndex_1",
+      "owner" : "ADMIN",
+      "col_order" : [ 7, 8, 6, 4, 12, 11 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1585806278006,
+      "manual" : true,
+      "auto" : false,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 20000010000,
+    "dimensions" : [ 7, 1 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000010001,
+      "name" : "TableIndex_2",
+      "owner" : "ADMIN",
+      "col_order" : [ 7, 1 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1585806630204,
+      "manual" : true,
+      "auto" : false,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  } ],
+  "override_properties" : { },
+  "to_be_deleted_indexes" : [ ],
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "notify_list" : [ ],
+  "status_need_notify" : [ ],
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 0,
+  "next_table_index_id" : 20000020000,
+  "agg_shard_by_columns" : [ ],
+  "extend_partition_columns" : [ ],
+  "layout_bucket_num" : { }
+}

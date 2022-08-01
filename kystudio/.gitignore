@@ -1,0 +1,13 @@
+.DS_Store
+node_modules/
+dist/
+npm-debug.log
+test/unit/coverage
+test/e2e/reports
+cypress/videos
+cypress/screenshots
+selenium-debug.log
+test/coverage
+package-lock.json
+*.env.local
+e2e/node_modules/

@@ -1,0 +1,519 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<datasource formatted-name="federated.0e6gjbn18cj0a41an9pi309itkyi" inline="true" source-platform="win" version="10.0">
+  <connection class="federated">
+    <named-connections>
+      <named-connection caption="localhost" name="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf">
+        <connection class="kyligence_odbc" dbname="default" odbc-connect-string-extras="PROJECT=default;CUBE=ut_inner_join_cube_partial" port="7070" schema="DEFAULT" server="localhost" username="ADMIN"/>
+      </named-connection>
+    </named-connections>
+    <relation join="inner" type="join">
+      <clause type="join">
+        <expression op="=">
+          <expression op="[BUYER_ACCOUNT].[ACCOUNT_COUNTRY]"/>
+          <expression op="[BUYER_COUNTRY].[COUNTRY]"/>
+        </expression>
+      </clause>
+      <relation join="inner" type="join">
+        <clause type="join">
+          <expression op="=">
+            <expression op="[SELLER_ACCOUNT].[ACCOUNT_COUNTRY]"/>
+            <expression op="[SELLER_COUNTRY].[COUNTRY]"/>
+          </expression>
+        </clause>
+        <relation join="inner" type="join">
+          <clause type="join">
+            <expression op="=">
+              <expression op="[TEST_ORDER].[BUYER_ID]"/>
+              <expression op="[BUYER_ACCOUNT].[ACCOUNT_ID]"/>
+            </expression>
+          </clause>
+          <relation join="inner" type="join">
+            <clause type="join">
+              <expression op="=">
+                <expression op="[TEST_KYLIN_FACT].[SELLER_ID]"/>
+                <expression op="[SELLER_ACCOUNT].[ACCOUNT_ID]"/>
+              </expression>
+            </clause>
+            <relation join="inner" type="join">
+              <clause type="join">
+                <expression op="=">
+                  <expression op="[TEST_KYLIN_FACT].[LSTG_SITE_ID]"/>
+                  <expression op="[TEST_SITES].[SITE_ID]"/>
+                </expression>
+              </clause>
+              <relation join="inner" type="join">
+                <clause type="join">
+                  <expression op="AND">
+                    <expression op="=">
+                      <expression op="[TEST_KYLIN_FACT].[LEAF_CATEG_ID]"/>
+                      <expression op="[TEST_CATEGORY_GROUPINGS].[LEAF_CATEG_ID]"/>
+                    </expression>
+                    <expression op="=">
+                      <expression op="[TEST_KYLIN_FACT].[LSTG_SITE_ID]"/>
+                      <expression op="[TEST_CATEGORY_GROUPINGS].[SITE_ID]"/>
+                    </expression>
+                  </expression>
+                </clause>
+                <relation join="inner" type="join">
+                  <clause type="join">
+                    <expression op="=">
+                      <expression op="[TEST_KYLIN_FACT].[CAL_DT]"/>
+                      <expression op="[TEST_CAL_DT].[CAL_DT]"/>
+                    </expression>
+                  </clause>
+                  <relation join="inner" type="join">
+                    <clause type="join">
+                      <expression op="=">
+                        <expression op="[TEST_KYLIN_FACT].[SLR_SEGMENT_CD]"/>
+                        <expression op="[TEST_SELLER_TYPE_DIM].[SELLER_TYPE_CD]"/>
+                      </expression>
+                    </clause>
+                    <relation join="inner" type="join">
+                      <clause type="join">
+                        <expression op="=">
+                          <expression op="[TEST_KYLIN_FACT].[ORDER_ID]"/>
+                          <expression op="[TEST_ORDER].[ORDER_ID]"/>
+                        </expression>
+                      </clause>
+                      <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_KYLIN_FACT" table="[DEFAULT].[TEST_KYLIN_FACT]"/>
+                      <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_ORDER" table="[DEFAULT].[TEST_ORDER]"/>
+                    </relation>
+                    <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_SELLER_TYPE_DIM" table="[EDW].[TEST_SELLER_TYPE_DIM]"/>
+                  </relation>
+                  <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_CAL_DT" table="[EDW].[TEST_CAL_DT]"/>
+                </relation>
+                <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_CATEGORY_GROUPINGS" table="[DEFAULT].[TEST_CATEGORY_GROUPINGS]"/>
+              </relation>
+              <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="TEST_SITES" table="[EDW].[TEST_SITES]"/>
+            </relation>
+            <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="SELLER_ACCOUNT" table="[DEFAULT].[TEST_ACCOUNT]"/>
+          </relation>
+          <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="BUYER_ACCOUNT" table="[DEFAULT].[TEST_ACCOUNT]"/>
+        </relation>
+        <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="SELLER_COUNTRY" table="[DEFAULT].[TEST_COUNTRY]"/>
+      </relation>
+      <relation type="table" connection="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf" name="BUYER_COUNTRY" table="[DEFAULT].[TEST_COUNTRY]"/>
+    </relation>
+    <cols>
+      <map key="[WEEK_END_DATE]" value="[TEST_CAL_DT].[WEEK_END_DATE]"/>
+      <map key="[AGE_FOR_RTL_QTR_ID]" value="[TEST_CAL_DT].[AGE_FOR_RTL_QTR_ID]"/>
+      <map key="[DAY_OF_WEEK]" value="[TEST_CAL_DT].[DAY_OF_WEEK]"/>
+      <map key="[RTL_YEAR_BEG_DT]" value="[TEST_CAL_DT].[RTL_YEAR_BEG_DT]"/>
+      <map key="[ORDER_ID (TEST_ORDER)]" value="[TEST_ORDER].[ORDER_ID]"/>
+      <map key="[RTL_MONTH_BEG_DT]" value="[TEST_CAL_DT].[RTL_MONTH_BEG_DT]"/>
+      <map key="[DAY_OF_QTR_ID]" value="[TEST_CAL_DT].[DAY_OF_QTR_ID]"/>
+      <map key="[SITES_UPD_DATE]" value="[TEST_SITES].[SITES_UPD_DATE]"/>
+      <map key="[DAY_IN_QTR_COUNT]" value="[TEST_CAL_DT].[DAY_IN_QTR_COUNT]"/>
+      <map key="[CATEG_LVL4_NAME]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL4_NAME]"/>
+      <map key="[CRE_DATE]" value="[TEST_SITES].[CRE_DATE]"/>
+      <map key="[LSTG_SITE_ID]" value="[TEST_KYLIN_FACT].[LSTG_SITE_ID]"/>
+      <map key="[QTR_END_DT]" value="[TEST_CAL_DT].[QTR_END_DT]"/>
+      <map key="[YEAR_ID]" value="[TEST_CAL_DT].[YEAR_ID]"/>
+      <map key="[WEEK_BEG_DT]" value="[TEST_CAL_DT].[WEEK_BEG_DT]"/>
+      <map key="[AGE_FOR_RTL_WEEK_ID]" value="[TEST_CAL_DT].[AGE_FOR_RTL_WEEK_ID]"/>
+      <map key="[LONGITUDE (BUYER_COUNTRY)]" value="[BUYER_COUNTRY].[LONGITUDE]"/>
+      <map key="[CATEG_LVL6_ID]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL6_ID]"/>
+      <map key="[PRD_IND]" value="[TEST_CAL_DT].[PRD_IND]"/>
+      <map key="[IS_EFFECTUAL]" value="[TEST_KYLIN_FACT].[IS_EFFECTUAL]"/>
+      <map key="[YEAR_OF_CAL_ID]" value="[TEST_CAL_DT].[YEAR_OF_CAL_ID]"/>
+      <map key="[SAP_CATEGORY_ID]" value="[TEST_CATEGORY_GROUPINGS].[SAP_CATEGORY_ID]"/>
+      <map key="[COUNTRY (BUYER_COUNTRY)]" value="[BUYER_COUNTRY].[COUNTRY]"/>
+      <map key="[SELLER_ID]" value="[TEST_KYLIN_FACT].[SELLER_ID]"/>
+      <map key="[SITE_DOMAIN_CODE]" value="[TEST_SITES].[SITE_DOMAIN_CODE]"/>
+      <map key="[BSNS_VRTCL_NAME]" value="[TEST_CATEGORY_GROUPINGS].[BSNS_VRTCL_NAME]"/>
+      <map key="[CATEG_BUSN_UNIT]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_BUSN_UNIT]"/>
+      <map key="[AGE_FOR_RTL_MONTH_ID]" value="[TEST_CAL_DT].[AGE_FOR_RTL_MONTH_ID]"/>
+      <map key="[CAL_DATE]" value="[TEST_CAL_DT].[CAL_DATE]"/>
+      <map key="[CATEG_LVL3_ID]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL3_ID]"/>
+      <map key="[NAME (BUYER_COUNTRY)]" value="[BUYER_COUNTRY].[NAME]"/>
+      <map key="[AGE_FOR_MONTH_ID]" value="[TEST_CAL_DT].[AGE_FOR_MONTH_ID]"/>
+      <map key="[TRANS_ID]" value="[TEST_KYLIN_FACT].[TRANS_ID]"/>
+      <map key="[CAL_DT_NAME]" value="[TEST_CAL_DT].[CAL_DT_NAME]"/>
+      <map key="[CAL_DT_MNS_1YEAR_DT]" value="[TEST_CAL_DT].[CAL_DT_MNS_1YEAR_DT]"/>
+      <map key="[SELLER_GROUP_DESC]" value="[TEST_SELLER_TYPE_DIM].[SELLER_GROUP_DESC]"/>
+      <map key="[MONTH_END_DT]" value="[TEST_CAL_DT].[MONTH_END_DT]"/>
+      <map key="[CAL_DT_DESC]" value="[TEST_CAL_DT].[CAL_DT_DESC]"/>
+      <map key="[AGE_FOR_DT_ID]" value="[TEST_CAL_DT].[AGE_FOR_DT_ID]"/>
+      <map key="[EOA_EMAIL_CSTMZBL_SITE_YN_ID]" value="[TEST_SITES].[EOA_EMAIL_CSTMZBL_SITE_YN_ID]"/>
+      <map key="[TEST_COUNT_DISTINCT_BITMAP]" value="[TEST_KYLIN_FACT].[TEST_COUNT_DISTINCT_BITMAP]"/>
+      <map key="[ACCOUNT_ID (BUYER_ACCOUNT)]" value="[BUYER_ACCOUNT].[ACCOUNT_ID]"/>
+      <map key="[WTD_YN_ID]" value="[TEST_CAL_DT].[WTD_YN_ID]"/>
+      <map key="[ACCOUNT_COUNTRY (SELLER_ACCOUNT)]" value="[SELLER_ACCOUNT].[ACCOUNT_COUNTRY]"/>
+      <map key="[RTL_QTR_OF_RTL_YEAR_ID]" value="[TEST_CAL_DT].[RTL_QTR_OF_RTL_YEAR_ID]"/>
+      <map key="[MONTH_OF_CAL_ID]" value="[TEST_CAL_DT].[MONTH_OF_CAL_ID]"/>
+      <map key="[AGE_FOR_QTR_ID]" value="[TEST_CAL_DT].[AGE_FOR_QTR_ID]"/>
+      <map key="[DAY_OF_YEAR_ID]" value="[TEST_CAL_DT].[DAY_OF_YEAR_ID]"/>
+      <map key="[SELLER_GROUP_CD]" value="[TEST_SELLER_TYPE_DIM].[SELLER_GROUP_CD]"/>
+      <map key="[YEAR_BEG_DT]" value="[TEST_CAL_DT].[YEAR_BEG_DT]"/>
+      <map key="[YEAR_IND]" value="[TEST_CAL_DT].[YEAR_IND]"/>
+      <map key="[LATITUDE (SELLER_COUNTRY)]" value="[SELLER_COUNTRY].[LATITUDE]"/>
+      <map key="[ACCOUNT_CONTACT (BUYER_ACCOUNT)]" value="[BUYER_ACCOUNT].[ACCOUNT_CONTACT]"/>
+      <map key="[CATEG_LVL2_NAME]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL2_NAME]"/>
+      <map key="[LONGITUDE (SELLER_COUNTRY)]" value="[SELLER_COUNTRY].[LONGITUDE]"/>
+      <map key="[WEEK_IND]" value="[TEST_CAL_DT].[WEEK_IND]"/>
+      <map key="[CURR_CAL_DT_MNS_2QTR_YN_ID]" value="[TEST_CAL_DT].[CURR_CAL_DT_MNS_2QTR_YN_ID]"/>
+      <map key="[RETAIL_WEEK]" value="[TEST_CAL_DT].[RETAIL_WEEK]"/>
+      <map key="[QTR_BEG_DT]" value="[TEST_CAL_DT].[QTR_BEG_DT]"/>
+      <map key="[ORDER_ID (TEST_KYLIN_FACT)]" value="[TEST_KYLIN_FACT].[ORDER_ID]"/>
+      <map key="[CAL_DT_CRE_DATE]" value="[TEST_CAL_DT].[CAL_DT_CRE_DATE]"/>
+      <map key="[CAL_DT_MNS_2QTR_DT]" value="[TEST_CAL_DT].[CAL_DT_MNS_2QTR_DT]"/>
+      <map key="[NAME (SELLER_COUNTRY)]" value="[SELLER_COUNTRY].[NAME]"/>
+      <map key="[MOVE_TO]" value="[TEST_CATEGORY_GROUPINGS].[MOVE_TO]"/>
+      <map key="[CAL_DT_UPD_USER]" value="[TEST_CAL_DT].[CAL_DT_UPD_USER]"/>
+      <map key="[SITE_CNTRY_ID]" value="[TEST_SITES].[SITE_CNTRY_ID]"/>
+      <map key="[USER_DEFINED_FIELD1]" value="[TEST_CATEGORY_GROUPINGS].[USER_DEFINED_FIELD1]"/>
+      <map key="[CAL_DT_SHORT_NAME]" value="[TEST_CAL_DT].[CAL_DT_SHORT_NAME]"/>
+      <map key="[YTM_YN_ID]" value="[TEST_CAL_DT].[YTM_YN_ID]"/>
+      <map key="[PRD_DESC]" value="[TEST_CAL_DT].[PRD_DESC]"/>
+      <map key="[CAL_DT_MNS_1MONTH_DT]" value="[TEST_CAL_DT].[CAL_DT_MNS_1MONTH_DT]"/>
+      <map key="[CAL_DT_MNS_1QTR_DT]" value="[TEST_CAL_DT].[CAL_DT_MNS_1QTR_DT]"/>
+      <map key="[CATEG_FLAGS]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_FLAGS]"/>
+      <map key="[DFAULT_LSTG_CURNCY]" value="[TEST_SITES].[DFAULT_LSTG_CURNCY]"/>
+      <map key="[CATEG_LVL5_ID]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL5_ID]"/>
+      <map key="[GCS_ID]" value="[TEST_CATEGORY_GROUPINGS].[GCS_ID]"/>
+      <map key="[CAL_DT_UPD_DATE]" value="[TEST_CAL_DT].[CAL_DT_UPD_DATE]"/>
+      <map key="[YEAR_END_DT]" value="[TEST_CAL_DT].[YEAR_END_DT]"/>
+      <map key="[CATEG_LVL5_NAME]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL5_NAME]"/>
+      <map key="[GROUPINGS_CRE_DATE]" value="[TEST_CATEGORY_GROUPINGS].[GROUPINGS_CRE_DATE]"/>
+      <map key="[GLBL_RPRT_SLR_SGMNT_CD]" value="[TEST_SELLER_TYPE_DIM].[GLBL_RPRT_SLR_SGMNT_CD]"/>
+      <map key="[CRE_USER]" value="[TEST_SITES].[CRE_USER]"/>
+      <map key="[USER_DEFINED_FIELD3]" value="[TEST_CATEGORY_GROUPINGS].[USER_DEFINED_FIELD3]"/>
+      <map key="[COUNTRY (SELLER_COUNTRY)]" value="[SELLER_COUNTRY].[COUNTRY]"/>
+      <map key="[SEASON_OF_YEAR_ID]" value="[TEST_CAL_DT].[SEASON_OF_YEAR_ID]"/>
+      <map key="[USER_DEFINED_FIELD5]" value="[TEST_CATEGORY_GROUPINGS].[USER_DEFINED_FIELD5]"/>
+      <map key="[CURR_CAL_DT_MNS_1WEEK_YN_IND]" value="[TEST_CAL_DT].[CURR_CAL_DT_MNS_1WEEK_YN_IND]"/>
+      <map key="[GROUPINGS_CRE_USER]" value="[TEST_CATEGORY_GROUPINGS].[GROUPINGS_CRE_USER]"/>
+      <map key="[ACCOUNT_BUYER_LEVEL (SELLER_ACCOUNT)]" value="[SELLER_ACCOUNT].[ACCOUNT_BUYER_LEVEL]"/>
+      <map key="[DIM_UPD_DATE]" value="[TEST_SELLER_TYPE_DIM].[DIM_UPD_DATE]"/>
+      <map key="[SRC_ID]" value="[TEST_CATEGORY_GROUPINGS].[SRC_ID]"/>
+      <map key="[MONTH_BEG_DT]" value="[TEST_CAL_DT].[MONTH_BEG_DT]"/>
+      <map key="[CATEG_BUSN_MGR]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_BUSN_MGR]"/>
+      <map key="[ACCOUNT_SELLER_LEVEL (BUYER_ACCOUNT)]" value="[BUYER_ACCOUNT].[ACCOUNT_SELLER_LEVEL]"/>
+      <map key="[YTW_YN_ID]" value="[TEST_CAL_DT].[YTW_YN_ID]"/>
+      <map key="[LEAF_CATEG_ID (TEST_KYLIN_FACT)]" value="[TEST_KYLIN_FACT].[LEAF_CATEG_ID]"/>
+      <map key="[CATEG_LVL2_ID]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL2_ID]"/>
+      <map key="[SITE_NAME]" value="[TEST_SITES].[SITE_NAME]"/>
+      <map key="[WEEK_IN_YEAR_ID]" value="[TEST_CAL_DT].[WEEK_IN_YEAR_ID]"/>
+      <map key="[PRD_FLAG]" value="[TEST_CAL_DT].[PRD_FLAG]"/>
+      <map key="[CAL_DT_MNS_2WEEK_DT]" value="[TEST_CAL_DT].[CAL_DT_MNS_2WEEK_DT]"/>
+      <map key="[CAL_DT_MNS_2MONTH_DT]" value="[TEST_CAL_DT].[CAL_DT_MNS_2MONTH_DT]"/>
+      <map key="[QTR_ID]" value="[TEST_CAL_DT].[QTR_ID]"/>
+      <map key="[AGE_FOR_RTL_YEAR_ID]" value="[TEST_CAL_DT].[AGE_FOR_RTL_YEAR_ID]"/>
+      <map key="[WEEK_BEG_DATE]" value="[TEST_CAL_DT].[WEEK_BEG_DATE]"/>
+      <map key="[CAL_DT_MNS_1WEEK_DT]" value="[TEST_CAL_DT].[CAL_DT_MNS_1WEEK_DT]"/>
+      <map key="[PRICE]" value="[TEST_KYLIN_FACT].[PRICE]"/>
+      <map key="[RETAIL_WK_END_DATE]" value="[TEST_CAL_DT].[RETAIL_WK_END_DATE]"/>
+      <map key="[AGE_FOR_CS_WEEK_ID]" value="[TEST_CAL_DT].[AGE_FOR_CS_WEEK_ID]"/>
+      <map key="[VCS_ID]" value="[TEST_CATEGORY_GROUPINGS].[VCS_ID]"/>
+      <map key="[WEEK_NUM_DESC]" value="[TEST_CAL_DT].[WEEK_NUM_DESC]"/>
+      <map key="[REGN_CATEG]" value="[TEST_CATEGORY_GROUPINGS].[REGN_CATEG]"/>
+      <map key="[SELLER_TYPE_DESC]" value="[TEST_SELLER_TYPE_DIM].[SELLER_TYPE_DESC]"/>
+      <map key="[RETAIL_YEAR]" value="[TEST_CAL_DT].[RETAIL_YEAR]"/>
+      <map key="[RTL_QTR_BEG_DT]" value="[TEST_CAL_DT].[RTL_QTR_BEG_DT]"/>
+      <map key="[CAL_DT (TEST_KYLIN_FACT)]" value="[TEST_KYLIN_FACT].[CAL_DT]"/>
+      <map key="[BUYER_ID]" value="[TEST_ORDER].[BUYER_ID]"/>
+      <map key="[DOMAIN_ID]" value="[TEST_CATEGORY_GROUPINGS].[DOMAIN_ID]"/>
+      <map key="[SELLER_TYPE_CD]" value="[TEST_SELLER_TYPE_DIM].[SELLER_TYPE_CD]"/>
+      <map key="[ACCOUNT_CONTACT (SELLER_ACCOUNT)]" value="[SELLER_ACCOUNT].[ACCOUNT_CONTACT]"/>
+      <map key="[TEST_TIME_ENC]" value="[TEST_ORDER].[TEST_TIME_ENC]"/>
+      <map key="[DIM_UPD_USER]" value="[TEST_SELLER_TYPE_DIM].[DIM_UPD_USER]"/>
+      <map key="[CURR_CAL_DT_MNS_2MONTH_YN_ID]" value="[TEST_CAL_DT].[CURR_CAL_DT_MNS_2MONTH_YN_ID]"/>
+      <map key="[AGE_FOR_YEAR_ID]" value="[TEST_CAL_DT].[AGE_FOR_YEAR_ID]"/>
+      <map key="[ACCOUNT_SELLER_LEVEL (SELLER_ACCOUNT)]" value="[SELLER_ACCOUNT].[ACCOUNT_SELLER_LEVEL]"/>
+      <map key="[CURR_CAL_DT_MNS_1YEAR_YN_ID]" value="[TEST_CAL_DT].[CURR_CAL_DT_MNS_1YEAR_YN_ID]"/>
+      <map key="[CATEG_LVL7_ID]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL7_ID]"/>
+      <map key="[LEAF_CATEG_NAME]" value="[TEST_CATEGORY_GROUPINGS].[LEAF_CATEG_NAME]"/>
+      <map key="[TEST_EXTENDED_COLUMN]" value="[TEST_ORDER].[TEST_EXTENDED_COLUMN]"/>
+      <map key="[DAY_OF_CAL_ID]" value="[TEST_CAL_DT].[DAY_OF_CAL_ID]"/>
+      <map key="[META_CATEG_NAME]" value="[TEST_CATEGORY_GROUPINGS].[META_CATEG_NAME]"/>
+      <map key="[META_CATEG_ID]" value="[TEST_CATEGORY_GROUPINGS].[META_CATEG_ID]"/>
+      <map key="[RTL_MONTH_OF_RTL_YEAR_ID]" value="[TEST_CAL_DT].[RTL_MONTH_OF_RTL_YEAR_ID]"/>
+      <map key="[PRD_ID]" value="[TEST_CAL_DT].[PRD_ID]"/>
+      <map key="[ITEM_COUNT]" value="[TEST_KYLIN_FACT].[ITEM_COUNT]"/>
+      <map key="[CAL_DT_CRE_USER]" value="[TEST_CAL_DT].[CAL_DT_CRE_USER]"/>
+      <map key="[TEST_DATE_ENC]" value="[TEST_ORDER].[TEST_DATE_ENC]"/>
+      <map key="[WEEK_ID]" value="[TEST_CAL_DT].[WEEK_ID]"/>
+      <map key="[MONTH_ID]" value="[TEST_CAL_DT].[MONTH_ID]"/>
+      <map key="[DIM_CRE_DATE]" value="[TEST_SELLER_TYPE_DIM].[DIM_CRE_DATE]"/>
+      <map key="[CURR_CAL_DT_MNS_1MONTH_YN_ID]" value="[TEST_CAL_DT].[CURR_CAL_DT_MNS_1MONTH_YN_ID]"/>
+      <map key="[DAY_OF_WEEK_ID]" value="[TEST_CAL_DT].[DAY_OF_WEEK_ID]"/>
+      <map key="[SEASON_BEG_DT]" value="[TEST_CAL_DT].[SEASON_BEG_DT]"/>
+      <map key="[CATEG_LVL7_NAME]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL7_NAME]"/>
+      <map key="[SLR_SEGMENT_CD]" value="[TEST_KYLIN_FACT].[SLR_SEGMENT_CD]"/>
+      <map key="[UPD_USER]" value="[TEST_CATEGORY_GROUPINGS].[UPD_USER]"/>
+      <map key="[LATITUDE (BUYER_COUNTRY)]" value="[BUYER_COUNTRY].[LATITUDE]"/>
+      <map key="[DAY_OF_MONTH_ID]" value="[TEST_CAL_DT].[DAY_OF_MONTH_ID]"/>
+      <map key="[CATEG_LVL4_ID]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL4_ID]"/>
+      <map key="[CURR_CAL_DT_MNS_2WEEK_YN_IND]" value="[TEST_CAL_DT].[CURR_CAL_DT_MNS_2WEEK_YN_IND]"/>
+      <map key="[YTQ_YN_ID]" value="[TEST_CAL_DT].[YTQ_YN_ID]"/>
+      <map key="[WEEK_OF_YEAR_ID]" value="[TEST_CAL_DT].[WEEK_OF_YEAR_ID]"/>
+      <map key="[QTR_DESC]" value="[TEST_CAL_DT].[QTR_DESC]"/>
+      <map key="[DAY_IN_MONTH_COUNT]" value="[TEST_CAL_DT].[DAY_IN_MONTH_COUNT]"/>
+      <map key="[YTD_YN_ID]" value="[TEST_CAL_DT].[YTD_YN_ID]"/>
+      <map key="[SITE_ID (TEST_CATEGORY_GROUPINGS)]" value="[TEST_CATEGORY_GROUPINGS].[SITE_ID]"/>
+      <map key="[ACCOUNT_COUNTRY (BUYER_ACCOUNT)]" value="[BUYER_ACCOUNT].[ACCOUNT_COUNTRY]"/>
+      <map key="[MONTH_OF_YEAR_ID]" value="[TEST_CAL_DT].[MONTH_OF_YEAR_ID]"/>
+      <map key="[MONTH_OF_QTR_ID]" value="[TEST_CAL_DT].[MONTH_OF_QTR_ID]"/>
+      <map key="[CS_WEEK_BEG_DT]" value="[TEST_CAL_DT].[CS_WEEK_BEG_DT]"/>
+      <map key="[CATEG_LVL6_NAME]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL6_NAME]"/>
+      <map key="[QTR_OF_CAL_ID]" value="[TEST_CAL_DT].[QTR_OF_CAL_ID]"/>
+      <map key="[CURR_CAL_DT_MNS_2YEAR_YN_ID]" value="[TEST_CAL_DT].[CURR_CAL_DT_MNS_2YEAR_YN_ID]"/>
+      <map key="[DAY_IN_WEEK_COUNT]" value="[TEST_CAL_DT].[DAY_IN_WEEK_COUNT]"/>
+      <map key="[MTD_YN_ID]" value="[TEST_CAL_DT].[MTD_YN_ID]"/>
+      <map key="[RETAIL_START_DATE]" value="[TEST_CAL_DT].[RETAIL_START_DATE]"/>
+      <map key="[ADULT_CATEG_YN]" value="[TEST_CATEGORY_GROUPINGS].[ADULT_CATEG_YN]"/>
+      <map key="[QTR_IND]" value="[TEST_CAL_DT].[QTR_IND]"/>
+      <map key="[LEAF_CATEG_ID (TEST_CATEGORY_GROUPINGS)]" value="[TEST_CATEGORY_GROUPINGS].[LEAF_CATEG_ID]"/>
+      <map key="[CATEG_LVL3_NAME]" value="[TEST_CATEGORY_GROUPINGS].[CATEG_LVL3_NAME]"/>
+      <map key="[CAL_DT (TEST_CAL_DT)]" value="[TEST_CAL_DT].[CAL_DT]"/>
+      <map key="[QTR_OF_YEAR_ID]" value="[TEST_CAL_DT].[QTR_OF_YEAR_ID]"/>
+      <map key="[UPD_DATE]" value="[TEST_CATEGORY_GROUPINGS].[UPD_DATE]"/>
+      <map key="[ACCOUNT_ID (SELLER_ACCOUNT)]" value="[SELLER_ACCOUNT].[ACCOUNT_ID]"/>
+      <map key="[LSTG_FORMAT_NAME]" value="[TEST_KYLIN_FACT].[LSTG_FORMAT_NAME]"/>
+      <map key="[CURR_CAL_DT_MNS_1QTR_YN_ID]" value="[TEST_CAL_DT].[CURR_CAL_DT_MNS_1QTR_YN_ID]"/>
+      <map key="[DIM_CRE_USER]" value="[TEST_SELLER_TYPE_DIM].[DIM_CRE_USER]"/>
+      <map key="[AGE_FOR_WEEK_ID]" value="[TEST_CAL_DT].[AGE_FOR_WEEK_ID]"/>
+      <map key="[ACCOUNT_BUYER_LEVEL (BUYER_ACCOUNT)]" value="[BUYER_ACCOUNT].[ACCOUNT_BUYER_LEVEL]"/>
+      <map key="[CAL_DT_MNS_2YEAR_DT]" value="[TEST_CAL_DT].[CAL_DT_MNS_2YEAR_DT]"/>
+      <map key="[RTL_WEEK_OF_RTL_YEAR_ID]" value="[TEST_CAL_DT].[RTL_WEEK_OF_RTL_YEAR_ID]"/>
+      <map key="[DAY_IN_YEAR_COUNT]" value="[TEST_CAL_DT].[DAY_IN_YEAR_COUNT]"/>
+      <map key="[WEEK_BEG_END_DESC_MD]" value="[TEST_CAL_DT].[WEEK_BEG_END_DESC_MD]"/>
+      <map key="[SITE_ID (TEST_SITES)]" value="[TEST_SITES].[SITE_ID]"/>
+      <map key="[QTD_YN_ID]" value="[TEST_CAL_DT].[QTD_YN_ID]"/>
+      <map key="[WEEK_OF_CAL_ID]" value="[TEST_CAL_DT].[WEEK_OF_CAL_ID]"/>
+      <map key="[SITES_UPD_USER]" value="[TEST_SITES].[SITES_UPD_USER]"/>
+      <map key="[WEEK_BEG_END_DESC_MDY]" value="[TEST_CAL_DT].[WEEK_BEG_END_DESC_MDY]"/>
+      <map key="[WEEK_END_DT]" value="[TEST_CAL_DT].[WEEK_END_DT]"/>
+      <map key="[RTL_WEEK_BEG_DT]" value="[TEST_CAL_DT].[RTL_WEEK_BEG_DT]"/>
+    </cols>
+  </connection>
+  <aliases enabled="yes"/>
+  <column caption="WEEK_END_DATE" datatype="string" name="[WEEK_END_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="AGE_FOR_RTL_QTR_ID" datatype="integer" name="[AGE_FOR_RTL_QTR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="DAY_OF_WEEK" datatype="string" name="[DAY_OF_WEEK]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="RTL_YEAR_BEG_DT" datatype="string" name="[RTL_YEAR_BEG_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="ORDER_ID" datatype="integer" name="[ORDER_ID (TEST_ORDER)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="RTL_MONTH_BEG_DT" datatype="string" name="[RTL_MONTH_BEG_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="DAY_OF_QTR_ID" datatype="integer" name="[DAY_OF_QTR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SITES_UPD_DATE" datatype="string" name="[SITES_UPD_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="DAY_IN_QTR_COUNT" datatype="integer" name="[DAY_IN_QTR_COUNT]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CATEG_LVL4_NAME" datatype="string" name="[CATEG_LVL4_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CRE_DATE" datatype="string" name="[CRE_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="LSTG_SITE_ID" datatype="integer" name="[LSTG_SITE_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="QTR_END_DT" datatype="string" name="[QTR_END_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="YEAR_ID" datatype="string" name="[YEAR_ID]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="WEEK_BEG_DT" datatype="date" name="[WEEK_BEG_DT]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="AGE_FOR_RTL_WEEK_ID" datatype="integer" name="[AGE_FOR_RTL_WEEK_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="LONGITUDE" datatype="real" name="[LONGITUDE (BUYER_COUNTRY)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CATEG_LVL6_ID" datatype="real" name="[CATEG_LVL6_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="PRD_IND" datatype="string" name="[PRD_IND]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="IS_EFFECTUAL" datatype="boolean" name="[IS_EFFECTUAL]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="YEAR_OF_CAL_ID" datatype="integer" name="[YEAR_OF_CAL_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SAP_CATEGORY_ID" datatype="real" name="[SAP_CATEGORY_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="COUNTRY" datatype="string" name="[COUNTRY (BUYER_COUNTRY)]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="SELLER_ID" datatype="integer" name="[SELLER_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SITE_DOMAIN_CODE" datatype="string" name="[SITE_DOMAIN_CODE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="BSNS_VRTCL_NAME" datatype="string" name="[BSNS_VRTCL_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CATEG_BUSN_UNIT" datatype="string" name="[CATEG_BUSN_UNIT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="AGE_FOR_RTL_MONTH_ID" datatype="integer" name="[AGE_FOR_RTL_MONTH_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CAL_DATE" datatype="string" name="[CAL_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CATEG_LVL3_ID" datatype="real" name="[CATEG_LVL3_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="BUYER_COUNTRY_NAME" datatype="string" name="[NAME (BUYER_COUNTRY)]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="AGE_FOR_MONTH_ID" datatype="integer" name="[AGE_FOR_MONTH_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="TRANS_ID" datatype="integer" name="[TRANS_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CAL_DT_NAME" datatype="string" name="[CAL_DT_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT_MNS_1YEAR_DT" datatype="string" name="[CAL_DT_MNS_1YEAR_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="SELLER_GROUP_DESC" datatype="string" name="[SELLER_GROUP_DESC]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="MONTH_END_DT" datatype="string" name="[MONTH_END_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT_DESC" datatype="string" name="[CAL_DT_DESC]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="AGE_FOR_DT_ID" datatype="integer" name="[AGE_FOR_DT_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="EOA_EMAIL_CSTMZBL_SITE_YN_ID" datatype="integer" name="[EOA_EMAIL_CSTMZBL_SITE_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="TEST_COUNT_DISTINCT_BITMAP" datatype="string" name="[TEST_COUNT_DISTINCT_BITMAP]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="ACCOUNT_ID" datatype="integer" name="[ACCOUNT_ID (BUYER_ACCOUNT)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="WTD_YN_ID" datatype="integer" name="[WTD_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SELLER_COUNTRY" datatype="string" name="[ACCOUNT_COUNTRY (SELLER_ACCOUNT)]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="RTL_QTR_OF_RTL_YEAR_ID" datatype="integer" name="[RTL_QTR_OF_RTL_YEAR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="MONTH_OF_CAL_ID" datatype="integer" name="[MONTH_OF_CAL_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="AGE_FOR_QTR_ID" datatype="integer" name="[AGE_FOR_QTR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="DAY_OF_YEAR_ID" datatype="integer" name="[DAY_OF_YEAR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SELLER_GROUP_CD" datatype="integer" name="[SELLER_GROUP_CD]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="YEAR_BEG_DT" datatype="date" name="[YEAR_BEG_DT]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="YEAR_IND" datatype="string" name="[YEAR_IND]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="LATITUDE" datatype="real" name="[LATITUDE (SELLER_COUNTRY)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="ACCOUNT_CONTACT" datatype="string" name="[ACCOUNT_CONTACT (BUYER_ACCOUNT)]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CATEG_LVL2_NAME" datatype="string" name="[CATEG_LVL2_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="LONGITUDE" datatype="real" name="[LONGITUDE (SELLER_COUNTRY)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="WEEK_IND" datatype="string" name="[WEEK_IND]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CURR_CAL_DT_MNS_2QTR_YN_ID" datatype="integer" name="[CURR_CAL_DT_MNS_2QTR_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="RETAIL_WEEK" datatype="string" name="[RETAIL_WEEK]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="QTR_BEG_DT" datatype="date" name="[QTR_BEG_DT]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="ORDER_ID" datatype="integer" name="[ORDER_ID (TEST_KYLIN_FACT)]" role="dimension" type="ordinal"/>
+  <column caption="CAL_DT_CRE_DATE" datatype="string" name="[CAL_DT_CRE_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT_MNS_2QTR_DT" datatype="string" name="[CAL_DT_MNS_2QTR_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="SELLER_COUNTRY_NAME" datatype="string" name="[NAME (SELLER_COUNTRY)]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="MOVE_TO" datatype="real" name="[MOVE_TO]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CAL_DT_UPD_USER" datatype="string" name="[CAL_DT_UPD_USER]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="SITE_CNTRY_ID" datatype="integer" name="[SITE_CNTRY_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="USER_DEFINED_FIELD1" datatype="string" name="[USER_DEFINED_FIELD1]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT_SHORT_NAME" datatype="string" name="[CAL_DT_SHORT_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="YTM_YN_ID" datatype="integer" name="[YTM_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="PRD_DESC" datatype="string" name="[PRD_DESC]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT_MNS_1MONTH_DT" datatype="string" name="[CAL_DT_MNS_1MONTH_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT_MNS_1QTR_DT" datatype="string" name="[CAL_DT_MNS_1QTR_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CATEG_FLAGS" datatype="real" name="[CATEG_FLAGS]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="DFAULT_LSTG_CURNCY" datatype="integer" name="[DFAULT_LSTG_CURNCY]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CATEG_LVL5_ID" datatype="real" name="[CATEG_LVL5_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="GCS_ID" datatype="real" name="[GCS_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CAL_DT_UPD_DATE" datatype="string" name="[CAL_DT_UPD_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="YEAR_END_DT" datatype="string" name="[YEAR_END_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CATEG_LVL5_NAME" datatype="string" name="[CATEG_LVL5_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="GROUPINGS_CRE_DATE" datatype="string" name="[GROUPINGS_CRE_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="GLBL_RPRT_SLR_SGMNT_CD" datatype="integer" name="[GLBL_RPRT_SLR_SGMNT_CD]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CRE_USER" datatype="string" name="[CRE_USER]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="USER_DEFINED_FIELD3" datatype="string" name="[USER_DEFINED_FIELD3]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="COUNTRY" datatype="string" name="[COUNTRY (SELLER_COUNTRY)]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="SEASON_OF_YEAR_ID" datatype="integer" name="[SEASON_OF_YEAR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="USER_DEFINED_FIELD5" datatype="string" name="[USER_DEFINED_FIELD5]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CURR_CAL_DT_MNS_1WEEK_YN_IND" datatype="integer" name="[CURR_CAL_DT_MNS_1WEEK_YN_IND]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="GROUPINGS_CRE_USER" datatype="string" name="[GROUPINGS_CRE_USER]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="SELLER_BUYER_LEVEL" datatype="integer" name="[ACCOUNT_BUYER_LEVEL (SELLER_ACCOUNT)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="DIM_UPD_DATE" datatype="string" name="[DIM_UPD_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="SRC_ID" datatype="integer" name="[SRC_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="MONTH_BEG_DT" datatype="date" name="[MONTH_BEG_DT]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CATEG_BUSN_MGR" datatype="string" name="[CATEG_BUSN_MGR]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="BUYER_SELLER_LEVEL" datatype="integer" name="[ACCOUNT_SELLER_LEVEL (BUYER_ACCOUNT)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="YTW_YN_ID" datatype="integer" name="[YTW_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="LEAF_CATEG_ID" datatype="integer" name="[LEAF_CATEG_ID (TEST_KYLIN_FACT)]" role="dimension" type="ordinal"/>
+  <column caption="CATEG_LVL2_ID" datatype="real" name="[CATEG_LVL2_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SITE_NAME" datatype="string" name="[SITE_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="WEEK_IN_YEAR_ID" datatype="string" name="[WEEK_IN_YEAR_ID]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="PRD_FLAG" datatype="string" name="[PRD_FLAG]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT_MNS_2WEEK_DT" datatype="string" name="[CAL_DT_MNS_2WEEK_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT_MNS_2MONTH_DT" datatype="string" name="[CAL_DT_MNS_2MONTH_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="QTR_ID" datatype="string" name="[QTR_ID]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="AGE_FOR_RTL_YEAR_ID" datatype="integer" name="[AGE_FOR_RTL_YEAR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="WEEK_BEG_DATE" datatype="string" name="[WEEK_BEG_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT_MNS_1WEEK_DT" datatype="string" name="[CAL_DT_MNS_1WEEK_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="PRICE" datatype="real" name="[PRICE]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="RETAIL_WK_END_DATE" datatype="string" name="[RETAIL_WK_END_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="AGE_FOR_CS_WEEK_ID" datatype="integer" name="[AGE_FOR_CS_WEEK_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="VCS_ID" datatype="real" name="[VCS_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="WEEK_NUM_DESC" datatype="string" name="[WEEK_NUM_DESC]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="REGN_CATEG" datatype="string" name="[REGN_CATEG]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="SELLER_TYPE_DESC" datatype="string" name="[SELLER_TYPE_DESC]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="RETAIL_YEAR" datatype="string" name="[RETAIL_YEAR]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="RTL_QTR_BEG_DT" datatype="string" name="[RTL_QTR_BEG_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT" datatype="date" name="[CAL_DT (TEST_KYLIN_FACT)]" role="dimension" type="ordinal"/>
+  <column caption="BUYER_ID" datatype="integer" name="[BUYER_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="DOMAIN_ID" datatype="real" name="[DOMAIN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SELLER_TYPE_CD" datatype="integer" name="[SELLER_TYPE_CD]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="ACCOUNT_CONTACT" datatype="string" name="[ACCOUNT_CONTACT (SELLER_ACCOUNT)]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="TEST_TIME_ENC" datatype="datetime" name="[TEST_TIME_ENC]" role="dimension" type="nominal"/>
+  <column caption="DIM_UPD_USER" datatype="string" name="[DIM_UPD_USER]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CURR_CAL_DT_MNS_2MONTH_YN_ID" datatype="integer" name="[CURR_CAL_DT_MNS_2MONTH_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="AGE_FOR_YEAR_ID" datatype="integer" name="[AGE_FOR_YEAR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SELLER_SELLER_LEVEL" datatype="integer" name="[ACCOUNT_SELLER_LEVEL (SELLER_ACCOUNT)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CURR_CAL_DT_MNS_1YEAR_YN_ID" datatype="integer" name="[CURR_CAL_DT_MNS_1YEAR_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CATEG_LVL7_ID" datatype="real" name="[CATEG_LVL7_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="LEAF_CATEG_NAME" datatype="string" name="[LEAF_CATEG_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="TEST_EXTENDED_COLUMN" datatype="string" name="[TEST_EXTENDED_COLUMN]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="DAY_OF_CAL_ID" datatype="integer" name="[DAY_OF_CAL_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="META_CATEG_NAME" datatype="string" name="[META_CATEG_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="META_CATEG_ID" datatype="real" name="[META_CATEG_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="RTL_MONTH_OF_RTL_YEAR_ID" datatype="string" name="[RTL_MONTH_OF_RTL_YEAR_ID]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="PRD_ID" datatype="string" name="[PRD_ID]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="ITEM_COUNT" datatype="integer" name="[ITEM_COUNT]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CAL_DT_CRE_USER" datatype="string" name="[CAL_DT_CRE_USER]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="TEST_DATE_ENC" datatype="date" name="[TEST_DATE_ENC]" role="dimension" type="ordinal"/>
+  <column caption="WEEK_ID" datatype="string" name="[WEEK_ID]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="MONTH_ID" datatype="string" name="[MONTH_ID]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="DIM_CRE_DATE" datatype="string" name="[DIM_CRE_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CURR_CAL_DT_MNS_1MONTH_YN_ID" datatype="integer" name="[CURR_CAL_DT_MNS_1MONTH_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="DAY_OF_WEEK_ID" datatype="integer" name="[DAY_OF_WEEK_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SEASON_BEG_DT" datatype="string" name="[SEASON_BEG_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CATEG_LVL7_NAME" datatype="string" name="[CATEG_LVL7_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="SLR_SEGMENT_CD" datatype="integer" name="[SLR_SEGMENT_CD]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="UPD_USER" datatype="string" name="[UPD_USER]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="LATITUDE" datatype="real" name="[LATITUDE (BUYER_COUNTRY)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="DAY_OF_MONTH_ID" datatype="integer" name="[DAY_OF_MONTH_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CATEG_LVL4_ID" datatype="real" name="[CATEG_LVL4_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CURR_CAL_DT_MNS_2WEEK_YN_IND" datatype="integer" name="[CURR_CAL_DT_MNS_2WEEK_YN_IND]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="YTQ_YN_ID" datatype="integer" name="[YTQ_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="WEEK_OF_YEAR_ID" datatype="integer" name="[WEEK_OF_YEAR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="QTR_DESC" datatype="string" name="[QTR_DESC]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="DAY_IN_MONTH_COUNT" datatype="integer" name="[DAY_IN_MONTH_COUNT]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="YTD_YN_ID" datatype="integer" name="[YTD_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SITE_ID" datatype="integer" name="[SITE_ID (TEST_CATEGORY_GROUPINGS)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="BUYER_COUNTRY" datatype="string" name="[ACCOUNT_COUNTRY (BUYER_ACCOUNT)]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="MONTH_OF_YEAR_ID" datatype="integer" name="[MONTH_OF_YEAR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="MONTH_OF_QTR_ID" datatype="integer" name="[MONTH_OF_QTR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CS_WEEK_BEG_DT" datatype="string" name="[CS_WEEK_BEG_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CATEG_LVL6_NAME" datatype="string" name="[CATEG_LVL6_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="QTR_OF_CAL_ID" datatype="integer" name="[QTR_OF_CAL_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CURR_CAL_DT_MNS_2YEAR_YN_ID" datatype="integer" name="[CURR_CAL_DT_MNS_2YEAR_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="DAY_IN_WEEK_COUNT" datatype="integer" name="[DAY_IN_WEEK_COUNT]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="MTD_YN_ID" datatype="integer" name="[MTD_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="RETAIL_START_DATE" datatype="string" name="[RETAIL_START_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="ADULT_CATEG_YN" datatype="string" name="[ADULT_CATEG_YN]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="QTR_IND" datatype="string" name="[QTR_IND]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="LEAF_CATEG_ID" datatype="integer" name="[LEAF_CATEG_ID (TEST_CATEGORY_GROUPINGS)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CATEG_LVL3_NAME" datatype="string" name="[CATEG_LVL3_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CAL_DT" datatype="date" name="[CAL_DT (TEST_CAL_DT)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="QTR_OF_YEAR_ID" datatype="integer" name="[QTR_OF_YEAR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="UPD_DATE" datatype="string" name="[UPD_DATE]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="ACCOUNT_ID" datatype="integer" name="[ACCOUNT_ID (SELLER_ACCOUNT)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="LSTG_FORMAT_NAME" datatype="string" name="[LSTG_FORMAT_NAME]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="CURR_CAL_DT_MNS_1QTR_YN_ID" datatype="integer" name="[CURR_CAL_DT_MNS_1QTR_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="DIM_CRE_USER" datatype="string" name="[DIM_CRE_USER]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="AGE_FOR_WEEK_ID" datatype="integer" name="[AGE_FOR_WEEK_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="BUYER_BUYER_LEVEL" datatype="integer" name="[ACCOUNT_BUYER_LEVEL (BUYER_ACCOUNT)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="CAL_DT_MNS_2YEAR_DT" datatype="string" name="[CAL_DT_MNS_2YEAR_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="RTL_WEEK_OF_RTL_YEAR_ID" datatype="integer" name="[RTL_WEEK_OF_RTL_YEAR_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="DAY_IN_YEAR_COUNT" datatype="integer" name="[DAY_IN_YEAR_COUNT]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="WEEK_BEG_END_DESC_MD" datatype="string" name="[WEEK_BEG_END_DESC_MD]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="SITE_ID" datatype="integer" name="[SITE_ID (TEST_SITES)]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="QTD_YN_ID" datatype="integer" name="[QTD_YN_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="WEEK_OF_CAL_ID" datatype="integer" name="[WEEK_OF_CAL_ID]" role="dimension" type="ordinal" hidden="true"/>
+  <column caption="SITES_UPD_USER" datatype="string" name="[SITES_UPD_USER]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="WEEK_BEG_END_DESC_MDY" datatype="string" name="[WEEK_BEG_END_DESC_MDY]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="WEEK_END_DT" datatype="string" name="[WEEK_END_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="RTL_WEEK_BEG_DT" datatype="string" name="[RTL_WEEK_BEG_DT]" role="dimension" type="nominal" hidden="true"/>
+  <column caption="TRANS_CNT" datatype="integer" name="[TRANS_CNT]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="COUNT(1)"/>
+  </column>
+  <column caption="GMV_SUM" datatype="real" name="[GMV_SUM]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="SUM([PRICE])"/>
+  </column>
+  <column caption="GMV_MIN" datatype="real" name="[GMV_MIN]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="MIN([PRICE])"/>
+  </column>
+  <column caption="GMV_MAX" datatype="real" name="[GMV_MAX]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="MAX([PRICE])"/>
+  </column>
+  <column caption="ITEM_COUNT_SUM" datatype="integer" name="[ITEM_COUNT_SUM]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="SUM([ITEM_COUNT])"/>
+  </column>
+  <column caption="ITEM_COUNT_MAX" datatype="integer" name="[ITEM_COUNT_MAX]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="MAX([ITEM_COUNT])"/>
+  </column>
+  <column caption="SELLER_HLL" datatype="integer" name="[SELLER_HLL]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="COUNTD([SELLER_ID])"/>
+  </column>
+  <column caption="COUNT_DISTINCT" datatype="integer" name="[COUNT_DISTINCT]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="COUNTD([LSTG_FORMAT_NAME])"/>
+  </column>
+  <column caption="TEST_COUNT_DISTINCT_BITMAP" datatype="integer" name="[TEST_COUNT_DISTINCT_BITMAP]" role="measure" type="quantitative" hidden="true">
+    <calculation class="tableau" formula="COUNTD([TEST_COUNT_DISTINCT_BITMAP])"/>
+  </column>
+  <drill-paths>
+    <drill-path name="[META_CATEG_NAME], [CATEG_LVL2_NAME], [CATEG_LVL3_NAME], [LEAF_CATEG_ID (TEST_KYLIN_FACT)]">
+      <field>[META_CATEG_NAME]</field>
+      <field>[CATEG_LVL2_NAME]</field>
+      <field>[CATEG_LVL3_NAME]</field>
+      <field>[LEAF_CATEG_ID (TEST_KYLIN_FACT)]</field>
+    </drill-path>
+  </drill-paths>
+  <semantic-values>
+    <semantic-value key="[Country].[Name]" value="&quot;美国&quot;"/>
+  </semantic-values>
+</datasource>

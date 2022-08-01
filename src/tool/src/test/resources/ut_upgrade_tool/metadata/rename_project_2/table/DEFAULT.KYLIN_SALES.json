@@ -1,0 +1,75 @@
+{
+  "uuid" : "46ed7ac3-fa18-4f8e-aa4b-140c289c555c",
+  "last_modified" : 0,
+  "create_time" : 1585557546108,
+  "version" : "4.0.0.0",
+  "name" : "KYLIN_SALES",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "TRANS_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "PART_DT",
+    "datatype" : "date",
+    "comment" : "Order Date"
+  }, {
+    "id" : "3",
+    "name" : "LSTG_FORMAT_NAME",
+    "datatype" : "varchar(4096)",
+    "comment" : "Order Transaction Type"
+  }, {
+    "id" : "4",
+    "name" : "LEAF_CATEG_ID",
+    "datatype" : "bigint",
+    "comment" : "Category ID"
+  }, {
+    "id" : "5",
+    "name" : "LSTG_SITE_ID",
+    "datatype" : "integer",
+    "comment" : "Site ID"
+  }, {
+    "id" : "6",
+    "name" : "SLR_SEGMENT_CD",
+    "datatype" : "smallint"
+  }, {
+    "id" : "7",
+    "name" : "PRICE",
+    "datatype" : "decimal(19,4)",
+    "comment" : "Order Price"
+  }, {
+    "id" : "8",
+    "name" : "ITEM_COUNT",
+    "datatype" : "bigint",
+    "comment" : "Number of Purchased Goods"
+  }, {
+    "id" : "9",
+    "name" : "SELLER_ID",
+    "datatype" : "bigint",
+    "comment" : "Seller ID"
+  }, {
+    "id" : "10",
+    "name" : "BUYER_ID",
+    "datatype" : "bigint",
+    "comment" : "Buyer ID"
+  }, {
+    "id" : "11",
+    "name" : "OPS_USER_ID",
+    "datatype" : "varchar(4096)",
+    "comment" : "System User ID"
+  }, {
+    "id" : "12",
+    "name" : "OPS_REGION",
+    "datatype" : "varchar(4096)",
+    "comment" : "System User Region"
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT"
+}

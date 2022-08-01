@@ -1,0 +1,3 @@
+[core]
+	ignorecase = false
+	autocrlf = false

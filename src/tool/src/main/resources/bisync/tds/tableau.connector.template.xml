@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<datasource formatted-name="federated.0e6gjbn18cj0a41an9pi309itkyi" inline="true" source-platform="win" version="10.0">
+  <connection class="federated">
+    <named-connections>
+      <named-connection caption='' name='kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf'>
+        <connection class='kyligence_odbc' dbname='' port='80' schema='DEFAULT' server='localhost' username='ADMIN' />
+      </named-connection>
+    </named-connections>
+  </connection>
+  <aliases enabled="yes"/>
+  <semantic-values>
+    <semantic-value key="[Country].[Name]" value="&quot;美国&quot;"/>
+  </semantic-values>
+</datasource>

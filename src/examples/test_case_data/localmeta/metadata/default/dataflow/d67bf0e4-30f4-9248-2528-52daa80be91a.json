@@ -1,0 +1,66 @@
+{
+  "uuid" : "d67bf0e4-30f4-9248-2528-52daa80be91a",
+  "last_modified" : 1644551100009,
+  "create_time" : 1644291284442,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 112,
+  "last_query_time" : 1644491445677,
+  "layout_query_hit_count" : {
+    "1" : {
+      "1644213600000" : 1,
+      "1644249600000" : 13,
+      "1644336000000" : 29,
+      "1644386400000" : 2,
+      "1644422400000" : 34
+    },
+    "20000000001" : {
+      "1644213600000" : 1,
+      "1644249600000" : 3,
+      "1644336000000" : 13,
+      "1644422400000" : 16
+    }
+  },
+  "segments" : [ {
+    "id" : "24faaf24-36ee-3e08-1c9f-b6e3ccfe9ec9",
+    "name" : "19920101000000_19950101000000",
+    "create_time_utc" : 1644291370749,
+    "status" : "READY",
+    "segRange" : {
+      "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+      "date_range_start" : 694245600000,
+      "date_range_end" : 788940000000
+    },
+    "timeRange" : null,
+    "dimension_range_info_map" : {
+      "13" : {
+        "min" : "1",
+        "max" : "50"
+      },
+      "10" : {
+        "min" : "1992-01-01",
+        "max" : "1994-12-31"
+      }
+    },
+    "parameters" : null,
+    "dictionaries" : null,
+    "snapshots" : null,
+    "last_build_time" : 1644291553194,
+    "source_count" : 27687,
+    "source_bytes_size" : 5659955,
+    "column_source_bytes" : {
+      "SSB.LINEORDER.LO_ORDERDATE" : 276870,
+      "SSB.LINEORDER.LO_QUANTITY" : 50418
+    },
+    "ori_snapshot_size" : { },
+    "additionalInfo" : { },
+    "is_realtime_segment" : false,
+    "is_snapshot_ready" : false,
+    "is_dict_ready" : false,
+    "is_flat_table_ready" : true,
+    "is_fact_view_ready" : false,
+    "multi_partitions" : [ ],
+    "max_bucket_id" : -1
+  } ]
+}

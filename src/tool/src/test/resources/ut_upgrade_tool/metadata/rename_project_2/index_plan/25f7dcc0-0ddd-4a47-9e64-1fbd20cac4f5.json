@@ -1,0 +1,19 @@
+{
+  "uuid" : "25f7dcc0-0ddd-4a47-9e64-1fbd20cac4f5",
+  "last_modified" : 0,
+  "create_time" : 1585557580004,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "rule_based_index" : null,
+  "indexes" : [ ],
+  "override_properties" : { },
+  "to_be_deleted_indexes" : [ ],
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 0,
+  "next_table_index_id" : 20000000000,
+  "agg_shard_by_columns" : [ ],
+  "extend_partition_columns" : [ ],
+  "layout_bucket_num" : { }
+}

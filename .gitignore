@@ -1,0 +1,140 @@
+### Eclipse
+*.pydevproject
+.metadata
+.gradle
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+*.versionsBackup
+local.properties
+release.properties
+.loadpath
+
+.cache-main
+.cache-tests
+
+#IDEA
+*.iml
+ci.log.*
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+*.factorypath
+
+# CDT-specific
+.cproject
+
+# PDT-specific
+.buildpath
+
+# sbteclipse plugin
+.target
+
+# TeXlipse plugin
+.texlipse
+
+### Java
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+
+### Origin
+# /
+.classpath
+.project
+.idea
+.DS_Store
+target
+logs
+*.releaseBackup
+*.log
+*.DS_Store
+
+# .settings
+org.eclipse.m2e.core.prefs
+org.eclipse.wst.common.component
+org.eclipse.wst.common.project.facet.core.xml
+org.eclipse.wst.validation.prefs
+org.eclipse.jdt.apt.core.prefs
+org.eclipse.jdt.core.prefs
+org.eclipse.core.resources.prefs
+org.scala-ide.sdt.core.prefs
+org.sonarlint.eclipse.core.prefs
+server/.settings/.jsdtscope
+server/.settings/org.eclipse.wst.common.project.facet.core.prefs.xml
+server/.settings/org.eclipse.wst.jsdt.ui.superType.container
+server/.settings/org.eclipse.wst.jsdt.ui.superType.name
+#web
+webapp/app/WEB-INF/*
+webapp/dist
+webapp/node_modules:
+webapp/CHANGELOG.md
+
+# package file
+build/tomcat
+build/lib
+build/kybot
+build/tpch-benchmark
+*.tgz
+*.tar.gz
+webapp/app/components/*
+
+ebay*
+build/commit_SHA1
+dist/
+tomcat/
+webapp/app/kylin-servlet.xml
+webapp/app/web.xml
+
+#kylin
+src/examples/test_data/*
+src/spark-project/examples/test_data/*
+src/second-storage/examples/test_data/*
+
+#kybot
+kybot/
+.kyaccount
+
+# maven
+dependency-reduced-pom.xml
+server_mapping.txt
+
+#obfuscation
+cp.txt
+tmp.pro
+spark_client_pid
+
+meta_backups
+tmp_war
+
+#exclusion
+!pathfinder*.jar
+VERSION
+
+#hadoop files
+*.crc
+_SUCCESS
+metastore_db
+ci.log*
+
+appid
+child_process
+src/server-base/spark-warehouse/
+
+#streaming
+src/streaming/examples/*

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration name="Log4j1">
+    <Appenders>
+        <RollingRandomAccessFile name="server" fileName="${env:KYLIN_HOME}/logs/kylin.log" append="true"
+                                 filePattern="${env:KYLIN_HOME}/logs/kylin.log.%i" immediateFlush="false" >
+            <Policies>
+                <SizeBasedTriggeringPolicy size="268435456"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+        </RollingRandomAccessFile>
+        <Routing name="routing">
+            <Routes pattern="${ctx:logCategory}">
+                <Route>
+                    <RollingFile name="rolling-${ctx:logCategory}"
+                                 fileName="${env:KYLIN_HOME}/logs/kylin.${ctx:logCategory}.log"
+                                 filePattern="${env:KYLIN_HOME}/logs/kylin.${ctx:logCategory}.log.%i">
+                        <Policies>
+                            <SizeBasedTriggeringPolicy size="268435456"/>
+                        </Policies>
+                        <DefaultRolloverStrategy max="10"/>
+                        <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+                    </RollingFile>
+                </Route>
+
+                <Route ref="server" key="${ctx:logCategory}"/>
+            </Routes>
+        </Routing>
+        <RollingFile name="query-log-spark" fileName="${env:KYLIN_HOME}/logs/kylin.query.log" append="true"
+                     filePattern="${env:KYLIN_HOME}/logs/kylin.query.log.%i">
+            <Policies>
+                <SizeBasedTriggeringPolicy size="268435456"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="routing"/>
+        </Root>
+        <Logger name="org.apache.spark.scheduler.TaskSetManager" level="INFO" additivity="false">
+            <AppenderRef ref="query-log-spark"/>
+        </Logger>
+        <Logger name="org.apache.spark.scheduler.DAGScheduler" level="INFO" additivity="false">
+            <AppenderRef ref="query-log-spark"/>
+        </Logger>
+        <Logger name="org.apache.spark.scheduler.YarnScheduler" level="INFO" additivity="false">
+            <AppenderRef ref="query-log-spark"/>
+        </Logger>
+        <Logger name="io.kyligence" level="DEBUG"/>
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.apache.kylin" level="DEBUG"/>
+        <Logger name="org.apache.spark.ui" level="WARN"/>
+        <Logger name="org.apache.spark.sql.execution.ui" level="WARN"/>
+        <Logger name="org.springframework.security" level="INFO"/>
+        <Logger name="org.apache.spark.ContextCleaner" level="WARN"/>
+        <Logger name="org.apache.kylin.ext" level="INFO"/>
+        <!--  Query log  -->
+        <Logger name="org.apache.kylin.query" level="INFO"/>
+        <Logger name="org.apache.kylin.query" level="INFO"/>
+        <Logger name="NDataflowCapabilityChecker" level="INFO" />
+        <Logger name="org.apache.kylin.common.util.CheckUtil" level="INFO" />
+        <Logger name="NQueryLayoutChooser" level="INFO" />
+        <Logger name="org.apache.kylin.query.runtime.plan.ResultPlan" level="INFO" />
+        <Logger name="org.apache.spark.sql.kylin.external.LogEx" level="INFO" />
+        <Logger name="org.apache.kylin.engine.spark.utils.LogEx" level="INFO" />
+    </Loggers>
+</Configuration>

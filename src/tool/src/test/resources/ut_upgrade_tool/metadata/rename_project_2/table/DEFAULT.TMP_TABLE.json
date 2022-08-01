@@ -1,0 +1,21 @@
+{
+  "uuid" : "d1927859-2fac-4d01-a254-5c19be716cfc",
+  "last_modified" : 0,
+  "create_time" : 1585557546108,
+  "version" : "4.0.0.0",
+  "name" : "TMP_TABLE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "SID",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT"
+}

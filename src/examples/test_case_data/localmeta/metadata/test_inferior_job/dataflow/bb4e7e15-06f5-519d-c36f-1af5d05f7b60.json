@@ -1,0 +1,12 @@
+{
+  "uuid" : "bb4e7e15-06f5-519d-c36f-1af5d05f7b60",
+  "last_modified" : 1649673683918,
+  "create_time" : 1649659451575,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 1649671686579,
+  "layout_query_hit_count" : {},
+  "segments" : []
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration name="Log4j1">
+    <Appenders>
+        <DriverHdfsAppender name="hdfs"
+                            kerberosEnabled="${sys:kylin.kerberos.enabled}"
+                            kerberosPrincipal="${sys:kylin.kerberos.principal}"
+                            kerberosKeytab="${sys:kylin.kerberos.keytab}"
+                            workingDir="${sys:kylin.hdfs.working.dir}"
+                            logPath="${sys:spark.driver.log4j.appender.hdfs.File}"
+                            logQueueCapacity="5000"
+                            flushInterval="5000">
+            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+        </DriverHdfsAppender>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="hdfs"/>
+        </Root>
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.apache.kylin" level="INFO"/>
+        <Logger name="org.springframework.security" level="INFO"/>
+        <Logger name="io.kyligence" level="INFO"/>
+    </Loggers>
+</Configuration>

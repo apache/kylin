@@ -1,0 +1,408 @@
+{
+  "uuid" : "2d07e878-da28-a203-2d2c-185b4c6656f1",
+  "last_modified" : 1632293938765,
+  "create_time" : 1632293935226,
+  "version" :  "%default_version%",
+  "alias" : "sample_ssb",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "SSB.P_LINEORDER",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "SSB.DATES",
+    "kind" : "LOOKUP",
+    "alias" : "DATES",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "DATES.D_DATEKEY" ],
+      "foreign_key" : [ "P_LINEORDER.LO_ORDERDATE" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  }, {
+    "table" : "SSB.CUSTOMER",
+    "kind" : "LOOKUP",
+    "alias" : "CUSTOMER",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "CUSTOMER.C_CUSTKEY" ],
+      "foreign_key" : [ "P_LINEORDER.LO_CUSTKEY" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  }, {
+    "table" : "SSB.PART",
+    "kind" : "LOOKUP",
+    "alias" : "PART",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "PART.P_PARTKEY" ],
+      "foreign_key" : [ "P_LINEORDER.LO_PARTKEY" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  }, {
+    "table" : "SSB.SUPPLIER",
+    "kind" : "LOOKUP",
+    "alias" : "SUPPLIER",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "SUPPLIER.S_SUPPKEY" ],
+      "foreign_key" : [ "P_LINEORDER.LO_SUPPKEY" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "P_LINEORDER.LO_ORDERDATE",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "LO_SHIPMODE",
+    "column" : "P_LINEORDER.LO_SHIPMODE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "LO_LINENUMBER",
+    "column" : "P_LINEORDER.LO_LINENUMBER",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "LO_ORDTOTALPRICE",
+    "column" : "P_LINEORDER.LO_ORDTOTALPRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "LO_SUPPLYCOST",
+    "column" : "P_LINEORDER.LO_SUPPLYCOST",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "LO_SUPPKEY",
+    "column" : "P_LINEORDER.LO_SUPPKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "LO_QUANTITY",
+    "column" : "P_LINEORDER.LO_QUANTITY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "LO_PARTKEY",
+    "column" : "P_LINEORDER.LO_PARTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "LO_ORDERKEY",
+    "column" : "P_LINEORDER.LO_ORDERKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "LO_CUSTKEY",
+    "column" : "P_LINEORDER.LO_CUSTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "LO_SHIPPRIOTITY",
+    "column" : "P_LINEORDER.LO_SHIPPRIOTITY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "LO_DISCOUNT",
+    "column" : "P_LINEORDER.LO_DISCOUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "LO_ORDERPRIOTITY",
+    "column" : "P_LINEORDER.LO_ORDERPRIOTITY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "LO_ORDERDATE",
+    "column" : "P_LINEORDER.LO_ORDERDATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "LO_REVENUE",
+    "column" : "P_LINEORDER.LO_REVENUE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "V_REVENUE",
+    "column" : "P_LINEORDER.V_REVENUE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "LO_COMMITDATE",
+    "column" : "P_LINEORDER.LO_COMMITDATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "LO_EXTENDEDPRICE",
+    "column" : "P_LINEORDER.LO_EXTENDEDPRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "LO_TAX",
+    "column" : "P_LINEORDER.LO_TAX",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 18,
+    "name" : "D_WEEKNUMINYEAR",
+    "column" : "DATES.D_WEEKNUMINYEAR"
+  }, {
+    "id" : 19,
+    "name" : "D_LASTDAYINWEEKFL",
+    "column" : "DATES.D_LASTDAYINWEEKFL"
+  }, {
+    "id" : 20,
+    "name" : "D_LASTDAYINMONTHFL",
+    "column" : "DATES.D_LASTDAYINMONTHFL"
+  }, {
+    "id" : 21,
+    "name" : "D_DAYOFWEEK",
+    "column" : "DATES.D_DAYOFWEEK"
+  }, {
+    "id" : 22,
+    "name" : "D_MONTHNUMINYEAR",
+    "column" : "DATES.D_MONTHNUMINYEAR"
+  }, {
+    "id" : 23,
+    "name" : "D_YEARMONTHNUM",
+    "column" : "DATES.D_YEARMONTHNUM"
+  }, {
+    "id" : 24,
+    "name" : "D_YEARMONTH",
+    "column" : "DATES.D_YEARMONTH"
+  }, {
+    "id" : 25,
+    "name" : "D_DAYNUMINMONTH",
+    "column" : "DATES.D_DAYNUMINMONTH"
+  }, {
+    "id" : 26,
+    "name" : "D_SELLINGSEASON",
+    "column" : "DATES.D_SELLINGSEASON"
+  }, {
+    "id" : 27,
+    "name" : "D_WEEKDAYFL",
+    "column" : "DATES.D_WEEKDAYFL"
+  }, {
+    "id" : 28,
+    "name" : "D_YEAR",
+    "column" : "DATES.D_YEAR"
+  }, {
+    "id" : 29,
+    "name" : "D_HOLIDAYFL",
+    "column" : "DATES.D_HOLIDAYFL"
+  }, {
+    "id" : 30,
+    "name" : "D_DAYNUMINWEEK",
+    "column" : "DATES.D_DAYNUMINWEEK"
+  }, {
+    "id" : 31,
+    "name" : "D_DAYNUMINYEAR",
+    "column" : "DATES.D_DAYNUMINYEAR"
+  }, {
+    "id" : 32,
+    "name" : "D_DATE",
+    "column" : "DATES.D_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 33,
+    "name" : "D_MONTH",
+    "column" : "DATES.D_MONTH"
+  }, {
+    "id" : 34,
+    "name" : "D_DATEKEY",
+    "column" : "DATES.D_DATEKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 35,
+    "name" : "C_ADDRESS",
+    "column" : "CUSTOMER.C_ADDRESS"
+  }, {
+    "id" : 36,
+    "name" : "C_NATION",
+    "column" : "CUSTOMER.C_NATION"
+  }, {
+    "id" : 37,
+    "name" : "C_CITY",
+    "column" : "CUSTOMER.C_CITY"
+  }, {
+    "id" : 38,
+    "name" : "C_PHONE",
+    "column" : "CUSTOMER.C_PHONE"
+  }, {
+    "id" : 39,
+    "name" : "C_REGION",
+    "column" : "CUSTOMER.C_REGION"
+  }, {
+    "id" : 40,
+    "name" : "C_NAME",
+    "column" : "CUSTOMER.C_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 41,
+    "name" : "C_MKTSEGMENT",
+    "column" : "CUSTOMER.C_MKTSEGMENT"
+  }, {
+    "id" : 42,
+    "name" : "C_CUSTKEY",
+    "column" : "CUSTOMER.C_CUSTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 43,
+    "name" : "P_PARTKEY",
+    "column" : "PART.P_PARTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 44,
+    "name" : "P_CONTAINER",
+    "column" : "PART.P_CONTAINER"
+  }, {
+    "id" : 45,
+    "name" : "P_SIZE",
+    "column" : "PART.P_SIZE"
+  }, {
+    "id" : 46,
+    "name" : "P_NAME",
+    "column" : "PART.P_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 47,
+    "name" : "P_CATEGORY",
+    "column" : "PART.P_CATEGORY"
+  }, {
+    "id" : 48,
+    "name" : "P_TYPE",
+    "column" : "PART.P_TYPE"
+  }, {
+    "id" : 49,
+    "name" : "P_MFGR",
+    "column" : "PART.P_MFGR"
+  }, {
+    "id" : 50,
+    "name" : "P_BRAND",
+    "column" : "PART.P_BRAND"
+  }, {
+    "id" : 51,
+    "name" : "P_COLOR",
+    "column" : "PART.P_COLOR"
+  }, {
+    "id" : 52,
+    "name" : "S_ADDRESS",
+    "column" : "SUPPLIER.S_ADDRESS"
+  }, {
+    "id" : 53,
+    "name" : "S_NAME",
+    "column" : "SUPPLIER.S_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 54,
+    "name" : "S_NATION",
+    "column" : "SUPPLIER.S_NATION"
+  }, {
+    "id" : 55,
+    "name" : "S_SUPPKEY",
+    "column" : "SUPPLIER.S_SUPPKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 56,
+    "name" : "S_REGION",
+    "column" : "SUPPLIER.S_REGION"
+  }, {
+    "id" : 57,
+    "name" : "S_PHONE",
+    "column" : "SUPPLIER.S_PHONE"
+  }, {
+    "id" : 58,
+    "name" : "S_CITY",
+    "column" : "SUPPLIER.S_CITY"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000
+  } ],
+  "recommendations_count" : 0,
+  "computed_columns" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "P_LINEORDER" : {
+        "x" : 625.388895670573,
+        "y" : 272.38889058430993,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "CUSTOMER" : {
+        "x" : 315.38889567057305,
+        "y" : 72.3888905843099,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "DATES" : {
+        "x" : 275.38889567057294,
+        "y" : 556.8333350287544,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "PART" : {
+        "x" : 774.2777845594618,
+        "y" : 605.7222239176433,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "SUPPLIER" : {
+        "x" : 1055.388895670573,
+        "y" : 122.3888905843099,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null
+}

@@ -1,0 +1,195 @@
+options {
+    STATIC = false;
+    IGNORE_CASE = true;
+    UNICODE_INPUT = true;
+}
+
+PARSER_BEGIN(RawSqlParser)
+package org.apache.kylin.query.util;
+
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+import org.apache.kylin.query.util.RawSql;
+import org.apache.kylin.query.util.RawSqlBlock;
+
+public class RawSqlParser {
+
+    public static void main(String[] args) throws Exception {
+        final String SQL = "select /*+ MODEL_PRIORITY(model1, model2) */ 'col1-;1', col2 -- comment1;\n"
+            + "from table -- comment2\n"
+            + "/* comment3\n"
+            + "   comment4;\n"
+            + "   comment5\n"
+            + "*/\n"
+            + "limit /* comment6 */ 10; -- comment7;";
+        System.out.println("--------------Input Sql---------------");
+        System.out.println(SQL);
+
+        RawSqlParser parser = new RawSqlParser(new StringReader(SQL));
+        List<RawSqlBlock> stmtBlockList = new ArrayList<RawSqlBlock>();
+        List<RawSqlBlock> allBlockList = new ArrayList<RawSqlBlock>();
+        parser.DoParse(stmtBlockList, allBlockList);
+
+        System.out.println();
+        System.out.println("--------------Statements Only---------------");
+        StringBuilder stmt = new StringBuilder();
+        int prevEndLine = -1;
+        for (int i = 0; i < stmtBlockList.size(); i++) {
+            RawSqlBlock block = stmtBlockList.get(i);
+            String text = block.getText().trim();
+            if (i == stmtBlockList.size() - 1) {
+                if (";".equals(text.substring(text.length() - 1))) {
+                    text = text.substring(0, text.length() - 1);
+                }
+            }
+            if (block.getBeginLine() > prevEndLine) {
+                if (prevEndLine != -1) {
+                    stmt.append("\n");
+                }
+                stmt.append(text);
+            } else if (block.getBeginLine() == prevEndLine) {
+                stmt.append(" ");
+                stmt.append(text);
+            }
+            prevEndLine = block.getEndLine();
+        }
+        System.out.println(stmt);
+
+        System.out.println();
+        System.out.println("--------------Full Text---------------");
+        StringBuilder fullText = new StringBuilder();
+        for (RawSqlBlock block : allBlockList) {
+            String text = block.getText();
+            if (block.getType().equals(RawSqlBlock.Type.STATEMENT) && block.equals(stmtBlockList.get(stmtBlockList.size() - 1))) {
+                for (int i = text.length() - 1; i >= 0; i--) {
+                    char c = text.charAt(i);
+                    if (c == '\'' || c == '"') {
+                        break;
+                    }
+                    if (c == ';') {
+                        text = text.substring(0, i) + text.substring(i + 1);
+                    }
+                }
+            }
+            fullText.append(text);
+        }
+        System.out.println(fullText);
+    }
+
+    private String sql;
+
+    public RawSqlParser(final String sql) {
+        this(new StringReader(sql.trim()));
+        this.sql = sql.trim();
+    }
+
+    public RawSql parse() throws ParseException {
+        List<RawSqlBlock> stmtBlockList = new ArrayList<RawSqlBlock>();
+        List<RawSqlBlock> allBlockList = new ArrayList<RawSqlBlock>();
+        DoParse(stmtBlockList, allBlockList);
+        return new RawSql(sql, stmtBlockList, allBlockList);
+    }
+
+}
+PARSER_END(RawSqlParser)
+
+/* ***************** */
+/* Token Definitions */
+/* ***************** */
+
+<DEFAULT> TOKEN : {
+    <SINGLE_LINE_COMMENT: "--" (~["\n","\r"])* ("\n"|"\r"|"\r\n")? >
+    | <REMAIN_TOKEN : [" ", "\t", "\n", "\r", ",", "/", "-"] >
+    | <ANY : (~[" ", ",", "\t", "\n", "\r", "/", "-", "'", "\""])+ >
+    | <HINT_BEG: "/*+" >
+    | <COMMENT_END: "*/" >
+    | <HINT: <HINT_BEG> (~["\n", "\r", "*", "/"])* <COMMENT_END> >
+}
+
+<DEFAULT> MORE : {
+    <MULTI_LINE_COMMENT_BEGIN: "/*" > : IN_MULTI_LINE_COMMENT
+    | <QUOTE_BEGIN: "'" > : IN_QUOTE
+    | <DOUBLE_QUOTE_BEGIN: "\"" > : IN_DOUBLE_QUOTE
+}
+
+<IN_MULTI_LINE_COMMENT> MORE : { < ~[] > }
+<IN_MULTI_LINE_COMMENT> TOKEN : { <MULTI_LINE_COMMENT: "*/" ("\n"|"\r"|"\r\n")? > : DEFAULT }
+
+<IN_QUOTE> MORE : { < ~["'"] > }
+<IN_QUOTE> TOKEN : { <QUOTE_STRING: "'" > : DEFAULT }
+
+<IN_DOUBLE_QUOTE> MORE : { < ~["\""] > }
+<IN_DOUBLE_QUOTE> TOKEN : { <DOUBLE_QUOTE_STRING: "\"" > : DEFAULT }
+
+/* ****************** */
+/* Parser Definitions */
+/* ****************** */
+
+private void DoParse(List<RawSqlBlock> stmtBlockList, List<RawSqlBlock> allBlockList):
+{
+    Token t;
+    RawSqlBlock block;
+}
+{
+    (
+        LOOKAHEAD(2)
+        {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new ParseException("RawSqlParser is interrupted");
+            }
+        }
+        block = Comment()
+        { allBlockList.add(block); }
+        | block = Stmt()
+        {
+            stmtBlockList.add(block);
+            allBlockList.add(block);
+        }
+    )+
+    <EOF>
+}
+
+private RawSqlBlock Comment():
+{
+    Token t;
+}
+{
+    (
+        t = <SINGLE_LINE_COMMENT>
+        | t = <MULTI_LINE_COMMENT>
+    )
+    { return new RawSqlBlock(t.image, RawSqlBlock.Type.COMMENT, t.beginLine, t.beginColumn, t.endLine, t.endColumn); }
+}
+
+private RawSqlBlock Stmt():
+{
+    Token t;
+    StringBuilder stmtBuilder = new StringBuilder();
+    int beginLine = -1;
+    int beginColumn = -1;
+    int endLine = -1;
+    int endColumn = -1;
+}
+{
+    (
+        (
+            t = <QUOTE_STRING>
+            | t = <DOUBLE_QUOTE_STRING>
+            | t = <REMAIN_TOKEN>
+            | t = <ANY>
+            | t = <HINT>
+        )
+        {
+            stmtBuilder.append(t.image);
+            beginLine = beginLine == -1 ? t.beginLine : Math.min(beginLine, t.beginLine);
+            beginColumn = beginColumn == -1 ? t.beginColumn : Math.min(beginColumn, t.beginColumn);
+            endLine = Math.max(endLine, t.endLine);
+            endColumn = Math.max(endColumn, t.endColumn);
+        }
+    )+
+    { return new RawSqlBlock(stmtBuilder.toString(), RawSqlBlock.Type.STATEMENT, beginLine, beginColumn, endLine, endColumn); }
+}

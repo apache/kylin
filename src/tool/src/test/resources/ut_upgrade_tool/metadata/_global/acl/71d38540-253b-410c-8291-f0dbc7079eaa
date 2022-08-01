@@ -1,0 +1,20 @@
+{
+  "uuid" : "458105ff-d115-4923-b52f-f051f6972b7f",
+  "last_modified" : 1585290432314,
+  "create_time" : 1585290432232,
+  "version" : "4.0.0.0",
+  "domainObjectInfo" : {
+    "type" : "org.apache.kylin.metadata.project.ProjectInstance",
+    "id" : "71d38540-253b-410c-8291-f0dbc7079eaa"
+  },
+  "parentDomainObjectInfo" : null,
+  "ownerInfo" : {
+    "sid" : "ADMIN",
+    "principal" : true
+  },
+  "entriesInheriting" : false,
+  "entries" : [ {
+    "p" : "p_admin",
+    "m" : 32
+  } ]
+}

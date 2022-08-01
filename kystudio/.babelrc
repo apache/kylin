@@ -1,0 +1,17 @@
+{
+  "presets": [
+    "@babel/preset-env",
+    "@vue/babel-preset-jsx"
+  ],
+  "plugins": ["@babel/plugin-transform-runtime", ["@babel/plugin-proposal-decorators", { "legacy": true }]],
+  "comments": false,
+  "env": {
+    "test": {
+      "presets": [
+        ["@babel/preset-env", { "targets": { "node": "current" }}],
+        "@vue/babel-preset-jsx"
+      ],
+      "plugins": ["@babel/plugin-transform-runtime", ["@babel/plugin-proposal-decorators", { "legacy": true }], "@babel/plugin-syntax-dynamic-import"]
+    }
+  }
+}

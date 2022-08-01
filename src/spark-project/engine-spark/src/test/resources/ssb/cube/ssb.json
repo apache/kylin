@@ -1,0 +1,15 @@
+{
+  "uuid" : "70a9f288-3c01-4745-a04b-5641e82d6c69",
+  "version" : "1.5.3",
+  "name" : "ssb",
+  "owner" : "ADMIN",
+  "cost" : 50,
+  "status" : "DISABLED",
+  "segments" : [],
+  "last_modified" : 1463713376736,
+  "descriptor" : "ssb",
+  "create_time_utc" : 1457444500888,
+  "size_kb" : 0,
+  "input_records_count" : 0,
+  "input_records_size" : 0
+}

@@ -1,0 +1,122 @@
+{
+  "uuid" : "cd27acf6-8c2a-42a6-890c-bf813c665ef3",
+  "last_modified" : 1585806651961,
+  "create_time" : 1585806631756,
+  "version" : "4.0.0.0",
+  "name" : "INDEX_BUILD",
+  "tasks" : [ {
+    "uuid" : "cd27acf6-8c2a-42a6-890c-bf813c665ef3_00",
+    "last_modified" : 0,
+    "create_time" : 1585806631756,
+    "version" : "4.0.0.0",
+    "name" : "Detect Resource",
+    "tasks" : null,
+    "type" : "org.apache.kylin.engine.spark.job.NResourceDetectStep",
+    "params" : {
+      "distMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/cd27acf6-8c2a-42a6-890c-bf813c665ef3/00/meta",
+      "submitter" : "ADMIN",
+      "dataflowId" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+      "dataRangeEnd" : "9223372036854775807",
+      "targetModel" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+      "dataRangeStart" : "0",
+      "project" : "version40",
+      "className" : "org.apache.kylin.engine.spark.job.ResourceDetectBeforeCubingJob",
+      "parentId" : "cd27acf6-8c2a-42a6-890c-bf813c665ef3",
+      "jobId" : "cd27acf6-8c2a-42a6-890c-bf813c665ef3",
+      "outputMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/cd27acf6-8c2a-42a6-890c-bf813c665ef3/00/meta_output",
+      "layoutIds" : "20000010001",
+      "segmentIds" : "7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b"
+    },
+    "segments" : [ ],
+    "job_type" : "INDEX_BUILD",
+    "data_range_start" : 0,
+    "data_range_end" : 0,
+    "target_model" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+    "target_segments" : [ ],
+    "output" : {
+      "content" : null,
+      "log_path" : null,
+      "status" : "SUCCEED",
+      "info" : {
+        "yarn_job_wait_time" : "0",
+        "yarn_job_run_time" : "8961"
+      },
+      "last_modified" : 0,
+      "createTime" : 1585806631756,
+      "start_time" : 1585806633041,
+      "end_time" : 1585806651137,
+      "wait_time" : 0
+    }
+  }, {
+    "uuid" : "cd27acf6-8c2a-42a6-890c-bf813c665ef3_01",
+    "last_modified" : 0,
+    "create_time" : 1585806631756,
+    "version" : "4.0.0.0",
+    "name" : "Load Data To Index",
+    "tasks" : null,
+    "type" : "org.apache.kylin.engine.spark.job.NSparkCubingStep",
+    "params" : {
+      "distMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/cd27acf6-8c2a-42a6-890c-bf813c665ef3/01/meta",
+      "submitter" : "ADMIN",
+      "dataflowId" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+      "dataRangeEnd" : "9223372036854775807",
+      "targetModel" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+      "dataRangeStart" : "0",
+      "project" : "version40",
+      "className" : "org.apache.kylin.engine.spark.job.DFBuildJob",
+      "parentId" : "cd27acf6-8c2a-42a6-890c-bf813c665ef3",
+      "jobId" : "cd27acf6-8c2a-42a6-890c-bf813c665ef3",
+      "outputMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/cd27acf6-8c2a-42a6-890c-bf813c665ef3/01/meta_output",
+      "layoutIds" : "20000010001",
+      "segmentIds" : "7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b"
+    },
+    "segments" : [ ],
+    "job_type" : "INDEX_BUILD",
+    "data_range_start" : 0,
+    "data_range_end" : 0,
+    "target_model" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+    "target_segments" : [ ],
+    "output" : {
+      "content" : null,
+      "log_path" : null,
+      "status" : "RUNNING",
+      "info" : { },
+      "last_modified" : 0,
+      "createTime" : 1585806631756,
+      "start_time" : 1585806651390,
+      "end_time" : 0,
+      "wait_time" : 0
+    }
+  } ],
+  "type" : "org.apache.kylin.engine.spark.job.NSparkCubingJob",
+  "params" : {
+    "submitter" : "ADMIN",
+    "jobId" : "cd27acf6-8c2a-42a6-890c-bf813c665ef3",
+    "dataflowId" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+    "dataRangeEnd" : "9223372036854775807",
+    "targetModel" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+    "dataRangeStart" : "0",
+    "project" : "version40",
+    "layoutIds" : "20000010001",
+    "segmentIds" : "7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b"
+  },
+  "segments" : [ ],
+  "job_type" : "INDEX_BUILD",
+  "data_range_start" : 0,
+  "data_range_end" : 0,
+  "target_model" : "b1d8d2b9-1d14-4148-bd42-8142e00beb76",
+  "target_segments" : [ "7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b" ],
+  "output" : {
+    "content" : null,
+    "log_path" : null,
+    "status" : "RUNNING",
+    "info" : {
+      "dependentFiles" : "/version40/table_snapshot/CUSTOMER,/version40/parquet/b1d8d2b9-1d14-4148-bd42-8142e00beb76/7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b/20000010001_temp1,/version40/table_snapshot/SUPPLIER,/version40/parquet/b1d8d2b9-1d14-4148-bd42-8142e00beb76/7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b/20000000001,/version40/parquet/b1d8d2b9-1d14-4148-bd42-8142e00beb76/7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b/20000010001,/version40/parquet/b1d8d2b9-1d14-4148-bd42-8142e00beb76/7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b/20000000001_temp1,/version40/parquet/b1d8d2b9-1d14-4148-bd42-8142e00beb76/7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b/20000000001_temp2,/version40/parquet/b1d8d2b9-1d14-4148-bd42-8142e00beb76/7e8268dc-2d2f-4ac7-a4fd-ebd9b430430b/20000010001_temp2"
+    },
+    "last_modified" : 0,
+    "createTime" : 1585806631756,
+    "start_time" : 1585806632837,
+    "end_time" : 0,
+    "wait_time" : 0
+  }
+}

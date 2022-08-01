@@ -1,0 +1,27 @@
+{
+  "uuid" : "cc60896f-456b-488f-8be5-2d48cf9eb792",
+  "last_modified" : 0,
+  "create_time" : 1585557546097,
+  "version" : "4.0.0.0",
+  "table_name" : "DEFAULT.KYLIN_ACCOUNT",
+  "last_build_job_id" : null,
+  "frequency" : 0,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : 0,
+  "total_rows" : 0,
+  "mapper_rows" : [ ],
+  "data_source_properties" : {
+    "owner" : "root",
+    "create_time" : "1535362739000",
+    "total_file_size" : "0",
+    "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+    "location" : "hdfs://hdp26.hadoop.com:8020/apps/hive/warehouse/kylin_account",
+    "partition_column" : "",
+    "total_file_number" : "0",
+    "last_access_time" : "0"
+  },
+  "loading_range" : [ ],
+  "col_stats_path" : null
+}

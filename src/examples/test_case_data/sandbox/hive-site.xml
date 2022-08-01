@@ -1,0 +1,819 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<configuration>
+
+    <property>
+        <name>ambari.hive.db.schema.name</name>
+        <value>hive</value>
+    </property>
+
+    <property>
+        <name>atlas.cluster.name</name>
+        <value>Sandbox</value>
+    </property>
+
+    <property>
+        <name>atlas.hook.hive.maxThreads</name>
+        <value>1</value>
+    </property>
+
+    <property>
+        <name>atlas.hook.hive.minThreads</name>
+        <value>1</value>
+    </property>
+
+    <property>
+        <name>atlas.hook.hive.synchronous</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>atlas.rest.address</name>
+        <value>http://sandbox.hortonworks.com:21000</value>
+    </property>
+
+    <property>
+        <name>datanucleus.autoCreateSchema</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>datanucleus.cache.level2.type</name>
+        <value>none</value>
+    </property>
+
+    <property>
+        <name>datanucleus.fixedDatastore</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.auto.convert.join</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.auto.convert.join.noconditionaltask</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.auto.convert.join.noconditionaltask.size</name>
+        <value>357913941</value>
+    </property>
+
+    <property>
+        <name>hive.auto.convert.sortmerge.join</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.auto.convert.sortmerge.join.to.mapjoin</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.cbo.enable</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.cli.print.header</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.cluster.delegation.token.store.class</name>
+        <value>org.apache.hadoop.hive.thrift.ZooKeeperTokenStore</value>
+    </property>
+
+    <property>
+        <name>hive.cluster.delegation.token.store.zookeeper.connectString</name>
+        <value>sandbox.hortonworks.com:2181</value>
+    </property>
+
+    <property>
+        <name>hive.cluster.delegation.token.store.zookeeper.znode</name>
+        <value>/hive/cluster/delegation</value>
+    </property>
+
+    <property>
+        <name>hive.compactor.abortedtxn.threshold</name>
+        <value>1000</value>
+    </property>
+
+    <property>
+        <name>hive.compactor.check.interval</name>
+        <value>300s</value>
+    </property>
+
+    <property>
+        <name>hive.compactor.delta.num.threshold</name>
+        <value>10</value>
+    </property>
+
+    <property>
+        <name>hive.compactor.delta.pct.threshold</name>
+        <value>0.1f</value>
+    </property>
+
+    <property>
+        <name>hive.compactor.initiator.on</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.compactor.worker.threads</name>
+        <value>0</value>
+    </property>
+
+    <property>
+        <name>hive.compactor.worker.timeout</name>
+        <value>86400s</value>
+    </property>
+
+    <property>
+        <name>hive.compute.query.using.stats</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.conf.restricted.list</name>
+        <value>hive.security.authenticator.manager,hive.security.authorization.manager,hive.users.in.admin.role</value>
+    </property>
+
+    <property>
+        <name>hive.convert.join.bucket.mapjoin.tez</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.default.fileformat</name>
+        <value>TextFile</value>
+    </property>
+
+    <property>
+        <name>hive.default.fileformat.managed</name>
+        <value>TextFile</value>
+    </property>
+
+    <property>
+        <name>hive.enforce.bucketing</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.enforce.sorting</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.enforce.sortmergebucketmapjoin</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.exec.compress.intermediate</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.exec.compress.output</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.exec.dynamic.partition</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.exec.dynamic.partition.mode</name>
+        <value>nonstrict</value>
+    </property>
+
+    <property>
+        <name>hive.exec.max.created.files</name>
+        <value>100000</value>
+    </property>
+
+    <property>
+        <name>hive.exec.max.dynamic.partitions</name>
+        <value>5000</value>
+    </property>
+
+    <property>
+        <name>hive.exec.max.dynamic.partitions.pernode</name>
+        <value>2000</value>
+    </property>
+
+    <property>
+        <name>hive.exec.orc.compression.strategy</name>
+        <value>SPEED</value>
+    </property>
+
+    <property>
+        <name>hive.exec.orc.default.compress</name>
+        <value>ZLIB</value>
+    </property>
+
+    <property>
+        <name>hive.exec.orc.default.stripe.size</name>
+        <value>67108864</value>
+    </property>
+
+    <property>
+        <name>hive.exec.orc.encoding.strategy</name>
+        <value>SPEED</value>
+    </property>
+
+    <property>
+        <name>hive.exec.parallel</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.exec.parallel.thread.number</name>
+        <value>8</value>
+    </property>
+
+    <property>
+        <name>hive.exec.reducers.bytes.per.reducer</name>
+        <value>67108864</value>
+    </property>
+
+    <property>
+        <name>hive.exec.reducers.max</name>
+        <value>1009</value>
+    </property>
+
+    <property>
+        <name>hive.exec.scratchdir</name>
+        <value>/tmp/hive</value>
+    </property>
+
+    <property>
+        <name>hive.exec.submit.local.task.via.child</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.exec.submitviachild</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.execution.engine</name>
+        <value>mr</value>
+    </property>
+
+    <property>
+        <name>hive.fetch.task.aggr</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.fetch.task.conversion</name>
+        <value>more</value>
+    </property>
+
+    <property>
+        <name>hive.fetch.task.conversion.threshold</name>
+        <value>1073741824</value>
+    </property>
+
+    <property>
+        <name>hive.limit.optimize.enable</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.limit.pushdown.memory.usage</name>
+        <value>0.04</value>
+    </property>
+
+    <property>
+        <name>hive.map.aggr</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.map.aggr.hash.force.flush.memory.threshold</name>
+        <value>0.9</value>
+    </property>
+
+    <property>
+        <name>hive.map.aggr.hash.min.reduction</name>
+        <value>0.5</value>
+    </property>
+
+    <property>
+        <name>hive.map.aggr.hash.percentmemory</name>
+        <value>0.5</value>
+    </property>
+
+    <property>
+        <name>hive.mapjoin.bucket.cache.size</name>
+        <value>10000</value>
+    </property>
+
+    <property>
+        <name>hive.mapjoin.optimized.hashtable</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.mapred.reduce.tasks.speculative.execution</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.merge.mapfiles</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.merge.mapredfiles</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.merge.orcfile.stripe.level</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.merge.rcfile.block.level</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.merge.size.per.task</name>
+        <value>256000000</value>
+    </property>
+
+    <property>
+        <name>hive.merge.smallfiles.avgsize</name>
+        <value>16000000</value>
+    </property>
+
+    <property>
+        <name>hive.merge.tezfiles</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.authorization.storage.checks</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.cache.pinobjtypes</name>
+        <value>Table,Database,Type,FieldSchema,Order</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.client.connect.retry.delay</name>
+        <value>5s</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.client.socket.timeout</name>
+        <value>1800s</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.connect.retries</name>
+        <value>24</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.execute.setugi</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.failure.retries</name>
+        <value>24</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.kerberos.keytab.file</name>
+        <value>/etc/security/keytabs/hive.service.keytab</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.kerberos.principal</name>
+        <value>hive/_HOST@EXAMPLE.COM</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.pre.event.listeners</name>
+        <value>org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventListener</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.sasl.enabled</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.server.max.threads</name>
+        <value>100000</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://sandbox.hortonworks.com:9083</value>
+    </property>
+
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>/apps/hive/warehouse</value>
+    </property>
+
+    <property>
+        <name>hive.optimize.bucketmapjoin</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.optimize.bucketmapjoin.sortedmerge</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.optimize.constant.propagation</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.optimize.index.filter</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.optimize.metadataonly</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.optimize.null.scan</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.optimize.reducededuplication</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.optimize.reducededuplication.min.reducer</name>
+        <value>4</value>
+    </property>
+
+    <property>
+        <name>hive.optimize.sort.dynamic.partition</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.orc.compute.splits.num.threads</name>
+        <value>10</value>
+    </property>
+
+    <property>
+        <name>hive.orc.splits.include.file.footer</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.prewarm.enabled</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.prewarm.numcontainers</name>
+        <value>3</value>
+    </property>
+
+    <property>
+        <name>hive.security.authenticator.manager</name>
+        <value>org.apache.hadoop.hive.ql.security.ProxyUserAuthenticator</value>
+    </property>
+
+    <property>
+        <name>hive.security.authorization.enabled</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.security.authorization.manager</name>
+        <value>org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdConfOnlyAuthorizerFactory</value>
+    </property>
+
+    <property>
+        <name>hive.security.metastore.authenticator.manager</name>
+        <value>org.apache.hadoop.hive.ql.security.HadoopDefaultMetastoreAuthenticator</value>
+    </property>
+
+    <property>
+        <name>hive.security.metastore.authorization.auth.reads</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.security.metastore.authorization.manager</name>
+        <value>org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizationProvider</value>
+    </property>
+
+    <property>
+        <name>hive.server2.allow.user.substitution</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.server2.authentication</name>
+        <value>NONE</value>
+    </property>
+
+    <property>
+        <name>hive.server2.authentication.spnego.keytab</name>
+        <value>HTTP/_HOST@EXAMPLE.COM</value>
+    </property>
+
+    <property>
+        <name>hive.server2.authentication.spnego.principal</name>
+        <value>/etc/security/keytabs/spnego.service.keytab</value>
+    </property>
+
+    <property>
+        <name>hive.server2.enable.doAs</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.server2.logging.operation.enabled</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.server2.logging.operation.log.location</name>
+        <value>/tmp/hive/operation_logs</value>
+    </property>
+
+    <property>
+        <name>hive.server2.support.dynamic.service.discovery</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.server2.table.type.mapping</name>
+        <value>CLASSIC</value>
+    </property>
+
+    <property>
+        <name>hive.server2.tez.default.queues</name>
+        <value>default</value>
+    </property>
+
+    <property>
+        <name>hive.server2.tez.initialize.default.sessions</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.server2.tez.sessions.per.default.queue</name>
+        <value>1</value>
+    </property>
+
+    <property>
+        <name>hive.server2.thrift.http.path</name>
+        <value>cliservice</value>
+    </property>
+
+    <property>
+        <name>hive.server2.thrift.http.port</name>
+        <value>10001</value>
+    </property>
+
+    <property>
+        <name>hive.server2.thrift.max.worker.threads</name>
+        <value>500</value>
+    </property>
+
+    <property>
+        <name>hive.server2.thrift.port</name>
+        <value>10000</value>
+    </property>
+
+    <property>
+        <name>hive.server2.thrift.sasl.qop</name>
+        <value>auth</value>
+    </property>
+
+    <property>
+        <name>hive.server2.transport.mode</name>
+        <value>binary</value>
+    </property>
+
+    <property>
+        <name>hive.server2.use.SSL</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.server2.zookeeper.namespace</name>
+        <value>hiveserver2</value>
+    </property>
+
+    <property>
+        <name>hive.smbjoin.cache.rows</name>
+        <value>10000</value>
+    </property>
+
+    <property>
+        <name>hive.stats.autogather</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.stats.dbclass</name>
+        <value>fs</value>
+    </property>
+
+    <property>
+        <name>hive.stats.fetch.column.stats</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.stats.fetch.partition.stats</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.support.concurrency</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.tez.auto.reducer.parallelism</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.tez.container.size</name>
+        <value>1024</value>
+    </property>
+
+    <property>
+        <name>hive.tez.cpu.vcores</name>
+        <value>-1</value>
+    </property>
+
+    <property>
+        <name>hive.tez.dynamic.partition.pruning</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.tez.dynamic.partition.pruning.max.data.size</name>
+        <value>104857600</value>
+    </property>
+
+    <property>
+        <name>hive.tez.dynamic.partition.pruning.max.event.size</name>
+        <value>1048576</value>
+    </property>
+
+    <property>
+        <name>hive.tez.input.format</name>
+        <value>org.apache.hadoop.hive.ql.io.HiveInputFormat</value>
+    </property>
+
+    <property>
+        <name>hive.tez.java.opts</name>
+        <value>-server -Xmx200m -Djava.net.preferIPv4Stack=true</value>
+    </property>
+
+    <property>
+        <name>hive.tez.log.level</name>
+        <value>INFO</value>
+    </property>
+
+    <property>
+        <name>hive.tez.max.partition.factor</name>
+        <value>2.0</value>
+    </property>
+
+    <property>
+        <name>hive.tez.min.partition.factor</name>
+        <value>0.25</value>
+    </property>
+
+    <property>
+        <name>hive.tez.smb.number.waves</name>
+        <value>0.5</value>
+    </property>
+
+    <property>
+        <name>hive.txn.manager</name>
+        <value>org.apache.hadoop.hive.ql.lockmgr.DbTxnManager</value>
+    </property>
+
+    <property>
+        <name>hive.txn.max.open.batch</name>
+        <value>1000</value>
+    </property>
+
+    <property>
+        <name>hive.txn.timeout</name>
+        <value>300</value>
+    </property>
+
+    <property>
+        <name>hive.user.install.directory</name>
+        <value>/user/</value>
+    </property>
+
+    <property>
+        <name>hive.users.in.admin.role</name>
+        <value>hue,hive</value>
+    </property>
+
+    <property>
+        <name>hive.vectorized.execution.enabled</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hive.vectorized.execution.reduce.enabled</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>hive.vectorized.groupby.checkinterval</name>
+        <value>4096</value>
+    </property>
+
+    <property>
+        <name>hive.vectorized.groupby.flush.percent</name>
+        <value>0.1</value>
+    </property>
+
+    <property>
+        <name>hive.vectorized.groupby.maxentries</name>
+        <value>100000</value>
+    </property>
+
+    <property>
+        <name>hive.zookeeper.client.port</name>
+        <value>2181</value>
+    </property>
+
+    <property>
+        <name>hive.zookeeper.namespace</name>
+        <value>hive_zookeeper_namespace</value>
+    </property>
+
+    <property>
+        <name>hive.zookeeper.quorum</name>
+        <value>sandbox.hortonworks.com:2181</value>
+    </property>
+
+    <property>
+        <name>hive_metastore_user_passwd</name>
+        <value>hive</value>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>com.mysql.jdbc.Driver</value>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:mysql://sandbox.hortonworks.com/hive?createDatabaseIfNotExist=true</value>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>hive</value>
+    </property>
+
+</configuration>

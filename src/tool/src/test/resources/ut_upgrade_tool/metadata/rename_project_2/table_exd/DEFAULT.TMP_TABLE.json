@@ -1,0 +1,27 @@
+{
+  "uuid" : "35b1ca6f-03e9-4a9f-bc80-9aea5345c363",
+  "last_modified" : 0,
+  "create_time" : 1585557546109,
+  "version" : "4.0.0.0",
+  "table_name" : "DEFAULT.TMP_TABLE",
+  "last_build_job_id" : null,
+  "frequency" : 0,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : 0,
+  "total_rows" : 0,
+  "mapper_rows" : [ ],
+  "data_source_properties" : {
+    "owner" : "quard",
+    "create_time" : "1584594794000",
+    "total_file_size" : "0",
+    "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+    "location" : "hdfs://hdp26.hadoop.com:8020/apps/hive/warehouse/tmp_table",
+    "partition_column" : "",
+    "total_file_number" : "0",
+    "last_access_time" : "0"
+  },
+  "loading_range" : [ ],
+  "col_stats_path" : null
+}

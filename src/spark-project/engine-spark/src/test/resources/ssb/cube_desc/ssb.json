@@ -1,0 +1,239 @@
+{
+  "uuid" : "5c44df30-daec-486e-af90-927bf7851057",
+  "last_modified" : 1491925122527,
+  "version" : "1.5.3",
+  "name" : "ssb",
+  "model_name" : "ssb",
+  "description" : "",
+  "null_string" : null,
+  "dimensions" : [ {
+    "name" : "C_NATION",
+    "table" : "CUSTOMER",
+    "column" : "C_NATION",
+    "derived" : null
+  }, {
+    "name" : "S_CITY",
+    "table" : "SUPPLIER",
+    "column" : "S_CITY",
+    "derived" : null
+  }, {
+    "name" : "P_CATEGORY",
+    "table" : "PART",
+    "column" : "P_CATEGORY",
+    "derived" : null
+  }, {
+    "name" : "D_YEAR",
+    "table" : "DATES",
+    "column" : "D_YEAR",
+    "derived" : null
+  }, {
+    "name" : "S_REGION",
+    "table" : "SUPPLIER",
+    "column" : "S_REGION",
+    "derived" : null
+  }, {
+    "name" : "S_NATION",
+    "table" : "SUPPLIER",
+    "column" : "S_NATION",
+    "derived" : null
+  }, {
+    "name" : "D_WEEKNUMINYEAR",
+    "table" : "DATES",
+    "column" : "D_WEEKNUMINYEAR",
+    "derived" : null
+  }, {
+    "name" : "LO_QUANTITY",
+    "table" : "P_LINEORDER",
+    "column" : "LO_QUANTITY",
+    "derived" : null
+  }, {
+    "name" : "D_YEARMONTHNUM",
+    "table" : "DATES",
+    "column" : "D_YEARMONTHNUM",
+    "derived" : null
+  }, {
+    "name" : "LO_DISCOUNT",
+    "table" : "P_LINEORDER",
+    "column" : "LO_DISCOUNT",
+    "derived" : null
+  }, {
+    "name" : "P_BRAND",
+    "table" : "PART",
+    "column" : "P_BRAND",
+    "derived" : null
+  }, {
+    "name" : "C_REGION",
+    "table" : "CUSTOMER",
+    "column" : "C_REGION",
+    "derived" : null
+  }, {
+    "name" : "D_YEARMONTH",
+    "table" : "DATES",
+    "column" : "D_YEARMONTH",
+    "derived" : null
+  }, {
+    "name" : "C_CITY",
+    "table" : "CUSTOMER",
+    "column" : "C_CITY",
+    "derived" : null
+  }, {
+    "name" : "P_MFGR",
+    "table" : "PART",
+    "column" : "P_MFGR",
+    "derived" : null
+  } ],
+  "measures" : [ {
+    "name" : "_COUNT_",
+    "function" : {
+      "expression" : "COUNT",
+      "parameter" : {
+        "type" : "constant",
+        "value" : "1"
+      },
+      "returntype" : "bigint"
+    }
+  }, {
+    "name" : "P_LINEORDER.V_REVENUE_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "P_LINEORDER.V_REVENUE"
+      },
+      "returntype" : "bigint"
+    }
+  }, {
+    "name" : "P_LINEORDER.LO_SUPPLYCOST_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "P_LINEORDER.LO_SUPPLYCOST"
+      },
+      "returntype" : "bigint"
+    }
+  }, {
+    "name" : "P_LINEORDER.LO_REVENUE_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "P_LINEORDER.LO_REVENUE"
+      },
+      "returntype" : "bigint"
+    }
+  } ],
+  "rowkey" : {
+    "rowkey_columns" : [ {
+      "column" : "CUSTOMER.C_CITY",
+      "encoding" : "dict",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "SUPPLIER.S_CITY",
+      "encoding" : "dict",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "PART.P_BRAND",
+      "encoding" : "dict",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "DATES.D_YEARMONTHNUM",
+      "encoding" : "integer:4",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "DATES.D_YEARMONTH",
+      "encoding" : "dict",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "PART.P_CATEGORY",
+      "encoding" : "dict",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "DATES.D_WEEKNUMINYEAR",
+      "encoding" : "integer:4",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "P_LINEORDER.LO_QUANTITY",
+      "encoding" : "integer:8",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "SUPPLIER.S_NATION",
+      "encoding" : "dict",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "P_LINEORDER.LO_DISCOUNT",
+      "encoding" : "integer:8",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "PART.P_MFGR",
+      "encoding" : "dict",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "CUSTOMER.C_NATION",
+      "encoding" : "dict",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "CUSTOMER.C_REGION",
+      "encoding" : "dict",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "SUPPLIER.S_REGION",
+      "encoding" : "dict",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "DATES.D_YEAR",
+      "encoding" : "integer:4",
+      "isShardBy" : false,
+      "index" : "eq"
+    } ]
+  },
+  "aggregation_groups" : [ {
+    "includes" : [ "CUSTOMER.C_CITY", "CUSTOMER.C_NATION", "CUSTOMER.C_REGION", "SUPPLIER.S_CITY", "SUPPLIER.S_REGION", "SUPPLIER.S_NATION", "DATES.D_YEARMONTH", "DATES.D_YEAR", "PART.P_BRAND", "PART.P_CATEGORY", "PART.P_MFGR" ],
+    "select_rule" : {
+      "hierarchy_dims" : [
+        [ "SUPPLIER.S_REGION", "SUPPLIER.S_NATION", "SUPPLIER.S_CITY" ],
+        [ "CUSTOMER.C_REGION", "CUSTOMER.C_NATION", "CUSTOMER.C_CITY" ],
+        [ "PART.P_MFGR", "PART.P_CATEGORY", "PART.P_BRAND" ],
+        [ "DATES.D_YEAR", "DATES.D_YEARMONTH" ]
+      ],
+      "mandatory_dims" : [ ],
+      "joint_dims" : [ ]
+    }
+  }, {
+    "includes" : [ "P_LINEORDER.LO_QUANTITY", "P_LINEORDER.LO_DISCOUNT", "DATES.D_YEARMONTHNUM", "DATES.D_WEEKNUMINYEAR", "DATES.D_YEAR" ],
+    "select_rule" : {
+      "hierarchy_dims" : [
+        [ "DATES.D_YEAR", "DATES.D_YEARMONTHNUM", "DATES.D_WEEKNUMINYEAR" ]
+      ],
+      "mandatory_dims" : [ ],
+      "joint_dims" : [
+        [ "P_LINEORDER.LO_QUANTITY", "P_LINEORDER.LO_DISCOUNT" ]
+      ]
+    }
+  } ],
+  "notify_list" : [ ],
+  "status_need_notify" : [ ],
+  "partition_date_start" : 694224000000,
+  "partition_date_end" : 3153600000000,
+  "auto_merge_time_ranges" : [ ],
+  "retention_range" : 0,
+  "engine_type" : 2,
+  "storage_type" : 2,
+  "override_kylin_properties" : {
+    "kylin.cube.aggrgroup.is-mandatory-only-valid" : "true"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "uuid" : "7e4f89dc-f9ec-4ef5-b96f-9db2a87a883b",
+  "last_modified" : 1585806452783,
+  "create_time" : 1585806212395,
+  "version" : "4.0.0.0",
+  "count" : 7,
+  "total_duration" : 801818,
+  "total_byte_size" : 416717,
+  "date" : 1585800000000,
+  "model_stats" : {
+    "b1d8d2b9-1d14-4148-bd42-8142e00beb76" : {
+      "uuid" : "c8e6f51e-092c-4793-ba08-9b6a6036c44b",
+      "last_modified" : 0,
+      "create_time" : 1585806452745,
+      "version" : "4.0.0.0",
+      "count" : 1,
+      "total_duration" : 132119,
+      "total_byte_size" : 416717
+    }
+  }
+}

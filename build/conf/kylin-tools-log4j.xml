@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration name="Log4j1">
+    <Appenders>
+        <Console name="stderr" target="SYSTEM_ERR">
+            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="stderr"/>
+        </Root>
+        <Logger name="org.apache.spark" level="WARN"/>
+        <Logger name="org.apache.kylin.ext" level="INFO"/>
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.apache.zookeeper" level="WARN"/>
+        <Logger name="io.kyligence" level="DEBUG"/>
+        <Logger name="org.apache.kylin.tool.shaded" level="INFO"/>
+        <Logger name="org.apache.kylin" level="DEBUG"/>
+    </Loggers>
+</Configuration>

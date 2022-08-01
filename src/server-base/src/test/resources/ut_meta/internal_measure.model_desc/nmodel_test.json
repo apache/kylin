@@ -1,0 +1,184 @@
+{
+  "uuid": null,
+  "name": "f",
+  "owner": "",
+  "project": "tpch",
+  "description": "",
+  "alias": "f",
+  "fact_table": "DEFAULT.TEST_KYLIN_FACT",
+  "join_tables": [],
+  "simplified_dimensions": [
+    {
+      "name": "CAL_DT",
+      "column": "TEST_KYLIN_FACT.CAL_DT",
+      "status": "DIMENSION",
+      "datatype": "date"
+    }
+  ],
+  "simplified_measures": [
+    {
+      "expression": "COUNT",
+      "name": "COUNT_ALL",
+      "parameter_value": [
+        {
+          "type": "constant",
+          "value": 1,
+          "table_guid": null
+        }
+      ],
+      "return_type": ""
+    },
+    {
+      "name": "sum_deal_amount",
+      "expression": "SUM",
+      "return_type": "",
+      "comment": "",
+      "parameter_value": [
+        {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.DEAL_AMOUNT"
+        }
+      ]
+    },
+    {
+      "name": "corr1",
+      "expression": "CORR",
+      "comment": "",
+      "parameter_value": [
+        {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.PRICE"
+        },
+        {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.ITEM_COUNT"
+        }
+      ]
+    },
+    {
+      "name": "corr2",
+      "expression": "CORR",
+      "comment": "",
+      "parameter_value": [
+        {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.ITEM_COUNT"
+        },
+        {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.SELLER_ID"
+        }
+      ]
+    },
+    {
+      "name": "corr_cc",
+      "expression": "CORR",
+      "comment": "",
+      "parameter_value": [
+        {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.DEAL_AMOUNT"
+        },
+        {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.DEAL_YEAR"
+        }
+      ]
+    }
+  ],
+  "computed_columns": [
+    {
+      "tableIdentity": "DEFAULT.TEST_KYLIN_FACT",
+      "tableAlias": "TEST_KYLIN_FACT",
+      "guid": "1638847873207_023499728524260566",
+      "columnName": "DEAL_AMOUNT",
+      "datatype": "DECIMAL(30,4)",
+      "expression": "TEST_KYLIN_FACT.ITEM_COUNT * TEST_KYLIN_FACT.PRICE",
+      "table_guid": "1638847855202_0404252953031085"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_KYLIN_FACT",
+      "tableAlias": "TEST_KYLIN_FACT",
+      "guid": "1638847896058_003890294417998175",
+      "columnName": "DEAL_YEAR",
+      "datatype": "INTEGER",
+      "expression": "year(TEST_KYLIN_FACT.CAL_DT)",
+      "table_guid": "1638847855202_0404252953031085"
+    }
+  ],
+  "last_modified": 0,
+  "filter_condition": "",
+  "partition_desc": null,
+  "multi_partition_desc": null,
+  "management_type": "MODEL_BASED",
+  "canvas": {
+    "coordinate": {
+      "TEST_KYLIN_FACT": {
+        "x": 434.49998643663196,
+        "y": 257.66665988498266,
+        "width": 220,
+        "height": 200
+      }
+    },
+    "zoom": 9
+  },
+  "other_columns": [
+    {
+      "name": "TRANS_ID",
+      "column": "TEST_KYLIN_FACT.TRANS_ID",
+      "datatype": "bigint"
+    },
+    {
+      "name": "ORDER_ID",
+      "column": "TEST_KYLIN_FACT.ORDER_ID",
+      "datatype": "bigint"
+    },
+    {
+      "name": "LSTG_FORMAT_NAME",
+      "column": "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+      "datatype": "varchar(4096)"
+    },
+    {
+      "name": "LEAF_CATEG_ID",
+      "column": "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+      "datatype": "bigint"
+    },
+    {
+      "name": "LSTG_SITE_ID",
+      "column": "TEST_KYLIN_FACT.LSTG_SITE_ID",
+      "datatype": "integer"
+    },
+    {
+      "name": "SLR_SEGMENT_CD",
+      "column": "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
+      "datatype": "smallint"
+    },
+    {
+      "name": "SELLER_ID",
+      "column": "TEST_KYLIN_FACT.SELLER_ID",
+      "datatype": "integer"
+    },
+    {
+      "name": "PRICE",
+      "column": "TEST_KYLIN_FACT.PRICE",
+      "datatype": "decimal(19,4)"
+    },
+    {
+      "name": "ITEM_COUNT",
+      "column": "TEST_KYLIN_FACT.ITEM_COUNT",
+      "datatype": "integer"
+    },
+    {
+      "name": "TEST_COUNT_DISTINCT_BITMAP",
+      "column": "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP",
+      "datatype": "varchar(4096)"
+    },
+    {
+      "name": "IS_EFFECTUAL",
+      "column": "TEST_KYLIN_FACT.IS_EFFECTUAL",
+      "datatype": "boolean"
+    }
+  ],
+  "save_only": true,
+  "with_base_index": true
+}

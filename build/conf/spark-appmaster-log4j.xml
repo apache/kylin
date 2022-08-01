@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration name="Log4j1">
+    <Appenders>
+        <Console name="stderr" target="SYSTEM_OUT" layout="org.apache.spark.log4j.SensitivePatternLayout">
+            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="stderr"/>
+        </Root>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,105 @@
+# /*
+#  * Copyright (C) 2016 Kyligence Inc. All rights reserved.
+#  *
+#  * http://kyligence.io
+#  *
+#  * This software is the confidential and proprietary information of
+#  * Kyligence Inc. ("Confidential Information"). You shall not disclose
+#  * such Confidential Information and shall use it only in accordance
+#  * with the terms of the license agreement you entered into with
+#  * Kyligence Inc.
+#  *
+#  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+#  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+#  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+#  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+#  * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+#  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+#  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+#  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+#  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#  */
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to you under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Signatures of APIs to avoid.
+# Cribbed from Elasticsearch
+
+java.lang.Character#codePointBefore(char[],int) @ Implicit start offset is error-prone when the char[] is a buffer and the first chars are random chars
+java.lang.Character#codePointAt(char[],int) @ Implicit end offset is error-prone when the char[] is a buffer and the last chars are random chars
+
+@defaultMessage Only use wait / notify when really needed try to use concurrency primitives, latches or callbacks instead.
+java.lang.Object#wait()
+java.lang.Object#wait(long)
+java.lang.Object#wait(long,int)
+java.lang.Object#notify()
+java.lang.Object#notifyAll()
+
+@defaultMessage Use StringBuilder; it is more efficient
+java.lang.StringBuffer
+
+@defaultMessage Please do not try to stop the world
+java.lang.System#gc()
+
+@defaultMessage Please do not try to kill the world
+java.lang.System#exit(int)
+java.lang.Runtime#exit(int)
+
+#@defaultMessage Spawning processes is a potential security issue
+#java.lang.ProcessBuilder
+#java.lang.Runtime#exec(java.lang.String)
+#java.lang.Runtime#exec(java.lang.String[])
+#java.lang.Runtime#exec(java.lang.String, java.lang.String[])
+#java.lang.Runtime#exec(java.lang.String, java.lang.String[], java.io.File)
+#java.lang.Runtime#exec(java.lang.String[], java.lang.String[])
+#java.lang.Runtime#exec(java.lang.String[], java.lang.String[], java.io.File)
+
+@defaultMessage For an enum, use == rather than equals
+java.lang.Enum#equals(java.lang.Object)
+
+@defaultMessage Please do not try to use System.setProperty in test, instead: 1) overwriting property/properties in KylinConfig; 2) extending class org.apache.kylin.common.util.AbstractTestCase and using Unsafe.overwriteSystemProperties. Moreover, be cautious when setting system properties in production file with Unsafe.setProperty().
+java.lang.System#setProperty(java.lang.String,java.lang.String)
+
+@defaultMessage Please do not try to use System.clearProperty instead Unsafe.clearProperty. Be cautious when clearing system properties in production file with Unsafe.clearProperty().
+java.lang.System#clearProperty(java.lang.String)
+
+@defaultMessage Please do not try to use Double.valueOf() instead Double.parseDouble()
+java.lang.Double#valueOf(java.lang.String)
+
+@defaultMessage Please do not try to use Float.valueOf() instead Double.parseFloat()
+java.lang.Float#valueOf(java.lang.String)
+
+@defaultMessage Please do not try to use Long.valueOf() instead Double.parseLong()
+java.lang.Long#valueOf(java.lang.String)
+
+@defaultMessage Please do not try to use Integer.valueOf() instead Double.parseInteger()
+java.lang.Integer#valueOf(java.lang.String)
+
+@defaultMessage Please do not try to use Short.valueOf() instead Double.parseShort()
+java.lang.Short#valueOf(java.lang.String)
+
+@defaultMessage Please do not try to use Byte.valueOf() instead Double.parseByte()
+java.lang.Byte#valueOf(java.lang.String)
+
+@defaultMessage Please do not try to use Boolean.valueOf() instead Double.parseBoolean()
+java.lang.Boolean#valueOf(java.lang.String)
+
+# @defaultMessage Please do not try to use new HashMap() in stead Maps.newHashMap()
+# java.util.HashMap#<init>()
+
+# End signatures.txt

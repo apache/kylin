@@ -1,0 +1,121 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.kylin.tool.setup;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.BufferedLogger;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.ShellException;
+import org.apache.kylin.cluster.SchedulerInfoCmdHelper;
+import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.tool.util.HadoopConfExtractor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.val;
+
+public class KapGetClusterInfo {
+    private static final Logger logger = LoggerFactory.getLogger(KapGetClusterInfo.class);
+
+    private static final String YARN_METRICS_SUFFIX = "/ws/v1/cluster/metrics";
+    private static final String AVAILABLE_VIRTUAL_CORE = "availableVirtualCores";
+    private static final String AVAILABLE_MEMORY = "availableMB";
+    private String fileName = "cluster.info";
+
+    private String yarnMasterUrlBase;
+
+    private Map<String, Integer> clusterMetricsMap = new HashMap<>();
+
+    public KapGetClusterInfo() {
+    }
+
+    public KapGetClusterInfo(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public static void main(String[] args) throws IOException, ShellException {
+        if (args.length != 1) {
+            System.out.println("Usage: KapGetClusterInfo fileName");
+            Unsafe.systemExit(1);
+        }
+        KapGetClusterInfo kapSetupConcurrency = new KapGetClusterInfo(args[0]);
+        kapSetupConcurrency.getYarnMetrics();
+        kapSetupConcurrency.saveToFile();
+        Unsafe.systemExit(0);
+    }
+
+    public void extractYarnMasterHost() {
+        Pattern pattern = Pattern.compile("(http://)([^:]*):([^/])*.*");
+        if (yarnMasterUrlBase != null) {
+            Matcher m = pattern.matcher(yarnMasterUrlBase);
+            if (m.matches()) {
+                return;
+            }
+        }
+        yarnMasterUrlBase = HadoopConfExtractor.extractYarnMasterUrl(HadoopUtil.getCurrentConfiguration());
+    }
+
+    public void getYarnMetrics() throws IOException, ShellException {
+        extractYarnMasterHost();
+        String url = yarnMasterUrlBase + YARN_METRICS_SUFFIX;
+        String command = "curl -s -k --negotiate -u : " + url;
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        val patternedLogger = new BufferedLogger(logger);
+
+        val response = config.getCliCommandExecutor().execute(command, patternedLogger).getCmd();
+        if (response == null) {
+            throw new IllegalStateException(
+                    "Cannot get yarn metrics with url: " + yarnMasterUrlBase + YARN_METRICS_SUFFIX);
+        }
+
+        logger.info("yarn metrics response: {}", response);
+        JsonNode clusterMetrics;
+        try {
+            clusterMetrics = new ObjectMapper().readTree(response).path("clusterMetrics");
+        } catch (Exception e) {
+            logger.warn("Failed to get clusterMetrics from cluster.", e);
+            clusterMetrics = new ObjectMapper().readTree(SchedulerInfoCmdHelper.metricsInfo()).path("clusterMetrics");
+        }
+        clusterMetricsMap.put(AVAILABLE_VIRTUAL_CORE, clusterMetrics.path(AVAILABLE_VIRTUAL_CORE).intValue());
+        clusterMetricsMap.put(AVAILABLE_MEMORY, clusterMetrics.path(AVAILABLE_MEMORY).intValue());
+    }
+
+    public void saveToFile() throws IOException {
+        File dest = new File(fileName);
+        StringBuilder buf = new StringBuilder();
+        for (Map.Entry<String, Integer> element : clusterMetricsMap.entrySet()) {
+            String input = element.getKey() + "=" + element.getValue();
+            input += "\n";
+            buf.append(input);
+        }
+        FileUtils.writeStringToFile(dest, buf.toString(), Charset.defaultCharset());
+    }
+}

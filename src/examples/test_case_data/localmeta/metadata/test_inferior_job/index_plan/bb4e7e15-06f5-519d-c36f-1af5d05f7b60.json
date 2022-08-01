@@ -1,0 +1,87 @@
+{
+  "uuid" : "bb4e7e15-06f5-519d-c36f-1af5d05f7b60",
+  "last_modified" : 1649662535212,
+  "create_time" : 1649659451559,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "rule_based_index" : {
+    "dimensions" : [ 5, 20, 203, 186, 171, 155, 144, 134, 148, 166, 177, 194, 198, 78, 88, 104, 117, 128, 51, 36, 73, 60, 96, 195, 180, 14, 2, 38, 110, 119, 190, 204, 157 ],
+    "measures" : [ 100000, 100001, 100002, 100003, 100004 ],
+    "global_dim_cap" : null,
+    "aggregation_groups" : [ {
+      "includes" : [ 5, 20, 203, 186, 171, 155, 144 ],
+      "measures" : [ 100000, 100001, 100002, 100003, 100004 ],
+      "select_rule" : {
+        "hierarchy_dims" : [ ],
+        "mandatory_dims" : [ 5, 20, 203 ],
+        "joint_dims" : [ ]
+      },
+      "index_range" : "EMPTY"
+    }, {
+      "includes" : [ 134, 148, 166, 177, 194, 198 ],
+      "measures" : [ 100000, 100001, 100002, 100003, 100004 ],
+      "select_rule" : {
+        "hierarchy_dims" : [ ],
+        "mandatory_dims" : [ 134, 148, 166 ],
+        "joint_dims" : [ ]
+      },
+      "index_range" : "EMPTY"
+    }, {
+      "includes" : [ 78, 88, 104, 117, 128 ],
+      "measures" : [ 100000, 100001, 100002, 100003, 100004 ],
+      "select_rule" : {
+        "hierarchy_dims" : [ ],
+        "mandatory_dims" : [ 78, 88 ],
+        "joint_dims" : [ ]
+      },
+      "index_range" : "EMPTY"
+    }, {
+      "includes" : [ 51, 36, 73, 60, 96 ],
+      "measures" : [ 100000, 100001, 100002, 100003, 100004 ],
+      "select_rule" : {
+        "hierarchy_dims" : [ ],
+        "mandatory_dims" : [ 51, 36 ],
+        "joint_dims" : [ ]
+      },
+      "index_range" : "EMPTY"
+    }, {
+      "includes" : [ 195, 180, 14, 2, 38 ],
+      "measures" : [ 100000, 100001, 100002, 100003, 100004 ],
+      "select_rule" : {
+        "hierarchy_dims" : [ ],
+        "mandatory_dims" : [ 195, 180 ],
+        "joint_dims" : [ ]
+      },
+      "index_range" : "EMPTY"
+    }, {
+      "includes" : [ 110, 119, 190, 204, 157 ],
+      "measures" : [ 100000, 100001, 100002, 100003, 100004 ],
+      "select_rule" : {
+        "hierarchy_dims" : [ ],
+        "mandatory_dims" : [ 110 ],
+        "joint_dims" : [ ]
+      },
+      "index_range" : "EMPTY"
+    } ],
+    "layout_id_mapping" : [ 260002, 10001, 30001, 40001, 530001, 550001, 50001, 60001, 70001, 560001, 80001, 580001, 90001, 460002, 100001, 590001, 600001, 120001, 130001, 140001, 150001, 640001, 650001, 250002, 200001, 210001, 220001, 230001, 660001, 170002, 240001, 420002, 270001, 110002, 280001, 290001, 690001, 180002, 300001, 390002, 20002, 310001, 700001, 320001, 160002, 720001, 730001, 740001, 330001, 430002, 340001, 770001, 370002, 360001, 190002, 400001, 410001, 470002, 380002, 440001, 450001, 800001, 480001, 810001, 490001 ],
+    "parent_forward" : 3,
+    "index_start_id" : 820000,
+    "last_modify_time" : 1649659810857,
+    "layout_black_list" : [ 720001 ],
+    "scheduler_version" : 2,
+    "index_update_enabled" : true
+  },
+  "indexes" : [ ],
+  "override_properties" : { },
+  "to_be_deleted_indexes" : [ ],
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 820000,
+  "next_table_index_id" : 20000010000,
+  "agg_shard_by_columns" : [ ],
+  "extend_partition_columns" : [ ],
+  "layout_bucket_num" : { },
+  "approved_additional_recs" : 0,
+  "approved_removal_recs" : 0
+}

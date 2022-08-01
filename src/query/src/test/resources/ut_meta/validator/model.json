@@ -1,0 +1,106 @@
+{
+  "uuid": "46edc73b-9a97-c546-011b-b81f89214a0e",
+  "last_modified": 1630488229226,
+  "create_time": 1630488229111,
+  "version": "4.0.0.0",
+  "alias": "model",
+  "owner": "ADMIN",
+  "config_last_modifier": null,
+  "config_last_modified": 0,
+  "description": "",
+  "fact_table": "TPCH.NATION",
+  "fact_table_alias": null,
+  "management_type": "MODEL_BASED",
+  "join_tables": [],
+  "filter_condition": "",
+  "partition_desc": null,
+  "capacity": "MEDIUM",
+  "segment_config": {
+    "auto_merge_enabled": null,
+    "auto_merge_time_ranges": null,
+    "volatile_range": null,
+    "retention_range": null,
+    "create_empty_segment_enabled": false
+  },
+  "data_check_desc": null,
+  "semantic_version": 0,
+  "storage_type": 0,
+  "model_type": "BATCH",
+  "all_named_columns": [
+    {
+      "id": 0,
+      "name": "N_NAME",
+      "column": "NATION.N_NAME",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 1,
+      "name": "N_COMMENT",
+      "column": "NATION.N_COMMENT",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 2,
+      "name": "N_REGIONKEY",
+      "column": "NATION.N_REGIONKEY",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 3,
+      "name": "N_NATIONKEY",
+      "column": "NATION.N_NATIONKEY",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 4,
+      "name": "CC1",
+      "column": "NATION.CC1",
+      "status": "DIMENSION"
+    }
+  ],
+  "all_measures": [
+    {
+      "name": "COUNT_ALL",
+      "function": {
+        "expression": "COUNT",
+        "parameters": [
+          {
+            "type": "constant",
+            "value": "1"
+          }
+        ],
+        "returntype": "bigint"
+      },
+      "column": null,
+      "comment": null,
+      "id": 100000
+    }
+  ],
+  "recommendations_count": 0,
+  "computed_columns": [
+    {
+      "tableIdentity": "TPCH.NATION",
+      "tableAlias": "NATION",
+      "columnName": "CC1",
+      "expression": "NATION.N_NATIONKEY + 1",
+      "innerExpression": "`NATION`.`N_NATIONKEY` + 1",
+      "datatype": "BIGINT",
+      "comment": null,
+      "rec_uuid": null
+    }
+  ],
+  "canvas": {
+    "coordinate": {
+      "NATION": {
+        "x": 532.1666802300348,
+        "y": 204.88888210720486,
+        "width": 252.22222222222223,
+        "height": 506.66666666666674
+      }
+    },
+    "zoom": 9
+  },
+  "multi_partition_desc": null,
+  "multi_partition_key_mapping": null,
+  "fusion_id": null
+}

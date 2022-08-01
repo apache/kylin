@@ -1,0 +1,25 @@
+{
+  "name": "kystudio_e2e",
+  "version": "1.0.0",
+  "description": "Next generation of Kylin by VUE",
+  "author": "luojie",
+  "private": true,
+  "scripts": {
+    "e2e": "npm run e2e:chrome && npm run e2e:firefox",
+    "e2e:chrome": "BROWSER_ENV=chrome mocha ./specs",
+    "e2e:chrome-debug": "BROWSER_ENV=chrome mocha ./specs --inspect-brk",
+    "e2e:firefox": "BROWSER_ENV=firefox mocha ./specs"
+  },
+  "dependencies": {
+    "chromedriver": "77.0.0",
+    "dotenv": "^8.2.0",
+    "geckodriver": "^1.19.1",
+    "mocha": "^7.1.1",
+    "selenium-webdriver": "^4.0.0-alpha.7"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">= 4.0.0",
+    "npm": ">= 3.0.0"
+  }
+}

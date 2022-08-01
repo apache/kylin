@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="12px" height="3px" viewBox="0 0 12 3" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 49.2 (51160) - http://www.bohemiancoding.com/sketch -->
+    <title>Shape</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Smyblos" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="icon_shrink" transform="translate(-6.000000, -10.000000)" fill="#FFFFFF" fill-rule="nonzero">
+            <g id="Group-45">
+                <g id="minus-square-o" transform="translate(5.476562, 10.476562)">
+                    <path d="M11.4397147,1.96874444 L1.60803488,1.96874444 C1.16438311,1.96874444 0.805448771,1.62386353 0.805448771,1.19758215 C0.805448771,0.77130077 1.16438311,0.426419855 1.60803488,0.426419855 L11.4397147,0.426419855 C11.8833665,0.426419855 12.2423008,0.77130077 12.2423008,1.19758215 C12.2423008,1.62386353 11.8833665,1.96874444 11.4397147,1.96874444 Z" id="Shape"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

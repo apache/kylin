@@ -1,0 +1,163 @@
+{
+  "uuid" : "5efb6eaa-9f39-42d6-8ad9-44bd5dee3152",
+  "last_modified" : 1561462162636,
+  "create_time" : 1561462161661,
+  "version" : "3.0.0.0",
+  "alias" : "model_join_increment_fact_table1",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "is_draft" : false,
+  "description" : "",
+  "fact_table" : "DEFAULT.TEST_ORDER",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "DEFAULT.TEST_KYLIN_FACT",
+    "kind" : "LOOKUP",
+    "alias" : "TEST_KYLIN_FACT",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "TEST_KYLIN_FACT.ORDER_ID" ],
+      "foreign_key" : [ "TEST_ORDER.ORDER_ID" ]
+    }
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "TEST_ORDER.TEST_DATE_ENC",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "TEST_DATE_ENC",
+    "column" : "TEST_ORDER.TEST_DATE_ENC"
+  }, {
+    "id" : 1,
+    "name" : "ORDER_ID",
+    "column" : "TEST_ORDER.ORDER_ID"
+  }, {
+    "id" : 2,
+    "name" : "TEST_TIME_ENC",
+    "column" : "TEST_ORDER.TEST_TIME_ENC"
+  }, {
+    "id" : 3,
+    "name" : "TEST_EXTENDED_COLUMN",
+    "column" : "TEST_ORDER.TEST_EXTENDED_COLUMN"
+  }, {
+    "id" : 4,
+    "name" : "BUYER_ID",
+    "column" : "TEST_ORDER.BUYER_ID"
+  }, {
+    "id" : 5,
+    "name" : "TEST_KYLIN_FACT_TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+  }, {
+    "id" : 7,
+    "name" : "LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+  }, {
+    "id" : 8,
+    "name" : "ITEM_COUNT",
+    "column" : "TEST_KYLIN_FACT.ITEM_COUNT"
+  }, {
+    "id" : 9,
+    "name" : "TEST_KYLIN_FACT_ORDER_ID",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT"
+  }, {
+    "id" : 11,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+  }, {
+    "id" : 12,
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+  }, {
+    "id" : 13,
+    "name" : "SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+  }, {
+    "id" : 14,
+    "name" : "SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID"
+  }, {
+    "id" : 15,
+    "name" : "PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE"
+  } ],
+  "all_measures" : [ {
+    "name" : "SAD",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.PRICE"
+      } ],
+      "returntype" : "decimal(19,4)"
+    },
+    "id" : 100000
+  }, {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100001
+  }, {
+    "name" : "sad",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_KYLIN_FACT.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100002
+  } ],
+  "column_correlations" : [ ],
+  "multilevel_partition_cols" : [ ],
+  "computed_columns" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "TEST_KYLIN_FACT" : {
+        "x" : 718.6666700575086,
+        "y" : 160.94445122612842,
+        "width" : 220.0,
+        "height" : 180.0
+      },
+      "TEST_ORDER" : {
+        "x" : 392.00000339084204,
+        "y" : 232.05556233723962,
+        "width" : 220.0,
+        "height" : 180.0
+      }
+    },
+    "zoom" : 9.0
+  }
+}

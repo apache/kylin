@@ -1,0 +1,188 @@
+{
+  "uuid": null,
+  "name": "new_model",
+  "owner": "",
+  "project": "default",
+  "description": "",
+  "fact_table": "DEFAULT.TEST_KYLIN_FACT",
+  "join_tables": [
+    {
+      "table": "DEFAULT.TEST_COUNTRY",
+      "alias": "TEST_COUNTRY",
+      "join": {
+        "type": "LEFT",
+        "primary_key": [
+          "TEST_COUNTRY.NAME"
+        ],
+        "foreign_key": [
+          "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+        ]
+      }
+    },
+    {
+      "table": "DEFAULT.TEST_ORDER",
+      "alias": "TEST_ORDER",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "TEST_ORDER.ORDER_ID"
+        ],
+        "foreign_key": [
+          "TEST_KYLIN_FACT.ORDER_ID"
+        ]
+      }
+    }
+  ],
+  "all_named_columns": [
+    {
+      "name": "TRANS_ID",
+      "column": "TEST_KYLIN_FACT.TRANS_ID",
+      "status": "DIMENSION",
+      "datatype": "bigint"
+    },
+    {
+      "name": "ORDER_ID",
+      "column": "TEST_KYLIN_FACT.ORDER_ID",
+      "status": "DIMENSION",
+      "datatype": "bigint"
+    },
+    {
+      "name": "CAL_DT",
+      "column": "TEST_KYLIN_FACT.CAL_DT",
+      "status": "DIMENSION",
+      "datatype": "date"
+    },
+    {
+      "name": "LSTG_FORMAT_NAME",
+      "column": "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+      "status": "DIMENSION",
+      "datatype": "varchar(256)"
+    },
+    {
+      "name": "LEAF_CATEG_ID",
+      "column": "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+      "status": "DIMENSION",
+      "datatype": "bigint"
+    },
+    {
+      "name": "LSTG_SITE_ID",
+      "column": "TEST_KYLIN_FACT.LSTG_SITE_ID",
+      "status": "DIMENSION",
+      "datatype": "integer"
+    },
+    {
+      "name": "SLR_SEGMENT_CD",
+      "column": "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
+      "status": "DIMENSION",
+      "datatype": "smallint"
+    },
+    {
+      "name": "SELLER_ID",
+      "column": "TEST_KYLIN_FACT.SELLER_ID",
+      "status": "DIMENSION",
+      "datatype": "integer"
+    },
+    {
+      "name": "IS_EFFECTUAL",
+      "column": "TEST_KYLIN_FACT.IS_EFFECTUAL",
+      "status": "DIMENSION",
+      "datatype": "boolean"
+    },
+    {
+      "name": "DEAL_AMOUNT",
+      "column": "TEST_KYLIN_FACT.DEAL_AMOUNT",
+      "status": "DIMENSION",
+      "datatype": "decimal(19,4)"
+    },
+    {
+      "name": "DEAL_YEAR",
+      "column": "TEST_KYLIN_FACT.DEAL_YEAR",
+      "status": "DIMENSION",
+      "datatype": "integer"
+    },
+    {
+      "name": "LEFTJOIN_BUYER_ID_AND_COUNTRY_NAME",
+      "column": "TEST_KYLIN_FACT.LEFTJOIN_BUYER_ID_AND_COUNTRY_NAME",
+      "status": "DIMENSION",
+      "datatype": "varchar(256)"
+    },
+    {
+      "name": "LEFTJOIN_SELLER_ID_AND_COUNTRY_NAME",
+      "column": "TEST_KYLIN_FACT.LEFTJOIN_SELLER_ID_AND_COUNTRY_NAME",
+      "status": "DIMENSION",
+      "datatype": "varchar(256)"
+    },
+    {
+      "name": "LEFTJOIN_BUYER_COUNTRY_ABBR",
+      "column": "TEST_KYLIN_FACT.LEFTJOIN_BUYER_COUNTRY_ABBR",
+      "status": "DIMENSION",
+      "datatype": "varchar(256)"
+    },
+    {
+      "name": "LEFTJOIN_SELLER_COUNTRY_ABBR",
+      "column": "TEST_KYLIN_FACT.LEFTJOIN_SELLER_COUNTRY_ABBR",
+      "status": "DIMENSION",
+      "datatype": "varchar(256)"
+    }
+  ],
+  "simplified_measures": [
+    {
+      "name": "SUM_PRICE",
+      "expression": "SUM",
+      "parameter_value": [
+        {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.PRICE"
+        }
+      ],
+      "converted_columns": [],
+      "return_type": "",
+      "guid": "1542626371004_03202799976722843"
+    },
+    {
+      "name": "MAX_COUNT",
+      "expression": "MAX",
+      "parameter_value": [
+        {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.ITEM_COUNT"
+        }
+      ],
+      "converted_columns": [],
+      "return_type": "",
+      "guid": "1542626395229_07454130271713577"
+    }
+  ],
+  "computed_columns": [],
+  "last_modified": 0,
+  "filter_condition": null,
+  "partition_desc": {
+    "partition_date_column": null,
+    "partition_date_start": 0,
+    "partition_type": "APPEND"
+  },
+  "management_type": "MODEL_BASED",
+  "canvas": {
+    "coordinate": {
+      "TEST_KYLIN_FACT": {
+        "x": 579.011111111111,
+        "y": 142.1277777777778,
+        "width": 220,
+        "height": 382.77777777777754
+      },
+      "TEST_COUNTRY": {
+        "x": 296.1222222222226,
+        "y": 135.57222222222225,
+        "width": 220,
+        "height": 273.88888888888874
+      },
+      "TEST_ORDER": {
+        "x": 854.455555555556,
+        "y": 142.5722222222221,
+        "width": 220,
+        "height": 195
+      }
+    },
+    "zoom": 9
+  }
+}
