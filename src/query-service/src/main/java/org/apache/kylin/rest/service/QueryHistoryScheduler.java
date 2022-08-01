@@ -45,8 +45,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-import io.kyligence.kap.secondstorage.SecondStorageUpdater;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.SecondStorageUpdater;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
 
 public class QueryHistoryScheduler {
 

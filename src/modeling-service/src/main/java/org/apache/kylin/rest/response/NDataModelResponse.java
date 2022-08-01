@@ -59,7 +59,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import io.kyligence.kap.secondstorage.response.SecondStorageNode;
+import org.apache.kylin.secondstorage.response.SecondStorageNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

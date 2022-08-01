@@ -108,8 +108,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import io.kyligence.kap.secondstorage.SecondStorageUpdater;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.SecondStorageUpdater;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
 import lombok.Setter;
 import lombok.val;
 import lombok.var;

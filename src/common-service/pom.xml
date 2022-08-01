@@ -36,7 +36,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-core</artifactId>
+            <artifactId>kylin-second-storage-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>

@@ -46,7 +46,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.google.common.collect.Lists;
 
 import io.kyligence.kap.guava20.shaded.common.collect.Sets;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
 import lombok.val;
 
 @RunWith(PowerMockRunner.class)

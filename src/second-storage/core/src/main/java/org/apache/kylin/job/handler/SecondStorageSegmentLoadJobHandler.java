@@ -22,7 +22,7 @@ import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 

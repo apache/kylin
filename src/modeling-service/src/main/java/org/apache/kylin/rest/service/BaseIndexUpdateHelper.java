@@ -26,8 +26,8 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.rest.request.CreateBaseIndexRequest;
 import org.apache.kylin.rest.response.BuildBaseIndexResponse;
 
-import io.kyligence.kap.secondstorage.SecondStorageUpdater;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.SecondStorageUpdater;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
 import lombok.Setter;
 
 /**

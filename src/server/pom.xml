@@ -52,15 +52,15 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-clickhouse</artifactId>
+            <artifactId>kylin-second-storage-clickhouse</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-core</artifactId>
+            <artifactId>kylin-second-storage-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-ui</artifactId>
+            <artifactId>kylin-second-storage-ui</artifactId>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.scala-lang.modules/scala-xml -->

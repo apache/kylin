@@ -17,8 +17,8 @@
  */
 package org.apache.kylin.common;
 
-import static io.kyligence.kap.clickhouse.ClickHouseConstants.CONFIG_CLICKHOUSE_QUERY_CATALOG;
-import static io.kyligence.kap.secondstorage.SecondStorageConstants.CONFIG_SECOND_STORAGE_CLUSTER;
+import static org.apache.kylin.clickhouse.ClickHouseConstants.CONFIG_CLICKHOUSE_QUERY_CATALOG;
+import static org.apache.kylin.secondstorage.SecondStorageConstants.CONFIG_SECOND_STORAGE_CLUSTER;
 
 /**
  * To access protect method of {@link KylinConfig}, we have to put this class in {@link org.apache.kylin.common}

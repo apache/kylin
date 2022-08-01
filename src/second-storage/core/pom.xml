@@ -10,7 +10,7 @@
         <relativePath>../../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>kap-second-storage-core</artifactId>
+    <artifactId>kylin-second-storage-core</artifactId>
     <packaging>jar</packaging>
     <name>Kylin - Second Storage</name>
     <url>http://kylin.apache.org</url>

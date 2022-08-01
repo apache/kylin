@@ -10,7 +10,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kap-second-storage-clickhouse</artifactId>
+    <artifactId>kylin-second-storage-clickhouse</artifactId>
     <packaging>jar</packaging>
     <name>Kylin - Second Storage Clickhouse</name>
     <url>http://kylin.apache.org</url>
@@ -23,7 +23,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-core</artifactId>
+            <artifactId>kylin-second-storage-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

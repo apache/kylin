@@ -98,8 +98,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import io.kyligence.kap.clickhouse.MockSecondStorage;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import org.apache.kylin.clickhouse.MockSecondStorage;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;

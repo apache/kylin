@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.common;
 
-import io.kyligence.kap.secondstorage.SecondStorageConstants;
+import org.apache.kylin.secondstorage.SecondStorageConstants;
 
 /**
  * To access protect method of {@link KylinConfig}, we have to put this class in {@link org.apache.kylin.common}

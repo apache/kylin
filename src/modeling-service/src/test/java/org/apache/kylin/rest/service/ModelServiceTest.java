@@ -203,11 +203,11 @@ import com.google.common.collect.Sets;
 import com.google.common.io.CharStreams;
 import com.google.common.primitives.Longs;
 
-import io.kyligence.kap.clickhouse.MockSecondStorage;
-import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.config.Node;
-import io.kyligence.kap.secondstorage.metadata.NodeGroup;
+import org.apache.kylin.clickhouse.MockSecondStorage;
+import org.apache.kylin.secondstorage.SecondStorageNodeHelper;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.config.Node;
+import org.apache.kylin.secondstorage.metadata.NodeGroup;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;

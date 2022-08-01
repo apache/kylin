@@ -45,10 +45,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.google.common.collect.Maps;
 
 import io.kyligence.kap.guava20.shaded.common.collect.Lists;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.config.Node;
-import io.kyligence.kap.secondstorage.response.SecondStorageInfo;
-import io.kyligence.kap.secondstorage.response.SecondStorageNode;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.config.Node;
+import org.apache.kylin.secondstorage.response.SecondStorageInfo;
+import org.apache.kylin.secondstorage.response.SecondStorageNode;
 import lombok.val;
 
 @RunWith(PowerMockRunner.class)

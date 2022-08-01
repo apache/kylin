@@ -32,7 +32,7 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
-import io.kyligence.kap.secondstorage.response.SecondStorageNode;
+import org.apache.kylin.secondstorage.response.SecondStorageNode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;

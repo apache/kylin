@@ -21,7 +21,7 @@ package org.apache.spark.sql
 import java.sql.Timestamp
 import org.apache.kylin.metadata.cube.model.{LayoutEntity, NDataflow, NDataflowManager}
 import org.apache.kylin.metadata.model.FusionModelManager
-import io.kyligence.kap.secondstorage.SecondStorage
+import org.apache.kylin.secondstorage.SecondStorage
 import org.apache.kylin.common.KylinConfig
 import org.apache.spark.sql.datasource.storage.StorageStoreFactory
 import org.apache.spark.sql.functions.col

@@ -27,7 +27,7 @@ import org.apache.kylin.metadata.model.VolatileRange;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.kyligence.kap.secondstorage.response.SecondStorageNode;
+import org.apache.kylin.secondstorage.response.SecondStorageNode;
 import lombok.Getter;
 import lombok.Setter;
 

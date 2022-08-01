@@ -50,7 +50,7 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Sets;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

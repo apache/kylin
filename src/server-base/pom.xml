@@ -77,7 +77,7 @@
         <!-- second storage -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-clickhouse</artifactId>
+            <artifactId>kylin-second-storage-clickhouse</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -448,7 +448,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-clickhouse</artifactId>
+            <artifactId>kylin-second-storage-clickhouse</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

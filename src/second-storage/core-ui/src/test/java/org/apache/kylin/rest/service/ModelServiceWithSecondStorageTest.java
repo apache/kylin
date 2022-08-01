@@ -69,10 +69,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import io.kyligence.kap.clickhouse.MockSecondStorage;
-import io.kyligence.kap.secondstorage.SecondStorageUpdater;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.management.SecondStorageService;
+import org.apache.kylin.clickhouse.MockSecondStorage;
+import org.apache.kylin.secondstorage.SecondStorageUpdater;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.management.SecondStorageService;
 import lombok.val;
 import lombok.var;
 

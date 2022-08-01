@@ -34,7 +34,7 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
 
 public class NSparkCleanupAfterMergeStep extends NSparkExecutable {
 

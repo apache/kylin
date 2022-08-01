@@ -38,7 +38,7 @@ import org.apache.kylin.rest.response.NDataModelResponse;
 
 import com.google.common.collect.Sets;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
 import lombok.val;
 
 public class ModelUtils {

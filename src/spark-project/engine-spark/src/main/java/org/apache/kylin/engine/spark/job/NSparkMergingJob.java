@@ -49,9 +49,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import io.kyligence.kap.secondstorage.SecondStorageConstants;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
+import org.apache.kylin.secondstorage.SecondStorageConstants;
+import org.apache.kylin.secondstorage.SecondStorageUtil;
+import org.apache.kylin.secondstorage.enums.LockTypeEnum;
 
 public class NSparkMergingJob extends DefaultChainedExecutableOnModel {
     @SuppressWarnings("unused")

@@ -40,8 +40,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-import io.kyligence.kap.secondstorage.SecondStorage;
-import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
+import org.apache.kylin.secondstorage.SecondStorage;
+import org.apache.kylin.secondstorage.SecondStorageNodeHelper;
 import lombok.NoArgsConstructor;
 import lombok.val;
 

@@ -10,7 +10,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kap-second-storage-ui</artifactId>
+    <artifactId>kylin-second-storage-ui</artifactId>
     <packaging>jar</packaging>
     <name>Kylin - Second Storage UI</name>
     <url>http://kylin.apache.org</url>
@@ -24,7 +24,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-core</artifactId>
+            <artifactId>kylin-second-storage-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -72,12 +72,12 @@
         <!--test-->
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-clickhouse</artifactId>
+            <artifactId>kylin-second-storage-clickhouse</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kap-second-storage-clickhouse</artifactId>
+            <artifactId>kylin-second-storage-clickhouse</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
