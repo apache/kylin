@@ -394,7 +394,7 @@ public class KapQueryUtil {
         String sql = queryParams.getSql();
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
-        // fix KE-34379，filter "/*+ MODEL_PRIORITY({cube_name}) */" hint
+        // fix，filter "/*+ MODEL_PRIORITY({cube_name}) */" hint
         String regex = "/\\*\\s*\\+\\s*(?i)MODEL_PRIORITY\\s*\\([\\s\\S]*\\)\\s*\\*/";
         sql = Pattern.compile(regex).matcher(sql).replaceAll("");
         initPushDownConvertersIfNeeded(queryParams.getKylinConfig());

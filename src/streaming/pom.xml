@@ -156,7 +156,6 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
             <scope>test</scope>
-            <version>3.4.0</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>

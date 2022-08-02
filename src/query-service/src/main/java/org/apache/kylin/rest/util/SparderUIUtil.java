@@ -96,7 +96,6 @@ public class SparderUIUtil {
             return;
         }
 
-        // KE-12678
         proxyBase = "/proxy/" + ui.appId();
 
         // reset

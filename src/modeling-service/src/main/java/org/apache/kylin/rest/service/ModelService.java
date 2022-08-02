@@ -3736,7 +3736,7 @@ public class ModelService extends BasicService implements TableModelSupporter, P
 
     /**
      * Validate computed column type and throw errors to report wrongly typed computed columns.
-     * Models migrated from 3x may have wrongly typed computed columns. see KE-11862
+     * Models migrated from 3x may have wrongly typed computed columns.
      *
      * @param modelId
      * @param project

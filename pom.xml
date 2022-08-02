@@ -162,7 +162,7 @@
 
         <groovy-all.version>2.4.7</groovy-all.version>
         <slf4j-ext.version>1.7.26</slf4j-ext.version>
-        <protobuf-java.version>3.16.1</protobuf-java.version>
+        <protobuf-java.version>3.17.3</protobuf-java.version>
 
         <!-- Sonar -->
         <sonar.scala.version>${scala.version}</sonar.scala.version>
@@ -348,7 +348,6 @@
         <module>src/data-loading-server</module>
         <module>src/query-server</module>
 
-        <!-- yinglong server (starter) -->
         <module>src/data-loading-booter</module>
         <module>src/query-booter</module>
         <module>src/common-booter</module>
@@ -356,12 +355,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- KAP, same order with modules -->
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.ke</groupId>-->
-            <!--                <artifactId>kap-it</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-engine-spark</artifactId>
@@ -382,11 +375,6 @@
                 <artifactId>kylin-datasource-sdk</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.ke</groupId>-->
-            <!--                <artifactId>kap-smart</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-external-catalog-sdk</artifactId>
@@ -469,11 +457,6 @@
                 <artifactId>kylin-datasource-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.yinglong</groupId>-->
-            <!--                <artifactId>yinglong-enterprise-service</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-job-service</artifactId>
@@ -489,21 +472,11 @@
                 <artifactId>kylin-query-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.yinglong</groupId>-->
-            <!--                <artifactId>yinglong-smart-booter</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-common-booter</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.yinglong</groupId>-->
-            <!--                <artifactId>yinglong-smart-server</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-data-loading-server</artifactId>
@@ -534,11 +507,6 @@
                 <artifactId>kylin-metadata-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.yinglong</groupId>-->
-            <!--                <artifactId>yinglong-smart-service</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-streaming-service</artifactId>
@@ -670,21 +638,6 @@
                 <artifactId>kylin-server-base</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.ke</groupId>-->
-            <!--                <artifactId>kap-license-service</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--            </dependency>-->
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.ke</groupId>-->
-            <!--                <artifactId>kap-core-metadata-ext</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--            </dependency>-->
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.ke</groupId>-->
-            <!--                <artifactId>kap-query-ext</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-tool</artifactId>
@@ -750,12 +703,6 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.ke</groupId>-->
-            <!--                <artifactId>kap-core-metadata-ext</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--                <type>test-jar</type>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-core-storage</artifactId>
@@ -798,12 +745,6 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
-            <!--            <dependency>-->
-            <!--                <groupId>io.kyligence.ke</groupId>-->
-            <!--                <artifactId>kap-it</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--                <type>test-jar</type>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-common-service</artifactId>
@@ -1633,6 +1574,10 @@
                         <groupId>com.google.protobuf</groupId>
                         <artifactId>protobuf-java</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.arrow</groupId>
+                        <artifactId>arrow-vector</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -1640,6 +1585,16 @@
                 <artifactId>spark-catalyst_2.12</artifactId>
                 <version>${spark.version}</version>
                 <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.arrow</groupId>
+                        <artifactId>arrow-vector</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.arrow</groupId>
+                        <artifactId>arrow-memory-netty</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.spark</groupId>
@@ -1651,6 +1606,10 @@
                     <exclusion>
                         <groupId>com.google.protobuf</groupId>
                         <artifactId>protobuf-java</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.arrow</groupId>
+                        <artifactId>arrow-vector</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1729,6 +1688,16 @@
                 <version>${spark.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.arrow</groupId>
+                        <artifactId>arrow-vector</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.arrow</groupId>
+                        <artifactId>arrow-memory-netty</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.esotericsoftware</groupId>
@@ -3046,24 +3015,6 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>kyoffice</id>
-
-            <repositories>
-                <repository>
-                    <id>kyoffice</id>
-                    <name>Central Repository</name>
-                    <url>http://repo-ofs.kyligence.com:8081/repository/maven-public/</url>
-                    <layout>default</layout>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-        </profile>
         <profile>
             <id>sandbox</id>
             <activation>

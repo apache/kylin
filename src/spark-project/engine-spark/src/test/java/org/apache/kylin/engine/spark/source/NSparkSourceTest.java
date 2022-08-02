@@ -57,7 +57,6 @@ public class NSparkSourceTest extends NLocalWithSparkSessionTest {
     }
 
     /**
-     * for the issue: https://olapio.atlassian.net/browse/KE-9497
      */
     @Test
     public void testGetSourceData() {

@@ -301,7 +301,7 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
     DFBuilderHelper.checkPointSegment(dataSegment, (copied: NDataSegment) => {
       copied.setFlatTableReady(true)
       if (dataSegment.isFlatTableReady) {
-        // KE-14714 if flat table is updated, there might be some data inconsistency across indexes
+        // if flat table is updated, there might be some data inconsistency across indexes
         copied.setStatus(SegmentStatusEnum.WARNING)
       }
     })

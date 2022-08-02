@@ -527,7 +527,7 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().is(400));
     }
 
-    //KE-22624 public query history api
+    // public query history api
     @Test
     public void testGetQueryHistoriesAPI() throws Exception {
         QueryHistoryRequest request = new QueryHistoryRequest();
