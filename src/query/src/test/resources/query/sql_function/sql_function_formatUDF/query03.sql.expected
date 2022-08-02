@@ -1,0 +1,21 @@
+--https://github.com/Kyligence/KAP/issues/13612
+
+--test date_format(timestamp,part)
+select date_format(TEST_TIME_ENC,'y'),
+       date_format(TEST_TIME_ENC,'Y'),
+       date_format(TEST_TIME_ENC,'y'),
+       date_format(TEST_TIME_ENC,'M'),
+       date_format(TEST_TIME_ENC,'M'),
+       date_format(TEST_TIME_ENC,'d'),
+       date_format(TEST_TIME_ENC,'D'),
+       date_format(TEST_TIME_ENC,'d'),
+       date_format(TEST_TIME_ENC,'h'),
+       date_format(TEST_TIME_ENC,'H'),
+       date_format(TEST_TIME_ENC,'h'),
+       date_format(TEST_TIME_ENC,'m'),
+       date_format(TEST_TIME_ENC,'m'),
+       date_format(TEST_TIME_ENC,'m'),
+       date_format(TEST_TIME_ENC,'s'),
+       date_format(TEST_TIME_ENC,'s'),
+       date_format(TEST_TIME_ENC,'s')
+from TEST_ORDER

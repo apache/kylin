@@ -1,0 +1,1 @@
+`factorial(CAST(5.1 AS INT))` BIGINT

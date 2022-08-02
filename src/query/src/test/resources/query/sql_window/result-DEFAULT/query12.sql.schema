@@ -1,0 +1,1 @@
+`cal_dt` DATE,`lstg_format_name` STRING,`GMV` DECIMAL(29,4),`last_day` DECIMAL(38,0),`last_year` DECIMAL(29,0)

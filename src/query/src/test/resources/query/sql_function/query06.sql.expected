@@ -1,0 +1,4 @@
+-- https://github.com/Kyligence/KAP/issues/13613
+
+select initcap(lstg_format_name) a
+from test_kylin_fact

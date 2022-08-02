@@ -1,0 +1,1 @@
+`now()` TIMESTAMP,`uuid()` STRING,`monotonically_increasing_id()` BIGINT,`unix_timestamp(current_timestamp(), yyyy-MM-dd HH:mm:ss)` BIGINT

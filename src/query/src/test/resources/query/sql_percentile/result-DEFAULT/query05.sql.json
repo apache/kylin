@@ -1,0 +1,1 @@
+{"percentile_approx(SELLER_ID, CAST(0.6 AS DOUBLE), 10000)":10000599}

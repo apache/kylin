@@ -1,0 +1,15 @@
+
+--disable reason: https://github.com/Kyligence/KAP/issues/14426
+select count(distinct date_format(CAL_DT,'YEAR')),
+       count(distinct date_format(CAL_DT,'y')),
+	   count(distinct date_format(CAL_DT,'Y')),
+	   count(distinct date_format(CAL_DT,'MONTH')),
+	   count(distinct date_format(CAL_DT,'M')),
+	   count(distinct date_format(CAL_DT,'DAY')),
+	   count(distinct date_format(CAL_DT,'D')),
+       count(distinct date_format(CAL_DT,'d')),
+       count(distinct date_format(CAL_DT,'H')),
+	   count(distinct date_format(CAL_DT,'h')),
+	   count(distinct date_format(CAL_DT,'m')),
+	   count(distinct date_format(CAL_DT,'s'))
+from TEST_KYLIN_FACT

@@ -1,0 +1,1 @@
+`unix_timestamp(TIME1, yyyy-MM-dd HH:mm:ss)` BIGINT,`unix_timestamp(TIME1, yyyy-MM-dd)` BIGINT,`unix_timestamp(TIME2, yyyy-MM-dd HH:mm:ss)` BIGINT,`unix_timestamp(TIME2, yyyy-MM-dd)` BIGINT

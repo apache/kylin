@@ -1,0 +1,1 @@
+select LSTG_FORMAT_NAME from test_kylin_fact where LSTG_FORMAT_NAME in ('Others', 'Others_B') group by LSTG_FORMAT_NAME

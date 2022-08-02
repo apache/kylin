@@ -1,0 +1,9 @@
+-- https://github.com/Kyligence/KAP/issues/13613
+
+SELECT  ORDER_ID,CASE length(substr(initcap(LSTG_FORMAT_NAME),1,1))
+                WHEN '1'     THEN 'LSTG_FORMAT_NAME length is 1'
+                WHEN '2'     THEN 'LSTG_FORMAT_NAME length is 2'
+                WHEN '3'     THEN 'LSTG_FORMAT_NAME length is 3'
+                ELSE 'LSTG_FORMAT_NAME length is x' END
+FROM    TEST_KYLIN_FACT
+order by ORDER_ID

@@ -1,0 +1,1 @@
+`date_trunc(YEAR, CAL_DT)` TIMESTAMP,`date_trunc(YYYY, CAL_DT)` TIMESTAMP,`date_trunc(YY, CAL_DT)` TIMESTAMP,`date_trunc(MM, CAL_DT)` TIMESTAMP,`date_trunc(MONTH, CAL_DT)` TIMESTAMP,`date_trunc(DAY, CAL_DT)` TIMESTAMP,`date_trunc(DD, CAL_DT)` TIMESTAMP,`date_trunc(HOUR, CAL_DT)` TIMESTAMP,`date_trunc(WEEK, CAL_DT)` TIMESTAMP

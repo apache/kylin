@@ -1,0 +1,21 @@
+--https://github.com/kyligence/kap/issues/14155#
+
+--disable reason: https://github.com/Kyligence/KAP/issues/14426
+select count(date_format(TEST_TIME_ENC,'y')),
+       count(date_format(TEST_TIME_ENC,'Y')),
+       count(date_format(TEST_TIME_ENC,'y')),
+       count(date_format(TEST_TIME_ENC,'M')),
+       count(date_format(TEST_TIME_ENC,'M')),
+       count(date_format(TEST_TIME_ENC,'d')),
+       count(date_format(TEST_TIME_ENC,'D')),
+       count(date_format(TEST_TIME_ENC,'d')),
+       count(date_format(TEST_TIME_ENC,'h')),
+       count(date_format(TEST_TIME_ENC,'H')),
+       count(date_format(TEST_TIME_ENC,'h')),
+       count(date_format(TEST_TIME_ENC,'m')),
+       count(date_format(TEST_TIME_ENC,'m')),
+       count(date_format(TEST_TIME_ENC,'m')),
+       count(date_format(TEST_TIME_ENC,'s')),
+       count(date_format(TEST_TIME_ENC,'s')),
+       count(date_format(TEST_TIME_ENC,'s'))
+from TEST_ORDER
