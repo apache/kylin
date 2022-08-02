@@ -1,0 +1,10 @@
+
+
+select
+       --add_months(CAL_DT,2),
+	   date_format(CAL_DT,'y'),
+	   date_format(CAL_DT,'M'),
+	   date_format(CAL_DT,'d'),
+	   datediff(CAL_DT,date'2019-8-3'),
+	   hour(CAL_DT)
+from TEST_KYLIN_FACT

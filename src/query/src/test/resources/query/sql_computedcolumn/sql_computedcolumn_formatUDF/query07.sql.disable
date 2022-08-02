@@ -1,0 +1,21 @@
+
+
+--disable reason: https://github.com/Kyligence/KAP/issues/14426
+select count(distinct date_format(TEST_TIME_ENC,'YEAR')),
+       count(distinct date_format(TEST_TIME_ENC,'Y')),
+       count(distinct date_format(TEST_TIME_ENC,'y')),
+       count(distinct date_format(TEST_TIME_ENC,'MONTH')),
+       count(distinct date_format(TEST_TIME_ENC,'M')),
+       count(distinct date_format(TEST_TIME_ENC,'DAY')),
+       count(distinct date_format(TEST_TIME_ENC,'D')),
+       count(distinct date_format(TEST_TIME_ENC,'d')),
+       count(distinct date_format(TEST_TIME_ENC,'HOUR')),
+       count(distinct date_format(TEST_TIME_ENC,'H')),
+       count(distinct date_format(TEST_TIME_ENC,'h')),
+       count(distinct date_format(TEST_TIME_ENC,'MINUTE')),
+       count(distinct date_format(TEST_TIME_ENC,'MINUTES')),
+       count(distinct date_format(TEST_TIME_ENC,'m')),
+       count(distinct date_format(TEST_TIME_ENC,'SECOND')),
+       count(distinct date_format(TEST_TIME_ENC,'SECONDS')),
+       count(distinct date_format(TEST_TIME_ENC,'s'))
+from TEST_ORDER

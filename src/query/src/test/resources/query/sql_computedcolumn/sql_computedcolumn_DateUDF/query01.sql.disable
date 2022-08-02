@@ -1,0 +1,8 @@
+
+--disable reason: https://github.com/Kyligence/KAP/issues/14425
+select  --add_months(CAL_DT,2),
+	   count(distinct date_part('YEAR',CAL_DT)),
+	   count(distinct date_part('MONTH',CAL_DT)),
+	   count(distinct date_part('DAY',CAL_DT)),
+	   count(distinct datediff(CAL_DT,date'2019-8-3'))
+from TEST_KYLIN_FACT

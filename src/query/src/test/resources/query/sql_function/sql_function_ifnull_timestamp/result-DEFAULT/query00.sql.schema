@@ -1,0 +1,1 @@
+`ifnull(TIME2, current_timestamp())` TIMESTAMP

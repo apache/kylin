@@ -1,0 +1,1 @@
+`splitpart(LSTG_FORMAT_NAME, I, 1)` STRING,`splitpart(a-b-c, -, 1)` STRING,`splitpart(a-b-c, -, -1)` STRING,`splitpart(a-b-c, -, 100)` STRING

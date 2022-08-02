@@ -40,20 +40,20 @@ public class CognosParenthesesEscapeTransformerTest {
 
     @Test
     public void advanced1Test() throws IOException {
-        advancedTestTemplate("src/test/resources/query/cognos/query01.sql",
-                "src/test/resources/query/cognos/query01.sql.expected");
+        advancedTestTemplate("src/test/resources/query_cognos/cognos/query01.sql",
+                "src/test/resources/query_cognos/cognos/query01.sql.expected");
     }
 
     @Test
     public void advanced2Test() throws IOException {
-        advancedTestTemplate("src/test/resources/query/cognos/query02.sql",
-                "src/test/resources/query/cognos/query02.sql.expected");
+        advancedTestTemplate("src/test/resources/query_cognos/cognos/query02.sql",
+                "src/test/resources/query_cognos/cognos/query02.sql.expected");
     }
 
     @Test
     public void advanced3Test() throws IOException {
-        advancedTestTemplate("src/test/resources/query/cognos/query03.sql",
-                "src/test/resources/query/cognos/query03.sql.expected");
+        advancedTestTemplate("src/test/resources/query_cognos/cognos/query03.sql",
+                "src/test/resources/query_cognos/cognos/query03.sql.expected");
     }
 
     private void advancedTestTemplate(String originFile, String expectedFile) throws IOException {
@@ -67,7 +67,7 @@ public class CognosParenthesesEscapeTransformerTest {
     @Test
     public void proguardTest() throws IOException {
         CognosParenthesesEscapeTransformer escape = new CognosParenthesesEscapeTransformer();
-        Collection<File> files = FileUtils.listFiles(new File("../../../kyligence/src/kap-it/src/test/resources/query"),
+        Collection<File> files = FileUtils.listFiles(new File("src/test/resources/query"),
                 new String[] { "sql" }, true);
         for (File f : files) {
             System.out.println("checking " + f.getCanonicalPath());
@@ -111,10 +111,10 @@ public class CognosParenthesesEscapeTransformerTest {
     public void advanced5Test() throws Exception {
         CognosParenthesesEscapeTransformer convertTransformer = new CognosParenthesesEscapeTransformer();
         String sql2 = FileUtils.readFileToString(
-                new File("../../../kyligence/src/kap-it/src/test/resources/query/sql_parentheses_escape/query05.sql"),
+                new File("src/test/resources/query/sql_parentheses_escape/query05.sql"),
                 Charset.defaultCharset());
         String expectedSql2 = FileUtils.readFileToString(
-                new File("../../../kyligence/src/kap-it/src/test/resources/query/sql_parentheses_escape/query05.sql.expected"),
+                new File("src/test/resources/query/sql_parentheses_escape/query05.sql.expected"),
                 Charset.defaultCharset());
         sql2 = QueryUtil.removeCommentInSql(sql2);
         String transform2 = convertTransformer.completion(sql2).replaceAll("[\n]+", "");
@@ -127,10 +127,10 @@ public class CognosParenthesesEscapeTransformerTest {
         CognosParenthesesEscapeTransformer convertTransformer = new CognosParenthesesEscapeTransformer();
 
         String originalSql = FileUtils.readFileToString(
-                new File("../../../kyligence/src/kap-it/src/test/resources/query/sql_parentheses_escape/query06.sql"),
+                new File("src/test/resources/query/sql_parentheses_escape/query06.sql"),
                 Charset.defaultCharset());
         String expectedSql = FileUtils.readFileToString(
-                new File("../../../kyligence/src/kap-it/src/test/resources/query/sql_parentheses_escape/query06.sql.expected"),
+                new File("src/test/resources/query/sql_parentheses_escape/query06.sql.expected"),
                 Charset.defaultCharset());
         originalSql = QueryUtil.removeCommentInSql(originalSql);
         String transformed = convertTransformer.completion(originalSql).replaceAll("[\n]+", "");

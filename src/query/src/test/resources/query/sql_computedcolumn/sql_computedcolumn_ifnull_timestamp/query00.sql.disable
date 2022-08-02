@@ -1,0 +1,6 @@
+--https://github.com/Kyligence/KAP/issues/13977
+
+--disable reason: https://github.com/Kyligence/KAP/issues/14074
+select count(ifnull(time2,CURRENT_TIMESTAMP))
+from TEST_MEASURE
+

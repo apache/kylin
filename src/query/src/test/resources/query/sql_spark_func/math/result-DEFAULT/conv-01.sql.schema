@@ -1,0 +1,1 @@
+`conv(100, 2, 10)` STRING,`conv(CAST(-10 AS STRING), 16, 10)` STRING

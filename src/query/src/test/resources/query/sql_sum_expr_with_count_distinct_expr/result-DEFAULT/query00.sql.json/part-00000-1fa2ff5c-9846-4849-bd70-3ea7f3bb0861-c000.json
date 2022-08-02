@@ -1,0 +1,6 @@
+{"针梭织__0":"ABIN","封样合格率（款）__MAX__1":1.0,"实际收货配套累计量__SUM__2":10004048.0,"sum(CASE WHEN ((ORDER_ID > 200) AND (ORDER_ID > 200)) THEN 0 ELSE TRANS_ID END)":413119,"__GROUPING_ID":0}
+{"针梭织__0":"Auction","封样合格率（款）__MAX__1":0.0,"实际收货配套累计量__SUM__2":10253117.0,"sum(CASE WHEN ((ORDER_ID > 200) AND (ORDER_ID > 200)) THEN 0 ELSE TRANS_ID END)":450810,"__GROUPING_ID":0}
+{"针梭织__0":"FP-GTC","封样合格率（款）__MAX__1":0.0,"实际收货配套累计量__SUM__2":10101950.0,"sum(CASE WHEN ((ORDER_ID > 200) AND (ORDER_ID > 200)) THEN 0 ELSE TRANS_ID END)":374936,"__GROUPING_ID":0}
+{"针梭织__0":"FP-non GTC","封样合格率（款）__MAX__1":0.0,"实际收货配套累计量__SUM__2":10035374.0,"sum(CASE WHEN ((ORDER_ID > 200) AND (ORDER_ID > 200)) THEN 0 ELSE TRANS_ID END)":302897,"__GROUPING_ID":0}
+{"针梭织__0":"Others","封样合格率（款）__MAX__1":0.0,"实际收货配套累计量__SUM__2":9600511.0,"sum(CASE WHEN ((ORDER_ID > 200) AND (ORDER_ID > 200)) THEN 0 ELSE TRANS_ID END)":379457,"__GROUPING_ID":0}
+{"针梭织__0":"AA","封样合格率（款）__MAX__1":0.1,"实际收货配套累计量__SUM__2":0.2,"sum(CASE WHEN ((ORDER_ID > 200) AND (ORDER_ID > 200)) THEN 0 ELSE TRANS_ID END)":33,"__GROUPING_ID":1}

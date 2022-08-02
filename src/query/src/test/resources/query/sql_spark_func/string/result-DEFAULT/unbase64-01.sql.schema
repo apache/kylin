@@ -1,0 +1,1 @@
+`unbase64(base64(CAST(Spark SQL AS BINARY)))` BINARY
