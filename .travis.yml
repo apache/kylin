@@ -1,0 +1,74 @@
+# Configuration file for Travis continuous integration.
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to you under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+---
+language: generic
+
+addons:
+  apt:
+    packages:
+      - openjdk-8-jdk
+      - unzip
+  sonarcloud:
+    organization: "kylin"
+    token:
+      secure: "2ca24e5a04ad1fca4ca956953810421aa8bd1470"
+
+cache:
+  directories:
+    - $HOME/.m2
+
+jobs:
+  include:
+    - name: Linux x86
+      arch: amd64
+
+before_install:
+  - export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-${TRAVIS_CPU_ARCH}";
+  - export PATH="$JAVA_HOME/bin:$PATH";
+  - echo "Downloading Maven 3.8.1"
+  - wget --quiet https://archive.apache.org/dist/maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.zip
+  - unzip -qq -o apache-maven-3.8.1-bin.zip
+  - export M2_HOME=$PWD/apache-maven-3.8.1
+  - export PATH=$M2_HOME/bin:$PATH
+  - mvn -version
+  - echo "MAVEN_OPTS='-Xms1024m -Xmx3072m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m'" > ~/.mavenrc
+
+  - if [[ $(uname -m) == 'aarch64' ]];then export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-arm64";fi
+
+script:
+  # mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test coveralls:report -e
+  # Skip coveralls temporarily, fix it asap
+  - mvn clean package -DskipTests -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN
+
+notification:
+  email:
+    recipients:
+      - dev@kylin.apache.org
+    on_failure: always
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
+before_cache:
+  # Remove project's local artifacts to force maven reactor resolve
+  - rm -rf $HOME/.m2/repository/org/apache/kylin
+
+# block list
+branches:
+  except:
+    - document
