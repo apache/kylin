@@ -98,7 +98,7 @@ public class AsyncQueryApplication extends SparkApplication {
         try {
             QueryMetricsContext queryMetricsContext = QueryMetricsContext.collect(queryContext);
             queryMetricsContext.setSql(constructQueryHistorySqlText(queryParams, queryContext.getUserSQL()));
-            // KE-36662 Using sql_pattern as normalized_sql storage
+            // Using sql_pattern as normalized_sql storage
             String normalizedSql = QueryContext.currentMetrics().getCorrectedSql();
             queryMetricsContext.setSqlPattern(normalizedSql);
 
@@ -123,7 +123,7 @@ public class AsyncQueryApplication extends SparkApplication {
             }
         }
 
-        // KE-36662 Do not store normalized_sql in sql_text, as it may exceed storage limitation
+        // Do not store normalized_sql in sql_text, as it may exceed storage limitation
         return QueryHistoryUtil.toQueryHistorySqlText(new QueryHistorySql(originalSql, null, params));
     }
 

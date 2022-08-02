@@ -175,7 +175,7 @@ public abstract class SparkJobMetadataMerger extends MetadataMerger {
                 item.forEach((k, v) -> //
                 merged.put(k, v + merged.getOrDefault(k, 0L))));
         localSegment.setColumnSourceBytes(merged);
-        // KE-18417 snapshot management.
+        // snapshot management.
         localSegment.setLastBuildTime(newSegment.getLastBuildTime());
         localSegment.setSourceBytesSize(newSegment.getSourceBytesSize());
         localSegment.setLastBuildTime(lastBuildTime);

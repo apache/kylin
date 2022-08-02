@@ -62,7 +62,11 @@ public class KylinPrepareEnvListener implements EnvironmentPostProcessor, Ordere
                 setSandboxEnvs("../examples/test_case_data/sandbox");
             }
         } else if (env.acceptsProfiles(Profiles.of("dev"))) {
-            setLocalEnvs();
+            if (env.acceptsProfiles(Profiles.of("reuse"))) {
+                setLocalEnvs(System.getProperty("kylin.test.metadata.reuse-dir"));
+            } else {
+                setLocalEnvs();
+            }
         }
         // enable CC check
         Unsafe.setProperty("needCheckCC", "true");
@@ -105,9 +109,12 @@ public class KylinPrepareEnvListener implements EnvironmentPostProcessor, Ordere
     }
 
     private static void setLocalEnvs() {
-        String tempMetadataDir = TempMetadataBuilder.prepareLocalTempMetadata();
-        KylinConfig.setKylinConfigForLocalTest(tempMetadataDir);
-        File localMetadata = new File(tempMetadataDir);
+        setLocalEnvs(TempMetadataBuilder.prepareLocalTempMetadata());
+    }
+
+    private static void setLocalEnvs(String metadataDir) {
+        KylinConfig.setKylinConfigForLocalTest(metadataDir);
+        File localMetadata = new File(metadataDir);
 
         // pass checkHadoopHome
         Unsafe.setProperty("hadoop.home.dir", localMetadata.getAbsolutePath() + "/working-dir");

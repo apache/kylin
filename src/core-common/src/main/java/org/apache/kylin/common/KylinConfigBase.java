@@ -309,7 +309,6 @@ public abstract class KylinConfigBase implements Serializable {
         setProperty("kylin.log.spark-driver-properties-file", getLogSparkDriverPropertiesFile());
         setProperty("kylin.log.spark-appmaster-properties-file", getLogSparkAppMasterPropertiesFile());
 
-        // https://github.com/kyligence/kap/issues/12654
         this.properties.put(WORKING_DIR_PROP,
                 makeQualified(new Path(this.properties.getProperty(WORKING_DIR_PROP, KYLIN_ROOT))).toString());
         if (this.properties.getProperty(DATA_WORKING_DIR_PROP) != null) {
@@ -1603,6 +1602,10 @@ public abstract class KylinConfigBase implements Serializable {
     // QUERY
     // ============================================================================
 
+    public String getQueryEngineClass() {
+        return getOptional("kylin.query.query-engine-class", "org.apache.kylin.query.runtime.SparkEngine");
+    }
+
     public boolean partialMatchNonEquiJoins() {
         return Boolean.parseBoolean(getOptional("kylin.query.match-partial-non-equi-join-model", FALSE));
     }
@@ -1697,7 +1700,6 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     // If return empty result for select star query
-    // https://olapio.atlassian.net/browse/KE-23663
     public boolean getEmptyResultForSelectStar() {
         return Boolean.parseBoolean(getOptional("kylin.query.return-empty-result-on-select-star", "false"));
     }

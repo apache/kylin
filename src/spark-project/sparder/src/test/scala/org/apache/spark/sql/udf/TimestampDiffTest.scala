@@ -56,7 +56,7 @@ class TimestampDiffTest extends SparderBaseFunSuite with SharedSparkSession with
     // DAY
     verifyResult("select timestampdiff('DAY', date'2016-02-01' , date'2016-02-01')", Seq("0"))
     verifyResult("select timestampdiff('DAY', date'2016-02-01' , date'2016-02-02')", Seq("1"))
-    // TODO KE-27654
+    // TODO
     // verifyResult("select timestampdiff('DAY', date'1977-04-20', date'1987-08-02')", Seq("3756"))
 
     // HOUR

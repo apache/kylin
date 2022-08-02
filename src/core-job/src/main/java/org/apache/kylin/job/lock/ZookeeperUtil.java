@@ -41,8 +41,6 @@ import org.apache.kylin.common.annotation.ThirdPartyDependencies;
 
 /**
  *   DO NOT DELETE.
- *
- *   Used By Kyligence Cloud.
  */
 @ThirdPartyDependencies({ @ThirdPartyDependencies.ThirdPartyDependent(repository = "static-user-manager", classes = {
         "AuthenticationClient" }) })

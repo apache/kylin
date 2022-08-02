@@ -124,7 +124,10 @@ public class AppInitializer {
             resourceStore.getMetadataStore().setEpochStore(epochStore);
         }
 
-        kylinConfig.getDistributedLockFactory().initialize();
+        // Don't need to initialize distributed lock when running in local mode
+        if (!kylinConfig.isUTEnv()) {
+            kylinConfig.getDistributedLockFactory().initialize();
+        }
         warmUpSystemCache();
         event.getApplicationContext().publishEvent(new AfterMetadataReadyEvent(event.getApplicationContext()));
 
