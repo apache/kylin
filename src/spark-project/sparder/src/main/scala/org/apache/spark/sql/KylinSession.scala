@@ -308,7 +308,7 @@ object KylinSession extends Logging {
         logDir = ExtractFactory.create.getSparderEvenLogDir()
         sparkConf.set("spark.eventLog.dir", logDir)
         val logPath = new Path(new URI(logDir).getPath)
-        val fs = HadoopUtil.getWorkingFileSystem()
+        val fs = HadoopUtil.getWorkingFileSystem(logPath)
         if (!fs.exists(logPath)) {
           fs.mkdirs(logPath)
         }
