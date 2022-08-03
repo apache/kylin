@@ -1006,8 +1006,9 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getQueryExtensionFactory() {
         String dft = "org.apache.kylin.query.QueryExtension$Factory";
+        logger.warn("Current vendor is " + vendor());
         if(vendor().equals(DEFAULT_VENDOR)){
-            dft = "io.kyligence.kap.query.QueryExtensionFactoryEnterprise";
+            dft = "org.apache.kylin.query.QueryExtension$Factory";
         } else if (vendor().equals("kyligence")) {
             dft = "io.kyligence.kap.query.QueryExtensionFactoryEnterprise";
         }
@@ -1016,9 +1017,8 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getMetadataExtensionFactory() {
         String dft = "org.apache.kylin.metadata.MetadataExtension$Factory";
-        // DEFAULT_VENDOR
         if (vendor().equals(DEFAULT_VENDOR)) {
-            dft = "io.kyligence.kap.metadata.MetadataExtensionFactoryEnterprise";
+            dft = "org.apache.kylin.metadata.MetadataExtension$Factory";
         } else if (vendor().equals("kyligence")) {
             dft = "io.kyligence.kap.metadata.MetadataExtensionFactoryEnterprise";
         }
