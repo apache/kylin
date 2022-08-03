@@ -1,0 +1,7 @@
+{"CASE WHEN (INT0 > 10) THEN sum(timestampdiff(second, TIME0, TIME1)) ELSE sum(timestampdiff(minute, TIME0, TIME1)) END":204245659}
+{"CASE WHEN (INT0 > 10) THEN sum(timestampdiff(second, TIME0, TIME1)) ELSE sum(timestampdiff(minute, TIME0, TIME1)) END":51061494}
+{"CASE WHEN (INT0 > 10) THEN sum(timestampdiff(second, TIME0, TIME1)) ELSE sum(timestampdiff(minute, TIME0, TIME1)) END":51061624}
+{"CASE WHEN (INT0 > 10) THEN sum(timestampdiff(second, TIME0, TIME1)) ELSE sum(timestampdiff(minute, TIME0, TIME1)) END":255306630}
+{"CASE WHEN (INT0 > 10) THEN sum(timestampdiff(second, TIME0, TIME1)) ELSE sum(timestampdiff(minute, TIME0, TIME1)) END":153184996}
+{"CASE WHEN (INT0 > 10) THEN sum(timestampdiff(second, TIME0, TIME1)) ELSE sum(timestampdiff(minute, TIME0, TIME1)) END":102123210}
+{"CASE WHEN (INT0 > 10) THEN sum(timestampdiff(second, TIME0, TIME1)) ELSE sum(timestampdiff(minute, TIME0, TIME1)) END":3063817301}

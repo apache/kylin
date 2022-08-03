@@ -1,0 +1,5 @@
+-- Unsupported to infer CC type, corresponding cc expression is:
+-- CAST(TIMESTAMPDIFF('SECOND', CALCS.TIME0, CAST(CALCS.DATETIME1 AS TIMESTAMP)) AS VARCHAR)
+-- inner expression varchar cannot be replaced
+
+select count(cast(timestampdiff(second, time0, cast(datetime1 as timestamp)) as varchar )) from tdvt.calcs;

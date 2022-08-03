@@ -1,0 +1,38 @@
+{
+  "uuid" : "a749e414-c40e-45b7-92e4-bbfe63af705d",
+  "last_modified" : 1603300134161,
+  "create_time" : 1603300134140,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "owner" : "ADMIN",
+  "mp_values" : [ ],
+  "create_time_utc" : 1603300134141,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "event_error" : false,
+  "segments" : [ {
+    "id" : "55d92193-cadf-4157-a3d8-f85ba51149a3",
+    "name" : "FULL_BUILD",
+    "create_time_utc" : 1603300134147,
+    "status" : "READY",
+    "segRange" : {
+      "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+      "date_range_start" : 0,
+      "date_range_end" : 9223372036854775807
+    },
+    "timeRange" : null,
+    "parameters" : null,
+    "dictionaries" : null,
+    "snapshots" : {
+      "DEFAULT.TEST_ACCOUNT" : "subquery/table_snapshot/DEFAULT.TEST_ACCOUNT/3807d642-bf8d-4762-8bc6-0e4079aef514"
+    },
+    "last_build_time" : 1603300165534,
+    "source_count" : -1,
+    "source_bytes_size" : 783362,
+    "additionalInfo" : { }
+  } ],
+  "storage_location_identifier" : null
+}

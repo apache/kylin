@@ -309,12 +309,11 @@
         <module>src/core-storage</module>
         <module>src/query-common</module>
         <module>src/query</module>
-        <!--        <module>src/kap-it</module>-->
+        <module>src/kylin-it</module>
         <module>src/core-common</module>
         <module>src/core-metadata</module>
         <module>src/source-hive</module>
         <module>src/server-base</module>
-        <!--        <module>src/license-service</module>-->
         <module>src/server</module>
         <module>src/spark-project/spark-common</module>
         <module>src/spark-project/sparder</module>
@@ -329,10 +328,9 @@
         <module>src/second-storage/core</module>
         <module>src/second-storage/core-ui</module>
         <module>src/second-storage/clickhouse</module>
-        <!--        <module>src/second-storage/clickhouse-it</module>-->
-        <!-- yinglong modules -->
         <module>src/systools</module>
-        <!-- yinglong service -->
+
+        <!-- service  -->
         <module>src/modeling-service</module>
         <module>src/query-service</module>
         <module>src/datasource-service</module>
@@ -342,7 +340,7 @@
         <module>src/streaming-service</module>
         <module>src/integration-service</module>
 
-        <!-- yinglong controller  -->
+        <!-- controller  -->
         <module>src/common-server</module>
         <module>src/metadata-server</module>
         <module>src/data-loading-server</module>

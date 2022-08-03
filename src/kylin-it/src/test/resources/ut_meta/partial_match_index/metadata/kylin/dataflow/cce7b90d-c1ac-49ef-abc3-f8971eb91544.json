@@ -1,0 +1,79 @@
+{
+  "uuid" : "cce7b90d-c1ac-49ef-abc3-f8971eb91544",
+  "last_modified" : 1609137488959,
+  "create_time" : 1604303730167,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "owner" : "ADMIN",
+  "mp_values" : [ ],
+  "create_time_utc" : 1604303730167,
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 6,
+  "last_query_time" : 1609136261913,
+  "layout_query_hit_count" : {
+    "60001" : {
+      "1609084800000" : 1
+    },
+    "30001" : {
+      "1609084800000" : 5
+    }
+  },
+  "event_error" : false,
+  "segments" : [ {
+    "id" : "a1fc70d4-3640-4554-9d53-b0d67b98de13",
+    "name" : "20120101000000_20130101000000",
+    "create_time_utc" : 1609135922402,
+    "status" : "READY",
+    "segRange" : {
+      "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+      "date_range_start" : 1325347200000,
+      "date_range_end" : 1356969600000
+    },
+    "timeRange" : null,
+    "parameters" : null,
+    "dictionaries" : null,
+    "snapshots" : null,
+    "last_build_time" : 0,
+    "source_count" : 4903,
+    "source_bytes_size" : 725571,
+    "column_source_bytes" : { },
+    "ori_snapshot_size" : { },
+    "additionalInfo" : { },
+    "is_encoding_data_skew" : false,
+    "is_snapshot_ready" : false,
+    "is_dict_ready" : false,
+    "is_flat_table_ready" : false,
+    "is_fact_view_ready" : false,
+    "multi_partitions" : [ ],
+    "max_bucket_id" : -1
+  }, {
+    "id" : "5d450d1a-170e-4410-9c93-6a34903fe7af",
+    "name" : "20130101000000_20140101000000",
+    "create_time_utc" : 1609136034176,
+    "status" : "READY",
+    "segRange" : {
+      "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+      "date_range_start" : 1356969600000,
+      "date_range_end" : 1388505600000
+    },
+    "timeRange" : null,
+    "parameters" : null,
+    "dictionaries" : null,
+    "snapshots" : null,
+    "last_build_time" : 0,
+    "source_count" : 5086,
+    "source_bytes_size" : 0,
+    "column_source_bytes" : { },
+    "ori_snapshot_size" : { },
+    "additionalInfo" : { },
+    "is_encoding_data_skew" : false,
+    "is_snapshot_ready" : false,
+    "is_dict_ready" : false,
+    "is_flat_table_ready" : false,
+    "is_fact_view_ready" : false,
+    "multi_partitions" : [ ],
+    "max_bucket_id" : -1
+  } ],
+  "storage_location_identifier" : null
+}

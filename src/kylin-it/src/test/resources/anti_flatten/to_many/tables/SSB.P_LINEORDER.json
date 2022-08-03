@@ -1,0 +1,36 @@
+{
+  "uuid": "b017d54b-e7b7-465b-a4db-b47f68baf1ad",
+  "version": "2.1",
+  "name": "P_LINEORDER",
+  "columns": [
+    {
+      "id": "1",
+      "name": "LO_CUSTKEY",
+      "datatype": "integer"
+    },
+    {
+      "id": "2",
+      "name": "LO_ORDERDATE",
+      "datatype": "integer"
+    },
+    {
+      "id": "3",
+      "name": "LO_EXTENDEDPRICE",
+      "datatype": "bigint"
+    },
+    {
+      "id": "4",
+      "name": "LO_DISCOUNT",
+      "datatype": "bigint"
+    },
+    {
+      "id": "5",
+      "name": "LO_SHIPMODE",
+      "datatype": "varchar(10)"
+    }
+  ],
+  "database": "SSB",
+  "last_modified": 1457444145578,
+  "source_type": 9,
+  "table_type": "VIRTUAL_VIEW"
+}

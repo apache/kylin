@@ -1,0 +1,1 @@
+`CASE WHEN (INT0 > 10) THEN sum(timestampdiff(second, TIME0, TIME1)) ELSE sum(timestampdiff(minute, TIME0, TIME1)) END` BIGINT

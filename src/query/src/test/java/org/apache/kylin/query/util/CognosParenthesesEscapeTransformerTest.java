@@ -67,7 +67,7 @@ public class CognosParenthesesEscapeTransformerTest {
     @Test
     public void proguardTest() throws IOException {
         CognosParenthesesEscapeTransformer escape = new CognosParenthesesEscapeTransformer();
-        Collection<File> files = FileUtils.listFiles(new File("src/test/resources/query"),
+        Collection<File> files = FileUtils.listFiles(new File("../kylin-it/src/test/resources/query"),
                 new String[] { "sql" }, true);
         for (File f : files) {
             System.out.println("checking " + f.getCanonicalPath());

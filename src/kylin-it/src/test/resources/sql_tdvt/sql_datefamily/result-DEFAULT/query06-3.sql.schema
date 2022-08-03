@@ -1,0 +1,1 @@
+`CASE WHEN (INT0 > 100) THEN timestampdiff(second, TIME0, TIME1) WHEN (INT0 > 50) THEN timestampdiff(minute, TIME0, TIME1) WHEN (INT0 > 0) THEN timestampdiff(hour, TIME0, TIME1) ELSE NULL END` BIGINT

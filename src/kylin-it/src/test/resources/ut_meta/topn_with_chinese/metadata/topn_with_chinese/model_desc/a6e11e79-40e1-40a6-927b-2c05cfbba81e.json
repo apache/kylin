@@ -1,0 +1,78 @@
+{
+  "uuid" : "a6e11e79-40e1-40a6-927b-2c05cfbba81e",
+  "last_modified" : 1595855900519,
+  "create_time" : 1595855900519,
+  "version" : "4.0.0.0",
+  "alias" : "topn_with_chinese",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.TOPN_WITH_CHINESE",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "INT_ID",
+    "column" : "TOPN_WITH_CHINESE.INT_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "CITY",
+    "column" : "TOPN_WITH_CHINESE.CITY",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "TOPN",
+    "function" : {
+      "expression" : "TOP_N",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TOPN_WITH_CHINESE.INT_ID"
+      }, {
+        "type" : "column",
+        "value" : "TOPN_WITH_CHINESE.CITY"
+      } ],
+      "returntype" : "topn(10)"
+    },
+    "id" : 100000
+  }, {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100001
+  } ],
+  "column_correlations" : [ ],
+  "multilevel_partition_cols" : [ ],
+  "computed_columns" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "TOPN_WITH_CHINESE" : {
+        "x" : 625.4444376627605,
+        "y" : 124.27778455946181,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  }
+}

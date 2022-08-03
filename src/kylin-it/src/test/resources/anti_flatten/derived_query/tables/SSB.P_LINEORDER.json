@@ -1,0 +1,101 @@
+{
+  "uuid": "b017d54b-e7b7-465b-a4db-b47f68baf1ad",
+  "version": "2.1",
+  "name": "P_LINEORDER",
+  "columns": [
+    {
+      "id": "1",
+      "name": "LO_ORDERKEY",
+      "datatype": "bigint"
+    },
+    {
+      "id": "2",
+      "name": "LO_LINENUMBER",
+      "datatype": "bigint"
+    },
+    {
+      "id": "3",
+      "name": "LO_CUSTKEY",
+      "datatype": "integer"
+    },
+    {
+      "id": "4",
+      "name": "LO_PARTKEY",
+      "datatype": "integer"
+    },
+    {
+      "id": "5",
+      "name": "LO_SUPPKEY",
+      "datatype": "integer"
+    },
+    {
+      "id": "6",
+      "name": "LO_ORDERDATE",
+      "datatype": "integer"
+    },
+    {
+      "id": "7",
+      "name": "LO_ORDERPRIOTITY",
+      "datatype": "varchar(15)"
+    },
+    {
+      "id": "8",
+      "name": "LO_SHIPPRIOTITY",
+      "datatype": "integer"
+    },
+    {
+      "id": "9",
+      "name": "LO_QUANTITY",
+      "datatype": "bigint"
+    },
+    {
+      "id": "10",
+      "name": "LO_EXTENDEDPRICE",
+      "datatype": "bigint"
+    },
+    {
+      "id": "11",
+      "name": "LO_ORDTOTALPRICE",
+      "datatype": "bigint"
+    },
+    {
+      "id": "12",
+      "name": "LO_DISCOUNT",
+      "datatype": "bigint"
+    },
+    {
+      "id": "13",
+      "name": "LO_REVENUE",
+      "datatype": "bigint"
+    },
+    {
+      "id": "14",
+      "name": "LO_SUPPLYCOST",
+      "datatype": "bigint"
+    },
+    {
+      "id": "15",
+      "name": "LO_TAX",
+      "datatype": "bigint"
+    },
+    {
+      "id": "16",
+      "name": "LO_COMMITDATE",
+      "datatype": "integer"
+    },
+    {
+      "id": "17",
+      "name": "LO_SHIPMODE",
+      "datatype": "varchar(10)"
+    },
+    {
+      "id": "18",
+      "name": "V_REVENUE",
+      "datatype": "bigint"
+    }
+  ],
+  "database": "SSB",
+  "last_modified": 1457444145578,
+  "source_type": 9,
+  "table_type": "VIRTUAL_VIEW"
+}

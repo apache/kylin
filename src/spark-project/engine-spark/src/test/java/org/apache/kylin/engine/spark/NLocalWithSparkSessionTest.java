@@ -76,7 +76,7 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
 
     private static final String CSV_TABLE_DIR = TempMetadataBuilder.TEMP_TEST_METADATA + "/data/%s.csv";
 
-    protected static final String KAP_SQL_BASE_DIR = "../kap-it/src/test/resources/query";
+    protected static final String KAP_SQL_BASE_DIR = "../kylin-it/src/test/resources/query";
 
     protected static SparkConf sparkConf;
     protected static SparkSession ss;

@@ -1,0 +1,1 @@
+{"sum(CASE WHEN (NOT (TIME0 = TIME1)) THEN (((INT2 - INT1) / timestampdiff(second, TIME0, TIME1)) * 60) ELSE (((INT2 - INT1) / timestampdiff(second, TIME1, DATETIME0)) * 60) END)":1.0771325424424967E-6}

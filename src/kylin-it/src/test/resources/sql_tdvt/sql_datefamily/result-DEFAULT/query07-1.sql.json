@@ -1,0 +1,17 @@
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51063754,"DATETIME0":"2004-07-09T10:17:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51060263,"DATETIME0":"2004-07-26T12:30:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51060438,"DATETIME0":"2004-08-02T07:59:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51061204,"DATETIME0":"2004-07-05T13:14:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51061494,"DATETIME0":"2004-07-28T23:30:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51061624,"DATETIME0":"2004-07-22T00:30:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51061766,"DATETIME0":"2004-07-28T06:54:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51060969,"DATETIME0":"2004-07-12T17:30:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51061765,"DATETIME0":"2004-07-04T22:49:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51061129,"DATETIME0":"2004-07-23T21:13:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51060280,"DATETIME0":"2004-07-14T08:16:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51062790,"DATETIME0":"2004-07-25T15:22:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51060420,"DATETIME0":"2004-07-17T14:01:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51061016,"DATETIME0":"2004-07-19T22:21:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51063621,"DATETIME0":"2004-07-31T11:57:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51063700,"DATETIME0":"2004-07-14T07:43:00.000+08:00"}
+{"sum(timestampdiff(minute, TIME1, TIME0))":-51061001,"DATETIME0":"2004-07-28T12:34:00.000+08:00"}
