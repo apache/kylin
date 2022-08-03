@@ -1,0 +1,1 @@
+`count(timestampadd(second, (1 + 2), TIME0))` BIGINT NOT NULL,`count(timestampadd(minute, (INT0 + 1), TIME1))` BIGINT NOT NULL

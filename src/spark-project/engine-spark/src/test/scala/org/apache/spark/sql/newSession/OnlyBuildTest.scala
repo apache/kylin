@@ -33,7 +33,7 @@ import java.util
 abstract class OnlyBuildTest extends SQLTestUtils with WithKylinExternalCatalog {
 
   val project = "file_pruning"
-  protected override val ut_meta = "../kap-it/src/test/resources/ut_meta/file_pruning"
+  protected override val ut_meta = "../kylin-it/src/test/resources/ut_meta/file_pruning"
   val dfID = "8c670664-8d05-466a-802f-83c023b56c77"
 
   protected def storageType: Integer

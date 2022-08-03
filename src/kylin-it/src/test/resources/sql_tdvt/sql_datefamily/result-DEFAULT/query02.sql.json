@@ -1,0 +1,1 @@
+{"count(weekofyear(DATE0))":17,"max(weekofyear(DATE1))":50,"count(dayofyear(DATE0))":17,"max(dayofyear(DATE1))":344,"count(dayofmonth(DATE0))":17,"max(dayofmonth(DATE1))":9,"count(dayofweek(DATE0))":17,"max(dayofweek(DATE1))":7}

@@ -1,0 +1,6 @@
+-- update model will fail for table `CALCS` not found
+-- `select sum(CALCS._CC_CC_AUTO_1), datetime0 from (select * from tdvt.calcs) tb1 group by datetime0`
+
+select sum(timestampdiff(second, time1, time0)), datetime0
+from (select * from tdvt.calcs) tb1
+group by datetime0;

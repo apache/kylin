@@ -55,7 +55,7 @@ public class NTableSamplingJobTest extends NLocalWithSparkSessionTest {
     public void after() throws IOException {
         NDefaultScheduler.destroyInstance();
         super.cleanupTestMetadata();
-        FileUtils.deleteQuietly(new File("../kap-it/metastore_db"));
+        FileUtils.deleteQuietly(new File("../kylin-it/metastore_db"));
     }
 
     @Test

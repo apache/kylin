@@ -1,0 +1,1 @@
+`sum(timestampdiff(minute, TIME1, T0))` BIGINT,`DATETIME0` TIMESTAMP

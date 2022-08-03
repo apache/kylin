@@ -1,0 +1,10 @@
+--the inner expression will propose a computed column, but result not match
+
+SELECT * FROM (SELECT SUM(timestampdiff(second, time0, time1)) AS col1, sta.datetime0
+                FROM tdvt.calcs calcs
+                LEFT JOIN (
+                SELECT sum(timestampdiff(minute, time1, time0)), datetime0
+                FROM tdvt.calcs group by datetime0
+                ) sta ON calcs.datetime0 = sta.datetime0
+                GROUP BY sta.datetime0
+                ORDER BY datetime0);
