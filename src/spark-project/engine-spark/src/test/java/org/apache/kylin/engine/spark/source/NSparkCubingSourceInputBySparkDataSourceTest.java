@@ -60,7 +60,7 @@ public class NSparkCubingSourceInputBySparkDataSourceTest extends NLocalWithSpar
             KylinBuildEnv.clean();
             KylinBuildEnv kylinBuildEnv = KylinBuildEnv.getOrCreate(getTestConfig());
             getTestConfig().setProperty("kylin.source.provider.9",
-                    "NSparkDataSource");
+                    "org.apache.kylin.engine.spark.source.NSparkDataSource");
             getTestConfig().setProperty("kylin.build.resource.read-transactional-table-enabled", "true");
             NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(getTestConfig(), "ssb");
             TableDesc fact = tableMgr.getTableDesc("SSB.P_LINEORDER");
@@ -80,7 +80,7 @@ public class NSparkCubingSourceInputBySparkDataSourceTest extends NLocalWithSpar
             KylinBuildEnv.clean();
             KylinBuildEnv kylinBuildEnv = KylinBuildEnv.getOrCreate(getTestConfig());
             getTestConfig().setProperty("kylin.source.provider.9",
-                    "NSparkDataSource");
+                    "org.apache.kylin.engine.spark.source.NSparkDataSource");
             getTestConfig().setProperty("kylin.build.resource.read-transactional-table-enabled", "true");
             NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(getTestConfig(), "ssb");
             TableDesc fact = tableMgr.getTableDesc("SSB.P_LINEORDER");

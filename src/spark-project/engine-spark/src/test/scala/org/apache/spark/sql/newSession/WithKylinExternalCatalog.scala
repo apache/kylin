@@ -64,7 +64,7 @@ trait WithKylinExternalCatalog extends SparkFunSuite with BeforeAndAfterAll {
     metaStore.createTestMetadata(metadata: _*)
     metaStore.overwriteSystemProp("kylin.use.external.catalog", externalCatalog)
     metaStore.overwriteSystemProp("kylin.NSparkDataSource.data.dir", s"${kylinConf.getMetadataUrlPrefix}/../data")
-    metaStore.overwriteSystemProp("kylin.source.provider.9", "NSparkDataSource")
+    metaStore.overwriteSystemProp("kylin.source.provider.9", "org.apache.kylin.engine.spark.source.NSparkDataSource")
     metaStore.overwriteSystemProp("kylin.query.engine.sparder-additional-files", fitPathForUT(additional))
     metaStore.overwriteSystemProp("kylin.source.jdbc.adaptor", "Set By WithKylinExternalCatalog")
     metaStore.overwriteSystemProp("kylin.source.jdbc.driver", "Set By WithKylinExternalCatalog")
