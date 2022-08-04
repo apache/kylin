@@ -111,10 +111,10 @@ public class CognosParenthesesEscapeTransformerTest {
     public void advanced5Test() throws Exception {
         CognosParenthesesEscapeTransformer convertTransformer = new CognosParenthesesEscapeTransformer();
         String sql2 = FileUtils.readFileToString(
-                new File("src/test/resources/query/sql_parentheses_escape/query05.sql"),
+                new File("../kylin-it/src/test/resources/query/sql_parentheses_escape/query05.sql"),
                 Charset.defaultCharset());
         String expectedSql2 = FileUtils.readFileToString(
-                new File("src/test/resources/query/sql_parentheses_escape/query05.sql.expected"),
+                new File("../kylin-it/src/test/resources/query/sql_parentheses_escape/query05.sql.expected"),
                 Charset.defaultCharset());
         sql2 = QueryUtil.removeCommentInSql(sql2);
         String transform2 = convertTransformer.completion(sql2).replaceAll("[\n]+", "");
@@ -127,10 +127,10 @@ public class CognosParenthesesEscapeTransformerTest {
         CognosParenthesesEscapeTransformer convertTransformer = new CognosParenthesesEscapeTransformer();
 
         String originalSql = FileUtils.readFileToString(
-                new File("src/test/resources/query/sql_parentheses_escape/query06.sql"),
+                new File("../kylin-it/src/test/resources/query/sql_parentheses_escape/query06.sql"),
                 Charset.defaultCharset());
         String expectedSql = FileUtils.readFileToString(
-                new File("src/test/resources/query/sql_parentheses_escape/query06.sql.expected"),
+                new File("../kylin-it/src/test/resources/query/sql_parentheses_escape/query06.sql.expected"),
                 Charset.defaultCharset());
         originalSql = QueryUtil.removeCommentInSql(originalSql);
         String transformed = convertTransformer.completion(originalSql).replaceAll("[\n]+", "");
