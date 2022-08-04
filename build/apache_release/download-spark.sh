@@ -24,9 +24,9 @@ source build/apache_release/functions.sh
 
 rm -rf build/spark
 
-spark_pkg_name="spark-newten-3.2.0-4.x-r56"
+spark_pkg_name="spark-newten-3.2.0-4.5.15.0"
 spark_pkg_file_name="${spark_pkg_name}.tgz"
-spark_pkg_md5="d3042a545690f85b2b8f90695df7f5b7"
+spark_pkg_md5="d239b19804b066721962bab0ca2039e6"
 
 checkDownloadSparkVersion ${spark_pkg_name}
 
