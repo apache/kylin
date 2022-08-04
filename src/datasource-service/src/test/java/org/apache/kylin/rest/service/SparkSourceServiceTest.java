@@ -60,7 +60,6 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setUp() throws Exception {
-        createTestMetadata();
         ss = SparkSession.builder().appName("local").master("local[1]").enableHiveSupport().getOrCreate();
         ss.sparkContext().hadoopConfiguration().set("javax.jdo.option.ConnectionURL",
                 "jdbc:derby:memory:db;create=true");
@@ -82,8 +81,8 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
         sparkSourceService.executeSQL(ddlRequest);
         zkTestServer = new TestingServer(true);
         overwriteSystemProp("kylin.env.zookeeper-connect-string", zkTestServer.getConnectString());
-        overwriteSystemProp("kap.env.zookeeper-max-retries", "1");
-        overwriteSystemProp("kap.env.zookeeper-base-sleep-time", "1000");
+        overwriteSystemProp("kylin.env.zookeeper-max-retries", "1");
+        overwriteSystemProp("kylin.env.zookeeper-base-sleep-time", "1000");
     }
 
     @After
