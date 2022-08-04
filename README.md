@@ -13,13 +13,13 @@
 
 1. Build maven artifact with following command:
 ```shell
-mvn clean package
+mvn clean package -DskipTests
 ```
 
 2. Run unit test with following command:
 
 ```shell
-mvn clean test
+sh dev-support/unit_testing.sh
 ```
 
 3. Build a Kylin 5 binary

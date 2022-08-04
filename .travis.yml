@@ -53,7 +53,7 @@ before_install:
 script:
   # mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test coveralls:report -e
   # Skip coveralls temporarily, fix it asap
-  - mvn clean package -DskipTests -q
+  - mvn clean package -DskipTests -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN
 
 notification:
   email:
