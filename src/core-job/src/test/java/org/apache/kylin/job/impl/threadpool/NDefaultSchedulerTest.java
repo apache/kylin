@@ -1877,6 +1877,7 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
         Assert.assertEquals(ExecutableState.ERROR, executableManager.getOutput(task1.getId()).getState());
     }
 
+    @Ignore("TODO: Class load conflict")
     @Test
     public void testSubmitParallelTasksReachMemoryQuota() throws Exception {
         logger.info("testSubmitParallelTasksByMemoryQuota");

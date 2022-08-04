@@ -209,9 +209,9 @@ public class StreamingJobServiceTest extends CSVSourceTestCase {
         jobFilter = new StreamingJobFilter("", Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST,
                 "", "last_modified", false);
         list = streamingJobService.getStreamingJobList(jobFilter, 0, 20);
-        Assert.assertTrue(list.getValue().get(0).getLastModified() >= list.getValue().get(1).getLastModified());
-        Assert.assertTrue(list.getValue().get(1).getLastModified() >= list.getValue().get(2).getLastModified());
-        Assert.assertTrue(list.getValue().get(2).getLastModified() >= list.getValue().get(3).getLastModified());
+        Assert.assertTrue(list.getValue().get(0).getLastModified() <= list.getValue().get(1).getLastModified());
+        Assert.assertTrue(list.getValue().get(1).getLastModified() <= list.getValue().get(2).getLastModified());
+        Assert.assertTrue(list.getValue().get(2).getLastModified() <= list.getValue().get(3).getLastModified());
 
         // project & page_size filter
         jobFilter = new StreamingJobFilter("", Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST,

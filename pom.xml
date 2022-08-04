@@ -3051,6 +3051,9 @@
                                 <exclude>**/IT*.java</exclude>
                             </excludes>
                             <argLine>${argLine} ${surefireArgLine}</argLine>
+                            <classpathDependencyExcludes>
+                                <classpathDependencyExclude>org.apache.hive:hive-metastore</classpathDependencyExclude>
+                            </classpathDependencyExcludes>
                         </configuration>
                     </plugin>
 

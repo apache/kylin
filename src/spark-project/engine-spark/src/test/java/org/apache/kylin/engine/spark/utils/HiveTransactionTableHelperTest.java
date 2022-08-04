@@ -96,7 +96,7 @@ public class HiveTransactionTableHelperTest extends NLocalWithSparkSessionTest {
     @Test
     public void testDoGetQueryHiveTemporaryTableSql() {
         // Init needed variable parameters
-        System.setProperty("kylin.source.provider.9", "NSparkDataSource");
+        System.setProperty("kylin.source.provider.9", "org.apache.kylin.engine.spark.source.NSparkDataSource");
         System.setProperty("kylin.build.resource.read-transactional-table-enabled", "true");
         KylinBuildEnv kylinBuildEnv = KylinBuildEnv.getOrCreate(getTestConfig());
         NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(getTestConfig(), "tdh");
