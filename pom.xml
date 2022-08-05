@@ -172,51 +172,51 @@
         <sonar.jacoco.excludes>
             org/apache/kylin/**/tools/**:**/*CLI.java,
             **/org/apache/kylin/query/optrule/*,
-            io/kyligence/kap/query/exec/*,
-            io/kyligence/kap/query/relnode/KapOLAPToEnumerableConverter.java,
+            org/apache/kylin/query/engine/exec/*,
+            org/apache/kylin/query/relnode/KapOLAPToEnumerableConverter.java,
             **/org/apache/kylin/query/relnode/OLAP*Rel.java,
-            **/io/kyligence/kap/tool/kerberos/KerberosLoginTask.java,
-            **/io/kyligence/kap/tool/kerberos/KerberosLoginUtil.java,
-            **/io/kyligence/kap/tool/setup/KapSparkTaskTestCLI.java,
-            **/io/kyligence/kap/tool/setup/KapGetClusterInfo.java,
-            **/io/kyligence/kap/tool/common/HadoopConfExtractor.java,
-            **/io/kyligence/kap/tool/hadoop/CheckHadoopConfDir.java,
-            **/io/kyligence/kap/tool/hadoop/KapGetPathWithoutSchemeAndAuthorityCLI.java,
-            **/io/kyligence/kap/engine/spark/streaming/**/*,
-            **/io/kyligence/kap/rest/security/KerberosLoginManager.java,
-            **/io/kyligence/kap/engine/spark/source/NSparkMetadataExplorer.java
+            **/org/apache/kylin/tool/kerberos/KerberosLoginTask.java,
+            **/org/apache/kylin/tool/kerberos/KerberosLoginUtil.java,
+            **/org/apache/kylin/tool/setup/KapSparkTaskTestCLI.java,
+            **/org/apache/kylin/tool/setup/KapGetClusterInfo.java,
+            **/org/apache/kylin/tool/common/HadoopConfExtractor.java,
+            **/org/apache/kylin/tool/hadoop/CheckHadoopConfDir.java,
+            **/org/apache/kylin/tool/hadoop/KapGetPathWithoutSchemeAndAuthorityCLI.java,
+            **/org/apache/kylin/engine/spark/streaming/**/*,
+            **/org/apache/kylin/rest/security/KerberosLoginManager.java,
+            **/org/apache/kylin/engine/spark/source/NSparkMetadataExplorer.java
         </sonar.jacoco.excludes>
         <sonar.coverage.exclusions>
-            **/io/kyligence/kap/**/*Exception.java,
-            **/io/kyligence/kap/rest/*Server.java,
-            **/io/kyligence/kap/engine/spark/builder/DFTableEncoder.java,
-            **/io/kyligence/kap/engine/spark/builder/DFLayoutMergeAssist.java,
-            **/io/kyligence/kap/engine/spark/job/DFMergeJob.java,
-            **/io/kyligence/kap/engine/spark/streaming/**/*,
-            **/io/kyligence/kap/engine/spark/builder/DFBuildJob.java,
-            **/io/kyligence/kap/engine/spark/builder/DFDictionaryBuilder.java,
-            **/io/kyligence/kap/tool/CuratorOperator.java,
-            **/io/kyligence/kap/tool/kerberos/**,
-            **/io/kyligence/kap/tool/setup/**,
-            **/io/kyligence/kap/tool/upgrade/**,
-            **/io/kyligence/kap/tool/common/HadoopConfExtractor.java,
-            **/io/kyligence/kap/tool/hadoop/CheckHadoopConfDir.java,
-            **/io/kyligence/kap/tool/hadoop/KapGetPathWithoutSchemeAndAuthorityCLI.java,
-            **/io/kyligence/kap/tool/metadata/CheckMetadataAccessCLI.java,
-            **/io/kyligence/kap/tool/QueryHistoryAccessCLI.java,
-            **/io/kyligence/kap/tool/upgrade/UpdateSessionTableCLI.java,
-            **/io/kyligence/kap/spark/common/logging/HdfsAppender.java,
-            **/io/kyligence/kap/common/logging/QueryLoggerAdapter.java,
-            **/io/kyligence/kap/common/metrics/reporter/InfluxdbReporter.java,
-            **/io/kyligence/kap/common/metrics/NMetricsInfluxdbReporter.java,
-            **/io/kyligence/kap/common/util/InfluxDBUtils.java,
-            **/io/kyligence/kap/common/metrics/NMetricsController.java,
-            **/io/kyligence/kap/common/metrics/NMetricsGroup.java,
-            **/io/kyligence/kap/rest/config/initialize/BootstrapCommand.java,
-            **/io/kyligence/kap/rest/config/AppInitializer.java,
-            **/io/kyligence/kap/rest/config/MetricsConfig.java,
-            **/io/kyligence/kap/metadata/model/Canvas.java,
-            **/io/kyligence/kap/rest/ZookeeperClusterManager.java,
+            **/org/apache/kylin/**/*Exception.java,
+            **/org/apache/kylin/rest/*Server.java,
+            **/org/apache/kylin/engine/spark/builder/DFTableEncoder.java,
+            **/org/apache/kylin/engine/spark/builder/DFLayoutMergeAssist.java,
+            **/org/apache/kylin/engine/spark/job/DFMergeJob.java,
+            **/org/apache/kylin/engine/spark/streaming/**/*,
+            **/org/apache/kylin/engine/spark/builder/DFBuildJob.java,
+            **/org/apache/kylin/engine/spark/builder/DFDictionaryBuilder.java,
+            **/org/apache/kylin/tool/CuratorOperator.java,
+            **/org/apache/kylin/tool/kerberos/**,
+            **/org/apache/kylin/tool/setup/**,
+            **/org/apache/kylin/tool/upgrade/**,
+            **/org/apache/kylin/tool/common/HadoopConfExtractor.java,
+            **/org/apache/kylin/tool/hadoop/CheckHadoopConfDir.java,
+            **/org/apache/kylin/tool/hadoop/KapGetPathWithoutSchemeAndAuthorityCLI.java,
+            **/org/apache/kylin/tool/metadata/CheckMetadataAccessCLI.java,
+            **/org/apache/kylin/tool/QueryHistoryAccessCLI.java,
+            **/org/apache/kylin/tool/upgrade/UpdateSessionTableCLI.java,
+            **/org/apache/kylin/spark/common/logging/HdfsAppender.java,
+            **/org/apache/kylin/common/logging/QueryLoggerAdapter.java,
+            **/org/apache/kylin/common/metrics/reporter/InfluxdbReporter.java,
+            **/org/apache/kylin/common/metrics/NMetricsInfluxdbReporter.java,
+            **/org/apache/kylin/common/util/InfluxDBUtils.java,
+            **/org/apache/kylin/common/metrics/NMetricsController.java,
+            **/org/apache/kylin/common/metrics/NMetricsGroup.java,
+            **/org/apache/kylin/rest/config/initialize/BootstrapCommand.java,
+            **/org/apache/kylin/rest/config/AppInitializer.java,
+            **/org/apache/kylin/rest/config/MetricsConfig.java,
+            **/org/apache/kylin/metadata/model/Canvas.java,
+            **/org/apache/kylin/rest/ZookeeperClusterManager.java,
             **/org/apache/kylin/**/*Exception.java,
             **/org/apache/kylin/common/msg/**,
             **/org/apache/spark/dict/NBucketDictionary.java,
@@ -225,14 +225,14 @@
             **/org/apache/spark/dict/NGlobalDictMetaInfo.java,
             **/org/apache/spark/dict/NHashPartitioner.java,
             **/org/apache/kylin/rest/model/LicenseInfo.java,
-            **/io/kyligence/kap/rest/security/KerberosLoginManager.java,
-            **/io/kyligence/kap/engine/spark/source/NSparkMetadataExplorer.java,
-            **/io/kyligence/kap/rest/security/SecurityLogAspect.java,
-            **/io/kyligence/kap/rest/util/SecurityLoggerUtils.java,
-            **/io/kyligence/kap/rest/util/InitResourceGroupUtils.java,
-            **/io/kyligence/kap/rest/QueryNodeFilter.java,
-            **/io/kyligence/kap/rest/config/SwaggerConfig.java,
-            **/io/kyligence/kap/rest/config/SwaggerCompatibilityConfig.java
+            **/org/apache/kylin/rest/security/KerberosLoginManager.java,
+            **/org/apache/kylin/engine/spark/source/NSparkMetadataExplorer.java,
+            **/org/apache/kylin/rest/security/SecurityLogAspect.java,
+            **/org/apache/kylin/rest/util/SecurityLoggerUtils.java,
+            **/org/apache/kylin/rest/util/InitResourceGroupUtils.java,
+            **/org/apache/kylin/rest/QueryNodeFilter.java,
+            **/org/apache/kylin/rest/config/SwaggerConfig.java,
+            **/org/apache/kylin/rest/config/SwaggerCompatibilityConfig.java
         </sonar.coverage.exclusions>
         <sonar.organization>kyligence</sonar.organization>
         <!--suppress UnresolvedMavenProperty -->
@@ -2965,14 +2965,12 @@
                         <exclude>**/org/apache/spark/sql/udf/SparderAggFun.class</exclude>
                         <exclude>**/org/apache/spark/sql/execution/utils/SchemaProcessor$.class</exclude>
                         <exclude>**/org/apache/spark/util/KylinReflectUtils$.class</exclude>
-                        <exclude>**/io/kyligence/kap/common/util/Unsafe.class</exclude>
-                        <exclude>**/io/kyligence/kap/query/runtime/ExpressionConverter$.class</exclude>
-                        <exclude>**/io/kyligence/kap/rest/scheduler/JobSchedulerListenerTest.class</exclude>
-                        <exclude>**/io/kyligence/kap/rest/scheduler/JobSchedulerListenerTest$TimeoutHandler.class
-                        </exclude>
-                        <exclude>**/io/kyligence/kap/rest/scheduler/JobSchedulerListenerTest$ModelHandler.class
-                        </exclude>
-                        <exclude>**/io/kyligence/kap/tool/kerberos/KerberosLoginUtil.class</exclude>
+                        <exclude>**/org/apache/kylin/common/util/Unsafe.class</exclude>
+                        <exclude>**/org/apache/kylin/query/runtime/ExpressionConverter$.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/config/initialize/JobSchedulerListenerTest.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/config/initialize/JobSchedulerListenerTest$TimeoutHandler.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/config/initialize/JobSchedulerListenerTest$ModelHandler.class</exclude>
+                        <exclude>**/org/apache/kylin/tool/kerberos/KerberosLoginUtil.class</exclude>
                         <exclude>**/org/apache/spark/sql/execution/columnar/ColumnarCachedBatchSerializer$FromCachedBatch.class</exclude>
                     </excludes>
                     <signaturesFiles>
