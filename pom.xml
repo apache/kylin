@@ -99,7 +99,7 @@
 
     <!-- Calcite Version, the kylin fork is: https://github.com/Kyligence/calcite -->
     <calcite.version>1.16.0-kylin-r5</calcite.version>
-    <avatica.version>1.12.0</avatica.version>
+    <avatica.version>1.22.0</avatica.version>
 
     <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
     <zookeeper.version>3.4.13</zookeeper.version>
