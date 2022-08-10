@@ -17,7 +17,7 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/intro">
+            to="/docs/category/tutorial">
             Kylin 5.0 Tutorial - 15min ⏱️
           </Link>
         </div>
