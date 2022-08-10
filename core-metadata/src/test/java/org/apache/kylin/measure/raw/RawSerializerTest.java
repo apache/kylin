@@ -30,8 +30,10 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class RawSerializerTest extends LocalFileMetadataTestCase {
     private static RawSerializer rawSerializer;
 
