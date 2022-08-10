@@ -20,7 +20,7 @@
 function help() {
     echo "Usage: upgrade.sh <OLD_KYLIN_HOME> [--silent]"
     echo
-    echo "<OLD_KYLIN_HOME>    Specify the old version of the Kyligence Enterprise"
+    echo "<OLD_KYLIN_HOME>    Specify the old version of the Kylin"
     echo "                    installation directory."
     echo
     echo "--silent            Optional, don't enter interactive mode, automatically complete the upgrade."
@@ -52,7 +52,7 @@ function logging() {
 
 function fail() {
     error "...................................................[FAIL]"
-    error "Upgrade Kyligence Enterprise failed."
+    error "Upgrade Kylin failed."
     recordKylinUpgradeResult "${START_TIME}" "false" "${NEW_KYLIN_HOME}"
     exit 1
 }
@@ -80,7 +80,7 @@ function check_kylin_query_transformers() {
         query_transformers=$(sed -n '/^kylin.query.transformers/p' ${OLD_KYLIN_HOME}/conf/kylin.properties)
     fi
 
-    if [[ -n "${query_transformers}" && (! ${query_transformers} =~ io.kyligence.kap.query.security.RowFilter) ]]; then
+    if [[ -n "${query_transformers}" && (! ${query_transformers} =~ org.apache.kylin.query.security.RowFilter) ]]; then
           error "Please check the value of the configuration item [kylin.query.transformers] in kylin.properties or kylin.properties.override, which needs to include [org.apache.kylin.query.security.RowFilter] class."
           exit 1
     fi
@@ -94,7 +94,7 @@ function upgrade() {
     if [[ -f ${OLD_KYLIN_HOME}/pid ]]; then
         PID=`cat ${OLD_KYLIN_HOME}/pid`
         if ps -p $PID > /dev/null; then
-          error "Please stop the Kyligence Enterprise during the upgrade process."
+          error "Please stop the Kylin during the upgrade process."
           exit 1
         fi
     fi
@@ -111,7 +111,7 @@ function upgrade() {
     origin_version=$(awk '{print $NF}' ${OLD_KYLIN_HOME}/VERSION)
     target_version=$(awk '{print $NF}' ${NEW_KYLIN_HOME}/VERSION)
     echo
-    logging "warn" "Upgrade Kyligence Enterprise from ${origin_version} to ${target_version}"
+    logging "warn" "Upgrade Kylin from ${origin_version} to ${target_version}"
     warn "Old KYLIN_HOME is ${OLD_KYLIN_HOME}, log is at ${upgrade_log}"
     echo
 
@@ -221,7 +221,7 @@ function upgrade() {
     fi
     info "...................................................[DONE]"
 
-    # sed -nE 's/^([#\t ]*)(kylin\..*|kap\..*)/\2/p' kylin.properties | awk '{kv[substr($0,0,index($0,"=")-1)]=substr($0,index($0,"=")+1)} END{print kv["kylin.metadata.url"]}'
+    # sed -nE 's/^([#\t ]*)(kylin\..*)/\2/p' kylin.properties | awk '{kv[substr($0,0,index($0,"=")-1)]=substr($0,index($0,"=")+1)} END{print kv["kylin.metadata.url"]}'
     logging "Checking Kylin Conf"
 python <<PY
 from __future__ import print_function
@@ -239,7 +239,7 @@ def getProp(prop_file):
     if not os.path.exists(prop_file):
         return dict()
 
-    output = cmd.getoutput("sed -nE 's/^([#\\\\t ]*)(kylin\\..*=.*|kap\\..*=.*)/\\\\2/p' %s" % prop_file)
+    output = cmd.getoutput("sed -nE 's/^([#\\\\t ]*)(kylin\\..*=.*)/\\\\2/p' %s" % prop_file)
     prop = dict()
     for x in output.split('\n'):
         if x.strip() == '':
@@ -307,7 +307,7 @@ if [[ -z $OLD_KYLIN_HOME ]] || [[ ! -d $OLD_KYLIN_HOME ]]; then
 fi
 
 if [[ $OLD_KYLIN_HOME == $NEW_KYLIN_HOME ]]; then
-    error "Please specify the old version of the Kyligence Enterprise installation directory."
+    error "Please specify the old version of the Kylin installation directory."
     help
 fi
 

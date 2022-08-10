@@ -26,5 +26,5 @@ echo "Checking Java version..."
 $JAVA -version 2>&1 || quit "ERROR: Detect java version failed. Please set JAVA_HOME."
 
 if [[ `isValidJavaVersion` == "false" ]]; then
-    quit "ERROR: Java 1.8 or above is required for Kyligence Enterprise"
+    quit "ERROR: Java 1.8 or above is required for Kylin"
 fi

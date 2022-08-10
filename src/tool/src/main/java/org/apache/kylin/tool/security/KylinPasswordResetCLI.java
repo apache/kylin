@@ -38,8 +38,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
 import lombok.val;
 
-public class KapPasswordResetCLI {
-    protected static final Logger logger = LoggerFactory.getLogger(KapPasswordResetCLI.class);
+public class KylinPasswordResetCLI {
+    protected static final Logger logger = LoggerFactory.getLogger(KylinPasswordResetCLI.class);
 
     public static void main(String[] args) {
         int exit;

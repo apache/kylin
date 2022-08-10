@@ -29,7 +29,7 @@ function startKG() {
 
     mkdir -p ${KYLIN_HOME}/logs
 
-    echo `date "${time_format} "`"Starting KE guardian process..."
+    echo `date "${time_format} "`"Starting Kylin guardian process..."
 
     ### lock the start process
     LOCK_NAME="$KYLIN_HOME/bin/kg-start.lock"
@@ -41,13 +41,13 @@ function startKG() {
     if [[ -f ${KGID_FILE} ]]; then
         PID=`cat ${KGID_FILE}`
         if ps -p ${PID} > /dev/null; then
-            quit "KE guardian process is running, stop it first"
+            quit "Kylin guardian process is running, stop it first"
         fi
     fi
 
     KE_PID_FILE=${KYLIN_HOME}/pid
     if [[ ! -f ${KE_PID_FILE} ]]; then
-        quit "Kyligence Enterprise is not running, will not start guardian process"
+        quit "Kylin is not running, will not start guardian process"
     fi
 
     if [[ -f ${KYLIN_HOME}/conf/kylin-guardian-log4j.xml ]]; then
@@ -69,7 +69,7 @@ function startKG() {
     PID=`cat ${KYLIN_HOME}/kgid`
     echo `date "${time_format} "`" new guardian process pid is "${PID} >> ${KYLIN_HOME}/logs/guardian.log
 
-    echo `date "${time_format} "`"KE guardian process is started"
+    echo `date "${time_format} "`"Kylin guardian process is started"
     echo `date "${time_format} "`"Check log in ${KYLIN_HOME}/logs/guardian.log"
 
     ### Removing lock
@@ -87,7 +87,7 @@ function stopKG() {
         return 0
     fi
 
-    echo `date "${time_format} "`"Stopping KE guardian process..."
+    echo `date "${time_format} "`"Stopping Kylin guardian process..."
 
     PID_FILE=${KYLIN_HOME}/kgid
 
@@ -114,7 +114,7 @@ function stopKG() {
         fi
     fi
 
-    echo `date "${time_format} "`"KE guardian process is not running"
+    echo `date "${time_format} "`"Kylin guardian process is not running"
     return 1
 }
 
@@ -123,9 +123,9 @@ if [[ $1 == "start" ]]; then
 elif [[ $1 == "stop" ]]; then
     stopKG
 elif [[ $1 == "kill" ]]; then
-    echo `date "${time_format} "`"Killing Kyligence Enterprise, caused by OOM!"
+    echo `date "${time_format} "`"Killing Kylin, caused by OOM!"
 
-    # stop KE
+    # stop Kylin
     PID_FILE=${KYLIN_HOME}/pid
     if [[ -f ${PID_FILE} ]]; then
         PID=`cat ${PID_FILE}`
@@ -147,7 +147,7 @@ elif [[ $1 == "kill" ]]; then
            exit 0
         fi
     fi
-    quit `date "${time_format} "`"Kyligence Enterprise is not running"
+    quit `date "${time_format} "`"Kylin is not running"
 else
     quit "Usage: 'guardian.sh start' or 'guardian.sh stop' or 'guardian.sh kill'"
 fi

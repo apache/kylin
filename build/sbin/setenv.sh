@@ -26,7 +26,7 @@ if [[ -d "/data/external-catalog" ]];then
 fi
 
 if [[ `isValidJavaVersion` == "false" ]]; then
-    quit "ERROR: Java 1.8 or above is required for Kyligence Enterprise"
+    quit "ERROR: Java 1.8 or above is required for Kylin"
 fi
 
 if [[ -f "${KYLIN_HOME}/conf/setenv.sh" ]]; then

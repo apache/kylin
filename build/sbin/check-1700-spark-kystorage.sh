@@ -61,7 +61,7 @@ key_executor_instance="kylin.storage.columnar.spark-conf.spark.executor.instance
 
 mkdir -p ${KYLIN_HOME}/logs
 saveFileName=${KYLIN_HOME}/logs/cluster.info
-${KYLIN_HOME}/sbin/bootstrap.sh io.kyligence.kap.tool.setup.KapGetClusterInfo ${saveFileName}
+${KYLIN_HOME}/sbin/bootstrap.sh org.apache.kylin.tool.setup.KapGetClusterInfo ${saveFileName}
 
 if [ $? != 0 ]; then
     echo "${CHECKENV_REPORT_PFX}WARN: Failed to get cluster' info, skip the spark config suggestion."

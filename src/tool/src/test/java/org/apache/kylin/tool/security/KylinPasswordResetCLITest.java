@@ -44,7 +44,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import lombok.val;
 
-public class KapPasswordResetCLITest extends LogOutputTestCase {
+public class KylinPasswordResetCLITest extends LogOutputTestCase {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -53,7 +53,7 @@ public class KapPasswordResetCLITest extends LogOutputTestCase {
     public void setup() {
         createTestMetadata();
         getTestConfig().setMetadataUrl(
-                "testKapPasswordResetCLITest@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1,username=sa,password=");
+                "testKylinPasswordResetCLITest@jdbc,driverClassName=org.h2.Driver,url=jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1,username=sa,password=");
     }
 
     @After
@@ -84,7 +84,7 @@ public class KapPasswordResetCLITest extends LogOutputTestCase {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         System.setOut(new PrintStream(output, false, Charset.defaultCharset().name()));
 
-        KapPasswordResetCLI.reset();
+        KylinPasswordResetCLI.reset();
 
         ResourceStore.clearCache(config);
         config.clearManagers();
@@ -118,7 +118,7 @@ public class KapPasswordResetCLITest extends LogOutputTestCase {
         val mode = config.getServerMode();
         try {
             config.setProperty("kylin.server.mode", "query");
-            Assert.assertFalse(KapPasswordResetCLI.reset());
+            Assert.assertFalse(KylinPasswordResetCLI.reset());
             Assert.assertTrue(containsLog("Only job/all node can update metadata."));
         } finally {
             config.setProperty("kylin.server.mode", mode);

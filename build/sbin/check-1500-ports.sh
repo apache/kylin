@@ -29,4 +29,4 @@ if [[ -z ${kylin_port} ]]; then
 fi
 
 kylin_port_in_use=`netstat -tlpn | grep "\b${kylin_port}\b"`
-[[ -z ${kylin_port_in_use} ]] || quit "ERROR: Port ${kylin_port} is in use, another Kyligence Enterprise server is running?"
+[[ -z ${kylin_port_in_use} ]] || quit "ERROR: Port ${kylin_port} is in use, another Kylin server is running?"

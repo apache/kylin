@@ -35,5 +35,5 @@ fi
 
 final_working_dir=${WORKING_DIR}
 
-export KAP_HADOOP_PARAM=${hadoop_conf_param}
-export KAP_WORKING_DIR=${final_working_dir}
+export KYLIN_HADOOP_PARAM=${hadoop_conf_param}
+export KYLIN_WORKING_DIR=${final_working_dir}
