@@ -1,8 +1,8 @@
 ---
-sidebar_position: 0
+sidebar_position: 1
 ---
 
-# Intro to Kylin 5.0
+# Tutorial Intro
 
 Let's discover ** Kylin 5.0 in than 15 minutes **.
 

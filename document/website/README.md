@@ -1,41 +1,60 @@
-# Website
+# How to write document
 
-This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+### Before your start
+Learn more from https://docusaurus.io/ .
 
-### Installation
+#### Install nodejs
+Make sure node.js 16.14 or above is installed.
 
-```
-$ yarn
-```
-
-### Local Development
-
-```
-$ yarn start
+Check version
+```shell
+node -v
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
-
-### Build
-
-```
-$ yarn build
-```
-
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
-
-### Deployment
-
-Using SSH:
-
-```
-$ USE_SSH=true yarn deploy
+```shell
+sudo npm cache clean -f
+sudo npm install -g n
+sudo n stable
+sudo npm install npm@latest -g
 ```
 
-Not using SSH:
-
+#### Directories
+```text
+website
+├── blog 
+│   ├── 2019-05-29-welcome.md
+├── docs 
+│   ├── doc1.md
+│   └── mdx.md
+├── src 
+│   ├── css 
+│   │   └── custom.css
+│   └── pages 
+│       ├── styles.module.css
+│       └── index.js
+├── static 
+│   └── img
+├── docusaurus.config.js 
+├── package.json 
+├── README.md
+├── sidebars.js
+└── yarn.lock
 ```
-$ GIT_USER=<Your GitHub username> yarn deploy
+
+
+
+### Preview at local machine
+
+```shell
+
+## Starts the development server.
+npm start
+
+## Publishes the website to GitHub pages.
+npm deploy
 ```
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+
+### How to push to apache website
+
+TODO

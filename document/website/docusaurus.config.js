@@ -6,7 +6,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Kylin 5.0 Document',
+  title: 'Kylin 5.0 Alpha',
   tagline: 'Kylin 5.0 is a unified and powerful OLAP platform for Hadoop and Cloud.',
   url: 'https://kylin.apache.org',
   baseUrl: '/',
@@ -16,8 +16,9 @@ const config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'apache', // Usually your GitHub org/user name.
+  organizationName: 'hit-lacus', // Usually your GitHub org/user name.
   projectName: 'kylin', // Usually your repo name.
+  deploymentBranch:'kylin5_doc',
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -57,12 +58,19 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'Apache Kylin 5.0 Preview',
+        title: 'Apache Kylin 5.0 Alpha',
         logo: {
           alt: 'Kylin Logo',
           src: 'img/kylin_logo.png',
         },
         items: [
+          {
+            type: 'doc',
+            docId: 'download',
+            position: 'left',
+            label: 'Download',
+          },
+
           {
             type: 'doc',
             docId: 'intro',
@@ -72,16 +80,9 @@ const config = {
 
           {
             type: 'doc',
-            docId: 'development/intro',
+            docId: 'development/how_to_contribute',
             position: 'left',
             label: 'Development',
-          },
-
-          {
-            type: 'doc',
-            docId: 'download',
-            position: 'left',
-            label: 'Download',
           },
 
           {
@@ -92,7 +93,6 @@ const config = {
           },
 
           {to: '/blog', label: 'Blog', position: 'left'},
-
 
           {
             href: 'https://github.com/apache/kylin',

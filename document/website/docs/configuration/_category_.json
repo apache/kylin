@@ -1,6 +1,6 @@
 {
-  "label": "Development Guide",
-  "position": 51,
+  "label": "Configuration Guide",
+  "position": 45,
   "link": {
     "type": "generated-index",
     "description": "Help developer to contribute."
