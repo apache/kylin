@@ -1845,6 +1845,7 @@
         </plugins>
       </build>
     </profile>
+
     <profile>
       <id>m2e-only</id>
       <activation>
