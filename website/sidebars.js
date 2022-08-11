@@ -56,6 +56,46 @@ const sidebars = {
                   type: 'doc',
                   id: 'deployment/intro'
               },
+              {
+                  type: 'doc',
+                  id: 'deployment/prerequisite'
+              },
+              {
+                  type: 'doc',
+                  id: 'deployment/network_port_requirements'
+              },
+              // TODO: add Installation part
+              // {
+              //     type: 'category',
+              //     label: 'Installation',
+              //     items:[
+              //         {
+              //
+              //         },
+              //     ],
+              // },
+              {
+                  type: 'category',
+                  label: 'Use RDBMS as Metastore',
+                  link: {
+                      type: 'doc',
+                      id: 'deployment/rdbms_metastore/intro',
+                  },
+                  items: [
+                      {
+                          type: 'doc',
+                          id: 'deployment/rdbms_metastore/default_metastore'
+                      },
+                      {
+                          type: 'doc',
+                          id: 'deployment/rdbms_metastore/install_postgresql'
+                      },
+                      {
+                          type: 'doc',
+                          id: 'deployment/rdbms_metastore/install_mysql'
+                      },
+                  ]
+              }
           ],
       },
       {
