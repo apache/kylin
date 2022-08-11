@@ -1,0 +1,466 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package org.apache.kylin.protobuf;
+
+option java_multiple_files = true;
+option java_package = "org.apache.kylin.protobuf";
+option java_outer_classname = "KylinDataModel";
+
+
+message ProjectInstance {
+  string name = 1;
+  enum ProjectStatusEnum {
+    DISABLED = 0;
+    ENABLED = 1;
+  };
+  ProjectStatusEnum status = 2;
+  string default_database = 3;
+  string description = 9;
+
+  // common properties
+  string uuid = 4;
+  string owner = 5;
+  int64 createTime = 6;
+  int64 lastModified = 7;
+  string version = 8;
+
+  // Configuration settings
+  map<string, string> settings = 10;
+}
+
+message TableDesc {
+  string uuid = 1;
+  int64 lastModified = 2;
+  int64 createTime = 3;
+  string name = 4;
+
+  SourceTypeEnum sourceType = 5;
+  enum SourceTypeEnum {
+    ID_HIVE = 0;
+    ID_STREAMING = 1;
+    ID_SPARKSQL = 5;
+    ID_EXTERNAL = 7;
+    ID_JDBC = 8;
+    ID_SPARK = 9;
+    ID_CSV = 11;
+    ID_FILE = 13;
+  }
+
+  CatalogTableType tableType = 6;
+  enum CatalogTableType {
+    EXTERNAL = 0;
+    MANAGED = 1;
+    VIEW = 2;
+  }
+
+  string project = 10;
+  string database = 11;
+  repeated ColumnDesc columns = 9;
+  repeated ColumnDesc partitionColumn = 14;
+
+  string lastSnapshotPath = 12;
+  int64 lastSnapshotSize = 13;
+  map<string, int64> snapshotPartitions = 15;
+  map<string, SnapshotPartitionInfo> snapshotPartitionInfo = 16;
+  int64 snapshotTotalRows = 17;
+  string selectedSnapshotPartitionCol = 18;
+  string snapshotPartitionCol = 19;
+  int64 snapshotLastModified = 20;
+  bool snapshotHasBroken = 21;
+}
+
+message DataModel {
+  // common properties
+  string uuid = 1;
+  int64 createTime = 2;
+  int64 lastModified = 3;
+  string version = 4;
+  string alias = 5;
+  string owner = 6;
+  string description = 7;
+
+  string rootFactTableName = 8;
+  repeated JoinTableDesc joinTables = 9;
+  string filterCondition = 10;
+
+  repeated NamedColumn allNamedColumns = 13; //dimensions
+  repeated Measure allMeasures = 14; //measures
+  repeated ComputedColumnDesc computedColumnDescs = 15;
+  PartitionDesc partitionDesc = 11;
+  DataCheckDesc dataCheckDesc = 18;
+
+  SegmentConfig segmentConfig = 17;
+  ModelType modelType = 26;
+  enum ModelType {
+    BATCH = 0;
+    STREAMING = 1;
+    HYBRID = 2;
+    UNKNOWN = 3;
+  }
+  RealizationCapacity capacity = 12;
+  enum RealizationCapacity {
+    SMALL = 0;
+    MEDIUM = 1;
+    LARGE = 2;
+  }
+  BrokenReason brokenReason = 20;
+  enum BrokenReason {
+    SCHEMA = 0;
+    NULL = 1;
+    EVENT = 2;
+  }
+}
+
+message JoinTableDesc{
+  string table = 1;
+  TableKind kind = 2;
+  enum TableKind {
+    FACT = 0;
+    LOOKUP = 1;
+  }
+  string alias = 3;
+  JoinDesc join = 4;
+  ModelJoinRelationTypeEnum joinRelationTypeEnum = 6;
+  enum ModelJoinRelationTypeEnum {
+    MANY_TO_ONE = 0;
+    ONE_TO_ONE = 1;
+    ONE_TO_MANY = 2;
+    MANY_TO_MANY = 3;
+  }
+}
+
+message NamedColumn {
+  int32 id = 1;
+  string name = 2;
+  string aliasDotColumn = 3;
+
+  // logical delete symbol
+  ColumnStatus status = 4;
+  enum ColumnStatus {
+    TOMB = 0;
+    EXIST = 1;
+    DIMENSION = 2;
+  }
+}
+
+message Measure {
+  string name = 1;
+  int32 id = 2;
+
+  bool tomb = 3;
+  FunctionDesc function = 4;
+  string column = 5;
+  string comment = 6;
+}
+
+message ComputedColumnDesc {
+  // the table identity DB.TABLE (ignoring alias) in the model where the computed column be int64 to
+  // this field is more useful for frontend, for backend code, usage should be avoided
+  string tableIdentity = 1;
+  string tableAlias = 2;
+  string columnName = 3; // the new col name
+  string expression = 4;
+  string datatype = 5;
+
+  string comment = 6;
+  string uuid = 7;
+}
+
+message IndexPlan {
+  string description = 1;
+  int64 retentionRange = 8;
+  int32 engineType = 9;
+  repeated int64 autoMergeTimeRanges = 7;
+
+  RuleBasedIndex ruleBasedIndex = 3; // agg group
+  repeated IndexEntity indexes = 4;
+  repeated DictionaryDesc dictionaries = 10;
+
+  repeated IndexEntity toBeDeletedIndexes = 6;
+  int64 nextAggregationIndexId = 11;
+  int64 nextTableIndexId = 12;
+  repeated int32 aggShardByColumns = 13;
+  map<int64, int32> layoutBucketNumMapping = 15;
+
+  map<string, string> overrideProps = 5;
+}
+
+message RuleBasedIndex {
+  repeated int32 dimensions = 2; // dimension id
+  repeated int32 measures = 3; //measure id
+  repeated int32 globalDimCap = 4;
+  repeated AggregationGroup aggregationGroups = 5;
+  repeated int32 layoutIdMapping = 6; // all of the layout id in agg group
+
+  int32 parentForward = 7;
+  int64 indexStartId = 8;
+  int32 schedulerVersion = 11;
+  bool indexUpdateEnabled = 12;
+
+  int64 lastModifiedTime = 9;
+}
+
+message IndexEntity {
+  int64 id = 1;
+  repeated int32 dimensions = 2;
+  repeated int32 measures = 3;
+  repeated LayoutEntity layouts = 4;
+  int64 nextLayoutOffset = 5;
+}
+
+message LayoutEntity {
+  int64 id = 1;
+  int64 updateTime = 10;
+  string name = 2;
+  string owner = 3;
+
+  repeated int32 colOrder = 4;
+  repeated int32 shardByColumns = 6;
+  repeated int32 partitionByColumns = 7;
+  repeated int32 sortByColumns = 8;
+
+  int32 storageType = 9;
+  bool isBase = 13;
+  string draftVersion = 14;
+  Range indexRange = 15;
+}
+
+message DataCheckDesc {
+  CheckOptions checkOptions = 1;
+  enum CheckOptions {
+    PK_DUPLICATE = 0;
+    DATA_SKEW = 1;
+    NULL_OR_BLANK_VALUE = 2;
+    FORCE_ANALYSIS_LOOKUP = 3;
+  }
+
+  int64 faultThreshold = 2;
+  int64 faultActions = 3;
+}
+
+message DataFlow {
+  RealizationStatusEnum status = 1;
+  enum RealizationStatusEnum {
+    OFFLINE = 0;
+    ONLINE = 1;
+    BROKEN = 2;
+  }
+
+  int32 cost = 2;
+  int32 queryHitCount = 3;
+  int64 lastQueryTime = 4;
+  repeated DataSegment segments = 6;
+}
+
+message DataSegment {
+  string id = 1;
+  string name = 2;
+  int64 createTimeUTC = 3;
+
+  SegmentStatusEnum status = 4;
+  enum SegmentStatusEnum {
+    NEW = 0;
+    READY = 1;
+    WARNING = 2;
+  }
+  SegmentRange segmentRange = 5;
+  TimeRange timeRange = 6;
+
+  map<string, DimensionRangeInfo> dimensionRangeInfoMap = 7;
+  map<string, string> dictionaries = 9; // table/column ==> dictionary resource path
+  map<string, string> snapshots = 10; // table name ==> snapshot resource path
+  int64 lastBuildTime = 11; // last segment incr build job
+
+  // stats
+  int64 sourceCount = 12;
+  int64 sourceBytesSize = 13;
+  map<string, int64> columnSourceBytes = 14;
+  map<string, int64> oriSnapshotSize = 15;
+  int64 storageSize = 16;
+  int64 storageFileCount = 17;
+  map<string, string> additionalInfo = 18;
+
+
+  // resumable flag, don't cross building jobs
+  // worked only in HDFSMeteStore
+  bool isSnapshotReady = 20;
+
+  // resumable flag, don't cross building jobs
+  // worked only in HDFSMeteStore
+  bool isDictReady = 21;
+
+  // resumable flag, don't cross building jobs
+  // worked only in HDFSMeteStore
+  bool isFlatTableReady = 22;
+
+  // resumable flag, don't cross building jobs
+  // worked only in HDFSMeteStore
+  bool isFactViewReady = 23;
+
+  int64 maxBucketId = 25;
+  map<string, string> parameters = 8;
+}
+
+
+message DataFlowDetails {
+  string dataflowId = 1;
+  repeated DataLayout layouts = 2;
+}
+
+message DataLayout {
+  int64 layoutId = 1;
+  int64 createTime = 11;
+
+  string buildJobId = 2;
+
+  int64 rows = 3;
+  int64 byteSize = 4;
+  int64 fileCount = 5;
+  int64 sourceRows = 6;
+  int64 sourceByteSize = 7;
+  // partition num may be diff with file num
+  int32 partitionNum = 8;
+  repeated string partitionValues = 9;
+
+  bool isReady = 10;
+}
+
+
+
+message JoinDesc {
+  string type = 1;
+  repeated string primaryKey = 2;
+  repeated string foreignKey = 3;
+  NonEquiJoinCondition nonEquiJoinCondition = 4;
+  string primaryTable = 5;
+  string foreignTable = 6;
+}
+
+message NonEquiJoinCondition {
+  NonEquiJoinConditionType type = 1;
+  enum NonEquiJoinConditionType {
+    EXPRESSION = 0; // expression with other NonEquiJoinCondition as operands
+    COLUMN = 1;
+    LITERAL = 2;
+  }
+  string dataType = 2;
+  SqlKind op = 3; // kind of the operator
+  enum SqlKind {
+    OTHER = 0;
+    SELECT = 1;
+    JOIN = 2;
+    IDENTIFIER = 3;
+    // .etc
+  }
+  string opName = 4; // name of the operator
+  repeated NonEquiJoinCondition operands = 5; // nested operands
+  string value = 6; // literal or column identity at leaf node
+  string expr = 7; // set at runtime with model init
+}
+
+message FunctionDesc {
+  string expression = 1;
+  repeated ParameterDesc parameters = 2;
+  string returnType = 3;
+
+  map<string, string> configuration = 4;
+}
+
+message ParameterDesc {
+  string type = 1;
+  string value = 2;
+}
+
+message PartitionDesc {
+  string partitionDateColumn = 1;
+  string partitionDateFormat = 2;
+  PartitionType partitionType = 3;
+  enum PartitionType {
+    APPEND = 0;
+    UPDATE_INSERT = 1;
+  }
+  string partitionConditionBuilderClz = 4;
+}
+
+message ColumnDesc {
+  string id = 1;
+  string name = 2;
+
+  string datatype = 3;
+  string comment = 5;
+  string caseSensitiveName = 8;
+}
+
+message SnapshotPartitionInfo {
+  int64 totalRows = 1;
+}
+
+message StorageDescription {
+  string path = 1;
+}
+
+message AggregationGroup {
+  repeated int32 includes = 1;
+  repeated int32 measures = 2;
+  SelectRule selectRule = 3;
+  Range indexRange = 4;
+}
+
+enum Range {
+  BATCH = 0;
+  STREAMING = 1;
+  HYBRID = 2;
+  EMPTY = 3;
+}
+
+message SelectRule {
+  repeated int32 hierarchyDims = 1;
+  repeated int32 mandatoryDims = 2;
+  repeated int32 jointDims = 3;
+  repeated int32 dimCap = 4;
+}
+
+message DictionaryDesc {
+  int32 id = 1;
+  int32 reuseId = 2;
+  string builderClass = 3;
+}
+
+message DimensionRangeInfo {
+  int64 min = 1;
+  int64 max = 2;
+}
+
+message SegmentRange {
+  int64 start = 1;
+  int64 end = 2;
+}
+
+message TimeRange {
+  int64 start = 1;
+  int64 end = 2;
+}
+
+message SegmentConfig {
+}
+
+
+
