@@ -8,7 +8,9 @@ toc_max_heading_level: 6
 pagination_prev: null
 pagination_next: null
 keywords:
-   - postgresql
+   - mysql
+   - install mysql
+   - install
 draft: true
 last_update:
    date: 11/08/2022
@@ -21,7 +23,7 @@ last_update:
    - MySQL 5.1 to 5.7, MySQL 5.7 is recommended
    - MySQL 8
 
-2. JDBC driver of MySQL is needed in the Kyligence Enterprise running environment.
+2. JDBC driver of MySQL is needed in the Kylin running environment.
 
 3. You can download the JDBC driver jar package of MySQL 8 via the link below, that compatible with the version after 5.6:
 

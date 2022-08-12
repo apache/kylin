@@ -125,7 +125,7 @@ last_update:
 
    **v.** <span id="metadata">Run `\l` to check if the database was created successfully. If you see picture as below, you have just created a database named `kylin`.</span>
 
-   ![check kylin database](./images/installation_create_postgresqldb.jpg)
+   ![check kylin database](../images/installation_create_postgresqldb.jpg)
 
    
 
@@ -162,7 +162,7 @@ The following example is that Linux user `abc` installs and configures PostgreSQ
 
    As the picture shows below, input password after run the command above, the password is the password for user `postgres`, say the password is `kylin`.
 
-   ![initialize postgresql](./images/install_initialize_postgresql.png)
+   ![initialize postgresql](../images/install_initialize_postgresql.png)
 
    **ii.** Edit configuration file
 
