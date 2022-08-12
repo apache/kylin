@@ -157,10 +157,106 @@ const sidebars = {
       {
           type: 'category',
           label: 'Rest API',
+          link: {
+              type: 'doc',
+              id: 'restapi/intro',
+          },
           items: [
               {
                   type: 'doc',
-                  id: 'restapi/intro'
+                  id: 'restapi/authentication'
+              },
+              {
+                  type: 'doc',
+                  id: 'restapi/project_api'
+              },
+              {
+                  type: 'category',
+                  label: 'Model API',
+                  link: {
+                      type: 'doc',
+                      id: 'restapi/model_api/intro',
+                  },
+                  items: [
+                      {
+                          type: 'doc',
+                          id: 'restapi/model_api/model_management_api'
+                      },
+                      {
+                          type: 'doc',
+                          id: 'restapi/model_api/model_build_api'
+                      },
+                      {
+                          type: 'doc',
+                          id: 'restapi/model_api/model_import_and_export_api'
+                      },
+                      {
+                          type: 'doc',
+                          id: 'restapi/model_api/model_multilevel_partitioning_api'
+                      },
+                  ],
+              },
+              {
+                  type: 'doc',
+                  id: 'restapi/segment_managment_api'
+              },
+              {
+                  type: 'doc',
+                  id: 'restapi/snapshot_management_api'
+              },
+              {
+                  type: 'doc',
+                  id: 'restapi/query_api'
+              },
+              {
+                  type: 'doc',
+                  id: 'restapi/data_source_api'
+              },
+              {
+                  type: 'doc',
+                  id: 'restapi/async_query_api'
+              },
+              {
+                  type: 'doc',
+                  id: 'restapi/job_api'
+              },
+              {
+                  type: 'category',
+                  label: 'ACL Management API',
+                  link: {
+                      type: 'doc',
+                      id: 'restapi/acl_api/intro',
+                  },
+                  items: [
+                      {
+                          type: 'doc',
+                          id: 'restapi/acl_api/user_api'
+                      },
+                      {
+                          type: 'doc',
+                          id: 'restapi/acl_api/user_group_api'
+                      },
+                      {
+                          type: 'doc',
+                          id: 'restapi/acl_api/project_acl_api'
+                      },
+                      {
+                          type: 'doc',
+                          id: 'restapi/acl_api/acl_api'
+                      },
+                  ],
+              },
+              {
+                  type: 'doc',
+                  id: 'restapi/streaming_job_api'
+              },
+              {
+                  type: 'doc',
+                  id: 'restapi/callback_api'
+              },
+              {
+                  type: 'doc',
+                  id: 'restapi/error_code'
               },
           ],
       },
