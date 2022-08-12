@@ -54,7 +54,9 @@ npm start
 npm deploy
 ```
 
+### TODO List
 
-### How to push your change
-
-TODO
+- Search in document
+- SEO
+- Multi Version
+- i18n
