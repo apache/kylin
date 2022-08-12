@@ -75,7 +75,7 @@ function main() {
     source ${KYLIN_HOME}/sbin/prepare-hadoop-conf-dir.sh
     export SPARK_HOME=${KYLIN_HOME}/spark
 
-    java -Xms${JAVA_VM_TOOL_XMS} -Xmx${JAVA_VM_TOOL_XMX} -cp "${kylin_hadoop_conf_dir}:${KYLIN_HOME}/lib/ext/*:${KYLIN_HOME}/server/jars/*:${SPARK_HOME}/jars/*" io.kyligence.kap.tool.RollbackTool -time "$TIME"  $PROJECT_SECTION $SKIP_CHECK_DATA_SECTION 2>>${ERR_LOG}  | tee -a ${OUT_LOG}
+    java -Xms${JAVA_VM_TOOL_XMS} -Xmx${JAVA_VM_TOOL_XMX} -cp "${kylin_hadoop_conf_dir}:${KYLIN_HOME}/lib/ext/*:${KYLIN_HOME}/server/jars/*:${SPARK_HOME}/jars/*" org.apache.kylin.tool.RollbackTool -time "$TIME"  $PROJECT_SECTION $SKIP_CHECK_DATA_SECTION 2>>${ERR_LOG}  | tee -a ${OUT_LOG}
 
     printBackupResult ${PIPESTATUS[0]}
 }

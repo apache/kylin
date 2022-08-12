@@ -78,7 +78,7 @@ function check_path_empty_dir() {
 }
 
 function turn_on_maintain_mode() {
-  ${KYLIN_HOME}/bin/kylin.sh io.kyligence.kap.tool.MaintainModeTool -on -reason 'metastore tool' -hidden-output true
+  ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MaintainModeTool -on -reason 'metastore tool' -hidden-output true
   local ret=$?
   if [[ $ret != 0 ]]; then
       echo -e "${YELLOW}Enter Maintain Mode failed. Detailed Message is at \"logs/shell.stderr\".${RESTORE}"
@@ -87,7 +87,7 @@ function turn_on_maintain_mode() {
 }
 
 function turn_off_maintain_mode() {
-    ${KYLIN_HOME}/bin/kylin.sh io.kyligence.kap.tool.MaintainModeTool -off -hidden-output true
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MaintainModeTool -off -hidden-output true
     local ret=$?
     if [[ $ret != 0 ]]; then
         echo -e "${YELLOW}Exit Maintain Mode failed. Detailed Message is at \"logs/shell.stderr\".${RESTORE}"
@@ -101,7 +101,7 @@ function restore_all() {
         check_path_empty_dir ${path}
         turn_on_maintain_mode
         printEnterMaintainModeResult
-        ${KYLIN_HOME}/bin/kylin.sh io.kyligence.kap.tool.MetadataTool -restore -dir ${path} ${2}
+        ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataTool -restore -dir ${path} ${2}
         printRestoreResult $?
         turn_off_maintain_mode
         printExitMaintainModeResult
@@ -113,7 +113,7 @@ function restore_project() {
         check_path_empty_dir ${path}
         turn_on_maintain_mode
         printEnterMaintainModeResult
-        ${KYLIN_HOME}/bin/kylin.sh io.kyligence.kap.tool.MetadataTool -restore -dir ${path} -project ${2} ${3}
+        ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataTool -restore -dir ${path} -project ${2} ${3}
         printRestoreResult $?
         turn_off_maintain_mode
         printExitMaintainModeResult
@@ -131,7 +131,7 @@ then
         help
     fi
 
-    ${KYLIN_HOME}/bin/kylin.sh io.kyligence.kap.tool.MetadataTool ${BACKUP_OPTS}
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataTool ${BACKUP_OPTS}
     printBackupResult $?
 
 elif [ "$1" == "restore" ]
@@ -155,7 +155,7 @@ then
         help
     fi
     BACKUP_OPTS="${BACKUP_OPTS} -project $2"
-    ${KYLIN_HOME}/bin/kylin.sh io.kyligence.kap.tool.MetadataTool ${BACKUP_OPTS}
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataTool ${BACKUP_OPTS}
     printBackupResult $?
 
 elif [ "$1" == "restore-project" ]

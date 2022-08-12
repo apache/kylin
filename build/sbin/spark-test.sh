@@ -39,8 +39,8 @@ then
     export LOG4J_DIR=${KYLIN_HOME}/build/conf
     export SPARK_DIR=${KYLIN_HOME}/build/spark/
     export KYLIN_SPARK_TEST_JAR_PATH=`ls $KYLIN_HOME/src/assembly/target/kap-assembly-*.jar`
-    export KAP_HDFS_WORKING_DIR=`$KYLIN_HOME/build/bin/get-properties.sh kylin.env.hdfs-working-dir`
-    export KAP_METADATA_URL=`$KYLIN_HOME/build/bin/get-properties.sh kylin.metadata.url`
+    export KYLIN_HDFS_WORKING_DIR=`$KYLIN_HOME/build/bin/get-properties.sh kylin.env.hdfs-working-dir`
+    export KYLIN_METADATA_URL=`$KYLIN_HOME/build/bin/get-properties.sh kylin.metadata.url`
     export SPARK_ENV_PROPS=`$KYLIN_HOME/build/bin/get-properties.sh kylin.storage.columnar.spark-env.`
     export SPARK_CONF_PROPS=`$KYLIN_HOME/build/bin/get-properties.sh kylin.storage.columnar.spark-conf.`
     export SPARK_ENGINE_CONF_PROPS=`$KYLIN_HOME/build/bin/get-properties.sh kylin.engine.spark-conf.`
@@ -51,8 +51,8 @@ else
     export LOG4J_DIR=${KYLIN_HOME}/conf
     export SPARK_DIR=${KYLIN_HOME}/spark/
     export KYLIN_SPARK_TEST_JAR_PATH=`ls $KYLIN_HOME/lib/newten-job*.jar`
-    export KAP_HDFS_WORKING_DIR=`$KYLIN_HOME/bin/get-properties.sh kylin.env.hdfs-working-dir`
-    export KAP_METADATA_URL=`$KYLIN_HOME/bin/get-properties.sh kylin.metadata.url`
+    export KYLIN_HDFS_WORKING_DIR=`$KYLIN_HOME/bin/get-properties.sh kylin.env.hdfs-working-dir`
+    export KYLIN_METADATA_URL=`$KYLIN_HOME/bin/get-properties.sh kylin.metadata.url`
     export SPARK_ENV_PROPS=`$KYLIN_HOME/bin/get-properties.sh kylin.storage.columnar.spark-env.`
     export SPARK_CONF_PROPS=`$KYLIN_HOME/bin/get-properties.sh kylin.storage.columnar.spark-conf.`
     export SPARK_ENGINE_CONF_PROPS=`$KYLIN_HOME/bin/get-properties.sh kylin.engine.spark-conf.`
@@ -64,7 +64,7 @@ else
 fi
 
 source ${KYLIN_HOME}/sbin/prepare-hadoop-conf-dir.sh
-export KAP_SPARK_IDENTIFIER=$RANDOM
+export KYLIN_SPARK_IDENTIFIER=$RANDOM
 #export KAP_HDFS_APPENDER_JAR=`basename ${KYLIN_SPARK_JAR_PATH}`
 
 # get local ip for htrace-zipkin use
@@ -215,7 +215,7 @@ then
     [[ ! -f ${full_input_file} ]] || rm -f ${full_input_file}
     echo "Hello Spark Client" >> ${full_input_file};
 
-    hadoop ${KAP_HADOOP_PARAM} fs -put -f ${full_input_file} ${KAP_WORKING_DIR}
+    hadoop ${KYLIN_HADOOP_PARAM} fs -put -f ${full_input_file} ${KAP_WORKING_DIR}
 
     spark_submit='$SPARK_HOME/bin/spark-submit '
     spark_submit_conf=' --class org.apache.kylin.tool.setup.KapSparkTaskTestCLI --name Test  $KYLIN_SPARK_TEST_JAR_PATH ${KAP_WORKING_DIR}/${input_file} '
@@ -223,10 +223,10 @@ then
     verbose "The submit command is: $submitCommand"
     eval $submitCommand
     if [ $? == 0 ];then
-        hadoop ${KAP_HADOOP_PARAM} fs -rm -r -skipTrash ${KAP_WORKING_DIR}/${input_file}
+        hadoop ${KYLIN_HADOOP_PARAM} fs -rm -r -skipTrash ${KAP_WORKING_DIR}/${input_file}
         rm -rf ${full_input_file}
     else
-        hadoop ${KAP_HADOOP_PARAM} fs -rm -r -skipTrash ${KAP_WORKING_DIR}/${input_file}
+        hadoop ${KYLIN_HADOOP_PARAM} fs -rm -r -skipTrash ${KAP_WORKING_DIR}/${input_file}
         rm -rf ${full_input_file}
         quit "ERROR: Test of submitting spark job failed,error when testing spark with spark configurations in Kyligence Enterprise!"
     fi

@@ -92,7 +92,7 @@ function checkIfStopUserSameAsStartUser() {
     currentUser=`whoami`
 
     if [ ${startUser} != ${currentUser} ]; then
-        echo `setColor 33 "Warning: You started Kyligence Enterprise as user [${startUser}], please stop the instance as the same user."`
+        echo `setColor 33 "Warning: You started Kylin as user [${startUser}], please stop the instance as the same user."`
     fi
 }
 
@@ -221,7 +221,7 @@ function clearRedundantProcess {
                 then
                     pidKeep=$pid
                 else
-                    echo "Redundant Kyligence Enterprise process $pid to running process $pidKeep, stop it."
+                    echo "Redundant Kylin process $pid to running process $pidKeep, stop it."
                     bash ${KYLIN_HOME}/sbin/kill-process-tree.sh $pid
                     ((pidRedundant+=1))
                 fi
@@ -235,7 +235,7 @@ function clearRedundantProcess {
         fi
         if [ "$pidRedundant" -ne 0 ]
         then
-            quit "Kyligence Enterprise is redundant, start canceled."
+            quit "Kylin is redundant, start canceled."
         fi
     fi
 }
@@ -341,7 +341,7 @@ function startKE(){
 
     sh ${KYLIN_HOME}/bin/guardian.sh start
 
-    echo "Kyligence Enterprise is starting. It may take a while. For status, please visit http://`hostname`:$port/kylin/index.html."
+    echo "Kylin is starting. It may take a while. For status, please visit http://`hostname`:$port/kylin/index.html."
     echo "You may also check status via: PID:`cat ${KYLIN_HOME}/pid`, or Log: ${KYLIN_HOME}/logs/kylin.log."
     recordKylinStartOrStop "start success" "${START_TIME}"
 }
@@ -394,26 +394,26 @@ if [[ "$1" == org.apache.kylin.* ]]; then
     runTool "$@"
 # start command
 elif [ "$1" == "start" ]; then
-    echo "Starting Kyligence Enterprise..."
+    echo "Starting Kylin..."
     startKE
 # stop command
 elif [ "$1" == "stop" ]; then
-    echo `date '+%Y-%m-%d %H:%M:%S '`"Stopping Kyligence Enterprise..."
+    echo `date '+%Y-%m-%d %H:%M:%S '`"Stopping Kylin..."
     stopKE
     if [[ $? == 0 ]]; then
         exit 0
     else
-        quit "Kyligence Enterprise is not running"
+        quit "Kylin is not running"
     fi
 # restart command
 elif [ "$1" == "restart" ]; then
-    echo "Restarting Kyligence Enterprise..."
-    echo "--> Stopping Kyligence Enterprise first if it's running..."
+    echo "Restarting Kylin..."
+    echo "--> Stopping Kylin first if it's running..."
     stopKE
     if [[ $? != 0 ]]; then
-        echo "    Kyligence Enterprise is not running, now start it"
+        echo "    Kylin is not running, now start it"
     fi
-    echo "--> Starting Kyligence Enterprise..."
+    echo "--> Starting Kylin..."
     startKE
 else
     quit "Usage: 'kylin.sh [-v] start' or 'kylin.sh [-v] stop' or 'kylin.sh [-v] restart'"

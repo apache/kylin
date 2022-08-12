@@ -122,11 +122,11 @@ if [[ ${INCLUDE_AUDIT_LOG} == "false" ]]; then
 fi
 
 if [[ ${DIAG_OPTS} == *" -job"* ]]; then
-    runTool io.kyligence.kap.tool.JobDiagInfoCLI ${DIAG_OPTS}
+    runTool org.apache.kylin.tool.JobDiagInfoCLI ${DIAG_OPTS}
 elif [[ ${DIAG_OPTS} == *" -streamingJob"* ]]; then
-    runTool io.kyligence.kap.tool.StreamingJobDiagInfoCLI ${DIAG_OPTS}
+    runTool org.apache.kylin.tool.StreamingJobDiagInfoCLI ${DIAG_OPTS}
 elif [[ ${DIAG_OPTS} == *" -query"* ]]; then
-    runTool io.kyligence.kap.tool.QueryDiagInfoCLI ${DIAG_OPTS}
+    runTool org.apache.kylin.tool.QueryDiagInfoCLI ${DIAG_OPTS}
 else
-    runTool io.kyligence.kap.tool.DiagClientCLI ${DIAG_OPTS}
+    runTool org.apache.kylin.tool.DiagClientCLI ${DIAG_OPTS}
 fi

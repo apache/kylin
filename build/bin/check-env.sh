@@ -41,7 +41,7 @@ if [[ "$CHECKENV_ING" == "" ]]; then
     if [[ "$1" != "if-not-yet" || ! -f ${BYPASS} ]]; then
 
         echo ""
-        echo `setColor 33 "Kyligence Enterprise is checking installation environment, log is at ${LOG}"`
+        echo `setColor 33 "Kylin is checking installation environment, log is at ${LOG}"`
         echo ""
 
         rm -rf ${KYLIN_HOME}/logs/tmp

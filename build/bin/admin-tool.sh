@@ -45,7 +45,7 @@ if [[ "$1" == "admin-password-reset" ]]; then
         exit 1
     fi
 
-    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.security.KapPasswordResetCLI
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.security.KylinPasswordResetCLI
     ret=$?
     printAdminPasswordResetResult ${ret}
 else

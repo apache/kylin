@@ -54,8 +54,8 @@ function startGrafana(){
     influxdb_unsafe_ssl_enabled=`$KYLIN_HOME/bin/get-properties.sh kylin.influxdb.https.unsafe-ssl.enabled`
     influxdb_unsafe_ssl_enabled=$([[ "${influxdb_https_enabled}" == "true" ]] && [[ "${influxdb_unsafe_ssl_enabled}" == "true" || -z "${influxdb_unsafe_ssl_enabled}" ]] && echo "true" || echo "false")
 
-    export KE_METRICS_DATABASE=${metadata_url_prefix}_${metrics_db_suffix}
-    export KE_METRICS_DAILY_DATABASE=${metadata_url_prefix}_${metrics_daily_db_suffix}
+    export KYLIN_METRICS_DATABASE=${metadata_url_prefix}_${metrics_db_suffix}
+    export KYLIN_METRICS_DAILY_DATABASE=${metadata_url_prefix}_${metrics_daily_db_suffix}
     export INFLUXDB_PROTOCOL=$([[ "$influxdb_https_enabled" == "true" ]] && echo "https" || echo "http")
     export INFLUXDB_ADDRESS=`$KYLIN_HOME/bin/get-properties.sh kylin.influxdb.address`
     export INFLUXDB_USERNAME=`$KYLIN_HOME/bin/get-properties.sh kylin.influxdb.username`
@@ -67,7 +67,7 @@ function startGrafana(){
 
     echo "Influxdb Connect Protocol: $INFLUXDB_PROTOCOL"
     echo "Influxdb Address: $INFLUXDB_ADDRESS"
-    echo "Metrics Database: $KE_METRICS_DATABASE"
+    echo "Metrics Database: $KYLIN_METRICS_DATABASE"
 
     if [[ -f "${KYLIN_HOME}/conf/grafana.ini" ]]; then
         nohup bin/grafana-server --config ${KYLIN_HOME}/conf/grafana.ini web > /dev/null 2>&1 &

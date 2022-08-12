@@ -36,7 +36,7 @@ if [[ -f ${KYLIN_HOME}/conf/kylin-tools-log4j.xml ]]; then
 fi
 
 mkdir -p ${KYLIN_HOME}/logs
-error_config=`java -Dlog4j.configurationFile=${kylin_tools_log4j} -cp "${KYLIN_HOME}/lib/ext/*:${KYLIN_HOME}/server/jars/*:${SPARK_HOME}/jars/*" io.kyligence.kap.tool.KylinConfigCheckCLI 2>>${KYLIN_HOME}/logs/shell.stderr`
+error_config=`java -Dlog4j.configurationFile=${kylin_tools_log4j} -cp "${KYLIN_HOME}/lib/ext/*:${KYLIN_HOME}/server/jars/*:${SPARK_HOME}/jars/*" org.apache.kylin.tool.KylinConfigCheckCLI 2>>${KYLIN_HOME}/logs/shell.stderr`
 
 
 if [[ -n $error_config ]]; then
