@@ -83,16 +83,62 @@ const sidebars = {
                   },
                   items: [
                       {
+                          type: 'category',
+                          label: 'MySQL',
+                          link: {
+                              type: 'doc',
+                              id: 'deployment/rdbms_metastore/mysql/intro',
+                          },
+                          items: [
+                              {
+                                  type: 'doc',
+                                  id: 'deployment/rdbms_metastore/mysql/install_mysql'
+                              },
+                              {
+                                  type: 'doc',
+                                  id: 'deployment/rdbms_metastore/mysql/mysql_metastore'
+                              },
+                          ],
+                      },
+                      {
+                          type: 'category',
+                          label: 'PostgreSQL',
+                          link: {
+                              type: 'doc',
+                              id: 'deployment/rdbms_metastore/postgresql/intro',
+                          },
+                          items: [
+                              {
+                                  type: 'doc',
+                                  id: 'deployment/rdbms_metastore/postgresql/install_postgresql'
+                              },
+                              {
+                                  type: 'doc',
+                                  id: 'deployment/rdbms_metastore/postgresql/default_metastore'
+                              },
+                          ],
+                      },
+                  ]
+              },
+              {
+                  type: 'category',
+                  label: 'Deployment Mode',
+                  link: {
+                      type: 'doc',
+                      id: 'deployment/deploy_mode/intro',
+                  },
+                  items: [
+                      {
                           type: 'doc',
-                          id: 'deployment/rdbms_metastore/default_metastore'
+                          id: 'deployment/deploy_mode/cluster_deployment'
                       },
                       {
                           type: 'doc',
-                          id: 'deployment/rdbms_metastore/install_postgresql'
+                          id: 'deployment/deploy_mode/service_discovery'
                       },
                       {
                           type: 'doc',
-                          id: 'deployment/rdbms_metastore/install_mysql'
+                          id: 'deployment/deploy_mode/rw_separation'
                       },
                   ]
               }
@@ -130,11 +176,39 @@ const sidebars = {
       },
       {
           type: 'category',
-          label: 'Operations',
+          label: 'Operation and Maintenance Guide',
+          link: {
+              type: 'doc',
+              id: 'operations/intro',
+          },
           items: [
               {
-                  type: 'doc',
-                  id: 'operations/intro'
+                  type: 'category',
+                  label: 'Monitoring',
+                  link: {
+                      type: 'doc',
+                      id: 'operations/monitoring/intro',
+                  },
+                  items: [
+                      {
+                          type: 'category',
+                          label: 'InfluxDB',
+                          link: {
+                              type: 'doc',
+                              id: 'operations/monitoring/influxdb/intro',
+                          },
+                          items: [
+                              {
+                                  type: 'doc',
+                                  id: 'operations/monitoring/influxdb/influxdb'
+                              },
+                              {
+                                  type: 'doc',
+                                  id: 'operations/monitoring/influxdb/influxdb_maintenance'
+                              },
+                          ],
+                      },
+                  ],
               },
           ],
       },

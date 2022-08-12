@@ -1,14 +1,17 @@
 ---
-sidebar_position: 1
+title: Rest API
+language: en
+sidebar_label: Rest API
+pagination_label: Rest API
+toc_min_heading_level: 2
+toc_max_heading_level: 6
+pagination_prev: null
+pagination_next: null
+keywords:
+    - rest api
+draft: false
+last_update:
+    date: 12/08/2022
 ---
 
-# Tutorial Intro
-
-Let's discover ** Kylin 5.0 in than 15 minutes **.
-
-## Getting Started
-
-```shell
-
-docker pull apachekylin/apache-kylin-standalone:5.0.0
-```
+Kylin provides various REST APIs, which can be used to execute queries, trigger a build job and so on. With those APIs, the third-party system could integrate with Kylin system seamlessly.  
