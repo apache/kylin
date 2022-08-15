@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -152,8 +151,12 @@ public class KylinExternalConfigLoader implements IExternalConfigLoader {
     @Override
     public String getConfig() {
         StringWriter writer = new StringWriter();
-        properties.list(new PrintWriter(writer));
-        return writer.toString();
+        try {
+            properties.store(writer, "");
+        } catch (IOException e) {
+            throw new KylinException(UNKNOWN_ERROR_CODE, e);
+        }
+        return writer.getBuffer().toString();
     }
 
     @Override

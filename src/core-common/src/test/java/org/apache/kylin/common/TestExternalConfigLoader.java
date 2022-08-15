@@ -18,9 +18,13 @@
 
 package org.apache.kylin.common;
 
-import java.io.PrintWriter;
+import static org.apache.kylin.common.exception.CommonErrorCode.UNKNOWN_ERROR_CODE;
+
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Properties;
+
+import org.apache.kylin.common.exception.KylinException;
 
 import io.kyligence.config.core.loader.IExternalConfigLoader;
 
@@ -34,8 +38,12 @@ public class TestExternalConfigLoader implements IExternalConfigLoader {
     @Override
     public String getConfig() {
         StringWriter writer = new StringWriter();
-        properties.list(new PrintWriter(writer));
-        return writer.toString();
+        try {
+            properties.store(writer, "");
+        } catch (IOException e) {
+            throw new KylinException(UNKNOWN_ERROR_CODE, e);
+        }
+        return writer.getBuffer().toString();
     }
 
     @Override
