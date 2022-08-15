@@ -2,4 +2,7 @@
 sidebar_position: 1
 ---
 
-# TODO
+# How to contribute
+
+1. JIRA Issue
+2. Github

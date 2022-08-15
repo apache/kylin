@@ -13,13 +13,4 @@ draft: false
 last_update:
     date: 12/08/2022
 ---
-# Tutorial Intro
-
-Let's discover ** Kylin 5.0 in than 15 minutes **.
-
-## Getting Started
-
-```shell
-
-docker pull apachekylin/apache-kylin-standalone:5.0.0
-```
+# Guide of developer

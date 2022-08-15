@@ -332,7 +332,7 @@ const sidebars = {
               },
               {
                   type: 'doc',
-                  id: 'development/how_to_develop'
+                  id: 'development/how_to_debug'
               },
               {
                   type: 'doc',

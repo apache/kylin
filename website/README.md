@@ -48,6 +48,7 @@ website
 ```shell
 
 ## Starts the development server.
+cd website
 npm start
 
 ## Publishes the website to GitHub pages.
