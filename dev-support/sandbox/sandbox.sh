@@ -82,7 +82,7 @@ function main() {
         fi
 
         info "* Downloading spark..."
-        ${PROJECT_DIR}/build/apache_release/download-spark.sh
+        ${PROJECT_DIR}/build/release/download-spark.sh
         if [[ $? != 0 ]]; then
             warn "  Download spark failed, please manually execute 'download-spark.sh'"
         fi

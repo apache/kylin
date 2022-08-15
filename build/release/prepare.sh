@@ -18,21 +18,37 @@
 #
 
 dir=$(dirname ${0})
-
 cd ${dir}/../..
 
-echo 'Build back-end'
-echo "-----SKIP------"
-## mvn clean install -DskipTests -Dcheckstyle.skip $@ || { exit 1; }
 
-#package webapp
-echo 'Build front-end'
-if [ "${WITH_FRONT}" = "1" ]; then
-    cd kystudio
-    echo 'Install front-end dependencies'
-    npm install  || { exit 1; }
-    echo 'Install front-end end'
-    npm run build		 || { exit 1; }
-    echo 'build front-end dist end'
+source build/release/functions.sh
+exportProjectVersions
+
+sh build/release/prepare-libs.sh || { exit 1; }
+
+#create ext dir
+mkdir -p build/ext
+
+mkdir -p build/server
+chmod -R 755 build/server
+
+cp src/server/target/kylin-server-${kylin_version}.jar build/server/newten.jar
+cp -r src/server/target/jars build/server/
+
+if [[ ${WITH_FRONT} == 0 ]]; then
+  echo "Skip frontend packing..."
+else
+  echo "Start to add js & css..."
+  if [ ! -d "kystudio/dist" ]; then
+      echo "Failed to generate js files!"
+      exit 1
+  fi
+
+  cd kystudio
+  mkdir -p ../build/server/webapp
+
+  cp -rf ./dist ../build/server/webapp
+
+  echo "End frontend packing..."
 fi
 

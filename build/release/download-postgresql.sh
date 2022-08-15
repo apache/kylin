@@ -20,7 +20,7 @@
 dir=$(dirname ${0})
 cd ${dir}/../..
 
-source build/apache_release/functions.sh
+source build/release/functions.sh
 
 mkdir -p build/postgresql
 
