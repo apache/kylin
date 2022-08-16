@@ -57,89 +57,95 @@ const sidebars = {
                   id: 'deployment/intro'
               },
               {
-                  type: 'doc',
-                  id: 'deployment/prerequisite'
-              },
-              {
-                  type: 'doc',
-                  id: 'deployment/network_port_requirements'
-              },
-              // TODO: add Installation part
-              // {
-              //     type: 'category',
-              //     label: 'Installation',
-              //     items:[
-              //         {
-              //
-              //         },
-              //     ],
-              // },
-              {
                   type: 'category',
-                  label: 'Use RDBMS as Metastore',
-                  link: {
-                      type: 'doc',
-                      id: 'deployment/rdbms_metastore/intro',
-                  },
+                  label: 'On-Premises',
                   items: [
                       {
-                          type: 'category',
-                          label: 'MySQL',
-                          link: {
-                              type: 'doc',
-                              id: 'deployment/rdbms_metastore/mysql/intro',
-                          },
-                          items: [
-                              {
-                                  type: 'doc',
-                                  id: 'deployment/rdbms_metastore/mysql/install_mysql'
-                              },
-                              {
-                                  type: 'doc',
-                                  id: 'deployment/rdbms_metastore/mysql/mysql_metastore'
-                              },
-                          ],
+                          type: 'doc',
+                          id: 'deployment/On-Premises/prerequisite'
+                      },
+                      {
+                          type: 'doc',
+                          id: 'deployment/On-Premises/network_port_requirements'
                       },
                       {
                           type: 'category',
-                          label: 'PostgreSQL',
+                          label: 'Use RDBMS as Metastore',
                           link: {
                               type: 'doc',
-                              id: 'deployment/rdbms_metastore/postgresql/intro',
+                              id: 'deployment/On-Premises/rdbms_metastore/intro',
+                          },
+                          items: [
+                              {
+                                  type: 'category',
+                                  label: 'MySQL',
+                                  link: {
+                                      type: 'doc',
+                                      id: 'deployment/On-Premises/rdbms_metastore/mysql/intro',
+                                  },
+                                  items: [
+                                      {
+                                          type: 'doc',
+                                          id: 'deployment/On-Premises/rdbms_metastore/mysql/install_mysql'
+                                      },
+                                      {
+                                          type: 'doc',
+                                          id: 'deployment/On-Premises/rdbms_metastore/mysql/mysql_metastore'
+                                      },
+                                  ],
+                              },
+                              {
+                                  type: 'category',
+                                  label: 'PostgreSQL',
+                                  link: {
+                                      type: 'doc',
+                                      id: 'deployment/On-Premises/rdbms_metastore/postgresql/intro',
+                                  },
+                                  items: [
+                                      {
+                                          type: 'doc',
+                                          id: 'deployment/On-Premises/rdbms_metastore/postgresql/install_postgresql'
+                                      },
+                                      {
+                                          type: 'doc',
+                                          id: 'deployment/On-Premises/rdbms_metastore/postgresql/default_metastore'
+                                      },
+                                  ],
+                              },
+                          ]
+                      },
+                      {
+                          type: 'category',
+                          label: 'Deployment Mode',
+                          link: {
+                              type: 'doc',
+                              id: 'deployment/On-Premises/deploy_mode/intro',
                           },
                           items: [
                               {
                                   type: 'doc',
-                                  id: 'deployment/rdbms_metastore/postgresql/install_postgresql'
+                                  id: 'deployment/On-Premises/deploy_mode/cluster_deployment'
                               },
                               {
                                   type: 'doc',
-                                  id: 'deployment/rdbms_metastore/postgresql/default_metastore'
+                                  id: 'deployment/On-Premises/deploy_mode/service_discovery'
                               },
-                          ],
-                      },
+                              {
+                                  type: 'doc',
+                                  id: 'deployment/On-Premises/deploy_mode/rw_separation'
+                              },
+                          ]
+                      }
                   ]
               },
               {
                   type: 'category',
-                  label: 'Deployment Mode',
-                  link: {
-                      type: 'doc',
-                      id: 'deployment/deploy_mode/intro',
-                  },
+                  label: 'On-Cloud',
                   items: [
                       {
-                          type: 'doc',
-                          id: 'deployment/deploy_mode/cluster_deployment'
-                      },
-                      {
-                          type: 'doc',
-                          id: 'deployment/deploy_mode/service_discovery'
-                      },
-                      {
-                          type: 'doc',
-                          id: 'deployment/deploy_mode/rw_separation'
-                      },
+                      type: 'doc',
+                      id: 'deployment/On-Cloud/intro'
+                  }
                   ]
               }
           ],
