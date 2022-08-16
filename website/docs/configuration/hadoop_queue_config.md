@@ -50,4 +50,4 @@ Similarly, you may set up YARN queue for other Kylin instances to achieve comput
 
 ###<span id="project">Project-level YARN Queue Setting</span>
 
-The system admin user can set the YARN Application Queue of the project in **Setting -> Advanced Settings -> YARN Application Queue**, please refer to the [Project Settings](../operations/project-maintenance/project_settings.md) for more information.
+The system admin user can set the YARN Application Queue of the project in **Setting -> Advanced Settings -> YARN Application Queue**, please refer to the [Project Settings](../operations/project-operation/project_settings.md) for more information.

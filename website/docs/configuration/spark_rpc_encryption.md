@@ -21,8 +21,11 @@ For more details about Spark RPC communication encryption, please see [Spark Sec
 This function is disabled by default. If you need to enable it, please refer to the following method for configuration.
 
 ### Spark RPC Communication Encryption Configuration
-1、1. Please refer to [Spark Security](http://spark.apache.org/docs/1.6.2/job-scheduling.html#dynamic-resource-allocation) to ensure that RPC communication encryption is enabled in the Spark cluster.
+
+1、Please refer to [Spark Security](http://spark.apache.org/docs/1.6.2/job-scheduling.html#dynamic-resource-allocation) to ensure that RPC communication encryption is enabled in the Spark cluster.
+
 2、Add the following configurations in `$KYLIN_HOME/conf/kylin.properties`, to To enable Kylin nodes and Spark cluster communication encryption
+
 ```
 ### spark rpc encryption for build jobs
 kylin.storage.columnar.spark-conf.spark.authenticate=true

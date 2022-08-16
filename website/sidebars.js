@@ -30,7 +30,6 @@ const sidebars = {
         {
             type: 'category',
             label: 'Tutorial',
-
             items: [
                 {
                     type: 'doc',
@@ -143,7 +142,263 @@ const sidebars = {
                             id: 'deployment/deploy_mode/rw_separation'
                         },
                     ]
+                },
+                {
+                    type: 'category',
+                    label: 'System Configuration',
+                    link: {
+                        type: 'doc',
+                        id: 'configuration/intro',
+                    },
+                    items: [
+                        {
+                            type: 'doc',
+                            id: 'configuration/configuration'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'configuration/spark_dynamic_allocation'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'configuration/hadoop_queue_config'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'configuration/query_cache'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'configuration/https'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'configuration/spark_rpc_encryption'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'configuration/log_rotate'
+                        },
+                    ],
+                },
+                {
+                    type: 'doc',
+                    id: 'deployment/installation/uninstallation'
                 }
+            ],
+        },
+        {
+            type: 'category',
+            label: 'Operation and Maintenance Guide',
+            link: {
+                type: 'doc',
+                id: 'operations/intro',
+            },
+            items: [
+                {
+                    type: 'doc',
+                    id: 'operations/overview'
+                },
+                {
+                    type: 'category',
+                    label: 'Project Operation',
+                    link: {
+                        type: 'doc',
+                        id: 'operations/project-operation/intro'
+                    },
+                    items: [
+                        {
+                            type: 'doc',
+                            id: 'operations/project-operation/project_management'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/project-operation/project_settings'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/project-operation/alerting'
+                        },
+                    ],
+                },
+                {
+                    type: 'category',
+                    label: 'Access Control',
+                    link: {
+                        type: 'doc',
+                        id: 'operations/access-control/intro'
+                    },
+                    items: [
+                        {
+                            type: 'doc',
+                            id: 'operations/access-control/user_management'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/access-control/group_management'
+                        },
+                        {
+                            type: 'category',
+                            label: 'Data Access Control',
+                            link: {
+                                type: 'doc',
+                                id: 'operations/access-control/data-access-control/intro'
+                            },
+                            items: [
+                                {
+                                    type: 'doc',
+                                    id: 'operations/access-control/data-access-control/project_acl'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'operations/access-control/data-access-control/acl_table'
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    type: 'category',
+                    label: 'System Operation',
+                    link: {
+                        type: 'doc',
+                        id: 'operations/system-operation/intro',
+                    },
+                    items: [
+                        {
+                            type: 'category',
+                            label: 'Diagnosis',
+                            link: {
+                                type: 'doc',
+                                id: 'operations/system-operation/diagnosis/intro',
+                            },
+                            items: [
+                                {
+                                    type: 'doc',
+                                    id: 'operations/system-operation/diagnosis/diagnosis',
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'operations/system-operation/diagnosis/query_flame_graph',
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'operations/system-operation/diagnosis/build_flame_graph',
+                                },
+                            ],
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/system-operation/update-session-table',
+                        },
+                        {
+                            type: 'category',
+                            label: 'CLI Operation Tool',
+                            link: {
+                                type: 'doc',
+                                id: 'operations/system-operation/cli_tool/intro',
+                            },
+                            items: [
+                                {
+                                    type: 'doc',
+                                    id: 'operations/system-operation/cli_tool/environment_dependency_check',
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'operations/system-operation/cli_tool/diagnosis'
+                                },
+                                {
+                                    type: 'category',
+                                    label: 'Metadata Tool',
+                                    link: {
+                                        type: 'doc',
+                                        id: 'operations/system-operation/cli_tool/metadata_tool/intro',
+                                    },
+                                    items: [
+                                        {
+                                            type: 'doc',
+                                            id: 'operations/system-operation/cli_tool/metadata_tool/metadata_backup_restore'
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'operations/system-operation/cli_tool/rollback'
+                                },
+                            ],
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/system-operation/maintenance_mode'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/system-operation/guardian',
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/system-operation/junk_file_clean',
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/system-operation/limit_query',
+                        },
+                    ],
+                },
+                {
+                    type: 'category',
+                    label: 'Monitoring',
+                    link: {
+                        type: 'doc',
+                        id: 'operations/monitoring/intro',
+                    },
+                    items: [
+                        {
+                            type: 'category',
+                            label: 'InfluxDB',
+                            link: {
+                                type: 'doc',
+                                id: 'operations/monitoring/influxdb/intro',
+                            },
+                            items: [
+                                {
+                                    type: 'doc',
+                                    id: 'operations/monitoring/influxdb/influxdb'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'operations/monitoring/influxdb/influxdb_maintenance'
+                                },
+                            ],
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/monitoring/metrics_intro',
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/monitoring/service'
+                        },
+                    ],
+                },
+                {
+                    type: 'category',
+                    label: 'Logs',
+                    link: {
+                        type: 'doc',
+                        id: 'operations/logs/intro',
+                    },
+                    items: [
+                        {
+                            type: 'doc',
+                            id: 'operations/logs/system_log'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'operations/logs/audit_log'
+                        },
+                    ],
+                },
             ],
         },
         {
@@ -272,54 +527,7 @@ const sidebars = {
                 },
             ],
         },
-        {
-            type: 'category',
-            label: 'Operation and Maintenance Guide',
-            link: {
-                type: 'doc',
-                id: 'operations/intro',
-            },
-            items: [
-                {
-                    type: 'category',
-                    label: 'Monitoring',
-                    link: {
-                        type: 'doc',
-                        id: 'operations/monitoring/intro',
-                    },
-                    items: [
-                        {
-                            type: 'category',
-                            label: 'InfluxDB',
-                            link: {
-                                type: 'doc',
-                                id: 'operations/monitoring/influxdb/intro',
-                            },
-                            items: [
-                                {
-                                    type: 'doc',
-                                    id: 'operations/monitoring/influxdb/influxdb'
-                                },
-                                {
-                                    type: 'doc',
-                                    id: 'operations/monitoring/influxdb/influxdb_maintenance'
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        },
-        {
-            type: 'category',
-            label: 'Configuration Guide',
-            items: [
-                {
-                    type: 'doc',
-                    id: 'configuration/intro'
-                },
-            ],
-        },
+
     ],
     DevelopmentSideBar: [
         {
