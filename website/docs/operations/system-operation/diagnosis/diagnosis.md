@@ -22,7 +22,7 @@ last_update:
 
 Kylin users may face with many problems during usage, such as  job failure, SQL query failure, SQL query overtime, etc. In order to help solve these problems efficiently, Kylin provides a *Diagnosis* function on Web UI to pack related information into a zip package to help operation staff and Kyligence Support team to analyze the root cause. 
 
-Diagnosis function includes System, Job and Query Diagnosis. In addition to the method of generating diagnostic package on web UI described in this chapter, you can also generate the diagnostic package through the bash script. For details, please refer to [Diagnosis Tool](cli_tool/diagnosis.en.md).
+Diagnosis function includes System, Job and Query Diagnosis. In addition to the method of generating diagnostic package on web UI described in this chapter, you can also generate the diagnostic package through the bash script. For details, please refer to [Diagnosis Tool](../cli_tool/diagnosis.md).
 
 
 ### Generate System Diagnostic Package in Web UI

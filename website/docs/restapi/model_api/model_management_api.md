@@ -89,7 +89,7 @@ last_update:
       - `primary_key` - `required` `string[]`, primary key
       - `simplified_non_equi_join_conditions` -  `optional` `JSON Object`, non-equivalent join conditions
 
-        (note1: The support of this settings should have 'Support History Table' enabled in advance. Seeing [Slowly Changing Dimension](../../../Designers-Guide/model/model_design/slowly_changing_dimension.en.md))
+        (note1: The support of this settings should have 'Support History Table' enabled in advance. Seeing [Slowly Changing Dimension](#TODO))
 
         (note2: Join relationship >= and < must be used in pairs, and same column must be joint in both conditions)
 
@@ -102,7 +102,7 @@ last_update:
     - `join_relation_type` -  `optional` `string`, join type: MANY_TO_ONE,MANY_TO_MANY, default: MANY_TO_ONE
   - `partition_desc` -  `optional` `JSON Object`, partition columns info
     - `partition_date_column` - `required` `string`, partition date column, format: TABLE.COLUMN
-    - `partition_date_format` - `required` `string`, partition date column format, including: yyyy-MM-dd, yyyyMMdd... Supported date format please check "[Model Design Basics](../../../Designers-Guide/model/model_design/data_modeling.en.md#faq)"
+    - `partition_date_format` - `required` `string`, partition date column format, including: yyyy-MM-dd, yyyyMMdd... Supported date format please check "[Model Design Basics](#TODO)"
     - `partition_type` -  `optional` `string`, partition type, including: APPEND, default: APPEND
   - `owner` -  `optional` `string`, the owner of model, default current user
   - `description` -  `optional` `string`, model description
@@ -360,7 +360,7 @@ last_update:
 
   > [!NOTE]
   >
-  > For parameters not listed in this page, you may go to the [Kylin Console](../../../Designers-Guide/model/model_concepts_operations.en.md) for details.
+  > For parameters not listed in this page, you may go to the [Kylin Console](#TODO) for details.
 
   ```json
     {
@@ -504,7 +504,7 @@ last_update:
         - `hierarchy_dims`: `JSON`, dimension hierarchy
         - `mandatory_dims`: `JSON`, required hierarchy
         - `joint_dims`:  `JSON`, joint dimensions
-        - `computed_columns`: `JSON`, [Computed Column](../../../Designers-Guide/model/model_design/computed_column/README.md)
+        - `computed_columns`: `JSON`, [Computed Column](#TODO)
         - `tableIdentity`: `String`, table ID
         - `tableAlias`: `String`, table alias
         - `columnName`: `String`, column name
