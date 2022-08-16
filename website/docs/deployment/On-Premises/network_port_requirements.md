@@ -11,7 +11,7 @@ keywords:
    - Network Port
 draft: false
 last_update:
-    date: 11/08/2022
+    date: 08/11/2022
 ---
 
 Kylin needs to communicate with different components. The following are the ports that need to be opened to Kylin. This table only includes the default configuration of the Hadoop environment, and does not include the configuration differences between Hadoop platforms.

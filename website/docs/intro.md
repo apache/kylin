@@ -8,10 +8,10 @@ toc_max_heading_level: 6
 pagination_prev: null
 pagination_next: null
 keywords:
-    - rest api
+    - intro
 draft: false
 last_update:
-    date: 12/08/2022
+    date: 08/12/2022
 ---
 
 # Intro to Kylin 5.0

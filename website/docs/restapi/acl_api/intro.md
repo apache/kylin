@@ -11,7 +11,7 @@ keywords:
     - acl management api
 draft: false
 last_update:
-    date: 12/08/2022
+    date: 08/12/2022
 ---
 
 Kylin provides REST APIs on Access Control List Management to help users strictly manage the ACL on projects, tables, users, user group and so on.

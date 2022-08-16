@@ -12,7 +12,7 @@ keywords:
    - separation
 draft: false
 last_update:
-   date: 12/08/2022
+   date: 08/12/2022
 ---
 
 Kylin's tasks based on Hadoop are mainly divided into two types: build and query. If these two tasks use the same set of Hadoop resources, resource preemption may occur between the build and the query, which makes them not stable and fast.

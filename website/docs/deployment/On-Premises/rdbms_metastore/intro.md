@@ -11,7 +11,7 @@ keywords:
     - Use RDBMS as Metastore
 draft: false
 last_update:
-    date: 11/08/2022
+    date: 08/11/2022
 ---
 
 Using RDBMS as Metastore is supported, which uses JDBC Driver to connect Metastore database.

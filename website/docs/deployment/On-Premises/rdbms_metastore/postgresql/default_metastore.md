@@ -11,7 +11,7 @@ keywords:
    - postgresql
 draft: false
 last_update:
-   date: 11/08/2022
+   date: 08/11/2022
 ---
 
 ### <span id="preparation">Prerequisite</span>
