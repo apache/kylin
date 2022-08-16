@@ -12,7 +12,7 @@ keywords:
     - maintenance
 draft: false
 last_update:
-    date: 12/08/2022
+    date: 08/12/2022
 ---
 
 This Operation and Maintenance Guide will introduce a suite of capabilities that can help you to manage your Kylin projects, do system maintenance, work with logs.

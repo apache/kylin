@@ -11,7 +11,7 @@ keywords:
     - mysql
 draft: false
 last_update:
-    date: 11/08/2022
+    date: 08/11/2022
 ---
 
 Kylin supports to use MySQL as Metastore, this chapter will discuss how to:

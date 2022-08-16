@@ -12,7 +12,7 @@ keywords:
     - monitor job
 draft: false 
 last_update: 
-    date: 12/08/2022
+    date: 08/12/2022
 ---
 
 The success returned by calling the required job API only indicates the job is successfully started. Kylin supports callback API to confirm the job execution state, it will return success if the job is successfully completed; it will return error if the job fails and also the error code to help troubleshooting. 

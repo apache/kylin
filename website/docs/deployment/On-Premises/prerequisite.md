@@ -11,7 +11,7 @@ keywords:
   - prerequisite
 draft: true
 last_update:
-    date: 11/08/2022
+    date: 08/11/2022
 ---
 
 To ensure system performance and stability, we recommend you run Kylin on a dedicated Hadoop cluster.

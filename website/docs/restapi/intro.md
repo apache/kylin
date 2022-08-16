@@ -11,7 +11,7 @@ keywords:
     - rest api
 draft: false
 last_update:
-    date: 12/08/2022
+    date: 08/12/2022
 ---
 
 Kylin provides various REST APIs, which can be used to execute queries, trigger a build job and so on. With those APIs, the third-party system could integrate with Kylin system seamlessly.  

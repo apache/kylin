@@ -12,7 +12,7 @@ keywords:
     - ha
 draft: false
 last_update:
-    date: 12/08/2022
+    date: 08/12/2022
 ---
 
 Multiple Kylin instances can work together as a cluster. When a Kylin instance is started, stopped, or lost, other instances in the cluster will be updated automatically. Kylin has a new implementation based on Apache Curator framework, which is more convenient and more stable. 
