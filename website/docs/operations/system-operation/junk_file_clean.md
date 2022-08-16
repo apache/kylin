@@ -81,7 +81,7 @@ This command supports standard short and long parameters. The parameter descript
 - `-r number`: The number of requests per second when accessing cloud environment object storage. `-r 10` means 10 requests per second. You can use this parameter to limit the frequency of requests for object storage in the cloud environment by the junk file cleaning tool to avoid errors due to exceeding the request frequency limit.
 - `-t number`: The number of request retries when accessing the cloud environment object storage fails. `-t 3` means to retry 3 times.
 
-**Note**: Whether this command executes metadata junk file cleaning through -m or data junk file cleaning through -c, Kylin will enter maintenance mode. If junk file cleaning is forcibly interrupted, you need to manually exit maintenance mode. Refer to [ Maintenance Mode](system-operation/maintenance_mode.en.md).
+**Note**: Whether this command executes metadata junk file cleaning through -m or data junk file cleaning through -c, Kylin will enter maintenance mode. If junk file cleaning is forcibly interrupted, you need to manually exit maintenance mode. Refer to [ Maintenance Mode](maintenance_mode.md).
 
 In addition, from Kylin 4.5.6, the new command line tool `FastRoutineTool`
 ````sh

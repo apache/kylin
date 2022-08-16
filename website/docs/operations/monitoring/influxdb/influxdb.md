@@ -196,7 +196,7 @@ To ensure the connectivity of InfluxDB service, it is recommended that you perfo
   ```
   If the query fails and the message `authorization failed` is displayed, please confirm whether the user has sufficient permissions.
 
-For more information about InfluxDB connectivity, please refer to the [InfluxDB Maintenance](../../Operation-and-Maintenance-Guide/influxdb/influxdb_maintenance.en.md) section.
+For more information about InfluxDB connectivity, please refer to the [InfluxDB Maintenance](influxdb_maintenance.md) section.
 
 
 

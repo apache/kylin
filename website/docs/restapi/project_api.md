@@ -561,7 +561,7 @@ last_update:
 
 ### <span id="update-job-engine">Update the Linking Relationship between Projects and Job Engines</span>
 
-**Note:** This Rest API need to cooperate with multi-active job engines. For more details, please refer to [Kylin Multi-Active Job Engines](../../../installation/deploy/cluster_lb.en.md).
+**Note:** This Rest API need to cooperate with multi-active job engines. For more details, please refer to [Kylin Multi-Active Job Engines](#TODO).
 
 - `POST http://host:port/kylin/api/epoch`
 
