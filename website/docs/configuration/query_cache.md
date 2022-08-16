@@ -19,7 +19,7 @@ By default, Kylin enables query cache in each process to improve query performan
 > **Note**: In order to ensure data consistency, query cache is not available in pushdown.
 
 
-###Use Default Cache
+### Use Default Cache
 
 Kylin enables query cache by default at each node/process level. The configuration details are described  below. You can change them in `$KYLIN_HOME/conf/kylin.properties` under Kylin installation directory.
 
