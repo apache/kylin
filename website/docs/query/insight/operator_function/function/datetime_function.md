@@ -1,0 +1,48 @@
+---
+title: Date and Time Functions
+language: en
+sidebar_label: Date and Time Functions
+pagination_label: Date and Time Functions
+toc_min_heading_level: 2
+toc_max_heading_level: 6
+pagination_prev: null
+pagination_next: null
+keywords:
+    - date functions
+    - time functions 
+draft: false
+last_update:
+    date: 08/17/2022
+---
+
+## Date and Time Functions
+
+| Syntax                                    | Description                                                  | Example                                                      | Normal Query | Pushdown Query | Defined as Computed Column | Suggested as Computed Column |
+| ----------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------ | -------------- | -------------------------- | ---------------------------- |
+| CURRENT_DATE                              | Returns the current date in the session time zone, in a value of datatype DATE | ` CURRENT_DATE`<br /> = 2018-10-10                           |  ✔️          | ✔️              | ✔️              |  ✔️          |
+| CURRENT_TIMESTAMP                         | Returns the current timestamp in the session time zone, in a value of datatype timestamp | ` CURRENT_TIMESTAMP`<br /> = 2022-07-19 10:24:44.708                 |  ✔️          | ✔️              | ✔️              |  ✔️          |
+| EXTRACT(timeUnit FROM datetime)           | Extracts and returns the value of a specified datetime field from a datetime value expression | `EXTRACT(minute FROM timestamp'2018-10-10 11:47:16')`<br /> = 47 | ✔️            | ✔️              | ✔️                          | ❌                            |
+| FLOOR(datetime TO timeUnit)               | Rounds *datetime* down to *timeUnit* where *timeunit* can be `year`,`quarter`, `month`, `week`, `day`, `hour`, `minute`, `second` | Example 1:<br/>`FLOOR(timestamp'2018-10-10 11:47:16' TO year)`<br/>= 2018-01-01 00:00:00<br/>Example 2:<br/>`FLOOR(timestamp'2018-10-10 11:47:16' TO minute)`<br/>= 2018-10-10 11:47:00 | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| CEIL(datetime TO timeUnit)                | Rounds *datetime* up to *timeUnit* where *timeunit* can be `year`,`quarter`, `month`, `week`, `day`, `hour`, `minute`, `second` | Example 1:<br/>`CEIL(timestamp'2018-10-10 11:47:16' TO year)`<br/>= 2019-01-01 00:00:00<br / >Example 2:<br/>`CEIL(timestamp'2018-10-10 11:47:16' TO minute)`<br/>= 2018-10-10 11:48:00 | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| YEAR(date)                                | Equivalent to `EXTRACT(YEAR FROM date)`. Returns an integer. | ` YEAR(date '2019-01-02')`<br /> = 2019                      | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| QUARTER(date)                             | Equivalent to `EXTRACT(QUARTER FROM date)`. Returns an integer between 1 and 4. | ` QUARTER(date '2019-01-02')` <br /> = 1                     | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| NOW(date)                                 | Returns the current timestamp at the start of query evaluation. | ` NOW()` <br /> = 2019-09-24 17:19:09.932                    | ❌            | ✔️              | ✔️                          | ✔️                            |
+| MONTH(date)                               | Equivalent to `EXTRACT(MONTH FROM date)`. Returns an integer between 1 and 12. | ` MONTH(date '2019-01-02')`<br /> = 1                        | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| WEEK(date)                                | Equivalent to `EXTRACT(WEEK FROM date)`. Returns an integer between 1 and 53. | ` WEEK(date '2019-01-02')`<br /> = 1                         | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| DAYOFYEAR(date)                           | Equivalent to `EXTRACT(DOY FROM date)`. Returns an integer between 1 and 366. | `DAYOFYEAR(date '2019-10-03')`<br /> = 276                   | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| DAYOFMONTH(date)                          | Equivalent to `EXTRACT(DAY FROM date)`. Returns an integer between 1 and 31. | ` DAYOFMONTH(date '2019-10-03')`<br /> = 3                   | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| DAYOFWEEK(date)                           | Equivalent to `EXTRACT(DOW FROM date)`. Returns an integer between 1 and 7. | ` DAYOFWEEK(date '2019-10-03')`<br /> = 5                    | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| HOUR(date)                                | Equivalent to `EXTRACT(HOUR FROM date)`. Returns an integer between 0 and 23. | ` HOUR(timestamp '2019-01-02 14:01:50')`<br /> = 14          | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| MINUTE(date)                              | Equivalent to `EXTRACT(MINUTE FROM date)`. Returns an integer between 0 and 59. | ` MINUTE(timestamp '2019-01-02 14:01:50')`<br /> = 1         | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| SECOND(date)                              | Equivalent to `EXTRACT(SECOND FROM date)`. Returns an integer between 0 and 59. | ` SECOND(timestamp '2019-01-02 14:01:50')`<br /> = 50        | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| TIMESTAMPADD(timeUnit, integer, datetime) | Returns *datetime* with an interval of (signed) *integer* *timeUnit*s added. Equivalent to `datetime + INTERVAL 'integer' timeUnit` | Example 1: to get the next month<br />` TIMESTAMPADD(month, 1, CURRENT_DATE)`<br /> = 2018-11-10<br /><br />Example 2: to get the last day of this month<br />`TIMESTAMPADD(day, -(extract(day from CURRENT_DATE)), timestampadd(month,1,CURRENT_DATE))`<br /> = 2018-10-31 | ✔️            | ✔️              | ✔️                          | ❌                            |
+| TRUNC(date, fmt)                          | Returns `date` with the time portion of the day truncated to the unit specified by the format model `fmt`.`fmt` should be one of ["year", "yyyy", "yy", "mon", "month", "mm"] | `TRUNC(date '2009-02-12', 'MM')`<br /> = 2009-02-01          | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| ADD_MONTHS(start_date, num_months)        | Returns the date that is `num_months` after `start_date`.    | ` ADD_MONTHS(date '2016-08-31', 1) `<br /> = 2016-09-30      | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| DATE_ADD(start_date, num_days)            | Returns the date that is `num_days` after `start_date`.      | ` DATE_ADD(date '2016-07-30', 1)`<br /> = 2016-07-31         | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| DATE_SUB(start_date, num_days)            | Returns the date that is `num_days` before `start_date`.     | ` DATE_SUB(date '2016-07-30', 1)`<br /> = 2016-07-29         | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| FROM_UNIXTIME(unix_time, format)          | Returns `unix_time` in the specified `format`.               | `FROM_UNIXTIME(0, 'yyyy-MM-dd HH:mm:ss')`<br /> = 1970-01-01 00:00:00 | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| FROM_UTC_TIMESTAMP(timestamp, timezone)   | Given a timestamp like '2017-07-14 02:40:00.0', interprets it as a time in UTC, and renders that time as a timestamp in the given time zone. | ` FROM_UTC_TIMESTAMP('2016-08-31', 'Asia/Seoul')`<br /> = 2016-08-31 09:00:00 | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| MONTHS_BETWEEN(timestamp1, timestamp2)    | If `timestamp1` is later than `timestamp2`, then the result is positive. If `timestamp1` and `timestamp2` are on the same day of month, or both are the last day of month, time of day will be ignored. Otherwise, the difference is  calculated based on 31 days per month. | ` MONTHS_BETWEEN('1997-02-28 10:30:00', '1996-10-30')`<br /> = 3.94959677 | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| TO_UTC_TIMESTAMP(timestamp, timezone)     | Given a timestamp like '2017-07-14 02:40:00.0', interprets it as a time in the given time zone, and renders that time as a timestamp in UTC. | `FROM_UTC_TIMESTAMP(TIMESTAMP'2015-03-02 06:05:00', 'America/Toronto')`<br /> = 2015-03-02 01:05:00.0 | ✔️            | ❌              | ✔️                          | ✔️                            |
+| UNIX_TIMESTAMP(datetime, format)          | Returns the seconds from `1970-01-01 08:00:00` to `datetime`. Please specify the `datetime` as `format` format | `UNIX_TIMESTAMP('2016-04-08 09:00:00', 'yyyy-MM-dd HH:mm:ss')`<br /> = 1460106000 | ✔️            | ✔️              | ✔️                          | ✔️                            |
+| DATEDIFF(endDate, startDate)              | Returns the number of days from `startDate` to `endDate`     | DATEDIFF(date '2022-02-03', date '2022-02-01')<br/>= 2       | ✔️            | ✔️              | ✔️                          | ❌                            |
