@@ -141,34 +141,29 @@ const config = {
         items: [
           {
             type: 'doc',
-            docId: 'download',
-            position: 'left',
-            label: 'Download',
-          },
-
-          {
-            type: 'doc',
             docId: 'intro',
             position: 'left',
             label: 'Document',
           },
-
           {
             type: 'doc',
             docId: 'development/how_to_contribute',
             position: 'left',
             label: 'Development',
           },
-
+          {
+            type: 'doc',
+            docId: 'download',
+            position: 'left',
+            label: 'Download',
+          },
           {
             type: 'doc',
             docId: 'community',
             position: 'left',
             label: 'Community',
           },
-
           {to: '/blog', label: 'Blog', position: 'left'},
-
           {
             href: 'https://github.com/apache/kylin',
             label: 'GitHub',

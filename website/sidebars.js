@@ -428,10 +428,100 @@ const sidebars = {
         {
             type: 'category',
             label: 'Modeling',
+            link: {
+                type: 'doc',
+                id: 'modeling/intro'
+            },
             items: [
                 {
                     type: 'doc',
-                    id: 'modeling/intro'
+                    id: 'modeling/data_modeling'
+                },
+            ],
+        },
+        {
+            type: 'category',
+            label: 'Query',
+            link: {
+                type: 'doc',
+                id: 'query/intro'
+            },
+            items: [
+                {
+                    type: 'doc',
+                    id: 'query/data_type'
+                },
+                {
+                    type: 'category',
+                    label: 'Basic Query Execution',
+                    link: {
+                        type: 'doc',
+                        id: 'query/insight/intro'
+                    },
+                    items: [
+                        {
+                            type: 'doc',
+                            id: 'query/insight/insight'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'query/insight/sql_spec'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'query/insight/async_query'
+                        },
+                    ],
+                },
+                {
+                    type: 'doc',
+                    id: 'query/history'
+                },
+                {
+                    type: 'category',
+                    label: 'Query Optimization',
+                    link: {
+                        type: 'doc',
+                        id: 'query/optimization/intro'
+                    },
+                    items: [
+                        {
+                            type: 'doc',
+                            id: 'query/optimization/query_enhanced'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'query/optimization/segment_pruning'
+                        },
+                    ],
+                },
+                {
+                    type: 'category',
+                    label: 'Query PushDown',
+                    link: {
+                        type: 'doc',
+                        id: 'query/pushdown/intro'
+                    },
+                    items: [
+                        {
+                            type: 'doc',
+                            id: 'query/pushdown/pushdown_to_embedded_spark'
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            type: 'category',
+            label: 'Snapshot Management',
+            link: {
+                type: 'doc',
+                id: 'snapshot/intro'
+            },
+            items: [
+                {
+                    type: 'doc',
+                    id: 'snapshot/snapshot_management'
                 },
             ],
         },
@@ -541,17 +631,6 @@ const sidebars = {
                 },
             ],
         },
-        {
-            type: 'category',
-            label: 'Query',
-            items: [
-                {
-                    type: 'doc',
-                    id: 'query/intro'
-                },
-            ],
-        },
-
     ],
     DevelopmentSideBar: [
         {
