@@ -40,7 +40,7 @@ After running successfully, you should be able to see the following information 
 Sample hive tables are created successfully
 ```
 
-We will be using SSB dataset as the data sample to introduce Kylin in several sections of this  product manual. The SSB dataset simulates transaction data for the online store, see more details in [Sample Dataset](../../Get-to-Know-Kyligence-Enterprise/quickstart/sample_dataset.en.md). Below is a brief introduction.
+We will be using SSB dataset as the data sample to introduce Kylin in several sections of this  product manual. The SSB dataset simulates transaction data for the online store, see more details in [Sample Dataset](#TODO). Below is a brief introduction.
 
 
 | Table        | Description                 | Introduction                                                         |

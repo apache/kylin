@@ -47,8 +47,6 @@ Set `kylin.query.share-state-switch-implement=jdbc` in `kylin.properties`, and c
 
 Among them, the default value of Spark task load is 50. Generally, it is not recommended to modify it. 
 
-To configure the Ops Plan to turn on the large query rejection strategy, please contact the [Kyligence Technical Support Team](https://support.kyligence.io/#/) for help.
-
 
 ### Judgment of large query
 

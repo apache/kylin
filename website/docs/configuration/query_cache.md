@@ -69,4 +69,4 @@ The default query cache cannot be shared among different nodes or processes beca
 #### Limitation
 Due to metadata inconsistency between Query nodes and All/Job nodes, the redis cache swith `kylin.cache.redis.enabled=true` should be configured along with `kylin.server.store-type=jdbc`.
 
-> **Caution:** Redis passwords can be encrypted, please refer to: [Use MySQL as Metastore](../deployment/rdbms_metastore/mysql/mysql_metastore.md)
+> **Caution:** Redis passwords can be encrypted, please refer to: [Use MySQL as Metastore](../deployment/on-premises/rdbms_metastore/mysql/mysql_metastore.md)

@@ -85,7 +85,7 @@ last_update:
 
 ### Prepare Reload Hive Table   {#Prepare-Reload-Hive-Table}
 
-> Call this API to compare the Hive table metadata in Kylin and that in the data source. For Hive table already loaded to Kylin and already used in model and index building, if some columns are deleted, Kyligence will return a failure when reading these columns. Use this API to find the metadata differences and evaluate whether to update the metadata in Kylin by reloading the Hive table. 
+> Call this API to compare the Hive table metadata in Kylin and that in the data source. For Hive table already loaded to Kylin and already used in model and index building, if some columns are deleted, Kylin will return a failure when reading these columns. Use this API to find the metadata differences and evaluate whether to update the metadata in Kylin by reloading the Hive table. 
 
 - `GET http://host:port/kylin/api/tables/pre_reload`
 
@@ -223,7 +223,7 @@ last_update:
 
 ### Prepare Unload Table   {#Prepare-Unload-Table}
 
-> Call this API to evaluate the risks of unloading Hive table metadata. There are cases where you need to offline some Hive tables from Kylin. Use this API to evaluate the impact of unloading Hive table metadata on related Kyligence models and jobs.
+> Call this API to evaluate the risks of unloading Hive table metadata. There are cases where you need to offline some Hive tables from Kylin. Use this API to evaluate the impact of unloading Hive table metadata on related Kylin models and jobs.
 
 - `GET http://host:port/kylin/api/tables/{database}/{table}/prepare_unload`
 
@@ -283,7 +283,7 @@ last_update:
 
 ### Unload Table   {#Unload-Table}
 
-> Call this API to unload Hive table metadata from Kylin. After the API call, Hive table metadata will be unloaded from Kylin, and Kyligence can no longer read the table data, or update the index data related to the table. It's recommended calling the "Prepare Unload Table" API before calling this API.  
+> Call this API to unload Hive table metadata from Kylin. After the API call, Hive table metadata will be unloaded from Kylin, and Kylin can no longer read the table data, or update the index data related to the table. It's recommended calling the "Prepare Unload Table" API before calling this API.  
 
 - `DELETE http://host:port/kylin/api/tables/{database}/{table}`
 
