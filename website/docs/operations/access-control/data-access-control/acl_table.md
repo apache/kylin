@@ -18,7 +18,7 @@ last_update:
 
 **Introduction**
 
-Table ACLs determines whether a user/user group can access a certain table loaded into Kyligence Enterprise. When a user/group is restricted to a table, the user/user group cannot query the table. 
+Table ACLs determines whether a user/user group can access a certain table loaded into Kylin. When a user/group is restricted to a table, the user/user group cannot query the table. 
 
 - System administrator can grant table-level data access to a user/user group. All users/user groups that have access rights to the current project can read or query all tables in the current project by default.
 - When the access rights of the user/user group are deleted, or the user/user group is removed from the system, the corresponding table-level permissions are also deleted.
@@ -41,7 +41,7 @@ If you query the table, the result will show an error.
 
 ### <span id="set">Grant Table ACL</span>
 
-1. In the **Admin** -> Project page, the system administrator can grant user/user group project-level access rights. For details, please refer to [Project ACL](project_acl.en.md).
+1. In the **Admin** -> Project page, the system administrator can grant user/user group project-level access rights. For details, please refer to [Project ACL](project_acl.md).
 
 2. Select the project you want to authorize，then click **Authorization** under the right **Action** bar and go to the authorization page.
 

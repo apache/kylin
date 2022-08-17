@@ -15,10 +15,10 @@ last_update:
 ---
 
 
-This chapter will describe how to grant roles to users/groups in Kyligence to control their access rights, and how to perform fine-grained data access control, it will cover:
+This chapter will describe how to grant roles to users/groups in Kylin to control their access rights, and how to perform fine-grained data access control, it will cover:
 
-* [User Management](user_management.en.md)
+* [User Management](user_management.md)
 * [User Group Management](group_management.md)
 
-* [Data Access Control](access_control.md)
-  * [Project Access Control](project_acl.md)
+* [Data Access Control](data-access-control/intro.md)
+  * [Project Access Control](data-access-control/project_acl.md)

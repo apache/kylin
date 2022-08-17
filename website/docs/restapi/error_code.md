@@ -111,7 +111,7 @@ If an error occurs when calling the Kylin API or using the built-in tools, you c
 | KE-010043208 | The entered parameter value is invalid. The parameter value must be a non-negative <br />integer. Please check and try again. |
 | KE-010043209 | The entered parameter value is invalid. Only support specific values at the moment. Please <br />check and try again. |
 | KE-010043210 | The parameter can't be empty. Please enter the time partition column format. |
-| KE-010043211 | The type of the time partition column is invalid. Please enter the supported format, refer <br />to the [user manual](../../Designers-Guide/model/model_design/data_modeling.en.md#faq). |
+| KE-010043211 | The type of the time partition column is invalid. Please enter the supported format, refer <br />to the [user manual](#TODO). |
 | KE-010043212 | The parameter can't be empty. Please enter layout(s) id.     |
 | KE-010043213 | Can't find layout. Please check and try again.               |
 | KE-010043214 | Can't refresh the value, the time units are only supported in d (days), h (hours), <br />or m (minutes). Please check and try again. |
@@ -144,7 +144,7 @@ If an error occurs when calling the Kylin API or using the built-in tools, you c
 
 ### Built-in tools error code  
 > [!NOTE]
->  Build-in tools include [junk file clean tools](../../Operation-and-Maintenance-Guide/junk_file_clean.en.md), [diagnostic package generate tools](../../Operation-and-Maintenance-Guide/system-operation/cli_tool/diagnosis.en.md), etc.
+>  Build-in tools include [junk file clean tools](../operations/system-operation/junk_file_clean.md), [diagnostic package generate tools](../operations/system-operation/cli_tool/diagnosis.md), etc.
 
 |    Error code      | Error message                                                                         |
 |:-------------------|:--------------------------------------------------------------------------------------|
