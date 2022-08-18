@@ -88,7 +88,7 @@ public class BuildLayoutWithUpdate {
     }
 
     public long updateSingleLayout(NDataSegment seg, KylinConfig config, String project) {
-        long indexId = -1l;
+        long indexId = -1L;
         try {
             logger.info("Wait to take job result.");
             JobResult result = completionService.take().get();

@@ -100,6 +100,7 @@ public class QueryDependentColumnMask implements QueryResultMask {
         }
     }
 
+    @Override
     public Dataset<Row> doMaskResult(Dataset<Row> df) {
         if (dependentInfo == null || rootRelNode == null || !dependentInfo.needMask()) {
             return df;

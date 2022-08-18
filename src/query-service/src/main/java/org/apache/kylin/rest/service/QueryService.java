@@ -501,10 +501,11 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         }
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId());
              SetLogCategory ignored2 = new SetLogCategory("query")) {
-            if (sqlRequest.getExecuteAs() != null)
+            if (sqlRequest.getExecuteAs() != null) {
                 sqlRequest.setUsername(sqlRequest.getExecuteAs());
-            else
+            } else {
                 sqlRequest.setUsername(getUsername());
+            }
             QueryLimiter.tryAcquire();
             SQLResponse response = doQueryWithCache(sqlRequest);
             response.setTraces(QueryContext.currentTrace().spans().stream().map(span -> {

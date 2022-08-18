@@ -360,10 +360,9 @@ public class DFBuildJob extends SparkApplication {
     }
 
     // decided and construct the next layer.
-    protected List<NBuildSourceInfo> constructTheNextLayerBuildInfos( //
-            NSpanningTree st, //
-            NDataSegment seg, //
-            Collection<IndexEntity> allIndexesInCurrentLayer) { //
+    protected List<NBuildSourceInfo> constructTheNextLayerBuildInfos(NSpanningTree st, NDataSegment seg,
+                                                                      Collection<IndexEntity> allIndexesInCurrentLayer
+    ) {
 
         val childrenBuildSourceInfos = new ArrayList<NBuildSourceInfo>();
         for (IndexEntity index : allIndexesInCurrentLayer) {
