@@ -68,7 +68,7 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication implements 
             List<Path> paths = JavaConversions
                     .seqAsJavaList(ResourceDetectUtils.getPaths(afterMerge.queryExecution().sparkPlan()));
             resourceSize.put(String.valueOf(entry.getKey()),
-                    ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(),config.isConcurrencyFetchDataSourceSize(),
+                    ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(), config.isConcurrencyFetchDataSourceSize(),
                             JavaConverters.asScalaIteratorConverter(paths.iterator()).asScala().toSeq()));
         }
         ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId),

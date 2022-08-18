@@ -50,7 +50,7 @@
                             <goal>javacc</goal>
                         </goals>
                         <configuration>
-                            <sourceDirectory>src/main/codegen/javacc/io/kyligence/kap/query/util/
+                            <sourceDirectory>src/main/codegen/javacc/org/apache/kylin/query/util/
                             </sourceDirectory>
                             <includes>
                                 <include>*.jj</include>

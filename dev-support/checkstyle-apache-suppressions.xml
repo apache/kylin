@@ -62,5 +62,17 @@
               files="UHCDictionaryReducer.java"/>
 
     <suppress checks="IllegalImport" files="FragmentData.java"/>
+    <suppress checks="LeftCurly" files="(RawSqlParserTokenManager|EscapeParserTokenManager|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="RightCurly" files="(RawSqlParserTokenManager|EscapeParserTokenManager|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="MissingSwitchDefault" files="(RawSqlParserTokenManager|EscapeParserTokenManager|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="Header" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="SingleSpaceSeparator" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="MethodLength" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="RedundantImport" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="UnusedImports" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="OperatorWrap" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="ArrayTypeStyle" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="WhitespaceAfter" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
+    <suppress checks="EmptyStatement" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
 
 </suppressions>
