@@ -14,8 +14,6 @@ last_update:
     date: 08/17/2022
 ---
 
-## Use the Left Join model to answer Inner Join queries with equivalent semantics
-
 By default in Kylin, the relationship between tables in the query SQL must be consistent with the relationship between the fact tables and dimension tables defined in the model, that is, the model of `Left Join` cannot answer the query of `Inner Join`.
 
 But in some cases,  part of `Left Join` queries can be semantically equivalently transformed into `Inner Join` queries, so we provide configuration parameters that allow users to use `Left Join`  model to answer equivalent semantics `Inner Join` query.
