@@ -29,6 +29,24 @@ const sidebars = {
         },
         {
             type: 'category',
+            label: 'Quick Start',
+            link: {
+                type: 'doc',
+                id: 'quickstart/intro',
+            },
+            items: [
+                {
+                    type: 'doc',
+                    id: 'quickstart/expert_mode_tutorial',
+                },
+                {
+                    type: 'doc',
+                    id: 'quickstart/sample_dataset',
+                },
+            ],
+        },
+        {
+            type: 'category',
             label: 'Tutorial',
             items: [
                 {
@@ -157,16 +175,6 @@ const sidebars = {
                         },
                     ]
                 },
-                // TODO: add Installation part
-                // {
-                //     type: 'category',
-                //     label: 'Installation',
-                //     items:[
-                //         {
-                //
-                //         },
-                //     ],
-                // },
                 {
                     type: 'category',
                     label: 'System Configuration',
