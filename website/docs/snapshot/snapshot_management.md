@@ -15,9 +15,6 @@ last_update:
     date: 08/17/2022
 ---
 
-
-## Snapshot Management and Operations
-
 The snapshot is a read-only static view of a source table, which can be used in the following scenarios:
 
 - Support independent query of dimension table. The snapshot will be used first to answer such queries.

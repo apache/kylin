@@ -43,5 +43,5 @@ Different from regular query engines, kylin uses precalculated results to replac
 
    The query will fail with an error message of `no model found` or `no realization found`. This means the data required for this query does not exist in the system.
 
-   As a special case, if the pushdown engine is enabled, then kylin will not report error, and instead route this query to the pushdown engine. For more details, please refer to [Query Pushdown](../../../Designers-Guide/query/pushdown/README.md).
+   As a special case, if the pushdown engine is enabled, then kylin will not report error, and instead route this query to the pushdown engine. For more details, please refer to [Query Pushdown](../../query/pushdown/intro.md).
 

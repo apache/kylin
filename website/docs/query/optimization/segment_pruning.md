@@ -14,9 +14,6 @@ last_update:
     date: 08/17/2022
 ---
 
-
-## Segment Pruning When Querying
-
 Starting from Kylin 5.0, we support the calculation of the dimension value range (maximum and minimum) of all dimensions when building the Segment, so we can prune segment during queries, reducing the scanning range of the segment to optimize some query performance.
 
 

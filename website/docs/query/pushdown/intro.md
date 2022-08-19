@@ -14,8 +14,6 @@ last_update:
     date: 08/17/2022
 ---
 
-## Query Pushdown
-
 Kylin integrates a Smart Pushdown engine which works SQL on Hadoop engine like SparkSQL. 
 
 For queries which cannot be answered by Kylin, they can be routed into Pushdown Query Engine when necessary.

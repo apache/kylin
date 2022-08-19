@@ -15,8 +15,6 @@ last_update:
 ---
 
 
-## Pushdown to Embedded SparkSQL
-
 Kylin uses pre-calculation instead of online calculation to achieve sub-second query latency on big data. In general, the model with pre-calculated data is able to serve the most frequently-used queries. But if a query is beyond the model's definition, the system will route it to the Kyligence smart pushdown engine. The embedded pushdown engine is Spark SQL.
 
 > **Note**: In order to ensure data consistency, query cache is not available in pushdown.

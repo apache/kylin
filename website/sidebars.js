@@ -241,6 +241,10 @@ const sidebars = {
                         },
                         {
                             type: 'doc',
+                            id: 'operations/project-operation/toolbar'
+                        },
+                        {
+                            type: 'doc',
                             id: 'operations/project-operation/alerting'
                         },
                     ],
@@ -436,6 +440,174 @@ const sidebars = {
                 {
                     type: 'doc',
                     id: 'modeling/data_modeling'
+                },
+                {
+                    type: 'doc',
+                    id: 'modeling/manual_modeling'
+                },
+                {
+                    type: 'doc',
+                    id: 'modeling/model_concepts_operations'
+                },
+                {
+                    type: 'category',
+                    label: 'Advanced Mode Design',
+                    link: {
+                        type: 'doc',
+                        id: 'modeling/model_design/intro'
+                    },
+                    items: [
+                        {
+                            type: 'category',
+                            label: 'Measures',
+                            link: {
+                                type: 'doc',
+                                id: 'modeling/model_design/measure_design/intro'
+                            },
+                            items: [
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/measure_design/topn'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/measure_design/count_distinct_bitmap'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/measure_design/count_distinct_hllc'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/measure_design/percentile_approx'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/measure_design/corr'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/measure_design/collect_set'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/measure_design/sum_expression'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/measure_design/count_distinct_case_when_expr'
+                                },
+                            ],
+                        },
+                        {
+                            type: 'doc',
+                            id: 'modeling/model_design/computed_column'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'modeling/model_design/slowly_changing_dimension'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'modeling/model_design/aggregation_group'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'modeling/model_design/table_index'
+                        },
+                        {
+                            type: 'category',
+                            label: 'Model Advanced Settings',
+                            link: {
+                                type: 'doc',
+                                id: 'modeling/model_design/advance_guide/intro'
+                            },
+                            items: [
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/advance_guide/model_metadata_managment'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/advance_guide/multilevel_partitioning'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/advance_guide/fast_bitmap'
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/model_design/advance_guide/integer_encoding'
+                                },
+                            ],
+                        },
+                        {
+                            type: 'doc',
+                            id: 'modeling/model_design/precompute_join_relations'
+                        },
+                    ],
+                },
+                {
+                    type: 'category',
+                    label: 'Load Data',
+                    link: {
+                        type: 'doc',
+                        id: 'modeling/load_data/intro'
+                    },
+                    items: [
+                        {
+                            type: 'doc',
+                            id: 'modeling/load_data/full_build'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'modeling/load_data/by_date'
+                        },
+                        {
+                            type: 'doc',
+                            id: 'modeling/load_data/build_index'
+                        },
+                        {
+                            type: 'category',
+                            label: 'Segment Operation and Settings',
+                            link: {
+                                type: 'doc',
+                                id: 'modeling/load_data/segment_operation_settings/intro'
+                            },
+                            items: [
+                                {
+                                    type: 'doc',
+                                    id: 'modeling/load_data/segment_operation_settings/segment_merge'
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            type: 'category',
+            label: 'Monitor Job',
+            link: {
+                type: 'doc',
+                id: 'monitor/intro'
+            },
+            items: [
+                {
+                    type: 'doc',
+                    id: 'monitor/job_concept_settings'
+                },
+                {
+                    type: 'doc',
+                    id: 'monitor/job_operations'
+                },
+                {
+                    type: 'doc',
+                    id: 'monitor/job_diagnosis'
+                },
+                {
+                    type: 'doc',
+                    id: 'monitor/job_exception_resolve'
                 },
             ],
         },

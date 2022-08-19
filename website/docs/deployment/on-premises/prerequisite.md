@@ -29,7 +29,6 @@ Prior to installing Kylin, please check the following prerequisites are met.
     - [Recommended Hardware Configuration](#hardware)
     - [Recommended Linux Distribution](#linux)
     - [Recommended Client Configuration](#client)
-- [License](#license)
 
 
 
