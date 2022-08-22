@@ -77,19 +77,21 @@ function main() {
         fi
 
         if [[ -d "${SPARK_HOME}" ]]; then
-            warn "* Spark already exists, will be deleted and re-downloaded"
-            rm -rf ${SPARK_HOME}
+            warn "* Spark already exists, will use it"
+            # rm -rf ${SPARK_HOME}
         fi
 
-        info "* Downloading spark..."
-        ${PROJECT_DIR}/build/release/download-spark.sh
-        if [[ $? != 0 ]]; then
-            warn "  Download spark failed, please manually execute 'download-spark.sh'"
+        if [[ ! -d "${SPARK_HOME}" ]]; then
+            info "* Downloading spark..."
+            ${PROJECT_DIR}/build/release/download-spark.sh
+            if [[ $? != 0 ]]; then
+                warn "  Download spark failed, please manually execute 'download-spark.sh'"
+            fi
         fi
 
         info "* Setting spark dependency..."
         cp ${PROJECT_DIR}/src/server/target/jars/log4j* ${SPARK_HOME}/jars
-        cp ${WORKDIR}/libs/mysql-connector-java-8.0.16.jar ${SPARK_HOME}/jars
+        # cp ${WORKDIR}/libs/mysql-connector-java-8.0.16.jar ${SPARK_HOME}/jars
 
         info "* Setting IDEA run configurations..."
         if [[ ! -d "${PROJECT_DIR}/.idea/runConfigurations" ]]; then
@@ -97,8 +99,8 @@ function main() {
         fi
 
         eval "cat <<EOF
-            $(<"${WORKDIR}/runConfigurations/BootstrapServer_docker_sandbox_.xml")
-EOF" >"${PROJECT_DIR}/.idea/runConfigurations/BootstrapServer_docker_sandbox_.xml"
+            $(<"${WORKDIR}/runConfigurations/BootstrapServer_docker_sandbox.xml")
+EOF" >"${PROJECT_DIR}/.idea/runConfigurations/BootstrapServer_docker_sandbox.xml"
 
         info "* Init Done!"
         ;;

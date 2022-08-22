@@ -22,7 +22,7 @@
     </property>
     <property>
         <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:mysql://mysql:3306/hive?useSSL=false</value>
+        <value>jdbc:mysql://mysql:3307/hive?useSSL=false</value>
     </property>
     <property>
         <name>javax.jdo.option.ConnectionUserName</name>
@@ -37,7 +37,7 @@
         <value>/user/hive/warehouse</value>
     </property>
     <property>
-        <name>datanucleus.connectionPoolingType</name>
+        <name>datanucleus.KYLIN</name>
         <value>DBCP</value>
     </property>
     <property>

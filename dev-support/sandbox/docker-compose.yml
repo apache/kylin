@@ -38,10 +38,10 @@ services:
     networks:
       - sandbox_cluster
     ports:
-      - 50010:50010
-      - 50075:50075
+      - 50011:50011
+      - 50076:50076
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:50075/ || exit 1" ]
+      test: [ "CMD-SHELL", "curl -f http://localhost:50076/ || exit 1" ]
       interval: 30s
       timeout: 30s
       retries: 4
@@ -51,7 +51,7 @@ services:
     hostname: resourcemanager
     environment:
       HADOOP_MODE: "resourcemanager"
-      SERVICE_PRECONDITION: "namenode:50070 datanode:50075"
+      SERVICE_PRECONDITION: "namenode:50070 datanode:50076"
     env_file:
       - hadoop.env
     networks:
@@ -71,38 +71,38 @@ services:
     hostname: nodemanager
     environment:
       HADOOP_MODE: "nodemanager"
-      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 resourcemanager:8088"
+      SERVICE_PRECONDITION: "namenode:50070 datanode:50076 resourcemanager:8088"
     env_file:
       - hadoop.env
     networks:
       - sandbox_cluster
     ports:
-      - 8042:8042
+      - 8043:8043
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8042/ || exit 1" ]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8043/ || exit 1" ]
       interval: 30s
       timeout: 30s
       retries: 4
-  historyserver:
-    image: kyligence/hadoop:2.10.1
-    container_name: historyserver
-    hostname: historyserver
-    volumes:
-      - ./data/historyserver:/hadoop/yarn/timeline #
-    environment:
-      HADOOP_MODE: "historyserver"
-      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 resourcemanager:8088 nodemanager:8042"
-    env_file:
-      - hadoop.env
-    networks:
-      - sandbox_cluster
-    ports:
-      - 8188:8188
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8188/ || exit 1" ]
-      interval: 30s
-      timeout: 30s
-      retries: 4
+#  historyserver:
+#    image: kyligence/hadoop:2.10.1
+#    container_name: historyserver
+#    hostname: historyserver
+#    volumes:
+#      - ./data/historyserver:/hadoop/yarn/timeline #
+#    environment:
+#      HADOOP_MODE: "historyserver"
+#      SERVICE_PRECONDITION: "namenode:50070 datanode:50076 resourcemanager:8088 nodemanager:8043"
+#    env_file:
+#      - hadoop.env
+#    networks:
+#      - sandbox_cluster
+#    ports:
+#      - 8188:8188
+#    healthcheck:
+#      test: [ "CMD-SHELL", "curl -f http://localhost:8188/ || exit 1" ]
+#      interval: 30s
+#      timeout: 30s
+#      retries: 4
   mysql:
     image: mysql:5.7
     container_name: mysql
@@ -114,7 +114,7 @@ services:
     networks:
       - sandbox_cluster
     ports:
-      - 3306:3306
+      - 3307:3307
     volumes:
       - ./data/mysql:/var/lib/mysql
   hivemetastore:
@@ -125,10 +125,10 @@ services:
       - hadoop.env
       - hive.env
     environment:
-      SERVICE_PRECONDITION: "namenode:50070 mysql:3306"
+      SERVICE_PRECONDITION: "namenode:50070 mysql:3307"
       MYSQL_METASTORE_USER: root
       MYSQL_METASTORE_HOST: mysql
-      MYSQL_METASTORE_PORT: 3306
+      MYSQL_METASTORE_PORT: 3307
       MYSQL_METASTORE_PWD: root
       MYSQL_METASTORE_DB: hive
     networks:
@@ -157,7 +157,14 @@ services:
     networks:
       - sandbox_cluster
     ports:
-      - 2181:2181
+      - 2182:2182
+
+
+# 2181 -> zk
+# 3306 -> mysql
+# 8042 -> node manager
+# 50010 -> data node
+# 50075 -> data node
 
 #  kafka:
 #    image: bitnami/kafka:2.7.0
@@ -167,8 +174,8 @@ services:
 #      - ./data/kafka:/bitnami/kafka
 #    environment:
 #      - KAFKA_BROKER_ID=1
-#      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-#      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+#      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2182
+#      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2182
 #      - ALLOW_PLAINTEXT_LISTENER=yes
 #    networks:
 #      - sandbox_cluster

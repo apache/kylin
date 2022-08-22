@@ -87,6 +87,7 @@ webapp/CHANGELOG.md
 
 # package file
 build/tomcat
+build/spark
 build/lib
 build/kybot
 build/tpch-benchmark
