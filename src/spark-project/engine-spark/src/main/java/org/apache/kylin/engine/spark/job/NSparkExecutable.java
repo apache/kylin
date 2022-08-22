@@ -119,7 +119,7 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
     public NSparkExecutable() {
         super();
         if(!KylinConfig.getInstanceFromEnv().isUTEnv()) {
-            logger.info("Has-args NSparkExecutable");
+            logger.trace("Has-args NSparkExecutable");
         }
         initHandler();
     }
@@ -127,7 +127,7 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
     public NSparkExecutable(Object notSetId) {
         super(notSetId);
         if(!KylinConfig.getInstanceFromEnv().isUTEnv()) {
-            logger.info("No-args NSparkExecutable");
+            logger.trace("No-args NSparkExecutable");
         }
         initHandler();
     }
@@ -137,7 +137,7 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
     }
 
     protected void initHandler() {
-        logger.debug("Handler class name {}", KylinConfig.getInstanceFromEnv().getSparkBuildJobHandlerClassName());
+        logger.trace("Handler class name {}", KylinConfig.getInstanceFromEnv().getSparkBuildJobHandlerClassName());
         sparkJobHandler = (ISparkJobHandler) ClassUtil
                 .newInstance(KylinConfig.getInstanceFromEnv().getSparkBuildJobHandlerClassName());
     }

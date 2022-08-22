@@ -80,7 +80,7 @@ public class ShellKylinExternalConfigLoaderFactory {
         if (configLoader != null) {
             return configLoader;
         }
-
+        logger.info("Use KylinExternalConfigLoader to load KylinConfig.");
         return new KylinExternalConfigLoader(getSitePropertiesFile());
     }
 

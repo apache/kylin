@@ -25,7 +25,7 @@ export WITH_SPARK=1
 export WITH_FRONT=1
 
 export PACKAGE_OFFICIAL=0
-export WITH_HIVE1=0
+export WITH_HIVE1=1
 export WITH_THIRDPARTY=0
 export SKIP_COMPILE=0
 

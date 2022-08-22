@@ -18,36 +18,41 @@
 
 package org.apache.kylin.common;
 
+import com.google.common.collect.Maps;
+import io.kyligence.config.core.loader.IExternalConfigLoader;
+import io.kyligence.config.external.loader.NacosExternalConfigLoader;
+import lombok.EqualsAndHashCode;
+
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import io.kyligence.config.core.loader.IExternalConfigLoader;
-import lombok.EqualsAndHashCode;
+import java.util.concurrent.ConcurrentMap;
 
 @EqualsAndHashCode
 public class PropertiesDelegate extends Properties {
 
     @EqualsAndHashCode.Include
-    private final Properties properties;
+    private final ConcurrentMap<Object, Object> properties = Maps.newConcurrentMap();
 
     @EqualsAndHashCode.Include
     private final transient IExternalConfigLoader configLoader;
 
     public PropertiesDelegate(Properties properties, IExternalConfigLoader configLoader) {
-        this.properties = properties;
+        if(configLoader != null) this.properties.putAll(configLoader.getProperties());
+        this.properties.putAll(properties);
         this.configLoader = configLoader;
     }
 
-    public synchronized void reloadProperties(Properties properties) {
+    public void reloadProperties(Properties properties) {
         this.properties.clear();
         this.properties.putAll(properties);
     }
 
     @Override
     public String getProperty(String key) {
-        String property = this.properties.getProperty(key);
+        String property = (String) this.properties.get(key);
         if (property == null && this.configLoader != null) {
             return configLoader.getProperty(key);
         }
@@ -64,12 +69,12 @@ public class PropertiesDelegate extends Properties {
     }
 
     @Override
-    public synchronized Object put(Object key, Object value) {
+    public Object put(Object key, Object value) {
         return this.properties.put(key, value);
     }
 
     @Override
-    public synchronized Object setProperty(String key, String value) {
+    public Object setProperty(String key, String value) {
         return this.put(key, value);
     }
 
@@ -79,21 +84,30 @@ public class PropertiesDelegate extends Properties {
     }
 
     @Override
-    public synchronized int size() {
+    public int size() {
         return getAllProperties().size();
     }
 
     @Override
-    public synchronized Enumeration<Object> keys() {
-        return getAllProperties().keys();
+    public Enumeration<Object> keys() {
+        return Collections.enumeration(getAllProperties().keySet());
     }
 
-    private synchronized Properties getAllProperties() {
-        Properties propertiesView = new Properties();
-        if (this.configLoader != null) {
-            propertiesView.putAll(this.configLoader.getProperties());
+    private ConcurrentMap<Object, Object> getAllProperties() {
+        // When KylinExternalConfigLoader is enabled, properties is static
+        if (configLoader == null || configLoader.getClass().equals(KylinExternalConfigLoader.class)) {
+            return properties;
         }
-        propertiesView.putAll(this.properties);
-        return propertiesView;
+        // When NacosExternalConfigLoader enabled, fetch config entries from remote for each call
+        // TODO: Kylin should call remote server in periodically, otherwise query concurrency
+        // maybe impacted badly
+        else if (configLoader.getClass().equals(NacosExternalConfigLoader.class)) {
+            ConcurrentMap<Object, Object> propertiesView = Maps.newConcurrentMap();
+            propertiesView.putAll(this.configLoader.getProperties());
+            propertiesView.putAll(this.properties);
+            return propertiesView;
+        } else {
+            throw new IllegalArgumentException(configLoader.getClass() + " is not supported ");
+        }
     }
 }

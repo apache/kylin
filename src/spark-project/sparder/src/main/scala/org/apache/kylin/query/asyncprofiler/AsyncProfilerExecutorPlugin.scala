@@ -19,7 +19,6 @@
 package org.apache.kylin.query.asyncprofiler
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import org.apache.kylin.common.KylinConfig
 import org.apache.spark.api.plugin.{ExecutorPlugin, PluginContext}
 import org.apache.spark.internal.Logging
 
@@ -31,7 +30,7 @@ class AsyncProfilerExecutorPlugin extends ExecutorPlugin with Logging {
   private val checkingInterval: Long = 1000
   private var ctx: PluginContext = _
   private var dumped = false
-  private val DEBUG = KylinConfig.getInstanceFromEnv.isUTEnv
+  def DEBUG: Boolean = if (System.getProperty("enabledProfile") != null) true else false
 
   private val scheduledExecutorService = Executors.newScheduledThreadPool(1,
     new ThreadFactoryBuilder().setDaemon(true).setNameFormat("profiler-%d").build())

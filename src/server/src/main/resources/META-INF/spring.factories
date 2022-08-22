@@ -1,2 +1,2 @@
-org.springframework.boot.env.EnvironmentPostProcessor=org.apache.kylin.rest.KylinPrepareEnvListener
+org.springframework.boot.env.EnvironmentPostProcessor=org.apache.kylin.rest.KylinPrepareEnvListener,org.apache.kylin.rest.config.KylinPropertySourceConfiguration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=io.kyligence.kap.secondstorage.management.ManagementConfig
