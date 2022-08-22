@@ -47,6 +47,7 @@ public class PropertiesDelegate extends Properties {
 
     public void reloadProperties(Properties properties) {
         this.properties.clear();
+        if(configLoader != null) this.properties.putAll(configLoader.getProperties());
         this.properties.putAll(properties);
     }
 
