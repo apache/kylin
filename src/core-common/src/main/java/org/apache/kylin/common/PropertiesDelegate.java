@@ -98,11 +98,10 @@ public class PropertiesDelegate extends Properties {
         // When KylinExternalConfigLoader is enabled, properties is static
         if (configLoader == null || configLoader.getClass().equals(KylinExternalConfigLoader.class)) {
             return properties;
-        }
-        // When NacosExternalConfigLoader enabled, fetch config entries from remote for each call
-        // TODO: Kylin should call remote server in periodically, otherwise query concurrency
-        // maybe impacted badly
-        else if (configLoader.getClass().equals(NacosExternalConfigLoader.class)) {
+        } else if (configLoader.getClass().equals(NacosExternalConfigLoader.class)) {
+            // When NacosExternalConfigLoader enabled, fetch config entries from remote for each call
+            // TODO: Kylin should call remote server in periodically, otherwise query concurrency
+            // maybe impacted badly
             ConcurrentMap<Object, Object> propertiesView = Maps.newConcurrentMap();
             propertiesView.putAll(this.configLoader.getProperties());
             propertiesView.putAll(this.properties);
