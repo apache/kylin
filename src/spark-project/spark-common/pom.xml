@@ -22,7 +22,7 @@
     <modelVersion>4.0.0</modelVersion>
     <name>Kylin - Spark Common</name>
     <url>http://kylin.apache.org</url>
-    <description>Kylin  Job Engine - SPARK</description>
+    <description>Kylin Job Engine - SPARK</description>
 
     <artifactId>kylin-spark-common</artifactId>
 

@@ -80,10 +80,11 @@ public class KylinConfigExt extends KylinConfig {
     @Override
     public String getOptional(String prop, String dft) {
         String value = overrides.get(prop);
-        if (value != null)
+        if (value != null) {
             return getSubstitutor().replace(value);
-        else
+        } else {
             return super.getOptional(prop, dft);
+        }
     }
 
     @Override
