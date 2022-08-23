@@ -54,9 +54,14 @@ npm start
 npm deploy
 ```
 
-### TODO List
+### Website TODO List
 
-- Search in document
-- SEO
-- Multi Version
-- i18n
+- [x] Search in document
+- [ ] SEO
+- [ ] Multi Version
+- [ ] i18n
+
+### Tech Article
+- [ ] MetadataStore and Job Engine
+- [ ] New Frontend and New Modeling Process
+- [ ] Index Management
