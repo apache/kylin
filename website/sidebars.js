@@ -37,6 +37,10 @@ const sidebars = {
             items: [
                 {
                     type: 'doc',
+                    id: 'quickstart/quick_start',
+                },
+                {
+                    type: 'doc',
                     id: 'quickstart/expert_mode_tutorial',
                 },
                 {
@@ -214,9 +218,37 @@ const sidebars = {
                     ],
                 },
                 {
-                    type: 'doc',
-                    id: 'deployment/installation/uninstallation'
-                }
+                    type: 'category',
+                    label: 'Install and Uninstall',
+                    link: {
+                        type: 'doc',
+                        id: 'deployment/installation/intro',
+                    },
+                    items: [
+                        {
+                            type: 'category',
+                            label: 'Install On Platforms',
+                            link: {
+                                type: 'doc',
+                                id: 'deployment/installation/platform/intro',
+                            },
+                            items: [
+                                {
+                                    type: 'doc',
+                                    id: 'deployment/installation/platform/install_on_apache_hadoop',
+                                },
+                            ],
+                        },
+                        {
+                            type: 'doc',
+                            id: 'deployment/installation/uninstallation',
+                        },
+                        {
+                            type: 'doc',
+                            id: 'deployment/installation/install_validation',
+                        },
+                    ],
+                },
             ],
         },
         {
