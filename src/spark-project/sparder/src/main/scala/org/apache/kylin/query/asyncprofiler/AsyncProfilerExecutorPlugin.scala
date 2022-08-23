@@ -19,11 +19,10 @@
 package org.apache.kylin.query.asyncprofiler
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import org.apache.kylin.common.KylinConfig
 import org.apache.spark.api.plugin.{ExecutorPlugin, PluginContext}
 import org.apache.spark.internal.Logging
 
-import java.util
+import java.util.Map
 import java.util.concurrent.{Executors, TimeUnit}
 
 class AsyncProfilerExecutorPlugin extends ExecutorPlugin with Logging {
@@ -31,12 +30,11 @@ class AsyncProfilerExecutorPlugin extends ExecutorPlugin with Logging {
   private val checkingInterval: Long = 1000
   private var ctx: PluginContext = _
   private var dumped = false
-  private val DEBUG = KylinConfig.getInstanceFromEnv.isUTEnv
 
   private val scheduledExecutorService = Executors.newScheduledThreadPool(1,
     new ThreadFactoryBuilder().setDaemon(true).setNameFormat("profiler-%d").build())
 
-  override def init(_ctx: PluginContext, extraConf: util.Map[String, String]): Unit = {
+  override def init(_ctx: PluginContext, extraConf: Map[String, String]): Unit = {
     ctx = _ctx
     val profile = new Runnable {
       override def run(): Unit = checkAndProfile()
@@ -65,9 +63,7 @@ class AsyncProfilerExecutorPlugin extends ExecutorPlugin with Logging {
         case _ =>
       }
     } catch {
-      case e: Exception => if (!DEBUG) {
-        logInfo("error while communication/profiling", e)
-      }
+      case e: Exception => logInfo("error while communication/profiling", e)
     }
   }
 

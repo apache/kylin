@@ -215,18 +215,18 @@ then
     [[ ! -f ${full_input_file} ]] || rm -f ${full_input_file}
     echo "Hello Spark Client" >> ${full_input_file};
 
-    hadoop ${KYLIN_HADOOP_PARAM} fs -put -f ${full_input_file} ${KAP_WORKING_DIR}
+    hadoop ${KYLIN_HADOOP_PARAM} fs -put -f ${full_input_file} ${KYLIN_WORKING_DIR}
 
     spark_submit='$SPARK_HOME/bin/spark-submit '
-    spark_submit_conf=' --class org.apache.kylin.tool.setup.KapSparkTaskTestCLI --name Test  $KYLIN_SPARK_TEST_JAR_PATH ${KAP_WORKING_DIR}/${input_file} '
+    spark_submit_conf=' --class org.apache.kylin.tool.setup.KapSparkTaskTestCLI --name Test  $KYLIN_SPARK_TEST_JAR_PATH ${KYLIN_WORKING_DIR}/${input_file} '
     submitCommand=${spark_submit}${confStr}${spark_submit_conf}
     verbose "The submit command is: $submitCommand"
     eval $submitCommand
     if [ $? == 0 ];then
-        hadoop ${KYLIN_HADOOP_PARAM} fs -rm -r -skipTrash ${KAP_WORKING_DIR}/${input_file}
+        hadoop ${KYLIN_HADOOP_PARAM} fs -rm -r -skipTrash ${KYLIN_WORKING_DIR}/${input_file}
         rm -rf ${full_input_file}
     else
-        hadoop ${KYLIN_HADOOP_PARAM} fs -rm -r -skipTrash ${KAP_WORKING_DIR}/${input_file}
+        hadoop ${KYLIN_HADOOP_PARAM} fs -rm -r -skipTrash ${KYLIN_WORKING_DIR}/${input_file}
         rm -rf ${full_input_file}
         quit "ERROR: Test of submitting spark job failed,error when testing spark with spark configurations in Kyligence Enterprise!"
     fi
