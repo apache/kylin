@@ -1,5 +1,17 @@
 ---
-sidebar_position: 1
+title: How to package
+language: en
+sidebar_label: How to package
+pagination_label: How to package
+toc_min_heading_level: 2
+toc_max_heading_level: 6
+pagination_prev: null
+pagination_next: null
+keywords:
+    - package
+draft: false
+last_update:
+    date: 08/22/2022
 ---
 
 # How to package
@@ -24,6 +36,11 @@ sidebar_position: 1
 | -skipFront           | If add this option, front-end won't be build and packaging |
 | -skipCompile         | Add this option will assume java source code no need be compiled again |
 
+### Other Options for Packaging Script
+|         Option       |     Comment                                        | 
+|--------------------  | ---------------------------------------------------|
+| -P hadoop3           | Packaging a Kylin 5.0 software package for running on Hadoop 3.0 + platform.|
+
 ### Package Content
 
 |         Option       |     Comment    | 
@@ -46,6 +63,9 @@ For example, an unofficial package could be `apache-kylin-5.0.0-SNAPSHOT.2022081
 ## Case 2: Official apache release,  kylin binary for deploy on Hadoop3+ and Hive2.3+, 
 # and third party cannot be distributed because of apache distribution policy(size and license)
 ./build/release/release.sh -noSpark -official 
+
+## Case 3: A package for runing on Apache Hadoop 3 platform
+./build/release/release.sh -P hadoop3
 ```
 
 ### How to switch to older node.js

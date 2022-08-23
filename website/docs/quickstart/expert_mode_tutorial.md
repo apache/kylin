@@ -1,14 +1,14 @@
 ---
-title: Quick Start
+title: Expert Mode Tutorial
 language: en
-sidebar_label: Quick Start
-pagination_label: Quick Start
+sidebar_label: Expert Mode Tutorial
+pagination_label: Expert Mode Tutorial
 toc_min_heading_level: 2
 toc_max_heading_level: 6
 pagination_prev: null
 pagination_next: null
 keywords:
-      - quick start
+      - expert mode tutorial
 draft: true
 last_update:
       date: 08/12/2022
