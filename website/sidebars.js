@@ -867,7 +867,7 @@ const sidebars = {
                 },
                 {
                     type: 'doc',
-                    id: 'development/how_to_debug'
+                    id: 'development/how_to_debug_kylin_in_ide'
                 },
                 {
                     type: 'doc',
