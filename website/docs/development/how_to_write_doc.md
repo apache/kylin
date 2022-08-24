@@ -71,7 +71,7 @@ then, a local website of `http://localhost:3000` will automatically open in your
 
 [Docusaurus](https://docusaurus.io/) is a static-site generator. It builds a single-page application with fast client-side navigation, leveraging the full power of React to make your site interactive. It provides out-of-the-box documentation features but can be used to create any kind of site (personal website, product, blog, marketing landing pages, etc).
 
-Apache Kylin's newest website and documentation is using [Docusaurus](https://docusaurus.io/) to manage and generate final content which avaliable at [Newest Website](#TODO).
+Apache Kylin's website and documentation is using [Docusaurus](https://docusaurus.io/) to manage and generate final content which avaliable at [http://kylin.apache.org](http://kylin.apache.org).
 
 ## Kylin document structure and navigation menu
 
