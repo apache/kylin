@@ -11,13 +11,33 @@ keywords:
 - developer
 - debug
 draft: false
-last_update:
+last_update: 08/24/2022
 date: 08/23/2022
 ---
 
 # How to debug Kylin in IDEA using docker
 
-### Prepare IDEA and build source code
+## Background
+
+#### Why debug Kylin in IDEA using docker
+This article aims to introduce a simple and useful way to develop and debug Kylin for developer, and provided similar deployment to user's real scenario. 
+
+This guide assumes you use Laptop such as Macbook to do development work, and have another remote linux server for testing and deployment purpose.
+Windows is not verified at the moment.
+
+You have to prepare:
+- Docker Desktop on Mac(and Docker Engine on Linux Server if needed)
+- IntelliJ IDEA and kylin's source code
+
+Tips:
+It is **recommended** to use remote server to deploy Hadoop Cluster, because 7-8 containers may consume a lot of hardware resources and cause your laptop run slower than before.
+
+#### Deployment architecture
+Following is architecture of current deployment.
+
+![debug_in_laptop](images/debug_kylin_by_docker_compose.png)
+
+## Prepare IDEA and build source code
 #### Build source code
 - Build back-end source code before your start debug.
 ```shell
@@ -41,7 +61,7 @@ npm install
 
 ![sandbox.sh init](images/how-to-debug-01.png)
 
-### Prepare the Hadoop Cluster
+## Prepare the Hadoop Cluster
 
 #### Deploy Hadoop Cluster
 - Install latest docker desktop in your laptop
@@ -52,6 +72,12 @@ npm install
 # see more detail at : https://docs.docker.com/compose/reference/envvars/#docker_host
 export DOCKER_HOST=ssh://${USER}@${DOCKER_HOST}
 ```
+
+- Check available resource of your docker engine which you want to deploy Hadoop Cluster, make sure you leave 6 CPUs and 12 GB memory at least .
+
+Following is the setting page of Docker Desktop of MacBook.
+
+![resources](images/docker-engine-resource.png)
 
 - Deploy hadoop cluster via docker compose on laptop(or on remote machine)
 
@@ -87,13 +113,7 @@ Following output content shows all hadoop component are in health state.
 
 ![hive table](images/how-to-debug-04.png)
 
-### Debug Kylin in IDEA
-
-#### Deployment architecture
-- Following is architecture of current deployment.
-
-![debug_in_laptop](images/debug_kylin_by_docker_compose.png)
-
+## Debug Kylin in IDEA
 
 #### Start backend in IDEA
 
@@ -118,14 +138,23 @@ cd kystudio
 npm run devproxy
 ```
 
-![steup front end](images/how-to-debug-08.png)
-
-- Visit Kylin WEB UI in your laptop.
-
-![steup front end](images/how-to-debug-09.png)
+![setup front end](images/how-to-debug-08.png)
 
 
-### Command manual
+#### Validate Kylin's core functions
+
+- Visit Kylin WEB UI in your laptop
+
+![setup front end](images/how-to-debug-09.png)
+
+- Validate Cube Build and Query function
+
+![build job](images/local-build-succeed.png)
+
+![query a agg index](images/local-query-succeed.png)
+
+
+## Command manual
 1. Use `./dev-support/sandbox/sandbox.sh stop` to stop all containers
 2. Use `./dev-support/sandbox/sandbox.sh start` to start all containers
 3. Use `./dev-support/sandbox/sandbox.sh ps` to check status of all containers
