@@ -82,7 +82,7 @@ public class DefaultFetcherRunner extends FetcherRunner {
                 }
                 if ((outputDigest.getState() != ExecutableState.READY)) {
                     // logger.debug("Job id:" + id + " not runnable");
-                    jobStateCount(id);
+                    jobStateCount(id, outputDigest);
                     continue;
                 }
 

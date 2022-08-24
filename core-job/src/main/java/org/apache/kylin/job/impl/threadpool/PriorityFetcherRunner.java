@@ -112,7 +112,7 @@ public class PriorityFetcherRunner extends FetcherRunner {
                     continue;
                 }
                 if ((outputDigest.getState() != ExecutableState.READY)) {
-                    jobStateCount(id);
+                    jobStateCount(id, outputDigest);
                     continue;
                 }
 

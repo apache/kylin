@@ -73,8 +73,8 @@ public abstract class FetcherRunner implements Runnable {
         }
     }
     
-    protected void jobStateCount(String id) {
-        final Output outputDigest = getExecutableManager().getOutputDigest(id);
+    protected void jobStateCount(String id, final Output outputDigest) {
+        // final Output outputDigest = getExecutableManager().getOutputDigest(id);
         // logger.debug("Job id:" + id + " not runnable");
         if (outputDigest.getState() == ExecutableState.SUCCEED) {
             succeedJobs.add(id);
@@ -90,6 +90,8 @@ public abstract class FetcherRunner implements Runnable {
                 getExecutableManager().forceKillJob(id);
                 nError++;
             } else {
+                // To avoid long fake runs：Assert outputDigest.state is RUNNING, but RUNNING should in context.getRunningJobs
+                getExecutableManager().forceKillJob(id);
                 nOthers++;
             }
         }
