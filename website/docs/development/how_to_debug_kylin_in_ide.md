@@ -8,11 +8,11 @@ toc_max_heading_level: 6
 pagination_prev: null
 pagination_next: null
 keywords:
-- developer
-- debug
+    - developer
+    - debug
 draft: false
-last_update: 08/24/2022
-date: 08/23/2022
+last_update:
+    date: 08/24/2022
 ---
 
 # How to debug Kylin in IDEA using docker

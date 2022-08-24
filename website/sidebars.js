@@ -11,7 +11,6 @@
 
 // @ts-check
 
-/** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
     // By default, Docusaurus generates a sidebar from the docs folder structure
     DownloadSideBar: [
@@ -876,6 +875,10 @@ const sidebars = {
                 {
                     type: 'doc',
                     id: 'development/how_to_release'
+                },
+                {
+                    type: 'doc',
+                    id: 'development/how_to_write_doc'
                 },
             ],
         },
