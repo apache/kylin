@@ -19,16 +19,32 @@ We write documents in MD format and convert to HTML using [Docusaurus](https://d
 
 The [Docusaurus](https://docusaurus.io/) generated HTML gets uploaded to apache SVN and becomes Kylin website. All MD source files are managed in git so all changes and contributors are clearly tracked.
 
+## Quick edit a page
+
+If you found some minor typos or mistakes on a page, you can quickly fix the page and create a commit.
+
+Just scroll down the page to the bottom and click the `Edit this page`.
+
+![](images/how-to-write-doc-01.png)
+
+Edit the page.
+![](images/how-to-write-doc-03.png)
+
+Create a commit.
+![](images/how-to-write-doc-04.png)
+
+> Note: If you want to add documentation or some more changes, please do as following steps.
+
 ## Before your work
 
 Before you add or edit documentation, please deploy the document compilation environment.
 
 There are two steps:
 
-- [Deploy a local document compilation environment](#Deploy a local document compilation environment)
-- [Download docs repo and configuration](#Download docs repo and configuration)
+- [Deploy a local document compilation environment](#Deploy)
+- [Download docs repo and configuration](#Download)
 
-### <span id="Deploy a local document compilation environment">Deploy a local document compilation environment</span>
+### <span id="Deploy">Deploy a local document compilation environment</span>
 
 Install following tools before you add or edit documentation:  
 
@@ -41,7 +57,7 @@ Install following tools before you add or edit documentation:
 
 2. And optionally any markdown editor you prefer
 
-### <span id="Download docs repo and configuration">Download docs repo and initialization</span>
+### <span id="Download">Download docs repo and initialization</span>
 
 1. Download the doc repo to any path you prefer.
 
@@ -53,7 +69,7 @@ git clone --branch doc5.0 https://github.com/apache/kylin.git # Or git clone -b 
 2. After pre-step, install dependencies for prerequisite of doc.
    
 ```shell
-cd /path/to/repo
+cd /path/to/repo/website
 npm install
 ```
 
@@ -65,7 +81,7 @@ npm run start
    
 then, a local website of `http://localhost:3000` will automatically open in your default browser and no errors occurred.
 
-![](images/how-to-write-doc-01.png)
+![](images/how-to-write-doc-02.png)
 
 ## About [Docusaurus](https://docusaurus.io/)
 
@@ -259,4 +275,4 @@ npm run start
 ```
 Then access http://127.0.0.1:3000 in your browser.
 
-## How to publish to website (for committer only) (#TODO)
+If everything is normal, create a pull request to [Apache Kylin Repo](https://github.com/apache/kylin) and target branch is `doc5.0`.
