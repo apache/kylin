@@ -7,6 +7,7 @@
     <ModelsExportModal />
     <ModelsImportModal />
     <ModelERDiagramModal />
+    <EditProjectConfigDialog />
   </div>
 </template>
 
@@ -21,6 +22,7 @@ import ProjectEditModal from '../ProjectEditModal/ProjectEditModal.vue'
 import ModelsExportModal from '../ModelsExportModal/ModelsExportModal.vue'
 import ModelsImportModal from '../ModelsImportModal/ModelsImportModal.vue'
 import ModelERDiagramModal from '../ModelERDiagramModal/ModelERDiagramModal'
+import EditProjectConfigDialog from '../EditProjectConfigDialog'
 
 @Component({
   computed: {
@@ -35,7 +37,8 @@ import ModelERDiagramModal from '../ModelERDiagramModal/ModelERDiagramModal'
     ModelsExportModal,
     ModelsImportModal,
     ProjectEditModal,
-    ModelERDiagramModal
+    ModelERDiagramModal,
+    EditProjectConfigDialog
   }
 })
 export default class Modal extends Vue {

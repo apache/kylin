@@ -344,6 +344,9 @@ import { pageRefTags, pageCount } from 'config'
     ...mapMutations({
       updateSCD2Enable: 'UPDATE_SCD2_ENABLE',
       updateMultiPartitionEnable: 'UPDATE_MULTI_PARTITION_ENABLE'
+    }),
+    ...mapActions('EditProjectConfigDialog', {
+      callProjectConfigModal: 'CALL_MODAL'
     })
   },
   computed: {
