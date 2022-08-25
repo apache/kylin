@@ -20,8 +20,8 @@ Apache Kylin is always looking for contributions of not only code, but also usag
 ## Source Branches
 Both code and document are under Git source control. Note the purpose of different branches.
 
-* `kylin5`: Development branch for a certain major release for v5.x
-* `doc5.0`: Document branch for V5.x
+* `kylin5`: Development branch for v5.x
+* `doc5.0`: Document branch for v5.x
 
 * `main`: Maintenance branch for a certain major release for v4.x
 * `2.[n].x`: Maintenance branch for a certain major release for v2.x
@@ -29,11 +29,7 @@ Both code and document are under Git source control. Note the purpose of differe
 * `document`: Document branch for V4.x and before
 
 ## Pick a task
-There are open tasks waiting to be done, tracked by JIRA. To make it easier to search, there are a few JIRA filters.
-
-* [A list of tasks](https://issues.apache.org/jira/issues/?filter=12339895) managed by Yang Li.
-* [A list of tasks](https://issues.apache.org/jira/issues/?filter=12341496) opened by Ted Yu, important small bugs and some are easy fixes.
-* Also you can search for tag "newbie" in Kylin JIRA.
+There are open tasks waiting to be done, tracked by JIRA.
 
 Do not forget to discuss in [mailing list](#TODO) before working on a big task.
 
@@ -76,13 +72,13 @@ git clone https://github.com/<YourUserName>/kylin.git
 
 Once the repo is cloned, you need to do two things:
 
-1. Create a new branch by issuing the command:
+* Create a new branch by issuing the command:
 
 ```shell
 git checkout -b new_branch
 ```
 
-2. Create a new remote for the upstream repo with the command:
+* Create a new remote for the upstream repo with the command:
 
 ```shell
 git remote add upstream https://github.com/apache/kylin.git
@@ -135,4 +131,4 @@ Patches that span components need at least two +1s before they can be committed,
 Any -1 on a patch by anyone vetoes a patch; it cannot be committed until the justification for the -1 is addressed.
 
 ## Making Document Changes
-Check out [How to Write Document](how_to_write_doc.md).
+Check out [How to Write Document](./how_to_write_doc).

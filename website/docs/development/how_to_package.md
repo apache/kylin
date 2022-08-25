@@ -64,7 +64,7 @@ For example, an unofficial package could be `apache-kylin-5.0.0-SNAPSHOT.2022081
 # and third party cannot be distributed because of apache distribution policy(size and license)
 ./build/release/release.sh -noSpark -official 
 
-## Case 3: A package for runing on Apache Hadoop 3 platform
+## Case 3: A package for Apache Hadoop 3 platform
 ./build/release/release.sh -P hadoop3
 ```
 
@@ -73,9 +73,11 @@ For example, an unofficial package could be `apache-kylin-5.0.0-SNAPSHOT.2022081
 If you install node.js which is higher than 14.X, I recommended you downgrade to lower version with some tools like https://github.com/nvm-sh/nvm.
 
 ```shell
-## switch to specific version
+## Switch to specific version using nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 nvm install 12.14.0
+
+## Before packaging, please switch to specific version 
 nvm use 12.14.0
 
 ## switch to original version
