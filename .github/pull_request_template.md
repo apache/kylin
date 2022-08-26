@@ -2,14 +2,10 @@
 
 Describe the big picture of your changes here to communicate to the maintainers why we should accept this pull request. If it fixes a bug or resolves a feature request, be sure to link to that issue.
 
-## Github Branch 
-
-As most of the development works are on Kylin 4, we need to switch it as main branch. Apache Kylin community changes the branch settings on Github since 2021-08-04 :
-
-1. The default branch _main_ is for **Kylin 4.x** (Parquet storage);
-2. The original branch _master_ for **Kylin 3.x** (HBase storage) has been renamed to **kylin3** ;
-
-Please check [Intro to Kylin 4 architecture](https://kylin.apache.org/blog/2021/07/02/Apache-Kylin4-A-new-storage-and-compute-architecture/) and [INFRA-22166](https://issues.apache.org/jira/browse/INFRA-22166) if you are interested.
+## Branch to commit
+- [ ] Branch **kylin3** for v2.x to v3.x
+- [ ] Branch **kylin4** for v4.x
+- [ ] Branch **kylin5** for v5.x
 
 ## Types of changes
 
@@ -25,7 +21,7 @@ _Put an `x` in the boxes that apply_
 
 _Put an `x` in the boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This is simply a reminder of what we are going to look for before merging your code._
 
-- [ ] I have create an issue on [Kylin's jira](https://issues.apache.org/jira/browse/KYLIN), and have described the bug/feature there in detail
+- [ ] I have created an issue on [Kylin's jira](https://issues.apache.org/jira/browse/KYLIN), and have described the bug/feature there in detail
 - [ ] Commit messages in my PR start with the related jira ID, like "KYLIN-0000 Make Kylin project open-source"
 - [ ] Compiling and unit tests pass locally with my changes
 - [ ] I have added tests that prove my fix is effective or that my feature works
