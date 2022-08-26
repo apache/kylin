@@ -145,7 +145,7 @@ public class JobService extends BasicService implements JobSupporter {
 
     private static final Map<String, String> jobTypeMap = Maps.newHashMap();
 
-    private static final String TOTAL_DURATION = "total_duration";
+    private static final String DURATION = "duration";
     private static final String LAST_MODIFIED = "last_modified";
     public static final String EXCEPTION_CODE_PATH = "exception_to_code.json";
     public static final String EXCEPTION_CODE_DEFAULT = "KE-030001000";
@@ -233,8 +233,8 @@ public class JobService extends BasicService implements JobSupporter {
 
     private List<ExecutableResponse> sortTotalDurationList(List<ExecutableResponse> result, final JobFilter jobFilter) {
         //constructing objects takes time
-        if (StringUtils.isNotEmpty(jobFilter.getSortBy()) && jobFilter.getSortBy().equals(TOTAL_DURATION)) {
-            Collections.sort(result, propertyComparator(TOTAL_DURATION, !jobFilter.isReverse()));
+        if (StringUtils.isNotEmpty(jobFilter.getSortBy()) && jobFilter.getSortBy().equals(DURATION)) {
+            Collections.sort(result, propertyComparator(DURATION, !jobFilter.isReverse()));
         }
         return result;
     }
