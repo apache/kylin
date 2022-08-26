@@ -34,7 +34,7 @@ last_update:
 - HTTP Body: JSON Object
   - `name` - `required` `string`, project name.
   - `description` - `optional` `string`, project description.
-  - `maintain_model_type` - `required` `string`, project type, `MANUAL_MAINTAIN` for AI augmented mode.
+  - `maintain_model_type` - `required` `string`, project type, `MANUAL_MAINTAIN` for default.
 
 
 - Curl Request Example

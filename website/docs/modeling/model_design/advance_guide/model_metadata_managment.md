@@ -130,4 +130,4 @@ You can also export and import model metadata through API. For details, please r
 
 ### Known limitation {#know_limitation}
 - **After the model is imported, it cannot be undone. Please make a backup of the model in advance**.
-- Only supports export and import between the first two versions of the same version number. For example, the model metadata package exported by Kylin 4.2.x does not support importing in Kylin 4.3.x.
+- Only supports export and import between the first two versions of the same version number. For example, the model metadata package exported by Kylin 4.x does not support importing in Kylin 5.x.

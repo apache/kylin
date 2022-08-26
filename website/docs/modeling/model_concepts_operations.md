@@ -28,7 +28,7 @@ Model design refers to build the star model or snowflake model based on data tab
 
 1. Log in to Web UI, switch to a project.
 
-2. Navigate to **Data Asset -> Model** page, where models are shown in a list. The picture below is the index group list in AI augmented mode:
+2. Navigate to **Data Asset -> Model** page, where models are shown in a list. The picture below is the index group list:
 
 	![Model List](images/model_list.png)
 	
@@ -70,7 +70,7 @@ Model design refers to build the star model or snowflake model based on data tab
 
 ### <span id="operation">Model Operation</span>
 
-You are only allowed to operate on models in **AI augmented mode**. You can hover on the righ tmost column **Actions** of the model list to get the action names. Specific actions are listed below:
+You are only allowed to operate on models. You can hover on the right most column **Actions** of the model list to get the action names. Specific actions are listed below:
 
 - **Edit**: Click on the pencil shape button, enter into the model editing page.
 
@@ -100,7 +100,7 @@ You are only allowed to operate on models in **AI augmented mode**. You can hove
 
 - **Online**: Makes a *Offline* model online. An online model should be able to answer related queries.
 
-> **Note:** If the model is in *BROKEN* status, only the delete operation is allowed.
+> **Note:** If the model is in *BROKEN* status, only the **delete** operation is allowed.
 
 
 ### <span id="more">Model Details</span>

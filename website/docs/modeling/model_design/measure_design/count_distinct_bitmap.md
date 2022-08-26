@@ -17,7 +17,7 @@ last_update:
 
 Count Distinct is a frequently used function for many data analysts. We implement precise Count Distinct based on bitmap. For the data with type tiny int(byte), small int(short) and int, the value projects onto the bitmap directly. For the data with type long, string, and others, encode the value as String onto a dict and project the dict id onto the bitmap. The resulting measure is the serialized data of the bitmap, not just the count value. This ensures results are always correct within any segment, even roll-up across segments.
 
-In the project of Kylin 5 the Count Distinct (Precise) measure is customizable.
+In the project of Kylin 5, the Count Distinct (Precise) measure is customizable.
 
 
 

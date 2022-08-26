@@ -14,9 +14,6 @@ last_update:
     date: 08/19/2022
 ---
 
-
-## Full Load
-
 If you want to load all the data in the source table, you can choose full load. The main contents are as follows:
 
 - [<span id="expert">Full Load</span>](#full-load-in-ai-augmented-mode-project)

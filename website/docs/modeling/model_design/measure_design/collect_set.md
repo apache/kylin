@@ -15,7 +15,7 @@ last_update:
 ---
 
 
-From v5, Kylin supports the COLLECT_SET function, which returns a set of unique elements as an array. The syntax is `COLLECT_SET(column)`. In smart mode, the product recommends the index containing the COLLECT_SET measure based on your query. In AI augmented mode the COLLECT_ SET measure is customizable.
+From Kylin 5, Kylin supports the COLLECT_SET function, which returns a set of unique elements as an array. The syntax is `COLLECT_SET(column)`. The COLLECT_ SET measure is customizable.
 
 
 

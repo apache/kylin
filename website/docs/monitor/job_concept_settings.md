@@ -51,13 +51,13 @@ You can view the job details in the navigation bar **Monitor -> Job**. As shown 
 
    > **Attention**: The start time of loading data must be greater than the end time of the loaded data.
 
-   - In AI augmented mode, in the navigation bar **Data Asset -> Model**, loading data within a time range of the model will trigger the job.
+   - In the navigation bar **Data Asset -> Model**, loading data within a time range of the model will trigger the job.
 
 3. **Merge Data**: When the system detects a sufficient number of segments, it will automatically trigger the job of merging data. You can set the parameters of merging segments in the navigation bar **Setting -> Segment Settings**. For detailed message, you can refer to [Segment Operation and Settings](../modeling/load_data/segment_operation_settings/intro.md).
 
 4. **Refresh Data**: Job for refreshing segments.
 
-   - In AI augmented mode, in the navigation bar **Data Asset -> Model**, refreshing data of a specified segment in the specified model will trigger the job.
+   - In the navigation bar **Data Asset -> Model**, refreshing data of a specified segment in the specified model will trigger the job.
 
      > **Attention**：If you refresh n segments at the same time, it will trigger n jobs to refresh the data, and arrange them in the job queue according to the chronological order of original segments. You can view them in the **Monitor -> Job** bar.
      

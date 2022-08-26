@@ -22,7 +22,7 @@ Kylin provides table index function to support querying on raw data. To create a
 
 In the **Data Asset -> Model** page, click the model name，then click **Index** and click **Table Index** button under **+ Index** in the **Index Overview** tab or **+**(Add Table Index) button in the **Table Index** tab to enter the **Add Table Index** page. You can edit the table index in the pop-up window shown below and put the required column in a table index.
 
-![Add Table Index](images/table_index_1.png)
+![Add Table Index](images/table_index/table_index_1.png)
 
 The fields are defined as follows:
 
@@ -53,7 +53,7 @@ You can add multiple table indices. After building the table index and loading d
 
 
 
-###View Table Index
+### View Table Index
 
 In the **Data Asset -> Model** page, click the model name and click **Index**. Under the **Index Overview** tab, you can view the details of table index.
 
@@ -62,7 +62,7 @@ You can click the icon beside the status and see the details in View Index Detai
 If you need to add base indexes when there is no base index or when a base index is missing. Click **+ Index** to add the base indexes in the drop-down box.
 
 
-![View Table Index](images/index_1.png)
+![View Table Index](images/table_index/index_1.png)
 
 
 For more information about the Index List, such as the index status, please refer to the [Aggregate Index](aggregation_group.md) section.

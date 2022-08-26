@@ -50,28 +50,6 @@ const sidebars = {
         },
         {
             type: 'category',
-            label: 'Tutorial',
-            items: [
-                {
-                    type: 'doc',
-                    id: 'tutorial/create-a-page'
-                },
-                {
-                    type: 'doc',
-                    id: 'tutorial/create-a-document'
-                },
-                {
-                    type: 'doc',
-                    id: 'tutorial/create-a-blog-post'
-                },
-                {
-                    type: 'doc',
-                    id: 'tutorial/deploy-your-site'
-                },
-            ]
-        },
-        {
-            type: 'category',
             label: 'Deployment',
             link: {
                 type: 'doc',
