@@ -26,7 +26,7 @@
         :width="320"
         prop="name">
       </el-table-column>
-      <el-table-column
+      <!-- <el-table-column
         :label="$t('type')"
         show-overflow-tooltip
         :width="120"
@@ -34,7 +34,7 @@
         <template slot-scope="scope">
           {{scope.row.maintain_model_type === projectType.auto ? $t('autoType') : $t('manualType')}}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column
         :label="$t('owner')"
         :width="220"
@@ -63,8 +63,8 @@
             <router-link :to="{path: '/admin/project/' + scope.row.name, query: {projectId: scope.row.uuid}}">
               <i class="el-icon-ksd-security ksd-mr-10 ksd-fs-14" v-if="projectActions.includes('accessActions')"></i>
             </router-link>
-          </el-tooltip><!--
-          --><common-tip :content="$t('kylinLang.common.moreActions')">
+          </el-tooltip>
+          <common-tip :content="$t('kylinLang.common.moreActions')">
             <el-dropdown trigger="click">
               <i class="el-icon-ksd-table_others"></i>
               <el-dropdown-menu slot="dropdown" class="project-dropdown">

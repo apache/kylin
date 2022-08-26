@@ -327,6 +327,10 @@ export default class ModelActions extends Vue {
     {value: 'TABLEAU_CONNECTOR_TDS', text: 'connectTableau'}
   ]
 
+  created () {
+    console.log(this.metadataActions)
+  }
+
   // 处理每行的构建按钮的 disable 状态
   disableLineBuildBtn (row) {
     if (row.model_type === 'STREAMING') {
