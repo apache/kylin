@@ -14,7 +14,7 @@ last_update:
     date: 08/19/2022
 ---
 
-In the incremental build mode, as the number of segments increases, the system may need to aggregate multiple segments to serve the query, which degrades the query performance and the query performance decreases. At the same time, a large number of small files will put pressure on the HDFS Namenode and affect the HDFS performance. Kyligence Enterprise provides a mechanism to control the number of segments - **Segments Merge **.
+In the incremental build mode, as the number of segments increases, the system may need to aggregate multiple segments to serve the query, which degrades the query performance and the query performance decreases. At the same time, a large number of small files will put pressure on the HDFS Namenode and affect the HDFS performance. Apache Kylin provides a mechanism to control the number of segments - **Segments Merge **.
 
 
 ### <span id="manual">Manual Merge</span>
@@ -28,7 +28,7 @@ In the web GUI
 
 ### <span id="auto">Auto Merge</span>
 
-Merging Segments is very simple, but requires manual triggering of the merge from time to time. When there are multiple projects and models in the production environment, it becomes very cumbersome to trigger the merge operation one by one. Therefore, Kyligence Enterprise provides a segment automatic merging solution.
+Merging Segments is very simple, but requires manual triggering of the merge from time to time. When there are multiple projects and models in the production environment, it becomes very cumbersome to trigger the merge operation one by one. Therefore, Apache Kylin provides a segment automatic merging solution.
 - [Auto-Merge settings](#setting)
 - [Auto-merge strategy](#strategy)
 - [Choose Segment](#choose)

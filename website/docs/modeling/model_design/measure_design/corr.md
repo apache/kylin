@@ -28,8 +28,8 @@ CORR function will return a value to find the relationship between the two varia
 The query example in Kylin is as below:
 
 ```sql
-SELECT corr(ITEM_COUNT, PRICE)
-FROM TEST_KYLIN_FACT
+SELECT corr(LO_ORDTOTALPRICE, LO_SHIPPRIOTITY)
+FROM SSB.P_LINEORDER
 ```
 
 

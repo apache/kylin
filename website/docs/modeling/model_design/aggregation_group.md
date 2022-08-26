@@ -321,7 +321,7 @@ At the same time, according to laboratory test data, it is found that when the n
 
 Click **Data Asset -> Model** in the left navigation bar to enter the **Model List** page, then click the model name and  you can view the details of aggregate index in **Index-Index Overview**. 
 
-![Index](images/index_1.png)
+![Index](images/table_index/index_1.png)
 
 You can enter the index ID or index content in the **Search** box to filter the index. Index content includes the dimensions, measures, and columns contained in the index, the index content is fuzzy filtering, and the index ID is precisely filtered. You can click the button in the **Content** column to view the index details. What's more. you can edit and delete Custom(Table Index), and for other kinds of indexes, you can only delete.
 On the top of the list, you can see data range. Once you have already build index, it will show the time range of the data loaded in the index.If it is **full load**, the data range will show **full load**.
@@ -372,7 +372,7 @@ The details page shows the combination of dimensions and all measures in the ind
 
 ### <span id="advanced">Advanced Settings</span>
 
-In the aggregate index of AI augmented mode, you can set the ShardBy column, and the data will be stored according to the column fragmentation to improve query efficiency. You can set the filter dimension or grouping dimension frequently used in the query as the ShardBy column according to the cardinality from high to low. In current version, you can only set one ShardBy column.
+In the aggregate index, you can set the ShardBy column, and the data will be stored according to the column fragmentation to improve query efficiency. You can set the filter dimension or grouping dimension frequently used in the query as the ShardBy column according to the cardinality from high to low. In current version, you can only set one ShardBy column.
 
 > Note: The ShardBy column is applied to all custom aggregate indexes.
 

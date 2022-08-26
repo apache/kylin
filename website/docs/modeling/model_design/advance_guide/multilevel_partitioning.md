@@ -40,7 +40,7 @@ You can enable or disable support for multi-level partitioning in the model **Se
 
 After enabling multi-level partitioning, you can create a model in **Data Asset- Model- +Model**. Then you can choose to add sub-partition columns when saving the model, and the types currently supported as sub-partition columns are **tinyint,smallint,int/integer,bigint,double,decimal,timestamp,date,varchar,char,boolean**.
 
-<img src="./images/multilevel_partitioning_model_save.en.png" width="40%"/>
+![](images/multilevel_partitioning_model_save.png)
 
 Or you can adjust the sub-partition column in **Model List-...(More Actions)-Model Partition**.
 

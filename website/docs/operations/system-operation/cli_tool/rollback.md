@@ -46,7 +46,7 @@ When a user error causes metadata or data loss, or when Kylin is unavailable due
 
 Below is a common scenario of using the rollback tool in the operational process, describing how the tool can be used to roll back and downgrade issues in the event of product agnostic issues.
 
-- In AI augmented mode, the `rollback_example` project has recommendation with recommendation mode turned on. If the user accepts the recommendations under the model at 16:06:05 on September 1, 2020, then the original model of this project and the metadata related to the index will be updated.
+- The `rollback_example` project has recommendation with recommendation mode turned on. If the user accepts the recommendations under the model at 16:06:05 on September 1, 2020, then the original model of this project and the metadata related to the index will be updated.
   ![accept_recommendations](images/accept_en.png)
 - At this point, it can be seen that the index recommended by the system has been generated, but at this point there is an unknown problem, which results in the index not being built properly and affects the health of the entire cluster, and the product is also in an inoperable state.
 - To guarantee production availability, the rollback tool can be used to roll back the metadata and data for this item to 15:20 on September 1.

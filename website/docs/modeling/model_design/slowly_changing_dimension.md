@@ -25,7 +25,7 @@ Dealing with this issue involves SCD management methodologies referred to as Typ
 
 For SCD Type 2（subsequently referred to as "SCD2"), Only supports the model based on the History Table, Below screen-shot illustrates the basics:
 
-![SCD2 Model](./images/scd2/model_SCD2_5x.png)
+![SCD2 Model](images/scd2/model_SCD2_5x.png)
 
 ### History Table
 
@@ -58,7 +58,7 @@ Every time Zhang San change his work location, the History Table adds a new line
 In order to be able to query the historical information of the History Table, the fact table is often used to filter the start and end dates of the History Table records, like`LO_ORDERDATE>=START_DATE AND LO_ORDERDATE<END_DATE`
 As shown below:
 
-<img src="images/scd2/model_historical_dimension_table_scd2_join.en.png" alt="model_historical_dimension_table_scd2_join " style="zoom:50%;" />
+![model_historical_dimension_table_scd2_join](images/scd2/model_historical_dimension_table_scd2_join.png)
 
 In order to use the History Table to meet the demand for slow dimensions, you can click **Setting -> Advanced Settings -> Support History Table** to turn on the function of supporting History Table. As shown below:
 

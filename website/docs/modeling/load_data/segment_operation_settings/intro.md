@@ -26,7 +26,7 @@ User can access the Segment management interface by following these steps:
 1. Open **Data Asset -> Model** page, and click the model (index group) name.
 2. Select **Segment** tag.
 
-The model list page in the AI augmented mode project is shown as below.
+The model list page in the project is shown as below.
 
 ![segment](images/segment.png)
 

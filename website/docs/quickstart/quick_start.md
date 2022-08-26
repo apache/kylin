@@ -220,7 +220,7 @@ When the metadata is loaded successfully, at the **Insight** page, 6 sample hive
 ```sql
 SELECT LO_PARTKEY, SUM(LO_REVENUE) AS TOTAL_REVENUE
 FROM SSB.P_LINEORDER
-WHERE LO_ORDERDATE between '19930601' AND '19940601' 
+WHERE LO_ORDERDATE between '1993-06-01' AND '1994-06-01' 
 group by LO_PARTKEY
 order by SUM(LO_REVENUE) DESC 
 ```

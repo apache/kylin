@@ -59,7 +59,6 @@ This section will describe the supported computed columns in Kylin, which includ
   - Expression only containing constants is not recommended to create computed column, such as  `POWER(CAST(2 AS DOUBLE), 2)`.
   - If a function expression contains a column using the keywords as column name, it cannot be recommended as a computed column. For more details about keywords, please refer the **Keywords** section in  [SQL Specification](../../../query/insight/sql_spec.en.md). 
   - Computed columns only support `Hive` data source in current version.
-  - JDBC-based syntax expressions only supported in smart mode project rather than in AI augmented mode project. For example, we cannot support `{FN CONVERT(PRICE, SQL_BIGINT)}` as a computed column expression in AI augmented mode project. 
   - Computed columns cannot be used as time partition columns and join keys.
   - If a function expression contains a table name or column name that is not started with letters or includes special characters, need to double quote this name. For example: `"100_KYLIN_SALES"."100_PRICE" * "100_KYLIN_SALES"."200_ITEM_COUNT"`
 
@@ -78,33 +77,33 @@ We want to define two computed columns on this fact table, `T_PRICE_PER_ITEM` to
 
 First, click the button **CC** marked in the picture. Then a window of **Computed Column** will pop up. 
 
-![Add a computed column](images/computed_column/cc_en_1.png)
+![Add a computed column](images/computed_column/cc_1.png)
 
 Secondly, click the button **+** in this window,  and a dialog box of **Add Computed Column** will pop up. Please fill in the following information:
 
 - `Column name`: Defines the name of the computed column.
 - `Expression`: Calculates the calculation logic for the column.
 
-![Define a computed column](images/computed_column/cc_en_2.png)
+![Define a computed column](images/computed_column/cc_2.png)
 
 Third, click the button **Submit**, the system will verify whether the name or the expression of the computed column is legal. If anything is wrong, the system will give you a tip, please correct it and resubmit. Once the computed column is created, you will see it on the fact table. As shown below, `T_PRICE_PER_ITEM` appears in the fact table `P_LINEORDER`.
 
-![Display a computed column](images/computed_column/cc_en_3.png)
+![Display a computed column](images/computed_column/cc_3.png)
 
 Finally, after creating the computed column, click the button **+** in the window of **Dimension** to add a new dimension which is based on the computed column `YEAR_OF_ORDER`, as shown below:
 
-![Add a dimension relies on computed column](images/computed_column/cc_en_4.png)
+![Add a dimension relies on computed column](images/computed_column/cc_4.png)
 
 Also, click the button **+** in the window of **Measure** to add a new measure `TOTAL_PRICE` which is based on computed column `T_PRICE_PER_ITEM`, as shown below:
 
-![Add a measure relies on computed column](images/computed_column/cc_en_5.png)
+![Add a measure relies on computed column](images/computed_column/cc_5.png)
 
 
 ### <span id="edit">Edit Computed Columns</span>
 
 In some cases, we need to change the expression to adapt some business scenario changes. At this point, we can modify the expressions of the computable columns directly by editing the model.
 
-![edit computed column](images/computed_column/cc_en_11.png)
+![edit computed column](images/computed_column/cc_11.png)
 
 However, there are few limitations and attentions.  Please read the following limitations carefully before using it:
 
@@ -121,7 +120,7 @@ You can use computed columns in an aggregate index or in a table index. Let's ta
 
 Firstly, click the model name to get more information in the **Data Asset->Model** page. Then we need to click **Index** to enter the **Index Overview** page as shown below. Click **+ Index** to add index.
 
-![Use computed column](images/computed_column/cc_en_6.png)
+![Use computed column](images/computed_column/cc_6.png)
 
 After the submission is successful, we have completed the basic usage about computed columns including:
 
@@ -189,11 +188,11 @@ Expression of computed column can be nested by other computed columns. You can d
 Here, we will introduce how to create a nested computed column. For example, we want to create column `D_PRICE_PER_ITEM = 2 * T_PRICE_PER_ITEM`. `D_PRICE_PER_ITEM` is the name of this nested computed column and  `T_PRICE_PER_ITEM` is a predefined computed column. 
 
 First, define a computed column named `T_PRICE_PER_ITEM`, click **Submit**
-![Create a computed column](images/computed_column/cc_en_2.png)
+![Create a computed column](images/computed_column/cc_2.png)
 
 Second, define a computed column named `D_PRICE_PER_ITEM` and the expression is `2 * T_PRICE_PER_ITEM`.
 
-![Create a nested computed column](images/computed_column/cc_en_8.png)
+![Create a nested computed column](images/computed_column/cc_8.png)
 
 After clicking **Submit** button, it will automatically validate the computed column expression. Then you will see the computed column information shown in the figure above.
 

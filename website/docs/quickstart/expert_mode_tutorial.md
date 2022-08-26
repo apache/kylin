@@ -21,7 +21,7 @@ Kylin 5.0 provides which the modeling process dominated by user. In this section
 
 1. Kylin 5.0 provides one mode:  You are able to design your own models to fulfill your analysis demands and load data for your models. You can design the index manually and let the system continue to improve the index according your query habits and data characteristics.
 	
-2. We will use the SSB (Star Schema Benchmark) sample data to introduce the AI augmented mode project. You can find out how to import the sample data in the [Import Data from Hive](../datasource/import_hive.md) section.
+2. We will use the SSB (Star Schema Benchmark) sample data to introduce the project. You can find out how to import the sample data in the [Import Data from Hive](../datasource/import_hive.md) section.
 
 
 ### <span id="project">Create Project</span>

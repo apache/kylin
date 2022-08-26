@@ -44,14 +44,14 @@ For example:
 
 ```sql
 select
-  sum(case when ORDERPRIOTITY='1-URGENT' then ORDTOTALPRICE else null end)
-from LINEORDER
+  sum(case when LO_ORDERPRIOTITY='1-URGENT' then LO_ORDTOTALPRICE else null end)
+from SSB.LO_LINEORDER
 ```
 
 In order to run this SQL, set your model as below in addition to enable sum(expression):
 
-- Define all columns in the `when` clause as dimensions, like the `ORDERPRIOTITY` in this example.
-- Define all columns in the `then` clause as Sum measure, like the `sum(ORDTOTALPRICE)` in this example.
+- Define all columns in the `when` clause as dimensions, like the `LO_ORDERPRIOTITY` in this example.
+- Define all columns in the `then` clause as Sum measure, like the `sum(LO_ORDTOTALPRICE)` in this example.
 
 Then, the model will be able to run the above SQL.
 
@@ -62,12 +62,12 @@ Then, the model will be able to run the above SQL.
 For example:
 
 ```sql
-select sum(ORDTOTALPRICE * 3) from LINEORDER
+select sum(LO_ORDTOTALPRICE * 3) from SSB.LO_LINEORDER
 ```
 
 In order to run this SQL, set your model as below in addition to enable sum(expression):
 
-- Define the column in the `sum` function as Sum measure, like the `sum(ORDTOTALPRICE)` in this example.
+- Define the column in the `sum` function as Sum measure, like the `sum(LO_ORDTOTALPRICE)` in this example.
 
 Then, the model will be able to run the above SQL.
 
@@ -78,7 +78,7 @@ Then, the model will be able to run the above SQL.
 For example:
 
 ```sql
-select sum(3) from LINEORDER
+select sum(3) from P_LINEORDER
 ```
 
 In order to run this SQL, just enable the sum(expression) feature. No other setting on model is needed.
@@ -88,7 +88,7 @@ In order to run this SQL, just enable the sum(expression) feature. No other sett
 For example:
 
 ```sql
-select sum(cast((case when ORDERPRIOTITY='1-URGENT' then ORDTOTALPRICE else null end) as bigint)) from LINEORDER
+select sum(cast((case when LO_ORDERPRIOTITY='1-URGENT' then LO_ORDTOTALPRICE else null end) as bigint)) from SSB.P_LINEORDER
 ```
 
 In order to run this SQL, set your model as below in addition to enable sum(expression):

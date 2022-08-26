@@ -17,7 +17,7 @@ last_update:
 
 ## Logical Operators
 
-This section introduces the logical operators supported by Kyligence Enterprise. The values of logical propositions are TRUE, FALSE, and UNKNOWN. The following `boolean` refers to a logical proposition.
+This section introduces the logical operators supported by Apache Kylin. The values of logical propositions are TRUE, FALSE, and UNKNOWN. The following `boolean` refers to a logical proposition.
 
 | Operator     | Description                               | Syntax                | Example                       |
 | ------------ | ---------------------------------------- | --------------------- | ----------------------------- |

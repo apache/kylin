@@ -74,7 +74,7 @@ Kylin model consists of multiple tables and their join relations. In this articl
 
 1. On the model editing page, drag a column to create a join relation between the foreign key of the fact table and the primary key of the dimension table. 
 
-   ![](images/create_join_relations.png)
+   ![](images/create_join_relations.gif)
 
 2. In the **Add Join Relationship** dialog box, follow the instructions below to set the join relation. 
 
@@ -130,7 +130,7 @@ P_LINEORDER LEFT JOIN PART ON P_LINEORDER.LO_PARTKEY = PART.P_PARTKEY
 
        To add dimensions in batch, click **+** in the **Measure** section.
 
-      ![](images/add_measure.png)
+      ![](images/add_measure.gif)
 
    2. In the **Add Measure** dialog box, follow the instructions below to complete join relation settings.
 
