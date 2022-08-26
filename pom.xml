@@ -63,7 +63,7 @@
     <spotbugs.version>3.1.1</spotbugs.version>
 
     <!-- Hadoop versions -->
-    <hadoop2.version>2.10.2</hadoop2.version>
+    <hadoop2.version>3.2.4</hadoop2.version>
     <yarn.version>2.10.2</yarn.version>
 
     <!-- Hive versions -->
