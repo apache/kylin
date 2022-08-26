@@ -270,7 +270,7 @@ export default {
     "metadataActions": {
       "keyPattern": "groupRole-projectRole",
       "entries": [
-        { "key": "*-*", "value": "none" },
+        // { "key": "*-*", "value": "none" },
         { "key": "systemAdmin-*", "value": "executeModelMetadata" },
         { "key": "systemUser-[admin,management]", "value": "executeModelMetadata" },
         { "key": "systemUser-[operation,read]", "value": "none" }
