@@ -1,18 +1,19 @@
 ---
 title: How to debug Kylin in IDEA
 language: en
-sidebar_label: How to debug
-pagination_label: How to debug
+sidebar_label: How to debug in IDEA
+pagination_label: How to debug in IDEA
 toc_min_heading_level: 2
 toc_max_heading_level: 6
-pagination_prev: null
-pagination_next: null
+pagination_prev: development/how_to_write_doc
+pagination_next: development/how_to_test
 keywords:
     - developer
     - debug
 draft: false
 last_update:
     date: 08/24/2022
+    author: Xiaoxiang Yu
 ---
 
 # How to debug Kylin in IDEA using docker

@@ -5,13 +5,14 @@ sidebar_label: How to package
 pagination_label: How to package
 toc_min_heading_level: 2
 toc_max_heading_level: 6
-pagination_prev: null
-pagination_next: null
+pagination_prev: development/how_to_test
+pagination_next: development/how_to_release
 keywords:
     - package
 draft: false
 last_update:
     date: 08/22/2022
+    author: Xiaoxiang Yu
 ---
 
 # How to package

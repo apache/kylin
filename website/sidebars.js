@@ -862,11 +862,15 @@ const sidebars = {
                 },
                 {
                     type: 'doc',
-                    id: 'development/how_to_test'
+                    id: 'development/how_to_write_doc'
                 },
                 {
                     type: 'doc',
                     id: 'development/how_to_debug_kylin_in_ide'
+                },
+                {
+                    type: 'doc',
+                    id: 'development/how_to_test'
                 },
                 {
                     type: 'doc',
@@ -876,10 +880,7 @@ const sidebars = {
                     type: 'doc',
                     id: 'development/how_to_release'
                 },
-                {
-                    type: 'doc',
-                    id: 'development/how_to_write_doc'
-                },
+
             ],
         },
     ],

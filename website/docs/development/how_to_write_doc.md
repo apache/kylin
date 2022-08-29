@@ -5,66 +5,61 @@ sidebar_label: How to write document
 pagination_label: How to write document
 toc_min_heading_level: 2
 toc_max_heading_level: 6
-pagination_prev: null
-pagination_next: null
+pagination_prev: development/how_to_contribute
+pagination_next: development/how_to_debug_kylin_in_ide
 keywords:
     - doc
     - document
 draft: false
 last_update:
     date: 08/24/2022
+    author: Tengting Xu, Xiaoxiang Yu
 ---
 
-From Kylin 5.0, Kylin community proposed to write documents using [Docusaurus](https://docusaurus.io/). Please note multi-version and i18n(multi-language) is in our plan, so it is not supported right now.
+From Kylin 5.0, Kylin community proposed to write documents using [Docusaurus](https://docusaurus.io/). Please note multi-version and i18n(multi-language) is in our plan, but it is not supported right now.
 
 ### Shortcut: Edit a single existent page
 
-If you found some minor typos or mistakes on a single page, you can quickly commit the change without clone source code and preview in user's local machine.
+:::caution
+1. If you found some minor typos or mistakes on a **single** page, you can quickly edit document in browser in quick way.
+2. But if you want to add/edit **several** pages, upload images, or change global config files, please jump to next paragraph: [Before your work](#Before_your_work).
+:::
 
-Just scroll down the page to the bottom and click the `Edit this page`.
+1. Just scroll down the page to the bottom and click the `Edit this page`.
 
 ![](images/how-to-write-doc-01.png)
 
-Edit the page.
+2. Edit this file in browser.
 ![](images/how-to-write-doc-03.png)
 
-Raise a pull request.
+3. Raise a pull request for your changes.
 ![](images/how-to-write-doc-04.png)
 
-> Note: If you want to add NEW pages/upload images/change frontend style, please do as following steps.
-
-## Before your work
+### <span id="Before_your_work">Before your work</span>
 
 Before you add new documentation, please deploy the document compilation environment.
 
 There are two steps:
 
-- [Deploy a local document compilation environment](#Deploy)
-- [Download repo](#Download)
+- [Install Node.js](#Install)
+- [Clone Github repo](#Download)
 
-### <span id="Deploy">Deploy a local document compilation environment</span>
+#### <span id="Install">Install Node.js</span>
 
-Install following tools before you add or edit documentation:  
+First, make sure [Node.js](https://nodejs.org/en/download/) version 16.14 or above (which can be checked by running node -v) is installed on your machine. You can use [nvm](https://github.com/nvm-sh/nvm) for managing multiple Node versions on a single machine installed.
 
-1. First, make sure [Node.js](https://nodejs.org/en/download/) version 16.14 or above (which can be checked by running node -v) on your machine. You can use [nvm](https://github.com/nvm-sh/nvm) for managing multiple Node versions on a single machine installed.
+When installing Node.js via **Windows/macOS Installer**, you are recommended to check all checkboxes related to dependencies. 
 
-    - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+#### <span id="Download">Clone Github repo</span>
 
-    > More about requirement about [Docusaurus](https://docusaurus.io/), please refer to [Docusaurus Installation](https://docusaurus.io/docs/installation).
-   
-
-2. And optionally any markdown editor you prefer
-
-### <span id="Download">Download docs repo</span>
-
-1. Download the doc repo to any path you prefer.
+1. Clone the doc repo to any path you prefer.
 
 ```shell
 cd /path/you/prefer/to
 git clone --branch doc5.0 https://github.com/apache/kylin.git # Or git clone -b doc5.0 https://github.com/apache/kylin.git
 ```
 
-2. After pre-step, install dependencies for prerequisite of doc.
+2. Install dependencies for prerequisite of doc. More about requirement about [Docusaurus](https://docusaurus.io/), please refer to [Docusaurus Installation](https://docusaurus.io/docs/installation).
    
 ```shell
 cd website
@@ -77,73 +72,50 @@ To check if that environment works well, run:
 npm run start
 ```
    
-then, home page doc (`http://localhost:3000`) will automatically open in your default browser and no errors occurred.
+then, homepage (`http://localhost:3000`) will automatically open in your default browser and no errors occurred.
 
 ![](images/how-to-write-doc-02.png)
 
 
-## How to create new document
+### How to create new document
 
-### Create a new markdown file
+#### Step 1: Create a new markdown file with metadata
 
-Open doc with any markdown editor, draft content as following:
+Create a new markdown file with editor, copy and paste following **Head metadata template** to the top your file. 
+After that, replace actual literal with variable like `${TITLE OF NEW DOC}` etc.
 
 ```
 ---
-title: Example doc
+title: ${TITLE OF NEW DOC}
 language: en
-sidebar_label: Example doc
-pagination_label: Example doc
+sidebar_label: ${TITLE OF NEW DOC}
+pagination_label: ${TITLE OF NEW DOC}
 toc_min_heading_level: 2
 toc_max_heading_level: 6
 pagination_prev: null
 pagination_next: null
 keywords:
-    - doc
+    - ${KEYWORD OF NEW DOC}
 draft: false
 last_update:
-    date: 08/23/2022
+    date: ${DATE of YOUR COMMIT}
+    author: ${YOUR FULL NAME}
 ---
-
-## This is example doc
-The quick brown fox jump over the lazy dog.
 ```
 
-> ***Note***:
->   
->   1. Please note that every doc need the ___Head metadata___. More details about `Head metadata` of a doc, please refer to [Head metadata](https://docusaurus.io/docs/markdown-features/head-metadata).
->   
->   2. Please use the template `Head metadata` in your modified doc.
-    ```shell
-    ---
-    title: Example doc
-    language: en
-    sidebar_label: Example doc
-    pagination_label: Example doc
-    toc_min_heading_level: 2
-    toc_max_heading_level: 6
-    pagination_prev: null
-    pagination_next: null
-    keywords:
-        - doc
-    draft: false
-    last_update:
-        date: 08/23/2022
-    ---
-    ```
-> 
->   3. Please use `second heading level` for the doc header start.
+:::caution 
+Please note that each doc need the ___Head metadata___. More details about `Head metadata` of a doc, please refer to [Head metadata](https://docusaurus.io/docs/markdown-features/head-metadata).
+:::
 
+#### Step 2: Add content for your new doc
 
-### How to add a new page to the sidebar
+Add text and pictures as you needs.
 
-Add the `{}` doc side block in sideBars.
+#### Step 3: Add new page to the sidebar
 
-Example:
+For example: if you want to add the sidebar of new doc(`how_to_write_doc.md`) to be the children menu of `development`.
 
-Scene: If you want to add the sidebar of `how_to_write_doc.md` to be the children menu of `development`.
-
-Then, modify the `DevelopmentSideBar` block in sidebars.js and add a new block in the `items` of `DevelopmentSideBar`.
+Then, modify the `DevelopmentSideBar` block in `sidebars.js` and add a new block to the tail of `items` of `DevelopmentSideBar`.
 
 ```shell
 DevelopmentSideBar: [
@@ -162,7 +134,7 @@ DevelopmentSideBar: [
 ```
 
 
-### Preview in your local machine
+#### Step 4: Preview in your local machine
 You can preview in your browser, to check exactly what it will look like, please run following commands in the `website` directory of repo folder:
 
 ```
@@ -170,17 +142,21 @@ npm run start
 ```
 Then access http://127.0.0.1:3000 in your browser.
 
+#### Step 5: Create a pull request
 If everything is normal, create a pull request to [Apache Kylin Repo](https://github.com/apache/kylin) and target branch is `doc5.0`.
 
-## Documentation Specification
 
-### About [Docusaurus](https://docusaurus.io/)
+----
+
+### Documentation Specification
+
+#### About [Docusaurus](https://docusaurus.io/)
 
 [Docusaurus](https://docusaurus.io/) is a static-site generator. It builds a single-page application with fast client-side navigation, leveraging the full power of React to make your site interactive. It provides out-of-the-box documentation features but can be used to create any kind of site (personal website, product, blog, marketing landing pages, etc).
 
 Apache Kylin's website and documentation is using [Docusaurus](https://docusaurus.io/) to manage and generate final content which avaliable at [http://kylin.apache.org](http://kylin.apache.org).
 
-### Kylin document structure and navigation menu
+#### Kylin document structure and navigation menu
 
 The Kylin [website as the Docusaurus source](https://github.com/apache/kylin/tree/document/doc5.0) is maintained under the `doc5.0` branch.
 
@@ -191,7 +167,7 @@ The Kylin [website as the Docusaurus source](https://github.com/apache/kylin/tre
 5. __Community__: Apache kylin Community information
 6. __Blog__: Technic blogs about Apache Kylin
 
-### Full doc structure
+#### Full doc structure
 
 The full doc structure about the newest Apache Kylin:
 
@@ -250,7 +226,7 @@ doc5.0
 
 More details about structure which managed by Docusaurus, please refer to [Project structure rundown](https://docusaurus.io/docs/installation#project-structure-rundown).
 
-### Navigation menu
+#### Navigation menu
 
 The menu is managed by Docusaurus collection:
 
@@ -259,7 +235,7 @@ The menu is managed by Docusaurus collection:
 More details about sidebars in Docusaurus, please refer to [Sidebar](https://docusaurus.io/docs/sidebar).
 
 
-### How to add image
+#### How to add image
 All image should be put under _images_ folder, in your document, please using below sample to include image:
 
 ```
@@ -267,12 +243,9 @@ All image should be put under _images_ folder, in your document, please using be
 ```
 
 
-### How to link to another page
-Using relative path for site links, for example:
+#### How to link to another page
+Using relative path for site links, check this [Markdown links](https://docusaurus.io/docs/markdown-features/links)
 
-```
-[How To Write Docs](../development/how_to_write_doc). 
-```
 
-### How to add code highlight
-We are using [Rouge](https://github.com/jneen/rouge) to highlight code syntax, check this doc for more detail sample.
+#### How to add code highlight
+We are using [Code Blocks Doc](https://docusaurus.io/docs/markdown-features/code-blocks) to highlight code syntax, check this doc for more detail sample.
