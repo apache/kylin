@@ -149,7 +149,7 @@ const config = {
           },
           {
             type: 'doc',
-            docId: 'development/how_to_contribute',
+            docId: 'development/roadmap',
             position: 'left',
             label: 'Development',
           },

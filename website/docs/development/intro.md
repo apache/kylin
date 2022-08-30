@@ -20,9 +20,20 @@ Check out the [How to Contribute](how_to_contribute.md) document.
 
 ### Source Repository
 Apache Kylin™ source code is version controlled using Git version control:
-Commits Summary
-Source Repo: https://github.com/apache/kylin
-Mirrored to Gitbox: https://gitbox.apache.org/repos/asf?p=kylin.git
+
+| Repository        |                      Link                       | 
+|:------------------|:------------------------------------------------|
+| Commits           |  https://github.com/apache/kylin/commits/kylin5 |
+| Source Repo       |  https://github.com/apache/kylin/               |
+| Mirrored to Gitbox| https://gitbox.apache.org/repos/asf?p=kylin.git |
+
 
 ### Issue Tracking
-Track issues on the “Kylin” Project on the [Apache JIRA](http://issues.apache.org/jira/browse/KYLIN)
+Track issues on the **Kylin Project** on the [Apache JIRA](http://issues.apache.org/jira/browse/KYLIN)
+
+### Wiki
+Please check [How to contribute wiki](https://cwiki.apache.org/confluence/display/KYLIN/How+to+contribute+wiki) .
+
+### Roadmap
+
+Please check [Roadmap of Kylin 5.0](./roadmap.md)
