@@ -14,9 +14,6 @@ last_update:
     date: 08/19/2022
 ---
 
-
-## Load Data
-
 Load data calculates the source data based on the model and index definition. This chapter takes the sample data as an example to introduce two data load methods and processes:
 
 - full load
