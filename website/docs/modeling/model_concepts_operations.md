@@ -51,7 +51,7 @@ Model design refers to build the star model or snowflake model based on data tab
 
 	- **Fact Table**: The fact table of this model.
 	
-	- **Types**: Model types, which include *Batch Model*, *Streaming Model*, *Fusion Model*
+	- **Types**: Model types, which include *Batch Model*
 	
 	- **Usage**: Hit count by SQL statements in the last 30 days. Update every 30 minutes.
 

@@ -44,7 +44,6 @@ The scope of junk file cleanup includes:
     - The total number of query history for all projects. The query history that exceeds this threshold number `kylin.query.queryhistory.project-max-size=10000000` (default) will be cleared.
     - The query history of a single project exceeds this threshold `kylin.query.queryhistory.project-max-size=1000000` (default) The query history will be cleared.
     - The query history time of all projects. The query history that exceeds this threshold `kylin.query.queryhistory.survival-time-threshold=30d` (default 30 days) will be cleared. This configuration also supports units: milliseconds ms, microseconds us, minutes m or min, hours h.
-  - Real-time job status/record table. Realtime jobs that exceed this threshold `kylin.streaming.jobstats.survival-time-threshold=7d` (default 7 days) will be cleaned up.
   - Invalid optimization suggestion table data.
   - Expired capacity billing metadata. Capacity billing information that exceeds this threshold `kylin.garbage.storage.sourceusage-survival-time-threshold=90d` (default 90 days) will be cleaned up.
   - Invalid or out-of-date item-related metadata.

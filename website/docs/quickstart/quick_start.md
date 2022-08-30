@@ -209,7 +209,7 @@ On the **Data Asset -> Model** page, you should see an example model with some s
 
 ![model list](images/list.png)
 
-On the **Monitor** page, you can see all jobs have been completed successfully in **Batch Job** and **Streaming Job** pages. 
+On the **Monitor** page, you can see all jobs have been completed successfully in **Batch Job** pages. 
 
 ![job monitor](images/job.png)
 

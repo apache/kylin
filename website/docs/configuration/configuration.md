@@ -93,20 +93,6 @@ The file **kylin.properties** occupies some of the most important configurations
 | kylin.query.realization.chooser.thread-max-num               | The maximum number of threads in the model matching thread pool in the query engine, the default is 50. It should be noted that when the maximum number of threads is set to be less than or equal to 0 or less than the number of core threads, this thread pool will be unavailable, which will cause the entire query engine to be unavailable |
 | kylin.query.memory-limit-during-collect-mb                   | Limit the memory usage when getting query result in Kylin，the unit is megabytes, defaults to 5400mb |
 | kylin.query.auto-model-view-enabled                          | Automatically generate views for model. When the config is on, a view will be generated for each model and user can query on that view. The view will be named with {project_name}.{model_name} and contains all the tables defined in the model and all the columns referenced by the dimension and measure of the table. |
-| kylin.streaming.job.max-concurrent-jobs                      | Only for Kylin Realtime. Max tasks numbers used to ingesting realtime data and merging segments. |
-| kylin.streaming.kafka-conf.maxOffsetsPerTrigger              | Only for Kylin Realtime. Max records numbers of ingesting data at one time. -1 stands for no limitation. |
-| kylin.streaming.job-status-watch-enabled                     | Only for Kylin Realtime. Whether enabling tasks monitor, "true" stands for enabled and "false" stands for disabled. |
-| kylin.streaming.job-retry-enabled                            | Only for Kylin Realtime. Whether retrying after tasks failed, "true" stands for enabled and "false" stands for disabled. |
-| kylin.streaming.job-retry-interval                           | Only for Kylin Realtime. How many minutes the tasks will retry after failed. |
-| kylin.streaming.job-retry-max-interval                       | Only for Kylin Realtime. How many minutes the interval is when the tasks retry. |
-| kylin.engine.streaming-metrics-enabled                       | Only for Kylin Realtime. Whether enabling tasks metrics monitor, "true" stands for enabled and "false" stands for disabled. |
-| kylin.engine.streaming-segment-merge-interval                | Only for Kylin Realtime. How many seconds the interval is when merging segments. |
-| kylin.engine.streaming-segment-clean-interval                | Only for Kylin Realtime. How many hours the time is before which the segments will be cleaned after being merged. |
-| kylin.engine.streaming-segment-merge-ratio                   | Only for Kylin Realtime. The ratio, which the summary of the segments reach, will trigger merging segments. |
-| kylin.streaming.jobstats.survival-time-threshold             | Only for Kylin Realtime. How many days the realtime data statistics keeps. The default value is 7. |
-| kylin.streaming.spark-conf.spark.yarn.queue                  | Only for Kylin Realtime. The name of the yarn queue which realtime tasks exclusively use. |
-| kylin.streaming.spark-conf.spark.port.maxRetries             | Only for Kylin Realtime. The number to retry when the port is occupied. |
-| kylin.streaming.kafka.starting-offsets                       | Only for Kylin Realtime. The offset from where to consume Kafka message. The default value is 'earliest'. |
 | kylin.storage.columnar.spark-conf.spark.sql.view-truncate-enabled | Allow spark view to lose precision when loading tables and queries, the default value is false |
 | kylin.engine.spark-conf.spark.sql.view-truncate-enabled=true | Allow spark view to lose precision during construction, the default value is false |
 | kylin.source.hive.databases                                  | Configure the database list loaded by the data source. There is no default value. Both the system level and the project level can be configured. The priority of the project level is greater than the system level. |
