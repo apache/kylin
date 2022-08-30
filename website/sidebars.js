@@ -808,10 +808,6 @@ const sidebars = {
                 },
                 {
                     type: 'doc',
-                    id: 'restapi/streaming_job_api'
-                },
-                {
-                    type: 'doc',
                     id: 'restapi/callback_api'
                 },
                 {

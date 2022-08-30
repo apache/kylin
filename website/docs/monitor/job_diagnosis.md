@@ -21,7 +21,7 @@ last_update:
 
 ### View Job Execution Log On Web UI
 
-You can view the job execution log in the ` Monitor -> Batch Job/Streaming Job` interface. As shown below, you can click the **Open Job Steps** button at the position 1, and then click the **Log Output** button in the job details to view the first and the last 100 lines of job execution log in a popup window. You can download the full log by clicking the link **download the full log** at the position 3.
+You can view the job execution log in the ` Monitor -> Batch Job` interface. As shown below, you can click the **Open Job Steps** button at the position 1, and then click the **Log Output** button in the job details to view the first and the last 100 lines of job execution log in a popup window. You can download the full log by clicking the link **download the full log** at the position 3.
 
 > **Tip**: If there are multiple steps in a job, you can view the execution log for each step.
 
@@ -31,7 +31,7 @@ You can view the job execution log in the ` Monitor -> Batch Job/Streaming Job` 
 
 In FusionInsight, you need to execute the command `source /opt/hadoopclient/bigdata_env` first. The `hadoopclient` is a variable.
 
-You can execute ` $KYLIN_HOME/bin/diag.sh -job <jobid> ` to generate the job diagnostic package and \<jobid\> need to be replaced with the actual job ID number. You can view the job ID number in the ` Monitor -> Batch Job/Streaming Job` interface. You can also click the icon in the position 1 as shown picture below to expand the specified job details that is in the position 2 on the right.
+You can execute ` $KYLIN_HOME/bin/diag.sh -job <jobid> ` to generate the job diagnostic package and \<jobid\> need to be replaced with the actual job ID number. You can view the job ID number in the ` Monitor -> Batch Job` interface. You can also click the icon in the position 1 as shown picture below to expand the specified job details that is in the position 2 on the right.
 
  ![Job ID](images/job_id.png)
 
