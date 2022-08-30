@@ -14,7 +14,7 @@ last_update:
     date: 08/19/2022
 ---
 
-Since Kylin 5, the system has enhanced the optimization of queries that hit the index exactly (the query contains dimensions that are exactly the same as the dimensions of the selected index), and it also improve the performance in count distinct scenario.
+Since Kylin 5, the system has enhanced the optimization of queries that hit the index exactly (the query contains dimensions that are exactly the same as the dimensions of the selected index), and it also improves the performance in count distinct scenario.
 
 With the following settings, optimization of precise count distinct queries can be applied:
 
@@ -42,29 +42,33 @@ GROUP BY  LINEITEM.L_SHIPDATE
 ```
 
 
- 1. Create the model:
+1. Create the model:
+
     ![Create Model](images/model.png)
 
- 2. Switch to the **Model Settings** interface:
-    <img src="images/model_config_1.en.png" alt="Settings" style="zoom:50%;" />
+2. Switch to the **Model Settings** interface:
 
- 3. Enter the configuration to enable the function:
-    <img src="images/model_config_2.en.png" alt="Settings" style="zoom:50%;" />
+    ![Settings](images/model_config_1.png)
 
- 4. Add  indexes:
+3. Enter the configuration to enable the function:
+
+    ![Settings](images/model_config_2.png)
+
+4. Add  indexes:
+
     ![Add Index](images/add_index.png)
 
- 5. After building successfully, the query performance is improved a lot when the query exactly matches index.
+5. After building successfully, the query performance is improved a lot when the query exactly matches index.
 
-   ![Query before optimization](images/query_old.png)
+    ![Query before optimization](images/query_old.png)
 
-   ![Query after optimization](images/query_new.png)
+    ![Query after optimization](images/query_new.png)
 
 6. Compare the execution plans before and after optimization
    
-   ![Queries before optimization](images/spark_plan_old.png)
+    ![Queries before optimization](images/spark_plan_old.png)
 
-   ![Optimized query](images/spark_plan_new.png)
+    ![Optimized query](images/spark_plan_new.png)
 
 
 ### Known Limitations
