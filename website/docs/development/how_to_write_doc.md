@@ -21,7 +21,7 @@ From Kylin 5.0, Kylin community proposed to write documents using [Docusaurus](h
 ### Shortcut: Edit a single existent page
 
 :::caution
-1. If you found some minor typos or mistakes on a **single** page, you can quickly edit document in browser in quick way.
+1. If you found some minor typos or mistakes on a **single** page, you can edit document in browser in this way in several minutes.
 2. But if you want to add/edit **several** pages, upload images, or change global config files, please jump to next paragraph: [Before your work](#Before_your_work).
 :::
 
@@ -42,7 +42,7 @@ Before you add new documentation, please deploy the document compilation environ
 There are two steps:
 
 - [Install Node.js](#Install)
-- [Clone Github repo](#Download)
+- [Clone Github Repo](#Download)
 
 #### <span id="Install">Install Node.js</span>
 
@@ -50,7 +50,7 @@ First, make sure [Node.js](https://nodejs.org/en/download/) version 16.14 or abo
 
 When installing Node.js via **Windows/macOS Installer**, you are recommended to check all checkboxes related to dependencies. 
 
-#### <span id="Download">Clone Github repo</span>
+#### <span id="Download">Clone Github Repo</span>
 
 1. Clone the doc repo to any path you prefer.
 
@@ -135,16 +135,20 @@ DevelopmentSideBar: [
 
 
 #### Step 4: Preview in your local machine
-You can preview in your browser, to check exactly what it will look like, please run following commands in the `website` directory of repo folder:
+You can preview in your browser, please run following commands in the `website` directory, then access [doc5.0](http://127.0.0.1:3000) in your browser:
 
 ```
 npm run start
 ```
-Then access http://127.0.0.1:3000 in your browser.
+
+:::caution Checklist
+- [ ] Whether **look and feel** meet your expectation?
+- [ ] Whether the link/pictures works fine?
+- [ ] Whether the most important part was highlighted? You may [check this to highlight a paragraph](#highlight_paragraph).
+:::
 
 #### Step 5: Create a pull request
 If everything is normal, create a pull request to [Apache Kylin Repo](https://github.com/apache/kylin) and target branch is `doc5.0`.
-
 
 ----
 
@@ -158,14 +162,14 @@ Apache Kylin's website and documentation is using [Docusaurus](https://docusauru
 
 #### Kylin document structure and navigation menu
 
-The Kylin [website as the Docusaurus source](https://github.com/apache/kylin/tree/document/doc5.0) is maintained under the `doc5.0` branch.
+The Kylin [website material](https://github.com/apache/kylin/tree/doc5.0) is maintained under the `doc5.0` branch.
 
 1. __Home Page__: Home page of Docs
 2. __Document__: General docs about Apache Kylin, including _Installation_, _Tutorial_, etc.
-3. __Development__: _"development"_ For developer to contribute, integration with other application and extend Apache Kylin
+3. __Development__: _"development"_ For developer to contribute, to develop, integration with other application and extend Apache Kylin
 4. __Download__: _"Download"_ Apache Kylin packages
 5. __Community__: Apache kylin Community information
-6. __Blog__: Technic blogs about Apache Kylin
+6. __Blog__: Engineering blogs about Apache Kylin
 
 #### Full doc structure
 
@@ -226,26 +230,28 @@ doc5.0
 
 More details about structure which managed by Docusaurus, please refer to [Project structure rundown](https://docusaurus.io/docs/installation#project-structure-rundown).
 
-#### Navigation menu
+#### Sidebar
+The Sidebar is managed by __sidebars.js__ , please refer to [Sidebar](https://docusaurus.io/docs/sidebar).
 
-The menu is managed by Docusaurus collection:
-
-* __sidebars.js__: All language version menu structure. Docusaurus can hold only one menu file to map any language version menu.
-
-More details about sidebars in Docusaurus, please refer to [Sidebar](https://docusaurus.io/docs/sidebar).
-
-
-#### How to add image
+#### How to add image in doc
 All image should be put under _images_ folder, in your document, please using below sample to include image:
 
 ```
-![](/images/how-to-write-doc-01.png)
+![](images/how-to-write-doc-01.png)
 ```
-
 
 #### How to link to another page
 Using relative path for site links, check this [Markdown links](https://docusaurus.io/docs/markdown-features/links)
 
 
-#### How to add code highlight
+#### How to add source code in doc
 We are using [Code Blocks Doc](https://docusaurus.io/docs/markdown-features/code-blocks) to highlight code syntax, check this doc for more detail sample.
+
+#### <span id="highlight_paragraph">How to highlight a sentence/paragraph</span>
+We recommend you to use [admonitions feature](https://docusaurus.io/docs/markdown-features/admonitions) to highlight a sentence/paragraph, following is a example:
+
+```
+:::caution
+Some **content** with _Markdown_ `syntax`. Check [this `api`](#).
+:::
+```

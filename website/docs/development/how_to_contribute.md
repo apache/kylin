@@ -16,16 +16,20 @@ last_update:
     author: Tengting Xu, Xiaoxiang Yu
 ---
 
-Apache Kylin is always looking for contributions of not only code, but also usage document, performance report, Q&A etc. All kinds of contributions pave the way towards a Kylin Committer. There is opportunity for everyone, especially for those come from analysis and solution background, due to the lacking of content from user and solution perspective.
+Apache Kylin is always looking for contributions of not only code, but also user document, [performance report](https://cwiki.apache.org/confluence/display/KYLIN/Performance+Benchmark+Report+of+Kylin+4.0.0+vs+Kylin3.1.2+on+Hadoop), 
+[Q&A](https://cwiki.apache.org/confluence/display/KYLIN/FAQ+Kylin+4.X) etc. All kinds of contributions pave the way towards a [Apache Committer](https://www.apache.org/foundation/how-it-works.html#committers). 
+There is opportunity for [newcomers](https://community.apache.org/newcomers/index.html), especially for those come from analysis and solution background, due to the lacking of content from user and solution perspective.
 
 ### Source Branches
 Both code and document are under Git source control. Note the purpose of different branches.
 
-* `kylin5`: Development branch for v5.x
-* `doc5.0`: Document branch for v5.x
-* `main`: Maintenance branch for v4.x
-* `kylin3`: Maintenance branch for v2.x
-* `document`: Document branch for v4.x and before
+| Branch            | Category           |                 Comment                | 
+|:------------------|--------------------|:---------------------------------------|
+| **kylin5**        | Development branch | **Active** development branch for v5.x |
+| **doc5.0**        | Document branch    | Document branch for v5.x               |
+| **main**          | Maintenance branch | Maintenance branch for v4.x            |
+| **kylin3**        | Maintenance branch | Maintenance branch for v3.x     |
+| **document**      | Document branch    | Document branch for v4.x and before    |
 
 -----
 
@@ -37,7 +41,7 @@ Want to know what do different role(like contributor, committer and PMC member) 
 
 ### Overall steps
 1. Fork [Apache Kylin Repo](https://github.com/apache/kylin) to your repository.
-2. Clone the fork repo to your local. It is recommended to [create a pull request from a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork).
+2. Clone the fork repo to your local.
 3. Create a new development branch locally.
 4. [Setup development environment](how_to_debug_kylin_in_ide.md)
 5. [Pick or Create a JIRA](#open_issue), describe the feature/enhancement/bug.
@@ -46,29 +50,37 @@ Want to know what do different role(like contributor, committer and PMC member) 
    - [ ] No strict code style at the moment, but the general rule is keep consistent with existing files. E.g. use 4-space indent for java files.
    - [ ] Add test case for your code change as much as possible.
    - [ ] Make sure [Run tests](how_to_test.md) can get success, this will ensure your change is in good quality and does not break anything.
-   - [ ] Sufficient unit test and integration test is a mandatory part of code change.
-8. Read [CODE REVIEW guidelines](#CodeReviewGuideline) and check if your code does not adhere to the guidelines, you may be asked to redo some work later if you forgot them.
+8. Read [Code Review Guidelines](#CodeReviewGuideline) and check if your code does **adhere to the guidelines**, you may be asked to redo some work later if you forgot them.
 9. [Create a pull request](#open_pull_request) for you code change.
 10. If you need to update doc, please check out [How to Write Document](./how_to_write_doc) for help.
 
+### Detailed Description of the steps
 
 #### <span id="open_issue">Step 4: Pick or create a task</span>
 There are open tasks waiting to be done, tracked by [KYLIN JIRA](http://issues.apache.org/jira/browse/KYLIN).
 If you want to create a new JIRA for bug or feature, remember to provide enough information for the community:
 
-* A well **summary** for the problem or feature
-* A detail **description**, which may include:
-    - the environment of this problem occurred
-      - Kylin version
-      - Hadoop/Spark version ...
-    - the steps to reproduce the problem
-    - the error trace or log files (as attachment)
-    - the metadata of the model or cube (as attachment)
+* A well **summary** for the problem or feature, like "Failed to read big resource /dict/xxxx at 'Build Dimension Dictionary' Step"
+* A correct **Type** of issue, choose 
+  - _New Feature_ , if you want to develop a brand-new function/feature by yourself
+  - _Improvement_ , if you find a way to improve an existent function/feature
+  - _Bug_ , if you find an existent function not works well as expected
+  - _Wish_ , if you want to a new function/feature and wish it will be developed by someone else
 * **Affected version**: which Kylin you're using.
+* A detailed **description**, which may include:
+  - the environment of this problem occurred
+    - Kylin version
+    - Hadoop/Spark version ...
+  - the steps to reproduce the problem
+  - the error [stacktrace](https://issues.apache.org/jira/secure/attachment/13048219/image-2022-08-17-13-17-40-751.png) or log files (as attachment)
+  - the metadata of the model or cube (as attachment)
+  - **Root cause**: For bug reports, provide root cause analysis if it is possible, here is an [example for root cause analysis](https://issues.apache.org/jira/browse/KYLIN-4153).
+
+![](images/ISSUE_TEMPLATE.png)
 
 #### <span id="mailing_list">Step 5: Discuss your proposal in mailing list</span>
 Do not forget to discuss in [mailing list](https://www.apache.org/foundation/mailinglists.html) before working on a big task.
-For how to discuss your idea/proposal in mailing list, please check this example : [Example for developer's proposal](https://lists.apache.org/thread/gtcntp4s8k0fz1d4glospq15sycc599x) .
+For how to discuss your idea/proposal in mailing list, please check [guide for ask good question](https://infra.apache.org/contrib-email-tips.html#usefulq) and [example for development's proposal](https://lists.apache.org/thread/gtcntp4s8k0fz1d4glospq15sycc599x) .
 
 :::caution subscribe a mailing list
 1. Before you sending mail to mailing list, please make sure you have subscribed a mailing list. Please [check this guide](https://www.apache.org/foundation/mailinglists.html#subscribing) if you don't know how to subscribe a mailing list.
