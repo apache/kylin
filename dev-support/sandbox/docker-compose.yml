@@ -18,7 +18,7 @@ services:
       - 8020:8020
       - 50070:50070
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:50070/ || exit 1" ]
+      test: [ "CMD-SHELL", "curl -f http://namenode:50070/ || exit 1" ]
       interval: 30s
       timeout: 30s
       retries: 3
@@ -41,7 +41,7 @@ services:
       - 50010:50010
       - 50075:50075
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:50075/ || exit 1" ]
+      test: [ "CMD-SHELL", "curl -f http://datanode:50075/ || exit 1" ]
       interval: 30s
       timeout: 30s
       retries: 4
@@ -61,7 +61,7 @@ services:
       - 8050:8050
       - 8088:8088
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8088/ || exit 1" ]
+      test: [ "CMD-SHELL", "curl -f http://resourcemanager:8088/ || exit 1" ]
       interval: 30s
       timeout: 30s
       retries: 4
@@ -79,30 +79,30 @@ services:
     ports:
       - 8042:8042
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8042/ || exit 1" ]
+      test: [ "CMD-SHELL", "curl -f http://nodemanager:8042/ || exit 1" ]
       interval: 30s
       timeout: 30s
       retries: 4
-  historyserver:
-    image: kyligence/hadoop:2.10.1
-    container_name: historyserver
-    hostname: historyserver
-    volumes:
-      - ./data/historyserver:/hadoop/yarn/timeline #
-    environment:
-      HADOOP_MODE: "historyserver"
-      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 resourcemanager:8088 nodemanager:8042"
-    env_file:
-      - hadoop.env
-    networks:
-      - sandbox_cluster
-    ports:
-      - 8188:8188
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8188/ || exit 1" ]
-      interval: 30s
-      timeout: 30s
-      retries: 4
+#  historyserver:
+#    image: kyligence/hadoop:2.10.1
+#    container_name: historyserver
+#    hostname: historyserver
+#    volumes:
+#      - ./data/historyserver:/hadoop/yarn/timeline #
+#    environment:
+#      HADOOP_MODE: "historyserver"
+#      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 resourcemanager:8088 nodemanager:8042"
+#    env_file:
+#      - hadoop.env
+#    networks:
+#      - sandbox_cluster
+#    ports:
+#      - 8188:8188
+#    healthcheck:
+#      test: [ "CMD-SHELL", "curl -f http://localhost:8188/ || exit 1" ]
+#      interval: 30s
+#      timeout: 30s
+#      retries: 4
   mysql:
     image: mysql:5.7
     container_name: mysql
@@ -158,6 +158,13 @@ services:
       - sandbox_cluster
     ports:
       - 2181:2181
+
+
+# 2181 -> zk
+# 3306 -> mysql
+# 8042 -> node manager
+# 50010 -> data node
+# 50075 -> data node
 
 #  kafka:
 #    image: bitnami/kafka:2.7.0
