@@ -17,15 +17,36 @@ last_update:
 
 # How to package
 
-### Environment Requirement
+### <span id="software_reqiurement">Software Requirement</span>
 
-| Software      | Comment                                      |    Version     |
-|---------------| ---------------------------------------------|----------------|
-| Git           |  Fetch branch name and hash of latest commit | latest         |
-| Apache Maven  |  Build Java and Scala source code            | 3.8.2 or latest         |  
-| Node.js       |  Build front end                             | 12.14.0 is recommended ( or 12.x ~ 14.x) |
+| Software      | Comment                                      |    Version     |   Download Link    |
+|---------------| ---------------------------------------------|----------------|--------------------|
+| Git           |  Fetch branch name and hash of latest commit | latest         | https://git-scm.com/book/en/v2/Getting-Started-Installing-Git |
+| Apache Maven  |  Build Java and Scala source code            | 3.8.2 or latest| https://maven.apache.org/download.cgi |  
+| Node.js       |  Build front end                             | 12.14.0 is recommended ( or 12.x ~ 14.x) | https://nodejs.org/en/download/ ([How to switch to older node.js](development/how_to_package.md#install_older_node))|
+| JDK           |  Java Compiler and Development Tools         | JDK 1.8.x      | https://www.oracle.com/java/technologies/javase/javase8u211-later-archive-downloads.html |
 
+After installed above software, please do verify **software requirement** by following commands:
 
+```shell
+$ java -version
+java version "1.8.0_301"
+Java(TM) SE Runtime Environment (build 1.8.0_301-b09)
+Java HotSpot(TM) 64-Bit Server VM (build 25.301-b09, mixed mode)
+
+$ mvn -v
+Apache Maven 3.8.2 (ea98e05a04480131370aa0c110b8c54cf726c06f)
+Maven home: /Users/xiaoxiang.yu/LacusDir/lib/apache-maven-3.8.2
+Java version: 1.8.0_301, vendor: Oracle Corporation, runtime: /Library/Java/JavaVirtualMachines/jdk1.8.0_301.jdk/Contents/Home/jre
+Default locale: en_CN, platform encoding: UTF-8
+OS name: "mac os x", version: "10.16", arch: "x86_64", family: "mac"
+
+$ node -v
+v12.14.0
+
+$ git version
+git version 2.30.1 (Apple Git-130)
+```
 ### Options for Packaging Script
 
 |         Option       |     Comment                                        | 
@@ -69,7 +90,7 @@ For example, an unofficial package could be `apache-kylin-5.0.0-SNAPSHOT.2022081
 ./build/release/release.sh -P hadoop3
 ```
 
-### How to switch to older node.js
+### <span id="install_older_node">How to switch to older node.js</span>
 
 If you install node.js which is higher than 14.X, I recommended you downgrade to lower version with some tools like https://github.com/nvm-sh/nvm.
 

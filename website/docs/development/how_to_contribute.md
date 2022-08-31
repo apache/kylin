@@ -20,7 +20,7 @@ Apache Kylin is always looking for contributions of not only code, but also user
 [Q&A](https://cwiki.apache.org/confluence/display/KYLIN/FAQ+Kylin+4.X) etc. All kinds of contributions pave the way towards a [Apache Committer](https://www.apache.org/foundation/how-it-works.html#committers). 
 There is opportunity for [newcomers](https://community.apache.org/newcomers/index.html), especially for those come from analysis and solution background, due to the lacking of content from user and solution perspective.
 
-### Source Branches
+### <span id="branch_table">Source Branches</span>
 Both code and document are under Git source control. Note the purpose of different branches.
 
 | Branch            | Category           |                 Comment                | 
@@ -45,7 +45,7 @@ Want to know what do different role(like contributor, committer and PMC member) 
 3. Create a new development branch locally.
 4. [Setup development environment](how_to_debug_kylin_in_ide.md)
 5. [Pick or Create a JIRA](#open_issue), describe the feature/enhancement/bug.
-6. [Discuss with others in mailing list](#mailing_list) or issue comments, make sure the proposed changes fit in with what others are doing and have planned for the project.
+6. [Discuss with others in mailing list](#discuss_proposal) or issue comments, make sure the proposed changes fit in with what others are doing and have planned for the project.
 7. Make code changes in your development branch
    - [ ] No strict code style at the moment, but the general rule is keep consistent with existing files. E.g. use 4-space indent for java files.
    - [ ] Add test case for your code change as much as possible.
@@ -56,7 +56,22 @@ Want to know what do different role(like contributor, committer and PMC member) 
 
 ### Detailed Description of the steps
 
-#### <span id="open_issue">Step 4: Pick or create a task</span>
+#### Step 1: Fork Apache Kylin Repo  
+![](images/fork_github_repo.png)
+
+#### Step 2: Clone the fork repo
+```shell
+git clone https://github.com/<YourUserName>/kylin.git
+```
+
+#### Step 3: Create a new development branch
+
+The **new_branch** is determined by which version of Kylin you are working on and [branches table](#branch_table).
+```shell
+git checkout -b <new_branch>
+```
+
+#### <span id="open_issue">Step 5: Pick or create a task</span>
 There are open tasks waiting to be done, tracked by [KYLIN JIRA](http://issues.apache.org/jira/browse/KYLIN).
 If you want to create a new JIRA for bug or feature, remember to provide enough information for the community:
 
@@ -72,29 +87,22 @@ If you want to create a new JIRA for bug or feature, remember to provide enough 
     - Kylin version
     - Hadoop/Spark version ...
   - the steps to reproduce the problem
-  - the error [stacktrace](https://issues.apache.org/jira/secure/attachment/13048219/image-2022-08-17-13-17-40-751.png) or log files (as attachment)
+  - the [thread stack](https://issues.apache.org/jira/secure/attachment/13048219/image-2022-08-17-13-17-40-751.png), exception stacktrace or log files (as attachment)
   - the metadata of the model or cube (as attachment)
   - **Root cause**: For bug reports, provide root cause analysis if it is possible, here is an [example for root cause analysis](https://issues.apache.org/jira/browse/KYLIN-4153).
 
 ![](images/ISSUE_TEMPLATE.png)
 
-#### <span id="mailing_list">Step 5: Discuss your proposal in mailing list</span>
+#### <span id="discuss_proposal">Step 6: Discuss your proposal</span>
 Do not forget to discuss in [mailing list](https://www.apache.org/foundation/mailinglists.html) before working on a big task.
 For how to discuss your idea/proposal in mailing list, please check [guide for ask good question](https://infra.apache.org/contrib-email-tips.html#usefulq) and [example for development's proposal](https://lists.apache.org/thread/gtcntp4s8k0fz1d4glospq15sycc599x) .
 
 :::caution subscribe a mailing list
-1. Before you sending mail to mailing list, please make sure you have subscribed a mailing list. Please [check this guide](https://www.apache.org/foundation/mailinglists.html#subscribing) if you don't know how to subscribe a mailing list.
+1. Before you sending mail to mailing list, please make sure you have subscribed a mailing list. Please [**check this guide**](how_to_subscribe_mailing_list) if you don't know how to subscribe a mailing list.
 2. If you do not [receive the confirmation email](https://www.apache.org/foundation/mailinglists.html#request-confirmation) after sending email to the mail list, the email maybe is shown in your trash mail.
 :::
 
-These are the mailing lists that have been established for kylin project. For each list, there is a subscribe, unsubscribe, and an archive link.
-
-|    Mailing List   |   Subscribe Link  | Unsubscribe Link  |   Archive Link    |
-|:-----------------:|:-----------------:|:-----------------:|:-----------------:|
-| user              | [subscribe](mailto:user-subscribe@kylin.apache.org)  | [unsubscribe](mailto:user-unsubscribe@kylin.apache.org)  | [mail archive](https://lists.apache.org/list.html?user@kylin.apache.org) |
-| dev               | [subscribe](mailto:dev-subscribe@kylin.apache.org)   | [unsubscribe](mailto:dev-unsubscribe@kylin.apache.org)   | [mail archive](https://lists.apache.org/list.html?dev@kylin.apache.org) |
-| issue             | [subscribe](mailto:issue-subscribe@kylin.apache.org) | [unsubscribe](mailto:issue-unsubscribe@kylin.apache.org) | [mail archive](https://lists.apache.org/list.html?issue@kylin.apache.org) |
-
+   
 #### <span id="open_pull_request">Step 9: Create a pull request</span>
 
 * Push your code change to your personal repo
@@ -137,7 +145,7 @@ The reviewer needs to review the patch from the following perspectives:
 * _API compatibility_: the change SHOULD NOT break public API's functionality and behavior; If an old API need be replaced by the new one, print warning message there.
 * _Documentation_: if the Kylin document need be updated together, create another JIRA with "Document" as the component to track. In the document JIRA, attach the doc change patch which is againt the "document" branch.
 
-:::caution
+:::danger Rules must be obeyed
 A patch which doesn't comply with the above rules may not get merged.
 :::
 
