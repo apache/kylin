@@ -104,7 +104,7 @@ public class MetricsGroup {
             counter.inc(increments);
             return true;
         } catch (Exception e) {
-            logger.warn("ke.metrics counterInc {}", e.getMessage());
+            logger.warn("kylin.metrics counterInc {}", e.getMessage());
         }
         return false;
     }
@@ -128,7 +128,7 @@ public class MetricsGroup {
             histogram.update(updateTo);
             return true;
         } catch (Exception e) {
-            logger.warn("ke.metrics histogramUpdate {}", e.getMessage());
+            logger.warn("kylin.metrics histogramUpdate {}", e.getMessage());
         }
         return false;
     }
@@ -144,7 +144,7 @@ public class MetricsGroup {
             meter.mark();
             return true;
         } catch (Exception e) {
-            logger.warn("ke.metrics meterMark {}", e.getMessage());
+            logger.warn("kylin.metrics meterMark {}", e.getMessage());
         }
         return false;
     }
@@ -356,7 +356,7 @@ public class MetricsGroup {
             registerHistogramIfAbsent(name.getVal(), category.getVal(), entity, tags);
             return true;
         } catch (Exception e) {
-            logger.warn("ke.metrics newHistogram {}", e.getMessage());
+            logger.warn("kylin.metrics newHistogram {}", e.getMessage());
         }
         return false;
     }
@@ -409,7 +409,7 @@ public class MetricsGroup {
                 if (!gauges.contains(metricName)) {
                     MetricsController.getDefaultMetricRegistry().register(metricName, metric);
                     gauges.add(metricName);
-                    logger.trace("ke.metrics register gauge: {}", metricName);
+                    logger.trace("kylin.metrics register gauge: {}", metricName);
                     return true;
                 }
             }
@@ -429,10 +429,10 @@ public class MetricsGroup {
                     final long restoreVal = tryRestoreCounter(name, category, entity, tags);
                     if (restoreVal > 0) {
                         metric.inc(restoreVal);
-                        logger.trace("ke.metrics counter=[{}] restore with value: {}", metricName, restoreVal);
+                        logger.trace("kylin.metrics counter=[{}] restore with value: {}", metricName, restoreVal);
                     }
                     counters.put(metricName, metric);
-                    logger.trace("ke.metrics register counter: {}", metricName);
+                    logger.trace("kylin.metrics register counter: {}", metricName);
                 }
             }
         }
@@ -468,7 +468,7 @@ public class MetricsGroup {
             return getResultFromSeries(result, fieldName);
         } catch (Exception e) {
             logger.warn(
-                    "ke.metrics tryRestoreCounter error. fieldName: [{}], category [{}], entity [{}], tags [{}]. error msg {}",
+                    "kylin.metrics tryRestoreCounter error. fieldName: [{}], category [{}], entity [{}], tags [{}]. error msg {}",
                     fieldName, category, entity, tags, e.getMessage());
         }
         return 0;
@@ -627,7 +627,7 @@ public class MetricsGroup {
                 if (!meters.containsKey(metricName)) {
                     final Meter metric = MetricsController.getDefaultMetricRegistry().meter(metricName);
                     meters.put(metricName, metric);
-                    logger.trace("ke.metrics register meter: {}", metricName);
+                    logger.trace("kylin.metrics register meter: {}", metricName);
                 }
             }
         }
@@ -642,7 +642,7 @@ public class MetricsGroup {
                 if (!histograms.containsKey(metricName)) {
                     final Histogram metric = MetricsController.getDefaultMetricRegistry().histogram(metricName);
                     histograms.put(metricName, metric);
-                    logger.trace("ke.metrics register histogram: {}", metricName);
+                    logger.trace("kylin.metrics register histogram: {}", metricName);
                 }
             }
         }
@@ -660,10 +660,10 @@ public class MetricsGroup {
                 if (metricNameSuffix.equals(arr[1]) || arr[1].startsWith(metricNameSuffix + ",")) {
                     registry.remove(metricName);
                     it.remove();
-                    logger.trace("ke.metrics remove metric: {}", metricName);
+                    logger.trace("kylin.metrics remove metric: {}", metricName);
                 }
             } catch (Exception e) {
-                logger.warn("ke.metrics remove metric: {} {}", metricName, e.getMessage());
+                logger.warn("kylin.metrics remove metric: {} {}", metricName, e.getMessage());
             }
         }
     }

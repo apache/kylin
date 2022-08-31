@@ -143,9 +143,9 @@ public class InfluxdbReporter extends ScheduledReporter {
                     System.currentTimeMillis() - startAt);
 
             points.stream().filter(Objects::nonNull).forEach(point -> metrics.putIfAbsent(point.getUniqueKey(), point));
-            logger.debug("ke.metrics report data: {} points", points.size());
+            logger.debug("kylin.metrics report data: {} points", points.size());
         } catch (Exception e) {
-            logger.info("[UNEXPECTED_THINGS_HAPPENED] ke.metrics report data failed {}", e.getMessage());
+            logger.info("[UNEXPECTED_THINGS_HAPPENED] kylin.metrics report data failed {}", e.getMessage());
         }
     }
 
@@ -187,7 +187,7 @@ public class InfluxdbReporter extends ScheduledReporter {
                                     snapshot.get999thPercentile())
                             .putField(filedName(nameTags.getFirst(), RUN_COUNT), histogram.getCount()).build();
                 } catch (Exception ex) {
-                    logger.error("[UNEXPECTED_THINGS_HAPPENED] ke.metrics histogram {}", e.getKey(), ex);
+                    logger.error("[UNEXPECTED_THINGS_HAPPENED] kylin.metrics histogram {}", e.getKey(), ex);
                     return null;
                 }
             }).filter(Objects::nonNull).collect(toList());
@@ -210,7 +210,7 @@ public class InfluxdbReporter extends ScheduledReporter {
                             .putField(filedName(nameTags.getFirst(), MEAN_MINUTE), convertRate(meter.getMeanRate()))
                             .build();
                 } catch (Exception ex) {
-                    logger.error("[UNEXPECTED_THINGS_HAPPENED] ke.metrics meter {}", e.getKey(), ex);
+                    logger.error("[UNEXPECTED_THINGS_HAPPENED] kylin.metrics meter {}", e.getKey(), ex);
                     return null;
                 }
             }).filter(Objects::nonNull).collect(toList());
@@ -249,7 +249,7 @@ public class InfluxdbReporter extends ScheduledReporter {
                             .putField(filedName(nameTags.getFirst(), MEAN_MINUTE), convertRate(timer.getMeanRate()))
                             .putField(filedName(nameTags.getFirst(), RUN_COUNT), timer.getCount()).build();
                 } catch (Exception ex) {
-                    logger.error("[UNEXPECTED_THINGS_HAPPENED] ke.metrics timer {}", e.getKey(), ex);
+                    logger.error("[UNEXPECTED_THINGS_HAPPENED] kylin.metrics timer {}", e.getKey(), ex);
                     return null;
                 }
             }).filter(Objects::nonNull).collect(toList());
@@ -265,7 +265,7 @@ public class InfluxdbReporter extends ScheduledReporter {
                     return new PointBuilder(measurement, timestamp, timeUnit).putTags(nameTags.getSecond())
                             .putField(nameTags.getFirst(), value).build();
                 } catch (Exception ex) {
-                    logger.error("[UNEXPECTED_THINGS_HAPPENED] ke.metrics gauge or counter {}", e.getKey(), ex);
+                    logger.error("[UNEXPECTED_THINGS_HAPPENED] kylin.metrics gauge or counter {}", e.getKey(), ex);
                     return null;
                 }
             }).filter(Objects::nonNull).collect(toList());

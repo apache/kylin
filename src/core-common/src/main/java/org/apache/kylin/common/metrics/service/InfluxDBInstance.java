@@ -55,8 +55,8 @@ public class InfluxDBInstance {
     private int replicationFactor;
     private boolean useDefault;
 
-    private static final String DEFAULT_DATABASE = "KE_MONITOR";
-    private static final String DEFAULT_RETENTION_POLICY_NAME = "KE_MONITOR_RP";
+    private static final String DEFAULT_DATABASE = "KYLIN_MONITOR";
+    private static final String DEFAULT_RETENTION_POLICY_NAME = "KYLIN_MONITOR_RP";
     private static final String RETENTION_DURATION = "90d";
     private static final String SHARD_DURATION = "7d";
     private static final int REPLICATION_FACTOR = 1;

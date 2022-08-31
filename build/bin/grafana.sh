@@ -68,6 +68,7 @@ function startGrafana(){
     echo "Influxdb Connect Protocol: $INFLUXDB_PROTOCOL"
     echo "Influxdb Address: $INFLUXDB_ADDRESS"
     echo "Metrics Database: $KYLIN_METRICS_DATABASE"
+    echo "Metrics Daily Database: $KYLIN_METRICS_DAILY_DATABASE"
 
     if [[ -f "${KYLIN_HOME}/conf/grafana.ini" ]]; then
         nohup bin/grafana-server --config ${KYLIN_HOME}/conf/grafana.ini web > /dev/null 2>&1 &
@@ -136,7 +137,17 @@ elif [[ "$1" == "stop" ]]; then
         echo "Grafana is not running."
         exit 1
     fi
+elif [[ "$1" == "restart" ]]; then
+    echo "Stopping Grafana..."
+    stopGrafana
+    if [[ $? == 0 ]]; then
+        echo "Grafana is stopped."
+    else
+        echo "Grafana is not running."
+    fi
+    echo "Starting Grafana..."
+    startGrafana
 else
-    echo "Usage: 'grafana.sh start' or 'grafana.sh stop'"
+    echo "Usage: 'grafana.sh start' or 'grafana.sh stop' or 'grafana.sh restart'"
     exit 1
 fi

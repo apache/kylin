@@ -23,7 +23,7 @@ cd ${dir}/../..
 export PACKAGE_TIMESTAMP=1
 export WITH_SPARK=1
 export WITH_HIVE1=1
-export WITH_THIRDPARTY=1
+export WITH_THIRDPARTY=0
 export WITH_FRONT=1
 
 for PARAM in $@; do
@@ -45,9 +45,9 @@ for PARAM in $@; do
         shift
     fi
 
-    if [[ "$PARAM" == "-noThirdParty" ]]; then
-        echo "Package without Third Party..."
-        export WITH_THIRDPARTY=0
+    if [[ "$PARAM" == "-withThirdParty" ]]; then
+        echo "Package with Third Party..."
+        export WITH_THIRDPARTY=1
         shift
     fi
 

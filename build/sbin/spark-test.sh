@@ -38,7 +38,7 @@ then
     export KYLIN_CONF=$CONF_DIR
     export LOG4J_DIR=${KYLIN_HOME}/build/conf
     export SPARK_DIR=${KYLIN_HOME}/build/spark/
-    export KYLIN_SPARK_TEST_JAR_PATH=`ls $KYLIN_HOME/src/assembly/target/kap-assembly-*.jar`
+    export KYLIN_SPARK_TEST_JAR_PATH=`ls $KYLIN_HOME/src/assembly/target/kylin-assembly-*.jar`
     export KYLIN_HDFS_WORKING_DIR=`$KYLIN_HOME/build/bin/get-properties.sh kylin.env.hdfs-working-dir`
     export KYLIN_METADATA_URL=`$KYLIN_HOME/build/bin/get-properties.sh kylin.metadata.url`
     export SPARK_ENV_PROPS=`$KYLIN_HOME/build/bin/get-properties.sh kylin.storage.columnar.spark-env.`
@@ -228,7 +228,7 @@ then
     else
         hadoop ${KYLIN_HADOOP_PARAM} fs -rm -r -skipTrash ${KYLIN_WORKING_DIR}/${input_file}
         rm -rf ${full_input_file}
-        quit "ERROR: Test of submitting spark job failed,error when testing spark with spark configurations in Kyligence Enterprise!"
+        quit "ERROR: Test of submitting spark job failed,error when testing spark with spark configurations in Kylin!"
     fi
 
     SPARK_SUBMIT_CLUSTER_MODE=$(echo "$SPARK_ENGINE_CONF_PROPS" | grep -c -E "spark.submit.deployMode=cluster")

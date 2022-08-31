@@ -40,7 +40,7 @@ public class MonitorDaoTest {
 
     @BeforeEach
     public void setUp() {
-        Mockito.doReturn("KE_MONITOR").when(influxDBInstance).getDatabase();
+        Mockito.doReturn("KYLIN_MONITOR").when(influxDBInstance).getDatabase();
         Mockito.doReturn(true).when(influxDBInstance).write(eq("tb_query"), Mockito.anyMap(), Mockito.anyMap(),
                 Mockito.anyLong());
 

@@ -15,10 +15,23 @@
 # limitations under the License.
 #
 
-KE-030001000=#TODO
-KE-030001003=#TODO#date_format_not_match
-KE-030001004=#TODO#oom
-KE-030001005=#TODO#no_space_left_on_device
-KE-030001006=#TODO#class_not_found
-KE-030001007=#TODO#kerberos_realm_not_found
-KE-030001009=#TODO
+apiVersion: 1
+
+deleteDatasources:
+  - name: KylinInfluxDB
+    orgId: 1
+
+datasources:
+  - id: 1
+    name: KylinInfluxDB
+    type: influxdb
+    access: proxy
+    orgId: 1
+    url: $INFLUXDB_PROTOCOL://$INFLUXDB_ADDRESS
+    password: $INFLUXDB_PASSWORD
+    user: $INFLUXDB_USERNAME
+    database: $KYLIN_METRICS_DATABASE
+    readOnly: false
+    jsonData:
+      tlsSkipVerify: true
+

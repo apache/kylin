@@ -15,10 +15,28 @@
 # limitations under the License.
 #
 
-KE-030001000=#TODO
-KE-030001003=#TODO#date_format_not_match
-KE-030001004=#TODO#oom
-KE-030001005=#TODO#no_space_left_on_device
-KE-030001006=#TODO#class_not_found
-KE-030001007=#TODO#kerberos_realm_not_found
-KE-030001009=#TODO
+# config file version
+apiVersion: 1
+
+# notifiers:
+#   - name: default-slack-temp
+#     type: slack
+#     org_name: Main Org.
+#     is_default: true
+#     uid: notifier1
+#     settings:
+#       recipient: "XXX"
+#       token: "xoxb"
+#       uploadImage: true
+#       url: https://slack.com
+#   - name: default-email
+#     type: email
+#     org_id: 1
+#     uid: notifier2
+#     is_default: false
+#     settings:
+#       addresses: example11111@example.com
+# delete_notifiers:
+#   - name: default-slack-temp
+#     org_name: Main Org.
+#     uid: notifier1

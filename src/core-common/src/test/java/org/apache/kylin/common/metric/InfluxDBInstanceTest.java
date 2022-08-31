@@ -49,7 +49,7 @@ public class InfluxDBInstanceTest {
 
     @BeforeEach
     public void setup() throws Exception {
-        influxDBInstance = new InfluxDBInstance("KE_HISTORY", "KE_MONITOR_RP", "", "", 1, false);
+        influxDBInstance = new InfluxDBInstance("KE_HISTORY", "KYLIN_MONITOR_RP", "", "", 1, false);
         influxDBInstance.init();
         influxDBInstance.setInfluxDB(mockInfluxDB());
     }

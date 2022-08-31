@@ -17,29 +17,24 @@
 # limitations under the License.
 #
 
-dir=$(dirname ${0})
-cd ${dir}/../..
-
-source build/apache_release/functions.sh
-
-rm -rf build/influxdb
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
 influxdb_version="1.6.4.x86_64"
-influxdb_pkg_md5="e24a00fb3b41d2974f85def72035f9f2"
+influxdb_pkg_md5="4c73908a1fc897c5ab010c5fb1852e3e"
 
-if [ ! -f "build/influxdb-${influxdb_version}.rpm" ]
-then
-    echo "No binary file found."
-    wget --directory-prefix=build/ https://repos.influxdata.com/centos/6/x86_64/stable/influxdb-${influxdb_version}.rpm || { echo "Download InfluxDB failed." && exit 1; }
-else
-    if [ `calMd5 build/influxdb-${influxdb_version}.rpm | awk '{print $1}'` != "${influxdb_pkg_md5}" ]
-    then
-        echo "md5 check failed."
-        rm build/influxdb-${influxdb_version}.rpm
-        wget --directory-prefix=build/ https://repos.influxdata.com/centos/6/x86_64/stable/influxdb-${influxdb_version}.rpm || { echo "Download InfluxDB failed." && exit 1; }
-
-    fi
+if [[ ! -d ${KYLIN_HOME}/influxdb ]]; then
+    mkdir -p ${KYLIN_HOME}/influxdb
 fi
 
-mkdir -p build/influxdb
-cp build/influxdb-${influxdb_version}.rpm build/influxdb
+if [ ! -f "${KYLIN_HOME}/influxdb/influxdb-${influxdb_version}.rpm" ]
+then
+    echo "No binary file found."
+    wget --directory-prefix=${KYLIN_HOME}/influxdb/ https://repos.influxdata.com/centos/6/x86_64/stable/influxdb-${influxdb_version}.rpm && echo "Download InfluxDB success."  || { echo "Download InfluxDB failed." && exit 1; }
+else
+    if [ `calMd5 ${KYLIN_HOME}/influxdb/influxdb-${influxdb_version}.rpm | awk '{print $1}'` != "${influxdb_pkg_md5}" ]
+    then
+        echo "md5 check failed."
+        rm ${KYLIN_HOME}/influxdb/influxdb-${influxdb_version}.rpm
+        wget --directory-prefix=${KYLIN_HOME}/influxdb/ https://repos.influxdata.com/centos/6/x86_64/stable/influxdb-${influxdb_version}.rpm && echo "Download InfluxDB success." || { echo "Download InfluxDB failed." && exit 1; }
+    fi
+fi
