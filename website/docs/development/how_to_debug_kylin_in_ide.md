@@ -18,30 +18,34 @@ last_update:
 
 # How to debug Kylin in IDEA using docker
 
-## Background
+### Background
 
 #### Why debug Kylin in IDEA using docker
 This article aims to introduce a simple and useful way to develop and debug Kylin for developer, and provided similar deployment to user's real scenario. 
 
-This guide assumes you use Laptop such as Macbook to do development work, and have another remote linux server for testing and deployment purpose.
-Windows is not verified at the moment.
+This guide **assumes** you have to the following:
 
-You have to prepare:
-- Docker Desktop on Mac(and Docker Engine on Linux Server if needed)
-- IntelliJ IDEA and kylin's source code
-
-Tips:
-It is **recommended** to use remote server to deploy Hadoop Cluster, because 7-8 containers may consume a lot of hardware resources and cause your laptop run slower than before.
+- Use a **laptop** with MacOS installed to do development work, and have another **remote linux server** for testing and deployment purpose.
+- Docker Desktop on Mac(Windows is not verified at the moment)
+- Docker Engine on Linux Server(optional)
+- IntelliJ IDEA Community Edition
+- kylin's source code is cloned into some directory in your laptop
 
 #### Deployment architecture
 Following is architecture of current deployment.
 
 ![debug_in_laptop](images/debug_kylin_by_docker_compose.png)
 
-## Prepare IDEA and build source code
+### Prepare IDEA and build source code
+
+#### Software Requirement
+
+Please visit [software_reqiurement](how_to_package#software_reqiurement).
+
 #### Build source code
 - Build back-end source code before your start debug.
 ```shell
+cd <path-to-kylin-source>
 mvn clean install -DskipTests
 ```
 
@@ -62,12 +66,16 @@ npm install
 
 ![sandbox.sh init](images/how-to-debug-01.png)
 
-## Prepare the Hadoop Cluster
+### Prepare the Hadoop Cluster
 
 #### Deploy Hadoop Cluster
 - Install latest docker desktop in your laptop
 - [**Optional**] Install docker engine on remote machine (https://docs.docker.com/engine/install/)
 - [**Optional**] If you want to deploy hadoop cluster on remote machine, please set correct `DOCKER_HOST`
+
+:::tip
+It is recommended to use **remote server** other than laptop to deploy Hadoop Cluster, because 7-8 containers may consume a lot of hardware resources and cause your laptop run slower than before.
+:::
 
 ```shell
 # see more detail at : https://docs.docker.com/compose/reference/envvars/#docker_host
@@ -114,7 +122,7 @@ Following output content shows all hadoop component are in health state.
 
 ![hive table](images/how-to-debug-04.png)
 
-## Debug Kylin in IDEA
+### Debug Kylin in IDEA
 
 #### Start backend in IDEA
 
@@ -155,12 +163,12 @@ npm run devproxy
 ![query a agg index](images/local-query-succeed.png)
 
 
-## Command manual
+### Command manual
 1. Use `./dev-support/sandbox/sandbox.sh stop` to stop all containers
 2. Use `./dev-support/sandbox/sandbox.sh start` to start all containers
 3. Use `./dev-support/sandbox/sandbox.sh ps` to check status of all containers
 4. Use `./dev-support/sandbox/sandbox.sh down` to stop all containers and delete them
 
-## Q&A
+### Q&A
 
 // todo

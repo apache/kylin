@@ -20,9 +20,9 @@ From Kylin 5.0, Kylin community proposed to write documents using [Docusaurus](h
 
 ### Shortcut: Edit a single existent page
 
-:::caution
-1. If you found some minor typos or mistakes on a **single** page, you can edit document in browser in this way in several minutes.
-2. But if you want to add/edit **several** pages, upload images, or change global config files, please jump to next paragraph: [Before your work](#Before_your_work).
+:::info Shortcut for non-programme
+1. This shortcut/way is extreme useful for **non-programmer**. If you found some minor typos or mistakes on a **single** page, you can edit document in browser in this way in 3-15 minutes without preparation.
+2. But if you want to more complex works, like add/edit **several** pages, upload images, or change global config files, please jump to next paragraph: [**Before your work**](#Before_your_work).
 :::
 
 1. Just scroll down the page to the bottom and click the `Edit this page`.
