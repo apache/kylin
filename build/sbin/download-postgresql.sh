@@ -17,13 +17,7 @@
 # limitations under the License.
 #
 
-dir=$(dirname ${0})
-cd ${dir}/../..
-
-source build/apache_release/functions.sh
-
-mkdir -p build/postgresql
-
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
 pg_urls=(
     "https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-6-x86_64/postgresql10-libs-10.7-1PGDG.rhel6.x86_64.rpm"
@@ -49,20 +43,24 @@ pg_file_md5=(
     "a5f563d7bf7fd0444250bb4bba6f3d4d"
 )
 
+if [[ ! -d ${KYLIN_HOME}/postgresql ]]; then
+    mkdir -p ${KYLIN_HOME}/postgresql
+fi
+
 for ((i=0;i<${#pg_urls[@]};i++))
 do
     url=${pg_urls[$i]}
     file_name=${url##*/}
-    if [ ! -f "build/postgresql/$file_name" ]
+    if [ ! -f "${KYLIN_HOME}/postgresql/$file_name" ]
     then
         echo "No binary file found "
-        wget --no-check-certificate --directory-prefix=build/postgresql/ $url || { echo "Download $file_name failed." && exit 1; }
+        wget --no-check-certificate --directory-prefix=${KYLIN_HOME}/postgresql/ $url && echo "Download Postgresql $file_name success." || { echo "Download $file_name failed." && exit 1; }
     else
-        if [ `calMd5 build/postgresql/$file_name | awk '{print $1}'` != "${pg_file_md5[$i]}" ]
+        if [ `calMd5 ${KYLIN_HOME}/postgresql/$file_name | awk '{print $1}'` != "${pg_file_md5[$i]}" ]
         then
             echo "md5 check failed"
-            rm build/$file_name
-            wget --no-check-certificate --directory-prefix=build/postgresql/ $url || { echo "Download $file_name failed." && exit 1; }
+            rm ${KYLIN_HOME}/$file_name
+            wget --no-check-certificate --directory-prefix=build/postgresql/ $url && echo "Download Postgresql $file_name success." || { echo "Download $file_name failed." && exit 1; }
         fi
     fi
 done

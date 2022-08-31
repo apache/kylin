@@ -68,6 +68,27 @@ then
         done<$2
     }
 
+    function calMd5() {
+        OS_TYPE=`detectOSType`
+        if [[ "$OS_TYPE" == "mac" ]]; then
+            md5 -q $1
+        elif [[ "$OS_TYPE" == "windows" ]]; then
+            md5sum $1
+        else
+            md5sum $1
+        fi
+    }
+
+    function detectOSType() {
+        OS_TYPE="linux"
+        if [[ `uname -a` =~ "Darwin" ]]; then
+            OS_TYPE="mac"
+        elif [[ `uname -a` =~ "Cygwin" ]]; then
+            OS_TYPE="windows"
+        fi
+        echo $OS_TYPE
+    }
+
     # setup verbose
     verbose=${verbose:-""}
     while getopts ":v" opt; do
@@ -81,7 +102,7 @@ then
                 ;;
         esac
     done
-    
+
     # set KYLIN_HOME with consideration for multiple instances that are on the same node
     CURRENT=`cd "${dir}/../"; pwd`
     if [[ "$CI_MODE" != "true" ]]; then
@@ -107,7 +128,7 @@ then
         fi
         export JAVA=$JAVA_HOME/bin/java
         [[ -e "${JAVA}" ]] || quit "${JAVA} does not exist. Please set JAVA_HOME correctly."
-        verbose "java is ${JAVA}" 
+        verbose "java is ${JAVA}"
     fi
 
     if [[ -z ${MAPR_HOME} ]];then

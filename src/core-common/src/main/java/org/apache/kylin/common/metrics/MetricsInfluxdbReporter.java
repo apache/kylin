@@ -50,8 +50,8 @@ public class MetricsInfluxdbReporter implements MetricsReporter {
 
     public static final String METRICS_MEASUREMENT = "system_metric";
 
-    public static final String KE_METRICS_RP = "KE_METRICS_RP";
-    public static final String DAILY_METRICS_RETENTION_POLICY_NAME = "KE_METRICS_DAILY_RP";
+    public static final String KYLIN_METRICS_RP = "KYLIN_METRICS_RP";
+    public static final String DAILY_METRICS_RETENTION_POLICY_NAME = "KYLIN_METRICS_DAILY_RP";
     public static final String DAILY_METRICS_MEASUREMENT = "system_metric_daily";
     private AtomicInteger retry = new AtomicInteger(0);
     private AtomicLong lastUpdateTime = new AtomicLong(0);
@@ -155,7 +155,7 @@ public class MetricsInfluxdbReporter implements MetricsReporter {
             if (!initialized.get()) {
                 final MetricsConfig config = new MetricsConfig(kapConfig);
                 defaultMeasurement = METRICS_MEASUREMENT;
-                metricInstance = new InfluxDBInstance(config.getMetricsDB(), KE_METRICS_RP, "30d", "7d", 1, true);
+                metricInstance = new InfluxDBInstance(config.getMetricsDB(), KYLIN_METRICS_RP, "30d", "7d", 1, true);
                 metricInstance.init();
                 underlying = new InfluxdbReporter(metricInstance, defaultMeasurement,
                         MetricsController.getDefaultMetricRegistry(), reporterName);
@@ -173,7 +173,7 @@ public class MetricsInfluxdbReporter implements MetricsReporter {
                 underlying.report();
                 underlying.start(pollingPeriodInSeconds, TimeUnit.SECONDS);
                 running.set(true);
-                logger.info("ke.metrics influxdb reporter started");
+                logger.info("kylin.metrics influxdb reporter started");
             }
         }
     }
@@ -191,6 +191,6 @@ public class MetricsInfluxdbReporter implements MetricsReporter {
 
     @Override
     public String getMBeanName() {
-        return "ke.metrics:type=NMetricsInfluxdbReporter";
+        return "kylin.metrics:type=NMetricsInfluxdbReporter";
     }
 }

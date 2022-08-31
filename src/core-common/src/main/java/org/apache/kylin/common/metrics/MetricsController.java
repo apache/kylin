@@ -69,9 +69,9 @@ public class MetricsController {
 
                     reporterStarted.set(true);
 
-                    logger.info("ke.metrics reporters started");
+                    logger.info("kylin.metrics reporters started");
                 } catch (Exception e) {
-                    logger.error("ke.metrics reporters start failed", e);
+                    logger.error("kylin.metrics reporters start failed", e);
                 }
             }
         }

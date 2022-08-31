@@ -394,14 +394,14 @@ public class KapConfig {
     public String getMetricsDbNameWithMetadataUrlPrefix() {
         StringBuilder sb = new StringBuilder(config.getMetadataUrlPrefix());
         sb.append("_");
-        sb.append(config.getOptional("kylin.metrics.influx-db", "KE_METRICS"));
+        sb.append(config.getOptional("kylin.metrics.influx-db", "KYLIN_METRICS"));
         return sb.toString();
     }
 
     public String getDailyMetricsDbNameWithMetadataUrlPrefix() {
         StringBuilder sb = new StringBuilder(config.getMetadataUrlPrefix());
         sb.append("_");
-        sb.append(config.getOptional("kylin.metrics.daily-influx-db", "KE_METRICS_DAILY"));
+        sb.append(config.getOptional("kylin.metrics.daily-influx-db", "KYLIN_METRICS_DAILY"));
         return sb.toString();
     }
 
@@ -429,11 +429,11 @@ public class KapConfig {
     }
 
     public String getMonitorDatabase() {
-        return String.valueOf(config.getOptional("kylin.monitor.db", "KE_MONITOR"));
+        return String.valueOf(config.getOptional("kylin.monitor.db", "KYLIN_MONITOR"));
     }
 
     public String getMonitorRetentionPolicy() {
-        return String.valueOf(config.getOptional("kylin.monitor.retention-policy", "KE_MONITOR_RP"));
+        return String.valueOf(config.getOptional("kylin.monitor.retention-policy", "KYLIN_MONITOR_RP"));
     }
 
     public String getMonitorRetentionDuration() {

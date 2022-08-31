@@ -55,11 +55,11 @@ else
 fi
 
 if [[ "${WITH_THIRDPARTY}" = "1" ]]; then
-    #echo "BUILD STAGE 4 - Prepare influxdb..."
-    #sh build/apache_release/download-influxdb.sh      || { exit 1; }
+    echo "BUILD STAGE 4 - Prepare influxdb..."
+    sh build/apache_release/download-influxdb.sh      || { exit 1; }
 
-    #echo "BUILD STAGE 5 - Prepare grafana..."
-    #sh build/apache_release/download-grafana.sh      || { exit 1; }
+    echo "BUILD STAGE 5 - Prepare grafana..."
+    sh build/apache_release/download-grafana.sh      || { exit 1; }
 
     echo "BUILD STAGE 6 - Prepare postgresql..."
     sh build/apache_release/download-postgresql.sh      || { exit 1; }
@@ -74,5 +74,5 @@ sh build/apache_release/prepare.sh ${MVN_PROFILE} || { exit 1; }
 sh build/apache_release/compress.sh               || { exit 1; }
 
 echo "BUILD STAGE 8 - Clean up..."
-    
+
 echo "BUILD FINISHED!"

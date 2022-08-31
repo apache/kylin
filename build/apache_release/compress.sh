@@ -51,6 +51,12 @@ mkdir -p ${package_name}/tool/ssb
 cp -rf ../src/examples/sample_cube/data ${package_name}/tool/ssb/
 cp -rf ../src/examples/sample_cube/create_sample_ssb_tables.sql ${package_name}/tool/ssb/
 
+# Add grafana preparation files
+mkdir -p ${package_name}/tool/grafana
+cp -rf ../build/deploy/grafana/dashboards   ${package_name}/tool/grafana/
+cp -rf ../build/deploy/grafana/provisioning ${package_name}/tool/grafana/
+cp -rf ../build/deploy/grafana/custom.ini   ${package_name}/tool/grafana/
+
 # Add ops_plan files
 cp -rf ../ops_plan ${package_name}/
 

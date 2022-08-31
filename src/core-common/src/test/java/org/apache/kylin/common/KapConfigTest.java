@@ -168,10 +168,10 @@ public class KapConfigTest {
 
         map.put("isMonitorEnabled", new PropertiesEntity("kylin.monitor.enabled", "true", true));
 
-        map.put("getMonitorDatabase", new PropertiesEntity("kylin.monitor.db", "KE_MONITOR", "KE_MONITOR"));
+        map.put("getMonitorDatabase", new PropertiesEntity("kylin.monitor.db", "KYLIN_MONITOR", "KYLIN_MONITOR"));
 
         map.put("getMonitorRetentionPolicy",
-                new PropertiesEntity("kylin.monitor.retention-policy", "KE_MONITOR_RP", "KE_MONITOR_RP"));
+                new PropertiesEntity("kylin.monitor.retention-policy", "KYLIN_MONITOR_RP", "KYLIN_MONITOR_RP"));
 
         map.put("getMonitorRetentionDuration", new PropertiesEntity("kylin.monitor.retention-duration", "90d", "90d"));
 

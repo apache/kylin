@@ -90,6 +90,8 @@ build/tomcat
 build/lib
 build/kybot
 build/tpch-benchmark
+build/spark
+
 *.tgz
 *.tar.gz
 webapp/app/components/*
