@@ -19,17 +19,22 @@
 
 dir=$(dirname ${0})
 cd ${dir}/../..
+source build/release/functions.sh
 
-export PACKAGE_TIMESTAMP=1
 export WITH_SPARK=1
 export WITH_HIVE1=1
 export WITH_THIRDPARTY=0
 export WITH_FRONT=1
 
+export PACKAGE_OFFICIAL=0
+export WITH_HIVE1=0
+export WITH_THIRDPARTY=0
+export SKIP_COMPILE=0
+
 for PARAM in $@; do
-    if [[ "$PARAM" == "-noTimestamp" ]]; then
-        echo "Package without timestamp..."
-        export PACKAGE_TIMESTAMP=0
+    if [[ "$PARAM" == "-official" ]]; then
+        echo "Package for official release..."
+        export PACKAGE_OFFICIAL=1
         shift
     fi
 
@@ -56,22 +61,30 @@ for PARAM in $@; do
         export WITH_FRONT=0
         shift
     fi
+    if [[ "$PARAM" == "-skipCompile" ]]; then
+        echo 'Skip install backend-end dependencies...'
+        export SKIP_COMPILE=1
+        shift
+    fi
 done
+
+## Fetch kylin version from pom
+exportProjectVersions
 
 if [[ -z ${release_version} ]]; then
     release_version='staging'
 fi
-if [[ "${PACKAGE_TIMESTAMP}" = "1" ]]; then
+if [[ "${PACKAGE_OFFICIAL}" = "0" ]]; then
     timestamp=`date '+%Y%m%d%H%M%S'`
     export release_version=${release_version}.${timestamp}
 fi
-export package_name="Kylin5-beta-${release_version}"
+export package_name="apache-kylin-${release_version}"
 
-sh build/apache_release/package.sh $@ || { echo "package failed!"; exit 1; }
+sh build/release/package.sh $@ || { echo "package failed!"; exit 1; }
 
 echo "Release Version: ${release_version}"
 
-package_name="Kylin5-beta-${release_version}.tar.gz"
+package_name="apache-kylin-${release_version}.tar.gz"
 sha256sum dist/$package_name > dist/${package_name}.sha256sum
 
 echo "sha256: `cat dist/${package_name}.sha256sum`"

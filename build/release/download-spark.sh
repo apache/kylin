@@ -20,7 +20,7 @@
 dir=$(dirname ${0})
 cd ${dir}/../..
 
-source build/apache_release/functions.sh
+source build/release/functions.sh
 
 rm -rf build/spark
 
@@ -53,8 +53,6 @@ rm -rf build/spark/examples
 rm -rf build/spark/data
 rm -rf build/spark/R
 rm -rf build/spark/hive_1_2_2
-
-cp -rf build/hadoop3 build/spark/
 
 if [[ "${WITH_HIVE1}" != "0" ]]; then
     if [ ! -f "build/hive_1_2_2.tar.gz" ]
