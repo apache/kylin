@@ -82,14 +82,14 @@ function main() {
         fi
 
         info "* Downloading spark..."
-        ${PROJECT_DIR}/build/apache_release/download-spark.sh
+        ${PROJECT_DIR}/build/release/download-spark.sh
         if [[ $? != 0 ]]; then
             warn "  Download spark failed, please manually execute 'download-spark.sh'"
         fi
 
         info "* Setting spark dependency..."
         cp ${PROJECT_DIR}/src/server/target/jars/log4j* ${SPARK_HOME}/jars
-        cp ${WORKDIR}/libs/mysql-connector-java-8.0.16.jar ${SPARK_HOME}/jars
+#        cp ${WORKDIR}/libs/mysql-connector-java-8.0.16.jar ${SPARK_HOME}/jars
 
         info "* Setting IDEA run configurations..."
         if [[ ! -d "${PROJECT_DIR}/.idea/runConfigurations" ]]; then

@@ -228,7 +228,7 @@ then
     else
         hadoop ${KYLIN_HADOOP_PARAM} fs -rm -r -skipTrash ${KYLIN_WORKING_DIR}/${input_file}
         rm -rf ${full_input_file}
-        quit "ERROR: Test of submitting spark job failed,error when testing spark with spark configurations in Kylin!"
+        quit "ERROR: Test of submitting spark job failed,error when testing spark with spark configurations in Apache Kylin!"
     fi
 
     SPARK_SUBMIT_CLUSTER_MODE=$(echo "$SPARK_ENGINE_CONF_PROPS" | grep -c -E "spark.submit.deployMode=cluster")

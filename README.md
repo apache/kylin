@@ -25,6 +25,5 @@ sh dev-support/unit_testing.sh
 3. Build a Kylin 5 binary
 
 ```shell
-cd build/apache_release
-./release.sh
+./build/release/release.sh
 ```

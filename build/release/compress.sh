@@ -20,14 +20,8 @@
 dir=$(dirname ${0})
 cd ${dir}/../..
 
-source build/apache_release/functions.sh
+source build/release/functions.sh
 exportProjectVersions
-
-# get package name
-current_branch=${branch}
-if [[ "${current_branch}" = "" ]]; then
-    current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-fi
 
 # package as *.tar.gz
 echo "package name: ${package_name}"
@@ -42,9 +36,12 @@ mkdir -p ${package_name}/lib/ext
 cp -rf spark ${package_name}/
 cp -rf sample_project ${package_name}/
 cp -rf samples ${package_name}/
-cp -rf influxdb ${package_name}/
-cp -rf grafana ${package_name}/
-cp -rf postgresql ${package_name}/
+
+if [[ -d "influxdb" ]]; then
+    cp -rf influxdb ${package_name}/
+    cp -rf grafana ${package_name}/
+    cp -rf postgresql ${package_name}/
+fi
 
 # Add ssb data preparation files
 mkdir -p ${package_name}/tool/ssb
@@ -56,9 +53,6 @@ mkdir -p ${package_name}/tool/grafana
 cp -rf ../build/deploy/grafana/dashboards   ${package_name}/tool/grafana/
 cp -rf ../build/deploy/grafana/provisioning ${package_name}/tool/grafana/
 cp -rf ../build/deploy/grafana/custom.ini   ${package_name}/tool/grafana/
-
-# Add ops_plan files
-cp -rf ../ops_plan ${package_name}/
 
 # Add conf profiles
 mkdir -p ${package_name}/conf
@@ -94,9 +88,12 @@ find ${package_name} -type d -exec chmod 755 {} \;
 find ${package_name} -type f -exec chmod 644 {} \;
 find ${package_name} -type f -name "*.sh" -exec chmod 755 {} \;
 find ${package_name}/spark -type f -exec chmod 755 {} \;
-find ${package_name}/influxdb -type f -exec chmod 755 {} \;
-find ${package_name}/grafana -type f -exec chmod 755 {} \;
-find ${package_name}/postgresql -type f -exec chmod 755 {} \;
+
+if [[ -d "${package_name}/postgresql" ]]; then
+    find ${package_name}/influxdb -type f -exec chmod 755 {} \;
+    find ${package_name}/grafana -type f -exec chmod 755 {} \;
+    find ${package_name}/postgresql -type f -exec chmod 755 {} \;
+fi
 
 rm -rf ../dist
 mkdir -p ../dist
