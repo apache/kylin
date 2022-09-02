@@ -51,8 +51,8 @@ git version 2.30.1 (Apple Git-130)
 
 |         Option       |     Comment                                        | 
 |--------------------  | ---------------------------------------------------|
-| -official            | If add this option, package name contains timestamp| 
-| -noThirdParty        | If add this option, third party binary be packaging into binary, current they are influxdb,grafana and postgresql |
+| -official            | If add this option, package name won't contain timestamp| 
+| -noThirdParty        | If add this option, third party binary won't be packaging into binary, current they are influxdb,grafana and postgresql |
 | -noSpark             | If add this option, spark won't packaging into Kylin binary |
 | -noHive1             | By default kylin 5.0 will support Hive 1.2, if add this option, this binary will support Hive 2.3+ |
 | -skipFront           | If add this option, front-end won't be build and packaging |
