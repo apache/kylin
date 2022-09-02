@@ -126,7 +126,7 @@ DevelopmentSideBar: [
             ...,
             {
                 type: 'doc',
-                id: 'development/how_to_write_doc.md'
+                id: 'development/how_to_write_doc'
             },
         ],
     },
