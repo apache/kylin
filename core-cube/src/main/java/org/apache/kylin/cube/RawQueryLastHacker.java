@@ -35,10 +35,9 @@ public class RawQueryLastHacker {
     private static final Logger logger = LoggerFactory.getLogger(RawQueryLastHacker.class);
 
     public static void hackNoAggregations(SQLDigest sqlDigest, CubeDesc cubeDesc, TupleInfo tupleInfo) {
-        if (!sqlDigest.isRawQuery ||
-                BackdoorToggles.getDisabledRawQueryLastHacker() ||
-                KylinConfig.getInstanceFromEnv().isEnabledNoAggQuery()) {
-            if (KylinConfig.getInstanceFromEnv().isEnabledNoAggQuery()) {
+        boolean isEnabledNoAggQuery = KylinConfig.getInstanceFromEnv().isEnabledNoAggQuery();
+        if (!sqlDigest.isRawQuery || BackdoorToggles.getDisabledRawQueryLastHacker() || isEnabledNoAggQuery) {
+            if (isEnabledNoAggQuery) {
                 logger.info("No hack for aggregation sql by kylin.query.enable-no-aggregate-query which is 'true'.");
             }
             return;
