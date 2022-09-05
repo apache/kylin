@@ -125,6 +125,18 @@ public abstract class KylinConfigBase implements Serializable {
         return (val == null) ? defaultValue : val;
     }
 
+    // Mainly invoked in tests
+    public static String setSystemProperty(String key, String value) {
+        System.setProperty(key, value);
+        return (String) STATIC_SYSTEM_PROPERTY.put(key, value);
+    }
+
+    // Mainly invoked in tests
+    public static void clearSystemProperty(String key) {
+        System.clearProperty(key);
+        STATIC_SYSTEM_PROPERTY.remove(key);
+    }
+
     /*
      * DON'T DEFINE CONSTANTS FOR PROPERTY KEYS!
      *
@@ -133,8 +145,8 @@ public abstract class KylinConfigBase implements Serializable {
      * For 3), key literals usually appear only once.
      */
 
-    public static String vendor(){
-        if(VENDOR != null) {
+    public static String vendor() {
+        if (VENDOR != null) {
             return VENDOR;
         } else {
             return DEFAULT_VENDOR;
@@ -174,7 +186,7 @@ public abstract class KylinConfigBase implements Serializable {
         return getKylinHome() + File.separator + "spark";
     }
 
-    public Map<String, String> getReadonlyProperties(){
+    public Map<String, String> getReadonlyProperties() {
         val substitutor = getSubstitutor();
         HashMap<String, String> config = Maps.newHashMap();
         for (Entry<Object, Object> entry : this.properties.entrySet()) {
@@ -1020,7 +1032,7 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getQueryExtensionFactory() {
         String dft = "org.apache.kylin.query.QueryExtension$Factory";
-        if(vendor().equals("kyligence")) {
+        if (vendor().equals("kyligence")) {
             dft = "io.kyligence.kap.query.QueryExtensionFactoryEnterprise";
         }
         return getOptional("kylin.extension.query.factory", dft);
@@ -1410,11 +1422,10 @@ public abstract class KylinConfigBase implements Serializable {
     public List<String> getSparkBuildConfExtraRules() {
         String rules = getOptional("kylin.engine.spark.build-conf-extra-rules");
         if (StringUtils.isEmpty(rules)) {
-            return Collections.<String>emptyList();
+            return Collections.<String> emptyList();
         }
         return Lists.newArrayList(rules.split(","));
     }
-
 
     public String getSparkTableSamplingClassName() {
         return getOptional("kylin.engine.spark.sampling-class-name",
@@ -1958,10 +1969,8 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String[] getTableDetectorTransformers() {
         String value = getOptional("kylin.query.table-detect-transformers");
-        return value == null
-                ? new String[] { "org.apache.kylin.query.util.PowerBIConverter",
-                        "org.apache.kylin.query.util.DefaultQueryTransformer",
-                        "org.apache.kylin.query.util.EscapeTransformer" }
+        return value == null ? new String[] { "org.apache.kylin.query.util.PowerBIConverter",
+                "org.apache.kylin.query.util.DefaultQueryTransformer", "org.apache.kylin.query.util.EscapeTransformer" }
                 : getOptionalStringArray("kylin.query.table-detect-transformers", new String[0]);
     }
 
@@ -1969,8 +1978,7 @@ public abstract class KylinConfigBase implements Serializable {
         String value = getOptional("kylin.query.transformers");
         return value == null ? new String[] { "org.apache.kylin.query.util.ReplaceStringWithVarchar",
                 "org.apache.kylin.query.util.PowerBIConverter", "org.apache.kylin.query.util.DefaultQueryTransformer",
-                "org.apache.kylin.query.util.EscapeTransformer",
-                "org.apache.kylin.query.util.ConvertToComputedColumn",
+                "org.apache.kylin.query.util.EscapeTransformer", "org.apache.kylin.query.util.ConvertToComputedColumn",
                 "org.apache.kylin.query.util.KeywordDefaultDirtyHack", "org.apache.kylin.query.security.RowFilter" }
                 : getOptionalStringArray("kylin.query.transformers", new String[0]);
     }

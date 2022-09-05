@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kylin.common.KylinConfigBase;
 
 /**
  * Contains methods that call JDK methods that the
@@ -97,9 +98,9 @@ public class Unsafe {
         }
 
         if (StringUtils.isEmpty(value)) {
-            System.clearProperty(key);
+            KylinConfigBase.clearSystemProperty(key);
         } else {
-            System.setProperty(key, value);
+            KylinConfigBase.setSystemProperty(key, value);
         }
     }
 
@@ -113,7 +114,7 @@ public class Unsafe {
 
     /** Set system property */
     public static String setProperty(String property, String value) {
-        return System.setProperty(property, value);
+        return KylinConfigBase.setSystemProperty(property, value);
     }
 
     /** Clear system property */

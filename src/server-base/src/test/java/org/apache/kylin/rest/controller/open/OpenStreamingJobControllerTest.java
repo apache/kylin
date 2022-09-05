@@ -24,6 +24,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PAR
 import java.util.Collections;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.job.execution.JobTypeEnum;
@@ -80,7 +81,7 @@ public class OpenStreamingJobControllerTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setupResource() {
-        System.setProperty("HADOOP_USER_NAME", "root");
+        KylinConfigBase.setSystemProperty("HADOOP_USER_NAME", "root");
         createTestMetadata();
     }
 

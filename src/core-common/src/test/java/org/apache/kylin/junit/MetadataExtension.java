@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -100,7 +101,7 @@ public class MetadataExtension implements BeforeEachCallback, BeforeAllCallback,
             cleanSingletonInstances();
 
             val kylinHomePath = new File(getTestConfig().getMetadataUrl().toString()).getParentFile().getAbsolutePath();
-            System.setProperty("KYLIN_HOME", kylinHomePath);
+            KylinConfigBase.setSystemProperty("KYLIN_HOME", kylinHomePath);
             val jobJar = org.apache.kylin.common.util.FileUtils.findFile(
                     new File(kylinHomePath, "../../../assembly/target/").getAbsolutePath(), "kylin-assembly(.?)\\.jar");
             getTestConfig().setProperty("kylin.engine.spark.job-jar", jobJar == null ? "" : jobJar.getAbsolutePath());
