@@ -52,7 +52,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
-import io.kyligence.config.core.loader.IExternalConfigLoader;
 import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
 import lombok.Setter;
 
@@ -64,7 +63,7 @@ public class KylinConfig extends KylinConfigBase {
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 
     @Setter
-    private static IExternalConfigLoader configLoader = null;
+    private static ICachedExternalConfigLoader configLoader = null;
 
     final transient ReentrantLock lock = new ReentrantLock();
     /**
@@ -144,7 +143,7 @@ public class KylinConfig extends KylinConfigBase {
         return newKylinConfig(ShellKylinExternalConfigLoaderFactory.getConfigLoader());
     }
 
-    public static KylinConfig newKylinConfig(IExternalConfigLoader configLoader) {
+    public static KylinConfig newKylinConfig(ICachedExternalConfigLoader configLoader) {
         try {
             KylinConfig config = new KylinConfig(configLoader);
             config.reloadKylinConfig(new Properties());
@@ -433,7 +432,7 @@ public class KylinConfig extends KylinConfigBase {
         this(null);
     }
 
-    private KylinConfig(IExternalConfigLoader configLoader) {
+    private KylinConfig(ICachedExternalConfigLoader configLoader) {
         super(configLoader);
         this.singletons = new Singletons();
         logger.trace("a new KylinConfig is created with id: {}", System.identityHashCode(this));

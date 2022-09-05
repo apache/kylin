@@ -18,17 +18,17 @@
 
 package org.apache.kylin.common;
 
-import com.google.common.collect.Maps;
-import io.kyligence.config.core.loader.IExternalConfigLoader;
-import io.kyligence.config.external.loader.NacosExternalConfigLoader;
-import lombok.EqualsAndHashCode;
-
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+
+import com.google.common.collect.Maps;
+
+import io.kyligence.config.external.loader.NacosExternalConfigLoader;
+import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode
 public class PropertiesDelegate extends Properties {
@@ -37,17 +37,19 @@ public class PropertiesDelegate extends Properties {
     private final ConcurrentMap<Object, Object> properties = Maps.newConcurrentMap();
 
     @EqualsAndHashCode.Include
-    private final transient IExternalConfigLoader configLoader;
+    private final transient ICachedExternalConfigLoader configLoader;
 
-    public PropertiesDelegate(Properties properties, IExternalConfigLoader configLoader) {
-        if(configLoader != null) this.properties.putAll(configLoader.getProperties());
+    public PropertiesDelegate(Properties properties, ICachedExternalConfigLoader configLoader) {
+        if (configLoader != null)
+            this.properties.putAll(configLoader.getPropertyEntries());
         this.properties.putAll(properties);
         this.configLoader = configLoader;
     }
 
     public void reloadProperties(Properties properties) {
         this.properties.clear();
-        if(configLoader != null) this.properties.putAll(configLoader.getProperties());
+        if (configLoader != null)
+            this.properties.putAll(configLoader.getPropertyEntries());
         this.properties.putAll(properties);
     }
 
@@ -103,7 +105,7 @@ public class PropertiesDelegate extends Properties {
             // TODO: Kylin should call remote server in periodically, otherwise query concurrency
             // maybe impacted badly
             ConcurrentMap<Object, Object> propertiesView = Maps.newConcurrentMap();
-            propertiesView.putAll(this.configLoader.getProperties());
+            propertiesView.putAll(this.configLoader.getPropertyEntries());
             propertiesView.putAll(this.properties);
             return propertiesView;
         } else {

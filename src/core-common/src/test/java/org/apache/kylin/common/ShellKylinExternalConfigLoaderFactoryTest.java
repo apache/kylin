@@ -31,15 +31,12 @@ import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
 
-import io.kyligence.config.core.loader.IExternalConfigLoader;
-import io.kyligence.config.external.loader.NacosExternalConfigLoader;
-
 @MetadataInfo
 class ShellKylinExternalConfigLoaderFactoryTest {
 
     @Test
     void testGetConfigLoader() {
-        IExternalConfigLoader configLoader = ShellKylinExternalConfigLoaderFactory.getConfigLoader();
+        ICachedExternalConfigLoader configLoader = ShellKylinExternalConfigLoaderFactory.getConfigLoader();
         Assertions.assertInstanceOf(KylinExternalConfigLoader.class, configLoader);
     }
 
@@ -63,10 +60,10 @@ class ShellKylinExternalConfigLoaderFactoryTest {
                 + "            configLibrary: \"${KYLIN_HOME}/conf/config_library.csv\"";
 
         Files.write(configFile, content.getBytes(StandardCharsets.UTF_8));
-        try (MockedConstruction<NacosExternalConfigLoader> mockedConstruction = Mockito
-                .mockConstruction(NacosExternalConfigLoader.class)) {
-            IExternalConfigLoader configLoader = ShellKylinExternalConfigLoaderFactory.getConfigLoader();
-            Assertions.assertInstanceOf(NacosExternalConfigLoader.class, configLoader);
+        try (MockedConstruction<CachedNacosExternalConfigLoader> mockedConstruction = Mockito
+                .mockConstruction(CachedNacosExternalConfigLoader.class)) {
+            ICachedExternalConfigLoader configLoader = ShellKylinExternalConfigLoaderFactory.getConfigLoader();
+            Assertions.assertInstanceOf(CachedNacosExternalConfigLoader.class, configLoader);
         }
     }
 
@@ -91,9 +88,9 @@ class ShellKylinExternalConfigLoaderFactoryTest {
                 + "            configLibrary: \"${KYLIN_HOME}/conf/config_library.csv\"";
 
         Files.write(configFile, content.getBytes(StandardCharsets.UTF_8));
-        try (MockedConstruction<NacosExternalConfigLoader> mockedConstruction = Mockito
-                .mockConstruction(NacosExternalConfigLoader.class)) {
-            IExternalConfigLoader configLoader = ShellKylinExternalConfigLoaderFactory.getConfigLoader();
+        try (MockedConstruction<CachedNacosExternalConfigLoader> mockedConstruction = Mockito
+                .mockConstruction(CachedNacosExternalConfigLoader.class)) {
+            ICachedExternalConfigLoader configLoader = ShellKylinExternalConfigLoaderFactory.getConfigLoader();
             Assertions.assertInstanceOf(KylinExternalConfigLoader.class, configLoader);
         }
     }
