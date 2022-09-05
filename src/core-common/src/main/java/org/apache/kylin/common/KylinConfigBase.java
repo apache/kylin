@@ -111,6 +111,21 @@ public abstract class KylinConfigBase implements Serializable {
 
     protected static final Map<String, String> STATIC_SYSTEM_ENV = new ConcurrentHashMap<>(System.getenv());
 
+    // It's a workaround to avoid lock in bottom hash table
+    // It can be removed after updating JDK to 11
+    protected static final ConcurrentHashMap<Object, Object> STATIC_SYSTEM_PROPERTY = new ConcurrentHashMap<>(
+            System.getProperties());
+
+    protected static String getSystemProperty(String key) {
+        Object oval = STATIC_SYSTEM_PROPERTY.get(key);
+        return (oval instanceof String) ? (String) oval : null;
+    }
+
+    protected static String getSystemProperty(String key, String defaultValue) {
+        String val = getSystemProperty(key);
+        return (val == null) ? defaultValue : val;
+    }
+
     /*
      * DON'T DEFINE CONSTANTS FOR PROPERTY KEYS!
      *
@@ -138,7 +153,7 @@ public abstract class KylinConfigBase implements Serializable {
     public static String getKylinHomeWithoutWarn() {
         String kylinHome = System.getenv("KYLIN_HOME");
         if (StringUtils.isEmpty(kylinHome)) {
-            kylinHome = System.getProperty("KYLIN_HOME");
+            kylinHome = getSystemProperty("KYLIN_HOME");
         }
         return kylinHome;
     }
@@ -146,7 +161,7 @@ public abstract class KylinConfigBase implements Serializable {
     public static String getKylinConfHome() {
         String confHome = System.getenv("KYLIN_CONF");
         if (StringUtils.isEmpty(confHome)) {
-            confHome = System.getProperty("KYLIN_CONF");
+            confHome = getSystemProperty("KYLIN_HOME");
         }
         return confHome;
     }
@@ -201,7 +216,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     protected String getOptional(String prop, String dft) {
-        final String property = System.getProperty(prop);
+        final String property = getSystemProperty("KYLIN_HOME");
         return property != null ? getSubstitutor().replace(property)
                 : getSubstitutor().replace(properties.getProperty(prop, dft));
     }
@@ -248,7 +263,7 @@ public abstract class KylinConfigBase implements Serializable {
                 result.put(key.substring(prefix.length()), (String) entry.getValue());
             }
         }
-        for (Entry<Object, Object> entry : System.getProperties().entrySet()) {
+        for (Entry<Object, Object> entry : STATIC_SYSTEM_PROPERTY.entrySet()) {
             String key = (String) entry.getKey();
             if (key.startsWith(prefix)) {
                 result.put(key.substring(prefix.length()), (String) entry.getValue());
@@ -267,7 +282,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     protected final String[] getSystemStringArray(String prop, String[] dft) {
-        final String property = System.getProperty(prop);
+        final String property = getSystemProperty("KYLIN_HOME");
         if (!StringUtils.isBlank(property)) {
             return property.split("\\s*,\\s*");
         } else {
@@ -1606,7 +1621,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean asyncProfilingEnabled() {
-        return !Boolean.parseBoolean(System.getProperty("spark.local", FALSE))
+        return !Boolean.parseBoolean(getSystemProperty("spark.local", FALSE))
                 && Boolean.parseBoolean(getOptional("kylin.query.async-profiler-enabled", TRUE));
     }
 
