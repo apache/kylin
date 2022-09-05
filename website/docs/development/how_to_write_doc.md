@@ -16,24 +16,25 @@ last_update:
     author: Tengting Xu, Xiaoxiang Yu
 ---
 
-From Kylin 5.0, Kylin community proposed to write documents using [Docusaurus](https://docusaurus.io/). Please note multi-version and i18n(multi-language) is in our plan, but it is not supported right now.
+From Kylin 5.0, Kylin documents are written using [Docusaurus](https://docusaurus.io/). Please note multi-version and i18n (multi-language) is not supported right now, but is in the plan. Contributions are very much appreciated.
 
-### Shortcut: Edit a single existent page
+### Shortcut: Edit a single existing page
 
-:::info Shortcut for non-programme
-1. This shortcut/way is extreme useful for **non-programmer**. If you found some minor typos or mistakes on a **single** page, you can edit document in browser in this way in 3-15 minutes without preparation.
-2. But if you want to more complex works, like add/edit **several** pages, upload images, or change global config files, please jump to next paragraph: [**Before your work**](#Before_your_work).
+:::info Shortcut editing a single page
+1. This shortcut is extreme useful if you found some minor typos or mistakes on a single page, you can edit the document in browser right away in a few minutes without preparation.
+2. But if the change is more complex, like add/edit several pages, upload images, or change global config files, please jump to next paragraph: [**Before your work**](#Before_your_work).
 :::
 
 1. Just scroll down the page to the bottom and click the `Edit this page`.
-
 ![](images/how-to-write-doc-01.png)
 
 2. Edit this file in browser.
 ![](images/how-to-write-doc-03.png)
 
-3. Raise a pull request for your changes.
+3. Propose your changes by raising a pull request.
 ![](images/how-to-write-doc-04.png)
+
+4. And you are done! The changes proposed will get reviewed by a reviewer, and if OK, will be merged and be seen by the community.
 
 ### <span id="Before_your_work">Before your work</span>
 
