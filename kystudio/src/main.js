@@ -55,7 +55,9 @@ Vue.use(VueKonva)
 Vue.http.headers.common['Accept-Language'] = localStorage.getItem('kystudio_lang') === 'en' ? 'en' : 'cn'
 Vue.http.options.xhr = { withCredentials: true }
 const skipUpdateApiList = [
-  'kylin/api/jobs'
+  'kylin/api/jobs',
+  'kylin/api/system/servers',
+  'kylin/api/jobs/waiting_jobs'
 ]
 Vue.http.interceptors.push(function (request, next) {
   const isProgressVisiable = !request.headers.get('X-Progress-Invisiable')

@@ -51,6 +51,9 @@
           </template>
 
           <ul class="top-ul ksd-fright">
+            <li class="capacity-li">
+              <capacity/>
+            </li>
             <li v-if="showMenuByRole('admin')" style="margin-right: 1px;">
               <el-tooltip :content="$t('kylinLang.menu.admin')" placement="bottom">
                 <el-button
@@ -78,8 +81,27 @@
             </li>
           </ul>
         </div>
-        <div class="panel-content" id="scrollBox">
-          <div class="grid-content bg-purple-light" id="scrollContent">
+        <div class="panel-content" id="scrollBox" :class="{'ksd-pt-38': isShowAlter && !isFullScreen}">
+          <div class="alter-block" v-if="isShowAlter && !isFullScreen">
+            <el-alert :type="globalAlterTips.flag === 0 ? 'error' : 'warning'" :closable="globalAlterTips.flag !== 0" show-icon>
+              <span slot="title">{{globalAlterTips.text}} <a href="javascript:void(0);" @click="jumpToDetails" v-if="globalAlterTips.detailPath&&$route.name!=='SystemCapacity'">{{$t('viewDetails')}}</a></span>
+            </el-alert>
+          </div>
+          <div :class="['grid-content', 'bg-purple-light']" id="scrollContent">
+            <!-- <el-col :span="24" v-show="gloalProjectSelectShow" class="bread-box"> -->
+              <!-- 面包屑在dashboard页面不显示 -->
+              <!-- <el-breadcrumb separator="/" class="ksd-ml-30">
+                <el-breadcrumb-item>
+                  <span>{{$t('kylinLang.menu.' + currentRouterNameArr[0])}}</span>
+                </el-breadcrumb-item>
+                <el-breadcrumb-item v-if="currentRouterNameArr[1]" :to="{ path: '/' + currentRouterNameArr[0] + '/' + currentRouterNameArr[1]}">
+                  <span>{{$t('kylinLang.menu.' + currentRouterNameArr[1])}}</span>
+                </el-breadcrumb-item>
+                <el-breadcrumb-item v-if="currentRouterNameArr[2]" >
+                  {{currentRouterNameArr[2]}}
+                </el-breadcrumb-item>
+              </el-breadcrumb> -->
+            <!-- </el-col> -->
             <el-col :span="24" class="main-content">
               <transition :name="isAnimation ? 'slide' : null" v-bind:css="isAnimation">
                 <router-view v-on:addProject="addProject" v-if="isShowRouterView"></router-view>
@@ -120,6 +142,7 @@ import projectSelect from '../project/project_select'
 import help from '../common/help'
 import KapDetailDialogModal from '../common/GlobalDialog/dialog/detail_dialog'
 import Diagnostic from '../admin/Diagnostic/index'
+import Capacity from '../admin/SystemCapacity/CapacityTopBar'
 import $ from 'jquery'
 import ElementUI from 'kyligence-kylin-ui'
 import GuideModal from '../studio/StudioModel/ModelList/GuideModal/GuideModal.vue'
@@ -143,6 +166,7 @@ let MessageBox = ElementUI.MessageBox
       cacheHistory: 'CACHE_HISTORY',
       saveTabs: 'SET_QUERY_TABS',
       resetSpeedInfo: 'CACHE_SPEED_INFO',
+      setGlobalAlter: 'SET_GLOBAL_ALTER',
       setProject: 'SET_PROJECT'
     }),
     ...mapActions('UserEditModal', {
@@ -158,7 +182,7 @@ let MessageBox = ElementUI.MessageBox
     help,
     KapDetailDialogModal,
     Diagnostic,
-    // Capacity,
+    Capacity,
     GuideModal
   },
   computed: {
@@ -181,6 +205,16 @@ let MessageBox = ElementUI.MessageBox
     canAddProject () {
       // 模型编辑页面的时候，新增项目的按钮不可点
       return this.$route.name !== 'ModelEdit'
+    },
+    isShowAlter () {
+      const isGlobalAlter = this.$store.state.capacity.maintenance_mode || this.capacityAlert
+      if (this.$store.state.capacity.maintenance_mode) {
+        this.globalAlterTips = { text: this.$t('systemUprade'), flag: 0 }
+      } else if (this.capacityAlert) {
+        this.globalAlterTips = { ...this.capacityAlert, text: this.$t(`kylinLang.capacity.${this.capacityAlert.text}`, this.capacityAlert.query ? this.capacityAlert.query : {}), detailPath: this.capacityAlert.detailPath }
+      }
+      this.setGlobalAlter(isGlobalAlter)
+      return isGlobalAlter
     }
   },
   locales: {
@@ -249,6 +283,7 @@ export default class LayoutLeftRightTop extends Vue {
   isGlobalMaskShow = false
   showDiagnostic = false
   showChangePassword = false
+  globalAlterTips = {}
 
   get isAdminView () {
     const adminRegex = /^\/admin/
