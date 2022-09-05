@@ -133,6 +133,7 @@ public class RollbackTool extends ExecutableApplication {
         return options;
     }
 
+    @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         log.info("start roll back");
         log.info("start to init ResourceStore");
@@ -226,7 +227,7 @@ public class RollbackTool extends ExecutableApplication {
         long userTargetTimeMillis = formatter.parseDateTime(userTargetTime).getMillis();
         long protectionTime = System.currentTimeMillis() - kylinConfig.getStorageResourceSurvivalTimeThreshold();
         if (userTargetTimeMillis < protectionTime) {
-            log.error("user specified time  is less than protection time");
+            log.error("user specified time is less than protection time");
             return false;
         }
 
