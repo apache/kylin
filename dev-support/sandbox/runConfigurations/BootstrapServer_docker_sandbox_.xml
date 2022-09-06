@@ -1,16 +1,16 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="BootstrapServer[docker-sandbox]" type="Application" factoryName="Application">
     <envs>
-      <env name="KYLIN_HOME" value="$PROJECT_DIR$" />
-      <env name="KYLIN_CONF" value="$PROJECT_DIR$/dev-support/sandbox/conf" />
-      <env name="SPARK_HOME" value="$PROJECT_DIR$/build/spark" />
-      <env name="HADOOP_CONF_DIR" value="$PROJECT_DIR$/dev-support/sandbox/conf" />
+      <env name="KYLIN_HOME" value="$PROJECT_DIR" />
+      <env name="KYLIN_CONF" value="$PROJECT_DIR/dev-support/sandbox/conf" />
+      <env name="SPARK_HOME" value="$PROJECT_DIR/build/spark" />
+      <env name="HADOOP_CONF_DIR" value="$PROJECT_DIR/dev-support/sandbox/conf" />
       <env name="HADOOP_USER_NAME" value="root" />
     </envs>
     <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.apache.kylin.rest.BootstrapServer" />
     <module name="kylin-server" />
-    <option name="VM_PARAMETERS" value="-Dspring.profiles.active=sandbox,docker" />
+    <option name="VM_PARAMETERS" value="-Dspring.profiles.active=sandbox,docker -Dkylin.server.mode=all" />
     <option name="WORKING_DIRECTORY" value="%MODULE_WORKING_DIR%" />
     <extension name="coverage">
       <pattern>
