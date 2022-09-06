@@ -16,6 +16,6 @@ last_update:
 
 This chapter mainly introduces different log types:
 
-* [System Log](logging.md)
+* [System Log](system_log.md)
 * [Audit Log](audit_log.md)
 

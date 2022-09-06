@@ -14,8 +14,6 @@ last_update:
   date: 08/12/2022
 ---
 
-## Service Monitoring
-
 Kylin provides the service monitoring for main components to help administrators obtain the service status and maintain instances.
 
 Currently, we provide the following methods to monitor the core components in Kylin:

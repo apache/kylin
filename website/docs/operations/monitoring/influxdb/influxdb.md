@@ -21,9 +21,9 @@ Starting with Kylin 5.0, the system uses RDBMS to store query history, which onl
 
 If you need this information, you need to configure the time series database InfluxDB in advance to store data such as the monitoring information of the system.
 
-We recommend you to use InfluxDB v1.6.4, which is provided in the Kylin installation package. 
+We recommend you to use InfluxDB v1.6.4, which can download by the script `$KYLIN_HOME/sbin/download-influxdb.sh`. 
 
-The InfluxDB installation package, `influxdb-1.6.4.x86_64.rpm` is under the `influxdb` directory in the installation directory of Kylin.
+The InfluxDB installation package, `influxdb-1.6.4.x86_64.rpm` will be under the `influxdb` directory in the installation directory of Kylin.
 
 If you need to use the existed InfluxDB database in your environment, please use the versions below:
 
@@ -45,9 +45,13 @@ The following steps are using InfluxDB 1.6.4 as an example.
       service influxdb status
       ```
 
-   If not, you can go to the directory where the InfluxDB installation package is located and install InfluxDB.
+   If not, you can download the influxdb and go to the directory where the InfluxDB installation package is located and install InfluxDB.
 
    ```shell
+   # download influxDB
+   $KYLIN_HOME/sbin/download-influxdb.sh
+  
+   # go to influxDB directory and install it
    cd $KYLIN_HOME/influxdb
    rpm -ivh influxdb-1.6.4.x86_64.rpm
    ```
@@ -146,14 +150,17 @@ The following steps are using InfluxDB 1.6.4 as an example.
 
 7. start Kylin.
 
-### <span id="not_root">Installation and Configuration for Non `root` User </span>
+### <span id="not_root">Installation and Configuration for `Non root` User </span>
 
 The following steps are using InfluxDB 1.6.4 as an example.
 
 
-1. Suppose you install as user `abc` . Then create a directory `home/abc/influx` to copy the InfluxDB installation package, `influxdb-1.6.4.x86_64.rpm` ,from `$KYLIN_HOME/influxdb` to this directory.
+1. Suppose you install as user `abc` . Then create a directory `home/abc/influx` to copy the InfluxDB installation package, `influxdb-1.6.4.x86_64.rpm` ,from `$KYLIN_HOME/influxdb` to this directory after executing download influxDB script.
 
    ```sh
+   # download influxDB
+   $KYLIN_HOME/sbin/download-influxdb.sh
+   
    mkdir /home/abc/influx
    cp $KYLIN_HOME/influxdb/influxdb-1.6.4.x86_64.rpm /home/abc/influx
    cd /home/abc/influx

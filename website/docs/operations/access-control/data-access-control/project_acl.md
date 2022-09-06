@@ -33,7 +33,7 @@ After the system administrator assigns project access permission to a group, use
 3. Click **+ User / Group** to grant access for a user / user group.
 4. Select the grant type : by **User** or by **User Group**. Then select the user / user group and access permission to be granted, and click **Submit**. 
 
-![Grant Project ACL](#TODO)
+![Grant Project ACL](../images/acl_5.png)
 
 
 ### Modify Project ACL
@@ -46,9 +46,3 @@ After the system administrator assigns project access permission to a group, use
 
 1. Select the project and click the **Authorization** icon under the **Actions** column on the right to enter the authorization page.
 2. Select the user / user group in the list and click the **Delete** icon under the **Actions** column on the right.
-
-> **Caution**: When user/user group's project access permission has been revoked, all access permission on this project including table-level, row-level and column-level will be revoked subsequently.
-
-### Data authority control
-
-After setting the system level configuration parameter **kylin.security.allow-project-admin-grant-acl=false**, the project administrator in each project has no right to assign table / row / column access rights to users or user groups, but can still view the table / row / column access rights of users or user groups.

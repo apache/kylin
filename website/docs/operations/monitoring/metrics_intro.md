@@ -17,7 +17,15 @@ last_update:
 
 By default, the system collects metric data every minute, including storage, query, job, metadata, and cleanup mechanism. The monitoring data is stored in the specified [InfluxDB](https://www.influxdata.com/time-series-platform/) and displayed through [Grafana](https://grafana.com/grafana). It can help administrators to understand the health of the system in order to take necessary actions.
 
-> **Note**: Since Grafana depends on InfluxDB, please make sure that InfluxDB is correctly configured and started according to [Use InfluxDB as Time-Series Database](influxdb/influxdb.md) before you use Grafana.
+> **Note**: Since Grafana depends on **InfluxDB**, please make sure that InfluxDB is correctly configured and started according to [Use InfluxDB as Time-Series Database](influxdb/influxdb.md) and download **Grafana** before you use Grafana.
+
+```shell
+# Download Grafana
+$KYLIN_HOME/sbin/download-grafana.sh
+```
+
+> **Note**: The Grafana installation path, will be under the `grafana` directory in the installation directory of Kylin.
+
 
 ### <span id="grafana_startup">Grafana</span>
 
@@ -30,11 +38,11 @@ By default, the system collects metric data every minute, including storage, que
 
 After the startup is successful, you may access Grafana through web browser with default port: 3000, username: admin, password: admin
 
-[comment]: <#TODO> (![metrics_dashboard]&#40;images/dashboard.jpg&#41;)
+![metrics_dashboard](images/dashboard.jpg)
 
 ### <span id="dashboard">Dashboard</span>
 
-Default Dashboard: ```Kylin```
+Default Dashboard: ```Kylin 5.0```
 
 The dashboard consists of 10 modules: Cluster, Summaries, Models, Queries, Favorites, Jobs, Cleanings, Metadata Operations, Transactions, among which Summaries module is automatically displayed in detail. Read more details about the modules, please refer to [Metrics Explanation](#explanation). If you want to make some changes for the dashboard, please refer to Grafana official website manual [Provisioning Grafana](https://grafana.com/docs/administration/provisioning/). 
 
@@ -65,7 +73,7 @@ Located in the upper left corner of the dashboard, the data granularity: auto, 1
 
 > **Tip **: “Project related” in the following table indicates whether the metric is related to the project, “Y” indicates that the metric is related to the project, and “N” indicates that the metric is not related to the project. "Host related" in the following table indicates whether the metric is related to Kylin nodes, "Y" indicates that the metric is related to the Kylin nodes, "N" indicates that the metric is not related to the host. "all", "job", "query" is Kylin nodes' server mode.
 
-<span id="cluster">**Cluster**：Cluster overview</span>
+#### <span id="cluster">Cluster: Cluster overview</span>
 
 | Name       | Meaning    | Project related     |
 | :------------- | :---------- | :----------- |
@@ -92,7 +100,7 @@ Located in the upper left corner of the dashboard, the data granularity: auto, 1
 |  query_load | spark sql load | N | Y(all, query) | - |
 |  cpu_cores | The number of cup cores for query configured in kylin.properties | N | Y(all, query) | Refer "Spark-related Configuration" |
 
-<span id="models">**Models**：Model related metrics</span>
+####  <span id="models">Models：Model related metrics</span>
 
 | Name       | Meaning    | Project related | Host related     |
 | :------------- | :---------- | :----------- | :----------- |
@@ -108,7 +116,7 @@ Located in the upper left corner of the dashboard, the data granularity: auto, 1
 | expansion_rate_of_models   | Expansion rate of models | Y | N |
 | model_build_duration (avg) | Avg build time of models | Y | N |
 
-<span id="queries">**Queries**：Query related metrics</span>
+#### <span id="queries">Queries：Query related metrics</span>
 
 | Name       | Meaning    | Project related | Host related    | Remark    |
 | :------------- | :---------- | :----------- | :----------- | :----------- |
@@ -143,7 +151,7 @@ Located in the upper left corner of the dashboard, the data granularity: auto, 1
 | query_scan_bytes_of_host             | Query scan bytes per host | N | Y(all, query) |-|
 | mean_scan_bytes_of_queries           | The mean scan bytes of queries | Y | Y(all, query) | - |
 
-<span id="favorites">**Favorites**：Favorite Query related metrics</span>
+#### <span id="favorites">Favorites：Favorite Query related metrics</span>
 
 | Name       | Meaning    | Project related | Host related    | Remark    |
 | :------------- | :---------- | :----------- | :----------- | :----------- |
@@ -163,7 +171,7 @@ Located in the upper left corner of the dashboard, the data granularity: auto, 1
 |  fq_pending_num_gauge | Favorite Query pending | Y | N | Favorite Query lacks of necessary conditions, such as missing column names, requiring user intervention |
 |  fq_blacklist_num_gauge | Favorite Query in blacklist | Y | N | Refer to the definition of "Blacklist" |
 
-<span id="jobs">**Jobs**：Job related metrics</span>
+#### <span id="jobs">Jobs：Job related metrics</span>
 
 | Name       | Meaning    | Project related | Host related     |
 | :------------- | :---------- | :----------- | :----------- |
@@ -182,7 +190,7 @@ Located in the upper left corner of the dashboard, the data granularity: auto, 1
 | job_duration                          | The build duration of job | Y | Y(all, job) |
 | job_wait_duration                     | The wait duration of job | Y | Y(all, job) |
 
-<span id="cleanings">**Cleanings**：Cleanup mechanisms related metrics</span>
+#### <span id="cleanings">Cleanings：Cleanup mechanisms related metrics</span>
 
 | Name       | Meaning    | Project related | Host related     |
 | :------------- | :---------- | :----------- | :----------- |
@@ -190,7 +198,7 @@ Located in the upper left corner of the dashboard, the data granularity: auto, 1
 |  storage_clean_total_duration | Storage cleanup total duration | N | Y(all, job, query) |
 |  failed_storage_clean_total_times | Storage cleanup failed total times | N | Y(all, job, query) |
 
-<span id="metadata">**Metadata Operations**：Metadata operations related metrics</span>
+#### <span id="metadata">Metadata Operations：Metadata operations related metrics</span>
 
 | Name       | Meaning    | Project related | Host related     | Remark    |
 | :------------- | :---------- | :----------- | :----------- | :----------- |
@@ -201,7 +209,7 @@ Located in the upper left corner of the dashboard, the data granularity: auto, 1
 |  metadata_ops_total_times | Metadata daily operations total times | N | Y(all, job, query) | Fixed time per day (configurable): automatically backup metadata; rotate audit_log; cleanup metadata and storage space; adjust FQ; cleanup query histories. |
 |  metadata_success_ops_total_times | Metadata daily operations failed total times | N | Y(all, job, query) |-|
 
-<span id="transactions">**Transactions**：Transaction mechanisms related metrics</span>
+#### <span id="transactions">Transactions：Transaction mechanisms related metrics</span>
 
 | Name       | Meaning    | Project related | Host related     | Remark    |
 | :------------- | :---------- | :----------- | :----------- |:----------- |

@@ -15,8 +15,6 @@ last_update:
 ---
 
 
-## System Log
-
 After being successfully started, Kylin will create a directory named `logs/` by default, all logs generated during Kylin runtime will be stored in this directory.
 
 ### Log files
@@ -64,9 +62,6 @@ This file records logs related to task scheduling, whose default logging level i
 #### `kylin.query.log`
 This file records query related logs, whose default logging level is DEBUG.
 
-#### `kylin.smart.log`
-This file records recommendation-related logs, whose default logging level is DEBUG.
-
 #### `dump.hprof`
 When Out of Memory (OOM) occurs in Kylin, it will dump the entire heap, which is convenient for checking the cause.
 > Note: When you have a large memory setting and Out of Memory OOM occurs, the file dump.hprof will occupy a large storage space, which may cause your disk space to be insufficient and the node to be abnormal. You can manually clean up the historical file.
@@ -83,7 +78,7 @@ User: ADMIN
 Success: true
 Duration: 1.243
 Project: ssb100_10
-Realization Names: [AUTO_MODEL_P_LINEORDER_1]
+Realization Names: [P_LINEORDER_1]
 Index Layout Ids: [30001]
 Snapshot Names: []
 Is Partial Match Model: [false]
@@ -106,6 +101,7 @@ Is forced to Push-Down: false
 User Agent: null
 Scan Segment Count: 1
 Scan File Count: 1
+Is Refused: false
 ==========================[QUERY]===============================
 ```
 The main fields in the above clip are described as follows:
@@ -139,6 +135,7 @@ The main fields in the above clip are described as follows:
 * `User Agent`： The environment information used to submit the query
 * `Scan Segment Count`： Number of scanned segments
 * `Scan File Count`： Number of scanned files
+* `Is Refused`: Whether to refuse to query
 
 ### Logging Configuration
 
