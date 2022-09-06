@@ -47,7 +47,7 @@ InfluxDB provides the availability to do backup and restore.
 - **Backup**
 
 	```sh
-	influxd backup -portable -database KE_METRIC -host 127.0.0.1:8089 /path/to/backup
+	influxd backup -portable -database KYLIN_METRIC -host 127.0.0.1:8089 /path/to/backup
 	```
 
 - **Restore**
@@ -55,10 +55,10 @@ InfluxDB provides the availability to do backup and restore.
 	Please make sure that the database exists, otherwise the restore will be failed.
 
 	```sh
-	influxd restore -portable -database KE_METRIC 	-host 127.0.0.1:8089 /path/to/backup
+	influxd restore -portable -database KYLIN_METRIC -host 127.0.0.1:8089 /path/to/backup
 	```
 
-> **note:** Please replace KE_METRIC with the actual database name, replace 127.0.0.1:8089 with the actual IP and port, replace `/path/to/backup` with the path you would like to set.
+> **note:** Please replace KYLIN_METRIC with the actual database name, replace 127.0.0.1:8089 with the actual IP and port, replace `/path/to/backup` with the path you would like to set.
 
 ### Monitoring and Diagnosis
 
@@ -67,7 +67,7 @@ InfluxDB provides the availability to do backup and restore.
 	- Check runtime
 
 	  Run following command to check GC, memory usage, etc.
-	  `influx -database KE_METRIC -execute "show stats for 'runtime'"`
+	  `influx -database KYLIN_METRIC -execute "show stats for 'runtime'"`
 	  
 	  Please focus on these important arguments:
 	  - *HeapAlloc* -> Heap allocation size
@@ -121,4 +121,3 @@ InfluxDB provides the availability to do backup and restore.
 	   WHERE time > now() - 10d 
 	   GROUP BY time(1h)
 	   ```
-	

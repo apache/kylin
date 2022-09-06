@@ -32,9 +32,9 @@ When Kylin is started for the first time, according to the metadata table name y
 
 e.g：
 
-`kylin.metadata.url=ke_metadata@jdbc,driverClassName=org.postgresql.Driver,url=jdbc:postgresql://sandbox:5432/kylin,username=postgres,password=`
+`kylin.metadata.url=kylin_metadata@jdbc,driverClassName=org.postgresql.Driver,url=jdbc:postgresql://sandbox:5432/kylin,username=postgres,password=`
 
-The metadata is named `kylin`, the metadata table is named` ke_metadata`, and the Audit Log table is named `ke_metadata_audit_log`.
+The metadata is named `kylin`, the metadata table is named` kylin_metadata`, and the Audit Log table is named `kylin_metadata_audit_log`.
 
 
 
@@ -107,31 +107,31 @@ e.g：
 1. View the history of an item of metadata
 
    ```
-   select * from ke_metadata_audit_log where meta_key = '/_global/project/default.json';
+   select * from kylin_metadata_audit_log where meta_key = '/_global/project/default.json';
    ```
 
 2. View the history of a model
 
    ```
-   select * from ke_metadata_audit_log where meta_key = '/project/model_desc/49529000-c161-4013-bb80-9a78f4f0248d.json' 
+   select * from kylin_metadata_audit_log where meta_key = '/project/model_desc/49529000-c161-4013-bb80-9a78f4f0248d.json' 
    ```
 
 3. View the change of metadata in a transaction
 
    ```
-   select * from ke_metadata_audit_log where unit_id = '6090bfb5-2401-4176-8475-fe6fd82bc439';
+   select * from kylin_metadata_audit_log where unit_id = '6090bfb5-2401-4176-8475-fe6fd82bc439';
    ```
 
 4. View audit logs for metadata over a period of time
 
    ```
-   select * from ke_metadata_audit_log where meta_ts > 1325376000000 and meta_ts < 1328054400000 ;
+   select * from kylin_metadata_audit_log where meta_ts > 1325376000000 and meta_ts < 1328054400000 ;
    ```
 
 5. Associate the metadata table to view the history changes of a user
 
    ```
-   select a.meta_mvcc, a.meta_content, b.meta_table_mvcc, b.meta_table_content from ke_metadata_audit_log a left join ke_metadata b on a.meta_key = b.meta_table_key where a.meta_key = '/_global/user/ADMIN'
+   select a.meta_mvcc, a.meta_content, b.meta_table_mvcc, b.meta_table_content from kylin_metadata_audit_log a left join kylin_metadata b on a.meta_key = b.meta_table_key where a.meta_key = '/_global/user/ADMIN'
    ```
 
 
@@ -150,7 +150,7 @@ e.g：
 
   ![metadata](images/after_update_pwd.png)
 
-​		
+		
 
 - Monitor if the model has been modified
 
@@ -199,7 +199,7 @@ There are two ways to execute commands on the KE node:
 
 If you have the Audit Log file exported locally and want to view and analyze it through the database, you can use the following methods to import.
 
-On a machine that already has a Kylin environment, use the AuditLogTool tool: `${KYLIN_HOME}/kylin.sh io.kyligence.kap.tool.AuditLogTool -restore -table ${target_table_name} -dir ${auditlog_dir}`
+On a machine that already has a Kylin environment, use the AuditLogTool tool: `${KYLIN_HOME}/kylin.sh org.apache.kylin.tool.AuditLogTool -restore -table ${target_table_name} -dir ${auditlog_dir}`
 
 - The `$ {target_table_name}` parameter specifies the name of the Audit Log table to be generated. Be careful not to duplicate the name of the Audit Log table already in the Kylin environment.
 - The `$ {auditlog_dir}` parameter specifies the directory where the Audit Log file is located;

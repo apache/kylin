@@ -17,9 +17,6 @@ last_update:
    date: 08/12/2022
 ---
 
-
-## System, Job and Query Diagnosis
-
 Kylin users may face with many problems during usage, such as  job failure, SQL query failure, SQL query overtime, etc. In order to help solve these problems efficiently, Kylin provides a *Diagnosis* function on Web UI to pack related information into a zip package to help operation staff and Kylin Community to analyze the root cause. 
 
 Diagnosis function includes System, Job and Query Diagnosis. In addition to the method of generating diagnostic package on web UI described in this chapter, you can also generate the diagnostic package through the bash script. For details, please refer to [Diagnosis Tool](../cli_tool/diagnosis.md).
@@ -29,7 +26,7 @@ Diagnosis function includes System, Job and Query Diagnosis. In addition to the 
 
 System diagnostic package includes all diagnostic information of a Kylin instance, and users can generate system diagnostic package on Web UI following the following steps:
 
-![Generate System Diagnostic Package in Web UI](images/diagnosis_web_en.png)
+![Generate System Diagnostic Package in Web UI](images/diagnosis_web.png)
 
 1. Enter the **Admin** page and click the **Diagnosis** button in the lower left corner.
 
@@ -49,7 +46,9 @@ System diagnostic package includes all diagnostic information of a Kylin instanc
 
 Job diagnostic package includes all diagnostic information of a specific job, and users can generate job diagnostic package on Web UI by following the following steps:
 
-![Generate Job Diagnostic Package in Web UI](images/job_diagnosis_web_en.png)
+![Generate Job Diagnostic Package in Web UI](images/job_diagnosis_web_01.png)
+
+![Generate Job Diagnostic Package in Web UI](images/job_diagnosis_web_02.png)
 
 1. After logging in to Kylin, click **Monitor** in the left navigation bar. In the action bar of a job on the **Jobs List** page, click the **Download Job Diagnostic Package** button.
 2. Select **Server**.
@@ -59,7 +58,9 @@ Job diagnostic package includes all diagnostic information of a specific job, an
 
 Query diagnosis package includes all diagnostic information of a specific query, and users can generate query diagnosis package on Web UI by following the following steps:
 
-![Generate Query Diagnosis Package in Web UI](images/query_diagnosis_web.png)
+![Generate Query Diagnosis Package in Web UI](images/query_diagnosis_web_01.png)
+
+![Generate Query Diagnosis Package in Web UI](images/query_diagnosis_web_02.png)
 
 1. After logging in to Kylin, click **Query** in the left navigation bar. In the action bar of a query on the **History** page, click the **Download Query Diagnostic Package** button in **Action**.
 2. Click **Generate and Download** button: After the diagnosis package is generated, the downloads will be triggered automatically. If the diagnosis package generation fails, you can view the details of the failure on the interface.

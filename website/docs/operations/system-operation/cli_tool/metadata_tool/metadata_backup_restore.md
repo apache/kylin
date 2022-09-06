@@ -85,4 +85,4 @@ Metadata recovery is required in Kylin with the **command line**.
    - `METADATA_BACKUP_PATH` - required, represents the metadata path that are going to be recovered, the default value is `${KYLIN_HOME}/meta_backups/
    - `--after-truncate` - optional, if this parameter is added, the project metadata will be completely restored, otherwise only the deleted and modified metadata will be restored, and the new metadata will still be retained.
    
-**Caution** When run this command, Kylin will enter maintenance mode. If the command is interrupted by force, you may need to exit maintain mode manually. Refer [maintenance_mode](../../maintenance_mode.en.md).
+**Caution** When run this command, Kylin will enter maintenance mode. If the command is interrupted by force, you may need to exit maintain mode manually. Refer [maintenance_mode](../../maintenance_mode.md).

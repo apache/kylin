@@ -58,6 +58,9 @@ Before proceeding, please make sure the [Prerequisite](../deployment/on-premises
    Kylin uses InfluxDB to save various system monitoring information. If you do not need to view related information, you can skip this step. It is strongly recommended to complete this step in a production environment and use related monitoring functions.
    
    ```sh
+   # download influxdb
+   $KYLIN_HOME/sbin/download-influxdb.sh
+   
    cd $KYLIN_HOME/influxdb
    
    # install influxdb

@@ -14,9 +14,6 @@ last_update:
     date: 08/12/2022
 ---
 
-
-## Junk File Cleanup
-
 After Kylin runs for a period of time, the system may generate a certain number of junk files, which may occupy a large amount of storage space. At this time, junk cleaning is required.
 
 Junk file cleaning can improve the stability and performance of the Kylin system. Effective junk file cleaning can not only save storage space, but also ensure the ecological health of the cluster where Kylin is located.
@@ -82,7 +79,7 @@ This command supports standard short and long parameters. The parameter descript
 
 **Note**: Whether this command executes metadata junk file cleaning through -m or data junk file cleaning through -c, Kylin will enter maintenance mode. If junk file cleaning is forcibly interrupted, you need to manually exit maintenance mode. Refer to [ Maintenance Mode](maintenance_mode.md).
 
-In addition, from Kylin 4.5.6, the new command line tool `FastRoutineTool`
+In addition, from Kylin 5, the new command line tool `FastRoutineTool`
 ````sh
 $KYLIN_HOME/bin/kylin.sh org.apache.kylin.tool.routine.FastRoutineTool
 ````

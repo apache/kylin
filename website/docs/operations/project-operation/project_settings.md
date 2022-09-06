@@ -29,25 +29,17 @@ All settings are composed of three main parts:
 
 #### 1. General Information
 
-In this part, you can check current project's name, type and description, also, you can modify project description.
+In this part, you can check current project's name and description, also, you can modify project description.
 
 ![general information](images/project_settings_basic_general.png)
 
-#### 2. Storage Setting
-
-In this part, you can check the storage quota, which is the upper limit of the storage. By default, storage size is 10TB.
-
-The picture below shows where to set storage quota:
-
-![storage setting](images/project_settings_storage.png)
-
-#### 3. Pushdown Setting
+#### 2. Pushdown Setting
 
 If you don't have any models or there is no avaliable models to answer your queries, you can use **pushdown** to get results for a more flexible user experience, and your queries will be pushdown to Spark SQL by default. This setting is turned on by default.
 
 ![pushdown setting](images/project_settings_pushdown.png)
 
-#### 4. Segment Settings
+#### 3. Segment Settings
 
 This part is about settings of segment, including Segment Merge, Retention Threshold and Creating Reserved Segments.
 
@@ -73,7 +65,7 @@ This part is about settings of segment, including Segment Merge, Retention Thres
 
 The picture below is the segment setting page.
 
-![segment settings](images/project_settings_segment_en.png)
+![segment settings](images/project_settings_segment.png)
 
 ### <span id="advanced">Advanced Settings</span>
 
@@ -85,7 +77,7 @@ After setting the default database, the database name can be omitted in SQL stat
 
 The picture below is the default database setting page:
 
-![default database](images/project_settings_default_database_en.png)
+![default database](images/project_settings_default_database.png)
 
 #### 2. Job Notification
 

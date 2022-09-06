@@ -43,6 +43,5 @@ The following table describes what will be checked in the tool.
 | Metastore | Check if the metastore is accessible and current user can perform necessary operations on metadata. |
 | InfluxDB                  | 1. Check if InfluxDB is accessible <br /> 2. Check if current user has read and write privileges  |
 | ZooKeeper              | Check if the service discovery is available. |
-| Clickhouse| Checking Clickhouse cluster health. |
 | KylinConfig | Checking kylin config, must starts with kylin / spring / server. |
 | Query history | Check whether the current user has permissions of reading and writing on the `query_history` and `query_history_realization` tables in the RDBMS database|
