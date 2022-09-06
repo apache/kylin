@@ -850,6 +850,10 @@ const sidebars = {
                     type: 'doc',
                     id: 'development/how_to_release'
                 },
+                {
+                    type: 'doc',
+                    id: 'development/how_to_subscribe_mailing_list'
+                },
 
             ],
         },
