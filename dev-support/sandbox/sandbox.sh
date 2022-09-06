@@ -88,7 +88,7 @@ function main() {
         fi
 
         info "* Setting spark dependency..."
-        cp ${PROJECT_DIR}/src/server/target/jars/log4j* ${SPARK_HOME}/jars
+#        cp ${PROJECT_DIR}/src/server/target/jars/log4j* ${SPARK_HOME}/jars
 #        cp ${WORKDIR}/libs/mysql-connector-java-8.0.16.jar ${SPARK_HOME}/jars
 
         info "* Setting IDEA run configurations..."
