@@ -10,6 +10,7 @@ import user from './user'
 import datasource from './datasource'
 import system from './system'
 import monitor from './monitor'
+import capacity from './capacity'
 import * as actionTypes from './types'
 
 export default new Vuex.Store({
@@ -22,6 +23,7 @@ export default new Vuex.Store({
     datasource: datasource,
     system: system,
     monitor: monitor,
+    capacity: capacity,
     modals: {}
   }
 })
