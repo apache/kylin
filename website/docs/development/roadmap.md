@@ -17,26 +17,30 @@ last_update:
 
 # Roadmap of Apache Kylin
 
-### Kylin 5.0.0-alpha & Kylin 5.0.0
+### Kylin 5.0.0
 
-- Re-design metadata schema to support new feature
+- More flexible and enhanced data model
+  - Allow adding new dimensions and measures to exiting data model
+  - Model adapts to table schema changes while retaining existing index at best effort
+  - Support last-mile data transformation using Computed Column
+  - Support raw query (non-aggregation query) using Table Index
+  - Support changing dimension table (SCD2)
+- Simplified metadata design
   - Merge DataModel and CubeDesc into new DataModel
+  - Add DataFlow for more generic data sequence, e.g. streaming alike data flow
+  - New metadata AuditLog for better cache synchronization
+- More flexible index management (was cuboid)
   - Add IndexPlan to support flexible index management
   - Add IndexEntity to support different index type
   - Add LayoutEntity to support different storage layout of same Index
-  - Add DataFlow/ComputedColumnDesc etc
-- New metadata cache synchronization via AuditLog
-- Rewrite model engine and build engine to implement some important new features:
-  - Support schema change
-  - Add Computed Column to support light-weight ETL
-  - Add Table Index to support raw query(non-aggregation query)
-  - SCD2
-- Rewrite whole WEB UI
-  - Use Vue.js, a brand new front-end framework, to replace AngularJS
-  - Simplify modeling process into one canvas 
-- Integrated with native compute engine preliminarily
-- Async query
-- Cost-based index optimizer
+- Towards a native and vectorized query engine
+  - Experiment: Integrate with native execution engine, leveraging Gluten
+  - Support async query
+  - Enhance cost-based index optimizer
+- More
+  - Build engine refactoring and performance optimization
+  - New WEB UI based on Vue.js, a brand new front-end framework, to replace AngularJS
+  - Smooth modeling process in one canvas
 
 ### Kylin 5.1.0
 
