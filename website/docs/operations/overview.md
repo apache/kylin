@@ -16,7 +16,7 @@ last_update:
 
 As Kylin system administrator, typical daily operations include:
 
-- To ensure Kylin service running smoothly, system administrator should monitor system logs on a regular basis.
+- To ensure **Kylin** service running smoothly, system administrator should monitor system logs on a regular basis.
 - To ensure building jobs run successfully, system administrator needs to monitor jobs execution status via email notification or system web UI.
-- To ensure there are enough cluster resources for Kylin, system administrator should check the YARN queue and storage utilization frequently.
+- To ensure there are enough cluster resources for **Kylin**, system administrator should check the YARN queue and storage utilization frequently.
 - To prevent any data loss or system failure, system administrator should make plans for system backup and disaster recovery.

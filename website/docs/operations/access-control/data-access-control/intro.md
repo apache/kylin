@@ -29,11 +29,9 @@ Kylin provides a rich set of access control features for big enterprise. Start f
 
 ###  Examples of Permission Check
 
-To perform an action, user must have both operation permission and data access permission. Below are a few examples.
+To perform an action, user must have operation permission. Below is few examples.
 
-- To manage source tables, user needs the ADMIN permission, and only the tables user can access can be seen and acted. (Column and row ACLs does not impact the source table management.)
 - To edit a model, user must have the MANAGEMENT permission and have access to all the tables and columns in the model.
-- Running queries is mostly about data access control, since all users in a project have at least QUERY permission. First user must have access to all the tables and columns in the query, or the system will prompt permission error and refuse to execute. Second the system will only return rows that are accessible to a user. If different row ACLs are set for users, they may see different results from a same query.
 
 ### Other Notes
 

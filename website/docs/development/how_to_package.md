@@ -23,7 +23,7 @@ last_update:
 |---------------| ---------------------------------------------|----------------|--------------------|
 | Git           |  Fetch branch name and hash of latest commit | latest         | https://git-scm.com/book/en/v2/Getting-Started-Installing-Git |
 | Apache Maven  |  Build Java and Scala source code            | 3.8.2 or latest| https://maven.apache.org/download.cgi |  
-| Node.js       |  Build front end                             | 12.14.0 is recommended ( or 12.x ~ 14.x) | https://nodejs.org/en/download/ ([How to switch to older node.js](development/how_to_package.md#install_older_node))|
+| Node.js       |  Build front end                             | 12.14.0 is recommended ( or 12.x ~ 14.x) | [How to switch to older node.js](development/how_to_package.md#install_older_node)|
 | JDK           |  Java Compiler and Development Tools         | JDK 1.8.x      | https://www.oracle.com/java/technologies/javase/javase8u211-later-archive-downloads.html |
 
 After installed above software, please do verify **software requirement** by following commands:
@@ -90,18 +90,33 @@ For example, an unofficial package could be `apache-kylin-5.0.0-SNAPSHOT.2022081
 ./build/release/release.sh -P hadoop3
 ```
 
-### <span id="install_older_node">How to switch to older node.js</span>
+### <span id="install_older_node">How to install older node.js</span>
 
-If you install node.js which is higher than 14.X, I recommended you downgrade to lower version with some tools like https://github.com/nvm-sh/nvm.
+1. Please visit https://nodejs.org/en/download/ to download and install the latest node.js . After installed, you may use follow command to verify if the latest node.js is in use:
+```shell
+$ node -v
+v16.17.0
+```
+
+2. Use some tools like https://github.com/nvm-sh/nvm to install specific version of node.js 
 
 ```shell
 ## Switch to specific version using nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 nvm install 12.14.0
 
-## Before packaging, please switch to specific version 
+## Before packaging, please switch to specific version
 nvm use 12.14.0
+```
 
+You may use follow command to verify if older node.js is in use:
+```shell
+$ node -v
+v12.14.0
+```
+
+3. Switch to latest node.js
+```shell
 ## switch to original version
 nvm use system
 ```

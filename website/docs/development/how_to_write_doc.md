@@ -136,16 +136,17 @@ DevelopmentSideBar: [
 
 
 #### Step 4: Preview in your local machine
-You can preview in your browser, please run following commands in the `website` directory, then access [doc5.0](http://127.0.0.1:3000) in your browser:
+You can preview in your browser, please run following commands in the `website` directory, then access [doc of kylin in local](http://127.0.0.1:3000) in your browser:
 
 ```
 npm run start
 ```
 
-:::caution Checklist
+:::caution Check your doc
 - [ ] Whether **look and feel** meet your expectation?
-- [ ] Whether the link/pictures works fine?
-- [ ] Whether the most important part was highlighted? You may [check this to highlight a paragraph](#highlight_paragraph).
+- [ ] Whether the **link/pictures** works fine?
+- [ ] Whether the most important part was **highlighted**? You may [check this to highlight a paragraph](#highlight_paragraph).
+- [ ] Whether the **title level** follow [this guide](#heading_level)?
 :::
 
 #### Step 5: Create a pull request
@@ -231,6 +232,32 @@ doc5.0
 
 More details about structure which managed by Docusaurus, please refer to [Project structure rundown](https://docusaurus.io/docs/installation#project-structure-rundown).
 
+#### <span id="heading_level">Title/Heading Level</span>
+
+Here is [official guide about heading](https://docusaurus.io/docs/markdown-features/toc#markdown-headings).  Please use level 3 title("###") and level 4 title("####") in most of the article.
+
+Following is a general guide:
+- Use level 2 heading(aka "##") as **top level** title. The number of top level title should not more than two. 
+- Use level 3 heading(aka "###") as **middle level** title. 
+- Use level 4 heading(aka "####") as **the lowest level** title.
+
+
+We recommend you to check for [this article](how_to_contribute) for example. Following is toc of it.
+```
+## Guide for Contributor
+### Detailed Description
+#### Step 1: Fork Apache Kylin Repo
+#### Step 2: Clone the fork repo
+#### Step 3: xxx
+#### Step 4: xxx
+...
+
+## Guide for Reviewer
+### Code Review Guideline
+### Patch +1 Policy
+...
+```
+
 #### Sidebar
 The Sidebar is managed by __sidebars.js__ , please refer to [Sidebar](https://docusaurus.io/docs/sidebar).
 
@@ -246,7 +273,7 @@ Using relative path for site links, check this [Markdown links](https://docusaur
 
 
 #### How to add source code in doc
-We are using [Code Blocks Doc](https://docusaurus.io/docs/markdown-features/code-blocks) to highlight code syntax, check this doc for more detail sample.
+We are using [Code Block](https://docusaurus.io/docs/markdown-features/code-blocks) to highlight code syntax, check this doc for more detail sample.
 
 #### <span id="highlight_paragraph">How to highlight a sentence/paragraph</span>
 We recommend you to use [admonitions feature](https://docusaurus.io/docs/markdown-features/admonitions) to highlight a sentence/paragraph, following is a example:

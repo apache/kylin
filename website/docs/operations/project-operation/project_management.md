@@ -59,4 +59,4 @@ On the Project Management page, select a project to change owner, click the **..
 
 ### <span id="grant">Grant Porject-level Access Rights to User</span>
 
-On the Project Management page, select a project to authorizer, click the **Authorization** button under the **Actions** bar on the right and set permissions for the project. You can find out more at the [Project ACL](../access-control/project_acl.md) section.
+On the Project Management page, select a project to authorizer, click the **Authorization** button under the **Actions** bar on the right and set permissions for the project. You can find out more at the [Project ACL](../access-control/data-access-control/project_acl.md) section.

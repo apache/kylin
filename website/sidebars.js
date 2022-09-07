@@ -294,10 +294,6 @@ const sidebars = {
                                     type: 'doc',
                                     id: 'operations/access-control/data-access-control/project_acl'
                                 },
-                                {
-                                    type: 'doc',
-                                    id: 'operations/access-control/data-access-control/acl_table'
-                                },
                             ],
                         },
                     ],
@@ -853,6 +849,10 @@ const sidebars = {
                 {
                     type: 'doc',
                     id: 'development/how_to_release'
+                },
+                {
+                    type: 'doc',
+                    id: 'development/how_to_subscribe_mailing_list'
                 },
 
             ],
