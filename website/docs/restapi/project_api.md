@@ -14,9 +14,6 @@ last_update:
   date: 08/12/2022
 ---
 
-
-## Project Setting API
-
 > Reminders:
 >
 > 1. Please read [Access and Authentication REST API](authentication.md) and understand how authentication works.
@@ -138,137 +135,6 @@ last_update:
   }
   ```
 
-
-### General Setting  {#general-setting}
-
-- `PUT http://host:port/kylin/api/projects/{project}/project_general_info`
-
-- URL Parameters
-  
-  - `project` - `required` `string`, project name.
-  
-- HTTP Header
-  - `Accept: application/vnd.apache.kylin-v4-public+json`
-  - `Accept-Language: en`
-  - `Content-Type: application/json;charset=utf-8`
-
-- HTTP Body: JSON Object
-  - `description` - `optional` `string`, project description.
-  - `semi_automatic_mode` - `optional` `boolean`, whether to turn 
-     on Recommendation Mode. `True` means to turn on, `false` means to turn off. The default value is `false`.
-  
-- Curl Request Example
-
-  ```sh
-  curl -X PUT \
-  'http://host:port/kylin/api/projects/b/project_general_info' \
-  -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-  -H 'Accept-Language: en' \
-  -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-  -H 'Content-Type: application/json;charset=utf-8' \
-  -d '{
-    "description":"description", 
-    "semi_automatic_mode":true
-  }'
-  ```
-
-- Response Example
-
-  ```json
-  {
-      "code":"000",
-      "data":null,
-      "msg":""
-  }
-  ```
-
-
-### Storage Quota  {#storage-quota}
-
-- `PUT http://host:port/kylin/api/projects/{project}/storage_quota`
-
-- URL Parameters
-  
-  - `project` - `required` `string`, project name.
-  
-- HTTP Header
-  - `Accept: application/vnd.apache.kylin-v4-public+json`
-  - `Accept-Language: en`
-  - `Content-Type: application/json;charset=utf-8`
-
-- HTTP Body: JSON Object
-  
-- `storage_quota_size` - `required` `long`, project storage quota, unit byte. Optional values: positive numbers and be equal or greater than `1099511627776` , which means equal or greater than 1 TB.
-  
-- Curl Request Example
-
-  ```sh
-  curl -X PUT \
-  'http://host:port/kylin/api/projects/b/storage_quota' \
-  -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-  -H 'Accept-Language: en' \
-  -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-  -H 'Content-Type: application/json;charset=utf-8' \
-  -d '{
-      "storage_quota_size": 1099511627776
-  }' 
-  ```
-
-- Response Example
-
-  ```json
-  {
-      "code":"000",
-      "data":null,
-      "msg":""
-  }
-  ```
-
-
-### Low Usage Storage  {#inefficient-storage}
-
-- `PUT http://host:port/kylin/api/projects/{project}/garbage_cleanup_config`
-
-- URL Parameters
-  - `project` - `required` `string`, project name.
-
-
-- HTTP Header
-  - `Accept: application/vnd.apache.kylin-v4-public+json`
-  - `Accept-Language: en`
-  - `Content-Type: application/json;charset=utf-8`
-
-- HTTP Body: JSON Object
-  - `frequency_time_window` - `required` `string`, low usage storage calculation period. Optional values: `MONTH`, `WEEK`, `DAY`.
-  - `low_frequency_threshold` - `required` `int`, the number of use of low usage storage. Optional values: positive integer and `0`. For example, you can set when usage is lower than 10 times, then the storage of indices would be regarded as low usage storage.
-
-- Curl Request Example
-
-  ```sh
-  curl -X PUT \
-  'http://host:port/kylin/api/projects/b/garbage_cleanup_config' \
-  -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-  -H 'Accept-Language: en' \
-  -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-  -H 'Content-Type: application/json;charset=utf-8' \
-  -d '{
-      "frequency_time_window": "WEEK", 
-      "low_frequency_threshold": 7
-  }' 
-  ```
-
-- Response Example
-
-  ```json
-  {
-      "code":"000",
-      "data":null,
-      "msg":""
-  }
-  ```
-
-
-
 ### <span id="Pushdown">Pushdown  Setting</span>
 
 - `PUT http://host:port/kylin/api/projects/{project}/push_down_config`
@@ -305,7 +171,7 @@ last_update:
   ```json
   {
       "code":"000",
-      "data":null,
+      "data":"",
       "msg":""
   }
   ```
@@ -351,7 +217,7 @@ last_update:
   ```json
   {
       "code":"000",
-      "data":null,
+      "data":"",
       "msg":""
   }
   ```
@@ -420,7 +286,7 @@ last_update:
   ```json
     {
         "code":"000",
-        "data":null,
+        "data":"",
         "msg":""
     }
   ```
@@ -463,7 +329,7 @@ last_update:
   ```json
     {
         "code":"000",
-        "data":null,
+        "data":"",
         "msg":""
     }
   ```
@@ -510,7 +376,7 @@ last_update:
   ```json
     {
         "code":"000",
-        "data":null,
+        "data":"",
         "msg":""
     }
   ```
@@ -546,48 +412,6 @@ last_update:
           "queue_name":"yarnqueue"
       }'
   ```
-
-- Response Example
-
-  ```json
-  {
-      "code": "000",
-      "data": null,
-      "msg": ""
-  }
-  ```
-
-
-
-### <span id="update-job-engine">Update the Linking Relationship between Projects and Job Engines</span>
-
-**Note:** This Rest API need to cooperate with multi-active job engines. For more details, please refer to [Kylin Multi-Active Job Engines](#TODO).
-
-- `POST http://host:port/kylin/api/epoch`
-
-- HTTP Body: JSON Object
-
-  - `projects` - `required` `string`, projects name. If the array is empty, it will update the relationship for all projects
-  - `force` - `required` `boolean`, whether to update the relationship directly. For `false`, it will check whether the relationship is outdated. If it is outdated, the system will update it based on current projects and job engines. For `true`, the system will skip the check step and update directly.
-
-- HTTP Header
-
-  - `Accept: application/vnd.apache.kylin-v4-public+json`
-  - `Accept-Language: en`
-  - `Content-Type: application/json;charset=utf-8`
-
-- Curl Request Example
-
-  ```sh
-  curl -X POST \
-    'http://host:port/kylin/api/epoch' \
-    -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-    -H 'Accept-Language: en' \
-    -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-    -H 'Content-Type: application/json;charset=utf-8' \
-    -d '{"projects":["Project_A"],"force":true}'
-  ```
-
 
 - Response Example
 
@@ -694,7 +518,3 @@ The Low Usage Storage, Segment Settings, Storage Quota and Job Notification can 
   - `"data_load_empty_notification_enabled":false` 
   - `"job_error_notification_enabled":false` 
   - `"job_notification_emails"` is null
-
-- The default values for Storage Quota
-  
-  - `"kylin.storage.quota-in-giga-bytes": 10240`

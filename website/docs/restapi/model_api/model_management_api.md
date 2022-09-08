@@ -89,7 +89,7 @@ last_update:
       - `primary_key` - `required` `string[]`, primary key
       - `simplified_non_equi_join_conditions` -  `optional` `JSON Object`, non-equivalent join conditions
 
-        (note1: The support of this settings should have 'Support History Table' enabled in advance. Seeing [Slowly Changing Dimension](#TODO))
+        (note1: The support of this settings should have 'Support History Table' enabled in advance. Seeing [Slowly Changing Dimension](../../modeling/model_design/slowly_changing_dimension.md))
 
         (note2: Join relationship >= and < must be used in pairs, and same column must be joint in both conditions)
 
@@ -102,7 +102,7 @@ last_update:
     - `join_relation_type` -  `optional` `string`, join type: MANY_TO_ONE,MANY_TO_MANY, default: MANY_TO_ONE
   - `partition_desc` -  `optional` `JSON Object`, partition columns info
     - `partition_date_column` - `required` `string`, partition date column, format: TABLE.COLUMN
-    - `partition_date_format` - `required` `string`, partition date column format, including: yyyy-MM-dd, yyyyMMdd... Supported date format please check "[Model Design Basics](#TODO)"
+    - `partition_date_format` - `required` `string`, partition date column format, including: yyyy-MM-dd, yyyyMMdd... Supported date format please check "[Model Design Basics](../../modeling/data_modeling.md)"
     - `partition_type` -  `optional` `string`, partition type, including: APPEND, default: APPEND
   - `owner` -  `optional` `string`, the owner of model, default current user
   - `description` -  `optional` `string`, model description
@@ -119,7 +119,9 @@ last_update:
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
     -H 'Content-Type: application/json;charset=utf-8' \
-    # Stringify the following JSON Object when use
+  
+    ### Stringify the following JSON Object when use
+  
     -d '{
       "project": "pj01",
       "fact_table": "SSB.P_LINEORDER",
@@ -360,7 +362,7 @@ last_update:
 
   > [!NOTE]
   >
-  > For parameters not listed in this page, you may go to the [Kylin Console](#TODO) for details.
+  > For parameters not listed in this page, you may go to the [Model Concepts and Operations](../../modeling/model_concepts_operations.md) for details.
 
   ```json
     {
@@ -504,7 +506,7 @@ last_update:
         - `hierarchy_dims`: `JSON`, dimension hierarchy
         - `mandatory_dims`: `JSON`, required hierarchy
         - `joint_dims`:  `JSON`, joint dimensions
-        - `computed_columns`: `JSON`, [Computed Column](#TODO)
+        - `computed_columns`: `JSON`, [Computed Column](../../modeling/model_design/computed_column.md)
         - `tableIdentity`: `String`, table ID
         - `tableAlias`: `String`, table alias
         - `columnName`: `String`, column name
@@ -689,130 +691,6 @@ last_update:
   }
   ```
 
-### Define Partition Column(Deprecated){#Define-Partition-Column-Deprecated}
-
-- `PUT http://host:port/kylin/api/models/{project}/{model_name}/partition_desc`
-
-- URL Parameters
-
-  - `model_name` - `required` `string`, model name.
-  - `project` - `required` `string`, project name.
-
-- HTTP Header
-
-  - `Accept: application/vnd.apache.kylin-v4-public+json`
-  - `Accept-Language: en`
-  - `Content-Type: application/json;charset=utf-8`
-
-- HTTP Body: JSON Object
-
-  - `partition_desc` - `optional` `string`, indicate the column name and data format of partition column.
-
-  - `start` - `optional` `string`, start time of segment (partition column exist), default value is `1`, type: timestamp, unit: ms.
-
-  - `end` - `optional` `string`, end time of segment (partition column exist), default value is`9223372036854775806`, type: timestamp, unit: ms.
-
-    > If you need to set the model partition column, the above parameters need to be filled in. Otherwise, if you want the model to be defined as a non-partition, please leave these parameters blank.
-
-- Curl Request Example
-
-  ```sh
-  curl -X PUT \
-    'http://localhost:7070/kylin/api/models/ssb/test/partition_desc' \
-    -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-    -H 'Accept-Language: en' \
-    -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-    -H 'Content-Type: application/json;charset=utf-8' \
-    -d '{
-      "partition_desc":{
-          "partition_date_column":"LINEORDER.LO_ORDERDATE",
-          "partition_date_format":"yyyy-MM-dd"},
-      "start":"0",
-      "end":"1111"
-      }'
-  ```
-
-- Response Example
-
-  ```json
-    {
-        "code":"000",
-        "data":"",
-        "msg":""
-    }
-  ```
-
-
-
-### Model Validation{#Model-Validation}
-
-> Used to determine whether the SQLs can be answered by an existing model which includes the original model and the models with recommendations.
->
-
-- `POST http://host:port/kylin/api/models/model_validation`
-
-- HTTP Header
-
-  - `Accept: application/vnd.apache.kylin-v4-public+json`
-  - `Accept-Language: en`
-
-  - `Content-Type: application/json;charset=utf-8`
-
-- HTTP Body: JSON Object
-
-  - `project` - `required` `string`, project name.
-  - `sqls` - `required` `array`, query list.
-
-* Curl Request Example
-
-  ```sh
-  curl -X POST \
-    'http://localhost:7070/kylin/api/models/model_validation' \
-    -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-    -H 'Accept-Language: en' \
-    -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-    -H 'Content-Type: application/json;charset=utf-8' \
-    -d '{"project":"ssb", "sqls":["select LO_CUSTKEY, count(1) from SSB.P_LINEORDER GROUP BY LO_CUSTKEY1", "SELECT LO_SHIPPRIOTITY,count(1) FROM SSB.LINEORDER GROUP BY LO_SHIPPRIOTITY"]}'
-  ```
-
-* Response Details
-
-  * `valid_sqls`, valid queries and the corresponding model.  If there is no answerable model, the list will be empty.
-  * `error_sqls`, queries failed to pass the syntax check.
-  * `error_sqls_detail`, detailed error message of queries failed to pass the syntax check
-
-* Response Example
-
-  ```json
-  {
-      "code":"000",
-      "data":{
-          "valid_sqls":{
-              "SELECT LO_SHIPPRIOTITY,count(1) FROM SSB.LINEORDER GROUP BY LO_SHIPPRIOTITY":[
-                  "AUTO_MODEL_LINEORDER_2"
-              ]
-          },
-          "error_sqls":[
-              "select LO_CUSTKEY, count(1) from SSB.P_LINEORDER GROUP BY LO_CUSTKEY1"
-          ],
-        	"error_sqls_detail": [
-              {
-                  "sql": "select LO_CUSTKEY, count(1) from SSB.P_LINEORDER GROUP BY LO_CUSTKEY1",
-                  "sql_advices": [
-                      {
-                          "suggestion": "Please add column LO_CUSTKEY1 to data source.",
-                          "incapable_reason": "Column 'LO_CUSTKEY1' not found in any table."
-                      }
-                  ]
-              }
-          ]
-      },
-      "msg":""
-  }
-  ```
-
-
-
 ### Get index list{#get-index-list}
 
 > Get indexes of given model.
@@ -928,551 +806,13 @@ last_update:
   }
   ```
 
-
-
-### Create a Model by SQL{#sql}
-
-- `POST http://host:port/kylin/api/models/model_suggestion`
-- HTTP Header
-  - `Accept: application/vnd.apache.kylin-v4-public+json`
-  - `Accept-Language: en`
-  - `Content-Type: application/json;charset=utf-8`
-- HTTP Body: JSON Object
-
-  - `project` - `required` `string`, project name.
-  - `sqls` - `required` `array`, queries to create models
-  - `with_segment` - `optional`, `bool`, create an empty segment, default is true
-  - `with_model_online` - `optional`, `bool`, model online or not, default is false
-
-* Curl Request Example
-
-  ```sh
-  curl -X POST \
-    'http://localhost:7070/kylin/api/models/model_suggestion' \
-    -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-    -H 'Accept-Language: en' \
-    -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-    -H 'Content-Type: application/json;charset=utf-8' \
-    -d '{"project":"ssb", "sqls":["select count(*) from ssb.P_LINEORDER", "SELECT 1"]}'
-  ```
-
-* Response Details
-
-  * `models`, model details
-    * `uuid`, model UUID
-    * `alias`, model name
-    * `version`, model version
-    * `rec_items`, new model information. Please note that there will be some model detail info such as dimensions or measure shown as a recommendation, but it will not truly generate such a recommendation.
-        * `sqls`, sqls used by one recommendation item
-        * `index_id`, reused index id, if the value is -1, a new model created
-        * `dimensions`, all dimensions used, `new` used to indicate whether it is newly created or reused
-        * `measues`, all measures used, `new` used to indicate whether it is newly created or reused
-        * `computed_columns`, all computed_columns used, `new` used to indicate whether it is newly created or reused
-  * `error_sqls`, failed SQLs
-
-* Response Example
-
-  ```json
-  {
-      "code": "000",
-      "data": {
-          "models": [
-              {
-                  "uuid": "364e4485-433c-4fe2-be57-02c59170b5d4",
-                  "alias": "AUTO_MODEL_P_LINEORDER_1",
-                  "version": "4.0.0.0",
-                  "rec_items": [
-                      {
-                          "sqls": [
-                              "select count(*) from ssb.P_LINEORDER"
-                          ],
-                          "index_id": -1,
-                          "dimensions": [],
-                          "measures": [
-                              {
-                                  "measure": {
-                                      "name": "COUNT_ALL",
-                                      "function": {
-                                          "expression": "COUNT",
-                                          "parameters": [
-                                              {
-                                                  "type": "constant",
-                                                  "value": "1"
-                                              }
-                                          ],
-                                          "returntype": "bigint"
-                                      },
-                                      "id": 100000
-                                  },
-                                  "new": true
-                              }
-                          ],
-                          "computed_columns": []
-                      }
-                  ]
-              }
-          ],
-          "error_sqls": [
-              "SELECT 1"
-          ]
-      },
-      "msg": ""
-  }
-  ```
-
-
-
-### Model Optimization{#Optimize-Model}
-
-
-- `POST http://host:port/kylin/api/models/model_optimization`
-- HTTP Header
-  - `Accept: application/vnd.apache.kylin-v4-public+json`
-  - `Accept-Language: en`
-
-  - `Content-Type: application/json;charset=utf-8`
-- HTTP Body: JSON Object
-
-  - `project` - `required` `string`, project name.
-  - `sqls` - `required` `array`, queries to optimize models.
-  - `accept_recommendation` - `optionalboolean`, default value is `false`, in which case the recommendations will be saved into the recommendation list. When it is set as `true`, the recommendations will be transferred to index directly.
-
-
-* Curl Request Example
-
-  ```sh
-  curl -X POST \
-    'http://localhost:7070/kylin/api/models/model_optimization' \
-    -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-    -H 'Accept-Language: en' \
-    -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-    -H 'Content-Type: application/json;charset=utf-8' \
-    -d '{"project":"ssb", "sqls":["select LO_CUSTKEY, count(1) from SSB.P_LINEORDER GROUP BY LO_CUSTKEY", "SELECT 1"]}'
-  ```
-
-* Response Details
-
-  * `models` , model details
-    * `alias`, model name
-    * `rec_items`, recommendation details
-       * `sqls`, sqls used by one recommendation
-       * `index_id`, a temporary index id
-       * `dimensions`, all dimensions used by this recommendation
-       * `measures`, all measures used by this recommendation
-       * `computed_column`, all computed columns used by this recommendation
-  * `error_sqls`, failed SQLs
-
-* Response Example
-
-  ```json
-  {
-      "code": "000",
-      "data": {
-          "models": [
-              {
-                  "uuid": "364e4485-433c-4fe2-be57-02c59170b5d4",
-                  "alias": "AUTO_MODEL_P_LINEORDER_1",
-                  "version": "4.0.0.0",
-                  "rec_items": [
-                      {
-                          "sqls": [
-                              "select LO_CUSTKEY, count(1) from SSB.P_LINEORDER GROUP BY LO_CUSTKEY"
-                          ],
-                          "index_id": 10001,
-                          "dimensions": [
-                              {
-                                  "dimension": {
-                                      "id": 1,
-                                      "name": "P_LINEORDER_0_DOT_0_LO_CUSTKEY",
-                                      "column": "P_LINEORDER.LO_CUSTKEY",
-                                      "status": "DIMENSION"
-                                  },
-                                  "dataType": "integer",
-                                  "new": true
-                              }
-                          ],
-                          "measures": [
-                              {
-                                  "measure": {
-                                      "name": "COUNT_ALL",
-                                      "function": {
-                                          "expression": "COUNT",
-                                          "parameters": [
-                                              {
-                                                  "type": "constant",
-                                                  "value": "1"
-                                              }
-                                          ],
-                                          "returntype": "bigint"
-                                      },
-                                      "id": 100000
-                                  },
-                                  "new": false
-                              }
-                          ],
-                          "computed_columns": []
-                      }
-                  ]
-              }
-          ],
-          "error_sqls": [
-              "SELECT 1"
-          ]
-      },
-      "msg": ""
-  }
-  ```
-
-
-
-### Accelerate SQL{#Accelerate-sql}
-
- - `POST http://host:port/kylin/api/models/sql_acceleration`
- - HTTP Header
-   - `Accept: application/vnd.apache.kylin-v4-public+json`
-   - `Accept-Language: en`
-   - `Content-Type: application/json;charset=utf-8`
-
- - HTTP Body: JSON Object
-
-   - `project` - `required` `string`, project name.
-   - `sqls` - `required` `array`, queries to optimize models.
-   - `accept_recommendation` - `optionalboolean`, default value is `false`, in which case the recommendations will be saved into the recommendation list. When it is set as `true`, the recommendations will be transferred to index directly.
-   - `with_segment` - `optional`, `bool`, create an empty segment, default is true
-   - `with_model_online` - `optional`, `bool`, model online or not, default is false
-
- * Curl Request Example
-
-   ```sh
-   curl -X POST \
-     'http://localhost:7070/kylin/api/models/sql_acceleration' \
-     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-     -H 'Accept-Language: en' \
-     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-     -H 'Content-Type: application/json;charset=utf-8' \
-     -d '{"project":"ssb", "sqls":["select count(*) from SSB.LINEORDER","select LO_CUSTKEY, count(1) from SSB.P_LINEORDER GROUP BY LO_CUSTKEY", "SELECT 1"]}'
-   ```
-
- * Response Details
-
-  * `optimized_models` , optimized model details
-     * `alias`, model name
-     * `rec_items`, recommendation details
-        * `sqls`, sqls used by one recommendation
-        * `index_id`, a temporary index id
-        * `dimensions`, all dimensions used by this recommendation
-        * `measures`, all measures used by this recommendation
-        * `computed_columns`, all computed columns used by this recommendation
-
-  * `created_models`, created model details
-    * `uuid`, model UUID
-    * `alias`, model name
-    * `version`, model version
-    * `rec_items`, new model information. Please note that there will be some model detail info such as dimensions or measure shown as a recommendation, but it will not truly generate such a recommendation.
-        * `sqls`, sqls used by one recommendation item
-        * `index_id`, reused index id, if the value is -1, a new model created
-        * `dimensions`, all dimensions used, `new` used to indicate whether it is newly created or reused
-        * `measures`, all measures used, `new` used to indicate whether it is newly created or reused
-        * `computed_columns`, all computed_columns used, `new` used to indicate whether it is newly created or reused
-
-* `optimal_models`, optimal models details
-
-     * `uuid`, model UUID
-
-     - `alias`, model name
-
-     - `version`, model version
-
-     - `rec_items`, query response details
-       - `sqls`, sql used by one query
-       - `index_id`, index used by one query
-       - `dimensions`, all dimensions about index
-       - `measures`, all measures about index
-       - `computed_columns`, all coputed_columns about index
-
-   * `error_sqls`, failed SQLs
-
- * Response Example
-
-  ```json
-  {
-        "code": "000",
-        "data": {
-            "optimized_models": [
-                {
-                    "uuid": "364e4485-433c-4fe2-be57-02c59170b5d4",
-                    "alias": "AUTO_MODEL_P_LINEORDER_1",
-                    "version": "4.0.0.0",
-                    "rec_items": [
-                        {
-                            "sqls": [
-                                "select LO_CUSTKEY, count(1) from SSB.P_LINEORDER GROUP BY LO_CUSTKEY"
-                            ],
-                            "index_id": 10001,
-                            "dimensions": [
-                                {
-                                    "dimension": {
-                                        "id": 1,
-                                        "name": "P_LINEORDER_0_DOT_0_LO_CUSTKEY",
-                                        "column": "P_LINEORDER.LO_CUSTKEY",
-                                        "status": "DIMENSION"
-                                    },
-                                    "dataType": "integer",
-                                    "new": true
-                                }
-                            ],
-                            "measures": [
-                                {
-                                    "measure": {
-                                        "name": "COUNT_ALL",
-                                        "function": {
-                                            "expression": "COUNT",
-                                            "parameters": [
-                                                {
-                                                    "type": "constant",
-                                                    "value": "1"
-                                                }
-                                            ],
-                                            "returntype": "bigint"
-                                        },
-                                        "id": 100000
-                                    },
-                                    "new": false
-                                }
-                            ],
-                            "computed_columns": []
-                        }
-                    ]
-                }
-            ],
-       "created_models": [
-              {
-                  "uuid": "364e4485-433c-4fe2-be57-02c59170b5d4",
-                  "alias": "AUTO_MODEL_LINEORDER_1",
-                  "version": "4.0.0.0",
-                  "rec_items": [
-                      {
-                          "sqls": [
-                              "select count(*) from SSB.LINEORDER"
-                          ],
-                          "index_id": -1,
-                          "dimensions": [],
-                          "measures": [
-                              {
-                                  "measure": {
-                                      "name": "COUNT_ALL",
-                                      "function": {
-                                          "expression": "COUNT",
-                                          "parameters": [
-                                              {
-                                                  "type": "constant",
-                                                  "value": "1"
-                                              }
-                                          ],
-                                          "returntype": "bigint"
-                                      },
-                                      "id": 100000
-                                  },
-                                  "new": true
-                              }
-                          ],
-                          "computed_columns": []
-                      }
-                  ]
-              }
-          ],
-          "optimal_models":[
-              {
-                  "uuid":"6731928e-0f6c-6a79-f430-9e2c938689de",
-                  "alias":"CONSTANT",
-                  "version":"4.0.0.0",
-                  "rec_items":[
-                      {
-                          "sqls":[
-                              "select 1"
-                          ],
-                          "index_id":-1,
-                          "dimensions":[
-
-                          ],
-                          "measures":[
-
-                          ],
-                          "computed_columns":[
-
-                          ]
-                      }
-                  ]
-              },
-          ],
-           "error_sqls": [
-                "SELECT SELECT"
-            ]
-        },
-        "msg": ""
-    }
-  ```
-
-
-
-### Get Model Recommendations{#Get_Model_Recommendations}
-
-> Call this API to get model recommendations for certain models. For SQL queries answered by pushdown rather than the models, Kylin will generate corresponding recommendations. Making this API call returns recommendations for specified models.
-
-- `GET http://host:port/kylin/api/models/{model_name}/recommendations`
-
-- URL Parameters
-
-  - `model_name` - `required` `string`, model name.
-  - `project` - `required` `string`, project name.
-
-- HTTP Header
-
-  - `Accept: application/vnd.apache.kylin-v4-public+json`
-  - `Accept-Language: en`
-  - `Content-Type: application/json;charset=utf-8`
-
-- Curl Request Example
-
-  ```shell
-  curl -X GET \
-    'http://host:port/kylin/api/models/ssb_test/recommendations?project=ssb'\
-    -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-    -H 'Accept-Language: en' \
-    -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-    -H 'Content-Type: application/json;charset=utf-8'
-  ```
-
-* Response Details
-
-  * `layouts`, all index recommendations
-     * `add`, recommendation used for adding or removing index
-     * `agg`, index related to this recommendation is AggIndex or TableIndex
-     * `item_id`, recommendation id
-     * `is_agg`, the same to `agg`
-     * `is_add`, the same to `add`
-     * `type`, recommendation type, including ADD_AGG_INDEX, REMOVE_AGG_INDEX, ADD_TABLE_INDEX, REMOVE_TABLE_INDEX
-     * `create_time`, create time of recommendation
-     * `last_modified`, last modified time of recommendation
-     * `hit_count`, used times of this recommendation in history
-     * `index_id`, ID of indexes in recommendations and if parameter `add` is true, this one should be ignored
-     * `data_size`, data size of indexes in recommendations and if parameter `add` is true, this one will be `-1`
-     * `memo_info`, comments of recommendations of deleting indexes
-  * `size`, all index recommendation size
-  * `model_id`, model id
-  * `project`, project name
-
-* Response Example
-
-  ```json
-  {
-  	"code": "000",
-  	"data": {
-  		"layouts": [{
-  			"add": true,
-  			"agg": true,
-  			"item_id": 34,
-  			"is_agg": true,
-  			"is_add": true,
-  			"type": "ADD_AGG_INDEX",
-  			"create_time": 1601027171262,
-  			"last_modified": 1601028480033,
-  			"hit_count": 20,
-  			"index_id": 0,
-  			"data_size": -1,
-  			"memo_info": {}
-  		}, {
-  			"add": false,
-  			"agg": true,
-  			"item_id": 35,
-  			"is_agg": true,
-  			"is_add": false,
-  			"type": "REMOVE_AGG_INDEX",
-  			"create_time": 1601028374011,
-  			"last_modified": 1601028491121,
-  			"hit_count": 2,
-  			"index_id": 1,
-  			"data_size": 155219,
-  			"memo_info": {
-  				"index_opt_reason": "INCLUDED"
-  			}
-  		}],
-  		"size": 2,
-  		"model_id": "931c95ba-a6c1-4d7e-8f30-b4599dae16ed",
-  		"project": "ssb"
-  	},
-  	"msg": ""
-  }
-  ```
-
-
-
-### Approve Model Recommendation in batch{#Approve_Model_Recommendation_in_batch}
-
-> Call this API to accept recommendations for certain models in batch. The recommendations are provided on a model level, that is, you can accept or reject all recommendations for certain model.
-
-- `PUT http://host:port/kylin/api/models/recommendations/batch`
-- HTTP Body: JSON Object
-  - `project` - `required` `string`, project name.
-  - `filter_by_models ` - `required` `boolean` , whether to approve recommendations by models. The default value is `true`, which means you only approve the recommendations under the models specified by `model_names` . Otherwise, all the recommendations in this project will be approved.
-  - `model_names` - `optional` `array`, model name list.
-- HTTP Header
-  - `Accept: application/vnd.apache.kylin-v4-public+json`
-  - `Accept-Language: en`
-
-  - `Content-Type: application/json;charset=utf-8`
-
-* Curl Request Example
-
-  ```sh
-  curl -X PUT \
-    'http://localhost:7070/kylin/api/models/recommendations/batch' \
-    -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
-    -H 'Accept-Language: en' \
-    -H 'Authorization: Basic QURNSU46S1lMSU4=' \
-    -H 'Content-Type: application/json;charset=utf-8' \
-    -d '{
-          "project": "ssb",
-          "filter_by_models": "true",
-          "model_names": ["ssb_test"]
-          }'
-  ```
-
-* Response Details
-
-  - project, project name
-  - models, information of affected models
-    - uuid, model uuid
-    - alias, model name
-    - added_indexes：the added index IDs among approved recommendations
-    - deleted_indexes：the removed index IDs among approved recommendations
-
-* Response Example
-
-  ```json
-  {
-   "code": "000",
-   "data": {
-     "project": "ssb",
-     "models": [
-      {
-           "uuid": "364e4485-433c-4fe2-be57-02c59170b5d4",
-           "alias": "ssb_test",
-           "added_indexes": [20001,30001],
-           "deleted_indexes": []
-      }]
-   },
-   "msg": ""
-  }
-  ```
-
 ### Delete Model {#Delete_Model}
 
 - `DELETE  http://host:port/kylin/api/models/{model_name}`
 
 - Request Permission: MANAGEMENT permission and above
 
-- Introduced in: 4.2.0
+- Introduced in: 5.0
 
 - URL Parameters
 
@@ -1509,7 +849,7 @@ last_update:
   }
   ```
 
-### Export TDS File {#EXPORT_TDS}
+### Export TDS File (BETA) {#EXPORT_TDS} 
 - `GET http://host:port/kylin/api/models/{model_name}/export`
 - URL Parameters
 
@@ -1536,7 +876,7 @@ curl -X GET \
   'http://localhost:7070/kylin/api/models/a3/export?project=test_project&export_as=TABLEAU_ODBC_TDS&element=AGG_INDEX_COL&server_host=host&server_port=7080' \
   -H 'accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'authorization: Basic QURNSU46S1lMSU4=' \
-  -H'Content-Type: application/json;charset=utf-8' \
+  -H 'Content-Type: application/json;charset=utf-8' \
 
 ```
 
@@ -1544,7 +884,7 @@ curl -X GET \
 
 - `PUT http://host:port/kylin/api/models/{model_name}/name`
 
-- Introduced in: 4.5.4
+- Introduced in: 5.0
 
 - URL Parameters
 
@@ -1565,12 +905,12 @@ curl -X GET \
 
   ```sh
   curl -X PUT \
-  'http://localhost:7070/kylin/api/models/sytest/name' \
-  -H'Accept: application/vnd.apache.kylin-v4-public+json' \
-  -H'Accept-Language: cn' \
-  -H'Authorization: Basic QURNSU46S1lMSU4=' \
+  'http://localhost:7070/kylin/api/models/test_model/name' \
+  -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
+  -H 'Accept-Language: cn' \
+  -H 'Authorization: Basic QURNSU46S1lMSU4=' \
   -H 'Content-Type: application/json;charset=utf-8' \
-  -d'{"project":"ssb", "new_model_name":"testNewName"}'
+  -d '{"project":"ssb", "new_model_name":"testNewName"}'
   ```
 
 - Response Example
@@ -1591,7 +931,7 @@ curl -X GET \
 
 - Request Permission: MANAGEMENT permission and above
 
-- Introduced in: 4.5.11
+- Introduced in: 5.0
 
 - URL Parameters
 
@@ -1648,7 +988,7 @@ curl -X GET \
   - `KE-010001002`: Empty Project Name
   - `KE-010000003`: Invalid Parameter
 
-### Export TDS File based on user rights {#Export_TDS_File_based_on_user_rights}
+### Export TDS File based on user rights (BETA) {#Export_TDS_File_based_on_user_rights}
 
 - `GET http://host:port/kylin/api/models/bi_export`
 - URL Parameters
