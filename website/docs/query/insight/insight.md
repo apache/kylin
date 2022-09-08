@@ -52,11 +52,11 @@ When you need to optimize for slow queries, you should analyze the query's speci
 
 After clicking the **Run Query** button, click the **Stop** button in the same position to stop the query.
 
-![](images/insight/insight_stop_query.en.png)
+![](images/insight/insight_stop_query.png)
 
 After the query is stopped, query ID and error message will be displayed.
 
-![](images/insight/insight_stop_query_result.en.png)
+![](images/insight/insight_stop_query_result.png)
 
 
 In addition, clicking the **Close** button of the query will also stop the query.
@@ -92,9 +92,7 @@ Support chart type: Line Chart, Bar Chart, Pie Chart.
 
 ### Other ways to execute SQL queries
 
-- [Integration with BI tools](../../integration/intro.md)
-
-
+- [Integration with BI tools](#TODO)
 
 ### Notices
 

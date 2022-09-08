@@ -55,7 +55,7 @@ This page saves the basic information of queries, such as query time, SQL statem
 
 Please enter the query history page by clicking **Query -> History** in the navigator bar, after executing the above SQL statements, you will see the following content.
 
-![Query History](./images/query_history.en.png)
+![Query History](images/query_history.png)
 
 Each line in the picture is a query history record. The meaning of the columns are as follows:
 
@@ -89,7 +89,7 @@ Each line in the picture is a query history record. The meaning of the columns a
 
 When you click on the icon to the left of a query, the execution details of the query will be displayed, as shown below:
 
-![Query Execution Detail](./images/query_history2.en.png)
+![Query Execution Detail](./images/query_history2.png)
 
 On the left is the SQL statement, you can copy and paste and then query. The fields on the right have the following meanings:
 
@@ -105,7 +105,7 @@ On the left is the SQL statement, you can copy and paste and then query. The fie
 
 When you click on the error details to the right of a query failure, the exception details of that query are displayed，as shown below:
 
-![Query Exception Message](./images/query_history5.en.png)
+![Query Exception Message](images/query_history5.png)
 
 > **Note**: When SQL does not wrap, only the first 100 lines of SQL can be seen in the query execution details. When SQL wraps, the details display the first 2000 characters. You can click the copy button in the upper right corner of the SQL statement box to copy the complete SQL statement.
 
@@ -126,10 +126,10 @@ In order to ensure the read and write performance of the query history and datab
 ### Export query history
 
 The query history can be exported as a csv file, as shown in the figure below, the export result is the filtered data.
-![Export query history](./images/query_history3.en.png)
+![Export query history](images/query_history3.png)
 
 You can also export the sql in the query history as a text file separately, as shown in the figure below, the export result is also the filtered data.
-![Export SQL](./images/query_history4.en.png)
+![Export SQL](images/query_history4.png)
 
 Query history support configuration export upper limit, the default value is 100000.
 ```kylin.query.query-history-download-max-size=100000```

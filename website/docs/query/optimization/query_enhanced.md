@@ -18,7 +18,7 @@ By default in Kylin, the relationship between tables in the query SQL must be co
 
 But in some cases,  part of `Left Join` queries can be semantically equivalently transformed into `Inner Join` queries, so we provide configuration parameters that allow users to use `Left Join`  model to answer equivalent semantics `Inner Join` query.
 
-The configuration parameters starts to take effect from version of Kylin 4.2.4, which is closed by default.
+The configuration parameters starts to take effect from version of Kylin 5.0, which is closed by default.
 
 
 

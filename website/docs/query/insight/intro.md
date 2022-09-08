@@ -15,7 +15,7 @@ last_update:
 ---
 
 
-kylin offers an Intelligent OLAP Platform for big data to simplify multidimensional analytics for cloud data lake. kylin finishes data loading and precomputation with the index building jobs and delivers sub-second query latency on massive dataset.
+kylin offers an Intelligent OLAP Platform for big data to simplify multidimensional analytics. kylin finishes data loading and precomputation with the index building jobs and delivers sub-second query latencydelivers sub-second query latency on massive dataset.
 
 Unlike the execution process of regular queries, kylin will be using precalculated data to answer queries instead of doing the calculation online, which will improve query performance significantly.
 
@@ -37,7 +37,7 @@ Different from regular query engines, kylin uses precalculated results to replac
 
 3. If all the `FROM` clauses match successfully, kylin will execute the query using index data.
 
-   All the `FROM` clauses will be replaced by precalculated results, and the query will execute from there to get the final result. If you execute queries via Web UI, you can find the name(s) of the answering model(s) in the **Answered By** field after a query returns successfully. For more details, please refer to [Execute SQL Query in Web UI](insight.en.md).
+   All the `FROM` clauses will be replaced by precalculated results, and the query will execute from there to get the final result. If you execute queries via Web UI, you can find the name(s) of the answering model(s) in the **Answered By** field after a query returns successfully. For more details, please refer to [Execute SQL Query in Web UI](insight.md).
 
 4. If there is one or more `FROM` clause cannot find a matching index, then kylin cannot execute the query using index data.x
 

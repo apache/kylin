@@ -108,7 +108,7 @@ windowSpec:
     ')'
 ```
 
-> **Notice:** the versions of the realization may be different. Feel free to contact the technical support team if you have any questions.
+> **Notice:** the versions of the realization may be different. Feel free to contact the Kylin Community if you have any questions.
 
 
 
@@ -141,7 +141,7 @@ For example, table *DATES* contains column *YEAR* that overlap with kylin's keyw
 
 You can just include the column with double-quotes to get the right result.
 
-![Query with double-quoted upper case column will return successfully  ](images/spec/4.en.png)
+![Query with double-quoted upper case column will return successfully  ](images/spec/4.png)
 
 
 
@@ -167,7 +167,7 @@ from SSB.P_LINEORDER
 where LO_ORDERDATE = date '1992-06-03'
 ```
 
-![Date Query 1](images/data_sql/date_sql1.en.png)
+![Date Query 1](images/data_sql/date_sql1.png)
 
 or
 
@@ -177,4 +177,4 @@ from SSB.P_LINEORDER
 where LO_ORDERDATE = cast ( '1992-06-03' as date)
 ```
 
-![Date Query 2](images/data_sql/date_sql2.en.png)
+![Date Query 2](images/data_sql/date_sql2.png)

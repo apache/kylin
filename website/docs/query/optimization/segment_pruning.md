@@ -21,7 +21,7 @@ Starting from Kylin 5.0, we support the calculation of the dimension value range
 
 This optimization is enable by default. Under normal circumstances, you do not need to pay attention to this optimization. In some extreme cases, system-level or project-level shutdown is supported.
 
-To disable it on the system level, configure the parameters in `$KYLIN_HOME/conf/kylin.properties` . To disable it on project level, add the configuration in **Setting-Advanced Settings-Custom Project Configuration**.
+To disable it on the system level, configure the parameters in `$KYLIN_HOME/conf/kylin.properties` . To disable it on project level, add the configuration in **Setting -> Advanced Settings -> Custom Project Configuration**.
 
 `kylin.storage.columnar.dimension-range-filter-enabled=false`
 

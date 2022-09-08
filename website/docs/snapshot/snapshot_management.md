@@ -32,11 +32,11 @@ The snapshot management is disabled by default. You can enable it in advanced se
 
 1. Navigate to **Settings -> Advanced Settings -> Snapshot Management**, turn on **Support Snapshot Management**.
 
-   ![Enable Snapshot Management](images/snapshot_1_en.png)
+   ![Enable Snapshot Management](images/snapshot_1.png)
    
-   ![switch on](images/snapshot_2_en.png)
+   ![switch on](images/snapshot_2.png)
    
-   ![switch off](images/snapshot_3_en.png)
+   ![switch off](images/snapshot_3.png)
 
 **Note**:
 
@@ -50,7 +50,7 @@ The snapshot management is disabled by default. You can enable it in advanced se
 
 2. Navigate to **Data Asset -> Snapshot**, the snapshot list will be displayed, as shown below:
 
-   ![Snapshot List](images/snapshot_4_en.png)
+   ![Snapshot List](images/snapshot_4.png)
    
    **Fields Explanation:**
    
@@ -76,7 +76,7 @@ Above the snapshot lis are the operation buttons. Specific actions are listed be
 
 - **Add Snapshots**：Select tables or databases to build snapshots. Click **Next** to set partition columns.
 
-   ![Add Snapshot](images/snapshot_5_en.png)
+   ![Add Snapshot](images/snapshot_5.png)
 
   Next, set the snapshot partition columns. Setting snapshot partition columns can improve the building speed by building partitions in parallel to a certain extent. By default, the system will build in a non-partitioned manner. Users can also set or detect partition columns , Also support specified partition value refresh.
    > **Note**: 
@@ -85,23 +85,23 @@ Above the snapshot lis are the operation buttons. Specific actions are listed be
    >
    > - Building in partitions can only increase the speed of the building task, and the result of the built snapshot is still full data.
    
-     ![Set Partition Column](images/snapshot_6_en.png)
+     ![Set Partition Column](images/snapshot_6.png)
 
 - **Refresh Snapshots**：Select snapshots to refresh.
     - Full refresh: The refresh operation at this time builds the latest and full snapshot.
     - Incremental refresh: For snapshots with source table partitions set, only the newly added partition value data will be refreshed (the built historical data will not be refreshed). It is recommended to select when the historical data is not updated.
     - Custom partition value refresh: Specify single or multiple partition values for data refresh.
 
-  ![Refresh Snapshot](images/snapshot_7_en.png)
+  ![Refresh Snapshot](images/snapshot_7.png)
 
 
 - **Delete Snapshots**：Select snapshots to delete. It will discard all jobs related to the snapshots.
 
-   ![delete](images/snapshot_8_en.png)
+   ![delete](images/snapshot_8.png)
 
 - **Repair Snapshots**: When the source table has a structural change and is reloaded, the corresponding snapshot will change to "BROKEN" and can be repaired.
 
-  ![repair](./images/snapshot_9_en.png)
+  ![repair](images/snapshot_9.png)
 
 According building tasks of snapshot，you can configure spark related configurations in `kylin.properties` to achieve more fine-grained control.（These configuration can be overridden at project level）
 
