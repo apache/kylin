@@ -26,7 +26,7 @@ Currently, asynchronous query only supports calling REST API. For how to use asy
 
 Asynchronous query supports the following configuration in `kylin.properties`:
 
--`kylin.query.async.result-retain-days=7d`: The retention time of asynchronous query results on HDFS. The default is 7 days, that is, asynchronous query results and related files older than 7 days will be cleaned up
+- `kylin.query.async.result-retain-days=7d`: The retention time of asynchronous query results on HDFS. The default is 7 days, that is, asynchronous query results and related files older than 7 days will be cleaned up.
 
 ### Configure a separate cluster queue for asynchronous query
 
@@ -36,16 +36,16 @@ In general, the same cluster queue can be used for asynchronous query and normal
 
 2. Specify the queue used for asynchronous queries. Three levels are supported for designation, the priority from high to low is as follows:
 
-   -Query level, specified by API request parameter `spark_queue`
-   -Project level, specified by setting `kylin.query.async-query.spark-conf.spark.yarn.queue`
-   -System level, specified by setting `kylin.query.async-query.spark-conf.spark.yarn.queue` in the configuration file `/conf/kylin.properties`
+   - Query level, specified by API request parameter `spark_queue`
+   - Project level, specified by setting `kylin.query.async-query.spark-conf.spark.yarn.queue`
+   - System level, specified by setting `kylin.query.async-query.spark-conf.spark.yarn.queue` in the configuration file `/conf/kylin.properties`
 
    > **Tip**: If none of the three are configured, the default queue is `default`
 
 3. Set configuration: `kylin.query.async-query.submit-hadoop-conf-dir=$KYLIN_HOME/async_query_hadoop_conf`
 
-4. Put the hadoop configuration of the asynchronous query cluster into the $KYLIN_HOME/async_query_hadoop_conf directory, and put the hive-site.xml for building the cluster into this directory.
-    If Kerberos authentication is enabled, you need to copy the krb5.conf file to the $KYLIN_HOME/async_query_hadoop_conf directory.
+4. Put the hadoop configuration of the asynchronous query cluster into the `$KYLIN_HOME/async_query_hadoop_conf` directory, and put the hive-site.xml for building the cluster into this directory.
+    If Kerberos authentication is enabled, you need to copy the `krb5.conf` file to the `$KYLIN_HOME/async_query_hadoop_conf` directory.
 
 5. If Kerberos authentication is enabled between asynchronous query cluster, query cluster, and build cluster, the following additional configuration is required:
 
