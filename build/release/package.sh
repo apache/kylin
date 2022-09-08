@@ -53,17 +53,17 @@ sh build/release/build.sh $@             || { exit 1; }
 
 if [[ "${WITH_SPARK}" = "1" ]]; then
     echo "BUILD STAGE 3 - Prepare spark..."
-    sh -x build/apache_release/download-spark.sh      || { exit 1; }
+    sh -x build/release/download-spark.sh      || { exit 1; }
 else
     rm -rf build/spark
 fi
 
 if [[ "${WITH_THIRDPARTY}" = "1" ]]; then
     echo "BUILD STAGE 4 - Prepare influxdb..."
-    sh build/apache_release/download-influxdb.sh      || { exit 1; }
+    sh build/release/download-influxdb.sh      || { exit 1; }
 
     echo "BUILD STAGE 5 - Prepare grafana..."
-    sh build/apache_release/download-grafana.sh      || { exit 1; }
+    sh build/release/download-grafana.sh      || { exit 1; }
 
     echo "BUILD STAGE 6 - Prepare postgresql..."
     sh build/release/download-postgresql.sh      || { exit 1; }
