@@ -796,10 +796,10 @@ const sidebars = {
                             type: 'doc',
                             id: 'restapi/acl_api/project_acl_api'
                         },
-                        {
-                            type: 'doc',
-                            id: 'restapi/acl_api/acl_api'
-                        },
+                        // {
+                        //     type: 'doc',
+                        //     id: 'restapi/acl_api/acl_api'
+                        // },
                     ],
                 },
                 {

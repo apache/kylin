@@ -26,7 +26,7 @@ last_update:
 
 - `GET http://host:port/kylin/api/user_group/groups`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - Request Parameters
 
@@ -45,7 +45,7 @@ last_update:
 
   ```sh
   curl -X GET \
-    'http://localhost:7070/kylin/api/user_group/groups`' \
+    'http://host:port/kylin/api/user_group/groups`' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -79,7 +79,7 @@ last_update:
 
 - `GET http://host:port/kylin/api/user_group/group_members/{group_name}`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - URL Parameters
 
@@ -101,7 +101,7 @@ last_update:
 
   ```sh
   curl -X GET \
-    'http://localhost:7070/kylin/api/user_group/group_members/test' \
+    'http://host:port/kylin/api/user_group/group_members/test' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -151,7 +151,7 @@ last_update:
 
 - `POST http://host:port/kylin/api/user_group`
 
-- Introduced in: 4.2.1
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
 
@@ -167,7 +167,7 @@ last_update:
 
   ```sh
   curl -X POST \
-    'http://localhost:7070/kylin/api/user_group' \
+    'http://host:port/kylin/api/user_group' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -195,7 +195,7 @@ last_update:
 
 - `PUT http://host:port/kylin/api/user_group/users`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
 
@@ -212,7 +212,7 @@ last_update:
 
   ```sh
   curl -X PUT \
-    'http://localhost:7070/kylin/api/user_group/users' \
+    'http://host:port/kylin/api/user_group/users' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -238,7 +238,7 @@ last_update:
 
 - `DELETE http://host:port/kylin/api/user_group`
 
-- Introduced in: 4.2.1
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
 
@@ -254,7 +254,7 @@ last_update:
 
   ```sh
   curl -X DELETE \
-    'http://localhost:7070/kylin/api/user_group' \
+    'http://host:port/kylin/api/user_group' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \

@@ -234,7 +234,7 @@ For building multi-level partition model, please refer directly to [Load Segment
   ```
 
 ### Get Segment List {#Get Segment List}
-Please refer to [Get Segment List](../segment_managment_api.md) for multi-level partition model to get Segment list.
+Please refer to [Get Segment List](../segment_management_api.md) for multi-level partition model to get Segment list.
 
 ### Get Segment details {#Get Segment details}
 - `GET http://host:port/kylin/api/models/{model_name}/segments/multi_partition`

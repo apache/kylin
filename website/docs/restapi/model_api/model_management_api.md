@@ -114,7 +114,7 @@ last_update:
 
   ```sh
   curl -X POST \
-    'http://localhost:7070/kylin/api/models' \
+    'http://host:port/kylin/api/models' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -264,7 +264,7 @@ last_update:
     "msg": "KE-010001002(Empty Project Name):Can’t find project information. Please select a project.",
     "stacktrace": "KE-010001002(Empty Project Name) \norg.apache.kylin.common.exception.KylinException: KE-010001002(Empty Project Name):Can’t find project information. ...",
     "exception": "KE-010001002(Empty Project Name):Can’t find project information. Please select a project.",
-    "url": "http://localhost:7070/kylin/api/models"
+    "url": "http://host:port/kylin/api/models"
   }
   ```
 
@@ -308,7 +308,7 @@ last_update:
 
   ```sh
   curl -X GET \
-    'http://localhost:7070/kylin/api/models?project=doc_expert' \
+    'http://host:port/kylin/api/models?project=doc_expert' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -719,7 +719,7 @@ last_update:
 + Curl Request Example
 
   ```shell
-  curl -X GET 'http://localhost:7070/kylin/api/models/m1/indexes?project=ssb&batch_index_ids=1,10001,20001' \
+  curl -X GET 'http://host:port/kylin/api/models/m1/indexes?project=ssb&batch_index_ids=1,10001,20001' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -873,7 +873,7 @@ last_update:
 
 ```sh
 curl -X GET \
-  'http://localhost:7070/kylin/api/models/a3/export?project=test_project&export_as=TABLEAU_ODBC_TDS&element=AGG_INDEX_COL&server_host=host&server_port=7080' \
+  'http://host:port/kylin/api/models/a3/export?project=test_project&export_as=TABLEAU_ODBC_TDS&element=AGG_INDEX_COL&server_host=host&server_port=7080' \
   -H 'accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'authorization: Basic QURNSU46S1lMSU4=' \
   -H 'Content-Type: application/json;charset=utf-8' \
@@ -905,7 +905,7 @@ curl -X GET \
 
   ```sh
   curl -X PUT \
-  'http://localhost:7070/kylin/api/models/test_model/name' \
+  'http://host:port/kylin/api/models/test_model/name' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: cn' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -951,7 +951,7 @@ curl -X GET \
 
   ```sh
   curl -X PUT \
-  'http://localhost:7070/kylin/api/models/model_test1/status' \
+  'http://host:port/kylin/api/models/model_test1/status' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -978,7 +978,7 @@ curl -X GET \
     "msg": "KE-010001002(Empty Project Name):Can’t find project information. Please select a project.",
     "stacktrace": "KE-010001002(Empty Project Name) \norg.apache.kylin.common.exception.KylinException: KE-010001002(Empty Project Name):Can’t find project information. ...",
     "exception": "KE-010001002(Empty Project Name):Can’t find project information. Please select a project.",
-    "url": "http://localhost:7070/kylin/api/models"
+    "url": "http://host:port/kylin/api/models"
   }
   ```
 
@@ -1031,7 +1031,7 @@ curl -X GET \
     "msg": "KE-010002022(The table not contains unauthenticated columns):Please add permissions to columns in the table!",
     "stacktrace": "KE-010002022(The table not contains unauthenticated columns) \norg.apache.kylin.common.exception.KylinException: KE-010002022(The table not contains unauthenticated columns):Please add permissions to columns in the table!8)...。",
     "exception": "KE-010002022(The table not contains unauthenticated columns):Please add permissions to columns in the table!",
-    "url": "http://localhost:7070/kylin/api/models/bi_export"
+    "url": "http://host:port/kylin/api/models/bi_export"
 }
 ```
 

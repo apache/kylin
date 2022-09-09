@@ -472,7 +472,7 @@ Calling this API will refresh the table cache of the Spark SQL Context for all q
 
 
 
-### Download query history SQL  {#Download-query-history-SQL}
+### Download query history {#Download-query-history}
 
 - `GET  http://host:port/kylin/api/query/download_query_histories`
 
@@ -499,7 +499,7 @@ Calling this API will refresh the table cache of the Spark SQL Context for all q
 
     ```
     curl -X GET \
-    ' http://host:port/kylin/api/query/download_ query_ histories?timezone_ offset_ hour=8&amp;realization=&amp;query_ status=&amp;submitter=&amp;project=default&amp;start_ time_ from=&amp;start_ time_ to=&amp;latency_ from=&amp;latency_ to=&amp;sql=' \
+    ' http://host:port/kylin/api/query/download_query_histories?timezone_offset_hour=8&realization=&query_status=&submitter=&project=default&start_time_from=&start_time_to=&latency_from=&latency_to=&sql=' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -534,7 +534,7 @@ Calling this API will refresh the table cache of the Spark SQL Context for all q
 
     ```
     curl -X GET \
-    ' http://host:port/kylin/api/query/download_ query_ histories_ sql?timezone_ offset_ hour=8&amp;realization=&amp;query_ status=&amp;submitter=&amp;project=default&amp;start_ time_ from=&amp;start_ time_ to=&amp;latency_ from=&amp;latency_ to=&amp;sql=' \
+    ' http://host:port/kylin/api/query/download_query_histories_sql?timezone_offset_hour=8&realization=&query_status=&submitter=&project=default&start_time_from=&start_time_to=&latency_from=&latency_to=&sql=' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \

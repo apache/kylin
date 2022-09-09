@@ -40,7 +40,7 @@ last_update:
 - Curl Request Example
 
   ```sh
-  curl --location --request GET 'http://localhost:7070/kylin/api/metastore/previews/models?project=target_project&model_names=model_index' \
+  curl --location --request GET 'http://host:port/kylin/api/metastore/previews/models?project=target_project&model_names=model_index' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -112,7 +112,7 @@ last_update:
 - Curl Request Example
 
   ```sh
-  curl --remote-name --remote-header-name --location --request POST 'http://localhost:7070/kylin/api/metastore/backup/models?project=original_project' \
+  curl --remote-name --remote-header-name --location --request POST 'http://host:port/kylin/api/metastore/backup/models?project=original_project' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Content-Type: application/json;charset=utf-8' \
@@ -153,7 +153,7 @@ last_update:
 - Curl Request Example
 
   ```sh
-  curl --location --request POST 'http://localhost:7070/kylin/api/metastore/validation/models?project=original_project' \
+  curl --location --request POST 'http://host:port/kylin/api/metastore/validation/models?project=original_project' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -291,7 +291,7 @@ last_update:
 - Curl Request Example
 
   ```sh
-  curl --location --request POST 'http://localhost:7070/kylin/api/metastore/import/models?project=original_project' \
+  curl --location --request POST 'http://host:port/kylin/api/metastore/import/models?project=original_project' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \
