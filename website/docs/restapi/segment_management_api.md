@@ -44,7 +44,7 @@ last_update:
 
   ```sh
   curl -X GET \
-    'http://localhost:7070/kylin/api/models/SSB_LINEORDER/segments?project=doc_expert' \
+    'http://host:port/kylin/api/models/SSB_LINEORDER/segments?project=doc_expert' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -152,7 +152,7 @@ last_update:
 
   ```sh
   curl -X PUT \
-    'http://localhost:7070/kylin/api/models/SSB_LINEORDER/segments' \
+    'http://host:port/kylin/api/models/SSB_LINEORDER/segments' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -197,7 +197,7 @@ last_update:
 
   ```sh
   curl -X DELETE \
-    'http://localhost:7070/kylin/api/models/SSB_LINEORDER/segments?project=doc_expert&ids=291b9926-eaba-42d1-9d70-0a587992bea7&purge=false' \
+    'http://host:port/kylin/api/models/SSB_LINEORDER/segments?project=doc_expert&ids=291b9926-eaba-42d1-9d70-0a587992bea7&purge=false' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -247,7 +247,7 @@ last_update:
 
   ```sh
   curl -X POST \
-    'http://localhost:7070/kylin/api/models/ssb_model/segments/check' \
+    'http://host:port/kylin/api/models/ssb_model/segments/check' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -313,7 +313,7 @@ last_update:
 
   ```sh
   curl -X POST \
-    'http://localhost:7070/kylin/api/models/ssb_test/indexes' \
+    'http://host:port/kylin/api/models/ssb_test/indexes' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -367,7 +367,7 @@ last_update:
 
   ```sh
   curl -X POST \
-  'http://localhost:7070/kylin/api/models/m1/segments/completion?project=ssb&names=19900101000000_19950101000000,19950101000000_19970101000000' \
+  'http://host:port/kylin/api/models/m1/segments/completion?project=ssb&names=19900101000000_19950101000000,19950101000000_19970101000000' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \

@@ -26,7 +26,7 @@ last_update:
 
 - `PUT http://host:port/kylin/api/projects/{project}/snapshot_config`
 - Request Permission: ADMIN permission and above
-- Introduced in: 4.2.2
+- Introduced in: 5.0
 - URL Parameters
     - `project` - `required` `string`, project name.
 - HTTP Body: JSON Object
@@ -38,7 +38,7 @@ last_update:
 - Curl Request Example
 ```sh
 curl -X PUT \
-  'http://localhost:7070/kylin/api/projects/gc_test/snapshot_config' \
+  'http://host:port/kylin/api/projects/gc_test/snapshot_config' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -60,7 +60,7 @@ curl -X PUT \
 
 - `POST http://host:port/kylin/api/snapshots`
 - Request Permission: OPERATION permission and above
-- Introduced in: 4.2.2 (Partition building: since 4.2.6)
+- Introduced in: 5.0 (Partition building: since 5.0)
 - HTTP Body: JSON Object
     - `project` - `required` `string`, project name.
     - `tables` - `optional` `array[string]`, load tables with the format `DB.TABLE`
@@ -81,7 +81,7 @@ curl -X PUT \
 - Curl Request Example
 ```sh
 curl -X POST \
-  'http://localhost:7070/kylin/api/snapshots' \
+  'http://host:port/kylin/api/snapshots' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -111,7 +111,7 @@ curl -X POST \
 
 - `POST http://host:port/kylin/api/snapshots/config`
 - Request Permission: OPERATION permission and above
-- Introduced in: 4.2.6
+- Introduced in: 5.0
 - HTTP Body: JSON Object
   - `project` - `required` `string`, project name.
   - `table_partition_col` - `required`  `map[string:string]` The mapping from table (DB.TABLE) to chosen partition column.
@@ -122,7 +122,7 @@ curl -X POST \
 - Curl Request Example
 ```sh
  curl -X POST \
-   'http://localhost:7070/kylin/api/snapshots/config' \
+   'http://host:port/kylin/api/snapshots/config' \
    -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
    -H 'Accept-Language: en' \
    -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -146,7 +146,7 @@ curl -X POST \
 
 - Request Permission: OPERATION permission and above
 
-- Introduced in: 4.2.2 (Partition building: since 4.2.6)
+- Introduced in: 5.0 (Partition building: since 5.0)
 
 - HTTP Body: JSON Object
     - `project` - `required` `string`, project name.
@@ -179,7 +179,7 @@ curl -X POST \
 - Curl Request Example
 ```sh
 curl -X PUT \
-  'http://localhost:7070/kylin/api/snapshots' \
+  'http://host:port/kylin/api/snapshots' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -208,7 +208,7 @@ curl -X PUT \
 
 - `DELETE http://host:port/kylin/api/snapshots`
 - Request Permission: OPERATION permission and above
-- Introduced in: 4.2.2
+- Introduced in: 5.0
 - URL Parameters
     - `project` - `required` `string`, project name.
     - `tables` - `required` `array[string]`, snapshot tables to be deleted, for example：DB.TABLE, multiple tables are splitted by comma. Because the http protocol has a limit on the size of the request header, it is recommended that the length of url is less than 100.
@@ -219,7 +219,7 @@ curl -X PUT \
 - Curl Request Example
 ```sh
 curl -X DELETE \
-  'http://localhost:7070/kylin/api/snapshots?project=gc_test&tables=SSB.P_LINEORDER%2CDEFAULT.TEST_KYLIN_FACT' \
+  'http://host:port/kylin/api/snapshots?project=gc_test&tables=SSB.P_LINEORDER%2CDEFAULT.TEST_KYLIN_FACT' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -254,7 +254,7 @@ curl -X DELETE \
 
 - `GET http://host:port/kylin/api/snapshots`
 - Request Permission: QUERY permission and above
-- Introduced in: 4.2.2
+- Introduced in: 5.0
 - URL Parameters
     - `project` - `required` `string`, project name.
     - `table` - `optional` `string`, search key word. Default value is an empty string, will display all the snapshots.
@@ -269,7 +269,7 @@ curl -X DELETE \
 - Curl Request Example
 ```sh
 curl -X GET \
-  'http://localhost:7070/kylin/api/snapshots?project=gc_test' \
+  'http://host:port/kylin/api/snapshots?project=gc_test' \
   -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
   -H 'Accept-Language: en' \
   -H 'Authorization: Basic QURNSU46S1lMSU4=' \

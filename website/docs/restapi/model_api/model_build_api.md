@@ -48,7 +48,7 @@ last_update:
 
   ```sh
   curl -X POST \
-    'http://localhost:7070/kylin/api/models/SSB_LINEORDER/segments' \
+    'http://host:port/kylin/api/models/SSB_LINEORDER/segments' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \

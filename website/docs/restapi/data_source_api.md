@@ -89,7 +89,7 @@ last_update:
 
 - `GET http://host:port/kylin/api/tables/pre_reload`
 
-- Introduced in: 4.1.9
+- Introduced in: 5.0
 
 - URL Parameters
 
@@ -167,7 +167,7 @@ last_update:
 
 - Request Permission: MANAGEMENT permission and above
 
-- Introduced in: 4.2.0
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
 
@@ -341,7 +341,7 @@ last_update:
 
 - Request Permission: MANAGEMENT permission and above
 
-- Introduced in: 4.2.0
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
 
@@ -390,7 +390,7 @@ last_update:
 
 - Request Permission: Operation permission and above
 
-- Introduced in: 4.2.0
+- Introduced in: 5.0
 
 - Request Parameters
 
@@ -443,7 +443,7 @@ last_update:
 
 - Request Permission: READ permission and above.
 
-- Introduced in: 4.2.0
+- Introduced in: 5.0
 
 - Request Parameters
 
@@ -465,7 +465,7 @@ last_update:
 
   ```sh
   curl -X GET \
-    'http://localhost:7070/kylin/api/tables?project=test&database=SSB&table=KYLIN_SALES' \
+    'http://host:port/kylin/api/tables?project=test&database=SSB&table=KYLIN_SALES' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -537,5 +537,5 @@ last_update:
       "msg": ""
   }
   ```
->Note: Prior to KE version 4.5.17.0, the `total_size` value was the total number of tables the requesting user had permissions on in the project. Due to performance issues, in KE 4.5.17.0 and later, the `total_size` value is adjusted to the total number of all loaded tables in the project and no longer correlates to the actual table permissions the requesting user has in the project.
+>Note: the `total_size` value is adjusted to the total number of all loaded tables in the project and no longer correlates to the actual table permissions the requesting user has in the project.
   

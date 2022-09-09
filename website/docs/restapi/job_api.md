@@ -14,9 +14,6 @@ last_update:
     date: 08/12/2022
 ---
 
-
-## Job API
-
 > Reminders:
 >
 > 1. Please read [Access and Authentication REST API](authentication.md) and understand how authentication works.

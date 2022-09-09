@@ -1,5 +1,5 @@
 ---
-title: Data ACL API
+title: Data ACL API (BETA)
 language: en
 sidebar_label: Data ACL API
 pagination_label: Data ACL API
@@ -9,7 +9,7 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - data acl api
-draft: false
+draft: true
 last_update:
     date: 08/12/2022
 ---
@@ -40,7 +40,7 @@ last_update:
 
   ```sh
   curl -X GET \
-    'http://localhost:7070/kylin/api/acl/User/bb?authorized_only=true&project=m' \
+    'http://host:port/kylin/api/acl/User/bb?authorized_only=true&project=m' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \

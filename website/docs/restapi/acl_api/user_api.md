@@ -25,7 +25,7 @@ last_update:
 
 - `GET http://host:port/kylin/api/user`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - Request Parameters
 
@@ -44,7 +44,7 @@ last_update:
 
   ```sh
   curl -X GET \
-    'http://localhost:7070/kylin/api/user' \
+    'http://host:port/kylin/api/user' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -92,7 +92,7 @@ last_update:
 
 - `POST http://host:port/kylin/api/user`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
 
@@ -111,7 +111,7 @@ last_update:
 
   ```sh
   curl -X POST \
-    'http://localhost:7070/kylin/api/user' \
+    'http://host:port/kylin/api/user' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -142,7 +142,7 @@ last_update:
 
 - `PUT http://host:port/kylin/api/user`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
 
@@ -159,7 +159,7 @@ last_update:
 
   ```sh
   curl -X PUT \
-    'http://localhost:7070/kylin/api/user' \
+    'http://host:port/kylin/api/user' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -186,7 +186,7 @@ last_update:
 
 - `PUT http://host:port/kylin/api/user/password`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
 
@@ -204,7 +204,7 @@ last_update:
 
   ```sh
   curl -X PUT \
-    'http://localhost:7070/kylin/api/user' \
+    'http://host:port/kylin/api/user' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -230,11 +230,9 @@ last_update:
 
 ### Delete User{#delete-user}
 
-### {#delete-user}
-
 - `DELETE http://host:port/kylin/api/user`
 
-- Introduced in: 4.2.1
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
 
@@ -250,7 +248,7 @@ last_update:
 
   ```sh
   curl -X DELETE \
-    'http://localhost:7070/kylin/api/user' \
+    'http://host:port/kylin/api/user' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -276,7 +274,7 @@ last_update:
 
 - `GET http://host:port/kylin/api/access/acls`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - Request Parameters
 
@@ -294,7 +292,7 @@ last_update:
 
   ```sh
   curl -X GET \
-    'http://localhost:7070/kylin/api/access/acls?type=user&name=ADMIN' \
+    'http://host:port/kylin/api/access/acls?type=user&name=ADMIN' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \

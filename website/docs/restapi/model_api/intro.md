@@ -15,6 +15,4 @@ last_update:
 ---
 
 
-##  Model API
-
 Kylin provides REST APIs on checking model information, index build and model management.

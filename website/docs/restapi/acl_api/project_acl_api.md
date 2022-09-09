@@ -24,7 +24,7 @@ last_update:
 
 - `GET http://host:port/kylin/api/access/project`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - Request Parameters
 
@@ -43,7 +43,7 @@ last_update:
 
   ```sh
   curl -X GET \
-    'http://localhost:7070/kylin/api/access/project?project=Kylin' \
+    'http://host:port/kylin/api/access/project?project=learn_kylin' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -83,7 +83,7 @@ last_update:
 
 - `POST http://host:port/kylin/api/access/project`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
 
@@ -102,7 +102,7 @@ last_update:
 
   ```sh
   curl -X POST \
-    'http://localhost:7070/kylin/api/access/project' \
+    'http://host:port/kylin/api/access/project' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -131,7 +131,7 @@ last_update:
 
 - `PUT http://host:port/kylin/api/access/project`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - HTTP Body: JSON Object
   - `project` - `required` `string`, project name.
@@ -149,7 +149,7 @@ last_update:
 
   ```sh
   curl -X PUT \
-     'http://localhost:7070/kylin/api/access/project' \
+     'http://host:port/kylin/api/access/project' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
@@ -178,7 +178,7 @@ last_update:
 
 - `DELETE http://host:port/kylin/api/access/project`
 
-- Introduced in: 4.1.4
+- Introduced in: 5.0
 
 - Request Parameters
 
@@ -196,7 +196,7 @@ last_update:
 
   ```sh
   curl -X DELETE \
-     'http://localhost:7070/kylin/api/access/project?project=Kylin&type=user&name=test' \
+     'http://host:port/kylin/api/access/project?project=learn_kylin&type=user&name=test' \
     -H 'Accept: application/vnd.apache.kylin-v4-public+json' \
     -H 'Accept-Language: en' \
     -H 'Authorization: Basic QURNSU46S1lMSU4=' \
