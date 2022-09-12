@@ -38,52 +38,68 @@ From Kylin 5.0, Kylin documents are written using [Docusaurus](https://docusauru
 
 ### <span id="Before_your_work">Before your work</span>
 
-Before you add new documentation, please deploy the document compilation environment.
+Before adding new documentation, it is best to setup the preview environment first.
 
-There are two steps:
+1. Install Node.js
 
-- [Install Node.js](#Install)
-- [Clone Github Repo](#Download)
+   Make sure [Node.js](https://nodejs.org/en/download/) version is 16.14 or above by checking `node -v`. You can use [nvm](https://github.com/nvm-sh/nvm) for managing multiple Node versions on a single machine installed.
 
-#### <span id="Install">Install Node.js</span>
+   ```shell
+   node -v
+   ```
 
-First, make sure [Node.js](https://nodejs.org/en/download/) version 16.14 or above (which can be checked by running node -v) is installed on your machine. You can use [nvm](https://github.com/nvm-sh/nvm) for managing multiple Node versions on a single machine installed.
+   :::note Tips
+   When installing Node.js via *Windows/macOS Installer*, recommend to check all checkboxes related to dependencies.
+   :::
 
-When installing Node.js via **Windows/macOS Installer**, you are recommended to check all checkboxes related to dependencies. 
+2. Clone the kylin doc branch
 
-#### <span id="Download">Clone Github Repo</span>
+   ```shell
+   cd /path/you/prefer/
+   git clone --branch doc5.0 https://github.com/apache/kylin.git # Or git clone -b doc5.0 https://github.com/apache/kylin.git
+   ```
 
-1. Clone the doc repo to any path you prefer.
+3. Install the website dependencies
 
-```shell
-cd /path/you/prefer/to
-git clone --branch doc5.0 https://github.com/apache/kylin.git # Or git clone -b doc5.0 https://github.com/apache/kylin.git
-```
+   ```shell
+   cd /path/you/prefer/
+   cd website
+   npm install
+   ```
 
-2. Install dependencies for prerequisite of doc. More about requirement about [Docusaurus](https://docusaurus.io/), please refer to [Docusaurus Installation](https://docusaurus.io/docs/installation).
+   :::note Slow NPM in China?
+   Add following lines to `~/.npmrc` and npm shall become much faster in China.
+   ```
+   sass_binary_site=https://npm.taobao.org/mirrors/node-sass/
+   phantomjs_cdnurl=https://npm.taobao.org/mirrors/phantomjs/
+   electron_mirror=https://npm.taobao.org/mirrors/electron/
+   registry=https://registry.npm.taobao.org
+   ```
+   :::
+
+   :::note Troubleshooting
+   Depending on your OS environment, `npm install` can hit various issues at this stage and most of them are due to missing a certain library. Below are a few examples from a Ubuntu user.
+   - If hit error `../src/common.cc:24:10: fatal error: vips/vips8: No such file or directory`
+     - Try install glib2.0-dev, like `sudo apt-get install glib2.0-dev`
+   - If hit error `Error: Command failed: /bin/sh -c autoreconf -ivf`
+     - Try install autoconf, like `sudo apt-get install autoconf`
+   :::
    
-```shell
-cd website
-npm install
-```
+   For more information about [Docusaurus](https://docusaurus.io/), please refer to [Docusaurus Installation](https://docusaurus.io/docs/installation).
 
-To check if that environment works well, run:
+4. Launch the doc website and preview it locally
 
-```shell
-npm run start
-```
-   
-then, homepage (`http://localhost:3000`) will automatically open in your default browser and no errors occurred.
+   ```shell
+   npm run start
+   ```
 
-![](images/how-to-write-doc-02.png)
-
+   The homepage of this doc site `http://localhost:3000` shall automatically open in your default browser if no error occurs. Modify any MD or resource file in your local repository, the changes shall reflect immediately in the browser. Very convenient for doc development.
 
 ### How to create new document
 
 #### Step 1: Create a new markdown file with metadata
 
-Create a new markdown file with editor, copy and paste following **Head metadata template** to the top your file. 
-After that, replace actual literal with variable like `${TITLE OF NEW DOC}` etc.
+Create a new markdown file with any text editor, copy and paste following **Head Metadata Template** to the top your file. After that, replace the variables like `${TITLE OF NEW DOC}` with actual values.
 
 ```
 ---
@@ -104,19 +120,21 @@ last_update:
 ---
 ```
 
-:::caution 
-Please note that each doc need the ___Head metadata___. More details about `Head metadata` of a doc, please refer to [Head metadata](https://docusaurus.io/docs/markdown-features/head-metadata).
+:::info Head metadata?
+___Head metadata___ is REQUIRED for all doc files. For more information, please refer to [docusaurus head metadata](https://docusaurus.io/docs/markdown-features/head-metadata).
 :::
 
 #### Step 2: Add content for your new doc
 
-Add text and pictures as you needs.
+Add text in the [markdown format](https://docusaurus.io/docs/markdown-features).
+
+Pictures usually go into a subfolder called `images`.
 
 #### Step 3: Add new page to the sidebar
 
-For example: if you want to add the sidebar of new doc(`how_to_write_doc.md`) to be the children menu of `development`.
+Sidebar contains the menu and the navigation tree of the doc site structure. It is maintained in a JS file located at `website/sidebars.js`.
 
-Then, modify the `DevelopmentSideBar` block in `sidebars.js` and add a new block to the tail of `items` of `DevelopmentSideBar`.
+For example, if you want to add a new doc `how_to_write_doc.md` to be the child of the `development` menu. Open the `sidebars.js` and modify the `DevelopmentSideBar` block. Add a new block at the tail of `items` of `DevelopmentSideBar`.
 
 ```shell
 DevelopmentSideBar: [
@@ -135,22 +153,31 @@ DevelopmentSideBar: [
 ```
 
 
-#### Step 4: Preview in your local machine
-You can preview in your browser, please run following commands in the `website` directory, then access [doc of kylin in local](http://127.0.0.1:3000) in your browser:
+#### Step 4: Preview the result locally
 
-```
+Saving all the changes, you can preview the result immediately in your browser. Please run following commands in the `website` directory, and a local version of the doc site shall show up in your browser `http://localhost:3000`.
+
+```shell
+cd website
 npm run start
 ```
 
-:::caution Check your doc
-- [ ] Whether **look and feel** meet your expectation?
-- [ ] Whether the **link/pictures** works fine?
-- [ ] Whether the most important part was **highlighted**? You may [check this to highlight a paragraph](#highlight_paragraph).
-- [ ] Whether the **title level** follow [this guide](#heading_level)?
+:::info Check your doc
+- [ ] Whether the **look and feel** meet expectation?
+- [ ] Whether the **link/pictures** work fine?
+- [ ] Whether the important info is properly **highlighted**? [How to highlight?](#highlight_paragraph)
+- [ ] Whether the **title levels** follow the [heading guide](#heading_level)?
 :::
 
 #### Step 5: Create a pull request
-If everything is normal, create a pull request to [Apache Kylin Repo](https://github.com/apache/kylin) and target branch is `doc5.0`.
+
+When everything looks fine, create a pull request to the [kylin doc5.0 branch](https://github.com/apache/kylin/tree/doc5.0).
+
+:::note What, Pull Request?
+For those who are new to pull requests, here it is explained.
+- How to geek -- [What are git pull requests](https://www.howtogeek.com/devops/what-are-git-pull-requests-and-how-do-you-use-them/)
+- Github -- [About pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests)
+:::
 
 ----
 
