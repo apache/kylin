@@ -14,10 +14,6 @@ last_update:
     date: 08/19/2022
 ---
 
-
-## Monitor Job
-
-
 Kylin introduces a **job monitor** module that allows users to view relevant information and execute jobs on the list.
 
 The job is built in the process of using Kylin, such as building an index and refreshing the source table data, etc.
