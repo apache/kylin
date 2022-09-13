@@ -40,7 +40,9 @@ This article introduces how to load Hive data source to a Kylin [project](../ope
 
 3. In the left navigation panel, click **Data Assets** > **Data Source**.
 
-4. Click **Add data source**. In the **Add New Source** dialog box, select **Hive** and click **Next**.![](images/hive_datasource.png)
+4. Click **Add data source**. In the **Add New Source** dialog box, select **Hive** and click **Next**.
+   
+   ![](images/hive_datasource.png)
 
 5. Select the target database/table (use the filter to quickly locate), and then click **Load**.   
 
@@ -64,8 +66,7 @@ This article introduces how to load Hive data source to a Kylin [project](../ope
 
 - Question: Besides Hive data source, what other data sources does Kylin support?
 
-  Answer: Kylin supports various data sources, including Hive and [Kakfa](import_kafka.md). Meanwhile, you can also [connect to other data sources by extending the data source SDK](../developer/rdbms_sdk/rdbms_sdk.md), for example, GBase. 
-
+  Answer: Kylin current only supports Hive. 
 
 
 ### Next step 
