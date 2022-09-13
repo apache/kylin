@@ -73,4 +73,4 @@ When running the following commands, the system will automatically turn on the m
 
  - [reset admin password](../access-control/user_management.md)
  - [junk file clean](junk_file_clean.md)
- - [metadata restore](cli_tool/metadata_tool/metadata_backup_restore.en.md#metadata-restore----metadata_restore)
+ - [metadata restore](cli_tool/metadata_tool/metadata_backup_restore.md#metadata-restore----metadata_restore)

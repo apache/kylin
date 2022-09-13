@@ -11,7 +11,7 @@ keywords:
     - sample dataset
 draft: false
 last_update:
-    date: 08/19/2022
+    date: 09/13/2022
 ---
 
 Kylin is embedded with a standard SSB dataset (approximately 5.9 MB) for testing or trying out different functions. This SSB dataset contains 5 tables and 1 view. LINEORDER serves as a central fact table with 60,175 rows of data. 

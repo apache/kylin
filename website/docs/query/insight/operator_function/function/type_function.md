@@ -14,8 +14,6 @@ last_update:
     date: 08/17/2022
 ---
 
-## Type Functions
-
 | Syntax                | Description                                                        | Example                                                        | Normal Query                                            | Pushdown Query                                          | Defined as Computed Column                              | Suggested as Computed Column                            |
 | ------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | CAST(value AS type) | Converts a value to a given type. | Example 1: Converts `time` to `string`<br />`CAST(CURRENT_DATE as varchar)`<br /> = 2018-10-10 | ✔️ | ✔️ | ✔️ | ✔️ |

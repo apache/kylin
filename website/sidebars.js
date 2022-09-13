@@ -116,6 +116,10 @@ const sidebars = {
                                         },
                                     ],
                                 },
+                                {
+                                    type: 'doc',
+                                    id: 'deployment/on-premises/rdbms_metastore/query_history_fields'
+                                },
                             ]
                         },
                         {
@@ -673,6 +677,100 @@ const sidebars = {
                         {
                             type: 'doc',
                             id: 'query/insight/async_query'
+                        },
+                        {
+                            type: 'category',
+                            label: 'Operators and Functions',
+                            link: {
+                                type: 'doc',
+                                id: 'query/insight/operator_function/intro'
+                            },
+                            items: [
+                                {
+                                    type: 'doc',
+                                    id: 'query/insight/operator_function/model_priority'
+                                },
+                                {
+                                    type: 'category',
+                                    label: 'Operators',
+                                    link: {
+                                        type: 'doc',
+                                        id: 'query/insight/operator_function/operator/intro',
+                                    },
+                                    items: [
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/operator/arithmetic_operator',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/operator/comparison_operator',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/operator/logical_operator',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/operator/string_operator',
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: 'category',
+                                    label: 'Function',
+                                    link: {
+                                        type: 'doc',
+                                        id: 'query/insight/operator_function/function/intro',
+                                    },
+                                    items: [
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/aggregate_function',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/arithmetic_function',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/bitmap_function',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/conditional_function',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/datetime_function',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/grouping_function',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/intersect_function',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/miscellaneous_function',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/string_function',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/type_function',
+                                        },
+                                        {
+                                            type: 'doc',
+                                            id: 'query/insight/operator_function/function/window_function',
+                                        },
+                                    ],
+                                }
+                            ],
                         },
                     ],
                 },

@@ -41,11 +41,11 @@ Kylin version is 5.0 or higher.
   
 - Query Example 1
 
-  ```select bitmap_uuid(SELLER_ID) from KYLIN_SALES where PART_DT=date'2012-01-01'```
+  ```select bitmap_uuid(LO_CUSTKEY) from SSB.P_LINEORDER where LO_ORDERDATE=date'2012-01-01'```
   
 - Response Example 1
 
-  ![](images/bitmap_uuid.1.en.png)
+  ![](images/bitmap_uuid.1.png)
 
   Return a string which points to a hidden serialized bitmap. The bitmap result is the de-duplicated seller id set of online transactions on New Year's Day. The bitmap can be used as an input to other bitmap functions.
 
@@ -75,14 +75,14 @@ Kylin version is 5.0 or higher.
   
   ```
   select intersect_bitmap_uuid(
-          SELLER_ID, LSTG_FORMAT_NAME,
-          array['FP-GTC|FP-non GTC', 'Others'])
-      from KYLIN_SALES
+        LO_CUSTKEY, LO_SHIPMODE,
+        array['AIR', 'Others'])
+  from SSB.P_LINEORDER
   ```
   
 - Response Example 1
 
-  ![](images/intersect_bitmap_uuid.1.en.png)
+  ![](images/intersect_bitmap_uuid.1.png)
   
   Return a string which points to a hidden serialized bitmap. The bitmap result is the de-duplicated seller id set who have transactions in either type 'FP-GTC' and 'Others', or type 'FP-non GTC' or 'Others' on New Year's Day. The bitmap can be used as an input to other bitmap functions.
 
@@ -108,14 +108,14 @@ Kylin version is 5.0 or higher.
 
   ```
   select intersect_bitmap_uuid_v2(
-          SELLER_ID, LSTG_FORMAT_NAME,
-          array['FP.*GTC', 'Other.*'], 'REGEXP')
-      from KYLIN_SALES
+        LO_CUSTKEY, LO_SHIPMODE,
+        array['A*R', 'Other.*'], 'REGEXP')
+  from SSB.P_LINEORDER
   ```
 
 - Response Example 1
 
-  ![](images/intersect_bitmap_uuid2.1.en.png)
+  ![](images/intersect_bitmap_uuid2.1.png)
 
   Return a string which points to a hidden serialized bitmap. The regular expression can match 'FP-GTC', 'FP-non GTC' and 'Others', The bitmap result is the de-duplicated seller id set who have transactions in either type 'FP-GTC' and 'Others', or type 'FP-non GTC' or 'Others' on New Year's Day. The bitmap can be used as an input to other bitmap functions.
 
@@ -137,17 +137,17 @@ Kylin version is 5.0 or higher.
 
   ```
   select intersect_count_by_col(Array[t1.a1,t2.a2]) from
-      (select bitmap_uuid(SELLER_ID) as a1
-          from KYLIN_SALES) t1,
-      (select intersect_bitmap_uuid(
-          SELLER_ID, LSTG_FORMAT_NAME,
-          array['FP-GTC|FP-non GTC', 'Others']) as a2
-  from KYLIN_SALES) t2
+    (select bitmap_uuid(LO_CUSTKEY) as a1
+        from SSB.P_LINEORDER) t1,
+    (select intersect_bitmap_uuid(
+        LO_CUSTKEY, LO_SHIPMODE,
+        array['AIR', 'Others']) as a2
+  from SSB.P_LINEORDER) t2
   ```
   
 - Response Example 1
 
-  ![](images/intersect_count_by_col.1.en.png)
+  ![](images/intersect_count_by_col.1.png)
   
   Function `bitmap_uuid` and `intersect_bitmap_uuid` return two serialized bitmap. `intersect_count_by_col` then find the intersection on two bitmaps and return distinct count.
 

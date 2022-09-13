@@ -9,9 +9,9 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - skip dictionary encoding optimization for integer type
-draft: true
+draft: false
 last_update:
-    date: 08/19/2022
+    date: 09/13/2022
 ---
 
 Starting from Kylin 5, the system supports no dictionary encoding for integer types

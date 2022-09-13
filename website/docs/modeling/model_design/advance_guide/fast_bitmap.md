@@ -9,9 +9,9 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - query optimization for exact hit index
-draft: true
+draft: false
 last_update:
-    date: 08/19/2022
+    date: 09/13/2022
 ---
 
 Since Kylin 5, the system has enhanced the optimization of queries that hit the index exactly (the query contains dimensions that are exactly the same as the dimensions of the selected index), and it also improves the performance in count distinct scenario.

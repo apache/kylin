@@ -44,37 +44,37 @@ kylin supports the following intersection function,
 
 - Query Example 1
 
-  Take the sample dataset provided by kylin as an example, table `KYLIN_SALES` simulates the online transaction data, and the following query can return the percentile of sellers who are trading day by day during 2012.01.01 to 2012.01.03.
+  Take the sample dataset provided by kylin as an example, table `SSB.P_LINEORDER` simulates the online transaction data, and the following query can return the percentile of sellers who are trading day by day during 1992.01.01 to 1992.01.03.
 
   ```SQL
-  select LSTG_FORMAT_NAME,
-  intersect_count(SELLER_ID, PART_DT, array[date'2012-01-01']) as first_day,
-  intersect_count(SELLER_ID, PART_DT, array[date'2012-01-02']) as second_day,
-  intersect_count(SELLER_ID, PART_DT, array[date'2012-01-03']) as third_day,
-  intersect_count(SELLER_ID, PART_DT, array[date'2012-01-01',date'2012-01-02']) as retention_oneday, 
-  intersect_count(SELLER_ID, PART_DT, array[date'2012-01-01',date'2012-01-02',date'2012-01-03']) as retention_twoday 
-  from KYLIN_SALES
-  where PART_DT in (date'2012-01-01',date'2012-01-02',date'2012-01-03')
-  group by LSTG_FORMAT_NAME
+  select LO_SHIPMODE,
+  intersect_count(LO_CUSTKEY, LO_ORDERDATE, array[date'1992-01-01']) as first_day,
+  intersect_count(LO_CUSTKEY, LO_ORDERDATE, array[date'1992-01-02']) as second_day,
+  intersect_count(LO_CUSTKEY, LO_ORDERDATE, array[date'1992-01-03']) as third_day,
+  intersect_count(LO_CUSTKEY, LO_ORDERDATE, array[date'1992-01-01',date'1992-01-02']) as retention_oneday,
+  intersect_count(LO_CUSTKEY, LO_ORDERDATE, array[date'1992-01-01',date'1992-01-02',date'1992-01-03']) as retention_twoday
+  from SSB.P_LINEORDER
+  where LO_ORDERDATE in (date'1992-01-01',date'1992-01-02',date'1992-01-03')
+  group by LO_SHIPMODE
   ```
 
 - Response Example 1
 
-  ![](images/intersect_count.1.en.png)
+  ![](images/intersect_count.1.png)
 
   The result shows that there is no seller keeps trading constantly during this period.
 
 - Query Example 2
 
   ```sql
-    select 
-    intersect_count(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC|FP-non GTC|Others', 'Others']) as test_column
-    from kylin_sales
+  select 
+  intersect_count(LO_CUSTKEY, LO_SHIPMODE, array['RAIL|SHIP|TRUCK', 'TRUCK']) as test_column
+  from SSB.P_LINEORDER
   ```
 
 - Response Example 2
 
-  ![](images/intersect_count.2.en.png) 
+  ![](images/intersect_count.2.png) 
 
 ### INTERSECT_VALUE	
 
@@ -99,37 +99,37 @@ kylin supports the following intersection function,
 
 - Query Example 1	
 
-  Fact table `KYLIN_SALES_TEST` simulates the online transaction data. And data type of `SELLER_ID` column is `integer`. The following query can return the ids of sellers who are trading day by day during 2012.01.01 to 2012.01.03.	
+  Fact table `SSB.P_LINEORDER` simulates the online transaction data. And data type of `LO_CUSTKEY` column is `integer`. The following query can return the ids of sellers who are trading day by day during 1992.01.01 to 1992.01.03.	
 
   ```SQL	
-  select LSTG_FORMAT_NAME,	
-  intersect_value(SELLER_ID, PART_DT, array[date'2012-01-01']) as first_day,	
-  intersect_value(SELLER_ID, PART_DT, array[date'2012-01-02']) as second_day,	
-  intersect_value(SELLER_ID, PART_DT, array[date'2012-01-03']) as third_day,	
-  intersect_value(SELLER_ID, PART_DT, array[date'2012-01-01',date'2012-01-02']) as retention_oneday, 	
-  intersect_value(SELLER_ID, PART_DT, array[date'2012-01-01',date'2012-01-02',date'2012-01-03']) as retention_twoday 	
-  from KYLIN_SALES	
-  where PART_DT in (date'2012-01-01',date'2012-01-02',date'2012-01-03')	
-  group by LSTG_FORMAT_NAME	
+  select LO_SHIPMODE,	
+  intersect_value(LO_CUSTKEY, LO_ORDERDATE, array[date'1992-01-01']) as first_day,
+  intersect_value(LO_CUSTKEY, LO_ORDERDATE, array[date'1992-01-02']) as second_day,
+  intersect_value(LO_CUSTKEY, LO_ORDERDATE, array[date'1992-01-03']) as third_day,
+  intersect_value(LO_CUSTKEY, LO_ORDERDATE, array[date'1992-01-01',date'1992-01-02']) as retention_oneday, 	
+  intersect_value(LO_CUSTKEY, LO_ORDERDATE, array[date'1992-01-01',date'1992-01-02',date'1992-01-03']) as retention_twoday 	
+  from SSB.P_LINEORDER
+  where PART_DT in (date'1992-01-01',date'1992-01-02',date'1992-01-03')
+  group by LO_SHIPMODE
   ```
 
 - Response Example 1	
 
-  ![](images/intersect_value.1.en.png)	
+  ![](images/intersect_value.1.png)	
 
   The result shows that set of keeping trading constantly's sellerId during this period.	
 
 - Query Example 2	
 
   ```sql	
-  select 	
-  intersect_value(SELLER_ID, LSTG_FORMAT_NAME, array['FP-GTC|FP-non GTC|Others', 'Others']) as test_column	
-  from kylin_sales	
+  select 
+  intersect_count(LO_CUSTKEY, LO_SHIPMODE, array['RAIL|SHIP|TRUCK', 'TRUCK']) as test_column
+  from SSB.P_LINEORDER
   ```
 
 - Response Example  2	
 
-  ![](images/intersect_value.2.en.png)
+  ![](images/intersect_value.2.png)
 
 ### INTERSECT_COUNT_V2
 
@@ -150,15 +150,15 @@ kylin supports the following intersection function,
 - Query Example 1
 
   ```sql
-    select intersect_count_v2(
-    	LSTG_SITE_ID, LSTG_FORMAT_NAME, 
-        array['FP.*GTC', 'Other.*'], 'REGEXP')
-     from kylin_sales
+  select intersect_count_v2(
+      LO_CUSTKEY, LO_SHIPMODE, 
+      array['R*L', 'TRU.*'], 'SHIP')
+  from SSB.P_LINEORDER
   ```
 
 - Response Example 1
 
-  ![](images/intersect_count2.1.en.png) 
+  ![](images/intersect_count2.1.png) 
 
 ### INTERSECT_VALUE_V2	
 
@@ -179,16 +179,16 @@ kylin supports the following intersection function,
 
 - Query Example 1	
 
-  ```sql	
+  ```sql
   select intersect_value_v2(
-    	LSTG_SITE_ID, LSTG_FORMAT_NAME, 
-        array['FP.*GTC', 'Other.*'], 'REGEXP')
-     from kylin_sales
+      LO_CUSTKEY, LO_SHIPMODE, 
+      array['R*L', 'TRU.*'], 'SHIP')
+  from SSB.P_LINEORDER
   ```
 
 - Response Example  1 
 
-  ![](images/intersect_value2.1.en.png)
+  ![](images/intersect_value2.1.png)
 
 ### Limitations
 - All the above functions don't support pushdown query

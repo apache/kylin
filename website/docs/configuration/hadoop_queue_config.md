@@ -9,9 +9,9 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - hadoop queue configuration
-draft: true
+draft: false
 last_update:
-    date: 08/16/2022
+    date: 09/13/2022
 ---
 
 In the case of a multiple-tenants environment, to securely share a large cluster, each tenant needs to have the allocated resources in a timely manner under the constraints of the allocated capacities. To achieve computing resources allocation and separation, each Kylin instance or project can be configured to use a different YARN queue.  

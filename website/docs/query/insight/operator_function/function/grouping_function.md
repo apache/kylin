@@ -39,7 +39,7 @@ GROUP BY
 
 - Result Example
 
-![GROUPING SETS Function](images/grouping_sets_function_en.png)
+![GROUPING SETS Function](images/grouping_sets_function.png)
 
 ### CUBE(expression) 和 ROLLUP(expression)
 
@@ -62,7 +62,7 @@ GROUP BY
 
 - Result Example
 
-![ROLLUP Function](images/rollup_function_en.png)
+![ROLLUP Function](images/rollup_function.png)
 
 
 
@@ -92,4 +92,4 @@ GROUP BY
 
 You can see that the result of the GROUPING function in both columns in the first row is 1, indicating that the NULL in the two columns LO_CUSTKEY and LO_ORDERKEY in this row are placeholders due to the GROUPING SETS function.
 
-![](images/grouping_en.png)
+![](images/grouping.png)

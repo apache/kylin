@@ -9,9 +9,9 @@ pagination_prev: null
 pagination_next: null
 keywords:
   - model design overview
-draft: true
+draft: false
 last_update:
-  date: 08/17/2022
+  date: 09/13/2022
 ---
 
 Kylin model consists of multiple tables and their join relations. Kylin follows multidimensional modeling theory to build star or snowflake schemas based on tables. Kylin also leverages pre-computation technique and will reuse the pre-computed results to answer queries, so there's no need to traverse all data when there is a query, thus achieving sub-second query times on PB-level data.

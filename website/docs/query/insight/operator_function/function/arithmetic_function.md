@@ -22,7 +22,7 @@ last_update:
 | MOD(numeric1, numeric2)        | Returns the remainder (modulus) of *numeric1* divided by *numeric2*. The result is negative only if *numeric1* is negative | `MOD(-3, 2)` = -1 | ✔️ | ✔️ | ❌ | ❌ |
 | SQRT(numeric)                  | Returns the square root of *numeric*                         | `SQRT(16)` = 4.0 | ✔️ | ✔️ | ✔️ | ❌ |
 | CBRT(numeric)                  | Returns the cube root of *numeric*.                          | ` CBRT(27.0)` = 3.0 | ✔️ | ✔️ | ✔️ | ✔️ |
-| HYPOT(numeric1, numeric2)      | Returns ![arithmetic_function](images/arithmetic_function.en.png) | ` HYPOT(3, 4)` = 5.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| HYPOT(numeric1, numeric2)      | Returns ![arithmetic_function](images/arithmetic_function.png) | ` HYPOT(3, 4)` = 5.0 | ✔️ | ✔️ | ✔️ | ✔️ |
 | LN(numeric)                    | Returns the natural logarithm (base *e*) of *numeric*        | ` LN(2)` = 0.6931471805599453 | ✔️ | ✔️ | ✔️ | ✔️ |
 | LOG(base, numeric)             | Returns the logarithm of *numeric* with *base*.              | ` LOG(10, 100)` = 2.0 | ✔️ | ✔️ | ✔️ | ✔️ |
 | LOG10(numeric)                 | Returns the base 10 logarithm of *numeric*                   | ` LOG10(100)` = 2.0 | ✔️ | ✔️ | ✔️ | ✔️ |

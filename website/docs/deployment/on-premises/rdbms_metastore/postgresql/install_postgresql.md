@@ -9,9 +9,9 @@ pagination_prev: null
 pagination_next: null
 keywords:
    - mysql 
-draft: true
+draft: false
 last_update:
-  date: 08/11/2022
+  date: 09/13/2022
 ---
 
 ### <span id="preparation">Prerequisite</span>

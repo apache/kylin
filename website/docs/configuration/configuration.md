@@ -9,9 +9,9 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - Basic Configuration
-draft: true
+draft: false
 last_update:
-    date: 08/16/2022
+    date: 09/13/2022
 ---
 
 This chapter will introduce some common configurations, the main contents are as follows:

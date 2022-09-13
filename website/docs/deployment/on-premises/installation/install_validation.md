@@ -10,9 +10,9 @@ pagination_next: null
 keywords:
     - install
     - validation
-draft: true
+draft: false
 last_update:
-    date: 08/12/2022
+    date: 09/13/2022
 ---
 
 Kylin uses the open source **SSB** (Star Schema Benchmark) dataset for star schema OLAP scenarios as a test dataset. You can verify whether the installation is successful by running a script to import the SSB dataset into Hive. The SSB dataset is from multiple CSV files.

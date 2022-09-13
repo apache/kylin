@@ -9,9 +9,9 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - corr 
-draft: true
+draft: false
 last_update:
-    date: 08/19/2022
+    date: 09/13/2022
 ---
 
 Correlation coefficient is used in statics to measure how strong a relationship is between two variables. The Correlation coefficient is using Pearson correlation underneath.

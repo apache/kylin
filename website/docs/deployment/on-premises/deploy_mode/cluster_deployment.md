@@ -10,9 +10,9 @@ pagination_next: null
 keywords:
     - cluster deployment
     - cluster
-draft: true
+draft: false
 last_update:
-    date: 08/12/2022
+    date: 09/13/2022
 ---
 
 All Kylin state information instance is stored in a RDBMS database, so running Kylin on multiple nodes in a cluster is good practice for better load balance and higher availability. Currently, we only support deployment with one `all` node and multiple `query` nodes.
