@@ -68,7 +68,7 @@ And then we'll illustrate the usage of every single window function with table *
   ```
 
 - **Result**
-  ![](images/rank_and_drank_en.png)
+  ![](images/rank_and_drank.png)
 
 - **Result Explanation**
   For buyer with id '1', there are four orders with quantity of 1, and the above three functions are compared as follows:
@@ -97,13 +97,11 @@ And then we'll illustrate the usage of every single window function with table *
       LO_PARTKEY
   FROM SSB.P_LINEORDER
   WHERE LO_QUANTITY >= 48
-WINDOW w AS (PARTITION BY LO_CUSTKEY ORDER BY LO_QUANTITY);
+  WINDOW w AS (PARTITION BY LO_CUSTKEY ORDER BY LO_QUANTITY);
   ```
 
 - **Result**
-  ![NTILE Response Examle](images/ntile_en.png)
-
-  
+  ![NTILE Response Examle](images/ntile.png)
   
 - **FIRST_VALUE**
   
@@ -135,7 +133,7 @@ WINDOW w AS (PARTITION BY LO_CUSTKEY ORDER BY LO_QUANTITY);
   ```
 
 - **Result**
-  ![](images/first_last_value_en.png)
+  ![](images/first_last_value.png)
 
 
 
@@ -162,4 +160,4 @@ WINDOW w AS (PARTITION BY LO_CUSTKEY ORDER BY LO_QUANTITY);
   ```
 
 - **Result**
-  ![](images/lead_lag_en.png)
+  ![](images/lead_lag.png)

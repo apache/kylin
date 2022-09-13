@@ -15,8 +15,6 @@ last_update:
     date: 08/17/2022
 ---
 
-## Date and Time Functions
-
 | Syntax                                    | Description                                                  | Example                                                      | Normal Query | Pushdown Query | Defined as Computed Column | Suggested as Computed Column |
 | ----------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------ | -------------- | -------------------------- | ---------------------------- |
 | CURRENT_DATE                              | Returns the current date in the session time zone, in a value of datatype DATE | ` CURRENT_DATE`<br /> = 2018-10-10                           |  ✔️          | ✔️              | ✔️              |  ✔️          |

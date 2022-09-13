@@ -17,7 +17,7 @@ last_update:
 
 Open  kylin Web UI, click **Query -> Insight** button on the navigation bar, all query-able tables will be listed on the left side of page. Enter SQL in textbox on the right side of page, query result will be shown at the below textbox.
 
-![Insight page](images/insight/insight_list_tables.en.png)
+![Insight page](images/insight/insight_list_tables.png)
 
 
 

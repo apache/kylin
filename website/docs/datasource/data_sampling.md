@@ -56,11 +56,11 @@ Kylin supports data sampling during data loading. If you want to manually sample
 
 Question: Why are the Chinese comments garbled in the sampled results?
 
-Answer: This issue is often caused by improper encoding settings. Please confirm whether any Chinese comments in the source Hive table are garbled via the Hive client. If yes, please modify the encoding in MySQL metabase. Below we use [CDH](../../installation/install_uninstall/install_on_cdh.en.md) platform as an example to show how to modify encoding: 
+Answer: This issue is often caused by improper encoding settings. Please confirm whether any Chinese comments in the source Hive table are garbled via the Hive client. If yes, please modify the encoding in MySQL metabase. Below we use [Apache Hadoop](../deployment/on-premises/installation/platform/install_on_apache_hadoop.md) platform as an example to show how to modify encoding: 
 
-1. Log in to the CDH server. 
+1. Log in to the server. 
 2. Run the `mysql -uroot -p` command and enter your password. 
-3. Run the `use metastore``;` command to enter the Metastore database. 
+3. Run the `use metastore;` command to enter the Metastore database. 
 4. Modify the encoding of the following columns to utf8: 
    - Column COMMENT in COLUMNS_V2
    - Column PARAM_VALUE in TABLE_PARAMS

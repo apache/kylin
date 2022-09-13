@@ -33,7 +33,7 @@ last_update:
 - URL Parameters
   - `time_filter` - `required` `int`
 
-    ![](image/job_api_en.png)
+    ![](image/job_api.png)
 
   - `project` - `optional` `string`, project name
   

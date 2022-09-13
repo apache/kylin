@@ -14,9 +14,6 @@ last_update:
     date: 08/17/2022
 ---
 
-
-## Logical Operators
-
 This section introduces the logical operators supported by Apache Kylin. The values of logical propositions are TRUE, FALSE, and UNKNOWN. The following `boolean` refers to a logical proposition.
 
 | Operator     | Description                               | Syntax                | Example                       |

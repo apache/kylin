@@ -9,9 +9,9 @@ pagination_prev: intro
 pagination_next: null
 keywords: 
   - prerequisite
-draft: true
+draft: false
 last_update:
-    date: 08/11/2022
+    date: 09/13/2022
 ---
 
 To ensure system performance and stability, we recommend you run Kylin on a dedicated Hadoop cluster.

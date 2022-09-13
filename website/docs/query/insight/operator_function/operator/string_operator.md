@@ -15,7 +15,5 @@ last_update:
 ---
 
 
-## String Operator
-
 ![](images/string.png)
 

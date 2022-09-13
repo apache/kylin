@@ -9,9 +9,9 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - aggregate index
-draft: true
+draft: false
 last_update:
-    date: 08/19/2022
+    date: 09/13/2022
 ---
 
 
@@ -291,7 +291,7 @@ We'll introduce how to set Max Dimension Combination (MDC) in this section. Clic
 
 > **Note**: The setting of MDC will not take effect until you submit the Edit Aggregate Index page.
 
-![intro_mdc.en](images/mdc/intro_mdc.png)
+![intro_mdc](images/mdc/intro_mdc.png)
 
 Aggregate index-level MDC affects all aggregate groups. Aggregate group-level MDC takes effect only for a single aggregate group. The priority of the aggregate group-level level MDC is higher than that of aggregate index-level MDC. The specific setting rules are as follows:
 

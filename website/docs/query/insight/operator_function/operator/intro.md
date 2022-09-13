@@ -14,8 +14,4 @@ last_update:
     date: 08/17/2022
 ---
 
-
-
-## Operators
-
 This chapter will introduce operators that applicable to SQL statements.

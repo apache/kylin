@@ -11,9 +11,9 @@ keywords:
    - mysql
    - install mysql
    - install
-draft: true
+draft: false
 last_update:
-   date: 08/11/2022
+   date: 09/13/2022
 ---
 
 ### Prerequisite

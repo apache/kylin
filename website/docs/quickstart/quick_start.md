@@ -9,9 +9,9 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - quick start
-draft: true
+draft: false
 last_update:
-    date: 08/12/2022
+    date: 09/13/2022
 ---
 
 In this guide, we will explain how to quickly install and start Kylin 5.

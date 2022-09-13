@@ -9,9 +9,9 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - advanced model design
-draft: true
+draft: false
 last_update:
-    date: 08/19/2022
+    date: 09/13/2022
 ---
 
 In this chapter, we take the Kylin built-in dataset as an example, to show you how to design a data model.
