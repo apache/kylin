@@ -36,7 +36,7 @@ To alleviate the pressure on index building, Kylin has released a series of adva
 In the **Data Asset -> Model** page, click the model name to get more information, you can click **Index**, then click **Aggregate Group** button under **+ Index** in the **Index Overview** tab to enter the  aggregate index editing page. Or you can click **+** (Add Aggregate Group) button in the **Aggregate Group** tab to enter the page. Then you can edit the aggregate index in the pop-up window shown below, and define dimensions and measures in different aggregate groups according to your business scenario.
 
 
-![Edit Aggregate Index](images/agg_1.png)
+![Edit Aggregate Index](images/agg/agg_1.png)
 
 **Step 1: Dimension Setting**
 
@@ -44,7 +44,7 @@ The initial interface is to edit *Aggregation Group 1*. First you need to set th
 
 Users can then set **Mandatory Dimension**, **Hierarchy Dimension**, and **Joint Dimension** in the *Aggregate Group 1*. Dimensions under these three settings have to be included in **Include** under this aggregate group first. You can add aggregate groups as needed. After editing all the aggregate groups, click the button beside **Index Amount** on the bottom left corner, estimated index number will be calculated and displayed beside the name of the aggregate group, the total estimated index number will be calculated and displayed on the bottom left corner. This can help you to understand the complexity of the aggregate index. 
 
-![Dimension Setting](images/agg_2.png)
+![Dimension Setting](images/agg/agg_2.png)
 
 We recommend selecting frequently paired grouping dimensions and filtering dimensions into the aggregate group according to the cardinality from high to low. For example, you often query for the supplier ID `SUPPKEY` and the product ID `PARTKEY`, by adding the dimension `SUPPKEY` and dimension `PARTKEY` into the aggregate group, you can view the cardinality of these two relevant columns in **Data Asset-Data Source**. If the cardinality of `SUPPKEY` is greater than the cardinality of `PARTKEY`, we recommended selecting `SUPPKEY` into **Include** first.
 
@@ -138,7 +138,7 @@ Assume a transactional aggregate index that includes transaction date, transacti
 
 
 
-### <span id="hierarchy">Hierarchy Dimension</span>
+### <span id="hierarchy">Hierarchy Dimension</span>
 
 End users will usually use dimensions with hierarchical relationship, for example, country, province, and city. In this case, a hierarchical relationship can be set as **Hierachy Dimension**. From top to bottom, country, province and city are one-to-many relationship. These three dimensions can be grouped into three different combinations：
 
@@ -147,7 +147,7 @@ End users will usually use dimensions with hierarchical relationship, for exampl
 2. group by country, province（equivalent to group by province）
 
 3. group by country, province, city（equivalent to group by country, city or group by city）
-    ​
+    
     In the aggregate index group shown below, assume dimension A = Country, dimension B = Province and dimension C = City, then dimension ABC can be set as a hierarchy dimension. And index [A, C, D] = index [A, B, C, D]，index [B, D] = index [A, B, D], thus, index [A, C, D] and index [B, D] can be pruned.
 
     ![Hierarchy Dimension](images/agg/Hierarchy-2.png)
@@ -155,8 +155,6 @@ End users will usually use dimensions with hierarchical relationship, for exampl
     As the diagram below illustrates, based on the method above, Kylin can prune redundant index, hence reducing index from 15 to 7.
 
     ![Reduce dimension combinations with Hierachy Dimension](images/agg/Hierarchy-3.png)
-
-
 
 
 #### Use Case of Hierarchy Dimension
@@ -263,7 +261,7 @@ The use of aggregate groups helps to avoid index number explosion. However, in o
 
 This chapter will introduce another simple index pruning tool named *Max Dimension Combination (MDC)*, which represents the maximum number of dimensions in every index. This tool limits the dimension number in a single index, which means indexes containing too many dimensions will not be built in index building process. This tool fits well in the situation where most queries only touch no more than N dimensions, where N is the MDC threshold that is configurable.
 
-> **Note**: MDC is only available from version 4.1.0.
+> **Note**: MDC is only available from version 5.0.
 
 #### Dimensions Count in Query
 
@@ -376,7 +374,7 @@ In the aggregate index, you can set the ShardBy column, and the data will be sto
 
 > Note: The ShardBy column is applied to all custom aggregate indexes.
 
-In the navigation bar **Data Asset -> Model ** page, click the icon to the left of the specified model to expand the model for more information. You can see the **Advanced Setting** button in the **Index- Aggregate Group**.
+In the navigation bar **Data Asset -> Model ** page, click the icon to the left of the specified model to expand the model for more information. You can see the **Advanced Setting** button in the **Index-> Aggregate Group**.
 
 In the **Advanced Setting**, you can select the dimensions that need to be set as the ShardBy column. 
 

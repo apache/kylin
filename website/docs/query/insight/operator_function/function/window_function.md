@@ -33,7 +33,7 @@ You can use window function to simplify the query process and analyze more compl
 
 ### Examples of window functions
 
-And then we'll illustrate the usage of every single window function with table *P_LINEORDER* in the [sample dataset](../../../../../Get-to-Know-Kyligence-Enterprise/quickstart/sample_dataset.en.md), where you may also find the fields and corresponding descriptions.
+And then we'll illustrate the usage of every single window function with table *P_LINEORDER* in the [sample dataset](../../../../quickstart/sample_dataset.md), where you may also find the fields and corresponding descriptions.
 
 - **ROW_NUMBER**
 

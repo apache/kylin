@@ -52,7 +52,7 @@ You can also add, delete or search for sub-partition values in **Model List-...(
 
 When adding sub-partition values, the system does not check the correctness. The system allows adding sub-partition values ​​that do not yet exist. When querying, the sub-partition value must be exactly the same with the sub-partition value to match (case sensitive, wildcards matching is not supported). Please ensure that the added sub-partition value meets your expectations.
 
-![](./images/multilevel_partitioning_subp_value.png)
+![](images/multilevel_partitioning_subp_value.png)
 
 
 

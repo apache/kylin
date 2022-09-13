@@ -84,7 +84,7 @@ Kylin model consists of multiple tables and their join relations. In this articl
 
    - **Table Relationship:** Select the mapping between the foreign and primary keys: **One-to-One or Many-to-One**, or **One-to-Many or Many-to-Many**.  
 
-   - **Precompute Join Relationship**: Select whether to expand the joined tables into a flat table based on the mappings. This option is selected by default. For more information about this function and its applicable scenarios, see [Precompute the join relations](precompute_join_relations.md). 
+   - **Precompute Join Relationship**: Select whether to expand the joined tables into a flat table based on the mappings. This option is selected by default. For more information about this function and its applicable scenarios, see [Precompute the join relations](model_design/precompute_join_relations.md). 
 
    - **Join Relationship for Columns**: It includes 3 drop-down lists. The first and the third one specify the columns to be joined, and the second one defines the join relation, which is equal-join (=) by default. Join relations should meet the following requirements:  
      - Do not define more than one join relation for the same column; two tables could only be joined by the same condition for one time
@@ -146,7 +146,7 @@ P_LINEORDER LEFT JOIN PART ON P_LINEORDER.LO_PARTKEY = PART.P_PARTKEY
 
       In our example, we added revenue (LO_REVENUE in P_LINEORDER) and supply cost (LO_SUPPLYCOST in P_LINEORDER) as measures, and wanted to calculate the sum for each.  
 
-3. (Optional) To achieve complex processing and computation based on the existing columns, you can add computed columns to the model. For more information, see [Computed columns](model_design/computed_column/intro.md).
+3. (Optional) To achieve complex processing and computation based on the existing columns, you can add computed columns to the model. For more information, see [Computed columns](model_design/computed_column.md).
 
 ### Step 4: Save the model and set the loading method
 

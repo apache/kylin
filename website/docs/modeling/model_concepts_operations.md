@@ -111,7 +111,7 @@ Models contain Segments and indexes. You can click model name to unfold the deta
 
 - **Overview**: Check Overview details, please refer to [Model Overview](#overview) for more.
 - **Data Features**: Check data features.
-- **Segment**: Check Segment details, please refer to [Segment Operation and Settings](load_data/segment_operation_settings.md) for more.
+- **Segment**: Check Segment details, please refer to [Segment Operation and Settings](load_data/segment_operation_settings/intro.md) for more.
 - **Index**: Review the model indexes.
   - **Index Overview**: Check index overview.
   - **Aggregate Group**: Add or check defined aggregate indexes, please refer to [Aggregate Index](model_design/aggregation_group.md) for more details.

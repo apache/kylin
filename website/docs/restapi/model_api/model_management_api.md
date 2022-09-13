@@ -89,7 +89,7 @@ last_update:
       - `primary_key` - `required` `string[]`, primary key
       - `simplified_non_equi_join_conditions` -  `optional` `JSON Object`, non-equivalent join conditions
 
-        (note1: The support of this settings should have 'Support History Table' enabled in advance. Seeing [Slowly Changing Dimension](../../modeling/model_design/slowly_changing_dimension.md))
+        (note1: The support of this settings should have 'Support History Table' enabled in advance. Seeing [Slowly Changing Dimension](../../modeling/model_design/slowly_changing_dimension.md)
 
         (note2: Join relationship >= and < must be used in pairs, and same column must be joint in both conditions)
 

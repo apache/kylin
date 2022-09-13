@@ -33,9 +33,9 @@ last_update:
 
 4. Please put the corresponding MySQL's JDBC driver to directory `$KYLIN_HOME/lib/ext`. 
 
-### <span id ="not_root">Non `root` User Installation and Configuration</span>
+### <span id ="not_root">`Non root` User Installation and Configuration</span>
 
-The followings are the steps for a non `root` user `abc` installing MySQL 5.7 on CentOS 7(#TODO)( apply to `root` users as well).
+The followings are the steps for a `non root` user `abc` installing MySQL 5.7 on CentOS 7( apply to `root` users as well).
 
 1. Create a new directory `/home/abc/mysql`, and locate MySQL intallation package in the directory, excute the following command to unzip the package of `rpm`:
 

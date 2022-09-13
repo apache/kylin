@@ -15,13 +15,13 @@ last_update:
 ---
 
 
-From Kylin 5, Kylin supports the COLLECT_SET function, which returns a set of unique elements as an array. The syntax is `COLLECT_SET(column)`. The COLLECT_ SET measure is customizable.
+From Kylin 5, Kylin supports the COLLECT_SET function, which returns a set of unique elements as an array. The syntax is `COLLECT_SET(column)`. The COLLECT_SET measure is customizable.
 
 
 
 ### Use Case
 
-Let’s use the project created in the chapter [Tutorial](../../../quickstart/expert_mode_tutorial.md) as an example to introduce COLLECT_ SET measure settings. This project uses the SSB Dataset and needs to complete the model design and index build (including data load). A model won't be able to serve any queries if it has no index and data. You can read [Model Design Basics](../data_modeling.md) to understand more about the methods used in model design. 
+Let’s use the project created in the chapter [Tutorial](../../../quickstart/expert_mode_tutorial.md) as an example to introduce COLLECT_SET measure settings. This project uses the SSB Dataset and needs to complete the model design and index build (including data load). A model won't be able to serve any queries if it has no index and data. You can read [Model Design Basics](../../data_modeling.md) to understand more about the methods used in model design. 
 
 We will use the fact table `SSB.P_LINEORDER`. This sample table is a mockup of transactions that can happen in an online marketplace. It has a couple of dimension and measure columns. For easy understanding, we will only use two columns: `LO_CUSTKEY` and `LO_ORDERDATE`. The table below gives an introduction of these columns.
 
@@ -54,7 +54,7 @@ Resubmit the above SQL query in the **Query -> Insight** page, and you will find
 
 ![Query Result](images/collect_result.png)
 
-If you need to create a model from the very beginning and add a COLLECT_SET measure, please add some indexes and load data into the model. A model won't be able to serve any query if it has no index and data. You can read this chapter [Model Design Basics](../data_modeling.md) to understand the method of model design.
+If you need to create a model from the very beginning and add a COLLECT_SET measure, please add some indexes and load data into the model. A model won't be able to serve any query if it has no index and data. You can read this chapter [Model Design Basics](../../data_modeling.md) to understand the method of model design.
 
 In actual application scenarios, you can use the COLLECT_SET function in combination with other functions to apply more analysis scenarios. For example, the following query combines the CONCAT_WS function, which  the values in the array of order date into a string and splits it with `;`:
 

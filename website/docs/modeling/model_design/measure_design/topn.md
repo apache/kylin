@@ -29,7 +29,7 @@ In the project of Kylin 5 the Top-N measure is customizable.
 
 ### Top-N Query
 
-Let’s use the project created in the chapter [Tutorial](../../../quickstart/expert_mode_tutorial.md) as an example to introduce Top-N measure settings. This project uses the SSB Dataset and needs to complete the model design and index build (including data load). A model won't be able to serve any queries if it has no index and data. You can read [Model Design Basics](../data_modeling.en.md) to understand more about the methods used in model design. 
+Let’s use the project created in the chapter [Tutorial](../../../quickstart/expert_mode_tutorial.md) as an example to introduce Top-N measure settings. This project uses the SSB Dataset and needs to complete the model design and index build (including data load). A model won't be able to serve any queries if it has no index and data. You can read [Model Design Basics](../../data_modeling.md) to understand more about the methods used in model design. 
 
 We will use the fact table `SSB.P_LINEORDER`. This is a mockup of transactions that can happen in an online marketplace. It has a couple of dimension and measure columns. For easy understanding, we use only use four columns:  `LO_ORDERDATE`, `LO_SUPPKEY`, `LO_PARTKEY` and `LO_ORDTOTALPRICE`. The table below gives an introduction to these columns. 
 

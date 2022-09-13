@@ -17,7 +17,7 @@ last_update:
 
 All Kylin state information instance is stored in a RDBMS database, so running Kylin on multiple nodes in a cluster is good practice for better load balance and higher availability. Currently, we only support deployment with one `all` node and multiple `query` nodes.
 
-[comment]: <#TODO> (![Deployment Architecture]&#40;images/cluster_20191231.png&#41;)
+![Deployment Architecture](images/cluster_20220913.png)
 
 In the above diagram, the components which require user deployment are below:
 
@@ -32,7 +32,7 @@ We will go through each one of them:
 
 Kylin uses RDBMS to store metadata, please refer to [Use RDBMS as Metastore](../rdbms_metastore/intro.md).
 
-Kylin uses Time-series database to store metrics (mostly for monitor purpose), please refer to [Use InfluxDB as Time-Series Database](../../operations/monitoring/influxdb/influxdb.md). 
+Kylin uses Time-series database to store metrics (mostly for monitor purpose), please refer to [Use InfluxDB as Time-Series Database](../../../operations/monitoring/influxdb/influxdb.md). 
 
 ### Kylin Nodes Introduction
 
@@ -83,4 +83,4 @@ kylin.job.ssh-password=password
 **Note:**
 
 - The "Multi-Active" mode is enabled by default. If there is only one `all` or `job` node, this mode should be turned off because of performance considerations. If you want to disable this feature, please add `kylin.server.leader-race.enabled=false` in `$KYLIN_HOME/conf/kylin.properties` for the `all` or `job` node.
-- If you want to enable it again, please update the relationship between projects and the job engines. After that, you need call Rest API to update the data. For details, please refer to [Project Settings API](../../restapi/project_api.md)
+- If you want to enable it again, please update the relationship between projects and the job engines. After that, you need call Rest API to update the data. For details, please refer to [Project Settings API](../../../restapi/project_api.md)

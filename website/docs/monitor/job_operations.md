@@ -37,7 +37,7 @@ The job has the following 6 states：
 
 You can view the job status information in the **Monitor -> Job** interface of navigation bar. As shown below:
 
-![Job Status](./images/job_status.png)
+![Job Status](images/job_status.png)
 
 - Label 1: Execution status.
 - Label 2: Pause status.

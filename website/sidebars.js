@@ -140,6 +140,38 @@ const sidebars = {
                                 },
                             ]
                         },
+                        {
+                            type: 'category',
+                            label: 'Install and Uninstall',
+                            link: {
+                                type: 'doc',
+                                id: 'deployment/on-premises/installation/intro',
+                            },
+                            items: [
+                                {
+                                    type: 'category',
+                                    label: 'Install On Platforms',
+                                    link: {
+                                        type: 'doc',
+                                        id: 'deployment/on-premises/installation/platform/intro',
+                                    },
+                                    items: [
+                                        {
+                                            type: 'doc',
+                                            id: 'deployment/on-premises/installation/platform/install_on_apache_hadoop',
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'deployment/on-premises/installation/uninstallation',
+                                },
+                                {
+                                    type: 'doc',
+                                    id: 'deployment/on-premises/installation/install_validation',
+                                },
+                            ],
+                        },
                     ],
                 },
                 {
@@ -191,38 +223,6 @@ const sidebars = {
                         {
                             type: 'doc',
                             id: 'configuration/log_rotate'
-                        },
-                    ],
-                },
-                {
-                    type: 'category',
-                    label: 'Install and Uninstall',
-                    link: {
-                        type: 'doc',
-                        id: 'deployment/installation/intro',
-                    },
-                    items: [
-                        {
-                            type: 'category',
-                            label: 'Install On Platforms',
-                            link: {
-                                type: 'doc',
-                                id: 'deployment/installation/platform/intro',
-                            },
-                            items: [
-                                {
-                                    type: 'doc',
-                                    id: 'deployment/installation/platform/install_on_apache_hadoop',
-                                },
-                            ],
-                        },
-                        {
-                            type: 'doc',
-                            id: 'deployment/installation/uninstallation',
-                        },
-                        {
-                            type: 'doc',
-                            id: 'deployment/installation/install_validation',
                         },
                     ],
                 },
@@ -439,6 +439,24 @@ const sidebars = {
                             id: 'operations/logs/audit_log'
                         },
                     ],
+                },
+            ],
+        },
+        {
+            type: 'category',
+            label: 'Datasource',
+            link: {
+                type: 'doc',
+                id: 'datasource/intro',
+            },
+            items: [
+                {
+                    type: 'doc',
+                    id: 'datasource/import_hive'
+                },
+                {
+                    type: 'doc',
+                    id: 'datasource/data_sampling'
                 },
             ],
         },

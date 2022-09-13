@@ -118,7 +118,7 @@ Some of the elements include job steps, waiting time and executing time, log out
 
 You can modify settings about **Email Notification** in the navigation bar **Setting -> Advanced Settings**, as shown below: 
 
-![Job Notification](./images/job_settings.png)
+![Job Notification](images/job_settings.png)
 
 You can fill in your email and choose to open different types of job notification.
 
