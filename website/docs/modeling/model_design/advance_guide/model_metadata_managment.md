@@ -15,9 +15,7 @@ last_update:
 ---
 
 
-## Model Metadata Management
-
-Kylin is stateless service. All state information is stored in metadata. The model is the core asset of the KE cluster. The model metadata describes the content of the model information in detail.
+Kylin is stateless service. All state information is stored in metadata. The model is the core asset of the Kylin cluster. The model metadata describes the content of the model information in detail.
 
 The movement of models in different environments is an important process of actual production. Therefore, importing and exporting metadata is a crucial link in operation and maintenance. Kylin provides import and export model metadata functions.
 

@@ -20,7 +20,7 @@ last_update:
 
 2. If using other versions of PostgreSQL, please choose a version above PostgreSQL 9.1.
 
-3. The PostgreSQL installation package currently supports installation in (#TODO) system, the correspondence is as follows:
+3. The PostgreSQL installation package currently supports installation in CentOS system, the correspondence is as follows:
 
    - `rhel6.x86_64.rpm` -> CentOS 6
    - `rhel7.x86_64.rpm` -> CentOS 7
@@ -28,13 +28,21 @@ last_update:
 
    Please check out Linux version before choosing the installation package. You should be able to see your Linux core version by running `uname -a` or `cat /etc/issue`.
 
+   > Note: other system compatible package please refer to [PostgreSQL Website](https://www.postgresql.org/download/). 
+
 4. In this section, we will go through a PostgreSQL installation and configuration on CentOS 6.
 
 
 
 ### <span id="root">`root` User Installation and Configuration</span>
 
-1. After unzipping the Kylin package, enter the root directory `postgresql` and run following commands in order to install PostgreSQL.(#TODO)
+1. After unzipping the Kylin package, enter the root directory `sbin` and run following commands in order to download PostgreSQL.
+
+   ```shell
+   ./download_postgresql.sh
+   ```
+
+2. After unzipping the Kylin package, enter the root directory `postgresql` and run following commands in order to install PostgreSQL.
 
    ```shell
    rpm -ivh postgresql10-libs-10.7-1PGDG.rhel6.x86_64.rpm
@@ -42,7 +50,7 @@ last_update:
    rpm -ivh postgresql10-server-10.7-1PGDG.rhel6.x86_64.rpm
    ```
 
-2. Initialize PostgreSQL
+3. Initialize PostgreSQL
 
    The OS has installed Initscripts services, Please run:
    ```sh
@@ -55,7 +63,7 @@ last_update:
    for example: /user/pgsql-10/bin/postgresql-10-setup initdb
    ```
 
-3. Modify two PostgreSQL configuration files, the files are in `/var/lib/pgsql/10/data/`:
+4. Modify two PostgreSQL configuration files, the files are in `/var/lib/pgsql/10/data/`:
 
    - `pg_hba.conf`: mainly used to store the authentication information of the client.
    - `postgresql.conf`
@@ -103,9 +111,9 @@ last_update:
    - `listen_addresses`: Specify the TCP / IP address listened by server. It is represented by multiple hostnames seperated by comma, for intance, `listen_addresses = host1,host2,host3` or `listen_address = 10.1.1.1,10.1.1.2,10.1.1.3`. The special symbol `*` matches all IP addresses. You can modify the property on demands.
    - `port`: The default value is `5432`. If `5432` is taken, please replace it with an avaliable port.
 
-4. Run `service postgresql-10 start` to launch PostgreSQL
+5. Run `service postgresql-10 start` to launch PostgreSQL
 
-5. Log in to PostgreSQL and create the database
+6. Log in to PostgreSQL and create the database
 
    **i.** Run `su - postgres` to switch to `postgres` user.
 
@@ -133,7 +141,7 @@ last_update:
 
 The following example is that Linux user `abc` installs and configures PostgreSQL.
 
-1. Create a new directory `/home/abc/postgresql`, then unzip the PostgreSQL installation package.(#TODO)
+1. Create a new directory `/home/abc/postgresql`, then unzip the PostgreSQL installation package.
 
    ```sh
    rpm2cpio postgresql10-libs-10.7-1PGDG.rhel6.x86_64.rpm | cpio -idmv
@@ -227,4 +235,4 @@ There are two solutions:
 
 Solution 1: Make sure that the node installing PostgreSQL can access the external network, and then enter the command `yum install libicu-devel` in the terminal to download libicui18n.
 
-Solution 2: Visit the website https://pkgs.org/download/libicu and download the required packages. Please choose the appropriate version according to the system kernel, such as `libicu-4.2.1-1.el6.x86_64.rpm` for CentOS 6. Then use the command `rpm2cpio libicu-4.2.1-14.el6.x86_64.rpm | cpio -idmv` to decompress the binary package and place the decompressed content in ` $LD_LIBRARY_PATH`. If you don't know `$LD_LIBRARY_PATH`, please refer to the second step of [Non `root` User Installation And Configuration](#not_root) above.
+Solution 2: Visit the website https://pkgs.org/download/libicu and download the required packages. Please choose the appropriate version according to the system kernel, such as `libicu-4.2.1-1.el6.x86_64.rpm` for CentOS 6. Then use the command `rpm2cpio libicu-4.2.1-14.el6.x86_64.rpm | cpio -idmv` to decompress the binary package and place the decompressed content in ` $LD_LIBRARY_PATH`. If you don't know `$LD_LIBRARY_PATH`, please refer to the second step of [`Non root` User Installation And Configuration](#not_root) above.

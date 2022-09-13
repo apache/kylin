@@ -40,7 +40,7 @@ After running successfully, you should be able to see the following information 
 Sample hive tables are created successfully
 ```
 
-We will be using SSB dataset as the data sample to introduce Kylin in several sections of this  product manual. The SSB dataset simulates transaction data for the online store, see more details in [Sample Dataset](#TODO). Below is a brief introduction.
+We will be using SSB dataset as the data sample to introduce Kylin in several sections of this  product manual. The SSB dataset simulates transaction data for the online store, see more details in [Sample Dataset](../../../quickstart/sample_dataset.md). Below is a brief introduction.
 
 
 | Table        | Description                 | Introduction                                                         |
@@ -69,7 +69,7 @@ When the metadata is loaded successfully, at the **Insight** page, 6 sample hive
 ```sql
 SELECT LO_PARTKEY, SUM(LO_REVENUE) AS TOTAL_REVENUE
 FROM SSB.P_LINEORDER
-WHERE LO_ORDERDATE between '19930601' AND '19940601' 
+WHERE LO_ORDERDATE between '1993-06-01' AND '1994-06-01' 
 group by LO_PARTKEY
 order by SUM(LO_REVENUE) DESC 
 ```

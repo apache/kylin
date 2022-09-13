@@ -36,7 +36,7 @@ Prior to installing Kylin, please check the following prerequisites are met.
 
 The following Hadoop distributions are verified to run on Kylin.
 
-- Apache Hadoop 3.2.1 (#TODO)
+- [Apache Hadoop 3.2.1](installation/platform/install_on_apache_hadoop.md)
 
 
 Kylin requires some components, please make sure each server has the following components.
@@ -60,7 +60,7 @@ java -version
 
 You can use the following command to check the JDK version of your existing environment, for example, the following figure shows JDK 8
 
-![JDK version](images/jdk.en.png)
+![JDK version](images/jdk.png)
 
 ### <span id="account">Account Authority</span>
 
@@ -114,13 +114,13 @@ Verify the user has access to the Hadoop cluster with account `KyAdmin`. Test us
 
 A configured metastore is required for this product.
 
-We recommend using PostgreSQL 10.7 as the metastore, which is provided in our package. Please refer to [Use PostgreSQL as Metastore (Default)](./rdbms_metastore/default_metastore.md) for installation steps and details.
+We recommend using PostgreSQL 10.7 as the metastore, which is provided in our package. Please refer to [Use PostgreSQL as Metastore (Default)](./rdbms_metastore/postgresql/default_metastore.md) for installation steps and details.
 
 If you want to use your own PostgreSQL database, the supported versions are below:
 
 - PostgreSQL 9.1 or above
 
-You can also choose to use MySQL but we currently don't provide a MySQL installation package or JDBC driver. Therefore, you need to finish all the prerequisites before setting up. Please refer to [Use MySQL as Metastore](./rdbms_metastore/mysql_metastore.md) for installation steps and details. The supported MySQL database versions are below:
+You can also choose to use MySQL but we currently don't provide a MySQL installation package or JDBC driver. Therefore, you need to finish all the prerequisites before setting up. Please refer to [Use MySQL as Metastore](./rdbms_metastore/mysql/mysql_metastore.md) for installation steps and details. The supported MySQL database versions are below:
 
 - MySQL 5.1-5.7
 - MySQL 5.7 (recommended)
@@ -176,7 +176,9 @@ We recommend the following hardware configuration to install Kylin:
 
 We recommend using the following version of the Linux operating system:
 
-- (#TODO)
+- Ubuntu 18.04 + (recommend LTS version)
+- Red Hat Enterprise Linux 6.4+ 或 7.x 
+- CentOS 6.4+ 或 7.x
 
 ### <span id="client">Recommended Client Configuration</span>
 

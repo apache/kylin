@@ -14,7 +14,7 @@ last_update:
     date: 08/19/2022
 ---
 
-As the business scenario changes, some of the indexes in the model need to be retained only in latest months for saving building and storage costs. Therefore, Kyligence provides a more flexible way to build indexes since the 4.2 released.
+As the business scenario changes, some of the indexes in the model need to be retained only in latest months for saving building and storage costs. Therefore, Kylin provides a more flexible way to build indexes since the 5.0 released.
 
 
 ### Build Index

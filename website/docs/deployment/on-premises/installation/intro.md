@@ -15,6 +15,4 @@ last_update:
     date: 08/12/2022
 ---
 
-## Install and Uninstall
-
 This chapter will introduce how to install Kylin on different platforms and how to uninstall Kylin.

@@ -14,13 +14,10 @@ last_update:
     date: 08/16/2022
 ---
 
-
-## Hadoop Queue Configuration
-
 In the case of a multiple-tenants environment, to securely share a large cluster, each tenant needs to have the allocated resources in a timely manner under the constraints of the allocated capacities. To achieve computing resources allocation and separation, each Kylin instance or project can be configured to use a different YARN queue.  
 
 
-###<span id="instance">Instance-level YARN Queue Setting</span>
+### <span id="instance">Instance-level YARN Queue Setting</span>
 
 To achieve this, first create a new YARN capacity scheduler queue. By default, the job sent out by Kylin will go to the default YARN queue.
 
@@ -48,6 +45,6 @@ Similarly, you may set up YARN queue for other Kylin instances to achieve comput
 
 
 
-###<span id="project">Project-level YARN Queue Setting</span>
+### <span id="project">Project-level YARN Queue Setting</span>
 
 The system admin user can set the YARN Application Queue of the project in **Setting -> Advanced Settings -> YARN Application Queue**, please refer to the [Project Settings](../operations/project-operation/project_settings.md) for more information.

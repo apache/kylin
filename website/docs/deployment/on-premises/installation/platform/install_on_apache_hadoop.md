@@ -18,7 +18,7 @@ last_update:
 
 ### Prepare Environment
 
-First, **make sure you allocate sufficient resources for the environment**. Please refer to [Prerequisites](../../../deployment/on-premises/prerequisite.md) for detailed resource requirements for Kylin. Moreover, please ensure that `HDFS`, `YARN`, `Hive`, `ZooKeeper` and other components are in normal state without any warning information.
+First, **make sure you allocate sufficient resources for the environment**. Please refer to [Prerequisites](docs/deployment/on-premises/prerequisite.md) for detailed resource requirements for Kylin. Moreover, please ensure that `HDFS`, `YARN`, `Hive`, `ZooKeeper` and other components are in normal state without any warning information.
 
 
 
@@ -43,10 +43,10 @@ Add the following two configurations in `$KYLIN_HOME/conf/kylin.properties`:
 
 In Apache Hadoop 3.2.1, you also need to prepare the MySQL JDBC driver in the operating environment of Kylin.
 
-Here is a download link for the jar file package of the MySQL 5.1 JDBC driver：https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.41/mysql-connector-java-5.1.41.jar. You need to prepare the other versions of the driver yourself.Please place the JDBC driver of the corresponding version of MySQL in the `$KYLIN_HOME/lib/ext` directory.
+Here is a download link for the jar file package of the MySQL 8.0 JDBC driver：https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.30/mysql-connector-java-8.0.30.jar. You need to prepare the other versions of the driver yourself.Please place the JDBC driver of the corresponding version of MySQL in the `$KYLIN_HOME/lib/ext` directory.
 
 
 
 ### Install Kylin
 
-After setting up the environment, please refer to [Quick Start](../../../quickstart/quick_start.md) to continue.
+After setting up the environment, please refer to [Quick Start](docs/quickstart/quick_start.md) to continue.

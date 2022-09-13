@@ -55,7 +55,7 @@ In general, the same cluster queue can be used for asynchronous query and normal
      kylin.engine.spark-conf.spark.yarn.access.hadoopFileSystems=hdfs://readcluster,hdfs://asyncquerycluster,hdfs://writecluster
     ```
 
-6. In general, the above configuration can meet the requirements. In some more advanced scenarios, you can configure spark related configurations in `kylin.properties` to achieve more fine-grained control with guidance of Kyligence expert.
+6. In general, the above configuration can meet the requirements. In some more advanced scenarios, you can configure spark related configurations in `kylin.properties` to achieve more fine-grained control with guidance of Kylin expert.
 
    The configuration starts with `kylin.query.async-query.spark-conf`, as shown below:
 

@@ -65,7 +65,7 @@ It can be answered by indexes including `cal_dt` dimension and `count(distinct p
 ### Known Limitation
 
 1. Else can only be with null, constants are not supported temporarily, such as `case when ... then column1 else 1 end`.
-Starting from KE 4.5.4 GA version, after else can be cast(null as `type`), such as `case when ... then column1 else cast(null as double) end`.
+Starting from Kylin 5.0 version, after else can be cast(null as `type`), such as `case when ... then column1 else cast(null as double) end`.
 It should be noted that `type` should be as close as possible to `column1` The type is the same or the same category,
 otherwise it may not conform to the sql syntax and an error will be reported, or this function cannot be applied. 
 The major category refers to the same numeric type, date type, Boolean type, etc.

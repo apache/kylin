@@ -14,7 +14,7 @@ last_update:
     date: 08/16/2022
 ---
 
-Kylin 5.x provides a HTTPS connection. It is disabled by default. If you need to enable it, please follow the steps below.
+Kylin 5.0 provides a HTTPS connection. It is disabled by default. If you need to enable it, please follow the steps below.
 
 ### Use Default Certificate
 
@@ -61,7 +61,7 @@ If you need to encrypt `kylin.server.https.keystore-password`, you can do it lik
 
 i.run following commands in `${KYLIN_HOME}`, it will print encrypted password
 ```shell
-./bin/kylin.sh io.kyligence.kap.tool.general.CryptTool -e AES -s <password>
+./bin/kylin.sh org.apache.kylin.tool.general.CryptTool -e AES -s <password>
 ```
 
 ii.config `kylin.server.https.keystore-password` like this

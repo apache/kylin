@@ -30,7 +30,7 @@ In the project of Kylin 5, you can customize Count Distinct (Approximate) measur
 
 ### Prerequisite
 
-Let’s use the project created in the chapter [Tutorial](../../../quickstart/expert_mode_tutorial.md) as an example to introduce approximate count distinct measure settings. This project uses the SSB Dataset and needs to complete the model design and index build (including data load). A model won't be able to serve any queries if it has no index and data. You can read [Model Design Basics](../data_modeling.md) to understand more about the methods used in model design. 
+Let’s use the project created in the chapter [Tutorial](../../../quickstart/expert_mode_tutorial.md) as an example to introduce approximate count distinct measure settings. This project uses the SSB Dataset and needs to complete the model design and index build (including data load). A model won't be able to serve any queries if it has no index and data. You can read [Model Design Basics](../../data_modeling.md) to understand more about the methods used in model design. 
 
 Before using Count Distinct query, you need to check the target column is ready. You can get measure information in the model editing page. If the desire measure has been pre-calculated on approximate Count Distinct syntax (requires both `Function` to be count_distinct and `Return Type` to be hllc), then this measure is ready for Count Distinct querying. Otherwise, you need to add a new measure Count Distinct (Approximate) first.
 
@@ -46,6 +46,6 @@ Once the measure is added and the model is saved, click **Add Index** in the pop
 SELECT COUNT(DISTINCT P_LINEORDER.LO_SHIPPRIOTITY)
 FROM SSB.P_LINEORDER
 ```
-If you need to create a model from the very beginning and add a Count Distinct (Approximate) measure, please add some indices and load data into the model. A model won't be able to serve any query if it has no index and data. You can read this chapter [Model Design Basics](../data_modeling.md) to understand the method of model design.
+If you need to create a model from the very beginning and add a Count Distinct (Approximate) measure, please add some indices and load data into the model. A model won't be able to serve any query if it has no index and data. You can read this chapter [Model Design Basics](../../data_modeling.md) to understand the method of model design.
 
 More information about precise Count Distinct function, please refer to [Count Distinct (Approximate)](count_distinct_bitmap.md) Introduction.

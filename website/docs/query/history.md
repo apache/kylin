@@ -89,7 +89,7 @@ Each line in the picture is a query history record. The meaning of the columns a
 
 When you click on the icon to the left of a query, the execution details of the query will be displayed, as shown below:
 
-![Query Execution Detail](./images/query_history2.png)
+![Query Execution Detail](images/query_history2.png)
 
 On the left is the SQL statement, you can copy and paste and then query. The fields on the right have the following meanings:
 

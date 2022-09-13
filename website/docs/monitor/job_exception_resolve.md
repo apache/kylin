@@ -28,7 +28,7 @@ Various problems may occur during the execution of building jobs which cause the
 
     1. Modify the time format of the model time partition column to be consistent with the actual time format in the data source:
 
-       Please refer to [Design a Data Model](../modeling/model_design/data_modeling.md#design) *Step 7. Set Time Partition Column and Data Filter Condition* modify the time format of the model time partition column。
+       Please refer to [Design a Data Model](../modeling/manual_modeling.md#step-4-save-the-model-and-set-the-loading-method) *Step 4. Save the model and set the loading method* modify the time format of the model time partition column。
 
     2. 2. If you insist on using this format, you can choose to disable checking the time partition column by modifying the system parameter in `kylin.properties` to `kylin.engine.check-partition-col-enabled=false`.
        Notice: Although this method can bypass the time format verification here, it may cause other problems. Please use it with caution.

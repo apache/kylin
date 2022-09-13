@@ -37,15 +37,15 @@ With pre-computation, the number of indexes will be determined by the dimension 
 
 #### Manual modeling 
 
-In addition to intelligent modeling, Kylin also supports users to design their own models and indexes based on their business needs. Kylin provides step-by-step guidance on how to complete basic model settings, including dimensions, measures, join relationships, and indexes. For details, see [Manual modeling](../../model/manual_modeling.en.md). 
+In addition to intelligent modeling, Kylin also supports users to design their own models and indexes based on their business needs. Kylin provides step-by-step guidance on how to complete basic model settings, including dimensions, measures, join relationships, and indexes. For details, see [Manual modeling](manual_modeling.md). 
 
 #### Advanced model design 
 
 Kylin offers various advanced features around models and indexes to help users quickly dig out the most valuable data. These features include: 
 
-- Accelerated model design: Kylin offers built-in [advanced measures](measure_design/intro.md) like count distinct and Top N to speed up modeling.  
+- Accelerated model design: Kylin offers built-in [advanced measures](model_design/measure_design/intro.md) like count distinct and Top N to speed up modeling.  
 
-For more information, see [Advanced model design](intro.md). 
+For more information, see [Advanced model design](model_design/advance_guide/intro.md). 
 
 ### Basic concepts 
 

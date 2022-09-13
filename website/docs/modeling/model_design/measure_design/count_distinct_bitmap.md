@@ -29,7 +29,7 @@ Before using the Count Distinct query, you need to clarify if the target column 
 
 ### Count Distinct Precision Setting 
 
-Let’s use the project created in the chapter [Tutorial](../../../quickstart/expert_mode_tutorial.md) as an example to introduce count distinct precision measure settings. This project uses the SSB Dataset and needs to complete the model design and index build (including data load). A model won't be able to serve any queries if it has no index and data. You can read [Model Design Basics](../data_modeling.md) to understand more about the methods used in model design. 
+Let’s use the project created in the chapter [Tutorial](../../../quickstart/expert_mode_tutorial.md) as an example to introduce count distinct precision measure settings. This project uses the SSB Dataset and needs to complete the model design and index build (including data load). A model won't be able to serve any queries if it has no index and data. You can read [Model Design Basics](../../data_modeling.md) to understand more about the methods used in model design. 
 
 Please add a measure in the model editing page as follows. Please fill in the measure **Name**, such as `DISTINCT_CUSTOMER`, select **Function** as **COUNT_DISTINCT**, select accuracy requirement from **Function Parameter**, and finally select the target column from the drop-down list.
 
@@ -41,6 +41,6 @@ Kylin offers both approximate Count Distinct function and precise Count Distinct
 
 Once the measure is added and the model is saved, you need to go to the **Edit Aggregate Index** page, add the corresponding dimensions and measures to the appropriate aggregate group according to your business scenario, and the new aggregate index will be generated after submission. You need to build index and load data to complete the precomputation of the target column. You can check the job of Build Index in the Job Monitor page. After the index is built, you can use the **Count Distinct (Precise)** measure to do some querying. 
 
-If you need to create a model from the very beginning and add a Count Distinct (Precise) measure, please add some indices and load data into the model. A model won't be able to serve any query if it has no index and data. You can read this chapter [Model Design Basics](../data_modeling.md) to understand the methods used in model design.
+If you need to create a model from the very beginning and add a Count Distinct (Precise) measure, please add some indices and load data into the model. A model won't be able to serve any query if it has no index and data. You can read this chapter [Model Design Basics](../../data_modeling.md) to understand the methods used in model design.
 
 For more information about approximate Count Distinct function, please refer to [Count Distinct (Approximate)](count_distinct_hllc.md) Introduction.

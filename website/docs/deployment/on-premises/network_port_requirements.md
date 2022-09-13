@@ -18,7 +18,7 @@ Kylin needs to communicate with different components. The following are the port
 
 | Component            | Port          | Function                                                     | Required |
 | -------------------- | ------------- | ------------------------------------------------------------ | -------- |
-| SSH                  | 22            | SSH to connect to the port of the virtual machine where KE is located | Y        |
+| SSH                  | 22            | SSH to connect to the port of the virtual machine where Kylin is located | Y        |
 | Kylin                | 7070          | Kylin access port                                            | Y        |
 | Kylin                | 7443          | Kylin HTTPS access port                                      | N        |
 | HDFS                 | 8020          | HDFS receives client connection RPC port                     | Y        |

@@ -180,7 +180,7 @@ In the Kylin configuration file `kylin.properties`, there are the following conf
 
 The Audit Log is stored in the database. You can use the tools provided by Kylin to export the data within the specified time range to the local for backup, or export it as an attachment to the Kylin ticket when encountering problems, which is convenient for technology support personnel to locate the problem.
 
-There are two ways to execute commands on the KE node:
+There are two ways to execute commands on the Kylin node:
 
 1. Use the diagnostic package command: `$ {KYLIN_HOME}/bin/diag.sh` 
 
@@ -188,7 +188,7 @@ There are two ways to execute commands on the KE node:
 
      
 
-2. Using the AuditLogTool tool: `${KYLIN_HOME}/bin/kylin.sh io.kyligence.kap.tool.AuditLogTool -startTime ${starttime} -endTime ${endtime} -dir ${target_dir}`
+2. Using the AuditLogTool tool: `${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AuditLogTool -startTime ${starttime} -endTime ${endtime} -dir ${target_dir}`
 
    - `${starttime}` and `${endtime}` Retrieves the specified range of Audit Log. The format is timestamp in milliseconds: e.g `1579868382749`;
    - `${target_dir}` specifies the directory where your Audit Log files are stored. The generated Audit Log is stored in the `${target_dir}/${starttime}_${endtime}` file;

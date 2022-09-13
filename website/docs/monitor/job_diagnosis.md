@@ -14,10 +14,7 @@ last_update:
     date: 08/19/2022
 ---
 
-
-## Job Diagnosis
-
- Job diagnosis may encounter various problems during execution. To help solve these problems efficiently, Kylin provides a task diagnostic function, which can package related problems' log information into a compressed package for operations or Kyligence technical supports to analyze problems and ascertain the cause.
+ Job diagnosis may encounter various problems during execution. To help solve these problems efficiently, Kylin provides a task diagnostic function, which can package related problems' log information into a compressed package for operations or Apache Community supports to analyze problems and ascertain the cause.
 
 ### View Job Execution Log On Web UI
 
@@ -50,7 +47,7 @@ You can execute ` $KYLIN_HOME/bin/diag.sh -job <jobid> ` to generate the job dia
 - `/yarn_application_log`: specifies the logs of yarn application of job. 
 - `/client`: operating system resources occupied information, hadoop version and kerberos information.
 - `/monitor_metrics`：The node monitoring log of the specified task.
-- `/write_ hadoop_ conf`：`$KYLIN_HOME/write_hadoop_conf`, Hadoop configuration of the build cluster. This directory will not be available when Read/Write separation deployment is not configured.
+- `/write_hadoop_conf`：`$KYLIN_HOME/write_hadoop_conf`, Hadoop configuration of the build cluster. This directory will not be available when Read/Write separation deployment is not configured.
 - file `catalog_info`: directory structure of install package.
 - file `commit_SHA1`: git-commit version.
 - file `hadoop_env`: hadoop environment information.
