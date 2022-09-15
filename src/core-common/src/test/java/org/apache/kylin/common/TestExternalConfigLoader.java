@@ -26,15 +26,13 @@ import java.util.Properties;
 
 import org.apache.kylin.common.exception.KylinException;
 
-import com.google.common.collect.ImmutableMap;
+import io.kyligence.config.core.loader.IExternalConfigLoader;
 
-public class TestExternalConfigLoader implements ICachedExternalConfigLoader {
-    private final Properties properties;
-    private final ImmutableMap<Object, Object> propertyEntries;
+public class TestExternalConfigLoader implements IExternalConfigLoader {
+    private Properties properties;
 
     public TestExternalConfigLoader(Properties properties) {
         this.properties = properties;
-        this.propertyEntries = ImmutableMap.copyOf(properties);
     }
 
     @Override
@@ -54,13 +52,7 @@ public class TestExternalConfigLoader implements ICachedExternalConfigLoader {
     }
 
     @Override
-    @Deprecated
     public Properties getProperties() {
         return properties;
-    }
-
-    @Override
-    public ImmutableMap getPropertyEntries() {
-        return propertyEntries;
     }
 }

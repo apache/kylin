@@ -47,6 +47,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import io.kyligence.config.core.loader.IExternalConfigLoader;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -205,15 +206,15 @@ public abstract class KylinConfigBase implements Serializable {
      */
     volatile PropertiesDelegate properties;
 
-    protected KylinConfigBase(ICachedExternalConfigLoader configLoader) {
+    protected KylinConfigBase(IExternalConfigLoader configLoader) {
         this(new Properties(), configLoader);
     }
 
-    protected KylinConfigBase(Properties props, ICachedExternalConfigLoader configLoader) {
+    protected KylinConfigBase(Properties props, IExternalConfigLoader configLoader) {
         this(props, false, configLoader);
     }
 
-    protected KylinConfigBase(Properties props, boolean force, ICachedExternalConfigLoader configLoader) {
+    protected KylinConfigBase(Properties props, boolean force, IExternalConfigLoader configLoader) {
         if (props instanceof PropertiesDelegate) {
             this.properties = (PropertiesDelegate) props;
         } else {

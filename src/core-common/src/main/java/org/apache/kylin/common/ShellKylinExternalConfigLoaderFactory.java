@@ -37,6 +37,8 @@ import org.springframework.core.io.FileUrlResource;
 import com.alibaba.cloud.nacos.NacosConfigProperties;
 
 import io.kyligence.config.core.conf.ExternalConfigProperties;
+import io.kyligence.config.core.loader.IExternalConfigLoader;
+import io.kyligence.config.external.loader.NacosExternalConfigLoader;
 import lombok.val;
 import lombok.experimental.UtilityClass;
 
@@ -51,11 +53,11 @@ public class ShellKylinExternalConfigLoaderFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(ShellKylinExternalConfigLoaderFactory.class);
 
-    public static ICachedExternalConfigLoader getConfigLoader() {
+    public static IExternalConfigLoader getConfigLoader() {
         if (useLegacyConfig()) {
             return new KylinExternalConfigLoader(getSitePropertiesFile());
         }
-        ICachedExternalConfigLoader configLoader = null;
+        IExternalConfigLoader configLoader = null;
         try {
             if (Paths.get(getKylinHome(), "conf", "config.yaml").toFile().exists()) {
                 val environment = getEnvironment();
@@ -67,9 +69,8 @@ public class ShellKylinExternalConfigLoaderFactory {
                         .bind(NacosConfigProperties.PREFIX, NacosConfigProperties.class).get();
 
                 val infos = externalConfigProperties.getInfos();
-                configLoader = infos.stream().filter(info -> info.getTarget().equals(KylinConfig.class.getName()))
-                        .map(info -> new CachedNacosExternalConfigLoader(info.getProperties(), nacosConfigProperties,
-                                environment))
+                configLoader = infos.stream().filter(info -> info.getTarget().equals(KylinConfig.class.getName())).map(
+                        info -> new NacosExternalConfigLoader(info.getProperties(), nacosConfigProperties, environment))
                         .findAny().orElse(null);
             }
         } catch (Exception e) {
