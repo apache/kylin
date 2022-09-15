@@ -117,6 +117,7 @@ public abstract class KylinConfigBase implements Serializable {
             System.getProperties());
 
     protected static String getSystemProperty(String key) {
+        checkKey(key);
         Object oval = STATIC_SYSTEM_PROPERTY.get(key);
         return (oval instanceof String) ? (String) oval : null;
     }
@@ -136,6 +137,15 @@ public abstract class KylinConfigBase implements Serializable {
     public static void clearSystemProperty(String key) {
         System.clearProperty(key);
         STATIC_SYSTEM_PROPERTY.remove(key);
+    }
+
+    private static void checkKey(String key) {
+        if (key == null) {
+            throw new NullPointerException("key can't be null");
+        }
+        if (key.equals("")) {
+            throw new IllegalArgumentException("key can't be empty");
+        }
     }
 
     /*
@@ -173,7 +183,7 @@ public abstract class KylinConfigBase implements Serializable {
     public static String getKylinConfHome() {
         String confHome = System.getenv("KYLIN_CONF");
         if (StringUtils.isEmpty(confHome)) {
-            confHome = getSystemProperty("KYLIN_HOME");
+            confHome = getSystemProperty("KYLIN_CONF");
         }
         return confHome;
     }
