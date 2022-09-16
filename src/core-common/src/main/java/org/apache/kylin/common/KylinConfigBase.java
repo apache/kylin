@@ -238,7 +238,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     protected String getOptional(String prop, String dft) {
-        final String property = getSystemProperty("KYLIN_HOME");
+        final String property = getSystemProperty(prop);
         return property != null ? getSubstitutor().replace(property)
                 : getSubstitutor().replace(properties.getProperty(prop, dft));
     }
@@ -304,7 +304,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     protected final String[] getSystemStringArray(String prop, String[] dft) {
-        final String property = getSystemProperty("KYLIN_HOME");
+        final String property = getSystemProperty(prop);
         if (!StringUtils.isBlank(property)) {
             return property.split("\\s*,\\s*");
         } else {
