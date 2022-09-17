@@ -1,0 +1,46 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Docker image for apache kylin, based on the Hadoop image
+FROM hadoop3.2.1-all-in-one-for-kylin5
+
+USER root
+# make a new workdir
+RUN mkdir -p /home/kylin
+
+# change workdir to install Kylin
+WORKDIR /home/kylin
+
+ENV KYLIN_VERSION 5.0.0
+ENV KYLIN_HOME /home/kylin/apache-kylin-$KYLIN_VERSION-bin
+
+# TODO: Download Kylin from official website
+COPY package/apache-kylin-$KYLIN_VERSION-*.tar.gz /home/kylin/
+
+RUN tar -zxf /home/kylin/apache-kylin-$KYLIN_VERSION-*.tar.gz \
+    && rm -f /home/kylin/apache-kylin-$KYLIN_VERSION-*.tar.gz \
+    && mv /home/kylin/apache-kylin-$KYLIN_VERSION-* $KYLIN_HOME \
+    && mkdir -p $KYLIN_HOME/lib/ext \
+    && cp $HIVE_HOME/lib/mysql-connector-java.jar $KYLIN_HOME/lib/ext/ \
+    && cp $HIVE_HOME/lib/mysql-connector-java.jar $KYLIN_HOME/spark/hive_1_2_2/
+
+COPY conf/kylin/kylin.properties.override $KYLIN_HOME/conf/
+
+COPY ./entrypoint.sh /home/kylin/entrypoint.sh
+RUN chmod u+x /home/kylin/entrypoint.sh
+
+ENTRYPOINT ["/home/kylin/entrypoint.sh"]
