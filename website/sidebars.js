@@ -970,6 +970,10 @@ const sidebars = {
                     type: 'doc',
                     id: 'development/how_to_subscribe_mailing_list'
                 },
+                {
+                    type: 'doc',
+                    id: 'development/dev_design/metastore_design'
+                },
 
             ],
         },

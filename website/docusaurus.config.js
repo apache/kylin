@@ -239,6 +239,7 @@ const config = {
         Built with Docusaurus.`,
       },
       prism: {
+        additionalLanguages: ['java'],
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },

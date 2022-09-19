@@ -1,0 +1,126 @@
+@startuml
+
+namespace business_layer {
+	class DataModelManager #pink {
+		'CRUD operation of DataModel // first kind method;
+		'complex business logic of DataModel // second kind method;
+
+		private NDataModel saveDataModelDesc(NDataModel dataModelDesc); // metadata write path, level 1
+	}
+
+	class CachedCrudAssist<T extends RootPersistentEntity> #pink {
+		protected Cache<String, T extends RootPersistentEntity> cache; // cache of RootPersistentEntity
+		ResourceStore resourceStore;
+
+		public T save(T entity); // metadata write path, level 2
+	}
+}
+
+
+namespace resource_store {
+
+
+	class RawResource {
+	    private String resPath;
+        private ByteSource byteSource;
+        private long timestamp;
+        private long mvcc;
+	}
+
+	class VersionedRawResource {
+		RawResource resource;
+		Integer mvcc;
+	}
+
+	abstract class ResourceStore {
+		static Cache<KylinConfig, ResourceStore> META_CACHE;
+		volatile ConcurrentSkipListMap<String, VersionedRawResource> data; // cache of byte array
+
+		public final <T extends RootPersistentEntity> void checkAndPutResource(String resPath, T obj,
+                    Serializer<T> serializer); // metadata write path, level 3
+	}
+
+	class InMemResourceStore
+
+	class ThreadViewResourceStore {
+		// ThreadViewResourceStore like a sandbox, update on ThreadViewResourceStore won't impact outside.\n ThreadViewResourceStore is used in transaction(UnitOfContext) only. */
+
+		InMemResourceStore overlay; // store local change of an uncommitted transaction
+		InMemResourceStore underlying; // real ResourceStore
+	}
+}
+
+
+namespace metastore {
+	abstract class MetadataStore {
+		void putResource(RawResource res, String unitPath, long epochId);  // metadata write path, level 4
+	}
+
+
+	class JDBCMetadataStore {
+		 DataSourceTransactionManager transactionManager;
+		 JdbcTemplate jdbcTemplate;
+		 RowMapper<RawResource> RAW_RESOURCE_ROW_MAPPER;
+	}
+
+	class HDFSMetadataStore
+	class FileMetadataStore
+
+	class JdbcUtil {
+
+	}
+
+	abstract class EpochStore {
+
+	}
+}
+
+
+namespace sync {
+	abstract class AuditLogStore {
+		void save(UnitMessages unitMessages); // metadata write path, level 5
+	}
+
+	class JDBCAuditLogStore
+}
+
+
+'---------------------- Class Relation(extends) ---------------------
+
+resource_store.InMemResourceStore --|> resource_store.ResourceStore : extends
+
+resource_store.ThreadViewResourceStore --|> resource_store.ResourceStore : extends
+
+resource_store.VersionedRawResource --|> resource_store.RawResource : extends
+
+
+metastore.JDBCMetadataStore --|> metastore.MetadataStore : extends
+metastore.HDFSMetadataStore --|> metastore.MetadataStore : extends
+metastore.FileMetadataStore --|> metastore.MetadataStore : extends
+
+sync.JDBCAuditLogStore --|> sync.AuditLogStore : extends
+
+'---------------------- Class Relation(contains) ---------------------
+
+
+business_layer.DataModelManager *-- "business_layer.CachedCrudAssist" : contains
+
+"business_layer.CachedCrudAssist" *-- resource_store.ResourceStore : contains
+
+resource_store.ResourceStore *-- metastore.MetadataStore  : contains
+
+metastore.MetadataStore *-- sync.AuditLogStore  : contains
+
+metastore.MetadataStore *-- metastore.EpochStore  : contains
+
+resource_store.ThreadViewResourceStore *-- resource_store.InMemResourceStore  : contains
+
+
+
+'---------------------- Class Relation(relate) ---------------------
+
+resource_store.ResourceStore --> resource_store.VersionedRawResource : store
+
+
+
+@enduml

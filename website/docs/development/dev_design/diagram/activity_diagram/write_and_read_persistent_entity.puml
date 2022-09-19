@@ -1,0 +1,98 @@
+@startuml
+
+start
+
+if (alreadyInTransaction?) then (yes)
+    :call process() of inner transaction;
+    end
+endif
+
+repeat
+    :Update Transaction Metrics;
+    :UnitOfWorkParams.getProcessor().preprocess();
+
+	:UnitOfWork#startTransaction;
+    partition #lightyellow "startTransaction" {
+        if (EpochNotOwnedByCurrentProcess?) then (no)
+            :throw Exception;
+            end
+        endif
+        : checkThreadLock;
+        : lockThreadLock;
+        if(isSandboxMode) then (yes)
+            : prepare thread kylin config;
+            : prepare thread ResourceStore(ThreadViewResourceStore);
+        endif
+    }
+
+	:UnitOfWorkParams.getProcessor().process();
+    :process(real business logic)// change is stored in ThreadViewResourceStore;
+    partition #azure "business logic" {
+		: copy new PersistentEntity for write;
+		: update on new PersistentEntity;
+		: create XXXManager;
+		: call XXXManager#save();
+		partition "XXXManager" {
+			: some check;
+            : CachedCrudAssist#save();
+            : ResourceStore#checkAndPutResource();
+		}
+    }
+
+
+	:UnitOfWork#endTransaction;
+    partition #powderblue "endTransaction" {
+		: remove thread kylin config;
+		if(isSandboxMode) then (yes)
+			: Fetch change from thread ResourceStore;
+        endif
+
+        :flushSandboxMeta;
+        :write_AuditLogStore;
+        :replay audit log into resource store;
+
+    }
+
+
+repeat while (Transaction failed and not hit max retry times?) is (retry) not (Succeed or not failed)
+    ->//return a object//;
+stop
+
+'autonumber 1.0
+'doInTransactionWithRetry -> isAlreadyInTransaction
+'
+'isAlreadyInTransaction --> doInTransactionWithRetry
+'
+'doInTransactionWithRetry -> updateMetrics
+'
+'loop "Retry-transaction" [123]
+'    autonumber 2.0
+'    updateMetrics -> preProcess
+'
+'    group doTransaction []
+'        autonumber 3.0
+'        preProcess -> startTransaction
+'
+'        group startTransaction [hello]
+'            startTransaction -> checkEpoch
+'
+'            checkEpoch -> fetchLock
+'
+'            fetchLock -> lock
+'    end
+'
+'    lock -> process : 业务逻辑
+'
+'
+'    process -> flushSandboxMeta
+'
+'    group endTransaction []
+'        autonumber 4.0
+'        flushSandboxMeta -> write_AuditLogStore
+'
+'        write_AuditLogStore -> write_Metastore
+'   end
+'
+'end
+
+@enduml

@@ -1,0 +1,68 @@
+@startuml
+
+start
+
+note right
+  这个是 Kylin 5.0 **元数据事务** 的提交流程分析
+  ======
+  1. 元数据事务的相关代码在 UnitOfWork, 本活动图是对代码的说明;
+  2. Epoch 是全局级别的, 项目粒度的元数据写锁, 用于确保同一时刻只有一个进程会修改指定项目下的元数据;
+  3. 为了避免获得 Epoch 的进程多线程同时变更元数据, 所以获得 Epoch 的进程, 还需要进行一个进程内的写锁的锁定, 以确保获得 Epoch 的进程对元数据的变更, 是串行的;
+  4. 调用 endTransaction 方法前, 元数据变更会发生在一个沙盒模式的 ResourceStore;
+  5. 在 endTransaction 方法, 会将元数据变更持久化到 Metastore(RDBMS) 和 AuditLogStore(RDBMS), 这里使用 RDBMS 的事务保证元数据操作的一致性;
+  6. 其他 Kylin 进程会定期获取 AuditLogStore 的变更, 重放到自己的 ResourceStore.
+end note
+
+if (是否已经在事务?) then (yes)
+    :调用"被包含"的子事务的 process 方法并且退出子事务;
+    end
+endif
+
+repeat
+    :更新元数据事务相关的 Metrics;
+    :调用 UnitOfWorkParams.getProcessor().preprocess(), 目前没有太多作用;
+
+    partition #lightyellow "startTransaction" {
+
+        if (当前进程是否拥有 Epoch?) then (no)
+            :抛出异常并且结束事务;
+            end
+        endif
+        : 获取进程内写锁;
+        : 对进程内写锁进行锁定;
+        if(是否启用沙盒模式?) then (yes)
+            : 创建 KylinConfig 的快照并且进行设置到 ThreadLocal;
+            : 创建 ThreadViewResourceStore, 以保证事务提交前\n事务内的元数据变更, 不会对外部可见;
+        endif
+    }
+    floating note #pink: 开始元数据事务的准备工作, \n相关代码在 UnitOfWork#startTransaction
+
+    partition #azure "process 方法包含的元数据修改逻辑(业务逻辑)" {
+		: 获取 startTransaction 准备的 KylinConfig;
+		: 创建 XXXManager 和 PersistentEntity;
+		: 使用 XXXManager 对变更后的 PersistentEntity 进行保存;
+		floating note #pink: 调用 UnitOfWorkParams.getProcessor().process()\n, process 方法由 Service 层传递, process 方法包含业务逻辑,\n在这一阶段元数据变更会发生在沙盒内(也就是 ThreadViewResourceStore)
+		partition "XXXManager" {
+			: XXXManager 对变更后的 PersistentEntity 进行约束性检查;
+            : XXXManager 调用 CachedCrudAssist#save() 写入 Cache;
+            : CachedCrudAssist 调用 ResourceStore#checkAndPutResource() \n写入 ThreadViewResourceStore 的 overlay;
+		}
+    }
+
+    partition #powderblue "endTransaction" {
+    	floating note #pink: 调用 UnitOfWork#endTransaction 来将\n ThreadViewResourceStore 的元数据变更提交;
+		: 清理 ThreadLocal 级别的 KylinConfig;
+		: 再次检查当前进程是否持有 Epoch;
+		if(是否启用沙盒模式?) then (yes)
+			: 从 ThreadViewResourceStore 的 overlay 收集元数据变更, 保存到 UnitMessages;
+			: 在一个 RDBMS 事务内, 提交 UnitMessages 的变更到\n MetadataStore 和 AuditLogStore 对应的表;
+            : 通过 MessageSynchronization 将 UnitMessages 缓存的元数据变更\n重放到原先的 ResourceStore(此时对外部可见);
+        endif
+        :更新元数据事务的耗时指标;
+    }
+
+repeat while (事务失败, 并且事务失败次数尚未超出重试最大次数?) is (是, 则触发事务重试) not (否, 那么事务成功, 或者事务失败次数超出阈值)
+    ->\n//返回 Pair<Boolean, T>, 其中 Boolean 标示事务是否成功, T 是业务逻辑(也就是 process方法)的返回值 //;
+stop
+
+@enduml
