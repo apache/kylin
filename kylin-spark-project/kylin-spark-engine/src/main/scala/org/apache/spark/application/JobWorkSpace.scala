@@ -35,11 +35,7 @@ object JobWorkSpace extends Logging {
       val worker = new JobWorker(application, appArgs, eventLoop)
       val monitor = new JobMonitor(eventLoop)
       val workspace = new JobWorkSpace(eventLoop, monitor, worker)
-      if (System.getProperty("spark.master").equals("yarn") && System.getProperty("spark.submit.deployMode").equals("cluster")) {
-        workspace.run()
-      } else {
-        System.exit(workspace.run())
-      }
+      System.exit(workspace.run())
     } catch {
       case throwable: Throwable =>
         logError("Error occurred when init job workspace.", throwable)
