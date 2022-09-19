@@ -36,7 +36,10 @@ object JobWorkSpace extends Logging {
       val monitor = new JobMonitor(eventLoop)
       val workspace = new JobWorkSpace(eventLoop, monitor, worker)
       if (System.getProperty("spark.master").equals("yarn") && System.getProperty("spark.submit.deployMode").equals("cluster")) {
-        workspace.run()
+        val res = workspace.run()
+        if (res != 0) {
+          System.exit(res)
+        }
       } else {
         System.exit(workspace.run())
       }
