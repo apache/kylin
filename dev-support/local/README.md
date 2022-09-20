@@ -2,7 +2,7 @@
 
 1. JDK 1.8 + version, Docker 3.8 version and above
 
-2. Executing `mvn clean install -DskipTests` by manually and make sure compile is ok.
+2. Executing `mvn clean install -DskipTests` manually and make sure that compiler is ok.
 
 3. Install Docker Desktop on local machine and configure the Docker resource, as follows is the lowest requirement：
 
@@ -30,7 +30,7 @@
 ![image-20211102105411171](./images/idea_configuration.png)
 
 
-3) Executing `./dev-support/sandbox/sandbox.sh up` to download images and start the container。
+3) Executing `./dev-support/local/local.sh up` to download images and start the container。
 
 *Container started successfully*
 
@@ -48,21 +48,20 @@
 ![Sparder](./images/sparder.png)
 
 
-
 ### Other Usage
 
-1) `./dev-support/sandbox/sandbox.sh stop`        : Stop the running containers
+1) `./dev-support/local/local.sh stop`        : Stop the running containers
 
-2) `./dev-support/sandbox/sandbox.sh start`       : Start all stopped containers
+2) `./dev-support/local/local.sh start`       : Start all stopped containers
 
-3) `./dev-support/sandbox/sandbox.sh ps`          : List all containers
+3) `./dev-support/local/local.sh ps`          : List all containers
 
-4) `./dev-support/sandbox/sandbox.sh down`        : Stop all containers and delete them
+4) `./dev-support/local/local.sh down`        : Stop all containers and delete them
 
-5) `./dev-support/sandbox/sandbox.sh interactive` : Enter in specific container
+5) `./dev-support/local/local.sh interactive` : Enter in specific container
 
 ### FAQ
 
-1) After executing `sandbox.sh init` and runConfiguration has nothing change. Then replace `type="SpringBootApplicationConfigurationType" factoryName="Spring Boot"` to `type="Application" factoryName="Application"` in `.idea/runconfigurations/BootstrapServer_local.xml`.
+1) After executing `local.sh init` and runConfiguration has nothing change. Then replace `type="SpringBootApplicationConfigurationType" factoryName="Spring Boot"` to `type="Application" factoryName="Application"` in `.idea/runconfigurations/BootstrapServer_local.xml`.
 
 ![](images/run_configuration_replace.png)
