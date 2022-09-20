@@ -96,7 +96,14 @@ public class PropertiesDelegate extends Properties {
 
     private ConcurrentMap<Object, Object> getAllProperties() {
         // When KylinExternalConfigLoader is enabled, properties is static
-        if (configLoader == null || configLoader.getClass().equals(KylinExternalConfigLoader.class)) {
+        if (configLoader == null || configLoader.getClass().equals(KylinExternalConfigLoader.class)
+                || configLoader.getClass().getSimpleName().equals("TestExternalConfigLoader")) {
+            /**
+             * Return properties directly
+             * 1. if configloader is null
+             * 2. if configloadder is KylinExternalConfigLoader.class
+             * 3. if running UT
+             */
             return properties;
         } else if (configLoader.getClass().equals(NacosExternalConfigLoader.class)) {
             // When NacosExternalConfigLoader enabled, fetch config entries from remote for each call

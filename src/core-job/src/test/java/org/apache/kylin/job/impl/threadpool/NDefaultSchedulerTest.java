@@ -1953,6 +1953,7 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
     }
 
     @Test
+    @Ignore("TODO: move it")
     public void testStorageQuotaLimitReached() {
         try {
             // case READY
