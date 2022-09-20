@@ -1,0 +1,28 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration name="BootstrapServer[Local]" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="kylin-server" />
+    <extension name="net.ashald.envfile">
+      <option name="IS_ENABLED" value="false" />
+      <option name="IS_SUBST" value="false" />
+      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+      <option name="IS_IGNORE_MISSING_FILES" value="false" />
+      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+      <ENTRIES>
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+      </ENTRIES>
+    </extension>
+    <option name="SPRING_BOOT_MAIN_CLASS" value="org.apache.kylin.rest.BootstrapServer" />
+    <option name="VM_PARAMETERS" value="-Xms1g -Xmx6g -Dspark.local=true -Dcalcite.debug=true" />
+    <option name="PROGRAM_PARAMETERS" value="--kylin.env.zookeeper-connect-string=localhost:2181 --kylin.server.mode=all" />
+    <option name="WORKING_DIRECTORY" value="file://%MODULE_WORKING_DIR%" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <option name="SHORTEN_COMMAND_LINE" value="NONE" />
+    <envs>
+      <env name="KYLIN_HOME" value="$PROJECT_DIR" />
+      <env name="SPARK_HOME" value="$PROJECT_DIR/build/spark" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

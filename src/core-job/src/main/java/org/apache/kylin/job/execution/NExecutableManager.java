@@ -205,11 +205,12 @@ public class NExecutableManager {
         if (KylinConfig.getInstanceFromEnv().isUTEnv()) {
             EventBusFactory.getInstance().postAsync(new JobReadyNotifier(project));
             EventBusFactory.getInstance().postAsync(new JobAddedNotifier(project, jobType));
-        } else
+        } else {
             UnitOfWork.get().doAfterUnit(() -> {
                 EventBusFactory.getInstance().postAsync(new JobReadyNotifier(project));
                 EventBusFactory.getInstance().postAsync(new JobAddedNotifier(project, jobType));
             });
+        }
     }
 
     private void addJobOutput(ExecutablePO executable) {
