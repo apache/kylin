@@ -85,10 +85,14 @@ function main() {
         if [[ ! -d "${PROJECT_DIR}/.idea/runConfigurations" ]]; then
             mkdir "${PROJECT_DIR}/.idea/runConfigurations"
         fi
-
+        DEFAULT_CONFIGURATION_VERSION=
+        if [[ -z ${DEFAULT_CONFIGURATION_VERSION} ]]; then
+            DEFAULT_CONFIGURATION_VERSION="community"
+        fi
+        warn "# IDEA run configuration version is ${DEFAULT_CONFIGURATION_VERSION}..."
         eval "cat <<EOF
-            $(<"${WORKDIR}/runConfigurations/BootstrapServer_local.xml")
-EOF" >"${PROJECT_DIR}/.idea/runConfigurations/BootstrapServer_local.xml"
+            $(<"${WORKDIR}/runConfigurations/BootstrapServer_local_community.xml")
+EOF" >"${PROJECT_DIR}/.idea/runConfigurations/BootstrapServer_local_community.xml"
 
         info "* Build Frontend..."
         cd ${FRONTEND_DIR}
