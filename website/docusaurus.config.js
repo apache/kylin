@@ -21,7 +21,6 @@ const config = {
   deploymentBranch:'kylin5_doc',
 
   // add search plugin
-  plugins: [require.resolve("@cmfcmf/docusaurus-search-local")],
   plugins: [
     [
       require.resolve("@cmfcmf/docusaurus-search-local"),
