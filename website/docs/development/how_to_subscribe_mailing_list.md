@@ -1,8 +1,8 @@
 ---
-title: How to subscribe mailing list
+title: How to subscribe and unsubscribe mailing list
 language: en
-sidebar_label: How to subscribe mailing list
-pagination_label: How to subscribe mailing list
+sidebar_label: How to subscribe and unsubscribe mailing list
+pagination_label: How to subscribe and unsubscribe mailing list
 toc_min_heading_level: 2
 toc_max_heading_level: 6
 keywords:
@@ -16,11 +16,11 @@ last_update:
 ### Mailing List Table
 These are the mailing lists that have been established for kylin project. For each list, there is a subscribe, unsubscribe, and an archive link.
 
-|    Mailing List   |   Subscribe Link  | Unsubscribe Link  |   Archive Link    |
-|:-----------------:|:-----------------:|:-----------------:|:-----------------:|
-| user              | [subscribe](mailto:user-subscribe@kylin.apache.org)  | [unsubscribe](mailto:user-unsubscribe@kylin.apache.org)  | [mail archive](https://lists.apache.org/list.html?user@kylin.apache.org) |
-| dev               | [subscribe](mailto:dev-subscribe@kylin.apache.org)   | [unsubscribe](mailto:dev-unsubscribe@kylin.apache.org)   | [mail archive](https://lists.apache.org/list.html?dev@kylin.apache.org) |
-| issue             | [subscribe](mailto:issue-subscribe@kylin.apache.org) | [unsubscribe](mailto:issue-unsubscribe@kylin.apache.org) | [mail archive](https://lists.apache.org/list.html?issue@kylin.apache.org) |
+| Mailing List |                    Subscribe Link                    |                     Unsubscribe Link                     |                               Archive Link                                |
+|:------------:|:----------------------------------------------------:|:--------------------------------------------------------:|:-------------------------------------------------------------------------:|
+|     user     | [subscribe](mailto:user-subscribe@kylin.apache.org)  | [unsubscribe](mailto:user-unsubscribe@kylin.apache.org)  | [mail archive](https://lists.apache.org/list.html?user@kylin.apache.org)  |
+|     dev      |  [subscribe](mailto:dev-subscribe@kylin.apache.org)  |  [unsubscribe](mailto:dev-unsubscribe@kylin.apache.org)  |  [mail archive](https://lists.apache.org/list.html?dev@kylin.apache.org)  |
+|    issue     | [subscribe](mailto:issue-subscribe@kylin.apache.org) | [unsubscribe](mailto:issue-unsubscribe@kylin.apache.org) | [mail archive](https://lists.apache.org/list.html?issue@kylin.apache.org) |
 
 
 ### <span id="mailing_list">Subscribe mailing list</span>
@@ -47,6 +47,9 @@ Following is a successful case.
 
 ![](images/subscribe_mailing_list_4.jpg)
 
+
+### <span id="unsubscribe_mailing_list">Unsubscribe mailing list</span>
+todo
 
 ----
 

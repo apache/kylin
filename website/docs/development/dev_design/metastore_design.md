@@ -5,7 +5,7 @@ sidebar_label: Metastore Design of Kylin 5
 pagination_label: Metastore Design of Kylin 5
 toc_min_heading_level: 2
 toc_max_heading_level: 6
-pagination_prev: null
+pagination_prev: development/how_to_understand_kylin_design
 pagination_next: null
 showLastUpdateAuthor: true
 showLastUpdateTime: true
@@ -28,15 +28,15 @@ last_update:
 
 #### Core Class and Interface
 
-| Class                       | Comment                                            |
-|-----------------------------|----------------------------------------------------|
-| ResourceStore               | 用于管理内存中对元数据的操作                                     |
-| InMemResourceStore          | ResourceStore 的实现类, 用于绝大部分情况                       |
-| ThreadViewResourceStore     | ResourceStore 的实现类, 作为一个沙盒式的 ResourceStore, 在事务中使用 |
-| MetadataStore               | 用于管理元数据持久化的操作                                      |
-| AuditLogStore               | 用于节点间元数据同步, 以及诊断元数据异常情况                            |
-| Epoch                       | 用于保证同时只有一个进程对指定项目下的元数据进行修改操作, 或者提交作业               |
-| EpochStore                  | 用于持久化 Epoch                                        |
+| Class                   | Comment                                            |
+|-------------------------|----------------------------------------------------|
+| ResourceStore           | 用于管理内存中对元数据的操作                                     |
+| InMemResourceStore      | ResourceStore 的实现类, 用于绝大部分情况                       |
+| ThreadViewResourceStore | ResourceStore 的实现类, 作为一个沙盒式的 ResourceStore, 在事务中使用 |
+| MetadataStore           | 用于管理元数据持久化的操作                                      |
+| AuditLogStore           | 用于节点间元数据同步, 以及诊断元数据异常情况                            |
+| Epoch                   | 用于保证同时只有一个进程对指定项目下的元数据进行修改操作, 或者提交作业               |
+| EpochStore              | 用于持久化 Epoch                                        |
 
 
 ### Question and Answer
@@ -58,7 +58,7 @@ Follower 同步元数据变更，通过两个方式，代码在 AuditLogReplayWo
 
 按照设计，Follower 元数据的 delay 在 1-2s 左右(被动广播同步)，最多 5s(主动定期同步).
 
-#### 4. How to read meta from metastore？
+#### 4. How ResourceStore was inited when Kylin started?
 todo
 
 #### 5. As a kylin developer, how should I write my code to update metadata?
@@ -113,13 +113,25 @@ class SomeService {
 3. 两个事务写的时候别复用同一个对象, 以避免元数据更新时, MVCC 检查失败
 ::: 
 
-#### 6. AuditLog replay and clean
+#### 6. What is Epoch and how do Epoch works? 
 
-todo
+1. 什么是 Epoch?
+    
+  `Epoch` 是全局级别的, 项目粒度的元数据写锁, 用于确保同一时刻只有一个进程会修改指定项目下的元数据.
 
-#### 7. Metadata dumped logic
+2. 什么样的进程可以获取 Epoch?
 
-todo
+  Job 和 All, Query 不可以获得 Epoch, Query 节点被设计为不需要提交任务或者是修改元数据.
+
+3. Epoch 如何管理?
+   
+
+相关类
+- EpochOrchestrator
+- EpochOrchestrator.EpochChecker
+- EpochOrchestrator.EpochRenewer
+- EpochManager
+- EpochChangedListener
 
 ### <span id="metadata_write">Diagram of write a piece of meta </span>
 

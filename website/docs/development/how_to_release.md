@@ -6,7 +6,7 @@ pagination_label: How to release
 toc_min_heading_level: 2
 toc_max_heading_level: 6
 pagination_prev: development/how_to_package
-pagination_next: null
+pagination_next: development/how_to_understand_kylin_design
 showLastUpdateAuthor: true
 showLastUpdateTime: true
 keywords:
