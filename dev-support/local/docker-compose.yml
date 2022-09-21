@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+
+  zookeeper:
+    image: zookeeper:3.6
+    container_name: zookeeper
+    hostname: zookeeper
+    networks:
+      - local
+    ports:
+      - 2181:2181
+
+
+# 2181 -> zk
+networks:
+  local:

@@ -18,6 +18,9 @@
 package org.apache.kylin.rest;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -25,6 +28,7 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.TimeZoneUtils;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.source.jdbc.H2Database;
 import org.apache.kylin.tool.kerberos.KerberosLoginTask;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
@@ -130,5 +134,14 @@ public class KylinPrepareEnvListener implements EnvironmentPostProcessor, Ordere
         Unsafe.setProperty("kylin.query.pushdown.jdbc.driver", "org.h2.Driver");
         Unsafe.setProperty("kylin.query.pushdown.jdbc.username", "sa");
         Unsafe.setProperty("kylin.query.pushdown.jdbc.password", "");
+
+        // Load H2 Tables (inner join) for pushdown to rdbms in local debug mode
+        try {
+            Connection h2Connection = DriverManager.getConnection("jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1", "sa", "");
+            H2Database h2DB = new H2Database(h2Connection, KylinConfig.getInstanceFromEnv(), "default");
+            h2DB.loadAllTables();
+        } catch (SQLException ex) {
+            log.error(ex.getMessage(), ex);
+        }
     }
 }

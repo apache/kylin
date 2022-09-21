@@ -313,16 +313,16 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         Mockito.when(executableDao.getJobs(Mockito.anyLong(), Mockito.anyLong())).thenReturn(mockJobs);
         {
             List<String> jobNames = Lists.newArrayList();
-            JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "", "default", "total_duration",
+            JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "", "default", "duration",
                     true);
             List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
 
-            val totalDurationArrays = jobs.stream().map(ExecutableResponse::getTotalDuration)
+            val durationArrays = jobs.stream().map(ExecutableResponse::getTotalDuration)
                     .collect(Collectors.toList());
-            List<Long> copyDurationList = new ArrayList<>(totalDurationArrays);
+            List<Long> copyDurationList = new ArrayList<>(durationArrays);
             copyDurationList.sort(Collections.reverseOrder());
             Assert.assertEquals(3, copyDurationList.size());
-            Assert.assertEquals(totalDurationArrays, copyDurationList);
+            Assert.assertEquals(durationArrays, copyDurationList);
         }
 
         for (int i = 0; i < 3; i++) {

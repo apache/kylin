@@ -1,0 +1,23 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration name="BootstrapServer[Local]" type="Application" factoryName="Application">
+    <module name="kylin-server" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.apache.kylin.rest.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
+    <option name="MAIN_CLASS_NAME" value="org.apache.kylin.rest.BootstrapServer" />
+    <option name="VM_PARAMETERS" value="-Xms1g -Xmx6g -Dspark.local=true -Dcalcite.debug=true" />
+    <option name="PROGRAM_PARAMETERS" value="--kylin.env.zookeeper-connect-string=localhost:2181 --kylin.server.mode=all" />
+    <option name="WORKING_DIRECTORY" value="file://%MODULE_WORKING_DIR%" />
+    <envs>
+      <env name="KYLIN_HOME" value="$PROJECT_DIR" />
+      <env name="SPARK_HOME" value="$PROJECT_DIR/build/spark" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
