@@ -1,0 +1,44 @@
+@startuml
+
+' avoid problems with angled crows feet
+skinparam linetype ortho
+
+entity "Epoch" as epoch {
+  EPOCH_ID : int // 标识第几次纪元, 每次续约或者抢占都会自增, 从 0 开始
+  * EPOCH_TARGET : varchar // <UNIQUE KEY> 竞争单元
+  --
+  CURRENT_EPOCH_OWNER : varchar  // Kylin 进程地址, 通常是 IP:PORT|START_TIME_TS
+  LAST_EPOCH_RENEW_TIME : bigint // EPOCH 需要定期续约, 可以通过这个字段确定 Epoch 是否过期
+  SERVER_MODE : varchar // Kylin 节点角色
+  MAINTENANCE_MODE_REASON : varchar // 不重要
+  MVCC : bigint // 避免写冲突
+
+  // 竞争单元, 通常是项目单元(元数据变更或者提交作业),
+  // 除此以外还有一个全局的 Epoch(执行全局定时任务（垃圾清理、索引优化），更新 user、acl 等元数据)
+}
+
+entity "AuditLog" as audit {
+  * ID : bigint <auto_increment primary key>
+  ----
+  AUDIT_LOG_TABLE_KEY : varchar
+  AUDIT_LOG_TABLE_CONTENT : longblob
+  AUDIT_LOG_TABLE_TS : bigint
+  AUDIT_LOG_TABLE_MVCC : bigint
+  UNIT_ID : varchar // 事务标识
+  OPERATOR : varchar // 操作者账号
+  INSTANCE : varchar // Kylin 的节点和端口
+}
+
+
+entity "Metadata" as meta {
+  * META_TABLE_KEY : varchar <primary key> // 元数据的键, 例如: learn_kylin/table/SSB.PART.json
+  ----
+  META_TABLE_CONTENT : longblob // 元数据的值(内容), 内容为 Json 格式, 和 RootPersistentEntity 对应
+  META_TABLE_TS : bigint // 这行数据最后的修改时间
+  META_TABLE_MVCC : bigint // 这行数据被修改的次数，mvcc 就是 Multi-Version Concurrency Control
+}
+
+
+meta }|-- audit : META_TABLE_KEY-AUDIT_LOG_TABLE_KEY
+
+@enduml
