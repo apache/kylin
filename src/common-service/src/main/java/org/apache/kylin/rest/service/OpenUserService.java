@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
@@ -33,10 +34,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 public abstract class OpenUserService implements UserService {
 
     @Override
-    public abstract List<ManagedUser> listUsers();
+    public abstract List<ManagedUser> listUsers() throws IOException;
 
     @Override
-    public abstract List<String> listAdminUsers();
+    public abstract List<String> listAdminUsers() throws IOException;
 
     @Override
     public void createUser(UserDetails userDetails) {
