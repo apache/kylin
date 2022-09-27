@@ -36,6 +36,13 @@ import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.optimization.FrequencyMap;
+import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.favorite.AbstractAsyncTask;
+import org.apache.kylin.metadata.favorite.AccelerateRuleUtil;
+import org.apache.kylin.metadata.favorite.AsyncAccelerationTask;
+import org.apache.kylin.metadata.favorite.AsyncTaskManager;
+import org.apache.kylin.metadata.favorite.QueryHistoryIdOffset;
+import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
@@ -53,13 +60,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
-import org.apache.kylin.metadata.favorite.AbstractAsyncTask;
-import org.apache.kylin.metadata.favorite.AccelerateRuleUtil;
-import org.apache.kylin.metadata.favorite.AsyncAccelerationTask;
-import org.apache.kylin.metadata.favorite.AsyncTaskManager;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffset;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
 import lombok.Data;
 import lombok.Getter;
 import lombok.val;
@@ -254,7 +254,7 @@ public class QueryHistoryTaskScheduler {
                 }
                 val snapshotsInRealization = queryHistory.getQueryHistoryInfo().getQuerySnapshots();
                 for (val snapshots : snapshotsInRealization) {
-                    snapshots.stream().forEach(tableIdentify -> {
+                    snapshots.forEach(tableIdentify -> {
                         results.merge(tableManager.getOrCreateTableExt(tableIdentify), 1, Integer::sum);
                     });
                 }
@@ -305,6 +305,9 @@ public class QueryHistoryTaskScheduler {
             for (Map.Entry<String, Long> entry : modelsLastQueryTime.entrySet()) {
                 String dataflowId = entry.getKey();
                 Long lastQueryTime = entry.getValue();
+                if (dfManager.getDataflow(dataflowId) == null) {
+                    continue;
+                }
                 dfManager.updateDataflow(dataflowId, copyForWrite -> copyForWrite.setLastQueryTime(lastQueryTime));
             }
         }
