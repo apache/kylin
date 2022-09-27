@@ -32,8 +32,6 @@ import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPRel;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.query.engine.exec.ExecuteResult;
@@ -43,6 +41,8 @@ import org.apache.kylin.query.engine.meta.SimpleDataContext;
 import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.relnode.KapContext;
 import org.apache.kylin.query.relnode.KapRel;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OLAPRel;
 import org.apache.kylin.query.runtime.SparkEngine;
 import org.apache.kylin.query.util.QueryContextCutter;
 import org.apache.spark.SparkException;
@@ -77,7 +77,7 @@ public class SparderQueryPlanExec implements QueryPlanExec {
                 || KapConfig.wrap(((SimpleDataContext) dataContext).getKylinConfig()).runConstantQueryLocally()) {
             val contexts = ContextUtil.listContexts();
             for (OLAPContext context : contexts) {
-                if (context.olapSchema != null && context.storageContext.isEmptyLayout()) {
+                if (context.olapSchema != null && context.storageContext.isEmptyLayout() && !context.isHasAgg()) {
                     QueryContext.fillEmptyResultSetMetrics();
                     return new ExecuteResult(Lists.newArrayList(), 0);
                 }
@@ -134,7 +134,7 @@ public class SparderQueryPlanExec implements QueryPlanExec {
                 QueryContext.current().getSecondStorageUsageMap().clear();
             } else if (e instanceof SQLException) {
                 handleForceToTieredStorage(e);
-            }else {
+            } else {
                 return ExceptionUtils.rethrow(e);
             }
         }
@@ -186,7 +186,7 @@ public class SparderQueryPlanExec implements QueryPlanExec {
     }
 
     private void handleForceToTieredStorage(final Exception e) {
-        if (e.getMessage().equals(QueryContext.ROUTE_USE_FORCEDTOTIEREDSTORAGE)){
+        if (e.getMessage().equals(QueryContext.ROUTE_USE_FORCEDTOTIEREDSTORAGE)) {
             ForceToTieredStorage forcedToTieredStorage = QueryContext.current().getForcedToTieredStorage();
             boolean forceTableIndex = QueryContext.current().isForceTableIndex();
             QueryContext.current().setLastFailed(true);
