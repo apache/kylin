@@ -80,9 +80,9 @@ public abstract class AbstractTestCase {
     /** Clear system property in test method with annotation {@link org.junit.Test} */
     public final void restoreSystemProp(String property) {
         if (!METHOD_PROPERTY_MAP.containsKey(property) || METHOD_PROPERTY_MAP.get(property) == null) {
-            System.clearProperty(property);
+            KylinConfigBase.clearSystemProperty(property);
         } else {
-            System.setProperty(property, METHOD_PROPERTY_MAP.get(property));
+            KylinConfigBase.setSystemProperty(property, METHOD_PROPERTY_MAP.get(property));
         }
         METHOD_PROPERTY_MAP.remove(property);
     }
