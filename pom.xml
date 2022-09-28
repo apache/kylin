@@ -15,15 +15,14 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
--->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+--><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
     <version>19</version>
-    <relativePath />
+    <relativePath/>
     <!-- no parent resolution -->
   </parent>
 
@@ -97,7 +96,7 @@
 
     <!-- Calcite Version, the kylin fork is: https://github.com/Kyligence/calcite -->
     <calcite.version>1.16.0-kylin-r5</calcite.version>
-    <avatica.version>1.12.0</avatica.version>
+    <avatica.version>1.22.0</avatica.version>
 
     <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
     <zookeeper.version>3.4.13</zookeeper.version>
@@ -1872,7 +1871,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <ignore />
+                        <ignore/>
                       </action>
                     </pluginExecution>
                   </pluginExecutions>
