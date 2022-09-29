@@ -133,7 +133,6 @@ public class HybridRealization implements IRealization {
     public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
             List<NDataSegment> prunedStreamingSegments, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
         CapabilityResult result = new CapabilityResult();
-        result.cost = Integer.MAX_VALUE;
 
         resolveSegmentsOverlap(prunedStreamingSegments);
         for (IRealization realization : getRealizations()) {
