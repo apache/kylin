@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -100,6 +101,31 @@ public class CandidateSortTest {
             val model3 = mockCandidate("model0003", "modelC", 4, 4);
             sort(model1, model2, model3).assertFirst(model1);
         }
+
+        {
+            val model1 = mockCandidate("model0001", "modelA", 1, 1);
+            val model2 = mockEmptyCandidate("model0002", "modelB", 1);
+            sort(model1, model2).assertFirst(model1);
+        }
+
+        {
+            val model1 = mockStreamingCandidate("model0001", "modelA", 1, 1);
+            val model2 = mockEmptyCandidate("model0002", "modelB", 1);
+            sort(model1, model2).assertFirst(model1);
+        }
+
+        {
+            val model1 = mockHybridCandidate("model0001", "modelA", 1, 1, 2);
+            val model2 = mockEmptyCandidate("model0002", "modelB", 1);
+            sort(model1, model2).assertFirst(model1);
+        }
+
+        {
+            val model1 = mockCandidate("model0001", "modelA", 1, 3);
+            val model2 = mockStreamingCandidate("model0002", "modelB", 1, 2);
+            val model3 = mockHybridCandidate("model0003", "modelC", 1, 4, 2);
+            sort(model1, model2, model3).assertFirst(model2);
+        }
     }
 
     private interface SortedCandidate {
@@ -120,6 +146,39 @@ public class CandidateSortTest {
         candidate.realization = mockRealization(modelId, modelName, modelCost);
         val cap = new CapabilityResult();
         cap.setSelectedCandidate(() -> candidateCost);
+        cap.cost = (int) cap.getSelectedCandidate().getCost();
+        candidate.setCapability(cap);
+        return candidate;
+    }
+
+    private Candidate mockStreamingCandidate(String modelId, String modelName, int modelCost, double candidateCost) {
+        val candidate = new Candidate();
+        candidate.realization = mockRealization(modelId, modelName, modelCost);
+        val cap = new CapabilityResult();
+        cap.setSelectedStreamingCandidate(() -> candidateCost);
+        cap.cost = (int) cap.getSelectedStreamingCandidate().getCost();
+        candidate.setCapability(cap);
+        return candidate;
+    }
+
+    private Candidate mockHybridCandidate(String modelId, String modelName, int modelCost, double candidateCost,
+            double streamingCandidateCost) {
+        val candidate = new Candidate();
+        candidate.realization = mockRealization(modelId, modelName, modelCost);
+        val cap = new CapabilityResult();
+        cap.setSelectedCandidate(() -> candidateCost);
+        cap.setSelectedStreamingCandidate(() -> streamingCandidateCost);
+        cap.cost = (int) Math.min(cap.getSelectedCandidate().getCost(), cap.getSelectedStreamingCandidate().getCost());
+        candidate.setCapability(cap);
+        return candidate;
+    }
+
+    private Candidate mockEmptyCandidate(String modelId, String modelName, int modelCost) {
+        val candidate = new Candidate();
+        candidate.realization = mockRealization(modelId, modelName, modelCost);
+        val cap = new CapabilityResult();
+        cap.setSelectedCandidate(NLayoutCandidate.EMPTY);
+        cap.setSelectedStreamingCandidate(NLayoutCandidate.EMPTY);
         candidate.setCapability(cap);
         return candidate;
     }
