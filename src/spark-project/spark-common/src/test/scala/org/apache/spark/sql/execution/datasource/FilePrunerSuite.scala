@@ -18,10 +18,13 @@
 
 package org.apache.spark.sql.execution.datasource
 
+import io.kyligence.kap.guava20.shaded.common.collect.Sets
 import org.apache.kylin.common.exception.TargetSegmentNotFoundException
 import org.apache.kylin.metadata.cube.model.{NDataSegment, NDataflow}
 import org.apache.kylin.metadata.model.{SegmentStatusEnum, Segments}
 import org.apache.spark.sql.common.SparderBaseFunSuite
+
+import scala.collection.JavaConverters._
 
 class FilePrunerSuite extends SparderBaseFunSuite {
 
@@ -37,12 +40,9 @@ class FilePrunerSuite extends SparderBaseFunSuite {
     val segDir1 = SegmentDirectory("1", List.empty[Long], null)
     val segDir2 = SegmentDirectory("2", List.empty[Long], null)
 
-    val segDirSeq1 = Seq(segDir1)
-    FilePruner.checkSegmentStatus(segDirSeq1, mockDataFlow)
-
-    val segDirSeq2 = Seq(segDir1, segDir2)
+    FilePruner.checkSegmentStatus(Sets.newHashSet(Seq(segDir1).map(_.segmentID).asJavaCollection), mockDataFlow)
     val catchEx = intercept[TargetSegmentNotFoundException] {
-      FilePruner.checkSegmentStatus(segDirSeq2, mockDataFlow)
+      FilePruner.checkSegmentStatus(Sets.newHashSet(Seq(segDir1, segDir2).map(_.segmentID).asJavaCollection), mockDataFlow)
     }
     assert(catchEx.getMessage.equals("Cannot find target segment, and missing segment id: 2;"))
   }

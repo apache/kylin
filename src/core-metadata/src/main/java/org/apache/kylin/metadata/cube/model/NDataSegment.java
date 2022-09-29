@@ -34,12 +34,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TimeRange;
-import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.util.MultiPartitionUtil;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -303,7 +303,7 @@ public class NDataSegment implements ISegment, Serializable {
         return getLayoutInfo().isAlreadyBuilt(layoutId);
     }
 
-    private LayoutInfo getLayoutInfo() {
+    public LayoutInfo getLayoutInfo() {
         if (layoutInfo == null) {
             synchronized (this) {
                 if (layoutInfo == null) {
