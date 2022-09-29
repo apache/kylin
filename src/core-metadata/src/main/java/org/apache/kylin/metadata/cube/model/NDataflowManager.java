@@ -22,8 +22,8 @@ import static java.util.stream.Collectors.groupingBy;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_MERGE_CHECK_INDEX_ILLEGAL;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_MERGE_CHECK_PARTITION_ILLEGAL;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_MERGE_CONTAINS_GAPS;
-import static org.apache.kylin.metadata.realization.RealizationStatusEnum.ONLINE;
 import static org.apache.kylin.common.util.SegmentMergeStorageChecker.checkMergeSegmentThreshold;
+import static org.apache.kylin.metadata.realization.RealizationStatusEnum.ONLINE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,28 +41,28 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
+import org.apache.kylin.metadata.model.ManagementType;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TimeRange;
+import org.apache.kylin.metadata.model.util.scd2.SCD2CondChecker;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.IRealizationProvider;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.metadata.model.ManagementType;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
-import org.apache.kylin.metadata.model.util.scd2.SCD2CondChecker;
-import org.apache.kylin.metadata.project.NProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -258,10 +258,7 @@ public class NDataflowManager implements IRealizationProvider {
     }
 
     public NDataflow getDataflow(String id) {
-        if (StringUtils.isEmpty(id)) {
-            return null;
-        }
-        return crud.get(id);
+        return getDataflow(id, false);
     }
 
     public NDataflow getDataflowByModelAlias(String name) {
@@ -872,6 +869,40 @@ public class NDataflowManager implements IRealizationProvider {
         boolean isOfflineScdModel = SCD2CondChecker.INSTANCE.isScd2Model(df.getModel())
                 && !config.isQueryNonEquiJoinModelEnabled();
         return offlineManually || isOfflineMultiPartitionModel || isOfflineScdModel;
+    }
+
+    /**
+     * get dataflow choose whether init all Segment LayoutInfo.
+     * Segment LayoutInfo is lazy load, It can be loaded immediately if needed.
+     */
+    public NDataflow getDataflow(String id, boolean loadSegLayoutInfo) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        NDataflow dataflow = crud.get(id);
+        if (!loadSegLayoutInfo) {
+            return dataflow;
+        }
+        dataflow.initAllSegLayoutInfo();
+        return dataflow;
+    }
+
+    /**
+     * get dataflow and init specified Segment LayoutInfo.
+     */
+    public NDataflow getDataflow(String id, Set<String> segmentIds) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        NDataflow dataflow = getDataflow(id, false);
+        if (CollectionUtils.isEmpty(segmentIds)) {
+            return dataflow;
+        }
+        if (Objects.isNull(dataflow)) {
+            return null;
+        }
+        dataflow.initSegLayoutInfoById(segmentIds);
+        return dataflow;
     }
 
 }

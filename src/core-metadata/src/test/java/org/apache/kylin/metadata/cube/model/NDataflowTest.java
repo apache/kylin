@@ -20,19 +20,22 @@ package org.apache.kylin.metadata.cube.model;
 
 import java.io.IOException;
 
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import lombok.val;
 import lombok.var;
 
 public class NDataflowTest extends NLocalFileMetadataTestCase {
-    private String projectDefault = "default";
+    private final String projectDefault = "default";
+    private final String projectStreaming = "streaming_test";
 
     @Before
     public void setUp() throws Exception {
@@ -76,9 +79,8 @@ public class NDataflowTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(indexPlanConfig.base(), config.base());
         Assert.assertEquals(2, config.getExtendedOverrides().size());
 
-        indexPlanManager.updateIndexPlan("89af4ee2-2cdb-4b07-b39e-4c29856309aa", copyForWrite -> {
-            copyForWrite.getOverrideProps().put("test", "test");
-        });
+        indexPlanManager.updateIndexPlan("89af4ee2-2cdb-4b07-b39e-4c29856309aa",
+                copyForWrite -> copyForWrite.getOverrideProps().put("test", "test"));
 
         config = df.getConfig();
         Assert.assertEquals(indexPlanConfig.base(), config.base());
@@ -103,7 +105,7 @@ public class NDataflowTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testCollectPrecalculationResource_Streaming() {
-        val dsMgr = NDataflowManager.getInstance(getTestConfig(), "streaming_test");
+        val dsMgr = NDataflowManager.getInstance(getTestConfig(), projectStreaming);
         val df = dsMgr.getDataflow("4965c827-fbb4-4ea1-a744-3f341a3b030d");
         val strings = df.collectPrecalculationResource();
         Assert.assertEquals(7, strings.size());
@@ -122,4 +124,81 @@ public class NDataflowTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(
                 strings.stream().anyMatch(path -> path.startsWith("/streaming_test/kafka/DEFAULT.SSB_STREAMING.json")));
     }
+
+    @Test
+    public void testGetDataflow() {
+        val dsMgr = NDataflowManager.getInstance(getTestConfig(), projectStreaming);
+        {
+            val df = dsMgr.getDataflow(null);
+            Assert.assertNull(df);
+        }
+
+        {
+            val df = dsMgr.getDataflow("4965c827-fbb4-4ea1-a744-3f341a3b030d");
+            Assert.assertNotNull(df);
+        }
+
+        {
+            val df = dsMgr.getDataflow("4965c827-fbb4-4ea1-a744-3f341a3b030d-AAA", Sets.newHashSet("1"));
+            Assert.assertNull(df);
+        }
+
+        {
+            val df = dsMgr.getDataflow(null, Sets.newHashSet("1"));
+            Assert.assertNull(df);
+        }
+    }
+
+    @Test
+    public void testLazyLoadSegmentDetail() {
+        val fieldName = "layoutInfo";
+        val dsMgr = NDataflowManager.getInstance(getTestConfig(), projectStreaming);
+        val df = dsMgr.getDataflow("4965c827-fbb4-4ea1-a744-3f341a3b030d");
+
+        df.getSegments().forEach(segment -> {
+            // lazy init Segment LayoutInfo, it is null
+            Object layoutInfoBefore = ReflectionTestUtils.getField(segment, fieldName);
+            Assert.assertNull(layoutInfoBefore);
+
+            // init Segment LayoutInfo, it is not null
+            segment.getLayoutInfo();
+            Object layoutInfoAfter = ReflectionTestUtils.getField(segment, fieldName);
+            Assert.assertNotNull(layoutInfoAfter);
+        });
+    }
+
+    @Test
+    public void testLoadSegmentDetail() {
+        val dsMgr = NDataflowManager.getInstance(getTestConfig(), projectStreaming);
+        // init Segment LayoutInfo right now
+        val df = dsMgr.getDataflow("4965c827-fbb4-4ea1-a744-3f341a3b030d", true);
+        df.getSegments().forEach(segment -> {
+            val layoutInfoAfter = ReflectionTestUtils.getField(segment, "layoutInfo");
+            Assert.assertNotNull(layoutInfoAfter);
+        });
+    }
+
+    @Test
+    public void testLoadSpecifiedSegmentDetail() {
+        val dataflowId = "4965c827-fbb4-4ea1-a744-3f341a3b030d";
+        val segmentId = "3e560d22-b749-48c3-9f64-d4230207f120";
+        val fieldName = "layoutInfo";
+
+        val dsMgr = NDataflowManager.getInstance(getTestConfig(), projectStreaming);
+        {
+            val df = dsMgr.getDataflow(dataflowId, Sets.newHashSet());
+            val segment = df.getSegment(segmentId);
+            val layoutInfo = ReflectionTestUtils.getField(segment, fieldName);
+            Assert.assertNull(layoutInfo);
+        }
+
+        {
+            // init Specified Segment LayoutInfo
+            val df = dsMgr.getDataflow(dataflowId, Sets.newHashSet(segmentId));
+            val segmentAfter = df.getSegment(segmentId);
+            val layoutInfo = ReflectionTestUtils.getField(segmentAfter, fieldName);
+            Assert.assertNotNull(layoutInfo);
+        }
+    }
+
 }
