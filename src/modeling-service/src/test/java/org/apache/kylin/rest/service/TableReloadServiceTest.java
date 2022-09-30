@@ -226,6 +226,20 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         Assert.assertEquals("BIGINT", model.getComputedColumnDescs().get(0).getDatatype());
     }
 
+    @Test
+    public void testPreProcess_UseCaseSensitiveTableIdentity() throws Exception {
+        NTableMetadataManager manager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
+        TableDesc tableDesc = manager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
+        Assert.assertNotNull(tableDesc);
+        val response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT, "DEFAULT.TEST_KYLIN_FAct", false);
+        Assert.assertFalse(response.isHasDatasourceChanged());
+
+        // test table identity is null
+        thrown.expect(NullPointerException.class);
+        thrown.expectMessage("table identity can not be null");
+        tableService.preProcessBeforeReloadWithoutFailFast(PROJECT, null, false);
+    }
+
     private void dropModelWhen(Predicate<String> predicate) {
         modelService.listAllModelIdsInProject(PROJECT).stream().filter(predicate)
                 .forEach(id -> modelService.innerDropModel(id, PROJECT));
