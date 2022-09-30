@@ -1072,9 +1072,9 @@ public class TableService extends BasicService {
 
     public OpenPreReloadTableResponse preProcessBeforeReloadWithoutFailFast(String project, String tableIdentity,
             boolean needDetails) throws Exception {
+        Preconditions.checkNotNull(tableIdentity, "table identity can not be null");
         aclEvaluate.checkProjectWritePermission(project);
-
-        val context = calcReloadContext(project, tableIdentity, false);
+        val context = calcReloadContext(project, tableIdentity.toUpperCase(Locale.ROOT), false);
         removeFusionModelBatchPart(project, context);
         PreReloadTableResponse preReloadTableResponse = preProcessBeforeReloadWithContext(project, context, needDetails);
 
