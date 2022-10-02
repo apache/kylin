@@ -16,9 +16,15 @@ last_update:
     author: Tengting Xu, Xiaoxiang Yu
 ---
 
-Apache Kylin is always looking for contributions of not only code, but also user document, [performance report](https://cwiki.apache.org/confluence/display/KYLIN/Performance+Benchmark+Report+of+Kylin+4.0.0+vs+Kylin3.1.2+on+Hadoop), 
-[Q&A](https://cwiki.apache.org/confluence/display/KYLIN/FAQ+Kylin+4.X) etc. All kinds of contributions pave the way towards a [Apache Committer](https://www.apache.org/foundation/how-it-works.html#committers). 
-There is opportunity for [newcomers](https://community.apache.org/newcomers/index.html), especially for those come from analysis and solution background, due to the lacking of content from user and solution perspective.
+Apache Kylin is always looking for all kinds of contributions, including not only code, but also documents, testings, [performance reports](https://cwiki.apache.org/confluence/display/KYLIN/Performance+Benchmark+Report+of+Kylin+4.0.0+vs+Kylin3.1.2+on+Hadoop), 
+release management, team coordination, success reference, etc. All of them pave the way towards a [Apache Committer](https://www.apache.org/foundation/how-it-works.html#committers). 
+
+Especially, we appreciate contents from a business and analysis perspective, like analysis best practices and success production scenarios. Technology is only useful when it has an impact to the real world. These contents are greatly helpful to users who are new to the community, however is often overlooked by technical developers.
+
+:::info User story wanted
+Please refer to [how to write document](./how_to_write_doc) if you want to contribute business or analysis content. Highly appreciated~
+:::
+
 
 ### <span id="branch_table">Source Branches</span>
 Both code and document are under Git source control. Note the purpose of different branches.
@@ -35,119 +41,152 @@ Both code and document are under Git source control. Note the purpose of differe
 
 ## Guide for Contributor 
 
-:::info 
-Want to know what do different role(like contributor, committer and PMC member) means in ASF? Check this for [official explanation](https://www.apache.org/foundation/how-it-works.html#roles) .
+:::note How we collaborate?
+Like all ASF projects, Apache Kylin follows [the apache way](https://www.apache.org/foundation/how-it-works) for distributed collaboration around the world.
 :::
 
-### Overall steps
-1. [Fork Kylin Repo to your repository](#fork_repo) (https://github.com/apache/kylin).
-2. [Clone the fork repo to your local](#clone_repo).
-3. [Create a new development branch locally](#create_branch).
-4. [Setup development environment](how_to_debug_kylin_in_ide.md)
-5. [Pick or Create a JIRA](#open_issue), describe the feature/enhancement/bug.
-6. [Discuss with others in mailing list](#discuss_proposal) or issue comments, make sure the proposed changes fit in with what others are doing and have planned for the project.
-7. Make code changes in your development branch
-   - [ ] No strict code style at the moment, but the general rule is keep consistent with existing files. E.g. use 4-space indent for java files.
-   - [ ] Add test case for your code change as much as possible.
-   - [ ] Make sure [Run tests](how_to_test.md) can get success, this will ensure your change is in good quality and does not break anything.
-8. Read [Code Review Guidelines](#CodeReviewGuideline) and check if your code does **adhere to the guidelines**, you may be asked to redo some work later if you forgot them.
-9. [Create a pull request](#open_pull_request) for you code change.
-10. If you need to update doc, please check out [How to Write Document](./how_to_write_doc) for help.
+For new comers, please read about [the project management](https://www.apache.org/foundation/how-it-works.html#management) and [the different roles](https://www.apache.org/foundation/how-it-works.html#roles), to get a quick understanding on the basics.
 
-### Detailed Description
+### Overview of code contribution
 
-#### <span id="fork_repo">Step 1: Fork Apache Kylin Repo</span> 
-Visit https://github.com/apache/kylin in your browser, and click the **Fork** button.
-![](images/fork_github_repo.png)
+The overview is followed by step-by-step instructions.
 
-#### <span id="clone_repo">Step 2: Clone the fork repo</span>
-```shell
-git clone https://github.com/<YourUserName>/kylin.git 
-```
+1. Setup a development environment
+2. Pick or create a new JIRA task
+3. [Community over code!](http://theapacheway.com/community-over-code/) Discuss your plan with others
+4. Make code changes and create a pull request
+5. Do code review with a reviewer
+6. Make related document changes following [how to write document](./how_to_write_doc).
 
-#### <span id="create_branch">Step 3: Create a new development branch</span>
+### Step 1. Setup a development environment
+1. Visit the https://github.com/apache/kylin and click the **Fork** button.
+   ![](images/fork_github_repo.png)
+2. Clone the fork repo to local
+   ```shell
+   cd /path/you/prefer
+   git clone https://github.com/<YourUserName>/kylin.git 
+   ```
+3. Create a new development branch
 
-The **base_branch** is determined by which version of Kylin you want to work on and [branches table](#branch_table). For better understanding of Git operations, please check [Contributing to a Project](https://www.git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project).
-```shell
-## check out to base branch you want to work on
-git checkout <base_branch>
+   The **base_branch** is determined by which version of Kylin you want to work on and [branches table](#branch_table).
 
-## create a development branch based on base branch
-git checkout -b <development_branch>
-```
+   ```shell
+   ## check out to base branch you want to work on
+   git checkout <base_branch>
+   
+   ## create a development branch based on base branch
+   git checkout -b <development_branch>
+   ```
+   
+   For example, if I want to fix some issue for Kylin 5.0.0-alpha, you could execute following command:
+   ```shell
+   git checkout kylin5
+   git checkout -b fix_some_issue
+   ```
 
-For example, if I want to fix some issue for Kylin 5.0.0-alpha, you could execute following command:
-```shell
-git checkout kylin5
-git checkout -b fix_some_issue
-```
+   For better understanding of Git operations, please check [Contributing to a Project](https://www.git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project).
 
-#### <span id="open_issue">Step 5: Pick or create a task</span>
-There are open tasks waiting to be done, tracked by [KYLIN JIRA](http://issues.apache.org/jira/browse/KYLIN).
+4. Read more about [how to setup an IDE](./how_to_debug_kylin_in_ide).
+
+
+### Step 2. Pick or create a new JIRA task
+
+Like other ASF projects, we use [JIRA](http://issues.apache.org/jira/browse/KYLIN) to track tasks for kylin development.
+
+:::caution report a possible vulnerability privately
+For a possible vulnerability, do not use JIRA as making the info public may harm existing users immediately. Please follow the guide to [report possible vulnerability](https://apache.org/security/committers.html#report) in a private manner.
+:::
+
 If you want to create a new JIRA for bug or feature, remember to provide enough information for the community:
 
-* A well **summary** for the problem or feature, like "Failed to read big resource /dict/xxxx at 'Build Dimension Dictionary' Step"
-* A correct **Type** of issue, choose 
-  - _New Feature_ , if you want to develop a brand-new function/feature by yourself
-  - _Improvement_ , if you find a way to improve an existent function/feature
-  - _Bug_ , if you find an existent function not works well as expected
-  - _Wish_ , if you want to a new function/feature and wish it will be developed by someone else
-* **Affected version**: which Kylin you're using.
-* A detailed **description**, which may include:
-  - the environment of this problem occurred
-    - Kylin version
-    - Hadoop/Spark version ...
+* A precise and compact **Summary**
+  - e.g. _Failed to read big resource /dict/xxxx at 'Build Dimension Dictionary' Step_
+* A correct **Type** of issue
+  - _New Feature_ , if you want to develop a new function by yourself
+  - _Improvement_ , if you find a way to improve an existent function
+  - _Bug_ , if you find something not working as expected
+  - _Wish_ , if you want a new function to be provided by others
+* **Affected version**: which version of Kylin this issue is about
+* A detailed **Description**, which may include:
+  - the environment of this problem occurred, OS/Hadoop/Spark versions ...
   - the steps to reproduce the problem
   - the [thread stack](https://issues.apache.org/jira/secure/attachment/13048219/image-2022-08-17-13-17-40-751.png), exception stacktrace or log files (as attachment)
   - the metadata of the model or cube (as attachment)
-  - **Root cause**: For bug reports, provide root cause analysis if it is possible, here is an [example for root cause analysis](https://issues.apache.org/jira/browse/KYLIN-4153).
+  - the root cause analysis if it possible, here is an [example for root cause analysis](https://issues.apache.org/jira/browse/KYLIN-4153)
+* Set the **Assignee** to yourself, if you plan to work on the task
 
+An example of JIRA:
 ![](images/ISSUE_TEMPLATE.png)
 
-:::caution report a possible vulnerability
-For a possible vulnerability, do not use JIRA, please follow the guide https://apache.org/security/committers.html#report .
-:::
+### Step 3. Discuss your plan with others
+Always remember, **[community over code!](http://theapacheway.com/community-over-code/)**
 
-#### <span id="discuss_proposal">Step 6: Discuss your proposal</span>
-Do not forget to discuss in [mailing list](https://www.apache.org/foundation/mailinglists.html) before working on a big task.
-For how to discuss your idea/proposal in mailing list, please check [guide for ask good question](https://infra.apache.org/contrib-email-tips.html#usefulq) and [example for development's proposal](https://lists.apache.org/thread/gtcntp4s8k0fz1d4glospq15sycc599x) .
+Be sure to discuss your idea, plan, design with the community before jumping into coding. Without involving the community, it is just a personal project for you.
 
-:::caution subscribe a mailing list
-1. Before you sending mail to mailing list, please make sure you have subscribed a mailing list. Please [**check this guide**](how_to_subscribe_mailing_list) if you don't know how to subscribe a mailing list.
-2. If you do not [receive the confirmation email](https://www.apache.org/foundation/mailinglists.html#request-confirmation) after sending email to the mail list, the email maybe is shown in your trash mail.
-:::
+Working with community has the following benefits:
+- The knowledge is more important than the code. If no one has the knowledge to maintain the code, the code is dead. Working with community passes on the knowledge, and that keeps the open source alive.
+- For big changes, aligning the architecture and high level designs is critical. Or you may face questions or even rejections when later submitting the code.
+- You may find volunteers who want to or have been working on the same thing. With more helping hands, it usually results better code quality, better testing, and better documentation.
 
-   
-#### <span id="open_pull_request">Step 9: Create a pull request</span>
+In ASF, **community discussions take place in [the mailing lists](https://www.apache.org/foundation/mailinglists.html)**.
+- [How to subscribe to mailing list](how_to_subscribe_mailing_list), check the guide if have not yet.
+  - Note the [the confirmation email](https://www.apache.org/foundation/mailinglists.html#request-confirmation) may show in trash mailbox for some users.
+- For tips and examples on email discussion, here is a [guide about asking good question](https://infra.apache.org/contrib-email-tips.html#usefulq) and here is an [good example of development proposal](https://lists.apache.org/thread/gtcntp4s8k0fz1d4glospq15sycc599x).
 
-* Push your code change to your personal repo
 
-Now you can make changes to the code. Then you need to push it to your remote :
+### Step 4. Make code changes and PR
 
-```shell
-# After making changes to the code ...
-git commit -m "KYLIN-0000 COMMIT SUMMARY"
-git push origin <development_branch>
-```
+A few notes about making code changes:
+* Though no strict code style at the moment, the general rule is keep consistent with existing files. E.g. use 4-space indent for java files.
+* Add test case for your code change is MANDATORY.
+* Make sure [all tests pass](how_to_test.md) before creating the pull request. This will ensure your change is in good quality and does not break others work.
+* Since your code will be reviewed, read the [Code Review Guidelines](#CodeReviewGuideline) in advance. Follow the good design principles before you are asked to do so.
 
-* Click the ___Compare & pull request___ button in browser
+Once code changes are done, you can submit the changes in a new pull request:
 
-Once you push the changes to your repo, the Compare & pull request button will appear in GitHub.
-![](images/how-to-contribute-02.png)
+* Push your code changes into a development branch
 
-* Fill the message and click ___Create pull request___ to open a new pull request.
+  ```shell
+  # After making changes to the code ...
+  git commit -m "KYLIN-XXXX COMMIT SUMMARY"
+  git push <your_fork> <development_branch>
+  ```
 
-:::caution Before you create pull request
-1. Please add a detailed description in the `Proposed changes` of a pull request.
-2. Click the `Types of changes` that you have made.
-3. Check the `Checklist`.
-:::
+* In GitHub, click the ___Compare & pull request___ button to initiate a new pull request.
 
-![](images/how-to-contribute-03.png)
+  ![](images/how-to-contribute-02.png)
+
+* Kylin community requires a PR template. Fill out the info and click ___Create pull request___ to create a new pull request.
+
+  :::info Kylin PR Template
+  Pass on the knowledge, not just the code.
+  1. In the `Proposed changes`, describe the __why__ and __how__ of your change.
+  2. Choose the right `Types of changes` and check the `Checklist`.
+  3. Double check the target branch is correct, or the code cannot merge.
+  :::
+
+  ![](images/how-to-contribute-03.png)
+
+### Step 5. Do code review with a reviewer
+
+A Kylin committer will get notified and review your pull request following the [Code Review Guidelines](#CodeReviewGuideline). You may be contacted through PR or JIRA comments. Or even meeting invitations if the discussion becomes involved.
+
+Please wait patiently while the review takes place. Most committers have their own jobs and can only serve the community in the spare time. Try add a comment in the PR if you want to give it a small push.
+
+When all is set, your pull request will be merged into the target branch by the committer.
+
+
+### Step 6. Make related document changes
+
+Document is as important as code, if you want others to know about a new feature or a critical bug has been resolved. Remember, **[community over code!](http://theapacheway.com/community-over-code/)**
+
+Please follow the [How to write document](./how_to_write_doc) guide to write documents for each bigger code change. And be sure to mention the document change in your code PR, such that reviewer knows you are following the best practices.
+
 
 -----
 
 ## Guide for Reviewer
+
 ### <span id="CodeReviewGuideline">Code Review Guideline</span>
 The reviewer needs to review the patch from the following perspectives:
 
@@ -158,7 +197,7 @@ The reviewer needs to review the patch from the following perspectives:
 * _API compatibility_: the change SHOULD NOT break public API's functionality and behavior; If an old API need be replaced by the new one, print warning message there.
 * _Documentation_: if the Kylin document need be updated together, create another JIRA with "Document" as the component to track. In the document JIRA, attach the doc change patch which is againt the "document" branch.
 
-:::danger Rules must be obeyed
+:::info Rules must be obeyed
 A patch which doesn't comply with the above rules may not get merged.
 :::
 
