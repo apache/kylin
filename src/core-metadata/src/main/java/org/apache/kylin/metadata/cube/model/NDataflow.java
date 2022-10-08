@@ -247,6 +247,10 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
         return getIndexPlan().listAllTblColRefs();
     }
 
+    public Set<Integer> getAllColumnsIndex() {
+        return getIndexPlan().listAllTblColRefsIndex();
+    }
+
     @Override
     public List<TblColRef> getAllDimensions() {
         return Lists.newArrayList(getIndexPlan().getEffectiveDimCols().values());

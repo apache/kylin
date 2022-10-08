@@ -18,11 +18,12 @@
 
 package org.apache.kylin.query.util
 
+import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.ImmutableBitSet
-import org.apache.kylin.query.util.SparderDerivedUtil
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.kylin.metadata.model.DeriveInfo.DeriveType
 import org.apache.kylin.metadata.model.TblColRef
+import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.catalyst.expressions.Literal
@@ -35,8 +36,9 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 // scalastyle:off
-object RuntimeHelper  extends Logging {
+object RuntimeHelper extends Logging {
 
+  final val literalZero = new Column(Literal(0, DataTypes.IntegerType))
   final val literalOne = new Column(Literal(1, DataTypes.IntegerType))
   final val literalTs = new Column(Literal(null, DataTypes.TimestampType))
   final val literalString = new Column(Literal(null, DataTypes.StringType))
@@ -95,6 +97,8 @@ object RuntimeHelper  extends Logging {
       }.toMap
     }
 
+    val projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv)
+      .getProject(derivedUtil.model.getProject)
     // may have multi TopN measures.
     val topNIndexs = sourceSchema.fields.map(_.dataType).zipWithIndex.filter(_._1.isInstanceOf[ArrayType])
     allColumns.indices
@@ -116,6 +120,13 @@ object RuntimeHelper  extends Logging {
               if (hasTopN && topNIndexs.map(_._2).contains(gTInfoIndex)) {
                 // topn measure will be erase when calling inline
                 literalOne.as(s"${factTableName}_${columnName}")
+              } else if (projectInstance.getConfig.useTableIndexAnswerSelectStarEnabled()
+                && gTInfoIndex < 0) {
+                if (column.getColumnDesc.getType.isNumberFamily) {
+                  literalZero.as(s"${factTableName}_${columnName}")
+                } else {
+                  literalString.as(s"${factTableName}_${columnName}")
+                }
               } else if (primaryKey.get(gTInfoIndex)) {
                 //  primary key
                 col(gTInfoNames.apply(gTInfoIndex))
@@ -132,7 +143,7 @@ object RuntimeHelper  extends Logging {
             }
           } else if (deriveMap.contains(index)) {
             deriveMap.apply(index)
-          } else if( DataType.DATETIME_FAMILY.contains(column.getType.getName)) {
+          } else if (DataType.DATETIME_FAMILY.contains(column.getType.getName)) {
             // https://github.com/Kyligence/KAP/issues/14561
             literalTs.as(s"${factTableName}_${columnName}")
           } else if (DataType.STRING_FAMILY.contains(column.getType.getName)) {
