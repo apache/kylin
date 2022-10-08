@@ -18,18 +18,30 @@
 
 package org.apache.kylin.common;
 
-import com.google.common.collect.Maps;
-import io.kyligence.config.core.loader.IExternalConfigLoader;
-import io.kyligence.config.external.loader.NacosExternalConfigLoader;
-import lombok.EqualsAndHashCode;
-
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import io.kyligence.config.core.loader.IExternalConfigLoader;
+import org.apache.kylin.common.util.CompositeMapView;
+
+import com.google.common.collect.Maps;
+
+import io.kyligence.config.external.loader.NacosExternalConfigLoader;
+import lombok.EqualsAndHashCode;
+
+/**
+ * It's mainly for reading by getting property config for some key.
+ * A few functions of hashtable are disabled.
+ * In the future, we should replace the java.util.Properties
+ */
 @EqualsAndHashCode
 public class PropertiesDelegate extends Properties {
 
@@ -39,39 +51,35 @@ public class PropertiesDelegate extends Properties {
     @EqualsAndHashCode.Include
     private final transient IExternalConfigLoader configLoader;
 
+    private final Map delegation;
+
     public PropertiesDelegate(Properties properties, IExternalConfigLoader configLoader) {
-        if(configLoader != null) this.properties.putAll(configLoader.getProperties());
         this.properties.putAll(properties);
         this.configLoader = configLoader;
+        if (configLoader == null) {
+            this.delegation = this.properties;
+        } else if (configLoader instanceof KylinExternalConfigLoader) {
+            this.delegation = new CompositeMapView(((ICachedExternalConfigLoader)this.configLoader).getPropertyEntries(), this.properties);
+        } else if (configLoader instanceof NacosExternalConfigLoader) {
+            this.delegation = new CompositeMapView((this.configLoader).getProperties(), this.properties);
+        } else {
+            throw new IllegalArgumentException(configLoader.getClass() + " is not supported ");
+        }
     }
 
     public void reloadProperties(Properties properties) {
         this.properties.clear();
-        if(configLoader != null) this.properties.putAll(configLoader.getProperties());
         this.properties.putAll(properties);
     }
 
     @Override
     public String getProperty(String key) {
-        String property = (String) this.properties.get(key);
-        if (property == null && this.configLoader != null) {
-            return configLoader.getProperty(key);
-        }
-        return property;
+        return (String) this.get(key);
     }
 
     @Override
     public String getProperty(String key, String defaultValue) {
-        String property = this.getProperty(key);
-        if (property == null) {
-            return defaultValue;
-        }
-        return property;
-    }
-
-    @Override
-    public Object put(Object key, Object value) {
-        return this.properties.put(key, value);
+        return (String) this.getOrDefault(key, defaultValue);
     }
 
     @Override
@@ -80,18 +88,102 @@ public class PropertiesDelegate extends Properties {
     }
 
     @Override
-    public Set<Map.Entry<Object, Object>> entrySet() {
-        return getAllProperties().entrySet();
+    public Enumeration<Object> keys() {
+        return Collections.enumeration(delegation.keySet());
     }
 
+    @Override
+    public Enumeration<Object> elements() {
+        return Collections.enumeration(delegation.values());
+    }
+
+    @Override
+    public boolean contains(Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * It's not accurate since overridden keys will be counted multiple times
+     */
     @Override
     public int size() {
-        return getAllProperties().size();
+        return delegation.size();
+    }
+
+
+    @Override
+    public boolean isEmpty() {
+        return delegation.isEmpty();
     }
 
     @Override
-    public Enumeration<Object> keys() {
-        return Collections.enumeration(getAllProperties().keySet());
+    public boolean containsKey(Object key) {
+        return delegation.containsKey(key);
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+        return delegation.containsValue(value);
+    }
+
+    @Override
+    public Object get(Object key) {
+        return delegation.get(key);
+    }
+
+    @Override
+    public Object put(Object key, Object value) {
+        return this.properties.put(key, value);
+    }
+
+    @Override
+    public Object remove(Object key) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void putAll(Map<?, ?> t) {
+        properties.putAll(t);
+    }
+
+    @Override
+    public void clear() {
+        properties.clear();
+    }
+
+    @Override
+    public Object clone() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toString() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<Object> keySet() {
+        return delegation.keySet();
+    }
+
+    @Override
+    public Set<Map.Entry<Object, Object>> entrySet() {
+        return delegation.entrySet();
+    }
+
+    @Override
+    public Collection<Object> values() {
+        return delegation.values();
+    }
+
+    @Override
+    public Object getOrDefault(Object key, Object defaultValue) {
+        return delegation.getOrDefault(key, defaultValue);
+    }
+
+    @Override
+    public void forEach(BiConsumer<? super Object, ? super Object> action) {
+        throw new UnsupportedOperationException();
     }
 
     private ConcurrentMap<Object, Object> getAllProperties() {
@@ -116,5 +208,43 @@ public class PropertiesDelegate extends Properties {
         } else {
             throw new IllegalArgumentException(configLoader.getClass() + " is not supported ");
         }
+    }
+
+    @Override
+    public boolean remove(Object key, Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean replace(Object key, Object oldValue, Object newValue) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object replace(Object key, Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object computeIfAbsent(Object key, Function<? super Object, ? extends Object> mappingFunction) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object computeIfPresent(Object key,
+            BiFunction<? super Object, ? super Object, ? extends Object> remappingFunction) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public synchronized Object compute(Object key,
+            BiFunction<? super Object, ? super Object, ? extends Object> remappingFunction) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public synchronized Object merge(Object key, Object value,
+            BiFunction<? super Object, ? super Object, ? extends Object> remappingFunction) {
+        throw new UnsupportedOperationException();
     }
 }

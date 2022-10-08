@@ -65,6 +65,7 @@ import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
 import org.apache.kylin.common.persistence.metadata.HDFSMetadataStore;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.ClusterConstant;
+import org.apache.kylin.common.util.CompositeMapView;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.FileUtils;
 import org.apache.kylin.common.util.SizeConvertUtil;
@@ -215,6 +216,7 @@ public abstract class KylinConfigBase implements Serializable {
      * only reload properties
      */
     volatile PropertiesDelegate properties;
+    volatile StrSubstitutor substitutor;
 
     protected KylinConfigBase(IExternalConfigLoader configLoader) {
         this(new Properties(), configLoader);
@@ -231,6 +233,8 @@ public abstract class KylinConfigBase implements Serializable {
             this.properties = force ? new PropertiesDelegate(props, configLoader)
                     : new PropertiesDelegate(BCC.check(props), configLoader);
         }
+        // env > properties
+        this.substitutor = new StrSubstitutor(new CompositeMapView(this.properties, STATIC_SYSTEM_ENV));
     }
 
     protected final String getOptional(String prop) {
@@ -265,12 +269,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     protected StrSubstitutor getSubstitutor() {
-        // env > properties
-        final Map<String, Object> all = Maps.newHashMap();
-        all.putAll((Map) properties);
-        all.putAll(STATIC_SYSTEM_ENV);
-
-        return new StrSubstitutor(all);
+        return substitutor;
     }
 
     protected Properties getRawAllProperties() {
