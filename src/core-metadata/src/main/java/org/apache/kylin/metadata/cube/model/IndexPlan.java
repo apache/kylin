@@ -29,6 +29,7 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -50,12 +51,12 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -65,6 +66,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -158,6 +160,8 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
     private transient BiMap<Integer, NDataModel.Measure> effectiveMeasures; // BiMap impl (com.google.common.collect.Maps$FilteredEntryBiMap) is not serializable
 
     private final LinkedHashSet<TblColRef> allColumns = Sets.newLinkedHashSet();
+
+    private Set<Integer> allColumnsIndex = new HashSet<>();
 
     private List<LayoutEntity> ruleBasedLayouts = Lists.newArrayList();
     @Setter
@@ -276,6 +280,14 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
             //all lookup tables are automatically derived
             allColumns.addAll(join.getTableRef().getColumns());
         }
+        initAllColumnsIndex();
+    }
+
+    private void initAllColumnsIndex() {
+        Map<TblColRef, Integer> tblColMap = Maps.newHashMap();
+        ImmutableBiMap<Integer, TblColRef> effectiveCols = getModel().getEffectiveCols();
+        effectiveCols.forEach((key, value) -> tblColMap.put(value, key));
+        allColumnsIndex = allColumns.stream().map(tblColMap::get).collect(Collectors.toSet());
     }
 
     private void initDictionaryDesc() {
@@ -365,6 +377,10 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
 
     public Set<TblColRef> listAllTblColRefs() {
         return allColumns;
+    }
+
+    public Set<Integer> listAllTblColRefsIndex() {
+        return allColumnsIndex;
     }
 
     private void addLayout2TargetIndex(LayoutEntity sourceLayout, IndexEntity targetIndex) {

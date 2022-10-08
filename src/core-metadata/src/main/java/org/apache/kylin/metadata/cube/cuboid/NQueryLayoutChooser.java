@@ -67,7 +67,8 @@ public class NQueryLayoutChooser {
         List<NDataSegment> toRemovedSegments = Lists.newArrayList();
         for (NDataSegment segment : prunedSegments) {
             if (candidate == null) {
-                candidate = selectLayoutCandidate(dataflow, Lists.newArrayList(segment), sqlDigest, secondStorageSegmentLayoutMap);
+                candidate = selectLayoutCandidate(dataflow, Lists.newArrayList(segment), sqlDigest,
+                        secondStorageSegmentLayoutMap);
                 if (candidate == null) {
                     toRemovedSegments.add(segment);
                 }
@@ -87,8 +88,7 @@ public class NQueryLayoutChooser {
             return NLayoutCandidate.EMPTY;
         }
         List<NLayoutCandidate> candidates = new ArrayList<>();
-        val commonLayouts = getLayoutsFromSegments(prunedSegments, dataflow,
-                secondStorageSegmentLayoutMap);
+        val commonLayouts = getLayoutsFromSegments(prunedSegments, dataflow, secondStorageSegmentLayoutMap);
         val model = dataflow.getModel();
         log.info("Matching dataflow with seg num: {} layout num: {}", prunedSegments.size(), commonLayouts.size());
         KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -108,6 +108,9 @@ public class NQueryLayoutChooser {
         if (!aggIndexMatcher.valid() && !tableIndexMatcher.valid()) {
             return null;
         }
+        val projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(dataflow.getProject());
+        double influenceFactor = 1.0;
         for (NDataLayout dataLayout : commonLayouts) {
             log.trace("Matching layout {}", dataLayout);
             CapabilityResult tempResult = new CapabilityResult();
@@ -119,6 +122,8 @@ public class NQueryLayoutChooser {
             var matchResult = tableIndexMatcher.match(layout);
             if (!matchResult.isMatched()) {
                 matchResult = aggIndexMatcher.match(layout);
+            } else if (projectInstance.getConfig().useTableIndexAnswerSelectStarEnabled()) {
+                influenceFactor += influenceFactor + tableIndexMatcher.getLayoutUnmatchedColsSize();
             }
             if (!matchResult.isMatched()) {
                 log.trace("Matching failed");
@@ -127,7 +132,7 @@ public class NQueryLayoutChooser {
 
             NLayoutCandidate candidate = new NLayoutCandidate(layout);
             tempResult.influences = matchResult.getInfluences();
-            candidate.setCost(dataLayout.getRows() * (tempResult.influences.size() + 1.0));
+            candidate.setCost(dataLayout.getRows() * (tempResult.influences.size() + influenceFactor));
             if (!matchResult.getNeedDerive().isEmpty()) {
                 candidate.setDerivedToHostMap(matchResult.getNeedDerive());
                 candidate.setDerivedTableSnapshots(candidate.getDerivedToHostMap().keySet().stream()
@@ -151,7 +156,7 @@ public class NQueryLayoutChooser {
     }
 
     private static Collection<NDataLayout> getLayoutsFromSegments(List<NDataSegment> segments, NDataflow dataflow,
-                                                                  Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
+            Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         val projectInstance = NProjectManager.getInstance(config).getProject(dataflow.getProject());
         if (!projectInstance.getConfig().isHeterogeneousSegmentEnabled()) {
@@ -166,10 +171,13 @@ public class NQueryLayoutChooser {
         for (int i = 0; i < segments.size(); i++) {
             val dataSegment = segments.get(i);
             var layoutIdMapToDataLayout = dataSegment.getLayoutsMap();
-            if (SegmentOnlineMode.ANY.toString().equalsIgnoreCase(projectInstance.getConfig().getKylinEngineSegmentOnlineMode())
+            if (SegmentOnlineMode.ANY.toString()
+                    .equalsIgnoreCase(projectInstance.getConfig().getKylinEngineSegmentOnlineMode())
                     && MapUtils.isNotEmpty(secondStorageSegmentLayoutMap)) {
-                Set<Long> chLayouts = secondStorageSegmentLayoutMap.getOrDefault(dataSegment.getId(), Sets.newHashSet());
-                Map<Long, NDataLayout> nDataLayoutMap = chLayouts.stream().map(id -> NDataLayout.newDataLayout(dataflow, dataSegment.getId(), id))
+                Set<Long> chLayouts = secondStorageSegmentLayoutMap.getOrDefault(dataSegment.getId(),
+                        Sets.newHashSet());
+                Map<Long, NDataLayout> nDataLayoutMap = chLayouts.stream()
+                        .map(id -> NDataLayout.newDataLayout(dataflow, dataSegment.getId(), id))
                         .collect(Collectors.toMap(NDataLayout::getLayoutId, nDataLayout -> nDataLayout));
 
                 nDataLayoutMap.putAll(layoutIdMapToDataLayout);
@@ -202,8 +210,7 @@ public class NQueryLayoutChooser {
                 .collect(Collectors.toList());
 
         Ordering<NLayoutCandidate> ordering = Ordering //
-                .from(priorityLayoutComparator()).compound(derivedLayoutComparator())
-                .compound(rowSizeComparator()) // L1 comparator, compare cuboid rows
+                .from(priorityLayoutComparator()).compound(derivedLayoutComparator()).compound(rowSizeComparator()) // L1 comparator, compare cuboid rows
                 .compound(filterColumnComparator(filterColIds, chooserContext)) // L2 comparator, order filter columns
                 .compound(dimensionSizeComparator()) // the lower dimension the best
                 .compound(measureSizeComparator()) // L3 comparator, order size of cuboid columns
@@ -216,9 +223,11 @@ public class NQueryLayoutChooser {
             if (!KylinConfig.getInstanceFromEnv().isPreferAggIndex()) {
                 return 0;
             }
-            if (!layoutCandidate1.getLayoutEntity().getIndex().isTableIndex() && layoutCandidate2.getLayoutEntity().getIndex().isTableIndex()) {
+            if (!layoutCandidate1.getLayoutEntity().getIndex().isTableIndex()
+                    && layoutCandidate2.getLayoutEntity().getIndex().isTableIndex()) {
                 return -1;
-            } else if (layoutCandidate1.getLayoutEntity().getIndex().isTableIndex() && !layoutCandidate2.getLayoutEntity().getIndex().isTableIndex()) {
+            } else if (layoutCandidate1.getLayoutEntity().getIndex().isTableIndex()
+                    && !layoutCandidate2.getLayoutEntity().getIndex().isTableIndex()) {
                 return 1;
             }
             return 0;

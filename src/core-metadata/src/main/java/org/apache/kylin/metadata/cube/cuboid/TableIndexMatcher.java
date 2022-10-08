@@ -23,11 +23,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.kylin.metadata.model.DeriveInfo;
-import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.model.DeriveInfo;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.SQLDigest;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -41,12 +46,14 @@ public class TableIndexMatcher extends IndexMatcher {
     private final boolean isUseTableIndexAnswerNonRawQuery;
     private Set<Integer> sqlColumns;
     private final boolean valid;
+    private int layoutUnmatchedColsSize;
 
     public TableIndexMatcher(SQLDigest sqlDigest, ChooserContext chooserContext, Set<String> excludedTables,
             boolean isUseTableIndexAnswerNonRawQuery) {
         super(sqlDigest, chooserContext, excludedTables);
         this.isUseTableIndexAnswerNonRawQuery = isUseTableIndexAnswerNonRawQuery;
         valid = init();
+        this.layoutUnmatchedColsSize = 0;
     }
 
     private boolean init() {
@@ -72,6 +79,15 @@ public class TableIndexMatcher extends IndexMatcher {
             unmatchedCols.removeAll(layout.getStreamingColumns().keySet());
         }
         unmatchedCols.removeAll(layout.getOrderedDimensions().keySet());
+        ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(model.getProject());
+        if (projectInstance.getConfig().useTableIndexAnswerSelectStarEnabled()) {
+            layoutUnmatchedColsSize = unmatchedCols.size();
+            NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                    model.getProject());
+            NDataflow dataflow = dataflowManager.getDataflow(layout.getModel().getId());
+            unmatchedCols.removeAll(dataflow.getAllColumnsIndex());
+        }
         goThruDerivedDims(layout.getIndex(), needDerive, unmatchedCols);
         if (!unmatchedCols.isEmpty()) {
             if (log.isDebugEnabled()) {
@@ -87,5 +103,9 @@ public class TableIndexMatcher extends IndexMatcher {
     private boolean needTableIndexMatch(IndexEntity index) {
         boolean isUseTableIndex = isUseTableIndexAnswerNonRawQuery && !nonSupportFunTableIndex(sqlDigest.aggregations);
         return index.isTableIndex() && (sqlDigest.isRawQuery || isUseTableIndex);
+    }
+
+    public int getLayoutUnmatchedColsSize() {
+        return layoutUnmatchedColsSize;
     }
 }
