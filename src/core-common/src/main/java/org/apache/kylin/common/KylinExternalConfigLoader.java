@@ -43,10 +43,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
-import io.kyligence.config.core.loader.IExternalConfigLoader;
-
-public class KylinExternalConfigLoader implements IExternalConfigLoader {
+public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
 
     private static final long serialVersionUID = 1694879531312203159L;
 
@@ -58,6 +57,8 @@ public class KylinExternalConfigLoader implements IExternalConfigLoader {
 
     private final Properties properties;
 
+    private final ImmutableMap<Object, Object> propertyEntries;
+
     public KylinExternalConfigLoader(Map<String, String> map) {
         this(map.get("config-dir") == null ? getSitePropertiesFile() : new File(map.get("config-dir")));
     }
@@ -65,6 +66,7 @@ public class KylinExternalConfigLoader implements IExternalConfigLoader {
     public KylinExternalConfigLoader(File file) {
         this.propFile = file;
         this.properties = loadProperties();
+        this.propertyEntries = ImmutableMap.copyOf(properties);
     }
 
     private Properties loadProperties() {
@@ -161,11 +163,21 @@ public class KylinExternalConfigLoader implements IExternalConfigLoader {
 
     @Override
     public String getProperty(String key) {
-        return properties.getProperty(key);
+        Object oval = propertyEntries.get(key);
+        return (oval instanceof String) ? (String) oval : null;
+    }
+
+    /**
+     * @see #getPropertyEntries
+     */
+    @Override
+    @Deprecated
+    public Properties getProperties() {
+        return this.properties;
     }
 
     @Override
-    public Properties getProperties() {
-        return this.properties;
+    public ImmutableMap getPropertyEntries() {
+        return propertyEntries;
     }
 }
