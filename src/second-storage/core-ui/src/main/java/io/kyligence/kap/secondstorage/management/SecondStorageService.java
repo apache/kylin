@@ -326,6 +326,7 @@ public class SecondStorageService extends BasicService implements SecondStorageU
         deleteLayoutChTable(project, modelId, layout.getId());
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             getTablePlan(project, modelId).update(tp -> tp.updatePrimaryIndexColumns(layout.getId(), columns));
+            deleteLayoutChTable(project, modelId, layout.getId());
             return null;
         }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID);
     }
@@ -369,20 +370,11 @@ public class SecondStorageService extends BasicService implements SecondStorageU
     }
     
     private void deleteLayoutChTable(String project, String modelId, long layoutId) {
-        KylinConfig config = getConfig();
-        String database = NameUtil.getDatabase(config, project);
+        String database = NameUtil.getDatabase(getConfig(), project);
         String table = NameUtil.getTable(modelId, layoutId);
-        for (NodeGroup nodeGroup : SecondStorageUtil.listNodeGroup(config, project)) {
-            nodeGroup.getNodeNames().forEach(node -> {
-                DatabaseOperator operator = SecondStorageFactoryUtils
-                        .createDatabaseOperator(SecondStorageNodeHelper.resolve(node));
-                try {
-                    operator.dropTable(database, table);
-                } catch (Exception e) {
-                    throw new KylinException(SECOND_STORAGE_NODE_NOT_AVAILABLE,
-                            MsgPicker.getMsg().getSecondStorageNodeNotAvailable(node), e);
-                }
-            });
+        for (NodeGroup nodeGroup : SecondStorageUtil.listNodeGroup(getConfig(), project)) {
+            nodeGroup.getNodeNames().forEach(node -> SecondStorageFactoryUtils
+                    .createDatabaseOperator(SecondStorageNodeHelper.resolve(node)).dropTable(database, table));
         }
     }
 
