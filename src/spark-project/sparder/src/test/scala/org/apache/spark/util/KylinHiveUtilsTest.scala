@@ -27,7 +27,7 @@ import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
 
 import java.io.File
 
-class KylinHiveUtilsTest extends SparderBaseFunSuite with SharedSparkSession {
+class KylinHiveUtilsTest extends SparderBaseFunSuite with SharedSparkSession{
 
   test("testHive") {
     val tmpHome = Files.createTempDir
