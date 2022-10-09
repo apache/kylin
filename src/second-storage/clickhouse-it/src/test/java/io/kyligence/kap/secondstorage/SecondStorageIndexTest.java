@@ -562,9 +562,11 @@ public class SecondStorageIndexTest implements JobWaiter {
         assertEquals(1, tableEntity.getSecondaryIndexColumns().size());
         assertTrue(tableEntity.getSecondaryIndexColumns().contains(0));
 
-        buildIncrementalLoadQuery("2012-01-02", "2012-01-03", new HashSet<>(getIndexPlan(modelId).getAllLayouts()),
+        buildIncrementalLoadQuery("2012-01-02", "2012-01-03",
+                new HashSet<>(
+                        NIndexPlanManager.getInstance(getConfig(), getProject()).getIndexPlan(modelId).getAllLayouts()),
                 modelId);
-        waitAllJoEnd();
+        waitAllJobFinish();
 
         for (TableData tableData : getTableFlow(modelId).getTableDataList()) {
             for (TablePartition partition : tableData.getPartitions()) {
