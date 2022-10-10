@@ -34,7 +34,6 @@ import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.spark.SparkContext;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -46,7 +45,6 @@ import com.google.common.collect.Maps;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Ignore("disable this suite, it is error in ci")
 @Slf4j
 @RunWith(JUnit4.class)
 public class ClickHouseSimpleITTestWithBlob extends ClickHouseSimpleITTest {
@@ -76,10 +74,9 @@ public class ClickHouseSimpleITTestWithBlob extends ClickHouseSimpleITTest {
         overrideConf.put("fs.azure.storage.emulator.account.name", "devstoreaccount1.localhost:10000");
         overrideConf.put("fs.AbstractFileSystem.wasb.impl", "org.apache.hadoop.fs.azure.Wasb");
         overrideConf.put("fs.wasb.impl", "org.apache.hadoop.fs.azure.NativeAzureFileSystem");
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        config.setProperty("kylin.env.hdfs-working-dir", "wasb://test@devstoreaccount1.localhost:10000/kylin");
         SparkContext sc = ss.sparkContext();
         overrideConf.forEach(sc.hadoopConfiguration()::set);
+        System.setProperty("kylin.env.hdfs-working-dir", "wasb://test@devstoreaccount1.localhost:10000/kylin");
     }
 
     @After
@@ -93,29 +90,20 @@ public class ClickHouseSimpleITTestWithBlob extends ClickHouseSimpleITTest {
 
     @Test
     public void testSingleShard() throws Exception {
-        try (JdbcDatabaseContainer<?> clickhouse = ClickHouseUtils.startClickHouse()) {
-            build_load_query("testSingleShardBlob", false, clickhouse);
-        }
+        // overwrite
     }
 
     @Test
     public void testTwoShards() throws Exception {
-        // TODO: make sure splitting data into two shards
-        try (JdbcDatabaseContainer<?> clickhouse1 = ClickHouseUtils.startClickHouse();
-                JdbcDatabaseContainer<?> clickhouse2 = ClickHouseUtils.startClickHouse()) {
-            build_load_query("testTwoShardsBlob", false, clickhouse1, clickhouse2);
-        }
+        // overwrite
     }
 
     @Test
     public void testIncrementalSingleShard() throws Exception {
-        try (JdbcDatabaseContainer<?> clickhouse = ClickHouseUtils.startClickHouse()) {
-            build_load_query("testIncrementalSingleShardBlob", true, clickhouse);
-        }
+        // overwrite
     }
 
     @Test
-    @Ignore
     public void testIncrementalTwoShard() throws Exception {
         try (JdbcDatabaseContainer<?> clickhouse1 = ClickHouseUtils.startClickHouse();
                 JdbcDatabaseContainer<?> clickhouse2 = ClickHouseUtils.startClickHouse()) {
