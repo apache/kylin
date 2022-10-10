@@ -32,7 +32,6 @@ import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.rest.controller.BaseController;
 import org.apache.kylin.rest.request.JobFilter;
-import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.service.JobService;
@@ -90,10 +89,6 @@ public class JobControllerV2 extends BaseController {
             @RequestParam(value = "sortBy", required = false, defaultValue = "last_modified") String sortBy,
             @RequestParam(value = "sortby", required = false) String sortby, //param for 3x
             @RequestParam(value = "reverse", required = false, defaultValue = "true") Boolean reverse) {
-        // 3x default last_modify
-        if (!StringUtils.isEmpty(sortby) && !"last_modify".equals(sortby)) {
-            sortBy = sortby;
-        }
         checkNonNegativeIntegerArg("pageOffset", pageOffset);
         checkNonNegativeIntegerArg("pageSize", pageSize);
         List<String> statuses = Lists.newArrayList();
