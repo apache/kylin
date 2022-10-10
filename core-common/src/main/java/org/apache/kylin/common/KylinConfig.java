@@ -65,7 +65,7 @@ public class KylinConfig extends KylinConfigBase {
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
     // static cached instances
-    private static KylinConfig SYS_ENV_INSTANCE = null;
+    private static volatile KylinConfig SYS_ENV_INSTANCE = null;
 
     // static default Ordered Properties, only need load from classpath once
     private static OrderedProperties defaultOrderedProperties = new OrderedProperties();
@@ -134,38 +134,40 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public static KylinConfig getInstanceFromEnv(boolean allowConfigFileNoExist) {
-        synchronized (KylinConfig.class) {
-            KylinConfig config = THREAD_ENV_INSTANCE.get();
-            if (config != null) {
-                return config;
-            }
+        KylinConfig config = THREAD_ENV_INSTANCE.get();
+        if (config != null) {
+            return config;
+        }
 
-            if (SYS_ENV_INSTANCE == null) {
-                try {
-                    //build default ordered properties will only be called once.
-                    //This logic no need called by CoProcessor due to it didn't call getInstanceFromEnv.
-                    buildDefaultOrderedProperties();
-
-                    config = new KylinConfig();
+        if (SYS_ENV_INSTANCE == null) {
+            synchronized (KylinConfig.class) {
+                if (SYS_ENV_INSTANCE == null) {
                     try {
-                        config.reloadKylinConfig(buildSiteProperties());
-                    } catch (KylinConfigCannotInitException e) {
-                        logger.info("Kylin Config Can not Init Exception");
-                        if (!allowConfigFileNoExist) {
-                            throw e;
-                        }
-                    }
+                        //build default ordered properties will only be called once.
+                        //This logic no need called by CoProcessor due to it didn't call getInstanceFromEnv.
+                        buildDefaultOrderedProperties();
 
-                    VersionUtil.loadKylinVersion();
-                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
-                            + System.identityHashCode(config));
-                    SYS_ENV_INSTANCE = config;
-                } catch (IllegalArgumentException e) {
-                    throw new IllegalStateException("Failed to find KylinConfig ", e);
+                        config = new KylinConfig();
+                        try {
+                            config.reloadKylinConfig(buildSiteProperties());
+                        } catch (KylinConfigCannotInitException e) {
+                            logger.info("Kylin Config Can not Init Exception");
+                            if (!allowConfigFileNoExist) {
+                                throw e;
+                            }
+                        }
+
+                        VersionUtil.loadKylinVersion();
+                        logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
+                                + System.identityHashCode(config));
+                        SYS_ENV_INSTANCE = config;
+                    } catch (IllegalArgumentException e) {
+                        throw new IllegalStateException("Failed to find KylinConfig ", e);
+                    }
                 }
             }
-            return SYS_ENV_INSTANCE;
         }
+        return SYS_ENV_INSTANCE;
     }
 
     public static KylinConfig getInstanceFromEnv() {
