@@ -15,6 +15,39 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+
+## v4.0.2 - 2022-10-10
+
+__New Feature__
+
+* [KYLIN-4954] - Cardinality statistics for Kylin 4
+* [KYLIN-5181] - support postgresql to store kylin metadata
+* [KYLIN-5183] - Set specific query id for devops
+* [KYLIN-5187] - Support Alluxio Local Cache + Soft Affinity to speed up the query performance on the cloud
+
+__Bug Fix__
+
+* [KYLIN-5058] - Throws ConcurrentModificationException when building cube
+* [KYLIN-5177] - Kylin4.0.1使用S3存储无法清理数据
+* [KYLIN-5182] - build job throw error fail to build lookup table snapshot for dup key found
+* [KYLIN-5185] - Found error Public key for mysql-community-libs-compat-xxx.rpm is not installed in building docker image
+* [KYLIN-5188] - No need to send email,user list is empty
+* [KYLIN-5190] - kylin.sh error when directory starts with s3a://
+* [KYLIN-5191] - Can not see executors on spardar page on AWS EMR 6
+* [KYLIN-5193] - input login url manually will din to the login page but current already login
+* [KYLIN-5194] - deleted user can login to kylin when the user login before one time at least
+
+__Improvement__
+
+* [KYLIN-5056] - Implement Column Cardinality Statistics Job for Kylin 4
+* [KYLIN-5166] - Use SQL hint to specify the cube that the user wants to query
+* [KYLIN-5184] - Using precise statics for cuboid
+* [KYLIN-5195] - update spark from 3.1.1 to 3.1.3 in kylin4
+* [KYLIN-5214] - Fix CVE-2022-22978 in Kylin
+* [KYLIN-5225] - Make "spark3" as the default profile
+* [KYLIN-5250] - Add a switch for no hack aggregation group
+* [KYLIN-5251] - when kylin run on hadoop 3 platform and start with class not found: org/apache/commons/Configuration
+
 ## v4.0.1 - 2022-01-05
 
 __New Feature__
