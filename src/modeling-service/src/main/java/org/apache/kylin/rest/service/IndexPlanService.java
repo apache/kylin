@@ -456,11 +456,13 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
     public AggIndexResponse calculateAggIndexCount(UpdateRuleBasedCuboidRequest request) {
         aclEvaluate.checkProjectWritePermission(request.getProject());
         val maxCount = getConfig().getCubeAggrGroupMaxCombination();
+        // The agg group for updates which includes all agg group for the index
         List<NAggregationGroup> aggregationGroups = request.getAggregationGroups();
         val indexPlan = getIndexPlan(request.getProject(), request.getModelId()).copy();
         AggIndexCombResult totalResult;
         AggIndexCombResult aggIndexResult;
 
+        // Filter the invalid agg group
         val aggregationGroupsCopy = aggregationGroups.stream()
                 .filter(aggGroup -> aggGroup.getIncludes() != null && aggGroup.getIncludes().length != 0)
                 .collect(Collectors.toList());
@@ -484,7 +486,22 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
                                     StringUtils.join(notExistCols.iterator(), ",")));
                 }
             }
-
+            // In order to implement the cost base index planner, we need to make sure the measures is align with the kylin3.1.
+            // step1: check the rule base index contains all measures
+            Set<Integer> allMeasure = indexPlan.getEffectiveMeasures().keySet();
+            if (allMeasure.size() == 0 && ruleBasedIndex.getAggregationGroups().size() != 0) {
+                // need add base index for this model
+                throw new RuntimeException("Please add base index first for the model");
+            }
+            if (ruleBasedIndex.getAggregationGroups().size() != 0 && allMeasure.size() != ruleBasedIndex.getMeasures().size()) {
+                throw new RuntimeException(String.format(
+                        "The rule base index must contain all of the measures [%s], but it just contains measures [%s]."
+                                + "\nPlease refer to %s",
+                        allMeasure, ruleBasedIndex.getMeasures(), "https://jirap.corp.ebay.com/browse/KYLIN-3593"
+                ));
+            }
+            // step2: check each agg group has all of the measures
+            ruleBasedIndex.validAggregationGroups();
             indexPlan.setRuleBasedIndex(ruleBasedIndex);
         } catch (OutOfMaxCombinationException oe) {
             invalid = true;
