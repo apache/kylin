@@ -4313,6 +4313,66 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         return response;
     }
 
+    public void checkCCEmpty(ModelRequest modelRequest) {
+        List<ComputedColumnDesc> ccList = modelRequest.getComputedColumnDescs();
+        if (CollectionUtils.isEmpty(ccList)) {
+            return;
+        }
+        boolean matchEmpty = ccList.stream()
+                .anyMatch(cc -> StringUtils.isEmpty(cc.getColumnName()) || StringUtils.isEmpty(cc.getExpression()));
+        if (matchEmpty) {
+            throw new KylinException(COMPUTED_COLUMN_NAME_OR_EXPR_EMPTY);
+        }
+    }
+
+    public Pair<ModelRequest, ComputedColumnConflictResponse> checkCCConflict(ModelRequest modelRequest) {
+        String project = modelRequest.getProject();
+        validatePartitionDateColumn(modelRequest);
+
+        val dataModel = semanticUpdater.convertToDataModel(modelRequest);
+        val modelManager = getManager(NDataModelManager.class, project);
+        val ccRelatedModels = modelManager.getCCRelatedModels(dataModel);
+        // check cc conflict and return ccConflictInfo
+        val ccConflictInfo = dataModel.checkCCFailAtEnd(getConfig(), project, ccRelatedModels, true);
+        boolean autoAdjust = modelRequest.isComputedColumnNameAutoAdjust();
+
+        if (ccConflictInfo.noneConflict()) {
+            // No conflict, return
+            return Pair.newPair(modelRequest, new ComputedColumnConflictResponse());
+        }
+        if (ccConflictInfo.hasSameNameConflict()) {
+            // have sameNameDiffExpr Conflict, all conflict messages need to be thrown
+            val response = handleOnConflictResponse(ccConflictInfo.getAllConflictException());
+            throw new KylinException(COMPUTED_COLUMN_CONFLICT).withData(response);
+        }
+        // have sameExprDiffExprConflict Conflict
+        if (!autoAdjust) {
+            // AutoAdjust = false
+            // SameExpr conflict messages need to be thrown
+            val response = handleOnConflictResponse(ccConflictInfo.getSameExprConflictException());
+            throw new KylinException(COMPUTED_COLUMN_CONFLICT).withData(response);
+        }
+        // AutoAdjust = true
+        List<ComputedColumnDesc> inputCCDescList = Lists.newArrayList(modelRequest.getComputedColumnDescs());
+        // deal with conflicts
+        val pair = ccConflictInfo.getAdjustedCCList(inputCCDescList);
+        modelRequest.setComputedColumnDescs(pair.getFirst());
+        return Pair.newPair(modelRequest, handleOnConflictResponse(pair.getSecond()));
+    }
+
+    public ComputedColumnConflictResponse handleOnConflictResponse(List<KylinException> exceptionList) {
+        val response = new ComputedColumnConflictResponse();
+        exceptionList.stream() //
+                .filter(Objects::nonNull) //
+                .forEach(e -> {
+                    val producer = e.getErrorCodeProducer();
+                    val code = producer.getErrorCode().getCode();
+                    val msg = producer.getMsg(e.getArgs());
+                    response.addConflictDetail(code, msg);
+                });
+        return response;
+    }
+
     @Override
     public void onUpdateBrokenModel(NDataModel model, AffectedModelContext removeAffectedModel,
             AffectedModelContext changeTypeAffectedModel, String projectName) throws Exception {

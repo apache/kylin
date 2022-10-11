@@ -522,7 +522,8 @@ public class ModelServiceTest extends SourceTestCase {
         Assert.assertEquals(1, models.size());
         NDataModelResponse model = models.get(0);
         Assert.assertTrue(model.getSimpleTables().stream().map(SimplifiedTableResponse::getColumns)
-                .flatMap(List::stream).anyMatch(SimplifiedColumnResponse::isComputedColumn));
+                .flatMap(List::stream)
+                .anyMatch(SimplifiedColumnResponse::isComputedColumn));
     }
 
     @Test
@@ -563,7 +564,8 @@ public class ModelServiceTest extends SourceTestCase {
         NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(getTestConfig(), getProject());
         val indexPlan = indexPlanManager.getIndexPlan(modelId);
         indexPlanManager.updateIndexPlan(modelId, copyForWrite -> {
-            copyForWrite.markIndexesToBeDeleted(modelId, new HashSet<>(indexPlan.getAllLayouts()));
+            copyForWrite.markIndexesToBeDeleted(modelId,
+                    new HashSet<>(indexPlan.getAllLayouts()));
             copyForWrite.getIndexes().clear();
         });
         NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
@@ -5082,6 +5084,394 @@ public class ModelServiceTest extends SourceTestCase {
     }
 
     @Test
+    public void testExportTDSByAdmin() throws Exception {
+        val project = "default";
+        val modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
+        prepareBasic(project);
+        List<String> dimensions = Lists.newArrayList();
+        dimensions.add("DEFAULT.TEST_MEASURE.FLAG");
+        dimensions.add("DEFAULT.TEST_MEASURE.PRICE1");
+        dimensions.add("DEFAULT.TEST_MEASURE.ID1");
+        List<String> measurs = Lists.newArrayList();
+        measurs.add("COUNT_STAR");
+        measurs.add("SUM_1");
+        SyncContext syncContext = modelService.getADMINSyncContext(project, modelId,
+                SyncContext.BI.TABLEAU_CONNECTOR_TDS, SyncContext.ModelElement.CUSTOM_COLS, "localhost", 8080);
+        TableauDatasourceModel datasource1 = (TableauDatasourceModel) modelService
+                .exportTDSDimensionsAndMeasuresByAdmin(syncContext, dimensions, measurs);
+        ByteArrayOutputStream outStream4 = new ByteArrayOutputStream();
+        datasource1.dump(outStream4);
+        Assert.assertEquals(getExpectedTds("/bisync_tableau/nmodel_full_measure_test.connector_admin.tds"),
+                outStream4.toString(Charset.defaultCharset().name()));
+    }
+
+    @Test
+    public void testExportTDSByUser() throws Exception {
+        val project = "default";
+        val modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
+        prepareBasic(project);
+        List<String> dimensions = Lists.newArrayList();
+        dimensions.add("TEST_MEASURE.ID1");
+        dimensions.add("TEST_MEASURE.ID2");
+        dimensions.add("TEST_MEASURE.ID3");
+        dimensions.add("TEST_MEASURE1.ID1");
+        dimensions.add("TEST_MEASURE1.NAME1");
+        dimensions.add("TEST_MEASURE1.NAME2");
+        dimensions.add("TEST_MEASURE1.NAME3");
+        List<String> measurs = Lists.newArrayList();
+        measurs.add("COUNT_STAR");
+        measurs.add("SUM_1");
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
+        SyncContext syncContext = modelService.getSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
+                SyncContext.ModelElement.CUSTOM_COLS, "localhost", 8080);
+        TableauDatasourceModel datasource1 = (TableauDatasourceModel) modelService
+                .exportTDSDimensionsAndMeasuresByNormalUser(syncContext, dimensions, measurs);
+        ByteArrayOutputStream outStream4 = new ByteArrayOutputStream();
+        datasource1.dump(outStream4);
+        Assert.assertEquals(getExpectedTds("/bisync_tableau/nmodel_full_measure_test.connector_user.tds"),
+                outStream4.toString(Charset.defaultCharset().name()));
+    }
+
+    @Test
+    public void testExportTDSByUserAndElement() throws Exception {
+        val project = "default";
+        val modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
+        prepareBasic(project);
+        try {
+            SecurityContextHolder.getContext()
+                    .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
+            SyncContext syncContext = modelService.getSyncContext(project, modelId,
+                    SyncContext.BI.TABLEAU_CONNECTOR_TDS, SyncContext.ModelElement.AGG_INDEX_COL, "localhost", 8080);
+            TableauDatasourceModel datasource1 = (TableauDatasourceModel) modelService
+                    .exportTDSDimensionsAndMeasuresByNormalUser(syncContext, null, null);
+            ByteArrayOutputStream outStream4 = new ByteArrayOutputStream();
+            datasource1.dump(outStream4);
+            Assert.assertEquals(
+                    getExpectedTds("/bisync_tableau/nmodel_full_measure_test.connector_user_agg_index_col.tds"),
+                    outStream4.toString(Charset.defaultCharset().name()));
+
+            TableauDatasourceModel datasource = (TableauDatasourceModel) modelService
+                    .exportTDSDimensionsAndMeasuresByNormalUser(syncContext, new ArrayList<>(), new ArrayList<>());
+        } finally {
+            SecurityContextHolder.getContext()
+                    .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+        }
+    }
+
+    @Test
+    public void testCheckModelExportPermissionException() {
+        val project = "default";
+        val modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
+        prepareBasic(project);
+        modelService.getADMINSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
+                SyncContext.ModelElement.AGG_INDEX_COL, "localhost", 8080);
+        try {
+            Mockito.when(accessService.getGroupsOfExecuteUser(Mockito.any(String.class)))
+                    .thenReturn(Sets.newHashSet("ROLE_ANALYST"));
+            SecurityContextHolder.getContext()
+                    .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
+            thrown.expect(KylinException.class);
+            thrown.expectMessage("current user does not have full permission on requesting model");
+            modelService.getADMINSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
+                    SyncContext.ModelElement.AGG_INDEX_COL, "localhost", 8080);
+        } finally {
+            SecurityContextHolder.getContext()
+                    .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+        }
+    }
+
+    @Test
+    public void testCheckModelExportPermission() {
+        val project = "default";
+        val modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
+        prepareBasic(project);
+        modelService.getADMINSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
+                SyncContext.ModelElement.AGG_INDEX_COL, "localhost", 8080);
+        modelService.getADMINSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
+                SyncContext.ModelElement.AGG_INDEX_COL, "localhost", 8080);
+    }
+
+    @Test
+    public void testCheckModelExportPermissionWithCC() {
+        val project = "cc_test";
+        val modelId = "0d146f1a-bdd3-4548-87ac-21c2c6f9a0da";
+        AclTCRManager manager = AclTCRManager.getInstance(getTestConfig(), project);
+        {
+            AclTCR u1a1 = new AclTCR();
+            manager.updateAclTCR(u1a1, "u1", true);
+            SecurityContextHolder.getContext()
+                    .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
+            Mockito.when(accessService.getGroupsOfExecuteUser(Mockito.any(String.class)))
+                    .thenReturn(Sets.newHashSet("ROLE_ANALYST"));
+            modelService.getADMINSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
+                    SyncContext.ModelElement.AGG_INDEX_COL, "localhost", 8080);
+        }
+        {
+            try {
+                AclTCR u1a1 = new AclTCR();
+                AclTCR.Table u1t1 = new AclTCR.Table();
+                AclTCR.ColumnRow u1cr1 = new AclTCR.ColumnRow();
+                AclTCR.Column u1c1 = new AclTCR.Column();
+                u1c1.add("ORDER_ID");
+                u1cr1.setColumn(u1c1);
+                u1t1.put("SSB.LINEORDER", u1cr1);
+                u1a1.setTable(u1t1);
+                manager.updateAclTCR(u1a1, "u1", true);
+                thrown.expect(KylinException.class);
+                thrown.expectMessage("current user does not have full permission on requesting model");
+                modelService.getADMINSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
+                        SyncContext.ModelElement.AGG_INDEX_COL, "localhost", 8080);
+            } finally {
+                SecurityContextHolder.getContext()
+                        .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+            }
+        }
+
+    }
+
+    @Test
+    public void testExportTDSByBroken() {
+        val project = "test_broken_project";
+        val modelId = "4b93b131-824e-6966-c4dd-5a4268d27095";
+        List<String> dimensions = Lists.newArrayList();
+        List<String> measurs = Lists.newArrayList();
+        SyncContext syncContext = modelService.getSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
+                SyncContext.ModelElement.CUSTOM_COLS, "localhost", 8080);
+        Assert.assertThrows(KylinException.class,
+                () -> modelService.exportTDSDimensionsAndMeasuresByNormalUser(syncContext, dimensions, measurs));
+
+        Assert.assertThrows(KylinException.class,
+                () -> modelService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, dimensions, measurs));
+    }
+
+    @Test
+    public void testExportTDSMeasurePermission() {
+        val project = "default";
+        val modelId = "82fa7671-a935-45f5-8779-85703601f49a";
+        prepareBasicByMeasure(project);
+        List<String> dimensions = Lists.newArrayList();
+        //"ORDER_ID", "PRICE", "CAL_DT", "PRICE", "ITEM_COUNT", "LEAF_CATEG_ID"
+        dimensions.add("TEST_KYLIN_FACT.ORDER_ID");
+        dimensions.add("TEST_KYLIN_FACT.PRICE");
+        dimensions.add("TEST_KYLIN_FACT.CAL_DT");
+        dimensions.add("TEST_KYLIN_FACT.PRICE");
+        dimensions.add("TEST_KYLIN_FACT.ITEM_COUNT");
+        dimensions.add("TEST_KYLIN_FACT.LEAF_CATEG_ID");
+        //"ORDER_ID", "TEST_TIME_ENC", "TEST_DATE_ENC"
+        dimensions.add("TEST_ORDER.ORDER_ID");
+        dimensions.add("TEST_ORDER.TEST_TIME_ENC");
+        dimensions.add("TEST_ORDER.TEST_DATE_ENC");
+        //"ORDER_ID", "PRICE", "CAL_DT", "TRANS_ID"
+        dimensions.add("TEST_MEASURE.ORDER_ID");
+        dimensions.add("TEST_MEASURE.PRICE");
+        dimensions.add("TEST_MEASURE.CAL_DT");
+        dimensions.add("TEST_MEASURE.TRANS_ID");
+
+        List<String> measures = Lists.newArrayList();
+        measures.add("TRANS_CNT");
+        measures.add("GMV_SUM");
+        measures.add("GMV_MIN");
+        measures.add("GMV_MAX");
+        measures.add("ITEM_COUNT_SUM");
+        measures.add("ITEM_COUNT_MAX");
+        measures.add("ITEM_COUNT_MIN");
+        measures.add("SELLER_HLL");
+        measures.add("COUNT_DISTINCT");
+        measures.add("TOP_SELLER");
+        measures.add("TEST_COUNT_DISTINCT_BITMAP");
+        measures.add("GVM_PERCENTILE");
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
+        SyncContext syncContext = modelService.getSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
+                SyncContext.ModelElement.CUSTOM_COLS, "localhost", 8080);
+        Assert.assertThrows(KylinException.class,
+                () -> modelService.exportTDSDimensionsAndMeasuresByNormalUser(syncContext, dimensions, measures));
+    }
+
+    private void prepareBasicByMeasure(String project) {
+        AclTCRManager manager = AclTCRManager.getInstance(getTestConfig(), project);
+
+        AclTCR u1a1 = new AclTCR();
+        AclTCR.Table u1t1 = new AclTCR.Table();
+        AclTCR.ColumnRow u1cr1 = new AclTCR.ColumnRow();
+        AclTCR.Column u1c1 = new AclTCR.Column();
+        u1c1.addAll(Arrays.asList("ORDER_ID", "PRICE", "CAL_DT", "PRICE", "ITEM_COUNT", "LEAF_CATEG_ID"));
+        u1cr1.setColumn(u1c1);
+
+        AclTCR.ColumnRow u1cr2 = new AclTCR.ColumnRow();
+        AclTCR.Column u1c2 = new AclTCR.Column();
+        u1c2.addAll(Arrays.asList("ORDER_ID", "TEST_TIME_ENC", "TEST_DATE_ENC"));
+        u1cr2.setColumn(u1c2);
+        u1t1.put("DEFAULT.TEST_KYLIN_FACT", u1cr1);
+        u1t1.put("DEFAULT.TEST_ORDER", u1cr2);
+        u1a1.setTable(u1t1);
+        manager.updateAclTCR(u1a1, "u1", true);
+    }
+
+    @Test
+    public void testExportModel() throws Exception {
+        val project = "default";
+        val modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
+        prepareBasic(project);
+        TableauDatasourceModel datasource1 = (TableauDatasourceModel) modelService.exportModel(project, modelId,
+                SyncContext.BI.TABLEAU_CONNECTOR_TDS, SyncContext.ModelElement.AGG_INDEX_AND_TABLE_INDEX_COL,
+                "localhost", 8080);
+        ByteArrayOutputStream outStream4 = new ByteArrayOutputStream();
+        datasource1.dump(outStream4);
+        Assert.assertEquals(getExpectedTds("/bisync_tableau/nmodel_full_measure_test.connector.tds"),
+                outStream4.toString(Charset.defaultCharset().name()));
+    }
+
+    private String getExpectedTds(String path) throws IOException {
+        return CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(path), Charsets.UTF_8));
+    }
+
+    private void prepareBasic(String project) {
+        AclTCRManager manager = AclTCRManager.getInstance(getTestConfig(), project);
+
+        AclTCR u1a1 = new AclTCR();
+        AclTCR.Table u1t1 = new AclTCR.Table();
+        AclTCR.ColumnRow u1cr1 = new AclTCR.ColumnRow();
+        AclTCR.Column u1c1 = new AclTCR.Column();
+        u1c1.addAll(Arrays.asList("ID1", "ID2", "ID3"));
+        u1cr1.setColumn(u1c1);
+
+        AclTCR.ColumnRow u1cr2 = new AclTCR.ColumnRow();
+        AclTCR.Column u1c2 = new AclTCR.Column();
+        u1c2.addAll(Arrays.asList("ID1", "NAME1", "NAME2", "NAME3"));
+        u1cr2.setColumn(u1c2);
+        u1t1.put("DEFAULT.TEST_MEASURE", u1cr1);
+        u1t1.put("DEFAULT.TEST_MEASURE1", u1cr2);
+        u1a1.setTable(u1t1);
+        manager.updateAclTCR(u1a1, "u1", true);
+
+        AclTCR g1a1 = new AclTCR();
+        AclTCR.Table g1t1 = new AclTCR.Table();
+        AclTCR.ColumnRow g1cr1 = new AclTCR.ColumnRow();
+        AclTCR.Column g1c1 = new AclTCR.Column();
+        g1c1.addAll(Arrays.asList("ID1", "ID2", "ID3", "ID4"));
+        g1cr1.setColumn(g1c1);
+        g1t1.put("DEFAULT.TEST_MEASURE", g1cr1);
+        g1a1.setTable(g1t1);
+        manager.updateAclTCR(g1a1, "g1", false);
+    }
+
+    @Test
+    public void testCheckTablePermission() {
+        val project = "default";
+        val modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
+        thrown.expect(KylinException.class);
+        thrown.expectMessage(MsgPicker.getMsg().getTableNoColumnsPermission());
+
+        AclTCRManager manager = AclTCRManager.getInstance(getTestConfig(), project);
+        Set<String> columns = new HashSet<>();
+        columns.add("DEFAULT.TEST_MEASURE1.NAME1");
+        columns.add("DEFAULT.TEST_MEASURE1.NAME2");
+        columns.add("DEFAULT.TEST_MEASURE1.NAME3");
+
+        AclTCR u1a1 = new AclTCR();
+        AclTCR.Table u1t1 = new AclTCR.Table();
+        AclTCR.ColumnRow u1cr1 = new AclTCR.ColumnRow();
+        AclTCR.Column u1c1 = new AclTCR.Column();
+        u1cr1.setColumn(u1c1);
+
+        AclTCR.ColumnRow u1cr2 = new AclTCR.ColumnRow();
+        AclTCR.Column u1c2 = new AclTCR.Column();
+        u1c2.addAll(Arrays.asList("NAME1", "NAME2", "NAME3"));
+        u1cr2.setColumn(u1c2);
+        u1t1.put("DEFAULT.TEST_MEASURE", u1cr1);
+        u1t1.put("DEFAULT.TEST_MEASURE1", u1cr2);
+        u1a1.setTable(u1t1);
+        manager.updateAclTCR(u1a1, "u1", true);
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
+        List<String> dimensions = Lists.newArrayList();
+        dimensions.add("TEST_MEASURE.FLAG");
+        dimensions.add("TEST_MEASURE.PRICE1");
+        dimensions.add("TEST_MEASURE.ID1");
+        List<String> measurs = Lists.newArrayList();
+        measurs.add("COUNT_STAR");
+        measurs.add("SUM_1");
+        modelService.checkTableHasColumnPermission(SyncContext.ModelElement.CUSTOM_COLS, project, modelId, columns,
+                dimensions, measurs);
+
+        dimensions.add("TEST_MEASURE.ID4");
+        Assert.assertThrows(KylinException.class,
+                () -> modelService.checkTableHasColumnPermission(SyncContext.ModelElement.CUSTOM_COLS, project, modelId,
+                        columns, dimensions, measurs));
+    }
+
+    @Test
+    public void testExportTDSCheckColumnPermission() {
+        val project = "default";
+        val modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        NDataModel dataModel = modelManager.getDataModelDesc(modelId);
+
+        Set<String> authColumns = Sets.newHashSet();
+        List<String> dimensions = Lists.newArrayList();
+        List<String> measurs = Lists.newArrayList();
+
+        Assert.assertTrue(modelService.checkColumnPermission(dataModel, authColumns, null, measurs));
+        Assert.assertTrue(modelService.checkColumnPermission(dataModel, authColumns, null, null));
+        Assert.assertTrue(modelService.checkColumnPermission(dataModel, authColumns, dimensions, null));
+        Assert.assertTrue(modelService.checkColumnPermission(dataModel, authColumns, dimensions, measurs));
+
+        authColumns.add("DEFAULT.TEST_KYLIN_FACT.PRICE");
+        authColumns.add("DEFAULT.TEST_KYLIN_FACT.ITEM_COUNT");
+        authColumns.add("EDW.TEST_CAL_DT.CAL_DT");
+        authColumns.add("DEFAULT.TEST_ACCOUNT.ACCOUNT_ID");
+
+        Set<String> newAuthColumns = Sets.newHashSet();
+        dataModel.getAllTables().forEach(tableRef -> {
+            List<TblColRef> collect = tableRef.getColumns().stream()
+                    .filter(column -> authColumns.contains(column.getCanonicalName())).collect(Collectors.toList());
+            collect.forEach(x -> newAuthColumns.add(x.getAliasDotName()));
+        });
+
+        dimensions.add("TEST_KYLIN_FACT.DEAL_AMOUNT");
+        dimensions.add("TEST_KYLIN_FACT.TRANS_ID");
+
+        Assert.assertFalse(modelService.checkColumnPermission(dataModel, newAuthColumns, dimensions, measurs));
+
+        newAuthColumns.add("TEST_KYLIN_FACT.TRANS_ID");
+
+        measurs.add("SUM_NEST4");
+        measurs.add("COUNT_CAL_DT");
+        Assert.assertTrue(modelService.checkColumnPermission(dataModel, newAuthColumns, dimensions, measurs));
+
+        Assert.assertTrue(modelService.checkColumnPermission(dataModel, newAuthColumns, dimensions, measurs));
+
+    }
+
+    @Test
+    public void testConvertCCToNormalCols() {
+        val project = "default";
+        val modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        NDataModel dataModel = modelManager.getDataModelDesc(modelId);
+        NDataModel.Measure measure = dataModel.getEffectiveMeasures().values().stream()
+                .filter(x -> x.getName().equals("SUM_NEST4")).findFirst().get();
+        Set<String> measureColumns = measure.getFunction().getParameters().stream()
+                .filter(parameterDesc -> parameterDesc.getColRef() != null)
+                .map(parameterDesc -> parameterDesc.getColRef().getCanonicalName()).collect(Collectors.toSet());
+        ComputedColumnDesc sumNest4 = dataModel.getComputedColumnDescs().stream()
+                .filter(x -> measureColumns.contains(x.getIdentName())).findFirst().get();
+        Set<String> strings = modelService.convertCCToNormalCols(dataModel, sumNest4);
+        Assert.assertEquals("TEST_KYLIN_FACT.PRICE, TEST_KYLIN_FACT.ITEM_COUNT", String.join(", ", strings));
+
+        sumNest4.setInnerExpression("1 + 2");
+        Set<String> set = modelService.convertCCToNormalCols(dataModel, sumNest4);
+        Assert.assertEquals(Collections.emptySet(), set);
+
+        HashSet<Object> authColumns = Sets.newHashSet();
+        authColumns.add("DEFAULT.TEST_KYLIN_FACT.PRICE");
+        Assert.assertTrue(authColumns.containsAll(set));
+    }
+
+    @Test
     public void testBuildExceptionMessage() {
         NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
         NDataModel dataModel = modelManager.getDataModelDesc("a8ba3ff1-83bd-4066-ad54-d2fb3d1f0e94");
@@ -5117,8 +5507,8 @@ public class ModelServiceTest extends SourceTestCase {
     public void testBuildDuplicateCCException() {
         Set<String> set = Sets.newHashSet("test");
         Assert.assertThrows("The computed column name \"test\" has been used in the current model. Please rename it.\n",
-                KylinException.class,
-                () -> ReflectionTestUtils.invokeMethod(modelService, "buildDuplicateCCException", set));
+                KylinException.class, () -> ReflectionTestUtils.invokeMethod(modelService, "buildDuplicateCCException",
+                        set));
     }
 
     @Test
@@ -5276,8 +5666,8 @@ public class ModelServiceTest extends SourceTestCase {
         testCheckCCConflictAllExprConflict(originRequest);
         testCheckCCConflictExprAndNameConflict(originRequest);
         testCheckCCConflictExprAndNameConflict2(originRequest);
-        testNoCCConflict(originRequest);
         testCheckCCConflictAdjust(originRequest);
+        testNoCCConflict(originRequest);
     }
 
     private void testCheckCCConflictAllExprConflict(ModelRequest originRequest) {
@@ -5369,78 +5759,18 @@ public class ModelServiceTest extends SourceTestCase {
     }
 
     private void testCheckCCConflictAdjust(ModelRequest originRequest) {
-        {
-            val ccList = Lists.newArrayList(//
-                    getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
-                    getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX + 1", "BIGINT"));
-            originRequest.setComputedColumnDescs(ccList);
-            originRequest.setComputedColumnNameAutoAdjust(true);
-            val pair = modelService.checkCCConflict(originRequest);
-            val details = pair.getSecond().getConflictDetails();
-            Assert.assertEquals(1, details.size());
-            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getErrorCode().getCode(),
-                    details.get(0).getDetailCode());
-            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getMsg("CC_1", "CUSTOMER.C_NAME +'USA'",
-                    "CC_CNAME", "CUSTOMER.C_NAME +'USA'", "CC_CNAME"), details.get(0).getDetailMsg());
-        }
-
-        {
-            val ccList = Lists.newArrayList(//
-                    getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
-                    getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX + 1", "BIGINT"));
-            originRequest.setComputedColumnDescs(ccList);
-            originRequest.setComputedColumnNameAutoAdjust(true);
-            originRequest.setFilterCondition("LINEORDER.LO_TAX = 'Kylin' or LINEORDER.LO_TAX = 'Kylin2'");
-            val pair = modelService.checkCCConflict(originRequest);
-            val details = pair.getSecond().getConflictDetails();
-            Assert.assertEquals(1, details.size());
-            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getErrorCode().getCode(),
-                    details.get(0).getDetailCode());
-            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getMsg("CC_1", "CUSTOMER.C_NAME +'USA'",
-                    "CC_CNAME", "CUSTOMER.C_NAME +'USA'", "CC_CNAME"), details.get(0).getDetailMsg());
-            Assert.assertEquals("LINEORDER.LO_TAX = 'Kylin' or LINEORDER.LO_TAX = 'Kylin2'",
-                    pair.getFirst().getFilterCondition());
-        }
-
-        {
-            val dimList = Lists.newArrayList(getNamedColumn("CC_1", "LINEORDER.CC_1"));
-            val measureList = Lists.newArrayList(//
-                    getSimplifiedMeasure("cc_count", "COUNT", "column", "LINEORDER.CC_1"),
-                    getSimplifiedMeasure("COUNT_ALL", "COUNT", "constant", "1"));
-            val ccList = Lists.newArrayList(//
-                    getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
-                    getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX + 1", "BIGINT"));
-            originRequest.setComputedColumnDescs(ccList);
-            originRequest.setComputedColumnNameAutoAdjust(true);
-            originRequest.setSimplifiedDimensions(dimList);
-            originRequest.setSimplifiedMeasures(measureList);
-            originRequest.setFilterCondition("LINEORDER.Cc_1 = 'Kylin' or LINEORDER.cC_1 = 'Kylin2'");
-            val pair = modelService.checkCCConflict(originRequest);
-            val details = pair.getSecond().getConflictDetails();
-            Assert.assertEquals(1, details.size());
-            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getErrorCode().getCode(),
-                    details.get(0).getDetailCode());
-            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getMsg("CC_1", "CUSTOMER.C_NAME +'USA'",
-                    "CC_CNAME", "CUSTOMER.C_NAME +'USA'", "CC_CNAME"), details.get(0).getDetailMsg());
-
-            ModelRequest modelRequest = pair.getFirst();
-            val simplifiedDimensions = modelRequest.getSimplifiedDimensions();
-            Assert.assertEquals(1, simplifiedDimensions.size());
-            Assert.assertEquals("LINEORDER.CC_CNAME", simplifiedDimensions.get(0).getAliasDotColumn());
-            Assert.assertEquals("CC_1", simplifiedDimensions.get(0).getName());
-
-            List<SimplifiedMeasure> simplifiedMeasures = modelRequest.getSimplifiedMeasures();
-            Assert.assertEquals(2, simplifiedMeasures.size());
-            simplifiedMeasures = simplifiedMeasures.stream().filter(measure -> measure.getName().equals("cc_count"))
-                    .collect(Collectors.toList());
-            Assert.assertEquals(1, simplifiedMeasures.size());
-            Assert.assertEquals("COUNT", simplifiedMeasures.get(0).getExpression());
-            Assert.assertEquals("column", simplifiedMeasures.get(0).getParameterValue().get(0).getType());
-            Assert.assertEquals("LINEORDER.CC_CNAME", simplifiedMeasures.get(0).getParameterValue().get(0).getValue());
-
-            Assert.assertEquals("LINEORDER.CC_CNAME = 'Kylin' or LINEORDER.CC_CNAME = 'Kylin2'",
-                    modelRequest.getFilterCondition());
-        }
+        val ccList = Lists.newArrayList(//
+                getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
+                getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX + 1", "BIGINT"));
+        originRequest.setComputedColumnDescs(ccList);
+        originRequest.setComputedColumnNameAutoAdjust(true);
+        val pair = modelService.checkCCConflict(originRequest);
+        val details = pair.getSecond().getConflictDetails();
+        Assert.assertEquals(1, details.size());
+        Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getErrorCode().getCode(),
+                details.get(0).getDetailCode());
+        Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getMsg("CC_1", "CUSTOMER.C_NAME +'USA'",
+                "CC_CNAME", "CUSTOMER.C_NAME +'USA'", "CC_CNAME"), details.get(0).getDetailMsg());
     }
 
     private void testNoCCConflict(ModelRequest originRequest) {
@@ -5498,20 +5828,4 @@ public class ModelServiceTest extends SourceTestCase {
         return ccDesc;
     }
 
-    private NamedColumn getNamedColumn(String name, String aliasDotName) {
-        NamedColumn namedColumn = new NamedColumn();
-        namedColumn.setName(name);
-        namedColumn.setAliasDotColumn(aliasDotName);
-        namedColumn.setStatus(NDataModel.ColumnStatus.DIMENSION);
-        return namedColumn;
-    }
-
-    private SimplifiedMeasure getSimplifiedMeasure(String name, String expr, String type, String value) {
-        ParameterResponse parameterResponse = new ParameterResponse(type, value);
-        SimplifiedMeasure measure = new SimplifiedMeasure();
-        measure.setName(name);
-        measure.setExpression(expr);
-        measure.setParameterValue(Lists.newArrayList(parameterResponse));
-        return measure;
-    }
 }
