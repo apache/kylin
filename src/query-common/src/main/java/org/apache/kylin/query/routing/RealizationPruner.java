@@ -91,6 +91,7 @@ public class RealizationPruner {
             SqlKind.LESS_THAN, SqlKind.LESS_THAN_OR_EQUAL, //
             SqlKind.IN, SqlKind.NOT_IN, //
             SqlKind.EQUALS, SqlKind.NOT_EQUALS);
+
     private RealizationPruner() {
     }
 
@@ -145,6 +146,7 @@ public class RealizationPruner {
         // sql filter condition is always false
         if (simplifiedSqlFilter.isAlwaysFalse()) {
             log.info("SQL filter condition is always false, pruning all ready segments");
+            olapContext.storageContext.setFilterCondAlwaysFalse(true);
             return selectedSegments;
         }
         // sql filter condition is always true

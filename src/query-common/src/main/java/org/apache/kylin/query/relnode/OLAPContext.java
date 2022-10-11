@@ -238,7 +238,9 @@ public class OLAPContext {
 
             final String realizationType;
             Set<String> tableSets = Sets.newHashSet();
-            if (ctx.storageContext.isEmptyLayout()) {
+            if (ctx.storageContext.isEmptyLayout() && ctx.storageContext.isFilterCondAlwaysFalse()) {
+                realizationType = QueryMetrics.FILTER_CONFLICT;
+            } else if (ctx.storageContext.isEmptyLayout()) {
                 realizationType = null;
             } else if (ctx.storageContext.isUseSnapshot()) {
                 realizationType = QueryMetrics.TABLE_SNAPSHOT;
@@ -292,7 +294,8 @@ public class OLAPContext {
                 realizationType, ctx.storageContext.isPartialMatchModel(), snapshots);
         realization.setSecondStorage(
                 QueryContext.current().getSecondStorageUsageMap().getOrDefault(realization.getLayoutId(), false));
-        realization.setRecommendSecondStorage(recommendSecondStorage(ctx.realization.getProject(), modelId, realizationType));
+        realization.setRecommendSecondStorage(
+                recommendSecondStorage(ctx.realization.getProject(), modelId, realizationType));
         return realization;
     }
 
