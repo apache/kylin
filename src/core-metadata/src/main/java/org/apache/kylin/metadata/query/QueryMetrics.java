@@ -39,6 +39,7 @@ public class QueryMetrics extends SchedulerEventNotifier {
     protected static final KapConfig kapConfig = KapConfig.getInstanceFromEnv();
     public static final String UNKNOWN = "Unknown";
 
+    public static final String FILTER_CONFLICT = "Filter Conflict";
     public static final String AGG_INDEX = "Agg Index";
     public static final String TABLE_INDEX = "Table Index";
     public static final String TABLE_SNAPSHOT = "Table Snapshot";
@@ -110,7 +111,7 @@ public class QueryMetrics extends SchedulerEventNotifier {
     }
 
     public boolean isSecondStorage() {
-        for (RealizationMetrics metrics: getRealizationMetrics()) {
+        for (RealizationMetrics metrics : getRealizationMetrics()) {
             if (metrics.isSecondStorage)
                 return true;
         }
@@ -143,7 +144,8 @@ public class QueryMetrics extends SchedulerEventNotifier {
         protected List<String> snapshots;
 
         // For serialize
-        public RealizationMetrics() {}
+        public RealizationMetrics() {
+        }
 
         public RealizationMetrics(String layoutId, String indexType, String modelId, List<String> snapshots) {
             this.layoutId = layoutId;
