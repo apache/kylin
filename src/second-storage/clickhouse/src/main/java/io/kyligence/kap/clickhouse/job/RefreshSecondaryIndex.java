@@ -26,9 +26,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.metadata.cube.model.NDataflowManager;
-import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -49,33 +47,32 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public class RefreshSecondaryIndex {
-
     @JsonProperty("node")
     private String node;
     @JsonProperty("database")
     private String database;
     @JsonProperty("table")
     private String table;
-    @JsonProperty("column_id")
-    private Integer columnId;
-    @JsonProperty("type")
-    private Type type;
+    @JsonProperty("add_indexes")
+    private Set<Integer> addIndexes;
+    @JsonProperty("delete_indexes")
+    private Set<Integer> deleteIndexes;
 
     @JsonIgnore
-    private LayoutEntity layoutEntity;
+    private NDataflow dataflow;
 
     public RefreshSecondaryIndex() {
         // empty
     }
 
-    public RefreshSecondaryIndex(String node, String database, String table, Integer columnId,
-            LayoutEntity layoutEntity, Type type) {
+    public RefreshSecondaryIndex(String node, String database, String table, Set<Integer> addIndexes,
+            Set<Integer> deleteIndexes, NDataflow dataflow) {
         this.node = node;
         this.database = database;
         this.table = table;
-        this.columnId = columnId;
-        this.layoutEntity = layoutEntity;
-        this.type = type;
+        this.dataflow = dataflow;
+        this.addIndexes = addIndexes;
+        this.deleteIndexes = deleteIndexes;
     }
 
     public void refresh() {
@@ -88,29 +85,31 @@ public class RefreshSecondaryIndex {
                 return;
             }
             Set<String> existSkipIndex = existSkippingIndex(clickHouse, database, table);
-            String column = getPrefixColumn(String.valueOf(columnId));
-            String indexName = ClickHouseNameUtil.getSkippingIndexName(table, column);
-            if (type == Type.ADD) {
-                addSkippingIndex(clickHouse, tableIdentifier, column, indexName, existSkipIndex);
-            } else if (type == Type.DELETE) {
-                deleteSkippingIndex(clickHouse, tableIdentifier, indexName, existSkipIndex);
+
+            for (Integer deleteIndexColumnId : deleteIndexes) {
+                deleteSkippingIndex(clickHouse, tableIdentifier, deleteIndexColumnId, existSkipIndex);
+            }
+
+            for (Integer addIndexColumnId : addIndexes) {
+                addSkippingIndex(clickHouse, tableIdentifier, addIndexColumnId, existSkipIndex);
             }
         } catch (SQLException e) {
-            log.error("node {} clean index {}.{} failed", node, database, table);
+            log.error("node {} update index {}.{} failed", node, database, table);
             ExceptionUtils.rethrow(e);
         }
     }
 
-    private void addSkippingIndex(ClickHouse clickHouse, TableIdentifier tableIdentifier, String column,
-            String indexName, Set<String> existSkipIndex) throws SQLException {
-        NDataModel model = layoutEntity.getModel();
-        KylinConfig modelConfig = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), model.getProject())
-                .getDataflow(model.getId()).getConfig();
+    private void addSkippingIndex(ClickHouse clickHouse, TableIdentifier tableIdentifier, int columnId,
+            Set<String> existSkipIndex) throws SQLException {
+        String column = getPrefixColumn(String.valueOf(columnId));
+        String indexName = ClickHouseNameUtil.getSkippingIndexName(table, column);
+        KylinConfig modelConfig = dataflow.getConfig();
         int granularity = modelConfig.getSecondStorageSkippingIndexGranularity();
         val render = new ClickHouseRender();
 
         String expr = SkippingIndexChooser
-                .getSkippingIndexType(layoutEntity.getOrderedDimensions().get(columnId).getType()).toSql(modelConfig);
+                .getSkippingIndexType(dataflow.getModel().getEffectiveDimensions().get(columnId).getType())
+                .toSql(modelConfig);
         AlterTable alterTable = new AlterTable(tableIdentifier,
                 new AlterTable.ManipulateIndex(indexName, column, expr, granularity));
         AlterTable materializeTable = new AlterTable(tableIdentifier,
@@ -122,8 +121,9 @@ public class RefreshSecondaryIndex {
         clickHouse.apply(materializeTable.toSql(render));
     }
 
-    private void deleteSkippingIndex(ClickHouse clickHouse, TableIdentifier tableIdentifier, String indexName,
+    private void deleteSkippingIndex(ClickHouse clickHouse, TableIdentifier tableIdentifier, int columnId,
             Set<String> existSkipIndex) throws SQLException {
+        String indexName = ClickHouseNameUtil.getSkippingIndexName(table, getPrefixColumn(String.valueOf(columnId)));
         if (!existSkipIndex.contains(indexName)) {
             return;
         }
@@ -149,9 +149,5 @@ public class RefreshSecondaryIndex {
         }
 
         return Sets.newHashSet();
-    }
-
-    enum Type {
-        ADD, DELETE;
     }
 }

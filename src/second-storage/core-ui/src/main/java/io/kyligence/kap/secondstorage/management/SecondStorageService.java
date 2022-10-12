@@ -1158,14 +1158,14 @@ public class SecondStorageService extends BasicService implements SecondStorageU
         SecondStorageUtil.validateProjectLock(project, Collections.singletonList(LockTypeEnum.LOAD.name()));
         List<AbstractExecutable> jobs = getRelationJobsWithoutFinish(project, modelId);
         if (!jobs.isEmpty()) {
-            throw new KylinException(JobErrorCode.SECOND_STORAGE_PROJECT_JOB_EXISTS,
-                    String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageProjectJobExists(), project));
+            throw new KylinException(JobErrorCode.SECOND_STORAGE_JOB_EXISTS,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageConcurrentOperate(), project));
         }
         jobs = getJobs(project, modelId, Sets.newHashSet(ExecutableState.ERROR),
                 Sets.newHashSet(JobTypeEnum.SECOND_STORAGE_REFRESH_SECONDARY_INDEXES));
         if (!jobs.isEmpty()) {
-            throw new KylinException(JobErrorCode.SECOND_STORAGE_PROJECT_JOB_EXISTS,
-                    String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageProjectJobExists(), project));
+            throw new KylinException(JobErrorCode.SECOND_STORAGE_JOB_EXISTS,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageConcurrentOperate(), project));
         }
     }
 
