@@ -48,14 +48,6 @@ import org.apache.kylin.job.exception.JobSubmissionException;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.manager.JobManager;
 import org.apache.kylin.job.model.JobParam;
-import org.apache.kylin.metadata.model.PartitionDesc;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.query.util.PushDownUtil;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -67,9 +59,15 @@ import org.apache.kylin.metadata.model.MultiPartitionDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.util.MultiPartitionUtil;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.sourceusage.SourceUsageManager;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.PartitionsRefreshRequest;
 import org.apache.kylin.rest.request.SegmentTimeRequest;
@@ -82,6 +80,7 @@ import org.apache.kylin.rest.service.params.FullBuildSegmentParams;
 import org.apache.kylin.rest.service.params.IncrementBuildSegmentParams;
 import org.apache.kylin.rest.service.params.MergeSegmentParams;
 import org.apache.kylin.rest.service.params.RefreshSegmentParams;
+import org.apache.kylin.source.SourceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -93,13 +92,10 @@ import lombok.val;
 import lombok.var;
 
 @Component("modelBuildService")
-public class ModelBuildService extends BasicService implements ModelBuildSupporter {
+public class ModelBuildService extends AbstractModelService implements ModelBuildSupporter {
 
     @Autowired
     private ModelService modelService;
-
-    @Autowired
-    private AclEvaluate aclEvaluate;
 
     @Autowired
     private SegmentHelper segmentHelper;
@@ -150,7 +146,7 @@ public class ModelBuildService extends BasicService implements ModelBuildSupport
 
     public JobInfoResponse fullBuildSegmentsManually(FullBuildSegmentParams params) {
         aclEvaluate.checkProjectOperationPermission(params.getProject());
-        modelService.checkModelPermission(params.getProject(), params.getModelId());
+        checkModelPermission(params.getProject(), params.getModelId());
         List<JobInfoResponse.JobInfo> jobIds = EnhancedUnitOfWork
                 .doInTransactionWithCheckAndRetry(() -> constructFullBuild(params), params.getProject());
         JobInfoResponse jobInfoResponse = new JobInfoResponse();
@@ -228,7 +224,7 @@ public class ModelBuildService extends BasicService implements ModelBuildSupport
         List<JobInfoResponse.JobInfo> jobIds = new ArrayList<>();
         NDataflowManager dfMgr = getManager(NDataflowManager.class, params.getProject());
         val jobManager = getManager(JobManager.class, params.getProject());
-        IndexPlan indexPlan = modelService.getIndexPlan(params.getModelId(), params.getProject());
+        IndexPlan indexPlan = getIndexPlan(params.getModelId(), params.getProject());
         NDataflow df = dfMgr.getDataflow(indexPlan.getUuid());
 
         for (String id : params.getSegmentIds()) {
@@ -263,7 +259,7 @@ public class ModelBuildService extends BasicService implements ModelBuildSupport
     public JobInfoResponse incrementBuildSegmentsManually(IncrementBuildSegmentParams params) throws Exception {
         String project = params.getProject();
         aclEvaluate.checkProjectOperationPermission(project);
-        modelService.checkModelPermission(project, params.getModelId());
+        checkModelPermission(project, params.getModelId());
         val modelManager = getManager(NDataModelManager.class, project);
         if (PartitionDesc.isEmptyPartitionDesc(params.getPartitionDesc())) {
             throw new KylinException(EMPTY_PARTITION_COLUMN, "Partition column is null.'");
@@ -441,7 +437,7 @@ public class ModelBuildService extends BasicService implements ModelBuildSupport
             List<String[]> partitionValues, boolean parallelBuild, boolean buildAllPartitions, int priority,
             String yarnQueue, Object tag) {
         aclEvaluate.checkProjectOperationPermission(project);
-        modelService.checkModelPermission(project, modelId);
+        checkModelPermission(project, modelId);
         modelService.checkSegmentsExistById(modelId, project, new String[] { segmentId });
         modelService.checkModelIsMLP(modelId, project);
         val dfm = getManager(NDataflowManager.class, project);
@@ -527,7 +523,7 @@ public class ModelBuildService extends BasicService implements ModelBuildSupport
         val segment = df.getSegment(param.getSegmentId());
         var partitions = param.getPartitionIds();
         aclEvaluate.checkProjectOperationPermission(project);
-        modelService.checkModelPermission(project, modelId);
+        checkModelPermission(project, modelId);
 
         if (CollectionUtils.isEmpty(param.getPartitionIds())) {
             partitions = modelService.getModelById(modelId, project).getMultiPartitionDesc()
@@ -561,7 +557,7 @@ public class ModelBuildService extends BasicService implements ModelBuildSupport
 
         val dfManager = getManager(NDataflowManager.class, project);
         val jobManager = getManager(JobManager.class, project);
-        val indexPlan = modelService.getIndexPlan(modelId, project);
+        val indexPlan = getIndexPlan(modelId, project);
         val df = dfManager.getDataflow(indexPlan.getUuid());
 
         NDataSegment mergeSeg = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project).mergeSegments(
@@ -588,7 +584,7 @@ public class ModelBuildService extends BasicService implements ModelBuildSupport
             List<Long> indexIds, boolean parallelBuildBySegment, int priority, boolean partialBuild, String yarnQueue,
             Object tag) {
         aclEvaluate.checkProjectOperationPermission(project);
-        modelService.checkModelPermission(project, modelId);
+        checkModelPermission(project, modelId);
         val dfManger = getManager(NDataflowManager.class, project);
         NDataflow dataflow = dfManger.getDataflow(modelId);
         modelService.checkSegmentsExistById(modelId, project, segmentIds.toArray(new String[0]));

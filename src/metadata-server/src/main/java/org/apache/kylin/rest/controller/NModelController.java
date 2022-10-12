@@ -30,18 +30,14 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.exception.CommonErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.exception.LookupTableException;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
@@ -73,13 +69,14 @@ import org.apache.kylin.rest.response.ModelConfigResponse;
 import org.apache.kylin.rest.response.ModelSaveCheckResponse;
 import org.apache.kylin.rest.response.MultiPartitionValueResponse;
 import org.apache.kylin.rest.response.PurgeModelAffectedResponse;
+import org.apache.kylin.rest.service.AbstractModelService;
 import org.apache.kylin.rest.service.FusionIndexService;
 import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.IndexPlanService;
 import org.apache.kylin.rest.service.ModelService;
-import org.apache.kylin.rest.util.AclPermissionUtil;
-import org.apache.kylin.tool.bisync.BISyncModel;
+import org.apache.kylin.rest.service.ModelTdsService;
 import org.apache.kylin.tool.bisync.SyncContext;
+import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -111,6 +108,10 @@ public class NModelController extends NBasicController {
     @Autowired
     @Qualifier("modelService")
     private ModelService modelService;
+
+    @Autowired
+    @Qualifier("modelTdsService")
+    private ModelTdsService tdsService;
 
     @Autowired
     private FusionModelService fusionModelService;
@@ -484,7 +485,7 @@ public class NModelController extends NBasicController {
         checkRequiredArg(MODEL_ID, modelId);
         String newAlias = modelRenameRequest.getNewModelName();
         String description = modelRenameRequest.getDescription();
-        if (!StringUtils.containsOnly(newAlias, ModelService.VALID_NAME_FOR_MODEL)) {
+        if (!StringUtils.containsOnly(newAlias, AbstractModelService.VALID_NAME_FOR_MODEL)) {
             throw new KylinException(MODEL_NAME_INVALID, newAlias);
         }
 
@@ -545,7 +546,7 @@ public class NModelController extends NBasicController {
         String newModelName = request.getNewModelName();
         checkRequiredArg(MODEL_ID, modelId);
         checkRequiredArg(NEW_MODEL_NAME, newModelName);
-        if (!StringUtils.containsOnly(newModelName, ModelService.VALID_NAME_FOR_MODEL)) {
+        if (!StringUtils.containsOnly(newModelName, AbstractModelService.VALID_NAME_FOR_MODEL)) {
             throw new KylinException(MODEL_NAME_INVALID, newModelName);
         }
         modelService.cloneModel(modelId, request.getNewModelName(), request.getProject());
@@ -636,9 +637,12 @@ public class NModelController extends NBasicController {
     @GetMapping(value = "/validate_export")
     @ResponseBody
     public EnvelopeResponse<Boolean> validateExport(@RequestParam(value = "model") String modelId,
-            @RequestParam(value = "project") String project) {
+            @RequestParam(value = "project") String project,
+            @RequestParam(value = "element", required = false, defaultValue = "AGG_INDEX_COL") SyncContext.ModelElement element) {
         String projectName = checkProjectName(project);
-        Boolean result = modelService.validateExport(projectName, modelId);
+        SyncContext virtualContext = tdsService.prepareSyncContext(projectName, modelId, null, element, "", -1);
+        SyncModel syncModel = tdsService.exportModel(virtualContext);
+        Boolean result = tdsService.preCheckNameConflict(syncModel);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
     }
 
@@ -652,75 +656,12 @@ public class NModelController extends NBasicController {
             @RequestParam(value = "server_port", required = false) Integer serverPort, HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         String projectName = checkProjectName(project);
-
         String host = getHost(serverHost, request.getServerName());
-        Integer port = getPort(serverPort, request.getServerPort());
+        int port = getPort(serverPort, request.getServerPort());
 
-        modelService.validateExport(projectName, modelId);
-        BISyncModel syncModel = modelService.exportModel(projectName, modelId, exportAs, element, host, port);
-
-        dumpSyncModel(modelId, exportAs, projectName, syncModel, response);
-    }
-
-    @ApiOperation(value = "biExport", tags = { "QE" })
-    @GetMapping(value = "/bi_export")
-    @ResponseBody
-    public void biExport(@RequestParam("model") String modelId, @RequestParam(value = "project") String project,
-            @RequestParam(value = "export_as") SyncContext.BI exportAs,
-            @RequestParam(value = "element", required = false, defaultValue = "AGG_INDEX_COL") SyncContext.ModelElement element,
-            @RequestParam(value = "server_host", required = false) String serverHost,
-            @RequestParam(value = "server_port", required = false) Integer serverPort,
-            @RequestParam(value = "dimensions", required = false) List<String> dimensions,
-            @RequestParam(value = "measures", required = false) List<String> measures, HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
-        String projectName = checkProjectName(project);
-
-        String host = getHost(serverHost, request.getServerName());
-        Integer port = getPort(serverPort, request.getServerPort());
-
-        modelService.validateExport(projectName, modelId);
-        SyncContext syncContext = modelService.getSyncContext(projectName, modelId, exportAs, element, host, port);
-
-        BISyncModel syncModel = AclPermissionUtil.isAdmin()
-                ? modelService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, dimensions, measures)
-                : modelService.exportTDSDimensionsAndMeasuresByNormalUser(syncContext, dimensions, measures);
-
-        dumpSyncModel(modelId, exportAs, projectName, syncModel, response);
-    }
-
-    private void dumpSyncModel(String modelId, SyncContext.BI exportAs, String projectName, BISyncModel syncModel,
-            HttpServletResponse response) throws IOException {
-        NDataModelManager manager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), projectName);
-        NDataModel dataModel = manager.getDataModelDesc(modelId);
-        String alias = dataModel.getAlias();
-        String fileName = String.format(Locale.ROOT, "%s_%s_%s", projectName, alias,
-                new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault(Locale.Category.FORMAT)).format(new Date()));
-        switch (exportAs) {
-        case TABLEAU_CONNECTOR_TDS:
-        case TABLEAU_ODBC_TDS:
-            response.setContentType("application/xml");
-            response.setHeader("Content-Disposition",
-                    String.format(Locale.ROOT, "attachment; filename=\"%s.tds\"", fileName));
-            break;
-        default:
-            throw new KylinException(CommonErrorCode.UNKNOWN_ERROR_CODE, "unrecognized export target");
-        }
-        syncModel.dump(response.getOutputStream());
-        response.getOutputStream().flush();
-        response.getOutputStream().close();
-    }
-
-    private String getHost(String serverHost, String serverName) {
-        String host = KylinConfig.getInstanceFromEnv().getModelExportHost();
-        host = Optional.ofNullable(Optional.ofNullable(host).orElse(serverHost)).orElse(serverName);
-        return host;
-    }
-
-    private Integer getPort(Integer serverPort, Integer requestServerPort) {
-        Integer port = KylinConfig.getInstanceFromEnv().getModelExportPort() == -1 ? null
-                : KylinConfig.getInstanceFromEnv().getModelExportPort();
-        port = Optional.ofNullable(Optional.ofNullable(port).orElse(serverPort)).orElse(requestServerPort);
-        return port;
+        SyncContext syncContext = tdsService.prepareSyncContext(projectName, modelId, exportAs, element, host, port);
+        SyncModel syncModel = tdsService.exportModel(syncContext);
+        tdsService.dumpSyncModel(syncContext, syncModel, response);
     }
 
     @ApiOperation(value = "updateMultiPartitionMapping", tags = { "QE" }, notes = "Add URL: {model}")

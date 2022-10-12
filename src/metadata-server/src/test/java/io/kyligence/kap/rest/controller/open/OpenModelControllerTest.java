@@ -37,6 +37,7 @@ import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
@@ -61,7 +62,10 @@ import org.apache.kylin.rest.response.OpenGetIndexResponse;
 import org.apache.kylin.rest.service.FusionIndexService;
 import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.service.ModelTdsService;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.tool.bisync.SyncContext;
+import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
@@ -101,6 +105,9 @@ public class OpenModelControllerTest extends NLocalFileMetadataTestCase {
 
     @Mock
     private FusionModelService fusionModelService;
+
+    @Mock
+    private ModelTdsService tdsService;
 
     @Mock
     private AclEvaluate aclEvaluate;
@@ -503,6 +510,66 @@ public class OpenModelControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testBIExportByADMIN() throws Exception {
+        String project = "default";
+        String modelName = "741ca86a-1f13-46da-a59f-95fb68615e3a";
+        SyncContext syncContext = new SyncContext();
+        syncContext.setProjectName(project);
+        syncContext.setModelId(modelName);
+        syncContext.setTargetBI(SyncContext.BI.TABLEAU_CONNECTOR_TDS);
+        syncContext.setModelElement(SyncContext.ModelElement.AGG_INDEX_AND_TABLE_INDEX_COL);
+        syncContext.setHost("localhost");
+        syncContext.setPort(8080);
+        syncContext.setDataflow(NDataflowManager.getInstance(getTestConfig(), project).getDataflow(modelName));
+        syncContext.setKylinConfig(getTestConfig());
+        SyncModel syncModel = Mockito.mock(SyncModel.class);
+        NDataModel model = new NDataModel();
+        model.setUuid("aaa");
+        Mockito.doReturn(model).when(openModelController).getModel(Mockito.anyString(), Mockito.anyString());
+        Mockito.doReturn(syncContext).when(tdsService).prepareSyncContext(project, modelName,
+                SyncContext.BI.TABLEAU_CONNECTOR_TDS, SyncContext.ModelElement.CUSTOM_COLS, "localhost", 8080);
+        Mockito.doReturn(syncModel).when(tdsService).exportTDSDimensionsAndMeasuresByAdmin(syncContext,
+                Lists.newArrayList(), Lists.newArrayList());
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/bi_export").param("model_name", modelName)
+                .param("project", project).param("export_as", "TABLEAU_CONNECTOR_TDS").param("element", "CUSTOM_COLS")
+                .param("server_host", "localhost").param("server_port", "8080").param("dimensions", "")
+                .param("measures", "").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testBIExportByNormalUser() throws Exception {
+        String project = "default";
+        String modelName = "741ca86a-1f13-46da-a59f-95fb68615e3a";
+        SyncContext syncContext = new SyncContext();
+        syncContext.setProjectName(project);
+        syncContext.setModelId(modelName);
+        syncContext.setTargetBI(SyncContext.BI.TABLEAU_CONNECTOR_TDS);
+        syncContext.setModelElement(SyncContext.ModelElement.AGG_INDEX_AND_TABLE_INDEX_COL);
+        syncContext.setHost("localhost");
+        syncContext.setPort(8080);
+        syncContext.setDataflow(NDataflowManager.getInstance(getTestConfig(), project).getDataflow(modelName));
+        syncContext.setKylinConfig(getTestConfig());
+        SyncModel syncModel = Mockito.mock(SyncModel.class);
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
+        NDataModel model = new NDataModel();
+        model.setUuid("aaa");
+        Mockito.doReturn(model).when(openModelController).getModel(Mockito.anyString(), Mockito.anyString());
+        Mockito.doReturn(syncContext).when(tdsService).prepareSyncContext(project, modelName,
+                SyncContext.BI.TABLEAU_CONNECTOR_TDS, SyncContext.ModelElement.CUSTOM_COLS, "localhost", 8080);
+        Mockito.doReturn(syncModel).when(tdsService).exportTDSDimensionsAndMeasuresByNormalUser(syncContext,
+                Lists.newArrayList(), Lists.newArrayList());
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/bi_export").param("model_name", modelName)
+                .param("project", project).param("export_as", "TABLEAU_CONNECTOR_TDS").param("element", "CUSTOM_COLS")
+                .param("server_host", "localhost").param("server_port", "8080").param("dimensions", "")
+                .param("measures", "").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
     public void testUpdateModelStatus() throws Exception {
         String project = "default";
         String modelName = "model1";
@@ -566,6 +633,8 @@ public class OpenModelControllerTest extends NLocalFileMetadataTestCase {
         OpenModelRequest request = new OpenModelRequest();
         request.setProject(project);
         request.setModelName(modelAlias);
+        Mockito.doReturn(Mockito.mock(BuildBaseIndexResponse.class)).when(fusionModelService)
+                .updateDataModelSemantic(request.getProject(), request);
         mockMvc.perform(MockMvcRequestBuilders.put("/api/models/modification").contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValueAsString(request))
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))

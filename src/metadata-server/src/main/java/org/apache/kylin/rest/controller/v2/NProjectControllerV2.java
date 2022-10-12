@@ -19,13 +19,13 @@ package org.apache.kylin.rest.controller.v2;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.controller.NBasicController;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -54,7 +54,7 @@ public class NProjectControllerV2 extends NBasicController {
             @RequestParam(value = "exact", required = false, defaultValue = "true") boolean exactMatch) {
 
         List<ProjectInstance> readableProjects = projectService.getReadableProjects(project, exactMatch);
-        HashMap<String, Object> projects = getDataResponse("projects", readableProjects, offset, size);
+        Map<String, Object> projects = getDataResponse("projects", readableProjects, offset, size);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, projects, "");
     }
 
