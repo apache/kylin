@@ -57,7 +57,7 @@ public class AbstractModelService extends BasicService {
     @Autowired
     public AccessService accessService;
 
-    public final void checkModelPermission(String project, String modelId) {
+    public void checkModelPermission(String project, String modelId) {
         String userName = aclEvaluate.getCurrentUserName();
         Set<String> groups = getCurrentUserGroups();
         if (AclPermissionUtil.isAdmin() || AclPermissionUtil.isAdminInProject(project, groups)) {
@@ -94,7 +94,7 @@ public class AbstractModelService extends BasicService {
         });
     }
 
-    public final NDataModel getModelById(String modelId, String project) {
+    public NDataModel getModelById(String modelId, String project) {
         NDataModelManager modelManager = getManager(NDataModelManager.class, project);
         NDataModel nDataModel = modelManager.getDataModelDesc(modelId);
         if (null == nDataModel) {
@@ -103,7 +103,7 @@ public class AbstractModelService extends BasicService {
         return nDataModel;
     }
 
-    public final NDataModel getModelByAlias(String modelAlias, String project) {
+    public NDataModel getModelByAlias(String modelAlias, String project) {
         NDataModelManager modelManager = getManager(NDataModelManager.class, project);
         NDataModel nDataModel = modelManager.getDataModelDescByAlias(modelAlias);
         if (null == nDataModel) {
@@ -112,7 +112,7 @@ public class AbstractModelService extends BasicService {
         return nDataModel;
     }
 
-    public final Set<String> listAllModelIdsInProject(String project) {
+    public Set<String> listAllModelIdsInProject(String project) {
         NDataModelManager dataModelManager = getManager(NDataModelManager.class, project);
         return dataModelManager.listAllModelIds();
     }
