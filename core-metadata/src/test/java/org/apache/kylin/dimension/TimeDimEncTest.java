@@ -18,13 +18,13 @@
 
 package org.apache.kylin.dimension;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.DateFormat;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Note the test must be consistent with TimeStrDictionaryTest,
@@ -34,7 +34,7 @@ public class TimeDimEncTest {
     TimeDimEnc enc;
     byte[] buf;
 
-    @Before
+    @BeforeEach
     public void setup() {
         enc = new TimeDimEnc();
         buf = new byte[enc.getLengthOfEncoding()];
@@ -51,19 +51,19 @@ public class TimeDimEncTest {
     }
 
     @Test
-    public void basicTest() {
+    void basicTest() {
         long a = encode("1999-01-01");
         long b = encode("1999-01-01 00:00:00");
         long c = encode("1999-01-01 00:00:00.000");
         long d = encode("1999-01-01 00:00:00.022");
 
-        Assert.assertEquals(a, b);
-        Assert.assertEquals(a, c);
-        Assert.assertEquals(a, d);
+        Assertions.assertEquals(a, b);
+        Assertions.assertEquals(a, c);
+        Assertions.assertEquals(a, d);
     }
 
     @Test
-    public void testEncodeDecode() {
+    void testEncodeDecode() {
         encodeDecode("1999-01-12");
         encodeDecode("2038-01-09");
         encodeDecode("2038-01-08");
@@ -78,7 +78,7 @@ public class TimeDimEncTest {
     }
 
     @Test
-    public void testIllegal() {
+    void testIllegal() {
         try {
             encode("10000-1-1");
             fail("IllegalArgumentException expected");
@@ -93,7 +93,7 @@ public class TimeDimEncTest {
 
         String originChoppingMilis = DateFormat.formatToTimeWithoutMilliStr(DateFormat.stringToMillis(origin));
         String backMillis = DateFormat.formatToTimeWithoutMilliStr(Long.parseLong(back));
-        Assert.assertEquals(originChoppingMilis, backMillis);
+        Assertions.assertEquals(originChoppingMilis, backMillis);
     }
 
 }

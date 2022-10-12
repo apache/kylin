@@ -18,8 +18,8 @@
 
 package org.apache.kylin.cube.project;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.Set;
@@ -34,37 +34,42 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author xduo
  */
 public class ProjectManagerTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testDropNonemptyProject() throws IOException {
-        ProjectManager.getInstance(getTestConfig()).dropProject("DEFAULT");
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testDropNonexistProject() throws IOException {
-        ProjectManager.getInstance(getTestConfig()).dropProject("DEFAULT???");
+    @Test
+    void testDropNonemptyProject() throws IOException {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            ProjectManager.getInstance(getTestConfig()).dropProject("DEFAULT");
+        });
     }
 
     @Test
-    public void testNewProject() throws Exception {
+    void testDropNonexistProject() throws IOException {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            ProjectManager.getInstance(getTestConfig()).dropProject("DEFAULT???");
+        });
+    }
+
+    @Test
+    void testNewProject() throws Exception {
         ProjectManager prjMgr = ProjectManager.getInstance(getTestConfig());
         CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
         CubeDescManager cubeDescMgr = CubeDescManager.getInstance(getTestConfig());
@@ -112,7 +117,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testExistingProject() throws Exception {
+    void testExistingProject() throws Exception {
         ProjectManager prjMgr = ProjectManager.getInstance(getTestConfig());
         CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
         CubeDescManager cubeDescMgr = CubeDescManager.getInstance(getTestConfig());
@@ -142,7 +147,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testProjectsDrop() throws IOException {
+    void testProjectsDrop() throws IOException {
         ProjectManager prjMgr = ProjectManager.getInstance(getTestConfig());
         CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
 
@@ -157,7 +162,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testProjectsLoadAfterProjectChange() throws IOException {
+    void testProjectsLoadAfterProjectChange() throws IOException {
         ProjectManager prjMgr = ProjectManager.getInstance(getTestConfig());
         CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
 

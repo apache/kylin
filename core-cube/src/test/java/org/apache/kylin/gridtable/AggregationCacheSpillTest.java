@@ -18,8 +18,8 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -28,9 +28,9 @@ import java.util.List;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
@@ -44,8 +44,8 @@ public class AggregationCacheSpillTest extends LocalFileMetadataTestCase {
 
     static GTInfo INFO;
 
-    @BeforeClass
-    public static void beforeClass() {
+    @BeforeAll
+    static void beforeClass() {
         staticCreateTestMetadata();
 
         INFO = UnitTestSupport.hllInfo();
@@ -54,13 +54,13 @@ public class AggregationCacheSpillTest extends LocalFileMetadataTestCase {
             TEST_DATA.addAll(data);
     }
 
-    @AfterClass
-    public static void afterClass() throws Exception {
+    @AfterAll
+    static void afterClass() throws Exception {
         cleanAfterClass();
     }
 
     @Test
-    public void testAggregationCacheSpill() throws IOException {
+    void testAggregationCacheSpill() throws IOException {
         IGTScanner inputScanner = new IGTScanner() {
             @Override
             public GTInfo getInfo() {
@@ -96,7 +96,7 @@ public class AggregationCacheSpillTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAggregationCacheInMem() throws IOException {
+    void testAggregationCacheInMem() throws IOException {
         IGTScanner inputScanner = new IGTScanner() {
             @Override
             public GTInfo getInfo() {

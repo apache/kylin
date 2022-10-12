@@ -18,29 +18,29 @@
 
 package org.apache.kylin.metrics.lib.impl;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metrics.lib.Record;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class BlockingReservoirTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testUpdate() {
+    void testUpdate() {
         BlockingReservoir reservoir = new BlockingReservoir();
 
         Record record = new RecordEvent("TEST");
@@ -56,7 +56,7 @@ public class BlockingReservoirTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testBatchSize() {
+    void testBatchSize() {
         BlockingReservoir reservoir = new BlockingReservoir(5, 12);
         reservoir.setReady();
 
@@ -65,12 +65,12 @@ public class BlockingReservoirTest extends LocalFileMetadataTestCase {
             reservoir.update(record);
         }
         reservoir.notifyUpdate();
-        Assert.assertEquals(18, reservoir.size());
+        Assertions.assertEquals(18, reservoir.size());
 
         reservoir.notifyUpdate();
-        Assert.assertEquals(6, reservoir.size());
+        Assertions.assertEquals(6, reservoir.size());
 
         reservoir.notifyUpdate();
-        Assert.assertEquals(0, reservoir.size());
+        Assertions.assertEquals(0, reservoir.size());
     }
 }

@@ -41,22 +41,22 @@ import org.apache.kylin.measure.hllc.HLLCAggregator;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.github.jamm.MemoryMeter;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class AggregatorMemEstimateTest extends LocalFileMetadataTestCase {
     private static final MemoryMeter meter = new MemoryMeter();
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         staticCreateTestMetadata();
     }
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         cleanAfterClass();
     }
 
@@ -98,7 +98,7 @@ public class AggregatorMemEstimateTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAggregatorEstimate() {
+    void testAggregatorEstimate() {
         HLLCAggregator hllcAggregator = new HLLCAggregator(14);
         hllcAggregator.aggregate(new HLLCounter(14));
 

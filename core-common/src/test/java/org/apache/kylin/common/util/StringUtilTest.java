@@ -19,8 +19,8 @@
 package org.apache.kylin.common.util;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 
 import java.util.ArrayList;
@@ -31,46 +31,46 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.Vector;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 public class StringUtilTest {
     @Test
-    public void splitTest() {
+    void splitTest() {
         String normalText = "Try to make the code better";
         String[] expected = new String[] { "Try", "to", "make", "the", "code", "better" };
-        Assert.assertArrayEquals(expected, StringUtil.split(normalText, " "));
+        Assertions.assertArrayEquals(expected, StringUtil.split(normalText, " "));
 
         // case in http://errorprone.info/bugpattern/StringSplitter
         expected = new String[] { "" };
-        Assert.assertArrayEquals(expected, StringUtil.split("", ":"));
+        Assertions.assertArrayEquals(expected, StringUtil.split("", ":"));
 
         expected = new String[] { "", "" };
-        Assert.assertArrayEquals(expected, StringUtil.split(":", ":"));
+        Assertions.assertArrayEquals(expected, StringUtil.split(":", ":"));
 
         expected = new String[] { "1", "2" };
-        Assert.assertArrayEquals(expected, StringUtil.split("1<|>2", "<|>"));
+        Assertions.assertArrayEquals(expected, StringUtil.split("1<|>2", "<|>"));
     }
 
     @Test
-    public void splitAndTrimTest() {
+    void splitAndTrimTest() {
         String[] expected = new String[] { "foo", "bar" };
-        Assert.assertArrayEquals(expected, StringUtil.splitAndTrim(" foo... bar. ", "."));
+        Assertions.assertArrayEquals(expected, StringUtil.splitAndTrim(" foo... bar. ", "."));
     }
 
     @Test
-    public void splitByCommaTest() {
+    void splitByCommaTest() {
         String[] expected = new String[] { "Hello", "Kylin" };
-        Assert.assertArrayEquals(expected, StringUtil.splitByComma("Hello,Kylin"));
+        Assertions.assertArrayEquals(expected, StringUtil.splitByComma("Hello,Kylin"));
     }
 
     @Test
-    public void testJoin() {
+    void testJoin() {
         List<String> stringListNormal = Lists.newArrayList();
         List<String> stringListEmpty = Lists.newArrayList();
 
@@ -90,29 +90,29 @@ public class StringUtilTest {
     }
 
   @Test
-  public void testDropSuffixWithNonEmptyString() {
+  void testDropSuffixWithNonEmptyString() {
       assertEquals("", StringUtil.dropSuffix("Oo}T^z88/U", "Oo}T^z88/U"));
   }
 
   @Test
-  public void testDropSuffixWithEmptyString() {
+  void testDropSuffixWithEmptyString() {
       String string = StringUtil.dropSuffix("", "^Fahs");
 
       assertEquals("", string);
   }
 
   @Test
-  public void testNoBlankWithNull() {
+  void testNoBlankWithNull() {
       assertEquals("%W=U~)O|0'#?,zA", StringUtil.noBlank(null, "%W=U~)O|0'#?,zA"));
   }
 
   @Test
-  public void testNoBlankWithNonEmptyString() {
+  void testNoBlankWithNonEmptyString() {
       assertEquals("N(sg", StringUtil.noBlank("N(sg", "H=!Cp(Ed5gral0qzo"));
   }
 
   @Test
-  public void testToUpperCaseArrayWithNonEmptyArray() {
+  void testToUpperCaseArrayWithNonEmptyArray() {
       String[] stringArray = new String[7];
       stringArray[0] = "org.apache.kylin.common.util.StringUtil";
       StringUtil.toUpperCaseArray(stringArray, stringArray);
@@ -124,7 +124,7 @@ public class StringUtilTest {
   }
 
   @Test
-  public void testJoinReturningNonEmptyString() {
+  void testJoinReturningNonEmptyString() {
       List<String> arrayList = new ArrayList<String>();
       LinkedHashSet<String> linkedHashSet = new LinkedHashSet<String>(arrayList);
       linkedHashSet.add(")'<Mw@ZR0IYF_l%*>");
@@ -137,7 +137,7 @@ public class StringUtilTest {
   }
 
   @Test
-  public void testJoinOne() {
+  void testJoinOne() {
       Vector<String> vector = new Vector<>();
       vector.add(null);
       String resultString = StringUtil.join(vector, "PB");
@@ -147,7 +147,7 @@ public class StringUtilTest {
   }
 
   @Test
-  public void testJoinTwo() {
+  void testJoinTwo() {
       Set<String> set = Locale.CHINESE.getUnicodeLocaleAttributes();
       String resultString = StringUtil.join(set, "Op");
 
@@ -159,28 +159,28 @@ public class StringUtilTest {
   }
 
   @Test
-  public void testJoinReturningNull() {
+  void testJoinReturningNull() {
       String string = StringUtil.join((Iterable<String>) null, ")Y>1v&V0GU6a");
 
       assertNull(string);
   }
 
   @Test
-  public void testTrimSuffixWithEmptyString() {
+  void testTrimSuffixWithEmptyString() {
       String string = StringUtil.trimSuffix(" 8VKQ&I*pSVr", "");
 
       assertEquals(" 8VKQ&I*pSVr", string);
   }
 
   @Test
-  public void testTrimSuffixWithNonEmptyString() {
+  void testTrimSuffixWithNonEmptyString() {
       String string = StringUtil.trimSuffix(",", "5I;.t0F*5HV4");
 
       assertEquals(",", string);
   }
 
   @Test
-  public void testFilterSystemArgsThrowsIllegalArgumentException() {
+  void testFilterSystemArgsThrowsIllegalArgumentException() {
       String[] stringArray = new String[4];
       stringArray[0] = "-D";
       try {
@@ -192,7 +192,7 @@ public class StringUtilTest {
   }
 
   @Test
-  public void testFilterSystemArgs() {
+  void testFilterSystemArgs() {
       String[] stringArray = new String[1];
       stringArray[0] = "J";
       String[] stringArrayTwo = StringUtil.filterSystemArgs(stringArray);

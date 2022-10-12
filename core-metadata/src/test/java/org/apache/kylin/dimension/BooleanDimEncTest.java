@@ -21,31 +21,31 @@ package org.apache.kylin.dimension;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class BooleanDimEncTest {
 
     @Test
-    public void testNull() {
+    void testNull() {
         BooleanDimEnc enc = new BooleanDimEnc();
 
         byte[] buf = new byte[enc.getLengthOfEncoding()];
         enc.encode(null, buf, 0);
-        Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
+        Assertions.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
         String decode = enc.decode(buf, 0, buf.length);
-        Assert.assertEquals(null, decode);
+        Assertions.assertEquals(null, decode);
 
         buf = new byte[enc.getLengthOfEncoding()];
         DataTypeSerializer<Object> ser = enc.asDataTypeSerializer();
         ser.serialize(null, ByteBuffer.wrap(buf));
-        Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
+        Assertions.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
         decode = (String) ser.deserialize(ByteBuffer.wrap(buf));
-        Assert.assertEquals(null, decode);
+        Assertions.assertEquals(null, decode);
     }
 
     @Test
-    public void testEncodeDecode() {
+    void testEncodeDecode() {
         BooleanDimEnc enc = new BooleanDimEnc();
 
         for (String x : BooleanDimEnc.ALLOWED_VALUES) {
@@ -54,9 +54,9 @@ public class BooleanDimEncTest {
 
         try {
             testEncodeDecode(enc, "FAlse");
-            Assert.fail();
+            Assertions.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("Value 'FAlse' is not a recognized boolean value.", e.getMessage());
+            Assertions.assertEquals("Value 'FAlse' is not a recognized boolean value.", e.getMessage());
         }
     }
 
@@ -64,11 +64,11 @@ public class BooleanDimEncTest {
         byte[] buf = new byte[enc.getLengthOfEncoding()];
         enc.encode(valueStr, buf, 0);
         String decode = enc.decode(buf, 0, buf.length);
-        Assert.assertEquals(valueStr, decode);
+        Assertions.assertEquals(valueStr, decode);
     }
 
     @Test
-    public void testSerDes() {
+    void testSerDes() {
         BooleanDimEnc enc = new BooleanDimEnc();
         for (String x : BooleanDimEnc.ALLOWED_VALUES) {
             testSerDes(enc, x);
@@ -76,9 +76,9 @@ public class BooleanDimEncTest {
 
         try {
             testSerDes(enc, "FAlse");
-            Assert.fail();
+            Assertions.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("Value 'FAlse' is not a recognized boolean value.", e.getMessage());
+            Assertions.assertEquals("Value 'FAlse' is not a recognized boolean value.", e.getMessage());
         }
     }
 
@@ -87,7 +87,7 @@ public class BooleanDimEncTest {
         byte[] buf = new byte[enc.getLengthOfEncoding()];
         ser.serialize(valueStr, ByteBuffer.wrap(buf));
         String decode = (String) ser.deserialize(ByteBuffer.wrap(buf));
-        Assert.assertEquals(valueStr, decode);
+        Assertions.assertEquals(valueStr, decode);
     }
 
 }

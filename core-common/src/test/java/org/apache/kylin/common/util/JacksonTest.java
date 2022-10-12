@@ -21,11 +21,11 @@ package org.apache.kylin.common.util;
 import java.io.IOException;
 import java.util.HashMap;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class JacksonTest {
     @Test
-    public void foo() throws IOException {
+    void foo() throws IOException {
         HashMap a = new HashMap<String, String>();
         a.put("1", "1");
         a.put("3", "3");

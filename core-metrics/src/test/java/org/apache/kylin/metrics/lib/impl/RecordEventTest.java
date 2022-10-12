@@ -18,9 +18,9 @@
 
 package org.apache.kylin.metrics.lib.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -28,19 +28,22 @@ import java.net.UnknownHostException;
 import java.util.Map;
 
 import org.apache.kylin.common.util.JsonUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Maps;
 
 public class RecordEventTest {
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testSetEventType() {
-        new RecordEvent(null, System.currentTimeMillis());
+    @Test
+    void testSetEventType() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            new RecordEvent(null, System.currentTimeMillis());
+        });
     }
 
     @Test
-    public void testBasic() throws IOException {
+    void testBasic() throws IOException {
         String type = "TEST";
         String localHostname;
         try {

@@ -18,9 +18,9 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,9 +37,9 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
@@ -47,18 +47,18 @@ import org.apache.kylin.shaded.com.google.common.collect.Maps;
  */
 public class CubeManagerTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testBasics() throws Exception {
+    void testBasics() throws Exception {
 
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_without_slr_ready");
         CubeDesc desc = cube.getDescriptor();
@@ -70,7 +70,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCreateAndDrop() throws Exception {
+    void testCreateAndDrop() throws Exception {
 
         KylinConfig config = getTestConfig();
         CubeManager cubeMgr = CubeManager.getInstance(config);
@@ -97,7 +97,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAutoMergeNormal() throws Exception {
+    void testAutoMergeNormal() throws Exception {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty").latestCopyForWrite();
 
@@ -126,7 +126,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testConcurrentBuildAndMerge() throws Exception {
+    void testConcurrentBuildAndMerge() throws Exception {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty").latestCopyForWrite();
 
@@ -183,7 +183,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testConcurrentMergeAndMerge() throws Exception {
+    void testConcurrentMergeAndMerge() throws Exception {
         System.setProperty("kylin.cube.max-building-segments", "10");
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty").latestCopyForWrite();
@@ -248,7 +248,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetAllCubes() throws Exception {
+    void testGetAllCubes() throws Exception {
         final ResourceStore store = ResourceStore.getStore(getTestConfig());
         final NavigableSet<String> cubePath = store.listResources(ResourceStore.CUBE_RESOURCE_ROOT);
         assertTrue(cubePath.size() > 1);
@@ -259,7 +259,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAutoMergeWithGap() throws Exception {
+    void testAutoMergeWithGap() throws Exception {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty").latestCopyForWrite();
 
@@ -314,7 +314,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAutoMergeWithVolatileRange() throws Exception {
+    void testAutoMergeWithVolatileRange() throws Exception {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
 
@@ -391,7 +391,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAutoMergeWithMaxSegmentMergeSpan() throws Exception {
+    void testAutoMergeWithMaxSegmentMergeSpan() throws Exception {
         KylinConfig kylinConfig = getTestConfig();
         kylinConfig.setProperty("kylin.cube.max-segment-merge.span", "4000");
         CubeManager mgr = CubeManager.getInstance(kylinConfig);
@@ -442,7 +442,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetCubeNameWithNamespace() {
+    void testGetCubeNameWithNamespace() {
         System.setProperty("kylin.storage.hbase.table-name-prefix", "HELLO_");
         try {
             CubeManager mgr = CubeManager.getInstance(getTestConfig());
@@ -463,7 +463,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testBuildCubeWithPartitionStartDate() throws IOException {
+    void testBuildCubeWithPartitionStartDate() throws IOException {
         Long PARTITION_DATE_START = 1513123200L;
         Long FIRST_BUILD_DATE_END = 1514764800L;
         Long SECOND_BUILD_DATE_END = 1540339200L;

@@ -22,19 +22,19 @@ import java.io.IOException;
 
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class CachedCrudAssistTest extends LocalFileMetadataTestCase {
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         staticCreateTestMetadata();
     }
 
     @Test
-    public void testSave() throws IOException {
+    void testSave() throws IOException {
         CachedCrudAssist<TestEntity> crudAssist = new CachedCrudAssist<TestEntity>(getStore() //
                 , "/test" //
                 , TestEntity.class //
@@ -46,12 +46,12 @@ public class CachedCrudAssistTest extends LocalFileMetadataTestCase {
         };
 
         TestEntity entity = new TestEntity();
-        Assert.assertNull(entity.getUuid());
+        Assertions.assertNull(entity.getUuid());
         crudAssist.save(entity);
-        Assert.assertNotNull(entity.getUuid());
+        Assertions.assertNotNull(entity.getUuid());
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         cleanAfterClass();
     }

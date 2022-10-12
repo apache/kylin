@@ -18,15 +18,15 @@
 
 package org.apache.kylin.metadata.tuple;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class EmptyTupleIteratorTest {
 
     @Test
-    public void testListAllTables() throws Exception {
+    void testListAllTables() throws Exception {
         ITupleIterator it = ITupleIterator.EMPTY_TUPLE_ITERATOR;
         assertFalse(it.hasNext());
         assertNull(it.next());

@@ -24,30 +24,30 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class TopNCounterSerializerTest extends LocalFileMetadataTestCase {
 
     private static TopNCounterSerializer serializer;
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         staticCreateTestMetadata();
 
         DataType.register("topn");
         serializer = new TopNCounterSerializer(DataType.getType("topn(10)"));
     }
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         cleanAfterClass();
     }
 
     @Test
-    public void testSerialization() {
+    void testSerialization() {
         TopNCounter<ByteArray> vs = new TopNCounter<ByteArray>(50);
         Integer[] stream = { 1, 1, 2, 9, 1, 2, 3, 7, 7, 1, 3, 1, 1 };
         for (Integer i : stream) {
@@ -63,12 +63,12 @@ public class TopNCounterSerializerTest extends LocalFileMetadataTestCase {
         ByteBuffer in = ByteBuffer.wrap(copyBytes);
         TopNCounter<ByteArray> vsNew = serializer.deserialize(in);
 
-        Assert.assertEquals(vs.toString(), vsNew.toString());
+        Assertions.assertEquals(vs.toString(), vsNew.toString());
 
     }
 
     @Test
-    public void testValueOf() {
+    void testValueOf() {
         // FIXME need a good unit test for valueOf()
     }
 }

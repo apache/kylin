@@ -28,44 +28,44 @@ import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class ExtendedColumnSerializerTest extends LocalFileMetadataTestCase {
     private static MeasureType<ByteArray> measureType;
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         staticCreateTestMetadata();
 
         measureType = (MeasureType<ByteArray>) MeasureTypeFactory.create("EXTENDED_COLUMN", "extendedcolumn(20)");
     }
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         cleanAfterClass();
     }
 
     @Test
-    public void testSerDesNull() {
+    void testSerDesNull() {
         ExtendedColumnSerializer serializer = new ExtendedColumnSerializer(DataType.getType("extendedcolumn(20)"));
         MeasureIngester<ByteArray> ingester = measureType.newIngester();
         ByteArray array = ingester.valueOf(new String[] { null, null }, null, null);
-        Assert.assertTrue(new ByteArray().equals(array));
+        Assertions.assertTrue(new ByteArray().equals(array));
 
         ByteBuffer buffer = ByteBuffer.allocate(serializer.maxLength());
         serializer.serialize(array, buffer);
         buffer.flip();
         int length = serializer.peekLength(buffer);
-        Assert.assertTrue(length == 1);
+        Assertions.assertTrue(length == 1);
         ByteArray des = serializer.deserialize(buffer);
-        Assert.assertTrue(new ByteArray().equals(des));
+        Assertions.assertTrue(new ByteArray().equals(des));
     }
 
     @Test
-    public void testNormal() {
+    void testNormal() {
         String text = StringUtils.repeat("h", 20);
 
         ExtendedColumnSerializer serializer = new ExtendedColumnSerializer(DataType.getType("extendedcolumn(20)"));
@@ -76,11 +76,11 @@ public class ExtendedColumnSerializerTest extends LocalFileMetadataTestCase {
         serializer.serialize(array, buffer);
         buffer.flip();
         ByteArray des = serializer.deserialize(buffer);
-        Assert.assertTrue(new ByteArray(text.getBytes(StandardCharsets.UTF_8)).equals(des));
+        Assertions.assertTrue(new ByteArray(text.getBytes(StandardCharsets.UTF_8)).equals(des));
     }
 
     @Test
-    public void testOverflow() {
+    void testOverflow() {
         String text = StringUtils.repeat("h", 21);
         ExtendedColumnSerializer serializer = new ExtendedColumnSerializer(DataType.getType("extendedcolumn(20)"));
         MeasureIngester<ByteArray> ingester = measureType.newIngester();
@@ -90,6 +90,6 @@ public class ExtendedColumnSerializerTest extends LocalFileMetadataTestCase {
         serializer.serialize(array, buffer);
         buffer.flip();
         ByteArray des = serializer.deserialize(buffer);
-        Assert.assertTrue(new ByteArray(StringUtils.repeat("h", 20).getBytes(StandardCharsets.UTF_8)).equals(des));
+        Assertions.assertTrue(new ByteArray(StringUtils.repeat("h", 20).getBytes(StandardCharsets.UTF_8)).equals(des));
     }
 }

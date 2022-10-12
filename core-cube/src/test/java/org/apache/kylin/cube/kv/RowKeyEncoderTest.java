@@ -18,8 +18,8 @@
 
 package org.apache.kylin.cube.kv;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
 
@@ -29,26 +29,26 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-@Ignore
+@Disabled 
 public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testEncodeWithoutSlr() throws Exception {
+    void testEncodeWithoutSlr() throws Exception {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
         // CubeSegment seg = cube.getTheOnlySegment();
         CubeDesc cubeDesc = cube.getDescriptor();
@@ -76,9 +76,9 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         assertArrayEquals(new byte[] { 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
     }
 
-    @Ignore
+    @Disabled 
     @Test
-    public void testEncodeWithSlr() throws Exception {
+    void testEncodeWithSlr() throws Exception {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
         // CubeSegment seg = cube.getTheOnlySegment();
         CubeDesc cubeDesc = cube.getDescriptor();
@@ -112,9 +112,9 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         assertArrayEquals(new byte[] { 11, 55, -13, 49, 49, 56, 52, 56, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
     }
 
-    @Ignore
+    @Disabled 
     @Test
-    public void testEncodeWithSlr2() throws Exception {
+    void testEncodeWithSlr2() throws Exception {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
         // CubeSegment seg = cube.getTheOnlySegment();
         CubeDesc cubeDesc = cube.getDescriptor();

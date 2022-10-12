@@ -18,8 +18,8 @@
 
 package org.apache.kylin.common.util;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,23 +28,23 @@ import java.util.Set;
 
 public class CaseInsensitiveStringCollectionTest {
     @Test
-    public void testCaseInsensitiveMap() {
+    void testCaseInsensitiveMap() {
         CaseInsensitiveStringMap<String> m1 = new CaseInsensitiveStringMap<>();
         m1.put("a", "a");
         Map<String, String> m2 = new HashMap<>();
         m2.put("a", "a");
-        Assert.assertEquals(m2, m1);
-        Assert.assertTrue(m1.containsKey("A"));
-        Assert.assertFalse(m1.containsValue("A"));
+        Assertions.assertEquals(m2, m1);
+        Assertions.assertTrue(m1.containsKey("A"));
+        Assertions.assertFalse(m1.containsValue("A"));
     }
 
     @Test
-    public void testCaseInsensitiveSet() {
+    void testCaseInsensitiveSet() {
         CaseInsensitiveStringSet s1 = new CaseInsensitiveStringSet();
         s1.add("a");
         Set<String> s2 = new HashSet<>();
         s2.add("a");
-        Assert.assertEquals(s2, s1);
-        Assert.assertTrue(s1.contains("A"));
+        Assertions.assertEquals(s2, s1);
+        Assertions.assertTrue(s1.contains("A"));
     }
 }

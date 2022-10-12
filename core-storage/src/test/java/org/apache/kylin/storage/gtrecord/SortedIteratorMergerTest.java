@@ -22,8 +22,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
@@ -39,7 +39,7 @@ public class SortedIteratorMergerTest {
     }
 
     @Test
-    public void basic1() {
+    void basic1() {
 
         List<Integer> a = Lists.newArrayList(1, 2, 3);
         List<Integer> b = Lists.newArrayList(1, 2, 3);
@@ -54,11 +54,11 @@ public class SortedIteratorMergerTest {
         while (iterator.hasNext()) {
             result.add(iterator.next());
         }
-        Assert.assertEquals(Lists.newArrayList(1, 1, 1, 2, 2, 2, 3, 3, 5), result);
+        Assertions.assertEquals(Lists.newArrayList(1, 1, 1, 2, 2, 2, 3, 3, 5), result);
     }
 
     @Test
-    public void basic2() {
+    void basic2() {
 
         List<Integer> a = Lists.newArrayList(2);
         List<Integer> b = Lists.newArrayList();
@@ -73,11 +73,11 @@ public class SortedIteratorMergerTest {
         while (iterator.hasNext()) {
             result.add(iterator.next());
         }
-        Assert.assertEquals(Lists.newArrayList(1, 2, 2, 5), result);
+        Assertions.assertEquals(Lists.newArrayList(1, 2, 2, 5), result);
     }
 
     @Test
-    public void basic3() {
+    void basic3() {
 
         List<Integer> a = Lists.newArrayList();
         List<Integer> b = Lists.newArrayList();
@@ -92,6 +92,6 @@ public class SortedIteratorMergerTest {
         while (iterator.hasNext()) {
             result.add(iterator.next());
         }
-        Assert.assertEquals(Lists.newArrayList(), result);
+        Assertions.assertEquals(Lists.newArrayList(), result);
     }
 }

@@ -21,6 +21,8 @@ package org.apache.kylin.metadata.filter;
 import static org.apache.kylin.metadata.filter.TupleFilter.and;
 import static org.apache.kylin.metadata.filter.TupleFilter.compare;
 import static org.apache.kylin.metadata.filter.TupleFilter.not;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -29,8 +31,8 @@ import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
@@ -39,7 +41,7 @@ public class TupleFilterTest {
     // true ==> true
     public void removeNotTest0() {
         TupleFilter constFilter = ConstantTupleFilter.TRUE;
-        Assert.assertEquals(constFilter, constFilter.removeNot());
+        Assertions.assertEquals(constFilter, constFilter.removeNot());
     }
 
     @Test
@@ -47,7 +49,7 @@ public class TupleFilterTest {
     public void removeNotTest1() {
         TupleFilter notFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.NOT);
         notFilter.addChild(ConstantTupleFilter.TRUE);
-        Assert.assertEquals(ConstantTupleFilter.FALSE, notFilter.removeNot());
+        Assertions.assertEquals(ConstantTupleFilter.FALSE, notFilter.removeNot());
     }
 
     @Test
@@ -60,7 +62,7 @@ public class TupleFilterTest {
 
         TupleFilter orFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.OR);
         orFilter.addChildren(ConstantTupleFilter.FALSE, ConstantTupleFilter.TRUE);
-        Assert.assertEquals(orFilter, notFilter.removeNot());
+        Assertions.assertEquals(orFilter, notFilter.removeNot());
     }
 
     @Test
@@ -73,11 +75,11 @@ public class TupleFilterTest {
 
         TupleFilter andFilter2 = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
         andFilter2.addChildren(ConstantTupleFilter.FALSE, ConstantTupleFilter.FALSE);
-        Assert.assertEquals(andFilter2, andFilter.removeNot());
+        Assertions.assertEquals(andFilter2, andFilter.removeNot());
     }
     
     @Test
-    public void testFindMustEqualColsAndValues() {
+    void testFindMustEqualColsAndValues() {
         TableDesc tbl = TableDesc.mockup("mockup_table");
         TblColRef colA = TblColRef.mockup(tbl, 0, "A", "bigint");
         TblColRef colB = TblColRef.mockup(tbl, 1, "B", "char(256)");
@@ -85,23 +87,23 @@ public class TupleFilterTest {
         
         {
             TupleFilter f = compare(colA, FilterOperatorEnum.EQ, "1234");
-            Assert.assertEquals(map(colA, "1234"), f.findMustEqualColsAndValues(cols));
+            Assertions.assertEquals(map(colA, "1234"), f.findMustEqualColsAndValues(cols));
         }
         
         {
             TupleFilter f = compare(colA, FilterOperatorEnum.ISNULL);
-            Assert.assertEquals(map(colA, null), f.findMustEqualColsAndValues(cols));
+            Assertions.assertEquals(map(colA, null), f.findMustEqualColsAndValues(cols));
         }
         
         {
             TupleFilter f = and(compare(colA, FilterOperatorEnum.ISNULL), compare(colB, FilterOperatorEnum.EQ, "1234"));
-            Assert.assertEquals(map(colA, null, colB, "1234"), f.findMustEqualColsAndValues(cols));
-            Assert.assertTrue(not(f).findMustEqualColsAndValues(cols).isEmpty());
+            Assertions.assertEquals(map(colA, null, colB, "1234"), f.findMustEqualColsAndValues(cols));
+            Assertions.assertTrue(not(f).findMustEqualColsAndValues(cols).isEmpty());
         }
         
         {
             TupleFilter f = compare(colA, FilterOperatorEnum.LT, "1234");
-            Assert.assertTrue(f.findMustEqualColsAndValues(cols).isEmpty());
+            Assertions.assertTrue(f.findMustEqualColsAndValues(cols).isEmpty());
         }
     }
 
@@ -119,7 +121,7 @@ public class TupleFilterTest {
     }
 
     @Test
-    public void testMustTrueTupleFilter() {
+    void testMustTrueTupleFilter() {
         TupleFilter andFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
         TupleFilter andFilter2  = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
         TupleFilter orFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.OR);
@@ -127,7 +129,7 @@ public class TupleFilterTest {
         andFilter.addChild(orFilter);
 
         Set<CompareTupleFilter> trueTupleFilters = andFilter.findMustTrueCompareFilters();
-        Assert.assertTrue(trueTupleFilters.isEmpty());
+        Assertions.assertTrue(trueTupleFilters.isEmpty());
 
         TupleFilter compFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
         compFilter.addChild(new ColumnTupleFilter(TblColRef.newInnerColumn("test1", TblColRef.InnerDataTypeEnum.LITERAL)));
@@ -135,13 +137,13 @@ public class TupleFilterTest {
         compFilter2.addChild(new ColumnTupleFilter(TblColRef.newInnerColumn("test2", TblColRef.InnerDataTypeEnum.LITERAL)));
         andFilter2.addChild(compFilter);
         orFilter.addChild(compFilter2);
-        Assert.assertEquals(Sets.newHashSet(compFilter), andFilter.findMustTrueCompareFilters());
+        Assertions.assertEquals(Sets.newHashSet(compFilter), andFilter.findMustTrueCompareFilters());
         
-        Assert.assertEquals(Sets.newHashSet(compFilter2), compFilter2.findMustTrueCompareFilters());
+        Assertions.assertEquals(Sets.newHashSet(compFilter2), compFilter2.findMustTrueCompareFilters());
     }
 
     @Test
-    public void flatFilterTest() {
+    void flatFilterTest() {
         TupleFilter topAndFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
         topAndFilter.addChild(createEQFilter("c1", "v1"));
         TupleFilter orFilter1 = new LogicalTupleFilter(FilterOperatorEnum.OR);
@@ -177,22 +179,24 @@ public class TupleFilterTest {
         topAndFilter.addChild(orFilter2);
 
         TupleFilter flatFilter = topAndFilter.flatFilter(500000);
-        Assert.assertEquals(6, flatFilter.children.size());
+        Assertions.assertEquals(6, flatFilter.children.size());
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void flatFilterTooFatTest() {
-        TupleFilter topAndFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
-        for (int i = 0; i < 3; i++) {
-            TupleFilter orFilter = new LogicalTupleFilter(FilterOperatorEnum.OR);
-            String col = "col-" + i;
-            for (int j = 0; j < 100; j++) {
-                orFilter.addChild(createEQFilter(col, String.valueOf(j)));
+    @Test
+    void flatFilterTooFatTest() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            TupleFilter topAndFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+            for (int i = 0; i < 3; i++) {
+                TupleFilter orFilter = new LogicalTupleFilter(FilterOperatorEnum.OR);
+                String col = "col-" + i;
+                for (int j = 0; j < 100; j++) {
+                    orFilter.addChild(createEQFilter(col, String.valueOf(j)));
+                }
+                topAndFilter.addChild(orFilter);
             }
-            topAndFilter.addChild(orFilter);
-        }
-        TupleFilter flatFilter = topAndFilter.flatFilter(500000);
-        System.out.println(flatFilter);
+            TupleFilter flatFilter = topAndFilter.flatFilter(500000);
+            System.out.println(flatFilter);
+        });
     }
 
     private TupleFilter createEQFilter(String colName, String colVal) {

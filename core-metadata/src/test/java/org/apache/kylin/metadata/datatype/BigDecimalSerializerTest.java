@@ -18,15 +18,17 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assertions;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  */
@@ -34,19 +36,19 @@ public class BigDecimalSerializerTest extends LocalFileMetadataTestCase {
 
     private static BigDecimalSerializer bigDecimalSerializer;
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         cleanAfterClass();
     }
 
-    @BeforeClass
-    public static void beforeClass() {
+    @BeforeAll
+    static void beforeClass() {
         staticCreateTestMetadata();
         bigDecimalSerializer = new BigDecimalSerializer(DataType.getType("decimal"));
     }
 
     @Test
-    public void testNormal() {
+    void testNormal() {
         BigDecimal input = new BigDecimal("1234.1234");
         ByteBuffer buffer = ByteBuffer.allocate(256);
         buffer.mark();
@@ -57,7 +59,7 @@ public class BigDecimalSerializerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testScaleOutOfRange() {
+    void testScaleOutOfRange() {
         BigDecimal input = new BigDecimal("1234.1234567890");
         ByteBuffer buffer = ByteBuffer.allocate(256);
         buffer.mark();
@@ -67,15 +69,17 @@ public class BigDecimalSerializerTest extends LocalFileMetadataTestCase {
         assertEquals(input.setScale(bigDecimalSerializer.type.getScale(), BigDecimal.ROUND_HALF_EVEN), output);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testOutOfPrecision() {
-        BigDecimal input = new BigDecimal("66855344214907231736.4924");
-        ByteBuffer buffer = ByteBuffer.allocate(256);
-        bigDecimalSerializer.serialize(input, buffer);
+    @Test
+    void testOutOfPrecision() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            BigDecimal input = new BigDecimal("66855344214907231736.4924");
+            ByteBuffer buffer = ByteBuffer.allocate(256);
+            bigDecimalSerializer.serialize(input, buffer);
+        });
     }
 
     @Test
-    public void testNull() {
+    void testNull() {
         BigDecimal input = null;
         ByteBuffer buffer = ByteBuffer.allocate(256);
         buffer.mark();

@@ -21,9 +21,11 @@ package org.apache.kylin.storage.gtrecord;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assertions;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
@@ -69,7 +71,7 @@ public class SortedIteratorMergerWithLimitTest {
     }
 
     @Test
-    public void basic1() {
+    void basic1() {
 
         List<CloneableInteger> a = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(3));
         List<CloneableInteger> b = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(3));
@@ -84,11 +86,11 @@ public class SortedIteratorMergerWithLimitTest {
         while (iterator.hasNext()) {
             result.add(iterator.next());
         }
-        Assert.assertEquals(Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(1), new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(2), new CloneableInteger(2), new CloneableInteger(3), new CloneableInteger(3)), result);
+        Assertions.assertEquals(Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(1), new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(2), new CloneableInteger(2), new CloneableInteger(3), new CloneableInteger(3)), result);
     }
 
     @Test
-    public void basic2() {
+    void basic2() {
 
         List<CloneableInteger> a = Lists.newArrayList(new CloneableInteger(2));
         List<CloneableInteger> b = Lists.newArrayList();
@@ -103,25 +105,27 @@ public class SortedIteratorMergerWithLimitTest {
         while (iterator.hasNext()) {
             result.add(iterator.next());
         }
-        Assert.assertEquals(Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(2), new CloneableInteger(5)), result);
+        Assertions.assertEquals(Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(2), new CloneableInteger(5)), result);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void basic3() {
+    @Test
+    void basic3() {
 
-        List<CloneableInteger> a = Lists.newArrayList(new CloneableInteger(2), new CloneableInteger(1));
-        List<CloneableInteger> b = Lists.newArrayList();
-        List<CloneableInteger> c = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(5));
-        List<Iterator<CloneableInteger>> input = Lists.newArrayList();
-        input.add(a.iterator());
-        input.add(b.iterator());
-        input.add(c.iterator());
-        SortedIteratorMergerWithLimit<CloneableInteger> merger = new SortedIteratorMergerWithLimit<CloneableInteger>(input.iterator(), 3, getComp());
-        Iterator<CloneableInteger> iterator = merger.getIterator();
-        List<CloneableInteger> result = Lists.newArrayList();
-        while (iterator.hasNext()) {
-            result.add(iterator.next());
-        }
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            List<CloneableInteger> a = Lists.newArrayList(new CloneableInteger(2), new CloneableInteger(1));
+            List<CloneableInteger> b = Lists.newArrayList();
+            List<CloneableInteger> c = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(5));
+            List<Iterator<CloneableInteger>> input = Lists.newArrayList();
+            input.add(a.iterator());
+            input.add(b.iterator());
+            input.add(c.iterator());
+            SortedIteratorMergerWithLimit<CloneableInteger> merger = new SortedIteratorMergerWithLimit<CloneableInteger>(input.iterator(), 3, getComp());
+            Iterator<CloneableInteger> iterator = merger.getIterator();
+            List<CloneableInteger> result = Lists.newArrayList();
+            while (iterator.hasNext()) {
+                result.add(iterator.next());
+            }
+        });
     }
 
 }

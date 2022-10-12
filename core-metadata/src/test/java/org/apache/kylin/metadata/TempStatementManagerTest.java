@@ -21,46 +21,46 @@ package org.apache.kylin.metadata;
 import java.io.IOException;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class TempStatementManagerTest extends LocalFileMetadataTestCase {
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testGetInstance() {
-        Assert.assertNotNull(TempStatementManager.getInstance(getTestConfig()));
+    void testGetInstance() {
+        Assertions.assertNotNull(TempStatementManager.getInstance(getTestConfig()));
     }
 
     @Test
-    public void testAddTempStatement() throws IOException {
+    void testAddTempStatement() throws IOException {
         TempStatementManager manager = TempStatementManager.getInstance(getTestConfig());
         manager.updateTempStatement("temp_table3", "AAAAA");
-        Assert.assertEquals(3, manager.reloadAllTempStatement().size());
+        Assertions.assertEquals(3, manager.reloadAllTempStatement().size());
     }
 
     @Test
-    public void testRemoveTempStatement() throws IOException {
+    void testRemoveTempStatement() throws IOException {
         TempStatementManager manager = TempStatementManager.getInstance(getTestConfig());
         manager.removeTempStatement("temp_table1");
-        Assert.assertEquals(1, manager.reloadAllTempStatement().size());
+        Assertions.assertEquals(1, manager.reloadAllTempStatement().size());
     }
 
     @Test
-    public void testUpdateTempStatement() throws IOException {
+    void testUpdateTempStatement() throws IOException {
         TempStatementManager manager = TempStatementManager.getInstance(getTestConfig());
         manager.updateTempStatement("temp_table1", "AAAAA");
-        Assert.assertEquals(2, manager.reloadAllTempStatement().size());
-        Assert.assertEquals("AAAAA", manager.getTempStatement("temp_table1"));
+        Assertions.assertEquals(2, manager.reloadAllTempStatement().size());
+        Assertions.assertEquals("AAAAA", manager.getTempStatement("temp_table1"));
     }
 }

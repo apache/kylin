@@ -18,34 +18,34 @@
 
 package org.apache.kylin.measure.percentile;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.ByteBuffer;
 import java.util.Random;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Created by dongli on 5/21/16.
  */
 public class PercentileSerializerTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         cleanAfterClass();
     }
 
     @Test
-    public void testBasic() {
+    void testBasic() {
         PercentileSerializer serializer = new PercentileSerializer(DataType.getType("percentile(100)"));
         PercentileCounter counter = new PercentileCounter(100, 0.5);
         Random random = new Random();

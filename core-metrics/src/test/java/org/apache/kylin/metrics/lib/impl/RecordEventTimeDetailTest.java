@@ -20,24 +20,24 @@ package org.apache.kylin.metrics.lib.impl;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.StringUtil;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class RecordEventTimeDetailTest extends LocalFileMetadataTestCase {
 
     private static String eventTimeZone;
 
-    @BeforeClass
-    public static void beforeClass() throws Exception {
+    @BeforeAll
+    static void beforeClass() throws Exception {
         staticCreateTestMetadata();
         eventTimeZone = System.getProperty("kylin.metrics.event-time-zone");
         System.setProperty("kylin.metrics.event-time-zone", "GMT");
     }
 
-    @AfterClass
-    public static void afterClass() throws Exception {
+    @AfterAll
+    static void afterClass() throws Exception {
         staticCleanupTestMetadata();
         if (!StringUtil.isEmpty(eventTimeZone)) {
             System.setProperty("kylin.metrics.event-time-zone", eventTimeZone);
@@ -45,16 +45,16 @@ public class RecordEventTimeDetailTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testFormatted() {
+    void testFormatted() {
         RecordEventTimeDetail timeDetail = new RecordEventTimeDetail(200000000000L);
 
-        Assert.assertEquals("1976-01-01", timeDetail.year_begin_date);
-        Assert.assertEquals("1976-05-01", timeDetail.month_begin_date);
-        Assert.assertEquals("1976-05-02", timeDetail.week_begin_date);
-        Assert.assertEquals("1976-05-03", timeDetail.date);
-        Assert.assertEquals("19:33:20", timeDetail.time);
-        Assert.assertEquals(19, timeDetail.hour);
-        Assert.assertEquals(33, timeDetail.minute);
-        Assert.assertEquals(20, timeDetail.second);
+        Assertions.assertEquals("1976-01-01", timeDetail.year_begin_date);
+        Assertions.assertEquals("1976-05-01", timeDetail.month_begin_date);
+        Assertions.assertEquals("1976-05-02", timeDetail.week_begin_date);
+        Assertions.assertEquals("1976-05-03", timeDetail.date);
+        Assertions.assertEquals("19:33:20", timeDetail.time);
+        Assertions.assertEquals(19, timeDetail.hour);
+        Assertions.assertEquals(33, timeDetail.minute);
+        Assertions.assertEquals(20, timeDetail.second);
     }
 }

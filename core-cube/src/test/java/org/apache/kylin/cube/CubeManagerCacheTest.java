@@ -18,16 +18,16 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author yangli9
@@ -37,19 +37,19 @@ public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
 
     private CubeManager cubeManager;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
         cubeManager = CubeManager.getInstance(getTestConfig());
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testReloadCache() throws Exception {
+    void testReloadCache() throws Exception {
         ResourceStore store = getStore();
 
         // clean legacy in case last run failed
@@ -68,7 +68,7 @@ public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCachedAndSharedFlag() {
+    void testCachedAndSharedFlag() {
         CubeInstance cube = cubeManager.getCube("test_kylin_cube_with_slr_empty");
         assertEquals(true, cube.isCachedAndShared());
         assertEquals(false, cube.latestCopyForWrite().isCachedAndShared());

@@ -18,10 +18,10 @@
 
 package org.apache.kylin.common.util;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Created by dongli on 1/4/16.
@@ -29,7 +29,7 @@ import org.junit.Test;
 public class DateFormatTest {
 
     @Test
-    public void testIsSupportedDateFormat() {
+    void testIsSupportedDateFormat() {
         assertTrue(DateFormat.isSupportedDateFormat("2010-01-01"));
         assertTrue(DateFormat.isSupportedDateFormat("20100101"));
         assertTrue(DateFormat.isSupportedDateFormat("2010-01-01 01:01:01"));

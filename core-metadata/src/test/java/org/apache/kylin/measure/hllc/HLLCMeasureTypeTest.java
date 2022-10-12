@@ -18,31 +18,31 @@
 
 package org.apache.kylin.measure.hllc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class HLLCMeasureTypeTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testIngest() {
+    void testIngest() {
         MeasureType<HLLCounter> mtype = (MeasureType<HLLCounter>) MeasureTypeFactory.create(HLLCMeasureType.FUNC_COUNT_DISTINCT, DataType.getType("hllc(10)"));
         MeasureIngester<HLLCounter> ingester = mtype.newIngester();
         HLLCounter hllc;

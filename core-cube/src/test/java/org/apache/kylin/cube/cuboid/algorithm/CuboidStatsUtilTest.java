@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Pair;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
@@ -120,42 +120,42 @@ public class CuboidStatsUtilTest {
     }
 
     @Test
-    public void isDescendantTest() {
-        Assert.assertTrue(CuboidStatsUtil.isDescendant(6L, 239L));
-        Assert.assertTrue(!CuboidStatsUtil.isDescendant(4L, 50L));
+    void isDescendantTest() {
+        Assertions.assertTrue(CuboidStatsUtil.isDescendant(6L, 239L));
+        Assertions.assertTrue(!CuboidStatsUtil.isDescendant(4L, 50L));
     }
 
     @Test
-    public void generateMandatoryCuboidSetTest() {
+    void generateMandatoryCuboidSetTest() {
         Map<Long, Long> srcCuboidSet = CuboidStatsUtil.generateSourceCuboidStats(simulateCount(),
                 simulateHitProbability(baseCuboidId), simulateRollingUpCount());
 
-        Assert.assertTrue(srcCuboidSet.get(239L) == 200L);
-        Assert.assertTrue(srcCuboidSet.get(187L) == 1000L);
-        Assert.assertTrue(srcCuboidSet.get(178L) == 800L);
+        Assertions.assertTrue(srcCuboidSet.get(239L) == 200L);
+        Assertions.assertTrue(srcCuboidSet.get(187L) == 1000L);
+        Assertions.assertTrue(srcCuboidSet.get(178L) == 800L);
 
-        Assert.assertTrue(!srcCuboidSet.containsKey(0L));
+        Assertions.assertTrue(!srcCuboidSet.containsKey(0L));
     }
 
     @Test
-    public void complementRowCountForMandatoryCuboidsTest() {
+    void complementRowCountForMandatoryCuboidsTest() {
         Map<Long, Long> countMap = simulateCount();
         Map<Long, Long> srcCuboidsStats = CuboidStatsUtil.generateSourceCuboidStats(countMap,
                 simulateHitProbability(baseCuboidId), simulateRollingUpCount());
         for (long mandatoryCuboid : srcCuboidsStats.keySet()) {
-            Assert.assertNull(countMap.get(mandatoryCuboid));
+            Assertions.assertNull(countMap.get(mandatoryCuboid));
         }
-        Assert.assertTrue(srcCuboidsStats.get(239L) == 200L);
+        Assertions.assertTrue(srcCuboidsStats.get(239L) == 200L);
 
         Map<Long, Long> mandatoryCuboidsWithStats2 = Maps.newHashMap();
         mandatoryCuboidsWithStats2.put(215L, countMap.get(255L));
         mandatoryCuboidsWithStats2.put(34L, countMap.get(50L));
-        Assert.assertEquals(mandatoryCuboidsWithStats2,
+        Assertions.assertEquals(mandatoryCuboidsWithStats2,
                 CuboidStatsUtil.complementRowCountForCuboids(countMap, mandatoryCuboidsWithStats2.keySet()));
     }
 
     @Test
-    public void testAdjustMandatoryCuboidStats() {
+    void testAdjustMandatoryCuboidStats() {
         Map<Long, Long> statistics = Maps.newHashMap();
         statistics.put(60160L, 1212L);
 
@@ -182,7 +182,7 @@ public class CuboidStatsUtilTest {
         cuboidsWithStatsExpected.put(61184L, 1212L);
 
         CuboidStatsUtil.adjustCuboidStats(cuboidsWithStats, statistics);
-        Assert.assertEquals(cuboidsWithStatsExpected, cuboidsWithStats);
+        Assertions.assertEquals(cuboidsWithStatsExpected, cuboidsWithStats);
     }
 
     /**
@@ -205,7 +205,7 @@ public class CuboidStatsUtilTest {
      *                                                                0111(70)     1000(100)
      * */
     @Test
-    public void testAdjustCuboidStats() {
+    void testAdjustCuboidStats() {
         Map<Long, Long> statistics = Maps.newHashMap();
         statistics.put(1L, 20L);
         statistics.put(2L, 80L);
@@ -221,7 +221,7 @@ public class CuboidStatsUtilTest {
         cuboidsWithStatsExpected.put(15L, 90L);
 
         statistics = CuboidStatsUtil.adjustCuboidStats(statistics);
-        Assert.assertEquals(cuboidsWithStatsExpected, statistics);
+        Assertions.assertEquals(cuboidsWithStatsExpected, statistics);
 
         Map<Long, Long> mandatoryCuboidsWithStats = Maps.newHashMap();
         mandatoryCuboidsWithStats.put(7L, 70L);
@@ -233,20 +233,20 @@ public class CuboidStatsUtilTest {
         mandatoryCuboidsWithStatsExpected.put(7L, 80L);
         mandatoryCuboidsWithStatsExpected.put(8L, 80L);
         mandatoryCuboidsWithStatsExpected.put(9L, 85L);
-        Assert.assertEquals(mandatoryCuboidsWithStatsExpected, mandatoryCuboidsWithStats);
+        Assertions.assertEquals(mandatoryCuboidsWithStatsExpected, mandatoryCuboidsWithStats);
     }
 
     @Test
-    public void createDirectChildrenCacheTest() {
+    void createDirectChildrenCacheTest() {
         Set<Long> cuboidSet = generateCuboidSet();
         Map<Long, List<Long>> directChildrenCache = CuboidStatsUtil.createDirectChildrenCache(cuboidSet);
 
-        Assert.assertTrue(directChildrenCache.get(255L).containsAll(Lists.newArrayList(239L, 159L, 50L)));
-        Assert.assertTrue(directChildrenCache.get(159L).contains(6L));
-        Assert.assertTrue(directChildrenCache.get(50L).contains(2L));
-        Assert.assertTrue(directChildrenCache.get(239L).contains(199L));
-        Assert.assertTrue(directChildrenCache.get(199L).contains(6L));
-        Assert.assertTrue(directChildrenCache.get(6L).containsAll(Lists.newArrayList(4L, 2L)));
+        Assertions.assertTrue(directChildrenCache.get(255L).containsAll(Lists.newArrayList(239L, 159L, 50L)));
+        Assertions.assertTrue(directChildrenCache.get(159L).contains(6L));
+        Assertions.assertTrue(directChildrenCache.get(50L).contains(2L));
+        Assertions.assertTrue(directChildrenCache.get(239L).contains(199L));
+        Assertions.assertTrue(directChildrenCache.get(199L).contains(6L));
+        Assertions.assertTrue(directChildrenCache.get(6L).containsAll(Lists.newArrayList(4L, 2L)));
     }
 
     private Set<Long> generateMassCuboidSet() {
@@ -259,7 +259,7 @@ public class CuboidStatsUtilTest {
     }
 
     @Test
-    public void createDirectChildrenCacheStressTest() {
+    void createDirectChildrenCacheStressTest() {
         Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         Set<Long> cuboidSet = generateMassCuboidSet();
@@ -274,10 +274,15 @@ public class CuboidStatsUtilTest {
     private void checkDirectChildrenCacheStressTest(Map<Long, List<Long>> directChildrenCache) {
         for (Map.Entry<Long, List<Long>> entry : directChildrenCache.entrySet()) {
             if (Long.bitCount(entry.getKey()) == 1) {
-                Assert.assertTrue("Check for cuboid " + entry.getKey(), entry.getValue().size() == 0);
+                Assertions.assertTrue(
+                    entry.getValue().size() == 0,
+                    "Check for cuboid " + entry.getKey()
+                );
             } else {
-                Assert.assertTrue("Check for cuboid " + entry.getKey(),
-                        Long.bitCount(entry.getKey()) == entry.getValue().size());
+                Assertions.assertTrue(
+                    Long.bitCount(entry.getKey()) == entry.getValue().size(),
+                    "Check for cuboid " + entry.getKey()
+                );
             }
         }
     }

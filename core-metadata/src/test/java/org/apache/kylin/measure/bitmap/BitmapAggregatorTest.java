@@ -18,21 +18,21 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class BitmapAggregatorTest {
     private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
 
     @Test
-    public void testAggregator() {
+    void testAggregator() {
         BitmapAggregator aggregator = new BitmapAggregator();
-        assertNull(null, aggregator.getState());
+        assertNull(aggregator.getState());
 
         aggregator.aggregate(factory.newBitmap(10, 20, 30, 40));
         assertEquals(4, aggregator.getState().getCount());
@@ -45,7 +45,7 @@ public class BitmapAggregatorTest {
     }
 
     @Test
-    public void testAggregatorDeserializedCounter() throws IOException {
+    void testAggregatorDeserializedCounter() throws IOException {
         BitmapCounter counter1 = factory.newBitmap(1, 3, 5);
         BitmapCounter counter2 = factory.newBitmap(1, 2, 4, 6);
         BitmapCounter counter3 = factory.newBitmap(1, 5, 7);

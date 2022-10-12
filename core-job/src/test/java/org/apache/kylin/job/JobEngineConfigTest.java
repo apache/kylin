@@ -21,11 +21,11 @@ package org.apache.kylin.job;
 import org.apache.kylin.common.HotLoadKylinPropertiesTestCase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author kangkaisen
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 public class JobEngineConfigTest extends HotLoadKylinPropertiesTestCase {
 
     @Test
-    public void testPropertiesHotLoad() throws IOException {
+    void testPropertiesHotLoad() throws IOException {
         KylinConfig baseConfig = KylinConfig.getInstanceFromEnv();
         JobEngineConfig jobEngineConfig = new JobEngineConfig(baseConfig);
         assertEquals(10, jobEngineConfig.getMaxConcurrentJobLimit());

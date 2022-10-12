@@ -23,8 +23,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.kylin.gridtable.GTRecord;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ public class ConsumeBlockingQueueControllerTest {
     private static final Logger logger = LoggerFactory.getLogger(ConsumeBlockingQueueControllerTest.class);
 
     @Test
-    public void testIterator() {
+    void testIterator() {
         final int nRecord = 4345;
         final int nCut = 2000;
         final int nBatch = 60;
@@ -84,7 +84,7 @@ public class ConsumeBlockingQueueControllerTest {
             }
         }
 
-        Assert.assertEquals(nRecord, nRecordConsumed.get());
+        Assertions.assertEquals(nRecord, nRecordConsumed.get());
     }
 
     private static class InputConverterUnitTest implements InputConverterUnit<String> {

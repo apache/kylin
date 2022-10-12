@@ -17,10 +17,10 @@
  */
 package org.apache.kylin.common.util;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ParameterFilterTest {
 
@@ -46,34 +46,34 @@ public class ParameterFilterTest {
     "'|touch /tmp/test|'", "';touch /tmp/test;'", "'&touch /tmp/test&'", "'$(|;&touch /tmp/test&;|)'", "default"};
 
     @Test
-    public void testParameter() {
+    void testParameter() {
         for (String[] pair : commands) {
             assertEquals(pair[1], ParameterFilter.checkParameter(pair[0]));
         }
     }
 
     @Test
-    public void testURI() {
+    void testURI() {
         for (String[] pair : commands) {
             assertEquals(pair[1], ParameterFilter.checkURI(pair[0]));
         }
     }
 
     @Test
-    public void testHiveProperties() {
+    void testHiveProperties() {
         for (String[] pair : properties) {
             assertEquals(pair[1], ParameterFilter.checkHiveProperty(pair[0]));
         }
     }
 
     @Test
-    public void testSparkConf() {
+    void testSparkConf() {
         int exceptionNum = 0;
         for(String conf : sparkConf) {
             try {
                 ParameterFilter.checkSparkConf(conf);
             } catch (Exception exception) {
-                Assert.assertTrue(exception instanceof IllegalArgumentException);
+                Assertions.assertTrue(exception instanceof IllegalArgumentException);
                 exceptionNum++;
             }
         }

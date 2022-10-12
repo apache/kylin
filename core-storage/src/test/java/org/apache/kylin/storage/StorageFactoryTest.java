@@ -23,12 +23,12 @@ import java.util.Properties;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class StorageFactoryTest {
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         Properties props = new Properties();
         props.setProperty("kylin.storage.provider.0", MockupStorageEngine.class.getName());
@@ -37,15 +37,15 @@ public class StorageFactoryTest {
     }
 
     @Test
-    public void testSingleThread() {
+    void testSingleThread() {
         IStorage s1 = StorageFactory.storage(new MockupStorageAware());
         IStorage s2 = StorageFactory.storage(new MockupStorageAware());
 
-        Assert.assertSame(s1, s2);
+        Assertions.assertSame(s1, s2);
     }
 
     @Test
-    public void testMultipleThread() throws InterruptedException {
+    void testMultipleThread() throws InterruptedException {
         final IStorage[] s = new IStorage[2];
 
         // thread 1
@@ -68,7 +68,7 @@ public class StorageFactoryTest {
         t.start();
         t.join();
 
-        Assert.assertNotSame(s[0], s[1]);
+        Assertions.assertNotSame(s[0], s[1]);
     }
 
     class MockupStorageAware implements IStorageAware {

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.gtrecord;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 //import java.math.BigDecimal;
@@ -61,15 +61,15 @@ import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Ignore;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
-@Ignore
+@Disabled 
 public class DictGridTableTest extends LocalFileMetadataTestCase {
 
     private GridTable table;
@@ -87,13 +87,13 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     private CompareTupleFilter ageComp3;
     private CompareTupleFilter ageComp4;
 
-    @After
+    @AfterEach
     public void after() throws Exception {
 
         this.cleanupTestMetadata();
     }
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
 
         this.createTestMetadata();
@@ -117,7 +117,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void verifySegmentSkipping() {
+    void verifySegmentSkipping() {
 
         ByteArray segmentStart = enc(info, 0, "2015-01-14");
         ByteArray segmentStartX = enc(info, 0, "2015-01-14 00:00:00");//when partition col is dict encoded, time format will be free
@@ -200,7 +200,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void verifySegmentSkipping2() {
+    void verifySegmentSkipping2() {
         {
             LogicalTupleFilter filter = and(timeComp0, ageComp1);
             CubeScanRangePlanner planner = new CubeScanRangePlanner(info, info.colRef(0), filter);
@@ -220,7 +220,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void verifyScanRangePlanner() {
+    void verifyScanRangePlanner() {
 
         // flatten or-and & hbase fuzzy value
         {
@@ -273,7 +273,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void verifyFirstRow() throws IOException {
+    void verifyFirstRow() throws IOException {
         doScanAndVerify(table,
                 new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null)
                         .setFilterPushDown(null).createGTScanRequest(),
@@ -296,13 +296,13 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         buffer.flip();
         GTScanRequest sGTScanRequest = GTScanRequest.serializer.deserialize(buffer);
 
-        Assert.assertArrayEquals(origin.getAggrMetricsFuncs(), sGTScanRequest.getAggrMetricsFuncs());
-        Assert.assertEquals(origin.getAggCacheMemThreshold(), sGTScanRequest.getAggCacheMemThreshold(), 0.01);
+        Assertions.assertArrayEquals(origin.getAggrMetricsFuncs(), sGTScanRequest.getAggrMetricsFuncs());
+        Assertions.assertEquals(origin.getAggCacheMemThreshold(), sGTScanRequest.getAggCacheMemThreshold(), 0.01);
         return sGTScanRequest;
     }
 
     @Test
-    public void verifyScanWithUnevaluatableFilter() throws IOException {
+    void verifyScanWithUnevaluatableFilter() throws IOException {
         GTInfo info = table.getInfo();
 
         CompareTupleFilter fComp = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
@@ -325,7 +325,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void verifyScanWithEvaluatableFilter() throws IOException {
+    void verifyScanWithEvaluatableFilter() throws IOException {
         GTInfo info = table.getInfo();
 
         CompareTupleFilter fComp1 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
@@ -345,7 +345,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void verifyAggregateAndHavingFilter() throws IOException {
+    void verifyAggregateAndHavingFilter() throws IOException {
         GTInfo info = table.getInfo();
 
         TblColRef havingCol = TblColRef.newInnerColumn("SUM_OF_BIGDECIMAL", InnerDataTypeEnum.LITERAL);
@@ -378,7 +378,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void verifyConvertFilterConstants1() {
+    void verifyConvertFilterConstants1() {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
@@ -400,7 +400,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void verifyConvertFilterConstants2() {
+    void verifyConvertFilterConstants2() {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
@@ -467,7 +467,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void verifyConvertFilterConstants3() {
+    void verifyConvertFilterConstants3() {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
@@ -533,7 +533,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void verifyConvertFilterConstants4() {
+    void verifyConvertFilterConstants4() {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
@@ -562,7 +562,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
             for (GTRecord r : scanner) {
                 System.out.println(r);
                 if (verifyRows == null || i >= verifyRows.length) {
-                    Assert.fail();
+                    Assertions.fail();
                 }
                 assertEquals(verifyRows[i], r.toString());
                 i++;

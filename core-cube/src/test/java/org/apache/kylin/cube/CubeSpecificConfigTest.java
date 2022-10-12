@@ -18,25 +18,25 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.kylin.common.HotLoadKylinPropertiesTestCase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 public class CubeSpecificConfigTest extends HotLoadKylinPropertiesTestCase {
     @Test
-    public void test() {
+    void test() {
         KylinConfig baseConfig = KylinConfig.getInstanceFromEnv();
         CubeDesc cubeDesc = CubeDescManager.getInstance(baseConfig).getCubeDesc("ssb");
         verifyOverride(baseConfig, cubeDesc.getConfig());
     }
 
     @Test
-    public void test2() {
+    void test2() {
         KylinConfig baseConfig = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(baseConfig).getCube("ssb");
         verifyOverride(baseConfig, cube.getConfig());
@@ -48,7 +48,7 @@ public class CubeSpecificConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testPropertiesHotLoad() throws IOException {
+    void testPropertiesHotLoad() throws IOException {
         KylinConfig baseConfig = KylinConfig.getInstanceFromEnv();
         KylinConfig oldCubeDescConfig = CubeDescManager.getInstance(baseConfig).getCubeDesc("ssb").getConfig();
         assertEquals(10, oldCubeDescConfig.getMaxConcurrentJobLimit());

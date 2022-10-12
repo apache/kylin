@@ -17,24 +17,24 @@
  */
 package org.apache.kylin.metadata.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class FunctionDescTest {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         System.setProperty(KylinConfig.KYLIN_CONF, LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
     }
 
     @Test
-    public void getRewriteFieldType() {
+    void getRewriteFieldType() {
         TblColRef mockColOfDoubleType = TblColRef.mockup(TableDesc.mockup("mock_table"), 0, "price", "double", "");
         TblColRef mockColOfDecimalType = TblColRef.mockup(TableDesc.mockup("mock_table"), 1, "price", "decimal", "");
         TblColRef mockColOfIntegerType = TblColRef.mockup(TableDesc.mockup("mock_table"), 2, "price", "integer", "");
@@ -56,7 +56,7 @@ public class FunctionDescTest {
         assertEquals(DataType.ANY, function.getRewriteFieldType());
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         System.clearProperty(KylinConfig.KYLIN_CONF);
     }

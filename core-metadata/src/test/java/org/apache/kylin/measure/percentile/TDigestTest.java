@@ -18,23 +18,23 @@
 
 package org.apache.kylin.measure.percentile;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 import org.apache.kylin.common.util.MathUtil;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import com.tdunning.math.stats.TDigest;
 
-@Ignore
+@Disabled 
 public class TDigestTest {
     @Test
-    public void testBasic() {
+    void testBasic() {
         int times = 1;
         int compression = 100;
         for (int t = 0; t < times; t++) {

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -30,14 +30,14 @@ import java.util.Map;
 import java.util.Random;
 
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler.CuboidTree;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class TreeCuboidSchedulerTest {
 
     @Test
-    public void testCreateCuboidTree() {
+    void testCreateCuboidTree() {
         long basicCuboid = getBaseCuboid(10);
         List<Long> cuboids = genRandomCuboids(basicCuboid, 200);
         CuboidTree cuboidTree = CuboidTree.createFromCuboids(cuboids);
@@ -47,7 +47,7 @@ public class TreeCuboidSchedulerTest {
     }
 
     @Test
-    public void testSpanningChild() {
+    void testSpanningChild() {
         long basicCuboid = getBaseCuboid(10);
         List<Long> cuboids = genRandomCuboids(basicCuboid, 50);
         long testCuboid = cuboids.get(10);
@@ -62,7 +62,7 @@ public class TreeCuboidSchedulerTest {
     }
 
     @Test
-    public void testFindBestMatchCuboid() {
+    void testFindBestMatchCuboid() {
         CuboidTree cuboidTree = createCuboidTree1();
         PrintWriter out = new PrintWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
         cuboidTree.print(out);

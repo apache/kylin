@@ -18,12 +18,12 @@
 
 package org.apache.kylin.common.util;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import java.util.Comparator;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
@@ -31,7 +31,7 @@ import org.apache.kylin.shaded.com.google.common.collect.Lists;
  */
 public class PartialSorterTest {
     @Test
-    public void basicTest() {
+    void basicTest() {
         List<Integer> a = Lists.newArrayList();
         a.add(100);
         a.add(2);

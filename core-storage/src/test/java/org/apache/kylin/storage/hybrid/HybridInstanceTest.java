@@ -18,9 +18,9 @@
 
 package org.apache.kylin.storage.hybrid;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -31,7 +31,7 @@ import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for class {@link HybridInstance}.
@@ -42,14 +42,14 @@ public class HybridInstanceTest {
 
 
     @Test
-    public void testGetCost() {
+    void testGetCost() {
         HybridInstance hybridInstance = new HybridInstance();
 
         assertEquals(Integer.MAX_VALUE, hybridInstance.getCost());
     }
 
     @Test
-    public void testIsCapable() {
+    void testIsCapable() {
         HybridInstance hybridInstance = new HybridInstance();
         LinkedHashSet<TblColRef> linkedHashSet = new LinkedHashSet<>();
         TupleInfo tupleInfo = new TupleInfo();

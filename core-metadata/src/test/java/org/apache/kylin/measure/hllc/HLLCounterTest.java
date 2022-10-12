@@ -17,8 +17,8 @@
 */
 package org.apache.kylin.measure.hllc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,8 +28,8 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Created by xiefan on 16-12-12.
@@ -45,7 +45,7 @@ public class HLLCounterTest {
     int errorCount3 = 0;
 
     @Test
-    public void testOneAdd() throws IOException {
+    void testOneAdd() throws IOException {
         HLLCounter hllc = new HLLCounter(14);
         HLLCounter one = new HLLCounter(14);
         for (int i = 0; i < 1000000; i++) {
@@ -60,7 +60,7 @@ public class HLLCounterTest {
     }
 
     @Test
-    public void tesSparseEstimate() throws IOException {
+    void tesSparseEstimate() throws IOException {
         HLLCounter hllc = new HLLCounter(14);
         for (int i = 0; i < 10; i++) {
             hllc.add(i);
@@ -74,7 +74,7 @@ public class HLLCounterTest {
      * cost time : 1341[old] -> 206[new]
      */
     @Test
-    public void countPerformanceWithLargeCardinality(){
+    void countPerformanceWithLargeCardinality(){
         int cardinality = 10_000_000;
         HLLCounter hllc = generateTestCounter(2009, cardinality);
         final int testCount = 5000;
@@ -86,7 +86,7 @@ public class HLLCounterTest {
      * cost time : 1396[old] -> 274[new]
      */
     @Test
-    public void countPerformanceSmallCardinality(){
+    void countPerformanceSmallCardinality(){
         int cardinality = 300_000;
         HLLCounter hllc = generateTestCounter(2009, cardinality);
         final int testCount = 5000;
@@ -98,7 +98,7 @@ public class HLLCounterTest {
      * cost time : 1577[old] -> 490[new]
      */
     @Test
-    public void createHLLCPerformance(){
+    void createHLLCPerformance(){
         int cardinality = 3_000_000;
         HLLCounter hllc = generateTestCounter(2009, cardinality);
         final int testCount = 30000;
@@ -152,7 +152,7 @@ public class HLLCounterTest {
     }
 
     @Test
-    public void countTest() throws IOException {
+    void countTest() throws IOException {
         int n = 10;
         for (int i = 0; i < 5; i++) {
             count(n);
@@ -161,7 +161,7 @@ public class HLLCounterTest {
     }
 
     @Test
-    public void mergeTest() throws IOException {
+    void mergeTest() throws IOException {
         double error = 0;
         int n = 100;
         for (int i = 0; i < n; i += 10) {
@@ -174,14 +174,14 @@ public class HLLCounterTest {
         System.out.println("  errorRateCount2 is " + errorCount2 + "!");
         System.out.println("  errorRateCount3 is " + errorCount3 + "!");
 
-        Assert.assertTrue(errorCount1 <= n * 0.30);
-        Assert.assertTrue(errorCount2 <= n * 0.05);
-        Assert.assertTrue(errorCount3 <= n * 0.02);
+        Assertions.assertTrue(errorCount1 <= n * 0.30);
+        Assertions.assertTrue(errorCount2 <= n * 0.05);
+        Assertions.assertTrue(errorCount3 <= n * 0.02);
     }
 
     /* compare the result of two different hll counter */
     @Test
-    public void compareResult() throws IOException {
+    void compareResult() throws IOException {
         int p = 12; //4096
         int m = 1 << p;
 
@@ -239,7 +239,7 @@ public class HLLCounterTest {
     }
 
     @Test
-    public void testPeekLength() throws IOException {
+    void testPeekLength() throws IOException {
         HLLCounter hllc = new HLLCounter(10);
         HLLCounter copy = new HLLCounter(10);
         byte[] value = new byte[10];
@@ -262,13 +262,13 @@ public class HLLCounterTest {
     }
 
     @Test
-    public void testEquivalence() {
+    void testEquivalence() {
         //test single
         HLLCounter ha = new HLLCounter();
         HLLCounter hb = new HLLCounter();
         ha.add(1);
         hb.add(1);
-        Assert.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
+        Assertions.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
         //test sparse
         ha = new HLLCounter();
         hb = new HLLCounter();
@@ -276,7 +276,7 @@ public class HLLCounterTest {
         byte[] b = new byte[] { 3, 4, 42 };
         ha.add(a, 1, 3);
         hb.add(b);
-        Assert.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
+        Assertions.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
         //test dense
         int p = 10;
         ha = new HLLCounter(p);
@@ -289,11 +289,11 @@ public class HLLCounterTest {
             ha.add(k);
             hb.add(k);
         }
-        Assert.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
+        Assertions.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
     }
 
     @Test
-    public void testAutoChangeToSparse() {
+    void testAutoChangeToSparse() {
         int p = 15;
         int m = 1 << p;
         HLLCounter counter = new HLLCounter(p);
@@ -310,7 +310,7 @@ public class HLLCounterTest {
     }
 
     @Test
-    public void testSerialilze() throws Exception {
+    void testSerialilze() throws Exception {
         //test single serialize
         int p = 15;
         int m = 1 << p;
@@ -390,7 +390,7 @@ public class HLLCounterTest {
         double actualError = Math.abs((double) (testSet.size() - estimate) / testSet.size());
 
         System.out.println(testSet.size() + "-" + estimate + " ~ " + actualError);
-        Assert.assertTrue(actualError < 0.1);
+        Assertions.assertTrue(actualError < 0.1);
 
         if (actualError > errorRate) {
             errorCount1++;
@@ -423,7 +423,7 @@ public class HLLCounterTest {
         System.out.println(testSet.size());
         System.out.println(errorRate);
         System.out.println("=" + actualError);
-        Assert.assertTrue(actualError < errorRate * 3.0);
+        Assertions.assertTrue(actualError < errorRate * 3.0);
 
         checkSerialize(hllc);
     }
@@ -434,6 +434,6 @@ public class HLLCounterTest {
         hllc.writeRegisters(buf);
         buf.flip();
         hllc.readRegisters(buf);
-        Assert.assertEquals(estimate, hllc.getCountEstimate());
+        Assertions.assertEquals(estimate, hllc.getCountEstimate());
     }
 }

@@ -18,8 +18,8 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -28,24 +28,24 @@ import java.util.List;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.gridtable.memstore.GTSimpleMemStore;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class SimpleGridTableTest extends LocalFileMetadataTestCase {
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         staticCreateTestMetadata();
     }
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         cleanAfterClass();
     }
 
     @Test
-    public void testBasics() throws IOException {
+    void testBasics() throws IOException {
         GTInfo info = UnitTestSupport.basicInfo();
         GTSimpleMemStore store = new GTSimpleMemStore(info);
         GridTable table = new GridTable(info, store);
@@ -55,7 +55,7 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAdvanced() throws IOException {
+    void testAdvanced() throws IOException {
         GTInfo info = UnitTestSupport.advancedInfo();
         GTSimpleMemStore store = new GTSimpleMemStore(info);
         GridTable table = new GridTable(info, store);
@@ -65,7 +65,7 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAggregate() throws IOException {
+    void testAggregate() throws IOException {
         GTInfo info = UnitTestSupport.advancedInfo();
         GTSimpleMemStore store = new GTSimpleMemStore(info);
         GridTable table = new GridTable(info, store);
@@ -75,7 +75,7 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAppend() throws IOException {
+    void testAppend() throws IOException {
         GTInfo info = UnitTestSupport.advancedInfo();
         GTSimpleMemStore store = new GTSimpleMemStore(info);
         GridTable table = new GridTable(info, store);

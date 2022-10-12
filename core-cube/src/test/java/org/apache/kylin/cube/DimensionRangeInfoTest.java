@@ -24,25 +24,25 @@ import java.util.Map;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataModelManager;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class DimensionRangeInfoTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testMergeRangeMap() {
+    void testMergeRangeMap() {
         DataModelDesc model = DataModelManager.getInstance(getTestConfig()).getDataModelDesc("ci_inner_join_model");
         String colId = "TEST_KYLIN_FACT.CAL_DT";
 
@@ -55,8 +55,8 @@ public class DimensionRangeInfoTest extends LocalFileMetadataTestCase {
             m2.put(colId, new DimensionRangeInfo("2012-06-01", "2013-06-30"));
 
             DimensionRangeInfo r1 = DimensionRangeInfo.mergeRangeMap(model, m1, m2).get(colId);
-            Assert.assertEquals("2012-01-01", r1.getMin());
-            Assert.assertEquals("2013-06-30", r1.getMax());
+            Assertions.assertEquals("2012-01-01", r1.getMin());
+            Assertions.assertEquals("2013-06-30", r1.getMax());
         }
         
         // missing column on one side
@@ -66,8 +66,8 @@ public class DimensionRangeInfoTest extends LocalFileMetadataTestCase {
 
             Map<String, DimensionRangeInfo> m2 = new HashMap<>();
 
-            Assert.assertTrue(DimensionRangeInfo.mergeRangeMap(model, m1, m2).isEmpty());
-            Assert.assertTrue(DimensionRangeInfo.mergeRangeMap(model, m2, m1).isEmpty());
+            Assertions.assertTrue(DimensionRangeInfo.mergeRangeMap(model, m1, m2).isEmpty());
+            Assertions.assertTrue(DimensionRangeInfo.mergeRangeMap(model, m2, m1).isEmpty());
         }
         
         // null min/max value (happens on empty segment, or all-null columns)
@@ -79,8 +79,8 @@ public class DimensionRangeInfoTest extends LocalFileMetadataTestCase {
             m2.put(colId, new DimensionRangeInfo("2012-06-01", "2013-06-30"));
 
             DimensionRangeInfo r1 = DimensionRangeInfo.mergeRangeMap(model, m1, m2).get(colId);
-            Assert.assertEquals("2012-06-01", r1.getMin());
-            Assert.assertEquals("2013-06-30", r1.getMax());
+            Assertions.assertEquals("2012-06-01", r1.getMin());
+            Assertions.assertEquals("2013-06-30", r1.getMax());
         }
         
     }

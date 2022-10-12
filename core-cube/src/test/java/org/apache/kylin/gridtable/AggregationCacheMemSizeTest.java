@@ -41,7 +41,7 @@ import org.apache.kylin.measure.bitmap.RoaringBitmapCounterFactory;
 import org.apache.kylin.measure.hllc.HLLCAggregator;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.github.jamm.MemoryMeter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
 
@@ -153,7 +153,7 @@ public class AggregationCacheMemSizeTest {
     }
 
     @Test
-    public void testEstimateBitmapMemSize() {
+    void testEstimateBitmapMemSize() {
         BitmapAggregator[] bitmapAggrs = new BitmapAggregator[bitmaps.length];
         for (int i = 0; i < bitmapAggrs.length; i++) {
             bitmapAggrs[i] = new BitmapAggregator();
@@ -168,7 +168,7 @@ public class AggregationCacheMemSizeTest {
     }
 
     @Test
-    public void testEstimateMemSize() throws InterruptedException {
+    void testEstimateMemSize() throws InterruptedException {
         int scale = Integer.parseInt(System.getProperty("scale", "1"));
         scale = Math.max(1, Math.min(10, scale));
 

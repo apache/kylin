@@ -31,10 +31,10 @@ import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.ZKUtil;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +48,7 @@ public class KylinServerDiscoveryTest extends LocalFileMetadataTestCase {
 
     private TestingServer zkTestServer;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         zkTestServer = new TestingServer();
         zkTestServer.start();
@@ -57,7 +57,7 @@ public class KylinServerDiscoveryTest extends LocalFileMetadataTestCase {
         createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         zkTestServer.close();
         cleanupTestMetadata();
@@ -68,7 +68,7 @@ public class KylinServerDiscoveryTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void test() throws Exception {
+    void test() throws Exception {
 
         final String zkString = zkTestServer.getConnectString();
 
@@ -87,11 +87,11 @@ public class KylinServerDiscoveryTest extends LocalFileMetadataTestCase {
             final ExampleServer server2 = new ExampleServer("localhost:2222");
 
             Collection<String> serviceNames = serviceDiscovery.queryForNames();
-            Assert.assertTrue(serviceNames.size() == 1);
-            Assert.assertTrue(KylinServerDiscovery.SERVICE_NAME.equals(serviceNames.iterator().next()));
+            Assertions.assertTrue(serviceNames.size() == 1);
+            Assertions.assertTrue(KylinServerDiscovery.SERVICE_NAME.equals(serviceNames.iterator().next()));
             Collection<ServiceInstance<LinkedHashMap>> instances = serviceDiscovery
                     .queryForInstances(KylinServerDiscovery.SERVICE_NAME);
-            Assert.assertTrue(instances.size() == 2);
+            Assertions.assertTrue(instances.size() == 2);
             List<ServiceInstance<LinkedHashMap>> instancesList = Lists.newArrayList(instances);
 
             final List<String> instanceNodes = instancesList.stream()
@@ -99,22 +99,22 @@ public class KylinServerDiscoveryTest extends LocalFileMetadataTestCase {
                             + input.getPayload().get(KylinServerDiscovery.SERVICE_PAYLOAD_DESCRIPTION))
                     .collect(Collectors.toList());
 
-            Assert.assertTrue(instanceNodes.contains(server1.getAddress() + ":query"));
-            Assert.assertTrue(instanceNodes.contains(server2.getAddress() + ":query"));
+            Assertions.assertTrue(instanceNodes.contains(server1.getAddress() + ":query"));
+            Assertions.assertTrue(instanceNodes.contains(server2.getAddress() + ":query"));
 
             // stop one server
             server1.close();
             instances = serviceDiscovery.queryForInstances(KylinServerDiscovery.SERVICE_NAME);
             ServiceInstance<LinkedHashMap> existingInstance = instances.iterator().next();
-            Assert.assertTrue(instances.size() == 1);
-            Assert.assertEquals(server2.getAddress() + ":query",
+            Assertions.assertTrue(instances.size() == 1);
+            Assertions.assertEquals(server2.getAddress() + ":query",
                     existingInstance.getAddress() + ":" + existingInstance.getPort() + ":"
                             + existingInstance.getPayload().get(KylinServerDiscovery.SERVICE_PAYLOAD_DESCRIPTION));
 
             // all stop
             server2.close();
             instances = serviceDiscovery.queryForInstances(KylinServerDiscovery.SERVICE_NAME);
-            Assert.assertTrue(instances.size() == 0);
+            Assertions.assertTrue(instances.size() == 0);
 
         } finally {
             CloseableUtils.closeQuietly(serviceDiscovery);

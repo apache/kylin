@@ -21,12 +21,12 @@ package org.apache.kylin.measure.topn;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-@Ignore("For collecting accuracy statistics, not for functional test")
+@Disabled ("For collecting accuracy statistics, not for functional test")
 public class TopNCounterCombinationTest extends TopNCounterTest {
 
     @Parameterized.Parameters

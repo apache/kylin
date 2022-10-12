@@ -30,8 +30,8 @@ import org.apache.hadoop.metrics2.MetricsCollector;
 import org.apache.hadoop.metrics2.MetricsRecordBuilder;
 import org.apache.hadoop.metrics2.MetricsSystem;
 import org.apache.hadoop.metrics2.lib.Interns;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Collections;
@@ -39,8 +39,8 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,7 +56,7 @@ public class HadoopMetrics2ReporterTest {
     private String recordName = "myserver";
     private HadoopMetrics2Reporter metrics2Reporter;
 
-    @Before
+    @BeforeEach
     public void setup() {
         mockRegistry = mock(MetricRegistry.class);
         mockMetricsSystem = mock(MetricsSystem.class);
@@ -72,7 +72,7 @@ public class HadoopMetrics2ReporterTest {
     }
 
     @Test
-    public void testBuilderDefaults() {
+    void testBuilderDefaults() {
         HadoopMetrics2Reporter.Builder builder = HadoopMetrics2Reporter.forRegistry(mockRegistry);
 
         final String jmxContext = "MyJmxContext;sub=Foo";
@@ -88,7 +88,7 @@ public class HadoopMetrics2ReporterTest {
     }
 
     @Test
-    public void testGaugeReporting() {
+    void testGaugeReporting() {
         final AtomicLong gaugeValue = new AtomicLong(0L);
         @SuppressWarnings("rawtypes")
         final Gauge gauge = new Gauge<Long>() {
@@ -119,12 +119,12 @@ public class HadoopMetrics2ReporterTest {
         verifyRecordBuilderUnits(recordBuilder);
 
         // Should not be the same instance we gave before. Our map should have gotten swapped out.
-        assertTrue("Should not be the same map instance after collection",
-                gauges != metrics2Reporter.getDropwizardGauges());
+        assertTrue(gauges != metrics2Reporter.getDropwizardGauges(),
+            "Should not be the same map instance after collection");
     }
 
     @Test
-    public void testCounterReporting() {
+    void testCounterReporting() {
         final Counter counter = new Counter();
 
         TreeMap<String, Counter> counters = new TreeMap<>();
@@ -146,12 +146,12 @@ public class HadoopMetrics2ReporterTest {
         verifyRecordBuilderUnits(recordBuilder);
 
         // Should not be the same instance we gave before. Our map should have gotten swapped out.
-        assertTrue("Should not be the same map instance after collection",
-                counters != metrics2Reporter.getDropwizardCounters());
+        assertTrue(counters != metrics2Reporter.getDropwizardCounters(),
+            "Should not be the same map instance after collection");
     }
 
     @Test
-    public void testHistogramReporting() {
+    void testHistogramReporting() {
         final String metricName = "my_histogram";
         final Histogram histogram = mock(Histogram.class);
         final Snapshot snapshot = mock(Snapshot.class);
@@ -216,12 +216,12 @@ public class HadoopMetrics2ReporterTest {
         verifyRecordBuilderUnits(recordBuilder);
 
         // Should not be the same instance we gave before. Our map should have gotten swapped out.
-        assertTrue("Should not be the same map instance after collection",
-                histograms != metrics2Reporter.getDropwizardHistograms());
+        assertTrue(histograms != metrics2Reporter.getDropwizardHistograms(),
+            "Should not be the same map instance after collection");
     }
 
     @Test
-    public void testTimerReporting() {
+    void testTimerReporting() {
         final String metricName = "my_timer";
         final Timer timer = mock(Timer.class);
         final Snapshot snapshot = mock(Snapshot.class);
@@ -308,12 +308,12 @@ public class HadoopMetrics2ReporterTest {
         verifyRecordBuilderUnits(recordBuilder);
 
         // Should not be the same instance we gave before. Our map should have gotten swapped out.
-        assertTrue("Should not be the same map instance after collection",
-                timers != metrics2Reporter.getDropwizardTimers());
+        assertTrue(timers != metrics2Reporter.getDropwizardTimers(),
+            "Should not be the same map instance after collection");
     }
 
     @Test
-    public void testMeterReporting() {
+    void testMeterReporting() {
         final String metricName = "my_meter";
         final Meter meter = mock(Meter.class);
 
@@ -357,13 +357,13 @@ public class HadoopMetrics2ReporterTest {
         verifyRecordBuilderUnits(recordBuilder);
 
         // Should not be the same instance we gave before. Our map should have gotten swapped out.
-        assertTrue("Should not be the same map instance after collection",
-                meters != metrics2Reporter.getDropwizardMeters());
+        assertTrue(meters != metrics2Reporter.getDropwizardMeters(),
+            "Should not be the same map instance after collection");
     }
 
     @SuppressWarnings("rawtypes")
     @Test
-    public void metrics2CycleIsNonDestructive() {
+    void metrics2CycleIsNonDestructive() {
         metrics2Reporter.setDropwizardCounters(Collections.unmodifiableSortedMap(new TreeMap<String, Counter>()));
         metrics2Reporter.setDropwizardGauges(Collections.unmodifiableSortedMap(new TreeMap<String, Gauge>()));
         metrics2Reporter.setDropwizardHistograms(Collections.unmodifiableSortedMap(new TreeMap<String, Histogram>()));
@@ -380,7 +380,7 @@ public class HadoopMetrics2ReporterTest {
 
     @SuppressWarnings("rawtypes")
     @Test
-    public void cachedMetricsAreClearedAfterCycle() {
+    void cachedMetricsAreClearedAfterCycle() {
         // After we perform a metrics2 reporting cycle, the maps should be reset to avoid double-reporting
         TreeMap<String, Counter> counters = new TreeMap<>();
         TreeMap<String, Gauge> gauges = new TreeMap<>();

@@ -17,7 +17,7 @@
 */
 package org.apache.kylin.metadata.measure;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
@@ -28,28 +28,28 @@ import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Created by shishaofeng on 6/6/16.
  */
 public class TopNMeasureTypeTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.createTestMetadata();
 
     }
 
-    @After
+    @AfterEach
     public void clear() {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void test() {
+    void test() {
 
         CubeDesc desc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
 

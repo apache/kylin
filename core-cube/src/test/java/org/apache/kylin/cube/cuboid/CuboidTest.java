@@ -18,14 +18,14 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author yangli9
@@ -57,18 +57,18 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         return getCubeDescManager().getCubeDesc("ssb");
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testIsValid() {
+    void testIsValid() {
 
         CubeDesc cube = getTestKylinCubeWithSeller();
         CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
@@ -94,7 +94,7 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testFindCuboidByIdWithSingleAggrGroup1() {
+    void testFindCuboidByIdWithSingleAggrGroup1() {
         CubeDesc cube = getTestKylinCubeWithoutSeller();
         Cuboid cuboid;
 
@@ -121,7 +121,7 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testIsValid2() {
+    void testIsValid2() {
         CubeDesc cube = getTestKylinCubeWithoutSeller();
         CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
 
@@ -147,7 +147,7 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testIsValid3() {
+    void testIsValid3() {
         CubeDesc cube = getSSBCubeDesc();
         CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
 
@@ -159,7 +159,7 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testFindCuboidByIdWithSingleAggrGroup2() {
+    void testFindCuboidByIdWithSingleAggrGroup2() {
         CubeDesc cube = getTestKylinCubeWithSeller();
         Cuboid cuboid;
 
@@ -186,7 +186,7 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testFindCuboidByIdWithMultiAggrGroup() {
+    void testFindCuboidByIdWithMultiAggrGroup() {
         CubeDesc cube = getTestKylinCubeWithoutSellerLeftJoin();
         Cuboid cuboid;
 

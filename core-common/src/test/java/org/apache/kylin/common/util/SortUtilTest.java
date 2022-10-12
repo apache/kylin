@@ -18,17 +18,17 @@
 
 package org.apache.kylin.common.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Month;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Stack;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertTrue;
 public class SortUtilTest{
 
   @Test
-  public void testExtractAndSort() {
+  void testExtractAndSort() {
       Stack<Month> stack = new Stack<>();
       ListIterator<Month> listIterator = stack.listIterator();
       Iterator<Month> iterator = SortUtil.extractAndSort(listIterator, null);

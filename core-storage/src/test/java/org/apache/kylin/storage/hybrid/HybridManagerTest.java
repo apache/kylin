@@ -22,36 +22,36 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  */
 public class HybridManagerTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testBasics() throws Exception {
+    void testBasics() throws Exception {
         HybridInstance hybridInstance = getHybridManager().getHybridInstance("test_kylin_hybrid_ready");
         System.out.println(JsonUtil.writeValueAsIndentString(hybridInstance));
 
         IRealization[] realizations = hybridInstance.getRealizations();
-        Assert.assertEquals(realizations.length, 2);
+        Assertions.assertEquals(realizations.length, 2);
 
         IRealization lastReal = hybridInstance.getLatestRealization();
-        Assert.assertTrue(lastReal instanceof CubeInstance);
-        Assert.assertEquals(lastReal.getName(), "test_kylin_cube_with_slr_ready_2_segments");
+        Assertions.assertTrue(lastReal instanceof CubeInstance);
+        Assertions.assertEquals(lastReal.getName(), "test_kylin_cube_with_slr_ready_2_segments");
 
     }
 

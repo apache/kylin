@@ -20,13 +20,13 @@ package org.apache.kylin.common.util;
 
 import java.util.UUID;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class RandomUtilTest {
     @Test
-    public void testRandomUUID() {
-        Assert.assertEquals(RandomUtil.randomUUID().toString().length(), UUID.randomUUID().toString().length());
-        Assert.assertNotEquals(RandomUtil.randomUUID().toString(), RandomUtil.randomUUID().toString());
+    void testRandomUUID() {
+        Assertions.assertEquals(RandomUtil.randomUUID().toString().length(), UUID.randomUUID().toString().length());
+        Assertions.assertNotEquals(RandomUtil.randomUUID().toString(), RandomUtil.randomUUID().toString());
     }
 }

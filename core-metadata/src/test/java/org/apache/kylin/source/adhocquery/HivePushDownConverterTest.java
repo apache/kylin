@@ -18,41 +18,41 @@
 
 package org.apache.kylin.source.adhocquery;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
 
-public class HivePushDownConverterTest extends TestCase {
+public class HivePushDownConverterTest  {
     @Test
-    public void testStringReplace() {
+    void testStringReplace() {
         String originString = "select count(*) as cnt from test_kylin_fact where char_length(lstg_format_name) < 10";
         String replacedString = HivePushDownConverter.replaceString(originString, "char_length", "length");
         assertEquals("select count(*) as cnt from test_kylin_fact where length(lstg_format_name) < 10", replacedString);
     }
 
     @Test
-    public void testStringReplace1() {
+    void testStringReplace1() {
         String originString = "select * from (select '(aaaa' from P_LINEORDER) ";
         String replacedString = HivePushDownConverter.subqueryReplace(originString);
         assertEquals("select * from (select '(aaaa' from P_LINEORDER) ", replacedString);
     }
 
     @Test
-    public void testExtractReplace() {
+    void testExtractReplace() {
         String originString = "ignore EXTRACT(YEAR FROM KYLIN_CAL_DT.CAL_DT) ignore";
         String replacedString = HivePushDownConverter.extractReplace(originString);
         assertEquals("ignore YEAR(KYLIN_CAL_DT.CAL_DT) ignore", replacedString);
     }
 
     @Test
-    public void testCastReplace() {
+    void testCastReplace() {
         String originString = "ignore EXTRACT(YEAR FROM CAST(KYLIN_CAL_DT.CAL_DT AS INTEGER)) ignore";
         String replacedString = HivePushDownConverter.castReplace(originString);
         assertEquals("ignore EXTRACT(YEAR FROM CAST(KYLIN_CAL_DT.CAL_DT AS int)) ignore", replacedString);
     }
 
     @Test
-    public void testSubqueryReplace1() {
+    void testSubqueryReplace1() {
         String originString = "select seller_id,lstg_format_name,sum(price) from (select * from test_kylin_fact where (lstg_format_name='FP-GTC') limit 20) group by seller_id,lstg_format_name";
         String replacedString = HivePushDownConverter.subqueryReplace(originString);
         assertEquals(
@@ -61,21 +61,21 @@ public class HivePushDownConverterTest extends TestCase {
     }
 
     @Test
-    public void testSubqueryReplace2() {
+    void testSubqueryReplace2() {
         String originString = "select count(*) from ( select test_kylin_fact.lstg_format_name from test_kylin_fact where test_kylin_fact.lstg_format_name='FP-GTC' group by test_kylin_fact.lstg_format_name ) t ";
         String replacedString = HivePushDownConverter.subqueryReplace(originString);
         assertEquals(originString, replacedString);
     }
 
     @Test
-    public void testSubqueryReplace3() {
+    void testSubqueryReplace3() {
         String originString = "select fact.lstg_format_name from (select * from test_kylin_fact where cal_dt > date'2010-01-01' ) as fact group by fact.lstg_format_name order by CASE WHEN fact.lstg_format_name IS NULL THEN 'sdf' ELSE fact.lstg_format_name END ";
         String replacedString = HivePushDownConverter.subqueryReplace(originString);
         assertEquals(originString, replacedString);
     }
 
     @Test
-    public void testSubqueryReplace4() {
+    void testSubqueryReplace4() {
         String originString = "select t.TRANS_ID from (\n"
                 + "    select * from test_kylin_fact s inner join TEST_ACCOUNT a \n"
                 + "        on s.BUYER_ID = a.ACCOUNT_ID inner join TEST_COUNTRY c on c.COUNTRY = a.ACCOUNT_COUNTRY\n"
@@ -85,7 +85,7 @@ public class HivePushDownConverterTest extends TestCase {
     }
 
     @Test
-    public void testConcatReplace() {
+    void testConcatReplace() {
         String originString = "select count(*) as cnt from test_kylin_fact where lstg_format_name||'a'='ABINa'";
         String replacedString = HivePushDownConverter.concatReplace(originString);
         assertEquals("select count(*) as cnt from test_kylin_fact where concat(lstg_format_name,'a')='ABINa'",
@@ -93,7 +93,7 @@ public class HivePushDownConverterTest extends TestCase {
     }
 
     @Test
-    public void testAddLimit() {
+    void testAddLimit() {
         String originString = "select t.TRANS_ID from (\n"
                 + "    select * from test_kylin_fact s inner join TEST_ACCOUNT a \n"
                 + "        on s.BUYER_ID = a.ACCOUNT_ID inner join TEST_COUNTRY c on c.COUNTRY = a.ACCOUNT_COUNTRY\n"

@@ -21,19 +21,19 @@ package org.apache.kylin.common.persistence;
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class AutoDeleteDirectoryTest {
 
     @Test
-    public void testBasic() throws IOException {
+    void testBasic() throws IOException {
         File tempFile = null;
         try (AutoDeleteDirectory autoTempFile = new AutoDeleteDirectory("test", "")) {
-            Assert.assertTrue(autoTempFile.getFile().isDirectory());
-            Assert.assertEquals(0, autoTempFile.getFile().listFiles().length);
+            Assertions.assertTrue(autoTempFile.getFile().isDirectory());
+            Assertions.assertEquals(0, autoTempFile.getFile().listFiles().length);
             tempFile = autoTempFile.getFile();
         }
-        Assert.assertTrue(!tempFile.exists());
+        Assertions.assertTrue(!tempFile.exists());
     }
 }

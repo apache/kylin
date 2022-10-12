@@ -18,7 +18,7 @@
 
 package org.apache.kylin.measure.raw;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -28,30 +28,31 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-@Ignore
+@Disabled 
 public class RawSerializerTest extends LocalFileMetadataTestCase {
     private static RawSerializer rawSerializer;
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         staticCreateTestMetadata();
 
         DataType.register("raw");
         rawSerializer = new RawSerializer(DataType.getType("raw"));
     }
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         cleanAfterClass();
     }
 
     @Test
-    public void testPeekLength() {
+    void testPeekLength() {
         ByteBuffer out = ByteBuffer.allocate(1024 * 1024 * 128);
         int size = 127;
         List<ByteArray> input = getValueList(size);
@@ -96,14 +97,14 @@ public class RawSerializerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testNormal() {
+    void testNormal() {
         List<ByteArray> input = getValueList(1024);
         List<ByteArray> output = doSAndD(input);
         assertEquals(input, output);
     }
 
     @Test
-    public void testNull() {
+    void testNull() {
         List<ByteArray> output = doSAndD(null);
         assertEquals(output.size(), 0);
         List<ByteArray> input = new ArrayList<ByteArray>();
@@ -111,10 +112,12 @@ public class RawSerializerTest extends LocalFileMetadataTestCase {
         assertEquals(input, output);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testOverflow() {
-        List<ByteArray> input = getValueList(512 * 1024);
-        doSAndD(input);
+    @Test
+    void testOverflow() {
+        Assertions.assertThrows(RuntimeException.class, () -> {
+            List<ByteArray> input = getValueList(512 * 1024);
+            doSAndD(input);
+        });
     }
 
     private List<ByteArray> doSAndD(List<ByteArray> input) {

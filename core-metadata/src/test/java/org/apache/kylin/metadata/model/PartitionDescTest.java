@@ -22,28 +22,28 @@ import java.io.IOException;
 
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class PartitionDescTest extends LocalFileMetadataTestCase {
 
     private PartitionDesc.DefaultPartitionConditionBuilder partitionConditionBuilder;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
         partitionConditionBuilder = new PartitionDesc.DefaultPartitionConditionBuilder();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testCustomYearMonthDayFieldPartitionConditionBuilder() throws IOException {
+    void testCustomYearMonthDayFieldPartitionConditionBuilder() throws IOException {
         DataModelManager dataModelManager = DataModelManager.getInstance(getTestConfig());
         DataModelDesc model = dataModelManager.getDataModelDesc("test_kylin_inner_join_model_desc");
         PartitionDesc yearMonthDayPartitionDesc = new PartitionDesc();
@@ -57,14 +57,14 @@ public class PartitionDescTest extends LocalFileMetadataTestCase {
                 .getPartitionDesc().getPartitionConditionBuilder();
         String dateRangeCondition = builder.buildDateRangeCondition(model.getPartitionDesc(), null,
                 new SegmentRange(0l, 86400000l), null);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "CONCAT(TEST_KYLIN_FACT.LSTG_SITE_ID,'-',TEST_KYLIN_FACT.LEAF_CATEG_ID,'-',TEST_KYLIN_FACT.SELLER_ID) < '1970-01-02'",
                 dateRangeCondition);
     }
 
     // [KYLIN-4495] Support custom date formats for partition date column
     @Test
-    public void testCustomDateFormat() {
+    void testCustomDateFormat() {
         PartitionDesc partitionDesc = new PartitionDesc();
         TblColRef col = TblColRef.mockup(TableDesc.mockup("DEFAULT.TABLE_NAME"), 1, "DATE_COLUMN", "string");
         partitionDesc.setPartitionDateColumnRef(col);
@@ -74,12 +74,12 @@ public class PartitionDescTest extends LocalFileMetadataTestCase {
                 DateFormat.stringToMillis("2016-02-22"),
                 DateFormat.stringToMillis("2016-02-23"));
         String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, null, range, null);
-        Assert.assertEquals(
+        Assertions.assertEquals(
                 "UNKNOWN_ALIAS.DATE_COLUMN >= '2016/02/22' AND UNKNOWN_ALIAS.DATE_COLUMN < '2016/02/23'",
                 condition);
 
         range = new SegmentRange.TSRange(0L, 0L);
         condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, null, range, null);
-        Assert.assertEquals("1=0", condition);
+        Assertions.assertEquals("1=0", condition);
     }
 }

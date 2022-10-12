@@ -18,12 +18,12 @@
 
 package org.apache.kylin.cube.common;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.charset.StandardCharsets;
 
 import org.apache.kylin.common.util.BytesSplitter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author George Song (ysong1)
@@ -32,7 +32,7 @@ import org.junit.Test;
 public class BytesSplitterTest {
 
     @Test
-    public void test() {
+    void test() {
         BytesSplitter bytesSplitter = new BytesSplitter(10, 15);
         byte[] input = "2013-02-17Collectibles".getBytes(StandardCharsets.UTF_8);
         bytesSplitter.split(input, input.length, (byte) 127);
@@ -46,7 +46,7 @@ public class BytesSplitterTest {
     }
 
     @Test
-    public void testNullValue() {
+    void testNullValue() {
         BytesSplitter bytesSplitter = new BytesSplitter(10, 15);
         byte[] input = "2013-02-17Collectibles".getBytes(StandardCharsets.UTF_8);
         bytesSplitter.split(input, input.length, (byte) 127);

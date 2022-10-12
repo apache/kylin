@@ -18,8 +18,8 @@
 
 package org.apache.kylin.metadata.badquery;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.NavigableSet;
@@ -28,23 +28,23 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testBasics() throws Exception {
+    void testBasics() throws Exception {
         BadQueryHistory history = BadQueryHistoryManager.getInstance(getTestConfig())
                 .getBadQueriesForProject("default");
         System.out.println(JsonUtil.writeValueAsIndentString(history));
@@ -63,7 +63,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAddEntryToProject() throws IOException {
+    void testAddEntryToProject() throws IOException {
         KylinConfig kylinConfig = getTestConfig();
         BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
         BadQueryEntry entry = new BadQueryEntry("sql", "adj", 1459362239992L, 100, "server", "t-0", "user",
@@ -91,7 +91,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testUpdateEntryToProject() throws IOException {
+    void testUpdateEntryToProject() throws IOException {
         KylinConfig kylinConfig = getTestConfig();
         BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
 

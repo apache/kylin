@@ -18,17 +18,16 @@
 
 package org.apache.kylin.common.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.junit.Test;
-
 public class BytesUtilTest {
     @Test
-    public void test() {
+    void test() {
         ByteBuffer buffer = ByteBuffer.allocate(10000);
         int[] x = new int[] { 1, 2, 3 };
         BytesUtil.writeIntArray(x, buffer);
@@ -43,7 +42,7 @@ public class BytesUtilTest {
     }
 
     @Test
-    public void testBooleanArray() {
+    void testBooleanArray() {
         ByteBuffer buffer = ByteBuffer.allocate(10000);
         boolean[] x = new boolean[] { true, false, true };
         BytesUtil.writeBooleanArray(x, buffer);
@@ -54,12 +53,12 @@ public class BytesUtilTest {
     }
 
     @Test
-    public void testWriteReadUnsignedInt() {
+    void testWriteReadUnsignedInt() {
         testWriteReadUnsignedInt(735033, 3);
         testWriteReadUnsignedInt(73503300, 4);
     }
 
-    public void testWriteReadUnsignedInt(int testInt, int length) {
+    private void testWriteReadUnsignedInt(int testInt, int length) {
         ByteArray ba = new ByteArray(new byte[length]);
         BytesUtil.writeUnsigned(testInt, length, ba.asBuffer());
 
@@ -76,7 +75,7 @@ public class BytesUtilTest {
     }
 
     @Test
-    public void testReadable() {
+    void testReadable() {
         String x = "\\x00\\x00\\x00\\x00\\x00\\x01\\xFC\\xA8";
         byte[] bytes = BytesUtil.fromReadableText(x);
         String y = BytesUtil.toHex(bytes);

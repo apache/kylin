@@ -18,14 +18,14 @@
 
 package org.apache.kylin.common.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for class {@link SumHelper}.
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 public class SumHelperTest{
 
   @Test
-  public void testSumDouble() {
+  void testSumDouble() {
       List<Double> linkedList = new LinkedList<>();
       Double doubleValue = new Double(2832);
       linkedList.add(doubleValue);
@@ -50,7 +50,7 @@ public class SumHelperTest{
   }
 
   @Test
-  public void testSumIntegerReturningLongWhereShortValueIsPositive() {
+  void testSumIntegerReturningLongWhereShortValueIsPositive() {
       List<Integer> linkedList = new LinkedList<>();
       Integer integer = Integer.valueOf(4584);
       linkedList.add(integer);
@@ -64,7 +64,7 @@ public class SumHelperTest{
   }
 
   @Test
-  public void testSumLong() {
+  void testSumLong() {
       List<Integer> linkedList = new LinkedList<>();
       Long resultOne = SumHelper.sumInteger(linkedList);
 

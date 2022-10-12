@@ -18,31 +18,31 @@
 
 package org.apache.kylin.common.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class SourceConfigurationUtilTest {
-    @Before
+    @BeforeEach
     public void setup() {
         System.setProperty("log4j.configuration", "file:../build/conf/kylin-tools-log4j.properties");
         System.setProperty("KYLIN_CONF", LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
     }
 
     @Test
-    public void testHiveConf() {
+    void testHiveConf() {
         Properties properties = SourceConfigurationUtil.loadHiveJDBCProperties();
         assertTrue(properties.containsKey("hiveconf:hive.auto.convert.join.noconditionaltask.size"));
     }
 
     @Test
-    public void testSqoopConf() {
+    void testSqoopConf() {
         Map<String, String> configMap = SourceConfigurationUtil.loadSqoopConfiguration();
         assertFalse(configMap.isEmpty());
         assertEquals("1", configMap.get("dfs.replication"));

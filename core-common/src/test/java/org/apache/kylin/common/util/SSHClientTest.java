@@ -18,7 +18,7 @@
 
 package org.apache.kylin.common.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,9 +26,9 @@ import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author ysong1
@@ -53,19 +53,19 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
         this.password = cfg.getRemoteHadoopCliPassword();
     }
 
-    @Before
+    @BeforeEach
     public void before() throws Exception {
         this.createTestMetadata();
         loadPropertiesFile();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testCmd() throws Exception {
+    void testCmd() throws Exception {
         if (isRemote == false)
             return;
 
@@ -76,7 +76,7 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testScp() throws Exception {
+    void testScp() throws Exception {
         if (isRemote == false)
             return;
 

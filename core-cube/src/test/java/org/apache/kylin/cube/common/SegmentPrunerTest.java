@@ -40,10 +40,10 @@ import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
@@ -52,34 +52,34 @@ import java.util.Map;
 public class SegmentPrunerTest extends LocalFileMetadataTestCase {
     private CubeInstance cube;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.createTestMetadata();
         cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube("ssb_cube_with_dimention_range");
     }
 
-    @After
+    @AfterEach
     public void after() {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testEmptySegment() {
+    void testEmptySegment() {
         CubeSegment seg = cube.getFirstSegment();
         TblColRef col = cube.getModel().findColumn("CUSTOMER.C_NATION");
 
         // a normal hit
         TupleFilter f = compare(col, FilterOperatorEnum.EQ, "CHINA");
         SegmentPruner segmentPruner = new SegmentPruner(f);
-        Assert.assertTrue(segmentPruner.check(seg));
+        Assertions.assertTrue(segmentPruner.check(seg));
 
         // make the segment empty, it should be pruned
         seg.setInputRecords(0);
-        Assert.assertFalse(segmentPruner.check(seg));
+        Assertions.assertFalse(segmentPruner.check(seg));
     }
 
     @Test
-    public void testDynamicFilter() {
+    void testDynamicFilter() {
         CubeSegment seg = cube.getFirstSegment();
         TblColRef col = cube.getModel().findColumn("CUSTOMER.C_NATION");
 
@@ -89,7 +89,7 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
             CompareTupleFilter f = compare(col, FilterOperatorEnum.EQ, dyna);
             f.bindVariable("$0", "CHINA");
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertTrue(segmentPruner.check(seg));
+            Assertions.assertTrue(segmentPruner.check(seg));
         }
 
         // prune case of a dynamic filter
@@ -98,12 +98,12 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
             CompareTupleFilter f = compare(col, FilterOperatorEnum.EQ, dyna);
             f.bindVariable("$0", "XXXX");
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertTrue(segmentPruner.check(seg) == false);
+            Assertions.assertTrue(segmentPruner.check(seg) == false);
         }
     }
 
     @Test
-    public void testDimensionRangeCheck() {
+    void testDimensionRangeCheck() {
         CubeSegment cubeSegment = cube.getSegments().getFirstSegment();
 
         //integer
@@ -121,89 +121,89 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.EQ, revCol);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertTrue(segmentPruner.check(cubeSegment));
+            Assertions.assertTrue(segmentPruner.check(cubeSegment));
         }
         
         // is null
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.ISNULL);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertTrue(segmentPruner.check(cubeSegment));
+            Assertions.assertTrue(segmentPruner.check(cubeSegment));
         }
 
         //lt min value
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.LT, constFilter_LO_QUANTITY1);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertFalse(segmentPruner.check(cubeSegment));
+            Assertions.assertFalse(segmentPruner.check(cubeSegment));
         }
 
         //lte min value
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.LTE, constFilter_LO_QUANTITY1);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertTrue(segmentPruner.check(cubeSegment));
+            Assertions.assertTrue(segmentPruner.check(cubeSegment));
         }
 
         //lt max value
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.LT, constFilter_LO_QUANTITY2);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertTrue(segmentPruner.check(cubeSegment));
+            Assertions.assertTrue(segmentPruner.check(cubeSegment));
         }
 
         //gt max value
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.GT, constFilter_LO_QUANTITY2);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertFalse(segmentPruner.check(cubeSegment));
+            Assertions.assertFalse(segmentPruner.check(cubeSegment));
         }
 
         //gte max value
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.GTE, constFilter_LO_QUANTITY2);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertTrue(segmentPruner.check(cubeSegment));
+            Assertions.assertTrue(segmentPruner.check(cubeSegment));
         }
 
         //gt min value
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.GT, constFilter_LO_QUANTITY1);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertTrue(segmentPruner.check(cubeSegment));
+            Assertions.assertTrue(segmentPruner.check(cubeSegment));
         }
 
         //in over-max values
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.IN, constFilter_LO_QUANTITY5);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertFalse(segmentPruner.check(cubeSegment));
+            Assertions.assertFalse(segmentPruner.check(cubeSegment));
         }
 
         //in normal values
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.IN, constFilter_LO_QUANTITY0);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertTrue(segmentPruner.check(cubeSegment));
+            Assertions.assertTrue(segmentPruner.check(cubeSegment));
         }
 
         //lte under-min value
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.LTE, constFilter_LO_QUANTITY3);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertFalse(segmentPruner.check(cubeSegment));
+            Assertions.assertFalse(segmentPruner.check(cubeSegment));
         }
 
         //gte over-max value
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.GTE, constFilter_LO_QUANTITY4);
             SegmentPruner segmentPruner = new SegmentPruner(f);
-            Assert.assertFalse(segmentPruner.check(cubeSegment));
+            Assertions.assertFalse(segmentPruner.check(cubeSegment));
         }
     }
 
     @Test
-    public void testLegacyCubeSeg() {
+    void testLegacyCubeSeg() {
         // legacy cube segments does not have DimensionRangeInfo, but with TSRange can do some pruning
         CubeInstance cube = CubeManager.getInstance(getTestConfig())
                 .getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
@@ -217,18 +217,18 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
             {
                 TupleFilter f = compare(col, FilterOperatorEnum.LTE, start);
                 SegmentPruner segmentPruner = new SegmentPruner(f);
-                Assert.assertTrue(segmentPruner.check(seg));
+                Assertions.assertTrue(segmentPruner.check(seg));
             }
             {
                 TupleFilter f = compare(col, FilterOperatorEnum.LT, start);
                 SegmentPruner segmentPruner = new SegmentPruner(f);
-                Assert.assertFalse(segmentPruner.check(seg));
+                Assertions.assertFalse(segmentPruner.check(seg));
             }
         }
     }
 
     @Test
-    public void testLegacyCubeSegWithOrFilter() {
+    void testLegacyCubeSegWithOrFilter() {
         // legacy cube segments does not have DimensionRangeInfo, but with TSRange can do some pruning
         CubeInstance cube = CubeManager.getInstance(getTestConfig())
                 .getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
@@ -261,8 +261,8 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
 
                 LogicalTupleFilter finalFilter = or(logicalAndFilter, logicalAndFilter2);
                 SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
-                Assert.assertTrue(segmentPruner.check(seg));
-                Assert.assertTrue(segmentPruner.check(seg2));
+                Assertions.assertTrue(segmentPruner.check(seg));
+                Assertions.assertTrue(segmentPruner.check(seg2));
             }
 
             {
@@ -276,8 +276,8 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
 
                 LogicalTupleFilter finalFilter = or(logicalAndFilter, logicalAndFilter2);
                 SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
-                Assert.assertTrue(segmentPruner.check(seg));
-                Assert.assertFalse(segmentPruner.check(seg2));
+                Assertions.assertTrue(segmentPruner.check(seg));
+                Assertions.assertFalse(segmentPruner.check(seg2));
             }
 
             {
@@ -291,8 +291,8 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
 
                 LogicalTupleFilter finalFilter = and(logicalAndFilter, logicalAndFilter2);
                 SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
-                Assert.assertFalse(segmentPruner.check(seg));
-                Assert.assertFalse(segmentPruner.check(seg2));
+                Assertions.assertFalse(segmentPruner.check(seg));
+                Assertions.assertFalse(segmentPruner.check(seg2));
             }
 
             {
@@ -306,8 +306,8 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
 
                 LogicalTupleFilter finalFilter = and(logicalAndFilter, logicalAndFilter2);
                 SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
-                Assert.assertTrue(segmentPruner.check(seg));
-                Assert.assertFalse(segmentPruner.check(seg2));
+                Assertions.assertTrue(segmentPruner.check(seg));
+                Assertions.assertFalse(segmentPruner.check(seg2));
             }
 
             {
@@ -321,8 +321,8 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
 
                 LogicalTupleFilter finalFilter = or(logicalAndFilter, logicalAndFilter2);
                 SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
-                Assert.assertTrue(segmentPruner.check(seg));
-                Assert.assertTrue(segmentPruner.check(seg2));
+                Assertions.assertTrue(segmentPruner.check(seg));
+                Assertions.assertTrue(segmentPruner.check(seg2));
             }
 
             {
@@ -336,8 +336,8 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
 
                 LogicalTupleFilter finalFilter = or(logicalAndFilter, logicalAndFilter2);
                 SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
-                Assert.assertTrue(segmentPruner.check(seg));
-                Assert.assertTrue(segmentPruner.check(seg2));
+                Assertions.assertTrue(segmentPruner.check(seg));
+                Assertions.assertTrue(segmentPruner.check(seg2));
             }
 
             {
@@ -364,14 +364,14 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
                 LogicalTupleFilter finalFinalFilter = or(finalFilter1, finalFilter2);
 
                 SegmentPruner segmentPruner = new SegmentPruner(finalFinalFilter);
-                Assert.assertTrue(segmentPruner.check(seg));
-                Assert.assertTrue(segmentPruner.check(seg2));
+                Assertions.assertTrue(segmentPruner.check(seg));
+                Assertions.assertTrue(segmentPruner.check(seg2));
             }
         }
     }
 
     @Test
-    public void testPruneSegWithFilterIN() {
+    void testPruneSegWithFilterIN() {
         // legacy cube segments does not have DimensionRangeInfo, but with TSRange can do some pruning
         CubeInstance cube = CubeManager.getInstance(getTestConfig())
                 .getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
@@ -388,8 +388,8 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
                         DateFormat.formatToTimeStr(tsRange2.end.v + 1000 * 60 * 60 * 24L, "yyyy-MM-dd")));
                 TupleFilter filter = compare(col, FilterOperatorEnum.IN, inFilter);
                 SegmentPruner segmentPruner = new SegmentPruner(filter);
-                Assert.assertTrue(segmentPruner.check(seg));
-                Assert.assertFalse(segmentPruner.check(seg2));
+                Assertions.assertTrue(segmentPruner.check(seg));
+                Assertions.assertFalse(segmentPruner.check(seg2));
 
             }
         }

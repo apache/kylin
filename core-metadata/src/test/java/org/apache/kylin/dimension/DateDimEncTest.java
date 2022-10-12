@@ -18,14 +18,14 @@
 
 package org.apache.kylin.dimension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.DateFormat;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Note the test must be consistent with DateStrDictionaryTest,
@@ -36,7 +36,7 @@ public class DateDimEncTest {
     DateDimEnc enc;
     byte[] buf;
 
-    @Before
+    @BeforeEach
     public void setup() {
         enc = new DateDimEnc(null);
         buf = new byte[enc.getLengthOfEncoding()];
@@ -53,7 +53,7 @@ public class DateDimEncTest {
     }
 
     @Test
-    public void testMinMaxId() {
+    void testMinMaxId() {
         assertEquals(0, encode("0000-01-01"));
         assertEquals(DateDimEnc.ID_9999_12_31, encode("9999-12-31"));
 
@@ -66,14 +66,14 @@ public class DateDimEncTest {
     }
 
     @Test
-    public void testNull() {
+    void testNull() {
         long nullId = encode(null);
         assertNull(decode(nullId));
         assertEquals(0xffffff, nullId & 0xffffff);
     }
 
     @Test
-    public void test() {
+    void test() {
         checkPair("0001-01-01");
         checkPair("1970-01-02");
         checkPair("1975-06-24");
@@ -89,7 +89,7 @@ public class DateDimEncTest {
     }
 
     @Test
-    public void testIllegalArgument() {
+    void testIllegalArgument() {
         try {
             encode("abcd");
             fail("IllegalArgumentException expected");

@@ -18,22 +18,22 @@
 
 package org.apache.kylin.measure.raw;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-@Ignore
+@Disabled 
 public class RawAggregatorTest {
     private RawAggregator agg = new RawAggregator();
 
     @Test
-    public void testNormal() {
+    void testNormal() {
         int size = 100;
         List<ByteArray> valueList = new ArrayList<ByteArray>(size);
         for (Integer i = 0; i < size; i++) {
@@ -47,7 +47,7 @@ public class RawAggregatorTest {
     }
 
     @Test
-    public void testNull() {
+    void testNull() {
         agg.aggregate(null);
         assertEquals(agg.getState(), null);
     }

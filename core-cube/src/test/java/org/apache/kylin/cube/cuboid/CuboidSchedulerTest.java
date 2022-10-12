@@ -18,10 +18,10 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.util.Arrays;
@@ -34,10 +34,10 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.cube.model.validation.rule.AggregationGroupRule;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.kylin.shaded.com.google.common.primitives.Longs;
@@ -47,12 +47,12 @@ import org.apache.kylin.shaded.com.google.common.primitives.Longs;
  * 
  */
 public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
@@ -137,7 +137,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetSpanningCuboid2() {
+    void testGetSpanningCuboid2() {
         CubeDesc cube = getTestKylinCubeWithSeller();
         CuboidScheduler scheduler = cube.getInitialCuboidScheduler();
 
@@ -165,7 +165,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetSpanningCuboid1() {
+    void testGetSpanningCuboid1() {
         CubeDesc cube = getTestKylinCubeWithoutSeller();
         CuboidScheduler scheduler = cube.getInitialCuboidScheduler();
 
@@ -194,50 +194,50 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCuboidGeneration1() {
+    void testCuboidGeneration1() {
 
         CubeDesc cube = getTestKylinCubeWithoutSeller();
         CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
     @Test
-    public void testCuboidGeneration2() {
+    void testCuboidGeneration2() {
         CubeDesc cube = getTestKylinCubeWithSeller();
         CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
     @Test
-    public void testCuboidGeneration3() {
+    void testCuboidGeneration3() {
         CubeDesc cube = getTestKylinCubeWithoutSellerLeftJoin();
         CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
     @Test
-    public void testCuboidGeneration4() {
+    void testCuboidGeneration4() {
         CubeDesc cube = getTestKylinCubeWithSellerLeft();
         CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
     @Test
-    public void testCuboidGeneration5() {
+    void testCuboidGeneration5() {
         CubeDesc cube = getStreamingCubeDesc();
         CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
     @Test
-    public void testCuboidGeneration6() {
+    void testCuboidGeneration6() {
         CubeDesc cube = getSSBCubeDesc();
         CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
     @Test
-    public void testCuboidGeneration7() {
+    void testCuboidGeneration7() {
         CubeDesc cube = getCIInnerJoinCube();
         CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
     @Test
-    public void testCuboidCounts1() {
+    void testCuboidCounts1() {
         CubeDesc cube = getTestKylinCubeWithoutSeller();
         CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
@@ -250,7 +250,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCuboidCounts2() {
+    void testCuboidCounts2() {
         CubeDesc cube = getTestKylinCubeWithoutSellerLeftJoin();
         CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
@@ -263,7 +263,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCuboidCounts3() {
+    void testCuboidCounts3() {
         CubeDesc cube = getTestKylinCubeWithSeller();
         CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
@@ -276,7 +276,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCuboidCounts4() {
+    void testCuboidCounts4() {
         CubeDesc cube = getTestKylinCubeWithSellerLeft();
         CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
@@ -289,7 +289,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCuboidCounts5() {
+    void testCuboidCounts5() {
         CubeDesc cube = getStreamingCubeDesc();
         CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
@@ -302,7 +302,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCuboidCounts6() {
+    void testCuboidCounts6() {
         CubeDesc cube = getCIInnerJoinCube();
         CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
@@ -315,7 +315,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testLargeCube() {
+    void testLargeCube() {
         CubeDesc cube = getFiftyDimCubeDesc();
         CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
         long start = System.currentTimeMillis();
@@ -324,7 +324,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testTooLargeCube() {
+    void testTooLargeCube() {
         CubeDesc cubeDesc = getFiftyDimFiveCapCubeDesc();
         AggregationGroupRule rule = new AggregationGroupRule();
         ValidateContext context = new ValidateContext();
@@ -334,23 +334,25 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
 
         try {
             cubeDesc.getInitialCuboidScheduler();
-            Assert.fail();
+            Assertions.fail();
         } catch (RuntimeException e) {
         }
     }
 
-    @Test(expected=RuntimeException.class)
-    public void testTooManyCombination() {
-        File twentyFile = new File(new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA, "cube_desc"), "twenty_dim");
-        twentyFile.renameTo(new File(twentyFile.getPath().substring(0, twentyFile.getPath().length() - 4)));
-        CubeDesc cube = getTwentyDimCubeDesc();
-        CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
-        cuboidScheduler.getCuboidCount();
-        twentyFile.renameTo(new File(twentyFile.getPath() + ".bad"));
+    @Test
+    void testTooManyCombination() {
+        Assertions.assertThrows(RuntimeException.class, () -> {
+            File twentyFile = new File(new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA, "cube_desc"), "twenty_dim");
+            twentyFile.renameTo(new File(twentyFile.getPath().substring(0, twentyFile.getPath().length() - 4)));
+            CubeDesc cube = getTwentyDimCubeDesc();
+            CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
+            cuboidScheduler.getCuboidCount();
+            twentyFile.renameTo(new File(twentyFile.getPath() + ".bad"));
+        });
     }
 
     @Test
-    public void testCuboid_onlyBaseCuboid() {
+    void testCuboid_onlyBaseCuboid() {
         for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA, "cube_desc").listFiles()) {
             if (f.getName().endsWith(".bad")) {
                 String path = f.getPath();

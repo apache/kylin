@@ -18,37 +18,37 @@
 
 package org.apache.kylin.common.persistence;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore.Checkpoint;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class LocalFileResourceStoreTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testFileStore() throws Exception {
+    void testFileStore() throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         ResourceStoreTest.testAStore(config.getMetadataUrl().toString(), config);
     }
 
     @Test
-    public void testRollback() throws Exception {
+    void testRollback() throws Exception {
         ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
         byte[] bytes = new byte[] { 0, 1, 2 };
         RawResource raw;

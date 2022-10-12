@@ -18,21 +18,21 @@
 
 package org.apache.kylin.measure.topn;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class TopNCounterBasicTest {
 
     @Test
-    public void testTopNCounter() {
+    void testTopNCounter() {
         TopNCounter<String> vs = new TopNCounter<String>(3);
         String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "A", "A", "Y" };
         for (String i : stream) {
@@ -48,7 +48,7 @@ public class TopNCounterBasicTest {
     }
 
     @Test
-    public void testTopK() {
+    void testTopK() {
         TopNCounter<String> vs = new TopNCounter<>(3);
         String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A" };
         for (String i : stream) {
@@ -61,7 +61,7 @@ public class TopNCounterBasicTest {
     }
 
     @Test
-    public void testTopKWithIncrement() {
+    void testTopKWithIncrement() {
         TopNCounter<String> vs = new TopNCounter<String>(3);
         String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A" };
         for (String i : stream) {
@@ -74,7 +74,7 @@ public class TopNCounterBasicTest {
     }
 
     @Test
-    public void testTopKWithIncrementOutOfOrder() {
+    void testTopKWithIncrementOutOfOrder() {
         TopNCounter<String> vs_increment = new TopNCounter<String>(3);
         TopNCounter<String> vs_single = new TopNCounter<String>(3);
         String[] stream = { "A", "B", "C", "D", "A" };
@@ -99,7 +99,7 @@ public class TopNCounterBasicTest {
     }
 
     @Test
-    public void testRetain() {
+    void testRetain() {
         TopNCounter<String> vs = new TopNCounter<String>(10);
         String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A" };
         for (String i : stream) {
@@ -112,7 +112,7 @@ public class TopNCounterBasicTest {
     }
 
     @Test
-    public void testMerge() {
+    void testMerge() {
 
         TopNCounter<String> vs = new TopNCounter<String>(10);
         String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "B", "A" };
@@ -135,7 +135,7 @@ public class TopNCounterBasicTest {
     }
 
     @Test
-    public void testComparatorSymmetry() {
+    void testComparatorSymmetry() {
         List<Counter> counters = Lists.newArrayList(new Counter<>("item", 0d), new Counter<>("item", 0d),
                 new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
                 new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 3d),
@@ -165,7 +165,7 @@ public class TopNCounterBasicTest {
         counters.stream().forEach(counter -> {
             originCounts.add(counter.getCount());
         });
-        Assert.assertArrayEquals(expectedCounts.toArray(), originCounts.toArray());
+        Assertions.assertArrayEquals(expectedCounts.toArray(), originCounts.toArray());
 
         counters.sort(TopNCounter.DESC_COMPARATOR);
         List<Double> expectedDescCounts = Lists.newArrayList(4d, 3d, 3d, 2d, 2d, 1d, 1d, 1d, 1d, 1d, 1d, 1d, 0d, 0d, 0d,
@@ -175,6 +175,6 @@ public class TopNCounterBasicTest {
         counters.stream().forEach(counter -> {
             originDescCounts.add(counter.getCount());
         });
-        Assert.assertArrayEquals(expectedDescCounts.toArray(), originDescCounts.toArray());
+        Assertions.assertArrayEquals(expectedDescCounts.toArray(), originDescCounts.toArray());
     }
 }

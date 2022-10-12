@@ -18,45 +18,45 @@
 
 package org.apache.kylin.common.util;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class EncryptUtilTest extends LocalFileMetadataTestCase {
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testAESEncrypt(){
+    void testAESEncrypt(){
         String input = "hello world";
         String result1 = EncryptUtil.encrypt(input);
         String decrypt1 = EncryptUtil.decrypt(result1);
-        Assert.assertEquals(input, decrypt1);
+        Assertions.assertEquals(input, decrypt1);
         String result2 = EncryptUtil.encrypt(input);
-        Assert.assertEquals(result2, result1);
+        Assertions.assertEquals(result2, result1);
 
         input = "this is a long string #&$";
         result1 = EncryptUtil.encrypt(input);
         decrypt1 = EncryptUtil.decrypt(result1);
-        Assert.assertEquals(input, decrypt1);
+        Assertions.assertEquals(input, decrypt1);
         result2 = EncryptUtil.encrypt(input);
-        Assert.assertEquals(result2, result1);
+        Assertions.assertEquals(result2, result1);
 
 
     }
 
     @Test
-    public void testNullInput() {
-        Assert.assertNull(EncryptUtil.encrypt(null));
-        Assert.assertNull(EncryptUtil.decrypt(null));
+    void testNullInput() {
+        Assertions.assertNull(EncryptUtil.encrypt(null));
+        Assertions.assertNull(EncryptUtil.decrypt(null));
     }
 
 }

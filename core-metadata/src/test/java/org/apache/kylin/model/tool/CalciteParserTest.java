@@ -25,11 +25,12 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class CalciteParserTest {
 
@@ -37,7 +38,7 @@ public class CalciteParserTest {
     public final ExpectedException exception = ExpectedException.none();
 
     @Test
-    public void testNoTableNameExists() throws SqlParseException {
+    void testNoTableNameExists() throws SqlParseException {
         String expr1 = "a + b";
         assertEquals("x.a + x.b", CalciteParser.insertAliasInExpr(expr1, "x"));
 
@@ -49,34 +50,39 @@ public class CalciteParserTest {
     }
 
     @Test
-    public void testTableNameExists1() throws SqlParseException {
+    void testTableNameExists1() throws SqlParseException {
         String expr1 = "a + x.b";
 
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage("SqlIdentifier X.B contains DB/Table name");
-        CalciteParser.insertAliasInExpr(expr1, "x");
+        Exception ex = Assertions.assertThrows(
+            IllegalArgumentException.class,
+            () -> CalciteParser.insertAliasInExpr(expr1, "x")
+        );
+        assertEquals("SqlIdentifier X.B contains DB/Table name", ex.getMessage());
     }
 
     @Test
-    public void testTableNameExists2() throws SqlParseException {
+    void testTableNameExists2() throws SqlParseException {
         String expr1 = "a + year(x.b)";
 
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage("SqlIdentifier X.B contains DB/Table name");
-        CalciteParser.insertAliasInExpr(expr1, "x");
+        Exception ex = Assertions.assertThrows(
+            IllegalArgumentException.class,
+            () -> CalciteParser.insertAliasInExpr(expr1, "x")
+        );
+        assertEquals("SqlIdentifier X.B contains DB/Table name", ex.getMessage());
     }
 
     @Test
-    public void testTableNameExists3() throws SqlParseException {
+    void testTableNameExists3() throws SqlParseException {
         String expr1 = "a + hiveudf(x.b)";
 
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage("SqlIdentifier X.B contains DB/Table name");
-        CalciteParser.insertAliasInExpr(expr1, "x");
+        Exception ex = Assertions.assertThrows(
+            IllegalArgumentException.class,
+            () -> CalciteParser.insertAliasInExpr(expr1, "x")
+        );
     }
 
     @Test
-    public void testCaseWhen() {
+    void testCaseWhen() {
         String expr = "(CASE LSTG_FORMAT_NAME  WHEN 'Auction' THEN 'x'  WHEN 'y' THEN '222' ELSE 'z' END)";
         String alias = "TEST_KYLIN_FACT";
         String s = CalciteParser.insertAliasInExpr(expr, alias);
@@ -87,7 +93,7 @@ public class CalciteParserTest {
     }
 
     @Test
-    public void testPos() throws SqlParseException {
+    void testPos() throws SqlParseException {
         String[] sqls = new String[]{"select \n a \n + \n b \n from t", //
                 "select\na\n+\nb\nfrom t", //
                 "select \r\n a \r\n + \r\n b \r\n from t", //
@@ -104,7 +110,7 @@ public class CalciteParserTest {
     }
 
     @Test
-    public void testPosWithBracketsInConstant() throws SqlParseException {
+    void testPosWithBracketsInConstant() throws SqlParseException {
         String[] sqls = new String[]{"select '(   a + b) * (c+ d     ' from t", };
         for (String sql : sqls) {
             SqlNode parse = ((SqlSelect) CalciteParser.parse(sql)).getSelectList().get(0);
@@ -115,7 +121,7 @@ public class CalciteParserTest {
     }
 
     @Test
-    public void testRowExpression() {
+    void testRowExpression() {
         String sql = "SELECT 'LO_LINENUMBER', 'LO_SUPPKEY' FROM \"SSB\".\"P_LINEORDER\" WHERE ROW('LO_ORDERKEY', 'LO_CUSTKEY') IN (ROW(123, 234), ROW(321, 432)) GROUP BY 'LO_LINENUMBER', 'LO_SUPPKEY'";
         try {
             CalciteParser.parse(sql);

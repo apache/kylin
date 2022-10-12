@@ -18,8 +18,8 @@
 
 package org.apache.kylin.measure.percentile;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.kylin.common.util.MathUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
@@ -36,7 +36,7 @@ public class PercentileAggregatorTest {
     private static int[] compressions = new int[] { 100, 1000, 10000 };
 
     @Test
-    public void testAggregate() {
+    void testAggregate() {
         double compression = 100;
         int datasize = 10000;
         PercentileAggregator aggregator = new PercentileAggregator(compression);
@@ -58,14 +58,14 @@ public class PercentileAggregatorTest {
     }
 
     @Test
-    public void testLargeSize() throws Exception {
+    void testLargeSize() throws Exception {
         for (int compression : compressions) {
             testPercentileSize(2000000, null, compression);
         }
     }
 
     @Test
-    public void testSmallSize() {
+    void testSmallSize() {
         for (int compression : compressions) {
             for (int i = compression; i < 4 * compression; i += compression / 3) {
                 PercentileAggregator aggregator = createPercentileAggreator(i, null, compression);
@@ -79,7 +79,7 @@ public class PercentileAggregatorTest {
     }
 
     @Test
-    public void testAggregation() throws Exception {
+    void testAggregation() throws Exception {
         for (int i = 5; i < 10; i += 3) {
             testAggregation(100000 * i);
         }

@@ -18,17 +18,17 @@
 
 package org.apache.kylin.metrics.property;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.apache.kylin.metrics.lib.impl.RecordEvent;
 import org.apache.kylin.metrics.lib.impl.TimePropertyEnum;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MetricsPropertyEnumTest {
 
     @Test
-    public void testJobPropertyEnum() {
+    void testJobPropertyEnum() {
         assertEquals(JobPropertyEnum.ID_CODE, JobPropertyEnum.getByName("JOB_ID"));
         assertEquals(JobPropertyEnum.USER, JobPropertyEnum.getByName("KUSER"));
         assertEquals(JobPropertyEnum.PROJECT, JobPropertyEnum.getByName("PROJECT"));
@@ -53,7 +53,7 @@ public class MetricsPropertyEnumTest {
     }
 
     @Test
-    public void testQueryPropertyEnum() {
+    void testQueryPropertyEnum() {
         assertEquals(QueryPropertyEnum.ID_CODE, QueryPropertyEnum.getByName("QUERY_HASH_CODE"));
         assertEquals(QueryPropertyEnum.TYPE, QueryPropertyEnum.getByName("QUERY_TYPE"));
         assertEquals(QueryPropertyEnum.USER, QueryPropertyEnum.getByName("KUSER"));
@@ -70,7 +70,7 @@ public class MetricsPropertyEnumTest {
     }
 
     @Test
-    public void testQueryCubePropertyEnum() {
+    void testQueryCubePropertyEnum() {
         assertEquals(QueryCubePropertyEnum.PROJECT, QueryCubePropertyEnum.getByName("PROJECT"));
         assertEquals(QueryCubePropertyEnum.CUBE, QueryCubePropertyEnum.getByName("CUBE_NAME"));
         assertEquals(QueryCubePropertyEnum.SEGMENT, QueryCubePropertyEnum.getByName("SEGMENT_NAME"));
@@ -93,7 +93,7 @@ public class MetricsPropertyEnumTest {
     }
 
     @Test
-    public void testQueryRPCPropertyEnum() {
+    void testQueryRPCPropertyEnum() {
         assertEquals(QueryRPCPropertyEnum.PROJECT, QueryRPCPropertyEnum.getByName("PROJECT"));
         assertEquals(QueryRPCPropertyEnum.REALIZATION, QueryRPCPropertyEnum.getByName("REALIZATION"));
         assertEquals(QueryRPCPropertyEnum.RPC_SERVER, QueryRPCPropertyEnum.getByName("RPC_SERVER"));
@@ -108,7 +108,7 @@ public class MetricsPropertyEnumTest {
     }
 
     @Test
-    public void testTimePropertyEnum() {
+    void testTimePropertyEnum() {
         assertEquals(TimePropertyEnum.YEAR, TimePropertyEnum.getByKey("KYEAR_BEGIN_DATE"));
         assertEquals(TimePropertyEnum.MONTH, TimePropertyEnum.getByKey("KMONTH_BEGIN_DATE"));
         assertEquals(TimePropertyEnum.WEEK_BEGIN_DATE, TimePropertyEnum.getByKey("KWEEK_BEGIN_DATE"));
@@ -121,7 +121,7 @@ public class MetricsPropertyEnumTest {
     }
 
     @Test
-    public void testRecordReserveKeyEnum() {
+    void testRecordReserveKeyEnum() {
         assertEquals(RecordEvent.RecordReserveKeyEnum.EVENT_SUBJECT,
                 RecordEvent.RecordReserveKeyEnum.getByKey("EVENT_TYPE"));
         assertEquals(RecordEvent.RecordReserveKeyEnum.ID, RecordEvent.RecordReserveKeyEnum.getByKey("EVENT_ID"));

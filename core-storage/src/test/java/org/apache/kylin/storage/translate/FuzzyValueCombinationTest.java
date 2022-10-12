@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.translate;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -30,9 +30,9 @@ import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author yangli9
@@ -49,8 +49,8 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
         table.setDatabase("default");
     }
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         staticCreateTestMetadata();
 
         col1 = col(1, table);
@@ -58,8 +58,8 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
         col3 = col(3, table);
     }
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         cleanAfterClass();
     }
 
@@ -68,7 +68,7 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testBasics() {
+    void testBasics() {
         System.out.println("test basics ============================================================================");
         Map<TblColRef, Set<String>> values = Maps.newHashMap();
         values.put(col1, set("a", "b", "c"));
@@ -81,7 +81,7 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSomeNull() {
+    void testSomeNull() {
         System.out.println("test some null ============================================================================");
         Map<TblColRef, Set<String>> values = Maps.newHashMap();
         values.put(col1, set("a", "b", "c"));
@@ -95,7 +95,7 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAllNulls() {
+    void testAllNulls() {
         System.out.println("test all nulls ============================================================================");
         Map<TblColRef, Set<String>> values = Maps.newHashMap();
         values.put(col1, set());
@@ -109,7 +109,7 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCap() {
+    void testCap() {
         System.out.println("test cap ============================================================================");
         Map<TblColRef, Set<String>> values = Maps.newHashMap();
         values.put(col1, set("1", "2", "3", "4"));

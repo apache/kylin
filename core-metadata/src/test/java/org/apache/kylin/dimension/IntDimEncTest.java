@@ -21,8 +21,8 @@ package org.apache.kylin.dimension;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Deprecated. use integer encoding instead
@@ -31,45 +31,45 @@ import org.junit.Test;
 public class IntDimEncTest {
 
     @Test
-    public void testBadConstructor() {
+    void testBadConstructor() {
         try {
             new IntDimEnc(0);
-            Assert.fail();
+            Assertions.fail();
         } catch (IllegalArgumentException e) {
             // expect
-            Assert.assertEquals("the length of IntDimEnc is 0, which should be 1-8", e.getMessage());
+            Assertions.assertEquals("the length of IntDimEnc is 0, which should be 1-8", e.getMessage());
         }
         try {
             new IntDimEnc(9);
-            Assert.fail();
+            Assertions.fail();
         } catch (IllegalArgumentException e) {
-            Assert.assertEquals("the length of IntDimEnc is 9, which should be 1-8", e.getMessage());
+            Assertions.assertEquals("the length of IntDimEnc is 9, which should be 1-8", e.getMessage());
         }
         new IntDimEnc(8);
     }
 
     @Test
-    public void testNull() {
+    void testNull() {
         for (int i = 1; i < 9; i++) {
             IntDimEnc enc = new IntDimEnc(i);
 
             byte[] buf = new byte[enc.getLengthOfEncoding()];
             enc.encode(null, buf, 0);
-            Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
+            Assertions.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
             String decode = enc.decode(buf, 0, buf.length);
-            Assert.assertEquals(null, decode);
+            Assertions.assertEquals(null, decode);
 
             buf = new byte[enc.getLengthOfEncoding()];
             DataTypeSerializer<Object> ser = enc.asDataTypeSerializer();
             ser.serialize(null, ByteBuffer.wrap(buf));
-            Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
+            Assertions.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
             decode = (String) ser.deserialize(ByteBuffer.wrap(buf));
-            Assert.assertEquals(null, decode);
+            Assertions.assertEquals(null, decode);
         }
     }
 
     @Test
-    public void testEncodeDecode() {
+    void testEncodeDecode() {
         IntDimEnc enc = new IntDimEnc(2);
         testEncodeDecode(enc, 0);
         testEncodeDecode(enc, 100);
@@ -77,15 +77,15 @@ public class IntDimEncTest {
         testEncodeDecode(enc, 65534);
         try {
             testEncodeDecode(enc, 65535);
-            Assert.fail();
+            Assertions.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<65535> but was:<null>", e.getMessage());
+            Assertions.assertEquals("expected: <65535> but was: <null>", e.getMessage());
         }
         try {
             testEncodeDecode(enc, 65536);
-            Assert.fail();
+            Assertions.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<[65536]> but was:<[0]>", e.getMessage());
+            Assertions.assertEquals("expected: <65536> but was: <0>", e.getMessage());
         }
     }
 
@@ -94,11 +94,11 @@ public class IntDimEncTest {
         String valueStr = "" + value;
         enc.encode(valueStr, buf, 0);
         String decode = enc.decode(buf, 0, buf.length);
-        Assert.assertEquals(valueStr, decode);
+        Assertions.assertEquals(valueStr, decode);
     }
 
     @Test
-    public void testSerDes() {
+    void testSerDes() {
         IntDimEnc enc = new IntDimEnc(2);
         testSerDes(enc, 0);
         testSerDes(enc, 100);
@@ -106,15 +106,15 @@ public class IntDimEncTest {
         testSerDes(enc, 65534);
         try {
             testSerDes(enc, 65535);
-            Assert.fail();
+            Assertions.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<65535> but was:<null>", e.getMessage());
+            Assertions.assertEquals("expected: <65535> but was: <null>", e.getMessage());
         }
         try {
             testSerDes(enc, 65536);
-            Assert.fail();
+            Assertions.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<[65536]> but was:<[0]>", e.getMessage());
+            Assertions.assertEquals("expected: <65536> but was: <0>", e.getMessage());
         }
     }
 
@@ -124,7 +124,7 @@ public class IntDimEncTest {
         String valueStr = "" + value;
         ser.serialize(valueStr, ByteBuffer.wrap(buf));
         String decode = (String) ser.deserialize(ByteBuffer.wrap(buf));
-        Assert.assertEquals(valueStr, decode);
+        Assertions.assertEquals(valueStr, decode);
     }
 
 }

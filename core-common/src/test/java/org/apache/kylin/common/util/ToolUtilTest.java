@@ -23,19 +23,19 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class ToolUtilTest {
 
     @Test
-    public void testGetFirstIPV4NonLoopBackAddress() throws Exception {
+    void testGetFirstIPV4NonLoopBackAddress() throws Exception {
 
         InetAddress localIp = ToolUtil.getFirstIPV4NonLoopBackAddress();
         boolean isLoopBackIp = localIp.isLoopbackAddress();
-        Assert.assertNotNull("localIp is null", localIp);
-        Assert.assertEquals(false, isLoopBackIp);
-        Assert.assertEquals(true, localIp instanceof Inet4Address);
-        Assert.assertEquals(false, localIp instanceof Inet6Address);
+        Assertions.assertNotNull(localIp, "localIp is null");
+        Assertions.assertEquals(false, isLoopBackIp);
+        Assertions.assertEquals(true, localIp instanceof Inet4Address);
+        Assertions.assertEquals(false, localIp instanceof Inet6Address);
     }
 }

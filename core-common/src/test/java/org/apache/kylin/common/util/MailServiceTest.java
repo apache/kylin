@@ -23,27 +23,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-@Ignore("convenient trial tool for dev")
+@Disabled ("convenient trial tool for dev")
 public class MailServiceTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         this.createTestMetadata();
 
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testSendEmail() throws IOException {
+    void testSendEmail() throws IOException {
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 

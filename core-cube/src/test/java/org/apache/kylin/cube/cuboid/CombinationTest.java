@@ -18,9 +18,9 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author xjiang
@@ -80,7 +80,7 @@ public class CombinationTest {
     }
 
     @Test
-    public void testComb3() {
+    void testComb3() {
         long valueBits = 1 << 4 | 1 << 6 | 1 << 8;
         System.out.println("value = " + Long.toBinaryString(valueBits) + ", count = " + Long.bitCount(valueBits));
         long valueMask = (long) Math.pow(2, 10) - 1;

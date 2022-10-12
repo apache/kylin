@@ -24,8 +24,8 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Range;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
@@ -34,47 +34,47 @@ import org.apache.kylin.shaded.com.google.common.collect.Sets;
  */
 public class RangeUtilTest {
     @Test
-    public void testFilter() {
+    void testFilter() {
         NavigableMap<Integer, Integer> map = new TreeMap<>();
         map.put(3, 3);
         map.put(1, 1);
         map.put(2, 2);
         Map<Integer, Integer> subMap = RangeUtil.filter(map, Range.<Integer> all());
-        Assert.assertEquals(subMap.size(), 3);
+        Assertions.assertEquals(subMap.size(), 3);
 
         subMap = RangeUtil.filter(map, Range.atLeast(2));
-        Assert.assertEquals(subMap.size(), 2);
+        Assertions.assertEquals(subMap.size(), 2);
 
         subMap = RangeUtil.filter(map, Range.greaterThan(2));
-        Assert.assertEquals(subMap.size(), 1);
+        Assertions.assertEquals(subMap.size(), 1);
 
         subMap = RangeUtil.filter(map, Range.greaterThan(0));
-        Assert.assertEquals(subMap.size(), 3);
+        Assertions.assertEquals(subMap.size(), 3);
 
         subMap = RangeUtil.filter(map, Range.greaterThan(5));
-        Assert.assertEquals(subMap.size(), 0);
+        Assertions.assertEquals(subMap.size(), 0);
 
         subMap = RangeUtil.filter(map, Range.atMost(2));
-        Assert.assertEquals(subMap.size(), 2);
+        Assertions.assertEquals(subMap.size(), 2);
 
         subMap = RangeUtil.filter(map, Range.lessThan(2));
-        Assert.assertEquals(subMap.size(), 1);
+        Assertions.assertEquals(subMap.size(), 1);
 
         subMap = RangeUtil.filter(map, Range.lessThan(5));
-        Assert.assertEquals(subMap.size(), 3);
+        Assertions.assertEquals(subMap.size(), 3);
 
         subMap = RangeUtil.filter(map, Range.lessThan(0));
-        Assert.assertEquals(subMap.size(), 0);
+        Assertions.assertEquals(subMap.size(), 0);
     }
 
     @Test
-    public void testBuildRanges() {
+    void testBuildRanges() {
         int[] test1 = { 1, 2, 3, 5, 7, 8, 10, 4 };
         TreeSet<Integer> treeSet = Sets.newTreeSet();
         for (int t : test1) {
             treeSet.add(t);
         }
         List<Range<Integer>> ranges = RangeUtil.buildRanges(new TreeSet<Integer>(treeSet));
-        Assert.assertEquals(3, ranges.size());
+        Assertions.assertEquals(3, ranges.size());
     }
 }

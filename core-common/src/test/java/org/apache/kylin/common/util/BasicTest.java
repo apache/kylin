@@ -36,9 +36,9 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
@@ -49,7 +49,7 @@ import org.apache.kylin.shaded.com.google.common.collect.Maps;
  * Keep this test case to test basic java functionality
  * development concept proving use
  */
-@Ignore("convenient trial tool for dev")
+@Disabled ("convenient trial tool for dev")
 @SuppressWarnings("unused")
 public class BasicTest {
     protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(BasicTest.class);
@@ -63,7 +63,7 @@ public class BasicTest {
     }
 
     @Test
-    public void testxx() throws InterruptedException {
+    void testxx() throws InterruptedException {
         System.out.println(
                 "((?<![\\p{L}_0-9\\.\\\"])(\\\"[\\p{L}_0-9]+\\\"\\.)?(\\\"[\\p{L}_0-9]+\\\")(?![\\p{L}_0-9\\.\\\"]))");
         System.out.println(0x8fL);
@@ -73,7 +73,7 @@ public class BasicTest {
     }
 
     @Test
-    public void testyy() throws InterruptedException {
+    void testyy() throws InterruptedException {
         long wallClock = System.currentTimeMillis();
 
         HashMap<Integer, byte[]> map = Maps.newHashMap();
@@ -86,7 +86,7 @@ public class BasicTest {
     }
 
     @Test
-    public void test0() throws Exception {
+    void test0() throws Exception {
 
         ExecutorService executorService = Executors.newCachedThreadPool();
         List<Future<?>> futures = Lists.newArrayList();
@@ -142,13 +142,13 @@ public class BasicTest {
     }
 
     @Test
-    public void test1() throws Exception {
+    void test1() throws Exception {
 
         System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1433833611000L));
         System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1433250517000L));
         System.out.println(org.apache.kylin.common.util.DateFormat.stringToMillis("2015-06-01 00:00:00"));
         System.out.println(org.apache.kylin.common.util.DateFormat.stringToMillis("2015-05-15 17:00:00"));
-        Assert.assertEquals(1568960682251L,
+        Assertions.assertEquals(1568960682251L,
                 org.apache.kylin.common.util.DateFormat.stringToMillis("2019-09-20T14:24:42.251+08:00"));
 
         String bb = "\\x00\\x00\\x00\\x00\\x01\\x3F\\xD0\\x2D\\58\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/07/12 07:59:37
@@ -187,7 +187,7 @@ public class BasicTest {
     }
 
     @Test
-    public void test3() throws Exception {
+    void test3() throws Exception {
         FastDateFormat formatter = org.apache.kylin.common.util.DateFormat.getDateFormat("MM dd, yyyy hh:mm:ss a");
 
         String timeStr = "07 20, 2016 09:59:17 AM";
@@ -196,7 +196,7 @@ public class BasicTest {
     }
 
     @Test
-    public void testStringSplit() throws Exception {
+    void testStringSplit() throws Exception {
 
         String[] origin = new String[] { "ab,c", "cd|e" };
 
@@ -206,10 +206,10 @@ public class BasicTest {
         System.out.println(concated);
 
         String[] newValues = concated.split(delimiter);
-        Assert.assertEquals(origin, newValues);
+        Assertions.assertEquals(origin, newValues);
 
         newValues = concated.split("\\" + delimiter);
-        Assert.assertEquals(origin, newValues);
+        Assertions.assertEquals(origin, newValues);
     }
 
     private enum MetricType {

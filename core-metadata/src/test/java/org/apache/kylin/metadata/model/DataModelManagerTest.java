@@ -19,32 +19,32 @@
 package org.apache.kylin.metadata.model;
 
 import static org.apache.kylin.metadata.model.DataModelManager.getInstance;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  */
 public class DataModelManagerTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testCiModel() {
+    void testCiModel() {
         DataModelManager mgr = getInstance(getTestConfig());
         DataModelDesc lm = mgr.getDataModelDesc("ci_left_join_model");
         DataModelDesc im = mgr.getDataModelDesc("ci_inner_join_model");
@@ -77,17 +77,17 @@ public class DataModelManagerTest extends LocalFileMetadataTestCase {
     }
 
     private void assertSnowflakeQuality(DataModelDesc model) {
-        Assert.assertNotNull(model);
-        Assert.assertNotNull(model.findTable("BUYER_COUNTRY"));
-        Assert.assertNotNull(model.findTable("SELLER_COUNTRY"));
-        Assert.assertNotNull(model.findColumn("BUYER_COUNTRY.NAME"));
-        Assert.assertNotNull(model.findColumn("BUYER_ID"));
+        Assertions.assertNotNull(model);
+        Assertions.assertNotNull(model.findTable("BUYER_COUNTRY"));
+        Assertions.assertNotNull(model.findTable("SELLER_COUNTRY"));
+        Assertions.assertNotNull(model.findColumn("BUYER_COUNTRY.NAME"));
+        Assertions.assertNotNull(model.findColumn("BUYER_ID"));
 
     }
 
     @Test
-    public void testDataModel() throws Exception {
+    void testDataModel() throws Exception {
         DataModelDesc modelDesc = getInstance(getTestConfig()).getDataModelDesc("test_kylin_left_join_model_desc");
-        Assert.assertTrue(modelDesc.getDimensions().size() > 0);
+        Assertions.assertTrue(modelDesc.getDimensions().size() > 0);
     }
 }

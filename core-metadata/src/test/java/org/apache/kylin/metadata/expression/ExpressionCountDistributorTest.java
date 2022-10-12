@@ -18,8 +18,8 @@
 
 package org.apache.kylin.metadata.expression;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,22 +32,22 @@ import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.powermock.api.mockito.PowerMockito;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class ExpressionCountDistributorTest extends LocalFileMetadataTestCase {
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         staticCreateTestMetadata();
     }
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         staticCleanupTestMetadata();
     }
 
@@ -73,7 +73,7 @@ public class ExpressionCountDistributorTest extends LocalFileMetadataTestCase {
      * *      1  2                                           1  2   n  1   n  1 n  2
      */
     @Test
-    public void testDistribute1() {
+    void testDistribute1() {
         NumberTupleExpression n = new NumberTupleExpression(10);
         ExpressionCountDistributor cntDistributor = new ExpressionCountDistributor(n);
 
@@ -136,7 +136,7 @@ public class ExpressionCountDistributorTest extends LocalFileMetadataTestCase {
      * *         end) + col*2 + 1                                     end) + col*2 + n*1
      */
     @Test
-    public void testDistribute2() {
+    void testDistribute2() {
         NumberTupleExpression n = new NumberTupleExpression(10);
         ExpressionCountDistributor cntDistributor = new ExpressionCountDistributor(n);
 

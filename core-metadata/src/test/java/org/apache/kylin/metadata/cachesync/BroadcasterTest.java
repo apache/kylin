@@ -27,25 +27,25 @@ import org.apache.kylin.metadata.cachesync.Broadcaster.BroadcastEvent;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Listener;
 import org.apache.kylin.metadata.cachesync.Broadcaster.SyncErrorHandler;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class BroadcasterTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testBasics() throws IOException {
+    void testBasics() throws IOException {
         Broadcaster broadcaster = Broadcaster.getInstance(getTestConfig());
         final AtomicInteger i = new AtomicInteger(0);
 
@@ -53,7 +53,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
             @Override
             public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
                     throws IOException {
-                Assert.assertEquals(2, i.incrementAndGet());
+                Assertions.assertEquals(2, i.incrementAndGet());
             }
         }, "test");
 
@@ -61,7 +61,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
             @Override
             public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
                     throws IOException {
-                Assert.assertEquals(1, i.incrementAndGet());
+                Assertions.assertEquals(1, i.incrementAndGet());
             }
         }, "test");
 
@@ -72,7 +72,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testNotifyNonStatic() throws IOException {
+    void testNotifyNonStatic() throws IOException {
         Broadcaster broadcaster = Broadcaster.getInstance(getTestConfig());
         final AtomicInteger i = new AtomicInteger(0);
 
@@ -88,7 +88,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
             @Override
             public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
                     throws IOException {
-                Assert.assertEquals(1, i.incrementAndGet());
+                Assertions.assertEquals(1, i.incrementAndGet());
             }
         }, "test");
 
@@ -99,7 +99,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAnnounceErrorHandler() throws IOException, InterruptedException {
+    void testAnnounceErrorHandler() throws IOException, InterruptedException {
         System.setProperty("kylin.server.cluster-servers", "localhost:717");
         System.setProperty("kylin.metadata.sync-error-handler", MockupErrHandler.class.getName());
         try {
@@ -118,7 +118,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
             System.clearProperty("kylin.metadata.sync-error-handler");
         }
         
-        Assert.assertTrue(MockupErrHandler.atom.get() > 0);
+        Assertions.assertTrue(MockupErrHandler.atom.get() > 0);
     }
     
     public static class MockupErrHandler implements SyncErrorHandler {
@@ -130,7 +130,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
 
         @Override
         public void handleAnnounceError(String targetNode, RestClient restClient, BroadcastEvent event) {
-            Assert.assertEquals("localhost:717", targetNode);
+            Assertions.assertEquals("localhost:717", targetNode);
             atom.incrementAndGet();
         }
         

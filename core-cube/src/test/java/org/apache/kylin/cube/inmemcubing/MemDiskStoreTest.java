@@ -18,7 +18,7 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,9 +32,9 @@ import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.UnitTestSupport;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class MemDiskStoreTest extends LocalFileMetadataTestCase {
 
@@ -43,18 +43,18 @@ public class MemDiskStoreTest extends LocalFileMetadataTestCase {
     final List<GTRecord> data = UnitTestSupport.mockupData(info, 100000); // converts to about 3.4 MB data
     // final List<GTRecord> data = UnitTestSupport.mockupData(info, 1000000); // converts to about 34 MB data
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         staticCreateTestMetadata();
     }
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         cleanAfterClass();
     }
 
     @Test
-    public void testSingleThreadWriteRead() throws IOException {
+    void testSingleThreadWriteRead() throws IOException {
         long start = System.currentTimeMillis();
         verifyOneTableWriteAndRead();
         long end = System.currentTimeMillis();
@@ -62,7 +62,7 @@ public class MemDiskStoreTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testMultiThreadWriteRead() throws IOException, InterruptedException {
+    void testMultiThreadWriteRead() throws IOException, InterruptedException {
         long start = System.currentTimeMillis();
 
         int nThreads = 5;

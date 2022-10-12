@@ -18,8 +18,8 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +32,9 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,20 +44,20 @@ public class CubeManagerConcurrencyTest extends LocalFileMetadataTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeManagerConcurrencyTest.class);
     
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         System.setProperty("kylin.cube.max-building-segments", "10000");
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
         System.clearProperty("kylin.cube.max-building-segments");
     }
 
     @Test
-    public void test() throws Exception {
+    void test() throws Exception {
         final KylinConfig config = getTestConfig();
         CubeManager cubeMgr = CubeManager.getInstance(config);
         CubeDescManager cubeDescMgr = CubeDescManager.getInstance(config);

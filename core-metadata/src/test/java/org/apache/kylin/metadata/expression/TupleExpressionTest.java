@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metadata.expression;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
 
@@ -26,28 +26,28 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.exception.QueryOnCubeException;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class TupleExpressionTest extends LocalFileMetadataTestCase {
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         staticCreateTestMetadata();
     }
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         staticCleanupTestMetadata();
     }
 
     private TableDesc t = TableDesc.mockup("T");
 
     @Test
-    public void testBinary() {
+    void testBinary() {
         BigDecimal value1 = BigDecimal.valueOf(10L);
         BigDecimal value2 = BigDecimal.valueOf(10L);
         TblColRef col1 = TblColRef.mockup(t, 1, "C1", "decimal");

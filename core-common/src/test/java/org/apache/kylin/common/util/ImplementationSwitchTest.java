@@ -17,12 +17,13 @@
  */
 package org.apache.kylin.common.util;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ImplementationSwitchTest {
 
@@ -46,13 +47,15 @@ public class ImplementationSwitchTest {
     }
 
     @Test
-    public void test() {
+    void test() {
         assertTrue(sw.get(1) instanceof Impl1);
         assertTrue(sw.get(2) instanceof Impl2);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testException() {
-        sw.get(0);
+    @Test
+    void testException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            sw.get(0);
+        });
     }
 }

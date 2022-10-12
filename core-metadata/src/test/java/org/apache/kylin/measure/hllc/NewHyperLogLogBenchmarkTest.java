@@ -17,18 +17,18 @@
 */
 package org.apache.kylin.measure.hllc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.ByteBuffer;
 import java.util.Random;
 
 import org.apache.kylin.metadata.datatype.DataType;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  */
-@Ignore("Save UT time")
+@Disabled ("Save UT time")
 @SuppressWarnings("deprecation")
 public class NewHyperLogLogBenchmarkTest {
 
@@ -37,7 +37,7 @@ public class NewHyperLogLogBenchmarkTest {
     final int testTimes = 100000;
 
     @Test
-    public void denseToDenseRegisterMergeBenchmark() throws Exception {
+    void denseToDenseRegisterMergeBenchmark() throws Exception {
         final int p = 15;
         int m = 1 << p;
 
@@ -79,7 +79,7 @@ public class NewHyperLogLogBenchmarkTest {
     }
 
     @Test
-    public void sparseToSparseMergeBenchmark() throws Exception {
+    void sparseToSparseMergeBenchmark() throws Exception {
         final int p = 15;
         int m = 1 << p;
         System.out.println("sparseToSparseMergeBenchmark(), m : " + m);
@@ -122,7 +122,7 @@ public class NewHyperLogLogBenchmarkTest {
     }
 
     @Test
-    public void sparseToDenseRegisterMergeBenchmark() throws Exception {
+    void sparseToDenseRegisterMergeBenchmark() throws Exception {
         final int p = 15;
         int m = 1 << p;
         System.out.println("sparseToDenseRegisterMergeBenchmark(), m : " + m);
@@ -164,7 +164,7 @@ public class NewHyperLogLogBenchmarkTest {
     }
 
     @Test
-    public void sparseSerializeBenchmark() throws Exception {
+    void sparseSerializeBenchmark() throws Exception {
         final int p = 15;
         int m = 1 << p;
         double oldFactor = HLLCounter.OVERFLOW_FACTOR;
@@ -217,7 +217,7 @@ public class NewHyperLogLogBenchmarkTest {
     }
 
     @Test
-    public void denseSerializeBenchmark() throws Exception {
+    void denseSerializeBenchmark() throws Exception {
         final int p = 15;
         final int m = 1 << p;
         double oldFactor = HLLCounter.OVERFLOW_FACTOR;
@@ -268,7 +268,7 @@ public class NewHyperLogLogBenchmarkTest {
     // Test the performance impact of KYLIN-2944.
     // The result shows returning a shared object or not DON'T impact performance.
     @Test
-    public void generalDeserializeBenchmark() throws Exception {
+    void generalDeserializeBenchmark() throws Exception {
         final HLLCSerializer ser = new HLLCSerializer(DataType.getType("hllc(15)"));
         final ByteBuffer buf = ByteBuffer.allocate(1024 * 1024);
         

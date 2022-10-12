@@ -21,25 +21,25 @@ package org.apache.kylin.common.restclient;
 import java.io.IOException;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class RestClientTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @SuppressWarnings("unused")
     @Test
-    public void basicTests() throws IOException {
+    void basicTests() throws IOException {
         RestClient a = new RestClient("prod01:80");
         //a.wipeCache("metadata", "a", "a");
         //String aa = a.getKylinProperties();

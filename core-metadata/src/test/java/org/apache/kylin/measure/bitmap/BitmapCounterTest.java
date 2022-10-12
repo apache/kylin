@@ -18,17 +18,17 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BitmapCounterTest {
     private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
 
     @Test
-    public void testBitmapCounter() {
+    void testBitmapCounter() {
         BitmapCounter counter = factory.newBitmap(10, 20, 30, 1000);
         assertEquals(4, counter.getCount());
         assertTrue(counter.getMemBytes() > 0);

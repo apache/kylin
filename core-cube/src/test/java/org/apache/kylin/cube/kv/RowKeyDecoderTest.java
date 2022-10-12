@@ -18,7 +18,7 @@
 
 package org.apache.kylin.cube.kv;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,26 +29,26 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-@Ignore
+@Disabled 
 public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testDecodeWithoutSlr() throws Exception {
+    void testDecodeWithoutSlr() throws Exception {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
@@ -60,9 +60,9 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
         assertEquals("[" + millis("2012-12-15") + ", 11848, Health & Beauty, Fragrances, Women, FP-GTC, 0, 15]", values.toString());
     }
 
-    @Ignore
+    @Disabled 
     @Test
-    public void testDecodeWithSlr() throws Exception {
+    void testDecodeWithSlr() throws Exception {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
@@ -75,7 +75,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testEncodeAndDecodeWithUtf8() throws IOException {
+    void testEncodeAndDecodeWithUtf8() throws IOException {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_READY");
         CubeDesc cubeDesc = cube.getDescriptor();
 

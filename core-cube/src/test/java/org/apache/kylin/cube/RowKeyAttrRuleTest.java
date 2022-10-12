@@ -18,7 +18,7 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,12 +30,12 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.cube.model.validation.rule.RowKeyAttrRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class RowKeyAttrRuleTest {
 
     @Test
-    public void testGoodDesc() throws IOException {
+    void testGoodDesc() throws IOException {
         for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/").listFiles()) {
             CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
             ValidateContext vContext = new ValidateContext();
@@ -47,7 +47,7 @@ public class RowKeyAttrRuleTest {
     }
 
     @Test
-    public void testBadDesc() throws IOException {
+    void testBadDesc() throws IOException {
         ValidateContext vContext = new ValidateContext();
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
         desc.getRowkey().getRowKeyColumns()[2].setColumn("");

@@ -33,50 +33,50 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  */
 public class TableMetadataManagerTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testListAllTables() throws Exception {
+    void testListAllTables() throws Exception {
         List<TableDesc> tables = getInstance(getTestConfig()).listAllTables(null);
-        Assert.assertNotNull(tables);
-        Assert.assertTrue(tables.size() > 0);
+        Assertions.assertNotNull(tables);
+        Assertions.assertTrue(tables.size() > 0);
     }
 
     @Test
-    public void testFindTableByName() throws Exception {
+    void testFindTableByName() throws Exception {
         TableDesc table = getInstance(getTestConfig()).getTableDesc("EDW.TEST_CAL_DT", "default");
-        Assert.assertNotNull(table);
-        Assert.assertEquals("EDW.TEST_CAL_DT", table.getIdentity());
+        Assertions.assertNotNull(table);
+        Assertions.assertEquals("EDW.TEST_CAL_DT", table.getIdentity());
     }
 
     @Test
-    public void testGetInstance() throws Exception {
-        Assert.assertNotNull(getInstance(getTestConfig()));
-        Assert.assertNotNull(getInstance(getTestConfig()).listAllTables(null));
-        Assert.assertTrue(getInstance(getTestConfig()).listAllTables(null).size() > 0);
+    void testGetInstance() throws Exception {
+        Assertions.assertNotNull(getInstance(getTestConfig()));
+        Assertions.assertNotNull(getInstance(getTestConfig()).listAllTables(null));
+        Assertions.assertTrue(getInstance(getTestConfig()).listAllTables(null).size() > 0);
     }
 
     @Test
-    public void testTableSample() throws IOException {
+    void testTableSample() throws IOException {
         TableExtDesc tableExtDesc = getInstance(getTestConfig()).getTableExt("DEFAULT.WIDE_TABLE", "default");
-        Assert.assertNotNull(tableExtDesc);
+        Assertions.assertNotNull(tableExtDesc);
 
         List<TableExtDesc.ColumnStats> columnStatsList = new ArrayList<>();
         TableExtDesc.ColumnStats columnStats = new TableExtDesc.ColumnStats();
@@ -86,22 +86,22 @@ public class TableMetadataManagerTest extends LocalFileMetadataTestCase {
         getInstance(getTestConfig()).saveTableExt(tableExtDesc, "default");
 
         TableExtDesc tableExtDesc1 = getInstance(getTestConfig()).getTableExt("DEFAULT.WIDE_TABLE", "default");
-        Assert.assertNotNull(tableExtDesc1);
+        Assertions.assertNotNull(tableExtDesc1);
 
         List<TableExtDesc.ColumnStats> columnStatsList1 = tableExtDesc1.getColumnStats();
-        Assert.assertEquals(1, columnStatsList1.size());
+        Assertions.assertEquals(1, columnStatsList1.size());
 
         getInstance(getTestConfig()).removeTableExt("DEFAULT.WIDE_TABLE", "default");
     }
 
     @Test
-    public void testTableExtCompatibility() throws IOException {
+    void testTableExtCompatibility() throws IOException {
         String tableName = "DEFAULT.WIDE_TABLE";
         Map<String, String> oldTableExt = new HashMap<>();
         oldTableExt.put(MetadataConstants.TABLE_EXD_CARDINALITY, "1,2,3,4");
         mockUpOldTableExtJson(tableName, oldTableExt);
         TableExtDesc tableExtDesc = getInstance(getTestConfig()).getTableExt(tableName, "default");
-        Assert.assertEquals("1,2,3,4,", tableExtDesc.getCardinality());
+        Assertions.assertEquals("1,2,3,4,", tableExtDesc.getCardinality());
         getInstance(getTestConfig()).removeTableExt(tableName, "default");
     }
 

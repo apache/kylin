@@ -20,8 +20,8 @@ package org.apache.kylin.storage.cache;
 
 import java.util.Random;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -31,11 +31,11 @@ import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
-@Ignore("trial for dev")
+@Disabled ("trial for dev")
 public class EhcacheTest {
 
     @Test
-    public void basicTest() throws InterruptedException {
+    void basicTest() throws InterruptedException {
         System.out.println("runtime used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
 
         Configuration conf = new Configuration();

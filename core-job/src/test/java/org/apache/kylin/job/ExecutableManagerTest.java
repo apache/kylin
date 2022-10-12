@@ -18,9 +18,9 @@
 
 package org.apache.kylin.job;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
@@ -33,9 +33,10 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.Executable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  */
@@ -43,19 +44,19 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
 
     private ExecutableManager service;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         createTestMetadata("../server/src/test/resources/ut_meta/broken_executable");
         service = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         cleanupTestMetadata();
     }
 
     @Test
-    public void test() throws Exception {
+    void test() throws Exception {
         assertNotNull(service);
         
         // all existing are broken jobs
@@ -80,7 +81,7 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testDefaultChainedExecutable() throws Exception {
+    void testDefaultChainedExecutable() throws Exception {
         DefaultChainedExecutable job = new DefaultChainedExecutable();
         job.addTask(new SucceedTestExecutable());
         job.addTask(new SucceedTestExecutable());
@@ -94,7 +95,7 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testValidStateTransfer() throws Exception {
+    void testValidStateTransfer() throws Exception {
         SucceedTestExecutable job = new SucceedTestExecutable();
         String id = job.getId();
         service.addJob(job);
@@ -107,12 +108,14 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         service.updateJobOutput(null, id, ExecutableState.SUCCEED, null, null, null);
     }
 
-    @Test(expected = IllegalStateTranferException.class)
-    public void testInvalidStateTransfer() {
-        SucceedTestExecutable job = new SucceedTestExecutable();
-        service.addJob(job);
-        service.updateJobOutput(null, job.getId(), ExecutableState.ERROR, null, null, null);
-        service.updateJobOutput(null, job.getId(), ExecutableState.STOPPED, null, null, null);
+    @Test
+    void testInvalidStateTransfer() {
+        Assertions.assertThrows(IllegalStateTranferException.class, () -> {
+            SucceedTestExecutable job = new SucceedTestExecutable();
+            service.addJob(job);
+            service.updateJobOutput(null, job.getId(), ExecutableState.ERROR, null, null, null);
+            service.updateJobOutput(null, job.getId(), ExecutableState.STOPPED, null, null, null);
+        });
     }
 
     private static void assertJobEqual(Executable one, Executable another) {

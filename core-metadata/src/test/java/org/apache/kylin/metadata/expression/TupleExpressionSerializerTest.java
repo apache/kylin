@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metadata.expression;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
 
@@ -31,28 +31,28 @@ import org.apache.kylin.metadata.filter.StringCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class TupleExpressionSerializerTest extends LocalFileMetadataTestCase {
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         staticCreateTestMetadata();
     }
 
-    @AfterClass
-    public static void after() throws Exception {
+    @AfterAll
+    static void after() throws Exception {
         staticCleanupTestMetadata();
     }
 
     private TableDesc t = TableDesc.mockup("T");
 
     @Test
-    public void testSerialization() {
+    void testSerialization() {
         TblColRef colD = TblColRef.mockup(t, 1, "C1", "decimal");
         TblColRef colM = TblColRef.mockup(t, 2, "C2", "string");
         BigDecimal value = BigDecimal.valueOf(10L);

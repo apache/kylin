@@ -18,8 +18,8 @@
 
 package org.apache.kylin.measure.hllc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,16 +28,16 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author yangli9
  * 
  */
 @SuppressWarnings("deprecation")
-@Ignore("HLLCounter takes over")
+@Disabled ("HLLCounter takes over")
 public class HLLCounterOldTest {
 
     ByteBuffer buf = ByteBuffer.allocate(1024 * 1024);
@@ -49,7 +49,7 @@ public class HLLCounterOldTest {
     int errorCount3 = 0;
 
     @Test
-    public void testOneAdd() throws IOException {
+    void testOneAdd() throws IOException {
         HLLCounterOld hllc = new HLLCounterOld(14);
         HLLCounterOld one = new HLLCounterOld(14);
         for (int i = 0; i < 1000000; i++) {
@@ -61,7 +61,7 @@ public class HLLCounterOldTest {
     }
 
     @Test
-    public void testPeekLength() throws IOException {
+    void testPeekLength() throws IOException {
         HLLCounterOld hllc = new HLLCounterOld(10);
         HLLCounterOld copy = new HLLCounterOld(10);
         byte[] value = new byte[10];
@@ -118,7 +118,7 @@ public class HLLCounterOldTest {
     }
 
     @Test
-    public void countTest() throws IOException {
+    void countTest() throws IOException {
         int n = 10;
         for (int i = 0; i < 5; i++) {
             count(n);
@@ -140,7 +140,7 @@ public class HLLCounterOldTest {
         System.out.println(testSet.size());
         System.out.println(errorRate);
         System.out.println("=" + actualError);
-        Assert.assertTrue(actualError < errorRate * 3.0);
+        Assertions.assertTrue(actualError < errorRate * 3.0);
 
         checkSerialize(hllc);
     }
@@ -151,11 +151,11 @@ public class HLLCounterOldTest {
         hllc.writeRegisters(buf);
         buf.flip();
         hllc.readRegisters(buf);
-        Assert.assertEquals(estimate, hllc.getCountEstimate());
+        Assertions.assertEquals(estimate, hllc.getCountEstimate());
     }
 
     @Test
-    public void mergeTest() throws IOException {
+    void mergeTest() throws IOException {
         double error = 0;
         int n = 100;
         for (int i = 0; i < n; i += 10) {
@@ -168,9 +168,9 @@ public class HLLCounterOldTest {
         System.out.println("  errorRateCount2 is " + errorCount2 + "!");
         System.out.println("  errorRateCount3 is " + errorCount3 + "!");
 
-        Assert.assertTrue(errorCount1 <= n * 0.30);
-        Assert.assertTrue(errorCount2 <= n * 0.05);
-        Assert.assertTrue(errorCount3 <= n * 0.02);
+        Assertions.assertTrue(errorCount1 <= n * 0.30);
+        Assertions.assertTrue(errorCount2 <= n * 0.05);
+        Assertions.assertTrue(errorCount3 <= n * 0.02);
     }
 
     private double merge(int round) throws IOException {
@@ -198,7 +198,7 @@ public class HLLCounterOldTest {
         double actualError = Math.abs((double) (testSet.size() - estimate) / testSet.size());
 
         System.out.println(testSet.size() + "-" + estimate + " ~ " + actualError);
-        Assert.assertTrue(actualError < 0.1);
+        Assertions.assertTrue(actualError < 0.1);
 
         if (actualError > errorRate) {
             errorCount1++;
@@ -219,12 +219,12 @@ public class HLLCounterOldTest {
         buf.flip();
         HLLCounterOld copy = new HLLCounterOld(hllc.getPrecision());
         copy.readRegisters(buf);
-        Assert.assertEquals(copy.getCountEstimate(), hllc.getCountEstimate());
+        Assertions.assertEquals(copy.getCountEstimate(), hllc.getCountEstimate());
         return copy;
     }
 
     @Test
-    public void testPerformance() throws IOException {
+    void testPerformance() throws IOException {
         int N = 3; // reduce N HLLC into one
         int M = 1000; // for M times, use 100000 for real perf test
 
@@ -250,7 +250,7 @@ public class HLLCounterOldTest {
     }
 
     @Test
-    public void testEquivalence() {
+    void testEquivalence() {
         byte[] a = new byte[] { 0, 3, 4, 42, 2, 2 };
         byte[] b = new byte[] { 3, 4, 42 };
         HLLCounterOld ha = new HLLCounterOld();
@@ -258,7 +258,7 @@ public class HLLCounterOldTest {
         ha.add(a, 1, 3);
         hb.add(b);
 
-        Assert.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
+        Assertions.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
     }
 
     private HLLCounterOld newHLLC() {

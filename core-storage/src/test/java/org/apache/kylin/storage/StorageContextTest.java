@@ -18,11 +18,11 @@
 
 package org.apache.kylin.storage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import org.apache.kylin.gridtable.StorageLimitLevel;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for class {@link StorageContext}.
@@ -33,7 +33,7 @@ public class StorageContextTest {
 
 
     @Test
-    public void testSetLimit() {
+    void testSetLimit() {
         StorageContext storageContext = new StorageContext();
         storageContext.setLimit(10);
 
@@ -50,7 +50,7 @@ public class StorageContextTest {
 
 
     @Test
-    public void testApplyLimitPushDownUsingStorageLimitLevelNO_LIMIT() {
+    void testApplyLimitPushDownUsingStorageLimitLevelNO_LIMIT() {
         StorageContext storageContext = new StorageContext();
         storageContext.setLimit(10);
         storageContext.applyLimitPushDown(null, StorageLimitLevel.NO_LIMIT);

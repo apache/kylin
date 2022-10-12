@@ -18,22 +18,22 @@
 
 package org.apache.kylin.common;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class QueryTraceTest {
 
     @Test
-    public void test() throws InterruptedException {
+    void test() throws InterruptedException {
         QueryTrace trace = new QueryTrace();
         trace.startSpan("span 1");
         Thread.sleep(100);
         trace.startSpan("span 2");
         Thread.sleep(100);
         trace.endLastSpan();
-        Assert.assertEquals(2, trace.spans().size());
-        Assert.assertTrue(trace.getLastSpan().isPresent());
-        Assert.assertEquals("span 2", trace.getLastSpan().get().name);
+        Assertions.assertEquals(2, trace.spans().size());
+        Assertions.assertTrue(trace.getLastSpan().isPresent());
+        Assertions.assertEquals("span 2", trace.getLastSpan().get().name);
         assertTimeEqual(100, trace.getLastSpan().get().duration);
 
         trace.amendLast("span 2", trace.getLastSpan().get().start + trace.getLastSpan().get().getDuration() + 1000);
@@ -41,7 +41,7 @@ public class QueryTraceTest {
     }
 
     private void assertTimeEqual(long expected, long actual) {
-        Assert.assertTrue(Math.abs(expected - actual) < 1000);
+        Assertions.assertTrue(Math.abs(expected - actual) < 1000);
     }
 
 }

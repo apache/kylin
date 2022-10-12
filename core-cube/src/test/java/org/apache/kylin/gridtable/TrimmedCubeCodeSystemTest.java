@@ -25,17 +25,17 @@ import java.nio.ByteBuffer;
 
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.FixedLenHexDimEnc;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TrimmedCubeCodeSystemTest {
     @Test
-    public void testFixLenHexEncSerDser() {
+    void testFixLenHexEncSerDser() {
         FixedLenHexDimEnc enc = new FixedLenHexDimEnc(6);
         ByteBuffer buff = ByteBuffer.allocate(1024);
         writeDimensionEncoding(enc, buff);
         buff.flip();
         DimensionEncoding dimensionEncoding = readDimensionEncoding(buff);
-        Assert.assertEquals(3, dimensionEncoding.asDataTypeSerializer().peekLength(null));
+        Assertions.assertEquals(3, dimensionEncoding.asDataTypeSerializer().peekLength(null));
     }
 }

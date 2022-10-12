@@ -18,7 +18,7 @@
 
 package org.apache.kylin.job;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 
@@ -28,16 +28,16 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author George Song (ysong1)
  * 
  */
-@Ignore("This test case doesn't have much value, ignore it.")
+@Disabled ("This test case doesn't have much value, ignore it.")
 public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
     CubeInstance cube = null;
@@ -45,7 +45,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
     String fakeJobUUID = "abc-def";
     CubeSegment cubeSegment = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
         cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready");
@@ -53,13 +53,13 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
         flatTableDesc = EngineFactory.getJoinedFlatTableDesc(cubeSegment);
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testGenCreateTableDDL() {
+    void testGenCreateTableDDL() {
         String ddl = JoinedFlatTable.generateCreateTableStatement(flatTableDesc, "/tmp");
         System.out.println(ddl);
 
@@ -67,14 +67,14 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGenDropTableDDL() {
+    void testGenDropTableDDL() {
         String ddl = JoinedFlatTable.generateDropTableStatement(flatTableDesc);
         System.out.println(ddl);
         assertEquals(101, ddl.length());
     }
 
     @Test
-    public void testGenerateInsertSql() throws IOException {
+    void testGenerateInsertSql() throws IOException {
         String sqls = JoinedFlatTable.generateInsertDataStatement(flatTableDesc);
         System.out.println(sqls);
 

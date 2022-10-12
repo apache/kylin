@@ -23,17 +23,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 
 public class IntegerDimEncTest {
 
     private static List<long[]> successValue;
     private static List<long[]> failValue;
 
-    @BeforeClass
-    public static void initTestValue() {
+    @BeforeAll
+    static void initTestValue() {
         successValue = new ArrayList<>();
         successValue.add(new long[] { -127, 0, 127 });
         successValue.add(new long[] { -32767, -127, 0, 127, 32767 });
@@ -73,16 +73,16 @@ public class IntegerDimEncTest {
     }
 
     @Test
-    public void testConstructor() {
+    void testConstructor() {
         try {
             new IntegerDimEnc(0);
-            Assert.fail();
+            Assertions.fail();
         } catch (IllegalArgumentException e) {
             // expect
         }
         try {
             new IntegerDimEnc(9);
-            Assert.fail();
+            Assertions.fail();
         } catch (IllegalArgumentException e) {
             // expect
         }
@@ -90,28 +90,28 @@ public class IntegerDimEncTest {
     }
 
     @Test
-    public void testNull() {
+    void testNull() {
         for (int i = 1; i < 9; i++) {
             IntegerDimEnc enc = new IntegerDimEnc(i);
 
             byte[] buf = new byte[enc.getLengthOfEncoding()];
             enc.encode(null, buf, 0);
-            Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
+            Assertions.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
             String decode = enc.decode(buf, 0, buf.length);
-            Assert.assertEquals(null, decode);
+            Assertions.assertEquals(null, decode);
 
             buf = new byte[enc.getLengthOfEncoding()];
             DataTypeSerializer<Object> ser = enc.asDataTypeSerializer();
             ser.serialize(null, ByteBuffer.wrap(buf));
-            Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
+            Assertions.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
             decode = (String) ser.deserialize(ByteBuffer.wrap(buf));
-            Assert.assertEquals(null, decode);
+            Assertions.assertEquals(null, decode);
         }
     }
 
-    @Test
     // For JIRA: KYLIN-1948
-    public void testEncodeDecodeMinusOne() {
+    @Test
+    void testEncodeDecodeMinusOne() {
         for (int i = 1; i < 9; i++) {
             IntegerDimEnc enc = new IntegerDimEnc(i);
             testEncodeDecode(enc, -1);
@@ -119,7 +119,7 @@ public class IntegerDimEncTest {
     }
 
     @Test
-    public void testEncodeDecode() {
+    void testEncodeDecode() {
         for (int i = 1; i <= successValue.size(); i++) {
             IntegerDimEnc enc = new IntegerDimEnc(i);
             for (long value : successValue.get(i - 1)) {
@@ -129,9 +129,9 @@ public class IntegerDimEncTest {
             for (long value : failValue.get(i - 1)) {
                 try {
                     testEncodeDecode(enc, value);
-                    Assert.fail();
+                    Assertions.fail();
                 } catch (Throwable e) {
-                    Assert.assertEquals("expected:<" + value + "> but was:<null>", e.getMessage());
+                    Assertions.assertEquals("expected: <" + value + "> but was: <null>", e.getMessage());
                 }
             }
         }
@@ -142,11 +142,11 @@ public class IntegerDimEncTest {
         byte[] buf = new byte[enc.getLengthOfEncoding()];
         enc.encode(valueStr, buf, 0);
         String decode = enc.decode(buf, 0, buf.length);
-        Assert.assertEquals(valueStr, decode);
+        Assertions.assertEquals(valueStr, decode);
     }
 
     @Test
-    public void testSerDes() {
+    void testSerDes() {
         for (int i = 1; i <= successValue.size(); i++) {
             IntegerDimEnc enc = new IntegerDimEnc(i);
 
@@ -157,9 +157,9 @@ public class IntegerDimEncTest {
             for (long value : failValue.get(i - 1)) {
                 try {
                     testSerDes(enc, value);
-                    Assert.fail();
+                    Assertions.fail();
                 } catch (Throwable e) {
-                    Assert.assertEquals("expected:<" + value + "> but was:<null>", e.getMessage());
+                    Assertions.assertEquals("expected: <" + value + "> but was: <null>", e.getMessage());
                 }
             }
         }
@@ -171,6 +171,6 @@ public class IntegerDimEncTest {
         String valueStr = "" + value;
         ser.serialize(valueStr, ByteBuffer.wrap(buf));
         String decode = (String) ser.deserialize(ByteBuffer.wrap(buf));
-        Assert.assertEquals(valueStr, decode);
+        Assertions.assertEquals(valueStr, decode);
     }
 }

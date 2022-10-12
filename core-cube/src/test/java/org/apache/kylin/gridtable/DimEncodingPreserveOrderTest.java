@@ -18,7 +18,7 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,20 +28,20 @@ import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.FixedLenHexDimEnc;
 import org.apache.kylin.dimension.IntegerDimEnc;
 import org.apache.kylin.dimension.OneMoreByteVLongDimEnc;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Ordering;
 
-@Ignore
+@Disabled 
 public class DimEncodingPreserveOrderTest {
     private static List<long[]> successValue;
     private static List<long[]> failValue;
 
-    @BeforeClass
-    public static void initTestValue() {
+    @BeforeAll
+    static void initTestValue() {
         successValue = new ArrayList<>();
         successValue.add(new long[] { -127, 0, 127 });
         successValue.add(new long[] { -32767, -127, 0, 127, 32767 });
@@ -81,7 +81,7 @@ public class DimEncodingPreserveOrderTest {
     }
 
     @Test
-    public void testOneMoreByteVLongDimEncPreserveOrder() {
+    void testOneMoreByteVLongDimEncPreserveOrder() {
         // TODO: better test
         OneMoreByteVLongDimEnc enc = new OneMoreByteVLongDimEnc(2);
         List<ByteArray> encodedValues = Lists.newArrayList();
@@ -98,7 +98,7 @@ public class DimEncodingPreserveOrderTest {
     }
 
     @Test
-    public void testVLongDimEncPreserveOrder() {
+    void testVLongDimEncPreserveOrder() {
         for (int i = 1; i <= successValue.size(); i++) {
             IntegerDimEnc enc = new IntegerDimEnc(i);
             List<ByteArray> encodedValues = Lists.newArrayList();
@@ -118,7 +118,7 @@ public class DimEncodingPreserveOrderTest {
     }
 
     @Test
-    public void testFixedLengthHexDimEncPreserveOrder() {
+    void testFixedLengthHexDimEncPreserveOrder() {
         FixedLenHexDimEnc enc = new FixedLenHexDimEnc(4);
         List<ByteArray> encodedValues = Lists.newArrayList();
         encodedValues.add(encode(enc, "0000"));

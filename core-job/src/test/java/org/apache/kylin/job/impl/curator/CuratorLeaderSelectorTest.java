@@ -27,17 +27,17 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.SchedulerException;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 
 import java.io.IOException;
 
 public class CuratorLeaderSelectorTest extends LocalFileMetadataTestCase {
     private TestingServer zkTestServer;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         zkTestServer = new TestingServer();
         zkTestServer.start();
@@ -46,8 +46,8 @@ public class CuratorLeaderSelectorTest extends LocalFileMetadataTestCase {
         createTestMetadata();
     }
 
-    @Test
-    public void testGetBasic() throws SchedulerException, IOException, InterruptedException {
+    @RepeatedTest(3)
+    void testGetBasic() throws SchedulerException, IOException, InterruptedException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         final String zkString = zkTestServer.getConnectString();
         final String server1 = "server1:1111";
@@ -59,7 +59,7 @@ public class CuratorLeaderSelectorTest extends LocalFileMetadataTestCase {
                 , jobEnginePath //
                 , server1 //
                 , new JobEngineConfig(kylinConfig)); //
-        Assert.assertFalse(s1.hasDefaultSchedulerStarted());
+        Assertions.assertFalse(s1.hasDefaultSchedulerStarted());
         CuratorLeaderSelector s2 = new CuratorLeaderSelector(client //
                 , jobEnginePath //
                 , server2 //
@@ -67,36 +67,36 @@ public class CuratorLeaderSelectorTest extends LocalFileMetadataTestCase {
         s1.start();
         //wait for Selector starting
         Thread.sleep(1000);
-        Assert.assertEquals(1, s1.getParticipants().size());
-        Assert.assertEquals(s1.getParticipants(), s2.getParticipants());
+        Assertions.assertEquals(1, s1.getParticipants().size());
+        Assertions.assertEquals(s1.getParticipants(), s2.getParticipants());
         s2.start();
         Thread.sleep(1000);
-        Assert.assertEquals(2, s1.getParticipants().size());
-        Assert.assertEquals(s1.getParticipants(), s2.getParticipants());
+        Assertions.assertEquals(2, s1.getParticipants().size());
+        Assertions.assertEquals(s1.getParticipants(), s2.getParticipants());
 
-        Assert.assertEquals(new Participant(server1, true), s1.getLeader());
-        Assert.assertEquals(s1.getLeader(), s2.getLeader());
+        Assertions.assertEquals(new Participant(server1, true), s1.getLeader());
+        Assertions.assertEquals(s1.getLeader(), s2.getLeader());
         assertSchedulerStart(s1);
         s1.close();
         Thread.sleep(1000);
-        Assert.assertEquals(1, s1.getParticipants().size());
-        Assert.assertEquals(s1.getParticipants(), s2.getParticipants());
-        Assert.assertEquals(new Participant(server2, true), s1.getLeader());
+        Assertions.assertEquals(1, s1.getParticipants().size());
+        Assertions.assertEquals(s1.getParticipants(), s2.getParticipants());
+        Assertions.assertEquals(new Participant(server2, true), s1.getLeader());
         assertSchedulerStart(s2);
         s2.close();
         Thread.sleep(1000);
-        Assert.assertEquals(0, s1.getParticipants().size());
-        Assert.assertEquals(s1.getParticipants(), s2.getParticipants());
+        Assertions.assertEquals(0, s1.getParticipants().size());
+        Assertions.assertEquals(s1.getParticipants(), s2.getParticipants());
     }
 
     private void assertSchedulerStart(CuratorLeaderSelector sele) throws InterruptedException {
         for (int i = 0; i < 50 && !sele.hasDefaultSchedulerStarted(); i++) {
             Thread.sleep(300);
         }
-        Assert.assertTrue(sele.hasDefaultSchedulerStarted());
+        Assertions.assertTrue(sele.hasDefaultSchedulerStarted());
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         zkTestServer.close();
         cleanupTestMetadata();

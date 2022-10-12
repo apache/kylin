@@ -21,22 +21,22 @@ package org.apache.kylin.dimension;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class OneMoreByteVLongDimEncTest {
 
     @Test
-    public void testConstructor() {
+    void testConstructor() {
         try {
             new OneMoreByteVLongDimEnc(0);
-            Assert.fail();
+            Assertions.fail();
         } catch (IllegalArgumentException e) {
             // expect
         }
         try {
             new OneMoreByteVLongDimEnc(9);
-            Assert.fail();
+            Assertions.fail();
         } catch (IllegalArgumentException e) {
             // expect
         }
@@ -44,27 +44,27 @@ public class OneMoreByteVLongDimEncTest {
     }
 
     @Test
-    public void testNull() {
+    void testNull() {
         for (int i = 1; i < 9; i++) {
             OneMoreByteVLongDimEnc enc = new OneMoreByteVLongDimEnc(i);
 
             byte[] buf = new byte[enc.getLengthOfEncoding()];
             enc.encode(null, buf, 0);
-            Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
+            Assertions.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
             String decode = enc.decode(buf, 0, buf.length);
-            Assert.assertEquals(null, decode);
+            Assertions.assertEquals(null, decode);
 
             buf = new byte[enc.getLengthOfEncoding()];
             DataTypeSerializer<Object> ser = enc.asDataTypeSerializer();
             ser.serialize(null, ByteBuffer.wrap(buf));
-            Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
+            Assertions.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
             decode = (String) ser.deserialize(ByteBuffer.wrap(buf));
-            Assert.assertEquals(null, decode);
+            Assertions.assertEquals(null, decode);
         }
     }
 
     @Test
-    public void testEncodeDecode() {
+    void testEncodeDecode() {
         OneMoreByteVLongDimEnc enc = new OneMoreByteVLongDimEnc(2);
         testEncodeDecode(enc, 0);
         testEncodeDecode(enc, 100);
@@ -75,15 +75,15 @@ public class OneMoreByteVLongDimEncTest {
         testEncodeDecode(enc, -32768);
         try {
             testEncodeDecode(enc, 32768);
-            Assert.fail();
+            Assertions.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<[]32768> but was:<[-]32768>", e.getMessage());
+            Assertions.assertEquals("expected: <32768> but was: <-32768>", e.getMessage());
         }
         try {
             testEncodeDecode(enc, -32769);
-            Assert.fail();
+            Assertions.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<[-32769]> but was:<[32767]>", e.getMessage());
+            Assertions.assertEquals("expected: <-32769> but was: <32767>", e.getMessage());
         }
     }
 
@@ -93,12 +93,12 @@ public class OneMoreByteVLongDimEncTest {
         byte[] buf = new byte[enc.getLengthOfEncoding()];
         enc.encode(valueStr, buf, 0);
         String decode = enc.decode(buf, 0, buf.length);
-        Assert.assertEquals(valueStr, decode);
+        Assertions.assertEquals(valueStr, decode);
     }
 
 
     @Test
-    public void testSerDes() {
+    void testSerDes() {
         OneMoreByteVLongDimEnc enc = new OneMoreByteVLongDimEnc(2);
         testSerDes(enc, 0);
         testSerDes(enc, 100);
@@ -109,15 +109,15 @@ public class OneMoreByteVLongDimEncTest {
         testSerDes(enc, -32768);
         try {
             testSerDes(enc, 32768);
-            Assert.fail();
+            Assertions.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<[]32768> but was:<[-]32768>", e.getMessage());
+            Assertions.assertEquals("expected: <32768> but was: <-32768>", e.getMessage());
         }
         try {
             testSerDes(enc, -32769);
-            Assert.fail();
+            Assertions.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<[-32769]> but was:<[32767]>", e.getMessage());
+            Assertions.assertEquals("expected: <-32769> but was: <32767>", e.getMessage());
         }
     }
 
@@ -127,7 +127,7 @@ public class OneMoreByteVLongDimEncTest {
         String valueStr = "" + value;
         ser.serialize(valueStr, ByteBuffer.wrap(buf));
         String decode = (String) ser.deserialize(ByteBuffer.wrap(buf));
-        Assert.assertEquals(valueStr, decode);
+        Assertions.assertEquals(valueStr, decode);
     }
 
 }

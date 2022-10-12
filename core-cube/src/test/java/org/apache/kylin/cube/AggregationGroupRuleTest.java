@@ -18,8 +18,8 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,23 +32,23 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.cube.model.validation.rule.AggregationGroupRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testGoodDesc() throws IOException {
+    void testGoodDesc() throws IOException {
         AggregationGroupRule rule = getAggregationGroupRule();
 
         for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/").listFiles()) {
@@ -65,7 +65,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGoodBecomeBadDesc() throws IOException {
+    void testGoodBecomeBadDesc() throws IOException {
         AggregationGroupRule rule = new AggregationGroupRule() {
             @Override
             protected long getMaxCombinations(CubeDesc cubeDesc) {
@@ -90,7 +90,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGoodDesc2() throws IOException {
+    void testGoodDesc2() throws IOException {
 
         ValidateContext vContext = new ValidateContext();
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
@@ -104,7 +104,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testBadDesc1() throws IOException {
+    void testBadDesc1() throws IOException {
 
         ValidateContext vContext = new ValidateContext();
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
@@ -119,7 +119,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testBadDesc2() throws IOException {
+    void testBadDesc2() throws IOException {
 
         ValidateContext vContext = new ValidateContext();
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
@@ -134,7 +134,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCombinationIntOverflow() throws IOException {
+    void testCombinationIntOverflow() throws IOException {
         for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/").listFiles()) {
             if (f.getName().endsWith("bad")) {
                 String path = f.getPath();

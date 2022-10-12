@@ -20,16 +20,16 @@ package org.apache.kylin.cube;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.dimension.DictionaryDimEnc;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CubeDescManagerTest {
 
     @Test
-    public void testNullProcessLogic() throws Exception {
+    void testNullProcessLogic() throws Exception {
         String encoding = null;
         if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
             assertEquals(null, encoding);
@@ -41,7 +41,7 @@ public class CubeDescManagerTest {
     }
 
     @Test
-    public void testDictProcessLogic() throws Exception {
+    void testDictProcessLogic() throws Exception {
         String encoding = "dict";
         if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
             assertEquals("dict", encoding);
@@ -53,7 +53,7 @@ public class CubeDescManagerTest {
     }
 
     @Test
-    public void testStartDictProcessLogic() throws Exception {
+    void testStartDictProcessLogic() throws Exception {
         String encoding = "dict(v1)";
         if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
             assertEquals(null, encoding);
@@ -65,7 +65,7 @@ public class CubeDescManagerTest {
     }
 
     @Test
-    public void testNonDictProcessLogic() throws Exception {
+    void testNonDictProcessLogic() throws Exception {
         String encoding = "boolean";
         if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
             assertEquals(null, encoding);

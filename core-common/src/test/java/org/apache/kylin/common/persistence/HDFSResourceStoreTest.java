@@ -28,25 +28,25 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class HDFSResourceStoreTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testListResourcesImpl() throws Exception {
+    void testListResourcesImpl() throws Exception {
         String path = "../examples/test_metadata/";
         String cp = new File(path).getCanonicalFile().getPath();
         FileSystem fs = HadoopUtil.getFileSystem(cp);
@@ -72,6 +72,6 @@ public class HDFSResourceStoreTest extends LocalFileMetadataTestCase {
         TreeSet<String> expected = new TreeSet<>();
         expected.add("/resource/resource/e1.json");
         expected.add("/resource/resource/e2.json");
-        Assert.assertEquals(expected, resources);
+        Assertions.assertEquals(expected, resources);
     }
 }

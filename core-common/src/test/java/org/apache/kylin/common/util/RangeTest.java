@@ -18,8 +18,8 @@
 
 package org.apache.kylin.common.util;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Range;
@@ -30,18 +30,18 @@ import org.apache.kylin.shaded.com.google.common.collect.Range;
 public class RangeTest {
 
     @Test
-    public void extremeCase() {
+    void extremeCase() {
         Range r1 = Range.all();
         Range r2 = Range.all();
 
         Range a = Range.closedOpen(2, 5);
 
-        Assert.assertTrue(RangeUtil.remove(r1, r2).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, a).equals(Lists.newArrayList(Range.lessThan(2), Range.atLeast(5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, r2).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, a).equals(Lists.newArrayList(Range.lessThan(2), Range.atLeast(5))));
     }
 
     @Test
-    public void testClosed() {
+    void testClosed() {
 
         Range anull = Range.closedOpen(0, 0);
 
@@ -75,39 +75,39 @@ public class RangeTest {
         Range d2 = Range.closed(3, 4);
         Range d3 = Range.closed(4, 5);
 
-        Assert.assertTrue(RangeUtil.remove(r1, anull).equals(Lists.newArrayList(r1)));
-        Assert.assertTrue(RangeUtil.remove(r1, a1).equals(Lists.newArrayList(r1)));
-        Assert.assertTrue(RangeUtil.remove(r1, a2).equals(Lists.newArrayList(Range.closed(3, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, a3).equals(Lists.newArrayList(Range.closed(5, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, a4).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, a5).equals(Lists.newArrayList(r1)));
-        Assert.assertTrue(RangeUtil.remove(r1, a6).equals(Lists.newArrayList(r1)));
-        Assert.assertTrue(RangeUtil.remove(r1, a7).equals(Lists.newArrayList(Range.closed(2, 4))));
-        Assert.assertTrue(RangeUtil.remove(r1, a8).equals(Lists.newArrayList(Range.closed(2, 2))));
-        Assert.assertTrue(RangeUtil.remove(r1, a9).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, anull).equals(Lists.newArrayList(r1)));
+        Assertions.assertTrue(RangeUtil.remove(r1, a1).equals(Lists.newArrayList(r1)));
+        Assertions.assertTrue(RangeUtil.remove(r1, a2).equals(Lists.newArrayList(Range.closed(3, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, a3).equals(Lists.newArrayList(Range.closed(5, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, a4).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, a5).equals(Lists.newArrayList(r1)));
+        Assertions.assertTrue(RangeUtil.remove(r1, a6).equals(Lists.newArrayList(r1)));
+        Assertions.assertTrue(RangeUtil.remove(r1, a7).equals(Lists.newArrayList(Range.closed(2, 4))));
+        Assertions.assertTrue(RangeUtil.remove(r1, a8).equals(Lists.newArrayList(Range.closed(2, 2))));
+        Assertions.assertTrue(RangeUtil.remove(r1, a9).equals(Lists.newArrayList()));
 
-        Assert.assertTrue(RangeUtil.remove(r1, b1).equals(Lists.newArrayList(Range.openClosed(2, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, b2).equals(Lists.newArrayList(Range.openClosed(3, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, b3).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, b4).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, b5).equals(Lists.newArrayList(r1)));
-        Assert.assertTrue(RangeUtil.remove(r1, b6).equals(Lists.newArrayList(Range.closedOpen(2, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, b7).equals(Lists.newArrayList(Range.closedOpen(2, 4))));
-        Assert.assertTrue(RangeUtil.remove(r1, b8).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, b9).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, b1).equals(Lists.newArrayList(Range.openClosed(2, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, b2).equals(Lists.newArrayList(Range.openClosed(3, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, b3).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, b4).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, b5).equals(Lists.newArrayList(r1)));
+        Assertions.assertTrue(RangeUtil.remove(r1, b6).equals(Lists.newArrayList(Range.closedOpen(2, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, b7).equals(Lists.newArrayList(Range.closedOpen(2, 4))));
+        Assertions.assertTrue(RangeUtil.remove(r1, b8).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, b9).equals(Lists.newArrayList()));
 
-        Assert.assertTrue(RangeUtil.remove(r1, c1).equals(Lists.newArrayList(Range.closed(2, 2), Range.closed(3, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, c2).equals(Lists.newArrayList(Range.closed(2, 3), Range.closed(4, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, c3).equals(Lists.newArrayList(Range.closed(2, 4), Range.closed(5, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, c1).equals(Lists.newArrayList(Range.closed(2, 2), Range.closed(3, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, c2).equals(Lists.newArrayList(Range.closed(2, 3), Range.closed(4, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, c3).equals(Lists.newArrayList(Range.closed(2, 4), Range.closed(5, 5))));
 
-        Assert.assertTrue(RangeUtil.remove(r1, d1).equals(Lists.newArrayList(Range.openClosed(3, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, d2).equals(Lists.newArrayList(Range.closedOpen(2, 3), Range.openClosed(4, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, d3).equals(Lists.newArrayList(Range.closedOpen(2, 4))));
+        Assertions.assertTrue(RangeUtil.remove(r1, d1).equals(Lists.newArrayList(Range.openClosed(3, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, d2).equals(Lists.newArrayList(Range.closedOpen(2, 3), Range.openClosed(4, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, d3).equals(Lists.newArrayList(Range.closedOpen(2, 4))));
 
     }
 
     @Test
-    public void testOpen() {
+    void testOpen() {
 
         Range anull = Range.closedOpen(0, 0);
 
@@ -141,35 +141,35 @@ public class RangeTest {
         Range d2 = Range.closed(3, 4);
         Range d3 = Range.closed(4, 5);
 
-        Assert.assertTrue(RangeUtil.remove(r1, anull).equals(Lists.newArrayList(r1)));
+        Assertions.assertTrue(RangeUtil.remove(r1, anull).equals(Lists.newArrayList(r1)));
 
-        Assert.assertTrue(RangeUtil.remove(r1, a1).equals(Lists.newArrayList(r1)));
-        Assert.assertTrue(RangeUtil.remove(r1, a2).equals(Lists.newArrayList(Range.closedOpen(3, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, a3).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, a4).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, a5).equals(Lists.newArrayList(r1)));
-        Assert.assertTrue(RangeUtil.remove(r1, a6).equals(Lists.newArrayList(r1)));
-        Assert.assertTrue(RangeUtil.remove(r1, a7).equals(Lists.newArrayList(Range.openClosed(2, 4))));
-        Assert.assertTrue(RangeUtil.remove(r1, a8).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, a9).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, a1).equals(Lists.newArrayList(r1)));
+        Assertions.assertTrue(RangeUtil.remove(r1, a2).equals(Lists.newArrayList(Range.closedOpen(3, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, a3).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, a4).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, a5).equals(Lists.newArrayList(r1)));
+        Assertions.assertTrue(RangeUtil.remove(r1, a6).equals(Lists.newArrayList(r1)));
+        Assertions.assertTrue(RangeUtil.remove(r1, a7).equals(Lists.newArrayList(Range.openClosed(2, 4))));
+        Assertions.assertTrue(RangeUtil.remove(r1, a8).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, a9).equals(Lists.newArrayList()));
 
-        Assert.assertTrue(RangeUtil.remove(r1, b1).equals(Lists.newArrayList(Range.open(2, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, b2).equals(Lists.newArrayList(Range.open(3, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, b3).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, b4).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, b5).equals(Lists.newArrayList(r1)));
-        Assert.assertTrue(RangeUtil.remove(r1, b6).equals(Lists.newArrayList(Range.open(2, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, b7).equals(Lists.newArrayList(Range.open(2, 4))));
-        Assert.assertTrue(RangeUtil.remove(r1, b8).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, b9).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, b1).equals(Lists.newArrayList(Range.open(2, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, b2).equals(Lists.newArrayList(Range.open(3, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, b3).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, b4).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, b5).equals(Lists.newArrayList(r1)));
+        Assertions.assertTrue(RangeUtil.remove(r1, b6).equals(Lists.newArrayList(Range.open(2, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, b7).equals(Lists.newArrayList(Range.open(2, 4))));
+        Assertions.assertTrue(RangeUtil.remove(r1, b8).equals(Lists.newArrayList()));
+        Assertions.assertTrue(RangeUtil.remove(r1, b9).equals(Lists.newArrayList()));
 
-        Assert.assertTrue(RangeUtil.remove(r1, c1).equals(Lists.newArrayList(Range.closedOpen(3, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, c2).equals(Lists.newArrayList(Range.openClosed(2, 3), Range.closedOpen(4, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, c3).equals(Lists.newArrayList(Range.openClosed(2, 4))));
+        Assertions.assertTrue(RangeUtil.remove(r1, c1).equals(Lists.newArrayList(Range.closedOpen(3, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, c2).equals(Lists.newArrayList(Range.openClosed(2, 3), Range.closedOpen(4, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, c3).equals(Lists.newArrayList(Range.openClosed(2, 4))));
 
-        Assert.assertTrue(RangeUtil.remove(r1, d1).equals(Lists.newArrayList(Range.open(3, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, d2).equals(Lists.newArrayList(Range.open(2, 3), Range.open(4, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, d3).equals(Lists.newArrayList(Range.open(2, 4))));
+        Assertions.assertTrue(RangeUtil.remove(r1, d1).equals(Lists.newArrayList(Range.open(3, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, d2).equals(Lists.newArrayList(Range.open(2, 3), Range.open(4, 5))));
+        Assertions.assertTrue(RangeUtil.remove(r1, d3).equals(Lists.newArrayList(Range.open(2, 4))));
 
     }
 }

@@ -22,25 +22,25 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class StreamingManagerTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testBasics() throws IOException {
+    void testBasics() throws IOException {
         StreamingManager mgr = StreamingManager.getInstance(getTestConfig());
         List<StreamingConfig> origin = mgr.listAllStreaming();
 
@@ -51,7 +51,7 @@ public class StreamingManagerTest extends LocalFileMetadataTestCase {
             streamingConfig.setType("type for test");
             mgr.createStreamingConfig(streamingConfig);
             List<StreamingConfig> reloadAll = mgr.reloadAll();
-            Assert.assertTrue(origin.size() + 1 == reloadAll.size());
+            Assertions.assertTrue(origin.size() + 1 == reloadAll.size());
         }
 
         // test update
@@ -60,9 +60,9 @@ public class StreamingManagerTest extends LocalFileMetadataTestCase {
             streamingConfig.setType("updated type");
             mgr.updateStreamingConfig(streamingConfig);
             List<StreamingConfig> reloadAll = mgr.reloadAll();
-            Assert.assertTrue(origin.size() + 1 == reloadAll.size());
+            Assertions.assertTrue(origin.size() + 1 == reloadAll.size());
             streamingConfig = mgr.getStreamingConfig("name for test");
-            Assert.assertEquals("updated type", streamingConfig.getType());
+            Assertions.assertEquals("updated type", streamingConfig.getType());
         }
     }
 }

@@ -18,36 +18,36 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ProjectSpecificConfigTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testProject1() {
+    void testProject1() {
         KylinConfig baseConfig = KylinConfig.getInstanceFromEnv();
         CubeDesc cubeDesc = CubeDescManager.getInstance(baseConfig).getCubeDesc("ssb");
         verifyProjectOverride(baseConfig, cubeDesc.getConfig());
     }
 
     @Test
-    public void testProject2() {
+    void testProject2() {
         KylinConfig baseConfig = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(baseConfig).getCube("ssb");
         verifyProjectOverride(baseConfig, cube.getConfig());

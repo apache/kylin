@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,26 +26,26 @@ import java.util.Map.Entry;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.JoinsTree.Chain;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  */
 public class JoinsTreeTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testBasics() {
+    void testBasics() {
         DataModelManager mgr = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc model = mgr.getDataModelDesc("ci_left_join_model");
         JoinsTree joinsTree = model.getJoinsTree();
@@ -60,7 +60,7 @@ public class JoinsTreeTest extends LocalFileMetadataTestCase {
     }
     
     @Test
-    public void testMatch() {
+    void testMatch() {
         DataModelManager mgr = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc model = mgr.getDataModelDesc("ci_inner_join_model");
         JoinsTree joinsTree = model.getJoinsTree();

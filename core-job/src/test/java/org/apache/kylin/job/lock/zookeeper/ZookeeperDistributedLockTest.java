@@ -18,10 +18,10 @@
 
 package org.apache.kylin.job.lock.zookeeper;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Random;
 
@@ -31,9 +31,9 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.job.lock.zookeeper.exception.ZkPeekLockInterruptException;
 import org.apache.kylin.job.lock.zookeeper.exception.ZkReleaseLockException;
 import org.apache.kylin.job.lock.zookeeper.exception.ZkReleaseLockInterruptException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
@@ -43,7 +43,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     static ZookeeperDistributedLock.Factory factory;
     private TestingServer zkTestServer;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         zkTestServer = new TestingServer();
         zkTestServer.start();
@@ -52,7 +52,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         factory = new ZookeeperDistributedLock.Factory();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         factory.lockForCurrentProcess().purgeLocks(ZK_PFX);
         zkTestServer.close();
@@ -61,7 +61,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testLockCurrentThread() {
+    void testLockCurrentThread() {
         DistributedLock lock = factory.lockForCurrentThread();
         String path = ZK_PFX + "/test_lock_current_thread";
 
@@ -77,7 +77,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testLockForClients() {
+    void testLockForClients() {
         String client1 = "client1";
         String client2 = "client2";
         DistributedLock lock1 = factory.lockForClient(client1);
@@ -120,7 +120,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testSingleClientLockWhenCatchInterruptException() {
+    void testSingleClientLockWhenCatchInterruptException() {
         String path = ZK_PFX + "/test_interrupt_lock";
         DistributedLock lock = factory.lockForClient("client");
         DistributedLock spy = Mockito.spy(lock);
@@ -140,7 +140,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testTwoClientLockWhenCatchInterruptException() {
+    void testTwoClientLockWhenCatchInterruptException() {
         String path = ZK_PFX + "/test_interrupt_lock";
         DistributedLock lock1 = factory.lockForClient("client_1");
         DistributedLock lock2 = factory.lockForClient("client_2");
@@ -194,7 +194,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testSingleClientUnlockWhenCatchInterruptExceptionOnPeekLock() {
+    void testSingleClientUnlockWhenCatchInterruptExceptionOnPeekLock() {
         String path = ZK_PFX + "/test_interrupt_lock";
         DistributedLock lock = factory.lockForClient("client");
 
@@ -220,7 +220,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testTwoClientUnlockWhenCatchInterruptExceptionOnPeekLock() {
+    void testTwoClientUnlockWhenCatchInterruptExceptionOnPeekLock() {
         String path = ZK_PFX + "/test_interrupt_lock";
         DistributedLock lock1 = factory.lockForClient("client_1");
         DistributedLock lock2 = factory.lockForClient("client_2");
@@ -274,7 +274,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testSingleClientUnlockWhenCatchInterruptExceptionOnPurgeLock() {
+    void testSingleClientUnlockWhenCatchInterruptExceptionOnPurgeLock() {
         String path = ZK_PFX + "/test_interrupt_lock";
         ZookeeperDistributedLock lock = (ZookeeperDistributedLock) factory.lockForClient("client");
 
@@ -300,7 +300,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testTwoClientUnlockWhenCatchInterruptExceptionOnPurgeLock() {
+    void testTwoClientUnlockWhenCatchInterruptExceptionOnPurgeLock() {
         String path = ZK_PFX + "/test_interrupt_lock";
         ZookeeperDistributedLock lock1 = (ZookeeperDistributedLock) factory.lockForClient("client_1");
         ZookeeperDistributedLock lock2 = (ZookeeperDistributedLock) factory.lockForClient("client_2");

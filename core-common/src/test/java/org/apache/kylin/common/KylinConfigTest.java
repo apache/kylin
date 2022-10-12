@@ -23,22 +23,22 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
 
     @Test
-    public void testMRConfigOverride() {
+    void testMRConfigOverride() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         Map<String, String> override = config.getMRConfigOverride();
         assertEquals(2, override.size());
@@ -47,7 +47,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testBackwardCompatibility() {
+    void testBackwardCompatibility() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         final String oldk = "kylin.test.bcc.old.key";
         final String newk = "kylin.test.bcc.new.key";
@@ -67,7 +67,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testExtShareTheBase() {
+    void testExtShareTheBase() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         Map<String, String> override = Maps.newHashMap();
         KylinConfig configExt = KylinConfigExt.createInstance(config, override);
@@ -77,7 +77,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testPropertiesHotLoad() {
+    void testPropertiesHotLoad() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         assertEquals("whoami@kylin.apache.org", config.getKylinOwner());
 
@@ -88,7 +88,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testGetMetadataUrlPrefix() {
+    void testGetMetadataUrlPrefix() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         config.setMetadataUrl("testMetaPrefix@hbase");
@@ -102,7 +102,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testThreadLocalOverride() throws InterruptedException {
+    void testThreadLocalOverride() throws InterruptedException {
         final String metadata1 = "meta1";
         final String metadata2 = "meta2";
 
@@ -135,14 +135,14 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testHdfsWorkingDir() {
+    void testHdfsWorkingDir() {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
         String hdfsWorkingDirectory = conf.getHdfsWorkingDirectory();
         assertTrue(hdfsWorkingDirectory.startsWith("file:/"));
     }
 
     @Test
-    public void testUnexpectedBlackInPro() {
+    void testUnexpectedBlackInPro() {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
         Map<String, String> override = conf.getPropertiesByPrefix("kylin.engine.mr.config-override.");
         assertEquals(2, override.size());
@@ -151,7 +151,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testCalciteExtrasProperties() {
+    void testCalciteExtrasProperties() {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
         Properties extras = conf.getCalciteExtrasProperties();
         assertEquals("true", extras.getProperty("caseSensitive"));
@@ -171,7 +171,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
   @Test
-  public void testSetKylinConfigInEnvIfMissingTakingEmptyProperties() {
+  void testSetKylinConfigInEnvIfMissingTakingEmptyProperties() {
       Properties properties = new Properties();
       KylinConfig.setKylinConfigInEnvIfMissing(properties);
 
@@ -182,26 +182,30 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
 
       assertEquals(0, properties.size());
       assertTrue(properties.isEmpty());
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void testCreateInstanceFromUriThrowsIllegalStateExceptionOne() {
-        KylinConfig.createInstanceFromUri("cb%MnlG]3:nav");
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateInstanceFromUriThrowsRuntimeException() {
-      Properties properties = new Properties();
-      KylinConfig.setKylinConfigInEnvIfMissing(properties);
-
-      assertEquals(0, properties.size());
-      assertTrue(properties.isEmpty());
-
-      KylinConfig.createInstanceFromUri("dHy3K~m");
   }
 
   @Test
-  public void testKylinConfigExt(){
+  void testCreateInstanceFromUriThrowsIllegalStateExceptionOne() {
+    Assertions.assertThrows(IllegalStateException.class, () -> {
+          KylinConfig.createInstanceFromUri("cb%MnlG]3:nav");
+    });
+  }
+
+  @Test
+  void testCreateInstanceFromUriThrowsRuntimeException() {
+    Assertions.assertThrows(RuntimeException.class, () -> {
+        Properties properties = new Properties();
+        KylinConfig.setKylinConfigInEnvIfMissing(properties);
+
+        assertEquals(0, properties.size());
+        assertTrue(properties.isEmpty());
+
+        KylinConfig.createInstanceFromUri("dHy3K~m");
+    });
+  }
+
+  @Test
+  void testKylinConfigExt(){
       KylinConfig conf = KylinConfig.getInstanceFromEnv();
       Map<String, String> overrideConf1 = new HashMap<>();
       overrideConf1.put("foo", "fooValue");
@@ -213,9 +217,9 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
       KylinConfigExt ext2 = KylinConfigExt.createInstance(ext1, overrideConf2);
 
       //check previous ext config's override value will not lost
-      Assert.assertEquals(ext2.getOptional("foo"), "fooValue");
+      Assertions.assertEquals(ext2.getOptional("foo"), "fooValue");
       //check previous exist config will be overwritten by by new one
-      Assert.assertEquals(ext2.getOptional("bar"), "barValue");
+      Assertions.assertEquals(ext2.getOptional("bar"), "barValue");
   }
 
 }

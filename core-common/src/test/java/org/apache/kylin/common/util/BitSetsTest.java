@@ -18,17 +18,17 @@
 
 package org.apache.kylin.common.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.BitSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BitSetsTest {
 
     @Test
-    public void basicTest() {
+    void basicTest() {
         BitSet a = BitSets.valueOf(new int[] { 1, 3, 10 });
         assertEquals(3, a.cardinality());
         assertTrue(10 < a.size());
@@ -36,7 +36,7 @@ public class BitSetsTest {
     }
 
   @Test
-  public void testValueOfWithNull() {
+  void testValueOfWithNull() {
       BitSet bitSet = BitSets.valueOf((int[]) null);
 
       assertEquals("{}", bitSet.toString());

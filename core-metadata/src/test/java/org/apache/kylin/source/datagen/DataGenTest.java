@@ -24,24 +24,24 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataModelManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class DataGenTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testCIConfigured() throws IOException {
+    void testCIConfigured() throws IOException {
         DataModelDesc model = getModel("ci_inner_join_model");
         ModelDataGenerator gen = new ModelDataGenerator(model, 100);
         gen.outprint = false;
@@ -50,7 +50,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSSBNoConfig() throws IOException {
+    void testSSBNoConfig() throws IOException {
         DataModelDesc model = getModel("ssb");
         ModelDataGenerator gen = new ModelDataGenerator(model, 100);
         gen.outprint = false;

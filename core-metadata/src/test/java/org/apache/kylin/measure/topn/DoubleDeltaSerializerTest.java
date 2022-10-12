@@ -17,14 +17,14 @@
  */
 package org.apache.kylin.measure.topn;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class DoubleDeltaSerializerTest {
 
@@ -32,7 +32,7 @@ public class DoubleDeltaSerializerTest {
     DoubleDeltaSerializer dds = new DoubleDeltaSerializer();
 
     @Test
-    public void testEmpty() {
+    void testEmpty() {
         buf.clear();
         dds.serialize(new double[] {}, buf);
         buf.flip();
@@ -41,7 +41,7 @@ public class DoubleDeltaSerializerTest {
     }
 
     @Test
-    public void testSingle() {
+    void testSingle() {
         buf.clear();
         dds.serialize(new double[] { 1.2 }, buf);
         buf.flip();
@@ -50,7 +50,7 @@ public class DoubleDeltaSerializerTest {
     }
 
     @Test
-    public void testRounding() {
+    void testRounding() {
         buf.clear();
         dds.serialize(new double[] { 1.234, 2.345 }, buf);
         buf.flip();
@@ -59,7 +59,7 @@ public class DoubleDeltaSerializerTest {
     }
 
     @Test
-    public void testRandom() {
+    void testRandom() {
         Random rand = new Random();
         int n = 1000;
 
@@ -79,7 +79,7 @@ public class DoubleDeltaSerializerTest {
     }
 
     @Test
-    public void testRandom2() {
+    void testRandom2() {
         Random rand = new Random();
         int n = 1000;
 

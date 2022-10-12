@@ -18,8 +18,8 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 
@@ -28,24 +28,24 @@ import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class CubeSegmentsTest extends LocalFileMetadataTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testAppendNonPartitioned() throws IOException {
+    void testAppendNonPartitioned() throws IOException {
         CubeManager mgr = mgr();
         CubeInstance cube = mgr.getCube("test_kylin_cube_without_slr_empty");
 
@@ -71,7 +71,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAppendNonPartitioned2() throws IOException {
+    void testAppendNonPartitioned2() throws IOException {
         CubeManager mgr = mgr();
         CubeInstance cube = mgr.getCube("test_kylin_cube_without_slr_ready");
 
@@ -102,7 +102,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testPartitioned() throws IOException {
+    void testPartitioned() throws IOException {
         CubeManager mgr = mgr();
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_left_join_empty");
 
@@ -157,7 +157,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAllowGap() throws IOException {
+    void testAllowGap() throws IOException {
 
         CubeManager mgr = mgr();
         CubeInstance cube = mgr.getCube("test_kylin_cube_without_slr_left_join_empty");

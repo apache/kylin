@@ -19,16 +19,17 @@
 package org.apache.kylin.dimension;
 
 import org.apache.kylin.common.util.DateFormat;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TimeDerivedColumnTypeTest {
 
     @Test
-    public void testMinuteStartTimeRangeOverlap() {
+    void testMinuteStartTimeRangeOverlap() {
         String segmentStartStr = "2017-11-01 08:00:00";
         String segmentEndStr = "2017-11-01 09:00:00";
 
@@ -50,7 +51,7 @@ public class TimeDerivedColumnTypeTest {
     }
 
     @Test
-    public void testHourStartTimeRangeOverlap() {
+    void testHourStartTimeRangeOverlap() {
         String segmentStartStr = "2017-11-01 08:00:00";
         String segmentEndStr = "2017-11-01 09:00:00";
 
@@ -80,7 +81,7 @@ public class TimeDerivedColumnTypeTest {
     }
 
     @Test
-    public void testDayStartTimeRangeOverlap() {
+    void testDayStartTimeRangeOverlap() {
         String segmentStartStr = "2017-11-01 08:00:00";
         String segmentEndStr = "2017-11-01 09:00:00";
 
@@ -119,79 +120,81 @@ public class TimeDerivedColumnTypeTest {
         assertFalse(overlap);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testParseTimeValueThrowsIllegalArgumentException() {
-        TimeDerivedColumnType.parseTimeValue(new Object());
+    @Test
+    void testParseTimeValueThrowsIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            TimeDerivedColumnType.parseTimeValue(new Object());
+        });
     }
 
     @Test
-    public void testIsTimeDerivedColumnReturningTrue() {
+    void testIsTimeDerivedColumnReturningTrue() {
         assertTrue(TimeDerivedColumnType.isTimeDerivedColumn("YEAR_START"));
     }
 
     @Test
-    public void testIsTimeDerivedColumnReturningFalse() {
+    void testIsTimeDerivedColumnReturningFalse() {
         assertFalse(TimeDerivedColumnType.isTimeDerivedColumn(""));
     }
 
     @Test
-    public void testNormalizeTimeFormatWithPositive() {
+    void testNormalizeTimeFormatWithPositive() {
         TimeDerivedColumnType timeDerivedColumnType = TimeDerivedColumnType.MINUTE_START;
 
         assertEquals("1970-01-01 00:00:00", timeDerivedColumnType.normalizeTimeFormat(1438L));
     }
 
     @Test
-    public void testNormalizeTimeFormatAndNormalizeTimeFormatWithNegativeOne() {
+    void testNormalizeTimeFormatAndNormalizeTimeFormatWithNegativeOne() {
         TimeDerivedColumnType timeDerivedColumnType = TimeDerivedColumnType.WEEK_START;
 
         assertEquals("1969-12-28", timeDerivedColumnType.normalizeTimeFormat((-65L)));
     }
 
     @Test
-    public void testNormalizeTimeFormatAndNormalizeTimeFormatWithZeroOne() {
+    void testNormalizeTimeFormatAndNormalizeTimeFormatWithZeroOne() {
         TimeDerivedColumnType timeDerivedColumnType = TimeDerivedColumnType.MONTH_START;
 
         assertEquals("1970-01-01", timeDerivedColumnType.normalizeTimeFormat(0L));
     }
 
     @Test
-    public void testHasTimeRangeOverlapAndValueOfReturningNonNull() {
+    void testHasTimeRangeOverlapAndValueOfReturningNonNull() {
         TimeDerivedColumnType timeDerivedColumnType = TimeDerivedColumnType.valueOf("HOUR_START");
 
         assertFalse(timeDerivedColumnType.hasTimeRangeOverlap((-2160L), (-2074L), new Long((-498L))));
     }
 
     @Test
-    public void testNormalizeTimeFormatAndValueOfReturningNonNull() {
+    void testNormalizeTimeFormatAndValueOfReturningNonNull() {
         TimeDerivedColumnType timeDerivedColumnType = TimeDerivedColumnType.valueOf("HOUR_START");
 
         assertEquals("1970-01-01 00:00:00", timeDerivedColumnType.normalizeTimeFormat((-419L)));
     }
 
     @Test
-    public void testNormalizeTimeFormatAndNormalizeTimeFormatWithZeroTwo() {
+    void testNormalizeTimeFormatAndNormalizeTimeFormatWithZeroTwo() {
         TimeDerivedColumnType timeDerivedColumnType = TimeDerivedColumnType.DAY_START;
 
         assertEquals("1970-01-01", timeDerivedColumnType.normalizeTimeFormat(0L));
     }
 
     @Test
-    public void testHasTimeRangeOverlapReturningTrue() {
+    void testHasTimeRangeOverlapReturningTrue() {
         TimeDerivedColumnType timeDerivedColumnType = TimeDerivedColumnType.QUARTER_START;
 
         assertTrue(timeDerivedColumnType.hasTimeRangeOverlap((-579L), 641L, new Long(0L)));
     }
 
     @Test
-    public void testNormalizeTimeFormatAndNormalizeTimeFormatWithNegativeTwo() {
+    void testNormalizeTimeFormatAndNormalizeTimeFormatWithNegativeTwo() {
         TimeDerivedColumnType timeDerivedColumnType = TimeDerivedColumnType.QUARTER_START;
 
         assertEquals("1969-10-01", timeDerivedColumnType.normalizeTimeFormat((-1L)));
     }
 
     @Test
-    public void testNormalizeTimeFormatAndNormalizeTimeFormatWithNegativeThree() {
+    void testNormalizeTimeFormatAndNormalizeTimeFormatWithNegativeThree() {
         TimeDerivedColumnType timeDerivedColumnType = TimeDerivedColumnType.YEAR_START;
 
         assertEquals("1969-01-01", timeDerivedColumnType.normalizeTimeFormat((-170L)));

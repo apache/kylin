@@ -18,9 +18,9 @@
 
 package org.apache.kylin.common.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Unit tests for class {@link StringSplitter}.
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 public class StringSplitterTest{
 
   @Test
-  public void testSplitReturningNonEmptyArray() {
+  void testSplitReturningNonEmptyArray() {
       String[] stringArray = StringSplitter.split("Fc8!v~f?aQL", "Fc8!v~f?aQL");
 
       assertEquals(2, stringArray.length);
@@ -40,7 +40,7 @@ public class StringSplitterTest{
   }
 
   @Test
-  public void testSplitWithNonEmptyString() {
+  void testSplitWithNonEmptyString() {
       String[] stringArray = StringSplitter.split("]sZ}gR\"cws,8p#|m", "Fc8!v~f?aQL");
 
       assertEquals(1, stringArray.length);

@@ -19,30 +19,35 @@
 package org.apache.kylin.metrics.lib.impl;
 
 import static org.apache.kylin.metrics.lib.impl.MetricsSystem.Metrics;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.kylin.metrics.lib.ActiveReservoir;
 import org.apache.kylin.metrics.lib.ActiveReservoirRecordFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class MetricsSystemTest {
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testDuplicateRegister() {
-        String name = "test1";
-        Metrics.register(name, new StubReservoir());
-        Metrics.register(name, new StubReservoir());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testNullRegister1() {
-        Metrics.register(null, new StubReservoir());
+    @Test
+    void testDuplicateRegister() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            String name = "test1";
+            Metrics.register(name, new StubReservoir());
+            Metrics.register(name, new StubReservoir());
+        });
     }
 
     @Test
-    public void testActiveReservoir() {
+    void testNullRegister1() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            Metrics.register(null, new StubReservoir());
+        });
+    }
+
+    @Test
+    void testActiveReservoir() {
         //Remove all ActiveReservoirs
         Metrics.removeActiveReservoirMatching(ActiveReservoirRecordFilter.ALL);
         assertEquals(0, Metrics.getActiveReservoirs().size());

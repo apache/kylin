@@ -18,15 +18,16 @@
 
 package org.apache.kylin.common;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class StorageURLTest {
 
     @Test
-    public void testBasic() {
+    void testBasic() {
         {
             StorageURL id = new StorageURL("hello@hbase");
             assertEquals("hello", id.getIdentifier());
@@ -57,13 +58,15 @@ public class StorageURLTest {
         }
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testNullInput() {
-        new StorageURL(null);
+    @Test
+    void testNullInput() {
+        Assertions.assertThrows(NullPointerException.class, () -> {
+            new StorageURL(null);
+        });
     }
 
     @Test
-    public void testHDFS() {
+    void testHDFS() {
         {
             StorageURL id = new StorageURL(
                     "master_ci_instance@hdfs,path=hdfs://sandbox.hortonworks.com:8020/kylin/master_ci_instance/metadata/f112fe00-6f99-4f8e-b075-d57c08501106");
@@ -78,7 +81,7 @@ public class StorageURLTest {
     }
 
     @Test
-    public void testEdgeCases() {
+    void testEdgeCases() {
 
         {
             StorageURL id = new StorageURL("");
@@ -105,7 +108,7 @@ public class StorageURLTest {
     }
 
     @Test
-    public void testValueOfCache() {
+    void testValueOfCache() {
         StorageURL id1 = StorageURL.valueOf("hello@hbase");
         StorageURL id2 = StorageURL.valueOf("hello@hbase");
         StorageURL id3 = StorageURL.valueOf("hello @ hbase");

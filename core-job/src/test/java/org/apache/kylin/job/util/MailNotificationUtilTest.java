@@ -19,47 +19,47 @@
 package org.apache.kylin.job.util;
 
 import org.apache.kylin.job.execution.ExecutableState;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class MailNotificationUtilTest {
 
     @Test
-    public void testGetMailTitle() {
+    void testGetMailTitle() {
         String[] titleParts = new String[] { "JOB", "SUCCEED" };
-        Assert.assertEquals("[" + titleParts[0] + "]-[" + titleParts[1] + "]",
+        Assertions.assertEquals("[" + titleParts[0] + "]-[" + titleParts[1] + "]",
                 MailNotificationUtil.getMailTitle(titleParts));
     }
 
     @Test
-    public void testHasMailNotification() {
-        Assert.assertTrue(MailNotificationUtil.hasMailNotification(ExecutableState.DISCARDED));
-        Assert.assertTrue(MailNotificationUtil.hasMailNotification(ExecutableState.ERROR));
-        Assert.assertTrue(MailNotificationUtil.hasMailNotification(ExecutableState.SUCCEED));
-        Assert.assertFalse(MailNotificationUtil.hasMailNotification(ExecutableState.RUNNING));
-        Assert.assertFalse(MailNotificationUtil.hasMailNotification(ExecutableState.STOPPED));
-        Assert.assertFalse(MailNotificationUtil.hasMailNotification(ExecutableState.READY));
+    void testHasMailNotification() {
+        Assertions.assertTrue(MailNotificationUtil.hasMailNotification(ExecutableState.DISCARDED));
+        Assertions.assertTrue(MailNotificationUtil.hasMailNotification(ExecutableState.ERROR));
+        Assertions.assertTrue(MailNotificationUtil.hasMailNotification(ExecutableState.SUCCEED));
+        Assertions.assertFalse(MailNotificationUtil.hasMailNotification(ExecutableState.RUNNING));
+        Assertions.assertFalse(MailNotificationUtil.hasMailNotification(ExecutableState.STOPPED));
+        Assertions.assertFalse(MailNotificationUtil.hasMailNotification(ExecutableState.READY));
     }
 
     @Test
-    public void testGetMailContent() {
-        Assert.assertFalse(
+    void testGetMailContent() {
+        Assertions.assertFalse(
                 MailNotificationUtil.getMailContent(ExecutableState.DISCARDED, Maps.<String, Object>newHashMap())
                         .startsWith("Cannot find email template for"));
-        Assert.assertFalse(MailNotificationUtil.getMailContent(ExecutableState.ERROR, Maps.<String, Object>newHashMap())
+        Assertions.assertFalse(MailNotificationUtil.getMailContent(ExecutableState.ERROR, Maps.<String, Object>newHashMap())
                 .startsWith("Cannot find email template for"));
-        Assert.assertFalse(
+        Assertions.assertFalse(
                 MailNotificationUtil.getMailContent(ExecutableState.SUCCEED, Maps.<String, Object>newHashMap())
                         .startsWith("Cannot find email template for"));
-        Assert.assertTrue(
+        Assertions.assertTrue(
                 MailNotificationUtil.getMailContent(ExecutableState.RUNNING, Maps.<String, Object>newHashMap())
                         .startsWith("Cannot find email template for"));
-        Assert.assertTrue(
+        Assertions.assertTrue(
                 MailNotificationUtil.getMailContent(ExecutableState.STOPPED, Maps.<String, Object>newHashMap())
                         .startsWith("Cannot find email template for"));
-        Assert.assertTrue(MailNotificationUtil.getMailContent(ExecutableState.READY, Maps.<String, Object>newHashMap())
+        Assertions.assertTrue(MailNotificationUtil.getMailContent(ExecutableState.READY, Maps.<String, Object>newHashMap())
                 .startsWith("Cannot find email template for"));
     }
 }

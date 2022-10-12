@@ -18,24 +18,24 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class DataTypeTest {
 
     @Test
-    public void testComplexType() {
+    void testComplexType() {
         DataType arrayInt = DataType.getType("array<int>");
         DataType arrayString = DataType.getType("array<string>");
 
-        Assert.assertTrue(DataType.isComplexType(arrayInt));
-        Assert.assertTrue(DataType.isComplexType(arrayString));
+        Assertions.assertTrue(DataType.isComplexType(arrayInt));
+        Assertions.assertTrue(DataType.isComplexType(arrayString));
     }
 
     @Test
-    public void testIsSupportedType() {
-        Assert.assertFalse(DataType.isKylinSupported("array<int>"));
-        Assert.assertFalse(DataType.isKylinSupported("map<string, int>"));
-        Assert.assertFalse(DataType.isKylinSupported(null));
+    void testIsSupportedType() {
+        Assertions.assertFalse(DataType.isKylinSupported("array<int>"));
+        Assertions.assertFalse(DataType.isKylinSupported("map<string, int>"));
+        Assertions.assertFalse(DataType.isKylinSupported(null));
     }
 }

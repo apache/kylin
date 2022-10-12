@@ -21,23 +21,23 @@ package org.apache.kylin.common.util;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 
 public class AutoReadWriteLockTest {
     
     @Test
-    public void testBasics() {
+    void testBasics() {
         AutoReadWriteLock lock = new AutoReadWriteLock(new ReentrantReadWriteLock());
         try (AutoLock al = lock.lockForRead()) {
-            Assert.assertTrue(lock.innerLock().getReadHoldCount() == 1);
+            Assertions.assertTrue(lock.innerLock().getReadHoldCount() == 1);
         }
-        Assert.assertTrue(lock.innerLock().getReadHoldCount() == 0);
+        Assertions.assertTrue(lock.innerLock().getReadHoldCount() == 0);
         
         try (AutoLock al = lock.lockForWrite()) {
-            Assert.assertTrue(lock.innerLock().getWriteHoldCount() == 1);
+            Assertions.assertTrue(lock.innerLock().getWriteHoldCount() == 1);
         }
-        Assert.assertTrue(lock.innerLock().getWriteHoldCount() == 0);
+        Assertions.assertTrue(lock.innerLock().getWriteHoldCount() == 0);
     }
 }

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.common.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.cache.Cache;
 import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
@@ -27,7 +27,7 @@ import org.apache.kylin.shaded.com.google.common.cache.RemovalNotification;
 
 public class CacheBuilderTest {
     @Test
-    public void foo() {
+    void foo() {
         Cache<Object, Object> build = CacheBuilder.newBuilder().maximumSize(1).weakValues().removalListener(new RemovalListener<Object, Object>() {
             @Override
             public void onRemoval(RemovalNotification<Object, Object> notification) {

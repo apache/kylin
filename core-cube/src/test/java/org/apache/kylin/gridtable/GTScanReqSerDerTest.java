@@ -30,30 +30,30 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Ignore;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 
-@Ignore
+@Disabled 
 public class GTScanReqSerDerTest extends LocalFileMetadataTestCase {
 
     private ByteBuffer buffer = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         buffer.clear();
         this.createTestMetadata();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
 
     @Test
-    public void testImmutableBitSet() {
+    void testImmutableBitSet() {
         ImmutableBitSet x = new ImmutableBitSet(10, 100);
         ImmutableBitSet.serializer.serialize(x, buffer);
 
@@ -61,15 +61,15 @@ public class GTScanReqSerDerTest extends LocalFileMetadataTestCase {
 
         ImmutableBitSet sx = ImmutableBitSet.serializer.deserialize(buffer);
         for (int i = 0; i < 10; i++) {
-            Assert.assertFalse(sx.get(i));
+            Assertions.assertFalse(sx.get(i));
         }
         for (int i = 10; i < 100; i++) {
-            Assert.assertTrue(sx.get(i));
+            Assertions.assertTrue(sx.get(i));
         }
     }
 
     @Test
-    public void testBasicInfo() {
+    void testBasicInfo() {
         GTInfo info = UnitTestSupport.basicInfo();
         GTInfo.serializer.serialize(info, buffer);
         buffer.flip();
@@ -79,7 +79,7 @@ public class GTScanReqSerDerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAdvancedInfo() {
+    void testAdvancedInfo() {
         GTInfo info = UnitTestSupport.advancedInfo();
         GTInfo.serializer.serialize(info, buffer);
         buffer.flip();
@@ -89,7 +89,7 @@ public class GTScanReqSerDerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGTInfo() {
+    void testGTInfo() {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube("test_kylin_cube_with_slr_ready");
         CubeSegment segment = cube.getFirstSegment();
 
@@ -103,17 +103,17 @@ public class GTScanReqSerDerTest extends LocalFileMetadataTestCase {
     }
 
     private void compareTwoGTInfo(GTInfo info, GTInfo sInfo) {
-        Assert.assertEquals(info.tableName, sInfo.tableName);
-        Assert.assertEquals(info.primaryKey, sInfo.primaryKey);
+        Assertions.assertEquals(info.tableName, sInfo.tableName);
+        Assertions.assertEquals(info.primaryKey, sInfo.primaryKey);
 
         for (int i = 0; i < info.colTypes.length; i++) {
-            Assert.assertEquals(info.codeSystem.maxCodeLength(i), sInfo.codeSystem.maxCodeLength(i));
-            Assert.assertTrue(info.codeSystem.maxCodeLength(i) > 0);
-            Assert.assertEquals(info.colRef(i), sInfo.colRef(i));
+            Assertions.assertEquals(info.codeSystem.maxCodeLength(i), sInfo.codeSystem.maxCodeLength(i));
+            Assertions.assertTrue(info.codeSystem.maxCodeLength(i) > 0);
+            Assertions.assertEquals(info.colRef(i), sInfo.colRef(i));
         }
-        Assert.assertArrayEquals(info.colBlocks, sInfo.colBlocks);
-        Assert.assertEquals(info.getRowBlockSize(), sInfo.getRowBlockSize());
-        Assert.assertEquals(info.rowBlockSize, sInfo.rowBlockSize);
+        Assertions.assertArrayEquals(info.colBlocks, sInfo.colBlocks);
+        Assertions.assertEquals(info.getRowBlockSize(), sInfo.getRowBlockSize());
+        Assertions.assertEquals(info.rowBlockSize, sInfo.rowBlockSize);
 
     }
 }

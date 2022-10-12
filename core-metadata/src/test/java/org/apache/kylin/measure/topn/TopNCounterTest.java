@@ -36,13 +36,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.math3.distribution.ZipfDistribution;
 import org.apache.kylin.common.util.Pair;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
-@Ignore("For collecting accuracy statistics, not for functional test")
+@Disabled ("For collecting accuracy statistics, not for functional test")
 public class TopNCounterTest {
 
     protected static int TOP_K;
@@ -98,9 +98,9 @@ public class TopNCounterTest {
         return tempFile.getAbsolutePath();
     }
 
-    @Ignore
+    @Disabled 
     @Test
-    public void testSingleSpaceSaving() throws IOException {
+    void testSingleSpaceSaving() throws IOException {
         String dataFile = prepareTestDate();
         TopNCounterTest.SpaceSavingConsumer spaceSavingCounter = new TopNCounterTest.SpaceSavingConsumer(
                 TOP_K * SPACE_SAVING_ROOM);
@@ -139,7 +139,7 @@ public class TopNCounterTest {
             }
         }
 
-        org.junit.Assert.assertEquals(0, error);
+        org.junit.jupiter.api.Assertions.assertEquals(0, error);
     }
 
     private boolean isClose(double value1, double value2) {
@@ -151,7 +151,7 @@ public class TopNCounterTest {
     }
 
     @Test
-    public void testParallelSpaceSaving() throws IOException, ClassNotFoundException {
+    void testParallelSpaceSaving() throws IOException, ClassNotFoundException {
         String dataFile = prepareTestDate();
 
         TopNCounterTest.SpaceSavingConsumer[] parallelCounters = new TopNCounterTest.SpaceSavingConsumer[PARALLEL];
