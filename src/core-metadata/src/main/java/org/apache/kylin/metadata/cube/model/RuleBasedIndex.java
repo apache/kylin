@@ -247,7 +247,7 @@ public class RuleBasedIndex implements Serializable {
         List<Integer> current = this.measures;
         // https://jirap.corp.ebay.com/browse/KYLIN-3593
         for (NAggregationGroup aggregationGroup : aggregationGroups) {
-            // each group should has the same measure this rule base index regardless of the order
+            // each group should has all of the same measure regardless of the order
             Integer[] aggMeasures = aggregationGroup.getMeasures();
             Set<Integer> aggMeasureSet = Sets.newHashSet(aggMeasures);
             if (current.size() == 0 && aggMeasures.length > 0) {

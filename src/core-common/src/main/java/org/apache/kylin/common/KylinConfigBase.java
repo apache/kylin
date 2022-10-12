@@ -3673,4 +3673,13 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean getDDLEnabled(){
         return Boolean.parseBoolean(getOptional("kylin.source.ddl.enabled", FALSE));
     }
+
+    // ============================================================================
+    // Cost case cuboid Planner
+    // ============================================================================
+
+    public boolean isCubePlannerEnabled() {
+        // If we enable the cost base cuboid planner, we need to disable some function in the rule index recommended
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", FALSE));
+    }
 }

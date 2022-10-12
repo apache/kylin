@@ -28,6 +28,7 @@ import java.util.Set;
 import javax.validation.Valid;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
@@ -211,6 +212,12 @@ public class NIndexPlanController extends NBasicController {
     public EnvelopeResponse<String> deleteIndex(@PathVariable(value = "layout_id") long layoutId,
             @RequestParam(value = "project") String project, //
             @RequestParam(value = "model") String modelId, @RequestParam("index_range") IndexEntity.Range indexRange) {
+        // https://jirap.corp.ebay.com/browse/KYLIN-3601
+        // Now we forbid the feature to align with the kylin3.1 for the cube planner
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        if (kylinConfig.isCubePlannerEnabled()) {
+            throw new RuntimeException("Can't delete index when use the cost base index planner");
+        }
         checkProjectName(project);
         checkRequiredArg(MODEL_ID, modelId);
         fusionIndexService.removeIndex(project, modelId, layoutId, indexRange);
@@ -221,6 +228,12 @@ public class NIndexPlanController extends NBasicController {
     @DeleteMapping(value = "/index")
     public EnvelopeResponse<String> batchDeleteIndex(@RequestParam(value = "layout_ids") Set<Long> layoutIds,
             @RequestParam(value = "project") String project, @RequestParam(value = "model") String modelId) {
+        // https://jirap.corp.ebay.com/browse/KYLIN-3601
+        // Now we forbid the feature to align with the kylin3.1 for the cube planner
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        if (kylinConfig.isCubePlannerEnabled()) {
+            throw new RuntimeException("Can't delete index when use the cost base index planner");
+        }
         checkProjectName(project);
         checkRequiredArg(MODEL_ID, modelId);
         if (CollectionUtils.isEmpty(layoutIds)) {
