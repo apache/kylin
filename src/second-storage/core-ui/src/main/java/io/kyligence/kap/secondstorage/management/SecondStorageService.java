@@ -326,7 +326,6 @@ public class SecondStorageService extends BasicService implements SecondStorageU
         deleteLayoutChTable(project, modelId, layout.getId());
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             getTablePlan(project, modelId).update(tp -> tp.updatePrimaryIndexColumns(layout.getId(), columns));
-            deleteLayoutChTable(project, modelId, layout.getId());
             return null;
         }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID);
     }
@@ -370,11 +369,20 @@ public class SecondStorageService extends BasicService implements SecondStorageU
     }
     
     private void deleteLayoutChTable(String project, String modelId, long layoutId) {
-        String database = NameUtil.getDatabase(getConfig(), project);
+        KylinConfig config = getConfig();
+        String database = NameUtil.getDatabase(config, project);
         String table = NameUtil.getTable(modelId, layoutId);
-        for (NodeGroup nodeGroup : SecondStorageUtil.listNodeGroup(getConfig(), project)) {
-            nodeGroup.getNodeNames().forEach(node -> SecondStorageFactoryUtils
-                    .createDatabaseOperator(SecondStorageNodeHelper.resolve(node)).dropTable(database, table));
+        for (NodeGroup nodeGroup : SecondStorageUtil.listNodeGroup(config, project)) {
+            nodeGroup.getNodeNames().forEach(node -> {
+                DatabaseOperator operator = SecondStorageFactoryUtils
+                        .createDatabaseOperator(SecondStorageNodeHelper.resolve(node));
+                try {
+                    operator.dropTable(database, table);
+                } catch (Exception e) {
+                    throw new KylinException(SECOND_STORAGE_NODE_NOT_AVAILABLE,
+                            MsgPicker.getMsg().getSecondStorageNodeNotAvailable(node), e);
+                }
+            });
         }
     }
 
@@ -1149,6 +1157,12 @@ public class SecondStorageService extends BasicService implements SecondStorageU
     private void checkUpdateIndex(String project, String modelId) {
         SecondStorageUtil.validateProjectLock(project, Collections.singletonList(LockTypeEnum.LOAD.name()));
         List<AbstractExecutable> jobs = getRelationJobsWithoutFinish(project, modelId);
+        if (!jobs.isEmpty()) {
+            throw new KylinException(JobErrorCode.SECOND_STORAGE_PROJECT_JOB_EXISTS,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageProjectJobExists(), project));
+        }
+        jobs = getJobs(project, modelId, Sets.newHashSet(ExecutableState.ERROR),
+                Sets.newHashSet(JobTypeEnum.SECOND_STORAGE_REFRESH_SECONDARY_INDEXES));
         if (!jobs.isEmpty()) {
             throw new KylinException(JobErrorCode.SECOND_STORAGE_JOB_EXISTS,
                     MsgPicker.getMsg().getSecondStorageConcurrentOperate());
