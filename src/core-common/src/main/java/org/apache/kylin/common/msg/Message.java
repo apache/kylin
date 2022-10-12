@@ -38,8 +38,6 @@ public class Message {
     private static final String NON_EXISTEN_MODEL = "Model %s doesn't exist. Please confirm and try again later.";
     private static final String LACK_PROJECT = "Please fill in the project parameters.";
     private static final String NON_EXIST_PROJECT = "Project %s doesn't exist. Please confirm and try again later.";
-    private static final String DUP_MODCOL_MEASURE_NAME = "There are duplicated names among model column %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
-    private static final String DUP_DIMCOL_MEASURE_NAME = "There are duplicated names among dimension column %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
     private static final String MODIFY_PERMISSION_OF_SUPER_ADMIN = "Super Admin’s permission can’t be modified.";
     private static final String ILLEGAL_AUTHORIZING_USER = "Unable to modify. Only Super Admin or System Admin with query permission can modify query permission.";
     private static final String GRANT_TO_NON_SYSTEM_ADMIN = "Unable to modify. You can only modify the permission of the System Admin.";

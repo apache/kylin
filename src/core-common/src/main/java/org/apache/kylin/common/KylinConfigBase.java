@@ -3632,11 +3632,6 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.build.resource.skip-resource-check", FALSE));
     }
 
-    public boolean useTableIndexAnswerSelectStarEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.use-tableindex-answer-select-star.enabled", FALSE));
-    }
-
-
     public int getSecondStorageSkippingIndexGranularity() {
         int granularity = Integer.parseInt(getOptional("kylin.second-storage.skipping-index.granularity", "3"));
         return granularity <= 0 ? 3 : granularity;
