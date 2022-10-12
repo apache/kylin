@@ -33,6 +33,7 @@ public class SyncModelTestUtil {
         syncContext.setPort(7070);
         syncContext.setDataflow(NDataflowManager.getInstance(kylinConfig, project).getDataflow(modelId));
         syncContext.setKylinConfig(kylinConfig);
+        syncContext.setAdmin(true);
         return syncContext;
     }
 }

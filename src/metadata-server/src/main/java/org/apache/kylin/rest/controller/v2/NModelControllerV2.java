@@ -20,14 +20,13 @@ package org.apache.kylin.rest.controller.v2;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.rest.controller.NBasicController;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.service.ModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -65,7 +64,7 @@ public class NModelControllerV2 extends NBasicController {
                 modelService.getModels(modelAlias, project, exactMatch, null, Lists.newArrayList(), sortBy, reverse));
         models = modelService.addOldParams(project, models);
 
-        HashMap<String, Object> modelResponse = getDataResponse("models", models, offset, limit);
+        Map<String, Object> modelResponse = getDataResponse("models", models, offset, limit);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, modelResponse, "");
     }
 

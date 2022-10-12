@@ -58,7 +58,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -78,28 +80,28 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.streaming.KafkaConfigManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.exception.UnauthorizedException;
+import org.apache.kylin.rest.request.Validation;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ErrorResponse;
+import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.PagingUtil;
-import org.apache.kylin.common.persistence.transaction.TransactionException;
-import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.streaming.KafkaConfigManager;
-import org.apache.kylin.rest.request.Validation;
-import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -370,8 +372,8 @@ public class NBasicController {
         return isAdmin;
     }
 
-    public HashMap<String, Object> getDataResponse(String name, List<?> result, int offset, int limit) {
-        HashMap<String, Object> data = new HashMap<>();
+    public Map<String, Object> getDataResponse(String name, List<?> result, int offset, int limit) {
+        Map<String, Object> data = new HashMap<>();
         data.put(name, PagingUtil.cutPage(result, offset, limit));
         data.put("size", result.size());
         return data;
@@ -379,6 +381,19 @@ public class NBasicController {
 
     public List<?> getDataNoEnvelopeResponse(List<?> result, int offset, int limit) {
         return PagingUtil.cutPage(result, offset, limit);
+    }
+
+    public String getHost(String serverHost, String serverName) {
+        String host = KylinConfig.getInstanceFromEnv().getModelExportHost();
+        host = Optional.ofNullable(Optional.ofNullable(host).orElse(serverHost)).orElse(serverName);
+        return host;
+    }
+
+    public int getPort(Integer serverPort, Integer requestServerPort) {
+        Integer port = KylinConfig.getInstanceFromEnv().getModelExportPort() == -1 ? null
+                : KylinConfig.getInstanceFromEnv().getModelExportPort();
+        port = Optional.ofNullable(Optional.ofNullable(port).orElse(serverPort)).orElse(requestServerPort);
+        return port;
     }
 
     public String checkProjectName(String project) {
@@ -632,8 +647,8 @@ public class NBasicController {
         if (CollectionUtils.isEmpty(statuses)) {
             return;
         }
-        List<String> streamingJobsStatus = Arrays.asList(JobStatusEnum.STARTING.name(),
-                JobStatusEnum.RUNNING.name(), JobStatusEnum.STOPPING.name(), JobStatusEnum.ERROR.name(), JobStatusEnum.STOPPED.name());
+        List<String> streamingJobsStatus = Arrays.asList(JobStatusEnum.STARTING.name(), JobStatusEnum.RUNNING.name(),
+                JobStatusEnum.STOPPING.name(), JobStatusEnum.ERROR.name(), JobStatusEnum.STOPPED.name());
         for (String status : statuses) {
             if (!streamingJobsStatus.contains(status)) {
                 throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "statuses",

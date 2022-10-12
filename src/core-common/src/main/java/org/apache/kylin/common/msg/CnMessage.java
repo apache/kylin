@@ -1701,21 +1701,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getDuplicateModelColumnAndMeasureName() {
-        return "模型中的列名 %s 与度量名 %s 重复，无法导出 TDS。请去除重名后再重试。";
-    }
-
-    @Override
-    public String getDuplicateDimensionNameAndMeasureName() {
-        return "维度名 %s 与度量名 %s 重复，无法导出 TDS。请去除重名后再重试。";
-    }
-
-    @Override
-    public String getDuplicateDimensionColAndMeasureName() {
-        return "维度的列名 %s 与度量名 %s 重复，无法导出 TDS。请去除重名后再重试。";
-    }
-
-    @Override
     public String getProfilingNotEnabled() {
         return "构建火焰图" + PARAMETER_NOT_ENABLED;
     }
@@ -1749,7 +1734,6 @@ public class CnMessage extends Message {
     public String getProfilingCollectTimeout() {
         return "构建火焰图任务" + TASK_TIMEOUT;
     }
-
 
     @Override
     public String getSecondStorageIndexNotSupport() {

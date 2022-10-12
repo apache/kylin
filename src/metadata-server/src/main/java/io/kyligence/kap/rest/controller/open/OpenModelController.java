@@ -28,6 +28,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_MUL
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -70,8 +71,12 @@ import org.apache.kylin.rest.response.OpenGetIndexResponse.IndexDetail;
 import org.apache.kylin.rest.service.FusionIndexService;
 import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.service.ModelTdsService;
+import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.tool.bisync.SyncContext;
+import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -84,6 +89,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
@@ -107,6 +113,10 @@ public class OpenModelController extends NBasicController {
 
     @Autowired
     private NModelController modelController;
+
+    @Autowired
+    @Qualifier("modelTdsService")
+    private ModelTdsService tdsService;
 
     @Autowired
     private FusionIndexService fusionIndexService;
@@ -150,8 +160,8 @@ public class OpenModelController extends NBasicController {
             @RequestParam(value = "only_normal_dim", required = false, defaultValue = "true") boolean onlyNormalDim) {
         String projectName = checkProjectName(project);
         return modelController.getModels(modelId, modelAlias, exactMatch, projectName, owner, status, table, offset,
-                limit, sortBy, reverse, modelAliasOrOwner, Arrays.asList(ModelAttributeEnum.BATCH), lastModifyFrom,
-                lastModifyTo, onlyNormalDim);
+                limit, sortBy, reverse, modelAliasOrOwner, Collections.singletonList(ModelAttributeEnum.BATCH),
+                lastModifyFrom, lastModifyTo, onlyNormalDim);
     }
 
     @ApiOperation(value = "getIndexes", tags = { "AI" })
@@ -354,28 +364,24 @@ public class OpenModelController extends NBasicController {
         return modelController.updatePartitionSemantic(modelId, param);
     }
 
-    @ApiOperation(value = "validate tds export", tags = { "QE" })
-    @GetMapping(value = "/validate_export")
-    @ResponseBody
-    public EnvelopeResponse<Boolean> validateExport(@RequestParam(value = "model_name") String modelAlias,
-            @RequestParam(value = "project") String project) {
-        String projectName = checkProjectName(project);
-        String modelId = getModel(modelAlias, projectName).getId();
-        return modelController.validateExport(modelId, projectName);
-    }
-
     @ApiOperation(value = "export model", tags = { "QE" }, notes = "Add URL: {model}")
     @GetMapping(value = "/{model_name:.+}/export")
     @ResponseBody
     public void exportModel(@PathVariable("model_name") String modelAlias,
             @RequestParam(value = "project") String project, @RequestParam(value = "export_as") SyncContext.BI exportAs,
             @RequestParam(value = "element", required = false, defaultValue = "AGG_INDEX_COL") SyncContext.ModelElement element,
-            @RequestParam(value = "server_host", required = false) String host,
-            @RequestParam(value = "server_port", required = false) Integer port, HttpServletRequest request,
+            @RequestParam(value = "server_host", required = false) String serverHost,
+            @RequestParam(value = "server_port", required = false) Integer serverPort, HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         String projectName = checkProjectName(project);
         String modelId = getModel(modelAlias, projectName).getId();
-        modelController.exportModel(modelId, projectName, exportAs, element, host, port, request, response);
+        String host = getHost(serverHost, request.getServerName());
+        int port = getPort(serverPort, request.getServerPort());
+
+        SyncContext syncContext = tdsService.prepareSyncContext(projectName, modelId, exportAs, element, host, port);
+        SyncModel syncModel = tdsService.exportModel(syncContext);
+        tdsService.preCheckNameConflict(syncModel);
+        tdsService.dumpSyncModel(syncContext, syncModel, response);
     }
 
     @ApiOperation(value = "bi export", tags = { "QE" })
@@ -384,15 +390,30 @@ public class OpenModelController extends NBasicController {
     public void biExport(@RequestParam("model_name") String modelAlias, @RequestParam(value = "project") String project,
             @RequestParam(value = "export_as") SyncContext.BI exportAs,
             @RequestParam(value = "element", required = false, defaultValue = "AGG_INDEX_COL") SyncContext.ModelElement element,
-            @RequestParam(value = "server_host", required = false) String host,
-            @RequestParam(value = "server_port", required = false) Integer port,
+            @RequestParam(value = "server_host", required = false) String serverHost,
+            @RequestParam(value = "server_port", required = false) Integer serverPort,
             @RequestParam(value = "dimensions", required = false) List<String> dimensions,
             @RequestParam(value = "measures", required = false) List<String> measures, HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         String projectName = checkProjectName(project);
         String modelId = getModel(modelAlias, projectName).getId();
-        modelController.biExport(modelId, projectName, exportAs, element, host, port, dimensions, measures, request,
-                response);
+        String host = getHost(serverHost, request.getServerName());
+        int port = getPort(serverPort, request.getServerPort());
+        if (dimensions == null) {
+            // no need filter of given dimensions
+            dimensions = ImmutableList.of();
+        }
+        if (measures == null) {
+            // no need filter of given measures
+            measures = ImmutableList.of();
+        }
+
+        SyncContext syncContext = tdsService.prepareSyncContext(projectName, modelId, exportAs, element, host, port);
+        SyncModel syncModel = AclPermissionUtil.isAdmin()
+                ? tdsService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, dimensions, measures)
+                : tdsService.exportTDSDimensionsAndMeasuresByNormalUser(syncContext, dimensions, measures);
+        tdsService.preCheckNameConflict(syncModel);
+        tdsService.dumpSyncModel(syncContext, syncModel, response);
     }
 
     @ApiOperation(value = "updateModelName", tags = { "AI" })

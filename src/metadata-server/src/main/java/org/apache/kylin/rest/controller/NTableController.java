@@ -246,13 +246,12 @@ public class NTableController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, loadTableResponse, "");
     }
 
-
-    @ApiOperation(value = "loadAWSTablesCompatibleCrossAccount", tags = {"KC"},
-            notes = "Update Body: data_source_type, need_sampling, sampling_rows, data_source_properties")
+    @ApiOperation(value = "loadAWSTablesCompatibleCrossAccount", tags = {
+            "KC" }, notes = "Update Body: data_source_type, need_sampling, sampling_rows, data_source_properties")
     @PostMapping(value = "/compatibility/aws")
     @ResponseBody
-    public EnvelopeResponse<LoadTableResponse> loadAWSTablesCompatibleCrossAccount(@RequestBody AWSTableLoadRequest tableLoadRequest)
-            throws Exception {
+    public EnvelopeResponse<LoadTableResponse> loadAWSTablesCompatibleCrossAccount(
+            @RequestBody AWSTableLoadRequest tableLoadRequest) throws Exception {
         checkProjectName(tableLoadRequest.getProject());
         if (NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(tableLoadRequest.getProject()) == null) {
@@ -263,8 +262,8 @@ public class NTableController extends NBasicController {
         }
 
         LoadTableResponse loadTableResponse = new LoadTableResponse();
-        LoadTableResponse loadByTable = tableExtService.loadAWSTablesCompatibleCrossAccount(tableLoadRequest.getTables(),
-                tableLoadRequest.getProject());
+        LoadTableResponse loadByTable = tableExtService
+                .loadAWSTablesCompatibleCrossAccount(tableLoadRequest.getTables(), tableLoadRequest.getProject());
         loadTableResponse.getFailed().addAll(loadByTable.getFailed());
         loadTableResponse.getLoaded().addAll(loadByTable.getLoaded());
 
@@ -277,13 +276,13 @@ public class NTableController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, loadTableResponse, "");
     }
 
-    @ApiOperation(value = "updateLoadedAWSTableExtProp", tags = {"KC" }, notes = "Update Body: data_source_properties")
+    @ApiOperation(value = "updateLoadedAWSTableExtProp", tags = { "KC" }, notes = "Update Body: data_source_properties")
     @PutMapping(value = "/ext/prop/aws")
     @ResponseBody
-    public EnvelopeResponse<UpdateAWSTableExtDescResponse> updateLoadedAWSTableExtProp(@RequestBody UpdateAWSTableExtDescRequest request) {
+    public EnvelopeResponse<UpdateAWSTableExtDescResponse> updateLoadedAWSTableExtProp(
+            @RequestBody UpdateAWSTableExtDescRequest request) {
         checkProjectName(request.getProject());
-        if (NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(request.getProject()) == null) {
+        if (NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(request.getProject()) == null) {
             throw new KylinException(PROJECT_NOT_EXIST, request.getProject());
         }
         if (CollectionUtils.isEmpty(request.getTables())) {

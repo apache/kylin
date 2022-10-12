@@ -126,7 +126,7 @@ public class TableauDataSourceConverter implements BISyncModelConverter {
     }
 
     protected void fillTemplate(TableauDatasource tds, SyncModel syncModel) {
-        fillConnectionProperties(tds, syncModel.getHost(), syncModel.getPort(), syncModel.getProjectName(),
+        fillConnectionProperties(tds, syncModel.getHost(), syncModel.getPort(), syncModel.getProject(),
                 syncModel.getModelName());
         Map<String, Pair<Col, ColumnDef>> colMap = fillCols(tds, syncModel.getColumnDefMap());
         fillColumns(tds, colMap);

@@ -39,7 +39,6 @@ public class Message {
     private static final String LACK_PROJECT = "Please fill in the project parameters.";
     private static final String NON_EXIST_PROJECT = "Project %s doesn't exist. Please confirm and try again later.";
     private static final String DUP_MODCOL_MEASURE_NAME = "There are duplicated names among model column %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
-    private static final String DUP_DIM_MEASURE_NAME = "There are duplicated names among dimension name %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
     private static final String DUP_DIMCOL_MEASURE_NAME = "There are duplicated names among dimension column %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
     private static final String MODIFY_PERMISSION_OF_SUPER_ADMIN = "Super Admin’s permission can’t be modified.";
     private static final String ILLEGAL_AUTHORIZING_USER = "Unable to modify. Only Super Admin or System Admin with query permission can modify query permission.";
@@ -1303,6 +1302,7 @@ public class Message {
     public String getInvalidLowCardinalityDataType() {
         return SECOND_STORAGE_CARDINALITY_DATATYPE_INVALID;
     }
+
     public String getJobRestartFailed() {
         return "Tiered storage task doesn't support restart.\n";
     }
@@ -1523,18 +1523,6 @@ public class Message {
 
     public String getInvalidMergeSegmentWithoutDFS() {
         return "The indexes included in the selected segments are not loaded to HDFS storage/object storage. Please ensure the indexes are loaded into HDFS storage and try merging again.";
-    }
-
-    public String getDuplicateModelColumnAndMeasureName() {
-        return DUP_MODCOL_MEASURE_NAME;
-    }
-
-    public String getDuplicateDimensionNameAndMeasureName() {
-        return DUP_DIM_MEASURE_NAME;
-    }
-
-    public String getDuplicateDimensionColAndMeasureName() {
-        return DUP_DIMCOL_MEASURE_NAME;
     }
 
     public String getProfilingNotEnabled() {

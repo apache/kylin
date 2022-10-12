@@ -21,9 +21,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class SyncModel {
 
-    private String projectName;
+    private String project;
 
     private String modelName;
 
@@ -38,69 +43,4 @@ public class SyncModel {
     private List<MeasureDef> metrics;
 
     private Set<String[]> hierarchies;
-
-    public JoinTreeNode getJoinTree() {
-        return joinTree;
-    }
-
-    public void setJoinTree(JoinTreeNode joinTree) {
-        this.joinTree = joinTree;
-    }
-
-    public String getProjectName() {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
-
-    public String getModelName() {
-        return modelName;
-    }
-
-    public void setModelName(String modelName) {
-        this.modelName = modelName;
-    }
-
-    public Map<String, ColumnDef> getColumnDefMap() {
-        return columnDefMap;
-    }
-
-    public void setColumnDefMap(Map<String, ColumnDef> columnDefMap) {
-        this.columnDefMap = columnDefMap;
-    }
-
-    public Set<String[]> getHierarchies() {
-        return hierarchies;
-    }
-
-    public void setHierarchies(Set<String[]> hierarchies) {
-        this.hierarchies = hierarchies;
-    }
-
-    public List<MeasureDef> getMetrics() {
-        return metrics;
-    }
-
-    public void setMetrics(List<MeasureDef> metrics) {
-        this.metrics = metrics;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public String getPort() {
-        return port;
-    }
-
-    public void setPort(String port) {
-        this.port = port;
-    }
-
 }
