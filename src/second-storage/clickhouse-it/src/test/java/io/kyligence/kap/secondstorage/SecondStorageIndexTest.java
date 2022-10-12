@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -348,8 +349,8 @@ public class SecondStorageIndexTest implements JobWaiter {
         String jobId = updatePrimaryIndexAndSecondaryIndex(modelName, null, Sets.newHashSet());
         waitJobEnd(getProject(), jobId);
 
-        assertThrows(MsgPicker.getMsg().getSecondStorageConcurrentOperate(), KylinException.class,
-                () -> updatePrimaryIndexAndSecondaryIndex(modelName, null, secondaryIndex));
+        assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageProjectJobExists(), getProject()),
+                KylinException.class, () -> updatePrimaryIndexAndSecondaryIndex(modelName, null, secondaryIndex));
         clickhouse[0].start();
         ClickHouseUtils.internalConfigClickHouse(clickhouse, replica);
 
@@ -562,11 +563,9 @@ public class SecondStorageIndexTest implements JobWaiter {
         assertEquals(1, tableEntity.getSecondaryIndexColumns().size());
         assertTrue(tableEntity.getSecondaryIndexColumns().contains(0));
 
-        buildIncrementalLoadQuery("2012-01-02", "2012-01-03",
-                new HashSet<>(
-                        NIndexPlanManager.getInstance(getConfig(), getProject()).getIndexPlan(modelId).getAllLayouts()),
+        buildIncrementalLoadQuery("2012-01-02", "2012-01-03", new HashSet<>(getIndexPlan(modelId).getAllLayouts()),
                 modelId);
-        waitAllJobFinish();
+        waitAllJoEnd();
 
         for (TableData tableData : getTableFlow(modelId).getTableDataList()) {
             for (TablePartition partition : tableData.getPartitions()) {
