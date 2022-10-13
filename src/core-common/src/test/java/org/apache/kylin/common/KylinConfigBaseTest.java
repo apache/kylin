@@ -1359,6 +1359,18 @@ class KylinConfigBaseTest {
         // Reset to prevent impacting other tests
         config.setProperty(WRITING_CLUSTER_WORKING_DIR, "");
     }
+
+    @Test
+    void testGetEpochRenewTimeoutRate() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        Assertions.assertEquals(0.8, config.getEpochRenewTimeoutRate());
+        config.setProperty("kylin.server.leader-race.heart-beat-timeout-rate", "0.0");
+        Assertions.assertEquals(0.0, config.getEpochRenewTimeoutRate());
+        config.setProperty("kylin.server.leader-race.heart-beat-timeout-rate", "0");
+        Assertions.assertEquals(0.0, config.getEpochRenewTimeoutRate());
+        config.setProperty("kylin.server.leader-race.heart-beat-timeout-rate", "1");
+        Assertions.assertEquals(1.0, config.getEpochRenewTimeoutRate());
+    }
 }
 
 class EnvironmentUpdateUtils {

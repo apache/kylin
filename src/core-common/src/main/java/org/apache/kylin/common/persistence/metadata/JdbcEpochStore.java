@@ -21,6 +21,7 @@ import static org.apache.kylin.common.exception.CommonErrorCode.FAILED_UPDATE_ME
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.datasourceParameters;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.isTableExists;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.withTransaction;
+import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.withTransactionTimeout;
 
 import java.io.InputStream;
 import java.sql.PreparedStatement;
@@ -265,5 +266,10 @@ public class JdbcEpochStore extends EpochStore {
     @Override
     public <T> T executeWithTransaction(Callback<T> callback) {
         return withTransaction(transactionManager, callback::handle);
+    }
+
+    @Override
+    public <T> T executeWithTransaction(Callback<T> callback, int timeout) {
+        return withTransactionTimeout(transactionManager, callback::handle, timeout);
     }
 }
