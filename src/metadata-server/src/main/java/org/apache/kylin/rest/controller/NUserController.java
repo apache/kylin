@@ -54,6 +54,7 @@ import org.apache.kylin.common.persistence.transaction.AclTCRRevokeEventNotifier
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.config.initialize.AfterMetadataReadyEvent;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.UnauthorizedException;
@@ -101,7 +102,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import org.apache.kylin.metadata.user.ManagedUser;
 import io.swagger.annotations.ApiOperation;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -423,21 +423,15 @@ public class NUserController extends NBasicController implements ApplicationList
             throw new KylinException(PERMISSION_DENIED, msg.getPermissionDenied());
         }
         accessService.checkDefaultAdmin(username, true);
-        val oldPassword = pwdBase64Decode(StringUtils.isEmpty(user.getPassword()) ? StringUtils.EMPTY : user.getPassword());
-        val newPassword = pwdBase64Decode(user.getNewPassword());
 
         checkUsername(username);
-
-        checkPasswordLength(newPassword);
-
-        checkPasswordCharacter(newPassword);
 
         ManagedUser existingUser = getManagedUser(username);
         if (existingUser == null) {
             throw new KylinException(USER_NOT_EXIST, String.format(Locale.ROOT, msg.getUserNotFound(), username));
         }
         val actualOldPassword = existingUser.getPassword();
-
+        val oldPassword = pwdBase64Decode(StringUtils.isEmpty(user.getPassword()) ? StringUtils.EMPTY : user.getPassword());
         // when reset oneself's password (includes ADMIN users), check old password
         if (StringUtils.equals(getPrincipal(), username)) {
             checkRequiredArg("password", user.getPassword());
@@ -447,6 +441,9 @@ public class NUserController extends NBasicController implements ApplicationList
         }
 
         checkRequiredArg("new_password", user.getNewPassword());
+        val newPassword = pwdBase64Decode(StringUtils.isEmpty(user.getNewPassword()) ? StringUtils.EMPTY : user.getNewPassword());
+        checkPasswordLength(newPassword);
+        checkPasswordCharacter(newPassword);
 
         if (newPassword.equals(oldPassword)) {
             throw new KylinException(FAILED_UPDATE_PASSWORD, msg.getNewPasswordSameAsOld());
