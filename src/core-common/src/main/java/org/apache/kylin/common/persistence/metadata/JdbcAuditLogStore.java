@@ -200,7 +200,7 @@ public class JdbcAuditLogStore implements AuditLogStore {
                             }
                             return null;
                         }).filter(Objects::nonNull).collect(Collectors.toList())),
-                TransactionDefinition.ISOLATION_REPEATABLE_READ, beforeCommit);
+                TransactionDefinition.ISOLATION_REPEATABLE_READ, beforeCommit, TransactionDefinition.TIMEOUT_DEFAULT);
     }
 
     public void batchInsert(List<AuditLog> auditLogs) {

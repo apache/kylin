@@ -157,4 +157,9 @@ public class FileEpochStore extends EpochStore {
 
         return null;
     }
+
+    @Override
+    public <T> T executeWithTransaction(Callback<T> callback, int timeout) {
+        return executeWithTransaction(callback);
+    }
 }

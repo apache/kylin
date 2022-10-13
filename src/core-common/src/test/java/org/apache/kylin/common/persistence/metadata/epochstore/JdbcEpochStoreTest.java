@@ -19,17 +19,22 @@ package org.apache.kylin.common.persistence.metadata.epochstore;
 
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.datasourceParameters;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
+import static org.awaitility.Awaitility.await;
+
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.apache.kylin.common.persistence.metadata.Epoch;
 import org.apache.kylin.junit.annotation.OverwriteProp;
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.TransactionException;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 
 import lombok.val;
 
@@ -55,34 +60,62 @@ public final class JdbcEpochStoreTest extends AbstractEpochStoreTest {
     }
 
     @Test
-    public void testExecuteWithTransaction_RollBack() {
+    void testExecuteWithTransaction_RollBack() {
 
-        Epoch e1 = new Epoch();
-        e1.setEpochTarget("test1");
-        e1.setCurrentEpochOwner("owner1");
-        e1.setEpochId(1);
-        e1.setLastEpochRenewTime(System.currentTimeMillis());
-
+        Epoch mockEpoch = getMockEpoch("test1", "owner1");
         try {
             epochStore.executeWithTransaction(() -> {
-                epochStore.insert(e1);
-
                 //insert success
-                Assert.assertEquals(epochStore.list().size(), 1);
-                Assert.assertTrue(compareEpoch(e1, epochStore.list().get(0)));
+                epochStore.insert(mockEpoch);
+                Assertions.assertEquals(1, epochStore.list().size());
+                Assertions.assertTrue(compareEpoch(mockEpoch, epochStore.list().get(0)));
 
                 if (epochStore.list().size() == 1) {
                     throw new RuntimeException("mock transaction error");
                 }
-
                 return null;
             });
-
-            Assert.fail();
+            Assertions.fail();
         } catch (RuntimeException e) {
-            Assert.assertEquals(Throwables.getRootCause(e).getMessage(), "mock transaction error");
-            Assert.assertEquals(epochStore.list().size(), 0);
+            Assertions.assertEquals("mock transaction error", Throwables.getRootCause(e).getMessage());
+            Assertions.assertEquals(0, epochStore.list().size());
         }
+    }
 
+    @Test
+    void testExecuteWithTransactionTimeout_RollBack() {
+
+        Epoch mockEpoch = getMockEpoch("test1", "owner1");
+        // before transaction
+        Assertions.assertEquals(0, epochStore.list().size());
+        try {
+            epochStore.executeWithTransaction(() -> {
+                // mock transaction timeout
+                await().pollDelay(1100, TimeUnit.MILLISECONDS).until(() -> true);
+                epochStore.insertBatch(Lists.newArrayList(mockEpoch));
+                return null;
+            }, 1);
+            Assertions.fail();
+        } catch (RuntimeException e) {
+            Throwable rootCause = Throwables.getRootCause(e);
+            Assertions.assertTrue(rootCause instanceof TransactionException);
+            Assertions.assertTrue(rootCause.getMessage().contains("Transaction timed out"));
+        }
+        // rollback result
+        Assertions.assertEquals(0, epochStore.list().size());
+    }
+
+    @Test
+    void testExecuteWithTransactionTimeoutSuccess() {
+
+        Epoch mockEpoch = getMockEpoch("test1", "owner1");
+        Assertions.assertEquals(0, epochStore.list().size());
+        epochStore.executeWithTransaction(() -> {
+            await().pollDelay(1100, TimeUnit.MILLISECONDS).until(() -> true);
+            epochStore.insertBatch(Lists.newArrayList(mockEpoch));
+            Assertions.assertEquals(1, epochStore.list().size());
+            return null;
+        });
+        Assertions.assertEquals(1, epochStore.list().size());
     }
 }

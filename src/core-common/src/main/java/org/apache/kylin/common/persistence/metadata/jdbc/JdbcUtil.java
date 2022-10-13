@@ -53,19 +53,27 @@ public class JdbcUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(JdbcUtil.class);
 
+    public static <T> T withTransactionTimeout(DataSourceTransactionManager transactionManager, Callback<T> consumer,
+            int timeout) {
+        return withTransaction(transactionManager, consumer, TransactionDefinition.ISOLATION_REPEATABLE_READ, null,
+                timeout);
+    }
+
     public static <T> T withTransaction(DataSourceTransactionManager transactionManager, Callback<T> consumer) {
         return withTransaction(transactionManager, consumer, TransactionDefinition.ISOLATION_REPEATABLE_READ);
     }
 
     public static <T> T withTransaction(DataSourceTransactionManager transactionManager, Callback<T> consumer,
             int isolationLevel) {
-        return withTransaction(transactionManager, consumer, isolationLevel, null);
+        return withTransaction(transactionManager, consumer, isolationLevel, null,
+                TransactionDefinition.TIMEOUT_DEFAULT);
     }
 
     public static <T> T withTransaction(DataSourceTransactionManager transactionManager, Callback<T> consumer,
-            int isolationLevel, Callback<T> beforeCommit) {
+            int isolationLevel, Callback<T> beforeCommit, int timeout) {
         val definition = new DefaultTransactionDefinition();
         definition.setIsolationLevel(isolationLevel);
+        definition.setTimeout(timeout);
         val status = transactionManager.getTransaction(definition);
         try {
             T result = consumer.handle();
