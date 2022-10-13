@@ -31,11 +31,7 @@ import io.kyligence.kap.guava20.shaded.common.collect.Lists;
 import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import io.kyligence.kap.secondstorage.metadata.annotation.TableDefinition;
 
-@JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @TableDefinition
 public class TableEntity implements Serializable, WithLayout {
 
@@ -67,13 +63,16 @@ public class TableEntity implements Serializable, WithLayout {
             table.layoutID = layoutEntity.getId();
             if (primaryIndexColumns != null) {
                 table.primaryIndexColumns = primaryIndexColumns;
+                table.primaryIndexLastModified = System.currentTimeMillis();
             }
             if (secondaryIndexColumns != null) {
                 table.secondaryIndexColumns = secondaryIndexColumns;
+                table.secondaryIndexLastModified = System.currentTimeMillis();
             }
             return table;
         }
     }
+
     public static Builder builder() {
         return new Builder();
     }

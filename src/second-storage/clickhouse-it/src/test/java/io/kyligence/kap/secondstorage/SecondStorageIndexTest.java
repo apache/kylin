@@ -488,6 +488,16 @@ public class SecondStorageIndexTest implements JobWaiter {
             assertEquals(SecondStorageIndexLoadStatus.ALL, r.getSecondaryIndexStatus());
         });
 
+        secondStorageService.sizeInNode(getProject());
+        EnvelopeResponse<List<SecondStorageIndexResponse>> res3 = secondStorageEndpoint.listIndex(getProject(),
+                modelName);
+        assertEquals(KylinException.CODE_SUCCESS, res3.getCode());
+        assertEquals(1, res3.getData().size());
+        res3.getData().forEach(r -> {
+            assertEquals(SecondStorageIndexLoadStatus.ALL, r.getPrimaryIndexStatus());
+            assertEquals(SecondStorageIndexLoadStatus.ALL, r.getSecondaryIndexStatus());
+        });
+
         secondStorageService.triggerSegmentsClean(getProject(), modelId,
                 getDataFlow(modelId).getSegments().stream().map(NDataSegment::getId).collect(Collectors.toSet()));
         waitAllJoEnd();
