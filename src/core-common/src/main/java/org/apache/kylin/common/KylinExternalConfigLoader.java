@@ -33,11 +33,11 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import javax.annotation.Nonnull;
 
-import com.google.common.collect.Maps;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.slf4j.Logger;
@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
 
@@ -153,7 +154,7 @@ public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
     @Override
     public String getConfig() {
         StringWriter writer = new StringWriter();
-        for (Map.Entry<String, String> entry: properties.entrySet()) {
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
             writer.append(entry.getKey() + "=" + entry.getValue()).append("\n");
         }
         return writer.toString();
@@ -161,7 +162,7 @@ public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
 
     @Override
     public String getProperty(String key) {
-        return properties.get(key);
+        return Objects.toString(properties.get(key), null);
     }
 
     /**
@@ -176,7 +177,7 @@ public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
     }
 
     @Override
-    public ImmutableMap getPropertyEntries() {
+    public ImmutableMap<Object, Object> getPropertyEntries() {
         return propertyEntries;
     }
 }
