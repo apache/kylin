@@ -1372,6 +1372,14 @@ class KylinConfigBaseTest {
         config.setProperty("kylin.server.leader-race.heart-beat-timeout-rate", "1");
         Assertions.assertEquals(1.0, config.getEpochRenewTimeoutRate());
     }
+
+    @Test
+    void testGetSubstitutor() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        val sub1 = config.getSubstitutor();
+        val sub2 = config.getSubstitutor();
+        Assertions.assertSame(sub1, sub2);
+    }
 }
 
 class EnvironmentUpdateUtils {
