@@ -24,21 +24,17 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
-import org.junit.Rule;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class CalciteParserTest {
 
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 
     @Test
-    void testNoTableNameExists() throws SqlParseException {
+    void testNoTableNameExists() {
         String expr1 = "a + b";
         assertEquals("x.a + x.b", CalciteParser.insertAliasInExpr(expr1, "x"));
 
@@ -50,7 +46,7 @@ public class CalciteParserTest {
     }
 
     @Test
-    void testTableNameExists1() throws SqlParseException {
+    void testTableNameExists1() {
         String expr1 = "a + x.b";
 
         Exception ex = Assertions.assertThrows(
@@ -61,7 +57,7 @@ public class CalciteParserTest {
     }
 
     @Test
-    void testTableNameExists2() throws SqlParseException {
+    void testTableNameExists2() {
         String expr1 = "a + year(x.b)";
 
         Exception ex = Assertions.assertThrows(
@@ -72,7 +68,7 @@ public class CalciteParserTest {
     }
 
     @Test
-    void testTableNameExists3() throws SqlParseException {
+    void testTableNameExists3() {
         String expr1 = "a + hiveudf(x.b)";
 
         Exception ex = Assertions.assertThrows(
