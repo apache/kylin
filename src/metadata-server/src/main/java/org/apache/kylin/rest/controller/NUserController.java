@@ -423,8 +423,6 @@ public class NUserController extends NBasicController implements ApplicationList
             throw new KylinException(PERMISSION_DENIED, msg.getPermissionDenied());
         }
         accessService.checkDefaultAdmin(username, true);
-        val oldPassword = pwdBase64Decode(StringUtils.isEmpty(user.getPassword()) ? StringUtils.EMPTY : user.getPassword());
-        val newPassword = pwdBase64Decode(user.getNewPassword());
 
         checkUsername(username);
 
@@ -443,6 +441,9 @@ public class NUserController extends NBasicController implements ApplicationList
         }
 
         checkRequiredArg("new_password", user.getNewPassword());
+        val newPassword = pwdBase64Decode(StringUtils.isEmpty(user.getNewPassword()) ? StringUtils.EMPTY : user.getNewPassword());
+        checkPasswordLength(newPassword);
+        checkPasswordCharacter(newPassword);
 
         if (newPassword.equals(oldPassword)) {
             throw new KylinException(FAILED_UPDATE_PASSWORD, msg.getNewPasswordSameAsOld());
