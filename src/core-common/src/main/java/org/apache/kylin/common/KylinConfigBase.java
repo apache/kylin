@@ -179,8 +179,8 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * only reload properties
      */
-    volatile PropertiesDelegate properties;
-    volatile StrSubstitutor substitutor;
+    final PropertiesDelegate properties;
+    final transient StrSubstitutor substitutor;
 
     protected KylinConfigBase(IExternalConfigLoader configLoader) {
         this(new Properties(), configLoader);
@@ -190,6 +190,7 @@ public abstract class KylinConfigBase implements Serializable {
         this(props, false, configLoader);
     }
 
+    @SuppressWarnings("rawtypes")
     protected KylinConfigBase(Properties props, boolean force, IExternalConfigLoader configLoader) {
         if (props instanceof PropertiesDelegate) {
             this.properties = (PropertiesDelegate) props;
@@ -220,12 +221,12 @@ public abstract class KylinConfigBase implements Serializable {
      * @return
      */
     protected Properties getProperties(Collection<String> propertyKeys) {
-        final StrSubstitutor substitutor = getSubstitutor();
+        val subStitutorTmp = getSubstitutor();
 
         Properties result = new Properties();
         for (Entry<Object, Object> entry : this.properties.entrySet()) {
             if (propertyKeys == null || propertyKeys.contains(entry.getKey())) {
-                result.put(entry.getKey(), substitutor.replace((String) entry.getValue()));
+                result.put(entry.getKey(), subStitutorTmp.replace((String) entry.getValue()));
             }
         }
 

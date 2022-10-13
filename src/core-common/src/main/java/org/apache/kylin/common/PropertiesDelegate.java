@@ -29,12 +29,13 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import io.kyligence.config.core.loader.IExternalConfigLoader;
+import javax.validation.constraints.NotNull;
+
 import org.apache.kylin.common.util.CompositeMapView;
 
 import com.google.common.collect.Maps;
 
-import io.kyligence.config.external.loader.NacosExternalConfigLoader;
+import io.kyligence.config.core.loader.IExternalConfigLoader;
 import lombok.EqualsAndHashCode;
 
 /**
@@ -42,28 +43,28 @@ import lombok.EqualsAndHashCode;
  * A few functions of hashtable are disabled.
  * In the future, we should replace the java.util.Properties
  */
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = false)
+@SuppressWarnings("sync-override")
 public class PropertiesDelegate extends Properties {
 
     @EqualsAndHashCode.Include
-    private final ConcurrentMap<Object, Object> properties = Maps.newConcurrentMap();
+    private final transient ConcurrentMap<Object, Object> properties = Maps.newConcurrentMap();
 
     @EqualsAndHashCode.Include
     private final transient IExternalConfigLoader configLoader;
 
-    private final Map delegation;
+    private final transient Map<Object, Object> delegation;
 
     public PropertiesDelegate(Properties properties, IExternalConfigLoader configLoader) {
         this.properties.putAll(properties);
         this.configLoader = configLoader;
         if (configLoader == null) {
             this.delegation = this.properties;
-        } else if (configLoader instanceof KylinExternalConfigLoader) {
-            this.delegation = new CompositeMapView(((ICachedExternalConfigLoader)this.configLoader).getPropertyEntries(), this.properties);
-        } else if (configLoader instanceof NacosExternalConfigLoader) {
-            this.delegation = new CompositeMapView((this.configLoader).getProperties(), this.properties);
+        } else if (configLoader instanceof ICachedExternalConfigLoader) {
+            this.delegation = new CompositeMapView<>(
+                    ((ICachedExternalConfigLoader) this.configLoader).getPropertyEntries(), this.properties);
         } else {
-            this.delegation = new CompositeMapView((this.configLoader).getProperties(), this.properties);
+            this.delegation = new CompositeMapView<>((this.configLoader).getProperties(), this.properties);
         }
     }
 
@@ -110,7 +111,6 @@ public class PropertiesDelegate extends Properties {
         return delegation.size();
     }
 
-
     @Override
     public boolean isEmpty() {
         return delegation.isEmpty();
@@ -142,18 +142,13 @@ public class PropertiesDelegate extends Properties {
     }
 
     @Override
-    public void putAll(Map<?, ?> t) {
+    public void putAll(@NotNull Map<?, ?> t) {
         properties.putAll(t);
     }
 
     @Override
     public void clear() {
         properties.clear();
-    }
-
-    @Override
-    public Object clone() {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -213,13 +208,12 @@ public class PropertiesDelegate extends Properties {
     }
 
     @Override
-    public synchronized Object compute(Object key,
-            BiFunction<? super Object, ? super Object, ? extends Object> remappingFunction) {
+    public Object compute(Object key, BiFunction<? super Object, ? super Object, ? extends Object> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public synchronized Object merge(Object key, Object value,
+    public Object merge(Object key, Object value,
             BiFunction<? super Object, ? super Object, ? extends Object> remappingFunction) {
         throw new UnsupportedOperationException();
     }

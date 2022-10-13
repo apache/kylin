@@ -23,5 +23,5 @@ import com.google.common.collect.ImmutableMap;
 import io.kyligence.config.core.loader.IExternalConfigLoader;
 
 public interface ICachedExternalConfigLoader extends IExternalConfigLoader {
-    ImmutableMap getPropertyEntries();
+    ImmutableMap<Object, Object> getPropertyEntries();
 }
