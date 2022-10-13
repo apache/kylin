@@ -349,7 +349,7 @@ public class SecondStorageIndexTest implements JobWaiter {
         String jobId = updatePrimaryIndexAndSecondaryIndex(modelName, null, Sets.newHashSet());
         waitJobEnd(getProject(), jobId);
 
-        assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageProjectJobExists(), getProject()),
+        assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageConcurrentOperate(), getProject()),
                 KylinException.class, () -> updatePrimaryIndexAndSecondaryIndex(modelName, null, secondaryIndex));
         clickhouse[0].start();
         ClickHouseUtils.internalConfigClickHouse(clickhouse, replica);
