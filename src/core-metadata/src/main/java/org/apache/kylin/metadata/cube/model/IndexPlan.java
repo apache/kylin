@@ -431,7 +431,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
             copy.getLayouts().forEach(layout -> layout.setInProposing(layouts.get(layout.getId()).isInProposing()));
             retSubscript++;
         }
-        for (LayoutEntity ruleBasedLayout : ruleBasedLayouts) {
+        for (LayoutEntity ruleBasedLayout : getRuleBaseLayouts()) {
             val ruleRelatedIndex = ruleBasedLayout.getIndex();
             if (!retSubscriptMap.containsKey(ruleRelatedIndex.getId())) {
                 val copy = JsonUtil.deepCopyQuietly(ruleRelatedIndex, IndexEntity.class);
@@ -480,7 +480,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         for (IndexEntity indexEntity : indexes) {
             indexEntity.getLayouts().forEach(layout -> classifyByIndexId(layout, resultMap, layout.isToBeDeleted()));
         }
-        for (LayoutEntity ruleBasedLayout : ruleBasedLayouts) {
+        for (LayoutEntity ruleBasedLayout : getRuleBaseLayouts()) {
             classifyByIndexId(ruleBasedLayout, resultMap, false);
         }
         for (IndexEntity indexEntity : toBeDeletedIndexes) {
@@ -518,6 +518,16 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
     }
 
     public List<LayoutEntity> getRuleBaseLayouts() {
+        // If use the cost base planner, there is no rule base layout to return
+        if (config.isCubePlannerEnabled()) {
+            return Lists.newArrayList();
+        } else {
+            return isCachedAndShared ? ImmutableList.copyOf(ruleBasedLayouts) : ruleBasedLayouts;
+        }
+    }
+
+    public List<LayoutEntity> getRuleBaseLayoutsWithoutPlannerCheck() {
+        // Return the rule base layout without the checker for planner
         return isCachedAndShared ? ImmutableList.copyOf(ruleBasedLayouts) : ruleBasedLayouts;
     }
 
@@ -594,7 +604,6 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         this.ruleBasedIndex = ruleBasedIndex;
 
         Set<LayoutEntity> targetSet = this.ruleBasedIndex.genCuboidLayouts();
-
         this.ruleBasedLayouts = Lists.newArrayList(targetSet);
         if (markToBeDeleted && CollectionUtils.isNotEmpty(layoutsNotIn(targetSet, originSet))) {
             Set<LayoutEntity> toBeDeletedSet = layoutsNotIn(originSet, targetSet);
