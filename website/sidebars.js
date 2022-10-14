@@ -944,7 +944,7 @@ const sidebars = {
                 },
                 {
                     type: 'doc',
-                    id: 'development/coding_convension'
+                    id: 'development/coding_convention'
                 },
                 {
                     type: 'doc',
