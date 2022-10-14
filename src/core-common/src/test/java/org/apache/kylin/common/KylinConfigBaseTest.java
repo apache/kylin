@@ -1258,6 +1258,7 @@ class KylinConfigBaseTest {
     @Test
     void testIsHdfsMetricsPeriodicCalculationEnabled() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.metrics.hdfs-periodic-calculation-enabled", "false");
         assertFalse(config.isHdfsMetricsPeriodicCalculationEnabled());
         config.setProperty("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
         assertTrue(config.isHdfsMetricsPeriodicCalculationEnabled());

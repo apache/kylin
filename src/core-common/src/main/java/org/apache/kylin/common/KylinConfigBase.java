@@ -3616,7 +3616,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isHdfsMetricsPeriodicCalculationEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.metrics.hdfs-periodic-calculation-enabled", FALSE));
+        return Boolean.parseBoolean(getOptional("kylin.metrics.hdfs-periodic-calculation-enabled", TRUE));
     }
 
     public long getHdfsMetricsPeriodicCalculationInterval() {
