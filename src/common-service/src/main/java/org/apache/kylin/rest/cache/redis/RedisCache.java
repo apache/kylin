@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.rest.cache;
+package org.apache.kylin.rest.cache.redis;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -34,6 +34,7 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.util.CompressionUtils;
+import org.apache.kylin.rest.cache.KylinCache;
 import org.apache.kylin.rest.util.SerializeUtil;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.ThrowableUtils;
@@ -67,7 +68,7 @@ public class RedisCache implements KylinCache {
 
     private static final String NX = "NX";
     private static final String XX = "XX";
-    private static final String PREFIX = "Kyligence-";
+    private static final String PREFIX = "Kylin-";
     private static final String CHARSET_NAME = "UTF-8";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final String SCAN_POINTER_START_STR = new String(ScanParams.SCAN_POINTER_START_BINARY, CHARSET);
