@@ -702,7 +702,7 @@ public class ComputedColumnUtil {
                 if (checkedCC.contains(cc)) {
                     continue;
                 }
-                ccUsedColsMap.put(cc.getColumnName(), ComputedColumnUtil.getCCUsedColsWithModel(model, cc));
+                ccUsedColsMap.put(cc.getIdentName(), ComputedColumnUtil.getCCUsedColsWithModel(model, cc));
             }
 
             // parse inner expression might cause error, for example timestampdiff
@@ -712,7 +712,7 @@ public class ComputedColumnUtil {
                     continue;
                 }
                 val ccUsedSourceCols = Sets.<String> newHashSet();
-                collectCCUsedSourceCols(cc.getColumnName(), ccUsedColsMap, ccUsedSourceCols);
+                collectCCUsedSourceCols(cc.getIdentName(), ccUsedColsMap, ccUsedSourceCols);
                 ccUsedSourceCols.removeIf(checkedCCUsedSourceCols::contains);
                 if (ccUsedSourceCols.isEmpty() || isColumnAuthorizedFunc.test(ccUsedSourceCols)) {
                     authorizedCC.add(cc);
@@ -726,15 +726,11 @@ public class ComputedColumnUtil {
 
     public static void collectCCUsedSourceCols(String ccColName, Map<String, Set<String>> ccUsedColsMap,
             Set<String> ccUsedSourceCols) {
-        String ccColNameWithoutDot = ccColName.contains(".") ? ccColName.substring(ccColName.lastIndexOf(".") + 1)
-                : ccColName;
-
-        if (!ccUsedColsMap.containsKey(ccColNameWithoutDot)) {
+        if (!ccUsedColsMap.containsKey(ccColName)) {
             ccUsedSourceCols.add(ccColName);
             return;
         }
-
-        for (String usedColumn : ccUsedColsMap.get(ccColNameWithoutDot)) {
+        for (String usedColumn : ccUsedColsMap.get(ccColName)) {
             collectCCUsedSourceCols(usedColumn, ccUsedColsMap, ccUsedSourceCols);
         }
     }
