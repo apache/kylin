@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.rest.cache.KylinCache;
-import org.apache.kylin.rest.cache.RedisCache;
+import org.apache.kylin.rest.cache.redis.RedisCache;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.junit.After;

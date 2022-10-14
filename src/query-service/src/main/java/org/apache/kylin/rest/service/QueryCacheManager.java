@@ -19,7 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.util.CheckUtil.checkCondition;
-import static org.apache.kylin.rest.cache.RedisCache.checkRedisClient;
+import static org.apache.kylin.rest.cache.redis.RedisCache.checkRedisClient;
 
 import java.util.List;
 
@@ -34,7 +34,8 @@ import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.cache.KylinCache;
 import org.apache.kylin.rest.cache.KylinEhCache;
-import org.apache.kylin.rest.cache.RedisCache;
+import org.apache.kylin.rest.cache.memcached.CompositeMemcachedCache;
+import org.apache.kylin.rest.cache.redis.RedisCache;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.response.TableMetaCacheResult;
@@ -73,6 +74,8 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         if (kylinConfig.isRedisEnabled()) {
             kylinCache = RedisCache.getInstance();
+        } else if (kylinConfig.isMemcachedEnabled()) {
+            kylinCache = CompositeMemcachedCache.getInstance();
         } else {
             kylinCache = KylinEhCache.getInstance();
         }
@@ -185,7 +188,7 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
 
         cached.setStorageCacheUsed(true);
         QueryContext.current().getQueryTagInfo().setStorageCacheUsed(true);
-        String cacheType = KylinConfig.getInstanceFromEnv().isRedisEnabled() ? "Redis" : "Ehcache";
+        String cacheType = getCacheType();
         cached.setStorageCacheType(cacheType);
         QueryContext.current().getQueryTagInfo().setStorageCacheType(cacheType);
 
@@ -199,6 +202,16 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
         }
 
         return cached;
+    }
+
+    private String getCacheType() {
+        if (KylinConfig.getInstanceFromEnv().isRedisEnabled()) {
+            return "Redis";
+        } else if (KylinConfig.getInstanceFromEnv().isMemcachedEnabled()) {
+            return "Memcached";
+        } else {
+            return "Ehcache";
+        }
     }
 
     public SQLResponse searchFailedCache(SQLRequest sqlRequest) {
