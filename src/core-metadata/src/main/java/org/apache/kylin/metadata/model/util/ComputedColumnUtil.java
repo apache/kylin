@@ -626,10 +626,10 @@ public class ComputedColumnUtil {
             return exceptionList;
         }
 
-        public Pair<List<ComputedColumnDesc>, List<KylinException>> getAdjustedCCList(
+        public Pair<List<ComputedColumnDesc>, List<CCConflictDetail>> getAdjustedCCList(
                 List<ComputedColumnDesc> inputCCDescList) {
             List<ComputedColumnDesc> resultCCDescList = Lists.newArrayList();
-            List<KylinException> adjustExceptionList = Lists.newArrayList();
+            List<CCConflictDetail> adjustDetails = Lists.newArrayList();
 
             for (ComputedColumnDesc ccDesc : inputCCDescList) {
                 for (CCConflictDetail detail : this.sameExprDiffNameDetails) {
@@ -638,13 +638,13 @@ public class ComputedColumnUtil {
                     if (newCC.equals(ccDesc)) {
                         logger.info("adjust cc name {} to {}", newCC.getColumnName(), existingCC.getColumnName());
                         ccDesc.setColumnName(existingCC.getColumnName());
-                        adjustExceptionList.add(detail.getAdjustKylinException());
+                        adjustDetails.add(detail);
                         break;
                     }
                 }
                 resultCCDescList.add(ccDesc);
             }
-            return Pair.newPair(resultCCDescList, adjustExceptionList);
+            return Pair.newPair(resultCCDescList, adjustDetails);
         }
     }
 
