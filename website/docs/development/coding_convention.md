@@ -24,19 +24,19 @@ For Java code, we use Eclipse default formatter setting, with one change that to
 
 - For Eclipse developers, no manual setting is required. Code formatter configurations `src/core-common/.settings/org.eclipse.jdt.core.prefs` is on git repo. Your IDE should be auto configured when the projects are imported.
 
-- For intellij IDEA developers, you need to install “Eclipse Code Formatter” and load the Eclipse formatter settings into your IDE manually.
+- For intellij IDEA developers, you need to install `Eclipse Code Formatter` and load the Eclipse formatter settings into your IDE manually.
 
   you have to do a few more steps:
 
-  1. Install “Eclipse Code Formatter” and use “org.eclipse.jdt.core.prefs” and “org.eclipse.jdt.ui.prefs” in src/core-common/.settings to configure “Eclipse Java Formatter config file” and “Import order”.
+  1. Install `Eclipse Code Formatter` and use `org.eclipse.jdt.core.prefs` and `org.eclipse.jdt.ui.prefs` in `src/core-common/.settings` to configure `Eclipse Java Formatter config file` and `Import order`.
 
   ![](images/coding_convention/coding_convention_1.png)
 
-  2. Go to Preference => Code Style => Java, set “Scheme” to Default, and set both “Class count to use import with ‘*’” and “Names count to use static import with ‘*’” to 99.
+  2. Go to Preference => Code Style => Java, set `Scheme` to Default, and set both Class count to use import with `*` and Names count to use static import with `*` to 99.
 
   ![](images/coding_convention/coding_convention_2.png)
 
-  3. Disable intellij IDEA’s “Optimize imports on the fly”
+  3. Disable intellij IDEA’s `Optimize imports on the fly`
   
   ![](images/coding_convention/coding_convention_3.png)
 
