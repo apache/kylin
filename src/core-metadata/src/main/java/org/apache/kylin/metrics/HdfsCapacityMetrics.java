@@ -18,7 +18,15 @@
 
 package org.apache.kylin.metrics;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,19 +40,12 @@ import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 
-import java.io.IOException;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 1. Unify the entry point for all calculation calls to obtain the capacity of the WorkingDir through scheduled threads
  * 2. Expose two configurations externally:
- * - function enable switch: kylin.metrics.hdfs-periodic-calculation-enabled  - default false
+ * - function enable switch: kylin.metrics.hdfs-periodic-calculation-enabled  - default true
  * - polling time parameter: kylin.metrics.hdfs-periodic-calculation-interval - default 5min
  */
 @Slf4j
@@ -68,7 +69,8 @@ public class HdfsCapacityMetrics {
         SERVICE_INFO = AddressUtil.getLocalInstance();
         WORKING_FS = HadoopUtil.getWorkingFileSystem();
         HDFS_CAPACITY_METRICS_PATH = new Path(KYLIN_CONFIG.getHdfsMetricsDir("hdfsCapacity.json"));
-        HDFS_METRICS_SCHEDULED_EXECUTOR = Executors.newScheduledThreadPool(1, new NamedThreadFactory("HdfsMetricsChecker"));
+        HDFS_METRICS_SCHEDULED_EXECUTOR = Executors.newScheduledThreadPool(1,
+                new NamedThreadFactory("HdfsMetricsChecker"));
         registerHdfsMetrics();
     }
 
@@ -85,8 +87,8 @@ public class HdfsCapacityMetrics {
         hdfsMetricsPeriodicCalculationEnabled = KYLIN_CONFIG.isHdfsMetricsPeriodicCalculationEnabled();
         if (hdfsMetricsPeriodicCalculationEnabled) {
             log.info("HDFS metrics periodic calculation is enabled, path: {}", HDFS_CAPACITY_METRICS_PATH);
-            HDFS_METRICS_SCHEDULED_EXECUTOR.scheduleAtFixedRate(HdfsCapacityMetrics::handleNodeHdfsMetrics,
-                    0, KYLIN_CONFIG.getHdfsMetricsPeriodicCalculationInterval(), TimeUnit.MILLISECONDS);
+            HDFS_METRICS_SCHEDULED_EXECUTOR.scheduleAtFixedRate(HdfsCapacityMetrics::handleNodeHdfsMetrics, 0,
+                    KYLIN_CONFIG.getHdfsMetricsPeriodicCalculationInterval(), TimeUnit.MILLISECONDS);
         }
     }
 
@@ -104,8 +106,8 @@ public class HdfsCapacityMetrics {
     public static void writeHdfsMetrics() {
         prepareForWorkingDirCapacity.clear();
         // All WorkingDir capacities involved are calculated here
-        Set<String> allProjects = NProjectManager.getInstance(KYLIN_CONFIG).listAllProjects()
-                .stream().map(ProjectInstance::getName).collect(Collectors.toSet());
+        Set<String> allProjects = NProjectManager.getInstance(KYLIN_CONFIG).listAllProjects().stream()
+                .map(ProjectInstance::getName).collect(Collectors.toSet());
         try {
             for (String project : allProjects) {
                 // Should not initialize projectTotalStorageSize outside the loop, otherwise it may affect the next calculation

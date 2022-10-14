@@ -18,22 +18,22 @@
 
 package org.apache.kylin.metrics;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
+import static org.awaitility.Awaitility.await;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
-import static org.awaitility.Awaitility.await;
 
 public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
 
@@ -51,12 +51,13 @@ public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
     public void testRegisterHdfsMetricsFailed() {
         HdfsCapacityMetrics.registerHdfsMetrics();
         // scheduledExecutor may like this
-        // java.util.concurrent.ScheduledThreadPoolExecutor@2d9caaeb[Running, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]
+        // java.util.concurrent.ScheduledThreadPoolExecutor@5bf61e67[Running, pool size = 1, active threads = 1, queued tasks = 1, completed tasks = 0]
         String scheduledExecutor = HdfsCapacityMetrics.HDFS_METRICS_SCHEDULED_EXECUTOR.toString();
-        String activeThreadStr = "active threads = ";
-        int activeThreadIdx = scheduledExecutor.indexOf(activeThreadStr);
-        String thread = scheduledExecutor.substring(activeThreadIdx + activeThreadStr.length(), activeThreadIdx + activeThreadStr.length() + 1);
-        Assert.assertEquals(0, Integer.parseInt(thread));
+        String poolSizeStr = "pool size = ";
+        int activePoolSizeIdx = scheduledExecutor.indexOf(poolSizeStr);
+        String poolSize = scheduledExecutor.substring(activePoolSizeIdx + poolSizeStr.length(),
+                activePoolSizeIdx + poolSizeStr.length() + 1);
+        Assert.assertEquals(1, Integer.parseInt(poolSize));
     }
 
     @Test
@@ -68,7 +69,8 @@ public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
         String scheduledExecutor = HdfsCapacityMetrics.HDFS_METRICS_SCHEDULED_EXECUTOR.toString();
         String activeThreadStr = "active threads = ";
         int activeThreadIdx = scheduledExecutor.indexOf(activeThreadStr);
-        String thread = scheduledExecutor.substring(activeThreadIdx + activeThreadStr.length(), activeThreadIdx + activeThreadStr.length() + 1);
+        String thread = scheduledExecutor.substring(activeThreadIdx + activeThreadStr.length(),
+                activeThreadIdx + activeThreadStr.length() + 1);
         Assert.assertEquals(1, Integer.parseInt(thread));
     }
 
