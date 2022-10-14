@@ -101,7 +101,7 @@ public class ExtendCubeToHybridCLI {
             logger.info("Job Finished.");
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("Job Aborted.", e.getMessage());
+            logger.error("Job Aborted. msg:{}", e.getMessage());
         }
     }
 
