@@ -19,11 +19,12 @@
 package io.kyligence.kap.secondstorage.database;
 
 import java.util.Map;
+import java.util.Set;
 
 public interface QueryOperator {
     Map<String, Object> getQueryMetric(String queryId);
 
-    void modifyColumnByCardinality(String database, String destTableName);
+    void modifyColumnByCardinality(String database, String destTableName, Set<Integer> secondaryIndex);
 
     void modifyColumnByCardinality(String database, String destTableName, String column, String datatype);
 }

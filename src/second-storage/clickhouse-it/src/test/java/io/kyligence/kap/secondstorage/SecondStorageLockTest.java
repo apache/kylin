@@ -2867,7 +2867,7 @@ public class SecondStorageLockTest implements JobWaiter {
             int replica = 1;
             configClickhouseWith(clickhouse, replica, catalog, () -> {
                 QueryOperator queryOperator = SecondStorageFactoryUtils.createQueryMetricOperator(getProject());
-                queryOperator.modifyColumnByCardinality("default", "table");
+                queryOperator.modifyColumnByCardinality("default", "table", Sets.newHashSet());
 
                 buildIncrementalLoadQuery("2012-01-02", "2012-01-03");
                 waitAllJobFinish();
@@ -2930,6 +2930,18 @@ public class SecondStorageLockTest implements JobWaiter {
                         LOW_CARDINALITY_STRING);
                 try (Connection connection = DriverManager.getConnection(clickhouse1.getJdbcUrl());
                         val stmt = connection.createStatement()) {
+                    val rs = stmt.executeQuery(String.format(Locale.ROOT, "desc %s.%s", database, destTableName));
+                    while (rs.next()) {
+                        if ("c4".equals(rs.getString(1))) {
+                            rows = rs.getString(2);
+                        }
+                    }
+                }
+                assertEquals(LOW_CARDINALITY_STRING, rows);
+
+                queryOperator.modifyColumnByCardinality(database, destTableName, Sets.newHashSet(4));
+                try (Connection connection = DriverManager.getConnection(clickhouse1.getJdbcUrl());
+                     val stmt = connection.createStatement()) {
                     val rs = stmt.executeQuery(String.format(Locale.ROOT, "desc %s.%s", database, destTableName));
                     while (rs.next()) {
                         if ("c4".equals(rs.getString(1))) {
