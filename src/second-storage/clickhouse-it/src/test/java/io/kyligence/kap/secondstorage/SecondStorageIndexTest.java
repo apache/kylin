@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -349,8 +348,8 @@ public class SecondStorageIndexTest implements JobWaiter {
         String jobId = updatePrimaryIndexAndSecondaryIndex(modelName, null, Sets.newHashSet());
         waitJobEnd(getProject(), jobId);
 
-        assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageConcurrentOperate(), getProject()),
-                KylinException.class, () -> updatePrimaryIndexAndSecondaryIndex(modelName, null, secondaryIndex));
+        assertThrows(MsgPicker.getMsg().getSecondStorageConcurrentOperate(), KylinException.class,
+                () -> updatePrimaryIndexAndSecondaryIndex(modelName, null, secondaryIndex));
         clickhouse[0].start();
         ClickHouseUtils.internalConfigClickHouse(clickhouse, replica);
 
@@ -464,6 +463,14 @@ public class SecondStorageIndexTest implements JobWaiter {
         jobCnt++;
         assertEquals(jobCnt, getNExecutableManager().getAllExecutables().stream()
                 .filter(job -> job instanceof ClickHouseRefreshSecondaryIndexJob).count());
+
+        // test range lock
+        val lockSecondaryIndex = Sets.newHashSet("TEST_KYLIN_FACT.TRANS_ID");
+        SegmentRange<Long> range = SegmentRange.TimePartitionedSegmentRange.createInfinite();
+        SecondStorageLockUtils.acquireLock(modelId, range).lock();
+        assertThrows(MsgPicker.getMsg().getSecondStorageConcurrentOperate(), KylinException.class,
+                () -> updatePrimaryIndexAndSecondaryIndex(modelName, null, lockSecondaryIndex));
+        SecondStorageLockUtils.unlock(modelId, range);
 
         tableData = getTableFlow(modelId).getTableDataList().get(0);
         partition = tableData.getPartitions().get(0);
