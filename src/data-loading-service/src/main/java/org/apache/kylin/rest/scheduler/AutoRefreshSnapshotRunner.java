@@ -87,8 +87,6 @@ public class AutoRefreshSnapshotRunner implements Runnable {
     @Getter
     private Map<Future<String>, Long> checkSourceTableFutures = Maps.newConcurrentMap();
     @Getter
-    private Map<Future<String>, Long> buildSnapshotFutures = Maps.newConcurrentMap();
-    @Getter
     private final String project;
     @Setter
     @Getter
@@ -141,6 +139,8 @@ public class AutoRefreshSnapshotRunner implements Runnable {
                         poolExecutor.getPoolSize(), poolExecutor.getCorePoolSize(), poolExecutor.getActiveCount(),
                         poolExecutor.getMaximumPoolSize());
             }
+            projectConfig = NProjectManager.getInstance(KylinConfig.readSystemKylinConfig()).getProject(project)
+                    .getConfig();
             saveSnapshotViewMapping(project, restTemplate);
             val tables = SnapshotJobUtils.getSnapshotTables(projectConfig, project);
             val viewTableMapping = readViewTableMapping();
@@ -152,8 +152,6 @@ public class AutoRefreshSnapshotRunner implements Runnable {
 
             waitCheckSourceTableTaskDone();
 
-            waitBuildSnapshotTaskDone();
-
             log.info("Project[{}] stop check and refresh snapshot", project);
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
@@ -163,9 +161,7 @@ public class AutoRefreshSnapshotRunner implements Runnable {
         } finally {
             checkSourceTableQueue = new LinkedBlockingQueue<>();
             cancelFuture(checkSourceTableFutures);
-            cancelFuture(buildSnapshotFutures);
             checkSourceTableFutures = Maps.newConcurrentMap();
-            buildSnapshotFutures = Maps.newConcurrentMap();
             sourceTableSnapshotMapping = Maps.newHashMap();
             buildSnapshotCount = Maps.newConcurrentMap();
         }
@@ -214,10 +210,12 @@ public class AutoRefreshSnapshotRunner implements Runnable {
             }
         }
         for (TableDesc tableDesc : tables) {
-            val source = tableDesc.getIdentity().toLowerCase(Locale.ROOT);
-            val snapshots = result.getOrDefault(source, Lists.newArrayList());
-            snapshots.add(tableDesc);
-            result.put(source, snapshots.stream().distinct().collect(Collectors.toList()));
+            if (!tableDesc.isView()) {
+                val source = tableDesc.getIdentity().toLowerCase(Locale.ROOT);
+                val snapshots = result.getOrDefault(source, Lists.newArrayList());
+                snapshots.add(tableDesc);
+                result.put(source, snapshots.stream().distinct().collect(Collectors.toList()));
+            }
         }
         return result;
     }
@@ -259,16 +257,16 @@ public class AutoRefreshSnapshotRunner implements Runnable {
 
     public void checkSourceTable(Set<String> allSourceTable) {
         for (String table : allSourceTable) {
-            val thread = new CheckSourceTableThread();
-            thread.setProject(project);
-            thread.setConfig(projectConfig);
-            thread.setTableIdentity(table);
-            thread.setRestTemplate(restTemplate);
-            thread.setCheckSourceTableQueue(checkSourceTableQueue);
+            val runnable = new CheckSourceTableRunnable();
+            runnable.setProject(project);
+            runnable.setConfig(projectConfig);
+            runnable.setTableIdentity(table);
+            runnable.setRestTemplate(restTemplate);
+            runnable.setCheckSourceTableQueue(checkSourceTableQueue);
             sourceTableSnapshotMapping.get(table).stream()
                     .filter(tableDesc -> StringUtils.equalsIgnoreCase(table, tableDesc.getIdentity())).findFirst()
-                    .ifPresent(tableDesc -> thread.setPartitionColumn(tableDesc.getSelectedSnapshotPartitionCol()));
-            val submit = jobPool.submit(thread, "success");
+                    .ifPresent(tableDesc -> runnable.setPartitionColumn(tableDesc.getSelectedSnapshotPartitionCol()));
+            val submit = jobPool.submit(runnable, "success");
             checkSourceTableFutures.put(submit, System.currentTimeMillis());
         }
     }
@@ -304,33 +302,21 @@ public class AutoRefreshSnapshotRunner implements Runnable {
         }
     }
 
-    public void waitBuildSnapshotTaskDone() throws InterruptedException {
-        while (true) {
-            val doneCount = buildSnapshotFutures.keySet().stream().filter(Future::isDone).count();
-            if (buildSnapshotFutures.size() == doneCount) {
-                break;
-            }
-            cancelTimeoutFuture(buildSnapshotFutures);
-            TimeUnit.SECONDS.sleep(10);
-        }
-    }
-
     public void buildSnapshot(CheckSourceTableResult result) {
         val needBuildSnapshots = sourceTableSnapshotMapping.get(result.getTableIdentity());
         for (TableDesc tableDesc : needBuildSnapshots) {
             val sourceTableCount = buildSnapshotCount.getOrDefault(tableDesc.getIdentity(), new AtomicInteger(0));
             log.info("buildSnapshotCount is [{}], tableIdentity is [{}]", sourceTableCount, tableDesc.getIdentity());
             if (sourceTableCount.getAndIncrement() == 0) {
-                val thread = new BuildSnapshotThread();
-                thread.setProject(project);
-                thread.setConfig(projectConfig);
-                thread.setRestTemplate(restTemplate);
-                thread.setNeedRefresh(result.getNeedRefresh());
-                thread.setNeedRefreshPartitionsValue(result.getNeedRefreshPartitionsValue());
-                thread.setTableIdentity(tableDesc.getIdentity());
-                thread.setPartitionColumn(tableDesc.getSelectedSnapshotPartitionCol());
-                val submit = jobPool.submit(thread, "success");
-                buildSnapshotFutures.put(submit, System.currentTimeMillis());
+                val runnable = new BuildSnapshotRunnable();
+                runnable.setProject(project);
+                runnable.setConfig(projectConfig);
+                runnable.setRestTemplate(restTemplate);
+                runnable.setNeedRefresh(result.getNeedRefresh());
+                runnable.setNeedRefreshPartitionsValue(result.getNeedRefreshPartitionsValue());
+                runnable.setTableIdentity(tableDesc.getIdentity());
+                runnable.setPartitionColumn(tableDesc.getSelectedSnapshotPartitionCol());
+                runnable.run();
             }
             buildSnapshotCount.put(tableDesc.getIdentity(), sourceTableCount);
         }

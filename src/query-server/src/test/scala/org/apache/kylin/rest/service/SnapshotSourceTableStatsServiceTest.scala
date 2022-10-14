@@ -194,9 +194,8 @@ class SnapshotSourceTableStatsServiceTest extends SparderBaseFunSuite with Local
         val tableIdentity = table.qualifiedName.toLowerCase(Locale.ROOT)
         val locationPath = table.location.getPath
         val locationFilesStatus: util.List[FileStatus] = snapshotSourceTableStatsService.getLocationFileStatus(locationPath)
-        val snapshotTablesLocationsJson = Maps.newHashMap[String, SnapshotSourceTableStats]()
-        snapshotSourceTableStatsService.createSnapshotSourceTableStats(locationPath, config,
-          locationFilesStatus, snapshotTablesLocationsJson)
+        val snapshotTablesLocationsJson = snapshotSourceTableStatsService.createSnapshotSourceTableStats(locationPath, config,
+          locationFilesStatus)
         snapshotSourceTableStatsService.writeSourceTableStats(DEFAULT_PROJECT, tableIdentity, snapshotTablesLocationsJson)
 
         val fromJson = snapshotSourceTableStatsService.getSnapshotSourceTableStatsJsonFromHDFS(DEFAULT_PROJECT, tableIdentity).getSecond

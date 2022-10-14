@@ -26,17 +26,23 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.scheduler.EpochStartedNotifier;
+import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -46,7 +52,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.google.common.collect.Maps;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
+import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
 import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +72,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-public class AutoRefreshSnapshotScheduler implements InitializingBean {
+public class AutoRefreshSnapshotScheduler {
     private static final Integer THREAD_POOL_TASK_SCHEDULER_DEFAULT_POOL_SIZE = 20;
     @Autowired
     @Qualifier("projectScheduler")
@@ -228,7 +234,6 @@ public class AutoRefreshSnapshotScheduler implements InitializingBean {
         }
     }
 
-    @Override
     public void afterPropertiesSet() throws Exception {
         log.info("AutoRefreshSnapshotScheduler init...");
         val fs = HadoopUtil.getWorkingFileSystem();
@@ -254,6 +259,31 @@ public class AutoRefreshSnapshotScheduler implements InitializingBean {
             } else {
                 deleteProjectSnapshotAutoUpdateDir(project.getName());
             }
+        }
+    }
+}
+
+@Slf4j
+@Configuration
+@Order
+class AutoRefreshSnapshotConfig {
+    @Autowired
+    private AutoRefreshSnapshotScheduler scheduler;
+
+    @PostConstruct
+    public void init() {
+        val kylinConfig = KylinConfig.getInstanceFromEnv();
+        if (kylinConfig.isJobNode()) {
+            EventBusFactory.getInstance().register(this, false);
+        }
+    }
+
+    @Subscribe
+    public void registerScheduler(EpochStartedNotifier notifier) {
+        try {
+            scheduler.afterPropertiesSet();
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
     }
 }

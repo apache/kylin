@@ -46,7 +46,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CheckSourceTableThread extends AbstractSchedulerRunnable {
+public class CheckSourceTableRunnable extends AbstractSchedulerRunnable {
 
     private static final String SNAPSHOT_TABLE_CHECK_ERROR_MESSAGE = "Project[%s] Snapshot source table[%s] check table stats Failed";
 
