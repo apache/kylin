@@ -5276,8 +5276,8 @@ public class ModelServiceTest extends SourceTestCase {
         testCheckCCConflictAllExprConflict(originRequest);
         testCheckCCConflictExprAndNameConflict(originRequest);
         testCheckCCConflictExprAndNameConflict2(originRequest);
-        testCheckCCConflictAdjust(originRequest);
         testNoCCConflict(originRequest);
+        testCheckCCConflictAdjust(originRequest);
     }
 
     private void testCheckCCConflictAllExprConflict(ModelRequest originRequest) {
@@ -5369,18 +5369,78 @@ public class ModelServiceTest extends SourceTestCase {
     }
 
     private void testCheckCCConflictAdjust(ModelRequest originRequest) {
-        val ccList = Lists.newArrayList(//
-                getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
-                getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX + 1", "BIGINT"));
-        originRequest.setComputedColumnDescs(ccList);
-        originRequest.setComputedColumnNameAutoAdjust(true);
-        val pair = modelService.checkCCConflict(originRequest);
-        val details = pair.getSecond().getConflictDetails();
-        Assert.assertEquals(1, details.size());
-        Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getErrorCode().getCode(),
-                details.get(0).getDetailCode());
-        Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getMsg("CC_1", "CUSTOMER.C_NAME +'USA'", "CC_CNAME",
-                "CUSTOMER.C_NAME +'USA'", "CC_CNAME"), details.get(0).getDetailMsg());
+        {
+            val ccList = Lists.newArrayList(//
+                    getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
+                    getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX + 1", "BIGINT"));
+            originRequest.setComputedColumnDescs(ccList);
+            originRequest.setComputedColumnNameAutoAdjust(true);
+            val pair = modelService.checkCCConflict(originRequest);
+            val details = pair.getSecond().getConflictDetails();
+            Assert.assertEquals(1, details.size());
+            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getErrorCode().getCode(),
+                    details.get(0).getDetailCode());
+            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getMsg("CC_1", "CUSTOMER.C_NAME +'USA'",
+                    "CC_CNAME", "CUSTOMER.C_NAME +'USA'", "CC_CNAME"), details.get(0).getDetailMsg());
+        }
+
+        {
+            val ccList = Lists.newArrayList(//
+                    getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
+                    getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX + 1", "BIGINT"));
+            originRequest.setComputedColumnDescs(ccList);
+            originRequest.setComputedColumnNameAutoAdjust(true);
+            originRequest.setFilterCondition("LINEORDER.LO_TAX = 'Kylin' or LINEORDER.LO_TAX = 'Kylin2'");
+            val pair = modelService.checkCCConflict(originRequest);
+            val details = pair.getSecond().getConflictDetails();
+            Assert.assertEquals(1, details.size());
+            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getErrorCode().getCode(),
+                    details.get(0).getDetailCode());
+            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getMsg("CC_1", "CUSTOMER.C_NAME +'USA'",
+                    "CC_CNAME", "CUSTOMER.C_NAME +'USA'", "CC_CNAME"), details.get(0).getDetailMsg());
+            Assert.assertEquals("LINEORDER.LO_TAX = 'Kylin' or LINEORDER.LO_TAX = 'Kylin2'",
+                    pair.getFirst().getFilterCondition());
+        }
+
+        {
+            val dimList = Lists.newArrayList(getNamedColumn("CC_1", "LINEORDER.CC_1"));
+            val measureList = Lists.newArrayList(//
+                    getSimplifiedMeasure("cc_count", "COUNT", "column", "LINEORDER.CC_1"),
+                    getSimplifiedMeasure("COUNT_ALL", "COUNT", "constant", "1"));
+            val ccList = Lists.newArrayList(//
+                    getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
+                    getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX + 1", "BIGINT"));
+            originRequest.setComputedColumnDescs(ccList);
+            originRequest.setComputedColumnNameAutoAdjust(true);
+            originRequest.setSimplifiedDimensions(dimList);
+            originRequest.setSimplifiedMeasures(measureList);
+            originRequest.setFilterCondition("LINEORDER.Cc_1 = 'Kylin' or LINEORDER.cC_1 = 'Kylin2'");
+            val pair = modelService.checkCCConflict(originRequest);
+            val details = pair.getSecond().getConflictDetails();
+            Assert.assertEquals(1, details.size());
+            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getErrorCode().getCode(),
+                    details.get(0).getDetailCode());
+            Assert.assertEquals(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO.getMsg("CC_1", "CUSTOMER.C_NAME +'USA'",
+                    "CC_CNAME", "CUSTOMER.C_NAME +'USA'", "CC_CNAME"), details.get(0).getDetailMsg());
+
+            ModelRequest modelRequest = pair.getFirst();
+            val simplifiedDimensions = modelRequest.getSimplifiedDimensions();
+            Assert.assertEquals(1, simplifiedDimensions.size());
+            Assert.assertEquals("LINEORDER.CC_CNAME", simplifiedDimensions.get(0).getAliasDotColumn());
+            Assert.assertEquals("CC_1", simplifiedDimensions.get(0).getName());
+
+            List<SimplifiedMeasure> simplifiedMeasures = modelRequest.getSimplifiedMeasures();
+            Assert.assertEquals(2, simplifiedMeasures.size());
+            simplifiedMeasures = simplifiedMeasures.stream().filter(measure -> measure.getName().equals("cc_count"))
+                    .collect(Collectors.toList());
+            Assert.assertEquals(1, simplifiedMeasures.size());
+            Assert.assertEquals("COUNT", simplifiedMeasures.get(0).getExpression());
+            Assert.assertEquals("column", simplifiedMeasures.get(0).getParameterValue().get(0).getType());
+            Assert.assertEquals("LINEORDER.CC_CNAME", simplifiedMeasures.get(0).getParameterValue().get(0).getValue());
+
+            Assert.assertEquals("LINEORDER.CC_CNAME = 'Kylin' or LINEORDER.CC_CNAME = 'Kylin2'",
+                    modelRequest.getFilterCondition());
+        }
     }
 
     private void testNoCCConflict(ModelRequest originRequest) {
@@ -5438,4 +5498,20 @@ public class ModelServiceTest extends SourceTestCase {
         return ccDesc;
     }
 
+    private NamedColumn getNamedColumn(String name, String aliasDotName) {
+        NamedColumn namedColumn = new NamedColumn();
+        namedColumn.setName(name);
+        namedColumn.setAliasDotColumn(aliasDotName);
+        namedColumn.setStatus(NDataModel.ColumnStatus.DIMENSION);
+        return namedColumn;
+    }
+
+    private SimplifiedMeasure getSimplifiedMeasure(String name, String expr, String type, String value) {
+        ParameterResponse parameterResponse = new ParameterResponse(type, value);
+        SimplifiedMeasure measure = new SimplifiedMeasure();
+        measure.setName(name);
+        measure.setExpression(expr);
+        measure.setParameterValue(Lists.newArrayList(parameterResponse));
+        return measure;
+    }
 }

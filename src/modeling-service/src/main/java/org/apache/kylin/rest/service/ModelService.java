@@ -70,6 +70,7 @@ import static org.apache.kylin.job.execution.JobTypeEnum.INC_BUILD;
 import static org.apache.kylin.job.execution.JobTypeEnum.INDEX_BUILD;
 import static org.apache.kylin.job.execution.JobTypeEnum.INDEX_MERGE;
 import static org.apache.kylin.job.execution.JobTypeEnum.INDEX_REFRESH;
+import static org.apache.kylin.metadata.model.FunctionDesc.PARAMETER_TYPE_COLUMN;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -190,6 +191,7 @@ import org.apache.kylin.metadata.model.UpdateImpact;
 import org.apache.kylin.metadata.model.VolatileRange;
 import org.apache.kylin.metadata.model.schema.AffectedModelContext;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.model.util.MultiPartitionUtil;
 import org.apache.kylin.metadata.model.util.scd2.SCD2CondChecker;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
@@ -4242,8 +4244,59 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         List<ComputedColumnDesc> inputCCDescList = Lists.newArrayList(modelRequest.getComputedColumnDescs());
         // deal with conflicts
         val pair = ccConflictInfo.getAdjustedCCList(inputCCDescList);
+        val adjustExceptions = pair.getSecond().stream() //
+                .map(ComputedColumnUtil.CCConflictDetail::getAdjustKylinException).collect(Collectors.toList());
+        ModelRequest resultModelRequest = adjustModelRequestCCName(modelRequest, pair);
+
+        return Pair.newPair(resultModelRequest, handleOnConflictResponse(adjustExceptions));
+    }
+
+    public ModelRequest adjustModelRequestCCName(ModelRequest modelRequest,
+            Pair<List<ComputedColumnDesc>, List<ComputedColumnUtil.CCConflictDetail>> pair) {
+        val adjustDetails = pair.getSecond();
+        // adjust cc name
         modelRequest.setComputedColumnDescs(pair.getFirst());
-        return Pair.newPair(modelRequest, handleOnConflictResponse(pair.getSecond()));
+
+        val dimensions = modelRequest.getSimplifiedDimensions();
+        val measures = modelRequest.getSimplifiedMeasures();
+        for (val detail : adjustDetails) {
+            String newCCFullName = detail.getNewCC().getFullName();
+            String existingCCFullName = detail.getExistingCC().getFullName();
+
+            // adjust dimensions
+            dimensions.stream() //
+                    .filter(NDataModel.NamedColumn::isExist) //
+                    // column equals
+                    .filter(d -> StringUtils.equalsIgnoreCase(d.getAliasDotColumn(), newCCFullName))
+                    .forEach(d -> d.setAliasDotColumn(existingCCFullName));
+
+            // adjust measures
+            measures.forEach(m -> m.getParameterValue().stream() //
+                    // type = column
+                    .filter(pr -> StringUtils.equalsIgnoreCase(pr.getType(), PARAMETER_TYPE_COLUMN))
+                    // value equals
+                    .filter(pr -> StringUtils.equalsIgnoreCase(pr.getValue(), newCCFullName))
+                    .forEach(pr -> pr.setValue(existingCCFullName)));
+        }
+
+        // adjust filter condition
+        String filterCondition = modelRequest.getFilterCondition();
+        if (StringUtils.isEmpty(filterCondition)) {
+            return modelRequest;
+        }
+        for (val detail : adjustDetails) {
+            String newCCFullName = detail.getNewCC().getFullName();
+            String existingCCFullName = detail.getExistingCC().getFullName();
+            if (StringUtils.containsIgnoreCase(filterCondition, newCCFullName)) {
+                filterCondition = replaceAllIgnoreCase(filterCondition, newCCFullName, existingCCFullName);
+            }
+        }
+        modelRequest.setFilterCondition(filterCondition);
+        return modelRequest;
+    }
+
+    public String replaceAllIgnoreCase(String input, String regex, String replacement) {
+        return Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(input).replaceAll(replacement);
     }
 
     public ComputedColumnConflictResponse handleOnConflictResponse(List<KylinException> exceptionList) {
