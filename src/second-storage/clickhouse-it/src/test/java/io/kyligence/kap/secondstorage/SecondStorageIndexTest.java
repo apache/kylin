@@ -505,7 +505,7 @@ public class SecondStorageIndexTest implements JobWaiter {
             assertEquals(SecondStorageIndexLoadStatus.ALL, r.getPrimaryIndexStatus());
             assertEquals(SecondStorageIndexLoadStatus.ALL, r.getSecondaryIndexStatus());
         });
-
+        
         secondStorageService.triggerSegmentsClean(getProject(), modelId,
                 getDataFlow(modelId).getSegments().stream().map(NDataSegment::getId).collect(Collectors.toSet()));
         waitAllJoEnd();
