@@ -944,6 +944,10 @@ const sidebars = {
                 },
                 {
                     type: 'doc',
+                    id: 'development/coding_convension'
+                },
+                {
+                    type: 'doc',
                     id: 'development/how_to_contribute'
                 },
                 {
