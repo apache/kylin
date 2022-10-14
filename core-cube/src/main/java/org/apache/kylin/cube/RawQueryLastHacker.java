@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -34,7 +35,11 @@ public class RawQueryLastHacker {
     private static final Logger logger = LoggerFactory.getLogger(RawQueryLastHacker.class);
 
     public static void hackNoAggregations(SQLDigest sqlDigest, CubeDesc cubeDesc, TupleInfo tupleInfo) {
-        if (!sqlDigest.isRawQuery || BackdoorToggles.getDisabledRawQueryLastHacker()) {
+        boolean isEnabledNoAggQuery = KylinConfig.getInstanceFromEnv().isEnabledNoAggQuery();
+        if (!sqlDigest.isRawQuery || BackdoorToggles.getDisabledRawQueryLastHacker() || isEnabledNoAggQuery) {
+            if (isEnabledNoAggQuery) {
+                logger.info("No hack for aggregation sql by kylin.query.enable-no-aggregate-query which is 'true'.");
+            }
             return;
         }
 

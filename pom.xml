@@ -1189,7 +1189,7 @@
     </repository>
     <repository>
       <id>conjars</id>
-      <url>http://conjars.org/repo/</url>
+      <url>https://conjars.org/repo/</url>
     </repository>
 
     <repository>
@@ -1837,7 +1837,6 @@
         </plugins>
       </build>
     </profile>
-
     <profile>
       <id>m2e-only</id>
       <activation>
@@ -1888,6 +1887,19 @@
           </plugins>
         </pluginManagement>
       </build>
+    </profile>
+    <profile>
+      <id>hadoop3</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>commons-configuration</groupId>
+          <artifactId>commons-configuration</artifactId>
+          <version>1.6</version>
+        </dependency>
+      </dependencies>
     </profile>
   </profiles>
 </project>
