@@ -16,8 +16,6 @@ last_update:
     author: Tengting Xu
 ---
 
-# Coding Convention
-
 Coding convention is very important for teamwork. Not only it keeps code neat and tidy, it saves a lot of work too. Different coding convention (and auto formatter) will cause unnecessary code changes that requires more effort at code review and code merge.
 
 ## Setup IDE code formatter
