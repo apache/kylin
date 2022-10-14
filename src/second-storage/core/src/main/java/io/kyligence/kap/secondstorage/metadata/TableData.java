@@ -281,6 +281,7 @@ public class TableData implements Serializable, WithLayout {
                     .setShardNodes(shardNodes)
                     .setSizeInNode(sizeInNode)
                     .setNodeFileMap(nodeFileMap)
+                    .setSecondaryIndexColumns(partition.getSecondaryIndexColumns())
                     .build();
         }).collect(Collectors.toList());
 
