@@ -42,12 +42,12 @@ import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import lombok.val;
 
 @MetadataInfo
-class CheckSourceTableThreadTest {
+class CheckSourceTableRunnableTest {
     private final RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
 
     @Test
     void checkTable() throws JsonProcessingException {
-        val thread = new CheckSourceTableThread();
+        val thread = new CheckSourceTableRunnable();
         thread.setProject("project");
         thread.setConfig(KylinConfig.readSystemKylinConfig());
         thread.setTableIdentity("default.table");
@@ -72,7 +72,7 @@ class CheckSourceTableThreadTest {
     @Test
     void checkTableFailed() {
         try {
-            val thread = new CheckSourceTableThread();
+            val thread = new CheckSourceTableRunnable();
             thread.setProject("project");
             thread.setConfig(KylinConfig.readSystemKylinConfig());
             thread.setTableIdentity("default.table");
@@ -83,8 +83,7 @@ class CheckSourceTableThreadTest {
             thread.checkTable();
         } catch (Exception e) {
             assertTrue(e instanceof KylinRuntimeException);
-            assertEquals(
-                    "Project[project] Snapshot source table[default.table] check table stats Failed",
+            assertEquals("Project[project] Snapshot source table[default.table] check table stats Failed",
                     e.getMessage());
         }
     }

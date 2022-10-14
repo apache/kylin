@@ -141,6 +141,7 @@ public class SnapshotSourceTableStatsService extends BasicService {
         } catch (Exception e) {
             log.info("Project[{}] [{}.{}] refresh check and save snapshot table location files failed", project,
                     database, table);
+            log.error(e.getMessage(), e);
             return new SnapshotSourceTableStatsResponse(false);
         }
     }
@@ -197,8 +198,8 @@ public class SnapshotSourceTableStatsService extends BasicService {
         }
         val needRefresh = checkLocation(location, filesStatus, snapshotSourceTableStatsJson, projectConfig);
         if (Boolean.FALSE.equals(snapshotSourceTableStatsJsonExist) || Boolean.TRUE.equals(needRefresh)) {
-            createSnapshotSourceTableStats(location, projectConfig, filesStatus, snapshotSourceTableStatsJson);
-            writeSourceTableStats(project, tableIdentity, snapshotSourceTableStatsJson);
+            val newSnapshotSourceTableStatsJson = createSnapshotSourceTableStats(location, projectConfig, filesStatus);
+            writeSourceTableStats(project, tableIdentity, newSnapshotSourceTableStatsJson);
         }
         if (Boolean.FALSE.equals(snapshotSourceTableStatsJsonExist)) {
             return projectConfig.isSnapshotFirstAutoRefreshEnabled();
@@ -279,10 +280,10 @@ public class SnapshotSourceTableStatsService extends BasicService {
                         tableFilesModifyTimesAndSize.get(FILES_SIZE));
     }
 
-    public void createSnapshotSourceTableStats(String location, KylinConfig config,
-            List<FileStatus> locationFilesStatus, Map<String, SnapshotSourceTableStats> snapshotSourceTableStatsJson) {
-        val sourceTableStats = snapshotSourceTableStatsJson.computeIfAbsent(location,
-                key -> new SnapshotSourceTableStats());
+    public Map<String, SnapshotSourceTableStats> createSnapshotSourceTableStats(String location, KylinConfig config,
+            List<FileStatus> locationFilesStatus) {
+        Map<String, SnapshotSourceTableStats> newSnapshotSourceTableStatsJson = Maps.newHashMap();
+        val sourceTableStats = new SnapshotSourceTableStats();
         val filesSize = Lists.<Long> newArrayList();
         val filesModificationTime = Lists.<Long> newArrayList();
         locationFilesStatus.stream().limit(config.getSnapshotAutoRefreshFetchFilesCount()).forEach(fileStatus -> {
@@ -293,7 +294,8 @@ public class SnapshotSourceTableStatsService extends BasicService {
         sourceTableStats.setFilesModificationTime(filesModificationTime);
         sourceTableStats.setFilesCount(locationFilesStatus.size());
 
-        snapshotSourceTableStatsJson.put(location, sourceTableStats);
+        newSnapshotSourceTableStatsJson.put(location, sourceTableStats);
+        return newSnapshotSourceTableStatsJson;
     }
 
     public void writeSourceTableStats(String project, String tableIdentity,
@@ -332,11 +334,12 @@ public class SnapshotSourceTableStatsService extends BasicService {
         val needRefresh = checkPartitionsLocation(partitions, snapshotSourceTableStatsJson, needRefreshPartitions,
                 needSavePartitionsFilesStatus, projectConfig);
         if (Boolean.FALSE.equals(snapshotSourceTableStatsJsonExist) || Boolean.TRUE.equals(needRefresh)) {
+            Map<String, SnapshotSourceTableStats> newSnapshotSourceTableStatsJson = Maps.newHashMap();
             for (CatalogTablePartition partition : partitions) {
                 createPartitionSnapshotSourceTableStats(partition, needSavePartitionsFilesStatus,
-                        snapshotSourceTableStatsJson, projectConfig);
+                        newSnapshotSourceTableStatsJson, projectConfig);
             }
-            writeSourceTableStats(project, tableIdentity, snapshotSourceTableStatsJson);
+            writeSourceTableStats(project, tableIdentity, newSnapshotSourceTableStatsJson);
         }
         if (Boolean.FALSE.equals(snapshotSourceTableStatsJsonExist)) {
             return projectConfig.isSnapshotFirstAutoRefreshEnabled();
