@@ -1174,6 +1174,7 @@ public class SecondStorageService extends BasicService implements SecondStorageU
     }
 
     public void modifyColumn(String project, String model, String column, String datatype) {
+        isProjectAdmin(project);
         logger.info("Start to modify second storage low cardinality on model {}.", model);
         if (!SecondStorageUtil.isProjectEnable(project) || !SecondStorageUtil.isModelEnable(project, model)) {
             throw new KylinException(INVALID_PARAMETER, String.format("The model does not have tiered storage enabled on project %s.", project));
