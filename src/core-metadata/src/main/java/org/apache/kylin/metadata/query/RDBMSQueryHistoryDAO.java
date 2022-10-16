@@ -45,8 +45,8 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
     private static final Logger logger = LoggerFactory.getLogger(RDBMSQueryHistoryDAO.class);
     @Setter
     private String queryMetricMeasurement;
-    private final String realizationMetricMeasurement;
-    private final JdbcQueryHistoryStore jdbcQueryHisStore;
+    private String realizationMetricMeasurement;
+    private JdbcQueryHistoryStore jdbcQueryHisStore;
 
     public static final String WEEK = "week";
     public static final String DAY = "day";
@@ -105,21 +105,13 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
     }
 
     public void deleteQueryHistoriesIfMaxSizeReached() {
-        int globalMaxSize = KylinConfig.getInstanceFromEnv().getQueryHistoryMaxSize();
-        long globalMaxId = jdbcQueryHisStore.getMaxId();
-        long retainMinId = globalMaxId - globalMaxSize + 1;
-        logger.info("Clean QueryHistory Global MaxId: {}, MaxSize: {}, RetainMinId: {}", globalMaxId, globalMaxSize, retainMinId);
-        if (retainMinId <= 1) {
-            // no need to delete
-            return;
+        QueryHistory queryHistory = jdbcQueryHisStore
+                .queryOldestQueryHistory(KylinConfig.getInstanceFromEnv().getQueryHistoryMaxSize());
+        if (Objects.nonNull(queryHistory)) {
+            long time = queryHistory.getQueryTime();
+            jdbcQueryHisStore.deleteQueryHistory(time);
+            jdbcQueryHisStore.deleteQueryHistoryRealization(time);
         }
-        QueryHistory queryHistory = jdbcQueryHisStore.queryOldestQueryHistory(retainMinId);
-        if (Objects.isNull(queryHistory)) {
-            return;
-        }
-        long time = queryHistory.getQueryTime();
-        jdbcQueryHisStore.deleteQueryHistory(time);
-        jdbcQueryHisStore.deleteQueryHistoryRealization(time);
     }
 
     public QueryHistory getByQueryId(String queryId) {
@@ -127,21 +119,13 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
     }
 
     public void deleteQueryHistoriesIfProjectMaxSizeReached(String project) {
-        int projectMaxSize = KylinConfig.getInstanceFromEnv().getQueryHistoryProjectMaxSize();
-        long projectCount = jdbcQueryHisStore.getProjectCount(project);
-        logger.info("Clean QueryHistory Project: {}, Count: {}, MaxSize: {}", project, projectCount, projectMaxSize);
-        if (projectCount <= projectMaxSize) {
-            // no need to delete
-            return;
+        QueryHistory queryHistory = jdbcQueryHisStore
+                .queryOldestQueryHistory(KylinConfig.getInstanceFromEnv().getQueryHistoryProjectMaxSize(), project);
+        if (Objects.nonNull(queryHistory)) {
+            long time = queryHistory.getQueryTime();
+            jdbcQueryHisStore.deleteQueryHistory(time, project);
+            jdbcQueryHisStore.deleteQueryHistoryRealization(time, project);
         }
-
-        QueryHistory queryHistory = jdbcQueryHisStore.queryOldestQueryHistory(projectMaxSize, project);
-        if (Objects.isNull(queryHistory)) {
-            return;
-        }
-        long time = queryHistory.getQueryTime();
-        jdbcQueryHisStore.deleteQueryHistory(time, project);
-        jdbcQueryHisStore.deleteQueryHistoryRealization(time, project);
     }
 
     public void deleteQueryHistoriesIfRetainTimeReached() {

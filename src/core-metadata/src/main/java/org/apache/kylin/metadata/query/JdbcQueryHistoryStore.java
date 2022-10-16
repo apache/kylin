@@ -154,7 +154,7 @@ public class JdbcQueryHistoryStore {
             insertQhRealProviderList.forEach(qhRealizationMapper::insert);
 
             session.commit();
-            if (!queryMetricsList.isEmpty()) {
+            if (queryMetricsList.size() > 0) {
                 log.info("Insert {} query history into database takes {} ms", queryMetricsList.size(),
                         System.currentTimeMillis() - startTime);
             }
@@ -183,7 +183,7 @@ public class JdbcQueryHistoryStore {
             return mapper.selectDaily(qhTableName, startTime, endTime);
         }
     }
-
+    
     public List<QueryHistory> queryQueryHistoriesSubmitters(QueryHistoryRequest request, int size) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
@@ -198,23 +198,22 @@ public class JdbcQueryHistoryStore {
             SelectStatementProvider statementProvider = selectDistinct(queryHistoryRealizationTable.queryId)
                     .from(queryHistoryRealizationTable).where(queryHistoryRealizationTable.model, isIn(modelIds))
                     .build().render(RenderingStrategies.MYBATIS3);
-            return mapper.selectMany(statementProvider).stream().map(QueryHistory::getQueryId)
-                    .collect(Collectors.toList());
+            return mapper.selectMany(statementProvider).stream().map(QueryHistory::getQueryId).collect(Collectors.toList());
         }
     }
 
     public List<QueryStatistics> queryQueryHistoriesModelIds(QueryHistoryRequest request, int size) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryStatisticsMapper mapper = session.getMapper(QueryStatisticsMapper.class);
-            SelectStatementProvider statementProvider1 = selectDistinct(queryHistoryTable.engineType)
-                    .from(queryHistoryTable).where(queryHistoryTable.engineType, isNotEqualTo("NATIVE"))
-                    .and(queryHistoryTable.projectName, isEqualTo(request.getProject())).build()
-                    .render(RenderingStrategies.MYBATIS3);
+            SelectStatementProvider statementProvider1 = selectDistinct(queryHistoryTable.engineType).from(queryHistoryTable)
+                    .where(queryHistoryTable.engineType, isNotEqualTo("NATIVE"))
+                    .and(queryHistoryTable.projectName, isEqualTo(request.getProject()))
+                    .build().render(RenderingStrategies.MYBATIS3);
             List<QueryStatistics> engineTypes = mapper.selectMany(statementProvider1);
 
-            SelectStatementProvider statementProvider2 = selectDistinct(queryHistoryRealizationTable.model)
-                    .from(queryHistoryRealizationTable)
-                    .where(queryHistoryRealizationTable.projectName, isEqualTo(request.getProject())).limit(size)
+            SelectStatementProvider statementProvider2 = selectDistinct(queryHistoryRealizationTable.model).from(queryHistoryRealizationTable)
+                    .where(queryHistoryRealizationTable.projectName, isEqualTo(request.getProject()))
+                    .limit(size)
                     .build().render(RenderingStrategies.MYBATIS3);
             List<QueryStatistics> modelIds = mapper.selectMany(statementProvider2);
             engineTypes.addAll(modelIds);
@@ -222,36 +221,16 @@ public class JdbcQueryHistoryStore {
         }
     }
 
-    public long getMaxId() {
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
-            SelectStatementProvider statementProvider = select(max(queryHistoryTable.id))
-                    .from(queryHistoryTable)
-                    .build().render(RenderingStrategies.MYBATIS3);
-            Long maxId = mapper.selectAsLong(statementProvider);
-            return maxId == null ? 0 : maxId;
-        }
-    }
-
-    public QueryHistory queryOldestQueryHistory(long retainMinId) {
+    public QueryHistory queryOldestQueryHistory(long maxSize) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
             SelectStatementProvider statementProvider = select(getSelectFields(queryHistoryTable))
-                    .from(queryHistoryTable)
-                    .where(queryHistoryTable.id, isEqualTo(retainMinId))
+                    .from(queryHistoryTable) //
+                    .orderBy(queryHistoryTable.id.descending()) //
+                    .limit(1) //
+                    .offset(maxSize - 1) //
                     .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectOne(statementProvider);
-        }
-    }
-
-    public long getProjectCount(String project) {
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
-            SelectStatementProvider statementProvider = select(count(queryHistoryTable.id)) //
-                    .from(queryHistoryTable) //
-                    .where(queryHistoryTable.projectName, isEqualTo(project)) //
-                    .build().render(RenderingStrategies.MYBATIS3);
-            return mapper.selectAsLong(statementProvider);
         }
     }
 
@@ -260,12 +239,11 @@ public class JdbcQueryHistoryStore {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
             SelectStatementProvider statementProvider = select(getSelectFields(queryHistoryTable)) //
                     .from(queryHistoryTable) //
-                    .where(queryHistoryTable.id, //
-                            isEqualTo(select(queryHistoryTable.id) //
-                                    .from(queryHistoryTable) //
-                                    .where(queryHistoryTable.projectName, isEqualTo(project)) //
-                                    .orderBy(queryHistoryTable.id.descending()).limit(1).offset(maxSize - 1)) //
-                    ).build().render(RenderingStrategies.MYBATIS3);
+                    .where(queryHistoryTable.projectName, isEqualTo(project)) //
+                    .orderBy(queryHistoryTable.id.descending()) //
+                    .limit(1) //
+                    .offset(maxSize - 1) //
+                    .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectOne(statementProvider);
         }
     }
@@ -520,7 +498,7 @@ public class JdbcQueryHistoryStore {
             idToQHInfoList.forEach(pair -> providers.add(changeQHInfoProvider(pair.getFirst(), pair.getSecond())));
             providers.forEach(mapper::update);
             session.commit();
-            if (!idToQHInfoList.isEmpty()) {
+            if (idToQHInfoList.size() > 0) {
                 log.info("Update {} query history info takes {} ms", idToQHInfoList.size(),
                         System.currentTimeMillis() - start);
             }
@@ -642,8 +620,7 @@ public class JdbcQueryHistoryStore {
             if (request.isSubmitterExactlyMatch()) {
                 filterSql = filterSql.and(queryHistoryTable.querySubmitter, isIn(request.getFilterSubmitter()));
             } else if (request.getFilterSubmitter().size() == 1) {
-                filterSql = filterSql.and(queryHistoryTable.querySubmitter,
-                        isLikeCaseInsensitive("%" + request.getFilterSubmitter().get(0) + "%"));
+                filterSql = filterSql.and(queryHistoryTable.querySubmitter, isLikeCaseInsensitive("%" + request.getFilterSubmitter().get(0) + "%"));
             }
         }
 
@@ -667,12 +644,10 @@ public class JdbcQueryHistoryStore {
             }
         } else if (selectAllModels) {
             // Process CONSTANTS, HIVE, RDBMS and all model
-            filterSql = filterSql.and(queryHistoryTable.engineType, isIn(realizations),
-                    or(queryHistoryTable.indexHit, isEqualTo(true)));
+            filterSql = filterSql.and(queryHistoryTable.engineType, isIn(realizations), or(queryHistoryTable.indexHit, isEqualTo(true)));
         } else if (request.getFilterModelIds() != null && !request.getFilterModelIds().isEmpty()) {
             // Process CONSTANTS, HIVE, RDBMS and model1, model2, model3...
-            filterSql = filterSql.and(queryHistoryTable.engineType, isIn(realizations),
-                    or(queryHistoryTable.queryId,
+            filterSql = filterSql.and(queryHistoryTable.engineType, isIn(realizations), or(queryHistoryTable.queryId,
                             isIn(selectDistinct(queryHistoryRealizationTable.queryId).from(queryHistoryRealizationTable)
                                     .where(queryHistoryRealizationTable.model, isIn(request.getFilterModelIds())))));
         } else {
