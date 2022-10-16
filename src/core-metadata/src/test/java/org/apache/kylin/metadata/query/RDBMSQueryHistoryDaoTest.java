@@ -23,7 +23,6 @@ import static org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO.fillZeroForQu
 import java.util.List;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.junit.TimeZoneTestRunner;
@@ -766,71 +765,4 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
         queryMetrics.setQueryHistoryInfo(queryHistoryInfo);
         return queryMetrics;
     }
-
-    @Test
-    public void testDeleteQueryHistoryMaxSizeForGlobal() {
-        KylinConfig config = getTestConfig();
-        config.setProperty("kylin.query.queryhistory.max-size", "2");
-        Assert.assertEquals(2, config.getQueryHistoryMaxSize());
-
-        // before delete
-        Assert.assertEquals(0, queryHistoryDAO.getAllQueryHistories().size());
-
-        // delete empty
-        queryHistoryDAO.deleteQueryHistoriesIfMaxSizeReached();
-        Assert.assertEquals(0, queryHistoryDAO.getAllQueryHistories().size());
-
-        // insert
-        queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1L, true, PROJECT, true));
-        queryHistoryDAO.insert(createQueryMetrics(1580397912000L, 2L, false, PROJECT, true));
-        Assert.assertEquals(2, queryHistoryDAO.getAllQueryHistories().size());
-
-        // delete equals max size
-        queryHistoryDAO.deleteQueryHistoriesIfMaxSizeReached();
-        Assert.assertEquals(2, queryHistoryDAO.getAllQueryHistories().size());
-
-        // delete > max size
-        queryHistoryDAO.insert(createQueryMetrics(1580397912000L, 2L, false, PROJECT, true));
-        Assert.assertEquals(3, queryHistoryDAO.getAllQueryHistories().size());
-        queryHistoryDAO.deleteQueryHistoriesIfMaxSizeReached();
-        Assert.assertEquals(2, queryHistoryDAO.getAllQueryHistories().size());
-
-    }
-
-    @Test
-    public void testDeleteQueryHistoryMaxSizeForProject() {
-        String otherProject = "other_project";
-        KylinConfig config = getTestConfig();
-        config.setProperty("kylin.query.queryhistory.project-max-size", "2");
-        Assert.assertEquals(2, config.getQueryHistoryProjectMaxSize());
-
-        // before delete
-        Assert.assertEquals(0, queryHistoryDAO.getAllQueryHistories().size());
-
-        // delete empty
-        queryHistoryDAO.deleteQueryHistoriesIfProjectMaxSizeReached(PROJECT);
-        Assert.assertEquals(0, queryHistoryDAO.getAllQueryHistories().size());
-
-        // insert
-        queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1L, true, PROJECT, true));
-        queryHistoryDAO.insert(createQueryMetrics(1580397912000L, 2L, false, PROJECT, true));
-        queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1L, true, otherProject, true));
-        queryHistoryDAO.insert(createQueryMetrics(1580397912000L, 2L, false, otherProject, true));
-        Assert.assertEquals(4, queryHistoryDAO.getAllQueryHistories().size());
-
-        // delete equals max size
-        queryHistoryDAO.deleteQueryHistoriesIfProjectMaxSizeReached(PROJECT);
-        queryHistoryDAO.deleteQueryHistoriesIfProjectMaxSizeReached(otherProject);
-        Assert.assertEquals(4, queryHistoryDAO.getAllQueryHistories().size());
-
-        // delete > max size
-        queryHistoryDAO.insert(createQueryMetrics(1580397912000L, 2L, false, PROJECT, true));
-        queryHistoryDAO.insert(createQueryMetrics(1580397912000L, 2L, false, otherProject, true));
-        Assert.assertEquals(6, queryHistoryDAO.getAllQueryHistories().size());
-        queryHistoryDAO.deleteQueryHistoriesIfProjectMaxSizeReached(PROJECT);
-        queryHistoryDAO.deleteQueryHistoriesIfProjectMaxSizeReached(otherProject);
-        Assert.assertEquals(4, queryHistoryDAO.getAllQueryHistories().size());
-
-    }
-
 }
