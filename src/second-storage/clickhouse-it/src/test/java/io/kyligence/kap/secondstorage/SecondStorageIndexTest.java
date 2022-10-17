@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -349,8 +348,8 @@ public class SecondStorageIndexTest implements JobWaiter {
         String jobId = updatePrimaryIndexAndSecondaryIndex(modelName, null, Sets.newHashSet());
         waitJobEnd(getProject(), jobId);
 
-        assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageConcurrentOperate(), getProject()),
-                KylinException.class, () -> updatePrimaryIndexAndSecondaryIndex(modelName, null, secondaryIndex));
+        assertThrows(MsgPicker.getMsg().getSecondStorageConcurrentOperate(), KylinException.class,
+                () -> updatePrimaryIndexAndSecondaryIndex(modelName, null, secondaryIndex));
         clickhouse[0].start();
         ClickHouseUtils.internalConfigClickHouse(clickhouse, replica);
 
@@ -505,7 +504,7 @@ public class SecondStorageIndexTest implements JobWaiter {
             assertEquals(SecondStorageIndexLoadStatus.ALL, r.getPrimaryIndexStatus());
             assertEquals(SecondStorageIndexLoadStatus.ALL, r.getSecondaryIndexStatus());
         });
-        
+
         secondStorageService.triggerSegmentsClean(getProject(), modelId,
                 getDataFlow(modelId).getSegments().stream().map(NDataSegment::getId).collect(Collectors.toSet()));
         waitAllJoEnd();
