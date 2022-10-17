@@ -163,10 +163,10 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public Map<String, String> getReadonlyProperties() {
-        val substitutor = getSubstitutor();
+        val subStitutorTmp = getSubstitutor();
         HashMap<String, String> config = Maps.newHashMap();
         for (Entry<Object, Object> entry : this.properties.entrySet()) {
-            config.put((String) entry.getKey(), substitutor.replace((String) entry.getValue()));
+            config.put((String) entry.getKey(), subStitutorTmp.replace((String) entry.getValue()));
         }
         return config;
     }

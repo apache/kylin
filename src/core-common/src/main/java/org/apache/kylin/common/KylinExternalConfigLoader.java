@@ -167,6 +167,7 @@ public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
 
     /**
      * @see #getPropertyEntries
+     * @deprecated
      */
     @Override
     @Deprecated
