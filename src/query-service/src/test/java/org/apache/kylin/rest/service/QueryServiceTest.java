@@ -1676,7 +1676,8 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     public void testQueryWithConstant() throws SQLException {
         doTestQueryWithConstant("select current_timestamp");
         doTestQueryWithConstant("select 1,2,3,4,5");
-
+        doTestQueryWithConstant("select max(1) from TEST_ACCOUNT inner join TEST_MEASURE "
+                + "on TEST_ACCOUNT.ACCOUNT_ID = TEST_MEASURE.ID1");
     }
 
     private void doTestQueryWithConstant(String testSql) {

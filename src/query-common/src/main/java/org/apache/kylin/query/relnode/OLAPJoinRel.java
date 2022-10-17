@@ -303,7 +303,9 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
         PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), pref.preferArray());
         RelOptTable factTable = context.firstTableScan.getTable();
-        MethodCallExpression exprCall = Expressions.call(factTable.getExpression(OLAPTable.class), "executeOLAPQuery",
+        // query result is error like select min(2+2), max(2) from EmptyTable
+        String execFunc = context.isConstantQueryWithAggregations() ? "executeSimpleAggregationQuery" : "executeOLAPQuery";
+        MethodCallExpression exprCall = Expressions.call(factTable.getExpression(OLAPTable.class), execFunc,
                 implementor.getRootExpression(), Expressions.constant(context.id));
         return implementor.result(physType, Blocks.toBlock(exprCall));
     }
