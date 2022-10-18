@@ -155,7 +155,9 @@ public class HdfsCapacityMetrics {
      */
     public static Long getHdfsCapacityByProject(String project) {
         if (hdfsMetricsPeriodicCalculationEnabled) {
-            return workingDirCapacity.getOrDefault(project, 0L);
+            // Writing numbers in JSON may be read as integer
+            Object orDefault = workingDirCapacity.getOrDefault(project, 0L);
+            return Long.parseLong(orDefault.toString());
         }
         return -1L;
     }
