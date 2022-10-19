@@ -1,1 +1,0 @@
-`lcase(substring(substring_index(concat(LSTG_FORMAT_NAME, .www.apache.org), ., CAST(CAST(2 AS TINYINT) AS INT)), 1, (1 + 2)))` STRING

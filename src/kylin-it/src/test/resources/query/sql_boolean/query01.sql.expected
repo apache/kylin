@@ -1,7 +1,0 @@
--- test is false, is true, is not false, is not true
-
-SELECT trans_id,
-CASE WHEN NOT IS_EFFECTUAL THEN 0 ELSE 1 END as case1,
-CASE WHEN NOT IS_EFFECTUAL THEN 0 ELSE 1 END as case2
-FROM TEST_KYLIN_FACT
-WHERE PRICE > 0 AND ITEM_COUNT > 0

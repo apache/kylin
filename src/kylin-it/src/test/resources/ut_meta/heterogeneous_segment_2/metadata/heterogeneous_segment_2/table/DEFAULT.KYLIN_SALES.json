@@ -1,0 +1,107 @@
+{
+  "uuid": "b6da5d34-831e-48e1-9c0a-499e95b4b2a8",
+  "last_modified": 0,
+  "create_time": 1630401561022,
+  "version": "4.0.0.0",
+  "name": "KYLIN_SALES",
+  "columns": [
+    {
+      "id": "1",
+      "name": "TRANS_ID",
+      "datatype": "bigint",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "2",
+      "name": "PART_DT",
+      "datatype": "date",
+      "comment": "Order Date",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "3",
+      "name": "LSTG_FORMAT_NAME",
+      "datatype": "varchar(4096)",
+      "comment": "Order Transaction Type",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "4",
+      "name": "LEAF_CATEG_ID",
+      "datatype": "bigint",
+      "comment": "Category ID",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "5",
+      "name": "LSTG_SITE_ID",
+      "datatype": "integer",
+      "comment": "Site ID",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "6",
+      "name": "SLR_SEGMENT_CD",
+      "datatype": "smallint",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "7",
+      "name": "PRICE",
+      "datatype": "decimal(19,4)",
+      "comment": "Order Price",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "8",
+      "name": "ITEM_COUNT",
+      "datatype": "bigint",
+      "comment": "Number of Purchased Goods",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "9",
+      "name": "SELLER_ID",
+      "datatype": "bigint",
+      "comment": "Seller ID",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "10",
+      "name": "BUYER_ID",
+      "datatype": "bigint",
+      "comment": "Buyer ID",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "11",
+      "name": "OPS_USER_ID",
+      "datatype": "varchar(4096)",
+      "comment": "System User ID",
+      "case_sensitive_name": null
+    },
+    {
+      "id": "12",
+      "name": "OPS_REGION",
+      "datatype": "varchar(4096)",
+      "comment": "System User Region",
+      "case_sensitive_name": null
+    }
+  ],
+  "source_type": 9,
+  "table_type": "MANAGED",
+  "top": false,
+  "increment_loading": false,
+  "last_snapshot_path": null,
+  "last_snapshot_size": 0,
+  "snapshot_last_modified": 0,
+  "query_hit_count": 0,
+  "partition_column": null,
+  "snapshot_partitions": {},
+  "snapshot_partition_col": null,
+  "selected_snapshot_partition_col": null,
+  "temp_snapshot_path": null,
+  "snapshot_has_broken": false,
+  "database": "DEFAULT",
+  "transactional": false
+}

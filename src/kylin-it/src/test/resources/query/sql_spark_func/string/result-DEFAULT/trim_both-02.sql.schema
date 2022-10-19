@@ -1,1 +1,0 @@
-`name` STRING,`TRIM(BOTH lanA FROM name)` STRING

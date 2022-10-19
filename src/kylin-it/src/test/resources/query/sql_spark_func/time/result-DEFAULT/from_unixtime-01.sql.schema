@@ -1,1 +1,0 @@
-`from_unixtime(CAST(100 AS BIGINT), yyyy-MM-dd HH:mm:ss)` STRING

@@ -1,1 +1,0 @@
-`levenshtein(concat(LSTG_FORMAT_NAME, ab), LSTG_FORMAT_NAME)` INT

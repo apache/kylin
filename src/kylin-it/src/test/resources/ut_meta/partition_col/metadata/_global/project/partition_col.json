@@ -1,0 +1,6 @@
+{
+  "uuid": "b705290a-ef17-4af5-beb1-b3543df8823g",
+  "override_kylin_properties": {
+    "kylin.query.slowquery-detect-interval": "4"
+  }
+}
