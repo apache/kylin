@@ -116,7 +116,7 @@
     <commons-pool.version>2.5.0</commons-pool.version>
 
     <!-- Calcite deps, keep compatible with calcite.version -->
-    <jackson.version>2.10.0</jackson.version>
+    <jackson.version>2.13.4.1</jackson.version>
 
     <!-- Test Dependency versions -->
     <antlr.version>3.4</antlr.version>
