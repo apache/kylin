@@ -1,1 +1,0 @@
-`LSTG_FORMAT_NAME` STRING,`substring(CAST(crc32(CAST(substring_index(concat(LSTG_FORMAT_NAME, .www.apache.org), ., CAST(CAST(2 AS TINYINT) AS INT)) AS BINARY)) AS STRING), 1, (1 + 2))` STRING

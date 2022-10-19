@@ -1,1 +1,0 @@
-select '>               <' from TEST_KYLIN_FACT limit 1

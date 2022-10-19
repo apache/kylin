@@ -401,6 +401,13 @@ public class ExecAndComp {
         return new QueryExec(prj, KylinConfig.getInstanceFromEnv(), true).executeQuery(sql).getRows();
     }
 
+    public static void execAndCompareQueryList(List<String> queries, String prj, CompareLevel compareLevel,
+                                               String joinType) {
+        List<Pair<String, String>> transformed = queries.stream().map(q -> Pair.newPair("", q))
+                .collect(Collectors.toList());
+        execAndCompare(transformed, prj, compareLevel, joinType);
+    }
+
     public static void execAndCompare(List<Pair<String, String>> queries, String prj, CompareLevel compareLevel,
             String joinType) {
         execAndCompare(queries, prj, compareLevel, joinType, null);

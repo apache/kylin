@@ -1,0 +1,18 @@
+{
+  "uuid" : "8d86557d-0a97-464c-a45d-ff565605feee",
+  "last_modified" : 0,
+  "create_time" : 1603300038356,
+  "version" : "4.0.0.0",
+  "table_name" : "DEFAULT.TEST_ACCOUNT",
+  "last_build_job_id" : null,
+  "frequency" : 0,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : 0,
+  "total_rows" : 0,
+  "mapper_rows" : [ ],
+  "data_source_properties" : { },
+  "loading_range" : [ ],
+  "col_stats_path" : null,
+  "original_size" : 2251
+}

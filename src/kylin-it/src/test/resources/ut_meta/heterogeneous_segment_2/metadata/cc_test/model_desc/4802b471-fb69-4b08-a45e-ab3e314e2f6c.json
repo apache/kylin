@@ -1,0 +1,272 @@
+{
+  "uuid": "4802b471-fb69-4b08-a45e-ab3e314e2f6c",
+  "last_modified": 1599401126420,
+  "create_time": 1599401126420,
+  "version": "4.0.0.0",
+  "alias": "cc_dup_nest",
+  "owner": "ADMIN",
+  "config_last_modifier": null,
+  "config_last_modified": 0,
+  "description": "",
+  "fact_table": "SSB.LINEORDER",
+  "fact_table_alias": null,
+  "management_type": "MODEL_BASED",
+  "join_tables": [
+    {
+      "table": "SSB.CUSTOMER",
+      "kind": "LOOKUP",
+      "alias": "CUSTOMER",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "CUSTOMER.C_CUSTKEY"
+        ],
+        "foreign_key": [
+          "LINEORDER.LO_CUSTKEY"
+        ],
+        "non_equi_join_condition": null,
+        "primary_table": null,
+        "foreign_table": null
+      },
+      "join_relation_type": "MANY_TO_ONE"
+    }
+  ],
+  "filter_condition": "",
+  "partition_desc": null,
+  "capacity": "MEDIUM",
+  "segment_config": {
+    "auto_merge_enabled": null,
+    "auto_merge_time_ranges": null,
+    "volatile_range": null,
+    "retention_range": null,
+    "create_empty_segment_enabled": false
+  },
+  "data_check_desc": null,
+  "semantic_version": 0,
+  "storage_type": 0,
+  "all_named_columns": [
+    {
+      "id": 0,
+      "name": "LO_LINENUMBER",
+      "column": "LINEORDER.LO_LINENUMBER"
+    },
+    {
+      "id": 1,
+      "name": "LO_ORDTOTALPRICE",
+      "column": "LINEORDER.LO_ORDTOTALPRICE"
+    },
+    {
+      "id": 2,
+      "name": "LO_SHIPMODE",
+      "column": "LINEORDER.LO_SHIPMODE"
+    },
+    {
+      "id": 3,
+      "name": "LO_SUPPKEY",
+      "column": "LINEORDER.LO_SUPPKEY"
+    },
+    {
+      "id": 4,
+      "name": "LO_SUPPLYCOST",
+      "column": "LINEORDER.LO_SUPPLYCOST"
+    },
+    {
+      "id": 5,
+      "name": "LO_COMMITDATE",
+      "column": "LINEORDER.LO_COMMITDATE"
+    },
+    {
+      "id": 6,
+      "name": "LO_ORDERDATE",
+      "column": "LINEORDER.LO_ORDERDATE"
+    },
+    {
+      "id": 7,
+      "name": "LO_REVENUE",
+      "column": "LINEORDER.LO_REVENUE"
+    },
+    {
+      "id": 8,
+      "name": "LO_TAX",
+      "column": "LINEORDER.LO_TAX"
+    },
+    {
+      "id": 9,
+      "name": "LO_EXTENDEDPRICE",
+      "column": "LINEORDER.LO_EXTENDEDPRICE"
+    },
+    {
+      "id": 10,
+      "name": "LO_ORDERKEY",
+      "column": "LINEORDER.LO_ORDERKEY",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 11,
+      "name": "LO_DISCOUNT",
+      "column": "LINEORDER.LO_DISCOUNT"
+    },
+    {
+      "id": 12,
+      "name": "LO_SHIPPRIOTITY",
+      "column": "LINEORDER.LO_SHIPPRIOTITY"
+    },
+    {
+      "id": 13,
+      "name": "LO_QUANTITY",
+      "column": "LINEORDER.LO_QUANTITY"
+    },
+    {
+      "id": 14,
+      "name": "LO_PARTKEY",
+      "column": "LINEORDER.LO_PARTKEY"
+    },
+    {
+      "id": 15,
+      "name": "LO_ORDERPRIOTITY",
+      "column": "LINEORDER.LO_ORDERPRIOTITY"
+    },
+    {
+      "id": 16,
+      "name": "LO_CUSTKEY",
+      "column": "LINEORDER.LO_CUSTKEY"
+    },
+    {
+      "id": 17,
+      "name": "C_PHONE",
+      "column": "CUSTOMER.C_PHONE"
+    },
+    {
+      "id": 18,
+      "name": "C_CUSTKEY",
+      "column": "CUSTOMER.C_CUSTKEY"
+    },
+    {
+      "id": 19,
+      "name": "C_NAME",
+      "column": "CUSTOMER.C_NAME"
+    },
+    {
+      "id": 20,
+      "name": "C_REGION",
+      "column": "CUSTOMER.C_REGION"
+    },
+    {
+      "id": 21,
+      "name": "C_MKTSEGMENT",
+      "column": "CUSTOMER.C_MKTSEGMENT"
+    },
+    {
+      "id": 22,
+      "name": "C_ADDRESS",
+      "column": "CUSTOMER.C_ADDRESS"
+    },
+    {
+      "id": 23,
+      "name": "C_CITY",
+      "column": "CUSTOMER.C_CITY"
+    },
+    {
+      "id": 24,
+      "name": "C_NATION",
+      "column": "CUSTOMER.C_NATION"
+    },
+    {
+      "id": 25,
+      "name": "CC_CNAME",
+      "column": "LINEORDER.CC_CNAME",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 26,
+      "name": "CC_LTAX",
+      "column": "LINEORDER.CC_LTAX",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 27,
+      "name": "CC_NUM",
+      "column": "LINEORDER.CC_NUM",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 28,
+      "name": "CC_LTAX_NEST",
+      "column": "LINEORDER.CC_LTAX_NEST",
+      "status": "DIMENSION"
+    }
+  ],
+  "all_measures": [
+    {
+      "name": "COUNT_ALL",
+      "function": {
+        "expression": "COUNT",
+        "parameters": [
+          {
+            "type": "constant",
+            "value": "1"
+          }
+        ],
+        "returntype": "bigint"
+      },
+      "id": 100000
+    }
+  ],
+  "column_correlations": [],
+  "multilevel_partition_cols": [],
+  "computed_columns": [
+    {
+      "tableIdentity": "SSB.LINEORDER",
+      "tableAlias": "LINEORDER",
+      "columnName": "CC_CNAME",
+      "expression": "CUSTOMER.C_NAME +'USA'",
+      "innerExpression": "`CUSTOMER`.`C_NAME` +'USA'",
+      "datatype": "DOUBLE",
+      "comment": null
+    },
+    {
+      "tableIdentity": "SSB.LINEORDER",
+      "tableAlias": "LINEORDER",
+      "columnName": "CC_LTAX",
+      "expression": "LINEORDER.LO_TAX +1 ",
+      "innerExpression": "`LINEORDER`.`LO_TAX` +1",
+      "datatype": "BIGINT",
+      "comment": null
+    },
+    {
+      "tableIdentity": "SSB.LINEORDER",
+      "tableAlias": "LINEORDER",
+      "columnName": "CC_NUM",
+      "expression": "1+2",
+      "innerExpression": "1+2",
+      "datatype": "INTEGER",
+      "comment": null
+    },
+    {
+      "tableIdentity": "SSB.LINEORDER",
+      "tableAlias": "LINEORDER",
+      "columnName": "CC_LTAX_NEST",
+      "expression": "LINEORDER.CC_LTAX * 2 ",
+      "innerExpression": "(`LINEORDER`.`LO_TAX` +1) * 2",
+      "datatype": "BIGINT",
+      "comment": null
+    }
+  ],
+  "canvas": {
+    "coordinate": {
+      "LINEORDER": {
+        "x": 602.5555589463976,
+        "y": 174.500003390842,
+        "width": 220.0,
+        "height": 200.0
+      },
+      "CUSTOMER": {
+        "x": 960.3333367241754,
+        "y": 211.1666700575087,
+        "width": 220.0,
+        "height": 200.0
+      }
+    },
+    "zoom": 9.0
+  }
+}

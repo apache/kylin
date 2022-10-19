@@ -1,0 +1,394 @@
+<?xml version="1.0" ?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<Root>
+    <TestCase name="testSimpleCountDistinctExpr">
+        <Resource name="planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], ctx=[])
+    KapProjectRel($f0=[CASE(=($3, 'FP-NON GTC'), $8, null)], ctx=[])
+      KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], AGG$0=[BITMAP_COUNT($0)], ctx=[])
+    KapProjectRel($f0=[CASE(=($0, 'FP-NON GTC'), $1, null)], ctx=[])
+      KapAggregateRel(group-set=[[0]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($1)], ctx=[])
+        KapProjectRel(LSTG_FORMAT_NAME=[$3], PRICE=[$8], $f2=[0], ctx=[])
+          KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testAllCases">
+        <Resource name="query00.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], ctx=[])
+    KapProjectRel($f0=[CASE(=($2, 2012-10-30), $8, null)], ctx=[])
+      KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query00.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], AGG$0=[BITMAP_COUNT($0)], ctx=[])
+    KapProjectRel($f0=[CASE(=($0, 2012-10-30), $1, null)], ctx=[])
+      KapAggregateRel(group-set=[[0]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($1)], ctx=[])
+        KapProjectRel(CAL_DT=[$2], PRICE=[$8], $f2=[0], ctx=[])
+          KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query01.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], ctx=[])
+    KapProjectRel($f0=[CASE(AND(=($2, 2012-10-30), >($7, 1)), $8, null)], ctx=[])
+      KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query01.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], AGG$0=[BITMAP_COUNT($0)], ctx=[])
+    KapProjectRel($f0=[CASE(AND(=($0, 2012-10-30), >($1, 1)), $2, null)], ctx=[])
+      KapAggregateRel(group-set=[[0, 1]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($2)], ctx=[])
+        KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], PRICE=[$8], $f3=[0], ctx=[])
+          KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query02.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], EXPR$1=[COUNT(DISTINCT $1)], EXPR$2=[COUNT(DISTINCT $2)], ctx=[])
+    KapProjectRel($f0=[CASE(AND(=($2, 2012-10-30), >($7, 1)), $8, null)], $f1=[CASE(>($7, 1), $8, null)], $f2=[CASE(>($9, 0), null, $8)], ctx=[])
+      KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query02.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], AGG$0=[BITMAP_COUNT($0)], AGG$1=[BITMAP_COUNT($1)], AGG$2=[BITMAP_COUNT($2)], ctx=[])
+    KapProjectRel($f0=[CASE(AND(=($0, 2012-10-30), >($1, 1)), $4, null)], $f1=[CASE(>($2, 1), $5, null)], $f2=[CASE(>($3, 0), null, $6)], ctx=[])
+      KapAggregateRel(group-set=[[0, 1, 4, 7]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($2)], COUNT_DISTINCT_CASE$1$0=[BITMAP_UUID($5)], COUNT_DISTINCT_CASE$2$1=[BITMAP_UUID($9)], ctx=[])
+        KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], PRICE=[$8], $f3=[0], SELLER_ID0=[$7], PRICE0=[$8], $f6=[0], ITEM_COUNT=[$9], $f8=[0], PRICE01=[$8], ctx=[])
+          KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query03.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapUnionRel(all=[false], ctx=[], all=[false])
+    KapProjectRel(EXPR$0=[$0], ctx=[])
+      KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], ctx=[])
+        KapProjectRel($f0=[CASE(AND(=($2, 2012-10-30), >($7, 1)), $8, null)], ctx=[])
+          KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+    KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], ctx=[])
+      KapProjectRel($f0=[CASE(>($7, 1), $8, null)], ctx=[])
+        KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query03.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapUnionRel(all=[false], ctx=[], all=[false])
+    KapProjectRel(EXPR$0=[$0], ctx=[])
+      KapAggregateRel(group-set=[[]], groups=[null], AGG$0=[BITMAP_COUNT($0)], ctx=[])
+        KapProjectRel($f0=[CASE(AND(=($0, 2012-10-30), >($1, 1)), $2, null)], ctx=[])
+          KapAggregateRel(group-set=[[0, 1]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($2)], ctx=[])
+            KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], PRICE=[$8], $f3=[0], ctx=[])
+              KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+    KapAggregateRel(group-set=[[]], groups=[null], AGG$0=[BITMAP_COUNT($0)], ctx=[])
+      KapProjectRel($f0=[CASE(>($0, 1), $1, null)], ctx=[])
+        KapAggregateRel(group-set=[[0]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($1)], ctx=[])
+          KapProjectRel(SELLER_ID=[$7], PRICE=[$8], $f2=[0], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query04.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(CNT1=[$0], CNT2=[$3], CAL_DT=[$1], ctx=[])
+    KapJoinRel(condition=[=($1, $2)], joinType=[inner], ctx=[])
+      KapProjectRel(CNT1=[$1], CAL_DT=[$0], ctx=[])
+        KapAggregateRel(group-set=[[0]], groups=[null], CNT1=[COUNT(DISTINCT $1)], ctx=[])
+          KapProjectRel(CAL_DT=[$2], $f1=[CASE(AND(=($2, 2012-10-30), >($7, 1)), $8, null)], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+      KapAggregateRel(group-set=[[0]], groups=[null], CNT2=[COUNT(DISTINCT $1)], ctx=[])
+        KapProjectRel(CAL_DT=[$2], $f1=[CASE(>($7, 1), $8, null)], ctx=[])
+          KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query04.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(CNT1=[$0], CNT2=[$3], CAL_DT=[$1], ctx=[])
+    KapJoinRel(condition=[=($1, $2)], joinType=[inner], ctx=[])
+      KapProjectRel(CNT1=[$1], CAL_DT=[$0], ctx=[])
+        KapAggregateRel(group-set=[[0]], groups=[null], AGG$0=[BITMAP_COUNT($1)], ctx=[])
+          KapProjectRel(CAL_DT=[$0], $f1=[CASE(AND(=($1, 2012-10-30), >($2, 1)), $3, null)], ctx=[])
+            KapAggregateRel(group-set=[[0, 1, 2]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($3)], ctx=[])
+              KapProjectRel(CAL_DT=[$2], CAL_DT0=[$2], SELLER_ID=[$7], PRICE=[$8], $f4=[0], ctx=[])
+                KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+      KapAggregateRel(group-set=[[0]], groups=[null], AGG$0=[BITMAP_COUNT($1)], ctx=[])
+        KapProjectRel(CAL_DT=[$0], $f1=[CASE(>($1, 1), $2, null)], ctx=[])
+          KapAggregateRel(group-set=[[0, 1]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($2)], ctx=[])
+            KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], PRICE=[$8], $f3=[0], ctx=[])
+              KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query05.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(CNT1=[$1], CAL_DT=[$0], ctx=[])
+    KapAggregateRel(group-set=[[0]], groups=[null], CNT1=[COUNT(DISTINCT $1)], ctx=[])
+      KapProjectRel(CAL_DT=[$0], $f1=[CASE(AND(=($0, 2012-10-30), >($1, 1)), CAST($2):BIGINT, null)], ctx=[])
+        KapAggregateRel(group-set=[[0, 1]], groups=[null], CNT=[COUNT(DISTINCT $2)], ctx=[])
+          KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], $f2=[CASE(>($9, 1), $8, null)], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query05.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(CNT1=[$1], CAL_DT=[$0], ctx=[])
+    KapAggregateRel(group-set=[[0]], groups=[null], CNT1=[COUNT(DISTINCT $1)], ctx=[])
+      KapProjectRel(CAL_DT=[$0], $f1=[CASE(AND(=($0, 2012-10-30), >($1, 1)), CAST($2):BIGINT, null)], ctx=[])
+        KapAggregateRel(group-set=[[0, 1]], groups=[null], AGG$0=[BITMAP_COUNT($2)], ctx=[])
+          KapProjectRel(CAL_DT=[$0], SELLER_ID=[$1], $f2=[CASE(>($2, 1), $3, null)], ctx=[])
+            KapAggregateRel(group-set=[[0, 1, 2]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($3)], ctx=[])
+              KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], ITEM_COUNT=[$9], PRICE=[$8], $f4=[0], ctx=[])
+                KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query06.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(EXPR$0=[$1], CAL_DT=[$0], EXPR$2=[$2], EXPR$3=[$3], ctx=[])
+    KapAggregateRel(group-set=[[0]], groups=[null], EXPR$0=[SUM($1)], EXPR$2=[COUNT(DISTINCT $2)], EXPR$3=[SUM($3)], ctx=[])
+      KapProjectRel(CAL_DT=[$2], $f1=[CASE(=($2, 2012-10-30), $8, null)], $f2=[CASE(>($2, 2012-12-01), $10, null)], $f3=[*($8, 9)], ctx=[])
+        KapJoinRel(condition=[=($1, $39)], joinType=[left], ctx=[])
+          KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+          KapTableScan(table=[[DEFAULT, TEST_ORDER]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+]]>
+        </Resource>
+        <Resource name="query06.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(EXPR$0=[$1], CAL_DT=[$0], EXPR$2=[$2], EXPR$3=[$3], ctx=[])
+    KapAggregateRel(group-set=[[0]], groups=[null], AGG$0=[SUM($1)], AGG$1=[BITMAP_COUNT($2)], AGG$2=[SUM($3)], ctx=[])
+      KapProjectRel(CAL_DT=[$0], EXPR$0=[$2], $f2=[CASE(>($1, 2012-12-01), $4, null)], EXPR$3=[$3], ctx=[])
+        KapProjectRel(CAL_DT=[$0], CAL_DT0=[$1], AGG$0=[$5], AGG$1=[$6], COUNT_DISTINCT_CASE$0$0=[$2], ctx=[])
+          KapJoinRel(condition=[AND(=($0, $3), =($1, $4))], joinType=[inner], ctx=[])
+            KapAggregateRel(group-set=[[0, 2]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($3)], ctx=[])
+              KapProjectRel(CAL_DT=[$2], $f1=[CAST(0):DECIMAL(19, 4)], CAL_DT0=[$2], TEST_COUNT_DISTINCT_BITMAP=[$10], $f4=[0], $f5=[CAST(0):DECIMAL(29, 4)], ctx=[])
+                KapJoinRel(condition=[=($1, $39)], joinType=[left], ctx=[])
+                  KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+                  KapTableScan(table=[[DEFAULT, TEST_ORDER]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+            KapAggregateRel(group-set=[[0, 1]], groups=[null], AGG$0=[SUM($2)], AGG$1=[SUM($3)], ctx=[])
+              KapProjectRel(CAL_DT=[$0], CAL_DT0=[$1], $f2=[CASE(=($2, 2012-10-30), $4, null)], EXPR$3=[$3], ctx=[])
+                KapAggregateRel(group-set=[[0, 1, 2]], groups=[null], TOP_AGG$0=[SUM($3)], TOP_AGG$1=[SUM($4)], TOP_AGG$2=[SUM($5)], ctx=[])
+                  KapProjectRel(CAL_DT=[$0], CAL_DT0=[$1], CAL_DT01=[$2], EXPR$3=[$3], SUM_CASE$0$0=[$4], $f5=[*(0, $5)], ctx=[])
+                    KapAggregateRel(group-set=[[0, 1, 2]], groups=[null], AGG$0=[SUM($3)], AGG$1=[SUM($4)], AGG$2=[SUM($5)], ctx=[])
+                      KapProjectRel(CAL_DT=[$0], CAL_DT0=[$1], CAL_DT01=[$2], $f3=[*($3, 9)], SUM_CASE$0$0=[$4], SUM_CONST$2=[$5], ctx=[])
+                        KapAggregateRel(group-set=[[0, 1, 2]], groups=[null], SUM_OP$0=[SUM($3)], SUM_CASE$0$0=[SUM($4)], SUM_CONST$2=[COUNT()], ctx=[])
+                          KapProjectRel(CAL_DT=[$2], CAL_DT0=[$2], CAL_DT01=[$2], PRICE=[$8], PRICE0=[$8], ctx=[])
+                            KapJoinRel(condition=[=($1, $39)], joinType=[left], ctx=[])
+                              KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+                              KapTableScan(table=[[DEFAULT, TEST_ORDER]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+]]>
+        </Resource>
+        <Resource name="query07.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], EXPR$1=[SUM($1)], EXPR$2=[COUNT($2)], EXPR$3=[COUNT(DISTINCT $2)], ctx=[])
+    KapProjectRel($f0=[CASE(AND(=($2, 2012-10-30), >($7, 1)), $8, null)], PRICE=[$8], LSTG_FORMAT_NAME=[$3], ctx=[])
+      KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query07.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(AGG$0=[$1], AGG$1=[$2], AGG$2=[$3], EXPR$3=[$0], ctx=[])
+    KapJoinRel(condition=[true], joinType=[inner], ctx=[])
+      KapAggregateRel(group-set=[[]], groups=[null], EXPR$3=[COUNT(DISTINCT $2)], ctx=[])
+        KapProjectRel($f0=[CAST(0):DECIMAL(19, 4)], $f1=[CAST(0):DECIMAL(19, 4)], LSTG_FORMAT_NAME=[$3], ctx=[])
+          KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+      KapAggregateRel(group-set=[[]], groups=[null], AGG$0=[BITMAP_COUNT($0)], AGG$1=[SUM($1)], AGG$2=[$SUM0($2)], ctx=[])
+        KapProjectRel($f0=[CASE(AND(=($0, 2012-10-30), >($1, 1)), $4, null)], EXPR$1=[$2], EXPR$2=[$3], ctx=[])
+          KapAggregateRel(group-set=[[0, 1]], groups=[null], EXPR$1=[SUM($4)], EXPR$2=[COUNT($5)], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($2)], ctx=[])
+            KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], PRICE=[$8], $f3=[0], PRICE0=[$8], LSTG_FORMAT_NAME=[$3], ctx=[])
+              KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query08.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], EXPR$1=[COUNT(DISTINCT $1)], EXPR$2=[COUNT(DISTINCT $2)], EXPR$3=[COUNT(DISTINCT $3)], ctx=[])
+    KapProjectRel($f0=[CASE(>($2, 2012-12-01), CAST($9):DECIMAL(19, 4), $8)], $f1=[CASE(>($2, 2012-12-01), null, 1)], $f2=[CASE(>($2, 2012-12-01), $9, 1)], $f3=[CASE(>($2, 2012-12-01), -($8, 1), null)], ctx=[])
+      KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query08.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], EXPR$1=[COUNT(DISTINCT $1)], EXPR$2=[COUNT(DISTINCT $2)], EXPR$3=[COUNT(DISTINCT $3)], ctx=[])
+    KapProjectRel($f0=[CASE(>($2, 2012-12-01), CAST($9):DECIMAL(19, 4), $8)], $f1=[CASE(>($2, 2012-12-01), null, 1)], $f2=[CASE(>($2, 2012-12-01), $9, 1)], $f3=[CASE(>($2, 2012-12-01), -($8, 1), null)], ctx=[])
+      KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query09.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], ctx=[])
+    KapProjectRel($f0=[CASE(>($2, 2012-12-01), $39, null)], ctx=[])
+      KapJoinRel(condition=[=($7, $39)], joinType=[inner], ctx=[])
+        KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+        KapAggregateRel(group-set=[[0, 1]], groups=[null], ctx=[])
+          KapProjectRel(ACCOUNT_ID=[$0], ACCOUNT_COUNTRY=[$3], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_ACCOUNT]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+]]>
+        </Resource>
+        <Resource name="query09.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], ctx=[])
+    KapProjectRel($f0=[CASE(>($2, 2012-12-01), $39, null)], ctx=[])
+      KapJoinRel(condition=[=($7, $39)], joinType=[inner], ctx=[])
+        KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+        KapAggregateRel(group-set=[[0, 1]], groups=[null], ctx=[])
+          KapProjectRel(ACCOUNT_ID=[$0], ACCOUNT_COUNTRY=[$3], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_ACCOUNT]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+]]>
+        </Resource>
+        <Resource name="query10.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], ctx=[])
+    KapProjectRel($f0=[CASE(AND(=($0, 2012-10-30), >($1, 1)), $2, null)], ctx=[])
+      KapUnionRel(all=[false], ctx=[], all=[false])
+        KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], PRICE=[$8], ctx=[])
+          KapFilterRel(condition=[AND(>=($7, 1), <=($7, 100))], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+        KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], PRICE=[$8], ctx=[])
+          KapFilterRel(condition=[AND(>=($7, 200), <=($7, 300))], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query10.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], ctx=[])
+    KapProjectRel($f0=[CASE(AND(=($0, 2012-10-30), >($1, 1)), $2, null)], ctx=[])
+      KapUnionRel(all=[false], ctx=[], all=[false])
+        KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], PRICE=[$8], ctx=[])
+          KapFilterRel(condition=[AND(>=($7, 1), <=($7, 100))], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+        KapProjectRel(CAL_DT=[$2], SELLER_ID=[$7], PRICE=[$8], ctx=[])
+          KapFilterRel(condition=[AND(>=($7, 200), <=($7, 300))], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+]]>
+        </Resource>
+        <Resource name="query11.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapSortRel(sort0=[$0], sort1=[$1], dir0=[ASC-nulls-first], dir1=[ASC-nulls-first], ctx=[])
+    KapAggregateRel(group-set=[[0, 1]], groups=[null], EXPR$2=[COUNT(DISTINCT $2)], ctx=[])
+      KapProjectRel(CAL_DT=[$2], ACCOUNT_COUNTRY=[$42], $f2=[CASE(=($42, 'US'), $8, null)], ctx=[])
+        KapFilterRel(condition=[AND(>=($2, 2012-01-01), <($2, 2012-02-01), OR(=($42, 'US'), =($42, 'CN')))], ctx=[])
+          KapJoinRel(condition=[=($7, $39)], joinType=[inner], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+            KapTableScan(table=[[DEFAULT, TEST_ACCOUNT]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+]]>
+        </Resource>
+        <Resource name="query11.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapSortRel(sort0=[$0], sort1=[$1], dir0=[ASC-nulls-first], dir1=[ASC-nulls-first], ctx=[])
+    KapAggregateRel(group-set=[[0, 1]], groups=[null], AGG$0=[BITMAP_COUNT($2)], ctx=[])
+      KapProjectRel(CAL_DT=[$0], ACCOUNT_COUNTRY=[$1], $f2=[CASE(=($2, 'US'), $3, null)], ctx=[])
+        KapAggregateRel(group-set=[[0, 1, 2]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($3)], ctx=[])
+          KapProjectRel(CAL_DT=[$2], ACCOUNT_COUNTRY=[$42], ACCOUNT_COUNTRY0=[$42], PRICE=[$8], $f4=[0], ctx=[])
+            KapFilterRel(condition=[AND(>=($2, 2012-01-01), <($2, 2012-02-01), OR(=($42, 'US'), =($42, 'CN')))], ctx=[])
+              KapJoinRel(condition=[=($7, $39)], joinType=[inner], ctx=[])
+                KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+                KapTableScan(table=[[DEFAULT, TEST_ACCOUNT]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+]]>
+        </Resource>
+        <Resource name="query12.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(EXPR$0=[$0], EXPR$1=[$0], EXPR$2=[$1], EXPR$3=[$2], EXPR$4=[$3], EXPR$5=[$0], EXPR$6=[$0], EXPR$7=[$4], EXPR$8=[$4], EXPR$9=[$5], EXPR$10=[$6], EXPR$11=[$7], EXPR$12=[$4], EXPR$13=[$4], EXPR$14=[$8], EXPR$15=[$9], EXPR$16=[$10], EXPR$17=[$11], EXPR$18=[$12], EXPR$19=[$9], EXPR$20=[$9], EXPR$21=[$13], EXPR$22=[$13], EXPR$23=[$13], EXPR$24=[$13], EXPR$25=[$14], EXPR$26=[$13], EXPR$27=[$13], EXPR$28=[$15], EXPR$29=[$15], EXPR$30=[$15], EXPR$31=[$15], EXPR$32=[$15], EXPR$33=[$15], EXPR$34=[$15], EXPR$35=[$16], EXPR$36=[$17], EXPR$37=[$18], EXPR$38=[$18], EXPR$39=[$19], EXPR$40=[$17], EXPR$41=[$17], EXPR$42=[$20], EXPR$43=[$21], EXPR$44=[$22], EXPR$45=[$23], EXPR$46=[$24], EXPR$47=[$25], EXPR$48=[$25], EXPR$49=[$26], EXPR$50=[$27], EXPR$51=[$28], EXPR$52=[$29], EXPR$53=[$30], EXPR$54=[$31], EXPR$55=[$32], EXPR$56=[$33], EXPR$57=[$34], EXPR$58=[$35], EXPR$59=[$36], EXPR$60=[$37], EXPR$61=[$38], EXPR$62=[$38], EXPR$63=[$39], EXPR$64=[$40], EXPR$65=[$40], EXPR$66=[$41], EXPR$67=[$42], EXPR$68=[$42], EXPR$69=[$43], EXPR$70=[$44], EXPR$71=[$44], EXPR$72=[$45], EXPR$73=[$46], EXPR$74=[$47], EXPR$75=[$48], EXPR$76=[$49], EXPR$77=[$50], EXPR$78=[$51], EXPR$79=[$52], EXPR$80=[$52], EXPR$81=[$53], EXPR$82=[$54], EXPR$83=[$55], ctx=[])
+    KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[COUNT(DISTINCT $0)], EXPR$2=[COUNT(DISTINCT $1)], EXPR$3=[COUNT(DISTINCT $2)], EXPR$4=[COUNT(DISTINCT $3)], EXPR$7=[COUNT(DISTINCT $4)], EXPR$9=[COUNT(DISTINCT $5)], EXPR$10=[COUNT(DISTINCT $6)], EXPR$11=[COUNT(DISTINCT $7)], EXPR$14=[COUNT(DISTINCT $8)], EXPR$15=[COUNT(DISTINCT $9)], EXPR$16=[COUNT(DISTINCT $10)], EXPR$17=[COUNT(DISTINCT $11)], EXPR$18=[COUNT(DISTINCT $12)], EXPR$21=[COUNT(DISTINCT $13)], EXPR$25=[COUNT(DISTINCT $14)], EXPR$28=[COUNT(DISTINCT $15)], EXPR$35=[COUNT(DISTINCT $16)], EXPR$36=[COUNT(DISTINCT $17)], EXPR$37=[COUNT(DISTINCT $18)], EXPR$39=[COUNT(DISTINCT $19)], EXPR$42=[COUNT(DISTINCT $20)], EXPR$43=[COUNT(DISTINCT $21)], EXPR$44=[COUNT(DISTINCT $22)], EXPR$45=[COUNT(DISTINCT $23)], EXPR$46=[COUNT(DISTINCT $24)], EXPR$47=[COUNT(DISTINCT $25)], EXPR$49=[COUNT(DISTINCT $26)], EXPR$50=[COUNT(DISTINCT $27)], EXPR$51=[COUNT(DISTINCT $28)], EXPR$52=[COUNT(DISTINCT $29)], EXPR$53=[COUNT(DISTINCT $30)], EXPR$54=[COUNT(DISTINCT $31)], EXPR$55=[COUNT(DISTINCT $32)], EXPR$56=[COUNT(DISTINCT $33)], EXPR$57=[COUNT(DISTINCT $34)], EXPR$58=[COUNT(DISTINCT $35)], EXPR$59=[COUNT(DISTINCT $36)], EXPR$60=[COUNT(DISTINCT $37)], EXPR$61=[COUNT(DISTINCT $38)], EXPR$63=[COUNT(DISTINCT $39)], EXPR$64=[COUNT(DISTINCT $40)], EXPR$66=[COUNT(DISTINCT $41)], EXPR$67=[COUNT(DISTINCT $42)], EXPR$69=[COUNT(DISTINCT $43)], EXPR$70=[COUNT(DISTINCT $44)], EXPR$72=[COUNT(DISTINCT $45)], EXPR$73=[COUNT(DISTINCT $46)], EXPR$74=[COUNT(DISTINCT $47)], EXPR$75=[COUNT(DISTINCT $48)], EXPR$76=[COUNT(DISTINCT $49)], EXPR$77=[COUNT(DISTINCT $50)], EXPR$78=[COUNT(DISTINCT $51)], EXPR$79=[COUNT(DISTINCT $52)], EXPR$81=[COUNT(DISTINCT $53)], EXPR$82=[COUNT(DISTINCT $54)], EXPR$83=[COUNT(DISTINCT $55)], ctx=[])
+      KapProjectRel($f0=[CASE(=($14, 2012-10-30), $0, null)], $f1=[CASE(=($14, 2012-10-30), CAST($0):FLOAT, null)], $f2=[CASE(=($14, 2012-10-30), CAST($0):DOUBLE, null)], $f3=[CASE(=($14, 2012-10-30), CAST($0):DECIMAL(25, 6), null)], $f4=[CASE(=($14, 2012-10-30), $2, null)], $f5=[CASE(=($14, 2012-10-30), CAST($2):FLOAT, null)], $f6=[CASE(=($14, 2012-10-30), CAST($2):DOUBLE, null)], $f7=[CASE(=($14, 2012-10-30), CAST($2):DECIMAL(25, 6), null)], $f8=[CASE(=($14, 2012-10-30), CAST($3):BIGINT, null)], $f9=[CASE(=($14, 2012-10-30), $3, null)], $f10=[CASE(=($14, 2012-10-30), CAST($3):FLOAT, null)], $f11=[CASE(=($14, 2012-10-30), CAST($3):DOUBLE, null)], $f12=[CASE(=($14, 2012-10-30), CAST($3):DECIMAL(19, 6), null)], $f13=[CASE(=($14, 2012-10-30), $4, null)], $f14=[CASE(=($14, 2012-10-30), CAST($4):DOUBLE, null)], $f15=[CASE(=($14, 2012-10-30), $5, null)], $f16=[CASE(=($14, 2012-10-30), CAST($6):DECIMAL(23, 4), null)], $f17=[CASE(=($14, 2012-10-30), $6, null)], $f18=[CASE(=($14, 2012-10-30), CAST($6):DOUBLE, null)], $f19=[CASE(=($14, 2012-10-30), CAST($6):DECIMAL(21, 6), null)], $f20=[CASE(=($14, 2012-10-30), CAST($7):BIGINT, null)], $f21=[CASE(=($14, 2012-10-30), CAST($7):INTEGER, null)], $f22=[CASE(=($14, 2012-10-30), CAST($7):FLOAT, null)], $f23=[CASE(=($14, 2012-10-30), CAST($7):DOUBLE, null)], $f24=[CASE(=($14, 2012-10-30), CAST($7):DECIMAL(19, 6), null)], $f25=[CASE(=($14, 2012-10-30), $7, null)], $f26=[CASE(=($14, 2012-10-30), CAST($8):BIGINT, null)], $f27=[CASE(=($14, 2012-10-30), CAST($8):INTEGER, null)], $f28=[CASE(=($14, 2012-10-30), CAST($8):FLOAT, null)], $f29=[CASE(=($14, 2012-10-30), CAST($8):DOUBLE, null)], $f30=[CASE(=($14, 2012-10-30), CAST($8):DECIMAL(19, 6), null)], $f31=[CASE(=($14, 2012-10-30), $8, null)], $f32=[CASE(=($14, 2012-10-30), CAST($8):SMALLINT, null)], $f33=[CASE(=($14, 2012-10-30), CAST($9):BIGINT, null)], $f34=[CASE(=($14, 2012-10-30), CAST($9):INTEGER, null)], $f35=[CASE(=($14, 2012-10-30), CAST($9):FLOAT, null)], $f36=[CASE(=($14, 2012-10-30), CAST($9):DOUBLE, null)], $f37=[CASE(=($14, 2012-10-30), CAST($9):DECIMAL(19, 6), null)], $f38=[CASE(=($14, 2012-10-30), $9, null)], $f39=[CASE(=($14, 2012-10-30), CAST($10):VARCHAR CHARACTER SET "UTF-16LE" COLLATE "UTF-16LE$en_US$primary", null)], $f40=[CASE(=($14, 2012-10-30), $10, null)], $f41=[CASE(=($14, 2012-10-30), CAST($11):VARCHAR CHARACTER SET "UTF-16LE" COLLATE "UTF-16LE$en_US$primary", null)], $f42=[CASE(=($14, 2012-10-30), $11, null)], $f43=[CASE(=($14, 2012-10-30), CAST($12):VARCHAR CHARACTER SET "UTF-16LE" COLLATE "UTF-16LE$en_US$primary", null)], $f44=[CASE(=($14, 2012-10-30), CAST($12):VARCHAR(255) CHARACTER SET "UTF-16LE" COLLATE "UTF-16LE$en_US$primary", null)], $f45=[CASE(=($14, 2012-10-30), CAST($13):BIGINT, null)], $f46=[CASE(=($14, 2012-10-30), CAST($13):INTEGER, null)], $f47=[CASE(=($14, 2012-10-30), CAST($13):FLOAT, null)], $f48=[CASE(=($14, 2012-10-30), CAST($13):DOUBLE, null)], $f49=[CASE(=($14, 2012-10-30), CAST($13):DECIMAL(19, 6), null)], $f50=[CASE(=($14, 2012-10-30), $13, null)], $f51=[CASE(=($14, 2012-10-30), CAST($13):SMALLINT, null)], $f52=[CASE(=($14, 2012-10-30), $14, null)], $f53=[CASE(=($14, 2012-10-30), CAST($15):DATE, null)], $f54=[CASE(=($14, 2012-10-30), $15, null)], $f55=[CASE(=($14, 2012-10-30), $16, null)], ctx=[])
+        KapTableScan(table=[[DEFAULT, TEST_MEASURE]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]])
+]]>
+        </Resource>
+        <Resource name="query12.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(EXPR$0=[$0], EXPR$1=[$0], EXPR$2=[$1], EXPR$3=[$2], EXPR$4=[$3], EXPR$5=[$0], EXPR$6=[$0], EXPR$7=[$4], EXPR$8=[$4], EXPR$9=[$5], EXPR$10=[$6], EXPR$11=[$7], EXPR$12=[$4], EXPR$13=[$4], EXPR$14=[$8], EXPR$15=[$9], EXPR$16=[$10], EXPR$17=[$11], EXPR$18=[$12], EXPR$19=[$9], EXPR$20=[$9], EXPR$21=[$13], EXPR$22=[$13], EXPR$23=[$13], EXPR$24=[$13], EXPR$25=[$14], EXPR$26=[$13], EXPR$27=[$13], EXPR$28=[$15], EXPR$29=[$15], EXPR$30=[$15], EXPR$31=[$15], EXPR$32=[$15], EXPR$33=[$15], EXPR$34=[$15], EXPR$35=[$16], EXPR$36=[$17], EXPR$37=[$18], EXPR$38=[$18], EXPR$39=[$19], EXPR$40=[$17], EXPR$41=[$17], EXPR$42=[$20], EXPR$43=[$21], EXPR$44=[$22], EXPR$45=[$23], EXPR$46=[$24], EXPR$47=[$25], EXPR$48=[$25], EXPR$49=[$26], EXPR$50=[$27], EXPR$51=[$28], EXPR$52=[$29], EXPR$53=[$30], EXPR$54=[$31], EXPR$55=[$32], EXPR$56=[$33], EXPR$57=[$34], EXPR$58=[$35], EXPR$59=[$36], EXPR$60=[$37], EXPR$61=[$38], EXPR$62=[$38], EXPR$63=[$39], EXPR$64=[$40], EXPR$65=[$40], EXPR$66=[$41], EXPR$67=[$42], EXPR$68=[$42], EXPR$69=[$43], EXPR$70=[$44], EXPR$71=[$44], EXPR$72=[$45], EXPR$73=[$46], EXPR$74=[$47], EXPR$75=[$48], EXPR$76=[$49], EXPR$77=[$50], EXPR$78=[$51], EXPR$79=[$52], EXPR$80=[$52], EXPR$81=[$53], EXPR$82=[$54], EXPR$83=[$55], ctx=[])
+    KapAggregateRel(group-set=[[]], groups=[null], AGG$0=[BITMAP_COUNT($0)], AGG$1=[BITMAP_COUNT($1)], AGG$2=[BITMAP_COUNT($2)], AGG$3=[BITMAP_COUNT($3)], AGG$4=[BITMAP_COUNT($4)], AGG$5=[BITMAP_COUNT($5)], AGG$6=[BITMAP_COUNT($6)], AGG$7=[BITMAP_COUNT($7)], AGG$8=[BITMAP_COUNT($8)], AGG$9=[BITMAP_COUNT($9)], AGG$10=[BITMAP_COUNT($10)], AGG$11=[BITMAP_COUNT($11)], AGG$12=[BITMAP_COUNT($12)], AGG$13=[BITMAP_COUNT($13)], AGG$14=[BITMAP_COUNT($14)], AGG$15=[BITMAP_COUNT($15)], AGG$16=[BITMAP_COUNT($16)], AGG$17=[BITMAP_COUNT($17)], AGG$18=[BITMAP_COUNT($18)], AGG$19=[BITMAP_COUNT($19)], AGG$20=[BITMAP_COUNT($20)], AGG$21=[BITMAP_COUNT($21)], AGG$22=[BITMAP_COUNT($22)], AGG$23=[BITMAP_COUNT($23)], AGG$24=[BITMAP_COUNT($24)], AGG$25=[BITMAP_COUNT($25)], AGG$26=[BITMAP_COUNT($26)], AGG$27=[BITMAP_COUNT($27)], AGG$28=[BITMAP_COUNT($28)], AGG$29=[BITMAP_COUNT($29)], AGG$30=[BITMAP_COUNT($30)], AGG$31=[BITMAP_COUNT($31)], AGG$32=[BITMAP_COUNT($32)], AGG$33=[BITMAP_COUNT($33)], AGG$34=[BITMAP_COUNT($34)], AGG$35=[BITMAP_COUNT($35)], AGG$36=[BITMAP_COUNT($36)], AGG$37=[BITMAP_COUNT($37)], AGG$38=[BITMAP_COUNT($38)], AGG$39=[BITMAP_COUNT($39)], AGG$40=[BITMAP_COUNT($40)], AGG$41=[BITMAP_COUNT($41)], AGG$42=[BITMAP_COUNT($42)], AGG$43=[BITMAP_COUNT($43)], AGG$44=[BITMAP_COUNT($44)], AGG$45=[BITMAP_COUNT($45)], AGG$46=[BITMAP_COUNT($46)], AGG$47=[BITMAP_COUNT($47)], AGG$48=[BITMAP_COUNT($48)], AGG$49=[BITMAP_COUNT($49)], AGG$50=[BITMAP_COUNT($50)], AGG$51=[BITMAP_COUNT($51)], AGG$52=[BITMAP_COUNT($52)], AGG$53=[BITMAP_COUNT($53)], AGG$54=[BITMAP_COUNT($54)], AGG$55=[BITMAP_COUNT($55)], ctx=[])
+      KapProjectRel($f0=[CASE(=($0, 2012-10-30), $56, null)], $f1=[CASE(=($1, 2012-10-30), $57, null)], $f2=[CASE(=($2, 2012-10-30), $58, null)], $f3=[CASE(=($3, 2012-10-30), $59, null)], $f4=[CASE(=($4, 2012-10-30), $60, null)], $f5=[CASE(=($5, 2012-10-30), $61, null)], $f6=[CASE(=($6, 2012-10-30), $62, null)], $f7=[CASE(=($7, 2012-10-30), $63, null)], $f8=[CASE(=($8, 2012-10-30), $64, null)], $f9=[CASE(=($9, 2012-10-30), $65, null)], $f10=[CASE(=($10, 2012-10-30), $66, null)], $f11=[CASE(=($11, 2012-10-30), $67, null)], $f12=[CASE(=($12, 2012-10-30), $68, null)], $f13=[CASE(=($13, 2012-10-30), $69, null)], $f14=[CASE(=($14, 2012-10-30), $70, null)], $f15=[CASE(=($15, 2012-10-30), $71, null)], $f16=[CASE(=($16, 2012-10-30), $72, null)], $f17=[CASE(=($17, 2012-10-30), $73, null)], $f18=[CASE(=($18, 2012-10-30), $74, null)], $f19=[CASE(=($19, 2012-10-30), $75, null)], $f20=[CASE(=($20, 2012-10-30), $76, null)], $f21=[CASE(=($21, 2012-10-30), $77, null)], $f22=[CASE(=($22, 2012-10-30), $78, null)], $f23=[CASE(=($23, 2012-10-30), $79, null)], $f24=[CASE(=($24, 2012-10-30), $80, null)], $f25=[CASE(=($25, 2012-10-30), $81, null)], $f26=[CASE(=($26, 2012-10-30), $82, null)], $f27=[CASE(=($27, 2012-10-30), $83, null)], $f28=[CASE(=($28, 2012-10-30), $84, null)], $f29=[CASE(=($29, 2012-10-30), $85, null)], $f30=[CASE(=($30, 2012-10-30), $86, null)], $f31=[CASE(=($31, 2012-10-30), $87, null)], $f32=[CASE(=($32, 2012-10-30), $88, null)], $f33=[CASE(=($33, 2012-10-30), $89, null)], $f34=[CASE(=($34, 2012-10-30), $90, null)], $f35=[CASE(=($35, 2012-10-30), $91, null)], $f36=[CASE(=($36, 2012-10-30), $92, null)], $f37=[CASE(=($37, 2012-10-30), $93, null)], $f38=[CASE(=($38, 2012-10-30), $94, null)], $f39=[CASE(=($39, 2012-10-30), $95, null)], $f40=[CASE(=($40, 2012-10-30), $96, null)], $f41=[CASE(=($41, 2012-10-30), $97, null)], $f42=[CASE(=($42, 2012-10-30), $98, null)], $f43=[CASE(=($43, 2012-10-30), $99, null)], $f44=[CASE(=($44, 2012-10-30), $100, null)], $f45=[CASE(=($45, 2012-10-30), $101, null)], $f46=[CASE(=($46, 2012-10-30), $102, null)], $f47=[CASE(=($47, 2012-10-30), $103, null)], $f48=[CASE(=($48, 2012-10-30), $104, null)], $f49=[CASE(=($49, 2012-10-30), $105, null)], $f50=[CASE(=($50, 2012-10-30), $106, null)], $f51=[CASE(=($51, 2012-10-30), $107, null)], $f52=[CASE(=($52, 2012-10-30), $108, null)], $f53=[CASE(=($53, 2012-10-30), $109, null)], $f54=[CASE(=($54, 2012-10-30), $110, null)], $f55=[CASE(=($55, 2012-10-30), $111, null)], ctx=[])
+        KapAggregateRel(group-set=[[0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108, 111, 114, 117, 120, 123, 126, 129, 132, 135, 138, 141, 144, 147, 150, 153, 156, 159, 162, 165]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($1)], COUNT_DISTINCT_CASE$1$0=[BITMAP_UUID($4)], COUNT_DISTINCT_CASE$2$0=[BITMAP_UUID($7)], COUNT_DISTINCT_CASE$3$0=[BITMAP_UUID($10)], COUNT_DISTINCT_CASE$4$0=[BITMAP_UUID($13)], COUNT_DISTINCT_CASE$5$0=[BITMAP_UUID($16)], COUNT_DISTINCT_CASE$6$0=[BITMAP_UUID($19)], COUNT_DISTINCT_CASE$7$0=[BITMAP_UUID($22)], COUNT_DISTINCT_CASE$8$0=[BITMAP_UUID($25)], COUNT_DISTINCT_CASE$9$0=[BITMAP_UUID($28)], COUNT_DISTINCT_CASE$10$0=[BITMAP_UUID($31)], COUNT_DISTINCT_CASE$11$0=[BITMAP_UUID($34)], COUNT_DISTINCT_CASE$12$0=[BITMAP_UUID($37)], COUNT_DISTINCT_CASE$13$0=[BITMAP_UUID($40)], COUNT_DISTINCT_CASE$14$0=[BITMAP_UUID($43)], COUNT_DISTINCT_CASE$15$0=[BITMAP_UUID($46)], COUNT_DISTINCT_CASE$16$0=[BITMAP_UUID($49)], COUNT_DISTINCT_CASE$17$0=[BITMAP_UUID($52)], COUNT_DISTINCT_CASE$18$0=[BITMAP_UUID($55)], COUNT_DISTINCT_CASE$19$0=[BITMAP_UUID($58)], COUNT_DISTINCT_CASE$20$0=[BITMAP_UUID($61)], COUNT_DISTINCT_CASE$21$0=[BITMAP_UUID($64)], COUNT_DISTINCT_CASE$22$0=[BITMAP_UUID($67)], COUNT_DISTINCT_CASE$23$0=[BITMAP_UUID($70)], COUNT_DISTINCT_CASE$24$0=[BITMAP_UUID($73)], COUNT_DISTINCT_CASE$25$0=[BITMAP_UUID($76)], COUNT_DISTINCT_CASE$26$0=[BITMAP_UUID($79)], COUNT_DISTINCT_CASE$27$0=[BITMAP_UUID($82)], COUNT_DISTINCT_CASE$28$0=[BITMAP_UUID($85)], COUNT_DISTINCT_CASE$29$0=[BITMAP_UUID($88)], COUNT_DISTINCT_CASE$30$0=[BITMAP_UUID($91)], COUNT_DISTINCT_CASE$31$0=[BITMAP_UUID($94)], COUNT_DISTINCT_CASE$32$0=[BITMAP_UUID($97)], COUNT_DISTINCT_CASE$33$0=[BITMAP_UUID($100)], COUNT_DISTINCT_CASE$34$0=[BITMAP_UUID($103)], COUNT_DISTINCT_CASE$35$0=[BITMAP_UUID($106)], COUNT_DISTINCT_CASE$36$0=[BITMAP_UUID($109)], COUNT_DISTINCT_CASE$37$0=[BITMAP_UUID($112)], COUNT_DISTINCT_CASE$38$0=[BITMAP_UUID($115)], COUNT_DISTINCT_CASE$39$0=[BITMAP_UUID($118)], COUNT_DISTINCT_CASE$40$0=[BITMAP_UUID($121)], COUNT_DISTINCT_CASE$41$0=[BITMAP_UUID($124)], COUNT_DISTINCT_CASE$42$0=[BITMAP_UUID($127)], COUNT_DISTINCT_CASE$43$0=[BITMAP_UUID($130)], COUNT_DISTINCT_CASE$44$0=[BITMAP_UUID($133)], COUNT_DISTINCT_CASE$45$0=[BITMAP_UUID($136)], COUNT_DISTINCT_CASE$46$0=[BITMAP_UUID($139)], COUNT_DISTINCT_CASE$47$0=[BITMAP_UUID($142)], COUNT_DISTINCT_CASE$48$0=[BITMAP_UUID($145)], COUNT_DISTINCT_CASE$49$0=[BITMAP_UUID($148)], COUNT_DISTINCT_CASE$50$0=[BITMAP_UUID($151)], COUNT_DISTINCT_CASE$51$0=[BITMAP_UUID($154)], COUNT_DISTINCT_CASE$52$0=[BITMAP_UUID($157)], COUNT_DISTINCT_CASE$53$0=[BITMAP_UUID($160)], COUNT_DISTINCT_CASE$54$0=[BITMAP_UUID($163)], COUNT_DISTINCT_CASE$55$0=[BITMAP_UUID($166)], ctx=[])
+          KapProjectRel(TIME1=[$14], ID1=[$0], $f2=[0], TIME10=[$14], ID10=[$0], $f5=[0], TIME101=[$14], ID101=[$0], $f8=[0], TIME1012=[$14], ID1012=[$0], $f11=[0], TIME10123=[$14], ID3=[$2], $f14=[0], TIME101234=[$14], ID30=[$2], $f17=[0], TIME1012345=[$14], ID301=[$2], $f20=[0], TIME10123456=[$14], ID3012=[$2], $f23=[0], TIME101234567=[$14], ID4=[$3], $f26=[0], TIME1012345678=[$14], ID40=[$3], $f29=[0], TIME10123456789=[$14], ID401=[$3], $f32=[0], TIME1012345678910=[$14], ID4012=[$3], $f35=[0], TIME101234567891011=[$14], ID40123=[$3], $f38=[0], TIME10123456789101112=[$14], PRICE1=[$4], $f41=[0], TIME1012345678910111213=[$14], PRICE10=[$4], $f44=[0], TIME101234567891011121314=[$14], PRICE2=[$5], $f47=[0], TIME10123456789101112131415=[$14], PRICE3=[$6], $f50=[0], TIME1012345678910111213141516=[$14], PRICE30=[$6], $f53=[0], TIME101234567891011121314151617=[$14], PRICE301=[$6], $f56=[0], TIME10123456789101112131415161718=[$14], PRICE3012=[$6], $f59=[0], TIME1012345678910111213141516171819=[$14], PRICE5=[$7], $f62=[0], TIME101234567891011121314151617181920=[$14], PRICE50=[$7], $f65=[0], TIME10123456789101112131415161718192021=[$14], PRICE501=[$7], $f68=[0], TIME1012345678910111213141516171819202122=[$14], PRICE5012=[$7], $f71=[0], TIME101234567891011121314151617181920212223=[$14], PRICE50123=[$7], $f74=[0], TIME10123456789101112131415161718192021222324=[$14], PRICE501234=[$7], $f77=[0], TIME1012345678910111213141516171819202122232425=[$14], PRICE6=[$8], $f80=[0], TIME101234567891011121314151617181920212223242526=[$14], PRICE60=[$8], $f83=[0], TIME10123456789101112131415161718192021222324252627=[$14], PRICE601=[$8], $f86=[0], TIME1012345678910111213141516171819202122232425262728=[$14], PRICE6012=[$8], $f89=[0], TIME101234567891011121314151617181920212223242526272829=[$14], PRICE60123=[$8], $f92=[0], TIME10123456789101112131415161718192021222324252627282930=[$14], PRICE601234=[$8], $f95=[0], TIME1012345678910111213141516171819202122232425262728293031=[$14], PRICE6012345=[$8], $f98=[0], TIME101234567891011121314151617181920212223242526272829303132=[$14], PRICE7=[$9], $f101=[0], TIME10123456789101112131415161718192021222324252627282930313233=[$14], PRICE70=[$9], $f104=[0], TIME1012345678910111213141516171819202122232425262728293031323334=[$14], PRICE701=[$9], $f107=[0], TIME101234567891011121314151617181920212223242526272829303132333435=[$14], PRICE7012=[$9], $f110=[0], TIME10123456789101112131415161718192021222324252627282930313233343536=[$14], PRICE70123=[$9], $f113=[0], TIME1012345678910111213141516171819202122232425262728293031323334353637=[$14], PRICE701234=[$9], $f116=[0], TIME101234567891011121314151617181920212223242526272829303132333435363738=[$14], NAME1=[$10], $f119=[0], TIME10123456789101112131415161718192021222324252627282930313233343536373839=[$14], NAME10=[$10], $f122=[0], TIME1012345678910111213141516171819202122232425262728293031323334353637383940=[$14], NAME2=[$11], $f125=[0], TIME101234567891011121314151617181920212223242526272829303132333435363738394041=[$14], NAME20=[$11], $f128=[0], TIME10123456789101112131415161718192021222324252627282930313233343536373839404142=[$14], NAME3=[$12], $f131=[0], TIME1012345678910111213141516171819202122232425262728293031323334353637383940414243=[$14], NAME30=[$12], $f134=[0], TIME101234567891011121314151617181920212223242526272829303132333435363738394041424344=[$14], NAME4=[$13], $f137=[0], TIME10123456789101112131415161718192021222324252627282930313233343536373839404142434445=[$14], NAME40=[$13], $f140=[0], TIME1012345678910111213141516171819202122232425262728293031323334353637383940414243444546=[$14], NAME401=[$13], $f143=[0], TIME101234567891011121314151617181920212223242526272829303132333435363738394041424344454647=[$14], NAME4012=[$13], $f146=[0], TIME10123456789101112131415161718192021222324252627282930313233343536373839404142434445464748=[$14], NAME40123=[$13], $f149=[0], TIME1012345678910111213141516171819202122232425262728293031323334353637383940414243444546474849=[$14], NAME401234=[$13], $f152=[0], TIME101234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950=[$14], NAME4012345=[$13], $f155=[0], TIME10123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051=[$14], TIME1012345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152=[$14], $f158=[0], TIME101234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253=[$14], TIME2=[$15], $f161=[0], TIME10123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354=[$14], TIME20=[$15], $f164=[0], TIME1012345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455=[$14], FLAG=[$16], $f167=[0], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_MEASURE]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]])
+]]>
+        </Resource>
+        <Resource name="query13.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], TEMP_________=[COUNT(DISTINCT $0)], EXPR$1=[COUNT(DISTINCT $1)], ctx=[])
+    KapProjectRel($f0=[CASE(=($3, 'Auction'), CAST($13):FLOAT, null)], LSTG_FORMAT_NAME=[$3], ctx=[])
+      KapFilterRel(condition=[=($2, 2012-01-01)], ctx=[])
+        KapJoinRel(condition=[=($1, $12)], joinType=[left], ctx=[])
+          KapProjectRel(TRANS_ID=[$0], ORDER_ID=[$1], CAL_DT=[$2], LSTG_FORMAT_NAME=[$3], LEAF_CATEG_ID=[$4], LSTG_SITE_ID=[$5], SLR_SEGMENT_CD=[$6], SELLER_ID=[$7], PRICE=[$8], ITEM_COUNT=[$9], TEST_COUNT_DISTINCT_BITMAP=[$10], IS_EFFECTUAL=[$11], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+          KapProjectRel(ORDER_ID=[$0], BUYER_ID=[$1], TEST_DATE_ENC=[$2], TEST_TIME_ENC=[$3], TEST_EXTENDED_COLUMN=[$4], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_ORDER]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+]]>
+        </Resource>
+        <Resource name="query13.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(AGG$0=[$1], EXPR$1=[$0], ctx=[])
+    KapJoinRel(condition=[true], joinType=[inner], ctx=[])
+      KapAggregateRel(group-set=[[]], groups=[null], EXPR$1=[COUNT(DISTINCT $1)], ctx=[])
+        KapProjectRel($f0=[CAST(0E0):FLOAT], LSTG_FORMAT_NAME=[$3], ctx=[])
+          KapFilterRel(condition=[=($2, 2012-01-01)], ctx=[])
+            KapJoinRel(condition=[=($1, $12)], joinType=[left], ctx=[])
+              KapProjectRel(TRANS_ID=[$0], ORDER_ID=[$1], CAL_DT=[$2], LSTG_FORMAT_NAME=[$3], LEAF_CATEG_ID=[$4], LSTG_SITE_ID=[$5], SLR_SEGMENT_CD=[$6], SELLER_ID=[$7], PRICE=[$8], ITEM_COUNT=[$9], TEST_COUNT_DISTINCT_BITMAP=[$10], IS_EFFECTUAL=[$11], ctx=[])
+                KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+              KapProjectRel(ORDER_ID=[$0], BUYER_ID=[$1], TEST_DATE_ENC=[$2], TEST_TIME_ENC=[$3], TEST_EXTENDED_COLUMN=[$4], ctx=[])
+                KapTableScan(table=[[DEFAULT, TEST_ORDER]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+      KapAggregateRel(group-set=[[]], groups=[null], AGG$0=[BITMAP_COUNT($0)], ctx=[])
+        KapProjectRel($f0=[CASE(=($0, 'Auction'), $1, null)], ctx=[])
+          KapAggregateRel(group-set=[[0]], groups=[null], COUNT_DISTINCT_CASE$0$0=[BITMAP_UUID($1)], ctx=[])
+            KapProjectRel(LSTG_FORMAT_NAME=[$3], BUYER_ID=[$13], $f2=[0], ctx=[])
+              KapFilterRel(condition=[=($2, 2012-01-01)], ctx=[])
+                KapJoinRel(condition=[=($1, $12)], joinType=[left], ctx=[])
+                  KapProjectRel(TRANS_ID=[$0], ORDER_ID=[$1], CAL_DT=[$2], LSTG_FORMAT_NAME=[$3], LEAF_CATEG_ID=[$4], LSTG_SITE_ID=[$5], SLR_SEGMENT_CD=[$6], SELLER_ID=[$7], PRICE=[$8], ITEM_COUNT=[$9], TEST_COUNT_DISTINCT_BITMAP=[$10], IS_EFFECTUAL=[$11], ctx=[])
+                    KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+                  KapProjectRel(ORDER_ID=[$0], BUYER_ID=[$1], TEST_DATE_ENC=[$2], TEST_TIME_ENC=[$3], TEST_EXTENDED_COLUMN=[$4], ctx=[])
+                    KapTableScan(table=[[DEFAULT, TEST_ORDER]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+]]>
+        </Resource>
+    </TestCase>
+</Root>

@@ -1,1 +1,0 @@
-{"count(CAST(bround((CAST(bround(PRICE, CAST(substring(12323, 0, 1) AS INT)) AS DECIMAL(24,5)) + CAST(2.71828 AS DECIMAL(24,5))), (1 + 2)) AS STRING))":10000,"bround(CAST(123.234356 AS DOUBLE), 4)":123.2344}

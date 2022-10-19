@@ -1,1 +1,0 @@
-`bround(1002.5786, -3)` DECIMAL(8,-3),`bround(-10.8, 0)` DECIMAL(3,0),`bround((125.0 / 9), 5)` DECIMAL(9,5)

@@ -1,1 +1,0 @@
-select price from test_kylin_fact where lstg_format_name like 'abc)' limit 10;

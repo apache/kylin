@@ -1,1 +1,0 @@
-`count(lcase(substring(substring_index(concat(LSTG_FORMAT_NAME, .www.apache.org), ., (1 + 1)), 2, (1 + 3))))` BIGINT

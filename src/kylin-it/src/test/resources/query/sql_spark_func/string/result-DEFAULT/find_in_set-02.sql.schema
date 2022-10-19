@@ -1,1 +1,0 @@
-`find_in_set(ab, concat(LSTG_FORMAT_NAME, ,abc,b,c,d,ab,c,def))` INT
