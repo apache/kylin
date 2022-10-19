@@ -21,7 +21,6 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.constant.Constant;
@@ -91,7 +90,7 @@ public class StreamingTableControllerTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setupResource() {
-        KylinConfigBase.setSystemProperty("HADOOP_USER_NAME", "root");
+        System.setProperty("HADOOP_USER_NAME", "root");
         createTestMetadata();
     }
 

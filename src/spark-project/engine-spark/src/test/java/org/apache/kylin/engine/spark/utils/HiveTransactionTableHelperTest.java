@@ -43,7 +43,6 @@ import java.util.UUID;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
@@ -97,8 +96,8 @@ public class HiveTransactionTableHelperTest extends NLocalWithSparkSessionTest {
     @Test
     public void testDoGetQueryHiveTemporaryTableSql() {
         // Init needed variable parameters
-        KylinConfigBase.setSystemProperty("kylin.source.provider.9", "org.apache.kylin.engine.spark.source.NSparkDataSource");
-        KylinConfigBase.setSystemProperty("kylin.build.resource.read-transactional-table-enabled", "true");
+        System.setProperty("kylin.source.provider.9", "org.apache.kylin.engine.spark.source.NSparkDataSource");
+        System.setProperty("kylin.build.resource.read-transactional-table-enabled", "true");
         KylinBuildEnv kylinBuildEnv = KylinBuildEnv.getOrCreate(getTestConfig());
         NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(getTestConfig(), "tdh");
         TableDesc fact = tableMgr.getTableDesc("TDH_TEST.LINEORDER_PARTITION");

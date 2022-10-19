@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -85,7 +84,7 @@ public class KafkaControllerTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setupResource() {
-        KylinConfigBase.setSystemProperty("HADOOP_USER_NAME", "root");
+        System.setProperty("HADOOP_USER_NAME", "root");
         createTestMetadata();
     }
 

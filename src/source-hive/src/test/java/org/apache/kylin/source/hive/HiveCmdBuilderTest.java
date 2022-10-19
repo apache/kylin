@@ -45,7 +45,6 @@ import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.ShellException;
 import org.junit.Before;
@@ -55,15 +54,15 @@ public class HiveCmdBuilderTest {
 
     @Before
     public void setup() {
-        KylinConfigBase.setSystemProperty("log4j.configuration", "file:../build/conf/kylin-tools-log4j.properties");
-        KylinConfigBase.setSystemProperty("KYLIN_CONF", "../examples/test_case_data/localmeta");
+        System.setProperty("log4j.configuration", "file:../build/conf/kylin-tools-log4j.properties");
+        System.setProperty("KYLIN_CONF", "../examples/test_case_data/localmeta");
     }
 
     @Test
     public void testBeeline() throws IOException, ShellException {
         String lineSeparator = java.security.AccessController
                 .doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
-        KylinConfigBase.setSystemProperty("kylin.source.hive.beeline-params", "-u jdbc_url");
+        System.setProperty("kylin.source.hive.beeline-params", "-u jdbc_url");
 
         HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(KylinConfig.getInstanceFromEnv());
         hiveCmdBuilder.addStatement("USE default;");
