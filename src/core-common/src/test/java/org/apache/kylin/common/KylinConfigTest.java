@@ -173,7 +173,7 @@ public class KylinConfigTest {
         if (StringUtils.isBlank(oldSparkJobJarPath)) {
             // remove property, otherwise org.apache.kylin.common.KylinConfigBase.getOptional(java.lang.String, java.lang.String)
             // will return empty str
-            System.clearProperty("kylin.engine.spark.job-jar");
+            SystemPropertiesCache.clearProperty("kylin.engine.spark.job-jar");
         } else {
             conf.overrideSparkJobJarPath(oldSparkJobJarPath);
         }

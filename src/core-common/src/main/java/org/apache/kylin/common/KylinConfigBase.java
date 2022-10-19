@@ -107,7 +107,7 @@ public abstract class KylinConfigBase implements Serializable {
     public static final String DIAG_ID_PREFIX = "front_";
 
     private static final String LOOPBACK = "127.0.0.1";
-    private static final String VENDOR = System.getProperty("vendor");
+    private static final String VENDOR = SystemPropertiesCache.getProperty("vendor");
     public static final String DEFAULT_VENDOR = "kylin";
 
     protected static final Map<String, String> STATIC_SYSTEM_ENV = new ConcurrentHashMap<>(System.getenv());
@@ -139,7 +139,7 @@ public abstract class KylinConfigBase implements Serializable {
     public static String getKylinHomeWithoutWarn() {
         String kylinHome = System.getenv("KYLIN_HOME");
         if (StringUtils.isEmpty(kylinHome)) {
-            kylinHome = System.getProperty("KYLIN_HOME");
+            kylinHome = SystemPropertiesCache.getProperty("KYLIN_HOME");
         }
         return kylinHome;
     }
@@ -147,7 +147,7 @@ public abstract class KylinConfigBase implements Serializable {
     public static String getKylinConfHome() {
         String confHome = System.getenv("KYLIN_CONF");
         if (StringUtils.isEmpty(confHome)) {
-            confHome = System.getProperty("KYLIN_CONF");
+            confHome = SystemPropertiesCache.getProperty("KYLIN_CONF");
         }
         return confHome;
     }
@@ -205,7 +205,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     protected String getOptional(String prop, String dft) {
-        final String property = System.getProperty(prop);
+        final String property = SystemPropertiesCache.getProperty(prop);
         return property != null ? getSubstitutor().replace(property)
                 : getSubstitutor().replace(properties.getProperty(prop, dft));
     }
@@ -247,7 +247,7 @@ public abstract class KylinConfigBase implements Serializable {
                 result.put(key.substring(prefix.length()), (String) entry.getValue());
             }
         }
-        for (Entry<Object, Object> entry : System.getProperties().entrySet()) {
+        for (Entry<Object, Object> entry : SystemPropertiesCache.getProperties().entrySet()) {
             String key = (String) entry.getKey();
             if (key.startsWith(prefix)) {
                 result.put(key.substring(prefix.length()), (String) entry.getValue());
@@ -266,7 +266,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     protected final String[] getSystemStringArray(String prop, String[] dft) {
-        final String property = System.getProperty(prop);
+        final String property = SystemPropertiesCache.getProperty(prop);
         if (!StringUtils.isBlank(property)) {
             return property.split("\\s*,\\s*");
         } else {
@@ -1005,7 +1005,7 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getQueryExtensionFactory() {
         String dft = "org.apache.kylin.query.QueryExtension$Factory";
-        if(vendor().equals("kyligence")) {
+        if (vendor().equals("kyligence")) {
             dft = "io.kyligence.kap.query.QueryExtensionFactoryEnterprise";
         }
         return getOptional("kylin.extension.query.factory", dft);
@@ -1395,11 +1395,10 @@ public abstract class KylinConfigBase implements Serializable {
     public List<String> getSparkBuildConfExtraRules() {
         String rules = getOptional("kylin.engine.spark.build-conf-extra-rules");
         if (StringUtils.isEmpty(rules)) {
-            return Collections.<String>emptyList();
+            return Collections.<String> emptyList();
         }
         return Lists.newArrayList(rules.split(","));
     }
-
 
     public String getSparkTableSamplingClassName() {
         return getOptional("kylin.engine.spark.sampling-class-name",
@@ -1605,7 +1604,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean asyncProfilingEnabled() {
-        return !Boolean.parseBoolean(System.getProperty("spark.local", FALSE))
+        return !Boolean.parseBoolean(SystemPropertiesCache.getProperty("spark.local", FALSE))
                 && Boolean.parseBoolean(getOptional("kylin.query.async-profiler-enabled", TRUE));
     }
 
@@ -1943,10 +1942,8 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String[] getTableDetectorTransformers() {
         String value = getOptional("kylin.query.table-detect-transformers");
-        return value == null
-                ? new String[] { "org.apache.kylin.query.util.PowerBIConverter",
-                        "org.apache.kylin.query.util.DefaultQueryTransformer",
-                        "org.apache.kylin.query.util.EscapeTransformer" }
+        return value == null ? new String[] { "org.apache.kylin.query.util.PowerBIConverter",
+                "org.apache.kylin.query.util.DefaultQueryTransformer", "org.apache.kylin.query.util.EscapeTransformer" }
                 : getOptionalStringArray("kylin.query.table-detect-transformers", new String[0]);
     }
 
@@ -1954,8 +1951,7 @@ public abstract class KylinConfigBase implements Serializable {
         String value = getOptional("kylin.query.transformers");
         return value == null ? new String[] { "org.apache.kylin.query.util.ReplaceStringWithVarchar",
                 "org.apache.kylin.query.util.PowerBIConverter", "org.apache.kylin.query.util.DefaultQueryTransformer",
-                "org.apache.kylin.query.util.EscapeTransformer",
-                "org.apache.kylin.query.util.ConvertToComputedColumn",
+                "org.apache.kylin.query.util.EscapeTransformer", "org.apache.kylin.query.util.ConvertToComputedColumn",
                 "org.apache.kylin.query.util.KeywordDefaultDirtyHack", "org.apache.kylin.query.security.RowFilter" }
                 : getOptionalStringArray("kylin.query.transformers", new String[0]);
     }

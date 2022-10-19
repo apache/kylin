@@ -22,6 +22,7 @@ import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.SystemPropertiesCache;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.scheduler.EventBusFactory;
@@ -94,7 +95,7 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
         projectManager.forceDropProject("broken_test");
         projectManager.forceDropProject("bad_query_test");
 
-        System.setProperty("HADOOP_USER_NAME", "root");
+        SystemPropertiesCache.setProperty("HADOOP_USER_NAME", "root");
 
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
         ReflectionTestUtils.setField(streamingTableService, "aclEvaluate", aclEvaluate);
