@@ -23,11 +23,13 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.ARGS_TYPE_C
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.google.common.collect.Lists;
 
 public class ArgsTypeJsonDeserializer {
 
@@ -36,12 +38,27 @@ public class ArgsTypeJsonDeserializer {
     }
 
     public static class BooleanJsonDeserializer extends JsonDeserializer<Boolean> {
+
+        private final List<String> boolList = Lists.newArrayList("true", "false", "TRUE", "FALSE", "null");
+
+        @Override
+        public Boolean getNullValue(DeserializationContext ctxt) {
+            return Boolean.FALSE;
+        }
+
         @Override
         public Boolean deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
             try {
+                String text = p.getText();
+                if (StringUtils.isEmpty(text)) {
+                    return Boolean.FALSE;
+                }
+                if (boolList.contains(text)) {
+                    return Boolean.parseBoolean(text);
+                }
                 return p.getBooleanValue();
             } catch (Exception e) {
-                throw new KylinException(ARGS_TYPE_CHECK, p.getText(), "Boolean");
+                throw new KylinException(ARGS_TYPE_CHECK, e, p.getText(), "Boolean");
             }
         }
     }
@@ -52,18 +69,28 @@ public class ArgsTypeJsonDeserializer {
             try {
                 return p.readValueAs(List.class);
             } catch (Exception e) {
-                throw new KylinException(ARGS_TYPE_CHECK, p.getText(), "List");
+                throw new KylinException(ARGS_TYPE_CHECK, e, p.getText(), "List");
             }
         }
     }
 
     public static class IntegerJsonDeserializer extends JsonDeserializer<Integer> {
+
+        @Override
+        public Integer getNullValue(DeserializationContext ctxt) {
+            return 0;
+        }
+
         @Override
         public Integer deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
             try {
-                return p.getIntValue();
+                String text = p.getText();
+                if (StringUtils.isEmpty(text) || StringUtils.equals("null", text)) {
+                    return 0;
+                }
+                return Integer.parseInt(text);
             } catch (Exception e) {
-                throw new KylinException(ARGS_TYPE_CHECK, p.getText(), "Integer");
+                throw new KylinException(ARGS_TYPE_CHECK, e, p.getText(), "Integer");
             }
         }
     }
