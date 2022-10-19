@@ -60,6 +60,7 @@ import org.apache.kylin.common.util.TimeZoneUtils;
 import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
 import org.apache.kylin.common.util.ProcessUtils;
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -1108,8 +1109,7 @@ class KylinConfigBaseTest {
         Assert.assertFalse(metadataKeyCaseInSensitiveEnabled);
     }
 
-    @SetSystemProperty.SetSystemProperties({
-            @SetSystemProperty(key = "kylin.metadata.key-case-insensitive", value = "true"), })
+    @OverwriteProp(key = "kylin.metadata.key-case-insensitive", value = "true")
     @Test
     void getIsMetadataKeyCaseInSensitiveEnabled2() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();

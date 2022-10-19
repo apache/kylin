@@ -63,7 +63,7 @@ public class PropertiesDelegate extends Properties {
         } else if (configLoader instanceof NacosExternalConfigLoader) {
             this.delegation = new CompositeMapView((this.configLoader).getProperties(), this.properties);
         } else {
-            throw new IllegalArgumentException(configLoader.getClass() + " is not supported ");
+            this.delegation = new CompositeMapView((this.configLoader).getProperties(), this.properties);
         }
     }
 
@@ -184,30 +184,6 @@ public class PropertiesDelegate extends Properties {
     @Override
     public void forEach(BiConsumer<? super Object, ? super Object> action) {
         throw new UnsupportedOperationException();
-    }
-
-    private ConcurrentMap<Object, Object> getAllProperties() {
-        // When KylinExternalConfigLoader is enabled, properties is static
-        if (configLoader == null || configLoader.getClass().equals(KylinExternalConfigLoader.class)
-                || configLoader.getClass().getSimpleName().equals("TestExternalConfigLoader")) {
-            /**
-             * Return properties directly
-             * 1. if configloader is null
-             * 2. if configloadder is KylinExternalConfigLoader.class
-             * 3. if running UT
-             */
-            return properties;
-        } else if (configLoader.getClass().equals(NacosExternalConfigLoader.class)) {
-            // When NacosExternalConfigLoader enabled, fetch config entries from remote for each call
-            // TODO: Kylin should call remote server in periodically, otherwise query concurrency
-            // maybe impacted badly
-            ConcurrentMap<Object, Object> propertiesView = Maps.newConcurrentMap();
-            propertiesView.putAll(this.configLoader.getProperties());
-            propertiesView.putAll(this.properties);
-            return propertiesView;
-        } else {
-            throw new IllegalArgumentException(configLoader.getClass() + " is not supported ");
-        }
     }
 
     @Override

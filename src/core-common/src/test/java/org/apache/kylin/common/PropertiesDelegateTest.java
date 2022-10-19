@@ -97,17 +97,6 @@ class PropertiesDelegateTest {
     }
 
     @Test
-    void testSize() {
-        Assertions.assertEquals(3, delegate.size());
-    }
-
-    @Test
-    void testEntrySet() {
-        Set<Map.Entry<Object, Object>> entries = delegate.entrySet();
-        Assertions.assertEquals(3, entries.size());
-    }
-
-    @Test
     void testKeys() {
         List<String> keys = new ArrayList<>();
         Enumeration<Object> enumer = delegate.keys();
@@ -115,9 +104,9 @@ class PropertiesDelegateTest {
             keys.add((String) enumer.nextElement());
         }
 
-        Assertions.assertEquals(3, keys.size());
+        Assertions.assertEquals(4, keys.size());
 
-        Assertions.assertEquals("key_in_external, key_in_prop, key_override_external",
+        Assertions.assertEquals("key_in_external, key_in_prop, key_override_external, key_override_external",
                 keys.stream().sorted().collect(Collectors.joining(", ")));
     }
 
