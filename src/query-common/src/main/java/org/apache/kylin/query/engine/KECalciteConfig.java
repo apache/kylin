@@ -53,7 +53,7 @@ public class KECalciteConfig extends CalciteConnectionConfigImpl {
 
     @Override
     public NullCollation defaultNullCollation() {
-        return NullCollation.LOW;
+        return NullCollation.HIGH;
     }
 
     @Override
