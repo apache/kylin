@@ -26,7 +26,7 @@ import java.util.HashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConfigBase;
+import org.apache.kylin.common.SystemPropertiesCache;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -103,7 +103,7 @@ public class StreamingJobControllerTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setupResource() {
-        KylinConfigBase.setSystemProperty("HADOOP_USER_NAME", "root");
+        SystemPropertiesCache.setProperty("HADOOP_USER_NAME", "root");
         createTestMetadata();
     }
 

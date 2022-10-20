@@ -19,7 +19,7 @@ package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 
-import org.apache.kylin.common.KylinConfigBase;
+import org.apache.kylin.common.SystemPropertiesCache;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.service.EpochService;
@@ -63,7 +63,7 @@ public class NEpochControllerTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setupResource() {
-        KylinConfigBase.setSystemProperty("HADOOP_USER_NAME", "root");
+        SystemPropertiesCache.setProperty("HADOOP_USER_NAME", "root");
         createTestMetadata();
     }
 
