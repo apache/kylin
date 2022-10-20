@@ -53,7 +53,7 @@ public class KECalciteConfig extends CalciteConnectionConfigImpl {
 
     @Override
     public NullCollation defaultNullCollation() {
-        return NullCollation.HIGH;
+        return kylinConfig.isAscOrderNullFirstEnable() ? NullCollation.LOW : NullCollation.HIGH;
     }
 
     @Override
