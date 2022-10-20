@@ -124,6 +124,7 @@ public class SparderQueryPlanExec implements QueryPlanExec {
                     }
                     QueryContext.current().setLastFailed(true);
                     cause = retryException;
+                    checkOnlyTsAnswer();
                 }
             }
             if (forceTableIndexAtException(e)) {
@@ -205,6 +206,13 @@ public class SparderQueryPlanExec implements QueryPlanExec {
                 throw new KylinException(QueryErrorCode.FORCED_TO_TIEREDSTORAGE_INVALID_PARAMETER,
                         MsgPicker.getMsg().getForcedToTieredstorageInvalidParameter());
             }
+        }
+    }
+
+    private void checkOnlyTsAnswer() {
+        if (QueryContext.current().getForcedToTieredStorage() == ForceToTieredStorage.CH_FAIL_TO_RETURN) {
+            throw new KylinException(QueryErrorCode.FORCED_TO_TIEREDSTORAGE_RETURN_ERROR,
+                    MsgPicker.getMsg().getForcedToTieredstorageReturnError());
         }
     }
 }

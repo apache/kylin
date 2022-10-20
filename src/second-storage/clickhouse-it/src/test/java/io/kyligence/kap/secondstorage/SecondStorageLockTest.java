@@ -2511,7 +2511,9 @@ public class SecondStorageLockTest implements JobWaiter {
             final String catalog = "default";
             Unsafe.setProperty(ClickHouseLoad.SOURCE_URL, getSourceUrl());
             Unsafe.setProperty(ClickHouseLoad.ROOT_PATH, getLocalWorkingDirectory());
-            configClickhouseWith(new JdbcDatabaseContainer[] { clickhouse1, clickhouse2 }, 1, catalog, () -> {
+            val container = new JdbcDatabaseContainer[] { clickhouse1, clickhouse2 };
+            int replica = 1;
+            configClickhouseWith(container, 1, catalog, () -> {
                 secondStorageService.changeProjectSecondStorageState(getProject(),
                         SecondStorageNodeHelper.getAllPairs(), true);
                 Assert.assertEquals(2, SecondStorageUtil.listProjectNodes(getProject()).size());
@@ -2525,6 +2527,8 @@ public class SecondStorageLockTest implements JobWaiter {
                 String sql = "select CAL_DT from TEST_KYLIN_FACT where CAL_DT between '2012-01-01' and '2012-01-02'";
                 Map<String, Map<String, Boolean>> nodeStatusMap;
 
+                testForceToTSAndChDown(sql, container, replica);
+                        
                 {
                     // testGroupNodeDownForceToTierStorageOK
                     clearQueryContext();
@@ -2606,27 +2610,45 @@ public class SecondStorageLockTest implements JobWaiter {
                     }
                     triggerClickHouseJob(getDataFlow());
                 }
-
-                {
-                    testReverseForceToTierStorageWhenCHUnavailable(sql);
-                }
-
-                {
-                    testReverseForceToTierStorageWhenCHOK(sql);
-                }
-
+                
+                testReverseForceToTierStorageWhenCHUnavailable(sql);
+                testReverseForceToTierStorageWhenCHOK(sql);
+                
                 //reset status
                 nodeStatusMap = ImmutableMap.of("pair0", ImmutableMap.of("node00", true), "pair1",
                         ImmutableMap.of("node01", true));
                 secondStorageEndpoint.updateNodeStatus(nodeStatusMap);
 
-                {
-                    testForceToTierStorageShutTierStorage(sql);
-                }
-
+                testForceToTierStorageShutTierStorage(sql);
                 return true;
             });
         }
+    }
+    
+    @SneakyThrows
+    private void testForceToTSAndChDown(String sql, JdbcDatabaseContainer<?>[] container, int replica) {
+        ExecAndComp.queryModel(getProject(), sql);
+        OLAPContext.getNativeRealizations().stream().findFirst().ifPresent(r -> assertTrue(r.isSecondStorage()));
+
+        for (JdbcDatabaseContainer<?> clickhouse : container) {
+            clickhouse.stop();
+        }
+        clearQueryContext();
+        QueryContext queryContext = QueryContext.current();
+        queryContext.setForcedToTieredStorage(ForceToTieredStorage.CH_FAIL_TO_RETURN);
+        queryContext.setForceTableIndex(true);
+        assertThrows(SQLException.class, () -> ExecAndComp.queryModel(getProject(), sql));
+
+        clearQueryContext();
+        queryContext = QueryContext.current();
+        queryContext.setForcedToTieredStorage(ForceToTieredStorage.CH_FAIL_TO_DFS);
+        queryContext.setForceTableIndex(false);
+        ExecAndComp.queryModel(getProject(), sql);
+
+        for (JdbcDatabaseContainer<?> clickhouse : container) {
+            clickhouse.start();
+        }
+        ClickHouseUtils.internalConfigClickHouse(container, replica);
     }
 
     private void testReverseForceToTierStorageWhenCHUnavailable(String sql) {
