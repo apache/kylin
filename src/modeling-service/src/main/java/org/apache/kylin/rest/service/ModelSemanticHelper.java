@@ -93,6 +93,8 @@ import org.apache.kylin.metadata.model.util.scd2.SCD2NonEquiCondSimplification;
 import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinDesc;
 import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinTableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.response.BuildIndexResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
@@ -111,8 +113,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
-import org.apache.kylin.query.util.KapQueryUtil;
 import io.kyligence.kap.secondstorage.SecondStorageUpdater;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.Setter;
@@ -130,7 +130,7 @@ public class ModelSemanticHelper extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelSemanticHelper.class);
     private final ExpandableMeasureUtil expandableMeasureUtil = new ExpandableMeasureUtil((model, ccDesc) -> {
-        String ccExpression = KapQueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
+        String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
                 AclPermissionUtil.prepareQueryContextACLInfo(model.getProject(), getCurrentUserGroups()));
         ccDesc.setInnerExpression(ccExpression);
         ComputedColumnEvalUtil.evaluateExprAndType(model, ccDesc);

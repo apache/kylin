@@ -52,7 +52,6 @@ import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundExceptio
 import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.mask.QueryResultMasks;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.util.KapQueryUtil;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
@@ -92,7 +91,7 @@ public class QueryRoutingEngine {
                     queryParams.setSql(queryParams.getPrepareSql());
                 }
 
-                String correctedSql = KapQueryUtil.massageSql(queryParams);
+                String correctedSql = QueryUtil.massageSql(queryParams);
 
                 //CAUTION: should not change sqlRequest content!
                 QueryContext.current().getMetrics().setCorrectedSql(correctedSql);
@@ -216,7 +215,7 @@ public class QueryRoutingEngine {
     private boolean checkBigQueryPushDown(QueryParams queryParams) {
         KylinConfig kylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(queryParams.getProject()).getConfig();
-        boolean isPush = KapQueryUtil.checkBigQueryPushDown(kylinConfig);
+        boolean isPush = QueryUtil.checkBigQueryPushDown(kylinConfig);
         if (isPush) {
             logger.info("Big query route to pushdown.");
         }
@@ -257,7 +256,7 @@ public class QueryRoutingEngine {
             sqlString = QueryUtil.addLimit(sqlString);
         }
 
-        String massagedSql = KapQueryUtil.normalMassageSql(KylinConfig.getInstanceFromEnv(), sqlString,
+        String massagedSql = QueryUtil.normalMassageSql(KylinConfig.getInstanceFromEnv(), sqlString,
                 queryParams.getLimit(), queryParams.getOffset());
         if (isPrepareStatementWithParams(queryParams)) {
             QueryContext.current().getMetrics().setCorrectedSql(massagedSql);

@@ -45,8 +45,8 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.QueryOptimizer;
 import org.apache.kylin.query.util.HepUtils;
-import org.apache.kylin.query.util.KapQueryUtil;
 import org.apache.kylin.query.util.QueryParams;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.util.ExecAndComp;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -111,7 +111,7 @@ public class CalciteRuleTestBase extends NLocalFileMetadataTestCase {
                 return e.getFirst().contains(file);
         }).map(e -> {
             QueryParams queryParams = new QueryParams(config, e.getSecond(), project, 0, 0, "DEFAULT", false);
-            String sql = KapQueryUtil.massageSql(queryParams).replaceAll(emptyLinePattern, ""); // remove empty line
+            String sql = QueryUtil.massageSql(queryParams).replaceAll(emptyLinePattern, ""); // remove empty line
             return new Pair<>(FilenameUtils.getBaseName(e.getFirst()), sql);
         }).collect(Collectors.toList());
         Assert.assertEquals(1, queries.size());
@@ -123,7 +123,7 @@ public class CalciteRuleTestBase extends NLocalFileMetadataTestCase {
         final String queryFolder = IT_SQL_KYLIN_DIR + folder;
         return ExecAndComp.fetchQueries(queryFolder).stream().map(e -> {
             QueryParams queryParams = new QueryParams(config, e.getSecond(), project, 0, 0, "DEFAULT", false);
-            String sql = KapQueryUtil.massageSql(queryParams).replaceAll(emptyLinePattern, ""); // remove empty line
+            String sql = QueryUtil.massageSql(queryParams).replaceAll(emptyLinePattern, ""); // remove empty line
             return new Pair<>(FilenameUtils.getBaseName(e.getFirst()), sql);
         }).collect(Collectors.toList());
     }

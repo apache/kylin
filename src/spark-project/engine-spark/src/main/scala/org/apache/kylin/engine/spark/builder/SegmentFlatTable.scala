@@ -18,9 +18,10 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.{Locale, Objects, Timer, TimerTask}
 import com.google.common.collect.Sets
+import org.apache.commons.lang3.StringUtils
+import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
 import org.apache.kylin.engine.spark.job.{FiltersUtil, TableMetaManager}
@@ -28,18 +29,16 @@ import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.metadata.cube.model.NDataSegment
-import org.apache.kylin.metadata.model.{NDataModel, NTableMetadataManager}
-import org.apache.commons.lang3.StringUtils
-import org.apache.kylin.common.{KapConfig, KylinConfig}
-import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.metadata.model._
-import org.apache.kylin.query.util.KapQueryUtil
+import org.apache.kylin.query.util.QueryUtil
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils
 
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+import java.util.{Locale, Objects, Timer, TimerTask}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -138,13 +137,13 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
     }
 
     /**
-      * If need to build and encode dict columns, then
-      * 1. try best to build in fact-table.
-      * 2. try best to build in lookup-tables (without cc dict).
-      * 3. try to build in fact-table.
-      *
-      * CC in lookup-tables MUST be built in flat-table.
-      */
+     * If need to build and encode dict columns, then
+     * 1. try best to build in fact-table.
+     * 2. try best to build in lookup-tables (without cc dict).
+     * 3. try to build in fact-table.
+     *
+     * CC in lookup-tables MUST be built in flat-table.
+     */
     val (dictCols, encodeCols, dictColsWithoutCc, encodeColsWithoutCc) = prepareForDict()
     val factTable = buildDictIfNeed(factTableDS, dictCols, encodeCols)
 
@@ -257,7 +256,7 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
       logInfo(s"No available FILTER-CONDITION segment $segmentId")
       return originDS
     }
-    val expression = KapQueryUtil.massageExpression(dataModel, project, //
+    val expression = QueryUtil.massageExpression(dataModel, project, //
       dataModel.getFilterCondition, null)
     val converted = replaceDot(expression, dataModel)
     val condition = s" (1=1) AND ($converted)"
@@ -368,13 +367,13 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
     // If fact table is a view and its snapshot exists, that will benefit.
     logInfo(s"Load source table ${tableRef.getTableIdentity}")
     val tableDescCopy = tableRef.getTableDesc
-    if(tableDescCopy.isTransactional || tableDescCopy.isRangePartition) {
+    if (tableDescCopy.isTransactional || tableDescCopy.isRangePartition) {
       val model = tableRef.getModel
-      if(Objects.nonNull(model)) {
+      if (Objects.nonNull(model)) {
         tableDescCopy.setPartitionDesc(model.getPartitionDesc)
       }
 
-      if(Objects.nonNull(segmentRange) && Objects.nonNull(segmentRange.getStart) && Objects.nonNull(segmentRange.getEnd)) {
+      if (Objects.nonNull(segmentRange) && Objects.nonNull(segmentRange.getStart) && Objects.nonNull(segmentRange.getEnd)) {
         sparkSession.table(tableDescCopy, segmentRange.getStart.toString, segmentRange.getEnd.toString).alias(tableRef.getAlias)
       } else {
         sparkSession.table(tableDescCopy).alias(tableRef.getAlias)

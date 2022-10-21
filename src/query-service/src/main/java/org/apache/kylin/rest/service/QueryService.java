@@ -92,7 +92,6 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater;
 import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryHistory;
@@ -169,7 +168,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import com.google.gson.Gson;
 
-import org.apache.kylin.query.util.KapQueryUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -232,9 +230,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
         try {
             //project level config
-            ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                    .getProject(project);
-            api = projectInstance.getConfig().getProjectForcedToTieredStorage();
+            api = NProjectManager.getProjectConfig(project).getProjectForcedToTieredStorage();
             switch (api) {
             case CH_FAIL_TO_DFS:
             case CH_FAIL_TO_PUSH_DOWN:
@@ -268,7 +264,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             slowQueryDetector.queryStart(sqlRequest.getStopId());
             markHighPriorityQueryIfNeeded();
 
-            QueryParams queryParams = new QueryParams(KapQueryUtil.getKylinConfig(sqlRequest.getProject()),
+            QueryParams queryParams = new QueryParams(NProjectManager.getProjectConfig(sqlRequest.getProject()),
                     sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(), sqlRequest.getOffset(), true,
                     sqlRequest.getExecuteAs());
             queryParams.setForcedToPushDown(sqlRequest.isForcedToPushDown());
@@ -300,11 +296,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             QueryContext.current().setForcedToTieredStorage(enumForcedToTieredStorage);
             QueryContext.current().setForceTableIndex(queryParams.isForcedToIndex());
 
-            KylinConfig projectConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                    .getProject(queryParams.getProject()).getConfig();
-
             if (QueryContext.current().getQueryTagInfo().isAsyncQuery()
-                    && projectConfig.isUniqueAsyncQueryYarnQueue()) {
+                    && NProjectManager.getProjectConfig(sqlRequest.getProject()).isUniqueAsyncQueryYarnQueue()) {
                 if (StringUtils.isNotEmpty(sqlRequest.getSparkQueue())) {
                     queryParams.setSparkQueue(sqlRequest.getSparkQueue());
                 }
@@ -428,9 +421,6 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                     .collect(Collectors.toList());
         }
 
-        KylinConfig projectConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(request.getProject()).getConfig();
-
         String errorMsg = response.getExceptionMessage();
         if (StringUtils.isNotBlank(errorMsg)) {
             int maxLength = 5000;
@@ -466,7 +456,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 .put(LogReport.SCAN_FILE_COUNT, QueryContext.current().getMetrics().getFileCount())
                 .put(LogReport.REFUSE, response.isRefused());
         String log = report.oldStyleLog();
-        if (!(QueryContext.current().getQueryTagInfo().isAsyncQuery() && projectConfig.isUniqueAsyncQueryYarnQueue())) {
+        if (!(QueryContext.current().getQueryTagInfo().isAsyncQuery()
+                && NProjectManager.getProjectConfig(request.getProject()).isUniqueAsyncQueryYarnQueue())) {
             logger.info(log);
             logger.debug(report.jsonStyleLog());
             if (request.getExecuteAs() != null)
@@ -488,12 +479,11 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             queryContext.setQueryId(UUID.fromString(sqlRequest.getQueryId()).toString());
         }
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId());
-             SetLogCategory ignored2 = new SetLogCategory("query")) {
-            if (sqlRequest.getExecuteAs() != null) {
+                SetLogCategory ignored2 = new SetLogCategory("query")) {
+            if (sqlRequest.getExecuteAs() != null)
                 sqlRequest.setUsername(sqlRequest.getExecuteAs());
-            } else {
+            else
                 sqlRequest.setUsername(getUsername());
-            }
             QueryLimiter.tryAcquire();
             SQLResponse response = doQueryWithCache(sqlRequest);
             response.setTraces(QueryContext.currentTrace().spans().stream().map(span -> {
@@ -550,8 +540,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             throw new KylinException(JOB_NODE_QUERY_API_INVALID);
         }
         checkSqlRequestProject(sqlRequest, msg);
-        final NProjectManager projectMgr = NProjectManager.getInstance(kylinConfig);
-        if (projectMgr.getProject(sqlRequest.getProject()) == null) {
+        if (NProjectManager.getInstance(kylinConfig).getProject(sqlRequest.getProject()) == null) {
             throw new KylinException(PROJECT_NOT_EXIST, sqlRequest.getProject());
         }
         if (StringUtils.isBlank(sqlRequest.getSql())) {
@@ -581,11 +570,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             queryContext.setAclInfo(getExecuteAclInfo(project, sqlRequest.getExecuteAs()));
             QueryContext.currentTrace().startSpan(QueryTrace.SQL_TRANSFORMATION);
             queryContext.getMetrics().setServer(clusterManager.getLocalServer());
+            queryContext.setProject(project);
 
-            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            ProjectInstance projectInstance = NProjectManager.getInstance(kylinConfig).getProject(project);
-            kylinConfig = projectInstance.getConfig();
-
+            KylinConfig kylinConfig = NProjectManager.getProjectConfig(project);
             // Parsing user sql by RawSqlParser
             RawSql rawSql = new RawSqlParser(sqlRequest.getSql()).parse();
             rawSql.autoAppendLimit(kylinConfig, sqlRequest.getLimit(), sqlRequest.getOffset());
@@ -605,7 +592,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             sqlResponse = QueryUtils.handleTempStatement(sqlRequest, kylinConfig);
 
             // search cache
-            if (sqlResponse == null && isQueryCacheEnabled(kylinConfig) && !sqlRequest.isForcedToPushDown()) {
+            if (sqlResponse == null && kylinConfig.isQueryCacheEnabled() && !sqlRequest.isForcedToPushDown()) {
                 sqlResponse = searchCache(sqlRequest, kylinConfig);
             }
 
@@ -678,7 +665,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     protected SQLResponse searchCache(SQLRequest sqlRequest, KylinConfig kylinConfig) {
         SQLResponse response = searchFailedCache(sqlRequest, kylinConfig);
         if (response == null) {
-            response = searchSuccessCache(sqlRequest, kylinConfig);
+            response = searchSuccessCache(sqlRequest);
         }
         if (response != null) {
             response.setDuration(0);
@@ -703,7 +690,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         return null;
     }
 
-    private SQLResponse searchSuccessCache(SQLRequest sqlRequest, KylinConfig kylinConfig) {
+    private SQLResponse searchSuccessCache(SQLRequest sqlRequest) {
         SQLResponse response = queryCacheManager.searchSuccessCache(sqlRequest);
         if (response != null) {
             logger.info("The sqlResponse is found in SUCCESS_QUERY_CACHE");
@@ -713,10 +700,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     }
 
     private void addToQueryHistory(SQLRequest sqlRequest, SQLResponse sqlResponse, String originalSql) {
-        KylinConfig projectKylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(sqlRequest.getProject()).getConfig();
         if (!(QueryContext.current().getQueryTagInfo().isAsyncQuery()
-                && projectKylinConfig.isUniqueAsyncQueryYarnQueue())) {
+                && NProjectManager.getProjectConfig(sqlRequest.getProject()).isUniqueAsyncQueryYarnQueue())) {
             try {
                 if (!sqlResponse.isPrepare() && QueryMetricsContext.isStarted()) {
                     val queryMetricsContext = QueryMetricsContext.collect(QueryContext.current());
@@ -890,7 +875,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         if (null == queryCacheManager.getFromExceptionCache(sqlRequest)) {
             return;
         }
-        if (!queryCacheManager.getCache().remove(QueryCacheManager.Type.EXCEPTION_QUERY_CACHE.rootCacheName,
+        if (!queryCacheManager.getCache().remove(CommonQueryCacheSupporter.Type.EXCEPTION_QUERY_CACHE.rootCacheName,
                 sqlRequest.getProject(), sqlRequest.getCacheKey())) {
             logger.info("Remove cache failed");
         }
@@ -950,9 +935,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     }
 
     boolean isACLDisabledOrAdmin(String project, QueryContext.AclInfo aclInfo) {
-        KylinConfig projectKylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(project).getConfig();
-        if (!projectKylinConfig.isAclTCREnabled()) {
+        if (!NProjectManager.getProjectConfig(project).isAclTCREnabled()) {
             return true;
         }
 
@@ -975,9 +958,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
     public QueryExec newQueryExec(String project, String executeAs) {
         QueryContext.current().setAclInfo(getExecuteAclInfo(project, executeAs));
-        KylinConfig projectKylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(project).getConfig();
-        return new QueryExec(project, projectKylinConfig, true);
+        return new QueryExec(project, NProjectManager.getProjectConfig(project), true);
     }
 
     protected QueryContext.AclInfo getExecuteAclInfo(String project) {
@@ -1014,8 +995,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     }
 
     public List<TableMeta> getMetadata(String project) {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        if (!NProjectManager.getInstance(kylinConfig).getProject(project).getConfig().isSchemaCacheEnabled()) {
+        if (!NProjectManager.getProjectConfig(project).isSchemaCacheEnabled()) {
             return doGetMetadata(project, null);
         }
 
@@ -1050,9 +1030,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         List<String> targetModelColumns = getTargetModelColumns(targetModelName, models, project);
 
         QueryContext.current().setAclInfo(getExecuteAclInfo(project));
-        ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(project);
-        SchemaMetaData schemaMetaData = new SchemaMetaData(project, projectInstance.getConfig());
+        SchemaMetaData schemaMetaData = new SchemaMetaData(project, NProjectManager.getProjectConfig(project));
 
         List<TableMeta> tableMetas = new LinkedList<>();
         SetMultimap<String, String> tbl2ccNames = collectComputedColumns(project);
@@ -1069,17 +1047,18 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
             int columnOrdinal = 1;
             for (StructField field : tableSchema.getFields()) {
-                ColumnMeta colmnMeta = constructColumnMeta(tableSchema, field, columnOrdinal);
+                ColumnMeta columnMeta = constructColumnMeta(tableSchema, field, columnOrdinal);
                 columnOrdinal++;
 
-                if (!shouldExposeColumn(projectInstance, colmnMeta, tbl2ccNames)) {
+                if (!shouldExposeColumn(project, columnMeta, tbl2ccNames)) {
                     continue;
                 }
 
-                if (!colmnMeta.getCOLUMN_NAME().toUpperCase(Locale.ROOT).startsWith("_KY_")
-                        && (targetModelColumns == null || targetModelColumns.contains(colmnMeta.getTABLE_SCHEM() + "."
-                        + colmnMeta.getTABLE_NAME() + "." + colmnMeta.getCOLUMN_NAME()))) {
-                    tblMeta.addColumn(colmnMeta);
+                String qualifiedCol = columnMeta.getTABLE_SCHEM() + "." + columnMeta.getTABLE_NAME() + "."
+                        + columnMeta.getCOLUMN_NAME();
+                if (!columnMeta.getCOLUMN_NAME().toUpperCase(Locale.ROOT).startsWith("_KY_")
+                        && isQualifiedColumn(targetModelColumns, qualifiedCol)) {
+                    tblMeta.addColumn(columnMeta);
                 }
             }
 
@@ -1088,9 +1067,12 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         return tableMetas;
     }
 
+    private boolean isQualifiedColumn(List<String> targetModelColumns, String qualifiedCol) {
+        return targetModelColumns == null || targetModelColumns.contains(qualifiedCol);
+    }
+
     public List<TableMetaWithType> getMetadataV2(String project, String modelAlias) {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        if (!NProjectManager.getInstance(kylinConfig).getProject(project).getConfig().isSchemaCacheEnabled()) {
+        if (!NProjectManager.getProjectConfig(project).isSchemaCacheEnabled()) {
             return doGetMetadataV2(project, modelAlias);
         }
 
@@ -1143,9 +1125,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         List<String> targetModelColumns = getTargetModelColumns(targetModelName, models, project);
 
         QueryContext.current().setAclInfo(getExecuteAclInfo(project));
-        ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(project);
-        SchemaMetaData schemaMetaData = new SchemaMetaData(project, projectInstance.getConfig());
+        SchemaMetaData schemaMetaData = new SchemaMetaData(project, NProjectManager.getProjectConfig(project));
         Map<TableMetaIdentify, TableMetaWithType> tableMap = constructTableMeta(schemaMetaData, targetModelTables);
         Map<ColumnMetaIdentify, ColumnMetaWithType> columnMap = constructTblColMeta(schemaMetaData, project,
                 targetModelColumns);
@@ -1166,14 +1146,16 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         List<String> targetModelColumns = null;
         if (targetModelName != null) {
             NIndexPlanManager indexPlanManager = getManager(NIndexPlanManager.class, project);
-            targetModelColumns = !getManager(NProjectManager.class).getProject(project).getConfig()
-                    .exposeAllModelRelatedColumns() ? models.stream().map(model -> {
+            targetModelColumns = NProjectManager.getProjectConfig(project).exposeAllModelRelatedColumns()
+                    ? models.stream()
+                            .flatMap(m -> m.getEffectiveCols().values().stream()
+                                    .map(TblColRef::getColumnWithTableAndSchema))
+                            .collect(Collectors.toList())
+                    : models.stream().map(model -> {
                         Set<Integer> relatedColIds = indexPlanManager.getIndexPlan(model.getId()).getRelatedColIds();
                         return relatedColIds.stream().map(id -> model.getColRef(id).getColumnWithTableAndSchema())
                                 .collect(Collectors.toList());
-                    }).flatMap(List::stream).collect(Collectors.toList())
-                            : models.stream().flatMap(m -> m.getEffectiveCols().values().stream()
-                                    .map(TblColRef::getColumnWithTableAndSchema)).collect(Collectors.toList());
+                    }).flatMap(List::stream).collect(Collectors.toList());
         }
         return targetModelColumns;
     }
@@ -1181,7 +1163,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     private List<String> getTargetModelTables(String targetModelName, List<NDataModel> models) {
         return targetModelName == null ? null
                 : models.stream().flatMap(m -> m.getAllTableRefs().stream().map(TableRef::getTableIdentity))
-                .collect(Collectors.toList());
+                        .collect(Collectors.toList());
     }
 
     private List<NDataModel> getModels(String project, String targetModelName) {
@@ -1210,8 +1192,6 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     private LinkedHashMap<ColumnMetaIdentify, ColumnMetaWithType> constructTblColMeta(SchemaMetaData schemaMetaData,
             String project, List<String> targetModelColumns) {
         LinkedHashMap<ColumnMetaIdentify, ColumnMetaWithType> columnMap = Maps.newLinkedHashMap();
-        ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(project);
         SetMultimap<String, String> tbl2ccNames = collectComputedColumns(project);
 
         for (TableSchema tableSchema : schemaMetaData.getTables()) {
@@ -1221,7 +1201,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                         .ofColumnMeta(constructColumnMeta(tableSchema, field, columnOrdinal));
                 columnOrdinal++;
 
-                if (!shouldExposeColumn(projectInstance, columnMeta, tbl2ccNames)) {
+                if (!shouldExposeColumn(project, columnMeta, tbl2ccNames)) {
                     continue;
                 }
 
@@ -1262,9 +1242,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     }
 
     private SetMultimap<String, String> collectComputedColumns(String project) {
-        NProjectManager projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
         SetMultimap<String, String> tbl2ccNames = HashMultimap.create();
-        projectManager.listAllRealizations(project).forEach(rea -> {
+        getManager(NProjectManager.class).listAllRealizations(project).forEach(rea -> {
             val upperCaseCcNames = rea.getModel().getComputedColumnNames().stream()
                     .map(str -> str.toUpperCase(Locale.ROOT)).collect(Collectors.toList());
             tbl2ccNames.putAll(rea.getModel().getRootFactTable().getAlias().toUpperCase(Locale.ROOT), upperCaseCcNames);
@@ -1273,28 +1252,25 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         return tbl2ccNames;
     }
 
-    private boolean shouldExposeColumn(ProjectInstance projectInstance, ColumnMeta columnMeta,
-            SetMultimap<String, String> tbl2ccNames) {
+    private boolean shouldExposeColumn(String project, ColumnMeta columnMeta, SetMultimap<String, String> tbl2ccNames) {
         // check for cc exposing
         // exposeComputedColumn=True, expose columns anyway
-        if (projectInstance.getConfig().exposeComputedColumn()) {
+        if (NProjectManager.getProjectConfig(project).exposeComputedColumn()) {
             return true;
         }
 
         // only check cc expose when exposeComputedColumn=False
         // do not expose column if it is a computed column
-        return !isComputedColumn(projectInstance.getName(), columnMeta.getCOLUMN_NAME().toUpperCase(Locale.ROOT),
-                columnMeta.getTABLE_NAME(), tbl2ccNames);
+        return !isComputedColumn(columnMeta.getCOLUMN_NAME().toUpperCase(Locale.ROOT), columnMeta.getTABLE_NAME(),
+                tbl2ccNames);
     }
 
     /**
-     * @param project
      * @param ccName
      * @param table   only support table alias like "TEST_COUNT" or table indentity "default.TEST_COUNT"
      * @return
      */
-    private boolean isComputedColumn(String project, String ccName, String table,
-            SetMultimap<String, String> tbl2ccNames) {
+    private boolean isComputedColumn(String ccName, String table, SetMultimap<String, String> tbl2ccNames) {
 
         return CollectionUtils.isNotEmpty(tbl2ccNames.get(table.toUpperCase(Locale.ROOT)))
                 && tbl2ccNames.get(table.toUpperCase(Locale.ROOT)).contains(ccName.toUpperCase(Locale.ROOT));

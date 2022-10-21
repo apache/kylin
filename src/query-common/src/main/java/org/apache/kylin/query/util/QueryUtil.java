@@ -18,11 +18,18 @@
 
 package org.apache.kylin.query.util;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import io.kyligence.kap.guava20.shaded.common.collect.ImmutableSet;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
@@ -41,7 +48,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.util.Util;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
@@ -55,41 +62,137 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater;
+import org.apache.kylin.query.IQueryTransformer;
 import org.apache.kylin.query.SlowQueryDetector;
 import org.apache.kylin.query.exception.UserStopQueryException;
 import org.apache.kylin.query.relnode.KapJoinRel;
+import org.apache.kylin.query.security.AccessDeniedException;
 import org.apache.kylin.source.adhocquery.IPushDownConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Pattern;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
-@Slf4j
-public class KapQueryUtil {
+public class QueryUtil {
+
+    private QueryUtil() {
+    }
+
+    private static final Logger log = LoggerFactory.getLogger("query");
 
     public static final String DEFAULT_SCHEMA = "DEFAULT";
     public static final ImmutableSet<String> REMOVED_TRANSFORMERS = ImmutableSet.of("ReplaceStringWithVarchar");
-
+    private static final Pattern SELECT_PATTERN = Pattern.compile("^select", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SELECT_STAR_PTN = Pattern.compile("^select\\s+\\*\\p{all}*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern LIMIT_PATTERN = Pattern.compile("(limit\\s+\\d+)$", Pattern.CASE_INSENSITIVE);
+    private static final String SELECT = "select";
+    private static final String COLON = ":";
+    private static final String SEMI_COLON = ";";
     public static final String JDBC = "jdbc";
 
     public static List<IQueryTransformer> queryTransformers = Collections.emptyList();
     public static List<IPushDownConverter> pushDownConverters = Collections.emptyList();
 
+    public static boolean isSelectStatement(String sql) {
+        String sql1 = sql.toLowerCase(Locale.ROOT);
+        sql1 = removeCommentInSql(sql1);
+        sql1 = sql1.trim();
+        while (sql1.startsWith("(")) {
+            sql1 = sql1.substring(1).trim();
+        }
+
+        return sql1.startsWith(SELECT) || (sql1.startsWith("with") && sql1.contains(SELECT))
+                || (sql1.startsWith("explain") && sql1.contains(SELECT));
+    }
+
+    public static String removeCommentInSql(String sql) {
+        // match two patterns, one is "-- comment", the other is "/* comment */"
+        try {
+            return new RawSqlParser(sql).parse().getStatementString();
+        } catch (Exception ex) {
+            log.error("Something unexpected while removing comments in the query, return original query", ex);
+            return sql;
+        }
+    }
+
+    public static String makeErrorMsgUserFriendly(Throwable e) {
+        String msg = e.getMessage();
+
+        // pick ParseException error message if possible
+        Throwable cause = e;
+        boolean needBreak = false;
+        while (cause != null) {
+            String className = cause.getClass().getName();
+            if (className.contains("ParseException") || className.contains("NoSuchTableException")
+                    || className.contains("NoSuchDatabaseException") || cause instanceof AccessDeniedException) {
+                msg = cause.getMessage();
+                needBreak = true;
+            } else if (className.contains("ArithmeticException")) {
+                msg = "ArithmeticException: " + cause.getMessage();
+                needBreak = true;
+            } else if (className.contains("NoStreamingRealizationFoundException")) {
+                msg = "NoStreamingRealizationFoundException: " + cause.getMessage();
+                needBreak = true;
+            }
+            if (needBreak) {
+                break;
+            }
+            cause = cause.getCause();
+        }
+
+        return makeErrorMsgUserFriendly(msg);
+    }
+
+    public static String makeErrorMsgUserFriendly(String errorMsg) {
+        if (StringUtils.isBlank(errorMsg)) {
+            return errorMsg;
+        }
+        errorMsg = errorMsg.trim();
+        String[] split = errorMsg.split(COLON);
+        if (split.length == 3) {
+            String prefix = "Error";
+            if (StringUtils.startsWithIgnoreCase(split[0], prefix)) {
+                split[0] = split[0].substring(prefix.length()).trim();
+            }
+            prefix = "while executing SQL";
+            if (StringUtils.startsWith(split[0], prefix)) {
+                split[0] = split[0].substring(0, prefix.length()) + COLON + split[0].substring(prefix.length());
+            }
+            return split[1].trim() + COLON + StringUtils.SPACE + split[2].trim() + "\n" + split[0];
+        } else {
+            return errorMsg;
+        }
+    }
+
+    public static String addLimit(String originString) {
+        if (StringUtils.isBlank(originString)) {
+            return originString;
+        }
+        String replacedString = originString.trim();
+        Matcher selectMatcher = SELECT_PATTERN.matcher(replacedString);
+        if (!selectMatcher.find()) {
+            return originString;
+        }
+
+        while (replacedString.endsWith(SEMI_COLON)) {
+            replacedString = replacedString.substring(0, replacedString.length() - 1).trim();
+        }
+
+        Matcher limitMatcher = LIMIT_PATTERN.matcher(replacedString);
+        return limitMatcher.find() ? originString : replacedString.concat(" limit 1");
+    }
+
     public static String massageExpression(NDataModel model, String project, String expression,
-            QueryContext.AclInfo aclInfo, boolean massageToPushdown) {
+            QueryContext.AclInfo aclInfo, boolean isForPushDown) {
         String tempConst = "'" + RandomUtil.randomUUIDStr() + "'";
         StringBuilder forCC = new StringBuilder();
-        forCC.append("select ");
-        forCC.append(expression);
-        forCC.append(" ,").append(tempConst);
-        forCC.append(" ");
+        forCC.append("select ").append(expression).append(" ,").append(tempConst) //
+                .append(" FROM ") //
+                .append(model.getRootFactTable().getTableDesc().getDoubleQuoteIdentity());
         appendJoinStatement(model, forCC, false);
 
         String ccSql = KeywordDefaultDirtyHack.transform(forCC.toString());
@@ -99,10 +202,10 @@ public class KapQueryUtil {
             modelMap.put(model.getUuid(), model);
             ccSql = RestoreFromComputedColumn.convertWithGivenModels(ccSql, project, DEFAULT_SCHEMA, modelMap);
             QueryParams queryParams = new QueryParams(project, ccSql, DEFAULT_SCHEMA, false);
-            queryParams.setKylinConfig(getKylinConfig(project));
+            queryParams.setKylinConfig(NProjectManager.getProjectConfig(project));
             queryParams.setAclInfo(aclInfo);
 
-            if (massageToPushdown) {
+            if (isForPushDown) {
                 ccSql = massagePushDownSql(queryParams);
             }
         } catch (Exception e) {
@@ -125,12 +228,7 @@ public class KapQueryUtil {
     public static void appendJoinStatement(NDataModel model, StringBuilder sql, boolean singleLine) {
         final String sep = singleLine ? " " : "\n";
         Set<TableRef> dimTableCache = Sets.newHashSet();
-
-        TableRef rootTable = model.getRootFactTable();
-        sql.append(String.format(Locale.ROOT, "FROM \"%s\".\"%s\" as \"%s\"", rootTable.getTableDesc().getDatabase(),
-                rootTable.getTableDesc().getName(), rootTable.getAlias()));
         sql.append(sep);
-
         for (JoinTableDesc lookupDesc : model.getJoinTables()) {
             JoinDesc join = lookupDesc.getJoin();
             TableRef dimTable = lookupDesc.getTableRef();
@@ -154,19 +252,14 @@ public class KapQueryUtil {
             if (pk.length == 0 && join.getNonEquiJoinCondition() != null) {
                 sql.append(join.getNonEquiJoinCondition().getExpr());
                 dimTableCache.add(dimTable);
-                continue;
+            } else {
+                String collect = IntStream.range(0, pk.length) //
+                        .mapToObj(i -> fk[i].getDoubleQuoteExpressionInSourceDB() + " = "
+                                + pk[i].getDoubleQuoteExpressionInSourceDB())
+                        .collect(Collectors.joining(" AND ", "", sep));
+                sql.append(collect);
+                dimTableCache.add(dimTable);
             }
-
-            for (int i = 0; i < pk.length; i++) {
-                if (i > 0) {
-                    sql.append(" AND ");
-                }
-                sql.append(String.format(Locale.ROOT, "%s = %s", fk[i].getDoubleQuoteExpressionInSourceDB(),
-                        pk[i].getDoubleQuoteExpressionInSourceDB()));
-            }
-            sql.append(sep);
-
-            dimTableCache.add(dimTable);
         }
     }
 
@@ -206,10 +299,7 @@ public class KapQueryUtil {
         if (!isContainAggregate(joinLeftChild) && !isContainAggregate(joinRightChild)) {
             return false;
         }
-        if (isContainAggregate(joinLeftChild) && isContainAggregate(joinRightChild)) {
-            return false;
-        }
-        return true;
+        return !isContainAggregate(joinLeftChild) || !isContainAggregate(joinRightChild);
     }
 
     private static boolean isContainAggregate(RelNode node) {
@@ -275,10 +365,7 @@ public class KapQueryUtil {
         }
         if (SqlKind.CAST == rexNode.getKind()) {
             RexNode operand = ((RexCall) rexNode).getOperands().get(0);
-            if (operand instanceof RexCall && operand.getKind() != SqlKind.CASE) {
-                return false;
-            }
-            return true;
+            return !(operand instanceof RexCall) || operand.getKind() == SqlKind.CASE;
         }
 
         return false;
@@ -312,30 +399,27 @@ public class KapQueryUtil {
         initQueryTransformersIfNeeded(queryParams.getKylinConfig(), queryParams.isCCNeeded());
         String sql = queryParams.getSql();
         for (IQueryTransformer t : queryTransformers) {
-            if (Thread.currentThread().isInterrupted()) {
-                log.error("SQL transformation is timeout and interrupted before {}", t.getClass());
-                if (SlowQueryDetector.getRunningQueries().get(Thread.currentThread()).isStopByUser()) {
-                    throw new UserStopQueryException("");
-                }
-                QueryContext.current().getQueryTagInfo().setTimeout(true);
-                throw new KylinTimeoutException("The query exceeds the set time limit of "
-                        + KylinConfig.getInstanceFromEnv().getQueryTimeoutSeconds()
-                        + "s. Current step: SQL transformation. ");
-            }
+            QueryUtil.checkThreadInterrupted("Interrupted sql transformation at the stage of " + t.getClass(),
+                    "Current step: SQL transformation.");
             sql = t.transform(sql, queryParams.getProject(), queryParams.getDefaultSchema());
+        }
+        return sql;
+    }
+
+    private static String trimRightSemiColon(String sql) {
+        while (sql.endsWith(SEMI_COLON)) {
+            sql = sql.substring(0, sql.length() - 1).trim();
         }
         return sql;
     }
 
     public static String normalMassageSql(KylinConfig kylinConfig, String sql, int limit, int offset) {
         sql = sql.trim();
-        sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
-
-        while (sql.endsWith(";"))
-            sql = sql.substring(0, sql.length() - 1);
+        sql = sql.replace("\r", StringUtils.SPACE).replace("\n", System.getProperty("line.separator"));
+        sql = trimRightSemiColon(sql);
 
         //Split keywords and variables from sql by punctuation and whitespace character
-        List<String> sqlElements = Lists.newArrayList(sql.toLowerCase(Locale.ROOT).split("(?![\\._\'\"`])\\p{P}|\\s+"));
+        List<String> sqlElements = Lists.newArrayList(sql.toLowerCase(Locale.ROOT).split("(?![._'\"`])\\p{P}|\\s+"));
 
         Integer maxRows = kylinConfig.getMaxResultRows();
         if (maxRows != null && maxRows > 0 && (maxRows < limit || limit <= 0)) {
@@ -343,14 +427,14 @@ public class KapQueryUtil {
         }
 
         // https://issues.apache.org/jira/browse/KYLIN-2649
-        if (kylinConfig.getForceLimit() > 0 && limit <=0 && !sql.toLowerCase(Locale.ROOT).contains("limit")
-                && sql.toLowerCase(Locale.ROOT).matches("^select\\s+\\*\\p{all}*")) {
+        if (kylinConfig.getForceLimit() > 0 && limit <= 0 && !sql.toLowerCase(Locale.ROOT).contains("limit")
+                && SELECT_STAR_PTN.matcher(sql).find()) {
             limit = kylinConfig.getForceLimit();
         }
 
         if (checkBigQueryPushDown(kylinConfig)) {
             long bigQueryThreshold = BigQueryThresholdUpdater.getBigQueryThreshold();
-            if (limit <=0 && bigQueryThreshold > 0) {
+            if (limit <= 0 && bigQueryThreshold > 0) {
                 log.info("Big query route to pushdown, Add limit {} to sql.", bigQueryThreshold);
                 limit = (int) bigQueryThreshold;
             }
@@ -368,7 +452,8 @@ public class KapQueryUtil {
     }
 
     public static boolean checkBigQueryPushDown(KylinConfig kylinConfig) {
-        return kylinConfig.isBigQueryPushDown() && JDBC.equals(KapConfig.getInstanceFromEnv().getShareStateSwitchImplement());
+        return kylinConfig.isBigQueryPushDown()
+                && JDBC.equals(KapConfig.getInstanceFromEnv().getShareStateSwitchImplement());
     }
 
     public static void initQueryTransformersIfNeeded(KylinConfig kylinConfig, boolean isCCNeeded) {
@@ -389,7 +474,7 @@ public class KapQueryUtil {
 
     public static List<IQueryTransformer> initTransformers(boolean isCCNeeded, String[] configTransformers) {
         List<IQueryTransformer> transformers = Lists.newArrayList();
-        List<String> classList = io.kyligence.kap.guava20.shaded.common.collect.Lists.newArrayList(configTransformers);
+        List<String> classList = Lists.newArrayList(configTransformers);
         classList.removeIf(clazz -> {
             String name = clazz.substring(clazz.lastIndexOf(".") + 1);
             return REMOVED_TRANSFORMERS.contains(name);
@@ -410,26 +495,19 @@ public class KapQueryUtil {
         return transformers;
     }
 
+    // fix KE-34379，filter "/*+ MODEL_PRIORITY({cube_name}) */" hint
+    private static final Pattern SQL_HINT_ERASER = Pattern
+            .compile("/\\*\\s*\\+\\s*(?i)MODEL_PRIORITY\\s*\\([\\s\\S]*\\)\\s*\\*/");
+
     public static String massagePushDownSql(QueryParams queryParams) {
         String sql = queryParams.getSql();
-        while (sql.endsWith(";"))
-            sql = sql.substring(0, sql.length() - 1);
-        // fix KE-34379，filter "/*+ MODEL_PRIORITY({cube_name}) */" hint
-        String regex = "/\\*\\s*\\+\\s*(?i)MODEL_PRIORITY\\s*\\([\\s\\S]*\\)\\s*\\*/";
-        sql = Pattern.compile(regex).matcher(sql).replaceAll("");
+        sql = trimRightSemiColon(sql);
+
+        sql = SQL_HINT_ERASER.matcher(sql).replaceAll("");
         initPushDownConvertersIfNeeded(queryParams.getKylinConfig());
         for (IPushDownConverter converter : pushDownConverters) {
-            if (Thread.currentThread().isInterrupted()) {
-                log.error("Push-down SQL conver transformation is timeout and interrupted before {}",
-                        converter.getClass());
-                if (SlowQueryDetector.getRunningQueries().get(Thread.currentThread()).isStopByUser()) {
-                    throw new UserStopQueryException("");
-                }
-                QueryContext.current().getQueryTagInfo().setTimeout(true);
-                throw new KylinTimeoutException("The query exceeds the set time limit of "
-                        + KylinConfig.getInstanceFromEnv().getQueryTimeoutSeconds()
-                        + "s. Current step: Massage push-down sql. ");
-            }
+            QueryUtil.checkThreadInterrupted("Interrupted sql transformation at the stage of " + converter.getClass(),
+                    "Current step: Massage push-down sql. ");
             sql = converter.convert(sql, queryParams.getProject(), queryParams.getDefaultSchema());
         }
         return sql;
@@ -457,13 +535,15 @@ public class KapQueryUtil {
         pushDownConverters = Collections.unmodifiableList(converters);
     }
 
-    public static KylinConfig getKylinConfig(String project) {
-        NProjectManager projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
-        ProjectInstance projectInstance = projectManager.getProject(project);
-        return projectInstance.getConfig();
-    }
-
-    public interface IQueryTransformer {
-        String transform(String sql, String project, String defaultSchema);
+    public static void checkThreadInterrupted(String errorMsgLog, String stepInfo) {
+        if (Thread.currentThread().isInterrupted()) {
+            log.error("{} {}", QueryContext.current().getQueryId(), errorMsgLog);
+            if (SlowQueryDetector.getRunningQueries().get(Thread.currentThread()).isStopByUser()) {
+                throw new UserStopQueryException("");
+            }
+            QueryContext.current().getQueryTagInfo().setTimeout(true);
+            throw new KylinTimeoutException("The query exceeds the set time limit of "
+                    + KylinConfig.getInstanceFromEnv().getQueryTimeoutSeconds() + "s. " + stepInfo);
+        }
     }
 }

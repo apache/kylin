@@ -37,7 +37,9 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.engine.spark.IndexDataConstructor;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.util.QueryParams;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.util.ExecAndComp;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -61,7 +63,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import io.kyligence.kap.newten.clickhouse.ClickHouseUtils;
-import org.apache.kylin.query.util.KapQueryUtil;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import io.kyligence.kap.secondstorage.test.ClickHouseClassRule;
 import io.kyligence.kap.secondstorage.test.EnableClickHouseJob;
@@ -87,7 +88,7 @@ public class TDVTHiveTest {
 
     @ClassRule
     public static SharedSparkSession sharedSpark = new SharedSparkSession(
-            ImmutableMap.of("spark.sql.extensions", "org.apache.kylin.query.SQLPushDownExtensions"));
+            ImmutableMap.of("spark.sql.extensions", "io.kyligence.kap.query.SQLPushDownExtensions"));
 
     public static EnableTestUser enableTestUser = new EnableTestUser();
     public static ClickHouseClassRule clickHouse = new ClickHouseClassRule(clickhouseNumber);
@@ -194,8 +195,8 @@ public class TDVTHiveTest {
 
     private String runWithHive(String sqlStatement) {
         QueryParams queryParams = new QueryParams(project, sqlStatement, "default", false);
-        queryParams.setKylinConfig(KapQueryUtil.getKylinConfig(project));
-        String afterConvert = KapQueryUtil.massagePushDownSql(queryParams);
+        queryParams.setKylinConfig(NProjectManager.getProjectConfig(project));
+        String afterConvert = QueryUtil.massagePushDownSql(queryParams);
         // Table schema comes from csv and DATABASE.TABLE is not supported.
         String sqlForSpark = ExecAndComp.removeDataBaseInSql(afterConvert);
         Dataset<Row> plan = ExecAndComp.querySparkSql(sqlForSpark);

@@ -24,7 +24,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -40,7 +40,6 @@ import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
 import org.apache.kylin.metadata.query.QueryHistoryRequest;
-import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
@@ -89,7 +88,7 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
 
         mockMvc = MockMvcBuilders.standaloneSetup(nQueryController).defaultRequest(MockMvcRequestBuilders.get("/"))
                 .build();
@@ -124,7 +123,7 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(nQueryController).query((PrepareSqlRequest) Mockito.any(), Mockito.anyString());
+        Mockito.verify(nQueryController).query(Mockito.any(), Mockito.anyString());
     }
 
     @Test
@@ -136,12 +135,11 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
         sql.setForcedToIndex(true);
         sql.setForcedToPushDown(false);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/query").contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtil.writeValueAsString(sql))
-                .header("User-Agent", "Chrome/89.0.4389.82 Safari/537.36")
+                .content(JsonUtil.writeValueAsString(sql)).header("User-Agent", "Chrome/89.0.4389.82 Safari/537.36")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(nQueryController).query((PrepareSqlRequest) Mockito.any(), Mockito.anyString());
+        Mockito.verify(nQueryController).query(Mockito.any(), Mockito.anyString());
     }
 
     @Test
@@ -154,11 +152,13 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
         PrepareSqlRequest sql = new PrepareSqlRequest();
         sql.setForcedToIndex(true);
         sql.setForcedToPushDown(true);
-        try{
-            checkForcedToParams.invoke(qc, (Object)sql);
+        try {
+            checkForcedToParams.invoke(qc, sql);
         } catch (Exception e) {
-            Assert.assertSame(new KylinException(
-                    QueryErrorCode.INVALID_QUERY_PARAMS, MsgPicker.getMsg().getCannotForceToBothPushdodwnAndIndex()).getMessage(), e.getCause().getMessage());
+            Assert.assertSame(
+                    new KylinException(QueryErrorCode.INVALID_QUERY_PARAMS,
+                            MsgPicker.getMsg().getCannotForceToBothPushdodwnAndIndex()).getMessage(),
+                    e.getCause().getMessage());
             catched = true;
         }
         Assert.assertTrue(catched);
@@ -167,17 +167,19 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
         sql.setForcedToIndex(true);
         sql.setForcedToPushDown(false);
         sql.setForcedToTieredStorage(ForceToTieredStorage.CH_FAIL_TO_PUSH_DOWN.ordinal());
-        checkForcedToParams.invoke(qc, (Object)sql);
+        checkForcedToParams.invoke(qc, sql);
 
         catched = false;
         sql = new PrepareSqlRequest();
         sql.setForcedToTieredStorage(4);
 
-        try{
-            checkForcedToParams.invoke(qc, (Object)sql);
+        try {
+            checkForcedToParams.invoke(qc, sql);
         } catch (Exception e) {
-            Assert.assertSame(new KylinException(
-                    QueryErrorCode.FORCED_TO_TIEREDSTORAGE_INVALID_PARAMETER, MsgPicker.getMsg().getForcedToTieredstorageInvalidParameter()).getMessage(), e.getCause().getMessage());
+            Assert.assertSame(
+                    new KylinException(QueryErrorCode.FORCED_TO_TIEREDSTORAGE_INVALID_PARAMETER,
+                            MsgPicker.getMsg().getForcedToTieredstorageInvalidParameter()).getMessage(),
+                    e.getCause().getMessage());
             catched = true;
         }
         Assert.assertTrue(catched);
@@ -186,11 +188,13 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
         sql = new PrepareSqlRequest();
         sql.setForcedToTieredStorage(-1);
 
-        try{
-            checkForcedToParams.invoke(qc, (Object)sql);
+        try {
+            checkForcedToParams.invoke(qc, sql);
         } catch (Exception e) {
-            Assert.assertSame(new KylinException(
-                    QueryErrorCode.FORCED_TO_TIEREDSTORAGE_INVALID_PARAMETER, MsgPicker.getMsg().getForcedToTieredstorageInvalidParameter()).getMessage(), e.getCause().getMessage());
+            Assert.assertSame(
+                    new KylinException(QueryErrorCode.FORCED_TO_TIEREDSTORAGE_INVALID_PARAMETER,
+                            MsgPicker.getMsg().getForcedToTieredstorageInvalidParameter()).getMessage(),
+                    e.getCause().getMessage());
             catched = true;
         }
         Assert.assertTrue(catched);
@@ -199,7 +203,7 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
         Mockito.when(sql.getForcedToTieredStorage()).thenThrow(new NullPointerException());
         sql.setForcedToIndex(false);
         sql.setForcedToPushDown(false);
-        checkForcedToParams.invoke(qc, (Object)sql);
+        checkForcedToParams.invoke(qc, sql);
     }
 
     @Test
@@ -209,14 +213,12 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
         sql.setProject(PROJECT);
         sql.setForcedToTieredStorage(-1);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/query").contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtil.writeValueAsString(sql))
-                .header("User-Agent", "Chrome/89.0.4389.82 Safari/537.36")
+                .content(JsonUtil.writeValueAsString(sql)).header("User-Agent", "Chrome/89.0.4389.82 Safari/537.36")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().is5xxServerError());
 
-        Mockito.verify(nQueryController).query((PrepareSqlRequest) Mockito.any(), Mockito.anyString());
+        Mockito.verify(nQueryController).query(Mockito.any(), Mockito.anyString());
     }
-
 
     @Test
     public void testStopQuery() throws Exception {
@@ -298,7 +300,7 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(nQueryController).prepareQuery((PrepareSqlRequest) Mockito.any());
+        Mockito.verify(nQueryController).prepareQuery(Mockito.any());
     }
 
     @Test
@@ -413,15 +415,6 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testErrorMsg() {
-        String errorMsg = "Error while executing SQL \"select lkp.clsfd_ga_prfl_id, ga.sum_dt, sum(ga.bounces) as bounces, sum(ga.exits) as exits, sum(ga.entrances) as entrances, sum(ga.pageviews) as pageviews, count(distinct ga.GA_VSTR_ID, ga.GA_VST_ID) as visits, count(distinct ga.GA_VSTR_ID) as uniqVistors from CLSFD_GA_PGTYPE_CATEG_LOC ga left join clsfd_ga_prfl_lkp lkp on ga.SRC_GA_PRFL_ID = lkp.SRC_GA_PRFL_ID group by lkp.clsfd_ga_prfl_id,ga.sum_dt order by lkp.clsfd_ga_prfl_id,ga.sum_dt LIMIT 50000\": From line 14, column 14 to line 14, column 29: Column 'CLSFD_GA_PRFL_ID' not found in table 'LKP'";
-        Assert.assertEquals(
-                "From line 14, column 14 to line 14, column 29: Column 'CLSFD_GA_PRFL_ID' not found in table 'LKP'\n"
-                        + "while executing SQL: \"select lkp.clsfd_ga_prfl_id, ga.sum_dt, sum(ga.bounces) as bounces, sum(ga.exits) as exits, sum(ga.entrances) as entrances, sum(ga.pageviews) as pageviews, count(distinct ga.GA_VSTR_ID, ga.GA_VST_ID) as visits, count(distinct ga.GA_VSTR_ID) as uniqVistors from CLSFD_GA_PGTYPE_CATEG_LOC ga left join clsfd_ga_prfl_lkp lkp on ga.SRC_GA_PRFL_ID = lkp.SRC_GA_PRFL_ID group by lkp.clsfd_ga_prfl_id,ga.sum_dt order by lkp.clsfd_ga_prfl_id,ga.sum_dt LIMIT 50000\"",
-                QueryUtil.makeErrorMsgUserFriendly(errorMsg));
-    }
-
-    @Test
     public void testQueryStatistics() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/query/statistics").contentType(MediaType.APPLICATION_JSON)
                 .param("project", "default").param("start_time", "0").param("end_time", "999999999999")
@@ -474,16 +467,6 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
         return queries;
     }
 
-    private List<String> mockQueryHistorySubmitters() {
-        final List<String> submitters = Lists.newArrayList();
-        submitters.add("ADMIN");
-        submitters.add("USER1");
-        submitters.add("USER2");
-        submitters.add("USER3");
-        submitters.add("USER4");
-        return submitters;
-    }
-
     @Test
     public void testGetQueryHistories() throws Exception {
         QueryHistoryRequest request = new QueryHistoryRequest();
@@ -493,7 +476,7 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
         request.setLatencyFrom("0");
         request.setLatencyTo("10");
         request.setSubmitterExactlyMatch(true);
-        request.setQueryStatus(Arrays.asList("FAILED"));
+        request.setQueryStatus(Collections.singletonList("FAILED"));
         HashMap<String, Object> data = Maps.newHashMap();
         data.put("query_histories", mockedQueryHistories());
         data.put("size", 6);
