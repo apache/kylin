@@ -17,16 +17,26 @@
  */
 package org.apache.kylin.rest.service;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import io.kyligence.kap.clickhouse.MockSecondStorage;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
-import org.apache.kylin.engine.spark.job.NTableSamplingJob;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import lombok.var;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.TABLE_RELOAD_HAVING_NOT_FINAL_JOB;
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.is;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
@@ -36,6 +46,8 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
+import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -82,25 +94,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.TABLE_RELOAD_HAVING_NOT_FINAL_JOB;
-import static org.awaitility.Awaitility.await;
-import static org.hamcrest.CoreMatchers.is;
+import io.kyligence.kap.clickhouse.MockSecondStorage;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import lombok.val;
+import lombok.var;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TableReloadServiceTest extends CSVSourceTestCase {
@@ -628,7 +630,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         Assert.assertNotNull(reModel);
         Assert.assertFalse(reModel.isBroken());
         Assert.assertEquals(9, reModel.getJoinTables().size());
-        Assert.assertEquals(18, reModel.getAllMeasures().size());
+        Assert.assertEquals(17, reModel.getAllMeasures().size());
         Assert.assertEquals(198, reModel.getAllNamedColumns().size());
         Assert.assertEquals("ORDER_ID", reModel.getAllNamedColumns().get(13).getName());
         Assert.assertEquals(NDataModel.ColumnStatus.TOMB, reModel.getAllNamedColumns().get(13).getStatus());
@@ -690,7 +692,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         Assert.assertNotNull(reModel);
         Assert.assertFalse(reModel.isBroken());
         Assert.assertEquals(9, reModel.getJoinTables().size());
-        Assert.assertEquals(18, reModel.getAllMeasures().size());
+        Assert.assertEquals(17, reModel.getAllMeasures().size());
         Assert.assertEquals(198, reModel.getAllNamedColumns().size());
         Assert.assertEquals("CAL_DT", reModel.getAllNamedColumns().get(2).getName());
         Assert.assertEquals("DEAL_YEAR", reModel.getAllNamedColumns().get(28).getName());
@@ -740,7 +742,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         Assert.assertNotNull(reModel);
         Assert.assertFalse(reModel.isBroken());
         Assert.assertEquals(9, reModel.getJoinTables().size());
-        Assert.assertEquals(18, reModel.getAllMeasures().size());
+        Assert.assertEquals(17, reModel.getAllMeasures().size());
         Assert.assertEquals(198, reModel.getAllNamedColumns().size());
         Assert.assertEquals("CAL_DT", reModel.getAllNamedColumns().get(2).getName());
         Assert.assertEquals("DEAL_YEAR", reModel.getAllNamedColumns().get(28).getName());
@@ -1054,8 +1056,8 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         executableManager.addJob(job);
         removeColumn(tableIdentity, "TEST_TIME_ENC");
 
-        OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT,
-                tableIdentity, false);
+        OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT, tableIdentity,
+                false);
         Assert.assertTrue(response.isHasEffectedJobs());
         Assert.assertEquals(1, response.getEffectedJobs().size());
         Assert.assertThrows(TABLE_RELOAD_HAVING_NOT_FINAL_JOB.getMsg(job.getId()), KylinException.class,
@@ -1071,8 +1073,8 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         job.setJobType(JobTypeEnum.TABLE_SAMPLING);
         executableManager.addJob(job);
         addColumn(tableIdentity, true, new ColumnDesc("", "TEST_COL", "int", "", "", "", null));
-        OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT,
-                tableIdentity, false);
+        OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT, tableIdentity,
+                false);
         Assert.assertTrue(response.isHasEffectedJobs());
         Assert.assertEquals(1, response.getEffectedJobs().size());
         tableService.preProcessBeforeReloadWithFailFast(PROJECT, tableIdentity);
@@ -1091,8 +1093,8 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
                 put("SLR_SEGMENT_CD", "bigint");
             }
         }, true);
-        OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT,
-                tableIdentity, false);
+        OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT, tableIdentity,
+                false);
         Assert.assertTrue(response.isHasEffectedJobs());
         Assert.assertEquals(1, response.getEffectedJobs().size());
         Assert.assertThrows(TABLE_RELOAD_HAVING_NOT_FINAL_JOB.getMsg(job.getId()), KylinException.class,
@@ -1626,7 +1628,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReloadAWSTableCompatibleCrossAccountNoSample(){
+    public void testReloadAWSTableCompatibleCrossAccountNoSample() {
         S3TableExtInfo tableExtInfo = prepareTableExtInfo("DEFAULT.TEST_ORDER", "endpoint", "role");
         prepareTableExt("DEFAULT.TEST_ORDER");
         tableService.reloadAWSTableCompatibleCrossAccount(PROJECT, tableExtInfo, false, 10000, true, 3, null);
@@ -1648,13 +1650,13 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test(expected = Exception.class)
-    public void testReloadAWSTableCompatibleCrossAccountNeedSample(){
+    public void testReloadAWSTableCompatibleCrossAccountNeedSample() {
         S3TableExtInfo tableExtInfo = prepareTableExtInfo("DEFAULT.TEST_ORDER", "endpoint", "role");
         prepareTableExt("DEFAULT.TEST_ORDER");
         tableService.reloadAWSTableCompatibleCrossAccount(PROJECT, tableExtInfo, true, 10000, true, 3, null);
     }
 
-    private S3TableExtInfo prepareTableExtInfo(String dbTable, String endpoint, String role){
+    private S3TableExtInfo prepareTableExtInfo(String dbTable, String endpoint, String role) {
         S3TableExtInfo tableExtInfo = new S3TableExtInfo();
         tableExtInfo.setName(dbTable);
         tableExtInfo.setEndpoint(endpoint);

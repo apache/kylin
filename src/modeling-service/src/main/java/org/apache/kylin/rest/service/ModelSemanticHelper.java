@@ -524,46 +524,11 @@ public class ModelSemanticHelper extends BasicService {
                     unusedColumn.setStatus(NDataModel.ColumnStatus.TOMB);
                     updateImpact.getRemovedOrUpdatedCCs().add(unusedColumn.getId());
                 });
-
-        Set<Integer> healthyExistedMeasures = Sets.newHashSet();
-        List<String> illegalSimplifiedMeasures = Lists.newArrayList();
-
-        Map<String, Integer> nameToIdOfSimplified = Maps.newHashMap();
-        Set<Integer> idOfSimplified = Sets.newHashSet();
-        for (SimplifiedMeasure measure : request.getSimplifiedMeasures()) {
-            nameToIdOfSimplified.put(measure.getName(), measure.getId());
-            if (measure.getId() != 0) {
-                idOfSimplified.add(measure.getId());
-            }
+        Set<String> allFunctions = originModel.getEffectiveMeasures().values().stream()
+                .map(measure -> measure.getFunction().toString()).collect(Collectors.toSet());
+        if (allFunctions.size() != originModel.getEffectiveMeasures().size()) {
+            fixDupMeasureNames(originModel, request);
         }
-
-        List<Measure> nonCountStarExistedMeasures = originModel.getAllMeasures().stream()
-                .filter(measure -> !measure.getName().equals("COUNT_ALL")).filter(measure -> !measure.isTomb())
-                .collect(Collectors.toList());
-        Map<String, Integer> nameToIdOfExistedModel = nonCountStarExistedMeasures.stream()
-                .collect(Collectors.toMap(MeasureDesc::getName, Measure::getId));
-        nameToIdOfExistedModel.forEach((name, id) -> {
-            if (!nameToIdOfSimplified.containsKey(name)) {
-                if (idOfSimplified.contains(id)) {
-                    healthyExistedMeasures.add(id);
-                }
-            } else if (nameToIdOfSimplified.get(name) == 0) {
-                illegalSimplifiedMeasures.add(name);
-            } else {
-                healthyExistedMeasures.add(id);
-            }
-        });
-
-        if (!illegalSimplifiedMeasures.isEmpty()) {
-            throw new KylinException(SIMPLIFIED_MEASURES_MISSING_ID, String.join(",", illegalSimplifiedMeasures));
-        }
-
-        nonCountStarExistedMeasures.stream() //
-                .filter(measure -> !healthyExistedMeasures.contains(measure.getId())) //
-                .forEach(measure -> {
-                    log.warn("the measure({}) has been handled to tomb", measure.getName());
-                    measure.setTomb(true);
-                });
 
         // move deleted CC's measure to TOMB
         List<Measure> currentMeasures = originModel.getEffectiveMeasures().values().asList();
@@ -618,6 +583,48 @@ public class ModelSemanticHelper extends BasicService {
                 .forEach(c -> c.setStatus(NDataModel.ColumnStatus.EXIST));
 
         return updateImpact;
+    }
+
+    private void fixDupMeasureNames(NDataModel originModel, ModelRequest request) {
+        Set<Integer> healthyExistedMeasures = Sets.newHashSet();
+        List<String> illegalSimplifiedMeasures = Lists.newArrayList();
+
+        Map<String, Integer> nameToIdOfSimplified = Maps.newHashMap();
+        Set<Integer> idOfSimplified = Sets.newHashSet();
+        for (SimplifiedMeasure measure : request.getSimplifiedMeasures()) {
+            nameToIdOfSimplified.put(measure.getName(), measure.getId());
+            if (measure.getId() != 0) {
+                idOfSimplified.add(measure.getId());
+            }
+        }
+
+        List<Measure> nonCountStarExistedMeasures = originModel.getAllMeasures().stream()
+                .filter(measure -> !measure.getName().equals("COUNT_ALL")).filter(measure -> !measure.isTomb())
+                .collect(Collectors.toList());
+        Map<String, Integer> nameToIdOfExistedModel = nonCountStarExistedMeasures.stream()
+                .collect(Collectors.toMap(MeasureDesc::getName, Measure::getId));
+        nameToIdOfExistedModel.forEach((name, id) -> {
+            if (!nameToIdOfSimplified.containsKey(name)) {
+                if (idOfSimplified.contains(id)) {
+                    healthyExistedMeasures.add(id);
+                }
+            } else if (nameToIdOfSimplified.get(name) == 0) {
+                illegalSimplifiedMeasures.add(name);
+            } else {
+                healthyExistedMeasures.add(id);
+            }
+        });
+
+        if (!illegalSimplifiedMeasures.isEmpty()) {
+            throw new KylinException(SIMPLIFIED_MEASURES_MISSING_ID, String.join(",", illegalSimplifiedMeasures));
+        }
+
+        nonCountStarExistedMeasures.stream() //
+                .filter(measure -> !healthyExistedMeasures.contains(measure.getId())) //
+                .forEach(measure -> {
+                    log.warn("the measure({}) has been handled to tomb", measure.getName());
+                    measure.setTomb(true);
+                });
     }
 
     /**
