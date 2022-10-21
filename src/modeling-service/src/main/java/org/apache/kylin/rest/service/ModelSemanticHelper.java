@@ -1114,7 +1114,7 @@ public class ModelSemanticHelper extends BasicService {
         return computedColumnDescs.stream().map(ccDesc -> {
             AtomicBoolean isValidCC = new AtomicBoolean(true);
             List<Pair<String, String>> colsWithAlias = ComputedColumnUtil.ExprIdentifierFinder
-                    .getExprIdentifiers(ccDesc.getInnerExpression());
+                    .getExprIdentifiers(ccDesc.getExpression());
             colsWithAlias.forEach(c -> {
                 String column = c.getFirst() + "." + c.getSecond();
                 if (!aliasDotColSet.contains(column)) {
