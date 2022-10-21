@@ -22,8 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.JoinConditionType;
@@ -41,29 +40,27 @@ import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.dialect.CalciteSqlDialect;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinsGraph;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
-import org.apache.kylin.query.relnode.ColumnRowType;
-import org.apache.kylin.query.schema.OLAPTable;
-import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableRef;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.alias.ExpressionComparator;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.query.relnode.ColumnRowType;
 import org.apache.kylin.query.schema.KapOLAPSchema;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.kylin.query.schema.OLAPTable;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -76,13 +73,13 @@ import com.google.common.collect.Maps;
 // Not designed to reuse, re-new per query
 public class QueryAliasMatcher {
     static final ColumnRowType MODEL_VIEW_COLUMN_ROW_TYPE = new ColumnRowType(new ArrayList<>());
-    private static final Logger logger = LoggerFactory.getLogger(QueryAliasMatcher.class);
     private static final ColumnRowType SUBQUERY_TAG = new ColumnRowType(null);
     private static final String[] COLUMN_ARRAY_MARKER = new String[0];
     private final String project;
     private final String defaultSchema;
     private final Map<String, KapOLAPSchema> schemaMap = Maps.newHashMap();
     private final Map<String, Map<String, OLAPTable>> schemaTables = Maps.newHashMap();
+
     public QueryAliasMatcher(String project, String defaultSchema) {
         this.project = project;
         this.defaultSchema = defaultSchema;
@@ -99,14 +96,14 @@ public class QueryAliasMatcher {
             String tableAlias = namesOfIdentifier.get(1);
             String colName = namesOfIdentifier.get(2);
             ColumnRowType columnRowType = alias2CRT.get(tableAlias);
-            Preconditions.checkState(columnRowType != null, "Alias " + tableAlias + " is not defined");
+            Preconditions.checkState(columnRowType != null, "Alias {} is not defined", tableAlias);
             return columnRowType == QueryAliasMatcher.SUBQUERY_TAG ? null : columnRowType.getColumnByName(colName);
         } else if (namesOfIdentifier.size() == 2) {
             // tableAlias.colName
             String tableAlias = namesOfIdentifier.get(0);
             String colName = namesOfIdentifier.get(1);
             ColumnRowType columnRowType = alias2CRT.get(tableAlias);
-            Preconditions.checkState(columnRowType != null, "Alias " + tableAlias + " is not defined");
+            Preconditions.checkState(columnRowType != null, "Alias {} is not defined", tableAlias);
             return columnRowType == QueryAliasMatcher.SUBQUERY_TAG ? null : columnRowType.getColumnByName(colName);
         } else if (namesOfIdentifier.size() == 1) {
             // only colName
@@ -138,8 +135,8 @@ public class QueryAliasMatcher {
 
     /**
      * match `sqlSelect` with the model in terms of join relations
-     * @param model
-     * @param sqlSelect
+     * @param model model
+     * @param sqlSelect select SqlNode
      * @return QueryAliasMatchInfo with
      *    1. the map(table alias in sql -> column row type)
      *    2. match result map(table alias in sql -> table alias in model)
@@ -149,7 +146,7 @@ public class QueryAliasMatcher {
             return null;
         }
 
-        SqlSelect subQuery = getSubquery(sqlSelect.getFrom());
+        SqlSelect subQuery = getSubQuery(sqlSelect.getFrom());
         boolean reUseSubqeury = false;
 
         // find subquery with permutation only projection
@@ -213,7 +210,7 @@ public class QueryAliasMatcher {
 
         // try match the subquery with model
         Map<String, String> matches = joinsGraph.matchAlias(model.getJoinsGraph(), projectConfig);
-        if (matches == null || matches.isEmpty()) {
+        if (MapUtils.isEmpty(matches)) {
             return null;
         }
         BiMap<String, String> aliasMapping = HashBiMap.create();
@@ -222,13 +219,13 @@ public class QueryAliasMatcher {
         return new QueryAliasMatchInfo(aliasMapping, queryAlias);
     }
 
-    private SqlSelect getSubquery(SqlNode sqlNode) {
+    private SqlSelect getSubQuery(SqlNode sqlNode) {
         if (sqlNode instanceof SqlSelect) {
             return (SqlSelect) sqlNode;
         } else if (SqlKind.UNION == sqlNode.getKind()) {
             return (SqlSelect) ((SqlBasicCall) sqlNode).getOperandList().get(0);
         } else if (SqlKind.AS == sqlNode.getKind()) {
-            return getSubquery(((SqlBasicCall) sqlNode).getOperandList().get(0));
+            return getSubQuery(((SqlBasicCall) sqlNode).getOperandList().get(0));
         }
 
         return null;
@@ -270,9 +267,9 @@ public class QueryAliasMatcher {
     //capture all the join within a SqlSelect's from clause, won't go into any subquery
     private class SqlJoinCapturer extends SqlBasicVisitor<SqlNode> {
 
-        private List<JoinDesc> joinDescs;
-        private LinkedHashMap<String, ColumnRowType> alias2CRT = Maps.newLinkedHashMap(); // aliasInQuery => ColumnRowType representing the alias table
-        private String modelName;
+        private final List<JoinDesc> joinDescs;
+        private final LinkedHashMap<String, ColumnRowType> alias2CRT = Maps.newLinkedHashMap(); // aliasInQuery => ColumnRowType representing the alias table
+        private final String modelName;
 
         private boolean foundJoinOnCC = false;
 
@@ -458,12 +455,12 @@ public class QueryAliasMatcher {
         }
     }
 
-    private class JoinConditionCapturer extends SqlBasicVisitor<SqlNode> {
+    private static class JoinConditionCapturer extends SqlBasicVisitor<SqlNode> {
         private final LinkedHashMap<String, ColumnRowType> alias2CRT;
         private final String joinType;
 
-        private List<TblColRef> pks = Lists.newArrayList();
-        private List<TblColRef> fks = Lists.newArrayList();
+        private final List<TblColRef> pks = Lists.newArrayList();
+        private final List<TblColRef> fks = Lists.newArrayList();
 
         private boolean foundCC = false;
         private boolean foundNonEqualJoin = false;
@@ -474,27 +471,17 @@ public class QueryAliasMatcher {
         }
 
         public JoinDesc getJoinDescs() {
-            List<String> pkNames = Lists.transform(pks, new Function<TblColRef, String>() {
-                @Nullable
-                @Override
-                public String apply(@Nullable TblColRef input) {
-                    return input == null ? null : input.getName();
-                }
-            });
-            List<String> fkNames = Lists.transform(fks, new Function<TblColRef, String>() {
-                @Nullable
-                @Override
-                public String apply(@Nullable TblColRef input) {
-                    return input == null ? null : input.getName();
-                }
-            });
+            List<String> pkNames = pks.stream().map(input -> input == null ? null : input.getName())
+                    .collect(Collectors.toList());
+            List<String> fkNames = fks.stream().map(input -> input == null ? null : input.getName())
+                    .collect(Collectors.toList());
 
             JoinDesc join = new JoinDesc();
             join.setType(joinType);
             join.setForeignKey(fkNames.toArray(COLUMN_ARRAY_MARKER));
-            join.setForeignKeyColumns(fks.toArray(new TblColRef[fks.size()]));
+            join.setForeignKeyColumns(fks.toArray(new TblColRef[0]));
             join.setPrimaryKey(pkNames.toArray(COLUMN_ARRAY_MARKER));
-            join.setPrimaryKeyColumns(pks.toArray(new TblColRef[pks.size()]));
+            join.setPrimaryKeyColumns(pks.toArray(new TblColRef[0]));
             join.sortByFK();
             return join;
         }

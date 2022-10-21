@@ -17,17 +17,18 @@
 
 package org.apache.kylin.common
 
-import java.util.Locale
 import org.apache.commons.lang3.StringUtils
-import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.Unsafe
+import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.query.engine.QueryExec
-import org.apache.kylin.query.util.{KapQueryUtil, QueryParams}
+import org.apache.kylin.query.util.{QueryParams, QueryUtil}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.common.{SharedSparkSession, SparderQueryTest}
 import org.apache.spark.sql.udf.UdfManager
 import org.apache.spark.sql.{DataFrame, SparderEnv}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
+
+import java.util.Locale
 
 trait QuerySupport
   extends BeforeAndAfterAll
@@ -58,9 +59,9 @@ trait QuerySupport
     val prevRunLocalConf = Unsafe.setProperty("kylin.query.engine.run-constant-query-locally", "FALSE")
     try {
       val queryExec = new QueryExec(project, KylinConfig.getInstanceFromEnv)
-      val queryParams = new QueryParams(KapQueryUtil.getKylinConfig(project), sql, project,
+      val queryParams = new QueryParams(NProjectManager.getProjectConfig(project), sql, project,
         0, 0, queryExec.getDefaultSchemaName, true)
-      val convertedSql = KapQueryUtil.massageSql(queryParams)
+      val convertedSql = QueryUtil.massageSql(queryParams)
       queryExec.executeQuery(convertedSql)
     } finally {
       if (prevRunLocalConf == null) {

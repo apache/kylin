@@ -34,15 +34,16 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.calcite.util.Litmus;
+import org.apache.commons.collections.MapUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
-import org.apache.kylin.source.adhocquery.IPushDownConverter;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
+import org.apache.kylin.source.adhocquery.IPushDownConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,10 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
     private static final Logger logger = LoggerFactory.getLogger(RestoreFromComputedColumn.class);
 
     public static String convertWithGivenModels(String sql, String project, String defaultSchema,
-            Map<String, NDataModel> dataModelDescs) throws SqlParseException {
+            Map<String, NDataModel> idToModelMap) throws SqlParseException {
+        if (MapUtils.isEmpty(idToModelMap)) {
+            return sql;
+        }
 
         List<SqlCall> selectOrOrderbys = SqlSubqueryFinder.getSubqueries(sql, true);
 
@@ -76,13 +80,14 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
         int recursionTimes = 0;
         int maxRecursionTimes = KapConfig.getInstanceFromEnv().getComputedColumnMaxRecursionTimes();
 
-        while ((recursionTimes++) < maxRecursionTimes) {
-
+        while (recursionTimes < maxRecursionTimes) {
+            QueryUtil.checkThreadInterrupted("Interrupted sql transformation at the stage of RestoreFromComputedColumn",
+                    "Current step: SQL transformation");
+            recursionTimes++;
             boolean recursionCompleted = true;
-
             for (int i = 0; i < selectOrOrderbys.size(); i++) { //subquery will precede
                 Pair<String, Integer> choiceForCurrentSubquery = restoreComputedColumn(sql, selectOrOrderbys.get(i),
-                        topColumns.get(i), dataModelDescs, queryAliasMatcher);
+                        topColumns.get(i), idToModelMap, queryAliasMatcher);
 
                 if (choiceForCurrentSubquery != null) {
                     sql = choiceForCurrentSubquery.getFirst();
@@ -113,11 +118,6 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
      * check whether it needs parenthesis
      * 1. not need if it is a top node
      * 2. not need if it is in parenthesis
-     *
-     * @param originSql
-     * @param topColumns
-     * @param replaceRange
-     * @return
      */
     private static boolean needParenthesis(String originSql, List<SqlNode> topColumns, ReplaceRange replaceRange) {
         if (replaceRange.addAlias) {
@@ -170,28 +170,28 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
     }
 
     static Pair<String, Integer> restoreComputedColumn(String sql, SqlCall selectOrOrderby, List<SqlNode> topColumns,
-            Map<String, NDataModel> dataModelDescs, QueryAliasMatcher queryAliasMatcher) throws SqlParseException {
-        SqlSelect sqlSelect = KapQueryUtil.extractSqlSelect(selectOrOrderby);
+            Map<String, NDataModel> modelMap, QueryAliasMatcher queryAliasMatcher) {
+        SqlSelect sqlSelect = QueryUtil.extractSqlSelect(selectOrOrderby);
         if (sqlSelect == null)
             return Pair.newPair(sql, 0);
 
         Pair<String, Integer> choiceForCurrentSubquery = null; //<new sql, number of changes by the model>
 
         //give each data model a chance to rewrite, choose the model that generates most changes
-        for (NDataModel modelDesc : dataModelDescs.values()) {
-
-            QueryAliasMatchInfo info = queryAliasMatcher.match(modelDesc, sqlSelect);
+        for (NDataModel model : modelMap.values()) {
+            QueryAliasMatchInfo info = model.getComputedColumnDescs().isEmpty() ? null
+                    : queryAliasMatcher.match(model, sqlSelect);
+            QueryUtil.checkThreadInterrupted("Interrupted sql transformation at the stage of RestoreFromComputedColumn",
+                    "Current step: SQL transformation");
             if (info == null) {
                 continue;
             }
 
-            Pair<String, Integer> ret = restoreComputedColumn(sql, selectOrOrderby, topColumns, modelDesc, info);
-
-            if (ret.getSecond() == 0)
-                continue;
-
-            if ((choiceForCurrentSubquery == null) || (ret.getSecond() > choiceForCurrentSubquery.getSecond())) {
+            Pair<String, Integer> ret = restoreComputedColumn(sql, selectOrOrderby, topColumns, model, info);
+            if (ret.getSecond() != 0
+                    && (choiceForCurrentSubquery == null || ret.getSecond() > choiceForCurrentSubquery.getSecond())) {
                 choiceForCurrentSubquery = ret;
+
             }
         }
 
@@ -202,15 +202,14 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
      * return the replaced sql, and the count of changes in the replaced sql
      */
     static Pair<String, Integer> restoreComputedColumn(String inputSql, SqlCall selectOrOrderby,
-            List<SqlNode> topColumns, NDataModel dataModelDesc, QueryAliasMatchInfo matchInfo)
-            throws SqlParseException {
+            List<SqlNode> topColumns, NDataModel dataModelDesc, QueryAliasMatchInfo matchInfo) {
 
         String result = inputSql;
 
         Set<String> ccColNamesWithPrefix = Sets.newHashSet();
         ccColNamesWithPrefix.addAll(dataModelDesc.getComputedColumnNames());
         List<ColumnUsage> columnUsages = ColumnUsagesFinder.getColumnUsages(selectOrOrderby, ccColNamesWithPrefix);
-        if (columnUsages.size() == 0) {
+        if (columnUsages.isEmpty()) {
             return Pair.newPair(inputSql, 0);
         }
 
@@ -232,10 +231,6 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
             //TODO cannot do this check because cc is not visible on schema without solid realizations
             // after this is done, constrains on #1932 can be relaxed
 
-            //            TblColRef tblColRef = QueryAliasMatchInfo.resolveTblColRef(queryAliasMatchInfo.getQueryAlias(), columnName);
-            //            //for now, must be fact table
-            //            Preconditions.checkState(tblColRef.getTableRef().getTableIdentity()
-            //                    .equals(dataModelDesc.getRootFactTable().getTableIdentity()));
             ComputedColumnDesc computedColumnDesc = dataModelDesc
                     .findCCByCCColumnName(ComputedColumnDesc.getOriginCcName(columnName));
             // The computed column expression is defined based on alias in model, e.g. BUYER_COUNTRY.x + BUYER_ACCOUNT.y
@@ -282,34 +277,32 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
             result = Unsafe.format(Locale.ROOT, pattern, result.substring(0, toBeReplaced.beginPos),
                     toBeReplaced.replaceExpr, result.substring(toBeReplaced.endPos));
 
-            last = toBeReplaced;// new Pair<>(toBeReplaced.getFirst(), new Pair<>(start, end+6));// toBeReplaced;
+            last = toBeReplaced;// new Pair<>(toBeReplaced.getFirst(), new Pair<>(start, end+6));// toBeReplaced
         }
 
         return Pair.newPair(result, toBeReplacedUsages.size());
     }
 
     @Override
-    public String convert(String originSql, String project, String defaultSchema) {
+    public String convert(String sql, String project, String defaultSchema) {
         try {
 
-            String sql = originSql;
             if (project == null || sql == null) {
                 return sql;
             }
 
-            Map<String, NDataModel> dataModelDescs = new LinkedHashMap<>();
-
+            Map<String, NDataModel> modelMap = new LinkedHashMap<>();
             NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
             for (NDataModel modelDesc : dataflowManager.listUnderliningDataModels()) {
-                dataModelDescs.put(modelDesc.getUuid(), modelDesc);
+                modelMap.put(modelDesc.getUuid(), modelDesc);
             }
 
-            return convertWithGivenModels(sql, project, defaultSchema, dataModelDescs);
+            return convertWithGivenModels(sql, project, defaultSchema, modelMap);
         } catch (Exception e) {
             logger.debug(
                     "Something unexpected while RestoreFromComputedColumn transforming the query, return original query",
                     e);
-            return originSql;
+            return sql;
         }
 
     }
@@ -335,8 +328,7 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
             this.usages = Lists.newArrayList();
         }
 
-        public static List<ColumnUsage> getColumnUsages(SqlCall selectOrOrderby, Set<String> columnNames)
-                throws SqlParseException {
+        public static List<ColumnUsage> getColumnUsages(SqlCall selectOrOrderby, Set<String> columnNames) {
             ColumnUsagesFinder sqlSubqueryFinder = new ColumnUsagesFinder(columnNames);
             selectOrOrderby.accept(sqlSubqueryFinder);
             return sqlSubqueryFinder.getUsages();
@@ -397,7 +389,7 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
         }
     }
 
-    static private class ColumnUsage {
+    private static class ColumnUsage {
         SqlIdentifier sqlIdentifier;
         boolean addAlias;
 

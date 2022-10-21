@@ -44,17 +44,17 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
+import org.apache.kylin.query.IQueryTransformer;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.source.adhocquery.IPushDownConverter;
-import org.apache.kylin.metadata.acl.AclTCRManager;
-import org.apache.kylin.query.util.KapQueryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-public class RowFilter implements KapQueryUtil.IQueryTransformer, IPushDownConverter {
+public class RowFilter implements IQueryTransformer, IPushDownConverter {
     private static final Logger logger = LoggerFactory.getLogger(RowFilter.class);
 
     static boolean needEscape(String sql, String defaultSchema, Map<String, String> cond) {

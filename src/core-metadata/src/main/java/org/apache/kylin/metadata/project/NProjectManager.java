@@ -245,4 +245,10 @@ public class NProjectManager {
         updater.modify(copy);
         return updateProject(copy);
     }
+
+    public static KylinConfig getProjectConfig(String project) {
+        NProjectManager projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+        ProjectInstance projectInstance = projectManager.getProject(project);
+        return projectInstance.getConfig();
+    }
 }

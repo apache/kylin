@@ -18,10 +18,10 @@
 package org.apache.kylin.common
 
 import com.google.common.base.Preconditions
-import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.TempMetadataBuilder
 import org.apache.kylin.metadata.model.NTableMetadataManager
-import org.apache.kylin.query.util.{KapQueryUtil, QueryParams}
+import org.apache.kylin.metadata.project.NProjectManager
+import org.apache.kylin.query.util.{QueryParams, QueryUtil}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession}
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.scalatest.Suite
@@ -76,7 +76,7 @@ trait SSSource extends SharedSparkSession with LocalMetadata {
       .replaceAll("DEFAULT\\.", "")
       .replaceAll("\"DEFAULT\"\\.", "")
     val queryParams = new QueryParams("default", sqlForSpark, "DEFAULT", false)
-    queryParams.setKylinConfig(KapQueryUtil.getKylinConfig("default"))
-    KapQueryUtil.massagePushDownSql(queryParams)
+    queryParams.setKylinConfig(NProjectManager.getProjectConfig("default"))
+    QueryUtil.massagePushDownSql(queryParams)
   }
 }

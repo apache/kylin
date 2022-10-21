@@ -17,10 +17,10 @@
 
 package org.apache.kylin.common
 
-import org.apache.kylin.util.ExecAndComp.EnhancedQueryResult
-import org.apache.kylin.util.{ExecAndComp, QueryResultComparator}
 import io.netty.util.internal.ThrowableUtil
 import org.apache.kylin.query.engine.data.QueryResult
+import org.apache.kylin.util.ExecAndComp.EnhancedQueryResult
+import org.apache.kylin.util.{ExecAndComp, QueryResultComparator}
 import org.scalatest.Suite
 
 trait CompareSupport extends QuerySupport {

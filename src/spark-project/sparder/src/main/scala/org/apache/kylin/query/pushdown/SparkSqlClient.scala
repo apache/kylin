@@ -18,10 +18,17 @@
 
 package org.apache.kylin.query.pushdown
 
+import com.google.common.collect.ImmutableList
 import io.kyligence.kap.guava20.shaded.common.collect.Lists
+import org.apache.commons.lang3.StringUtils
+import org.apache.kylin.common.util.{DateFormat, HadoopUtil, Pair}
+import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.metadata.query.StructField
-import org.apache.commons.lang3.StringUtils
+import org.apache.kylin.query.mask.QueryResultMasks
+import org.apache.kylin.query.runtime.plan.QueryToExecutionIDCache
+import org.apache.kylin.query.runtime.plan.ResultPlan.saveAsyncQueryResult
+import org.apache.kylin.query.util.{QueryUtil, SparkJobTrace}
 import org.apache.spark.network.util.JavaUtils
 import org.apache.spark.sql.hive.QueryMetricUtils
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
@@ -31,17 +38,6 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import java.sql.Timestamp
 import java.util.{UUID, List => JList}
-import com.google.common.collect.ImmutableList
-import org.apache.kylin.common.exception.KylinTimeoutException
-import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
-import org.apache.kylin.common.util.{DateFormat, HadoopUtil, Pair}
-import org.apache.kylin.query.SlowQueryDetector
-import org.apache.kylin.query.exception.UserStopQueryException
-import org.apache.kylin.query.mask.QueryResultMasks
-import org.apache.kylin.query.runtime.plan.QueryToExecutionIDCache
-import org.apache.kylin.query.runtime.plan.ResultPlan.saveAsyncQueryResult
-import org.apache.kylin.query.util.SparkJobTrace
-
 import scala.collection.JavaConverters._
 import scala.collection.{immutable, mutable}
 
@@ -91,8 +87,8 @@ object SparkSqlClient {
       try {
         val basePartitionSize = config.getBaseShufflePartitionSize
         val paths = ResourceDetectUtils.getPaths(df.queryExecution.sparkPlan)
-        val sourceTableSize = ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(), config.isConcurrencyFetchDataSourceSize,
-          paths: _*) + "b"
+        val sourceTableSize = ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(),
+          config.isConcurrencyFetchDataSourceSize, paths: _*) + "b"
         val partitions = Math.max(1, JavaUtils.byteStringAsMb(sourceTableSize) / basePartitionSize).toString
         df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", partitions)
         QueryContext.current().setShufflePartitions(partitions.toInt)
@@ -125,7 +121,6 @@ object SparkSqlClient {
       val results = df.toIterator()
       val resultRows = results._1
       val resultSize = results._2
-
       if (config.isQuerySparkJobTraceEnabled) jobTrace.jobFinished()
       val fieldList = df.schema.map(field => SparderTypeUtil.convertSparkFieldToJavaField(field)).asJava
       val (scanRows, scanBytes) = QueryMetricUtils.collectScanMetrics(df.queryExecution.executedPlan)
@@ -137,10 +132,22 @@ object SparkSqlClient {
       QueryContext.current().getMetrics.setQueryTaskCount(taskCount)
       (
         () => new java.util.Iterator[JList[String]] {
+          /*
+           * After fetching a batch of 1000, checks whether the query thread is interrupted.
+           */
+          val checkInterruptSize = 1000;
+          var readRowSize = 0;
+
           override def hasNext: Boolean = resultRows.hasNext
 
           override def next(): JList[String] = {
-            resultRows.next().toSeq.map(rawValueToString(_)).asJava
+            val row = resultRows.next()
+            readRowSize += 1;
+            if (readRowSize % checkInterruptSize == 0) {
+              QueryUtil.checkThreadInterrupted("Interrupted at the stage of collecting result in SparkSqlClient.",
+                "Current step: Collecting dataset of push-down.")
+            }
+            row.toSeq.map(rawValueToString(_)).asJava
           }
         },
         resultSize,
@@ -151,15 +158,10 @@ object SparkSqlClient {
         if (e.isInstanceOf[InterruptedException]) {
           Thread.currentThread.interrupt()
           ss.sparkContext.cancelJobGroup(jobGroup)
-          if (SlowQueryDetector.getRunningQueries.get(Thread.currentThread()).isStopByUser) {
-            throw new UserStopQueryException("")
-          }
-          QueryContext.current.getQueryTagInfo.setTimeout(true)
-          logger.info("Query timeout ", e)
-          throw new KylinTimeoutException("The query exceeds the set time limit of "
-            + KylinConfig.getInstanceFromEnv.getQueryTimeoutSeconds + "s. Current step: Collecting dataset for push-down. ")
+          QueryUtil.checkThreadInterrupted("Interrupted at the stage of collecting result in SparkSqlClient.",
+            "Current step: Collecting dataset of push-down.")
         }
-        else throw e
+        throw e
     } finally {
       QueryContext.current().setExecutionID(QueryToExecutionIDCache.getQueryExecutionID(QueryContext.current().getQueryId))
       df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
@@ -171,7 +173,8 @@ object SparkSqlClient {
     case null => null
     case value: Timestamp => DateFormat.castTimestampToString(value.getTime)
     case value: String => if (wrapped) "\"" + value + "\"" else value
-    case value: mutable.WrappedArray.ofRef[Any] => value.array.map(v => rawValueToString(v, true)).mkString("[", ",", "]")
+    case value: mutable.WrappedArray[AnyVal] => value.array.map(v => rawValueToString(v, true)).mkString("[", ",", "]")
+    case value: mutable.WrappedArray.ofRef[AnyRef] => value.array.map(v => rawValueToString(v, true)).mkString("[", ",", "]")
     case value: immutable.Map[Any, Any] =>
       value.map(p => rawValueToString(p._1, true) + ":" + rawValueToString(p._2, true)).mkString("{", ",", "}")
     case value: Any => value.toString

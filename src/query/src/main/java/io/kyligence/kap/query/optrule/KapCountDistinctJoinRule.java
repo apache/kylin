@@ -33,7 +33,7 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.kylin.query.relnode.KapAggregateRel;
 import org.apache.kylin.query.relnode.KapJoinRel;
-import org.apache.kylin.query.util.KapQueryUtil;
+import org.apache.kylin.query.util.QueryUtil;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -82,7 +82,7 @@ public class KapCountDistinctJoinRule extends RelOptRule {
     public boolean matches(RelOptRuleCall call) {
         final KapAggregateRel aggregate = call.rel(0);
         final KapJoinRel join = call.rel(1);
-        return aggregate.isContainCountDistinct() && KapQueryUtil.isJoinOnlyOneAggChild(join);
+        return aggregate.isContainCountDistinct() && QueryUtil.isJoinOnlyOneAggChild(join);
     }
 
     @Override
