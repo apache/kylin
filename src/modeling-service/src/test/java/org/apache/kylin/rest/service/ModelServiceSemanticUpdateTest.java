@@ -20,13 +20,17 @@ package org.apache.kylin.rest.service;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SIMPLIFIED_MEASURES_MISSING_ID;
 import static org.hamcrest.Matchers.is;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import lombok.var;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -36,6 +40,8 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.SelectRule;
 import org.apache.kylin.engine.spark.ExecutableUtils;
+import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -50,6 +56,7 @@ import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -57,7 +64,9 @@ import org.apache.kylin.metadata.model.NDataModel.ColumnStatus;
 import org.apache.kylin.metadata.model.NDataModel.Measure;
 import org.apache.kylin.metadata.model.NDataModel.NamedColumn;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.rest.constant.Constant;
@@ -84,16 +93,14 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
+import lombok.val;
+import lombok.var;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
@@ -411,23 +418,109 @@ public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testRenameTableAliasUsedWithSimplifiedMeasure() throws IOException {
+        String project = getProject();
+        val modelManager = NDataModelManager.getInstance(getTestConfig(), project);
+        modelManager.listAllModels().forEach(modelManager::dropModel);
+        val request = JsonUtil.readValue(
+                getClass().getResourceAsStream("/ut_request/model_update/model_with_measure.json"), ModelRequest.class);
+        request.setAlias("model_with_measure");
+        val newModel = modelService.createModel(project, request);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            // prepare dirty model
+            NDataModelManager modelMgr = NDataModelManager.getInstance(getTestConfig(), project);
+            modelMgr.updateDataModel(newModel.getId(), copyForWrite -> {
+                List<Measure> allMeasures = copyForWrite.getAllMeasures();
+                Measure measure = new Measure();
+                measure.setId(100002);
+                measure.setType(NDataModel.MeasureType.NORMAL);
+                measure.setName("MAX2");
+                FunctionDesc function = new FunctionDesc();
+                function.setExpression("MAX");
+                function.setReturnType("integer");
+                function.setConfiguration(Maps.newLinkedHashMap());
+                ParameterDesc parameter = new ParameterDesc();
+                parameter.setType("column");
+                parameter.setValue("TEST_ACCOUNT.ACCOUNT_SELLER_LEVEL");
+                parameter.setColRef(allMeasures.get(0).getFunction().getParameters().get(0).getColRef());
+                function.setParameters(ImmutableList.of(parameter));
+                measure.setFunction(function);
+                allMeasures.add(measure);
+            });
+            return null;
+        }, project);
+        val updateRequest = JsonUtil.readValue(
+                getClass().getResourceAsStream("/ut_request/model_update/model_with_measure_change_alias.json"),
+                ModelRequest.class);
+        updateRequest.setAlias("model_with_measure_change_alias");
+        updateRequest.setUuid(newModel.getUuid());
+        List<SimplifiedMeasure> simplifiedMeasures = updateRequest.getSimplifiedMeasures();
+        simplifiedMeasures.get(0).setId(100000);
+        simplifiedMeasures.get(1).setId(100001);
+        SimplifiedMeasure simplifiedMeasure = new SimplifiedMeasure();
+        ParameterResponse param = new ParameterResponse();
+        param.setType("column");
+        param.setValue("TEST_ACCOUNT.ACCOUNT_SELLER_LEVEL");
+        simplifiedMeasure.setParameterValue(ImmutableList.of(param));
+        simplifiedMeasure.setExpression("MAX");
+        simplifiedMeasure.setName("MAX2");
+        simplifiedMeasure.setReturnType("integer");
+        simplifiedMeasures.add(simplifiedMeasure);
+        try {
+            modelService.updateDataModelSemantic(project, updateRequest);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(SIMPLIFIED_MEASURES_MISSING_ID.getErrorCode().getCode(), e.getErrorCodeString());
+        }
+    }
+
+    @Test
+    public void testMockFixDirtyModelWhenSaving() throws IOException {
         val modelManager = NDataModelManager.getInstance(getTestConfig(), getProject());
         modelManager.listAllModels().forEach(modelManager::dropModel);
         val request = JsonUtil.readValue(
                 getClass().getResourceAsStream("/ut_request/model_update/model_with_measure.json"), ModelRequest.class);
         request.setAlias("model_with_measure");
         val newModel = modelService.createModel(request.getProject(), request);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            // prepare dirty model
+            NDataModelManager modelMgr = NDataModelManager.getInstance(getTestConfig(), getProject());
+            modelMgr.updateDataModel(newModel.getId(), copyForWrite -> {
+                List<Measure> allMeasures = copyForWrite.getAllMeasures();
+                Measure measure = new Measure();
+                measure.setId(100002);
+                measure.setType(NDataModel.MeasureType.NORMAL);
+                measure.setName("MAX2");
+                FunctionDesc function = new FunctionDesc();
+                function.setExpression("MAX");
+                function.setReturnType("integer");
+                function.setConfiguration(Maps.newLinkedHashMap());
+                ParameterDesc parameter = new ParameterDesc();
+                parameter.setType("column");
+                parameter.setValue("TEST_ACCOUNT.ACCOUNT_SELLER_LEVEL");
+                parameter.setColRef(allMeasures.get(0).getFunction().getParameters().get(0).getColRef());
+                function.setParameters(ImmutableList.of(parameter));
+                measure.setFunction(function);
+                allMeasures.add(measure);
+            });
+            return null;
+        }, getProject());
+
+        // set max2 to tomb
         val updateRequest = JsonUtil.readValue(
                 getClass().getResourceAsStream("/ut_request/model_update/model_with_measure_change_alias.json"),
                 ModelRequest.class);
         updateRequest.setAlias("model_with_measure_change_alias");
         updateRequest.setUuid(newModel.getUuid());
-        try {
-            modelService.updateDataModelSemantic(getProject(), updateRequest);
-            Assert.fail();
-        } catch (KylinException e) {
-            Assert.assertEquals(SIMPLIFIED_MEASURES_MISSING_ID.getErrorCode().getCode(), e.getErrorCodeString());
-        }
+        List<SimplifiedMeasure> simplifiedMeasures = updateRequest.getSimplifiedMeasures();
+        simplifiedMeasures.get(0).setId(100000);
+        simplifiedMeasures.get(1).setId(100001);
+        modelService.updateDataModelSemantic(getProject(), updateRequest);
+
+        NDataModel modifiedModel = modelManager.getDataModelDesc(newModel.getUuid());
+        List<Measure> allMeasures = modifiedModel.getAllMeasures();
+        Optional<Measure> max2 = allMeasures.stream().filter(measure -> measure.getName().equals("MAX2")).findFirst();
+        Assert.assertTrue(max2.isPresent());
+        Assert.assertTrue(max2.get().isTomb());
     }
 
     @Test
