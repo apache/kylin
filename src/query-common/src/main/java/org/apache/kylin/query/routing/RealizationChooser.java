@@ -91,6 +91,7 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectLoader;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
@@ -243,7 +244,7 @@ public class RealizationChooser {
         }
 
         // Step 3. find the lowest-cost candidate
-        candidates.sort(Candidate.COMPARATOR);
+        sortCandidate(context, candidates);
         logger.trace("Cost Sorted Realizations {}", candidates);
         if (!candidates.isEmpty()) {
             Candidate selectedCandidate = candidates.get(0);
@@ -271,6 +272,17 @@ public class RealizationChooser {
 
         checkNoRealizationWithStreaming(context);
         throw new NoRealizationFoundException("No realization found for " + toErrorMsg(context));
+    }
+
+    private static void sortCandidate(OLAPContext context, List<Candidate> candidates) {
+        ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(context.olapSchema.getProjectName());
+        if (projectInstance.getConfig().useTableIndexAnswerSelectStarEnabled()
+                && context.getSQLDigest().isRawQuery) {
+            candidates.sort(Candidate.COMPARATOR_TABLE_INDEX);
+        } else {
+            candidates.sort(Candidate.COMPARATOR);
+        }
     }
 
     private static void checkNoRealizationWithStreaming(OLAPContext context) {

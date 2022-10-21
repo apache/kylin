@@ -110,7 +110,6 @@ public class NQueryLayoutChooser {
         }
         val projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(dataflow.getProject());
-        double influenceFactor = 1.0;
         for (NDataLayout dataLayout : commonLayouts) {
             log.trace("Matching layout {}", dataLayout);
             CapabilityResult tempResult = new CapabilityResult();
@@ -119,18 +118,20 @@ public class NQueryLayoutChooser {
             LayoutEntity layout = indexPlan.getLayoutEntity(dataLayout.getLayoutId());
             log.trace("Matching indexEntity {}", indexEntity);
 
+            NLayoutCandidate candidate = new NLayoutCandidate(layout);
             var matchResult = tableIndexMatcher.match(layout);
+            double influenceFactor = 1.0;
             if (!matchResult.isMatched()) {
                 matchResult = aggIndexMatcher.match(layout);
             } else if (projectInstance.getConfig().useTableIndexAnswerSelectStarEnabled()) {
-                influenceFactor += influenceFactor + tableIndexMatcher.getLayoutUnmatchedColsSize();
+                influenceFactor += tableIndexMatcher.getLayoutUnmatchedColsSize();
+                candidate.setLayoutUnmatchedColsSize(tableIndexMatcher.getLayoutUnmatchedColsSize());
             }
             if (!matchResult.isMatched()) {
                 log.trace("Matching failed");
                 continue;
             }
 
-            NLayoutCandidate candidate = new NLayoutCandidate(layout);
             tempResult.influences = matchResult.getInfluences();
             candidate.setCost(dataLayout.getRows() * (tempResult.influences.size() + influenceFactor));
             if (!matchResult.getNeedDerive().isEmpty()) {

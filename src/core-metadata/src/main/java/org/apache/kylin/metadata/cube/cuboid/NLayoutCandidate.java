@@ -42,6 +42,10 @@ public class NLayoutCandidate implements IRealizationCandidate {
     @Setter
     private double cost;
 
+    @Getter
+    @Setter
+    private int layoutUnmatchedColsSize;
+
     @Setter
     @Getter
     private CapabilityResult capabilityResult;
