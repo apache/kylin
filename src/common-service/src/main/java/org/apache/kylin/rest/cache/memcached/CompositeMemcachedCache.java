@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.SimpleValueWrapper;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -226,7 +227,7 @@ public class CompositeMemcachedCache implements KylinCache {
             Object obj = SerializationUtils.deserialize(value);
             if (obj != null && type != null && !type.isInstance(value)) {
                 throw new IllegalStateException(
-                        "Cached value is not of required type [" + type.getName() + "]: " + value);
+                        "Cached value is not of required type [" + type.getName() + "]: " + Arrays.toString(value));
             }
             return (T) obj;
         }
