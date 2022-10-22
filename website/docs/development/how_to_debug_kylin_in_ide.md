@@ -31,6 +31,10 @@ This guide **assumes** you have prepared the following things:
 - [ ] A **remote linux server** for testing and deployment purpose(if you do not prepare remote linux server, you will deploy Hadoop on your laptop)
 - [ ] kylin's source code is cloned into some directory in your laptop
 
+:::info For Windows Dev Machine
+For Windows dev machine, setup the Kylin dev env in [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/about) is the best option. Follow this guide on [how to install WSL with GUI](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps), and install both Kylin code and your favorite IDE (but not the docker) in WSL for best performance.
+:::
+
 ### Prepare IDEA and build source code
 
 #### Step 1: Check Software Requirement

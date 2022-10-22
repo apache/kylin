@@ -59,6 +59,11 @@ The overview is followed by step-by-step instructions.
 6. Make related document changes following [how to write document](./how_to_write_doc).
 
 ### Step 1. Setup a development environment
+
+:::info For Windows Dev Machine
+For Windows dev machine, setup the Kylin dev env in [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/about) is the best option. Follow this guide on [how to install WSL with GUI](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps), and install both Kylin code and your favorite IDE in WSL for best performance.
+:::
+
 1. Visit the https://github.com/apache/kylin and click the **Fork** button.
    ![](images/fork_github_repo.png)
 2. Clone the fork repo to local
