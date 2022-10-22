@@ -32,6 +32,10 @@ This guide **assumes** you have prepared the following things:
 - [X] A **laptop** with MacOS installed to do development work (Windows is not verified at the moment)
 - [X] kylin's source code is cloned into some directory in your laptop
 
+:::info For Windows Dev Machine
+For Windows dev machine, setup the Kylin dev env in [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/about) is the best option. Follow this guide on [how to install WSL with GUI](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps), and install both Kylin code and your favorite IDE (but not the docker) in WSL for best performance.
+:::
+
 ### Prepare IDEA and build source code
 
 #### Step 1: Check Software Requirement
