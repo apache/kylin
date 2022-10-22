@@ -30,6 +30,7 @@ import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -77,6 +78,22 @@ public class TableDescResponse extends TableDesc {
         for (int i = 0; i < getColumns().length; i++) {
             extColumns[i] = new ColumnDescResponse(getColumns()[i]);
         }
+    }
+
+    @JsonProperty(value = "cardinality", access = JsonProperty.Access.READ_ONLY)
+    public Map<String, Long> getCardinality() {
+        Map<String, Long> cardinality = Maps.newHashMapWithExpectedSize(extColumns.length);
+        for (ColumnDescResponse extColumn : extColumns) {
+            if (extColumn.getCardinality() != null) {
+                cardinality.put(extColumn.getName(), extColumn.getCardinality());
+            }
+        }
+        return cardinality;
+    }
+
+    @JsonProperty(value = "is_transactional", access = JsonProperty.Access.READ_ONLY)
+    public boolean getTransactionalV2() {
+        return super.isTransactional();
     }
 
     @Getter

@@ -1633,4 +1633,29 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         queryContext.setModelPriorities(QueryModelPriorities.getModelPrioritiesFromComment(sql));
     }
 
+    public List<TableMetaWithType> getMetadataAddType(String project, String modelAlias) {
+        List<TableMeta> tableMetas = getMetadata(project, modelAlias);
+
+        Map<TableMetaIdentify, TableMetaWithType> tableMap = Maps.newLinkedHashMap();
+        Map<ColumnMetaIdentify, ColumnMetaWithType> columnMap = Maps.newLinkedHashMap();
+
+        for (TableMeta tableMeta : tableMetas) {
+            TableMetaWithType tblMeta = TableMetaWithType.ofColumnMeta(tableMeta);
+            tableMap.put(new TableMetaIdentify(tblMeta.getTABLE_SCHEM(), tblMeta.getTABLE_NAME()), tblMeta);
+
+            for (ColumnMeta columnMeta : tblMeta.getColumns()) {
+                columnMap.put(new ColumnMetaIdentify(columnMeta.getTABLE_SCHEM(), columnMeta.getTABLE_NAME(),
+                        columnMeta.getCOLUMN_NAME()), (ColumnMetaWithType) columnMeta);
+            }
+        }
+
+        List<NDataModel> models = getModels(project, modelAlias);
+
+        for (NDataModel model : models) {
+            clarifyTblTypeToFactOrLookup(model, tableMap);
+            clarifyPkFkCols(model, columnMap);
+        }
+
+        return Lists.newArrayList(tableMap.values());
+    }
 }

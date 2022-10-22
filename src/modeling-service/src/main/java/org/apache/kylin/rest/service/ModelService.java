@@ -359,6 +359,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             if (model instanceof NDataModelResponse) {
                 oldParams.setProjectName(model.getProject());
                 oldParams.setSizeKB(((NDataModelResponse) model).getStorage() / 1024);
+                oldParams.setDimensions(((NDataModelResponse) model).getNamedColumns());
                 ((NDataModelResponse) model).setOldParams(oldParams);
             } else if (model instanceof RelatedModelResponse) {
                 ((RelatedModelResponse) model).setOldParams(oldParams);

@@ -755,6 +755,47 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testGetMetadataAddType() throws Exception {
+        List<TableMetaWithType> tableMetasAddType = queryService.getMetadataAddType("default", null);
+        List<TableMeta> tableMetas = queryService.getMetadata("default", null);
+        List<TableMeta> tablesV2 = Lists.newLinkedList();
+        for (TableMetaWithType t : tableMetasAddType) {
+            TableMeta tableMeta = new TableMeta(t.getTABLE_CAT(), t.getTABLE_SCHEM(), t.getTABLE_NAME(),
+                    t.getTABLE_TYPE(), t.getREMARKS(), t.getTYPE_CAT(), t.getTYPE_SCHEM(), t.getTYPE_NAME(),
+                    t.getSELF_REFERENCING_COL_NAME(), t.getREF_GENERATION());
+            tableMeta.setColumns(t.getColumns().stream()
+                    .map(c -> new ColumnMeta(c.getTABLE_CAT(), c.getTABLE_SCHEM(), c.getTABLE_NAME(),
+                            c.getCOLUMN_NAME(), c.getDATA_TYPE(), c.getTYPE_NAME(), c.getCOLUMN_SIZE(),
+                            c.getBUFFER_LENGTH(), c.getDECIMAL_DIGITS(), c.getNUM_PREC_RADIX(), c.getNULLABLE(),
+                            c.getREMARKS(), c.getCOLUMN_DEF(), c.getSQL_DATA_TYPE(), c.getSQL_DATETIME_SUB(),
+                            c.getCHAR_OCTET_LENGTH(), c.getORDINAL_POSITION(), c.getIS_NULLABLE(), c.getSCOPE_CATLOG(),
+                            c.getSCOPE_SCHEMA(), c.getSCOPE_TABLE(), c.getSOURCE_DATA_TYPE(), c.getIS_AUTOINCREMENT()))
+                    .collect(Collectors.toList()));
+            tablesV2.add(tableMeta);
+        }
+        Assert.assertEquals(JsonUtil.writeValueAsString(tablesV2), JsonUtil.writeValueAsString(tableMetas));
+
+        tableMetasAddType = queryService.getMetadataAddType("default", "test_bank");
+        tableMetas = queryService.getMetadata("default", "test_bank");
+        tablesV2 = Lists.newLinkedList();
+        for (TableMetaWithType t : tableMetasAddType) {
+            TableMeta tableMeta = new TableMeta(t.getTABLE_CAT(), t.getTABLE_SCHEM(), t.getTABLE_NAME(),
+                    t.getTABLE_TYPE(), t.getREMARKS(), t.getTYPE_CAT(), t.getTYPE_SCHEM(), t.getTYPE_NAME(),
+                    t.getSELF_REFERENCING_COL_NAME(), t.getREF_GENERATION());
+            tableMeta.setColumns(t.getColumns().stream()
+                    .map(c -> new ColumnMeta(c.getTABLE_CAT(), c.getTABLE_SCHEM(), c.getTABLE_NAME(),
+                            c.getCOLUMN_NAME(), c.getDATA_TYPE(), c.getTYPE_NAME(), c.getCOLUMN_SIZE(),
+                            c.getBUFFER_LENGTH(), c.getDECIMAL_DIGITS(), c.getNUM_PREC_RADIX(), c.getNULLABLE(),
+                            c.getREMARKS(), c.getCOLUMN_DEF(), c.getSQL_DATA_TYPE(), c.getSQL_DATETIME_SUB(),
+                            c.getCHAR_OCTET_LENGTH(), c.getORDINAL_POSITION(), c.getIS_NULLABLE(), c.getSCOPE_CATLOG(),
+                            c.getSCOPE_SCHEMA(), c.getSCOPE_TABLE(), c.getSOURCE_DATA_TYPE(), c.getIS_AUTOINCREMENT()))
+                    .collect(Collectors.toList()));
+            tablesV2.add(tableMeta);
+        }
+        Assert.assertEquals(JsonUtil.writeValueAsString(tablesV2), JsonUtil.writeValueAsString(tableMetas));
+    }
+
+    @Test
     public void testExposedColumnsProjectConfigByModel() throws Exception {
         NProjectManager projectManager = NProjectManager.getInstance(getTestConfig());
 

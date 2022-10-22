@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.v2.NModelControllerV2;
 import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.response.RelatedModelResponse;
@@ -46,6 +46,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.google.common.collect.Lists;
 
 public class NModelControllerV2Test extends NLocalFileMetadataTestCase {
 
@@ -139,4 +141,22 @@ public class NModelControllerV2Test extends NLocalFileMetadataTestCase {
         Mockito.verify(nModelControllerV2).getModels("", true, "default", 0, 10, "last_modify", true);
     }
 
+    @Test
+    public void testGetModelDesc() throws Exception {
+        Mockito.when(modelService.getModels("model1", "default", true, null, Lists.newArrayList(), "last_modify", true))
+                .thenReturn(mockModelDesc());
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/default/model1")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        Mockito.verify(nModelControllerV2).getModelDesc("default", "model1");
+    }
+
+    private List<NDataModelResponse> mockModelDesc() {
+        final List<NDataModelResponse> models = new ArrayList<>();
+        NDataModel model = new NDataModel();
+        model.setAlias("model1");
+        model.setUuid("model1");
+        models.add(new NDataModelResponse(model));
+        return models;
+    }
 }

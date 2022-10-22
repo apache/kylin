@@ -22,10 +22,10 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 
 import java.util.List;
 
-import org.apache.kylin.metadata.querymeta.TableMeta;
+import org.apache.kylin.metadata.querymeta.TableMetaWithType;
+import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.request.MetaRequest;
 import org.apache.kylin.rest.service.QueryService;
-import org.apache.kylin.rest.controller.NBasicController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,11 +56,11 @@ public class NQueryMetaController extends NBasicController {
     @GetMapping(value = "/tables_and_columns", produces = { "application/json", HTTP_VND_APACHE_KYLIN_V2_JSON })
     @ResponseBody
     @Deprecated
-    public List<TableMeta> getMetadataForDriver(MetaRequest metaRequest) {
+    public List<TableMetaWithType> getMetadataForDriver(MetaRequest metaRequest) {
         if (metaRequest.getCube() == null || metaRequest.getCube().isEmpty()) {
-            return queryService.getMetadata(metaRequest.getProject());
+            return queryService.getMetadataAddType(metaRequest.getProject(), null);
         } else {
-            return queryService.getMetadata(metaRequest.getProject(), metaRequest.getCube());
+            return queryService.getMetadataAddType(metaRequest.getProject(), metaRequest.getCube());
         }
     }
 }

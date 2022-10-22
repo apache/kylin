@@ -18,11 +18,18 @@
 package org.apache.kylin.rest.response;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.metadata.model.JoinTableDesc;
+import org.apache.kylin.metadata.model.ModelDimensionDesc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -50,4 +57,35 @@ public class NDataModelOldParams implements Serializable {
 
     @JsonProperty("project")
     private String projectName;
+
+    @JsonProperty("dimensions")
+    private List<ModelDimensionDesc> dimensions;
+
+    public void setDimensions(List<NDataModelResponse.SimplifiedNamedColumn> simplifiedDimensions) {
+        if (CollectionUtils.isEmpty(simplifiedDimensions)) {
+            return;
+        }
+
+        Map<String, Set<String>> dimCandidate = new HashMap<>();
+        for (NDataModelResponse.SimplifiedNamedColumn dimension : simplifiedDimensions) {
+            String[] tableColumn = dimension.getAliasDotColumn().split("\\.");
+            String table = tableColumn[0];
+            String column = tableColumn[1];
+            addCandidate(dimCandidate, table, column);
+        }
+
+        List<ModelDimensionDesc> dims = new ArrayList<>();
+        for (Map.Entry<String, Set<String>> dimensionEntry : dimCandidate.entrySet()) {
+            ModelDimensionDesc dimension = new ModelDimensionDesc();
+            dimension.setTable(dimensionEntry.getKey());
+            dimension.setColumns(dimensionEntry.getValue().toArray(new String[0]));
+            dims.add(dimension);
+        }
+        this.dimensions = dims;
+    }
+
+    private static void addCandidate(Map<String, Set<String>> tblColMap, String table, String column) {
+        tblColMap.computeIfAbsent(table, k -> Sets.newHashSet());
+        tblColMap.get(table).add(column);
+    }
 }

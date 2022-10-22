@@ -1459,4 +1459,39 @@ public class TableServiceTest extends CSVSourceTestCase {
                 new ArrayList<>());
         Assert.assertThrows(KylinException.class, func);
     }
+
+    @Test
+    public void testTableDescResponseV2() throws IOException {
+        final String tableIdentity = "DEFAULT.TEST_COUNTRY";
+        final NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(getTestConfig(), "newten");
+        final TableDesc tableDesc = tableMgr.getTableDesc(tableIdentity);
+        final TableExtDesc oldExtDesc = tableMgr.getOrCreateTableExt(tableDesc);
+        // mock table ext desc
+        TableExtDesc tableExt = new TableExtDesc(oldExtDesc);
+        tableExt.setIdentity(tableIdentity);
+        TableExtDesc.ColumnStats col1 = new TableExtDesc.ColumnStats();
+        col1.setCardinality(100);
+        col1.setTableExtDesc(tableExt);
+        col1.setColumnName(tableDesc.getColumns()[0].getName());
+        col1.setMinValue("America");
+        col1.setMaxValue("Zimbabwe");
+        col1.setNullCount(0);
+        tableExt.setColumnStats(Lists.newArrayList(col1));
+        tableMgr.mergeAndUpdateTableExt(oldExtDesc, tableExt);
+
+        final List<TableDesc> tables = tableService.getTableDesc("newten", true, "TEST_COUNTRY", "DEFAULT", true);
+        Assert.assertEquals(1, tables.size());
+        Assert.assertTrue(tables.get(0) instanceof TableDescResponse);
+        TableDescResponse t = (TableDescResponse) tables.get(0);
+        Map<String, Long> cardinality = t.getCardinality();
+        for (int i = 0; i < t.getExtColumns().length; i++) {
+            if (t.getExtColumns()[i].getCardinality() != null) {
+                Assert.assertEquals(cardinality.get(t.getExtColumns()[i].getName()),
+                        t.getExtColumns()[i].getCardinality());
+            }
+        }
+        Assert.assertEquals(t.getTransactionalV2(), t.isTransactional());
+        t.setTransactional(true);
+        Assert.assertEquals(t.getTransactionalV2(), t.isTransactional());
+    }
 }
