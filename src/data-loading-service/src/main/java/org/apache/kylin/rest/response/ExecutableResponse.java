@@ -18,23 +18,17 @@
 
 package org.apache.kylin.rest.response;
 
-import com.clearspring.analytics.util.Lists;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.google.common.collect.Maps;
-import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
-import org.apache.kylin.engine.spark.job.NTableSamplingJob;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.var;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
+import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import org.apache.kylin.job.SecondStorageCleanJobUtil;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -49,9 +43,19 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
 import org.apache.kylin.metadata.model.TableDesc;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import com.clearspring.analytics.util.Lists;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.google.common.collect.Maps;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.var;
 
 @Setter
 @Getter
@@ -110,6 +114,36 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
     private List<SegmentResponse> segments;
     private static final String SNAPSHOT_FULL_RANGE = "FULL";
     private static final String SNAPSHOT_INC_RANGE = "INC";
+
+    @JsonProperty("version")
+    protected String version;
+
+    @JsonProperty("related_segment")
+    public String getRelatedSegment() {
+        return CollectionUtils.isEmpty(targetSegments) ? "" : String.join(",", targetSegments);
+    }
+
+    @JsonProperty("progress")
+    public double getProgress() {
+        int completedStepCount = 0;
+
+        for (ExecutableStepResponse step : this.getSteps()) {
+            if (step.getStatus().equals(JobStatusEnum.FINISHED)) {
+                completedStepCount++;
+            }
+        }
+        if (steps.isEmpty()) {
+            return 0.0;
+        }
+        return 100.0 * completedStepCount / steps.size();
+    }
+
+    public List<ExecutableStepResponse> getSteps() {
+        if (steps == null) {
+            steps = Collections.emptyList();
+        }
+        return steps;
+    }
 
     private static ExecutableResponse newInstance(AbstractExecutable abstractExecutable) {
         ExecutableResponse executableResponse = new ExecutableResponse();

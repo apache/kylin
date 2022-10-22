@@ -32,6 +32,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -1095,6 +1096,26 @@ public class JobService extends BasicService implements JobSupporter {
         aclEvaluate.checkProjectOperationPermission(project);
         val executableManager = getManager(NExecutableManager.class, project);
         return executableManager.getOutputFromHDFSByJobId(jobId, stepId).getVerboseMsg();
+    }
+
+    public Map<String, Object> getStepOutput(String project, String jobId, String stepId) {
+        aclEvaluate.checkProjectOperationPermission(project);
+        val executableManager = getManager(NExecutableManager.class, project);
+        Output output = executableManager.getOutputFromHDFSByJobId(jobId, stepId);
+        Map<String, Object> result = new HashMap<>();
+        result.put("cmd_output", output.getVerboseMsg());
+
+        Map<String, String> info = output.getExtra();
+        List<String> servers = Lists.newArrayList();
+        if (info != null && info.get("nodes") != null) {
+            servers = Lists.newArrayList(info.get("nodes").split(","));
+        }
+        List<String> nodes = servers.stream().map(server -> {
+            String[] split = server.split(":");
+            return split[0] + ":" + split[1];
+        }).collect(Collectors.toList());
+        result.put("nodes", nodes);
+        return result;
     }
 
     @SneakyThrows

@@ -18,8 +18,10 @@
 package org.apache.kylin.rest.controller.v2;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,11 +34,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -68,4 +72,21 @@ public class NModelControllerV2 extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, modelResponse, "");
     }
 
+    @ApiOperation(value = "getModelDesc", tags = { "AI" })
+    @GetMapping(value = "/{projectName}/{modelName}", produces = { HTTP_VND_APACHE_KYLIN_V2_JSON })
+    @ResponseBody
+    public EnvelopeResponse<Map<String, Object>> getModelDesc(@PathVariable("projectName") String project,
+            @PathVariable("modelName") String modelAlias) {
+        checkProjectName(project);
+        List<NDataModel> models = new ArrayList<>(
+                modelService.getModels(modelAlias, project, true, null, Lists.newArrayList(), "last_modify", true));
+        if (models.size() == 0) {
+            throw new KylinException(MODEL_ID_NOT_EXIST, modelAlias);
+        }
+        models = modelService.addOldParams(project, models);
+
+        HashMap<String, Object> modelResponse = new HashMap<>();
+        modelResponse.put("model", models.size() == 0 ? Maps.newHashMap() : models.get(0));
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, modelResponse, "");
+    }
 }

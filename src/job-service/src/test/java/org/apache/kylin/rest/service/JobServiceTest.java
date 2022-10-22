@@ -1206,14 +1206,14 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
 
     private long getCreateTime(String name) {
         switch (name) {
-            case "1":
-                return 1560324101000L;
-            case "2":
-                return 1560324102000L;
-            case "3":
-                return 1560324103000L;
-            default:
-                return 0L;
+        case "1":
+            return 1560324101000L;
+        case "2":
+            return 1560324102000L;
+        case "3":
+            return 1560324103000L;
+        default:
+            return 0L;
         }
     }
 
@@ -1331,8 +1331,8 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         String sampleLog = "";
         try (InputStream allJobOutput = jobService.getAllJobOutput("default", "e1ad7bb0-522e-456a-859d-2eab1df448de",
                 "e1ad7bb0-522e-456a-859d-2eab1df448de");
-             BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(allJobOutput, Charset.defaultCharset()))) {
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(allJobOutput, Charset.defaultCharset()))) {
 
             String line;
             StringBuilder sampleData = new StringBuilder();
@@ -1581,14 +1581,14 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         // testGetProjectNameAndJobStepId_NotContains
         String yarnAppId1 = "application";
         overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
-        Assert.assertThrows("Async profiler status error, yarnAppId entered incorrectly, please try again.", KylinException.class,
-                () -> jobService.getProjectNameAndJobStepId(yarnAppId1));
+        Assert.assertThrows("Async profiler status error, yarnAppId entered incorrectly, please try again.",
+                KylinException.class, () -> jobService.getProjectNameAndJobStepId(yarnAppId1));
 
         // testGetProjectNameAndJobStepId_LengthError
         String yarnAppId2 = "application_";
         overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
-        Assert.assertThrows("Async profiler status error, yarnAppId entered incorrectly, please try again.", KylinException.class,
-                () -> jobService.getProjectNameAndJobStepId(yarnAppId2));
+        Assert.assertThrows("Async profiler status error, yarnAppId entered incorrectly, please try again.",
+                KylinException.class, () -> jobService.getProjectNameAndJobStepId(yarnAppId2));
 
         // testGetProjectNameAndJobStepId_NotContainsJob
         String yarnAppId = "application_1554187389076_-1";
@@ -1802,5 +1802,78 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
             errorMsg = e.getMessage();
         }
         Assert.assertEquals("", errorMsg);
+    }
+
+    @Test
+    public void testGetStepOutput() {
+        String jobId = "e1ad7bb0-522e-456a-859d-2eab1df448de";
+        NExecutableManager manager = NExecutableManager.getInstance(jobService.getConfig(), "default");
+        ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();
+        Map<String, String> info = Maps.newHashMap();
+        info.put("nodes", "localhost:7070:all");
+        executableOutputPO.setInfo(info);
+        manager.updateJobOutputToHDFS(KylinConfig.getInstanceFromEnv().getJobTmpOutputStorePath("default", jobId),
+                executableOutputPO);
+
+        Map<String, Object> result = Maps.newHashMap();
+        result.put("nodes", Lists.newArrayList("localhost:7070"));
+        result.put("cmd_output", null);
+        Assert.assertEquals(result, jobService.getStepOutput("default", jobId, jobId));
+
+        executableOutputPO.setInfo(null);
+        manager.updateJobOutputToHDFS(KylinConfig.getInstanceFromEnv().getJobTmpOutputStorePath("default", jobId),
+                executableOutputPO);
+
+        result = Maps.newHashMap();
+        result.put("nodes", Lists.newArrayList());
+        result.put("cmd_output", null);
+        Assert.assertEquals(result, jobService.getStepOutput("default", jobId, jobId));
+
+        info = Maps.newHashMap();
+        executableOutputPO.setInfo(info);
+        manager.updateJobOutputToHDFS(KylinConfig.getInstanceFromEnv().getJobTmpOutputStorePath("default", jobId),
+                executableOutputPO);
+
+        result = Maps.newHashMap();
+        result.put("nodes", Lists.newArrayList());
+        result.put("cmd_output", null);
+        Assert.assertEquals(result, jobService.getStepOutput("default", jobId, jobId));
+    }
+
+    @Test
+    public void testExecutableResponse() throws Exception {
+        val modelManager = mock(NDataModelManager.class);
+
+        Mockito.when(modelService.getManager(NDataModelManager.class, "default")).thenReturn(modelManager);
+        NDataModel nDataModel = mock(NDataModel.class);
+        Mockito.when(modelManager.getDataModelDesc(Mockito.anyString())).thenReturn(nDataModel);
+
+        NExecutableManager executableManager = Mockito.spy(NExecutableManager.getInstance(getTestConfig(), "default"));
+        Mockito.when(jobService.getManager(NExecutableManager.class, "default")).thenReturn(executableManager);
+        val mockJobs = mockDetailJobs(false);
+        Mockito.when(executableManager.getAllJobs(Mockito.anyLong(), Mockito.anyLong())).thenReturn(mockJobs);
+        for (ExecutablePO po : mockJobs) {
+            AbstractExecutable exe = executableManager.fromPO(po);
+            Mockito.when(executableManager.getJob(po.getId())).thenReturn(exe);
+        }
+        getTestConfig().setProperty("kylin.streaming.enabled", "false");
+        // test size
+        List<String> jobNames = Lists.newArrayList();
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, "", "", "default", "", true);
+        List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
+        List<ExecutableResponse> executableResponses = jobService.addOldParams(jobs);
+        ExecutableResponse executable = executableResponses.get(0);
+        Assert.assertEquals("", executable.getRelatedSegment());
+        Assert.assertEquals(0, executable.getProgress(), 0);
+        executable.getSteps().get(0).setStatus(JobStatusEnum.FINISHED);
+        Assert.assertEquals(33, executable.getProgress(), 1);
+        executable.setSteps(null);
+        String uuid = UUID.randomUUID().toString();
+        executable.setTargetSegments(Lists.newArrayList(uuid));
+        Assert.assertEquals(0.0, executable.getProgress(), 0);
+        Assert.assertEquals(uuid, executable.getRelatedSegment());
+        executable.setTargetSegments(Collections.emptyList());
+        Assert.assertEquals(0.0, executable.getProgress(), 0);
+        Assert.assertEquals("", executable.getRelatedSegment());
     }
 }
