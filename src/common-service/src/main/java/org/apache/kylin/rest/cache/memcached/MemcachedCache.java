@@ -36,11 +36,9 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CompressionUtils;
-import org.apache.kylin.common.util.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -160,15 +158,6 @@ public class MemcachedCache {
 
     public Object getNativeCache() {
         return client;
-    }
-
-    protected String serializeKey(Object key) {
-        try {
-            return JsonUtil.writeValueAsString(key);
-        } catch (JsonProcessingException e) {
-            logger.warn("Can not convert key to String.", e);
-        }
-        return null;
     }
 
     protected byte[] serializeValue(Object value) {
