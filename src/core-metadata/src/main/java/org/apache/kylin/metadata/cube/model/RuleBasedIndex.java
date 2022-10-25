@@ -528,7 +528,7 @@ public class RuleBasedIndex implements Serializable {
     private void calculateCurrentSortedList(Map<Integer, Integer> mergedAndSortedIndexMap,
             List<Integer> currentSortedList, int dimensionId) {
         boolean needToAppendToTail = true;
-        Set<Integer> currentSortedSet = Sets.newHashSet(currentSortedList);
+        Set<Integer> currentSortedSet = Sets.newLinkedHashSet(currentSortedList);
         if (currentSortedSet.contains(dimensionId)) {
             return;
         }
