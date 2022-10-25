@@ -242,6 +242,11 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
         return model == null ? null : model.getAlias();
     }
 
+    public String getFusionModelAlias() {
+        NDataModel model = getModel();
+        return model == null ? null : model.getFusionModelAlias();
+    }
+
     @Override
     public Set<TblColRef> getAllColumns() {
         return getIndexPlan().listAllTblColRefs();

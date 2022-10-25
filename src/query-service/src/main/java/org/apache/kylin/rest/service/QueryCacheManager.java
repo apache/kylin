@@ -195,7 +195,7 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
             val modelId = nativeQueryRealization.getModelId();
             val dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
                     .getDataflow(modelId);
-            nativeQueryRealization.setModelAlias(dataflow.getModelAlias());
+            nativeQueryRealization.setModelAlias(dataflow.getFusionModelAlias());
         }
 
         return cached;

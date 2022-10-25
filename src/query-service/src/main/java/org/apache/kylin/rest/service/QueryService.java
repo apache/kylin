@@ -83,6 +83,7 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.acl.AclTCR;
 import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
+import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -636,6 +637,12 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                         QueryContext.currentMetrics().getTotalScanRows());
             }
 
+            val fusionManager = FusionModelManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                    sqlRequest.getProject());
+            if (CollectionUtils.isNotEmpty(sqlResponse.getNativeRealizations())) {
+                sqlResponse.getNativeRealizations().stream()
+                        .forEach(realization -> realization.setModelId(fusionManager.getModelId(realization)));
+            }
             //check query result row count
             NCircuitBreaker.verifyQueryResultRowCount(sqlResponse.getResultRowCount());
 

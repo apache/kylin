@@ -128,7 +128,7 @@ public class AsyncTaskService implements AsyncTaskServiceSupporter {
         val noBrokenModels = NDataflowManager.getInstance(kylinConfig, project).listUnderliningDataModels().stream()
                 .collect(Collectors.toMap(NDataModel::getAlias, RootPersistentEntity::getUuid));
         val dataModelManager = NDataModelManager.getInstance(kylinConfig, project);
-        List<NativeQueryRealization> realizations = qh.transformRealizations();
+        List<NativeQueryRealization> realizations = qh.transformRealizations(project);
 
         realizations.forEach(realization -> {
             NDataModel nDataModel = dataModelManager.getDataModelDesc(realization.getModelId());

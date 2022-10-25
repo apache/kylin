@@ -67,6 +67,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import lombok.val;
+import lombok.var;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(TimeZoneTestRunner.class)
@@ -77,6 +78,8 @@ public class QueryHistoryTaskSchedulerTest extends NLocalFileMetadataTestCase {
     private static final String DATAFLOW = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
     private static final String LAYOUT1 = "20000000001";
     private static final String LAYOUT2 = "1000001";
+    private static final String LAYOUT3 = "30001";
+    private static final String LAYOUT4 = "40001";
     private static final Long QUERY_TIME = 1586760398338L;
 
     private QueryHistoryTaskScheduler qhAccelerateScheduler;
@@ -343,6 +346,46 @@ public class QueryHistoryTaskSchedulerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(16, idOffsetManager.get().getStatMetaUpdateOffset());
     }
 
+    @Test
+    public void testUpdateStatMeta() {
+        QueryHistoryTaskScheduler taskScheduler = new QueryHistoryTaskScheduler("streaming_test");
+        QueryHistoryTaskScheduler.QueryHistoryMetaUpdateRunner metaUpdateRunner = taskScheduler.new QueryHistoryMetaUpdateRunner();
+        NDataflowManager manager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), "streaming_test");
+        {
+            var dataflow = manager.getDataflow("334671fd-e383-4fc9-b5c2-94fce832f77a");
+            Assert.assertTrue(dataflow.getLayoutHitCount().isEmpty());
+            ReflectionTestUtils.invokeMethod(metaUpdateRunner, "updateStatMeta", batchModelQueryHistory());
+            dataflow = manager.getDataflow("334671fd-e383-4fc9-b5c2-94fce832f77a");
+            Assert.assertEquals(1, countDateFrequency(dataflow, LAYOUT3));
+        }
+        {
+            var batchDataflow = manager.getDataflow("334671fd-e383-4fc9-b5c2-94fce832f77a");
+            var streamingDataflow = manager.getDataflow("b05034a8-c037-416b-aa26-9e6b4a41ee40");
+
+            Assert.assertFalse(batchDataflow.getLayoutHitCount().containsKey(Long.parseLong(LAYOUT4)));
+            Assert.assertFalse(streamingDataflow.getLayoutHitCount().containsKey(Long.parseLong(LAYOUT3)));
+
+            ReflectionTestUtils.invokeMethod(metaUpdateRunner, "updateStatMeta", fusionModelQueryHistory());
+            batchDataflow = manager.getDataflow("334671fd-e383-4fc9-b5c2-94fce832f77a");
+            streamingDataflow = manager.getDataflow("b05034a8-c037-416b-aa26-9e6b4a41ee40");
+
+            Assert.assertEquals(1, countDateFrequency(batchDataflow, LAYOUT4));
+            Assert.assertEquals(1, countDateFrequency(streamingDataflow, LAYOUT3));
+        }
+        {
+            var streamingDataflow = manager.getDataflow("b05034a8-c037-416b-aa26-9e6b4a41ee40");
+            Assert.assertEquals(1, countDateFrequency(streamingDataflow, LAYOUT3));
+            ReflectionTestUtils.invokeMethod(metaUpdateRunner, "updateStatMeta", streamingModelQueryHistory());
+            streamingDataflow = manager.getDataflow("b05034a8-c037-416b-aa26-9e6b4a41ee40");
+            Assert.assertEquals(2, countDateFrequency(streamingDataflow, LAYOUT3));
+        }
+    }
+
+    private int countDateFrequency(NDataflow dataflow, String layout) {
+        return dataflow.getLayoutHitCount().get(Long.parseLong(layout)).getDateFrequency().values().stream()
+                .mapToInt(Integer::intValue).sum();
+    }
+
     private List<QueryHistory> queryHistories() {
         QueryHistory queryHistory1 = new QueryHistory();
         queryHistory1.setSqlPattern("select * from sql1");
@@ -515,6 +558,85 @@ public class QueryHistoryTaskSchedulerTest extends NLocalFileMetadataTestCase {
         startOffset += histories.size();
 
         return histories;
+    }
+
+    /**
+     * sql match batch model of fusion model
+     * @return
+     */
+    private List<QueryHistory> batchModelQueryHistory() {
+        String fusionModelId = "b05034a8-c037-416b-aa26-9e6b4a41ee40";
+        QueryHistory queryHistory1 = new QueryHistory();
+        queryHistory1.setSqlPattern("SELECT MAX(LO_ORDERKEY) FROM SSB.KAFKA_FUSION");
+        queryHistory1.setQueryStatus(QueryHistory.QUERY_HISTORY_SUCCEEDED);
+        queryHistory1.setDuration(1000L);
+        queryHistory1.setQueryTime(QUERY_TIME);
+        queryHistory1.setEngineType("NATIVE");
+        QueryHistoryInfo queryHistoryInfo1 = new QueryHistoryInfo();
+        queryHistoryInfo1.setRealizationMetrics(Lists.newArrayList(
+                new QueryMetrics.RealizationMetrics(LAYOUT3, "Agg Index", fusionModelId, Lists.newArrayList())));
+        queryHistory1.setQueryHistoryInfo(queryHistoryInfo1);
+        queryHistory1.setId(10);
+        return Lists.newArrayList(queryHistory1);
+    }
+
+    /**
+     * sql match both batch model and streaming model in fusion model
+     * @return
+     */
+    private List<QueryHistory> fusionModelQueryHistory() {
+        String fusionModelId = "b05034a8-c037-416b-aa26-9e6b4a41ee40";
+        String batchModelId = "334671fd-e383-4fc9-b5c2-94fce832f77a";
+        QueryHistory queryHistory1 = new QueryHistory();
+        queryHistory1.setSqlPattern("SELECT MAX(LO_ORDERKEY) FROM SSB.KAFKA_FUSION");
+        queryHistory1.setQueryStatus(QueryHistory.QUERY_HISTORY_SUCCEEDED);
+        queryHistory1.setDuration(1000L);
+        queryHistory1.setQueryTime(QUERY_TIME);
+        queryHistory1.setEngineType("NATIVE");
+        QueryHistoryInfo queryHistoryInfo1 = new QueryHistoryInfo();
+        QueryMetrics.RealizationMetrics streamingRealizationMetric = new QueryMetrics.RealizationMetrics(LAYOUT3,
+                "Agg Index", fusionModelId, Lists.newArrayList());
+        streamingRealizationMetric.setStreamingLayout(true);
+        queryHistoryInfo1.setRealizationMetrics(Lists.newArrayList(streamingRealizationMetric,
+                new QueryMetrics.RealizationMetrics(LAYOUT4, "Agg Index", batchModelId, Lists.newArrayList())));
+        queryHistory1.setQueryHistoryInfo(queryHistoryInfo1);
+        queryHistory1.setId(11);
+        return Lists.newArrayList(queryHistory1);
+    }
+
+    /**
+     * sql match streaming model in fusion model
+     * @return
+     */
+    private List<QueryHistory> streamingModelQueryHistory() {
+        String fusionModelId = "b05034a8-c037-416b-aa26-9e6b4a41ee40";
+        QueryHistory queryHistory1 = new QueryHistory();
+        queryHistory1.setSqlPattern("SELECT MAX(LO_ORDERKEY) FROM SSB.KAFKA_FUSION");
+        queryHistory1.setQueryStatus(QueryHistory.QUERY_HISTORY_SUCCEEDED);
+        queryHistory1.setDuration(1000L);
+        queryHistory1.setQueryTime(QUERY_TIME);
+        queryHistory1.setEngineType("NATIVE");
+        QueryHistoryInfo queryHistoryInfo1 = new QueryHistoryInfo();
+        QueryMetrics.RealizationMetrics streamingRealizationMetric = new QueryMetrics.RealizationMetrics(LAYOUT3,
+                "Agg Index", fusionModelId, Lists.newArrayList());
+        streamingRealizationMetric.setStreamingLayout(true);
+        queryHistoryInfo1.setRealizationMetrics(Lists.newArrayList(streamingRealizationMetric));
+        queryHistory1.setQueryHistoryInfo(queryHistoryInfo1);
+        queryHistory1.setId(10);
+
+        QueryHistory queryHistory2 = new QueryHistory();
+        queryHistory2.setSqlPattern("SELECT MAX(LO_ORDERKEY) FROM SSB.KAFKA_FUSION");
+        queryHistory2.setQueryStatus(QueryHistory.QUERY_HISTORY_SUCCEEDED);
+        queryHistory2.setDuration(1000L);
+        queryHistory2.setQueryTime(QUERY_TIME);
+        queryHistory2.setEngineType("NATIVE");
+        QueryHistoryInfo queryHistoryInfo2 = new QueryHistoryInfo();
+        QueryMetrics.RealizationMetrics realizationMetric = new QueryMetrics.RealizationMetrics(LAYOUT3,
+                "Agg Index", "error", Lists.newArrayList());
+        queryHistoryInfo2.setRealizationMetrics(Lists.newArrayList(realizationMetric));
+        queryHistory2.setQueryHistoryInfo(queryHistoryInfo2);
+        queryHistory2.setId(11);
+        return Lists.newArrayList(queryHistory1, queryHistory2);
     }
 
     int startOffset = 0;

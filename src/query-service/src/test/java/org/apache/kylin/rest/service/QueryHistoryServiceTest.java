@@ -902,12 +902,17 @@ public class QueryHistoryServiceTest extends NLocalFileMetadataTestCase {
         QueryHistory query2 = new QueryHistory();
         query2.setSql("select * from test_table_2");
 
+        QueryHistory query3 = new QueryHistory();
+        query3.setSql("select * from test_table_3");
+
         QueryMetrics.RealizationMetrics metrics1 = new QueryMetrics.RealizationMetrics("1", "Agg Index",
                 "b05034a8-c037-416b-aa26-9e6b4a41ee40", Lists.newArrayList(new String[] {}));
         QueryMetrics.RealizationMetrics metrics2 = new QueryMetrics.RealizationMetrics("1", "Agg Index",
                 "334671fd-e383-4fc9-b5c2-94fce832f77a", Lists.newArrayList(new String[] {}));
         QueryMetrics.RealizationMetrics metrics3 = new QueryMetrics.RealizationMetrics("1", "Agg Index",
                 "554671fd-e383-4fc9-b5c2-94fce832f77a", Lists.newArrayList(new String[] {}));
+        QueryMetrics.RealizationMetrics metrics4 = new QueryMetrics.RealizationMetrics("1", "Agg Index",
+                "b05034a8-c037-416b-aa26-9e6b4a41ee40", Lists.newArrayList(new String[] {}));
 
         QueryHistoryInfo queryHistoryInfo1 = new QueryHistoryInfo();
         queryHistoryInfo1.setRealizationMetrics(
@@ -917,8 +922,12 @@ public class QueryHistoryServiceTest extends NLocalFileMetadataTestCase {
         QueryHistoryInfo queryHistoryInfo2 = new QueryHistoryInfo();
         queryHistoryInfo2.setRealizationMetrics(Lists.newArrayList(new QueryMetrics.RealizationMetrics[] { metrics3 }));
         query2.setQueryHistoryInfo(queryHistoryInfo2);
+
+        QueryHistoryInfo queryHistoryInfo3 = new QueryHistoryInfo();
+        queryHistoryInfo3.setRealizationMetrics(Lists.newArrayList(new QueryMetrics.RealizationMetrics[] { metrics4 }));
+        query3.setQueryHistoryInfo(queryHistoryInfo3);
         RDBMSQueryHistoryDAO queryHistoryDAO = Mockito.mock(RDBMSQueryHistoryDAO.class);
-        Mockito.doReturn(Lists.newArrayList(query1, query2)).when(queryHistoryDAO)
+        Mockito.doReturn(Lists.newArrayList(query1, query2, query3)).when(queryHistoryDAO)
                 .getQueryHistoriesByConditions(Mockito.any(), Mockito.anyInt(), Mockito.anyInt());
         Mockito.doReturn(10L).when(queryHistoryDAO).getQueryHistoriesSize(Mockito.any(), Mockito.anyString());
         Mockito.doReturn(queryHistoryDAO).when(queryHistoryService).getQueryHistoryDao();
@@ -930,6 +939,8 @@ public class QueryHistoryServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals("streaming_test",
                 queryHistories.get(0).getNativeQueryRealizations().get(1).getModelAlias());
         Assert.assertEquals("batch", queryHistories.get(1).getNativeQueryRealizations().get(0).getModelAlias());
+        Assert.assertEquals("334671fd-e383-4fc9-b5c2-94fce832f77a",
+                queryHistories.get(2).getNativeQueryRealizations().get(0).getModelId());
     }
 
     @Test
