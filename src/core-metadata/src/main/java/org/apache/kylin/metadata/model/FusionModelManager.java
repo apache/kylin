@@ -18,9 +18,14 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.util.Objects;
+import java.util.Optional;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
+import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,5 +97,15 @@ public class FusionModelManager {
             throw new IllegalArgumentException("Fusion Model  '" + desc.getAlias() + "' already exists");
 
         return crud.save(desc);
+    }
+
+    public String getModelId(NativeQueryRealization realization) {
+        String modelId = realization.getModelId();
+        FusionModel fusionModel = getFusionModel(modelId);
+        if (!realization.isStreamingLayout() && !Objects.isNull(fusionModel)) {
+            NDataModel dataModel = fusionModel.getBatchModel();
+            modelId = Optional.ofNullable(dataModel).map(RootPersistentEntity::getId).orElse("");
+        }
+        return modelId;
     }
 }

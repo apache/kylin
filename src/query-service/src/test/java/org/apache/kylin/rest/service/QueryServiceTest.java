@@ -586,6 +586,39 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         mockQueryWithSqlMassage();
     }
 
+    private void mockOLAPContextWithBatchPart() throws Exception {
+        val modelManager = Mockito
+                .spy(NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "streaming_test"));
+
+        Mockito.doReturn(modelManager).when(queryService).getManager(NDataModelManager.class, "streaming_test");
+        // mock agg index realization
+        OLAPContext aggMock = new OLAPContext(1);
+        NDataModel mockModel1 = Mockito.spy(new NDataModel());
+        Mockito.when(mockModel1.getUuid()).thenReturn("4965c827-fbb4-4ea1-a744-3f341a3b030d");
+        Mockito.when(mockModel1.getAlias()).thenReturn("model_streaming");
+        Mockito.doReturn(mockModel1).when(modelManager).getDataModelDesc("4965c827-fbb4-4ea1-a744-3f341a3b030d");
+
+        IRealization batchRealization = Mockito.mock(IRealization.class);
+        Mockito.when(batchRealization.getUuid()).thenReturn("cd2b9a23-699c-4699-b0dd-38c9412b3dfd");
+
+        HybridRealization hybridRealization = Mockito.mock(HybridRealization.class);
+        Mockito.when(hybridRealization.getModel()).thenReturn(mockModel1);
+        Mockito.when(hybridRealization.getBatchRealization()).thenReturn(batchRealization);
+
+        aggMock.realization = hybridRealization;
+        IndexEntity mockIndexEntity1 = new IndexEntity();
+        mockIndexEntity1.setId(1);
+        LayoutEntity mockLayout1 = new LayoutEntity();
+        mockLayout1.setIndex(mockIndexEntity1);
+        aggMock.storageContext.setCandidate(new NLayoutCandidate(mockLayout1));
+        aggMock.storageContext.setLayoutId(20001L);
+        aggMock.storageContext.setPrunedSegments(Lists.newArrayList(new NDataSegment()));
+        OLAPContext.registerContext(aggMock);
+
+        Mockito.doNothing().when(queryService).clearThreadLocalContexts();
+        mockQueryWithSqlMassage();
+    }
+
     private void mockOLAPContextWithStreaming() throws Exception {
         val modelManager = Mockito.spy(NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "demo"));
 
@@ -1990,28 +2023,48 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testQueryContextWithFusionModel() throws Exception {
         final String project = "streaming_test";
-        final String sql = "select count(*) from SSB_STREAMING";
 
-        stubQueryConnection(sql, project);
-        mockOLAPContextWithHybrid();
+        {
+            final String sql = "select count(*) from SSB_STREAMING";
 
-        final SQLRequest request = new SQLRequest();
-        request.setProject(project);
-        request.setSql(sql);
-        Mockito.when(SpringContext.getBean(QueryService.class)).thenReturn(queryService);
-        SQLResponse sqlResponse = queryService.doQueryWithCache(request);
+            stubQueryConnection(sql, project);
+            mockOLAPContextWithHybrid();
 
-        Assert.assertEquals(2, sqlResponse.getNativeRealizations().size());
+            final SQLRequest request = new SQLRequest();
+            request.setProject(project);
+            request.setSql(sql);
+            Mockito.when(SpringContext.getBean(QueryService.class)).thenReturn(queryService);
+            SQLResponse sqlResponse = queryService.doQueryWithCache(request);
 
-        Assert.assertEquals("4965c827-fbb4-4ea1-a744-3f341a3b030d",
-                sqlResponse.getNativeRealizations().get(0).getModelId());
-        Assert.assertEquals((Long) 10001L, sqlResponse.getNativeRealizations().get(0).getLayoutId());
-        Assert.assertEquals("cd2b9a23-699c-4699-b0dd-38c9412b3dfd",
-                sqlResponse.getNativeRealizations().get(1).getModelId());
-        Assert.assertEquals((Long) 20001L, sqlResponse.getNativeRealizations().get(1).getLayoutId());
+            Assert.assertEquals(2, sqlResponse.getNativeRealizations().size());
 
-        Assert.assertTrue(sqlResponse.getNativeRealizations().get(0).isStreamingLayout());
-        Assert.assertFalse(sqlResponse.getNativeRealizations().get(1).isStreamingLayout());
+            Assert.assertEquals("4965c827-fbb4-4ea1-a744-3f341a3b030d",
+                    sqlResponse.getNativeRealizations().get(0).getModelId());
+            Assert.assertEquals((Long) 10001L, sqlResponse.getNativeRealizations().get(0).getLayoutId());
+            Assert.assertEquals("cd2b9a23-699c-4699-b0dd-38c9412b3dfd",
+                    sqlResponse.getNativeRealizations().get(1).getModelId());
+            Assert.assertEquals((Long) 20001L, sqlResponse.getNativeRealizations().get(1).getLayoutId());
+
+            Assert.assertTrue(sqlResponse.getNativeRealizations().get(0).isStreamingLayout());
+            Assert.assertFalse(sqlResponse.getNativeRealizations().get(1).isStreamingLayout());
+        }
+        {
+            final String sql = "select count(1) from SSB_STREAMING";
+
+            stubQueryConnection(sql, project);
+            mockOLAPContextWithBatchPart();
+
+            final SQLRequest request = new SQLRequest();
+            request.setProject(project);
+            request.setSql(sql);
+            Mockito.when(SpringContext.getBean(QueryService.class)).thenReturn(queryService);
+            SQLResponse sqlResponse = queryService.doQueryWithCache(request);
+
+            Assert.assertEquals(1, sqlResponse.getNativeRealizations().size());
+            Assert.assertFalse(sqlResponse.getNativeRealizations().get(0).isStreamingLayout());
+            Assert.assertEquals("cd2b9a23-699c-4699-b0dd-38c9412b3dfd",
+                    sqlResponse.getNativeRealizations().get(0).getModelId());
+        }
     }
 
     @Test
