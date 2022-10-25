@@ -1723,10 +1723,6 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.query.replace-count-column-with-count-star", FALSE));
     }
 
-    public boolean isAscOrderNullFirstEnable() {
-        return Boolean.parseBoolean(getOptional("kylin.query.asc-order-null-first-enable", FALSE));
-    }
-
     // Select star on large table is too slow for BI, add limit by default if missing
     // https://issues.apache.org/jira/browse/KYLIN-2649
     public int getForceLimit() {
