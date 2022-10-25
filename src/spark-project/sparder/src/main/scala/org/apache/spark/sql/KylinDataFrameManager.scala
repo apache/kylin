@@ -19,10 +19,11 @@
 package org.apache.spark.sql
 
 import java.sql.Timestamp
-import org.apache.kylin.metadata.cube.model.{LayoutEntity, NDataflow, NDataflowManager}
-import org.apache.kylin.metadata.model.FusionModelManager
+
 import io.kyligence.kap.secondstorage.SecondStorage
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.metadata.cube.model.{LayoutEntity, NDataflow, NDataflowManager}
+import org.apache.kylin.metadata.model.FusionModelManager
 import org.apache.spark.sql.datasource.storage.StorageStoreFactory
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.StructType
@@ -78,26 +79,26 @@ class KylinDataFrameManager(sparkSession: SparkSession) {
     option("pruningInfo", pruningInfo)
     if (dataflow.isStreaming && dataflow.getModel.isFusionModel) {
       val fusionModel = FusionModelManager.getInstance(KylinConfig.getInstanceFromEnv, dataflow.getProject)
-              .getFusionModel(dataflow.getModel.getFusionId)
+        .getFusionModel(dataflow.getModel.getFusionId)
       val batchModelId = fusionModel.getBatchModel.getUuid
       val batchDataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, dataflow.getProject).getDataflow(batchModelId)
       val end = batchDataflow.getDateRangeEnd
 
       val partition = dataflow.getModel.getPartitionDesc.getPartitionDateColumnRef
       val id = layout.getOrderedDimensions.inverse().get(partition)
-      SecondStorage.trySecondStorage(sparkSession, dataflow, layout, pruningInfo).getOrElse {
-        var df = StorageStoreFactory.create(dataflow.getModel.getStorageType)
-          .read(dataflow, layout, sparkSession, extraOptions.toMap)
-        if (end != Long.MinValue) {
-          df = df.filter(col(id.toString).geq(new Timestamp(end)))
-        }
-        df
+      var df = read(dataflow, layout, pruningInfo)
+      if (id != null && end != Long.MinValue) {
+        df = df.filter(col(id.toString).geq(new Timestamp(end)))
       }
-    } else {
-      SecondStorage.trySecondStorage(sparkSession, dataflow, layout, pruningInfo).getOrElse {
-        StorageStoreFactory.create(dataflow.getModel.getStorageType)
-          .read(dataflow, layout, sparkSession, extraOptions.toMap)
-      }
+      return df
+    }
+    read(dataflow, layout, pruningInfo)
+  }
+
+  def read(dataflow: NDataflow, layout: LayoutEntity, pruningInfo: String): DataFrame = {
+    SecondStorage.trySecondStorage(sparkSession, dataflow, layout, pruningInfo).getOrElse {
+      StorageStoreFactory.create(dataflow.getModel.getStorageType)
+        .read(dataflow, layout, sparkSession, extraOptions.toMap)
     }
   }
 
