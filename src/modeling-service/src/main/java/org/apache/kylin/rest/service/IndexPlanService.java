@@ -260,7 +260,7 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         return createTableIndex(project, request.getModelId(), newLayout, request.isLoadData());
     }
 
-    public BuildIndexResponse createTableIndex(String project, String modelId, LayoutEntity newLayout,
+    private BuildIndexResponse createTableIndex(String project, String modelId, LayoutEntity newLayout,
             boolean loadData) {
         NIndexPlanManager indexPlanManager = getManager(NIndexPlanManager.class, project);
         val jobManager = getManager(JobManager.class, project);
@@ -272,6 +272,7 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         }
         int layoutIndex = indexPlan.getWhitelistLayouts().indexOf(newLayout);
         if (layoutIndex != -1) {
+            // find the target layout in this index plan
             indexPlanManager.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> {
                 val oldLayout = copyForWrite.getWhitelistLayouts().get(layoutIndex);
                 oldLayout.setManual(true);
@@ -281,6 +282,8 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
             modelChangeSupporters.forEach(listener -> listener.onUpdate(project, modelId));
             return new BuildIndexResponse(BuildIndexResponse.BuildIndexType.NO_LAYOUT);
         } else {
+            // create a new index for this layout
+            // update this index plan with the new layout
             indexPlanManager.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> {
                 val newCuboid = new IndexEntity();
                 newCuboid.setId(newLayout.getId() - 1);
@@ -486,19 +489,19 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
                                     StringUtils.join(notExistCols.iterator(), ",")));
                 }
             }
-            // In order to implement the cost base index planner, we need to make sure the measures is align with the kylin3.1.
+            // In order to implement the cost based index planner, we need to make sure the measures is align with the kylin3.1.
             // step1: check the rule base index contains all measures
             Set<Integer> allMeasure = indexPlan.getEffectiveMeasures().keySet();
             if (allMeasure.size() == 0 && ruleBasedIndex.getAggregationGroups().size() != 0) {
                 // need add base index for this model
                 throw new RuntimeException("Please add base index first for the model");
             }
-            if (ruleBasedIndex.getAggregationGroups().size() != 0 && allMeasure.size() != ruleBasedIndex.getMeasures().size()) {
+            if (ruleBasedIndex.getAggregationGroups().size() != 0
+                    && allMeasure.size() != ruleBasedIndex.getMeasures().size()) {
                 throw new RuntimeException(String.format(
                         "The rule base index must contain all of the measures [%s], but it just contains measures [%s]."
                                 + "\nPlease refer to %s",
-                        allMeasure, ruleBasedIndex.getMeasures(), "https://jirap.corp.ebay.com/browse/KYLIN-3593"
-                ));
+                        allMeasure, ruleBasedIndex.getMeasures(), "https://jirap.corp.ebay.com/browse/KYLIN-3593"));
             }
             // step2: check each agg group has all of the measures
             ruleBasedIndex.validAggregationGroups();

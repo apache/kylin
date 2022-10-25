@@ -18,8 +18,10 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.engine.spark.application.SparkApplication;
 import org.apache.kylin.engine.spark.scheduler.JobRuntime;
 import org.apache.kylin.job.execution.ExecutableParams;
@@ -38,6 +41,7 @@ import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.job.JobBucket;
 import org.apache.spark.tracker.BuildContext;
 import org.slf4j.Logger;
@@ -45,6 +49,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+
+import lombok.val;
 
 public abstract class SegmentJob extends SparkApplication {
 
@@ -55,9 +62,9 @@ public abstract class SegmentJob extends SparkApplication {
     protected IndexPlan indexPlan;
 
     protected String dataflowId;
-
-    protected Set<LayoutEntity> readOnlyLayouts;
-
+    // TODO change the `readOnlyLayouts`
+    // In order to support the cube planner, `readOnlyLayouts` can be changed
+    private Set<LayoutEntity> readOnlyLayouts;
     protected Set<NDataSegment> readOnlySegments;
 
     // Resource detection results output path
@@ -77,8 +84,71 @@ public abstract class SegmentJob extends SparkApplication {
         return readOnlyLayouts;
     }
 
+    private Set<LayoutEntity> recommendAggLayouts = new HashSet<>();
+
+    public Set<LayoutEntity> getRecommendAggLayouts() {
+        return recommendAggLayouts;
+    }
+
+    public void setRecommendAggLayouts(Set<LayoutEntity> aggIndexLayouts) {
+        recommendAggLayouts.clear();
+        recommendAggLayouts.addAll(aggIndexLayouts);
+    }
+
+    public void addMockIndex() {
+        Set<LayoutEntity> set = new HashSet<>();
+        List<Integer> colOrder = new ArrayList<>();
+        colOrder.add(1);
+        colOrder.addAll(indexPlan.getEffectiveMeasures().keySet());
+        LayoutEntity aggLayout = indexPlan.createRecommendAggIndexLayout(colOrder);
+        set.add(aggLayout);
+
+        colOrder = new ArrayList<>();
+        colOrder.add(1);
+        colOrder.add(2);
+        colOrder.addAll(indexPlan.getEffectiveMeasures().keySet());
+        LayoutEntity aggLayout2 = indexPlan.createRecommendAggIndexLayout(colOrder);
+        set.add(aggLayout2);
+
+        setRecommendAggLayouts(set);
+    }
+
+    public boolean updateIndexPlanIfNeed() {
+        // when run the cube planner, there will be some recommended index layouts for this model
+        if (getRecommendAggLayouts().size() != 0) {
+            UnitOfWork.doInTransactionWithRetry(() -> {
+                // update and add the recommended index layout to the index plan
+                val recommendAggLayouts = Lists.newArrayList(getRecommendAggLayouts());
+                NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(config, project);
+                logger.info("Update the index plan and add recommended agg index {}", recommendAggLayouts);
+                indexPlanManager.updateIndexPlan(dataflowId, copyForWrite -> {
+                    copyForWrite.createAndAddRecommendAggIndex(recommendAggLayouts);
+                });
+                return null;
+            }, project);
+            updateJobLayoutsIfNeed();
+            return true;
+        } else {
+            logger.info("There is no recommended agg index");
+            return false;
+        }
+    }
+
+    private void updateJobLayoutsIfNeed() {
+        // update this job layouts when there are recommended index layouts for this build
+        NDataflowManager dataflowManager = NDataflowManager.getInstance(config, project);
+        // get the new index plan
+        indexPlan = dataflowManager.getDataflow(dataflowId).getIndexPlan();
+        // get the new layout
+        val newJobLayouts = indexPlan.getAllLayouts();
+        logger.info("Update Job layouts from {} to {}", readOnlyLayouts, newJobLayouts);
+        readOnlyLayouts = new HashSet<>(newJobLayouts);
+        // rewrite the `P_LAYOUT_IDS` parameters
+        setParam(NBatchConstants.P_LAYOUT_IDS, NSparkCubingUtil.ids2Str(NSparkCubingUtil.toLayoutIds(readOnlyLayouts)));
+    }
+
     @Override
-    protected final void extraInit() {
+    protected void extraInit() {
         partialBuild = Boolean.parseBoolean(getParam(NBatchConstants.P_PARTIAL_BUILD));
         Set<String> segmentIDs = Arrays.stream(getParam(NBatchConstants.P_SEGMENT_IDS).split(COMMA))
                 .collect(Collectors.toCollection(LinkedHashSet::new));

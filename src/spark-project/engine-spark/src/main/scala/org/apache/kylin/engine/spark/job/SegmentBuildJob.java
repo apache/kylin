@@ -29,10 +29,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.builder.SnapshotBuilder;
-import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
 import org.apache.kylin.engine.spark.job.exec.BuildExec;
 import org.apache.kylin.engine.spark.job.stage.BuildParam;
 import org.apache.kylin.engine.spark.job.stage.StageExec;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -50,6 +50,7 @@ import java.util.stream.Stream;
 
 import static org.apache.kylin.engine.spark.job.StageType.BUILD_DICT;
 import static org.apache.kylin.engine.spark.job.StageType.BUILD_LAYER;
+import static org.apache.kylin.engine.spark.job.StageType.COST_BASED_PLANNER;
 import static org.apache.kylin.engine.spark.job.StageType.GATHER_FLAT_TABLE_STATS;
 import static org.apache.kylin.engine.spark.job.StageType.GENERATE_FLAT_TABLE;
 import static org.apache.kylin.engine.spark.job.StageType.MATERIALIZED_FACT_TABLE;
@@ -60,9 +61,20 @@ import static org.apache.kylin.engine.spark.job.StageType.WAITE_FOR_RESOURCE;
 @Slf4j
 public class SegmentBuildJob extends SegmentJob {
 
+    private boolean usePlanner = false;
+
     public static void main(String[] args) {
         SegmentBuildJob segmentBuildJob = new SegmentBuildJob();
         segmentBuildJob.execute(args);
+    }
+
+    @Override
+    protected final void extraInit() {
+        super.extraInit();
+        String enablePlanner = getParam(NBatchConstants.P_JOB_ENABLE_PLANNER);
+        if (enablePlanner != null && Boolean.valueOf(enablePlanner)) {
+            usePlanner = true;
+        }
     }
 
     @Override
@@ -135,6 +147,11 @@ public class SegmentBuildJob extends SegmentJob {
                 MATERIALIZED_FACT_TABLE.createStage(this, seg, buildParam, exec);
                 BUILD_DICT.createStage(this, seg, buildParam, exec);
                 GENERATE_FLAT_TABLE.createStage(this, seg, buildParam, exec);
+                // enable cost based planner according to the parameter
+                if (usePlanner) {
+                    COST_BASED_PLANNER.createStage(this, seg, buildParam, exec);
+                }
+
                 GATHER_FLAT_TABLE_STATS.createStage(this, seg, buildParam, exec);
                 BUILD_LAYER.createStage(this, seg, buildParam, exec);
 

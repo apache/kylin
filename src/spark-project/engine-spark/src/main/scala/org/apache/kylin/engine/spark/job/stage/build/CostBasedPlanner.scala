@@ -27,31 +27,39 @@ import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBu
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.spark.sql.{Dataset, Row}
 
-class MaterializedFactTableView(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
+class CostBasedPlanner(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
   extends FlatTableAndDictBase(jobContext, dataSegment, buildParam) {
-
   override def execute(): Unit = {
-    logInfo(s"Build SEGMENT $segmentId")
-    val spanTree = new AdaptiveSpanningTree(config, new AdaptiveTreeBuilder(dataSegment, readOnlyLayouts))
-    buildParam.setSpanningTree(spanTree)
+    // calculate the recommended index for this model
+    logInfo(s"Begin cost based planner $segmentId")
+    // table desc for the flat table
+    logInfo(s"Flat table desc $tableDesc")
+    // layout for the data
+    logInfo(s"layout: $readOnlyLayouts")
+    val costTable: Dataset[Row] = generateCostTable()
+    // persist the cost table
+    persistCostTable(costTable)
+    getRecommendedLayoutAndUpdateMetadata()
 
-    val flatTableDesc: SegmentFlatTableDesc = if (jobContext.isPartialBuild) {
-      val parser = new IndexDependencyParser(dataModel)
-      val relatedTableAlias =
-        parser.getRelatedTablesAlias(readOnlyLayouts)
-      new SegmentFlatTableDesc(config, dataSegment, spanningTree, relatedTableAlias)
-    } else {
-      new SegmentFlatTableDesc(config, dataSegment, spanningTree)
-    }
-    buildParam.setFlatTableDesc(flatTableDesc)
+    // update the recommended index to the index plan in the remote hdfs
+    logInfo(s"Add mock agg index")
+    jobContext.addMockIndex()
+    val result = jobContext.updateIndexPlanIfNeed()
+    if (result) {
+      // update span tree and table desc with the new build job layouts
+      val spanTree = new AdaptiveSpanningTree(config, new AdaptiveTreeBuilder(dataSegment, readOnlyLayouts))
+      buildParam.setSpanningTree(spanTree)
 
-    val factTableDS: Dataset[Row] = newFactTableDS()
-    buildParam.setFactTableDS(factTableDS)
-
-    val fastFactTableDS: Dataset[Row] = newFastFactTableDS()
-    buildParam.setFastFactTableDS(fastFactTableDS)
-    if (buildParam.isSkipMaterializedFactTableView) {
-      onStageSkipped()
+      // update table desc with new span tree
+      val flatTableDesc: SegmentFlatTableDesc = if (jobContext.isPartialBuild) {
+        val parser = new IndexDependencyParser(dataModel)
+        val relatedTableAlias =
+          parser.getRelatedTablesAlias(readOnlyLayouts)
+        new SegmentFlatTableDesc(config, dataSegment, spanningTree, relatedTableAlias)
+      } else {
+        new SegmentFlatTableDesc(config, dataSegment, spanningTree)
+      }
+      buildParam.setFlatTableDesc(flatTableDesc)
     }
   }
 }

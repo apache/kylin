@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
+
 import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.Path
@@ -42,8 +43,8 @@ import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils
-
 import java.util.{Locale, Objects}
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -63,8 +64,10 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
 
   import FlatTableAndDictBase._
 
-  protected lazy val spanningTree = buildParam.getSpanningTree
-  protected lazy val tableDesc = buildParam.getFlatTableDesc
+  // These parameters can be changed when running the cube planner, should use the
+  // `def` to get the latest data
+  protected def spanningTree = buildParam.getSpanningTree
+  protected def tableDesc = buildParam.getFlatTableDesc
 
   protected lazy final val indexPlan = tableDesc.getIndexPlan
   protected lazy final val segmentRange = tableDesc.getSegmentRange
@@ -137,6 +140,26 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     }
     flatTableDS = applyFilterCondition(flatTableDS)
     changeSchemeToColumnId(flatTableDS, tableDesc)
+  }
+
+  protected def generateCostTable(): Dataset[Row] = {
+    // TODO got the cost class
+    logInfo(s"Segment $segmentId generate the planner cost table")
+    FLAT_TABLE
+  }
+
+  protected def persistCostTable(costTable: Dataset[Row]): Unit = {
+    // persist the cost class
+    //    sparkSession.sparkContext.setJobDescription(s"Segment $segmentId persist planner cost table.")
+    //    costTable.write.mode(SaveMode.Overwrite).parquet(plannerCostTablePath.toString)
+    //    sparkSession.sparkContext.setJobDescription(null)
+  }
+
+  protected def getRecommendedLayoutAndUpdateMetadata(): Unit = {
+    // val cuboids = CostBasePlannerUtils.getRecommendCuboidList()
+    // val recommendedLayouts = CuboIdToLayoutUtils.convertCuboIdsToLayoutEntity(cuboids, tableDesc)
+    // logInfo(s"Segment $segmentId get the recommended layouts $recommendedLayouts")
+    // jobContext.setRecommendAggLayouts(recommendedLayouts)
   }
 
   protected def generateFlatTable(): Dataset[Row] = {

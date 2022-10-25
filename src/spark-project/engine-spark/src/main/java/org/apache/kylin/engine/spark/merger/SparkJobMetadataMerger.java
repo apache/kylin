@@ -19,6 +19,8 @@
 package org.apache.kylin.engine.spark.merger;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +35,6 @@ import org.apache.kylin.job.dao.JobStatisticsManager;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.LayoutPartition;
@@ -45,6 +46,7 @@ import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.PartitionStatusEnum;
 import org.apache.kylin.metadata.cube.model.SegmentPartition;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,6 +216,24 @@ public abstract class SparkJobMetadataMerger extends MetadataMerger {
         NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(getConfig(), getProject());
         indexPlanManager.updateIndexPlan(dfId, copyForWrite -> {
             copyForWrite.setLayoutBucketNumMapping(remoteIndexPlan.getLayoutBucketNumMapping());
+            // This is used for the cube planner
+            // In the function of `updateIndexPlanIfNeed`, we may add recommended index for this index plan.
+            // We need to update the indexes for the index plan to kylin metadata
+            Set<LayoutEntity> currentAllLayouts = new HashSet<>(copyForWrite.getAllLayouts());
+            List<LayoutEntity> remoteAllLayouts = remoteIndexPlan.getAllLayouts();
+            List<LayoutEntity> needAddedLayouts = findDiffLayoutEntity(currentAllLayouts, remoteAllLayouts);
+            copyForWrite.createAndAddRecommendAggIndex(needAddedLayouts);
         });
+    }
+
+    private List<LayoutEntity> findDiffLayoutEntity(Set<LayoutEntity> currentAllLayouts, List<LayoutEntity> remoteAllLayouts) {
+        List<LayoutEntity> result = new ArrayList<>();
+        for (LayoutEntity remote : remoteAllLayouts) {
+            if (!currentAllLayouts.contains(remote)) {
+                val copy = JsonUtil.deepCopyQuietly(remote, LayoutEntity.class);
+                result.add(copy);
+            }
+        }
+        return result;
     }
 }

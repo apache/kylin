@@ -36,7 +36,6 @@
     </properties>
 
     <dependencies>
-
         <!-- provided -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>

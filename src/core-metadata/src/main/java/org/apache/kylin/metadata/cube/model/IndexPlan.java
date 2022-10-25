@@ -518,7 +518,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
     }
 
     public List<LayoutEntity> getRuleBaseLayouts() {
-        // If use the cost base planner, there is no rule base layout to return
+        // If use the cost based planner, there is no rule base layout to return
         if (config.isCubePlannerEnabled()) {
             return Lists.newArrayList();
         } else {
@@ -1046,6 +1046,62 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
 
         }
 
+    }
+
+    public void createAndAddRecommendAggIndex(List<LayoutEntity> recommendAggLayout) {
+        for (LayoutEntity layoutEntity : recommendAggLayout) {
+            createAndAddRecommendAggIndex(layoutEntity);
+        }
+    }
+
+    private void createAndAddRecommendAggIndex(LayoutEntity recommendAggLayout) {
+        // add the new recommended agg layout for the index plan
+        checkIsNotCachedAndShared();
+        val allIndexMapping = getAllIndexesMap();
+        Optional<LayoutEntity> oldLayout = removeLayoutSameWith(recommendAggLayout);
+        if (oldLayout.isPresent()) {
+            recommendAggLayout.setId(oldLayout.get().getId());
+        }
+        val newIndexEntity = IndexEntity.from(recommendAggLayout);
+        IndexEntity indexInAll = allIndexMapping.get(newIndexEntity.createIndexIdentifier());
+        if (indexInAll == null) {
+            // create new index entity
+            addIndex(newIndexEntity, recommendAggLayout.notAssignId());
+        } else {
+            // update the layout to the index entity
+            IndexEntity indexInWhiteList = getWhiteListIndexesMap().get(newIndexEntity.createIndexIdentifier());
+            if (indexInWhiteList != null) {
+                IndexEntity realIndex = getIndexes().get(getIndexes().indexOf(indexInWhiteList));
+                realIndex.addLayout(recommendAggLayout);
+            } else {
+                newIndexEntity.setLayouts(Lists.newArrayList());
+                newIndexEntity.addLayout(recommendAggLayout);
+                getIndexes().add(newIndexEntity);
+            }
+        }
+    }
+
+    /**
+     * create recommend agg layout base on the colOrder.
+     * @param colOrder
+     * @return LayoutEntity or null
+     *  null: if the measures in the colOrder can't match the measures in this Index Plan
+     */
+    public LayoutEntity createRecommendAggIndexLayout(List<Integer> colOrder) {
+        LayoutEntity newAddIndexLayout = new LayoutEntity();
+        // The layout is not the manual
+        newAddIndexLayout.setManual(false);
+        newAddIndexLayout.setColOrder(colOrder);
+        // For recommend index in the cube planner
+        // all of the measure must be in the layout
+        val measureSize = this.effectiveMeasures.size();
+        if (measureSize != newAddIndexLayout.getMeasureIds().size()) {
+            return null;
+        }
+        newAddIndexLayout.setUpdateTime(System.currentTimeMillis());
+        newAddIndexLayout.setBase(false);
+        newAddIndexLayout.initalId(true);
+        return newAddIndexLayout;
     }
 
     public Long getBaseAggLayoutId() {

@@ -163,6 +163,12 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         if (CollectionUtils.isNotEmpty(buckets)) {
             job.setParam(NBatchConstants.P_BUCKETS, ExecutableParams.toBucketParam(buckets));
         }
+        // Add the parameter `P_JOB_ENABLE_PLANNER` which is used to decide whether to use the  cube planner
+        if (kylinConfig.isCubePlannerEnabled()
+                && jobType.equals(JobTypeEnum.INC_BUILD)
+                && segments.size() == 1 && noSegmentExist(df.getProject(), job.getTargetSubject(), kylinConfig)) {
+            job.setParam(NBatchConstants.P_JOB_ENABLE_PLANNER, Boolean.TRUE.toString());
+        }
         job.setParam(NBatchConstants.P_JOB_ID, jobId);
         job.setParam(NBatchConstants.P_PROJECT_NAME, df.getProject());
         job.setParam(NBatchConstants.P_TARGET_MODEL, job.getTargetSubject());
@@ -425,5 +431,11 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         private final AbstractExecutable secondStorageDeleteIndex;
         private final AbstractExecutable secondStorage;
         private final AbstractExecutable cleanUpTransactionalTable;
+    }
+
+    private static boolean noSegmentExist(String project, String modelId, KylinConfig kylinConfig) {
+        NDataflowManager nDataflowManager = NDataflowManager.getInstance(kylinConfig, project);
+        NDataflow dataflow = nDataflowManager.getDataflow(modelId);
+        return dataflow.getSegments().size() == 1;
     }
 }
