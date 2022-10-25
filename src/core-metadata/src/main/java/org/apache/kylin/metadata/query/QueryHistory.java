@@ -22,8 +22,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.metadata.model.FusionModelManager;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
@@ -31,7 +33,7 @@ import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
-import org.apache.kylin.common.util.JsonUtil;
+import lombok.extern.slf4j.Slf4j;
 
 @SuppressWarnings("serial")
 @Getter
@@ -192,7 +194,7 @@ public class QueryHistory {
         return queryStatus.equals(QUERY_HISTORY_FAILED);
     }
 
-    public List<NativeQueryRealization> transformRealizations() {
+    public List<NativeQueryRealization> transformRealizations(String project) {
         List<NativeQueryRealization> realizations = Lists.newArrayList();
         if (queryHistoryInfo == null || queryHistoryInfo.getRealizationMetrics() == null
                 || queryHistoryInfo.getRealizationMetrics().isEmpty()) {
@@ -200,7 +202,7 @@ public class QueryHistory {
         }
 
         List<QueryMetrics.RealizationMetrics> realizationMetrics = queryHistoryInfo.realizationMetrics;
-
+        val fusionModelManager = FusionModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         for (QueryMetrics.RealizationMetrics metrics : realizationMetrics) {
             val realization = new NativeQueryRealization(metrics.modelId,
                     metrics.layoutId == null || metrics.layoutId.equals("null") ? null
@@ -210,6 +212,8 @@ public class QueryHistory {
                             : metrics.snapshots);
             realization.setSecondStorage(metrics.isSecondStorage);
             realization.setStreamingLayout(metrics.isStreamingLayout);
+            String modelId = fusionModelManager.getModelId(realization);
+            realization.setModelId(modelId);
             realizations.add(realization);
         }
         return realizations;

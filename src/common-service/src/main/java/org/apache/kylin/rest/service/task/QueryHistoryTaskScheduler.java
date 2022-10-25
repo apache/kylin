@@ -28,8 +28,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
@@ -224,25 +226,30 @@ public class QueryHistoryTaskScheduler {
         }
 
         private Map<String, DataflowHitCount> collectDataflowHitCount(List<QueryHistory> queryHistories) {
-            val dfManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
             val result = Maps.<String, DataflowHitCount> newHashMap();
             for (QueryHistory queryHistory : queryHistories) {
-                val realizations = queryHistory.transformRealizations();
+                val realizations = queryHistory.transformRealizations(project);
                 if (CollectionUtils.isEmpty(realizations)) {
                     continue;
                 }
-                for (val realization : realizations) {
-                    if (dfManager.getDataflow(realization.getModelId()) == null || realization.getLayoutId() == null) {
-                        continue;
-                    }
-                    result.computeIfAbsent(realization.getModelId(), k -> new DataflowHitCount());
-                    result.get(realization.getModelId()).dataflowHit += 1;
-                    val layoutHits = result.get(realization.getModelId()).getLayoutHits();
+                val realizationList = realizations.stream().filter(this::isValidRealization)
+                        .collect(Collectors.toList());
+                for (val realization : realizationList) {
+                    String modelId = realization.getModelId();
+                    result.computeIfAbsent(modelId, k -> new DataflowHitCount());
+                    result.get(modelId).dataflowHit += 1;
+                    val layoutHits = result.get(modelId).getLayoutHits();
                     layoutHits.computeIfAbsent(realization.getLayoutId(), k -> new FrequencyMap());
                     layoutHits.get(realization.getLayoutId()).incFrequency(queryHistory.getQueryTime());
                 }
             }
             return result;
+        }
+
+        private boolean isValidRealization(NativeQueryRealization realization) {
+            val config = KylinConfig.getInstanceFromEnv();
+            val dfManager = NDataflowManager.getInstance(config, project);
+            return dfManager.getDataflow(realization.getModelId()) != null && realization.getLayoutId() != null;
         }
 
         private Map<TableExtDesc, Integer> collectSnapshotHitCount(List<QueryHistory> queryHistories) {
@@ -263,10 +270,13 @@ public class QueryHistoryTaskScheduler {
         }
 
         private void collectModelLastQueryTime(QueryHistory queryHistory, Map<String, Long> modelsLastQueryTime) {
-            List<NativeQueryRealization> realizations = queryHistory.transformRealizations();
+            List<NativeQueryRealization> realizations = queryHistory.transformRealizations(project);
             long queryTime = queryHistory.getQueryTime();
             for (NativeQueryRealization realization : realizations) {
                 String modelId = realization.getModelId();
+                if (StringUtils.isEmpty(modelId)) {
+                    continue;
+                }
                 modelsLastQueryTime.put(modelId, queryTime);
             }
         }

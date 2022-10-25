@@ -989,4 +989,24 @@ public class NDataflowManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(5, flatTableDesc2.getUsedColumns().size());
     }
 
+    @Test
+    public void testGetFusionModelAlias() {
+        String streamingModelId = "14e00a6f-d910-14b6-ee67-e0a5775012c4";
+        String batchModelId = "3d69e1c0-0165-c144-7dae-8ae5dc0cf16c";
+        NDataflowManager mgr = NDataflowManager.getInstance(getTestConfig(), "streaming_test");
+        Assert.assertEquals("fusion_model", mgr.getDataflow(streamingModelId).getFusionModelAlias());
+        Assert.assertEquals("fusion_model", mgr.getDataflow(batchModelId).getFusionModelAlias());
+
+        Assert.assertEquals("stream_merge",
+                mgr.getDataflow("e78a89dd-847f-4574-8afa-8768b4228b72").getFusionModelAlias());
+
+        mgr = NDataflowManager.getInstance(getTestConfig(), projectDefault);
+        Assert.assertEquals("nmodel_basic_inner",
+                mgr.getDataflow("741ca86a-1f13-46da-a59f-95fb68615e3a").getFusionModelAlias());
+
+        val modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), projectDefault);
+        modelManager.dropModel("741ca86a-1f13-46da-a59f-95fb68615e3a");
+        Assert.assertNull(mgr.getDataflow("741ca86a-1f13-46da-a59f-95fb68615e3a").getFusionModelAlias());
+
+    }
 }

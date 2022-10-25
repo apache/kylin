@@ -22,6 +22,7 @@ import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -104,6 +105,29 @@ public class FusionModelManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(batchModel.fusionModelBatchPart());
         Assert.assertTrue(batchModel.isFusionModel());
         Assert.assertTrue(streamingModel.fusionModelStreamingPart());
+    }
+
+    @Test
+    public void testGetModelId() {
+        String streamingModelId = "14e00a6f-d910-14b6-ee67-e0a5775012c4";
+        String batchModelId = "3d69e1c0-0165-c144-7dae-8ae5dc0cf16c";
+
+        val realization = new NativeQueryRealization();
+        realization.setModelId(streamingModelId);
+        Assert.assertEquals(batchModelId, mgr.getModelId(realization));
+
+        realization.setModelId(streamingModelId);
+        realization.setStreamingLayout(true);
+        Assert.assertEquals(streamingModelId, mgr.getModelId(realization));
+
+        realization.setModelId(batchModelId);
+        realization.setStreamingLayout(false);
+        Assert.assertEquals(batchModelId, mgr.getModelId(realization));
+
+        realization.setModelId(streamingModelId);
+        val modelMgr = NDataModelManager.getInstance(getTestConfig(), PROJECT);
+        modelMgr.dropModel(batchModelId);
+        Assert.assertEquals("", mgr.getModelId(realization));
     }
 
 }
