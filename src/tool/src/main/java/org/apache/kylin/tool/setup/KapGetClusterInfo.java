@@ -111,7 +111,7 @@ public class KapGetClusterInfo {
         val patternedLogger = new BufferedLogger(logger);
         val response = config.getCliCommandExecutor().execute(command, patternedLogger).getCmd();
         logger.info("yarn metrics response: {}", response);
-        Map<String, Integer> clusterMetricsInfos;
+        Map<String, Integer> clusterMetricsInfos = null;
         if (response == null) {
             throw new IllegalStateException(
                     "Cannot get yarn metrics with url: " + yarnMasterUrlBase + YARN_METRICS_SUFFIX);
@@ -135,6 +135,13 @@ public class KapGetClusterInfo {
                 } else {
                     clusterMetricsInfos = yarnClusterMetrics.getYarnResourceInfoByQueueName(this.queueName);
                 }
+
+                if (clusterMetricsInfos == null || clusterMetricsInfos.isEmpty()) {
+                    logger.error("The queue:{} is invalid, please check kylin.properties", this.queueName);
+                    Unsafe.systemExit(101);
+                    return;
+                }
+
                 clusterMetricsMap.put(AVAILABLE_VIRTUAL_CORE, clusterMetricsInfos.get(AVAILABLE_VIRTUAL_CORE));
                 clusterMetricsMap.put(AVAILABLE_MEMORY, clusterMetricsInfos.get(AVAILABLE_MEMORY));
                 return;

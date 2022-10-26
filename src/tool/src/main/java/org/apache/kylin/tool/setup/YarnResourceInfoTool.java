@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,10 @@ public class YarnResourceInfoTool {
         Map<String, Integer> clusterMetricsMap = new HashMap<>();
 
         QueueInfo queueInfo = yarnClient.getQueueInfo(queue);
+        if (queueInfo == null) {
+            return Collections.emptyMap();
+        }
+
         availableMB += queueInfo.getQueueStatistics().getAvailableMemoryMB();
         availableVirtualCores += queueInfo.getQueueStatistics().getAvailableVCores();
 
