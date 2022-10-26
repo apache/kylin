@@ -481,7 +481,7 @@ public class AccessService extends BasicService {
 
         List<AccessEntryResponse> result = new ArrayList<>();
         for (AccessControlEntry ace : acl.getEntries()) {
-            if (StringUtils.isNotEmpty(nameSeg) && !needAdd(nameSeg, isCaseSensitive, getName(ace.getSid()))) {
+            if (nameSegNotMatch(ace, nameSeg, isCaseSensitive) || sidNotExists(ace)) {
                 continue;
             }
             result.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
@@ -490,16 +490,37 @@ public class AccessService extends BasicService {
         return result;
     }
 
+    private boolean nameSegNotMatch(AccessControlEntry ace, String nameSeg, boolean isCaseSensitive) {
+        return StringUtils.isNotEmpty(nameSeg) && !needAdd(nameSeg, isCaseSensitive, getName(ace.getSid()));
+    }
+
+    private boolean sidNotExists(AccessControlEntry ace) {
+        return isPrincipalSidNotExists(ace.getSid()) || isGrantedAuthoritySidNotExists(ace.getSid());
+    }
+
     private boolean needAdd(String nameSeg, boolean isCaseSensitive, String name) {
         return isCaseSensitive && StringUtils.contains(name, nameSeg)
                 || !isCaseSensitive && StringUtils.containsIgnoreCase(name, nameSeg);
     }
 
-    private static String getName(Sid sid) {
+    public static String getName(Sid sid) {
         if (sid instanceof PrincipalSid) {
             return ((PrincipalSid) sid).getPrincipal();
         } else {
             return ((GrantedAuthoritySid) sid).getGrantedAuthority();
+        }
+    }
+
+    public boolean isPrincipalSidNotExists(Sid sid) {
+        return (sid instanceof PrincipalSid) && !userService.userExists(((PrincipalSid) sid).getPrincipal());
+    }
+
+    public boolean isGrantedAuthoritySidNotExists(Sid sid) {
+        try {
+            return (sid instanceof GrantedAuthoritySid)
+                    && !userGroupService.exists(((GrantedAuthoritySid) sid).getGrantedAuthority());
+        } catch (IOException e) {
+            return true;
         }
     }
 
@@ -537,13 +558,16 @@ public class AccessService extends BasicService {
         List<String> result = new ArrayList<>();
         for (AccessControlEntry ace : acl.getEntries()) {
             String name = null;
+            boolean notExisted = false;
             if (type.equalsIgnoreCase(MetadataConstants.TYPE_USER) && ace.getSid() instanceof PrincipalSid) {
                 name = ((PrincipalSid) ace.getSid()).getPrincipal();
+                notExisted = isPrincipalSidNotExists(ace.getSid());
             }
             if (type.equalsIgnoreCase(MetadataConstants.TYPE_GROUP) && ace.getSid() instanceof GrantedAuthoritySid) {
                 name = ((GrantedAuthoritySid) ace.getSid()).getGrantedAuthority();
+                notExisted = isGrantedAuthoritySidNotExists(ace.getSid());
             }
-            if (!StringUtils.isBlank(name)) {
+            if (!StringUtils.isBlank(name) && !notExisted) {
                 result.add(name);
             }
         }
