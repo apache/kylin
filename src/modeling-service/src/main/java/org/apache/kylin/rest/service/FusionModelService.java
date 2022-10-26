@@ -129,6 +129,9 @@ public class FusionModelService extends AbstractModelService implements TableFus
             convertModel(copy, tableAlias, oldAliasName);
             modelService.updateDataModelSemantic(project, copy);
         }
+        if (model.isStreaming()) {
+            request.setWithBaseIndex(false);
+        }
         return modelService.updateDataModelSemantic(project, request);
     }
 
