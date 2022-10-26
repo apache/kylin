@@ -78,6 +78,7 @@ import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.NExecutableManager;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cube.storage.ProjectStorageInfoCollector;
 import org.apache.kylin.metadata.cube.storage.StorageInfoEnum;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -376,14 +377,26 @@ public class ProjectService extends BasicService {
     public void cleanupAcl() {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             val prjManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
-            List<String> prjects = prjManager.listAllProjects().stream().map(ProjectInstance::getUuid)
-                    .collect(Collectors.toList());
+            Set<String> projects = prjManager.listAllProjects().stream().map(ProjectInstance::getUuid)
+                    .collect(Collectors.toSet());
             val aclManager = AclManager.getInstance(KylinConfig.getInstanceFromEnv());
             for (val acl : aclManager.listAll()) {
                 String id = acl.getDomainObjectInfo().getId();
-                if (!prjects.contains(id)) {
+                if (!projects.contains(id)) {
                     aclManager.delete(id);
+                    continue;
                 }
+                val aceList = acl.getEntries();
+                aceList.forEach(ace -> {
+                    if (accessService.isPrincipalSidNotExists(ace.getSid())) {
+                        accessService.revokeProjectPermission(AccessService.getName(ace.getSid()),
+                                MetadataConstants.TYPE_USER);
+                    }
+                    if (accessService.isGrantedAuthoritySidNotExists(ace.getSid())) {
+                        accessService.revokeProjectPermission(accessService.getName(ace.getSid()),
+                                MetadataConstants.TYPE_GROUP);
+                    }
+                });
             }
             return 0;
         }, UnitOfWork.GLOBAL_UNIT);

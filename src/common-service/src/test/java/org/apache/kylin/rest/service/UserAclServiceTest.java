@@ -37,10 +37,8 @@ import org.apache.kylin.rest.request.GlobalBatchAccessRequest;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.UserAclManager;
 import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.SpringContext;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -120,7 +118,6 @@ public class UserAclServiceTest extends ServiceTestBase {
         userAclService.grantUserAclPermission("admin", "DATA_QUERY");
     }
 
-    @Ignore("very unstable")
     @Test
     public void testGetAllUsersHasGlobalPermission() {
         KylinUserService kylinUserService = new KylinUserService() {
@@ -131,7 +128,6 @@ public class UserAclServiceTest extends ServiceTestBase {
         };
         ReflectionTestUtils.setField(userAclService, "userService", kylinUserService);
         Assert.assertTrue(userAclService.listUserAcl().isEmpty());
-        ReflectionTestUtils.setField(userAclService, "userService", SpringContext.getBean(UserService.class));
     }
 
     @Test

@@ -428,6 +428,8 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         sidToPerm.put(new GrantedAuthoritySid("ROLE_ADMIN"), AclPermission.ADMINISTRATION);
         sidToPerm.put(new GrantedAuthoritySid("role_ADMIN"), AclPermission.ADMINISTRATION);
         accessService.batchGrant(ae, sidToPerm);
+        Mockito.when(userGroupService.exists(Mockito.anyString())).thenReturn(true);
+        Mockito.when(userService.userExists(Mockito.anyString())).thenReturn(true);
         List<AccessEntryResponse> result = accessService.generateAceResponsesByFuzzMatching(ae, "", false);
         assertEquals(2, result.size());
         assertEquals("ANALYST", ((PrincipalSid) result.get(0).getSid()).getPrincipal());
@@ -437,6 +439,8 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
     public void testGenerateAceResponsesByFuzzMatchingWhenHasSameNameUserAndGroupName() throws Exception {
         AclEntity ae = new AclServiceTest.MockAclEntity("test");
         final Map<Sid, Permission> sidToPerm = new HashMap<>();
+        Mockito.when(userGroupService.exists("ADMIN")).thenReturn(true);
+        sidToPerm.put(new GrantedAuthoritySid("grp1"), AclPermission.ADMINISTRATION);
         sidToPerm.put(new GrantedAuthoritySid("ADMIN"), AclPermission.ADMINISTRATION);
         sidToPerm.put(new PrincipalSid("ADMIN"), AclPermission.ADMINISTRATION);
         accessService.batchGrant(ae, sidToPerm);
@@ -469,6 +473,21 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(AclPermissionUtil.hasProjectAdminPermission("default", accessService.getCurrentUserGroups()));
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+    }
+
+    @Test
+    public void testCleanupProjectAcl() throws Exception {
+        AclEntity ae = new AclServiceTest.MockAclEntity("test");
+        final Map<Sid, Permission> sidToPerm = new HashMap<>();
+        sidToPerm.put(new PrincipalSid("ADMIN"), AclPermission.ADMINISTRATION);
+        sidToPerm.put(new PrincipalSid("admin"), AclPermission.ADMINISTRATION);
+        sidToPerm.put(new PrincipalSid("ANALYST"), AclPermission.ADMINISTRATION);
+        sidToPerm.put(new GrantedAuthoritySid("ROLE_ADMIN"), AclPermission.ADMINISTRATION);
+        sidToPerm.put(new GrantedAuthoritySid("role_ADMIN"), AclPermission.ADMINISTRATION);
+        accessService.batchGrant(ae, sidToPerm);
+        projectService.cleanupAcl();
+        List<AccessEntryResponse> result = accessService.generateAceResponsesByFuzzMatching(ae, "", false);
+        assertEquals(0, result.size());
     }
 
     @Test
@@ -722,7 +741,8 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         AclEntity ae = accessService.getAclEntity(AclEntityType.PROJECT_INSTANCE,
                 "1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b");
         Map<String, List<String>> map = accessService.getProjectUsersAndGroups(ae);
-        assertEquals(4, map.get("user").size());
+        assertEquals(2, map.get("user").size());
+        assertEquals(1, map.get("group").size());
         assertTrue(map.get("user").contains("ADMIN"));
         assertTrue(map.get("group").contains("ROLE_ADMIN"));
     }
@@ -766,10 +786,12 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAclWithUnNaturalOrderUpdate() {
+    public void testAclWithUnNaturalOrderUpdate() throws IOException{
         AclEntity ae = accessService.getAclEntity(AclEntityType.PROJECT_INSTANCE,
                 "1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b");
 
+        Mockito.when(userService.userExists(Mockito.anyString())).thenReturn(true);
+        Mockito.when(userGroupService.exists(Mockito.anyString())).thenReturn(true);
         // read from metadata
         MutableAclRecord acl = accessService.getAcl(ae);
         // order by sid_order in aceImpl
