@@ -101,8 +101,8 @@ public class FusionModelResponse extends NDataModelResponse {
             this.setTotalIndexes(getIndexesCount(batchIndex));
             this.setStreamingIndexes(getIndexesCount(streamingIndex));
             this.setEmptyIndexesCount(this.getTotalIndexes() - this.getAvailableIndexesCount());
-            this.setHasBaseAggIndex(streamingIndex.containBaseAggLayout());
-            this.setHasBaseTableIndex(streamingIndex.containBaseTableLayout());
+            this.setHasBaseAggIndex(batchIndex.containBaseAggLayout());
+            this.setHasBaseTableIndex(batchIndex.containBaseTableLayout());
         }
     }
 
