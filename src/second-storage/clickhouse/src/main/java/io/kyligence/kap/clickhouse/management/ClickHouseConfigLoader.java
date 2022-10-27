@@ -66,10 +66,12 @@ public class ClickHouseConfigLoader implements SecondStorageConfigLoader {
         clusterDesc.addPropertyParameters("cluster", String.class, List.class);
         clusterDesc.addPropertyParameters("socketTimeout", String.class);
         clusterDesc.addPropertyParameters("keepAliveTimeout", String.class);
+        clusterDesc.addPropertyParameters("connectTimeout", String.class);
         clusterDesc.addPropertyParameters("installPath", String.class);
         clusterDesc.addPropertyParameters("logPath", String.class);
         clusterDesc.addPropertyParameters("userName", String.class);
         clusterDesc.addPropertyParameters("password", String.class);
+        clusterDesc.addPropertyParameters("extConfig", String.class);
         constructor.addTypeDescription(clusterDesc);
         val nodeDesc = new TypeDescription(Node.class);
         nodeDesc.addPropertyParameters("name", String.class);

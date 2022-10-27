@@ -178,6 +178,13 @@ public class ClickHouseStorage implements SecondStoragePlugin {
         if (StringUtils.isNotEmpty(cluster.getSocketTimeout())) {
             param.put(ClickHouse.SOCKET_TIMEOUT, cluster.getSocketTimeout());
         }
+        if (StringUtils.isNotEmpty(cluster.getConnectTimeout())) {
+            int timeout = Integer.parseInt(cluster.getConnectTimeout()) / 1000;
+            param.put(ClickHouse.CONNECT_TIMEOUT, Integer.toString(timeout));
+        }
+        if (StringUtils.isNotEmpty(cluster.getExtConfig())) {
+            param.put(ClickHouse.EXT_CONFIG, cluster.getExtConfig());
+        }
         if (StringUtils.isNotEmpty(node.getUser())) {
             param.put(ClickHouse.USER, node.getUser());
         }

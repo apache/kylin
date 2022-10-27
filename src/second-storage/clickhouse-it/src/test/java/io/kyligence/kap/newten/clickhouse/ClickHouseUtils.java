@@ -275,7 +275,7 @@ public class ClickHouseUtils {
         int pairNum = clickhouse.length / replica;
         IntStream.range(0, pairNum).forEach(idx -> clusterNode.put("pair" + idx, new ArrayList<>()));
         ClusterInfo cluster = new ClusterInfo().setKeepAliveTimeout("600000").setSocketTimeout("600000")
-                .setCluster(clusterNode);
+                .setConnectTimeout("3000").setExtConfig("maxWait=10").setCluster(clusterNode);
         int i = 0;
         for (JdbcDatabaseContainer<?> jdbcDatabaseContainer : clickhouse) {
             Node node = new Node();
@@ -302,7 +302,7 @@ public class ClickHouseUtils {
         int pairNum = clickhouse.length / replica;
         IntStream.range(0, pairNum).forEach(idx -> clusterNode.put("pair" + idx, new ArrayList<>()));
         ClusterInfo cluster = new ClusterInfo().setKeepAliveTimeout("600000").setSocketTimeout("600000")
-                .setCluster(clusterNode);
+                .setConnectTimeout("3000").setExtConfig("maxWait=10").setCluster(clusterNode);
         int i = 0;
         for (JdbcDatabaseContainer<?> jdbcDatabaseContainer : clickhouse) {
             Node node = new Node();
