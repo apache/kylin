@@ -52,6 +52,8 @@ public class ClickHouse implements Closeable {
     public static final String USER = "user";
     public static final String SOCKET_TIMEOUT = "socket_timeout";
     public static final String KEEP_ALIVE_TIMEOUT = "keepAliveTimeout";
+    public static final String CONNECT_TIMEOUT = "connect_timeout";
+    public static final String EXT_CONFIG = "extConfig";
     public static final String CLIENT_NAME = "client_name";
 
     private final String shardName;
@@ -110,8 +112,15 @@ public class ClickHouse implements Closeable {
         if (!param.isEmpty()) {
             base.append('?');
             List<String> paramList = new ArrayList<>();
-            param.forEach((name, value) -> paramList.add(name + "=" + value));
+            param.forEach((name, value) -> {
+              if (!ClickHouse.EXT_CONFIG.equals(name)){
+                paramList.add(name + "=" + value);
+              }
+            });
             base.append(String.join("&", paramList));
+            if(param.get(ClickHouse.EXT_CONFIG) != null) {
+                base.append("&").append(param.get(ClickHouse.EXT_CONFIG));
+            }
         }
         return base.toString();
     }
