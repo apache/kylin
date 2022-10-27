@@ -32,8 +32,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Setter;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.common.util.SystemInfoCollector;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -43,16 +45,17 @@ import org.apache.kylin.job.runners.FetcherRunner;
 import org.apache.kylin.job.runners.JobCheckRunner;
 import org.apache.kylin.job.runners.LicenseCapacityCheckRunner;
 import org.apache.kylin.job.runners.QuotaStorageCheckRunner;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.util.SystemInfoCollector;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -152,7 +155,7 @@ public class NDefaultScheduler implements Scheduler<AbstractExecutable> {
         //load all executable, set them to a consistent status
         fetcherPool = Executors.newScheduledThreadPool(1,
                 new NamedThreadFactory("FetchJobWorker(project:" + project + ")"));
-        int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();
+        int corePoolSize = getMaxConcurrentJobLimitByProject(config, jobEngineConfig, project);
         if (config.getAutoSetConcurrentJob()) {
             val availableMemoryRate = config.getMaxLocalConsumptionRatio();
             synchronized (NDefaultScheduler.class) {
@@ -236,6 +239,14 @@ public class NDefaultScheduler implements Scheduler<AbstractExecutable> {
 
     public static double currentAvailableMem() {
         return 1.0 * memoryRemaining.availablePermits();
+    }
+
+    public int getMaxConcurrentJobLimitByProject(KylinConfig config, JobEngineConfig jobEngineConfig, String project) {
+        ProjectInstance prjInstance = NProjectManager.getInstance(config).getProject(project);
+        if (Strings.isNullOrEmpty(project) || prjInstance == null) {
+            return jobEngineConfig.getMaxConcurrentJobLimit();
+        }
+        return prjInstance.getConfig().getMaxConcurrentJobLimit();
     }
 
 }

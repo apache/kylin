@@ -66,6 +66,8 @@ import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.util.MultiPartitionUtil;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.sourceusage.SourceUsageManager;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.aspect.Transaction;
@@ -85,6 +87,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -471,7 +474,7 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
             String segmentId, Set<Long> partitionIds, int priority, String yarnQueue, Object tag) {
         val jobIds = Lists.<String> newArrayList();
         if (parallelBuild) {
-            checkConcurrentSubmit(partitionIds.size());
+            checkConcurrentSubmit(partitionIds.size(), project);
             partitionIds.forEach(partitionId -> {
                 val jobParam = new JobParam(Sets.newHashSet(segmentId), null, modelId, getUsername(),
                         Sets.newHashSet(partitionId), null).withPriority(priority).withYarnQueue(yarnQueue)
@@ -490,12 +493,20 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
         return JobInfoResponse.of(jobIds, JobTypeEnum.SUB_PARTITION_BUILD.toString());
     }
 
-    private void checkConcurrentSubmit(int partitionSize) {
-        int runningJobLimit = getConfig().getMaxConcurrentJobLimit();
+    private void checkConcurrentSubmit(int partitionSize, String project) {
+        int runningJobLimit = getMaxConcurrentJobLimitByProject(getConfig(), project);
         int submitJobLimit = runningJobLimit * 5;
         if (partitionSize > submitJobLimit) {
             throw new KylinException(JOB_CONCURRENT_SUBMIT_LIMIT, submitJobLimit);
         }
+    }
+
+    public int getMaxConcurrentJobLimitByProject(KylinConfig config, String project) {
+        ProjectInstance prjInstance = NProjectManager.getInstance(config).getProject(project);
+        if (Strings.isNullOrEmpty(project) || prjInstance == null) {
+            return config.getMaxConcurrentJobLimit();
+        }
+        return prjInstance.getConfig().getMaxConcurrentJobLimit();
     }
 
     @Override

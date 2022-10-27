@@ -20,6 +20,7 @@ package org.apache.kylin.job.runners;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
@@ -103,6 +104,8 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
                 reSchedule = false;
                 return;
             }
+            checkAndUpdateJobPoolNum();
+
             val executableManager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
             Map<String, Executable> runningJobs = context.getRunningJobs();
 
@@ -236,7 +239,9 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
     }
 
     private boolean isJobPoolFull() {
-        if (context.getRunningJobs().size() >= nDefaultScheduler.getJobEngineConfig().getMaxConcurrentJobLimit()) {
+        int corePoolSize = nDefaultScheduler.getMaxConcurrentJobLimitByProject(context.getConfig(),
+                nDefaultScheduler.getJobEngineConfig(), project);
+        if (context.getRunningJobs().size() >= corePoolSize) {
             logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time.");
             return true;
         }
@@ -245,5 +250,25 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
 
     void scheduleNext() {
         fetcherPool.schedule(this, 0, TimeUnit.SECONDS);
+    }
+
+    private void checkAndUpdateJobPoolNum() {
+        final ThreadPoolExecutor pool = (ThreadPoolExecutor) jobPool;
+        int maximumPoolSize = pool.getMaximumPoolSize();
+        int maxConcurrentJobLimit = nDefaultScheduler.getMaxConcurrentJobLimitByProject(context.getConfig(),
+                nDefaultScheduler.getJobEngineConfig(), project);
+        int activeCount = pool.getActiveCount();
+        if (maximumPoolSize == maxConcurrentJobLimit) {
+            return;
+        }
+        if (maximumPoolSize < maxConcurrentJobLimit) {
+            pool.setCorePoolSize(maxConcurrentJobLimit);
+            pool.setMaximumPoolSize(maxConcurrentJobLimit);
+            return;
+        }
+        if (activeCount <= maxConcurrentJobLimit) {
+            pool.setCorePoolSize(maxConcurrentJobLimit);
+            pool.setMaximumPoolSize(maxConcurrentJobLimit);
+        }
     }
 }
