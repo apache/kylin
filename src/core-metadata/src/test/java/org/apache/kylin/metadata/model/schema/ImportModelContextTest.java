@@ -150,9 +150,8 @@ public class ImportModelContextTest extends NLocalFileMetadataTestCase {
 
         ResourceStore.setRS(importKylinConfig, importResourceStore);
 
-        rawResourceMap.forEach((resPath, raw) -> {
-            importResourceStore.putResourceWithoutCheck(resPath, raw.getByteSource(), raw.getTimestamp(), 0);
-        });
+        rawResourceMap.forEach((resPath, raw) -> importResourceStore.putResourceWithoutCheck(resPath,
+                raw.getByteSource(), raw.getTimestamp(), 0));
 
         return importKylinConfig;
     }

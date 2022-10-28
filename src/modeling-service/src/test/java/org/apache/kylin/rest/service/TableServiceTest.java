@@ -148,7 +148,7 @@ public class TableServiceTest extends CSVSourceTestCase {
     @InjectMocks
     private FusionModelService fusionModelService = Mockito.spy(new FusionModelService());
 
-    private StreamingJobListener eventListener = new StreamingJobListener();
+    private final StreamingJobListener eventListener = new StreamingJobListener();
 
     @Before
     public void setup() {
@@ -458,8 +458,8 @@ public class TableServiceTest extends CSVSourceTestCase {
     @Test
     public void testAddAndBroadcastSparkSession() {
         getTestConfig().setProperty("kylin.env.use-dynamic-S3-role-credential-in-table", "true");
-        TableExtDesc.S3RoleCredentialInfo roleCredentialInfo = null;
-        tableService.addAndBroadcastSparkSession(roleCredentialInfo);
+        tableService.addAndBroadcastSparkSession(null);
+        TableExtDesc.S3RoleCredentialInfo roleCredentialInfo;
         roleCredentialInfo = new TableExtDesc.S3RoleCredentialInfo("testbucket2", "", "");
         tableService.addAndBroadcastSparkSession(roleCredentialInfo);
         assert !SparderEnv.getSparkSession().conf().contains("fs.s3a.bucket2.testbucket.aws.credentials.provider");
@@ -588,7 +588,6 @@ public class TableServiceTest extends CSVSourceTestCase {
         val originSize = nTableMetadataManager.listAllTables().size();
 
         // Add partition_key and data_loading_range
-        DateRangeRequest request = mockDateRangeRequest();
         tableService.setPartitionKey(tableName, "default", "CAL_DT", "yyyy-MM-dd");
 
         // unload table
@@ -607,7 +606,6 @@ public class TableServiceTest extends CSVSourceTestCase {
     @Test
     public void testUnloadKafkaTable() {
         String project = "streaming_test";
-        NProjectManager npr = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
         NTableMetadataManager tableManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(),
                 project);
         StreamingJobManager mgr = StreamingJobManager.getInstance(getTestConfig(), project);
@@ -868,7 +866,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         NDataLoadingRangeManager rangeManager = NDataLoadingRangeManager.getInstance(KylinConfig.getInstanceFromEnv(),
                 "default");
         NDataLoadingRange dataLoadingRange = rangeManager.getDataLoadingRange("DEFAULT.TEST_KYLIN_FACT");
-        SegmentRange segmentRange = new SegmentRange.TimePartitionedSegmentRange(1294364400000L, 1294364500000L);
+        SegmentRange<Long> segmentRange = new SegmentRange.TimePartitionedSegmentRange(1294364400000L, 1294364500000L);
         dataLoadingRange.setCoveredRange(segmentRange);
         NDataLoadingRange updateRange = rangeManager.copyForWrite(dataLoadingRange);
         rangeManager.updateDataLoadingRange(updateRange);
@@ -1059,13 +1057,6 @@ public class TableServiceTest extends CSVSourceTestCase {
         return request;
     }
 
-    private DateRangeRequest mockeDateRangeRequestWithoutTime() {
-        DateRangeRequest request = new DateRangeRequest();
-        request.setProject("default");
-        request.setTable("DEFAULT.TEST_KYLIN_FACT");
-        return request;
-    }
-
     @Test
     public void testGetProjectTables() throws Exception {
         NInitTablesResponse response;
@@ -1073,36 +1064,31 @@ public class TableServiceTest extends CSVSourceTestCase {
                 (databaseName, tableName) -> tableService.getTableNameResponses("default", databaseName, tableName));
         Assert.assertEquals(0, response.getDatabases().size());
 
-        response = tableService.getProjectTables("default", "SSB.CU", 0, 14, true, (databaseName, tableName) -> {
-            return tableService.getTableNameResponses("default", databaseName, tableName);
-        });
+        response = tableService.getProjectTables("default", "SSB.CU", 0, 14, true,
+                (databaseName, tableName) -> tableService.getTableNameResponses("default", databaseName, tableName));
         Assert.assertEquals(1, response.getDatabases().size());
-        Assert.assertEquals(1, response.getDatabases().get(0).getTables().size());
+        Assert.assertEquals(2, response.getDatabases().get(0).getTables().size());
 
-        response = tableService.getProjectTables("default", "", 0, 14, true, (databaseName, tableName) -> {
-            return tableService.getTableNameResponses("default", databaseName, tableName);
-        });
+        response = tableService.getProjectTables("default", "", 0, 14, true,
+                (databaseName, tableName) -> tableService.getTableNameResponses("default", databaseName, tableName));
         Assert.assertEquals(3, response.getDatabases().size());
-        Assert.assertEquals(20,
+        Assert.assertEquals(21,
                 response.getDatabases().get(0).getTables().size() + response.getDatabases().get(1).getTables().size()
                         + response.getDatabases().get(2).getTables().size());
 
-        response = tableService.getProjectTables("default", "TEST", 0, 14, true, (databaseName, tableName) -> {
-            return tableService.getTableNameResponses("default", databaseName, tableName);
-        });
+        response = tableService.getProjectTables("default", "TEST", 0, 14, true,
+                (databaseName, tableName) -> tableService.getTableNameResponses("default", databaseName, tableName));
         Assert.assertEquals(2, response.getDatabases().size());
         Assert.assertEquals(13,
                 response.getDatabases().get(0).getTables().size() + response.getDatabases().get(1).getTables().size());
 
-        response = tableService.getProjectTables("default", "EDW.", 0, 14, true, (databaseName, tableName) -> {
-            return tableService.getTableNameResponses("default", databaseName, tableName);
-        });
+        response = tableService.getProjectTables("default", "EDW.", 0, 14, true,
+                (databaseName, tableName) -> tableService.getTableNameResponses("default", databaseName, tableName));
         Assert.assertEquals(1, response.getDatabases().size());
         Assert.assertEquals(3, response.getDatabases().get(0).getTables().size());
 
-        response = tableService.getProjectTables("default", "EDW.", 0, 14, false, (databaseName, tableName) -> {
-            return tableService.getTableDesc("default", true, tableName, databaseName, true);
-        });
+        response = tableService.getProjectTables("default", "EDW.", 0, 14, false,
+                (databaseName, tableName) -> tableService.getTableDesc("default", true, tableName, databaseName, true));
         Assert.assertEquals(1, response.getDatabases().size());
         Assert.assertEquals(3, response.getDatabases().get(0).getTables().size());
 
@@ -1167,7 +1153,7 @@ public class TableServiceTest extends CSVSourceTestCase {
                 .setProperty("kylin.source.hive.databases", "ssb");
         tableService.loadProjectHiveTableNameToCacheImmediately("default", true);
         tables = tableService.getTableNameResponsesInCache("default", "SSB", "");
-        Assert.assertEquals(6, tables.size());
+        Assert.assertEquals(7, tables.size());
 
         NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject("default").setPrincipal("default");
         tableService.loadHiveTableNameToCache();
@@ -1199,7 +1185,6 @@ public class TableServiceTest extends CSVSourceTestCase {
         testData.put("t", Arrays.asList("aa", "ab", "bc"));
         NHiveSourceInfo sourceInfo = new NHiveSourceInfo();
         sourceInfo.setTables(testData);
-        UserGroupInformation ugi = UserGroupInformation.getLoginUser();
         DataSourceState.getInstance().putCache("project#default", sourceInfo, Arrays.asList("aa", "ab", "bc"));
         List<?> tables = tableService.getTableNameResponsesInCache("default", "t", "a");
         Assert.assertEquals(2, tables.size());
@@ -1306,7 +1291,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         KylinConfig config = getTestConfig();
         config.setProperty("kylin.source.load-hive-tablename-enabled", "false");
         config.setProperty("kylin.query.security.acl-tcr-enabled", "true");
-        Assert.assertEquals(6, tableService.getHiveTableNameResponses("default", "SSB", "").size());
+        Assert.assertEquals(7, tableService.getHiveTableNameResponses("default", "SSB", "").size());
         Assert.assertEquals(11, tableService.getHiveTableNameResponses("default", "DEFAULT", "").size());
 
         val table = NTableMetadataManager.getInstance(getTestConfig(), "default").getTableDesc("DEFAULT.TEST_ENCODING");
@@ -1321,7 +1306,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         acl.setTable(aclTable);
         manager.updateAclTCR(acl, "test", true);
 
-        Assert.assertEquals(6, tableService.getHiveTableNameResponses("default", "SSB", "").size());
+        Assert.assertEquals(7, tableService.getHiveTableNameResponses("default", "SSB", "").size());
         Assert.assertEquals(11, tableService.getHiveTableNameResponses("default", "DEFAULT", "").size());
         config.setProperty("kylin.source.load-hive-tablename-enabled", "true");
         config.setProperty("kylin.query.security.acl-tcr-enabled", "false");
@@ -1393,10 +1378,8 @@ public class TableServiceTest extends CSVSourceTestCase {
         try {
             List<Integer> sourceTypes = Arrays.asList(1, 9);
             val tableDescs2 = tableService.getTableDescByTypes(project, true, "", "SSB", false, sourceTypes);
-            assert tableDescs2.stream().filter(tableDesc -> tableDesc.getSourceType() == 1).collect(Collectors.toList())
-                    .size() > 0;
-            assert tableDescs2.stream().filter(tableDesc -> tableDesc.getSourceType() == 9).collect(Collectors.toList())
-                    .size() > 0;
+            assert tableDescs2.stream().anyMatch(tableDesc -> tableDesc.getSourceType() == 1);
+            assert tableDescs2.stream().anyMatch(tableDesc -> tableDesc.getSourceType() == 9);
         } catch (Exception e) {
             Assert.fail();
         }
