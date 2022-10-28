@@ -41,10 +41,9 @@ import org.apache.kylin.common.persistence.InMemResourceStore;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.model.SelectRule;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
@@ -56,6 +55,8 @@ import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 import org.apache.kylin.metadata.recommendation.entity.DimensionRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.LayoutRecItemV2;
@@ -95,6 +96,10 @@ public class ImportModelContext implements AutoCloseable {
     private final NIndexPlanManager importIndexPlanManager;
 
     @Getter
+    private final List<TableDesc> targetMissTableList;
+    @Getter
+    private final List<TableDesc> loadTableList;
+    @Getter
     private final Map<String, String> newModels;
     private final List<String> unImportModels;
 
@@ -133,31 +138,39 @@ public class ImportModelContext implements AutoCloseable {
 
         targetKylinConfig.setProperty("kylin.metadata.validate-computed-column", "false");
 
+        val pairTable = getPairTable();
+        targetMissTableList = pairTable.getFirst();
+        loadTableList = pairTable.getSecond();
         loadTable();
         loadModel();
     }
 
-    private void loadTable() {
+    private Pair<List<TableDesc>, List<TableDesc>> getPairTable() {
+        List<TableDesc> missTables = Lists.newArrayList();
+        List<TableDesc> loadTables = Lists.newArrayList();
+
         List<TableDesc> tables = importTableMetadataManager.listAllTables();
         for (TableDesc tableDesc : tables) {
             TableDesc newTable = targetTableMetadataManager.copyForWrite(tableDesc);
             TableDesc originalTable = targetTableMetadataManager.getTableDesc(newTable.getIdentity());
-            long mvcc = -1;
-            if (originalTable != null) {
-                mvcc = originalTable.getMvcc();
-            }
-            newTable.setMvcc(mvcc);
             newTable.setLastModified(System.currentTimeMillis());
-            targetTableMetadataManager.saveSourceTable(newTable);
+            if (Objects.isNull(originalTable)) {
+                newTable.setMvcc(-1);
+                missTables.add(newTable);
+            } else {
+                newTable.setMvcc(originalTable.getMvcc());
+            }
+            loadTables.add(newTable);
+        }
+        return Pair.newPair(missTables, loadTables);
+    }
+
+    private void loadTable() {
+        for (TableDesc tableDesc : loadTableList) {
+            targetTableMetadataManager.saveSourceTable(tableDesc);
         }
     }
 
-    /**
-     *
-     * @param newDataModel
-     * @param importModel
-     * @throws IOException
-     */
     private void createNewModel(NDataModel newDataModel, NDataModel importModel) throws IOException {
         newDataModel.setProject(targetProject);
         newDataModel.setAlias(newModels.getOrDefault(importModel.getAlias(), newDataModel.getAlias()));
@@ -180,7 +193,6 @@ public class ImportModelContext implements AutoCloseable {
      *
      * @param originalDataModel model from current env
      * @param newDataModel model from import
-     * @return
      */
     private static Map<Integer, Integer> prepareIdChangedMap(NDataModel originalDataModel, NDataModel newDataModel) {
         Map<Integer, Integer> idChangedMap = new HashMap<>();
@@ -237,12 +249,6 @@ public class ImportModelContext implements AutoCloseable {
         return idChangedMap;
     }
 
-    /**
-     *
-     * @param newDataModel
-     * @param originalDataModel
-     * @param hasModelOverrideProps
-     */
     private void updateModel(NDataModel newDataModel, NDataModel originalDataModel, boolean hasModelOverrideProps) {
         newDataModel.setUuid(originalDataModel.getUuid());
         newDataModel.setProject(targetProject);
@@ -254,12 +260,6 @@ public class ImportModelContext implements AutoCloseable {
         targetDataModelManager.updateDataModelDesc(newDataModel);
     }
 
-    /**
-     *
-     * @param originalDataModel
-     * @param targetIndexPlan
-     * @param hasModelOverrideProps
-     */
     private void updateIndexPlan(NDataModel originalDataModel, IndexPlan targetIndexPlan,
             boolean hasModelOverrideProps) {
         targetIndexPlanManger.updateIndexPlan(originalDataModel.getUuid(), copyForWrite -> {

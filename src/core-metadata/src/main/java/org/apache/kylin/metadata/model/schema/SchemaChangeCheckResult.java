@@ -24,11 +24,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.google.common.collect.Sets;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -65,13 +67,13 @@ public class SchemaChangeCheckResult {
         @JsonProperty("importable")
         public boolean importable() {
             return Stream.of(missingItems, newItems, updateItems, reduceItems).flatMap(Collection::stream)
-                    .allMatch(BaseItem::isImportable);
+                    .allMatch(BaseItem::isImportable) || isLoadTableAble();
         }
 
         @JsonProperty("creatable")
         public boolean creatable() {
             return Stream.of(missingItems, newItems, updateItems, reduceItems).flatMap(Collection::stream)
-                    .allMatch(BaseItem::isCreatable);
+                    .allMatch(BaseItem::isCreatable) || isLoadTableAble();
         }
 
         @JsonProperty("")
@@ -89,6 +91,14 @@ public class SchemaChangeCheckResult {
             return Stream.of(missingItems, newItems, updateItems, reduceItems).flatMap(Collection::stream)
                     .allMatch(BaseItem::isHasSameName);
         }
+
+        @Setter
+        @JsonIgnore
+        private boolean loadTableAble = false;
+
+        @Getter
+        @JsonIgnore
+        private Set<String> loadTables = Sets.newHashSet();
     }
 
     @Data

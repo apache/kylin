@@ -21,8 +21,8 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,9 +30,9 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.ModelImportRequest;
 import org.apache.kylin.rest.request.ModelPreviewRequest;
 import org.apache.kylin.rest.service.MetaStoreService;
@@ -116,7 +116,7 @@ public class NMetaStoreControllerTest extends NLocalFileMetadataTestCase {
     public void testUploadAndCheckModelMetadata() throws Exception {
         File file = new File("src/test/resources/ut_model_metadata/ut_model_matadata.zip");
         MockMultipartFile multipartFile = new MockMultipartFile("file", "ut_model_matadata.zip", "text/plain",
-                new FileInputStream(file));
+                Files.newInputStream(file.toPath()));
 
         SchemaChangeCheckResult schemaChangeCheckResult = new SchemaChangeCheckResult();
         Mockito.when(metaStoreService.checkModelMetadata("default", multipartFile, null))
@@ -135,7 +135,7 @@ public class NMetaStoreControllerTest extends NLocalFileMetadataTestCase {
     public void testImportModelMetadata() throws Throwable {
         File file = new File("src/test/resources/ut_model_metadata/ut_model_matadata.zip");
         MockMultipartFile multipartFile = new MockMultipartFile("file", "ut_model_matadata.zip", "text/plain",
-                new FileInputStream(file));
+                Files.newInputStream(file.toPath()));
 
         final ModelImportRequest request = new ModelImportRequest();
         List<ModelImportRequest.ModelImport> models = new ArrayList<>();
