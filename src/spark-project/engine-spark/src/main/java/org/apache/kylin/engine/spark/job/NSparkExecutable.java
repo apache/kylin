@@ -206,8 +206,9 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
     public void waiteForResourceStart(ExecutableContext context) {
         // mark waiteForResource stage start
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-            getExecutableManager(getProject()) //
-                    .updateStageStatus(getId() + "_00", null, ExecutableState.RUNNING, null, null);
+            NExecutableManager manager = getExecutableManager(getProject());
+            manager.updateStageStatus(getId() + "_00", null, ExecutableState.RUNNING, null, null);
+            manager.saveUpdatedJob();
             return 0;
         }, project, UnitOfWork.DEFAULT_MAX_RETRY, context.getEpochId(), getTempLockName());
     }

@@ -987,6 +987,7 @@ public class JobService extends BasicService implements JobSupporter {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             val executableManager = getManager(NExecutableManager.class, project);
             executableManager.updateStageStatus(taskId, segmentId, newStatus, updateInfo, errMsg);
+            executableManager.saveUpdatedJob();
             return null;
         }, project, UnitOfWork.DEFAULT_MAX_RETRY, UnitOfWork.DEFAULT_EPOCH_ID, jobId);
     }
