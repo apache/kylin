@@ -76,7 +76,7 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testMetadataBackupException() throws Exception {
+    public void testMetadataBackupException() {
         getTestConfig().setProperty("kylin.metadata.ops-cron-timeout", "300000ms");
         ReflectionTestUtils.setField(scheduleService, "backupService", new MetadataBackupService() {
             @SneakyThrows(IOException.class)
@@ -86,12 +86,11 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
         });
         EpochManager epochManager = EpochManager.getInstance();
         epochManager.updateAllEpochs();
-        //        thrown.expect(ExecutionException.class);
         scheduleService.routineTask();
     }
 
     @Test
-    public void testRoutineTask() throws Exception {
+    public void testRoutineTask() {
         getTestConfig().setProperty("kylin.metadata.ops-cron-timeout", "300000ms");
         doNothing().when(projectService).garbageCleanup(anyLong());
         EpochManager epochManager = EpochManager.getInstance();
@@ -100,7 +99,7 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testTimeoutException() throws Exception {
+    public void testTimeoutException() {
         getTestConfig().setProperty("kylin.metadata.ops-cron-timeout", "1000ms");
         ReflectionTestUtils.setField(scheduleService, "backupService", new MetadataBackupService() {
             @SneakyThrows(Exception.class)

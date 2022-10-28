@@ -20,10 +20,7 @@ package org.apache.kylin.rest.service;
 import java.io.IOException;
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -33,12 +30,11 @@ import org.apache.kylin.tool.HDFSMetadataTool;
 import org.apache.kylin.tool.MetadataTool;
 import org.springframework.stereotype.Service;
 
+import lombok.SneakyThrows;
 import lombok.val;
 
 @Service
 public class MetadataBackupService {
-
-    private ExecutorService executors = Executors.newSingleThreadExecutor();
 
     @SneakyThrows(IOException.class)
     public void backupAll(){
@@ -46,7 +42,7 @@ public class MetadataBackupService {
         try (SetThreadName ignored = new SetThreadName("MetadataBackupWorker")) {
             String[] args = new String[] { "-backup", "-compress", "-dir", getBackupDir() };
             backup(args);
-            executors.submit(this::rotateAuditLog);
+            rotateAuditLog();
         }
     }
 

@@ -66,12 +66,12 @@ public class ScheduleService {
     public void routineTask() {
         opsCronTimeout = KylinConfig.getInstanceFromEnv().getRoutineOpsTaskTimeOut();
         CURRENT_FUTURE.remove();
-        long startTime = System.currentTimeMillis();
         EpochManager epochManager = EpochManager.getInstance();
         try {
+            log.info("Start to work");
+            long startTime = System.currentTimeMillis();
             MetricsGroup.hostTagCounterInc(MetricsName.METADATA_OPS_CRON, MetricsCategory.GLOBAL, GLOBAL);
             try (SetThreadName ignored = new SetThreadName("RoutineOpsWorker")) {
-                log.info("Start to work");
                 if (epochManager.checkEpochOwner(EpochManager.GLOBAL)) {
                     executeTask(() -> backupService.backupAll(), "MetadataBackup", startTime);
                     executeTask(RoutineTool::cleanQueryHistories, "QueryHistoriesCleanup", startTime);
@@ -83,7 +83,7 @@ public class ScheduleService {
                 executeTask(() -> projectService.garbageCleanup(getRemainingTime(startTime)), "ProjectGarbageCleanup",
                         startTime);
                 executeTask(() -> newFastRoutineTool().execute(new String[] { "-c" }), "HdfsCleanup", startTime);
-                log.info("Finish to work");
+                log.info("Finish to work, cost {}ms", System.currentTimeMillis() - startTime);
             }
         } catch (InterruptedException e) {
             log.warn("Routine task execution interrupted", e);
@@ -106,7 +106,7 @@ public class ScheduleService {
         try {
             future.get(remainingTime, TimeUnit.MILLISECONDS);
         } catch (ExecutionException e) {
-            log.warn("Routine task {} execution failed, reason: {}", taskName, e);
+            log.warn("Routine task {} execution failed, reason:", taskName, e);
         }
     }
 
