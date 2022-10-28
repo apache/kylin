@@ -19,7 +19,9 @@
 package org.apache.kylin.job.dao;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -60,6 +62,8 @@ public class NExecutableDao {
     private KylinConfig config;
 
     private CachedCrudAssist<ExecutablePO> crud;
+
+    private Map<String, ExecutablePO> updating = new HashMap<>();
 
     private NExecutableDao(KylinConfig config, String project) {
         logger.trace("Using metadata url: {}", config);
@@ -124,6 +128,27 @@ public class NExecutableDao {
         if (updater.test(copyForWrite)) {
             crud.save(copyForWrite);
         }
+    }
+
+    public void updateJobWithoutSave(String uuid, Predicate<ExecutablePO> updater) {
+        ExecutablePO executablePO;
+        if (updating.containsKey(uuid)) {
+            executablePO = updating.get(uuid);
+        } else {
+            ExecutablePO executablePOFromCache = getJobByUuid(uuid);
+            Preconditions.checkNotNull(executablePOFromCache);
+            val copyForWrite = JsonUtil.copyBySerialization(executablePOFromCache, JOB_SERIALIZER, null);
+            updating.put(uuid, copyForWrite);
+            executablePO = copyForWrite;
+        }
+        updater.test(executablePO);
+    }
+
+    public void saveUpdatedJob() {
+        for (ExecutablePO executablePO : updating.values()) {
+            crud.save(executablePO);
+        }
+        updating = new HashMap<>();
     }
 
     private ResourceStore getStore() {

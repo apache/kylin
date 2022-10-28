@@ -644,6 +644,7 @@ class DagExecutableTest {
         manager.updateStageStatus(stage1.getId(), task.getId(), ExecutableState.RUNNING, null, null);
         manager.updateStageStatus(stage2.getId(), task.getId(), ExecutableState.RUNNING, null, null);
         manager.updateStageStatus(stage3.getId(), task.getId(), ExecutableState.RUNNING, null, null);
+        manager.saveUpdatedJob();
         await().pollDelay(Duration.ONE_SECOND).until(() -> true);
         manager.updateJobOutput(job.getId(), ExecutableState.SUCCEED);
         manager.updateJobOutput(task.getId(), ExecutableState.SUCCEED);
@@ -652,6 +653,7 @@ class DagExecutableTest {
         manager.updateStageStatus(stage2.getId(), task.getId(), ExecutableState.SUCCEED, null, null);
         await().pollDelay(Duration.ONE_SECOND).until(() -> true);
         manager.updateStageStatus(stage3.getId(), task.getId(), ExecutableState.SUCCEED, null, null);
+        manager.saveUpdatedJob();
 
         val taskDuration = task.getTaskDurationToTest(task);
         val expected = AbstractExecutable.getDuration(stage1.getOutput(task.getId()))
@@ -687,6 +689,7 @@ class DagExecutableTest {
         manager.updateStageStatus(stage1.getId(), task.getId(), ExecutableState.RUNNING, null, null);
         manager.updateStageStatus(stage2.getId(), task.getId(), ExecutableState.RUNNING, null, null);
         manager.updateStageStatus(stage3.getId(), task.getId(), ExecutableState.RUNNING, null, null);
+        manager.saveUpdatedJob();
         await().pollDelay(Duration.ONE_SECOND).until(() -> true);
         manager.updateJobOutput(job.getId(), ExecutableState.SUCCEED);
         manager.updateJobOutput(task.getId(), ExecutableState.SUCCEED);
@@ -695,6 +698,7 @@ class DagExecutableTest {
         manager.updateStageStatus(stage2.getId(), task.getId(), ExecutableState.SUCCEED, null, null);
         await().pollDelay(Duration.ONE_SECOND).until(() -> true);
         manager.updateStageStatus(stage3.getId(), task.getId(), ExecutableState.SUCCEED, null, null);
+        manager.saveUpdatedJob();
 
         val taskDuration = task.getTaskDurationToTest(task);
         val expected = task.getDuration();
