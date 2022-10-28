@@ -54,10 +54,10 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.logging.LogOutputStream;
 import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.query.util.QueryHisStoreUtil;
 import org.mybatis.dynamic.sql.BasicColumn;
 import org.mybatis.dynamic.sql.SqlBuilder;
@@ -66,6 +66,7 @@ import org.mybatis.dynamic.sql.insert.render.InsertStatementProvider;
 import org.mybatis.dynamic.sql.render.RenderingStrategies;
 import org.mybatis.dynamic.sql.select.QueryExpressionDSL;
 import org.mybatis.dynamic.sql.select.SelectModel;
+import org.mybatis.dynamic.sql.select.join.EqualTo;
 import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
 import org.mybatis.dynamic.sql.update.render.UpdateStatementProvider;
 
@@ -274,10 +275,14 @@ public class JdbcQueryHistoryStore {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
             SelectStatementProvider statementProvider = select(getSelectFields(queryHistoryTable)) //
                     .from(queryHistoryTable) //
-                    .where(queryHistoryTable.id, isGreaterThan(id)) //
-                    .and(queryHistoryTable.projectName, isEqualTo(project)) //
+                    .join(select(BasicColumn.columnList(queryHistoryTable.id)).from(queryHistoryTable)
+                            .where(queryHistoryTable.id, isGreaterThan(id)) //
+                            .and(queryHistoryTable.projectName, isEqualTo(project)) //
+                            .orderBy(queryHistoryTable.id) //
+                            .limit(batchSize), "idTable") //
+                    .on(queryHistoryTable.id.qualifiedWith(queryHistoryTable.tableNameAtRuntime()),
+                            new EqualTo(queryHistoryTable.id.qualifiedWith("idTable")))
                     .orderBy(queryHistoryTable.id) //
-                    .limit(batchSize) //
                     .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectMany(statementProvider);
         }
@@ -558,10 +563,15 @@ public class JdbcQueryHistoryStore {
 
     private SelectStatementProvider queryQueryHistoriesByConditionsProvider(QueryHistoryRequest request, int limit,
             int offset) {
-        return filterByConditions(select(getSelectFields(queryHistoryTable)).from(queryHistoryTable), request)
+        return select(getSelectFields(queryHistoryTable)).from(queryHistoryTable)
+                .join(filterByConditions(select(BasicColumn.columnList(queryHistoryTable.id)).from(queryHistoryTable),
+                        request).orderBy(queryHistoryTable.queryTime.descending()) //
+                                .limit(limit) //
+                                .offset(offset),
+                        "idTable") //
+                .on(queryHistoryTable.id.qualifiedWith(queryHistoryTable.tableNameAtRuntime()),
+                        new EqualTo(queryHistoryTable.id.qualifiedWith("idTable")))
                 .orderBy(queryHistoryTable.queryTime.descending()) //
-                .limit(limit) //
-                .offset(offset) //
                 .build().render(RenderingStrategies.MYBATIS3);
     }
 
@@ -743,13 +753,13 @@ public class JdbcQueryHistoryStore {
     }
 
     private BasicColumn[] getSelectFields(QueryHistoryTable queryHistoryTable) {
-        return BasicColumn.columnList(queryHistoryTable.id, queryHistoryTable.cacheHit, queryHistoryTable.duration,
-                queryHistoryTable.engineType, queryHistoryTable.errorType, queryHistoryTable.hostName,
-                queryHistoryTable.indexHit, queryHistoryTable.projectName, queryHistoryTable.queryHistoryInfo,
-                queryHistoryTable.queryId, queryHistoryTable.queryRealizations, queryHistoryTable.queryStatus,
-                queryHistoryTable.querySubmitter, queryHistoryTable.queryTime, queryHistoryTable.resultRowCount,
-                queryHistoryTable.sql, queryHistoryTable.sqlPattern, queryHistoryTable.totalScanBytes,
-                queryHistoryTable.totalScanCount);
+        return BasicColumn.columnList(queryHistoryTable.id.qualifiedWith(queryHistoryTable.tableNameAtRuntime()),
+                queryHistoryTable.cacheHit, queryHistoryTable.duration, queryHistoryTable.engineType,
+                queryHistoryTable.errorType, queryHistoryTable.hostName, queryHistoryTable.indexHit,
+                queryHistoryTable.projectName, queryHistoryTable.queryHistoryInfo, queryHistoryTable.queryId,
+                queryHistoryTable.queryRealizations, queryHistoryTable.queryStatus, queryHistoryTable.querySubmitter,
+                queryHistoryTable.queryTime, queryHistoryTable.resultRowCount, queryHistoryTable.sql,
+                queryHistoryTable.sqlPattern, queryHistoryTable.totalScanBytes, queryHistoryTable.totalScanCount);
     }
 
 }
