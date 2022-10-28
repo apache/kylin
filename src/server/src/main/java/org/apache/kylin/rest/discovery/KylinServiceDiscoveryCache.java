@@ -145,7 +145,13 @@ public class KylinServiceDiscoveryCache implements KylinServiceDiscovery {
         ServiceCache<ZookeeperInstance> serviceCache = serviceDiscovery.serviceCacheBuilder().name(serverMode.getName())
                 .threadFactory(Executors.defaultThreadFactory()).build();
 
-        serviceCache.addListener(new ServiceCacheListener() {
+        serviceCache.addListener(getListener(serverMode, action));
+
+        return serviceCache;
+    }
+
+    private ServiceCacheListener getListener(ServerModeEnum serverMode, Callback action) {
+        return new ServiceCacheListener() {
             @Override
             public void cacheChanged() {
                 List<String> serverNodes = getServerStrByServerMode(serverMode);
@@ -154,7 +160,7 @@ public class KylinServiceDiscoveryCache implements KylinServiceDiscovery {
                 logger.info("kylin.server.cluster-mode-{} update to {}", serverMode.getName(), serverNodes);
 
                 // current node is active all/job nodes, try to update all epochs
-                if (getServerInfoByServerMode(JOB).stream().map(ServerInfoResponse::getHost).anyMatch(
+                if (getServerInfoByServerMode(ALL, JOB).stream().map(ServerInfoResponse::getHost).anyMatch(
                         server -> Objects.equals(server, kylinServiceDiscoveryClient.getLocalServiceServer()))) {
                     logger.debug("Current node is active node, try to update all epochs");
                     action.action();
@@ -165,9 +171,7 @@ public class KylinServiceDiscoveryCache implements KylinServiceDiscovery {
             public void stateChanged(CuratorFramework curatorFramework, ConnectionState connectionState) {
                 logger.info("zookeeper connection state changed to {}", connectionState);
             }
-        });
-
-        return serviceCache;
+        };
     }
 
     private ServiceCache<ZookeeperInstance> getServiceCacheByMode(@Nonnull ServerModeEnum serverModeEnum) {

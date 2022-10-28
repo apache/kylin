@@ -24,11 +24,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ExecutorServiceUtil;
-import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.persistence.transaction.AuditLogReplayWorker;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.ExecutorServiceUtil;
+import org.apache.kylin.common.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,16 +64,23 @@ public class EpochOrchestrator {
             logger.info("server mode: {},  no need to run EventOrchestrator", serverMode);
             return;
         }
+        startEpochChecker(kylinConfig);
+        EventBusFactory.getInstance().register(new ReloadMetadataListener(), true);
+    }
 
+    private void startEpochChecker(KylinConfig kylinConfig) {
+        // first renew and update epoch at org.apache.kylin.rest.discovery.KylinServiceDiscoveryCache#createServiceCache
+        if (!kylinConfig.getEpochCheckerEnabled()) {
+            // this logic can be used when there is only one All or Job KE node
+            logger.info("Disable epoch timing renew and update, renew and update epoch only once");
+            return;
+        }
         long pollSecond = kylinConfig.getEpochCheckerIntervalSecond();
         logger.info("Try to update epoch every {} seconds", pollSecond);
-        logger.info("renew executor work size is :{}", kylinConfig.getRenewEpochWorkerPoolSize());
-
+        logger.info("Renew executor work size is :{}", kylinConfig.getRenewEpochWorkerPoolSize());
         checkerPool = Executors.newScheduledThreadPool(2, new NamedThreadFactory("EpochChecker"));
         checkerPool.scheduleWithFixedDelay(new EpochChecker(), 1, pollSecond, TimeUnit.SECONDS);
         checkerPool.scheduleAtFixedRate(new EpochRenewer(), pollSecond, pollSecond, TimeUnit.SECONDS);
-
-        EventBusFactory.getInstance().register(new ReloadMetadataListener(), true);
     }
 
     public void shutdown() {
