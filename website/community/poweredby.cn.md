@@ -10,19 +10,19 @@ __如何贡献案例__
 __公司 & 组织__
 
 * [爱的番茄](https://www.tomatogames.com/), 2022-8-18
-    * By building a self-service data platform based on MDX for Kylin + Kylin 4, users can use Excel to retrieve data and then flexibly analyze user behavior, conduct targeted user incentives and advertising operations.
+    * 通过基于 MDX for Kylin + Kylin 4 搭建自助取数平台，使得运营同学可以使用 Excel 自助取数，从而可以灵活地分析用户行为，进行定向用户激励和广告推送等运营活动。
 
 * [传音](https://www.transsion.com/), 2022-4-6
-    * Transsion is a manufacturer of mobile phones based in Shenzhen, China. Transsion uses Apache Kylin as the OLAP engine of metrics store, managing thousands of key metrics.
+    * 传音是一家中国智能手机制造商。传音使用 Apache Kylin 作为其指标平台的 OLAP engine，管理上千业务指标。
 
 * [兴业银行](https://www.cib.com.cn/), 2022-2-10
-    * CIB is a commercial bank based in Fuzhou, Fujian province of China. CIB has over 100 million card holders. It adopted Apache Kylin for its credit card data and user portrait analysis.
+    * 兴业银行是中国最大的银行之一，拥有上亿持卡人。兴业银行使用 Apache Kylin 于信用卡分析以及用户画像分析。
 
 * [TP-Link](https://www.tp-link.com/), 2021-8-9
-    * TP-Link sells a large number of IoT devices, which regularly generate a large amount of device operation data. The data has great value for the monitoring of device operation status. By building a data analysis system with Kylin, TP-Link can analyse the running status of different versions of equipment in time.
+    * 普联科技销售了海量的 IoT 终端设备，这些设备会定期产生和上传海量的设备运行数据，这些数据分析对于设备运行状态的监控有很重要的价值。通过 Kylin 搭建数据分析系统，可以及时分析不同版本设备运行状态。
 
 * [顺丰科技](https://www.sf-tech.com.cn/), 2020-11-21
-    * SF-tech is a subsidiary of SF express, which is a multinational delivery services and logistics company in China. SF-tech selects Kylin for internal finance metrics processing and online serving.
+    * 顺丰科技是顺丰快递旗下子公司. 顺丰科技使用 Kylin 用于经营指标计算和在线服务。
 
 * [ZTO 中通快递](https://www.zto.com/), 2019-12-18 
     * ZTO 作为体量最大的快递公司，将 Apache Kylin 用于大数据分析，为各种数据产品提供支持，主要应用在数据驾驶舱，仪表盘分析等产品。
