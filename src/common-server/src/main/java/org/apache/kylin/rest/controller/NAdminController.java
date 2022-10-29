@@ -74,6 +74,7 @@ public class NAdminController extends NBasicController {
         propertyKeys.add("kylin.streaming.enabled");
         propertyKeys.add("kylin.model.measure-name-check-enabled");
         propertyKeys.add("kylin.security.remove-ldap-custom-security-limit-enabled");
+        propertyKeys.add("kylin.source.ddl.enabled");
 
         // add second storage
         if (StringUtils.isNotEmpty(KylinConfig.getInstanceFromEnv().getSecondStorage())) {
