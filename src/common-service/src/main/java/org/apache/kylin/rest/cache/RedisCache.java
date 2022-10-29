@@ -18,35 +18,22 @@
 
 package org.apache.kylin.rest.cache;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.util.CompressionUtils;
-import org.apache.kylin.rest.util.SerializeUtil;
 import org.apache.kylin.common.util.EncryptUtil;
-import org.apache.kylin.common.util.ThrowableUtils;
 import org.apache.kylin.rest.service.CommonQueryCacheSupporter;
+import org.apache.kylin.rest.util.SerializeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
@@ -60,6 +47,16 @@ import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.exceptions.JedisMovedDataException;
 import redis.clients.jedis.params.SetParams;
 import redis.clients.jedis.util.JedisClusterCRC16;
+
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RedisCache implements KylinCache {
 
@@ -340,9 +337,6 @@ public class RedisCache implements KylinCache {
             }
         } catch (JedisConnectionException | JedisClusterException e) {
             logger.error("Get jedis connection failed: ", e);
-            if (ThrowableUtils.isInterruptedException(e.getCause())) {
-                Thread.currentThread().interrupt();
-            }
         } catch (JedisMovedDataException e) {
             logger.error("Failed to get redis data: ", e);
         } catch (Exception e) {
