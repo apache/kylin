@@ -1754,4 +1754,39 @@ public class CnMessage extends Message {
     public String getSecondStorageNodeNotAvailable(String nodeName) {
         return String.format(Locale.ROOT, "分层存储节点'%s'不可用。", nodeName);
     }
+
+    @Override
+    public String getDDLUnSupported() {
+        return "不支持的 DDL 语法，仅支持 `create view`, `drop view`, `alter view`, `show create view` 语法";
+    }
+
+    @Override
+    public String getDDLViewNameError() {
+        return "视图名需要以 KE_ 开头";
+    }
+
+    @Override
+    public String getDDLDropError() {
+        return "仅支持删除 view 类型表且 view 名称需要以 KE_ 开头";
+    }
+
+    @Override
+    public String getDDLTableNotLoad(String table) {
+        return String.format(Locale.ROOT, "'%s' 没有加载到数据源", table);
+    }
+
+    @Override
+    public String getDDLTableNotSupport(String table) {
+        return String.format(Locale.ROOT, "仅支持 hive 数据表，但 '%s' 不是 hive 表", table);
+    }
+
+    @Override
+    public String getDDLPermissionDenied() {
+        return "只有系统或者项目管理员可以进行 DDL 操作";
+    }
+
+    @Override
+    public String getDDLDatabaseAccessnDenied() {
+        return "用户没有视图所在数据库的权限";
+    }
 }
