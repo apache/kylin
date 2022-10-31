@@ -141,7 +141,11 @@ public class QueryRoutingEngine {
                     NProjectLoader.removeCache();
                     return queryWithSqlMassage(queryParams);
                 } else {
-                    throw e;
+                    if (e.getCause() instanceof NewQueryRefuseException && shouldPushdown(e, queryParams)) {
+                        return pushDownQuery(e, queryParams);
+                    } else {
+                        throw e;
+                    }
                 }
             }
             if (shouldPushdown(e, queryParams)) {
@@ -179,7 +183,7 @@ public class QueryRoutingEngine {
         }
 
         if (e.getCause() instanceof NewQueryRefuseException) {
-            return false;
+            return checkBigQueryPushDown(queryParams);
         }
 
         return e instanceof SQLException && !e.getMessage().contains(SPARK_MEM_LIMIT_EXCEEDED);
@@ -208,6 +212,16 @@ public class QueryRoutingEngine {
         QueryContext.current().setNativeQueryRealizationList(nativeQueryRealizationList);
 
         return queryResult;
+    }
+
+    private boolean checkBigQueryPushDown(QueryParams queryParams) {
+        KylinConfig kylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(queryParams.getProject()).getConfig();
+        boolean isPush = KapQueryUtil.checkBigQueryPushDown(kylinConfig);
+        if (isPush) {
+            logger.info("Big query route to pushdown.");
+        }
+        return isPush;
     }
 
     private QueryResult pushDownQuery(SQLException sqlException, QueryParams queryParams) throws SQLException {

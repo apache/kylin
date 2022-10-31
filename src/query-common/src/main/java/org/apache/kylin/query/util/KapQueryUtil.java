@@ -42,6 +42,7 @@ import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.util.Util;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinTimeoutException;
@@ -55,6 +56,7 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.query.BigQueryThresholdUpdater;
 import org.apache.kylin.query.SlowQueryDetector;
 import org.apache.kylin.query.exception.UserStopQueryException;
 import org.apache.kylin.query.relnode.KapJoinRel;
@@ -74,6 +76,8 @@ public class KapQueryUtil {
 
     public static final String DEFAULT_SCHEMA = "DEFAULT";
     public static final ImmutableSet<String> REMOVED_TRANSFORMERS = ImmutableSet.of("ReplaceStringWithVarchar");
+
+    public static final String JDBC = "jdbc";
 
     public static List<IQueryTransformer> queryTransformers = Collections.emptyList();
     public static List<IPushDownConverter> pushDownConverters = Collections.emptyList();
@@ -338,6 +342,20 @@ public class KapQueryUtil {
             limit = maxRows;
         }
 
+        // https://issues.apache.org/jira/browse/KYLIN-2649
+        if (kylinConfig.getForceLimit() > 0 && limit <=0 && !sql.toLowerCase(Locale.ROOT).contains("limit")
+                && sql.toLowerCase(Locale.ROOT).matches("^select\\s+\\*\\p{all}*")) {
+            limit = kylinConfig.getForceLimit();
+        }
+
+        if (checkBigQueryPushDown(kylinConfig)) {
+            long bigQueryThreshold = BigQueryThresholdUpdater.getBigQueryThreshold();
+            if (limit <=0 && bigQueryThreshold > 0) {
+                log.info("Big query route to pushdown, Add limit {} to sql.", bigQueryThreshold);
+                limit = (int) bigQueryThreshold;
+            }
+        }
+
         if (limit > 0 && !sqlElements.contains("limit")) {
             sql += ("\nLIMIT " + limit);
         }
@@ -346,12 +364,11 @@ public class KapQueryUtil {
             sql += ("\nOFFSET " + offset);
         }
 
-        // https://issues.apache.org/jira/browse/KYLIN-2649
-        if (kylinConfig.getForceLimit() > 0 && !sql.toLowerCase(Locale.ROOT).contains("limit")
-                && sql.toLowerCase(Locale.ROOT).matches("^select\\s+\\*\\p{all}*")) {
-            sql += ("\nLIMIT " + kylinConfig.getForceLimit());
-        }
         return sql;
+    }
+
+    public static boolean checkBigQueryPushDown(KylinConfig kylinConfig) {
+        return kylinConfig.isBigQueryPushDown() && JDBC.equals(KapConfig.getInstanceFromEnv().getShareStateSwitchImplement());
     }
 
     public static void initQueryTransformersIfNeeded(KylinConfig kylinConfig, boolean isCCNeeded) {
