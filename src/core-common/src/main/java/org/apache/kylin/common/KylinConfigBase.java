@@ -3543,6 +3543,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.query.max-result-rows", "0"));
     }
 
+    public boolean isBigQueryPushDown() {
+        return Boolean.parseBoolean(this.getOptional("kylin.query.big-query-pushdown", FALSE));
+    }
+
     public Integer getLoadHiveTableWaitSparderSeconds() {
         return Integer.parseInt(this.getOptional("kylin.source.load-hive-table-wait-sparder-seconds", "900"));
     }

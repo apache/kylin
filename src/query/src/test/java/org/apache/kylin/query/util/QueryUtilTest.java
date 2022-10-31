@@ -24,15 +24,17 @@ import java.util.Properties;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
-import org.apache.kylin.query.security.AccessDeniedException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.query.security.AccessDeniedException;
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import io.kyligence.kap.query.util.KapQueryUtil;
 
 public class QueryUtilTest extends NLocalFileMetadataTestCase {
 
@@ -425,5 +427,96 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
                     + "FROM `POPHEALTH_ANALYTICS`.`Z_PROVDASH_UM_ED` AS `Z_PROVDASH_UM_ED`\n" + "LIMIT 1";
             Assert.assertEquals(expectedSql, massagedSql);
         }
+    }
+
+    @Test
+    public void testBigQueryPushDown() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.query.share-state-switch-implement", "jdbc");
+        config.setProperty("kylin.query.big-query-source-scan-rows-threshold", "10");
+        config.setProperty("kylin.query.big-query-pushdown", "true");
+        String sql1 = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
+        QueryParams queryParams1 = new QueryParams(config, sql1, "default", 0, 0, "DEFAULT", true);
+        String newSql1 = KapQueryUtil.massageSql(queryParams1);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
+                        + "LIMIT 10",
+                newSql1);
+    }
+
+    @Test
+    public void testBigQueryPushDownByParams() {
+        KylinConfig config = KylinConfig.createKylinConfig(new Properties());
+        String sql1 = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
+        QueryParams queryParams1 = new QueryParams(config, sql1, "default", 0, 0, "DEFAULT", true);
+        String newSql1 = KapQueryUtil.massageSql(queryParams1);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
+                newSql1);
+        String sql = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
+        QueryParams queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
+        String targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
+                targetSQL);
+        queryParams = new QueryParams(config, sql, "default", 1, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
+                        + "LIMIT 1",
+                targetSQL);
+        config.setProperty("kylin.query.max-result-rows", "2");
+        queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
+                        + "LIMIT 2",
+                targetSQL);
+        queryParams = new QueryParams(config, sql, "default", 1, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
+                        + "LIMIT 1",
+                targetSQL);
+        config.setProperty("kylin.query.max-result-rows", "-1");
+        config.setProperty("kylin.query.force-limit", "3");
+        queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
+                targetSQL);
+        queryParams = new QueryParams(config, sql, "default", 1, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
+                        + "LIMIT 1",
+                targetSQL);
+        sql1 = "select * from table1";
+        queryParams = new QueryParams(config, sql1, "default", 0, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals("select * from table1" + "\n" + "LIMIT 3", targetSQL);
+        queryParams = new QueryParams(config, sql1, "default", 2, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals("select * from table1" + "\n" + "LIMIT 2", targetSQL);
+        sql1 = "select * from table1 limit 4";
+        queryParams = new QueryParams(config, sql1, "default", 0, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals("select * from table1 limit 4", targetSQL);
+        queryParams = new QueryParams(config, sql1, "default", 2, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals("select * from table1 limit 4", targetSQL);
+        config.setProperty("kylin.query.force-limit", "-1");
+        config.setProperty("kylin.query.share-state-switch-implement", "jdbc");
+        queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
+                targetSQL);
+        config.setProperty("kylin.query.big-query-pushdown", "true");
+        queryParams = new QueryParams(config, sql, "default", 0, 0, "DEFAULT", true);
+        targetSQL = KapQueryUtil.massageSql(queryParams);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
+                targetSQL);
     }
 }

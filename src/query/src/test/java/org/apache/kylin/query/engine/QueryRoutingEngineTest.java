@@ -29,16 +29,18 @@ import java.sql.Timestamp;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.NewQueryRefuseException;
 import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.exception.TargetSegmentNotFoundException;
 import org.apache.kylin.common.persistence.InMemResourceStore;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
-import org.apache.kylin.query.util.QueryParams;
-import org.apache.kylin.source.adhocquery.PushdownResult;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
 import org.apache.kylin.query.QueryExtension;
+import org.apache.kylin.query.engine.data.QueryResult;
+import org.apache.kylin.query.util.QueryParams;
+import org.apache.kylin.source.adhocquery.PushdownResult;
 import org.apache.spark.SparkException;
 import org.junit.After;
 import org.junit.Assert;
@@ -256,4 +258,50 @@ public class QueryRoutingEngineTest extends NLocalFileMetadataTestCase {
         QueryContext.current().getMetrics().setRetryTimes(0);
     }
 
+    @Test
+    public void testNewQueryRefuseException() throws Exception {
+        final String sql = "select * from success_table_2";
+        final String project = "default";
+        KylinConfig kylinconfig = KylinConfig.getInstanceFromEnv();
+        QueryParams queryParams = new QueryParams();
+        queryParams.setProject(project);
+        queryParams.setSql(sql);
+        queryParams.setKylinConfig(kylinconfig);
+        queryParams.setSelect(true);
+
+        Mockito.doThrow(new SQLException("",
+                new NewQueryRefuseException("Refuse new big query, sum of source_scan_rows is 10, "
+                        + "refuse query threshold is 10. Current step: Collecting dataset for sparder. ")))
+                .when(queryRoutingEngine).execute(Mockito.anyString(), Mockito.any());
+
+        try {
+            queryRoutingEngine.queryWithSqlMassage(queryParams);
+        } catch (Exception e) {
+            Assert.assertTrue(e.getCause() instanceof NewQueryRefuseException);
+            Assert.assertFalse(QueryContext.current().getQueryTagInfo().isPushdown());
+        }
+
+        kylinconfig.setProperty("kylin.query.share-state-switch-implement", "jdbc");
+        kylinconfig.setProperty("kylin.query.big-query-source-scan-rows-threshold", "10");
+        kylinconfig.setProperty("kylin.query.big-query-pushdown", "true");
+        queryParams.setKylinConfig(kylinconfig);
+
+        Mockito.doThrow(new SQLException("",
+                new NewQueryRefuseException("Refuse new big query, sum of source_scan_rows is 10, "
+                        + "refuse query threshold is 10. Current step: Collecting dataset for sparder. ")))
+                .when(queryRoutingEngine).execute(Mockito.anyString(), Mockito.any());
+        try {
+            queryRoutingEngine.queryWithSqlMassage(queryParams);
+        } catch (Exception e) {
+            Assert.assertTrue(e.getCause() instanceof NewQueryRefuseException);
+            Assert.assertTrue(QueryContext.current().getQueryTagInfo().isPushdown());
+        }
+        Mockito.doAnswer(invocation -> {
+            pushdownCount++;
+            Assert.assertTrue(ResourceStore.getKylinMetaStore(kylinconfig) instanceof InMemResourceStore);
+            return PushdownResult.emptyResult();
+        }).when(queryRoutingEngine).tryPushDownSelectQuery(Mockito.any(), Mockito.any(), Mockito.anyBoolean());
+        QueryResult queryResult = queryRoutingEngine.queryWithSqlMassage(queryParams);
+        Assert.assertEquals(0, queryResult.getSize());
+    }
 }
