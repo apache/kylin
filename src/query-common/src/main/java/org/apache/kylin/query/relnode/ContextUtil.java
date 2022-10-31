@@ -50,8 +50,6 @@ public class ContextUtil {
 
     /**
      * used for collect a rel node's all subContext, which contain the context of itself
-     *
-     * @param subRel
      */
     public static Set<OLAPContext> collectSubContext(RelNode subRel) {
         Set<OLAPContext> subContexts = Sets.newHashSet();
@@ -115,11 +113,6 @@ public class ContextUtil {
         if (Boolean.TRUE.equals(CalciteSystemProperty.DEBUG.value()) && logger.isDebugEnabled()) {
             logger.debug("{} :{}{}", msg, System.getProperty("line.separator"), RelOptUtil.toString(relNode));
         }
-    }
-
-    public static void resetContext(KapRel kapRel) {
-        kapRel.setContext(null);
-
     }
 
     private static boolean derivedFromSameContext(Collection<Integer> indexOfInputCols, RelNode currentNode,
@@ -188,31 +181,49 @@ public class ContextUtil {
         int maxIndex = Collections.max(indexOfInputCols);
         int leftLength = joinRel.getLeft().getRowType().getFieldList().size();
         if (maxIndex < leftLength) {
-            KapRel potentialSubRel = (KapRel) joinRel.getLeft();
-            if (subContext == potentialSubRel.getContext()) {
-                return true;
-            }
-            if (potentialSubRel.getContext() != null) {
-                return false;
-            }
-            return derivedFromSameContext(indexOfInputCols, potentialSubRel, subContext, hasCountConstant);
+            return isLeftJoinFromSameContext(indexOfInputCols, joinRel, subContext, hasCountConstant);
         }
         int minIndex = Collections.min(indexOfInputCols);
         if (minIndex >= leftLength) {
-            KapRel potentialSubRel = (KapRel) joinRel.getRight();
-            if (subContext == potentialSubRel.getContext()) {
-                return true;
-            }
-            if (potentialSubRel.getContext() != null) {
-                return false;
-            }
-            Set<Integer> indexOfInputRel = Sets.newHashSet();
-            for (Integer indexOfInputCol : indexOfInputCols) {
-                indexOfInputRel.add(indexOfInputCol - leftLength);
-            }
-            return derivedFromSameContext(indexOfInputRel, potentialSubRel, subContext, hasCountConstant);
+            return isRightJoinFromSameContext(indexOfInputCols, joinRel, subContext, hasCountConstant, leftLength);
         }
         return false;
+    }
+
+    private static boolean isLeftJoinFromSameContext(Collection<Integer> indexOfInputCols, Join joinRel,
+            OLAPContext subContext, boolean hasCountConstant) {
+        KapRel potentialSubRel = (KapRel) joinRel.getLeft();
+        if (subContext == potentialSubRel.getContext()) {
+            return true;
+        }
+        if (potentialSubRel.getContext() != null) {
+            return false;
+        }
+        if (potentialSubRel instanceof KapProjectRel) {
+            ((KapJoinRel) joinRel).leftKeys.forEach(leftKey -> {
+                RexNode leftCol = ((KapProjectRel) potentialSubRel).getProjects().get(leftKey);
+                if (leftCol instanceof RexCall) {
+                    indexOfInputCols.add(leftKey);
+                }
+            });
+        }
+        return derivedFromSameContext(indexOfInputCols, potentialSubRel, subContext, hasCountConstant);
+    }
+
+    private static boolean isRightJoinFromSameContext(Collection<Integer> indexOfInputCols, Join joinRel,
+            OLAPContext subContext, boolean hasCountConstant, int leftLength) {
+        KapRel potentialSubRel = (KapRel) joinRel.getRight();
+        if (subContext == potentialSubRel.getContext()) {
+            return true;
+        }
+        if (potentialSubRel.getContext() != null) {
+            return false;
+        }
+        Set<Integer> indexOfInputRel = Sets.newHashSet();
+        for (Integer indexOfInputCol : indexOfInputCols) {
+            indexOfInputRel.add(indexOfInputCol - leftLength);
+        }
+        return derivedFromSameContext(indexOfInputRel, potentialSubRel, subContext, hasCountConstant);
     }
 
     private static boolean areSubJoinRelsSameType(RelNode kapRel, OLAPContext subContext, JoinRelType expectedJoinType,
