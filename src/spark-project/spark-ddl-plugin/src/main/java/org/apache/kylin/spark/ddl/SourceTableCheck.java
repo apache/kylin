@@ -17,6 +17,9 @@
  */
 package org.apache.kylin.spark.ddl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -62,12 +65,15 @@ public class SourceTableCheck implements DDLCheck {
     for (LogicalPlan plan : scala.collection.JavaConverters.seqAsJavaListConverter(relationLeaves).asJava()) {
       if (plan instanceof UnresolvedRelation) {
         val tableName = ((UnresolvedRelation) plan).tableName();
-        TableDesc tableDesc = tableManager.getTableDesc(tableName);
-        if (tableDesc == null) {
+        List<TableDesc> loadTable = tableManager.listAllTables().stream()
+            .filter(table -> table.getTableAlias().equalsIgnoreCase(tableName))
+            .collect(Collectors.toList());
+        if (loadTable.isEmpty()) {
           throwException(MsgPicker.getMsg().getDDLTableNotLoad(tableName));
         }
-        if (ISourceAware.ID_HIVE != tableDesc.getSourceType()
-            && ISourceAware.ID_SPARK != tableDesc.getSourceType()) {
+        TableDesc table = loadTable.get(0);
+        if (ISourceAware.ID_HIVE != table.getSourceType()
+            && ISourceAware.ID_SPARK != table.getSourceType()) {
           throwException(MsgPicker.getMsg().getDDLTableNotSupport(tableName));
         }
       }
