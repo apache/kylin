@@ -70,6 +70,12 @@ public interface QueryHistoryMapper {
     List<QueryHistory> selectMany(SelectStatementProvider selectStatement);
 
     @SelectProvider(type = SqlProviderAdapter.class, method = "select")
+    @Results(id = "QueryHistoryProjectInfoResult", value = {
+            @Result(column = "project_name", property = "projectName", jdbcType = JdbcType.VARCHAR),
+            @Result(column = "count", property = "count", jdbcType = JdbcType.BIGINT) })
+    List<QueryHistoryProjectInfo> selectByProject(SelectStatementProvider selectStatement);
+
+    @SelectProvider(type = SqlProviderAdapter.class, method = "select")
     @ResultMap("QueryHistoryResult")
     QueryHistory selectOne(SelectStatementProvider selectStatement);
 

@@ -2801,6 +2801,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.queryhistory.project-max-size", "1000000"));
     }
 
+    public int getQueryHistorySingleDeletionSize() {
+        return Integer.parseInt(getOptional("kylin.query.queryhistory.single-deletion-size", "2000"));
+    }
+
     public long getQueryHistorySurvivalThreshold() {
         return TimeUtil.timeStringAs(getOptional("kylin.query.queryhistory.survival-time-threshold", "30d"),
                 TimeUnit.MILLISECONDS);

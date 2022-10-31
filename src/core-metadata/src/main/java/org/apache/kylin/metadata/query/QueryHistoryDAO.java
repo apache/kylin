@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.query;
 
 import java.util.List;
+import java.util.Map;
 
 public interface QueryHistoryDAO {
 
@@ -44,9 +45,9 @@ public interface QueryHistoryDAO {
 
     void deleteQueryHistoriesIfMaxSizeReached();
 
-    void deleteQueryHistoriesIfProjectMaxSizeReached(String project);
-
     void deleteQueryHistoriesIfRetainTimeReached();
+
+    void deleteOldestQueryHistoriesByProject(String project, int deleteCount);
 
     long getQueryHistoriesSize(QueryHistoryRequest request, String project);
 
@@ -59,4 +60,7 @@ public interface QueryHistoryDAO {
     String getRealizationMetricMeasurement();
 
     List<QueryDailyStatistic> getQueryDailyStatistic(long startTime, long endTime);
+
+    Map<String, Long> getQueryCountByProject();
+
 }
