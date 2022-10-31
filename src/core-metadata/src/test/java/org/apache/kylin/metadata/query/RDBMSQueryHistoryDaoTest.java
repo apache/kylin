@@ -19,13 +19,16 @@
 package org.apache.kylin.metadata.query;
 
 import static org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO.fillZeroForQueryStatistics;
+import static org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO.largeSplitToSmallTask;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.junit.TimeZoneTestRunner;
+import org.apache.kylin.metadata.query.util.QueryHisStoreUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -71,7 +74,7 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetQueryHistoriesfilterByIsIndexHit() throws Exception {
+    public void testGetQueryHistoriesFilterByIsIndexHit() throws Exception {
         queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1L, true, PROJECT, true));
         queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1L, false, PROJECT, true));
         queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1L, false, PROJECT, true));
@@ -102,7 +105,7 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetQueryHistoriesfilterByQueryTime() throws Exception {
+    public void testGetQueryHistoriesFilterByQueryTime() throws Exception {
         // 2020-01-29 23:25:12
         queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1L, true, PROJECT, true));
         // 2020-01-30 23:25:12
@@ -123,7 +126,7 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetQueryHistoriesfilterByDuration() throws Exception {
+    public void testGetQueryHistoriesFilterByDuration() throws Exception {
         queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1000L, true, PROJECT, true));
         queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 2000L, false, PROJECT, true));
         queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 3000L, false, PROJECT, true));
@@ -145,7 +148,7 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetQueryHistoriesfilterBySql() throws Exception {
+    public void testGetQueryHistoriesFilterBySql() throws Exception {
         QueryMetrics queryMetrics1 = createQueryMetrics(1580311512000L, 1L, true, PROJECT, true);
         queryMetrics1.setSql("select 2 LIMIT 500\n");
         queryHistoryDAO.insert(queryMetrics1);
@@ -334,6 +337,38 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testDeleteQueryHistories() throws Exception {
+        overwriteSystemProp("kylin.query.queryhistory.max-size", "2");
+        overwriteSystemProp("kylin.query.queryhistory.project-max-size", "5");
+
+        String PROJECT_V1 = PROJECT + "_v1";
+
+        // 2020-01-29 23:25:12
+        queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1L, true, PROJECT, true));
+        // 2020-01-30 23:25:12
+        queryHistoryDAO.insert(createQueryMetrics(1580397912000L, 2L, false, PROJECT, true));
+        // 2030-01-28 23:25:12
+        queryHistoryDAO.insert(createQueryMetrics(1895844312000L, 3L, false, PROJECT_V1, true));
+        // 2030-01-29 23:25:12
+        queryHistoryDAO.insert(createQueryMetrics(1895930712000L, 1L, false, PROJECT, true));
+
+        // before delete
+        List<QueryHistory> queryHistoryList = queryHistoryDAO.queryQueryHistoriesByIdOffset(0, 100, PROJECT);
+        Assert.assertEquals(3, queryHistoryList.size());
+
+        // after delete
+        QueryHisStoreUtil.cleanQueryHistory();
+
+        queryHistoryList = queryHistoryDAO.queryQueryHistoriesByIdOffset(0, 100, PROJECT_V1);
+        Assert.assertEquals(1, queryHistoryList.size());
+        Assert.assertEquals(1895844312000L, queryHistoryList.get(0).getQueryTime());
+
+        queryHistoryList = queryHistoryDAO.queryQueryHistoriesByIdOffset(0, 100, PROJECT);
+        Assert.assertEquals(1, queryHistoryList.size());
+        Assert.assertEquals(1895930712000L, queryHistoryList.get(0).getQueryTime());
+    }
+
+    @Test
     public void testDeleteQueryHistoriesIfRetainTimeReached() throws Exception {
         // 2020-01-29 23:25:12
         queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1L, true, PROJECT, true));
@@ -401,12 +436,12 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(4, queryHistoryList.size());
 
         // after delete
-        queryHistoryDAO.deleteQueryHistoriesIfProjectMaxSizeReached(PROJECT);
+        QueryHisStoreUtil.cleanQueryHistory(PROJECT, 4);
         queryHistoryList = queryHistoryDAO.getAllQueryHistories();
         Assert.assertEquals(2, queryHistoryList.size());
 
         // test delete empty
-        queryHistoryDAO.deleteQueryHistoriesIfProjectMaxSizeReached(PROJECT);
+        QueryHisStoreUtil.cleanQueryHistory(PROJECT, 2);
         queryHistoryList = queryHistoryDAO.getAllQueryHistories();
         Assert.assertEquals(2, queryHistoryList.size());
     }
@@ -670,12 +705,12 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
 
         Assert.assertEquals(2, queryHistoryList.size());
 
-        Assert.assertEquals(false, queryHistoryList.get(0).getQueryHistoryInfo().isExactlyMatch());
+        Assert.assertFalse(queryHistoryList.get(0).getQueryHistoryInfo().isExactlyMatch());
         Assert.assertEquals(5, queryHistoryList.get(0).getQueryHistoryInfo().getScanSegmentNum());
         Assert.assertEquals("PENDING", queryHistoryList.get(0).getQueryHistoryInfo().getState().toString());
-        Assert.assertEquals(false, queryHistoryList.get(0).getQueryHistoryInfo().isExecutionError());
+        Assert.assertFalse(queryHistoryList.get(0).getQueryHistoryInfo().isExecutionError());
 
-        Assert.assertEquals(true, queryHistoryList.get(1).getQueryHistoryInfo().isExactlyMatch());
+        Assert.assertTrue(queryHistoryList.get(1).getQueryHistoryInfo().isExactlyMatch());
         Assert.assertEquals(3, queryHistoryList.get(1).getQueryHistoryInfo().getScanSegmentNum());
         Assert.assertEquals("PENDING", queryHistoryList.get(1).getQueryHistoryInfo().getState().toString());
         Assert.assertTrue(queryHistoryList.get(1).getQueryHistoryInfo().isExecutionError());
@@ -721,6 +756,23 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(2L, queryDailyStatistic.get(0).getLt3sNum());
     }
 
+    @Test
+    public void testLargeSplitToSmallTask() {
+        AtomicInteger executions = new AtomicInteger(0);
+        AtomicInteger actualSize = new AtomicInteger(0);
+        largeSplitToSmallTask(105, 10, currentCount -> {
+            executions.incrementAndGet();
+            actualSize.addAndGet(currentCount);
+            if (currentCount < 10) {
+                return currentCount - 1;
+            } else {
+                return currentCount;
+            }
+        }, "Test LargeSplitToSmall Task");
+        Assert.assertEquals(105, actualSize.get());
+        Assert.assertEquals(11, executions.get());
+    }
+
     public static QueryMetrics createQueryMetrics(long queryTime, long duration, boolean indexHit, String project,
             boolean hitModel) {
         QueryMetrics queryMetrics = new QueryMetrics("6a9a151f-f992-4d52-a8ec-8ff3fd3de6b1", "192.168.1.6:7070");
@@ -753,7 +805,7 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
             realizationMetrics.setModelId("82fa7671-a935-45f5-8779-85703601f49a.json");
 
             realizationMetrics.setSnapshots(
-                    Lists.newArrayList(new String[] { "DEFAULT.TEST_KYLIN_ACCOUNT", "DEFAULT.TEST_COUNTRY" }));
+                    Lists.newArrayList("DEFAULT.TEST_KYLIN_ACCOUNT", "DEFAULT.TEST_COUNTRY"));
 
             List<QueryMetrics.RealizationMetrics> realizationMetricsList = Lists.newArrayList();
             realizationMetricsList.add(realizationMetrics);

@@ -23,18 +23,19 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.TimeUtil;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +46,8 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
     private static final Logger logger = LoggerFactory.getLogger(RDBMSQueryHistoryDAO.class);
     @Setter
     private String queryMetricMeasurement;
-    private String realizationMetricMeasurement;
-    private JdbcQueryHistoryStore jdbcQueryHisStore;
+    private final String realizationMetricMeasurement;
+    private final JdbcQueryHistoryStore jdbcQueryHisStore;
 
     public static final String WEEK = "week";
     public static final String DAY = "day";
@@ -104,34 +105,43 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
         jdbcQueryHisStore.deleteQueryHistoryRealization(project);
     }
 
-    public void deleteQueryHistoriesIfMaxSizeReached() {
-        QueryHistory queryHistory = jdbcQueryHisStore
-                .queryOldestQueryHistory(KylinConfig.getInstanceFromEnv().getQueryHistoryMaxSize());
-        if (Objects.nonNull(queryHistory)) {
-            long time = queryHistory.getQueryTime();
-            jdbcQueryHisStore.deleteQueryHistory(time);
-            jdbcQueryHisStore.deleteQueryHistoryRealization(time);
-        }
-    }
-
     public QueryHistory getByQueryId(String queryId) {
         return jdbcQueryHisStore.queryByQueryId(queryId);
     }
 
-    public void deleteQueryHistoriesIfProjectMaxSizeReached(String project) {
-        QueryHistory queryHistory = jdbcQueryHisStore
-                .queryOldestQueryHistory(KylinConfig.getInstanceFromEnv().getQueryHistoryProjectMaxSize(), project);
-        if (Objects.nonNull(queryHistory)) {
-            long time = queryHistory.getQueryTime();
-            jdbcQueryHisStore.deleteQueryHistory(time, project);
-            jdbcQueryHisStore.deleteQueryHistoryRealization(time, project);
+    public void deleteQueryHistoriesIfMaxSizeReached() {
+        long maxSize = KylinConfig.getInstanceFromEnv().getQueryHistoryMaxSize();
+        long totalCount = jdbcQueryHisStore.getCountOnQueryHistory();
+        if (totalCount > maxSize) {
+            deleteQueryHistoryAndRealization((int) (totalCount - maxSize));
         }
     }
 
     public void deleteQueryHistoriesIfRetainTimeReached() {
-        long retainTime = getRetainTime();
-        jdbcQueryHisStore.deleteQueryHistory(retainTime);
-        jdbcQueryHisStore.deleteQueryHistoryRealization(retainTime);
+        long rangeOutCount = jdbcQueryHisStore.getCountOnQueryHistory(getRetainTime());
+        if (rangeOutCount > 0) {
+            deleteQueryHistoryAndRealization((int) rangeOutCount);
+        }
+    }
+
+    public void deleteQueryHistoryAndRealization(int deleteCount) {
+        int singleLimit = KylinConfig.getInstanceFromEnv().getQueryHistorySingleDeletionSize();
+        largeSplitToSmallTask(deleteCount, singleLimit, currentCount -> {
+            QueryHistory queryHistory = jdbcQueryHisStore.getOldestQueryHistory(currentCount);
+            int deletedRows = jdbcQueryHisStore.deleteQueryHistory(queryHistory.getId());
+            jdbcQueryHisStore.deleteQueryHistoryRealization(queryHistory.getQueryTime());
+            return deletedRows;
+        }, "Cleanup all query history");
+    }
+
+    public void deleteOldestQueryHistoriesByProject(String project, int deleteCount) {
+        int singleLimit = KylinConfig.getInstanceFromEnv().getQueryHistorySingleDeletionSize();
+        largeSplitToSmallTask(deleteCount, singleLimit, currentCount -> {
+            QueryHistory queryHistory = jdbcQueryHisStore.getOldestQueryHistory(project, currentCount);
+            int deletedRows = jdbcQueryHisStore.deleteQueryHistory(project, queryHistory.getId());
+            jdbcQueryHisStore.deleteQueryHistoryRealization(project, queryHistory.getQueryTime());
+            return deletedRows;
+        }, "Cleanup project<" + project + "> query history");
     }
 
     public void batchUpdateQueryHistoriesInfo(List<Pair<Long, QueryHistoryInfo>> idToQHInfoList) {
@@ -215,6 +225,11 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
         return jdbcQueryHisStore.queryAvgDurationByTime(startTime, endTime, timeDimension, project);
     }
 
+    @Override
+    public Map<String, Long> getQueryCountByProject() {
+        return jdbcQueryHisStore.getCountGroupByProject();
+    }
+
     public static void fillZeroForQueryStatistics(List<QueryStatistics> queryStatistics, long startTime, long endTime,
             String dimension) {
         if (!dimension.equalsIgnoreCase(DAY) && !dimension.equalsIgnoreCase(WEEK)) {
@@ -245,4 +260,19 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
             }
         }
     }
+
+    public static void largeSplitToSmallTask(int totalCount, int singleSize, IntFunction<Integer> function,
+            String description) {
+        int retainCount = totalCount;
+        while (retainCount > 0) {
+            int currentCount = Math.min(retainCount, singleSize);
+            int actualCount = function.apply(currentCount);
+            if (currentCount != actualCount && logger.isWarnEnabled()) {
+                logger.warn("The task {} was not performed as expected, expect:{}, actual:{}", description,
+                        currentCount, actualCount);
+            }
+            retainCount -= currentCount;
+        }
+    }
+
 }
