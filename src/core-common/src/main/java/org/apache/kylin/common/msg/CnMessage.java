@@ -1757,7 +1757,7 @@ public class CnMessage extends Message {
 
     @Override
     public String getDDLUnSupported() {
-        return "不支持的 DDL 语法，仅支持 `create view`, `drop view`, `alter view`, `show create view` 语法";
+        return "不支持的 DDL 语法，仅支持 `create view`, `drop view`, `alter view`, `show create table` 语法";
     }
 
     @Override

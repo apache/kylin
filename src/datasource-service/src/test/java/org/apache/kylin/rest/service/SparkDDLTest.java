@@ -45,7 +45,7 @@ public class SparkDDLTest extends NLocalFileMetadataTestCase {
   private final IUserGroupService userGroupService = Mockito.spy(NUserGroupService.class);
 
   private static final String CREATEVIEW_SQL1 =
-      "CREATE VIEW `ssb`.`ke_order_view` as select LO_ORDERKEY, C_NAME from SSB.P_LINEORDER t1 left join "
+      "CREATE VIEW `ssb`.`ke_order_view` as select LO_ORDERKEY, C_NAME from SSB.p_lineorder t1 left join "
           + "SSB. CUSTOMER t2 on t1. LO_CUSTKEY = t2. C_CUSTKEY";
   private static final String CREATEVIEW_SQL2 = "CREATE VIEW `ssb`.`order_view2` as select * from SSB.P_LINEORDER";
   private static final String CREATEVIEW_SQL3 = "CREATE VIEW `ssb`.`order_view2` as abc";
