@@ -162,9 +162,12 @@ class KylinFileSourceScanExec(
         f => FilePruner.getPartitionId(new Path(f.filePath))
       }
 
-    val filePartitions = Seq.tabulate(shardSpec.numShards) { shardId =>
-      FilePartition(shardId, filesToPartitionId.getOrElse(shardId, Nil).toArray)
-    }
+    var shardId = 0
+    val filePartitions = new ArrayBuffer[FilePartition]()
+    filesToPartitionId.foreach(t => {
+      filePartitions += FilePartition(shardId, t._2.toArray)
+      shardId += 1
+    })
 
     if (SoftAffinityManager.usingSoftAffinity) {
       val start = System.currentTimeMillis()
