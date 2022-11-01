@@ -45,6 +45,9 @@ import org.apache.kylin.query.util.QueryUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+/**
+ * agg-filter-join -> agg-filter-agg-join
+ */
 public class KapAggFilterTransposeRule extends RelOptRule {
     public static final KapAggFilterTransposeRule AGG_FILTER_JOIN = new KapAggFilterTransposeRule(
             operand(KapAggregateRel.class, operand(KapFilterRel.class, operand(KapJoinRel.class, any()))),

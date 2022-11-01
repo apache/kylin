@@ -1766,6 +1766,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.query.convert-sum-expression-enabled", FALSE));
     }
 
+    public boolean isEnhancedAggPushDownEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.enhanced-agg-pushdown-enabled", FALSE));
+    }
+
     public boolean isOptimizedSumCastDoubleRuleEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.optimized-sum-cast-double-rule-enabled", TRUE));
     }
@@ -2465,7 +2469,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.query.calcite.reduce-rules-enabled", TRUE));
     }
 
-    public boolean isAgregatePushdownEnabled() {
+    public boolean isAggregatePushdownEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.calcite.aggregate-pushdown-enabled", FALSE));
     }
 

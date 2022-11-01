@@ -300,10 +300,15 @@ public class QueryUtil {
             return false;
         }
 
-        if (!isContainAggregate(joinLeftChild) && !isContainAggregate(joinRightChild)) {
-            return false;
+        String project = QueryContext.current().getProject();
+        if (project != null && NProjectManager.getProjectConfig(project).isEnhancedAggPushDownEnabled()
+                && RelAggPushDownUtil.canRelAnsweredBySnapshot(project, joinRight)
+                && RelAggPushDownUtil.isUnmatchedJoinRel(joinRel)) {
+            QueryContext.current().setEnhancedAggPushDown(true);
+            return true;
         }
-        return !isContainAggregate(joinLeftChild) || !isContainAggregate(joinRightChild);
+
+        return isContainAggregate(joinLeftChild) ^ isContainAggregate(joinRightChild);
     }
 
     private static boolean isContainAggregate(RelNode node) {

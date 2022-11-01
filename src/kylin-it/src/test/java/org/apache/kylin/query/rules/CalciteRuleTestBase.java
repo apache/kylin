@@ -47,6 +47,7 @@ import org.apache.kylin.query.engine.QueryOptimizer;
 import org.apache.kylin.query.util.HepUtils;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
+import org.apache.kylin.query.util.RelAggPushDownUtil;
 import org.apache.kylin.util.ExecAndComp;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -145,6 +146,21 @@ public class CalciteRuleTestBase extends NLocalFileMetadataTestCase {
         RelNode relAfter = toCalcitePlan(project, sql, KylinConfig.getInstanceFromEnv());
         logger.debug("check plan for {}.sql: {}{}", prefix, NL, sql);
         checkDiff(relBefore, relAfter, prefix);
+    }
+
+    protected void checkSQLAfterRule(String project, String sql, String prefix, StringOutput StrOut,
+            Collection<RelOptRule> rules) {
+        RelNode relBefore = toCalcitePlan(project, sql, KylinConfig.getInstanceFromEnv());
+        Assert.assertThat(relBefore, notNullValue());
+        RelAggPushDownUtil.clearUnmatchedJoinDigest();
+        RelAggPushDownUtil.collectAllJoinRel(relBefore);
+        RelNode relAfter = HepUtils.runRuleCollection(relBefore, rules, false);
+        Assert.assertThat(relAfter, notNullValue());
+        if (StrOut != null) {
+            StrOut.output(relBefore, relAfter, prefix);
+        } else {
+            checkDiff(relBefore, relAfter, prefix);
+        }
     }
 
     protected void checkSQLPostOptimize(String project, String sql, String prefix, StringOutput StrOut,
