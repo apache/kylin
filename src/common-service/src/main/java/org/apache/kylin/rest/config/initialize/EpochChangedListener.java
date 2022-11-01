@@ -18,6 +18,7 @@
 package org.apache.kylin.rest.config.initialize;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -93,8 +94,8 @@ public class EpochChangedListener {
             }
 
             log.info("start thread of project: {}", project);
+            NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project);
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-                NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project);
                 scheduler.init(new JobEngineConfig(kylinConfig));
                 if (!scheduler.hasStarted()) {
                     throw new RuntimeException("Scheduler for " + project + " has not been started");
@@ -104,7 +105,6 @@ public class EpochChangedListener {
                 if (!ss.getHasStarted().get()) {
                     throw new RuntimeException("Streaming Scheduler for " + project + " has not been started");
                 }
-
                 QueryHistoryTaskScheduler qhAccelerateScheduler = QueryHistoryTaskScheduler.getInstance(project);
                 qhAccelerateScheduler.init();
 
@@ -115,6 +115,7 @@ public class EpochChangedListener {
                 recommendationUpdateScheduler.addProject(project);
                 return 0;
             }, project, 1);
+            scheduler.setHasFinishedTransactions(new AtomicBoolean(true));
         } else {
             //TODO need global leader
             CreateAdminUserUtils.createAllAdmins(userService, env);
