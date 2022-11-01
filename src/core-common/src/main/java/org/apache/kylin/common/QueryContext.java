@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.util.RandomUtil;
@@ -132,6 +133,14 @@ public class QueryContext implements Closeable {
     @Getter
     @Setter
     private boolean retrySecondStorage = true;
+
+    @Getter
+    @Setter
+    private Map<String, Boolean> unmatchedJoinDigest = new ConcurrentHashMap<>();
+
+    @Getter
+    @Setter
+    private boolean enhancedAggPushDown;
 
     private QueryContext() {
         // use QueryContext.current() instead

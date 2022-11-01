@@ -38,8 +38,8 @@ import com.sun.tools.javac.util.Assert;
 
 public class NAggPushDownTest extends NLocalWithSparkSessionTest {
     private static final Logger logger = LoggerFactory.getLogger(NAggPushDownTest.class);
-    private String sqlFolder = "sql_select_subquery";
-    private String joinType = "inner"; // only support inner join
+    private static final String SQL_FOLDER = "sql_select_subquery";
+    private static final String JOIN_TYPE = "inner"; // only support inner join
 
     @Before
     public void setup() throws Exception {
@@ -71,11 +71,11 @@ public class NAggPushDownTest extends NLocalWithSparkSessionTest {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         ExecAndComp.CompareLevel compareLevel = ExecAndComp.CompareLevel.SAME;
         populateSSWithCSVData(config, getProject(), SparderEnv.getSparkSession());
-        String identity = "sqlFolder:" + sqlFolder + ", joinType:" + joinType + ", compareLevel:" + compareLevel;
+        String identity = "sqlFolder:" + SQL_FOLDER + ", joinType:" + JOIN_TYPE + ", compareLevel:" + compareLevel;
         try {
             List<Pair<String, String>> queries = ExecAndComp
-                    .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
-            ExecAndComp.execAndCompare(queries, getProject(), compareLevel, joinType);
+                    .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + SQL_FOLDER);
+            ExecAndComp.execAndCompare(queries, getProject(), compareLevel, JOIN_TYPE);
         } catch (Throwable th) {
             logger.error("Query fail on: {}", identity);
             Assert.error();
@@ -89,11 +89,12 @@ public class NAggPushDownTest extends NLocalWithSparkSessionTest {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         ExecAndComp.CompareLevel compareLevel = ExecAndComp.CompareLevel.SAME;
         populateSSWithCSVData(config, getProject(), SparderEnv.getSparkSession());
-        String identity = "sqlFolder:" + "sql_agg_pushdown" + ", joinType:" + joinType + ", compareLevel:" + compareLevel;
+        String identity = "sqlFolder:" + "sql_agg_pushdown" + ", joinType:" + JOIN_TYPE + ", compareLevel:"
+                + compareLevel;
         try {
             List<Pair<String, String>> queries = ExecAndComp
                     .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + "sql_agg_pushdown");
-            ExecAndComp.execAndCompare(queries, getProject(), compareLevel, joinType);
+            ExecAndComp.execAndCompare(queries, getProject(), compareLevel, JOIN_TYPE);
         } catch (Throwable th) {
             logger.error("Query fail on: {}", identity);
             Assert.error();

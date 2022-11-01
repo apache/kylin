@@ -68,22 +68,28 @@ public class KapAggProjectMergeRule extends RelOptRule {
 
     @Override
     public boolean matches(RelOptRuleCall call) {
-        final KapProjectRel project = call.rel(1);
-        final KapJoinRel joinRel;
-        if (call.rel(2) instanceof KapFilterRel) {
-            joinRel = call.rel(3);
-        } else {
-            joinRel = call.rel(2);
-        }
-
+        final KapJoinRel joinRel = call.rel(2) instanceof KapFilterRel //
+                ? call.rel(3)
+                : call.rel(2);
         //Only one agg child of join is accepted
         if (!QueryUtil.isJoinOnlyOneAggChild(joinRel)) {
             return false;
         }
 
-        for (RexNode rexNode : project.getProjects()) {
-            // Cannot handle "GROUP BY expression"
-            if (!(rexNode instanceof RexInputRef)) {
+        final KapAggregateRel aggregate = call.rel(0);
+        final KapProjectRel project = call.rel(1);
+        ImmutableBitSet.Builder immutableBitSetBuilder = ImmutableBitSet.builder();
+        immutableBitSetBuilder.addAll(aggregate.getGroupSet());
+        aggregate.getAggCallList().forEach(aggregateCall -> {
+            ImmutableBitSet args = ImmutableBitSet.of(aggregateCall.getArgList());
+            immutableBitSetBuilder.addAll(args);
+        });
+        ImmutableBitSet hasUseInAgg = immutableBitSetBuilder.build();
+        for (int i = 0; i < project.getProjects().size(); i++) {
+            RexNode rexNode = project.getProjects().get(i);
+            // group by column is RexInputRef or group by column is expression 
+            // and the expression has not imported by topNode
+            if (!(rexNode instanceof RexInputRef) && hasUseInAgg.get(i)) {
                 return false;
             }
         }
@@ -147,8 +153,7 @@ public class KapAggProjectMergeRule extends RelOptRule {
         relBuilder.push(newAggregate);
         processNewKeyNotExists(relBuilder, newKeys, newGroupSet, aggregate, newAggregate);
 
-        RelNode newRel = relBuilder.build();
-        return newRel;
+        return relBuilder.build();
     }
 
     private static void processNewKeyNotExists(RelBuilder relBuilder, List<Integer> newKeys,

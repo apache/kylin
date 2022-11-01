@@ -33,45 +33,26 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.kylin.query.relnode.KapAggregateRel;
 import org.apache.kylin.query.relnode.KapJoinRel;
+import org.apache.kylin.query.relnode.KapProjectRel;
+import org.apache.kylin.query.relnode.KapRel;
 import org.apache.kylin.query.util.QueryUtil;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
- *    agg-join  ->  agg(CD)-agg(other-agg)-join
- *
- *   for example:
- *
- *   KapAggregateRel(group-set=[[1]], groups=[null], TEMP_Calculation_54915774428294=[SUM($2)], TEMP_Calculation_97108873613918=[COUNT(DISTINCT $1)], TEMP_Calculation_97108873613911=[COUNT(DISTINCT $4)], ctx=[])
- *     KapJoinRel(condition=[=($0, $3)], joinType=[inner], ctx=[])
- *       KapProjectRel(ORDER_ID=[$1], CAL_DT=[$2], SELLER_ID=[$7], ctx=[])
- *         KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]])
- *       KapProjectRel(ORDER_ID=[$1], CASE=[CASE(>($2, 0), $0, null)], ctx=[])
- *         KapAggregateRel(group-set=[[0, 1]], groups=[null], X_measure__0=[SUM($2)], ctx=[])
- *           KapProjectRel(LSTG_FORMAT_NAME=[$3], ORDER_ID=[$1], PRICE=[$8], ctx=[])
- *             KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]])
- *
- *   the above plan will be transformed into the following after agg-pushdown(contain KapCountDistinctJoinRule).
- *
- *   KapAggregateRel(group-set=[[0]], groups=[null], TEMP_Calculation_54915774428294=[SUM($2)], TEMP_Calculation_97108873613918=[COUNT(DISTINCT $0)], TEMP_Calculation_97108873613911=[COUNT(DISTINCT $1)], ctx=[])
- *     KapAggregateRel(group-set=[[0, 1]], groups=[null], TEMP_Calculation_54915774428294=[SUM($2)], ctx=[])
- *       KapProjectRel(CAL_DT=[$1], CASE=[$4], $f6=[*($2, $5)], ctx=[])
- *         KapJoinRel(condition=[=($0, $3)], joinType=[inner], ctx=[])
- *           KapAggregateRel(group-set=[[0, 1]], groups=[null], TEMP_Calculation_54915774428294=[SUM($2)], ctx=[])
- *             KapProjectRel(ORDER_ID=[$1], CAL_DT=[$2], SELLER_ID=[$7], ctx=[])
- *               KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]])
- *           KapAggregateRel(group-set=[[0, 1]], groups=[null], agg#0=[COUNT()], ctx=[])
- *             KapProjectRel(ORDER_ID=[$1], CASE=[CASE(>($2, 0), $0, null)], ctx=[])
- *               KapAggregateRel(group-set=[[0, 1]], groups=[null], X_measure__0=[SUM($2)], ctx=[])
- *                 KapProjectRel(LSTG_FORMAT_NAME=[$3], ORDER_ID=[$1], PRICE=[$8], ctx=[])
- *                   KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]])
+ * agg-join  ->  agg(CD)-agg(other-agg)-join
+ * agg-project-join  ->  agg(CD)-agg(other-agg)-project-join
  */
 public class KapCountDistinctJoinRule extends RelOptRule {
 
     public static final KapCountDistinctJoinRule INSTANCE_COUNT_DISTINCT_JOIN_ONESIDEAGG = new KapCountDistinctJoinRule(
             operand(KapAggregateRel.class, operand(KapJoinRel.class, any())), RelFactories.LOGICAL_BUILDER,
             "KapCountDistinctJoinRule:agg(contain-count-distinct)-join-oneSideAgg");
+
+    public static final KapCountDistinctJoinRule INSTANCE_COUNT_DISTINCT_AGG_PROJECT_JOIN = new KapCountDistinctJoinRule(
+            operand(KapAggregateRel.class, operand(KapProjectRel.class, operand(KapJoinRel.class, any()))),
+            RelFactories.LOGICAL_BUILDER, "KapCountDistinctJoinRule:agg(contain-count-distinct)-agg-project-join");
 
     public KapCountDistinctJoinRule(RelOptRuleOperand operand, RelBuilderFactory relBuilderFactory,
             String description) {
@@ -81,14 +62,19 @@ public class KapCountDistinctJoinRule extends RelOptRule {
     @Override
     public boolean matches(RelOptRuleCall call) {
         final KapAggregateRel aggregate = call.rel(0);
-        final KapJoinRel join = call.rel(1);
+        final KapJoinRel join;
+        if (call.rel(1) instanceof KapJoinRel) {
+            join = call.rel(1);
+        } else {
+            join = call.rel(2);
+        }
         return aggregate.isContainCountDistinct() && QueryUtil.isJoinOnlyOneAggChild(join);
     }
 
     @Override
     public void onMatch(RelOptRuleCall call) {
         final KapAggregateRel aggregate = call.rel(0);
-        final KapJoinRel join = call.rel(1);
+        final KapRel inputKapRel = call.rel(1);
 
         // build bottom aggRelNode
         final ImmutableList.Builder<AggregateCall> bottomAggCallsBuilder = ImmutableList.builder();
@@ -106,16 +92,13 @@ public class KapCountDistinctJoinRule extends RelOptRule {
         ImmutableBitSet bottomGroupSetBuild = bottomGroupSetBuilder.build();
         ImmutableList<AggregateCall> bottomAggCallsBuild = bottomAggCallsBuilder.build();
         List<Integer> bottomGroupSets = bottomGroupSetBuild.asList();
-        final Aggregate bottomAggregate = aggregate.copy(aggregate.getTraitSet(), join, aggregate.indicator,
+        final Aggregate bottomAggregate = aggregate.copy(aggregate.getTraitSet(), inputKapRel, aggregate.indicator,
                 bottomGroupSetBuild, null, bottomAggCallsBuild);
 
         // build top aggRelNode
         ImmutableBitSet.Builder topGroupSet = ImmutableBitSet.builder();
         List<Integer> topGroupSetList = new ArrayList<>();
-        for (int i = 0; i < aggregate.getGroupSet().asList().size(); i++) {
-            topGroupSetList.add(i);
-        }
-        topGroupSet.addAll(topGroupSetList);
+        setTopAggregateGroupSet(bottomAggregate, aggregate, topGroupSetList, topGroupSet);
 
         int topAggArgsIndex = bottomGroupSets.size();
         final ImmutableList.Builder<AggregateCall> topAggCalls = ImmutableList.builder();
@@ -140,5 +123,17 @@ public class KapCountDistinctJoinRule extends RelOptRule {
                 topGroupSet.build(), null, topAggCalls.build());
 
         call.transformTo(topAggregate);
+    }
+
+    private void setTopAggregateGroupSet(Aggregate bottomAggregate, Aggregate aggregate, List<Integer> topGroupSetList,
+            ImmutableBitSet.Builder topGroupSet) {
+        List<Integer> bottomAggregateGroupIndexList = bottomAggregate.getGroupSet().asList();
+        List<Integer> aggregateGroupIndexList = aggregate.getGroupSet().asList();
+        for (int i = 0; i < bottomAggregateGroupIndexList.size(); i++) {
+            if (aggregateGroupIndexList.contains(bottomAggregateGroupIndexList.get(i))) {
+                topGroupSetList.add(i);
+            }
+        }
+        topGroupSet.addAll(topGroupSetList);
     }
 }

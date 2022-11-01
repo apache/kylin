@@ -99,6 +99,7 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPContextProp;
 import org.apache.kylin.query.relnode.OLAPTableScan;
+import org.apache.kylin.query.util.RelAggPushDownUtil;
 import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -207,6 +208,7 @@ public class RealizationChooser {
         Multimap<NDataModel, IRealization> modelMap = makeOrderedModelMap(context);
         if (modelMap.size() == 0) {
             checkNoRealizationWithStreaming(context);
+            RelAggPushDownUtil.registerUnmatchedJoinDigest(context.getTopNode());
             throw new NoRealizationFoundException("No model found for " + toErrorMsg(context));
         }
         logger.trace("Models matched fact table {}: {}", context.firstTableScan.getTableName(), modelMap.values());
@@ -270,6 +272,7 @@ public class RealizationChooser {
         }
 
         checkNoRealizationWithStreaming(context);
+        RelAggPushDownUtil.registerUnmatchedJoinDigest(context.getTopNode());
         throw new NoRealizationFoundException("No realization found for " + toErrorMsg(context));
     }
 

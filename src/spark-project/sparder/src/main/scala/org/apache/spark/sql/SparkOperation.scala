@@ -21,6 +21,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.GroupingSets
 import org.apache.spark.sql.catalyst.plans.logical.Aggregate
+import org.apache.spark.sql.functions.{count, lit}
 import org.apache.spark.sql.types.StructType
 
 object SparkOperation {
@@ -76,7 +77,7 @@ object SparkOperation {
         .groupBy(aggArgc.group: _*)
         .agg(aggArgc.agg.head, aggArgc.agg.drop(1): _*)
     } else if (aggArgc.agg.isEmpty && aggArgc.group.nonEmpty) {
-      aggArgc.dataFrame.dropDuplicates(aggArgc.group.map(_.toString()))
+      aggArgc.dataFrame.groupBy(aggArgc.group: _*).agg(count(lit("1"))).select(aggArgc.group: _*)
     } else if (aggArgc.agg.nonEmpty && aggArgc.group.isEmpty) {
       aggArgc.dataFrame.agg(aggArgc.agg.head, aggArgc.agg.drop(1): _*)
     } else {

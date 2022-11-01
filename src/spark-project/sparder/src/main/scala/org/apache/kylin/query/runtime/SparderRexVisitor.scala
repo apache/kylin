@@ -278,6 +278,9 @@ class SparderRexVisitor(val inputFieldNames: Array[String],
           divisionResult = divisionResult.cast(LongType)
         }
         divisionResult
+      case COALESCE =>
+        assert(children.size == 2)
+        coalesce(children.apply(0).asInstanceOf[Column], k_lit(children.apply(1)))
       case _ =>
 
         ExpressionConverter.convert(call.getType.getSqlTypeName, call.`type`, op.getKind, op.getName, children)

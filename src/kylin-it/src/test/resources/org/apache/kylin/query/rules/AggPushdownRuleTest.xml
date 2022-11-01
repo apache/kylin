@@ -262,7 +262,7 @@ KapOLAPToEnumerableConverter
             <![CDATA[
 KapOLAPToEnumerableConverter
   KapAggregateRel(group-set=[[0]], groups=[null], usr_GMV_SUM_ok=[SUM($1)], ctx=[])
-    KapProjectRel(Calculation_1162491713472385025=[CASE(<($0, 164000), '[0,164000)', <($0, 166000), '[164000, 166000)', '[166000, +∞')], PRICE=[$1], ctx=[])
+    KapProjectRel(Calculation_1162491713472385025=[CASE(<($0, 164000), '[0,164000)', <($0, 166000), '[164000, 166000)', '[166000, +∞')], $1=[$1], ctx=[])
       KapAggregateRel(group-set=[[1]], groups=[null], usr_GMV_SUM_ok=[SUM($2)], ctx=[])
         KapFilterRel(condition=[<>($0, 'Auction')], ctx=[])
           KapProjectRel(LSTG_FORMAT_NAME=[$0], X_measure__0=[$3], usr_GMV_SUM_ok=[$1], ctx=[])
@@ -293,7 +293,7 @@ KapOLAPToEnumerableConverter
             <![CDATA[
 KapOLAPToEnumerableConverter
   KapAggregateRel(group-set=[[0, 1]], groups=[null], usr_GMV_SUM_ok=[SUM($2)], ctx=[])
-    KapProjectRel(Calculation_1162491713472385025=[CASE(<($1, 164000), '[0,164000)', <($1, 166000), '[164000, 166000)', '[166000, +∞')], LSTG_FORMAT_NAME=[$0], PRICE=[$2], ctx=[])
+    KapProjectRel(Calculation_1162491713472385025=[CASE(<($1, 164000), '[0,164000)', <($1, 166000), '[164000, 166000)', '[166000, +∞')], LSTG_FORMAT_NAME=[$0], $2=[$2], ctx=[])
       KapAggregateRel(group-set=[[1, 2]], groups=[null], usr_GMV_SUM_ok=[SUM($3)], ctx=[])
         KapFilterRel(condition=[<>($0, 'Auction')], ctx=[])
           KapProjectRel(LSTG_FORMAT_NAME=[$0], LSTG_FORMAT_NAME0=[$2], X_measure__0=[$3], usr_GMV_SUM_ok=[$1], ctx=[])
@@ -324,7 +324,7 @@ KapOLAPToEnumerableConverter
             <![CDATA[
 KapOLAPToEnumerableConverter
   KapAggregateRel(group-set=[[0]], groups=[null], usr_GMV_SUM_ok=[SUM($1)], ctx=[])
-    KapProjectRel(Calculation_1162491713472385025=[CASE(<($0, 164000), '[0,164000)', <($0, 166000), '[164000, 166000)', '[166000, +∞')], PRICE=[$1], ctx=[])
+    KapProjectRel(Calculation_1162491713472385025=[CASE(<($0, 164000), '[0,164000)', <($0, 166000), '[164000, 166000)', '[166000, +∞')], $1=[$1], ctx=[])
       KapAggregateRel(group-set=[[0]], groups=[null], usr_GMV_SUM_ok=[SUM($2)], ctx=[])
         KapFilterRel(condition=[<>($1, 'Auction')], ctx=[])
           KapProjectRel(X_measure__0=[$1], LSTG_FORMAT_NAME=[$2], usr_GMV_SUM_ok=[$3], ctx=[])
@@ -359,7 +359,7 @@ KapOLAPToEnumerableConverter
             <![CDATA[
 KapOLAPToEnumerableConverter
   KapAggregateRel(group-set=[[0]], groups=[null], usr_GMV_SUM_ok=[SUM($1)], ctx=[])
-    KapProjectRel(Calculation_1162491713472385025=[CASE(<($0, 164000), '[0,164000)', <($0, 166000), '[164000, 166000)', '[166000, +∞')], PRICE=[$1], ctx=[])
+    KapProjectRel(Calculation_1162491713472385025=[CASE(<($0, 164000), '[0,164000)', <($0, 166000), '[164000, 166000)', '[166000, +∞')], $1=[$1], ctx=[])
       KapAggregateRel(group-set=[[1]], groups=[null], usr_GMV_SUM_ok=[SUM($2)], ctx=[])
         KapFilterRel(condition=[<>($0, 'Auction')], ctx=[])
           KapProjectRel(LSTG_FORMAT_NAME=[$0], X_measure__0=[$3], usr_GMV_SUM_ok=[$1], ctx=[])
@@ -423,7 +423,7 @@ KapOLAPToEnumerableConverter
             <![CDATA[
 KapOLAPToEnumerableConverter
   KapAggregateRel(group-set=[[0]], groups=[null], usr_GMV_SUM_ok=[SUM($1)], ctx=[])
-    KapProjectRel(Calculation_1162491713472385025=[CASE(AND(<($1, 164000), =($0, 'ABIN')), '[0,164000)', AND(<($1, 166000), =($0, 'ABIN')), '[164000, 166000)', '[166000, +∞')], PRICE=[$2], ctx=[])
+    KapProjectRel(Calculation_1162491713472385025=[CASE(AND(<($1, 164000), =($0, 'ABIN')), '[0,164000)', AND(<($1, 166000), =($0, 'ABIN')), '[164000, 166000)', '[166000, +∞')], $2=[$2], ctx=[])
       KapAggregateRel(group-set=[[1, 2]], groups=[null], usr_GMV_SUM_ok=[SUM($3)], ctx=[])
         KapFilterRel(condition=[<>($0, 'Auction')], ctx=[])
           KapProjectRel(LSTG_FORMAT_NAME=[$0], LSTG_FORMAT_NAME0=[$2], X_measure__0=[$3], usr_GMV_SUM_ok=[$1], ctx=[])
@@ -454,7 +454,7 @@ KapOLAPToEnumerableConverter
             <![CDATA[
 KapOLAPToEnumerableConverter
   KapAggregateRel(group-set=[[0]], groups=[null], usr_GMV_COUNT_ok=[$SUM0($1)], ctx=[])
-    KapProjectRel(Calculation_1162491713472385025=[CASE(<($0, 164000), '[0,164000)', <($0, 166000), '[164000, 166000)', '[166000, +∞')], PRICE=[$1], ctx=[])
+    KapProjectRel(Calculation_1162491713472385025=[CASE(<($0, 164000), '[0,164000)', <($0, 166000), '[164000, 166000)', '[166000, +∞')], $1=[$1], ctx=[])
       KapAggregateRel(group-set=[[1]], groups=[null], usr_GMV_COUNT_ok=[$SUM0($2)], ctx=[])
         KapFilterRel(condition=[<>($0, 'Auction')], ctx=[])
           KapProjectRel(LSTG_FORMAT_NAME=[$0], X_measure__0=[$3], usr_GMV_COUNT_ok=[$1], ctx=[])
@@ -512,7 +512,7 @@ KapAggregateRel(group-set=[[0]], groups=[null], usr_GMV_SUM_ok=[SUM($1)], ctx=[]
         <Resource name="query01.planAfter">
             <![CDATA[
 KapAggregateRel(group-set=[[0]], groups=[null], usr_GMV_SUM_ok=[SUM($1)], ctx=[])
-  KapProjectRel(Calculation_1162491713472385025=[CASE(<($0, 164000), '[0,164000)', <($0, 166000), '[164000, 166000)', '[166000, +∞')], PRICE=[$1], ctx=[])
+  KapProjectRel(Calculation_1162491713472385025=[CASE(<($0, 164000), '[0,164000)', <($0, 166000), '[164000, 166000)', '[166000, +∞')], $1=[$1], ctx=[])
     KapAggregateRel(group-set=[[17]], groups=[null], usr_GMV_SUM_ok=[SUM($8)], ctx=[])
       KapFilterRel(condition=[NOT(=($3, 'Auction'))], ctx=[])
         KapJoinRel(condition=[=($3, $16)], joinType=[inner], ctx=[])
