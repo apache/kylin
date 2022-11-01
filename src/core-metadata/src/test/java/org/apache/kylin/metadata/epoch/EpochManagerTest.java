@@ -215,6 +215,28 @@ class EpochManagerTest {
     }
 
     @Test
+    void testGetOwnedEpochs() {
+        Epoch e1 = new Epoch();
+        e1.setEpochTarget("test1");
+        e1.setCurrentEpochOwner("owner1");
+
+        Epoch e2 = new Epoch();
+        e2.setEpochTarget("test2");
+        e2.setCurrentEpochOwner("owner2");
+
+        Epoch e3 = new Epoch();
+        e3.setEpochTarget("test3");
+        e3.setCurrentEpochOwner("owner2");
+
+        getEpochStore().insertBatch(Arrays.asList(e1, e2, e3));
+
+        EpochManager epochManager = EpochManager.getInstance();
+        epochManager.setIdentity("owner2");
+
+        Assertions.assertEquals(2, epochManager.getOwnedEpochs().size());
+    }
+
+    @Test
     void testForceUpdateEpoch() {
         EpochManager epochManager = EpochManager.getInstance();
         Assertions.assertNull(epochManager.getGlobalEpoch());
