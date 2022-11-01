@@ -29,6 +29,8 @@ import org.springframework.stereotype.Component;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 @Slf4j
 @Component
 public class BootstrapCommand implements Runnable {
@@ -50,8 +52,8 @@ public class BootstrapCommand implements Runnable {
     }
 
     void initProject(KylinConfig config, final ProjectInstance project) {
+        NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project.getName());
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-            NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project.getName());
             scheduler.init(new JobEngineConfig(config));
             if (!scheduler.hasStarted()) {
                 throw new RuntimeException("Scheduler for " + project.getName() + " has not been started");
@@ -59,7 +61,7 @@ public class BootstrapCommand implements Runnable {
 
             return 0;
         }, project.getName(), 1, UnitOfWork.DEFAULT_EPOCH_ID);
-
+        scheduler.setHasFinishedTransactions(new AtomicBoolean(true));
         log.info("init project {} finished", project.getName());
     }
 }
