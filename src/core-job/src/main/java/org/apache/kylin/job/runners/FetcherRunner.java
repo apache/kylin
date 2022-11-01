@@ -45,6 +45,8 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
 
     private final ScheduledExecutorService fetcherPool;
 
+    private boolean reSchedule = true;
+
     public FetcherRunner(NDefaultScheduler nDefaultScheduler, ExecutorService jobPool,
             ScheduledExecutorService fetcherPool) {
         super(nDefaultScheduler);
@@ -95,6 +97,12 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
     @Override
     public void doRun() {
         try {
+            // Job schedule is only limited to the transaction in the NDefaultScheduler once
+            // Avoid that if the first transaction fails, jobs in the project cannot be scheduled
+            if (!nDefaultScheduler.hasFinishedTransactions() && reSchedule) {
+                reSchedule = false;
+                return;
+            }
             val executableManager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
             Map<String, Executable> runningJobs = context.getRunningJobs();
 

@@ -29,6 +29,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import lombok.Setter;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
@@ -69,6 +70,9 @@ public class NDefaultScheduler implements Scheduler<AbstractExecutable> {
     private ExecutableContext context;
     private AtomicBoolean initialized = new AtomicBoolean(false);
     private AtomicBoolean hasStarted = new AtomicBoolean(false);
+
+    @Setter
+    private AtomicBoolean hasFinishedTransactions = new AtomicBoolean(false);
     @Getter
     private JobEngineConfig jobEngineConfig;
     @Getter
@@ -224,6 +228,10 @@ public class NDefaultScheduler implements Scheduler<AbstractExecutable> {
     @Override
     public boolean hasStarted() {
         return hasStarted.get();
+    }
+
+    public boolean hasFinishedTransactions() {
+        return hasFinishedTransactions.get();
     }
 
     public static double currentAvailableMem() {
