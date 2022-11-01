@@ -47,6 +47,7 @@ import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
@@ -66,6 +67,7 @@ import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.metrics.MetricsName;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.metadata.Epoch;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkContext;
 import org.apache.kylin.common.scheduler.EventBusFactory;
@@ -107,6 +109,7 @@ import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.ISmartApplicationListenerForSystem;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.JobFilter;
 import org.apache.kylin.rest.request.JobUpdateRequest;
@@ -122,6 +125,8 @@ import org.apache.kylin.rest.util.SparkHistoryUIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
@@ -141,7 +146,7 @@ import lombok.val;
 import lombok.var;
 
 @Component("jobService")
-public class JobService extends BasicService implements JobSupporter {
+public class JobService extends BasicService implements JobSupporter, ISmartApplicationListenerForSystem {
 
     @Autowired
     private ProjectService projectService;
@@ -1351,6 +1356,33 @@ public class JobService extends BasicService implements JobSupporter {
             MsgPicker.setMsg("en");
         }
     }
+
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        if (event instanceof ContextClosedEvent) {
+            logger.info("Stop kyligence node, kill job on yarn for yarn cluster mode");
+            EpochManager epochManager = EpochManager.getInstance();
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            List<Epoch> ownedEpochs = epochManager.getOwnedEpochs();
+
+            for (Epoch epoch : ownedEpochs) {
+                String project = epoch.getEpochTarget();
+                NExecutableManager executableManager = NExecutableManager.getInstance(kylinConfig, project);
+                if (executableManager != null) {
+                    List<ExecutablePO> allJobs = executableManager.getAllJobs();
+                    for (ExecutablePO executablePO : allJobs) {
+                        executableManager.cancelRemoteJob(executablePO);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public int getOrder() {
+        return HIGHEST_PRECEDENCE;
+    }
+
     @Setter
     @Getter
     static class ExecutablePOSortBean {

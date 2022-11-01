@@ -814,4 +814,9 @@ public class EpochManager {
             return null;
         });
     }
+
+    public List<Epoch> getOwnedEpochs() {
+        return epochStore.list().stream().filter(this::checkEpochOwnerOnly).collect(Collectors.toList());
+    }
+
 }
