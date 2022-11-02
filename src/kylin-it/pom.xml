@@ -12,11 +12,6 @@
 
     <artifactId>kylin-it</artifactId>
 
-    <properties>
-        <beanutils.version>1.9.4</beanutils.version>
-        <kylin.module.version>5.0.0-SNAPSHOT</kylin.module.version>
-    </properties>
-
     <dependencies>
         <!--Springfox Swagger2 v2.9.2, swagger2markup v1.3.3. has specific requirement on guava and commons-beanutils -->
         <dependency>
@@ -27,7 +22,6 @@
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
-            <version>${beanutils.version}</version>
         </dependency>
 
         <dependency>
@@ -231,7 +225,6 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-streaming</artifactId>
-            <version>${kylin.module.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
