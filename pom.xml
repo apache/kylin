@@ -90,7 +90,7 @@
     <mysql-connector.version>5.1.8</mysql-connector.version>
 
     <!-- postgre SQL versions -->
-    <postgresql.version>42.3.3</postgresql.version>
+    <postgresql.version>42.3.7</postgresql.version>
 
     <!-- Scala versions -->
     <scala.version>2.12.10</scala.version>
