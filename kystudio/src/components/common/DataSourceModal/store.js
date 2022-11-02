@@ -39,7 +39,7 @@ const initialState = JSON.stringify({
     project: null,
     selectedTables: [],
     selectedDatabases: [],
-    needSampling: false,
+    needSampling: false, // click next default value
     samplingRows: 20000000,
     settings: {
       type: '',
