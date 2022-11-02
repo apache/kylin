@@ -19,6 +19,7 @@ package org.apache.kylin.junit;
 
 import java.util.Map;
 
+import org.apache.kylin.common.SystemPropertiesCache;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -64,9 +65,9 @@ public class OverwritePropExtension implements BeforeEachCallback, AfterEachCall
         val keys = Sets.newHashSet(overwritten.keySet());
         for (String property : keys) {
             if (!overwritten.containsKey(property) || overwritten.get(property) == null) {
-                System.clearProperty(property);
+                SystemPropertiesCache.clearProperty(property);
             } else {
-                System.setProperty(property, overwritten.get(property));
+                SystemPropertiesCache.setProperty(property, overwritten.get(property));
             }
         }
         context.getStore(NAMESPACE).remove(OVERWRITE_PROP_BEFORE_EACH_KEY);
@@ -82,9 +83,9 @@ public class OverwritePropExtension implements BeforeEachCallback, AfterEachCall
     /** Clear system property in test method with annotation {@link org.junit.Test} */
     public final void restoreSystemProp(Map<String, String> overwritten, String property) {
         if (!overwritten.containsKey(property) || overwritten.get(property) == null) {
-            System.clearProperty(property);
+            SystemPropertiesCache.clearProperty(property);
         } else {
-            System.setProperty(property, overwritten.get(property));
+            SystemPropertiesCache.setProperty(property, overwritten.get(property));
         }
         overwritten.remove(property);
     }

@@ -41,6 +41,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.SystemPropertiesCache;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.scheduler.EventBusFactory;
@@ -121,7 +122,7 @@ public class StreamingJobServiceTest extends CSVSourceTestCase {
     @Before
     public void setup() {
         super.setup();
-        System.setProperty("HADOOP_USER_NAME", "root");
+        SystemPropertiesCache.setProperty("HADOOP_USER_NAME", "root");
 
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
         ReflectionTestUtils.setField(streamingJobService, "aclEvaluate", aclEvaluate);

@@ -109,7 +109,10 @@ public class KylinConfigExt extends KylinConfig {
     protected StrSubstitutor getSubstitutor() {
         // overrides > env > properties
         final Map<String, Object> all = Maps.newHashMap();
-        all.putAll((Map) properties);
+        // all.putAll((Map) properties); // use putAll will call CompositeMapView.size()sss
+        for(Map.Entry<Object, Object> e: properties.entrySet()) {
+            all.put(e.getKey().toString(), e.getValue());
+        }
         all.putAll(STATIC_SYSTEM_ENV);
         all.putAll(overrides);
         return new StrSubstitutor(all);

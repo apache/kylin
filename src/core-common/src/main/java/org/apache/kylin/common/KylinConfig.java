@@ -600,7 +600,7 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public String getOptionalFromProperties(String prop, String dft, Properties properties) {
-        final String property = System.getProperty(prop);
+        final String property = SystemPropertiesCache.getProperty(prop);
         return property != null ? getSubstitutor().replace(property)
                 : getSubstitutor().replace(properties.getProperty(prop, dft));
     }

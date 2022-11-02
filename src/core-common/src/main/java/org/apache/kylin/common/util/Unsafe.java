@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kylin.common.SystemPropertiesCache;
 
 /**
  * Contains methods that call JDK methods that the
@@ -97,27 +98,27 @@ public class Unsafe {
         }
 
         if (StringUtils.isEmpty(value)) {
-            System.clearProperty(key);
+            SystemPropertiesCache.clearProperty(key);
         } else {
-            System.setProperty(key, value);
+            SystemPropertiesCache.setProperty(key, value);
         }
     }
 
     /** Restore all system properties in test */
     public static void restoreAllSystemProp(Map<String, String> systemProp) {
         if (systemProp != null) {
-            systemProp.forEach((prop, value) -> System.clearProperty(prop));
+            systemProp.forEach((prop, value) -> SystemPropertiesCache.clearProperty(prop));
             systemProp.clear();
         }
     }
 
     /** Set system property */
     public static String setProperty(String property, String value) {
-        return System.setProperty(property, value);
+        return SystemPropertiesCache.setProperty(property, value);
     }
 
     /** Clear system property */
     public static void clearProperty(String property) {
-        System.clearProperty(property);
+        SystemPropertiesCache.clearProperty(property);
     }
 }

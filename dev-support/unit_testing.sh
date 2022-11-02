@@ -63,11 +63,11 @@ mvn clean test -X --fail-at-end -pl src/tool -DfailIfNoTests=false -Duser.timezo
 echo "----------- Kylin Test Completed -----------"
 
 
-echo "\n\nRunning test on following module: "
+echo "<Running test on following module>"
 cat ${ci_output} | grep "maven-surefire-plugin:3.0.0-M5:test"
 
-echo "\n\nFailed test on following module: "
+echo "<Failed test on following module>"
 cat ${ci_output} | grep "Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:"
 
-echo "\n\nFailed cases statistics: "
+echo "<Failed cases statistics>"
 cat ${ci_output} | grep "R] Tests run"
