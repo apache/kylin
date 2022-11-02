@@ -50,6 +50,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
     private static final String META_TABLE_KEY = "META_TABLE_KEY";
     private static final String META_TABLE_TS = "META_TABLE_TS";
     private static final String META_TABLE_CONTENT = "META_TABLE_CONTENT";
+    private static final String DIALECT_OF_PG = "postgresql";
     private static Logger logger = LoggerFactory.getLogger(JDBCResourceStore.class);
     private JDBCConnectionManager connectionManager;
 
@@ -123,6 +124,9 @@ public class JDBCResourceStore extends PushdownResourceStore {
 
                 try {
                     String indexName = "IDX_" + META_TABLE_TS;
+                    if (DIALECT_OF_PG.equals(kylinConfig.getMetadataDialect())) {
+                        indexName += System.currentTimeMillis();
+                    }
                     String createIndexSql = sqls.getCreateIndexSql(indexName, tableName, META_TABLE_TS);
                     logger.info("Creating index: {}", createIndexSql);
                     pstat = connection.prepareStatement(createIndexSql);
@@ -314,7 +318,13 @@ public class JDBCResourceStore extends PushdownResourceStore {
         if (rs == null) {
             return null;
         }
-
+        if (DIALECT_OF_PG.equals(kylinConfig.getMetadataDialect())) {
+            InputStream inputStream = rs.getBinaryStream(META_TABLE_CONTENT);
+            if (inputStream == null) {
+                return openPushdown(resPath);
+            }
+            return inputStream;
+        }
         Blob blob = rs.getBlob(META_TABLE_CONTENT);
 
         if (blob == null || blob.length() == 0) {
@@ -355,13 +365,13 @@ public class JDBCResourceStore extends PushdownResourceStore {
                     if (existing) {
                         pstat = connection.prepareStatement(sqls.getReplaceSql());
                         pstat.setLong(1, ts);
-                        pstat.setBlob(2, new BufferedInputStream(new ByteArrayInputStream(bytes)));
+                        pstat.setBinaryStream(2, new BufferedInputStream(new ByteArrayInputStream(bytes)));
                         pstat.setString(3, resPath);
                     } else {
                         pstat = connection.prepareStatement(sqls.getInsertSql());
                         pstat.setString(1, resPath);
                         pstat.setLong(2, ts);
-                        pstat.setBlob(3, new BufferedInputStream(new ByteArrayInputStream(bytes)));
+                        pstat.setBinaryStream(3, new BufferedInputStream(new ByteArrayInputStream(bytes)));
                     }
 
                     if (isContentOverflow(bytes, resPath)) {
@@ -376,8 +386,9 @@ public class JDBCResourceStore extends PushdownResourceStore {
                         RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(bytes));
                         try {
                             int result = pstat.executeUpdate();
-                            if (result != 1)
+                            if (result != 1) {
                                 throw new SQLException();
+                            }
                         } catch (Exception e) {
                             pushdown.rollback();
                             throw e;
@@ -414,10 +425,11 @@ public class JDBCResourceStore extends PushdownResourceStore {
         }
 
         int maxSize = kylinConfig.getJdbcResourceStoreMaxCellSize();
-        if (content.length > maxSize)
+        if (content.length > maxSize) {
             return true;
-        else
+        } else {
             return false;
+        }
     }
 
     @Override
@@ -454,8 +466,9 @@ public class JDBCResourceStore extends PushdownResourceStore {
                             RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(content));
                             try {
                                 int result = pstat.executeUpdate();
-                                if (result != 1)
+                                if (result != 1) {
                                     throw new SQLException();
+                                }
                             } catch (Throwable e) {
                                 pushdown.rollback();
                                 throw e;
@@ -466,7 +479,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
                             pstat = connection.prepareStatement(sqls.getInsertSql());
                             pstat.setString(1, resPath);
                             pstat.setLong(2, newTS);
-                            pstat.setBlob(3, new BufferedInputStream(new ByteArrayInputStream(content)));
+                            pstat.setBinaryStream(3, new BufferedInputStream(new ByteArrayInputStream(content)));
                             pstat.executeUpdate();
                         }
                     } else {
@@ -481,8 +494,9 @@ public class JDBCResourceStore extends PushdownResourceStore {
                             RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(content));
                             try {
                                 int result = pstat.executeUpdate();
-                                if (result != 1)
+                                if (result != 1) {
                                     throw new SQLException();
+                                }
                             } catch (Throwable e) {
                                 pushdown.rollback();
                                 throw e;
