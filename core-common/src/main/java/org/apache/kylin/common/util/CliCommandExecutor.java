@@ -143,9 +143,7 @@ public class CliCommandExecutor {
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8));
             String line;
-            StringBuilder result = new StringBuilder();
             while ((line = reader.readLine()) != null && !Thread.currentThread().isInterrupted()) {
-                result.append(line).append('\n');
                 if (logAppender != null) {
                     logAppender.log(line);
                 }
@@ -164,7 +162,8 @@ public class CliCommandExecutor {
 
             try {
                 int exitCode = proc.waitFor();
-                return Pair.newPair(exitCode, result.toString());
+                String msg = exitCode !=0 ? "Job execute failed, see kylin log or spark log for more info." : "success";
+                return Pair.newPair(exitCode, msg);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IOException(e);
