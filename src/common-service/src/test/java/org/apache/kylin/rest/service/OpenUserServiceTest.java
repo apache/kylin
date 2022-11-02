@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -89,7 +88,7 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testBasic() throws IOException {
+    public void testBasic() {
 
         Assert.assertNotNull(userService);
 
