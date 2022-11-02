@@ -143,10 +143,6 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails, Us
         this.setUuid(RandomUtil.randomUUIDStr());
     }
 
-    public ManagedUser(String userName) {
-        this(userName, "NO_PASSWORD", false, Constant.GROUP_ALL_USERS);
-    }
-
     @Override
     public String resourceName() {
         return username;
