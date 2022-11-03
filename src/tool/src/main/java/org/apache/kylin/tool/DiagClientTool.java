@@ -20,6 +20,7 @@ package org.apache.kylin.tool;
 import static org.apache.kylin.common.exception.code.ErrorCodeTool.PARAMETER_TIMESTAMP_COMPARE;
 import static org.apache.kylin.tool.constant.DiagSubTaskEnum.CANDIDATE_LOG;
 import static org.apache.kylin.tool.constant.DiagSubTaskEnum.LOG;
+import static org.apache.kylin.tool.constant.DiagSubTaskEnum.SOURCE_TABLE_STATS;
 
 import java.io.File;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.common.util.OptionBuilder;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.tool.snapshot.SnapshotSourceTableStatsTool;
 import org.apache.kylin.tool.util.DiagnosticFilesChecker;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -175,6 +177,8 @@ public class DiagClientTool extends AbstractInfoExtractorTool {
 
         executeTimeoutTask(taskQueue);
 
+        extractSnapshotAutoUpdate(exportDir, recordTime);
+
         executorService.shutdown();
         awaitDiagPackageTermination(getKapConfig().getDiagPackageTimeout());
 
@@ -187,6 +191,15 @@ public class DiagClientTool extends AbstractInfoExtractorTool {
         }
 
         DiagnosticFilesChecker.writeMsgToFile("Total files", System.currentTimeMillis() - start, recordTime);
+    }
+
+    public void extractSnapshotAutoUpdate(File exportDir, File recordTime) {
+        val sourceTableStatsTask = executorService.submit(() -> {
+            recordTaskStartTime(SOURCE_TABLE_STATS);
+            SnapshotSourceTableStatsTool.extractSnapshotAutoUpdate(exportDir);
+            recordTaskExecutorTimeToFile(SOURCE_TABLE_STATS, recordTime);
+        });
+        scheduleTimeoutTask(sourceTableStatsTask, SOURCE_TABLE_STATS);
     }
 
     private void exportCandidateLog(File exportDir, File recordTime, long startTime, long endTime) {

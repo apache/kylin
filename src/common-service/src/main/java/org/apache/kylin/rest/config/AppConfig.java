@@ -25,9 +25,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.common.util.DefaultHostInfoFetcher;
 import org.apache.kylin.common.util.HostInfoFetcher;
+import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.cluster.DefaultClusterManager;
 import org.apache.kylin.rest.handler.KapNoOpResponseErrorHandler;
@@ -86,6 +86,15 @@ public class AppConfig implements WebMvcConfigurer {
         scheduler.setPoolSize(5);
         scheduler.setThreadNamePrefix("DefaultTaskScheduler-");
         return scheduler;
+    }
+
+    @Bean("projectScheduler")
+    public TaskScheduler projectScheduler() {
+        val autoRefreshSnapshotScheduler = new ThreadPoolTaskScheduler();
+        autoRefreshSnapshotScheduler.setPoolSize(20);
+        autoRefreshSnapshotScheduler.setAwaitTerminationSeconds(60);
+        autoRefreshSnapshotScheduler.setThreadNamePrefix("ProjectScheduler-");
+        return autoRefreshSnapshotScheduler;
     }
 
     @Bean

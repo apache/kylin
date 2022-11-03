@@ -18,8 +18,8 @@
 
 package org.apache.kylin.engine.spark.job.stage.snapshots
 
+import io.kyligence.kap.engine.spark.job.SnapshotBuildJob
 import org.apache.kylin.engine.spark.application.SparkApplication
-import org.apache.kylin.engine.spark.job.SnapshotBuildJob
 import org.apache.kylin.engine.spark.job.stage.StageExec
 import org.apache.kylin.metadata.cube.model.NDataSegment
 

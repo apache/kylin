@@ -222,4 +222,8 @@ class TestResourceUtils extends SparderBaseFunSuite with BeforeAndAfterEach {
       case e: Exception => assert(e.getMessage.contains("more than the maximum allocation memory capability"))
     }
   }
+
+  test("checkResource return true when skipCheckResource=true") {
+    assert(ResourceUtils.checkResource(new SparkConf(), fetcher, true))
+  }
 }

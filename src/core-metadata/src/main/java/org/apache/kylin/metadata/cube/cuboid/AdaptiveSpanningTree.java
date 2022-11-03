@@ -115,7 +115,7 @@ public class AdaptiveSpanningTree implements Serializable {
         return treeNodes.stream().allMatch(TreeNode::isSpanned);
     }
 
-    public boolean nonSpanned() {
+    public boolean canSpan() {
         return treeNodes.stream().anyMatch(TreeNode::nonSpanned);
     }
 

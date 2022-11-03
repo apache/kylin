@@ -19,22 +19,32 @@
 package io.kyligence.kap.secondstorage.management;
 
 import com.google.common.collect.Maps;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import io.kyligence.kap.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import io.kyligence.kap.secondstorage.NameUtil;
+import io.kyligence.kap.secondstorage.SecondStorageLockUtils;
 import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import io.kyligence.kap.secondstorage.database.DatabaseOperator;
+import io.kyligence.kap.secondstorage.database.QueryOperator;
+import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
 import io.kyligence.kap.secondstorage.factory.SecondStorageFactoryUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,6 +56,58 @@ public class SecondStorageScheduleService {
     @Scheduled(cron = "${kylin.second-storage.table-clean-cron:0 0 0 * * *}")
     public void secondStorageTempTableCleanTask() {
         cleanAllUsedNode();
+    }
+
+    @Scheduled(cron = "${kylin.second-storage.low-cardinality-cron:0 0 0 * * *}")
+    public void secondStorageLowCardinality() throws Exception {
+        log.info("Start to modify second storage low cardinality.");
+        EpochManager epochManager = EpochManager.getInstance();
+        if (!epochManager.checkEpochOwner(EpochManager.GLOBAL))
+            return;
+
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        if (!config.getSecondStorageUseLowCardinality())
+            return;
+
+        val projectManager = NProjectManager.getInstance(config);
+        List<String> enabledProjects = projectManager.listAllProjects().stream()
+                .filter(project -> SecondStorageUtil.isProjectEnable(project.getName())
+                        && project.getConfig().getSecondStorageUseLowCardinality())
+                .map(ProjectInstance::getName)
+                .collect(Collectors.toList());
+
+        for (String project : enabledProjects) {
+            try {
+                SecondStorageUtil.validateProjectLock(project, Arrays.asList(LockTypeEnum.LOAD.name(), LockTypeEnum.ALL.name()));
+            } catch (KylinException e) {
+                log.error("There is second storage task on project {}.", project);
+                continue;
+            }
+            log.info("Start to modify second storage low cardinality on project {}.", project);
+            val dataModelManager = NDataModelManager.getInstance(config, project);
+            QueryOperator queryOperator = SecondStorageFactoryUtils.createQueryMetricOperator(project);
+            List<NDataModel> enabledModels = dataModelManager.listAllModels().stream()
+                    .filter(model -> SecondStorageUtil.isModelEnable(project, model.getId())
+                            && !SecondStorageLockUtils.containsKey(model.getId()))
+                    .collect(Collectors.toList());
+            for (NDataModel model : enabledModels) {
+                val df = NDataflowManager.getInstance(config, project).getDataflow(model.getId());
+                if (df.getConfig().getSecondStorageUseLowCardinality()) {
+                    SegmentRange<Long> range = new SegmentRange.TimePartitionedSegmentRange(df.getSegments().getTSStart(), df.getSegments().getTSEnd());
+                    SecondStorageLockUtils.acquireLock(model.getId(), range).lock();
+                    try {
+                        val database = NameUtil.getDatabase(df);
+                        val destTableName = NameUtil.getTable(df, SecondStorageUtil.getBaseIndex(df).getId());
+                        queryOperator.modifyColumnByCardinality(database, destTableName);
+                    } catch (Exception exception) {
+                        log.error("Failed to modify second storage low cardinality on model {}.", model.getId(), exception);
+                    } finally {
+                        SecondStorageLockUtils.unlock(model.getId(), range);
+                    }
+                }
+            }
+            log.info("Finish to modify second storage low cardinality on project {}.", project);
+        }
     }
 
     private void cleanAllUsedNode() {
@@ -81,14 +143,14 @@ public class SecondStorageScheduleService {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         try (DatabaseOperator operator = SecondStorageFactoryUtils.createDatabaseOperator(SecondStorageNodeHelper.resolve(node))) {
             String database = NameUtil.getDatabase(config, project);
-            List<String> AllDatabases = operator.listDatabases();
-            if (!AllDatabases.contains(database)) {
+            List<String> allDatabases = operator.listDatabases();
+            if (!allDatabases.contains(database)) {
                 return;
             }
 
             // get all temp table in database
             List<String> tempTables = operator.listTables(database).stream()
-                    .filter(NameUtil::isTempTable).collect(Collectors.toList());
+                    .filter(NameUtil::isTempTable).map(table -> table.replace("-", "_")).collect(Collectors.toList());
 
             val execManager = NExecutableManager.getInstance(config, project);
             val allJobs = execManager.getAllJobs();
@@ -96,11 +158,13 @@ public class SecondStorageScheduleService {
                     .filter(job -> job.getOutput().getStatus().equals(ExecutableState.DISCARDED.name()))
                     .map(RootPersistentEntity::getId)
                     .map(jobId -> jobId.length() > JOB_ID_LENGTH ? jobId.substring(0, JOB_ID_LENGTH) : jobId)
+                    .map(jobId -> jobId.replace("-", "_"))
                     .collect(Collectors.toList());
 
             List<String> allJobIds = allJobs.stream()
                     .map(RootPersistentEntity::getId)
                     .map(jobId -> jobId.length() > JOB_ID_LENGTH ? jobId.substring(0, JOB_ID_LENGTH) : jobId)
+                    .map(jobId -> jobId.replace("-", "_"))
                     .collect(Collectors.toList());
 
             // temp table is start with job id
@@ -111,11 +175,9 @@ public class SecondStorageScheduleService {
             List<String> orphanTempTables = tempTables.stream().filter(table -> !allJobIds.contains(table.substring(0, JOB_ID_LENGTH)))
                     .collect(Collectors.toList());
             log.info("check database {}, find discardTempTables: {}, orphanTempTables: {} ", database, discardTempTables, orphanTempTables);
-            // drop tables;
+
             discardTempTables.forEach(table -> operator.dropTable(database, table));
             orphanTempTables.forEach(table -> operator.dropTable(database, table));
         }
     }
-
-
 }

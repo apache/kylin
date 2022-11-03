@@ -169,7 +169,7 @@ class StreamingEntry
 
     val flatTableDesc = new NCubeJoinedFlatTableDesc(dataflow.getIndexPlan)
     val nSpanningTree = createSpanningTree(dataflow)
-    val partitionColumn = NSparkCubingUtil.convertFromDot(dataflow.getModel.getPartitionDesc.getPartitionDateColumn)
+    val partitionColumn = NSparkCubingUtil.convertFromDot(dataflow.getModel.getPartitionDesc.getBackTickPartitionDateColumn)
     val flatTable = CreateStreamingFlatTable(flatTableDesc, null, nSpanningTree, ss, null, partitionColumn, watermark)
 
     val streamingJobMgr = StreamingJobManager.getInstance(originConfig, project)

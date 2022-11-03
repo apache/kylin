@@ -10,5 +10,5 @@
   "subscribe" : "streaming_fusion_ssb_topic",
   "starting_offsets" : "latest",
   "batch_table_identity" : "SSB.LINEORDER_HIVE",
-  "parser_name" : "org.apache.kylin.parser.TimedJsonStreamParser"
+  "parser_name" : "io.kyligence.kap.parser.TimedJsonStreamParser"
 }

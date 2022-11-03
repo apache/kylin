@@ -39,7 +39,7 @@ import org.apache.kylin.common.state.StateSwitchConstant;
 import org.apache.kylin.common.util.ClusterConstant;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.metadata.project.NProjectManager;
@@ -62,7 +62,7 @@ import org.apache.spark.sql.SparderEnv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.ApplicationListener;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
@@ -78,7 +78,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component("monitorService")
-public class MonitorService extends BasicService {
+public class MonitorService extends BasicService implements ApplicationListener<AfterMetadataReadyEvent> {
     private static final Logger logger = LoggerFactory.getLogger(MonitorService.class);
 
     @Setter
@@ -100,8 +100,8 @@ public class MonitorService extends BasicService {
                 .map(ProjectConfigResponse::getYarnQueue).collect(Collectors.toSet());
     }
 
-    @EventListener(AfterMetadataReadyEvent.class)
-    public void reportMonitor() {
+    @Override
+    public void onApplicationEvent(AfterMetadataReadyEvent event) {
         val kylinConfig = KylinConfig.getInstanceFromEnv();
         KapConfig kapConfig = KapConfig.wrap(kylinConfig);
         if (kapConfig.isMonitorEnabled()) {
@@ -326,7 +326,7 @@ public class MonitorService extends BasicService {
     }
 
     private boolean pendingOnYarn(Set<String> runningOnYarnJobs, AbstractExecutable executable) {
-        val parent = (DefaultChainedExecutable) executable;
+        val parent = (DefaultExecutable) executable;
         val runningJob = parent.getTasks().stream().filter(e -> e.getStatus() == ExecutableState.RUNNING).findFirst()
                 .orElse(null);
         if (runningJob == null) {

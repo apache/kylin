@@ -85,6 +85,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- aws -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-core</artifactId>
+            <version>${aws-java-sdk-s3.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!--test-->
         <dependency>
             <groupId>org.junit.vintage</groupId>
@@ -96,6 +104,7 @@
             <artifactId>mockito-inline</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>

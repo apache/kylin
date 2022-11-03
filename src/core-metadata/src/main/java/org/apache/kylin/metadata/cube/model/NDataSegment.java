@@ -162,6 +162,7 @@ public class NDataSegment implements ISegment, Serializable {
         }
         layoutInfo = new LayoutInfo();
     }
+
     public NDataSegment(NDataSegment other) {
         this.id = other.id;
         this.name = other.name;
@@ -343,6 +344,13 @@ public class NDataSegment implements ISegment, Serializable {
                     .getForSegment(NDataSegment.this);
             if (segDetails == null) {
                 segDetails = NDataSegDetails.newSegDetails(dataflow, id);
+            }
+
+            IndexPlan indexPlan = dataflow.getIndexPlan();
+            if (!indexPlan.isBroken()) {
+                List<NDataLayout> filteredCuboids = segDetails.getLayouts().stream()
+                        .filter(dataLayout -> dataLayout.getLayout() != null).collect(Collectors.toList());
+                segDetails.setLayouts(filteredCuboids);
             }
 
             segDetails.setCachedAndShared(dataflow.isCachedAndShared());

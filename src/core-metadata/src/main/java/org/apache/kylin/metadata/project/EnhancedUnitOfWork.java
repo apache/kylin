@@ -25,7 +25,7 @@ import org.apache.kylin.common.persistence.metadata.JdbcMetadataStore;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.epoch.EpochNotMatchException;
 
 import lombok.val;

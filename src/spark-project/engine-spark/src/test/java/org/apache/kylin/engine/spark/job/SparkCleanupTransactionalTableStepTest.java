@@ -17,20 +17,20 @@
  */
 package org.apache.kylin.engine.spark.job;
 
-import java.io.IOException;
-
+import com.google.common.collect.Maps;
+import io.kyligence.kap.engine.spark.job.SparkCleanupTransactionalTableStep;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecutableContext;
-import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
 
 public class SparkCleanupTransactionalTableStepTest extends NLocalWithSparkSessionTest {
 

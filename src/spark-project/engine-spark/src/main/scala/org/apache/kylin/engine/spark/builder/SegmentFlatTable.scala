@@ -20,8 +20,8 @@ package org.apache.kylin.engine.spark.builder
 
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 import java.util.{Locale, Objects, Timer, TimerTask}
-
 import com.google.common.collect.Sets
+import io.kyligence.kap.query.util.KapQueryUtil
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
 import org.apache.kylin.engine.spark.job.{FiltersUtil, TableMetaManager}
@@ -34,7 +34,6 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.metadata.model._
-import org.apache.kylin.query.util.KapQueryUtil
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StructField
@@ -74,7 +73,7 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
 
   // Flat table.
   private lazy val shouldPersistFT = tableDesc.shouldPersistFlatTable()
-  private lazy val isFTReady = dataSegment.isFlatTableReady && HadoopUtil.getWorkingFileSystem.exists(flatTablePath)
+  private lazy val isFTReady = dataSegment.isFlatTableReady && tableDesc.buildFilesSeparationPathExists(flatTablePath)
 
   // Fact table view.
   private lazy val isFTV = rootFactTable.getTableDesc.isView
@@ -301,7 +300,7 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
     DFBuilderHelper.checkPointSegment(dataSegment, (copied: NDataSegment) => {
       copied.setFlatTableReady(true)
       if (dataSegment.isFlatTableReady) {
-        // if flat table is updated, there might be some data inconsistency across indexes
+        // KE-14714 if flat table is updated, there might be some data inconsistency across indexes
         copied.setStatus(SegmentStatusEnum.WARNING)
       }
     })
@@ -480,7 +479,8 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
     val matchedCols = selectColumnsInTable(table, computColumns)
     var tableWithCcs = table
     matchedCols.foreach(m =>
-      tableWithCcs = tableWithCcs.withColumn(convertFromDot(m.getIdentity), expr(convertFromDot(m.getExpressionInSourceDB))))
+      tableWithCcs = tableWithCcs.withColumn(convertFromDot(m.getBackTickIdentity),
+        expr(convertFromDot(m.getBackTickExpressionInSourceDB))))
     tableWithCcs
   }
 
@@ -522,7 +522,8 @@ object SegmentFlatTable extends LogEx {
   }
 
   def wrapAlias(originDS: Dataset[Row], alias: String): Dataset[Row] = {
-    val newFields = originDS.schema.fields.map(f => convertFromDot(alias + "." + f.name)).toSeq
+    val newFields = originDS.schema.fields.map(f =>
+      convertFromDot("`" + alias + "`" + "." + "`" + f.name + "`")).toSeq
     val newDS = originDS.toDF(newFields: _*)
     logInfo(s"Wrap ALIAS ${originDS.schema.treeString} TO ${newDS.schema.treeString}")
     newDS
@@ -555,8 +556,8 @@ object SegmentFlatTable extends LogEx {
             s" lookup table:$lookupDesc, pk: ${pk.mkString(",")}")
       }
       val equiConditionColPairs = fk.zip(pk).map(joinKey =>
-        col(convertFromDot(joinKey._1.getIdentity))
-          .equalTo(col(convertFromDot(joinKey._2.getIdentity))))
+        col(convertFromDot(joinKey._1.getBackTickIdentity))
+          .equalTo(col(convertFromDot(joinKey._2.getBackTickIdentity))))
       logInfo(s"Lookup table schema ${lookupDataset.schema.treeString}")
 
       if (join.getNonEquiJoinCondition != null) {
@@ -584,7 +585,7 @@ object SegmentFlatTable extends LogEx {
     val columnIds = tableDesc.getColumnIds.asScala
     val columnName2Id = tableDesc.getColumns
       .asScala
-      .map(column => convertFromDot(column.getIdentity))
+      .map(column => convertFromDot(column.getBackTickIdentity))
       .zip(columnIds)
     val columnName2IdMap = columnName2Id.toMap
     val encodeSeq = structType.filter(_.name.endsWith(ENCODE_SUFFIX)).map {
@@ -593,7 +594,7 @@ object SegmentFlatTable extends LogEx {
         val columnId = columnName2IdMap.apply(columnName)
         col(tp.name).alias(columnId.toString + ENCODE_SUFFIX)
     }
-    val columns = columnName2Id.map(tp => expr(tp._1).alias(tp._2.toString))
+    val columns = columnName2Id.map(tp => expr("`" + tp._1 + "`").alias(tp._2.toString))
     logInfo(s"Select model column is ${columns.mkString(",")}")
     logInfo(s"Select model encoding column is ${encodeSeq.mkString(",")}")
     val selectedColumns = columns ++ encodeSeq
@@ -655,7 +656,7 @@ object SegmentFlatTable extends LogEx {
       // try replacing quoted identifiers if any
       val quotedColName = colName.split('.').mkString("`", "`.`", "`")
       if (quotedColName.nonEmpty) {
-        doReplaceDot(sb, quotedColName, namedColumn.getAliasDotColumn)
+        doReplaceDot(sb, quotedColName, namedColumn.getAliasDotColumn.split('.').mkString("`", "`.`", "`"))
       }
     }
     sb.toString()
@@ -666,7 +667,7 @@ object SegmentFlatTable extends LogEx {
     while (start != -1) {
       sb.replace(start,
         start + namedCol.length,
-        convertFromDot(colAliasDotColumn))
+        "`" + convertFromDot(colAliasDotColumn) + "`")
       start = sb.toString.toLowerCase(Locale.ROOT)
         .indexOf(namedCol)
     }

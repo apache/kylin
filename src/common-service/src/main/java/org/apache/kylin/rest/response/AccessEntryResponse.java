@@ -37,10 +37,17 @@
 package org.apache.kylin.rest.response;
 
 import java.io.Serializable;
+import java.util.List;
 
+import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.util.Assert;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Getter;
 
 public class AccessEntryResponse {
 
@@ -48,6 +55,10 @@ public class AccessEntryResponse {
     private Serializable id;
     private Sid sid;
     private boolean granting;
+    @Getter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty("ext_permissions")
+    private List<Permission> extPermissions;
 
     public AccessEntryResponse() {
     }
@@ -57,7 +68,8 @@ public class AccessEntryResponse {
         Assert.notNull(permission, "Permission required");
         this.id = id;
         this.sid = sid;
-        this.permission = permission;
+        this.permission = AclPermissionUtil.convertToBasePermission(permission);
+        this.extPermissions = AclPermissionUtil.convertToCompositePermission(permission).getExtPermissions();
         this.granting = granting;
     }
 
@@ -66,7 +78,8 @@ public class AccessEntryResponse {
     }
 
     public void setPermission(Permission permission) {
-        this.permission = permission;
+        this.permission = AclPermissionUtil.convertToBasePermission(permission);
+        this.extPermissions = AclPermissionUtil.convertToCompositePermission(permission).getExtPermissions();
     }
 
     public Serializable getId() {

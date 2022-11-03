@@ -19,6 +19,7 @@ package io.kyligence.kap.secondstorage.ddl;
 
 import io.kyligence.kap.clickhouse.ddl.ClickHouseCreateTable;
 import io.kyligence.kap.clickhouse.ddl.ClickHouseRender;
+import io.kyligence.kap.clickhouse.ddl.TableSetting;
 import io.kyligence.kap.secondstorage.ddl.exp.ColumnWithType;
 import io.kyligence.kap.secondstorage.ddl.exp.TableIdentifier;
 import org.junit.Test;
@@ -49,16 +50,16 @@ public class ClickHouseDDLTest {
                 ClickHouseCreateTable.createCKTableIgnoreExist("pufa", "xx")
                         .columns(new ColumnWithType("a", "int"))
                         .engine("MergeTree()")
-                        .deduplicationWindow(3);
+                        .tableSettings(TableSetting.NON_REPLICATED_DEDUPLICATION_WINDOW, "3");
         final ClickHouseRender render = new ClickHouseRender();
-        assertEquals("CREATE TABLE if not exists `pufa`.`xx`(a int) ENGINE = MergeTree() ORDER BY tuple() SETTINGS non_replicated_deduplication_window = 3", create.toSql(render));
+        assertEquals("CREATE TABLE if not exists `pufa`.`xx`(a int) ENGINE = MergeTree() ORDER BY tuple() SETTINGS non_replicated_deduplication_window=3", create.toSql(render));
 
         final ClickHouseCreateTable create2 =
                 ClickHouseCreateTable.createCKTable("pufa", "xx")
                         .columns(new ColumnWithType("a", "int"))
                         .engine("MergeTree()")
-                        .deduplicationWindow(3);
-        assertEquals("CREATE TABLE `pufa`.`xx`(a int) ENGINE = MergeTree() ORDER BY tuple() SETTINGS non_replicated_deduplication_window = 3", create2.toSql(render));
+                        .tableSettings(TableSetting.NON_REPLICATED_DEDUPLICATION_WINDOW, "3");
+        assertEquals("CREATE TABLE `pufa`.`xx`(a int) ENGINE = MergeTree() ORDER BY tuple() SETTINGS non_replicated_deduplication_window=3", create2.toSql(render));
     }
 
     @Test

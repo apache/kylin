@@ -26,7 +26,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.AddressUtil;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.slf4j.Logger;

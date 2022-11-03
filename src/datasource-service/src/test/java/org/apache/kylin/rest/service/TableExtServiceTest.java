@@ -120,16 +120,18 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
                 "");
         Mockito.doReturn(Lists.newArrayList("DEFAULT")).when(tableService).getSourceDbNames("default");
 
-        LoadTableResponse response = tableExtService.loadAWSTablesCompatibleCrossAccount(crossAccountTableReq, "default");
+        LoadTableResponse response = tableExtService.loadAWSTablesCompatibleCrossAccount(crossAccountTableReq,
+                "default");
         Assert.assertEquals(2, response.getLoaded().size());
 
         KylinConfig.getInstanceFromEnv().setProperty("kylin.env.use-dynamic-S3-role-credential-in-table", "true");
-        LoadTableResponse response2 = tableExtService.loadAWSTablesCompatibleCrossAccount(crossAccountTableReq, "default");
+        LoadTableResponse response2 = tableExtService.loadAWSTablesCompatibleCrossAccount(crossAccountTableReq,
+                "default");
         Assert.assertEquals(2, response2.getLoaded().size());
     }
 
     @Test
-    public void testUpdateAWSLoadedTableExtProp(){
+    public void testUpdateAWSLoadedTableExtProp() {
         UpdateAWSTableExtDescRequest request = new UpdateAWSTableExtDescRequest();
         List<S3TableExtInfo> tableExtInfoList = new ArrayList<>();
         S3TableExtInfo s3TableExtInfo1 = new S3TableExtInfo();

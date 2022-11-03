@@ -68,7 +68,7 @@ public class MetaInfoUpdaterTest extends NLocalFileMetadataTestCase {
         NDataflowManager mgr1 = NDataflowManager.getInstance(testConfig, PROJECT);
         NDataflow df1 = mgr1.getDataflow(dataflowId);
         val seg1 = df1.getSegment(segId);
-        Assert.assertEquals(18, seg1.getLayoutSize());
+        Assert.assertEquals(17, seg1.getLayoutSize());
     }
 
     @Test

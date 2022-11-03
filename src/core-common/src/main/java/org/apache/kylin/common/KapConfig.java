@@ -424,7 +424,7 @@ public class KapConfig {
     /**
      * kap monitor
      */
-    public Boolean isMonitorEnabled() {
+    public boolean isMonitorEnabled() {
         return Boolean.parseBoolean(config.getOptional("kylin.monitor.enabled", "true"));
     }
 
@@ -448,7 +448,7 @@ public class KapConfig {
         return Integer.parseInt(config.getOptional("kylin.monitor.replication-factor", "1"));
     }
 
-    public Boolean isMonitorUserDefault() {
+    public boolean isMonitorUserDefault() {
         return Boolean.parseBoolean(config.getOptional("kylin.monitor.user-default", "true"));
     }
 
@@ -479,7 +479,7 @@ public class KapConfig {
     /**
      * kap circuit-breaker
      */
-    public Boolean isCircuitBreakerEnabled() {
+    public boolean isCircuitBreakerEnabled() {
         return Boolean.parseBoolean(config.getOptional("kylin.circuit-breaker.enabled", "true"));
     }
 
@@ -563,10 +563,6 @@ public class KapConfig {
                 config.getOptional("kylin.query.engine.push-down.enable-prepare-statement-with-params", FALSE));
     }
 
-    public boolean enableReplaceDynamicParams() {
-        return Boolean.parseBoolean(config.getOptional("kylin.query.replace-dynamic-params-enabled", FALSE));
-    }
-
     public boolean runConstantQueryLocally() {
         return Boolean.parseBoolean(config.getOptional("kylin.query.engine.run-constant-query-locally", TRUE));
     }
@@ -584,7 +580,7 @@ public class KapConfig {
      * Kerberos
      */
 
-    public Boolean isKerberosEnabled() {
+    public boolean isKerberosEnabled() {
         return Boolean.parseBoolean(config.getOptional("kylin.kerberos.enabled", FALSE));
     }
 
@@ -608,11 +604,19 @@ public class KapConfig {
         return Long.parseLong(config.getOptional("kylin.kerberos.monitor-interval-minutes", "10"));
     }
 
+    public Long getKerberosTGTRenewalInterval() {
+        return Long.parseLong(config.getOptional("kylin.kerberos.tgt-renewal-interval-minutes", "10"));
+    }
+
+    public Long getKerberosTGTRetryInterval() {
+        return Long.parseLong(config.getOptional("kylin.kerberos.tgt-retry-interval-minutes", "60"));
+    }
+
     public String getKerberosPlatform() {
         return config.getOptional("kylin.kerberos.platform", "");
     }
 
-    public Boolean getPlatformZKEnable() {
+    public boolean getPlatformZKEnable() {
         return Boolean.parseBoolean(config.getOptional("kylin.env.zk-kerberos-enabled",
                 config.getOptional("kylin.kerberos.enabled", FALSE)));
     }
@@ -665,7 +669,7 @@ public class KapConfig {
         return config.getOptional("kylin.canary.sqlcontext-type", "file");
     }
 
-    public Boolean getSparkCanaryEnable() {
+    public boolean getSparkCanaryEnable() {
         return Boolean.parseBoolean(config.getOptional("kylin.canary.sqlcontext-enabled", FALSE));
     }
 

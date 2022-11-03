@@ -25,10 +25,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
-import org.apache.kylin.metadata.recommendation.ref.OptRecV2;
-import org.apache.kylin.metadata.recommendation.ref.RecommendationRef;
-import org.apache.kylin.metadata.recommendation.util.RawRecUtil;
+import io.kyligence.kap.metadata.recommendation.candidate.RawRecItem;
+import io.kyligence.kap.metadata.recommendation.ref.OptRecV2;
+import io.kyligence.kap.metadata.recommendation.ref.RecommendationRef;
+import io.kyligence.kap.metadata.recommendation.util.RawRecUtil;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;

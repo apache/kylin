@@ -18,15 +18,19 @@
 
 package io.kyligence.kap.secondstorage.management;
 
-import com.google.common.collect.Lists;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.rest.response.NModelDescResponse;
-import org.apache.kylin.rest.service.ModelService;
-import io.kyligence.kap.secondstorage.management.request.StorageRequest;
-import lombok.val;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_EMPTY_PARAMETER;
+
+import io.kyligence.kap.secondstorage.management.request.ModelModifyRequest;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.response.NModelDescResponse;
+import org.apache.kylin.rest.service.ModelService;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,18 +48,23 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_EMPTY_PARAMETER;
+import com.google.common.collect.Lists;
+
+import io.kyligence.kap.secondstorage.management.request.ModelEnableRequest;
+import io.kyligence.kap.secondstorage.management.request.StorageRequest;
+import lombok.val;
 
 public class OpenSecondStorageEndpointTest extends NLocalFileMetadataTestCase {
-
+    private static final String NULLABLE_STRING = "Nullable(String)";
+    private static final String LOW_CARDINALITY_STRING = "LowCardinality(Nullable(String))";
     private MockMvc mockMvc;
 
     @Mock
     private ModelService modelService;
 
-    @Mock
-    private SecondStorageEndpoint secondStorageEndpoint;
+    private SecondStorageService secondStorageService = new SecondStorageService();
+
+    private SecondStorageEndpoint secondStorageEndpoint = new SecondStorageEndpoint();
 
     @InjectMocks
     private final OpenSecondStorageEndpoint openSecondStorageEndpoint = Mockito.spy(new OpenSecondStorageEndpoint());
@@ -64,6 +73,10 @@ public class OpenSecondStorageEndpointTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setup() {
+        secondStorageEndpoint.setSecondStorageService(secondStorageService);
+        openSecondStorageEndpoint.setSecondStorageService(secondStorageService);
+        openSecondStorageEndpoint.setSecondStorageEndpoint(secondStorageEndpoint);
+        openSecondStorageEndpoint.setModelService(modelService);
         MockitoAnnotations.initMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(openSecondStorageEndpoint)
                 .defaultRequest(MockMvcRequestBuilders.get("/api/storage/segments"))
@@ -113,5 +126,113 @@ public class OpenSecondStorageEndpointTest extends NLocalFileMetadataTestCase {
             return;
         }
         Assert.fail();
+    }
+
+    @Test
+    public void testEnableStorageException() throws Exception{
+        val request = new ModelEnableRequest();
+        request.setProject("default");
+        request.setModelName("test");
+        request.setEnabled(true);
+        try {
+            openSecondStorageEndpoint.enableStorage(request);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(MODEL_NAME_NOT_EXIST, e.getErrorCodeProducer());
+        }
+
+        val req = new ModelEnableRequest();
+        req.setProject("default");
+        req.setModelName("test");
+        try {
+            openSecondStorageEndpoint.enableStorage(req);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, e.getErrorCodeProducer());
+        }
+    }
+
+    @Test
+    public void testModifyColumnException() {
+        val request = new ModelModifyRequest();
+        request.setProject("default");
+        request.setModelName("test");
+        try {
+            openSecondStorageEndpoint.modifyColumn(request);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(MODEL_NAME_NOT_EXIST, e.getErrorCodeProducer());
+        }
+
+        val req = new ModelModifyRequest();
+        req.setProject("defaulT");
+        req.setModelName("test_bank");
+        req.setDatatype("");
+        try {
+            openSecondStorageEndpoint.modifyColumn(req);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(INVALID_PARAMETER.toErrorCode(), e.getErrorCode());
+            Assert.assertEquals("Please enter the value for the parameter 'datatype'.", e.getMessage());
+        }
+
+        val req1 = new ModelModifyRequest();
+        req1.setProject("default");
+        req1.setModelName("test_bank");
+        req1.setDatatype("test_bank");
+        try {
+            openSecondStorageEndpoint.modifyColumn(req1);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(INVALID_PARAMETER.toErrorCode(), e.getErrorCode());
+            Assert.assertEquals("The datatype is invalid. Only support LowCardinality(Nullable(String)) or Nullable(String) at the moment.", e.getMessage());
+        }
+
+        val req2 = new ModelModifyRequest();
+        req2.setProject("default");
+        req2.setModelName("test_bank");
+        req2.setDatatype(LOW_CARDINALITY_STRING);
+        try {
+            openSecondStorageEndpoint.modifyColumn(req2);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(INVALID_PARAMETER.toErrorCode(), e.getErrorCode());
+            Assert.assertEquals("Please enter the value for the parameter 'column'.", e.getMessage());
+        }
+
+        val req3 = new ModelModifyRequest();
+        req3.setProject("default");
+        req3.setModelName("test_bank");
+        req3.setDatatype(NULLABLE_STRING);
+        try {
+            openSecondStorageEndpoint.modifyColumn(req3);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(INVALID_PARAMETER.toErrorCode(), e.getErrorCode());
+        }
+
+        val req4 = new ModelModifyRequest();
+        req4.setProject("default");
+        req4.setModelName("test_bank");
+        req4.setDatatype(LOW_CARDINALITY_STRING);
+        req4.setColumn("");
+        try {
+            openSecondStorageEndpoint.modifyColumn(req4);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(INVALID_PARAMETER.toErrorCode(), e.getErrorCode());
+        }
+
+        val req5 = new ModelModifyRequest();
+        req5.setProject("defaulT");
+        req5.setModelName("test_bank");
+        req5.setDatatype(LOW_CARDINALITY_STRING);
+        req5.setColumn("LO_test");
+        try {
+            openSecondStorageEndpoint.modifyColumn(req5);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(INVALID_PARAMETER.toErrorCode(), e.getErrorCode());
+        }
     }
 }

@@ -32,9 +32,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
@@ -132,5 +135,18 @@ public class SecondStorageServiceTest extends NLocalFileMetadataTestCase {
         Mockito.when(executableManager.getJob("job1")).thenReturn(job1);
         Mockito.when(executableManager.getJob("job2")).thenReturn(job2);
         Assert.assertEquals(1, secondStorageService.validateProjectDisable(projectEnableRequest.getProject()).size());
+    }
+
+    @Test
+    public void changeModelSecondStorageStateProjectDisable() {
+        PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isProjectEnable", String.class)).toReturn(false);
+        try {
+            secondStorageService.changeModelSecondStorageState("project", "modelId", true);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageProjectEnabled(), "project"), e.getMessage());
+        } finally {
+            PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isProjectEnable", String.class)).toReturn(true);
+        }
     }
 }

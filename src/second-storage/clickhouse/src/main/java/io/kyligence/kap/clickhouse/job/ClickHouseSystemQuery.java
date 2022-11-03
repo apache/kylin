@@ -52,6 +52,7 @@ public class ClickHouseSystemQuery {
                     .readRows(rs.getLong(1))
                     .readBytes(rs.getLong(2))
                     .clientName(rs.getString(3))
+                    .resultRows(rs.getLong(4))
                     .build();
         } catch (SQLException sqlException) {
             return ExceptionUtils.rethrow(sqlException);
@@ -73,6 +74,7 @@ public class ClickHouseSystemQuery {
             .column(ColumnWithAlias.builder().expr("sum(read_rows)").alias("readRows").build())
             .column(ColumnWithAlias.builder().expr("sum(read_bytes)").alias("readBytes").build())
             .column(ColumnWithAlias.builder().name("client_name").alias("clientName").build())
+            .column(ColumnWithAlias.builder().expr("sum(result_rows)").alias("resultRows").build())
             .groupby(new GroupBy().column(ColumnWithAlias.builder().name("client_name").build()))
             .where("type = 'QueryFinish' AND event_time >= addHours(now(), -1) AND event_date >= addDays(now(), -1) AND position(client_name, '%s') = 1");
 
@@ -101,5 +103,13 @@ public class ClickHouseSystemQuery {
         private String clientName;
         private long readRows;
         private long readBytes;
+        private long resultRows;
+    }
+
+    @Data
+    @Builder
+    public static class DescTable {
+        private String column;
+        private String datatype;
     }
 }

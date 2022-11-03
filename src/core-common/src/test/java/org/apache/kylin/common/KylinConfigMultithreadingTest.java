@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common;
 
+import static org.apache.kylin.common.KylinConfigBase.WRITING_CLUSTER_WORKING_DIR;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -35,6 +36,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
@@ -122,6 +124,17 @@ public class KylinConfigMultithreadingTest {
         final Properties actual = KylinConfig.getInstanceFromEnv().exportToProperties();
         comparePropertiesKeys(properties, actual);
         comparePropertiesValues(properties, actual);
+    }
+
+    @Test
+    void test8ReloadKylinConfig2Properties() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        final Properties properties = config.exportToProperties();
+        properties.setProperty(WRITING_CLUSTER_WORKING_DIR, "file://");
+        final Properties actual = config.reloadKylinConfig2Properties(properties);
+        Assertions.assertEquals(properties.size(), actual.size());
+        // reset
+        config.setProperty(WRITING_CLUSTER_WORKING_DIR, "");
     }
 
     void comparePropertiesValues(Properties expected, Properties actual) {

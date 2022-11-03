@@ -21,12 +21,12 @@ package org.apache.kylin.engine.spark.job;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
+import org.apache.kylin.metadata.model.Segments;
 import org.junit.Assert;
 import org.junit.Test;
 import org.sparkproject.guava.collect.Sets;
@@ -89,36 +89,116 @@ public class NSparkCubingUtilTest extends NLocalWithSparkSessionTest {
 
     @Test
     public void testConvert() {
-        Assert.assertTrue(isEqualsConvertedString("max(case when A.account_id = 0 then 'adf.d kylin.adfad adf' else 'ky.lin' end), A.seller_id",
-                "max(case when A_0_DOT_0_account_id = 0 then 'adf.d kylin.adfad adf' else 'ky.lin' end), A_0_DOT_0_seller_id"));
+        Assert.assertTrue(isEqualsConvertedString(
+                "max(case when `A`.`account_id` = 0 then 'adf.d kylin.adfad adf' else 'ky.lin' end), "
+                        + "`A`.`seller_id`",
+                "max(case when A_0_DOT_0_account_id = 0 then 'adf.d kylin.adfad adf' else 'ky.lin' end), "
+                        + "A_0_DOT_0_seller_id"));
         Assert.assertTrue(isEqualsConvertedString("'ky.lin'", "'ky.lin'"));
-        Assert.assertTrue(isEqualsConvertedString("p1.3a + 3.1E12", "p1_0_DOT_0_3a + 3.1E12"));
-        Assert.assertTrue(isEqualsConvertedString("p1.3a + 3.1", "p1_0_DOT_0_3a + 3.1"));
-        Assert.assertTrue(isEqualsConvertedString("3.1 + 1p1.3a1", "3.1 + 1p1_0_DOT_0_3a1"));
-        Assert.assertTrue(isEqualsConvertedString("TEST_KYLIN_FACT.CAL_DT > '2017-09-12' AND TEST_KYLIN_FACT.PRICE < 9.9",
-                "TEST_KYLIN_FACT_0_DOT_0_CAL_DT > '2017-09-12' AND TEST_KYLIN_FACT_0_DOT_0_PRICE < 9.9"));
-        Assert.assertTrue(isEqualsConvertedString("case when  table.11col  > 0.8 then 0.2 else null end",
+        Assert.assertTrue(isEqualsConvertedString("`p1`.`3a` + 3.1E12", "p1_0_DOT_0_3a + 3.1E12"));
+        Assert.assertTrue(isEqualsConvertedString("`p1`.`3a` + 3.1", "p1_0_DOT_0_3a + 3.1"));
+        Assert.assertTrue(isEqualsConvertedString("3.1 + `1p1`.`3a1`", "3.1 + 1p1_0_DOT_0_3a1"));
+        Assert.assertTrue(
+                isEqualsConvertedString("`TEST_KYLIN_FACT`.`CAL_DT` > '2017-09-12' AND `TEST_KYLIN_FACT`.`PRICE` < 9.9",
+                        "TEST_KYLIN_FACT_0_DOT_0_CAL_DT > '2017-09-12' AND TEST_KYLIN_FACT_0_DOT_0_PRICE < 9.9"));
+        Assert.assertTrue(isEqualsConvertedString("case when  `table`.`11col`  > 0.8 then 0.2 else null end",
                 "case when  table_0_DOT_0_11col  > 0.8 then 0.2 else null end"));
-        Assert.assertTrue(isEqualsConvertedString("TEST_KYLIN_FACT.PRICE*0.8", "TEST_KYLIN_FACT_0_DOT_0_PRICE*0.8"));
+        Assert.assertTrue(
+                isEqualsConvertedString("`TEST_KYLIN_FACT`.`PRICE`*0.8", "TEST_KYLIN_FACT_0_DOT_0_PRICE*0.8"));
         Assert.assertTrue(isEqualsConvertedString("`TEST_KYLIN_FACT`.`ITEM_COUNT`*`TEST_KYLIN_FACT`.`PRICE`*0.8",
                 "TEST_KYLIN_FACT_0_DOT_0_ITEM_COUNT*TEST_KYLIN_FACT_0_DOT_0_PRICE*0.8"));
-        Assert.assertTrue(isEqualsConvertedString("`TEST_KYLIN_FACT`.`PRICE`*0.8", "TEST_KYLIN_FACT_0_DOT_0_PRICE*0.8"));
-        Assert.assertTrue(isEqualsConvertedString("TEST_KYLIN_FACT.PRICE-0.8", "TEST_KYLIN_FACT_0_DOT_0_PRICE-0.8"));
-        Assert.assertTrue(isEqualsConvertedString("TEST_KYLIN_FACT.LSTG_FORMAT_NAME+'0.8'",
+        Assert.assertTrue(
+                isEqualsConvertedString("`TEST_KYLIN_FACT`.`PRICE`*0.8", "TEST_KYLIN_FACT_0_DOT_0_PRICE*0.8"));
+        Assert.assertTrue(
+                isEqualsConvertedString("`TEST_KYLIN_FACT`.`PRICE`-0.8", "TEST_KYLIN_FACT_0_DOT_0_PRICE-0.8"));
+        Assert.assertTrue(isEqualsConvertedString("`TEST_KYLIN_FACT`.`LSTG_FORMAT_NAME`+'0.8'",
                 "TEST_KYLIN_FACT_0_DOT_0_LSTG_FORMAT_NAME+'0.8'"));
-        Assert.assertTrue(isEqualsConvertedString("TEST_KYLIN_FACT.LSTG_FORMAT_NAME+'-0.8'",
+        Assert.assertTrue(isEqualsConvertedString("`TEST_KYLIN_FACT`.`LSTG_FORMAT_NAME`+'-0.8'",
                 "TEST_KYLIN_FACT_0_DOT_0_LSTG_FORMAT_NAME+'-0.8'"));
-        Assert.assertTrue(isEqualsConvertedString("TEST_KYLIN_FACT.LSTG_FORMAT_NAME+'TEST_KYLIN_FACT.LSTG_FORMAT_NAME*0.8'",
-                "TEST_KYLIN_FACT_0_DOT_0_LSTG_FORMAT_NAME+'TEST_KYLIN_FACT.LSTG_FORMAT_NAME*0.8'"));
+        Assert.assertTrue(
+                isEqualsConvertedString("`TEST_KYLIN_FACT`.`LSTG_FORMAT_NAME`+'TEST_KYLIN_FACT.LSTG_FORMAT_NAME*0.8'",
+                        "TEST_KYLIN_FACT_0_DOT_0_LSTG_FORMAT_NAME+'TEST_KYLIN_FACT.LSTG_FORMAT_NAME*0.8'"));
+        Assert.assertTrue(isEqualsConvertedString(
+                "default_test.sumtwonum(7, `TEST_FUNCTIONS`.`PRICE2`) + "
+                        + "default_test.sumtwonum(7, `TEST_FUNCTIONS`.`PRICE2`) ",
+                "default_test.sumtwonum(7, TEST_FUNCTIONS_0_DOT_0_PRICE2) + "
+                        + "default_test.sumtwonum(7, TEST_FUNCTIONS_0_DOT_0_PRICE2) "));
+        Assert.assertTrue(isEqualsConvertedString(
+                "default_test.sumtwonum(max(case when default_test.sumtwonum(`A`.`account_id`,1)= 0 then "
+                        + "'adf.d kylin.adfad adf' else 'ky.lin' end), `A`.`seller_id`)",
+                "default_test.sumtwonum(max(case when default_test.sumtwonum(A_0_DOT_0_account_id,1)= 0 then "
+                        + "'adf.d kylin.adfad adf' else 'ky.lin' end), A_0_DOT_0_seller_id)"));
+        Assert.assertTrue(isEqualsConvertedString("test_table.column > 0 and test_table.column < 100",
+                "test_table_0_DOT_0_column > 0 and test_table_0_DOT_0_column < 100"));
+        Assert.assertTrue(isEqualsConvertedString("`test_table`.`column` > 0 and `test_table`.`column` < 100",
+                "test_table_0_DOT_0_column > 0 and test_table_0_DOT_0_column < 100"));
+        Assert.assertTrue(isEqualsConvertedString("`table`.`col umn,<>/?'\"[{]}\\|~!@#$%^&*()-=+`",
+                "table_0_DOT_0_col umn,<>/?'\"[{]}\\|~!@#$%^&*()-=+"));
+    }
 
-        Assert.assertTrue(isEqualsConvertedString("default_test.sumtwonum(7, `TEST_FUNCTIONS`.`PRICE2`) + default_test.sumtwonum(7, TEST_FUNCTIONS.PRICE2) ",
-                "default_test.sumtwonum(7, TEST_FUNCTIONS_0_DOT_0_PRICE2) + default_test.sumtwonum(7, TEST_FUNCTIONS_0_DOT_0_PRICE2) "));
-
-        Assert.assertTrue(isEqualsConvertedString("default_test.sumtwonum(max(case when default_test.sumtwonum(A.account_id,1)= 0 then 'adf.d kylin.adfad adf' else 'ky.lin' end), A.seller_id)",
-                "default_test.sumtwonum(max(case when default_test.sumtwonum(A_0_DOT_0_account_id,1)= 0 then 'adf.d kylin.adfad adf' else 'ky.lin' end), A_0_DOT_0_seller_id)"));
+    @Test
+    public void testConvertWithBacktick() {
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick(
+                "max(case when `A`.`account_id` = 0 then 'adf.d kylin.adfad adf' else 'ky.lin' end), "
+                        + "`A`.`seller_id`",
+                "max(case when `A_0_DOT_0_account_id` = 0 then 'adf.d kylin.adfad adf' else 'ky.lin' end), "
+                        + "`A_0_DOT_0_seller_id`"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("'ky.lin'", "'ky.lin'"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("`p1`.`3a` + 3.1E12", "`p1_0_DOT_0_3a` + 3.1E12"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("p1.3a + 3.1E12", "`p1_0_DOT_0_3a` + 3.1E12"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("`p1`.`3a` + 3.1", "`p1_0_DOT_0_3a` + 3.1"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("p1.3a + 3.1", "`p1_0_DOT_0_3a` + 3.1"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("3.1 + `1p1`.`3a1`", "3.1 + `1p1_0_DOT_0_3a1`"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick(
+                "`TEST_KYLIN_FACT`.`CAL_DT` > '2017-09-12' AND `TEST_KYLIN_FACT`.`PRICE` < 9.9",
+                "`TEST_KYLIN_FACT_0_DOT_0_CAL_DT` > '2017-09-12' AND `TEST_KYLIN_FACT_0_DOT_0_PRICE` < 9.9"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick(
+                "TEST_KYLIN_FACT.CAL_DT > '2017-09-12' AND TEST_KYLIN_FACT.PRICE < 9.9",
+                "`TEST_KYLIN_FACT_0_DOT_0_CAL_DT` > '2017-09-12' AND `TEST_KYLIN_FACT_0_DOT_0_PRICE` < 9.9"));
+        Assert.assertTrue(
+                isEqualsConvertedStringWithBackTick("case when  `table`.`11col`  > 0.8 then 0.2 else null end",
+                        "case when  `table_0_DOT_0_11col`  > 0.8 then 0.2 else null end"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("`TEST_KYLIN_FACT`.`PRICE`*0.8",
+                "`TEST_KYLIN_FACT_0_DOT_0_PRICE`*0.8"));
+        Assert.assertTrue(
+                isEqualsConvertedStringWithBackTick("`TEST_KYLIN_FACT`.`ITEM_COUNT`*`TEST_KYLIN_FACT`.`PRICE`*0.8",
+                        "`TEST_KYLIN_FACT_0_DOT_0_ITEM_COUNT`*`TEST_KYLIN_FACT_0_DOT_0_PRICE`*0.8"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("`TEST_KYLIN_FACT`.`PRICE`*0.8",
+                "`TEST_KYLIN_FACT_0_DOT_0_PRICE`*0.8"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("`TEST_KYLIN_FACT`.`PRICE`-0.8",
+                "`TEST_KYLIN_FACT_0_DOT_0_PRICE`-0.8"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("`TEST_KYLIN_FACT`.`LSTG_FORMAT_NAME`+'0.8'",
+                "`TEST_KYLIN_FACT_0_DOT_0_LSTG_FORMAT_NAME`+'0.8'"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("`TEST_KYLIN_FACT`.`LSTG_FORMAT_NAME`+'-0.8'",
+                "`TEST_KYLIN_FACT_0_DOT_0_LSTG_FORMAT_NAME`+'-0.8'"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick(
+                "`TEST_KYLIN_FACT`.`LSTG_FORMAT_NAME`+'TEST_KYLIN_FACT.LSTG_FORMAT_NAME*0.8'",
+                "`TEST_KYLIN_FACT_0_DOT_0_LSTG_FORMAT_NAME`+'TEST_KYLIN_FACT.LSTG_FORMAT_NAME*0.8'"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick(
+                "default_test.sumtwonum(7, `TEST_FUNCTIONS`.`PRICE2`) + "
+                        + "default_test.sumtwonum(7, `TEST_FUNCTIONS`.`PRICE2`) ",
+                "default_test.sumtwonum(7, `TEST_FUNCTIONS_0_DOT_0_PRICE2`) + "
+                        + "default_test.sumtwonum(7, `TEST_FUNCTIONS_0_DOT_0_PRICE2`) "));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick(
+                "default_test.sumtwonum(max(case when default_test.sumtwonum(`A`.`account_id`,1)= 0 then "
+                        + "'adf.d kylin.adfad adf' else 'ky.lin' end), `A`.`seller_id`)",
+                "default_test.sumtwonum(max(case when default_test.sumtwonum(`A_0_DOT_0_account_id`,1)= 0 "
+                        + "then 'adf.d kylin.adfad adf' else 'ky.lin' end), `A_0_DOT_0_seller_id`)"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("test_table.column > 0 and test_table.column < 100",
+                "`test_table_0_DOT_0_column` > 0 and `test_table_0_DOT_0_column` < 100"));
+        Assert.assertTrue(
+                isEqualsConvertedStringWithBackTick("`test_table`.`column` > 0 and " + "`test_table`.`column` < 100",
+                        "`test_table_0_DOT_0_column` > 0 and `test_table_0_DOT_0_column` < 100"));
+        Assert.assertTrue(isEqualsConvertedStringWithBackTick("`table`.`col umn,<>/?'\"[{]}\\|~!@#$%^&*()-=+`",
+                "`table_0_DOT_0_col umn,<>/?'\"[{]}\\|~!@#$%^&*()-=+`"));
     }
 
     private boolean isEqualsConvertedString(String original, String converted) {
         return converted.equals(NSparkCubingUtil.convertFromDot(original));
     }
+
+    private boolean isEqualsConvertedStringWithBackTick(String original, String converted) {
+        return converted.equals(NSparkCubingUtil.convertFromDotWithBackTick(original));
+    }
+
 }

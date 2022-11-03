@@ -37,6 +37,7 @@ import org.apache.logging.log4j.status.StatusLogger;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.spark.utils.SparkHadoopUtils;
 
 @Plugin(name = "DriverHdfsAppender", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE, printObject = true)
 public class SparkDriverHdfsLogAppender extends AbstractHdfsLogAppender {
@@ -111,7 +112,7 @@ public class SparkDriverHdfsLogAppender extends AbstractHdfsLogAppender {
     @Override
     public void doWriteLog(int eventSize, List<LogEvent> transaction) throws IOException, InterruptedException {
         if (!isWriterInited()) {
-            Configuration conf = new Configuration();
+            Configuration conf = SparkHadoopUtils.newConfigurationWithSparkConf();
             if (!initHdfsWriter(new Path(getLogPath()), conf)) {
                 StatusLogger.getLogger().error("init the hdfs writer failed!");
             }

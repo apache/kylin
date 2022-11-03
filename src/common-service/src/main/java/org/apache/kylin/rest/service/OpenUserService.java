@@ -23,7 +23,7 @@ import java.util.Locale;
 
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.annotation.ThirdPartyDependencies;
-import org.apache.kylin.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @ThirdPartyDependencies({

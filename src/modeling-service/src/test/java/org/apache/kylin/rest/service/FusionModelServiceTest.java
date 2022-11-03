@@ -184,7 +184,7 @@ public class FusionModelServiceTest extends SourceTestCase {
         String batchId = "334671fd-e383-4fc9-b5c2-94fce832f77a";
         String project = "streaming_test";
         String newModelName = "new_streaming";
-        fusionModelService.renameDataModel(project, modelId, newModelName);
+        fusionModelService.renameDataModel(project, modelId, newModelName, "");
         Assert.assertEquals(newModelName,
                 NDataModelManager.getInstance(getTestConfig(), project).getDataModelDesc(modelId).getAlias());
         Assert.assertEquals(FusionModel.getBatchName(newModelName, modelId),

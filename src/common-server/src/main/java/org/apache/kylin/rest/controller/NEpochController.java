@@ -48,7 +48,10 @@ public class NEpochController extends NBasicController {
     @PostMapping(value = "", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
     @ResponseBody
     public EnvelopeResponse<String> updateEpochOwner(@RequestBody EpochRequest epochRequest) {
-        epochService.updateEpoch(epochRequest.getProjects(), epochRequest.isForce(), epochRequest.isClient());
+        checkCollectionRequiredArg("projects", epochRequest.getProjects());
+        epochRequest.getProjects().forEach(this::checkProjectName);
+        checkRequiredArg("force", epochRequest.getForce());
+        epochService.updateEpoch(epochRequest.getProjects(), epochRequest.getForce(), epochRequest.isClient());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
@@ -56,7 +59,8 @@ public class NEpochController extends NBasicController {
     @PostMapping(value = "/all", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
     @ResponseBody
     public EnvelopeResponse<String> updateAllEpochOwner(@RequestBody EpochRequest epochRequest) {
-        epochService.updateAllEpochs(epochRequest.isForce(), epochRequest.isClient());
+        checkRequiredArg("force", epochRequest.getForce());
+        epochService.updateAllEpochs(epochRequest.getForce(), epochRequest.isClient());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 

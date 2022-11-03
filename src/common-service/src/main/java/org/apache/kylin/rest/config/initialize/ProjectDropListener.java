@@ -26,9 +26,9 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
 import org.apache.kylin.common.metrics.MetricsGroup;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
-import org.apache.kylin.metadata.recommendation.candidate.RawRecManager;
+import io.kyligence.kap.metadata.recommendation.candidate.RawRecManager;
 import org.apache.kylin.rest.service.task.QueryHistoryTaskScheduler;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 

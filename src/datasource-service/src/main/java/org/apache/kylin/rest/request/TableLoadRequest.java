@@ -18,10 +18,12 @@
 
 package org.apache.kylin.rest.request;
 
+import org.apache.kylin.common.util.ArgsTypeJsonDeserializer;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import lombok.Data;
 
@@ -32,8 +34,10 @@ public class TableLoadRequest implements ProjectInsensitiveRequest {
     private String project;
     private String[] tables;
     private String[] databases;
+    @JsonDeserialize(using = ArgsTypeJsonDeserializer.BooleanJsonDeserializer.class)
     @JsonProperty("need_sampling")
     private Boolean needSampling;
+    @JsonDeserialize(using = ArgsTypeJsonDeserializer.IntegerJsonDeserializer.class)
     @JsonProperty("sampling_rows")
     private Integer samplingRows;
     private int priority = ExecutablePO.DEFAULT_PRIORITY;

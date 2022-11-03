@@ -18,13 +18,13 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_UPDATE_JOB_STATUS;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.Maps;
+import io.kyligence.kap.engine.spark.job.step.NStageForBuild;
+import io.kyligence.kap.engine.spark.job.step.NStageForMerge;
+import io.kyligence.kap.engine.spark.job.step.NStageForSnapshot;
+import lombok.val;
+import lombok.var;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.exception.ErrorCode;
 import org.apache.kylin.common.exception.ExceptionReason;
@@ -34,7 +34,9 @@ import org.apache.kylin.common.exception.JobExceptionReason;
 import org.apache.kylin.common.exception.JobExceptionResolve;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ChainedExecutable;
@@ -45,16 +47,11 @@ import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.execution.StageBase;
 import org.apache.kylin.job.execution.SucceedChainedTestExecutable;
 import org.apache.kylin.job.execution.SucceedTestExecutable;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.response.ExecutableStepResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.job.NSparkExecutable;
-import org.apache.kylin.engine.spark.job.step.NStageForBuild;
-import org.apache.kylin.engine.spark.job.step.NStageForMerge;
-import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
-import org.apache.kylin.metadata.cube.model.NBatchConstants;
-import org.apache.kylin.rest.response.ExecutableStepResponse;
 import org.apache.spark.application.NoRetryException;
 import org.awaitility.Awaitility;
 import org.junit.After;
@@ -70,11 +67,12 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import lombok.val;
-import lombok.var;
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_UPDATE_JOB_STATUS;
 
 public class JobErrorTest extends NLocalFileMetadataTestCase {
     @InjectMocks
@@ -389,7 +387,7 @@ public class JobErrorTest extends NLocalFileMetadataTestCase {
         manager.addJob(executable);
 
         var output = manager.getOutput(executable.getId());
-        final long[] duration = { AbstractExecutable.getDuration(output) };
+        final long[] duration = {AbstractExecutable.getDuration(output)};
         Assert.assertEquals(0, duration[0]);
 
         ((DefaultOutput) output).setStartTime(System.currentTimeMillis());

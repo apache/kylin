@@ -21,7 +21,6 @@ package io.kyligence.kap.clickhouse.job;
 import static io.kyligence.kap.secondstorage.SecondStorageConstants.STEP_SECOND_STORAGE_MODEL_CLEAN;
 
 import java.sql.SQLException;
-import java.util.Objects;
 
 import io.kyligence.kap.secondstorage.metadata.TableData;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -56,7 +55,10 @@ public class ClickHouseTableClean extends AbstractClickHouseClean {
         Preconditions.checkState(nodeGroupManager.isPresent() && tableFlowManager.isPresent());
         val dataflow = dataflowManager.getDataflow(getParam(NBatchConstants.P_DATAFLOW_ID));
 
-        val tableFlow = Objects.requireNonNull(tableFlowManager.get().get(getParam(NBatchConstants.P_DATAFLOW_ID)).orElse(null));
+        val tableFlow = tableFlowManager.get().get(getParam(NBatchConstants.P_DATAFLOW_ID)).orElse(null);
+        if (tableFlow == null) {
+            return;
+        }
 
         setNodeCount(Math.toIntExact(nodeGroupManager.map(
                 manager -> manager.listAll().stream().mapToLong(nodeGroup -> nodeGroup.getNodeNames().size()).sum())

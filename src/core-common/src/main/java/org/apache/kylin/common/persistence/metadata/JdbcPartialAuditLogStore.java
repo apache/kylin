@@ -17,33 +17,17 @@
  */
 package org.apache.kylin.common.persistence.metadata;
 
-import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.AuditLog;
 
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JdbcPartialAuditLogStore extends JdbcAuditLogStore {
 
-    private final Predicate<String> filterByResPath;
-
     public JdbcPartialAuditLogStore(KylinConfig config, Predicate<String> filterByResPath) throws Exception {
         super(config);
-        this.filterByResPath = filterByResPath;
-    }
-
-    @Override
-    public List<AuditLog> fetch(long currentId, long size) {
-        val originAuditLog = super.fetch(currentId, size);
-        val resultAuditLog = originAuditLog.stream().filter(auditLog -> filterByResPath.test(auditLog.getResPath()))
-                .collect(Collectors.toList());
-        log.debug("fetch partial meta path {}->{}", originAuditLog.size(), resultAuditLog.size());
-
-        return resultAuditLog;
+        replayWorker.setFilterByResPath(filterByResPath);
     }
 }

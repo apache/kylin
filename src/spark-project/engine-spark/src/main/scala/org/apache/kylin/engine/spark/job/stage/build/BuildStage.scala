@@ -18,9 +18,11 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import java.util.Objects
-import java.util.concurrent.{BlockingQueue, CountDownLatch, ForkJoinPool, TimeUnit}
 import com.google.common.collect.Queues
+import org.apache.commons.math3.ml.clustering.{Clusterable, KMeansPlusPlusClusterer}
+import org.apache.commons.math3.ml.distance.EarthMoversDistance
+import org.apache.kylin.common.persistence.transaction.UnitOfWork
+import org.apache.kylin.common.persistence.transaction.UnitOfWork.Callback
 import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.builder.DictionaryBuilderHelper
 import org.apache.kylin.engine.spark.job._
@@ -29,19 +31,16 @@ import org.apache.kylin.engine.spark.job.stage.{BuildParam, InferiorGroup, Stage
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.TreeNode
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager.NIndexPlanUpdater
 import org.apache.kylin.metadata.cube.model._
-import org.apache.commons.math3.ml.clustering.{Clusterable, KMeansPlusPlusClusterer}
-import org.apache.commons.math3.ml.distance.EarthMoversDistance
-import org.apache.kylin.common.persistence.transaction.UnitOfWork
-import org.apache.kylin.common.persistence.transaction.UnitOfWork.Callback
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.sql.datasource.storage.StorageStoreUtils
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.storage.StorageLevel
 
+import java.util.Objects
+import java.util.concurrent.CountDownLatch
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.collection.parallel.ForkJoinTaskSupport
 
 
 abstract class BuildStage(private val jobContext: SegmentJob,
@@ -60,7 +59,7 @@ abstract class BuildStage(private val jobContext: SegmentJob,
   protected final val dataflowId = jobContext.getDataflowId
   protected final val sparkSession = jobContext.getSparkSession
   protected final val resourceContext = jobContext.getBuildContext
-  protected final val runtime = jobContext.runtime
+  protected final val runtime = jobContext.getRuntime
   protected final val readOnlyLayouts = jobContext.getReadOnlyLayouts
 
   // Needed variables from data segment.
@@ -79,12 +78,14 @@ abstract class BuildStage(private val jobContext: SegmentJob,
   private lazy val flatTableDS: Dataset[Row] = buildParam.getFlatTable
   private lazy val flatTableStats: Statistics = buildParam.getFlatTableStatistics
 
+  private lazy val sanityResultQueue = Queues.newLinkedBlockingQueue[SanityResult]()
+
   // thread unsafe
-  private lazy val cachedLayoutSanity: Option[Map[Long, Long]] = buildParam.getCachedLayoutSanity
+  private lazy val cachedLayoutSanity = buildParam.getCachedLayoutSanity
   // thread unsafe
-  private lazy val cachedLayoutDS: mutable.HashMap[Long, Dataset[Row]] = buildParam.getCachedLayoutDS
+  private lazy val cachedLayoutDS = buildParam.getCachedLayoutDS
   // thread unsafe
-  private lazy val cachedIndexInferior: Option[Map[Long, InferiorGroup]] = buildParam.getCachedIndexInferior
+  private lazy val cachedIndexInferior = buildParam.getCachedIndexInferior
 
   private lazy val datasetCacheStorageLevel = getStorageLevel
 
@@ -92,86 +93,66 @@ abstract class BuildStage(private val jobContext: SegmentJob,
 
   override protected def columnIdFunc(colRef: TblColRef): String = flatTableDesc.getColumnIdAsString(colRef)
 
+  protected trait BuildTaskIterator[Task] extends Iterator[Task] {
+
+    private var innerIter: Iterator[Task] = Iterator.empty
+
+    def canSpan: Boolean
+
+    def spanNodeSeq(segment: NDataSegment): Seq[TreeNode]
+
+    def genTask(segment: NDataSegment, node: TreeNode): Seq[Task]
+
+    override def hasNext: Boolean = {
+      while ((Objects.isNull(innerIter) || !innerIter.hasNext) && canSpan) {
+        innerIter = nextInnerIter
+        // Avoid dead loop
+        failFastCheck()
+      }
+      Objects.nonNull(innerIter) && innerIter.hasNext
+    }
+
+    override def next(): Task = {
+      innerIter.next()
+    }
+
+    private def nextInnerIter: Iterator[Task] = {
+      // Drain immediately.
+      drain()
+      // Use the latest data segment.
+      val segment = jobContext.getSegment(segmentId)
+      // span may generate empty nodes
+      val nodes = spanNodeSeq(segment)
+      nodes.flatMap(node => genTask(segment, node)).iterator
+    }
+  }
+
   protected def buildLayouts(): Unit = {
-    // Maintain this variable carefully.
-    var remainingTaskCount = 0
 
-    // Share failed task 'throwable' with main thread.
-    val failQueue = Queues.newLinkedBlockingQueue[Option[Throwable]]()
+    val taskIter = new BuildTaskIterator[LayoutBuildTask] {
 
-    var successTaskCount = 0
-    // Main loop: build layouts.
-    while (spanningTree.nonSpanned()) {
-      if (resourceContext.isAvailable) {
-        // Drain immediately.
-        drain()
-        // Use the latest data segment.
-        val segment = jobContext.getSegment(segmentId)
-        val nodes = spanningTree.span(segment).asScala
-        val tasks = nodes.flatMap(node => getLayoutTasks(segment, node))
-        remainingTaskCount += tasks.size
-        // Submit tasks, no task skip inside this foreach.
-        tasks.foreach { task =>
-          runtime.submit(() => try {
-            // If unset
-            setConfig4CurrentThread()
-            // Build layout.
-            buildLayout(task)
-            // Offer 'Node' if everything was well.
-            failQueue.offer(None)
-          } catch {
-            // Offer 'Throwable' if unexpected things happened.
-            case t: Throwable =>
-              failQueue.offer(Some(t))
-              if (config.isUTEnv) {
-                log.debug(s"count of flatTable: ${flatTableDS.count()}," +
-                  s"count of factTable: ${buildParam.getFactTableDS.count()}")
-              }
-          })
-        }
-        logInfo(s"Segment $segment add layout tasks: ${tasks.size}")
-        if (tasks.nonEmpty) {
-          KylinBuildEnv.get().buildJobInfos.recordCuboidsNumPerLayer(segmentId, tasks.size)
+      override def canSpan: Boolean = spanningTree.canSpan
 
-          val layoutCount = KylinBuildEnv.get().buildJobInfos.getSeg2cuboidsNumPerLayer.get(segmentId).asScala.sum
-          onBuildLayoutSuccess(layoutCount)
-        }
+      override def spanNodeSeq(segment: NDataSegment): Seq[TreeNode] = {
+        spanningTree.span(segment).asScala
       }
-      // Poll and fail fast.
-      remainingTaskCount -= failFastPoll(failQueue, 3L, TimeUnit.SECONDS)
+
+      override def genTask(segment: NDataSegment, node: TreeNode): Seq[LayoutBuildTask] = {
+        getLayoutTasks(segment, node)
+      }
     }
-    // Await or fail fast.
-    while (remainingTaskCount > 0) {
-      remainingTaskCount -= failFastPoll(failQueue)
-    }
-    // Drain immediately after all layouts built.
-    drain()
+    slowStartExec(taskIter, buildLayout)
   }
 
-  protected final def failFastPoll(failQueue: BlockingQueue[Option[Throwable]], //
-                                   timeout: Long = 1, unit: TimeUnit = TimeUnit.SECONDS): Int = {
-    checkBackgroundFailure()
-    assert(unit.toSeconds(timeout) > 0, s"Timeout should be positive seconds to avoid a busy loop.")
-    var count = 0
-    var failure = failQueue.poll(timeout, unit)
-    while (Objects.nonNull(failure)) {
-      if (failure.isDefined) {
-        logError(s"Fail fast.", failure.get)
-        drain()
-        throw failure.get
-      }
-      count += 1
-      failure = failQueue.poll()
-    }
-    count
+
+  override protected def recordTaskInfo(t: Task): Unit = {
+    logInfo(s"Segment $segmentId submit task: ${t.getTaskDesc}")
+    KylinBuildEnv.get().buildJobInfos.recordCuboidsNumPerLayer(segmentId, 1)
   }
 
-  private def checkBackgroundFailure(): Unit = {
-    // Maybe other errors occur
-    if (backgroundFailure.isDefined) {
-      logError(s"Fail fast.", backgroundFailure.get)
-      throw backgroundFailure.get
-    }
+  override protected def reportTaskProgress(): Unit = {
+    val layoutCount = KylinBuildEnv.get().buildJobInfos.getSeg2cuboidsNumPerLayer.get(segmentId).asScala.sum
+    onBuildLayoutSuccess(layoutCount)
   }
 
   protected def buildStatistics(): Statistics = {
@@ -188,26 +169,29 @@ abstract class BuildStage(private val jobContext: SegmentJob,
       return
     }
 
-    logInfo(s"Segment $segmentId build sanity cache.")
-    val parallel = rootNodes.map { node =>
+    val taskIter = rootNodes.map { node =>
       val layout = node.getLayout
       val layoutDS = getCachedLayoutDS(dataSegment, layout)
-      (layout, layoutDS)
-    }.par
-    val forkJoinPool = new ForkJoinPool(rootNodes.size)
-    try {
-      parallel.tasksupport = new ForkJoinTaskSupport(forkJoinPool)
-      val sanityMap = parallel.map { case (layout, layoutDS) =>
-        val sanityCount = SanityChecker.getCount(layoutDS, layout)
-        (layout.getId, sanityCount)
-      }.toMap.seq
-      assert(sanityMap.keySet.size == rootNodes.size, //
-        s"Collect sanity for root nodes went wrong: ${sanityMap.keySet.size} == ${rootNodes.size}")
-      buildParam.setCachedLayoutSanity(Some(sanityMap))
-      logInfo(s"Segment $segmentId finished build sanity cache $sanityMap.")
-    } finally {
-      forkJoinPool.shutdownNow()
-    }
+      new SanityTask(layout, layoutDS)
+    }.iterator
+
+    logInfo(s"Segment $segmentId build sanity cache.")
+    slowStartExec(taskIter, (sanityTask: SanityTask) => {
+      val layout = sanityTask.layout
+      val layoutDS = sanityTask.layoutDS
+      val sanityCount = SanityChecker.getCount(layoutDS, layout)
+      sanityResultQueue.offer(new SanityResult(layout.getId, sanityCount))
+    })
+
+    val sanityMap = polledResultSeq(sanityResultQueue).map { r =>
+      val layout = r.layout
+      val sanityCount = r.sanityCount
+      (layout, sanityCount)
+    }.toMap.seq
+    assert(sanityMap.keySet.size == rootNodes.size, //
+      s"Collect sanity for root nodes went wrong: ${sanityMap.keySet.size} == ${rootNodes.size}")
+    buildParam.setCachedLayoutSanity(Some(sanityMap))
+    logInfo(s"Segment $segmentId finished build sanity cache $sanityMap.")
   }
 
   private def getLayoutTasks(segment: NDataSegment, node: TreeNode): Seq[LayoutBuildTask] = {
@@ -256,16 +240,12 @@ abstract class BuildStage(private val jobContext: SegmentJob,
       return flatTableStats.totalCount
     }
 
-    // From data layout.
-    if (cachedLayoutSanity.isEmpty) {
-      return SanityChecker.SKIP_FLAG
-    }
-    val rootNode = node.getRootNode
-    val cachedLayout = cachedLayoutSanity.get
-    val layout = rootNode.getLayout
-    assert(cachedLayout.contains(layout.getId), //
-      s"Root node's layout sanity should have been cached: ${layout.getId}")
-    cachedLayout(layout.getId)
+    cachedLayoutSanity.map { cached =>
+      val layout = node.getRootNode.getLayout.getId
+      assert(cached.contains(layout), //
+        s"Root node's layout sanity should have been cached: layout")
+      cached(layout)
+    }.getOrElse(SanityChecker.SKIP_FLAG)
   }
 
   private def getCachedLayoutDS(segment: NDataSegment, layout: LayoutEntity): Dataset[Row] = synchronized {
@@ -289,7 +269,11 @@ abstract class BuildStage(private val jobContext: SegmentJob,
                                     , parentDS: Dataset[Row] //
                                     , sanityCount: Long //
                                     , segment: NDataSegment = dataSegment //
-                                    , inferior: Option[InferiorGroup] = None)
+                                    , inferior: Option[InferiorGroup] = None) extends Task {
+    override def getTaskDesc: String = {
+      s"layout ${layout.getId}"
+    }
+  }
 
 
   private def buildLayout(task: LayoutBuildTask): Unit = {
@@ -405,6 +389,14 @@ abstract class BuildStage(private val jobContext: SegmentJob,
       }
     }, project)
   }
+
+  sealed class SanityTask(val layout: LayoutEntity, val layoutDS: Dataset[Row]) extends Task {
+    override def getTaskDesc: String = {
+      s"layout sanity ${layout.getId}"
+    }
+  }
+
+  sealed class SanityResult(val layout: Long, val sanityCount: Long)
 
   // ----------------------------- Beta feature: Inferior Flat Table. ----------------------------- //
 

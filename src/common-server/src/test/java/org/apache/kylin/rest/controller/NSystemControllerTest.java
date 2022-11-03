@@ -19,6 +19,12 @@ package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.Random;
+
+import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -48,7 +54,7 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
     private MockMvc mockMvc;
 
     @Mock
-    private SystemService systemService;
+    private SystemService systemService = Mockito.spy(new SystemService());
 
     @InjectMocks
     private NSystemController nSystemController = Mockito.spy(new NSystemController());
@@ -73,13 +79,100 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testDumpDiagPackage() throws Exception {
+        DiagPackageRequest request = new DiagPackageRequest();
+        final long end = System.currentTimeMillis();
+        final long start = end - 1000L * 60 * 10;
+        request.setStart(String.valueOf(start));
+        request.setEnd(String.valueOf(end));
+        Mockito.doAnswer(x -> null).when(systemService).dumpLocalDiagPackage(Mockito.any(), Mockito.any(),
+                Mockito.any(), Mockito.any());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)).param("host", "")
+                .content(JsonUtil.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nSystemController).getRemoteDumpDiagPackage(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
     public void testRemoteDumpDiagPackage() throws Exception {
         DiagPackageRequest request = new DiagPackageRequest();
         Mockito.doAnswer(x -> null).when(nSystemController).generateTaskForRemoteHost(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)).param("host", "ip")
+                .content(JsonUtil.writeValueAsString(request)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        request.setStart("start");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
+                .content(JsonUtil.writeValueAsString(request)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        request.setStart("-1");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
+                .content(JsonUtil.writeValueAsString(request)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        Random random = new Random();
+        LocalDateTime randomStartLocalDateTime = LocalDateTime.now().minus(random.nextInt(100), ChronoUnit.MONTHS);
+        request.setStart(
+                String.valueOf(randomStartLocalDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
+                .content(JsonUtil.writeValueAsString(request)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        request.setEnd("end");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
+                .content(JsonUtil.writeValueAsString(request)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        request.setEnd("-2");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
+                .content(JsonUtil.writeValueAsString(request)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        final LocalDateTime endLocalDateTimeFiveMinute = randomStartLocalDateTime.plus(5, ChronoUnit.MINUTES);
+        request.setEnd(String
+                .valueOf(endLocalDateTimeFiveMinute.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1));
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
+                .content(JsonUtil.writeValueAsString(request)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        final LocalDateTime endLocalDateTimeOneMouth = randomStartLocalDateTime.plus(30, ChronoUnit.DAYS);
+        request.setEnd(
+                String.valueOf(endLocalDateTimeOneMouth.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() + 1));
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
+                .content(JsonUtil.writeValueAsString(request)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        request.setEnd(
+                String.valueOf(endLocalDateTimeFiveMinute.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
                 .content(JsonUtil.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nSystemController).getRemoteDumpDiagPackage(Mockito.any(), Mockito.any(), Mockito.any());
+
+        request.setEnd(
+                String.valueOf(endLocalDateTimeOneMouth.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
+                .content(JsonUtil.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.verify(nSystemController, Mockito.times(10)).getRemoteDumpDiagPackage(Mockito.any(),
+                Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    public void testGetDumpDiagPackage() throws Exception {
+        Mockito.doAnswer(x -> null).when(systemService).getExtractorStatus(Mockito.any(), Mockito.anyString());
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/system/diag/status").contentType(MediaType.APPLICATION_JSON)
+                .param("id", "id").param("host", "").param("project", "project")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nSystemController).getRemotePackageStatus(Mockito.anyString(), Mockito.anyString(),
+                Mockito.anyString(), Mockito.any());
     }
 
     @Test
@@ -87,20 +180,34 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
         Mockito.doAnswer(x -> null).when(nSystemController).generateTaskForRemoteHost(Mockito.any(),
                 Mockito.anyString());
         mockMvc.perform(MockMvcRequestBuilders.get("/api/system/diag/status").contentType(MediaType.APPLICATION_JSON)
-                .param("id", "id").param("host", "ip").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .param("id", "id").param("host", "ip").param("project", "project")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(nSystemController).getRemotePackageStatus(Mockito.anyString(), Mockito.anyString(),
-                Mockito.any());
+                Mockito.anyString(), Mockito.any());
+    }
+
+    @Test
+    public void testDownloadPackage() throws Exception {
+        Mockito.when(systemService.getDiagPackagePath(Mockito.anyString(), Mockito.anyString())).thenReturn("");
+        Mockito.doNothing().when(nSystemController).setDownloadResponse(Mockito.any(), Mockito.any(), Mockito.any());
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
+                .param("id", "id").param("host", "").param("project", "project")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nSystemController).remoteDownloadPackage(Mockito.anyString(), Mockito.anyString(),
+                Mockito.anyString(), Mockito.any(), Mockito.any());
     }
 
     @Test
     public void testRemoteDownloadPackage() throws Exception {
         Mockito.doNothing().when(nSystemController).downloadFromRemoteHost(Mockito.any(), Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.get("/api/system/diag").contentType(MediaType.APPLICATION_JSON)
-                .param("id", "id").param("host", "ip").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .param("id", "id").param("host", "ip").param("project", "project")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nSystemController).remoteDownloadPackage(Mockito.anyString(), Mockito.anyString(), Mockito.any(),
-                Mockito.any());
+        Mockito.verify(nSystemController).remoteDownloadPackage(Mockito.anyString(), Mockito.anyString(),
+                Mockito.anyString(), Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -145,5 +252,24 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/system/host").contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.parseMediaType(APPLICATION_JSON))).andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(nSystemController, Mockito.times(1)).getHostname();
+    }
+
+    @Test
+    public void testSimulationInsert_TurnON() throws Exception {
+        getTestConfig().setProperty("kylin.env.unitofwork-simulation-enabled", KylinConfigBase.TRUE);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/transaction/simulation/insert_meta")
+                .contentType(MediaType.APPLICATION_JSON).param("count", "10").param("sleepSec", "1")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        Mockito.verify(nSystemController).simulateInsertMeta(Mockito.anyInt(), Mockito.anyLong());
+    }
+
+    @Test
+    public void testSimulationInsert_TurnOff() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/transaction/simulation/insert_meta")
+                .contentType(MediaType.APPLICATION_JSON).param("count", "10").param("sleepSec", "100")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nSystemController).simulateInsertMeta(Mockito.anyInt(), Mockito.anyLong());
     }
 }

@@ -65,6 +65,31 @@ class TestSegmentFlatTable extends SparderBaseFunSuite with SharedSparkSession w
     assert(flatTable.newTableDS(ref) != null)
   }
 
+  test("testSegmentFlatTableWithChineseAndSpecialChar") {
+    getTestConfig.setProperty("kylin.engine.persist-flattable-enabled", "false")
+    getTestConfig.setProperty("kylin.engine.count.lookup-table-max-time", "0")
+    getTestConfig.setProperty("kylin.source.record-source-usage-enabled", "false")
+
+    val dfMgr: NDataflowManager = NDataflowManager.getInstance(getTestConfig, "special_character_in_column")
+    val df: NDataflow = dfMgr.getDataflow("8c08822f-296a-b097-c910-e38d8934b6f9")
+    // cleanup all segments first
+    val update = new NDataflowUpdate(df.getUuid)
+    update.setToRemoveSegsWithArray(df.getSegments.asScala.toArray)
+    dfMgr.updateDataflow(update)
+
+    val seg = dfMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(0L, 1356019200000L))
+    val toBuildTree = new AdaptiveSpanningTree(getTestConfig, new AdaptiveTreeBuilder(seg, seg.getIndexPlan.getAllLayouts))
+    val flatTableDesc = new SegmentFlatTableDesc(getTestConfig, seg, toBuildTree)
+    val flatTable = new SegmentFlatTable(spark, flatTableDesc)
+    assert(flatTable.newTableDS(df.getModel.getAllTables.iterator().next()) != null)
+
+    val tableRef: TableRef = df.getModel.getAllTables.iterator().next()
+    val tableDesc: TableDesc = tableRef.getTableDesc
+    tableDesc.setRangePartition(true)
+    val ref = new TableRef(df.getModel, tableDesc.getName, tableDesc, false)
+    assert(flatTable.newTableDS(ref) != null)
+  }
+
   test("waitTillWorkerRegistered") {
     getTestConfig.setProperty("kylin.engine.persist-flattable-enabled", "false")
     getTestConfig.setProperty("kylin.engine.count.lookup-table-max-time", "0")

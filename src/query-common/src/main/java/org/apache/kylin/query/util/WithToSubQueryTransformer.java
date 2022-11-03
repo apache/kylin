@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import io.kyligence.kap.query.util.KapQueryUtil;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlDynamicParam;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -39,11 +40,13 @@ import org.apache.calcite.sql.SqlWith;
 import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.fun.SqlCase;
 import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.kylin.common.KapConfig;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.kylin.metadata.project.NProjectManager;
 
 /**
  * Transform "WITH AS ... SELECT" SQL to SQL with subquery
@@ -65,7 +68,9 @@ public class WithToSubQueryTransformer implements KapQueryUtil.IQueryTransformer
 
     @Override
     public String transform(String originSql, String project, String defaultSchema) {
-        if (!KapConfig.getInstanceFromEnv().enableReplaceDynamicParams()) {
+        KylinConfig kylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project)
+                .getConfig();
+        if (!kylinConfig.enableReplaceDynamicParams()) {
             // when dynamic params close, '?' count may inconsistent with params count after transform with to subquery
             return originSql;
         }

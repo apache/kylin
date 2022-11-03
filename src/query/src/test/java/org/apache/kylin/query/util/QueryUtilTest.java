@@ -16,30 +16,13 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.query.util;
 
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Properties;
 
+import io.kyligence.kap.query.util.KapQueryUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
 import org.apache.kylin.query.security.AccessDeniedException;
@@ -400,6 +383,27 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
                 "(select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID)"
                         + "limit 10 offset 3",
                 newSql3);
+        
+        String sql4 = "select TRANS_ID as test_limit, ORDER_ID as \"limit\" from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";
+        QueryParams queryParams4 = new QueryParams(config, sql4, "cc_test", 5, 2, "ssb", true);
+        String newSql4 = KapQueryUtil.massageSql(queryParams4);
+        Assert.assertEquals(
+                "select TRANS_ID as test_limit, ORDER_ID as \"limit\" from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID\n"
+                        + "LIMIT 5\n" + "OFFSET 2",
+                newSql4);
+
+        String sql5 = "select '\"`OFFSET`\"'";
+        QueryParams queryParams5 = new QueryParams(config, sql5, "cc_test", 1, 4, "ssb", true);
+        String newSql5 = KapQueryUtil.massageSql(queryParams5);
+        Assert.assertEquals("select '\"`OFFSET`\"'\n" + "LIMIT 1\n" + "OFFSET 4", newSql5);
+
+        String sql6 = "select TRANS_ID as \"offset\", \"limit\" as \"offset limit\" from TEST_KYLIN_FACT group by TRANS_ID, \"limit\"";
+        QueryParams queryParams6 = new QueryParams(config, sql6, "cc_test", 10, 5, "ssb", true);
+        String newSql6 = KapQueryUtil.massageSql(queryParams6);
+        Assert.assertEquals(
+                "select TRANS_ID as \"offset\", \"limit\" as \"offset limit\" from TEST_KYLIN_FACT group by TRANS_ID, \"limit\"\n"
+                        + "LIMIT 10\n" + "OFFSET 5",
+                newSql6);
     }
 
     @Test

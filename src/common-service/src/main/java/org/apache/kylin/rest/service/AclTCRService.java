@@ -46,27 +46,27 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.rest.security.MutableAclRecord;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.common.persistence.transaction.AclGrantEventNotifier;
 import org.apache.kylin.common.persistence.transaction.AclRevokeEventNotifier;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.acl.AclTCR;
 import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.acl.DependentColumn;
 import org.apache.kylin.metadata.acl.SensitiveDataMask;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.user.NKylinUserManager;
+import io.kyligence.kap.metadata.user.NKylinUserManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.request.AclTCRRequest;
 import org.apache.kylin.rest.response.AclTCRResponse;
+import org.apache.kylin.rest.security.MutableAclRecord;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -473,7 +473,7 @@ public class AclTCRService extends BasicService implements AclTCRServiceSupporte
                 .ifPresent(prj -> EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                     requests.stream().filter(r -> StringUtils.isNotEmpty(r.getSid())).forEach(r -> {
                         AclTCR aclTCR = new AclTCR();
-                        if (!defaultAuthorized) {
+                        if (!defaultAuthorized && !AclPermissionUtil.isProjectAdminPermission(r.getPermission())) {
                             aclTCR.setTable(new AclTCR.Table());
                         }
                         updateAclTCR(prj.getName(), r.getSid(), r.isPrincipal(), aclTCR);
@@ -1186,13 +1186,8 @@ public class AclTCRService extends BasicService implements AclTCRServiceSupporte
     }
 
     @VisibleForTesting
-    public boolean canUseACLGreenChannel(String project) {
-        return AclPermissionUtil.canUseACLGreenChannel(project, getCurrentUserGroups(), false);
-    }
-
-    @VisibleForTesting
-    public boolean canUseACLGreenChannelForShowTable(String project) {
-        return AclPermissionUtil.canUseACLGreenChannel(project, getCurrentUserGroups(), true);
+    boolean canUseACLGreenChannel(String project) {
+        return AclPermissionUtil.canUseACLGreenChannel(project, getCurrentUserGroups());
     }
 
     @VisibleForTesting

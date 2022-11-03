@@ -46,7 +46,9 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class JdbcUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(JdbcUtil.class);
@@ -57,11 +59,19 @@ public class JdbcUtil {
 
     public static <T> T withTransaction(DataSourceTransactionManager transactionManager, Callback<T> consumer,
             int isolationLevel) {
+        return withTransaction(transactionManager, consumer, isolationLevel, null);
+    }
+
+    public static <T> T withTransaction(DataSourceTransactionManager transactionManager, Callback<T> consumer,
+            int isolationLevel, Callback<T> beforeCommit) {
         val definition = new DefaultTransactionDefinition();
         definition.setIsolationLevel(isolationLevel);
         val status = transactionManager.getTransaction(definition);
         try {
             T result = consumer.handle();
+            if (beforeCommit != null) {
+                beforeCommit.handle();
+            }
             transactionManager.commit(status);
             return result;
         } catch (Exception e) {

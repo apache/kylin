@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.FusionModel;
@@ -42,6 +41,7 @@ import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
 import org.apache.kylin.rest.service.params.ModelQueryParams;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ModelTriple;
 import org.apache.kylin.rest.util.ModelTripleComparator;
 import org.apache.kylin.rest.util.ModelUtils;
@@ -102,10 +102,10 @@ public class ModelQueryService extends BasicService implements ModelQuerySupport
             modelTripleList.removeIf(t -> !t.getDataModel().getUuid().equals(elem.getModelId()));
         }
 
-        if (!KylinConfig.getInstanceFromEnv().streamingEnabled()) {
-            modelTripleList = modelTripleList.parallelStream().filter(t -> !t.getDataModel().isStreaming())
-                    .collect(Collectors.toList());
-        }
+        boolean streamingEnabled = KylinConfig.getInstanceFromEnv().streamingEnabled();
+        modelTripleList = modelTripleList.parallelStream()
+                .filter(triple -> triple.getDataModel().isAccessible(streamingEnabled)) //
+                .collect(Collectors.toList());
 
         if (!modelAttributeSet.isEmpty()) {
             val isProjectEnable = SecondStorageUtil.isProjectEnable(elem.getProjectName());

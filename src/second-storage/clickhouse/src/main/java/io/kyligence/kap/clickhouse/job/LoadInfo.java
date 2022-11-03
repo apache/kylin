@@ -17,18 +17,6 @@
  */
 package io.kyligence.kap.clickhouse.job;
 
-import com.google.common.base.Preconditions;
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.model.NDataModel;
-import io.kyligence.kap.secondstorage.metadata.PartitionType;
-import io.kyligence.kap.secondstorage.metadata.SegmentFileStatus;
-import io.kyligence.kap.secondstorage.metadata.TableData;
-import io.kyligence.kap.secondstorage.metadata.TableFlow;
-import io.kyligence.kap.secondstorage.metadata.TablePartition;
-import lombok.val;
-import org.apache.kylin.common.util.RandomUtil;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,6 +24,22 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.model.NDataModel;
+
+import com.google.common.base.Preconditions;
+
+import io.kyligence.kap.secondstorage.metadata.PartitionType;
+import io.kyligence.kap.secondstorage.metadata.SegmentFileStatus;
+import io.kyligence.kap.secondstorage.metadata.TableData;
+import io.kyligence.kap.secondstorage.metadata.TableEntity;
+import io.kyligence.kap.secondstorage.metadata.TableFlow;
+import io.kyligence.kap.secondstorage.metadata.TablePartition;
+import lombok.Getter;
+import lombok.val;
 
 public class LoadInfo {
     final NDataModel model;
@@ -46,6 +50,8 @@ public class LoadInfo {
     final LayoutEntity layout;
     final List<List<SegmentFileStatus>> shardFiles;
     final TableFlow tableFlow;
+    @Getter
+    private final TableEntity tableEntity;
 
     private String targetDatabase;
     private String targetTable;
@@ -57,12 +63,13 @@ public class LoadInfo {
         return (List<T>) Arrays.asList(new Object[size]);
     }
 
-    private LoadInfo(NDataModel model, NDataSegment segment, LayoutEntity layout, String[] nodeNames, TableFlow tableFlow) {
-        this(model, segment, null, layout, nodeNames, tableFlow);
+    private LoadInfo(NDataModel model, NDataSegment segment, LayoutEntity layout, String[] nodeNames,
+            TableFlow tableFlow, TableEntity tableEntity) {
+        this(model, segment, null, layout, nodeNames, tableFlow, tableEntity);
     }
 
     private LoadInfo(NDataModel model, NDataSegment segment, String oldSegmentId, LayoutEntity layout,
-            String[] nodeNames, TableFlow tableFlow) {
+            String[] nodeNames, TableFlow tableFlow, TableEntity tableEntity) {
         this.model = model;
         this.segment = segment;
         final int shardNumber = nodeNames.length;
@@ -75,6 +82,7 @@ public class LoadInfo {
             this.shardFiles.set(i, new ArrayList<>(100));
         }
         this.tableFlow = tableFlow;
+        this.tableEntity = tableEntity;
     }
 
     /**
@@ -101,9 +109,9 @@ public class LoadInfo {
      */
 
     public static LoadInfo distribute(String[] nodeNames, NDataModel model, NDataSegment segment, FileProvider provider,
-            LayoutEntity layout, TableFlow tableFlow) {
+            LayoutEntity layout, TableFlow tableFlow, TableEntity tableEntity) {
         int shardNum = nodeNames.length;
-        final LoadInfo info = new LoadInfo(model, segment, layout, nodeNames, tableFlow);
+        final LoadInfo info = new LoadInfo(model, segment, layout, nodeNames, tableFlow, tableEntity);
         val it = provider.getAllFilePaths().iterator();
         int index = 0;
         while (it.hasNext()) {
@@ -122,6 +130,10 @@ public class LoadInfo {
     public LoadInfo setTargetTable(String targetTable) {
         this.targetTable = targetTable;
         return this;
+    }
+
+    public String getTargetTable() {
+        return this.targetTable;
     }
 
     public LoadInfo setOldSegmentId(String oldSegmentId) {
@@ -177,7 +189,8 @@ public class LoadInfo {
         }
         Map<String, Long> sizeInNode = metric.getByPartitions(targetDatabase, targetTable, segment.getSegRange(), dateFormat);
         return TablePartition.builder().setSegmentId(segmentId).setShardNodes(Arrays.asList(nodeNames))
-                .setId(RandomUtil.randomUUIDStr()).setNodeFileMap(nodeFileMap).setSizeInNode(sizeInNode).build();
+                .setId(RandomUtil.randomUUIDStr()).setNodeFileMap(nodeFileMap).setSizeInNode(sizeInNode)
+                .setSecondaryIndexColumns(tableEntity.getSecondaryIndexColumns()).build();
     }
 
     public void upsertTableData(TableFlow copied, String database, String table, PartitionType partitionType) {

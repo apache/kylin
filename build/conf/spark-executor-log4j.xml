@@ -22,5 +22,11 @@
             <AppenderRef ref="hdfs"/>
             <AppenderRef ref="stderr"/>
         </Root>
+        <Logger name="org.apache.spark" level="INFO"/>
+
+        <!-- CAUTION !!! Switch hadoop log level to DEBUG may cause large log output. -->
+        <Logger name="org.apache.hadoop" level="INFO"/>
+        <!-- CAUTION !!! Switch parquet log level to DEBUG may cause extremely large log output. -->
+        <Logger name="org.apache.parquet" level="INFO"/>
     </Loggers>
 </Configuration>

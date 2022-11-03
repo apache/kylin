@@ -41,6 +41,8 @@
         <maven-model.version>3.3.9</maven-model.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <kylin.module.version>5.0.0-SNAPSHOT</kylin.module.version>
+        <arthas.version>3.6.3-kyarthas-r2</arthas.version>
 
         <!-- Keep same order with dependencyManagement -->
 
@@ -52,26 +54,34 @@
         <!-- Hive versions -->
         <hive.version>2.3.9</hive.version>
         <hive-hcatalog.version>2.3.9</hive-hcatalog.version>
+        <hive-storage-api.version>2.7.2</hive-storage-api.version>
+
+        <!-- soft affinity -->
+        <alluxio.version>2.7.4</alluxio.version>
+        <libthrift.version>0.12.0</libthrift.version>
 
         <!-- Kafka versions -->
-        <kafka.version>2.8.1</kafka.version>
+        <kafka.version>2.8.2</kafka.version>
 
         <!-- Spark versions -->
-        <spark.version>3.2.0-kylin-4.5.15.0</spark.version>
+        <delta.version>1.2.1</delta.version>
+        <spark.version>3.2.0-kylin-4.5.20.0-SNAPSHOT</spark.version>
 
         <roaring.version>0.9.2-kylin-r4</roaring.version>
 
         <kryo.version>4.0.0</kryo.version>
 
+        <scala-retry>0.3.0</scala-retry>
+
         <!-- Calcite Version -->
-        <calcite.version>1.116.0-kylin-4.x-r021</calcite.version>
-        <avatica.version>1.10.0</avatica.version>
+        <calcite.version>1.116.0-kylin-4.x-r023</calcite.version>
+        <avatica.version>4.x_1.10-r01</avatica.version>
 
         <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
         <zookeeper.version>3.4.14</zookeeper.version>
         <curator.version>2.12.0-kylin-r5</curator.version>
         <jsr305.version>3.0.1</jsr305.version>
-        <guava.version>30.0-jre</guava.version>
+        <guava.version>14.0</guava.version>
         <listenablefuture.version>1.0</listenablefuture.version>
         <jsch.version>0.1.54</jsch.version>
         <commons-cli.version>1.2</commons-cli.version>
@@ -106,10 +116,10 @@
         <!-- Utility -->
         <mssql-jdbc.version>6.1.0.jre7</mssql-jdbc.version>
         <mysql-connector.version>8.0.28</mysql-connector.version>
-        <postgresql.version>42.3.3</postgresql.version>
+        <postgresql.version>42.4.1</postgresql.version>
         <commons-dbcp.version>2.9.0</commons-dbcp.version>
         <lmax.disruptor.versoin>3.4.2</lmax.disruptor.versoin>
-        <log4j2.version>2.17.1</log4j2.version>
+        <log4j2.version>2.18.0</log4j2.version>
         <log4j2-cachefile-transformer.version>2.14.1</log4j2-cachefile-transformer.version>
         <slf4j.version>1.7.30</slf4j.version>
         <apache-log4j.version>2.12.1</apache-log4j.version>
@@ -120,32 +130,34 @@
         <beanutils.version>1.9.4</beanutils.version>
         <xerces.version>2.12.2</xerces.version>
         <bcprov-ext-jdk15on.version>1.67</bcprov-ext-jdk15on.version>
-        <bcprov-jdk15on.version>1.67</bcprov-jdk15on.version>
+        <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
         <opencsv.version>5.5.2</opencsv.version>
+        <snakeyaml.version>1.31</snakeyaml.version>
 
         <mybatis.version>3.5.6</mybatis.version>
         <mybatis-sql.version>1.3.1</mybatis-sql.version>
         <cglib.version>3.2.4</cglib.version>
         <supercsv.version>2.4.0</supercsv.version>
         <cors.version>2.5</cors.version>
-        <tomcat.version>9.0.58</tomcat.version>
+        <tomcat.version>9.0.63</tomcat.version>
         <t-digest.version>3.1.1-kylin-r1</t-digest.version>
         <jsonpath.version>2.3.0</jsonpath.version>
         <lombok.version>1.18.2</lombok.version>
         <forbiddenapis.version>3.1</forbiddenapis.version>
         <javassist.version>3.20.0-GA</javassist.version>
         <esapi.version>2.3.0.0</esapi.version>
+        <api-util.version>1.0.2</api-util.version>
+        <neko-htmlunit.version>2.62.0</neko-htmlunit.version>
+        <woodstox-core.version>5.3.0</woodstox-core.version>
+
         <!--metric-->
         <dropwizard.version>4.1.1</dropwizard.version>
 
         <spring.cloud.version>2021.0.0</spring.cloud.version>
-        <spring.boot.version>2.6.3</spring.boot.version>
-        <spring-session.version>2.6.1-kylin-r2</spring-session.version>
+        <spring.boot.version>2.6.8</spring.boot.version>
+        <spring-boot-admin.version>2.6.6</spring-boot-admin.version>
+        <spring-session.version>2.6.1-kylin-r3</spring-session.version>
         <spring.framework.security.extensions.version>1.0.10.RELEASE</spring.framework.security.extensions.version>
-        <spring-jdbc.version>5.3.15</spring-jdbc.version>
-        <spring-beans.version>5.3.18</spring-beans.version>
-        <spring-core.version>5.3.18</spring-core.version>
-        <spring-tx.version>5.3.19</spring-tx.version>
         <spring-security-web.version>5.6.4</spring-security-web.version>
         <opensaml.version>2.6.6</opensaml.version>
         <aspectj.version>1.8.9</aspectj.version>
@@ -162,7 +174,7 @@
 
         <groovy-all.version>2.4.7</groovy-all.version>
         <slf4j-ext.version>1.7.26</slf4j-ext.version>
-        <protobuf-java.version>3.17.3</protobuf-java.version>
+        <protobuf-java.version>3.16.1</protobuf-java.version>
 
         <!-- Sonar -->
         <sonar.scala.version>${scala.version}</sonar.scala.version>
@@ -172,14 +184,15 @@
         <sonar.jacoco.excludes>
             org/apache/kylin/**/tools/**:**/*CLI.java,
             **/org/apache/kylin/query/optrule/*,
-            org/apache/kylin/query/engine/exec/*,
+            org/apache/kylin/query/exec/*,
             org/apache/kylin/query/relnode/KapOLAPToEnumerableConverter.java,
             **/org/apache/kylin/query/relnode/OLAP*Rel.java,
+            **/org/apache/kylin/tool/kerberos/DelegationTokenManager.java,
             **/org/apache/kylin/tool/kerberos/KerberosLoginTask.java,
             **/org/apache/kylin/tool/kerberos/KerberosLoginUtil.java,
             **/org/apache/kylin/tool/setup/KapSparkTaskTestCLI.java,
             **/org/apache/kylin/tool/setup/KapGetClusterInfo.java,
-            **/org/apache/kylin/tool/common/HadoopConfExtractor.java,
+            **/org/apache/kylin/tool/util/HadoopConfExtractor.java,
             **/org/apache/kylin/tool/hadoop/CheckHadoopConfDir.java,
             **/org/apache/kylin/tool/hadoop/KapGetPathWithoutSchemeAndAuthorityCLI.java,
             **/org/apache/kylin/engine/spark/streaming/**/*,
@@ -191,22 +204,21 @@
             **/org/apache/kylin/rest/*Server.java,
             **/org/apache/kylin/engine/spark/builder/DFTableEncoder.java,
             **/org/apache/kylin/engine/spark/builder/DFLayoutMergeAssist.java,
-            **/org/apache/kylin/engine/spark/job/DFMergeJob.java,
-            **/org/apache/kylin/engine/spark/streaming/**/*,
-            **/org/apache/kylin/engine/spark/builder/DFBuildJob.java,
             **/org/apache/kylin/engine/spark/builder/DFDictionaryBuilder.java,
+            **/org/apache/kylin/engine/spark/job/DFMergeJob.java,
+            **/org/apache/kylin/engine/spark/job/DFBuildJob.java,
+            **/org/apache/kylin/engine/spark/streaming/**/*,
             **/org/apache/kylin/tool/CuratorOperator.java,
             **/org/apache/kylin/tool/kerberos/**,
             **/org/apache/kylin/tool/setup/**,
             **/org/apache/kylin/tool/upgrade/**,
-            **/org/apache/kylin/tool/common/HadoopConfExtractor.java,
+            **/org/apache/kylin/tool/util/HadoopConfExtractor.java,
             **/org/apache/kylin/tool/hadoop/CheckHadoopConfDir.java,
             **/org/apache/kylin/tool/hadoop/KapGetPathWithoutSchemeAndAuthorityCLI.java,
             **/org/apache/kylin/tool/metadata/CheckMetadataAccessCLI.java,
             **/org/apache/kylin/tool/QueryHistoryAccessCLI.java,
             **/org/apache/kylin/tool/upgrade/UpdateSessionTableCLI.java,
             **/org/apache/kylin/spark/common/logging/HdfsAppender.java,
-            **/org/apache/kylin/common/logging/QueryLoggerAdapter.java,
             **/org/apache/kylin/common/metrics/reporter/InfluxdbReporter.java,
             **/org/apache/kylin/common/metrics/NMetricsInfluxdbReporter.java,
             **/org/apache/kylin/common/util/InfluxDBUtils.java,
@@ -223,7 +235,6 @@
             **/org/apache/spark/dict/NGlobalDictHDFSStore.java,
             **/org/apache/spark/dict/NGlobalDictionaryV2.java,
             **/org/apache/spark/dict/NGlobalDictMetaInfo.java,
-            **/org/apache/spark/dict/NHashPartitioner.java,
             **/org/apache/kylin/rest/model/LicenseInfo.java,
             **/org/apache/kylin/rest/security/KerberosLoginManager.java,
             **/org/apache/kylin/engine/spark/source/NSparkMetadataExplorer.java,
@@ -234,11 +245,10 @@
             **/org/apache/kylin/rest/config/SwaggerConfig.java,
             **/org/apache/kylin/rest/config/SwaggerCompatibilityConfig.java
         </sonar.coverage.exclusions>
-        <sonar.organization>kyligence</sonar.organization>
+        <sonar.organization>kylin</sonar.organization>
         <!--suppress UnresolvedMavenProperty -->
         <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../../${aggregate.report.dir}
         </sonar.coverage.jacoco.xmlReportPaths>
-
 
         <!-- Kylin versions -->
         <kylin.version>3.0.0-SNAPSHOT</kylin.version>
@@ -295,13 +305,11 @@
         <netty.version>3.10.6.Final</netty.version>
         <servo-core.version>0.13.2</servo-core.version>
         <apache-api.version>1.0.3</apache-api.version>
-
-        <spring.cloud.alibaba.version>2021.1</spring.cloud.alibaba.version>
         <saas.nacos.discovery.starter.version>2.6.2</saas.nacos.discovery.starter.version>
-
         <jersey.version>2.35</jersey.version>
         <validation.api.version>2.0.1.Final</validation.api.version>
-        <jackson-databind.version>2.13.2.1</jackson-databind.version>
+        <jackson-databind.version>2.13.2.2</jackson-databind.version>
+        <nimbus-jose-jwt.version>9.23</nimbus-jose-jwt.version>
     </properties>
 
     <modules>
@@ -309,28 +317,26 @@
         <module>src/core-storage</module>
         <module>src/query-common</module>
         <module>src/query</module>
-        <module>src/kylin-it</module>
         <module>src/core-common</module>
         <module>src/core-metadata</module>
         <module>src/source-hive</module>
-        <module>src/server-base</module>
         <module>src/server</module>
+        <module>src/spark-project/kylin-soft-affinity-cache</module>
         <module>src/spark-project/spark-common</module>
         <module>src/spark-project/sparder</module>
         <module>src/spark-project/engine-spark</module>
         <module>src/spark-project/source-jdbc</module>
         <module>src/spark-project/engine-build-sdk</module>
+        <module>src/spark-project/spark-it</module>
         <module>src/streaming</module>
         <module>src/assembly</module>
         <module>src/tool</module>
         <module>src/datasource-sdk</module>
-        <module>src/external-catalog/external-catalog-sdk</module>
         <module>src/second-storage/core</module>
         <module>src/second-storage/core-ui</module>
         <module>src/second-storage/clickhouse</module>
+        <module>src/second-storage/clickhouse-it</module>
         <module>src/systools</module>
-
-        <!-- service  -->
         <module>src/modeling-service</module>
         <module>src/query-service</module>
         <module>src/datasource-service</module>
@@ -339,13 +345,15 @@
         <module>src/job-service</module>
         <module>src/streaming-service</module>
         <module>src/integration-service</module>
+        <module>src/kylin-it</module>
 
-        <!-- controller  -->
+        <!-- yinglong controller  -->
         <module>src/common-server</module>
         <module>src/metadata-server</module>
         <module>src/data-loading-server</module>
         <module>src/query-server</module>
 
+        <!-- yinglong server (starter) -->
         <module>src/data-loading-booter</module>
         <module>src/query-booter</module>
         <module>src/common-booter</module>
@@ -371,11 +379,6 @@
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-datasource-sdk</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-external-catalog-sdk</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -521,6 +524,13 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- arthas -->
+            <dependency>
+                <groupId>com.taobao.arthas</groupId>
+                <artifactId>arthas-spring-boot-starter</artifactId>
+                <version>${arthas.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>io.kyligence.saas</groupId>
                 <artifactId>saas-nacos-discovery-starter</artifactId>
@@ -633,12 +643,12 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-server-base</artifactId>
+                <artifactId>kylin-tool</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-tool</artifactId>
+                <artifactId>kylin-soft-affinity-cache</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -673,6 +683,12 @@
             <!--KAP test scope-->
             <dependency>
                 <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-it</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-core-common</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
@@ -704,12 +720,6 @@
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-core-storage</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-server-base</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
@@ -755,7 +765,12 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
-
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-soft-affinity-cache</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
 
             <!-- Hadoop2 dependencies -->
             <dependency>
@@ -1348,6 +1363,155 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-exec</artifactId>
+                <version>${hive.version}</version>
+                <classifier>core</classifier>
+                <exclusions>
+                    <!-- pull this in when needed; the explicit definition culls the surplus-->
+                    <exclusion>
+                        <groupId>org.apache.hive</groupId>
+                        <artifactId>hive-metastore</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.hive</groupId>
+                        <artifactId>hive-shims</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.hive</groupId>
+                        <artifactId>hive-ant</artifactId>
+                    </exclusion>
+                    <!-- break the loop -->
+                    <exclusion>
+                        <groupId>org.apache.hive</groupId>
+                        <artifactId>spark-client</artifactId>
+                    </exclusion>
+
+                    <!-- excluded dependencies & transitive.
+                     Some may be needed to be explicitly included-->
+                    <exclusion>
+                        <groupId>ant</groupId>
+                        <artifactId>ant</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.esotericsoftware.kryo</groupId>
+                        <artifactId>kryo</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-codec</groupId>
+                        <artifactId>commons-codec</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.avro</groupId>
+                        <artifactId>avro-mapred</artifactId>
+                    </exclusion>
+                    <!--  Do not need Calcite because we disabled hive.cbo.enable -->
+                    <exclusion>
+                        <groupId>org.apache.calcite</groupId>
+                        <artifactId>calcite-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.calcite</groupId>
+                        <artifactId>calcite-avatica</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>apache-curator</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-framework</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.thrift</groupId>
+                        <artifactId>libthrift</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.thrift</groupId>
+                        <artifactId>libfb303</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.zookeeper</groupId>
+                        <artifactId>zookeeper</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>jline</groupId>
+                        <artifactId>jline</artifactId>
+                    </exclusion>
+                    <!-- Cat X license now; see SPARK-18262 -->
+                    <exclusion>
+                        <groupId>org.json</groupId>
+                        <artifactId>json</artifactId>
+                    </exclusion>
+                    <!-- Begin of Hive 2.3 exclusion -->
+                    <!-- Do not need Tez -->
+                    <exclusion>
+                        <groupId>org.apache.hive</groupId>
+                        <artifactId>hive-llap-tez</artifactId>
+                    </exclusion>
+                    <!-- Do not need Calcite, see SPARK-27054 -->
+                    <exclusion>
+                        <groupId>org.apache.calcite</groupId>
+                        <artifactId>calcite-druid</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.calcite.avatica</groupId>
+                        <artifactId>avatica</artifactId>
+                    </exclusion>
+                    <!-- org.apache.logging.log4j:* conflict with log4j 1.2.17 -->
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>net.hydromatic</groupId>
+                        <artifactId>eigenbase-properties</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.codehaus.janino</groupId>
+                        <artifactId>commons-compiler</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.codehaus.janino</groupId>
+                        <artifactId>janino</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.pentaho</groupId>
+                        <artifactId>pentaho-aggdesigner-algorithm</artifactId>
+                    </exclusion>
+                    <!-- End of Hive 2.3 exclusion -->
+                </exclusions>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.ant</groupId>
                 <artifactId>ant</artifactId>
                 <version>${ant.version}</version>
@@ -1402,12 +1566,8 @@
                         <artifactId>json</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.eclipse.jetty.aggregate</groupId>
-                        <artifactId>jetty-all</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.codehaus.jackson</groupId>
-                        <artifactId>jackson-mapper-asl</artifactId>
+                        <groupId>org.eclipse.jetty.orbit</groupId>
+                        <artifactId>javax.servlet</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>org.eclipse.jetty.aggregate</groupId>
@@ -1419,6 +1579,33 @@
                     </exclusion>
                 </exclusions>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libthrift</artifactId>
+                <version>${libthrift.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libfb303</artifactId>
+                <version>0.9.3</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.alluxio</groupId>
+                <artifactId>alluxio-shaded-client</artifactId>
+                <version>${alluxio.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.hive</groupId>
@@ -1572,10 +1759,6 @@
                         <groupId>com.google.protobuf</groupId>
                         <artifactId>protobuf-java</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.arrow</groupId>
-                        <artifactId>arrow-vector</artifactId>
-                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -1583,16 +1766,6 @@
                 <artifactId>spark-catalyst_2.12</artifactId>
                 <version>${spark.version}</version>
                 <scope>provided</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.arrow</groupId>
-                        <artifactId>arrow-vector</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.arrow</groupId>
-                        <artifactId>arrow-memory-netty</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.spark</groupId>
@@ -1604,10 +1777,6 @@
                     <exclusion>
                         <groupId>com.google.protobuf</groupId>
                         <artifactId>protobuf-java</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.arrow</groupId>
-                        <artifactId>arrow-vector</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1686,16 +1855,6 @@
                 <version>${spark.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.arrow</groupId>
-                        <artifactId>arrow-vector</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.arrow</groupId>
-                        <artifactId>arrow-memory-netty</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.esotericsoftware</groupId>
@@ -1752,6 +1911,16 @@
                 </exclusions>
                 <scope>provided</scope>
             </dependency>
+            <dependency>
+                <groupId>io.delta</groupId>
+                <artifactId>delta-core_2.12</artifactId>
+                <version>${delta.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.hipjim</groupId>
+                <artifactId>scala-retry_2.12</artifactId>
+                <version>${scala-retry}</version>
+            </dependency>
 
             <!-- Other dependencies -->
             <dependency>
@@ -1773,7 +1942,7 @@
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.2</version>
+                <version>${lombok.version}</version>
             </dependency>
 
             <!-- Logging -->
@@ -2024,6 +2193,73 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>de.codecentric</groupId>
+                <artifactId>spring-boot-admin-starter-client</artifactId>
+                <version>${spring-boot-admin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-annotations-api</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-el</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-websocket</artifactId>
+                <version>${tomcat.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.tomcat.embed</groupId>
+                        <artifactId>tomcat-embed-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- Tomcat -->
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>${tomcat.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.tomcat</groupId>
+                        <artifactId>tomcat-annotations-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.tomcat.embed</groupId>
+                        <artifactId>tomcat-embed-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.tomcat.embed</groupId>
+                        <artifactId>tomcat-embed-el</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.tomcat.embed</groupId>
+                        <artifactId>tomcat-embed-websocket</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.tomcat</groupId>
+                        <artifactId>tomcat-annotations-api</artifactId>
+                    </exclusion>
+                </exclusions>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
             <dependency>
                 <groupId>org.springframework.session</groupId>
@@ -2042,6 +2278,11 @@
             </dependency>
 
             <!-- Spring Security -->
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-web</artifactId>
+                <version>${spring-security-web.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.security.extensions</groupId>
                 <artifactId>spring-security-saml2-core</artifactId>
@@ -2412,6 +2653,7 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty</artifactId>
                 <version>${netty.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.janino</groupId>
@@ -2539,6 +2781,31 @@
                 <artifactId>validation-api</artifactId>
                 <version>${validation.api.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson-databind.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.directory.api</groupId>
+                <artifactId>api-util</artifactId>
+                <version>${api-util.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.sourceforge.htmlunit</groupId>
+                <artifactId>neko-htmlunit</artifactId>
+                <version>${neko-htmlunit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.woodstox</groupId>
+                <artifactId>woodstox-core</artifactId>
+                <version>${woodstox-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>${snakeyaml.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -2615,7 +2882,10 @@
                         <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                         <junitxml>.</junitxml>
                         <filereports>WDF TestSuite.txt</filereports>
-                        <argLine>${surefireArgLine}</argLine>
+                        <argLine>${argLine} ${surefireArgLine}</argLine>
+                        <systemProperties>
+                            <skipBuild>${skipBuild}</skipBuild>
+                        </systemProperties>
                     </configuration>
                     <executions>
                         <execution>
@@ -2793,7 +3063,8 @@
                             <phase>validate</phase>
                             <configuration>
                                 <configLocation>dev-support/checkstyle-apache.xml</configLocation>
-                                <suppressionsLocation>dev-support/checkstyle-apache-suppressions.xml</suppressionsLocation>
+                                <suppressionsLocation>dev-support/checkstyle-apache-suppressions.xml
+                                </suppressionsLocation>
                                 <includeTestSourceDirectory>true</includeTestSourceDirectory>
                                 <consoleOutput>true</consoleOutput>
                                 <failsOnError>true</failsOnError>
@@ -2967,11 +3238,16 @@
                         <exclude>**/org/apache/spark/util/KylinReflectUtils$.class</exclude>
                         <exclude>**/org/apache/kylin/common/util/Unsafe.class</exclude>
                         <exclude>**/org/apache/kylin/query/runtime/ExpressionConverter$.class</exclude>
-                        <exclude>**/org/apache/kylin/rest/config/initialize/JobSchedulerListenerTest.class</exclude>
-                        <exclude>**/org/apache/kylin/rest/config/initialize/JobSchedulerListenerTest$TimeoutHandler.class</exclude>
-                        <exclude>**/org/apache/kylin/rest/config/initialize/JobSchedulerListenerTest$ModelHandler.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/scheduler/JobSchedulerListenerTest.class</exclude>
+                        <exclude>**/org/apache/kylin/rest/scheduler/JobSchedulerListenerTest$TimeoutHandler.class
+                        </exclude>
+                        <exclude>**/org/apache/kylin/rest/scheduler/JobSchedulerListenerTest$ModelHandler.class
+                        </exclude>
                         <exclude>**/org/apache/kylin/tool/kerberos/KerberosLoginUtil.class</exclude>
-                        <exclude>**/org/apache/spark/sql/execution/columnar/ColumnarCachedBatchSerializer$FromCachedBatch.class</exclude>
+                        <exclude>
+                            **/org/apache/spark/sql/execution/columnar/ColumnarCachedBatchSerializer$FromCachedBatch.class
+                        </exclude>
+                        <exclude>**/org/apache/kylin/tool/kerberos/DelegationTokenManager.class</exclude>
                     </excludes>
                     <signaturesFiles>
                         <signaturesFile>${user.dir}/dev-support/forbidden-signatures.txt</signaturesFile>
@@ -3012,6 +3288,24 @@
 
     <profiles>
         <profile>
+            <id>kyoffice</id>
+
+            <repositories>
+                <repository>
+                    <id>kyoffice</id>
+                    <name>Central Repository</name>
+                    <url>http://mvn.ops.kylincorp.com/repository/maven-public/</url>
+                    <layout>default</layout>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+        <profile>
             <id>sandbox</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -3049,9 +3343,6 @@
                                 <exclude>**/IT*.java</exclude>
                             </excludes>
                             <argLine>${argLine} ${surefireArgLine}</argLine>
-                            <classpathDependencyExcludes>
-                                <classpathDependencyExclude>org.apache.hive:hive-metastore</classpathDependencyExclude>
-                            </classpathDependencyExcludes>
                         </configuration>
                     </plugin>
 

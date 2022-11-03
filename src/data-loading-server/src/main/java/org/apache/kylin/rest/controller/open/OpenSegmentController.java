@@ -31,13 +31,10 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.response.DataResult;
-import org.apache.kylin.rest.response.EnvelopeResponse;
-import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.controller.BaseController;
 import org.apache.kylin.rest.controller.SegmentController;
 import org.apache.kylin.rest.request.BuildIndexRequest;
@@ -49,12 +46,15 @@ import org.apache.kylin.rest.request.PartitionsRefreshRequest;
 import org.apache.kylin.rest.request.SegmentsRequest;
 import org.apache.kylin.rest.response.BuildIndexResponse;
 import org.apache.kylin.rest.response.CheckSegmentResponse;
+import org.apache.kylin.rest.response.DataResult;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.JobInfoResponse;
 import org.apache.kylin.rest.response.JobInfoResponseWithFailure;
 import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.apache.kylin.rest.response.SegmentPartitionResponse;
 import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -118,11 +118,15 @@ public class OpenSegmentController extends BaseController {
             @RequestParam(value = "start", required = false, defaultValue = "1") String start,
             @RequestParam(value = "end", required = false, defaultValue = "" + (Long.MAX_VALUE - 1)) String end,
             @RequestParam(value = "sort_by", required = false, defaultValue = "last_modified_time") String sortBy,
-            @RequestParam(value = "reverse", required = false, defaultValue = "false") Boolean reverse) {
+            @RequestParam(value = "reverse", required = false, defaultValue = "false") Boolean reverse,
+            @RequestParam(value = "statuses", required = false, defaultValue = "") List<String> statuses,
+            @RequestParam(value = "statuses_second_storage", required = false, defaultValue = "") List<String> statusesSecondStorage) {
+        checkNonNegativeIntegerArg("page_offset", offset);
+        checkNonNegativeIntegerArg("page_size", limit);
         String projectName = checkProjectName(project);
         String modelId = getModel(modelAlias, projectName).getUuid();
         return segmentController.getSegments(modelId, projectName, status, offset, limit, start, end, null, null, false,
-                sortBy, reverse);
+                sortBy, reverse, statuses, statusesSecondStorage);
     }
 
     @ApiOperation(value = "getMultiPartitions", tags = { "DW" })
@@ -137,6 +141,8 @@ public class OpenSegmentController extends BaseController {
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer pageSize,
             @RequestParam(value = "sort_by", required = false, defaultValue = "last_modify_time") String sortBy,
             @RequestParam(value = "reverse", required = false, defaultValue = "true") Boolean reverse) {
+        checkNonNegativeIntegerArg("page_offset", pageOffset);
+        checkNonNegativeIntegerArg("page_size", pageSize);
         String projectName = checkProjectName(project);
         String modelId = getModel(modelAlias, project).getId();
         return segmentController.getMultiPartition(modelId, projectName, segId, status, pageOffset, pageSize, sortBy,

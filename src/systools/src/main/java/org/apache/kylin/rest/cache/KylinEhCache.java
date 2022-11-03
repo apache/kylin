@@ -45,12 +45,9 @@ public class KylinEhCache implements KylinCache {
         try {
             logger.info("Trying to load ehcache properties from {}.", cacheConfigLocation);
             this.cacheManager = CacheManager.create(new URL(cacheConfigLocation));
-        } catch (MalformedURLException e) {
-            logger.warn("Cannot use " + cacheConfigLocation, e);
-        } catch (CacheException e) {
-            logger.warn("Create cache manager failed with config path: {}.", cacheConfigLocation, e);
-        } finally {
-            logger.info("Use default ehcache.xml.");
+        } catch (MalformedURLException | CacheException e) {
+            logger.error("Create cache manager failed with config path: {}, will use default ehcache.xml",
+                    cacheConfigLocation, e);
             this.cacheManager = CacheManager.create(ClassLoader.getSystemResourceAsStream("ehcache.xml"));
         }
     }

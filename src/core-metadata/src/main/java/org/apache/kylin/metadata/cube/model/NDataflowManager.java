@@ -677,6 +677,19 @@ public class NDataflowManager implements IRealizationProvider {
     }
 
     public NDataflow updateDataflow(final NDataflowUpdate update) {
+        updateDataflowWithoutIndex(update);
+        if (ArrayUtils.isNotEmpty(update.getToRemoveSegs())) {
+            NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                    project);
+            IndexPlan indexPlan = indexPlanManager.getIndexPlan(update.getDataflowId());
+            if (!indexPlan.isBroken() && !indexPlan.getAllToBeDeleteLayoutId().isEmpty()) {
+                indexPlanManager.updateIndexPlan(update.getDataflowId(), IndexPlan::removeTobeDeleteIndexIfNecessary);
+            }
+        }
+        return getDataflow(update.getDataflowId());
+    }
+
+    public void updateDataflowWithoutIndex(final NDataflowUpdate update) {
         updateDataflow(update.getDataflowId(), df -> {
             Segments<NDataSegment> newSegs = (Segments<NDataSegment>) df.getSegments().clone();
 
@@ -716,15 +729,6 @@ public class NDataflowManager implements IRealizationProvider {
             NDataSegDetailsManager.getInstance(df.getConfig(), project).updateDataflow(df, update);
             newSegs.forEach(this::updateSegmentStatus);
         });
-        if (ArrayUtils.isNotEmpty(update.getToRemoveSegs())) {
-            NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(),
-                    project);
-            IndexPlan indexPlan = indexPlanManager.getIndexPlan(update.getDataflowId());
-            if (!indexPlan.isBroken() && !indexPlan.getAllToBeDeleteLayoutId().isEmpty()) {
-                indexPlanManager.updateIndexPlan(update.getDataflowId(), IndexPlan::removeTobeDeleteIndexIfNecessary);
-            }
-        }
-        return getDataflow(update.getDataflowId());
     }
 
     private void updateSegmentStatus(NDataSegment seg) {

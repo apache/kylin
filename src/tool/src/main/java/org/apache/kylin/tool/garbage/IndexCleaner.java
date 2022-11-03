@@ -30,8 +30,8 @@ import org.apache.kylin.metadata.cube.optimization.IndexOptimizerFactory;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
-import org.apache.kylin.metadata.recommendation.ref.OptRecV2;
+import io.kyligence.kap.metadata.recommendation.ref.OptRecManagerV2;
+import io.kyligence.kap.metadata.recommendation.ref.OptRecV2;
 
 import com.google.common.collect.Lists;
 

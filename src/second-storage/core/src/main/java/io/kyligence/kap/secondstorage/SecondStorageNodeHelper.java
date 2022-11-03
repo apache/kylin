@@ -27,6 +27,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -91,7 +92,7 @@ public class SecondStorageNodeHelper {
                 Preconditions.checkState(NODE_MAP.containsKey(replicaName));
                 return NODE_MAP.get(replicaName);
             }).collect(Collectors.toList());
-
+            Collections.shuffle(replicas);
             return shard2url.apply(replicas, queryContext);
         }).collect(Collectors.toList());
     }

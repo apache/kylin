@@ -18,11 +18,12 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
+import io.kyligence.kap.engine.spark.job.SegmentBuildJob
+import org.apache.commons.lang.StringUtils
 import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.job.stage.StageExec
-import org.apache.kylin.engine.spark.job.{KylinBuildEnv, SegmentBuildJob, SegmentJob}
+import org.apache.kylin.engine.spark.job.{KylinBuildEnv, SegmentJob}
 import org.apache.kylin.metadata.cube.model.NDataSegment
-import org.apache.commons.lang.StringUtils
 
 class RefreshSnapshots(jobContext: SegmentJob) extends StageExec {
 

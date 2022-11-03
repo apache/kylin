@@ -48,7 +48,7 @@ import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.source.adhocquery.IPushDownConverter;
 import org.apache.kylin.metadata.acl.AclTCRManager;
-import org.apache.kylin.query.util.KapQueryUtil;
+import io.kyligence.kap.query.util.KapQueryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

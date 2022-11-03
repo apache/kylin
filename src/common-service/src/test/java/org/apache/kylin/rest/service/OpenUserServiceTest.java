@@ -19,21 +19,32 @@
 package org.apache.kylin.rest.service;
 
 import java.io.FileInputStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.rest.config.initialize.UserAclListener;
+import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.security.AdminUserAspect;
+import org.apache.kylin.rest.security.UserAclManager;
+import org.apache.kylin.rest.util.SpringContext;
+import org.apache.kylin.tool.upgrade.UpdateUserAclTool;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ClassPathResource;
@@ -46,8 +57,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.google.common.collect.Lists;
+
+import io.kyligence.kap.metadata.epoch.EpochManager;
+import io.kyligence.kap.metadata.user.ManagedUser;
+import lombok.val;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ServiceTestBase.SpringConfig.class)
@@ -67,8 +83,14 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
     @Qualifier("customAuthProvider")
     private AuthenticationProvider authenticationProvider;
 
+    @Autowired
+    @Qualifier("userAclService")
+    private UserAclService userAclService;
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+
+    private UserAclListener userAclListener = new UserAclListener();
 
     @BeforeClass
     public static void setupResource() throws Exception {
@@ -82,6 +104,17 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
+    @Before
+    public void setup() {
+        ReflectionTestUtils.setField(userAclService, "userService", userService);
+        EventBusFactory.getInstance().register(userAclListener, true);
+    }
+
+    @After
+    public void tearDown() {
+        EventBusFactory.getInstance().unregister(userAclListener);
+    }
+
     @AfterClass
     public static void cleanupResource() {
         staticCleanupTestMetadata();
@@ -89,7 +122,8 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testBasic() {
-
+        EpochManager epochManager = EpochManager.getInstance();
+        epochManager.tryUpdateEpoch(EpochManager.GLOBAL, true);
         Assert.assertNotNull(userService);
 
         // test list users
@@ -107,6 +141,13 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(userName.contains("test"));
 
         //test list admin
+        getTestConfig().setProperty("kylin.security.profile", "custom");
+        val adminUserAspect = SpringContext.getBean(AdminUserAspect.class);
+        ReflectionTestUtils.setField(adminUserAspect, "tool", Mockito.spy(new UpdateUserAclTool()));
+        val tool = (UpdateUserAclTool) ReflectionTestUtils.getField(adminUserAspect, "tool");
+        Mockito.when(tool.isUpgraded()).thenReturn(true);
+        adminUserAspect.doAfterListAdminUsers(Collections.emptyList());
+        Assert.assertFalse((Boolean) ReflectionTestUtils.getField(adminUserAspect, "superAdminInitialized"));
         List<String> admins = userService.listAdminUsers();
         Assert.assertEquals(admins.size(), adminUsers.size());
         for (ManagedUser user : adminUsers) {
@@ -114,6 +155,9 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
                 throw new RuntimeException("test get admin fail");
             }
         }
+        Assert.assertTrue((Boolean) ReflectionTestUtils.getField(adminUserAspect, "superAdminInitialized"));
+        val userAclManager = UserAclManager.getInstance(getTestConfig());
+        Assert.assertTrue(userAclManager.get("admin").hasPermission(AclPermission.DATA_QUERY.getMask()));
 
         //test list groups
         Assert.assertTrue(userService.userExists("test"));
@@ -200,5 +244,37 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
                 .startsWith("org.apache.kylin.rest.service.StaticUserGroupService"));
         Assert.assertTrue(authenticationProvider.getClass().getName()
                 .startsWith("org.apache.kylin.rest.security.StaticAuthenticationProvider"));
+    }
+
+    @Test
+    public void testDoAfterListAdminUsers() {
+        List adminUserList = Arrays.asList("admin", "sunny");
+        val adminUserAspect = SpringContext.getBean(AdminUserAspect.class);
+        adminUserAspect.doAfterListAdminUsers(adminUserList);
+        Assert.assertTrue(((List) ReflectionTestUtils.getField(adminUserAspect, "adminUserList")).contains("sunny"));
+    }
+
+    @Test
+    public void testSuperAdmin() {
+        getTestConfig().setProperty("kylin.security.acl.super-admin-username", "");
+        Assert.assertFalse(userAclService.isSuperAdmin("test"));
+        Assert.assertTrue(userService.listSuperAdminUsers().isEmpty());
+        getTestConfig().setProperty("kylin.security.acl.super-admin-username", "admin");
+        val staticUserService = new StaticUserService() {
+            @Override
+            public List<String> listAdminUsers() {
+                throw new RuntimeException("test");
+            }
+        };
+        thrown.expect(RuntimeException.class);
+        staticUserService.listSuperAdminUsers();
+    }
+
+    @Test
+    public void testSyncAdminUser() {
+        EpochManager epochManager = EpochManager.getInstance();
+        epochManager.tryUpdateEpoch(EpochManager.GLOBAL, true);
+        userAclService.syncAdminUserAcl();
+        Assert.assertTrue(userAclService.hasUserAclPermission("admin", AclPermission.DATA_QUERY));
     }
 }

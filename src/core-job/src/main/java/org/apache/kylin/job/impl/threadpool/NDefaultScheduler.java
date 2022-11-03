@@ -44,7 +44,7 @@ import org.apache.kylin.job.runners.LicenseCapacityCheckRunner;
 import org.apache.kylin.job.runners.QuotaStorageCheckRunner;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.SystemInfoCollector;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -172,17 +172,15 @@ public class NDefaultScheduler implements Scheduler<AbstractExecutable> {
         logger.info("Fetching jobs every {} seconds", pollSecond);
         val fetcher = new FetcherRunner(this, jobPool, fetcherPool);
 
-        fetcherPool.scheduleWithFixedDelay(new JobCheckRunner(this), RandomUtils.nextInt(0, pollSecond), pollSecond,
-                TimeUnit.SECONDS);
-        if(KylinConfig.vendor().equals("kyligence")) {
-            fetcherPool.scheduleWithFixedDelay(new LicenseCapacityCheckRunner(this), RandomUtils.nextInt(0, pollSecond),
+        if (config.isCheckQuotaStorageEnabled()) {
+            fetcherPool.scheduleWithFixedDelay(new QuotaStorageCheckRunner(this), RandomUtils.nextInt(0, pollSecond),
                     pollSecond, TimeUnit.SECONDS);
-            if (config.isCheckQuotaStorageEnabled()) {
-                fetcherPool.scheduleWithFixedDelay(new QuotaStorageCheckRunner(this), RandomUtils.nextInt(0, pollSecond),
-                        pollSecond, TimeUnit.SECONDS);
-            }
         }
 
+        fetcherPool.scheduleWithFixedDelay(new JobCheckRunner(this), RandomUtils.nextInt(0, pollSecond), pollSecond,
+                TimeUnit.SECONDS);
+        fetcherPool.scheduleWithFixedDelay(new LicenseCapacityCheckRunner(this), RandomUtils.nextInt(0, pollSecond),
+                pollSecond, TimeUnit.SECONDS);
         fetcherPool.scheduleWithFixedDelay(fetcher, RandomUtils.nextInt(0, pollSecond), pollSecond, TimeUnit.SECONDS);
         hasStarted.set(true);
     }

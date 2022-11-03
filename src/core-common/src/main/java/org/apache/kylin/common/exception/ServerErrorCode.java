@@ -15,24 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.kylin.common.exception;
 
 public enum ServerErrorCode implements ErrorCodeSupplier {
@@ -49,30 +31,22 @@ public enum ServerErrorCode implements ErrorCodeSupplier {
     EXCEED_MAX_ALLOWED_PACKET("KE-010000010"),
 
     // 10001XXX project
-    PROJECT_NOT_EXIST("KE-010001001"), //
     EMPTY_PROJECT_NAME("KE-010001002"), //
     INVALID_PROJECT_NAME("KE-010001003"), //
     DUPLICATE_PROJECT_NAME("KE-010001004"), //
     PROJECT_NAME_ILLEGAL("KE-010001005"), //
     FAILED_CREATE_PROJECT("KE-010001006"), //
     INCORRECT_PROJECT_MODE("KE-010001007"), //
-    MULTI_PARTITION_DISABLE("KE-010001008"), //
 
     // 10002XXX model
-    MODEL_NOT_EXIST("KE-010002001"), //
-    EMPTY_MODEL_NAME("KE-010002002"), //
-    INVALID_MODEL_NAME("KE-010002003"), //
-    DUPLICATE_MODEL_NAME("KE-010002004"), //
     FAILED_UPDATE_MODEL("KE-010002005"), //
     FAILED_IMPORT_MODEL("KE-010002006"), //
-    MODEL_UNSUPPORTED_OPERATOR("KE-010002007"), //
     EMPTY_MODEL_ID("KE-010002008"), //
     MODEL_METADATA_FILE_ERROR("KE-010002009"), //
     FAILED_CREATE_MODEL("KE-010002010"), //
     MODEL_BROKEN("KE-010002011"), //
     MODEL_ONLINE_ABANDON("KE-010002012"), //
     INVALID_MEASURE_DATA_TYPE("KE-010002013"), //
-    MODEL_METADATA_CONFLICT_ERROR("KE-010002014"), //
     MODEL_EXPORT_ERROR("KE-010002015"), //
     MODEL_IMPORT_ERROR("KE-010002016"), //
     INVALID_MODEL_TYPE("KE-010002017"), //
@@ -155,14 +129,6 @@ public enum ServerErrorCode implements ErrorCodeSupplier {
 
     // 10013XXX job
     FAILED_UPDATE_JOB_STATUS("KE-010013001"), //
-    ILLEGAL_JOB_STATUS("KE-010013002"), //
-    EMPTY_JOB_ID("KE-010013003"), //
-    INVALID_SAMPLING_RANGE("KE-010013004"), //
-    ILLEGAL_JOB_STATE_TRANSFER("KE-010013005"), //
-    CONCURRENT_SUBMIT_JOB_LIMIT("KE-010013006"), //
-    ILLEGAL_JOB_ACTION("KE-010013007"), //
-    STORAGE_QUOTA_LIMIT("KE-010013008"), //
-    JOB_NOT_EXIST("KE-010013009"), //
     READ_TRANSACTIONAL_TBALE_FAILED("KE-010013010"), //
 
     // 10014XXX sql expression
@@ -299,6 +265,14 @@ public enum ServerErrorCode implements ErrorCodeSupplier {
     SEGMENT_DROP_FAILED("KE-010037011"), //
     JOB_RESUME_FAILED("KE-010037012"), //
     SECOND_STORAGE_DELETE_NODE_FAILED("KE-010037013"), //
+    PROJECT_NOT_ENABLE("KE-010037014"), //
+    SECOND_STORAGE_INDEX_NOT_SUPPORT("KE-010037015"), //
+    SECOND_STORAGE_ORDER_BY_INDEX_HAS_DATA("KE-010037016"), //
+    SECOND_STORAGE_LAYOUT_NOT_EXIST("KE-010037017"), //
+    SECOND_STORAGE_LAYOUT_NOT_BASE_TABLE_INDEX("KE-010037018"), //
+    SECOND_STORAGE_INDEX_NOT_ALLOW_NULLABLE("KE-010037019"), //
+    JOB_PAUSE_FAILED("KE-010037020"), //
+    SECOND_STORAGE_NOT_SUPPORT_TYPE("KE-010037021"), //
 
     //10038XXX system profile
     SYSTEM_PROFILE_ABNORMAL_DATA("KE-010038001"), //

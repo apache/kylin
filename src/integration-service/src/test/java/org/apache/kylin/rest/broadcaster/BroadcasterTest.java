@@ -20,15 +20,24 @@ package org.apache.kylin.rest.broadcaster;
 
 import static org.awaitility.Awaitility.await;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.util.SpringContext;
+import org.apache.kylin.common.persistence.transaction.AddS3CredentialToSparkBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.cluster.DefaultClusterManager;
 import org.apache.kylin.rest.config.initialize.BroadcastListener;
+import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.security.AdminUserSyncEventNotifier;
+import org.apache.kylin.rest.security.UserAclManager;
+import org.apache.kylin.rest.service.UserAclService;
+import org.apache.kylin.rest.service.UserService;
+import org.apache.kylin.rest.util.SpringContext;
+import org.apache.spark.sql.SparderEnv;
+import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +50,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import io.kyligence.kap.metadata.epoch.EpochManager;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -77,6 +88,26 @@ class BroadcasterTest {
             Assertions.assertNotNull(clusterManager);
             Assertions.assertEquals(clusterManager.getClass(), DefaultClusterManager.class);
         }
+    }
+
+    @Test
+    void testBroadcastSyncAdminUserAcl() throws Exception {
+        EpochManager epochManager = EpochManager.getInstance();
+        epochManager.tryUpdateEpoch(EpochManager.GLOBAL, true);
+        BroadcastListener broadcastListener = new BroadcastListener();
+        val userAclService = Mockito.spy(UserAclService.class);
+        ReflectionTestUtils.setField(userAclService, "userService", Mockito.spy(UserService.class));
+        ReflectionTestUtils.setField(broadcastListener, "userAclService", userAclService);
+        broadcastListener.handle(new AdminUserSyncEventNotifier(Arrays.asList("admin"), true));
+        val userAclManager = UserAclManager.getInstance(KylinConfig.getInstanceFromEnv());
+        Assert.assertTrue(userAclManager.get("admin").hasPermission(AclPermission.DATA_QUERY.getMask()));
+    }
+
+    @Test
+    void testBroadcastAddS3Conf() throws Exception {
+        BroadcastListener broadcastListener = new BroadcastListener();
+        broadcastListener.handle(new AddS3CredentialToSparkBroadcastEventNotifier("aa", "bb", "cc"));
+        assert SparderEnv.getSparkSession().conf().contains(String.format("fs.s3a.bucket.%s.assumed.role.arn", "aa"));
     }
 
     @Configuration

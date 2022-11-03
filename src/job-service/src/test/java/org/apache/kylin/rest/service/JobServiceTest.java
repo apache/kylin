@@ -19,13 +19,15 @@
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_ACTION_ILLEGAL;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_STATUS_ILLEGAL;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_UPDATE_STATUS_FAILED;
 import static org.apache.kylin.job.constant.JobStatusEnum.SKIP;
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -49,15 +51,27 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.transaction.TransactionException;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
@@ -66,40 +80,40 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.BaseTestExecutable;
 import org.apache.kylin.job.execution.ChainedExecutable;
 import org.apache.kylin.job.execution.ChainedStageExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.DefaultOutput;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.FiveSecondSucceedTestExecutable;
+import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.execution.StageBase;
 import org.apache.kylin.job.execution.SucceedChainedTestExecutable;
 import org.apache.kylin.job.execution.SucceedTestExecutable;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.response.DataResult;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.AclUtil;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
-import org.apache.kylin.engine.spark.job.NSparkExecutable;
-import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
-import org.apache.kylin.engine.spark.job.NTableSamplingJob;
-import org.apache.kylin.engine.spark.job.step.NStageForBuild;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.plugin.asyncprofiler.ProfilerStatus;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.JobFilter;
 import org.apache.kylin.rest.request.JobUpdateRequest;
+import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.ExecutableStepResponse;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
+import org.apache.kylin.rest.response.NDataSegmentResponse;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclUtil;
 import org.assertj.core.api.Assertions;
+import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -113,6 +127,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AssignableTypeFilter;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -121,10 +136,25 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import io.kyligence.kap.clickhouse.MockSecondStorage;
+import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import io.kyligence.kap.engine.spark.job.NSparkSnapshotJob;
+import io.kyligence.kap.engine.spark.job.NTableSamplingJob;
+import io.kyligence.kap.engine.spark.job.step.NStageForBuild;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 import lombok.var;
 
 public class JobServiceTest extends NLocalFileMetadataTestCase {
+
+    String project = "default";
+    String yarnAppId = "application_1554187389076_9296";
+    String jobId = "273cf5ea-9a9b-dccb-004e-0e3b04bfb50c-c11baf56-a593-4c5f-d546-1fa86c2d54ad";
+    String jobStepId = jobId + "_01";
+    String startParams = "start,event=cpu";
+    String dumpParams = "flamegraph";
+
+    String sparkClusterManagerName = "org.apache.kylin.rest.service.MockClusterManager";
 
     @InjectMocks
     private final JobService jobService = Mockito.spy(new JobService());
@@ -133,7 +163,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     private final ModelService modelService = Mockito.spy(ModelService.class);
 
     @Mock
-    private final NExecutableDao executableDao = Mockito.mock(NExecutableDao.class);
+    private final NExecutableDao executableDao = mock(NExecutableDao.class);
 
     @Mock
     private final TableExtService tableExtService = Mockito.spy(TableExtService.class);
@@ -156,6 +186,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() {
         overwriteSystemProp("HADOOP_USER_NAME", "root");
+        overwriteSystemProp("kylin.engine.async-profiler-enabled", "true");
         createTestMetadata();
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
@@ -200,10 +231,10 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testListJobs() throws Exception {
 
-        val modelManager = Mockito.mock(NDataModelManager.class);
+        val modelManager = mock(NDataModelManager.class);
 
         Mockito.when(modelService.getManager(NDataModelManager.class, "default")).thenReturn(modelManager);
-        NDataModel nDataModel = Mockito.mock(NDataModel.class);
+        NDataModel nDataModel = mock(NDataModel.class);
         Mockito.when(modelManager.getDataModelDesc(Mockito.anyString())).thenReturn(nDataModel);
 
         NExecutableManager executableManager = Mockito.spy(NExecutableManager.getInstance(getTestConfig(), "default"));
@@ -259,10 +290,10 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         List<ExecutableResponse> jobs6 = jobService.listJobs(jobFilter);
         Assert.assertTrue(jobs6.size() == 3 && jobs6.get(0).getJobName().equals("sparkjob1"));
 
-        //        jobFilter.setSortBy("duration");
-        //        jobFilter.setReverse(true);
-        //        List<ExecutableResponse> jobs7 = jobService.listJobs(jobFilter);
-        //        Assert.assertTrue(jobs7.size() == 3 && jobs7.get(0).getJobName().equals("sparkjob3"));
+        jobFilter.setSortBy("duration");
+        jobFilter.setReverse(true);
+        List<ExecutableResponse> jobs7 = jobService.listJobs(jobFilter);
+        Assert.assertTrue(jobs7.size() == 3 && jobs7.get(0).getJobName().equals("sparkjob1"));
 
         jobFilter.setSortBy("create_time");
         jobFilter.setReverse(true);
@@ -283,9 +314,50 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         List<ExecutableResponse> jobs12 = jobService.listJobs(jobFilter);
         Assert.assertTrue(jobs12.size() == 3 && jobs12.get(0).getJobName().equals("sparkjob1"));
 
+        jobFilter.setSortBy("total_duration");
+        List<ExecutableResponse> sortJobs1 = jobService.listJobs(jobFilter);
+        Assert.assertTrue(sortJobs1.size() == 3 && sortJobs1.get(0).getDuration() == 0);
+
+        jobFilter.setSortBy("target_subject");
+        for (ExecutablePO job : mockJobs) {
+            job.setJobType(JobTypeEnum.INDEX_BUILD);
+        }
+        List<ExecutableResponse> sortJobs2 = jobService.listJobs(jobFilter);
+        Assert.assertTrue(sortJobs2.size() == 3 && sortJobs2.get(0).getJobName().equals("sparkjob1"));
+        for (ExecutablePO job : mockJobs) {
+            job.setJobType(JobTypeEnum.TABLE_SAMPLING);
+        }
+        List<ExecutableResponse> sortJobs3 = jobService.listJobs(jobFilter);
+        Assert.assertTrue(sortJobs3.size() == 3 && sortJobs3.get(0).getJobName().equals("sparkjob1"));
+        for (ExecutablePO job : mockJobs) {
+            job.setJobType(JobTypeEnum.SNAPSHOT_BUILD);
+            if (job.getName().equals("sparkjob2")) {
+                job.getOutput().setStatus("PAUSED");
+            } else {
+                job.getOutput().setStatus("DISCARDED");
+            }
+        }
+        List<ExecutableResponse> sortJobs4 = jobService.listJobs(jobFilter);
+        Assert.assertTrue(sortJobs4.size() == 3 && sortJobs4.get(0).getJobName().equals("sparkjob2"));
+        for (ExecutablePO job : mockJobs) {
+            job.setJobType(JobTypeEnum.SNAPSHOT_REFRESH);
+            if (job.getName().equals("sparkjob1")) {
+                job.getOutput().setStatus("PAUSED");
+            } else {
+                job.getOutput().setStatus("SUCCEED");
+            }
+        }
+        List<ExecutableResponse> sortJobs5 = jobService.listJobs(jobFilter);
+        Assert.assertTrue(sortJobs5.size() == 3 && sortJobs5.get(0).getJobName().equals("sparkjob1"));
+
+        jobFilter.setSortBy("total_time");
+        assertKylinExeption(() -> {
+            jobService.listJobs(jobFilter);
+        }, "The selected sort filter \"total_time\" is invalid. Please select again.");
+
+        jobFilter.setSortBy("create_time");
         DataResult<List<ExecutableResponse>> jobs13 = jobService.listJobs(jobFilter, 0, 10);
         Assert.assertEquals(3, jobs13.getValue().size());
-
         String jobId = jobs13.getValue().get(0).getId();
         for (ExecutablePO job : mockJobs) {
             job.setJobType(JobTypeEnum.TABLE_SAMPLING);
@@ -293,15 +365,12 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         jobFilter.setKey(jobId);
         DataResult<List<ExecutableResponse>> jobs14 = jobService.listJobs(jobFilter, 0, 10);
         Assert.assertTrue(jobs14.getValue().size() == 1 && jobs14.getValue().get(0).getId().equals(jobId));
-
         jobFilter.setStatuses(Lists.newArrayList());
         DataResult<List<ExecutableResponse>> jobs15 = jobService.listJobs(jobFilter, 0, 10);
         assertEquals(1, jobs15.getValue().size());
-
         jobFilter.setStatuses(Lists.newArrayList("NEW"));
         DataResult<List<ExecutableResponse>> jobs16 = jobService.listJobs(jobFilter, 0, 10);
         assertEquals(0, jobs16.getValue().size());
-
     }
 
     @Test
@@ -370,12 +439,12 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     public void testListAllJobs() throws Exception {
         Mockito.doReturn(mockProjects()).when(jobService).getReadableProjects();
 
-        NExecutableManager executableManager = Mockito.mock(NExecutableManager.class);
+        NExecutableManager executableManager = mock(NExecutableManager.class);
         Mockito.when(jobService.getManager(NExecutableManager.class, "default")).thenReturn(executableManager);
         val mockJobs = mockJobs(executableManager);
         Mockito.when(executableManager.getAllExecutables(Mockito.anyLong(), Mockito.anyLong())).thenReturn(mockJobs);
 
-        NExecutableManager executableManager1 = Mockito.mock(NExecutableManager.class);
+        NExecutableManager executableManager1 = mock(NExecutableManager.class);
         Mockito.when(jobService.getManager(NExecutableManager.class, "default1")).thenReturn(executableManager1);
         val mockJobs1 = mockJobs1(executableManager1);
         Mockito.when(executableManager1.getAllExecutables(Mockito.anyLong(), Mockito.anyLong())).thenReturn(mockJobs1);
@@ -949,8 +1018,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         manager.updateJobOutput(executable.getId(), ExecutableState.RUNNING, null, null, null);
         manager.updateJobOutput(executable.getId(), ExecutableState.SUCCEED, null, null, null);
         Assert.assertEquals(ExecutableState.SUCCEED, executable.getStatus());
-        thrown.expect(KylinException.class);
-        thrown.expectMessage(JOB_UPDATE_STATUS_FAILED.getMsg("DISCARD", executable.getId(), ExecutableState.SUCCEED));
+        thrown.expect(TransactionException.class);
         jobService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "DISCARD",
                 Lists.newArrayList());
     }
@@ -965,7 +1033,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         executable.setProject("default");
         executable.setName("test");
         manager.addJob(executable);
-        thrown.expect(KylinException.class);
+        thrown.expect(TransactionException.class);
         jobService.batchUpdateJobStatus(Lists.newArrayList(executable.getId()), "default", "ROLLBACK",
                 Lists.newArrayList());
     }
@@ -1138,14 +1206,14 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
 
     private long getCreateTime(String name) {
         switch (name) {
-        case "1":
-            return 1560324101000L;
-        case "2":
-            return 1560324102000L;
-        case "3":
-            return 1560324103000L;
-        default:
-            return 0L;
+            case "1":
+                return 1560324101000L;
+            case "2":
+                return 1560324102000L;
+            case "3":
+                return 1560324103000L;
+            default:
+                return 0L;
         }
     }
 
@@ -1263,8 +1331,8 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         String sampleLog = "";
         try (InputStream allJobOutput = jobService.getAllJobOutput("default", "e1ad7bb0-522e-456a-859d-2eab1df448de",
                 "e1ad7bb0-522e-456a-859d-2eab1df448de");
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(allJobOutput, Charset.defaultCharset()))) {
+             BufferedReader reader = new BufferedReader(
+                     new InputStreamReader(allJobOutput, Charset.defaultCharset()))) {
 
             String line;
             StringBuilder sampleData = new StringBuilder();
@@ -1290,7 +1358,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         AbstractExecutable job = new NSparkCubingJob();
 
         Mockito.doReturn(mockProjects()).when(jobService).getReadableProjects();
-        NExecutableManager manager = Mockito.mock(NExecutableManager.class);
+        NExecutableManager manager = mock(NExecutableManager.class);
         Mockito.when(manager.getJob(jobId)).thenReturn(job);
         Mockito.doReturn(manager).when(jobService).getManager(NExecutableManager.class, "default");
         Assert.assertEquals("default", jobService.getProjectByJobId(jobId));
@@ -1302,6 +1370,38 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         Mockito.doNothing().when(jobService).updateJobStatus(jobId, "default", "RESUME");
 
         Assert.assertEquals(executableResponse, jobService.manageJob("default", executableResponse, "RESUME"));
+    }
+
+    @Test
+    public void testGetJobInstance_notExistedJobId() throws IOException {
+        String jobId = "job1";
+        Mockito.doReturn(null).when(jobService).getProjectByJobId(jobId);
+        thrown.expect(KylinException.class);
+        thrown.expectMessage(JOB_NOT_EXIST.getMsg(jobId));
+        jobService.getJobInstance(jobId);
+    }
+
+    @Test
+    public void testGetJobInstance_ManageJob_RESTART() throws IOException {
+        String jobId = "job1";
+        ExecutableResponse executableResponse = new ExecutableResponse();
+        executableResponse.setId(jobId);
+
+        AbstractExecutable job = new NSparkCubingJob();
+
+        Mockito.doReturn(mockProjects()).when(jobService).getReadableProjects();
+        NExecutableManager manager = mock(NExecutableManager.class);
+        Mockito.when(manager.getJob(jobId)).thenReturn(job);
+        Mockito.doReturn(manager).when(jobService).getManager(NExecutableManager.class, "default");
+        Assert.assertEquals("default", jobService.getProjectByJobId(jobId));
+
+        Mockito.doReturn("default").when(jobService).getProjectByJobId(jobId);
+        Mockito.doReturn(executableResponse).when(jobService).convert(job);
+        Assert.assertEquals(jobId, jobService.getJobInstance(jobId).getId());
+
+        Mockito.doNothing().when(jobService).updateJobStatus(jobId, "default", "RESTART");
+
+        Assert.assertEquals(executableResponse, jobService.manageJob("default", executableResponse, "RESTART"));
     }
 
     @Test
@@ -1359,22 +1459,6 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testKillExistApplication() {
-        NExecutableManager manager = NExecutableManager.getInstance(jobService.getConfig(), getProject());
-        SucceedChainedTestExecutable executable = new SucceedChainedTestExecutable();
-        executable.setProject(getProject());
-        addSegment(executable);
-        val task = new NSparkExecutable();
-        task.setProject(getProject());
-        addSegment(task);
-        executable.addTask(task);
-        manager.addJob(executable);
-        jobService.killExistApplication(executable);
-
-        jobService.killExistApplication(getProject(), executable.getId());
-    }
-
-    @Test
     public void testHistoryTrackerUrl() {
         getTestConfig().setProperty("kylin.history-server.enable", "true");
         AbstractExecutable task = new FiveSecondSucceedTestExecutable();
@@ -1396,7 +1480,327 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testParseToExecutableState() {
+        JobService service = new JobService();
         Assert.assertThrows(KylinException.class,
-                () -> ReflectionTestUtils.invokeMethod(new JobService(), "parseToExecutableState", SKIP));
+                () -> ReflectionTestUtils.invokeMethod(service, "parseToExecutableState", SKIP));
+    }
+
+    @Test
+    public void jobActionValidate() throws IOException {
+        val manager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject());
+        val job = new DefaultExecutable();
+        job.setProject(getProject());
+        job.setJobType(JobTypeEnum.INDEX_BUILD);
+        manager.addJob(job);
+        jobService.jobActionValidateToTest(job.getId(), getProject(), JobActionEnum.PAUSE.name());
+
+        val job1 = new DefaultExecutable();
+        job1.setProject(getProject());
+        job1.setJobType(JobTypeEnum.INDEX_BUILD);
+        job1.setJobSchedulerMode(JobSchedulerModeEnum.DAG);
+        manager.addJob(job1);
+        jobService.jobActionValidateToTest(job1.getId(), getProject(), JobActionEnum.PAUSE.name());
+
+        val model = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        val project = "default";
+        MockSecondStorage.mock("default", new ArrayList<>(), this);
+        val indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            indexPlanManager.updateIndexPlan(model, indexPlan -> {
+                indexPlan.createAndAddBaseIndex(indexPlan.getModel());
+            });
+            return null;
+        }, project);
+        SecondStorageUtil.initModelMetaData(project, model);
+        Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
+
+        val job3 = new DefaultExecutable();
+        job3.setProject(getProject());
+        job3.setJobType(JobTypeEnum.INDEX_BUILD);
+        job3.setTargetSubject(model);
+        manager.addJob(job3);
+        jobService.jobActionValidateToTest(job3.getId(), getProject(), JobActionEnum.PAUSE.name());
+
+        val job4 = new DefaultExecutable();
+        job4.setProject(getProject());
+        job4.setJobType(JobTypeEnum.INDEX_BUILD);
+        job4.setJobSchedulerMode(JobSchedulerModeEnum.DAG);
+        job4.setTargetSubject(model);
+        manager.addJob(job4);
+        jobService.jobActionValidateToTest(job4.getId(), getProject(), JobActionEnum.PAUSE.name());
+    }
+
+    @Test
+    public void testGetSegmentsInGetJobList() throws IOException {
+        val model = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        val modelMock = RandomUtil.randomUUIDStr();
+        val project = "default";
+        MockSecondStorage.mock("default", new ArrayList<>(), this);
+        val indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            indexPlanManager.updateIndexPlan(model, indexPlan -> {
+                indexPlan.createAndAddBaseIndex(indexPlan.getModel());
+            });
+            return null;
+        }, project);
+        SecondStorageUtil.initModelMetaData(project, model);
+        Assert.assertTrue(SecondStorageUtil.isModelEnable(project, model));
+
+        val manager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject());
+        val job = new DefaultExecutable();
+        job.setProject(getProject());
+        job.setJobType(JobTypeEnum.INDEX_BUILD);
+        job.setTargetSubject(modelMock);
+        manager.addJob(job);
+        val segments = jobService.getSegments(job);
+        Assert.assertTrue(CollectionUtils.isEmpty(segments));
+
+        val job1 = new DefaultExecutable();
+        job1.setProject(getProject());
+        job1.setJobType(JobTypeEnum.INDEX_BUILD);
+        job1.setTargetSubject(model);
+        manager.addJob(job1);
+        val segment = Mockito.mock(NDataSegmentResponse.class);
+        Mockito.doReturn(Lists.newArrayList(segment)).when(modelService).getSegmentsResponseByJob(model, getProject(),
+                job1);
+        val segments1 = jobService.getSegments(job1);
+        Assert.assertEquals(1, segments1.size());
+    }
+
+    @Test
+    public void testGetProjectNameAndJobStepId() {
+        // yarnAppName - "job_step_273cf5ea-9a9b-dccb-004e-0e3b04bfb50c-c11baf56-a593-4c5f-d546-1fa86c2d54ad_01"
+        overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
+        Mockito.doReturn(project).when(jobService).getProjectByJobId(jobId);
+        Pair<String, String> projectNameAndJobStepId = jobService.getProjectNameAndJobStepId(yarnAppId);
+        Assert.assertEquals(jobStepId, projectNameAndJobStepId.getSecond());
+    }
+
+    @Test
+    public void testGetProjectNameAndJobStepIdError() {
+        // testGetProjectNameAndJobStepId_NotContains
+        String yarnAppId1 = "application";
+        overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
+        Assert.assertThrows("Async profiler status error, yarnAppId entered incorrectly, please try again.", KylinException.class,
+                () -> jobService.getProjectNameAndJobStepId(yarnAppId1));
+
+        // testGetProjectNameAndJobStepId_LengthError
+        String yarnAppId2 = "application_";
+        overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
+        Assert.assertThrows("Async profiler status error, yarnAppId entered incorrectly, please try again.", KylinException.class,
+                () -> jobService.getProjectNameAndJobStepId(yarnAppId2));
+
+        // testGetProjectNameAndJobStepId_NotContainsJob
+        String yarnAppId = "application_1554187389076_-1";
+        overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
+        Assert.assertThrows("Async profiler status error, job is finished already.", KylinException.class,
+                () -> jobService.getProjectNameAndJobStepId(yarnAppId));
+    }
+
+    @Test
+    public void testStartProfileByProjectError() {
+        overwriteSystemProp("kylin.engine.async-profiler-enabled", "false");
+        Assert.assertThrows("Async profiling is not enabled. check parameter 'kylin.engine.async-profiler-enabled'",
+                KylinException.class, () -> jobService.startProfileByProject(project, jobStepId, startParams));
+    }
+
+    @Test
+    public void testStartProfileByProject() throws IOException {
+        overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        HadoopUtil.writeStringToHdfs("", actionPath);
+
+        String errorMsg = "";
+        try {
+            jobService.startProfileByProject(project, jobStepId, startParams);
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertEquals(0, errorMsg.length());
+        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), actionPath);
+    }
+
+    @Test
+    public void testDumpProfileByProjectError() {
+        overwriteSystemProp("kylin.engine.async-profiler-enabled", "false");
+        Pair<InputStream, String> jobOutputAndDownloadFile = new Pair<>();
+        Assert.assertThrows("Async profiling is not enabled. check parameter 'kylin.engine.async-profiler-enabled'",
+                KylinException.class,
+                () -> jobService.dumpProfileByProject(project, jobStepId, dumpParams, jobOutputAndDownloadFile));
+    }
+
+    @Test
+    public void testDumpProfileByProject() throws IOException {
+        overwriteSystemProp("kylin.engine.async-profiler-result-timeout", "3s");
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        Path dumpFilePath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/dump.tar.gz");
+        HadoopUtil.writeStringToHdfs(ProfilerStatus.RUNNING(), actionPath);
+
+        Thread t1 = new Thread(() -> {
+            try {
+                await().pollDelay(new Duration(1, TimeUnit.MILLISECONDS)).until(() -> true);
+                HadoopUtil.writeStringToHdfs("", dumpFilePath);
+            } catch (IOException ignored) {
+            }
+        });
+        t1.start();
+
+        String errorMsg = "";
+        try {
+            jobService.dumpProfileByProject(project, jobStepId, dumpParams, new Pair<>());
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertEquals(0, errorMsg.length());
+        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), actionPath);
+        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), dumpFilePath);
+        t1.interrupt();
+    }
+
+    @Test
+    public void testStartProfileByYarnAppIdError() {
+        overwriteSystemProp("kylin.engine.async-profiler-enabled", "false");
+        Assert.assertThrows("Async profiling is not enabled. check parameter 'kylin.engine.async-profiler-enabled'",
+                KylinException.class, () -> jobService.startProfileByYarnAppId(yarnAppId, startParams));
+    }
+
+    @Test
+    public void testStartProfileByYarnAppIdAlready() throws IOException {
+        overwriteSystemProp("kylin.engine.async-profiler-result-timeout", "1s");
+        overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
+
+        Mockito.doReturn(project).when(jobService).getProjectByJobId(jobId);
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        HadoopUtil.writeStringToHdfs(ProfilerStatus.RUNNING(), actionPath);
+        Assert.assertThrows("Async profiler status error, profiler is started already.", KylinException.class,
+                () -> jobService.startProfileByYarnAppId(yarnAppId, startParams));
+        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), actionPath);
+    }
+
+    @Test
+    public void testStartProfileByYarnAppId() throws IOException {
+        overwriteSystemProp("kylin.engine.async-profiler-result-timeout", "1s");
+        overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
+
+        Mockito.doReturn(project).when(jobService).getProjectByJobId(jobId);
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        HadoopUtil.writeStringToHdfs(ProfilerStatus.IDLE(), actionPath);
+        jobService.startProfileByYarnAppId(yarnAppId, startParams);
+        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), actionPath);
+    }
+
+    @Test
+    public void testDumpProfileByYarnAppIdError() {
+        overwriteSystemProp("kylin.engine.async-profiler-enabled", "false");
+        Pair<InputStream, String> jobOutputAndDownloadFile = new Pair<>();
+        Assert.assertThrows("Async profiling is not enabled. check parameter 'kylin.engine.async-profiler-enabled'",
+                KylinException.class,
+                () -> jobService.dumpProfileByYarnAppId(yarnAppId, dumpParams, jobOutputAndDownloadFile));
+    }
+
+    @Test
+    public void testDumpProfileByYarnAppId() throws IOException {
+        overwriteSystemProp("kylin.engine.async-profiler-result-timeout", "3s");
+        overwriteSystemProp("kylin.engine.spark.cluster-manager-class-name", sparkClusterManagerName);
+
+        Mockito.doReturn(project).when(jobService).getProjectByJobId(jobId);
+
+        Path actionPath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/status");
+        Path dumpFilePath = new Path(
+                KylinConfig.getInstanceFromEnv().getJobTmpProfilerFlagsDir(project, jobStepId) + "/dump.tar.gz");
+        HadoopUtil.writeStringToHdfs(ProfilerStatus.RUNNING(), actionPath);
+
+        Thread t1 = new Thread(() -> {
+            try {
+                await().pollDelay(new Duration(1, TimeUnit.MILLISECONDS)).until(() -> true);
+                HadoopUtil.writeStringToHdfs("", dumpFilePath);
+            } catch (IOException ignored) {
+            }
+        });
+        t1.start();
+
+        String errorMsg = "";
+        try {
+            jobService.dumpProfileByYarnAppId(yarnAppId, dumpParams, new Pair<>());
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertEquals(0, errorMsg.length());
+        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), actionPath);
+        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), dumpFilePath);
+        t1.interrupt();
+    }
+
+    @Test
+    public void testSetResponseLanguageNull() {
+        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+        String errorMsg = "";
+        try {
+            jobService.setResponseLanguage(mockRequest);
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertEquals("", errorMsg);
+    }
+
+    @Test
+    public void testSetResponseLanguageWithZh() {
+        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+        // zh
+        Mockito.doReturn("zh,zh-CN;q=0.9,zh-HK;q=0.8,zh-TW;q=0.7").when(mockRequest)
+                .getHeader(HttpHeaders.ACCEPT_LANGUAGE);
+        String errorMsg = "";
+        try {
+            jobService.setResponseLanguage(mockRequest);
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertEquals("", errorMsg);
+
+        // zh-CN
+        Mockito.doReturn("zh-CN").when(mockRequest).getHeader(HttpHeaders.ACCEPT_LANGUAGE);
+        try {
+            jobService.setResponseLanguage(mockRequest);
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertEquals("", errorMsg);
+
+        // zh-HK
+        Mockito.doReturn("zh-HK,zh-TW").when(mockRequest).getHeader(HttpHeaders.ACCEPT_LANGUAGE);
+        try {
+            jobService.setResponseLanguage(mockRequest);
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertEquals("", errorMsg);
+
+        // zh-TW
+        Mockito.doReturn("zh-TW;q=0.9,zh;q=0.8,zh-CN;q=0.7").when(mockRequest).getHeader(HttpHeaders.ACCEPT_LANGUAGE);
+        try {
+            jobService.setResponseLanguage(mockRequest);
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertEquals("", errorMsg);
+    }
+
+    @Test
+    public void testSetResponseLanguageWithNoZh() {
+        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+        Mockito.doReturn("en;q=0.9,zh;q=0.8,zh-TW;q=0.7").when(mockRequest).getHeader(HttpHeaders.ACCEPT_LANGUAGE);
+        String errorMsg = "";
+        try {
+            jobService.setResponseLanguage(mockRequest);
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertEquals("", errorMsg);
     }
 }

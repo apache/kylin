@@ -96,7 +96,7 @@ public class EpochUpdateLockManager {
         return sortedProjects.stream().map(EpochUpdateLockManager::getLock).collect(Collectors.toList());
     }
 
-    static <T> T executeEpochWithLock(@Nonnull String project, @Nonnull Callback<T> callback) {
+    public static <T> T executeEpochWithLock(@Nonnull String project, @Nonnull Callback<T> callback) {
         Preconditions.checkNotNull(project, "project is null");
         Preconditions.checkNotNull(callback, "callback is null");
 

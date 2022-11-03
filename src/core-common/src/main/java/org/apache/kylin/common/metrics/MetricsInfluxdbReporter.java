@@ -32,12 +32,13 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.Singletons;
-import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.common.metrics.reporter.InfluxdbReporter;
 import org.apache.kylin.common.metrics.service.InfluxDBInstance;
+import org.apache.kylin.common.util.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 
 import io.kyligence.kap.shaded.influxdb.org.influxdb.dto.Query;
@@ -107,7 +108,7 @@ public class MetricsInfluxdbReporter implements MetricsReporter {
         });
     }
 
-    private void startDailyReport(MetricsConfig config) throws Exception {
+    private void startDailyReport(MetricsConfig config) {
         dailyInstance = new InfluxDBInstance(config.getDailyMetricsDB(), DAILY_METRICS_RETENTION_POLICY_NAME, "0d",
                 "30d", 2, true);
         dailyInstance.init();
@@ -149,7 +150,7 @@ public class MetricsInfluxdbReporter implements MetricsReporter {
     }
 
     @Override
-    public void init(KapConfig kapConfig) throws Exception {
+    public void init(KapConfig kapConfig) {
 
         synchronized (this) {
             if (!initialized.get()) {
@@ -160,6 +161,15 @@ public class MetricsInfluxdbReporter implements MetricsReporter {
                 underlying = new InfluxdbReporter(metricInstance, defaultMeasurement,
                         MetricsController.getDefaultMetricRegistry(), reporterName);
                 initialized.set(true);
+            }
+        }
+    }
+
+    @Override
+    public void start(KapConfig kapConfig) {
+        synchronized (this) {
+            if (initialized.get()) {
+                final MetricsConfig config = new MetricsConfig(kapConfig);
                 startReporter(config.pollingIntervalSecs());
                 startDailyReport(config);
             }
@@ -192,5 +202,10 @@ public class MetricsInfluxdbReporter implements MetricsReporter {
     @Override
     public String getMBeanName() {
         return "kylin.metrics:type=NMetricsInfluxdbReporter";
+    }
+
+    @VisibleForTesting
+    public boolean isRunning() {
+        return running.get();
     }
 }

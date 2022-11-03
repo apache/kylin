@@ -57,6 +57,12 @@ public class MetricsConfig {
 
     @EventListener(ApplicationReadyEvent.class)
     public void registerMetrics() {
+        if (!KapConfig.getInstanceFromEnv().isMonitorEnabled()) {
+            return;
+        }
+
+        MetricsController.init(KapConfig.wrap(KylinConfig.getInstanceFromEnv()));
+
         String host = clusterManager.getLocalServer();
 
         log.info("Register global metrics...");

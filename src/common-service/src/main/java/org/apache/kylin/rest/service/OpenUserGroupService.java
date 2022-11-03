@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.annotation.ThirdPartyDependencies;
-import org.apache.kylin.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 
 @ThirdPartyDependencies({

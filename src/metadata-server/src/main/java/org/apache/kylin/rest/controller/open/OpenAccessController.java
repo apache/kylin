@@ -26,8 +26,10 @@ import static org.apache.kylin.rest.aspect.InsensitiveNameAspect.getCaseInsentiv
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -99,7 +101,8 @@ public class OpenAccessController extends NBasicController {
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer pageSize)
             throws IOException {
         String projectName = checkProjectName(project);
-        AclEntity ae = accessService.getAclEntity(AclEntityType.PROJECT_INSTANCE, getProjectUuid(projectName));
+        String projectUuid = getProjectUuid(projectName);
+        AclEntity ae = accessService.getAclEntity(AclEntityType.PROJECT_INSTANCE, projectUuid);
         List<AccessEntryResponse> aeResponses = accessService.generateAceResponsesByFuzzMatching(ae, name,
                 isCaseSensitive);
         List<ProjectPermissionResponse> permissionResponses = convertAceResponseToProjectPermissionResponse(
@@ -320,6 +323,7 @@ public class OpenAccessController extends NBasicController {
             String type = "";
             String userOrGroupName = "";
             Sid sid = aclResponse.getSid();
+            List<String> extPermissionList;
             if (sid instanceof PrincipalSid) {
                 type = MetadataConstants.TYPE_USER;
                 userOrGroupName = ((PrincipalSid) sid).getPrincipal();
@@ -327,8 +331,12 @@ public class OpenAccessController extends NBasicController {
                 type = MetadataConstants.TYPE_GROUP;
                 userOrGroupName = ((GrantedAuthoritySid) sid).getGrantedAuthority();
             }
+            extPermissionList = CollectionUtils.isEmpty(aclResponse.getExtPermissions()) ? Collections.EMPTY_LIST
+                    : aclResponse.getExtPermissions().stream().map(ExternalAclProvider::convertToExternalPermission)
+                    .collect(Collectors.toList());
             String externalPermission = ExternalAclProvider.convertToExternalPermission(aclResponse.getPermission());
-            responseList.add(new ProjectPermissionResponse(type, userOrGroupName, externalPermission));
+            responseList
+                    .add(new ProjectPermissionResponse(type, userOrGroupName, externalPermission, extPermissionList));
         }
         return responseList;
     }

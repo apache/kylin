@@ -19,21 +19,25 @@
 package org.apache.kylin.rest.service.task;
 
 import java.util.List;
+import java.util.Map;
+
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.TimeUtil;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.util.SpringContext;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.junit.TimeZoneTestRunner;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
-import org.apache.kylin.metadata.favorite.AccelerateRuleUtil;
-import org.apache.kylin.metadata.favorite.AsyncAccelerationTask;
-import org.apache.kylin.metadata.favorite.AsyncTaskManager;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffset;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
+import io.kyligence.kap.metadata.favorite.AccelerateRuleUtil;
+import io.kyligence.kap.metadata.favorite.AsyncAccelerationTask;
+import io.kyligence.kap.metadata.favorite.AsyncTaskManager;
+import io.kyligence.kap.metadata.favorite.QueryHistoryIdOffset;
+import io.kyligence.kap.metadata.favorite.QueryHistoryIdOffsetManager;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
 import org.apache.kylin.metadata.query.QueryMetrics;
@@ -57,6 +61,7 @@ import org.springframework.security.acls.model.PermissionGrantingStrategy;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(TimeZoneTestRunner.class)
@@ -199,6 +204,12 @@ public class QueryHistoryTaskSchedulerTest extends NLocalFileMetadataTestCase {
                 .get(TimeUtil.getDayStart(QUERY_TIME)).intValue());
         Assert.assertEquals(1586760398338L, dataflow.getLastQueryTime());
 
+        // update snapshot usage
+        NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                PROJECT);
+        Assert.assertEquals(1, tableMetadataManager.getOrCreateTableExt("DEFAULT.TEST_ACCOUNT").getSnapshotHitCount());
+        Assert.assertEquals(1, tableMetadataManager.getOrCreateTableExt("DEFAULT.TEST_ORDER").getSnapshotHitCount());
+
         // after update id offset
         Assert.assertEquals(8, idOffsetManager.get().getStatMetaUpdateOffset());
     }
@@ -268,6 +279,17 @@ public class QueryHistoryTaskSchedulerTest extends NLocalFileMetadataTestCase {
         queryHistoryAccelerateRunner.run();
 
         Assert.assertEquals(0, idOffsetManager.get().getOffset());
+    }
+
+    @Test
+    public void testQueryHitSnapshotCount() {
+        QueryHistoryTaskScheduler.QueryHistoryMetaUpdateRunner queryHistoryAccelerateRunner = qhAccelerateScheduler.new QueryHistoryMetaUpdateRunner();
+        TableExtDesc tableExtDesc = new TableExtDesc();
+        tableExtDesc.setSnapshotHitCount(10);
+        tableExtDesc.setIdentity("123");
+        Map<TableExtDesc, Integer> map = Maps.newHashMap();
+        map.put(tableExtDesc, 1);
+        ReflectionTestUtils.invokeMethod(queryHistoryAccelerateRunner, "incQueryHitSnapshotCount", map, PROJECT);
     }
 
     @Test
@@ -353,6 +375,8 @@ public class QueryHistoryTaskSchedulerTest extends NLocalFileMetadataTestCase {
         queryHistory7.setQueryTime(QUERY_TIME);
         queryHistory7.setEngineType("NATIVE");
         QueryHistoryInfo queryHistoryInfo7 = new QueryHistoryInfo();
+        queryHistoryInfo7.setQuerySnapshots(Lists.newArrayList(Lists.newArrayList("DEFAULT.TEST_ACCOUNT"),
+                Lists.newArrayList("DEFAULT.TEST_ORDER")));
         queryHistoryInfo7.setRealizationMetrics(Lists.newArrayList(
                 new QueryMetrics.RealizationMetrics(LAYOUT2, "Table Index", DATAFLOW, Lists.newArrayList())));
         queryHistory7.setQueryHistoryInfo(queryHistoryInfo7);

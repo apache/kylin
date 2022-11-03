@@ -18,13 +18,14 @@
 
 package org.apache.kylin.engine.spark.job
 
-import com.google.common.collect.Maps
+import io.kyligence.kap.engine.spark.job.RDSegmentBuildJob
+import io.kyligence.kap.guava20.shaded.common.collect.{Maps, Sets}
+import org.apache.hadoop.fs.Path
 import org.apache.kylin.engine.spark.builder.PartitionFlatTable
 import org.apache.kylin.engine.spark.model.PartitionFlatTableDesc
 import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree.{PartitionTreeBuilder, PartitionTreeNode}
 import org.apache.kylin.metadata.cube.model.NDataSegment
-import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparderEnv
 import org.apache.spark.sql.datasource.storage.StorageStoreUtils
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
@@ -45,7 +46,7 @@ class RDPartitionBuildExec(private val jobContext: RDSegmentBuildJob, //
   }
 
   private lazy val spanningTree = new PartitionSpanningTree(config, //
-    new PartitionTreeBuilder(dataSegment, readOnlyLayouts, jobId, partitions))
+    new PartitionTreeBuilder(dataSegment, readOnlyLayouts, jobId, partitions, Sets.newHashSet(newBuckets.asJava)))
 
   private lazy val flatTableDesc = new PartitionFlatTableDesc(config, dataSegment, spanningTree, jobId, partitions)
 

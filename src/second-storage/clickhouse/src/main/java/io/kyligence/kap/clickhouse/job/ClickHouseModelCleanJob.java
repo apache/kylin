@@ -30,7 +30,7 @@ import lombok.val;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.SecondStorageCleanJobBuildParams;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.factory.JobFactory;
 
@@ -39,7 +39,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ClickHouseModelCleanJob extends DefaultChainedExecutable {
+public class ClickHouseModelCleanJob extends DefaultExecutable {
 
     public ClickHouseModelCleanJob() {}
 

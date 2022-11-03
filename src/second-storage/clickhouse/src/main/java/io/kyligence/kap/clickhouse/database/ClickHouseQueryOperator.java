@@ -22,27 +22,51 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.QueryMetrics;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
+import io.kyligence.kap.clickhouse.ddl.ClickHouseRender;
 import io.kyligence.kap.clickhouse.job.ClickHouse;
 import io.kyligence.kap.clickhouse.job.ClickHouseSystemQuery;
+import io.kyligence.kap.clickhouse.parser.DescQueryParser;
+import io.kyligence.kap.clickhouse.parser.ExistsQueryParser;
+import io.kyligence.kap.guava20.shaded.common.collect.Maps;
 import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
 import io.kyligence.kap.secondstorage.SecondStorageQueryRouteUtil;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import io.kyligence.kap.secondstorage.database.QueryOperator;
+import io.kyligence.kap.secondstorage.ddl.AlterTable;
+import io.kyligence.kap.secondstorage.ddl.Desc;
+import io.kyligence.kap.secondstorage.ddl.ExistsTable;
+import io.kyligence.kap.secondstorage.ddl.Select;
+import io.kyligence.kap.secondstorage.ddl.exp.ColumnWithAlias;
+import io.kyligence.kap.secondstorage.ddl.exp.TableIdentifier;
+import io.kyligence.kap.secondstorage.metadata.NodeGroup;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ClickHouseQueryOperator implements QueryOperator {
+
+    private static final String NULLABLE_STRING = "Nullable(String)";
+
+    private static final String LOW_CARDINALITY_STRING = "LowCardinality(Nullable(String))";
+
+    private static final ClickHouseRender render = new ClickHouseRender();
     private final String project;
 
     public ClickHouseQueryOperator(String project) {
@@ -79,7 +103,8 @@ public class ClickHouseQueryOperator implements QueryOperator {
                 queryMetrics.putAll(getQueryMetric(replicas, sql, true));
             } catch (SQLException ex) {
                 log.error("Fetch tired storage query metric fail.", ex);
-                queryMetrics.put(queryId, ClickHouseSystemQuery.QueryMetric.builder().clientName(queryId).readBytes(-1).readRows(-1).build());
+                queryMetrics.put(queryId,
+                        ClickHouseSystemQuery.QueryMetric.builder().clientName(queryId).readBytes(-1).readRows(-1).resultRows(-1).build());
             }
 
             return queryMetrics.entrySet().stream();
@@ -97,6 +122,7 @@ public class ClickHouseQueryOperator implements QueryOperator {
 
                     o1.setReadBytes(o2.getReadBytes() + o1.getReadBytes());
                     o1.setReadRows(o2.getReadRows() + o1.getReadRows());
+                    o1.setResultRows(o2.getResultRows() + o1.getResultRows());
                     return o1;
                 }
         ));
@@ -112,7 +138,8 @@ public class ClickHouseQueryOperator implements QueryOperator {
         }
 
         String lastQueryId = lastQueryIdOptional.get();
-        return ImmutableMap.of(QueryMetrics.TOTAL_SCAN_COUNT, queryMetricMap.get(lastQueryId).getReadRows(), QueryMetrics.TOTAL_SCAN_BYTES, queryMetricMap.get(lastQueryId).getReadBytes());
+        return ImmutableMap.of(QueryMetrics.TOTAL_SCAN_COUNT, queryMetricMap.get(lastQueryId).getReadRows(), QueryMetrics.TOTAL_SCAN_BYTES, queryMetricMap.get(lastQueryId).getReadBytes(),
+                QueryMetrics.SOURCE_RESULT_COUNT, queryMetricMap.get(lastQueryId).getResultRows());
     }
 
     public Map<String, ClickHouseSystemQuery.QueryMetric> getQueryMetric(Set<String> replicas, String sql, boolean needFlush) throws SQLException {
@@ -135,7 +162,131 @@ public class ClickHouseQueryOperator implements QueryOperator {
     }
 
     private Map<String, Object> exceptionQueryMetric() {
-        return ImmutableMap.of(QueryMetrics.TOTAL_SCAN_COUNT, -1L, QueryMetrics.TOTAL_SCAN_BYTES, -1L);
+        return ImmutableMap.of(QueryMetrics.TOTAL_SCAN_COUNT, -1L, QueryMetrics.TOTAL_SCAN_BYTES, -1L,
+                QueryMetrics.SOURCE_RESULT_COUNT, -1L);
     }
 
+    public void modifyColumnByCardinality(String database, String destTableName) {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        List<NodeGroup> nodeGroups = SecondStorageUtil.listNodeGroup(config, project);
+        Set<String> nodes = nodeGroups.stream()
+                .flatMap(x -> x.getNodeNames().stream())
+                .filter(SecondStorageQueryRouteUtil::getNodeStatus)
+                .collect(Collectors.toSet());
+        String maxRowsNode = getMaxRowsNode(nodes, database, destTableName);
+        if (maxRowsNode.isEmpty())
+            return;
+
+        ProjectInstance projectInstance = NProjectManager.getInstance(config).getProject(project);
+        List<ClickHouseSystemQuery.DescTable> modifyColumns = getFilterDescTable(maxRowsNode, database, destTableName, projectInstance.getConfig());
+        if (CollectionUtils.isEmpty(modifyColumns))
+            return;
+
+        for (String node : nodes) {
+            try (ClickHouse clickHouse = new ClickHouse(SecondStorageNodeHelper.resolve(node))) {
+                modifyColumns.stream().forEach(c -> {
+                    String targetType = NULLABLE_STRING.equals(c.getDatatype()) ? LOW_CARDINALITY_STRING : NULLABLE_STRING;
+                    modifyColumn(clickHouse, database, destTableName, c.getColumn(), targetType);
+                });
+            } catch (Exception sqlException) {
+                ExceptionUtils.rethrow(sqlException);
+            }
+        }
+    }
+
+    public void modifyColumnByCardinality(String database, String destTableName, String column, String datatype) {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        List<NodeGroup> nodeGroups = SecondStorageUtil.listNodeGroup(config, project);
+        Set<String> nodes = nodeGroups.stream()
+                .flatMap(x -> x.getNodeNames().stream())
+                .filter(SecondStorageQueryRouteUtil::getNodeStatus)
+                .collect(Collectors.toSet());
+
+        for (String node : nodes) {
+            try (ClickHouse clickHouse = new ClickHouse(SecondStorageNodeHelper.resolve(node))) {
+                modifyColumn(clickHouse, database, destTableName, column, datatype);
+            } catch (Exception sqlException) {
+                ExceptionUtils.rethrow(sqlException);
+            }
+        }
+    }
+
+    private String getMaxRowsNode(Set<String> nodes, String database, String destTableName) {
+        String nodeName = "";
+        long tableRows = 0L;
+        for (String node : nodes) {
+            try (ClickHouse clickHouse = new ClickHouse(SecondStorageNodeHelper.resolve(node))) {
+                int existCode = clickHouse.query(new ExistsTable(TableIdentifier.table(database, destTableName)).toSql(), ExistsQueryParser.EXISTS).get(0);
+                if (existCode == 0)
+                    continue;
+
+                String select = new Select(TableIdentifier.table("system", "tables"))
+                        .column(ColumnWithAlias.builder().expr("total_rows").alias("totalRows").build())
+                        .where("database = '%s' AND name = '%s'").toSql();
+                val rows = clickHouse.query(String.format(Locale.ROOT, select, database, destTableName), rs -> {
+                    try {
+                        return rs.getLong(1);
+                    } catch (SQLException sqlException) {
+                        return ExceptionUtils.rethrow(sqlException);
+                    }
+                }).get(0);
+
+                if (rows > tableRows) {
+                    tableRows = rows;
+                    nodeName = node;
+                }
+            } catch (SQLException sqlException) {
+                ExceptionUtils.rethrow(sqlException);
+            }
+        }
+        return nodeName;
+    }
+
+    private List<ClickHouseSystemQuery.DescTable> getFilterDescTable(String node, String database, String destTableName, KylinConfig config) {
+        try (ClickHouse clickHouse = new ClickHouse(SecondStorageNodeHelper.resolve(node))) {
+            val columnTypeMap = clickHouse.query(new Desc(TableIdentifier.table(database, destTableName)).toSql(), DescQueryParser.Desc)
+                    .stream().filter(c -> NULLABLE_STRING.equals(c.getDatatype()) || LOW_CARDINALITY_STRING.equals(c.getDatatype()))
+                    .collect(Collectors.toList());
+
+            Map<String, Long> columnCardinalities = selectCardinality(clickHouse, database, destTableName, columnTypeMap).get(0);
+            long lowCardinalityNumber = config.getSecondStorageLowCardinalityNumber();
+            long highCardinalityNumber = config.getSecondStorageHighCardinalityNumber();
+            return columnTypeMap.stream()
+                    .filter(c -> (NULLABLE_STRING.equals(c.getDatatype()) && columnCardinalities.get(c.getColumn()) < lowCardinalityNumber)
+                            || (LOW_CARDINALITY_STRING.equals(c.getDatatype()) && columnCardinalities.get(c.getColumn()) > highCardinalityNumber))
+                    .collect(Collectors.toList());
+        } catch (SQLException sqlException) {
+            ExceptionUtils.rethrow(sqlException);
+        }
+        return Lists.newArrayList();
+    }
+
+    private List<Map<String, Long>> selectCardinality(ClickHouse clickHouse, String database, String table,
+                                                      List<ClickHouseSystemQuery.DescTable> columnTypeMap) throws SQLException {
+        final Select select = new Select(TableIdentifier.table(database, table));
+        columnTypeMap.forEach(column ->
+            select.column(ColumnWithAlias.builder().expr("uniqCombined(`" + column.getColumn() + "`)").alias(column.getColumn()).build())
+        );
+        return clickHouse.query(select.toSql(), rs -> {
+            Map<String, Long> columnCardinality = Maps.newHashMap();
+            for (int i = 0; i < columnTypeMap.size(); i++) {
+                try {
+                    columnCardinality.put(columnTypeMap.get(i).getColumn(), rs.getLong(i+1));
+                } catch (SQLException e) {
+                    return ExceptionUtils.rethrow(e);
+                }
+            }
+            return columnCardinality;
+        });
+    }
+
+    private void modifyColumn(ClickHouse clickHouse, String database, String table, String column, String datatype) {
+        try {
+            String alterTable = new AlterTable(TableIdentifier.table(database, table),
+                    new AlterTable.ModifyColumn(column, datatype)).toSql(render);
+            clickHouse.apply(alterTable);
+        } catch (SQLException e) {
+             ExceptionUtils.rethrow(e);
+        }
+    }
 }

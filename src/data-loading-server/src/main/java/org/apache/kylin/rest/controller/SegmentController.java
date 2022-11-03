@@ -18,10 +18,10 @@
 
 package org.apache.kylin.rest.controller;
 
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_EMPTY_ID;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_MERGE_LESS_THAN_TWO;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_REFRESH_SELECT_EMPTY;
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,10 +29,11 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.rest.response.DataResult;
-import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.BuildIndexRequest;
 import org.apache.kylin.rest.request.BuildSegmentsRequest;
 import org.apache.kylin.rest.request.IncrementBuildSegmentsRequest;
@@ -42,6 +43,8 @@ import org.apache.kylin.rest.request.PartitionsRefreshRequest;
 import org.apache.kylin.rest.request.SegmentFixRequest;
 import org.apache.kylin.rest.request.SegmentsRequest;
 import org.apache.kylin.rest.response.BuildIndexResponse;
+import org.apache.kylin.rest.response.DataResult;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.JobInfoResponse;
 import org.apache.kylin.rest.response.JobInfoResponseWithFailure;
 import org.apache.kylin.rest.response.MergeSegmentCheckResponse;
@@ -97,7 +100,9 @@ public class SegmentController extends BaseController {
     public EnvelopeResponse<BuildIndexResponse> buildIndicesManually(@PathVariable("model") String modelId,
             @RequestBody BuildIndexRequest request) {
         checkProjectName(request.getProject());
-        checkParamLength("tag", request.getTag(), 1024);
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(request.getProject());
+        checkParamLength("tag", request.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         checkRequiredArg(MODEL_ID, modelId);
 
         modelService.validateCCType(modelId, request.getProject());
@@ -124,11 +129,15 @@ public class SegmentController extends BaseController {
             @RequestParam(value = "without_indexes", required = false) List<Long> withoutAnyIndexes,
             @RequestParam(value = "all_to_complement", required = false, defaultValue = "false") Boolean allToComplement,
             @RequestParam(value = "sort_by", required = false, defaultValue = "last_modified_time") String sortBy,
-            @RequestParam(value = "reverse", required = false, defaultValue = "false") Boolean reverse) {
+            @RequestParam(value = "reverse", required = false, defaultValue = "false") Boolean reverse,
+            @RequestParam(value = "statuses", required = false, defaultValue = "") List<String> statuses,
+            @RequestParam(value = "statuses_second_storage", required = false, defaultValue = "") List<String> statusesSecondStorage) {
         checkProjectName(project);
         validateRange(start, end);
+        modelService.checkSegmentStatus(statuses);
+        modelService.checkSegmentSecondStorageStatus(statusesSecondStorage);
         List<NDataSegmentResponse> segments = modelService.getSegmentsResponse(dataflowId, project, start, end, status,
-                withAllIndexes, withoutAnyIndexes, allToComplement, sortBy, reverse);
+                withAllIndexes, withoutAnyIndexes, allToComplement, sortBy, reverse, statuses, statusesSecondStorage);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(segments, offset, limit), "");
     }
 
@@ -202,7 +211,9 @@ public class SegmentController extends BaseController {
     public EnvelopeResponse<JobInfoResponse> refreshOrMergeSegments(@PathVariable("model") String modelId,
             @RequestBody SegmentsRequest request) {
         checkProjectName(request.getProject());
-        checkParamLength("tag", request.getTag(), 1024);
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(request.getProject());
+        checkParamLength("tag", request.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         checkSegmentParams(request.getIds(), request.getNames());
         List<JobInfoResponse.JobInfo> jobInfos = new ArrayList<>();
         String[] segIds = modelService.convertSegmentIdWithName(modelId, request.getProject(), request.getIds(),
@@ -240,7 +251,9 @@ public class SegmentController extends BaseController {
     public EnvelopeResponse<MergeSegmentCheckResponse> checkMergeSegments(@PathVariable("model") String modelId,
             @RequestBody SegmentsRequest request) {
         checkProjectName(request.getProject());
-        checkParamLength("tag", request.getTag(), 1024);
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(request.getProject());
+        checkParamLength("tag", request.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         if (ArrayUtils.isEmpty(request.getIds()) || request.getIds().length < 2) {
             throw new KylinException(SEGMENT_MERGE_LESS_THAN_TWO);
         }
@@ -255,7 +268,9 @@ public class SegmentController extends BaseController {
     @ResponseBody
     public EnvelopeResponse<JobInfoResponse> buildSegmentsManually(@PathVariable("model") String modelId,
             @RequestBody BuildSegmentsRequest buildSegmentsRequest) throws Exception {
-        checkParamLength("tag", buildSegmentsRequest.getTag(), 1024);
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(buildSegmentsRequest.getProject());
+        checkParamLength("tag", buildSegmentsRequest.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         String partitionColumnFormat = modelService.getPartitionColumnFormatById(buildSegmentsRequest.getProject(),
                 modelId);
         validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
@@ -276,7 +291,9 @@ public class SegmentController extends BaseController {
     public EnvelopeResponse<JobInfoResponse> incrementBuildSegmentsManually(@PathVariable("model") String modelId,
             @RequestBody IncrementBuildSegmentsRequest buildSegmentsRequest) throws Exception {
         checkProjectName(buildSegmentsRequest.getProject());
-        checkParamLength("tag", buildSegmentsRequest.getTag(), 1024);
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(buildSegmentsRequest.getProject());
+        checkParamLength("tag", buildSegmentsRequest.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         String partitionColumnFormat = buildSegmentsRequest.getPartitionDesc().getPartitionDateFormat();
         validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
         modelService.validateCCType(modelId, buildSegmentsRequest.getProject());
@@ -301,7 +318,9 @@ public class SegmentController extends BaseController {
     public EnvelopeResponse<JobInfoResponseWithFailure> addIndexesToSegments(@PathVariable("model") String modelId,
             @RequestBody IndexesToSegmentsRequest buildSegmentsRequest) {
         checkProjectName(buildSegmentsRequest.getProject());
-        checkParamLength("tag", buildSegmentsRequest.getTag(), 1024);
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(buildSegmentsRequest.getProject());
+        checkParamLength("tag", buildSegmentsRequest.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         val response = fusionModelService.addIndexesToSegments(modelId, buildSegmentsRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
     }
@@ -312,7 +331,9 @@ public class SegmentController extends BaseController {
     public EnvelopeResponse<JobInfoResponseWithFailure> addAllIndexesToSegments(@PathVariable("model") String modelId,
             @RequestBody IndexesToSegmentsRequest buildSegmentsRequest) {
         checkProjectName(buildSegmentsRequest.getProject());
-        checkParamLength("tag", buildSegmentsRequest.getTag(), 1024);
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(buildSegmentsRequest.getProject());
+        checkParamLength("tag", buildSegmentsRequest.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         JobInfoResponseWithFailure response = modelBuildService.addIndexesToSegments(buildSegmentsRequest.getProject(),
                 modelId, buildSegmentsRequest.getSegmentIds(), null, buildSegmentsRequest.isParallelBuildBySegment(),
                 buildSegmentsRequest.getPriority());
@@ -336,7 +357,10 @@ public class SegmentController extends BaseController {
     public EnvelopeResponse<JobInfoResponse> buildMultiPartition(@PathVariable("model") String modelId,
             @RequestBody PartitionsBuildRequest param) {
         checkProjectName(param.getProject());
-        checkParamLength("tag", param.getTag(), 1024);
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(param.getProject());
+        checkParamLength("tag", param.getTag(), prjInstance.getConfig().getJobTagMaxSize());
+
         checkRequiredArg("segment_id", param.getSegmentId());
         checkRequiredArg("sub_partition_values", param.getSubPartitionValues());
         val response = modelBuildService.buildSegmentPartitionByValue(param.getProject(), modelId, param.getSegmentId(),
@@ -351,7 +375,9 @@ public class SegmentController extends BaseController {
     public EnvelopeResponse<JobInfoResponse> refreshMultiPartition(@PathVariable("model") String modelId,
             @RequestBody PartitionsRefreshRequest param) {
         checkProjectName(param.getProject());
-        checkParamLength("tag", param.getTag(), 1024);
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(param.getProject());
+        checkParamLength("tag", param.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         checkRequiredArg("segment_id", param.getSegmentId());
         val response = modelBuildService.refreshSegmentPartition(param, modelId);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");

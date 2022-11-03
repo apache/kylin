@@ -19,20 +19,21 @@
 package org.apache.kylin.rest.util;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.query.engine.PrepareSqlStateParam;
+import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.TempStatementUtil;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.query.engine.PrepareSqlStateParam;
-import org.apache.kylin.query.engine.QueryExec;
-import org.apache.kylin.query.util.KapQueryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.kyligence.kap.query.util.KapQueryUtil;
 
 public class QueryUtils {
 
@@ -55,8 +56,10 @@ public class QueryUtils {
     }
 
     public static void fillInPrepareStatParams(SQLRequest sqlRequest, boolean pushdown) {
+        KylinConfig kylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(sqlRequest.getProject()).getConfig();
         if (QueryUtils.isPrepareStatementWithParams(sqlRequest)
-                && !(KapConfig.getInstanceFromEnv().enableReplaceDynamicParams() || pushdown)) {
+                && !(kylinConfig.enableReplaceDynamicParams() || pushdown)) {
             PrepareSqlStateParam[] params = ((PrepareSqlRequest) sqlRequest).getParams();
             String filledSql = QueryContext.current().getMetrics().getCorrectedSql();
             try {

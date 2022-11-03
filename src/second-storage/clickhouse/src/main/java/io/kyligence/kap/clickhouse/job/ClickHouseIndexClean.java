@@ -18,25 +18,34 @@
 
 package io.kyligence.kap.clickhouse.job;
 
-import com.clearspring.analytics.util.Preconditions;
-import org.apache.kylin.metadata.cube.model.NBatchConstants;
-import io.kyligence.kap.secondstorage.NameUtil;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.util.SecondStorageDateUtils;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.SegmentRange;
+import static io.kyligence.kap.secondstorage.SecondStorageConstants.STEP_SECOND_STORAGE_INDEX_CLEAN;
 
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.kyligence.kap.secondstorage.SecondStorageConstants.STEP_SECOND_STORAGE_INDEX_CLEAN;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.execution.ExecutableContext;
+import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+
+import com.clearspring.analytics.util.Preconditions;
+
+import io.kyligence.kap.secondstorage.NameUtil;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import io.kyligence.kap.secondstorage.util.SecondStorageDateUtils;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ClickHouseIndexClean extends AbstractClickHouseClean {
@@ -61,7 +70,30 @@ public class ClickHouseIndexClean extends AbstractClickHouseClean {
     }
 
     public Set<Long> getNeedDeleteLayoutIds() {
-        return this.needDeleteLayoutIds;
+        if (CollectionUtils.isNotEmpty(needDeleteLayoutIds)) {
+            return this.needDeleteLayoutIds;
+        }
+
+        Set<Long> deleteLayoutIds = new HashSet<>();
+        Optional.ofNullable(getExecutableManager(getProject()).getJob(getParentId()).getParams()).ifPresent(params -> {
+            String toBeDeletedLayoutIdsStr = params.get(NBatchConstants.P_TO_BE_DELETED_LAYOUT_IDS);
+            if (StringUtils.isNotBlank(toBeDeletedLayoutIdsStr)) {
+                for (String id : toBeDeletedLayoutIdsStr.split(",")) {
+                    deleteLayoutIds.add(Long.parseLong(id));
+                }
+            }
+        });
+
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            SecondStorageUtil.tableFlowManager(getConfig(), getProject()).ifPresent(manage -> manage.update(
+                    getTargetSubject(),
+                    updater -> updater.cleanTableData(tableData -> deleteLayoutIds.contains(tableData.getLayoutID()))));
+            SecondStorageUtil.tablePlanManager(getConfig(), getProject()).ifPresent(
+                    manage -> manage.update(getTargetSubject(), updater -> updater.cleanTable(deleteLayoutIds)));
+            return null;
+        }, project, 1, getEpochId());
+
+        return deleteLayoutIds;
     }
 
     public ClickHouseIndexClean setSegmentRangeMap(Map<String, SegmentRange<Long>> segmentRangeMap) {
@@ -78,6 +110,19 @@ public class ClickHouseIndexClean extends AbstractClickHouseClean {
     }
 
     @Override
+    public ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        return wrapWithExecuteException(() -> {
+            if (INDEX_CLEAN_READY.equals(this.getParam(CLICKHOUSE_NODE_COUNT_PARAM))) {
+                loadState();
+            } else {
+                internalInit();
+            }
+            workImpl();
+            return ExecuteResult.createSucceed();
+        });
+    }
+
+    @Override
     protected void internalInit() {
         KylinConfig config = getConfig();
         String modelId = getParam(NBatchConstants.P_DATAFLOW_ID);
@@ -86,25 +131,25 @@ public class ClickHouseIndexClean extends AbstractClickHouseClean {
 
         Preconditions.checkState(nodeGroupManager.isPresent() && tableFlowManager.isPresent());
 
-        val tableFlow = Objects.requireNonNull(tableFlowManager.get().get(modelId).orElse(null));
+        val tableFlow = tableFlowManager.get().get(modelId).orElse(null);
+        if (tableFlow == null) {
+            return;
+        }
 
         setNodeCount(Math.toIntExact(nodeGroupManager.map(
                 manager -> manager.listAll().stream().mapToLong(nodeGroup -> nodeGroup.getNodeNames().size()).sum())
                 .orElse(0L)));
-
-
         List<String> nodes = nodeGroupManager.get().listAll()
                 .stream()
                 .flatMap(nodeGroup -> nodeGroup.getNodeNames().stream())
                 .collect(Collectors.toList());
-
-
         getNeedDeleteLayoutIds().forEach(layoutId -> {
             // table_data not contains layout means deleted. Delete table instead partition
-            if (segmentRangeMap.isEmpty() || !tableFlow.getEntity(layoutId).isPresent()) {
+            if (segmentRangeMap == null || segmentRangeMap.isEmpty() || !tableFlow.getEntity(layoutId).isPresent()) {
                 shardCleaners.addAll(cleanTable(nodes, layoutId));
             } else {
-                segmentRangeMap.keySet().forEach(segmentId -> shardCleaners.addAll(cleanPartition(nodes, layoutId, segmentId)));
+                segmentRangeMap.keySet()
+                        .forEach(segmentId -> shardCleaners.addAll(cleanPartition(nodes, layoutId, segmentId)));
             }
         });
     }

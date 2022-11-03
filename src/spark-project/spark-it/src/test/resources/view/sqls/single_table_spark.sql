@@ -1,0 +1,1 @@
+select sum(O_TOTALPRICE) from TPCH.ORDERS where O_ORDERSTATUS = 'P' group by O_ORDERDATE

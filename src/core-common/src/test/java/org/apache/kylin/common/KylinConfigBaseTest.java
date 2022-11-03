@@ -36,9 +36,14 @@
 
 package org.apache.kylin.common;
 
+import static org.apache.kylin.common.KylinConfigBase.PATH_DELIMITER;
+import static org.apache.kylin.common.KylinConfigBase.WRITING_CLUSTER_WORKING_DIR;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_ENABLE_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_NAME_KEY;
-import static org.junit.Assert.assertEquals;
+import static org.apache.kylin.common.constant.Constants.SNAPSHOT_AUTO_REFRESH;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -48,6 +53,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -55,13 +61,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Shell;
-import org.apache.kylin.common.util.TimeZoneUtils;
 import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
 import org.apache.kylin.common.util.ProcessUtils;
+import org.apache.kylin.common.util.TimeZoneUtils;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junitpioneer.jupiter.SetSystemProperty;
@@ -144,6 +152,8 @@ class KylinConfigBaseTest {
                 new PropertiesEntity("kylin.metadata.custom-dimension-encodings", "", new String[0]));
 
         map.put("isCheckCopyOnWrite", new PropertiesEntity("kylin.metadata.check-copy-on-write", "false", false));
+
+        map.put("isCheckHostname", new PropertiesEntity("kylin.env.hostname-check-enabled", "false", false));
 
         map.put("getServerAddress", new PropertiesEntity("kylin.server.address", "127.0.0.1:7070", "127.0.0.1:7070"));
 
@@ -339,18 +349,18 @@ class KylinConfigBaseTest {
 
         map.put("getSparkBuildClassName",
                 new PropertiesEntity("kylin.engine.spark.build-class-name",
-                        "org.apache.kylin.engine.spark.job.SegmentBuildJob",
-                        "org.apache.kylin.engine.spark.job.SegmentBuildJob"));
+                        "io.kyligence.kap.engine.spark.job.SegmentBuildJob",
+                        "io.kyligence.kap.engine.spark.job.SegmentBuildJob"));
 
         map.put("getSparkTableSamplingClassName",
                 new PropertiesEntity("kylin.engine.spark.sampling-class-name",
-                        "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob",
-                        "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob"));
+                        "io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob",
+                        "io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob"));
 
         map.put("getSparkMergeClassName",
                 new PropertiesEntity("kylin.engine.spark.merge-class-name",
-                        "org.apache.kylin.engine.spark.job.SegmentMergeJob",
-                        "org.apache.kylin.engine.spark.job.SegmentMergeJob"));
+                        "io.kyligence.kap.engine.spark.job.SegmentMergeJob",
+                        "io.kyligence.kap.engine.spark.job.SegmentMergeJob"));
 
         map.put("getClusterManagerClassName", new PropertiesEntity("kylin.engine.spark.cluster-manager-class-name",
                 "org.apache.kylin.cluster.YarnClusterManager", "org.apache.kylin.cluster.YarnClusterManager"));
@@ -738,8 +748,7 @@ class KylinConfigBaseTest {
         map.put("getGuardianHACheckInitDelay",
                 new PropertiesEntity("kylin.guardian.ha-check-init-delay", "5min", 5 * 60L));
         map.put("getGuardianHealthCheckers",
-                new PropertiesEntity("kylin.guardian.checkers",
-                        "org.apache.kylin.tool.daemon.checker.KEProcessChecker",
+                new PropertiesEntity("kylin.guardian.checkers", "org.apache.kylin.tool.daemon.checker.KEProcessChecker",
                         "org.apache.kylin.tool.daemon.checker.KEProcessChecker"));
         map.put("getGuardianFullGCCheckFactor", new PropertiesEntity("kylin.guardian.full-gc-check-factor", "5", 5));
         map.put("isFullGCRatioBeyondRestartEnabled",
@@ -898,7 +907,7 @@ class KylinConfigBaseTest {
         map.put("isMeasureNameCheckEnabled",
                 new PropertiesEntity("kylin.model.measure-name-check-enabled", "true", true));
         map.put("isConcurrencyFetchDataSourceSize",
-                new PropertiesEntity("kylin.job.concurrency-fetch-datasource-size-enabled", "false", false));
+                new PropertiesEntity("kylin.job.concurrency-fetch-datasource-size-enabled", "true", true));
         map.put("getConcurrencyFetchDataSourceSizeThreadNumber",
                 new PropertiesEntity("kylin.job.concurrency-fetch-datasource-size-thread_number", "10", 10));
         map.put("isSpark3ExecutorPrometheusEnabled",
@@ -920,6 +929,18 @@ class KylinConfigBaseTest {
                 new PropertiesEntity("kylin.source.load-hive-table-wait-sparder-seconds", "900", 900));
         map.put("getLoadHiveTableWaitSparderIntervals",
                 new PropertiesEntity("kylin.source.load-hive-table-wait-sparder-interval-seconds", "10", 10));
+        map.put("buildJobProfilingEnabled",
+                new PropertiesEntity("kylin.engine.async-profiler-enabled", "false", false));
+        map.put("buildJobProfilingResultTimeout",
+                new PropertiesEntity("kylin.engine.async-profiler-result-timeout", "60s", 60000L));
+        map.put("buildJobProfilingProfileTimeout",
+                new PropertiesEntity("kylin.engine.async-profiler-profile-timeout", "5m", 300000L));
+        map.put("isHdfsMetricsPeriodicCalculationEnabled",
+                new PropertiesEntity("kylin.metrics.hdfs-periodic-calculation-enabled", "false", false));
+        map.put("getHdfsMetricsPeriodicCalculationInterval",
+                new PropertiesEntity("kylin.metrics.hdfs-periodic-calculation-interval", "5m", 300000L));
+        map.put("isSkipResourceCheck",
+                new PropertiesEntity("kylin.build.resource.skip-resource-check", "false", false));
     }
 
     @Test
@@ -961,9 +982,9 @@ class KylinConfigBaseTest {
     @Test
     void testGetNonCustomProjectConfigs() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        Assert.assertEquals(17, config.getNonCustomProjectConfigs().size());
+        assertEquals(19, config.getNonCustomProjectConfigs().size());
         config.setProperty("kylin.server.non-custom-project-configs", "kylin.job.retry");
-        Assert.assertEquals(18, config.getNonCustomProjectConfigs().size());
+        assertEquals(20, config.getNonCustomProjectConfigs().size());
     }
 
     @Test
@@ -1016,8 +1037,8 @@ class KylinConfigBaseTest {
     void testMultipleUpdateEnvironment() {
         EnvironmentUpdateUtils.put("test.environment1", "test.value1");
         EnvironmentUpdateUtils.put("test.environment2", "test.value2");
-        assertEquals("Environment was not set propertly", "test.value1", System.getenv("test.environment1"));
-        assertEquals("Environment was not set propertly", "test.value2", System.getenv("test.environment2"));
+        assertEquals("test.value1", System.getenv("test.environment1"), "Environment was not set propertly");
+        assertEquals("test.value2", System.getenv("test.environment2"), "Environment was not set propertly");
     }
 
     @Test
@@ -1074,23 +1095,23 @@ class KylinConfigBaseTest {
     void testRedisSettings() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.cache.redis.expire-time-unit", "INVALID");
-        assertEquals(config.getRedisExpireTimeUnit(), "EX");
-        assertEquals(config.getRedisConnectionTimeout(), 2000);
-        assertEquals(config.getRedisSoTimeout(), 2000);
-        assertEquals(config.getRedisMaxAttempts(), 20);
+        assertEquals("EX", config.getRedisExpireTimeUnit());
+        assertEquals(2000, config.getRedisConnectionTimeout());
+        assertEquals(2000, config.getRedisSoTimeout());
+        assertEquals(20, config.getRedisMaxAttempts());
     }
 
     @Test
     void testMetadataUrlSetting() {
         val config = KylinConfig.getInstanceFromEnv();
-        Assert.assertEquals(config.getStreamingStatsUrl().toString(), config.getMetadataUrl().toString());
-        Assert.assertEquals(config.getQueryHistoryUrl().toString(), config.getMetadataUrl().toString());
+        assertEquals(config.getStreamingStatsUrl().toString(), config.getMetadataUrl().toString());
+        assertEquals(config.getQueryHistoryUrl().toString(), config.getMetadataUrl().toString());
         val pgUrl = "ke_metadata@jdbc,driverClassName=org.postgresql.Driver,"
                 + "url=jdbc:postgresql://sandbox:5432/kylin,username=postgres,password";
         config.setStreamingStatsUrl(pgUrl);
-        Assert.assertEquals(pgUrl, config.getStreamingStatsUrl().toString());
+        assertEquals(pgUrl, config.getStreamingStatsUrl().toString());
         config.setQueryHistoryUrl(pgUrl);
-        Assert.assertEquals(pgUrl, config.getQueryHistoryUrl().toString());
+        assertEquals(pgUrl, config.getQueryHistoryUrl().toString());
     }
 
     @Test
@@ -1099,14 +1120,14 @@ class KylinConfigBaseTest {
                 + "url=\"jdbc:mysql:replication://10.1.3.12:3306,10.1.3.11:3306/kylin_test?useUnicode=true&characterEncoding=utf8\","
                 + "username=kylin,password=test,maxTotal=20,maxIdle=20";
         StorageURL storageURL = StorageURL.valueOf(url);
-        Assert.assertEquals(url, storageURL.toString());
+        assertEquals(url, storageURL.toString());
     }
 
     @Test
     void getIsMetadataKeyCaseInSensitiveEnabled() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         boolean metadataKeyCaseInSensitiveEnabled = config.isMetadataKeyCaseInSensitiveEnabled();
-        Assert.assertFalse(metadataKeyCaseInSensitiveEnabled);
+        assertFalse(metadataKeyCaseInSensitiveEnabled);
     }
 
     @OverwriteProp(key = "kylin.metadata.key-case-insensitive", value = "true")
@@ -1115,7 +1136,7 @@ class KylinConfigBaseTest {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config = KylinConfig.getInstanceFromEnv();
         val metadataKeyCaseInSensitiveEnabled = config.isMetadataKeyCaseInSensitiveEnabled();
-        Assert.assertTrue(metadataKeyCaseInSensitiveEnabled);
+        assertTrue(metadataKeyCaseInSensitiveEnabled);
     }
 
     @SetSystemProperty.SetSystemProperties({
@@ -1126,22 +1147,217 @@ class KylinConfigBaseTest {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config = KylinConfig.getInstanceFromEnv();
         val metadataKeyCaseInSensitiveEnabled = config.isMetadataKeyCaseInSensitiveEnabled();
-        Assert.assertFalse(metadataKeyCaseInSensitiveEnabled);
+        assertFalse(metadataKeyCaseInSensitiveEnabled);
     }
 
     @Test
     void testConnectClusterMangerParam() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-        Assert.assertEquals(10, config.getClusterManagerHealthCheckMaxTimes());
+        assertEquals(10, config.getClusterManagerHealthCheckMaxTimes());
         config.setProperty("kylin.engine.cluster-manager-health-check-max-times", "0");
-        Assert.assertEquals(0, config.getClusterManagerHealthCheckMaxTimes());
+        assertEquals(0, config.getClusterManagerHealthCheckMaxTimes());
         config.setProperty("kylin.engine.cluster-manager-health-check-max-times", "-1");
-        Assert.assertEquals(-1, config.getClusterManagerHealthCheckMaxTimes());
+        assertEquals(-1, config.getClusterManagerHealthCheckMaxTimes());
 
-        Assert.assertEquals(120, config.getClusterManagerHealCheckIntervalSecond());
+        assertEquals(120, config.getClusterManagerHealCheckIntervalSecond());
         config.setProperty("kylin.engine.cluster-manager-heal-check-interval-second", "0");
-        Assert.assertEquals(0, config.getClusterManagerHealCheckIntervalSecond());
+        assertEquals(0, config.getClusterManagerHealCheckIntervalSecond());
+    }
+
+    @Test
+    void testJobSchedulerMode() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+
+        assertEquals("DAG", config.getJobSchedulerMode());
+        config.setProperty("kylin.engine.job-scheduler-mode", "CHAIN");
+        assertEquals("CHAIN", config.getJobSchedulerMode());
+        config.setProperty("kylin.engine.job-scheduler-mode", "DAG");
+        assertEquals("DAG", config.getJobSchedulerMode());
+    }
+
+    @Test
+    void testGetRoutineOpsTaskTimeOut() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        Assert.assertEquals(4 * 60 * 60 * 1000, config.getRoutineOpsTaskTimeOut());
+        config.setProperty("kylin.metadata.ops-cron-timeout", "30m");
+        Assert.assertEquals(30 * 60 * 1000, config.getRoutineOpsTaskTimeOut());
+        config.setProperty("kylin.metadata.ops-cron-timeout", "1d");
+        Assert.assertEquals(24 * 60 * 60 * 1000, config.getRoutineOpsTaskTimeOut());
+        config.setProperty("kylin.metadata.ops-cron-timeout", "4h");
+        Assert.assertEquals(4 * 60 * 60 * 1000, config.getRoutineOpsTaskTimeOut());
+    }
+
+    @Test
+    void testBuildJobProfilingEnabled() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertFalse(config.buildJobProfilingEnabled());
+        config.setProperty("kylin.engine.async-profiler-enabled", "true");
+        assertTrue(config.buildJobProfilingEnabled());
+    }
+
+    @Test
+    void testBuildJobProfilingResultTimeout() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals(60000, config.buildJobProfilingResultTimeout());
+        config.setProperty("kylin.engine.async-profiler-result-timeout", "2m");
+        assertEquals(120000, config.buildJobProfilingResultTimeout());
+        // TODO We do not have a check for a negative time parameter, maybe we need this
+        //  in the whole range of KE parameters
+        config.setProperty("kylin.engine.async-profiler-result-timeout", "-1");
+        assertEquals(-1, config.buildJobProfilingResultTimeout());
+    }
+
+    @Test
+    void testBuildJobProfilingProfileTimeout() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals(300000, config.buildJobProfilingProfileTimeout());
+        config.setProperty("kylin.engine.async-profiler-profile-timeout", "10s");
+        assertEquals(10000, config.buildJobProfilingProfileTimeout());
+        // TODO We do not have a check for a negative time parameter, maybe we need this
+        //  in the whole range of KE parameters
+        config.setProperty("kylin.engine.async-profiler-profile-timeout", "-1");
+        assertEquals(-1, config.buildJobProfilingProfileTimeout());
+    }
+
+    @Test
+    void testGetJobTmpProfilerFlagsDir() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String project = "ke-project";
+        String jobId = "job-00001";
+        String jobTmpProfilerFlagsDir = config.getJobTmpProfilerFlagsDir(project, jobId);
+        String expectedDir = config.getJobTmpDir(project) + jobId + "/profiler_flags";
+        assertEquals(expectedDir, jobTmpProfilerFlagsDir);
+    }
+
+    @Test
+    void testGetQueryTimeoutSeconds() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals(300, config.getQueryTimeoutSeconds());
+        config.setProperty("kylin.query.timeout-seconds", "3");
+        assertEquals(5, config.getQueryTimeoutSeconds());
+        config.setProperty("kylin.query.timeout-seconds", "5");
+        assertEquals(5, config.getQueryTimeoutSeconds());
+    }
+
+    @Test
+    void testSnapshotAutoRefresh() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertFalse(config.isSnapshotAutoRefreshEnabled());
+        assertEquals("0 0 0 */1 * ?", config.getSnapshotAutoRefreshCron());
+        assertEquals(1, config.getSnapshotAutoRefreshFetchFilesCount());
+        assertEquals(1, config.getSnapshotAutoRefreshFetchPartitionsCount());
+        assertEquals(20, config.getSnapshotAutoRefreshMaxConcurrentJobLimit());
+        assertEquals(config.getHdfsWorkingDirectory("test") + SNAPSHOT_AUTO_REFRESH + "/",
+                config.getSnapshotAutoRefreshDir("test"));
+        assertEquals(30 * 60 * 1000, config.getSnapshotAutoRefreshTaskTimeout());
+        assertFalse(config.isSnapshotFirstAutoRefreshEnabled());
+        assertFalse(config.isSnapshotNullLocationAutoRefreshEnabled());
+    }
+
+    @Test
+    void testIsHdfsMetricsPeriodicCalculationEnabled() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertFalse(config.isHdfsMetricsPeriodicCalculationEnabled());
+        config.setProperty("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
+        assertTrue(config.isHdfsMetricsPeriodicCalculationEnabled());
+    }
+
+    @Test
+    void testGetHdfsMetricsPeriodicCalculationInterval() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals(300000L, config.getHdfsMetricsPeriodicCalculationInterval());
+        config.setProperty("kylin.metrics.hdfs-periodic-calculation-interval", "1m");
+        assertEquals(60000L, config.getHdfsMetricsPeriodicCalculationInterval());
+    }
+
+    @Test
+    void testGetHdfsMetricsDir() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String hdfsMetricsDir = config.getHdfsMetricsDir("hdfsCapacity.json");
+        String expectedDir = config.getHdfsWorkingDirectory() + "_metrics/" + "hdfsCapacity.json";
+        assertEquals(hdfsMetricsDir, expectedDir);
+    }
+
+    @Test
+    void testReloadKylinConfig2Properties() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        final Properties properties = config.exportToProperties();
+        properties.setProperty(WRITING_CLUSTER_WORKING_DIR, "file://");
+        int beforeSize = config.properties.size();
+        config.reloadKylinConfig(properties);
+        int afterSize = config.properties.size();
+        Assertions.assertNotEquals(beforeSize, afterSize);
+        // reset
+        config.setProperty(WRITING_CLUSTER_WORKING_DIR, "");
+    }
+
+    @Test
+    void testIsBuildFilesSeparationEnabled() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        // getBuildConf empty getWritingClusterWorkingDir empty
+        config.setProperty("kylin.engine.submit-hadoop-conf-dir", "");
+        config.setProperty("kylin.env.hdfs-write-working-dir", "");
+        assertFalse(config.isBuildFilesSeparationEnabled());
+        // getBuildConf empty getWritingClusterWorkingDir not empty
+        config.setProperty("kylin.engine.submit-hadoop-conf-dir", "");
+        config.setProperty("kylin.env.hdfs-write-working-dir", "file://abc");
+        assertFalse(config.isBuildFilesSeparationEnabled());
+        // getBuildConf not empty getWritingClusterWorkingDir empty
+        config.setProperty("kylin.engine.submit-hadoop-conf-dir", "/kylin");
+        config.setProperty("kylin.env.hdfs-write-working-dir", "");
+        assertFalse(config.isBuildFilesSeparationEnabled());
+        // getBuildConf not empty getWritingClusterWorkingDir not empty
+        config.setProperty("kylin.engine.submit-hadoop-conf-dir", "/kylin");
+        config.setProperty("kylin.env.hdfs-write-working-dir", "file://abc");
+        assertTrue(config.isBuildFilesSeparationEnabled());
+        // reset
+        config.setProperty("kylin.engine.submit-hadoop-conf-dir", "");
+        config.setProperty("kylin.env.hdfs-write-working-dir", "");
+    }
+
+    @Test
+    void testGetWritingClusterWorkingDir() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertTrue(config.getWritingClusterWorkingDir().isEmpty());
+        config.setProperty(WRITING_CLUSTER_WORKING_DIR, "hdfs://writecluster/kylin");
+        assertFalse(config.getWritingClusterWorkingDir().isEmpty());
+        // Reset to prevent impacting other tests
+        config.setProperty(WRITING_CLUSTER_WORKING_DIR, "");
+    }
+
+    @Test
+    void testGetWritingClusterWorkingDirWithSuffix() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        // path empty
+        Assert.assertThrows("Can not create a Path from an empty string", IllegalArgumentException.class,
+                () -> config.getWritingClusterWorkingDir(""));
+        // path not absolute
+        config.setProperty(WRITING_CLUSTER_WORKING_DIR, "../kylin");
+        Assert.assertThrows("kylin.env.hdfs-write-working-dir must be absolute, but got ../kylin",
+                IllegalArgumentException.class,
+                () -> config.getWritingClusterWorkingDir(""));
+        // with suffix
+        config.setProperty(WRITING_CLUSTER_WORKING_DIR, "/kylin/");
+        assertTrue(config.getWritingClusterWorkingDir("project/flat_table").contains("/kylin"));
+        // Reset to prevent impacting other tests
+        config.setProperty(WRITING_CLUSTER_WORKING_DIR, "");
+    }
+
+    @Test
+    void testGetFlatTableDir() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String project = "readWriteSeparation";
+        String dataFlowId = "3791a20e";
+        String segmentId = "60c51f8e";
+        String flatTableDirSuffix = project + "/flat_table/" + dataFlowId + PATH_DELIMITER + segmentId;
+        assertEquals(config.getFlatTableDir(project, dataFlowId, segmentId),
+                new Path(config.getHdfsWorkingDirectory() + flatTableDirSuffix));
+        config.setProperty(WRITING_CLUSTER_WORKING_DIR, "/kylin/");
+        assertEquals(config.getFlatTableDir(project, dataFlowId, segmentId),
+                new Path(config.getWritingClusterWorkingDir(flatTableDirSuffix)));
+        // Reset to prevent impacting other tests
+        config.setProperty(WRITING_CLUSTER_WORKING_DIR, "");
     }
 }
 

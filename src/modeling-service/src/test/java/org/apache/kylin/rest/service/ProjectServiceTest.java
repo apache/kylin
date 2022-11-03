@@ -44,7 +44,7 @@ import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
@@ -56,7 +56,6 @@ import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.GarbageCleanUpConfigRequest;
@@ -98,6 +97,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import io.kyligence.kap.clickhouse.MockSecondStorage;
+import io.kyligence.kap.metadata.recommendation.candidate.JdbcRawRecStore;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;
@@ -130,6 +130,9 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     @Mock
     private final UserService userService = Mockito.spy(UserService.class);
 
+    @Mock
+    private final UserAclService userAclService = Mockito.spy(UserAclService.class);
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
@@ -145,11 +148,14 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", Mockito.spy(AclUtil.class));
+        ReflectionTestUtils.setField(aclEvaluate, "userAclService", userAclService);
+        ReflectionTestUtils.setField(userAclService, "userService", userService);
         ReflectionTestUtils.setField(projectService, "aclEvaluate", aclEvaluate);
         ReflectionTestUtils.setField(projectService, "accessService", accessService);
         ReflectionTestUtils.setField(projectService, "projectModelSupporter", modelService);
         ReflectionTestUtils.setField(projectService, "userService", userService);
         ReflectionTestUtils.setField(projectService, "projectSmartService", projectSmartService);
+        ReflectionTestUtils.setField(projectService, "asyncTaskService", asyncTaskService);
 
         ReflectionTestUtils.setField(modelService, "aclEvaluate", aclEvaluate);
         projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -229,14 +235,14 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     public void testGetReadableProjects() {
         Mockito.doReturn(true).when(aclEvaluate).hasProjectAdminPermission(Mockito.any(ProjectInstance.class));
         List<ProjectInstance> projectInstances = projectService.getReadableProjects("", false);
-        Assert.assertEquals(26, projectInstances.size());
+        Assert.assertEquals(27, projectInstances.size());
     }
 
     @Test
     public void testGetAdminProjects() throws Exception {
         Mockito.doReturn(true).when(aclEvaluate).hasProjectAdminPermission(Mockito.any(ProjectInstance.class));
         List<ProjectInstance> projectInstances = projectService.getAdminProjects();
-        Assert.assertEquals(26, projectInstances.size());
+        Assert.assertEquals(27, projectInstances.size());
     }
 
     @Test
@@ -250,7 +256,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     public void testGetReadableProjectsHasNoPermissionProject() {
         Mockito.doReturn(true).when(aclEvaluate).hasProjectAdminPermission(Mockito.any(ProjectInstance.class));
         List<ProjectInstance> projectInstances = projectService.getReadableProjects("", false);
-        Assert.assertEquals(26, projectInstances.size());
+        Assert.assertEquals(27, projectInstances.size());
 
     }
 
@@ -654,7 +660,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(scheduler.hasStarted());
         NExecutableManager jobMgr = NExecutableManager.getInstance(getTestConfig(), project);
 
-        val job1 = new DefaultChainedExecutable();
+        val job1 = new DefaultExecutable();
         job1.setProject(project);
         val task1 = new ShellExecutable();
         job1.addTask(task1);
@@ -688,19 +694,19 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(scheduler.hasStarted());
         NExecutableManager jobMgr = NExecutableManager.getInstance(getTestConfig(), project);
 
-        val job1 = new DefaultChainedExecutable();
+        val job1 = new DefaultExecutable();
         job1.setProject(project);
         val task1 = new ShellExecutable();
         job1.addTask(task1);
         jobMgr.addJob(job1);
 
-        val job2 = new DefaultChainedExecutable();
+        val job2 = new DefaultExecutable();
         job2.setProject(project);
         val task2 = new ShellExecutable();
         job2.addTask(task2);
         jobMgr.addJob(job2);
 
-        val job3 = new DefaultChainedExecutable();
+        val job3 = new DefaultExecutable();
         job3.setProject(project);
         val task3 = new ShellExecutable();
         job3.addTask(task3);
@@ -989,4 +995,14 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertThrows(KylinException.class, () -> projectService.generateTempKeytab("test", multipartFile));
     }
 
+    @Test
+    public void testCleanupGarbage() throws Exception {
+        projectService.cleanupGarbage(PROJECT);
+    }
+
+    @Test
+    public void testHasProjectAdminPermission() {
+        Assert.assertTrue(aclEvaluate.hasProjectAdminPermission(PROJECT));
+        aclEvaluate.checkProjectQueryPermission(PROJECT);
+    }
 }

@@ -26,6 +26,7 @@ import org.apache.calcite.rel.{RelNode, RelVisitor}
 import org.apache.kylin.query.relnode.{KapAggregateRel, KapFilterRel, KapJoinRel, KapLimitRel, KapMinusRel, KapModelViewRel, KapNonEquiJoinRel, KapProjectRel, KapRel, KapSortRel, KapTableScan, KapUnionRel, KapValuesRel, KapWindowRel}
 import org.apache.kylin.query.runtime.plan.{AggregatePlan, FilterPlan, LimitPlan, ProjectPlan, SortPlan, TableScanPlan, ValuesPlan, WindowPlan}
 import org.apache.kylin.query.util.KapRelUtil
+import org.apache.kylin.common.KylinConfig
 import org.apache.spark.sql.DataFrame
 
 import scala.collection.JavaConverters._
@@ -34,6 +35,7 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
   private val stack = new util.Stack[DataFrame]()
   private val setOpStack = new util.Stack[Int]()
   private var unionLayer = 0
+  private val dataframeCache = KylinConfig.getInstanceFromEnv.isDataFrameCacheEnabled
 
   // clear cache before any op
   cleanCache()
@@ -67,7 +69,7 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
         logTime("filter") { FilterPlan.filter(Lists.newArrayList(stack.pop()), rel, dataContext) }
       case rel: KapProjectRel =>
         logTime("project") {
-          actionWithCache(rel) {
+          actionWith(rel) {
             ProjectPlan.select(Lists.newArrayList(stack.pop()), rel, dataContext)
           }
         }
@@ -79,7 +81,7 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
         logTime("window") { WindowPlan.window(Lists.newArrayList(stack.pop()), rel, dataContext) }
       case rel: KapAggregateRel =>
         logTime("agg") {
-          actionWithCache(rel) {
+          actionWith(rel) {
             AggregatePlan.agg(Lists.newArrayList(stack.pop()), rel)
           }
         }
@@ -120,7 +122,17 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
     }
   }
 
-  private def actionWithCache(rel: KapRel)(body: => DataFrame): DataFrame = {
+  def actionWith(rel: KapRel)(body: => DataFrame): DataFrame = {
+    if (!dataframeCache) {
+      body
+    } else {
+      actionWithCache(rel) {
+        body
+      }
+    }
+  }
+
+  protected def actionWithCache(rel: KapRel)(body: => DataFrame): DataFrame = {
     var layoutId = 0L
     var modelId = ""
     var pruningSegmentHashCode = 0

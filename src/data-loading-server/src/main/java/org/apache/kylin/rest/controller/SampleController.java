@@ -22,7 +22,10 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 
 import java.io.IOException;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.RefreshSegmentsRequest;
 import org.apache.kylin.rest.request.SamplingRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -97,7 +100,9 @@ public class SampleController extends BaseController {
     @ResponseBody
     public EnvelopeResponse<String> submitSampling(@RequestBody SamplingRequest request) {
         checkProjectName(request.getProject());
-        checkParamLength("tag", request.getTag(), 1024);
+        ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(request.getProject());
+        checkParamLength("tag", request.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         TableSamplingService.checkSamplingRows(request.getRows());
         TableSamplingService.checkSamplingTable(request.getQualifiedTableName());
         validatePriority(request.getPriority());

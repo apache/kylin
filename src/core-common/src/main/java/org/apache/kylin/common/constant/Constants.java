@@ -50,4 +50,11 @@ public class Constants {
     public static final String KYLIN_SOURCE_JDBC_DRIVER_KEY = "kylin.source.jdbc.driver";
 
     public static final String UNLIMITED = "Unlimited";
+
+    public static final String SNAPSHOT_AUTO_REFRESH = "snapshot_auto_refresh";
+    public static final String VIEW_MAPPING = "view_mapping";
+    public static final String SOURCE_TABLE_STATS = "source_table_stats";
+    public static final String SNAPSHOT_JOB = "snapshot_job";
+    public static final String MARK = "_mark";
+    public static final String BACKSLASH = "/";
 }

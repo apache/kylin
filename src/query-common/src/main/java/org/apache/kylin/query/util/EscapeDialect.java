@@ -86,6 +86,11 @@ public abstract class EscapeDialect {
         public String defaultConversion(String functionName, String[] args) {
             return EscapeFunction.scalarFN(functionName, args);
         }
+
+        @Override
+        public String transformDataType(String type) {
+            return type.equalsIgnoreCase("STRING") ? "VARCHAR" : type;
+        }
     };
 
     /**

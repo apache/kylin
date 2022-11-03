@@ -15,21 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.kyligence.kap.secondstorage.factory;
 
-import com.google.common.base.Preconditions;
-import io.kyligence.kap.secondstorage.config.SecondStorageProperties;
-import io.kyligence.kap.secondstorage.database.DatabaseOperator;
-import io.kyligence.kap.secondstorage.database.QueryOperator;
-import io.kyligence.kap.secondstorage.metadata.MetadataOperator;
+package io.kyligence.kap.secondstorage.factory;
 
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.base.Preconditions;
+
+import io.kyligence.kap.secondstorage.config.SecondStorageProperties;
+import io.kyligence.kap.secondstorage.database.DatabaseOperator;
+import io.kyligence.kap.secondstorage.database.QueryOperator;
+import io.kyligence.kap.secondstorage.ddl.DDLOperator;
+import io.kyligence.kap.secondstorage.metadata.MetadataOperator;
+
 public class SecondStorageFactoryUtils {
     private static final Map<Class<? extends SecondStorageFactory>, SecondStorageFactory> FACTORY_MAP = new ConcurrentHashMap<>();
 
+    private SecondStorageFactoryUtils() {
+        // can't new
+    }
+    
     public static void register(Class<? extends SecondStorageFactory> type, SecondStorageFactory factory) {
         Preconditions.checkArgument(type.isAssignableFrom(factory.getClass()), String.format(Locale.ROOT, "type %s is not assignable from %s",
                 type.getName(), factory.getClass().getName()));
@@ -50,5 +57,10 @@ public class SecondStorageFactoryUtils {
     public static QueryOperator createQueryMetricOperator(String project) {
         SecondStorageQueryOperatorFactory factory = (SecondStorageQueryOperatorFactory) FACTORY_MAP.get(SecondStorageQueryOperatorFactory.class);
         return factory.getQueryOperator(project);
+    }
+
+    public static DDLOperator createSecondaryDDLOperator(){
+        SecondStorageIndexFactory factory = (SecondStorageIndexFactory) FACTORY_MAP.get(SecondStorageIndexFactory.class);
+        return factory.createDDLOperator();
     }
 }

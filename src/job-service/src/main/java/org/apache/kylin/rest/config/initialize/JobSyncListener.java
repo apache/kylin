@@ -18,22 +18,20 @@
 
 package org.apache.kylin.rest.config.initialize;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeCommon.NON_KE_EXCEPTION;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.Base64;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.net.ssl.SSLContext;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
+import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -64,7 +62,6 @@ import org.apache.kylin.common.scheduler.JobFinishedNotifier;
 import org.apache.kylin.common.scheduler.JobReadyNotifier;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
@@ -72,32 +69,36 @@ import org.apache.kylin.job.manager.SegmentAutoMergeUtil;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TimeRange;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.rest.constant.SnapshotStatus;
 import org.apache.kylin.rest.response.SegmentPartitionResponse;
 import org.apache.kylin.rest.util.SpringContext;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import javax.net.ssl.SSLContext;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Base64;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
-import io.micrometer.core.instrument.DistributionSummary;
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static org.apache.kylin.common.exception.code.ErrorCodeCommon.NON_KE_EXCEPTION;
 
 @Slf4j
 @Component
 public class JobSyncListener {
     private static final long RETRY_INTERVAL = 5000L;
     private static final int MAX_RETRY_COUNT = 5;
+    private static String URL;
 
     private static class SimpleHttpRequestRetryHandler implements HttpRequestRetryHandler {
 
@@ -106,8 +107,8 @@ public class JobSyncListener {
             if (exception == null) {
                 return false;
             }
-            log.info("Trigger SimpleHttpRequestRetryHandler, exception : " + exception.getClass().getName()
-                    + ", retryTimes : " + retryTimes);
+            log.info("Trigger SimpleHttpRequestRetryHandler, url: {}, exception: {}, retryTimes: {}", URL,
+                    exception.getClass().getName(), retryTimes);
             return retryTimes < MAX_RETRY_COUNT;
         }
     }
@@ -117,7 +118,7 @@ public class JobSyncListener {
         @Override
         public boolean retryRequest(HttpResponse httpResponse, int executionCount, HttpContext httpContext) {
             int statusCode = httpResponse.getStatusLine().getStatusCode();
-            log.info("status code: {}, execution count: {}", statusCode, executionCount);
+            log.info("url: {}, status code: {}, execution count: {}", URL, statusCode, executionCount);
             return executionCount < MAX_RETRY_COUNT && statusCode != HttpStatus.SC_OK;
         }
 
@@ -177,37 +178,43 @@ public class JobSyncListener {
     }
 
     static JobInfo extractJobInfo(JobFinishedNotifier notifier) {
-        Set<String> segmentIds = notifier.getSegmentIds();
-        String project = notifier.getProject();
-        String dfID = notifier.getSubject();
-        NDataflowManager manager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-        NDataflow dataflow = manager.getDataflow(dfID);
         List<SegRange> segRangeList = Lists.newArrayList();
         List<SegmentPartitionsInfo> segmentPartitionsInfoList = Lists.newArrayList();
-        if (dataflow != null && CollectionUtils.isNotEmpty(segmentIds)) {
-            val model = dataflow.getModel();
-            val partitionDesc = model.getMultiPartitionDesc();
-            segmentIds.forEach(id -> {
-                NDataSegment segment = dataflow.getSegment(id);
-                if (segment == null) {
-                    return;
-                }
-                TimeRange segRange = segment.getTSRange();
-                segRangeList.add(new SegRange(id, segRange.getStart(), segRange.getEnd()));
-                if (partitionDesc != null && notifier.getSegmentPartitionsMap().get(id) != null
-                        && !notifier.getSegmentPartitionsMap().get(id).isEmpty()) {
-                    List<SegmentPartitionResponse> segmentPartitionResponseList = segment.getMultiPartitions().stream()
-                            .filter(segmentPartition -> notifier.getSegmentPartitionsMap().get(id)
-                                    .contains(segmentPartition.getPartitionId()))
-                            .map(partition -> {
-                                val partitionInfo = partitionDesc.getPartitionInfo(partition.getPartitionId());
-                                return new SegmentPartitionResponse(partitionInfo.getId(), partitionInfo.getValues(),
-                                        partition.getStatus(), partition.getLastBuildTime(), partition.getSourceCount(),
-                                        partition.getStorageSize());
-                            }).collect(Collectors.toList());
-                    segmentPartitionsInfoList.add(new SegmentPartitionsInfo(id, segmentPartitionResponseList));
-                }
-            });
+        String project = notifier.getProject();
+        String subject = notifier.getSubject();
+        NTableMetadataManager nTableMetadataManager = NTableMetadataManager
+                .getInstance(KylinConfig.getInstanceFromEnv(), project);
+        TableDesc tableDesc = nTableMetadataManager.getTableDesc(subject);
+        if (tableDesc == null) {
+            Set<String> segmentIds = notifier.getSegmentIds();
+            NDataflowManager nDataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+            NDataflow dataflow = nDataflowManager.getDataflow(subject);
+            if (dataflow != null && CollectionUtils.isNotEmpty(segmentIds)) {
+                val model = dataflow.getModel();
+                val partitionDesc = model.getMultiPartitionDesc();
+                segmentIds.forEach(id -> {
+                    NDataSegment segment = dataflow.getSegment(id);
+                    if (segment == null) {
+                        return;
+                    }
+                    TimeRange segRange = segment.getTSRange();
+                    segRangeList.add(new SegRange(id, segRange.getStart(), segRange.getEnd()));
+                    if (partitionDesc != null && notifier.getSegmentPartitionsMap().get(id) != null
+                            && !notifier.getSegmentPartitionsMap().get(id).isEmpty()) {
+                        List<SegmentPartitionResponse> segmentPartitionResponseList = segment
+                                .getMultiPartitions().stream().filter(segmentPartition -> notifier
+                                        .getSegmentPartitionsMap().get(id).contains(segmentPartition.getPartitionId()))
+                                .map(partition -> {
+                                    val partitionInfo = partitionDesc.getPartitionInfo(partition.getPartitionId());
+                                    return new SegmentPartitionResponse(partitionInfo.getId(),
+                                            partitionInfo.getValues(), partition.getStatus(),
+                                            partition.getLastBuildTime(), partition.getSourceCount(),
+                                            partition.getStorageSize());
+                                }).collect(Collectors.toList());
+                        segmentPartitionsInfoList.add(new SegmentPartitionsInfo(id, segmentPartitionResponseList));
+                    }
+                });
+            }
         }
 
         String errorCode = null;
@@ -236,14 +243,27 @@ public class JobSyncListener {
             }
         }
         return JobInfo.builder().jobId(notifier.getJobId()).project(notifier.getProject())
-                .modelId(notifier.getSubject()).segmentIds(notifier.getSegmentIds()).indexIds(notifier.getLayoutIds())
-                .duration(notifier.getDuration())
+                .modelId(tableDesc == null ? notifier.getSubject() : null).segmentIds(notifier.getSegmentIds())
+                .indexIds(notifier.getLayoutIds()).duration(notifier.getDuration())
                 .state("SUICIDAL".equalsIgnoreCase(notifier.getJobState()) ? "DISCARDED" : notifier.getJobState())
                 .jobType(notifier.getJobType()).segRanges(segRangeList)
-                .segmentPartitionInfoList(segmentPartitionsInfoList).startTime(notifier.getStartTime())
-                .endTime(notifier.getEndTime()).tag(notifier.getTag()).errorCode(errorCode).suggestion(suggestion)
-                .msg(msg).code(code).stacktrace(stacktrace).build();
+                .segmentPartitionInfoList(segmentPartitionsInfoList)
+                .snapshotJobInfo(getSnapshotJobInfo(tableDesc, notifier))
+                .startTime(notifier.getStartTime()).endTime(notifier.getEndTime()).tag(notifier.getTag())
+                .errorCode(errorCode).suggestion(suggestion).msg(msg).code(code).stacktrace(stacktrace).build();
 
+    }
+    
+    private static SnapshotJobInfo getSnapshotJobInfo(TableDesc tableDesc, JobFinishedNotifier notifier) {
+        SnapshotJobInfo snapshotJobInfo = null;
+        if (tableDesc != null && (JobTypeEnum.SNAPSHOT_BUILD.toString().equals(notifier.getJobType())
+                || JobTypeEnum.SNAPSHOT_REFRESH.toString().equals(notifier.getJobType()))) {
+            snapshotJobInfo = SnapshotJobInfo.builder().table(tableDesc.getName()).database(tableDesc.getDatabase())
+                    .totalRows(tableDesc.getSnapshotTotalRows()).storage(tableDesc.getLastSnapshotSize())
+                    .status(getSnapshotJobStatus(tableDesc)).lastModifiedTime(tableDesc.getSnapshotLastModified())
+                    .selectPartitionCol(tableDesc.getSelectedSnapshotPartitionCol()).build();
+        }
+        return snapshotJobInfo;
     }
 
     @Getter
@@ -280,6 +300,9 @@ public class JobSyncListener {
 
         @JsonProperty("segment_partition_info")
         private List<SegmentPartitionsInfo> segmentPartitionInfoList;
+
+        @JsonProperty("snapshot_job_info")
+        private SnapshotJobInfo snapshotJobInfo;
 
         @JsonProperty("start_time")
         private long startTime;
@@ -339,11 +362,34 @@ public class JobSyncListener {
         }
     }
 
+    @Setter
+    @Getter
+    @Builder
+    static class SnapshotJobInfo {
+        @JsonProperty("table")
+        private String table;
+        @JsonProperty("database")
+        private String database;
+        @JsonProperty("total_rows")
+        private long totalRows;
+        @JsonProperty("storage")
+        private long storage;
+        @JsonProperty("last_modified_time")
+        private long lastModifiedTime;
+        @JsonProperty("status")
+        private SnapshotStatus status;
+        @JsonProperty("select_partition_col")
+        private String selectPartitionCol;
+    }
+
     static void postJobInfo(JobInfo info) {
-        String url = KylinConfig.getInstanceFromEnv().getJobFinishedNotifierUrl();
-        log.info("post job info parameter, url : {}, state : {}, segmentId : {}", url, info.getState(),
-                info.getSegmentIds());
-        if (url == null || "READY".equalsIgnoreCase(info.getState())) {
+        URL = KylinConfig.getInstanceFromEnv().getJobFinishedNotifierUrl();
+        log.info("post job info parameter, url : {}, state : {}, segmentId : {}, table : {}", URL, info.getState(),
+                info.getSegmentIds(),
+                info.getSnapshotJobInfo() != null
+                        ? info.getSnapshotJobInfo().getDatabase() + "." + info.getSnapshotJobInfo().getTable()
+                        : null);
+        if (URL == null || "READY".equalsIgnoreCase(info.getState())) {
             return;
         }
 
@@ -352,7 +398,7 @@ public class JobSyncListener {
                 .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).setDefaultRequestConfig(config)
                 .setRetryHandler(new SimpleHttpRequestRetryHandler())
                 .setServiceUnavailableRetryStrategy(new SimpleServiceUnavailableRetryStrategy()).build()) {
-            HttpPost httpPost = new HttpPost(url);
+            HttpPost httpPost = new HttpPost(URL);
             httpPost.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
             String username = KylinConfig.getInstanceFromEnv().getJobFinishedNotifierUsername();
             String password = KylinConfig.getInstanceFromEnv().getJobFinishedNotifierPassword();
@@ -365,12 +411,24 @@ public class JobSyncListener {
             HttpResponse response = httpClient.execute(httpPost);
             int code = response.getStatusLine().getStatusCode();
             if (code == HttpStatus.SC_OK) {
-                log.info("Post job info to " + url + " successful.");
+                log.info("Post job info to " + URL + " successful.");
             } else {
-                log.info("Post job info to " + url + " failed. Status code: " + code);
+                log.info("Post job info to " + URL + " failed. Status code: " + code);
             }
         } catch (IOException e) {
             log.warn("Error occurred when post job status.", e);
+        }
+    }
+
+    private static SnapshotStatus getSnapshotJobStatus(TableDesc tableDesc) {
+        if (tableDesc.isSnapshotHasBroken()) {
+            return SnapshotStatus.BROKEN;
+        }
+        boolean hasSnapshot = StringUtils.isNotEmpty(tableDesc.getLastSnapshotPath());
+        if (hasSnapshot) {
+            return SnapshotStatus.ONLINE;
+        } else {
+            return SnapshotStatus.OFFLINE;
         }
     }
 

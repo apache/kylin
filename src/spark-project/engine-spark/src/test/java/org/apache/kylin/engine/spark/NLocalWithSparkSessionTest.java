@@ -17,15 +17,10 @@
  */
 package org.apache.kylin.engine.spark;
 
-import java.io.File;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
-
+import com.google.common.base.Preconditions;
+import io.kyligence.kap.engine.spark.job.NSparkMergingJob;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.util.Shell;
@@ -33,7 +28,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
-import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -66,17 +60,21 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.sparkproject.guava.collect.Sets;
 
-import com.google.common.base.Preconditions;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import java.io.File;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Random;
+import java.util.Set;
 
 @Slf4j
 public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase implements Serializable {
 
     private static final String CSV_TABLE_DIR = TempMetadataBuilder.TEMP_TEST_METADATA + "/data/%s.csv";
 
-    protected static final String KAP_SQL_BASE_DIR = "../kylin-it/src/test/resources/query";
+    protected static final String KAP_SQL_BASE_DIR = "../kap-it/src/test/resources/query";
 
     protected static SparkConf sparkConf;
     protected static SparkSession ss;
@@ -106,14 +104,22 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
         sparkConf.set(StaticSQLConf.WAREHOUSE_PATH().key(),
                 TempMetadataBuilder.TEMP_TEST_METADATA + "/spark-warehouse");
 
-        sparkConf.set("spark.sql.legacy.parquet.int96RebaseModeInWrite", "LEGACY");
-        sparkConf.set("spark.sql.legacy.parquet.datetimeRebaseModeInWrite", "LEGACY");
-        sparkConf.set("spark.sql.legacy.parquet.int96RebaseModeInRead", "CORRECTED");
-        sparkConf.set("spark.sql.legacy.parquet.datetimeRebaseModeInRead", "CORRECTED");
+        sparkConf.set("spark.sql.parquet.int96RebaseModeInWrite", "LEGACY");
+        sparkConf.set("spark.sql.parquet.datetimeRebaseModeInWrite", "LEGACY");
+        sparkConf.set("spark.sql.parquet.int96RebaseModeInRead", "CORRECTED");
+        sparkConf.set("spark.sql.parquet.datetimeRebaseModeInRead", "CORRECTED");
         sparkConf.set("spark.sql.legacy.timeParserPolicy", "LEGACY");
         sparkConf.set("spark.sql.parquet.mergeSchema", "true");
         sparkConf.set("spark.sql.legacy.allowNegativeScaleOfDecimal", "true");
         sparkConf.set("spark.sql.broadcastTimeout", "900");
+
+        if (!sparkConf.getOption("spark.sql.extensions").isEmpty()) {
+            sparkConf.set("spark.sql.extensions",
+                    sparkConf.get("spark.sql.extensions") + ", io.delta.sql.DeltaSparkSessionExtension");
+        } else {
+            sparkConf.set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension");
+        }
+        sparkConf.set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog");
         ss = SparkSession.builder().withExtensions(ext -> {
             ext.injectOptimizerRule(ss -> new ConvertInnerJoinToSemiJoin());
             return null;
@@ -132,6 +138,10 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
     @Before
     public void setUp() throws Exception {
         overwriteSystemProp("calcite.keep-in-clause", "true");
+        overwriteSystemProp("kylin.build.resource.consecutive-idle-state-num", "1");
+        overwriteSystemProp("kylin.build.resource.state-check-interval-seconds", "1s");
+        overwriteSystemProp("kylin.engine.spark.build-job-progress-reporter", //
+                "org.apache.kylin.engine.spark.job.MockJobProgressReport");
         this.createTestMetadata();
         ExecutableUtils.initJobFactory();
         Random r = new Random(10000);
@@ -170,7 +180,7 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
         Preconditions.checkArgument(projectInstance != null);
         for (String table : projectInstance.getTables()) {
 
-            if ("DEFAULT.STREAMING_TABLE".equals(table)) {
+            if ("DEFAULT.STREAMING_TABLE".equals(table) || "DEFAULT.TEST_SNAPSHOT_TABLE".equals(table)) {
                 continue;
             }
 

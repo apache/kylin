@@ -36,7 +36,6 @@ import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.MissingRootPersistentEntity;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -208,17 +207,18 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
     }
 
     @Override
-    public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments) {
-        return NDataflowCapabilityChecker.check(this, prunedSegments, digest);
+    public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
+            Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
+        return NDataflowCapabilityChecker.check(this, prunedSegments, digest, secondStorageSegmentLayoutMap);
     }
 
     @Override
     public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            List<NDataSegment> prunedStreamingSegments) {
+            List<NDataSegment> prunedStreamingSegments, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
         if (isStreaming()) {
-            return isCapable(digest, prunedStreamingSegments);
+            return isCapable(digest, prunedStreamingSegments, secondStorageSegmentLayoutMap);
         } else {
-            return isCapable(digest, prunedSegments);
+            return isCapable(digest, prunedSegments, secondStorageSegmentLayoutMap);
         }
     }
 
@@ -245,11 +245,6 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
     @Override
     public Set<TblColRef> getAllColumns() {
         return getIndexPlan().listAllTblColRefs();
-    }
-
-    @Override
-    public Set<ColumnDesc> getAllColumnDescs() {
-        return getIndexPlan().listAllColumnDescs();
     }
 
     @Override

@@ -28,12 +28,12 @@ import java.util.Objects;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.job.constant.JobStatusEnum;
-import org.apache.kylin.rest.response.EnvelopeResponse;
-import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.controller.BaseController;
 import org.apache.kylin.rest.request.JobFilter;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.service.JobService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -85,6 +85,8 @@ public class JobControllerV2 extends BaseController {
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize,
             @RequestParam(value = "sortBy", required = false, defaultValue = "last_modified") String sortBy,
             @RequestParam(value = "reverse", required = false, defaultValue = "true") Boolean reverse) {
+        checkNonNegativeIntegerArg("pageOffset", pageOffset);
+        checkNonNegativeIntegerArg("pageSize", pageSize);
         List<String> statuses = Lists.newArrayList();
         for (Integer code : status) {
             JobStatusEnum jobStatus = JobStatusEnum.getByCode(code);

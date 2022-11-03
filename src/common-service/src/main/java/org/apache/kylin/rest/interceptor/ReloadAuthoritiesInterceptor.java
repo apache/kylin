@@ -34,7 +34,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.response.ErrorResponse;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.Order;

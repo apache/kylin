@@ -49,7 +49,7 @@ import org.mockito.Mockito;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import io.kyligence.kap.engine.spark.job.ParamsConstants;
+import org.apache.kylin.engine.spark.job.ParamsConstants;
 
 public class SparkApplicationTest extends NLocalWithSparkSessionTest {
 

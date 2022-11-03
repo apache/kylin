@@ -246,7 +246,8 @@ public class NTableController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, loadTableResponse, "");
     }
 
-    @ApiOperation(value = "loadAWSTablesCompatibleCrossAccount", tags = {"KC" },
+
+    @ApiOperation(value = "loadAWSTablesCompatibleCrossAccount", tags = {"KC"},
             notes = "Update Body: data_source_type, need_sampling, sampling_rows, data_source_properties")
     @PostMapping(value = "/compatibility/aws")
     @ResponseBody

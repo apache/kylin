@@ -4,7 +4,7 @@
   "version" : "3.0.0.0",
   "mvcc" : -1,
   "conds" : [ {
-    "@class" : "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
+    "@class" : "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
     "leftThreshold" : null,
     "rightThreshold" : "ADMIN"
   } ],

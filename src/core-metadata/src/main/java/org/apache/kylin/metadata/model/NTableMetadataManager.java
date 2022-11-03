@@ -27,7 +27,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
@@ -69,8 +68,8 @@ public class NTableMetadataManager {
 
     // ============================================================================
 
-    private KylinConfig config;
-    private String project;
+    private final KylinConfig config;
+    private final String project;
 
     private CachedCrudAssist<TableDesc> srcTableCrud;
     private CachedCrudAssist<TableExtDesc> srcExtCrud;
@@ -119,22 +118,10 @@ public class NTableMetadataManager {
         return listAllTables().stream().collect(groupingBy(TableDesc::getDatabase));
     }
 
-    public Set<String> listDatabases() {
-        return listDatabases(false);
-    }
-
-    public Set<String> listDatabases(boolean filterStreamingDatabase) {
-        if (!filterStreamingDatabase) {
-            return listAllTables().stream().map(TableDesc::getDatabase).map(name -> name.toUpperCase(Locale.ROOT))
-                    .collect(Collectors.toSet());
-        }
-        return listAllTables().stream().filter(this::tableAccessible).map(TableDesc::getDatabase)
-                .map(name -> name.toUpperCase(Locale.ROOT)).collect(Collectors.toSet());
-    }
-
-    public boolean tableAccessible(TableDesc tableDesc) {
-        return KylinConfig.getInstanceFromEnv().streamingEnabled()
-                || tableDesc.getSourceType() != ISourceAware.ID_STREAMING;
+    public Map<String, List<TableDesc>> dbToTablesMap(boolean streamingEnabled) {
+        return listAllTables().stream() //
+                .filter(table -> table.isAccessible(streamingEnabled)) //
+                .collect(groupingBy(table -> table.getDatabase().toUpperCase(Locale.ROOT), Collectors.toList()));
     }
 
     public Map<String, TableDesc> getAllTablesMap() {
@@ -173,7 +160,6 @@ public class NTableMetadataManager {
     public TableExtDesc copyForWrite(TableExtDesc tableExtDesc) {
         return srcExtCrud.copyForWrite(tableExtDesc);
     }
-
 
     public void saveSourceTable(TableDesc srcTable) {
         srcTable.init(project);
@@ -217,9 +203,6 @@ public class NTableMetadataManager {
 
     /**
      * Get table extended info. Keys are defined in {@link MetadataConstants}
-     *
-     * @param tableName
-     * @return
      */
     public TableExtDesc getOrCreateTableExt(String tableName) {
         TableDesc t = getTableDesc(tableName);
@@ -304,7 +287,7 @@ public class NTableMetadataManager {
                 attrs.putAll(JsonUtil.readValue(is, HashMap.class));
             }
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            throw new IllegalStateException(ex);
         }
 
         String cardinality = attrs.get(MetadataConstants.TABLE_EXD_CARDINALITY);
@@ -324,15 +307,6 @@ public class NTableMetadataManager {
             throw new IllegalStateException("tableDesc " + tableDesc.getName() + "does not exist");
         }
         saveSourceTable(tableDesc);
-    }
-
-    /**
-     * Streaming table can't be accessed when streaming disabled
-     * @return
-     */
-    public static boolean isTableAccessible(TableDesc tableDesc) {
-        return KylinConfig.getInstanceFromEnv().streamingEnabled()
-                || tableDesc.getSourceType() != ISourceAware.ID_STREAMING;
     }
 
 }

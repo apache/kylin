@@ -108,6 +108,29 @@ public class ImportModelContextTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testPrepareIdChangedMapWithTombColumn() throws NoSuchMethodException {
+        NDataModelManager originalDataModelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                "original_project");
+        NDataModel originalModel = originalDataModelManager.getDataModelDescByAlias("ssb_model");
+
+        NDataModel targetDataModel = originalDataModelManager.copyForWrite(originalModel);
+        NDataModel.NamedColumn tombCol = targetDataModel.getAllNamedColumns().get(28);
+        val copy = NDataModel.NamedColumn.copy(tombCol);
+        copy.setId(30);
+        targetDataModel.getAllNamedColumns().add(copy);
+
+        Method prepareIdChangedMapMethod = ImportModelContext.class.getDeclaredMethod("prepareIdChangedMap",
+                NDataModel.class, NDataModel.class);
+
+        Unsafe.changeAccessibleObject(prepareIdChangedMapMethod, true);
+        Map<Integer, Integer> idChangedMap = (Map<Integer, Integer>) ReflectionUtils
+                .invokeMethod(prepareIdChangedMapMethod, ImportModelContext.class, originalModel, targetDataModel);
+
+        Assert.assertEquals(1, idChangedMap.size());
+        Assert.assertSame(29, idChangedMap.get(30));
+    }
+
+    @Test
     public void testTableNameContainsProjectName() throws IOException {
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/table_name_contains_project_name/LINEORDER_model_metadata_2020_11_14_17_11_19_25E6007633A4793DB1790C2E5D3B940A.zip");

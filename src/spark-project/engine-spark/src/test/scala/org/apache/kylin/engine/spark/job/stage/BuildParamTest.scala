@@ -47,6 +47,10 @@ class BuildParamTest extends AnyFunSuite {
     param.setCachedLayoutDS(mutable.HashMap[Long, Dataset[Row]]())
     assert(Objects.nonNull(param.getCachedLayoutDS))
 
+    param.setCachedLayoutPartitionDS(mutable.HashMap[Long, mutable.HashMap[Long, Dataset[Row]]
+    ]())
+    assert(Objects.nonNull(param.getCachedLayoutPartitionDS))
+
     param.setCachedLayoutSanity(Some(Map(1L -> 10001L)))
     assert(param.getCachedLayoutSanity.isDefined)
 

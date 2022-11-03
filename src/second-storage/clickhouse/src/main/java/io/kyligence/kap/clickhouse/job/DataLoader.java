@@ -18,39 +18,31 @@
 
 package io.kyligence.kap.clickhouse.job;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.datatype.DataType;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
 import io.kyligence.kap.secondstorage.ColumnMapping;
-import io.kyligence.kap.secondstorage.SecondStorageConcurrentTestUtil;
 import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
 import io.kyligence.kap.secondstorage.ddl.exp.ColumnWithType;
 import io.kyligence.kap.secondstorage.metadata.TableData;
 import io.kyligence.kap.secondstorage.util.SecondStorageDateUtils;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Getter;
 import lombok.val;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.kylin.common.util.NamedThreadFactory;
-import org.apache.kylin.common.util.SetThreadName;
-import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.metadata.datatype.DataType;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DataLoader {
@@ -100,14 +92,26 @@ public class DataLoader {
         throw new UnsupportedOperationException("");
     }
 
-    static List<ColumnWithType> columns(LayoutEntity layout, String partitionCol, boolean addPrefix) {
+    static List<ColumnWithType> columns(Map<String, String> columnTypeMap, LayoutEntity layout, String partitionCol, boolean addPrefix) {
         List<ColumnWithType> cols = new ArrayList<>();
         layout.getOrderedDimensions()
-                .forEach((k, v) -> cols.add(new ColumnWithType(
-                        addPrefix ? getPrefixColumn(String.valueOf(k)) : String.valueOf(k), clickHouseType(v.getType()),
+                .forEach((k, v) -> {
+                    String colType = columnTypeMap.get(getPrefixColumn(String.valueOf(k)));
+                    cols.add(new ColumnWithType(
+                        addPrefix ? getPrefixColumn(String.valueOf(k)) : String.valueOf(k),
+                        colType == null ? clickHouseType(v.getType()) : colType,
                         // partition column must not be null
-                        v.getColumnDesc().isNullable() && !String.valueOf(k).equals(partitionCol), true)));
+                        colType == null && v.getColumnDesc().isNullable() && !String.valueOf(k).equals(partitionCol),
+                        true));
+                });
         return cols;
+    }
+
+    static List<String> orderColumns(LayoutEntity layout, List<Integer> orderCols, boolean addPrefix) {
+        val orderedDimensions = layout.getOrderedDimensions();
+        return orderCols.stream().filter(orderedDimensions::containsKey)
+                .map(column -> addPrefix ? getPrefixColumn(String.valueOf(column)) : String.valueOf(column))
+                .collect(Collectors.toList());
     }
 
     static String getPrefixColumn(String col) {
@@ -116,22 +120,51 @@ public class DataLoader {
 
     private final String executableId;
     private final String database;
-    private final Function<LayoutEntity, String> prefixTableName;
     private final Engine tableEngine;
     private final boolean isIncremental;
+    private final List<LoadInfo> loadInfoBatch;
+    private final LoadContext loadContext;
+    private final List<ShardLoader> shardLoaders;
+    private final Map<String, List<ClickhouseLoadFileLoad>> singleFileLoaderPerNode;
+    @Getter
+    private final LoadContext.CompletedSegmentKeyUtil segmentKey;
+    @Getter
+    private final String segmentId;
 
-    public DataLoader(String executableId, String database, Function<LayoutEntity, String> prefixTableName, Engine tableEngine, boolean isIncremental) {
+    public DataLoader(String executableId,
+                      String database,
+                      Engine tableEngine,
+                      boolean isIncremental,
+                      List<LoadInfo> loadInfoBatch,
+                      LoadContext loadContext) {
         this.executableId = executableId;
         this.database = database;
-        this.prefixTableName = prefixTableName;
         this.tableEngine = tableEngine;
         this.isIncremental = isIncremental;
+        this.loadInfoBatch = loadInfoBatch;
+        this.loadContext = loadContext;
+        int totalJdbcNum = loadInfoBatch.stream().mapToInt(item -> item.getNodeNames().length).sum();
+        this.shardLoaders = new ArrayList<>(totalJdbcNum + 2);
+        this.segmentId = loadInfoBatch.get(0).getSegmentId();
+        this.segmentKey = new LoadContext.CompletedSegmentKeyUtil(loadInfoBatch.get(0).getLayout().getId());
+        this.singleFileLoaderPerNode = new HashMap<>();
+        toSingleFileLoaderPerNode();
     }
 
-    public boolean load(List<LoadInfo> loadInfoBatch, LoadContext loadContext) throws InterruptedException, ExecutionException, SQLException {
-        val totalJdbcNum = loadInfoBatch.stream().mapToInt(item -> item.getNodeNames().length).sum();
+    public List<ShardLoader> getShardLoaders() {
+        return shardLoaders == null ? Collections.emptyList() : shardLoaders;
+    }
 
-        List<ShardLoader> shardLoaders = new ArrayList<>(totalJdbcNum + 2);
+    public Map<String, List<ClickhouseLoadFileLoad>> getSingleFileLoaderPerNode() {
+        return singleFileLoaderPerNode;
+    }
+
+    private void toSingleFileLoaderPerNode() {
+        // skip segment when committed
+        if (loadContext.getHistorySegments(segmentKey).contains(this.segmentId)) {
+            return;
+        }
+
         // After new shard is created, JDBC Connection is Ready.
         for (val loadInfo : loadInfoBatch) {
             String[] nodeNames = loadInfo.getNodeNames();
@@ -141,10 +174,11 @@ public class DataLoader {
                 final String nodeName = nodeNames[idx];
                 final List<String> listParquet = loadInfo.getShardFiles().get(idx);
 
-                val builder = ShardLoader.ShardLoadContext.builder().jdbcURL(SecondStorageNodeHelper.resolve(nodeName))
-                        .executableId(executableId)
-                        .database(database).layout(loadInfo.getLayout()).parquetFiles(listParquet)
-                        .tableEngine(tableEngine).destTableName(prefixTableName.apply(loadInfo.getLayout()));
+                val builder = ShardLoader.ShardLoadContext.builder().nodeName(nodeName)
+                        .jdbcURL(SecondStorageNodeHelper.resolve(nodeName)).executableId(executableId)
+                        .segmentId(loadInfo.segmentId).database(database).layout(loadInfo.getLayout())
+                        .parquetFiles(listParquet).tableEngine(tableEngine).destTableName(loadInfo.getTargetTable())
+                        .loadContext(loadContext).tableEntity(loadInfo.getTableEntity());
                 if (isIncremental) {
                     String partitionColName = loadInfo.model.getPartitionDesc().getPartitionDateColumn();
                     val dateCol = loadInfo.model.getAllNamedColumns().stream()
@@ -159,89 +193,71 @@ public class DataLoader {
                             .targetPartitions(SecondStorageDateUtils.splitByDay(loadInfo.segment.getSegRange()));
                 }
 
-
                 val needDropTable = getNeedDropTable(loadInfo);
                 builder.needDropTable(needDropTable);
                 builder.needDropPartition(getNeedDropPartition(loadInfo, needDropTable));
 
                 ShardLoader.ShardLoadContext context = builder.build();
-                loadInfo.setTargetDatabase(database);
-                loadInfo.setTargetTable(prefixTableName.apply(loadInfo.getLayout()));
-                shardLoaders.add(new ShardLoader(context));
-            }
-        }
+                List<ClickhouseLoadFileLoad> clickhouseLoadFileLoads = singleFileLoaderPerNode.computeIfAbsent(nodeName, k -> new ArrayList<>());
+                ShardLoader shardLoader = new ShardLoader(context);
 
-        // skip segment when committed
-        val segmentKey = new LoadContext.CompletedSegmentKeyUtil(loadInfoBatch.get(0).getLayout().getId());
-        if (loadContext.getHistorySegments(segmentKey).contains(loadInfoBatch.get(0).getSegmentId())) return false;
-
-        final ExecutorService executorService = new ThreadPoolExecutor(totalJdbcNum, totalJdbcNum, 0L,
-                TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), new NamedThreadFactory("LoadWoker"));
-        CountDownLatch latch = new CountDownLatch(totalJdbcNum);
-        List<Future<?>> futureList = Lists.newArrayList();
-
-        AtomicBoolean stopFlag = new AtomicBoolean();
-        SecondStorageConcurrentTestUtil.wait(SecondStorageConcurrentTestUtil.WAIT_PAUSED);
-
-        for (ShardLoader shardLoader : shardLoaders) {
-            Future<?> future = executorService.submit(() -> {
-                String replicaName = shardLoader.getClickHouse().getShardName();
-                val fileKey = new LoadContext.CompletedFileKeyUtil(replicaName, shardLoader.getLayout().getId());
-                try (SetThreadName ignored = new SetThreadName("Shard %s", replicaName)) {
-                    log.info("Load parquet files into {}", replicaName);
-                    shardLoader.setup(loadContext.isNewJob());
-                    val files = shardLoader.loadDataIntoTempTable(
-                            loadContext.getHistory(fileKey),
-                            stopFlag);
-                    files.forEach(file -> loadContext.finishSingleFile(fileKey, file));
-                    // save progress
-                    return true;
-                } finally {
-                    latch.countDown();
-                }
-            });
-            futureList.add(future);
-        }
-        boolean paused;
-        do {
-            stopFlag.set(loadContext.getJobStatus() == ExecutableState.DISCARDED
-                    || loadContext.getJobStatus() == ExecutableState.PAUSED);
-            paused = loadContext.getJobStatus() == ExecutableState.PAUSED;
-        } while (!latch.await(5, TimeUnit.SECONDS));
-
-        try {
-            for (Future<?> future : futureList) {
-                future.get();
-            }
-            SecondStorageConcurrentTestUtil.wait(SecondStorageConcurrentTestUtil.WAIT_BEFORE_COMMIT);
-            paused = loadContext.getJob().isPaused();
-            stopFlag.set(loadContext.getJob().isDiscarded() || paused);
-            if (!stopFlag.get()) {
-                // commit data when job finish normally
-                for (ShardLoader shardLoader : shardLoaders) {
-                        shardLoader.commit();
-                }
-                loadContext.finishSegment(loadInfoBatch.get(0).getSegmentId(), segmentKey);
-            }
-            SecondStorageConcurrentTestUtil.wait(SecondStorageConcurrentTestUtil.WAIT_AFTER_COMMIT);
-            return paused;
-        } catch (SQLException e) {
-            for (ShardLoader shardLoader : shardLoaders) {
-                shardLoader.cleanIncrementLoad();
-            }
-            return ExceptionUtils.rethrow(e);
-        } finally {
-            for (ShardLoader shardLoader : shardLoaders) {
-                // if paused skip clean insert temp table
-                shardLoader.cleanUpQuietly(paused);
-            }
-
-            if (!executorService.isShutdown()) {
-                executorService.shutdown();
+                clickhouseLoadFileLoads.addAll(shardLoader.toSingleFileLoader());
+                shardLoaders.add(shardLoader);
             }
         }
     }
 
+    public Map<String, List<ClickhouseLoadPartitionDrop>> getLoadCommitDropPartitions() {
+        Map<String, List<ClickhouseLoadPartitionDrop>> dropPartitions = new HashMap<>();
+        for (ShardLoader shardLoader : this.getShardLoaders()) {
+            ImmutableList.Builder<String> needDropPartitionTableBuilder = ImmutableList.builder();
+            needDropPartitionTableBuilder.add(shardLoader.getDestTableName());
+            if (shardLoader.getNeedDropPartition() != null) {
+                needDropPartitionTableBuilder.addAll(shardLoader.getNeedDropPartition());
+            }
+            val needDropPartitionTables = needDropPartitionTableBuilder.build();
+
+            if (shardLoader.isIncremental()) {
+                List<ClickhouseLoadPartitionDrop> dropPartitionShard = dropPartitions
+                        .computeIfAbsent(shardLoader.getNodeName(), k -> new ArrayList<>());
+                dropPartitionShard.addAll(shardLoader.getTargetPartitions().stream().map(
+                        partition -> new ClickhouseLoadPartitionDrop(needDropPartitionTables, partition, shardLoader))
+                        .collect(Collectors.toList()));
+            }
+        }
+        return dropPartitions;
+    }
+
+    public Map<String, List<ClickhouseLoadPartitionCommit>> getLoadCommitMovePartitions() throws SQLException {
+        Map<String, List<ClickhouseLoadPartitionCommit>> movePartitions = new HashMap<>();
+        for (ShardLoader shardLoader : this.getShardLoaders()) {
+            List<ClickhouseLoadPartitionCommit> movePartitionNode = movePartitions
+                    .computeIfAbsent(shardLoader.getNodeName(), k -> new ArrayList<>());
+            if (shardLoader.isIncremental()) {
+                movePartitionNode.addAll(shardLoader.getInsertTempTablePartition().stream()
+                        .map(partition -> new ClickhouseLoadPartitionCommit(partition, shardLoader))
+                        .collect(Collectors.toList()));
+            } else {
+                movePartitionNode.add(new ClickhouseLoadPartitionCommit(null, shardLoader));
+            }
+        }
+        return movePartitions;
+    }
+
+    public Map<String, List<ClickhouseLoadPartitionDrop>> getLoadCommitExceptionPartitions() throws SQLException {
+        Map<String, List<ClickhouseLoadPartitionDrop>> movePartitions = new HashMap<>();
+        for (ShardLoader shardLoader : this.getShardLoaders()) {
+            if (shardLoader.isIncremental()) {
+                List<ClickhouseLoadPartitionDrop> dropPartitionShard = movePartitions
+                        .computeIfAbsent(shardLoader.getNodeName(), k -> new ArrayList<>());
+                dropPartitionShard.addAll(shardLoader.getInsertTempTablePartition().stream()
+                        .map(partition -> new ClickhouseLoadPartitionDrop(
+                                Collections.singletonList(shardLoader.getDestTableName()), partition, shardLoader))
+                        .collect(Collectors.toList()));
+            }
+        }
+        return movePartitions;
+    }
 
     private Set<String> getNeedDropTable(LoadInfo loadInfo) {
         return loadInfo.containsOldSegmentTableData.stream().filter(tableData -> {
@@ -256,5 +272,4 @@ public class DataLoader {
                 .map(TableData::getTable)
                 .collect(Collectors.toSet());
     }
-
 }

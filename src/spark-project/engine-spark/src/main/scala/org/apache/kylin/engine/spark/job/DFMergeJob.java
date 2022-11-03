@@ -61,7 +61,7 @@ import com.google.common.collect.Maps;
 import lombok.val;
 
 /**
- * After KE 4.3, we use {@link org.apache.kylin.engine.spark.job.SegmentMergeJob} to merge segment
+ * After KE 4.3, we use {@link io.kyligence.kap.engine.spark.job.SegmentMergeJob} to merge segment
  */
 @Deprecated
 public class DFMergeJob extends SparkApplication {

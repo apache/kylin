@@ -25,20 +25,35 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import io.kyligence.kap.secondstorage.SecondStorageLockUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.SegmentOnlineMode;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.JobStoppedException;
@@ -46,20 +61,29 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.spark.sql.execution.datasources.jdbc.ShardOptions;
-
-import com.google.common.base.Preconditions;
-
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.spark.sql.execution.datasources.jdbc.ShardOptions;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+
 import io.kyligence.kap.secondstorage.NameUtil;
 import io.kyligence.kap.secondstorage.SecondStorage;
+import io.kyligence.kap.secondstorage.SecondStorageConcurrentTestUtil;
+import io.kyligence.kap.secondstorage.SecondStorageLockUtils;
+import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
 import io.kyligence.kap.secondstorage.metadata.Manager;
@@ -69,6 +93,7 @@ import io.kyligence.kap.secondstorage.metadata.SegmentFileStatus;
 import io.kyligence.kap.secondstorage.metadata.TableEntity;
 import io.kyligence.kap.secondstorage.metadata.TableFlow;
 import io.kyligence.kap.secondstorage.metadata.TablePlan;
+import io.kyligence.kap.secondstorage.response.SecondStorageNode;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,7 +108,7 @@ public class ClickHouseLoad extends AbstractExecutable {
     private static String indexPath(String workingDir, String dataflowID, String segmentID, long layoutID) {
         return String.format(Locale.ROOT, "%s%s/%s/%d", workingDir, dataflowID, segmentID, layoutID);
     }
-
+    
     private List<List<LoadInfo>> loadInfos = null;
     private LoadContext loadContext;
 
@@ -109,11 +134,12 @@ public class ClickHouseLoad extends AbstractExecutable {
 
     private Engine createTableEngine() {
         val sourceType = getTableSourceType();
-        return new Engine(sourceType.getTableEngineType(), getUtParam(ROOT_PATH), getUtParam(SOURCE_URL), sourceType);
+        return new Engine(sourceType, getUtParam(ROOT_PATH), getUtParam(SOURCE_URL));
     }
 
-    private boolean isAzurePlatform() {
-        return KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory().startsWith("wasb");
+    public boolean isAzurePlatform() {
+        String workingDirectory = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
+        return workingDirectory.startsWith("wasb") || workingDirectory.startsWith("abfs");
     }
 
     private boolean isAwsPlatform() {
@@ -124,16 +150,18 @@ public class ClickHouseLoad extends AbstractExecutable {
         return KylinConfig.getInstanceFromEnv().isUTEnv();
     }
 
-    private TableSourceType getTableSourceType() {
-        TableSourceType sourceType = TableSourceType.HDFS;
+    private AbstractTableSource getTableSourceType() {
+        AbstractTableSource tableSource;
         if (isAwsPlatform()) {
-            sourceType = TableSourceType.S3;
+            tableSource = new S3TableSource();
         } else if (isAzurePlatform()) {
-            sourceType = TableSourceType.BLOB;
+            tableSource = new BlobTableSource();
         } else if (isUt()) {
-            sourceType = TableSourceType.UT;
+            tableSource = new UtTableSource();
+        } else {
+            tableSource = new HdfsTableSource();
         }
-        return sourceType;
+        return tableSource;
     }
 
     protected String[] selectInstances(String[] nodeNames, int shardNumber) {
@@ -141,28 +169,41 @@ public class ClickHouseLoad extends AbstractExecutable {
             return nodeNames;
         throw new UnsupportedOperationException();
     }
-
+    
     protected FileProvider getFileProvider(NDataflow df, String segmentId, long layoutId) {
-        final String workingDir = KapConfig.wrap(df.getConfig()).getReadParquetStoragePath(df.getProject());
-        String segmentLayoutRoot = indexPath(workingDir, df.getId(), segmentId, layoutId);
+        String segmentLayoutRoot;
+        if (JobSchedulerModeEnum.CHAIN.toString().equalsIgnoreCase(df.getConfig().getJobSchedulerMode())) {
+            final String workingDir = KapConfig.wrap(df.getConfig()).getReadParquetStoragePath(df.getProject());
+            segmentLayoutRoot = indexPath(workingDir, df.getId(), segmentId, layoutId);
+            logger.info("Tiered storage load segment {} layout {} from index path {}", segmentId, layoutId,
+                    segmentLayoutRoot);
+        } else {
+            segmentLayoutRoot = getConfig().getFlatTableDir(getProject(), df.getId(), segmentId).toString();
+            logger.info("Tiered storage load segment {} layout {} from flat table path {}", segmentId, layoutId,
+                    segmentLayoutRoot);
+        }
         return new SegmentFileProvider(segmentLayoutRoot);
     }
 
-    private List<LoadInfo> distributeLoad(NDataflow dataFlow,
-                                          IndexPlan indexPlan,
-                                          TablePlan tablePlan,
-                                          String[] nodeNames,
-                                          TableFlow tableFlow) {
-        return getLayoutIds().stream()
-                .map(indexPlan::getLayoutEntity)
+    private List<LoadInfo> distributeLoad(MethodContext mc, String[] nodeNames) {
+        return mc.layoutIds.stream()
+                .map(mc.indexPlan()::getLayoutEntity)
                 .filter(SecondStorageUtil::isBaseTableIndex)
-                .flatMap(layoutEntity ->
-                        getSegmentIds().stream()
-                                .filter(segmentId -> dataFlow.getSegment(segmentId).getLayoutsMap().containsKey(layoutEntity.getId()))
-                                .map(segmentId ->
-                                        genLoadInfoBySegmentId(segmentId, nodeNames, layoutEntity, tablePlan, dataFlow, tableFlow)
-                                )
+                .flatMap(layoutEntity -> mc.segmentIds.stream()
+                        .filter(segmentId -> filterLayoutBySegmentId(mc, segmentId, layoutEntity.getId()))
+                        .map(segmentId -> getLoadInfo(segmentId, layoutEntity, mc, nodeNames))
                 ).collect(Collectors.toList());
+    }
+
+    private boolean filterLayoutBySegmentId(MethodContext mc, String segmentId, long layoutId) {
+        return isDAGJobScheduler() || mc.df.getSegment(segmentId).getLayoutsMap().containsKey(layoutId);
+    }
+
+    private LoadInfo getLoadInfo(String segmentId, LayoutEntity layoutEntity, MethodContext mc, String[] nodeNames) {
+        LoadInfo loadInfo = genLoadInfoBySegmentId(segmentId, nodeNames, layoutEntity, mc.tablePlan(), mc.df, mc.tableFlow());
+        loadInfo.setTargetDatabase(mc.database);
+        loadInfo.setTargetTable(mc.prefixTableName.apply(loadInfo.getLayout()));
+        return loadInfo;
     }
 
     private LoadInfo genLoadInfoBySegmentId(String segmentId, String[] nodeNames, LayoutEntity currentLayoutEntity,
@@ -172,7 +213,7 @@ public class ClickHouseLoad extends AbstractExecutable {
         int shardNumber = Math.min(nodeNames.length, tableEntity.getShardNumbers());
         return LoadInfo.distribute(selectInstances(nodeNames, shardNumber), dataFlow.getModel(),
                 dataFlow.getSegment(segmentId), getFileProvider(dataFlow, segmentId, currentLayoutEntity.getId()),
-                currentLayoutEntity, tableFlow);
+                currentLayoutEntity, tableFlow, tableEntity);
     }
 
     public static class MethodContext {
@@ -182,6 +223,9 @@ public class ClickHouseLoad extends AbstractExecutable {
         private final NDataflow df;
         private final String database;
         private final Function<LayoutEntity, String> prefixTableName;
+        private final Set<Long> layoutIds;
+        private final Set<String> segmentIds;
+        private final boolean isIncremental;
 
         MethodContext(ClickHouseLoad load) {
             this.project = load.getProject();
@@ -190,7 +234,11 @@ public class ClickHouseLoad extends AbstractExecutable {
             final NDataflowManager dfMgr = NDataflowManager.getInstance(config, load.getProject());
             this.df = dfMgr.getDataflow(dataflowId);
             this.database = NameUtil.getDatabase(df);
-            this.prefixTableName = s -> NameUtil.getTable(df, s.getId());
+            this.prefixTableName = layoutEntity -> NameUtil.getTable(df, layoutEntity.getId());
+            this.layoutIds = load.getLayoutIds();
+            this.segmentIds = load.getSegmentIds();
+            this.isIncremental = df.getSegments().stream().filter(segment -> segmentIds.contains(segment.getId()))
+                    .noneMatch(segment -> segment.getSegRange().isInfinite());
         }
 
         IndexPlan indexPlan() {
@@ -207,21 +255,12 @@ public class ClickHouseLoad extends AbstractExecutable {
                     .orElseThrow(() -> new IllegalStateException(" no table flow found"));
         }
 
-        boolean isIncremental(Set<String> segIds) {
-            return this.df.getSegments().stream().filter(segment -> segIds.contains(segment.getId()))
-                    .noneMatch(segment -> segment.getSegRange().isInfinite());
-        }
-
         public String getProject() {
             return project;
         }
 
         public String getDataflowId() {
             return dataflowId;
-        }
-
-        public KylinConfig getConfig() {
-            return config;
         }
 
         public NDataflow getDf() {
@@ -239,6 +278,7 @@ public class ClickHouseLoad extends AbstractExecutable {
 
     /**
      * update load info before use it。 For example, refresh job will set old segment id to load info.
+     *
      * @param infoList
      * @return new loadInfo list
      */
@@ -259,12 +299,17 @@ public class ClickHouseLoad extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    public ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        if (!SecondStorageUtil.isModelEnable(getProject(), getParam(NBatchConstants.P_DATAFLOW_ID))) {
+            return ExecuteResult.createSkip();
+        }
         SegmentRange<Long> range = new SegmentRange.TimePartitionedSegmentRange(getDataRangeStart(), getDataRangeEnd());
         SecondStorageLockUtils.acquireLock(getTargetModelId(), range).lock();
+
         try {
             init();
             preCheck();
+
             final MethodContext mc = new MethodContext(this);
             return wrapWithExecuteException(() -> {
                 Manager<NodeGroup> nodeGroupManager = SecondStorage.nodeGroupManager(mc.config, mc.project);
@@ -275,15 +320,17 @@ public class ClickHouseLoad extends AbstractExecutable {
                         return ExecuteResult.createSkip();
                     }
                 }
+
+                waitFlatTableStepEnd();
+
                 String[][] nodeGroups = new String[allGroup.size()][];
-                log.info("project={} replica, nodeGroup {}", project, nodeGroups);
+                logger.info("project={} replica, nodeGroup {}", project, nodeGroups);
                 ListIterator<NodeGroup> it = allGroup.listIterator();
                 while (it.hasNext()) {
                     nodeGroups[it.nextIndex()] = it.next().getNodeNames().toArray(new String[0]);
                 }
                 ShardOptions options = new ShardOptions(ShardOptions.buildReplicaSharding(nodeGroups));
-                boolean isIncremental = mc.isIncremental(getSegmentIds());
-                DataLoader dataLoader = new DataLoader(getId(), mc.getDatabase(), mc.getPrefixTableName(), createTableEngine(), isIncremental);
+
                 val replicaShards = options.replicaShards();
                 val replicaNum = replicaShards.length;
                 List<List<LoadInfo>> tempLoadInfos = new ArrayList<>();
@@ -299,11 +346,10 @@ public class ClickHouseLoad extends AbstractExecutable {
                 }));
 
                 int[] indexInGroup = getIndexInGroup(replicaShards[0], nodeSizeMap);
-                log.info("project={} indexInGroup={}", project, indexInGroup);
+                logger.info("project={} indexInGroup={}", project, indexInGroup);
 
                 for (val shards : replicaShards) {
-                    List<LoadInfo> infoList = distributeLoad(mc.df, mc.indexPlan(), mc.tablePlan(),
-                            orderGroupByIndex(shards, indexInGroup), mc.tableFlow());
+                    List<LoadInfo> infoList = distributeLoad(mc, orderGroupByIndex(shards, indexInGroup));
                     infoList = preprocessLoadInfo(infoList);
                     tempLoadInfos.add(infoList);
                 }
@@ -315,7 +361,7 @@ public class ClickHouseLoad extends AbstractExecutable {
                     return loadInfoBatch;
                 }).sorted(Comparator.comparing(infoBatch -> infoBatch.get(0).getSegmentId())).collect(Collectors.toList());
 
-                loadData(dataLoader);
+                loadData(mc);
                 updateMeta();
                 return ExecuteResult.createSucceed();
             });
@@ -324,39 +370,225 @@ public class ClickHouseLoad extends AbstractExecutable {
         }
     }
 
-    private void loadData(DataLoader dataLoader) throws InterruptedException, ExecutionException, SQLException, JobStoppedException {
-        for (List<LoadInfo> infoBatch : loadInfos) {
-            // if paused, stop load
-            if (dataLoader.load(infoBatch, this.loadContext)) break;
+    private void loadData(MethodContext mc)
+            throws InterruptedException, ExecutionException, SQLException, JobStoppedException {
+        List<DataLoader> dataLoaders = loadInfos.stream()
+                .map(loadInfo -> new DataLoader(getId(), mc.getDatabase(), createTableEngine(), mc.isIncremental,
+                        loadInfo, this.loadContext))
+                .filter(dataLoader -> !loadContext.getHistorySegments(dataLoader.getSegmentKey()).contains(dataLoader.getSegmentId()))
+                .collect(Collectors.toList());
+        List<ShardLoader> shardLoaders = dataLoaders.stream()
+                .flatMap(dataLoader -> dataLoader.getShardLoaders().stream()).collect(Collectors.toList());
+
+        try {
+            checkResumeFileCorrect(dataLoaders, loadContext);
+            for (ShardLoader shardLoader : shardLoaders) {
+                shardLoader.setup(loadContext.isNewJob());
+            }
+            loadToTemp(dataLoaders, mc.dataflowId);
+            waitDFSEnd(getParentId());
+            SecondStorageConcurrentTestUtil.wait(SecondStorageConcurrentTestUtil.WAIT_BEFORE_COMMIT);
+            if (!isStop()) {
+                // if load in commit, can't stop job
+                beforeDataCommit();
+                commitLoad(dataLoaders, shardLoaders, mc.dataflowId);
+            }
+        } finally {
+            // if paused skip clean insert temp table
+            boolean isPaused = isPauseOrError();
+            shardLoaders.forEach(shardLoader -> shardLoader.cleanUpQuietly(isPaused));
+            jobStopHandle(false);
         }
-        if (isPaused()) {
-            saveState(false);
+    }
+
+    public void checkResumeFileCorrect(List<DataLoader> dataLoaders, LoadContext loadContext) {
+        if (loadContext.isNewJob()) {
+            return;
         }
-        if (isPaused() || isDiscarded()) {
-            throw new JobStoppedException("job stop manually.");
+        Set<String> allFiles = new HashSet<>();
+        dataLoaders.forEach(dataLoader -> dataLoader.getSingleFileLoaderPerNode().values()
+                .forEach(fileLoaders -> fileLoaders.forEach(fileLoader -> allFiles.add(fileLoader.getParquetFile()))));
+        if (allFiles.isEmpty()) {
+            return;
         }
+        for (List<String> loadedFiles : loadContext.getHistory().values()) {
+            if (!allFiles.containsAll(loadedFiles)) {
+                throw new IllegalStateException("The file status changed after pausing, please try to resume");
+            }
+        }
+    }
+
+    private void executeTasks(ExecutorService executorService, List<Runnable> tasks, AtomicBoolean stopFlag,
+            CountDownLatch latch, AtomicInteger currentProcessCnt, BooleanSupplier isStop)
+            throws InterruptedException, ExecutionException {
+        List<Future<?>> futureList = Lists.newArrayList();
+
+        for (Runnable task : tasks) {
+            futureList.add(executorService.submit(task));
+        }
+
+        do {
+            boolean stopStatus = isStop.getAsBoolean();
+            if (stopStatus) {
+                stopFlag.set(true);
+            }
+            logger.info("Tiered storage process is {}", currentProcessCnt.get());
+        } while (!latch.await(5, TimeUnit.SECONDS));
+
+        for (Future<?> future : futureList) {
+            future.get();
+        }
+    }
+
+    public void loadToTemp(List<DataLoader> dataLoaders, String modelId)
+            throws ExecutionException, InterruptedException {
+        List<SecondStorageNode> nodes = SecondStorageUtil.listProjectNodes(getProject());
+        final NDataflowManager dfMgr = NDataflowManager.getInstance(getConfig(), getProject());
+        int processCnt = dfMgr.getDataflow(modelId).getConfig().getSecondStorageLoadThreadsPerJob();
+        logger.info("Tiered storage load file start. Load file concurrency is {}", processCnt);
+        Map<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> partitionsNode = getFileLoaders(dataLoaders);
+        int pollSize = nodes.size() * processCnt;
+        final ExecutorService executorService = new ThreadPoolExecutor(pollSize, pollSize, 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(), new NamedThreadFactory("ClickhouseLoadFileWorker"));
+        try {
+            doLoadDataAction(executorService, partitionsNode, processCnt, this::isStop);
+        } finally {
+            if (!executorService.isShutdown()) {
+                executorService.shutdown();
+            }
+        }
+    }
+
+    public void commitLoad(List<DataLoader> dataLoaders, List<ShardLoader> shardLoaders, String modelId)
+            throws SQLException, ExecutionException, InterruptedException {
+        for (ShardLoader shardLoader : shardLoaders) {
+            shardLoader.createDestTableIgnoreExist();
+        }
+        List<SecondStorageNode> nodes = SecondStorageUtil.listProjectNodes(getProject());
+        final NDataflowManager dfMgr = NDataflowManager.getInstance(getConfig(), getProject());
+        int processCnt = dfMgr.getDataflow(modelId).getConfig().getSecondStorageCommitThreadsPerJob();
+        logger.info("Tiered storage commit file start. Commit file concurrency is {}", processCnt);
+        int pollSize = nodes.size() * processCnt;
+        final ExecutorService executorService = new ThreadPoolExecutor(pollSize, pollSize, 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(), new NamedThreadFactory("ClickhouseCommitLoadWorker"));
+        try {
+            val dropPartitionsNode = getBeforeCommitDropPartitions(dataLoaders);
+            if (!dropPartitionsNode.isEmpty()) {
+                doLoadDataAction(executorService, dropPartitionsNode, processCnt, () -> false);
+            }
+            val movePartitionsNode = getCommitMovePartitions(dataLoaders);
+            doLoadDataAction(executorService, movePartitionsNode, processCnt, () -> false);
+            dataLoaders.forEach(
+                    dataLoader -> loadContext.finishSegment(dataLoader.getSegmentId(), dataLoader.getSegmentKey()));
+        } catch (InterruptedException e) {
+            val exceptionPartitionsNode = getExceptionCommitDropPartitions(dataLoaders);
+            doLoadDataAction(executorService, exceptionPartitionsNode, processCnt, () -> false);
+            throw e;
+        } catch (Exception e) {
+            val exceptionPartitionsNode = getExceptionCommitDropPartitions(dataLoaders);
+            doLoadDataAction(executorService, exceptionPartitionsNode, processCnt, () -> false);
+            ExceptionUtils.rethrow(e);
+        } finally {
+            if (!executorService.isShutdown()) {
+                executorService.shutdown();
+            }
+            SecondStorageConcurrentTestUtil.wait(SecondStorageConcurrentTestUtil.WAIT_AFTER_COMMIT);
+        }
+    }
+
+    private void doLoadDataAction(ExecutorService executorService,
+            Map<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> partitionsNode, int processCnt,
+            BooleanSupplier isStop) throws ExecutionException, InterruptedException {
+        if (partitionsNode.isEmpty()) {
+            return;
+        }
+
+        int pollSize = partitionsNode.size() * processCnt;
+        CountDownLatch latch = new CountDownLatch(pollSize);
+        AtomicBoolean stopFlag = new AtomicBoolean(false);
+        AtomicInteger currentProcessCnt = new AtomicInteger(0);
+        AtomicBoolean isException = new AtomicBoolean(false);
+        List<Runnable> tasks = Lists.newArrayList();
+        for (Map.Entry<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> entry : partitionsNode.entrySet()) {
+            String nodeName = entry.getKey();
+            IntStream.range(0, processCnt).forEach(i -> tasks.add(() -> {
+                try (ClickHouse clickHouse = new ClickHouse(SecondStorageNodeHelper.resolve(nodeName))) {
+                    ConcurrentLinkedQueue<ClickhouseLoadActionUnit> actions = partitionsNode.get(nodeName);
+                    while (!actions.isEmpty() && !isException.get() && !stopFlag.get()) {
+                        ClickhouseLoadActionUnit action = actions.poll();
+                        if (action == null) {
+                            continue;
+                        }
+                        currentProcessCnt.incrementAndGet();
+                        action.doAction(clickHouse);
+                        currentProcessCnt.decrementAndGet();
+                    }
+                } catch (Exception e) {
+                    isException.set(true);
+                    currentProcessCnt.decrementAndGet();
+                    ExceptionUtils.rethrow(e);
+                } finally {
+                    latch.countDown();
+                }
+            }));
+        }
+        // can't stop commit step
+        executeTasks(executorService, tasks, stopFlag, latch, currentProcessCnt, isStop);
     }
 
     protected void updateMeta() {
         Preconditions.checkArgument(this.getLoadInfos() != null, "no load info found");
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             final MethodContext mc = new MethodContext(this);
-            val isIncrementalBuild = mc.isIncremental(getSegmentIds());
-            return mc.tableFlow()
+            val isIncrementalBuild = mc.isIncremental;
+            mc.tableFlow()
                     .update(copied -> this.getLoadInfos().stream().flatMap(Collection::stream)
                             .forEach(loadInfo -> loadInfo.upsertTableData(copied, mc.database,
                                     mc.prefixTableName.apply(loadInfo.getLayout()),
                                     isIncrementalBuild ? PartitionType.INCREMENTAL : PartitionType.FULL)));
-        }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+
+            updateDFSSegmentIfNeeded(mc);
+            return null;
+        }, project, 1, getEpochId());
     }
 
-    public boolean isDiscarded() {
-        return ExecutableState.DISCARDED == SecondStorageUtil.getJobStatus(project, getParentId());
+    protected void updateDFSSegmentIfNeeded(MethodContext mc) {
+        if (!SegmentOnlineMode.ANY.toString().equalsIgnoreCase(getProjectConfig().getKylinEngineSegmentOnlineMode())){
+            return;
+        }
+
+        if (!isDAGJobScheduler()){
+            return;
+        }
+
+        final NDataflowManager dfMgr = NDataflowManager.getInstance(getConfig(), getProject());
+        val dataflow = dfMgr.getDataflow(mc.getDataflowId()).copy();
+
+        NDataflowUpdate update = new NDataflowUpdate(mc.getDf().getId());
+        List<NDataSegment> toUpdateSegments = mc.segmentIds.stream()
+                .map(dataflow::getSegment)
+                .filter(Objects::nonNull)
+                .filter(segment -> segment.getStatus() == SegmentStatusEnum.NEW)
+                .peek(segment -> segment.setStatus(SegmentStatusEnum.READY)).collect(Collectors.toList());
+
+        if (!toUpdateSegments.isEmpty()){
+            update.setToUpdateSegs(toUpdateSegments.toArray(new NDataSegment[0]));
+            dfMgr.updateDataflowWithoutIndex(update);
+        }
+
+        markDFStatus(mc.dataflowId);
     }
 
-    public boolean isPaused() {
-        return ExecutableState.PAUSED == SecondStorageUtil.getJobStatus(project, getParentId());
+    protected void markDFStatus(String modelId) {
+        NDataflowManager dfManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject());
+        NDataflow df = dfManager.getDataflow(modelId);
+        boolean isOffline = dfManager.isOfflineModel(df);
+        RealizationStatusEnum status = df.getStatus();
+        if (RealizationStatusEnum.OFFLINE == status && !isOffline) {
+            dfManager.updateDataflowStatus(df.getId(), RealizationStatusEnum.ONLINE);
+        }
     }
+
 
     public void saveState(boolean saveEmpty) {
         Preconditions.checkNotNull(loadContext, "load context can't be null");
@@ -367,7 +599,7 @@ public class ClickHouseLoad extends AbstractExecutable {
             val manager = this.getManager();
             manager.updateJobOutput(getParentId(), null, info, null, null);
             return null;
-        }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, project, UnitOfWork.DEFAULT_MAX_RETRY, getEpochId(), getTempLockName());
     }
 
 
@@ -383,11 +615,12 @@ public class ClickHouseLoad extends AbstractExecutable {
 
     /**
      * index of group order by size
-     * @param group group
+     *
+     * @param group       group
      * @param nodeSizeMap node size
      * @return index of group order by size
      */
-    private int[] getIndexInGroup(String[] group, Map<String, Long> nodeSizeMap){
+    private int[] getIndexInGroup(String[] group, Map<String, Long> nodeSizeMap) {
         return IntStream.range(0, group.length)
                 .mapToObj(i -> new Pair<>(group[i], i))
                 .sorted(Comparator.comparing(c -> nodeSizeMap.getOrDefault(c.getFirst(), 0L)))
@@ -396,13 +629,175 @@ public class ClickHouseLoad extends AbstractExecutable {
 
     /**
      * order group by index
+     *
      * @param group group
      * @param index index
      * @return ordered group by index
      */
-    private String[] orderGroupByIndex(String[] group, int[] index){
+    private String[] orderGroupByIndex(String[] group, int[] index) {
         return IntStream.range(0, group.length)
                 .mapToObj(i -> group[index[i]])
                 .collect(Collectors.toList()).toArray(new String[]{});
+    }
+
+
+    private void waitFlatTableStepEnd() throws JobStoppedException, InterruptedException {
+        if (!isDAGJobScheduler()) return;
+
+        long waitSecond = getConfig().getSecondStorageWaitIndexBuildSecond();
+        String jobId = getParentId();
+        AbstractExecutable executable = getManager().getJob(jobId);
+        boolean isAllFlatTableSuccess;
+        do {
+            if (isStop()) {
+                break;
+            }
+
+            isAllFlatTableSuccess = isFlatTableSuccess(executable);
+
+            if (!isAllFlatTableSuccess) {
+                logger.info("Tiered storage is waiting flat table end");
+                TimeUnit.SECONDS.sleep(waitSecond);
+            }
+        } while (!isAllFlatTableSuccess);
+        jobStopHandle(true);
+
+        logger.info("Tiered storage load beginning");
+    }
+
+    protected boolean isFlatTableSuccess(AbstractExecutable executable) {
+        return SecondStorageUtil.checkBuildFlatTableIsSuccess(executable);
+    }
+
+    private void waitDFSEnd(String jobId) throws InterruptedException {
+        if (!needWaitDFSEnd()) {
+            return;
+        }
+
+        long waitSecond = getConfig().getSecondStorageWaitIndexBuildSecond();
+        AbstractExecutable executable = getManager().getJob(jobId);
+        boolean isDfsSuccess;
+
+        do {
+            if (isStop()) {
+                break;
+            }
+
+            isDfsSuccess = isDfsSuccess(executable);
+
+            if (!isDfsSuccess) {
+                logger.info("Tiered storage is waiting dfs end");
+                TimeUnit.SECONDS.sleep(waitSecond);
+            }
+        } while (!isDfsSuccess);
+
+        logger.info("Tiered storage continue after DFS end");
+    }
+
+    protected boolean isDfsSuccess(AbstractExecutable executable) {
+        return SecondStorageUtil.checkBuildDfsIsSuccess(executable);
+    }
+
+    protected boolean isDAGJobScheduler() {
+        return JobSchedulerModeEnum.DAG == getParent().getJobSchedulerMode();
+    }
+
+    protected boolean needWaitDFSEnd() {
+        if (!isDAGJobScheduler()) {
+            return false;
+        }
+
+        return !SegmentOnlineMode.ANY.toString().equalsIgnoreCase(getProjectConfig().getKylinEngineSegmentOnlineMode());
+    }
+
+    protected void beforeDataCommit() {
+        // Do nothing because function only used by refresh data.
+    }
+
+    protected void jobStopHandle(boolean isSaveEmpty) throws JobStoppedException {
+        if (!isStop()) {
+            return;
+        }
+
+        if (isPauseOrError()) {
+            saveState(isSaveEmpty);
+        }
+
+        if (isPaused() || isDiscarded()) {
+            throw new JobStoppedException("job stop manually.");
+        }
+
+        if (isStop()) {
+            throw new JobStoppedException("job stop by main task.");
+        }
+    }
+
+    public boolean isDiscarded() {
+        return ExecutableState.DISCARDED == SecondStorageUtil.getJobStatus(project, getParentId());
+    }
+
+    public boolean isPaused() {
+        // main task is error,and Tiered storage status change to paused
+        return ExecutableState.PAUSED == SecondStorageUtil.getJobStatus(project, getParentId());
+    }
+
+    public boolean isError() {
+        return ExecutableState.ERROR == SecondStorageUtil.getJobStatus(project, getParentId());
+    }
+
+    public boolean isSuicidal() {
+        return ExecutableState.SUICIDAL == SecondStorageUtil.getJobStatus(project, getParentId());
+    }
+
+    public boolean isStop() {
+        return isDiscarded() || isPaused() || isError() || isSuicidal();
+    }
+
+    public boolean isPauseOrError() {
+        return isPaused() || isError();
+    }
+
+    public KylinConfig getProjectConfig() {
+        return NProjectManager.getInstance(getConfig()).getProject(getProject()).getConfig();
+    }
+
+    private Map<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> getFileLoaders(List<DataLoader> dataLoaders) {
+        Map<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> fileLoaders = new HashMap<>(dataLoaders.size());
+        for (DataLoader dataLoader : dataLoaders) {
+            dataLoader.getSingleFileLoaderPerNode().forEach((nodeName, files) -> fileLoaders
+                    .computeIfAbsent(nodeName, v -> new ConcurrentLinkedQueue<>()).addAll(files));
+        }
+        return fileLoaders;
+    }
+
+    private Map<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> getBeforeCommitDropPartitions(
+            List<DataLoader> dataLoaders) {
+        Map<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> dropPartitions = new HashMap<>(dataLoaders.size());
+        for (DataLoader dataLoader : dataLoaders) {
+            dataLoader.getLoadCommitDropPartitions().forEach((nodeName, partition) -> dropPartitions
+                    .computeIfAbsent(nodeName, v -> new ConcurrentLinkedQueue<>()).addAll(partition));
+        }
+        return dropPartitions;
+    }
+
+    private Map<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> getCommitMovePartitions(
+            List<DataLoader> dataLoaders) throws SQLException {
+        Map<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> movePartitions = new HashMap<>(dataLoaders.size());
+        for (DataLoader dataLoader : dataLoaders) {
+            dataLoader.getLoadCommitMovePartitions().forEach((nodeName, partition) -> movePartitions
+                    .computeIfAbsent(nodeName, v -> new ConcurrentLinkedQueue<>()).addAll(partition));
+        }
+        return movePartitions;
+    }
+
+    private Map<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> getExceptionCommitDropPartitions(
+            List<DataLoader> dataLoaders) throws SQLException {
+        Map<String, ConcurrentLinkedQueue<ClickhouseLoadActionUnit>> exceptionPartitions = new HashMap<>(
+                dataLoaders.size());
+        for (DataLoader dataLoader : dataLoaders) {
+            dataLoader.getLoadCommitExceptionPartitions().forEach((nodeName, partition) -> exceptionPartitions
+                    .computeIfAbsent(nodeName, v -> new ConcurrentLinkedQueue<>()).addAll(partition));
+        }
+        return exceptionPartitions;
     }
 }

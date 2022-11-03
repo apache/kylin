@@ -543,4 +543,30 @@ public class SyncModelBuilderTest extends NLocalFileMetadataTestCase {
         expectColumns.add("TEST_KYLIN_FACT.TEST_TIME_ENC");
         Assert.assertEquals(set, expectColumns);
     }
+
+    @Test
+    public void testBuildSyncModelHavingCrossModelCC() throws Exception {
+        overwriteSystemProp("kylin.query.metadata.expose-computed-column", "true");
+
+        val project = "default";
+        val model1Id = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        val model2Id = "741ca86a-1f13-46da-a59f-95fb68615e3a";
+        val syncContext1 = SyncModelTestUtil.createSyncContext(project, model1Id, KylinConfig.getInstanceFromEnv());
+        val syncContext2 = SyncModelTestUtil.createSyncContext(project, model2Id, KylinConfig.getInstanceFromEnv());
+        syncContext1.setModelElement(SyncContext.ModelElement.AGG_INDEX_AND_TABLE_INDEX_COL);
+        syncContext2.setModelElement(SyncContext.ModelElement.AGG_INDEX_AND_TABLE_INDEX_COL);
+        prepareBasic(project);
+
+        TableauDatasourceModel datasource1 = (TableauDatasourceModel) BISyncTool.dumpToBISyncModel(syncContext1);
+        ByteArrayOutputStream outStream1 = new ByteArrayOutputStream();
+        datasource1.dump(outStream1);
+        Assert.assertEquals(getExpectedTds("/bisync_tableau/nmodel_basic_all_cols.tds"),
+                outStream1.toString(Charset.defaultCharset().name()));
+
+        TableauDatasourceModel datasource2 = (TableauDatasourceModel) BISyncTool.dumpToBISyncModel(syncContext2);
+        ByteArrayOutputStream outStream2 = new ByteArrayOutputStream();
+        datasource2.dump(outStream2);
+        Assert.assertEquals(getExpectedTds("/bisync_tableau/nmodel_basic_inner_all_cols.tds"),
+                outStream2.toString(Charset.defaultCharset().name()));
+    }
 }

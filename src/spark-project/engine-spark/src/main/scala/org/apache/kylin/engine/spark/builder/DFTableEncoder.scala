@@ -50,7 +50,7 @@ object DFTableEncoder extends Logging {
 
       val noEncodeCols = cols.asScala.filter(_.getType.isIntegerFamily).map {
         ref =>
-          val encodeColRef = convertFromDot(ref.getIdentity)
+          val encodeColRef = convertFromDot(ref.getBackTickIdentity)
           val aliasName = encodeColRef.concat(ENCODE_SUFFIX)
           col(encodeColRef).cast(LongType).as(aliasName)
       }.toSeq
@@ -65,7 +65,7 @@ object DFTableEncoder extends Logging {
         val bucketSize = globalDict.getBucketSizeOrDefault(seg.getConfig.getGlobalDictV2MinHashPartitions)
         val enlargedBucketSize = (((minBucketSize / bucketSize) + 1) * bucketSize).toInt
 
-        val encodeColRef = convertFromDot(ref.getIdentity)
+        val encodeColRef = convertFromDot(ref.getBackTickIdentity)
         val columnIndex = structType.fieldIndex(encodeColRef)
 
         val dictParams = Array(seg.getProject, ref.getTable, ref.getName, seg.getConfig.getHdfsWorkingDirectory)

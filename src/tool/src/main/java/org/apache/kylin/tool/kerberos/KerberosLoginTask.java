@@ -33,6 +33,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+/**
+ * KE-Process kerberos long-running scenario.
+ * @deprecated since 'ke-4.5.18.0'
+ * This implementation is no longer acceptable to fulfill in long-running scenario.
+ * Use {@link DelegationTokenManager} instead.
+ */
+@Deprecated
 public class KerberosLoginTask {
 
     private static final Logger logger = LoggerFactory.getLogger(KerberosLoginTask.class);
@@ -114,8 +121,7 @@ public class KerberosLoginTask {
                     + kapConfig.getKerberosKeytabPath() + ".");
             if (kapConfig.getKerberosPlatform().equals("Standard")) {
                 loginStandardKerberos();
-            } else if (kapConfig.getKerberosPlatform().equals(KapConfig.FI_PLATFORM)
-                    || kapConfig.getKerberosPlatform().equals(KapConfig.TDH_PLATFORM)) {
+            } else if (kapConfig.getKerberosPlatform().equals(KapConfig.FI_PLATFORM) || kapConfig.getKerberosPlatform().equals(KapConfig.TDH_PLATFORM)) {
                 loginNonStandardKerberos();
             }
         } catch (Exception e) {

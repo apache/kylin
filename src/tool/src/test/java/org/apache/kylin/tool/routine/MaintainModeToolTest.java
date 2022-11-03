@@ -22,7 +22,7 @@ import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 import org.apache.kylin.common.persistence.metadata.EpochStore;
 import org.apache.kylin.junit.annotation.JdbcMetadataInfo;
 import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import org.apache.kylin.tool.MaintainModeTool;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;

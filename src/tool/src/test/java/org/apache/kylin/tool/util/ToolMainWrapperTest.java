@@ -33,6 +33,10 @@ public class ToolMainWrapperTest {
             throw new RuntimeException("test");
         });
 
+        ToolMainWrapper.wrap(args, () -> {
+            throw new OutOfMemoryError("Java heap space");
+        });
+
         Thread.currentThread().setName("main");
     }
 

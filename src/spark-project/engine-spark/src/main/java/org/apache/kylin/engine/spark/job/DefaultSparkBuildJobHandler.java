@@ -50,8 +50,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.kyligence.kap.engine.spark.job.ISparkJobHandler;
-import io.kyligence.kap.engine.spark.job.SparkAppDescription;
 import io.kyligence.kap.guava20.shaded.common.util.concurrent.UncheckedTimeoutException;
 import lombok.val;
 
@@ -67,8 +65,8 @@ public class DefaultSparkBuildJobHandler implements ISparkJobHandler {
     private static final String EQUALS = "=";
 
     @Override
-    public void killOrphanApplicationIfExists(String project, String jobStepId, KylinConfig config,
-            Map<String, String> sparkConf) {
+    public void killOrphanApplicationIfExists(String project, String jobStepId, KylinConfig config, Boolean isSubmitting,
+                                              Map<String, String> sparkConf) {
         try {
             val sparkMaster = sparkConf.getOrDefault(SPARK_MASTER, "local");
             if (sparkMaster.startsWith("local")) {

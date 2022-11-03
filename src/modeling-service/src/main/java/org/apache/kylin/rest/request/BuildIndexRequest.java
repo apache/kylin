@@ -18,10 +18,12 @@
 
 package org.apache.kylin.rest.request;
 
+import org.apache.kylin.common.util.ArgsTypeJsonDeserializer;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import lombok.Data;
 
@@ -31,6 +33,7 @@ public class BuildIndexRequest implements ProjectInsensitiveRequest {
     @JsonProperty("project")
     private String project;
 
+    @JsonDeserialize(using = ArgsTypeJsonDeserializer.IntegerJsonDeserializer.class)
     private int priority = ExecutablePO.DEFAULT_PRIORITY;
 
     @JsonProperty("yarn_queue")

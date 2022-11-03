@@ -22,8 +22,6 @@ import java.util.Map;
 
 import org.apache.spark.sql.SparkSession;
 
-import io.kyligence.kap.engine.spark.job.EnviromentAdaptor;
-
 public class DefaultEnviromentAdaptor implements EnviromentAdaptor {
     @Override
     public Boolean prepareEnviroment(SparkSession spark, Map<String, String> params) {

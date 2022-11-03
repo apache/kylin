@@ -18,19 +18,23 @@
 
 package org.apache.kylin.common.util;
 
-import java.lang.reflect.Array;
+import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import org.apache.commons.collections.collection.CompositeCollection;
-import org.apache.commons.collections.iterators.EmptyIterator;
-import org.apache.commons.collections.iterators.IteratorChain;
+import javax.validation.constraints.NotNull;
+
+import io.kyligence.kap.guava20.shaded.common.base.Preconditions;
+import io.kyligence.kap.guava20.shaded.common.collect.Maps;
+import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import lombok.EqualsAndHashCode;
+import lombok.val;
 
 /**
  * <pre>
@@ -39,76 +43,45 @@ import org.apache.commons.collections.iterators.IteratorChain;
  * 2. The changes of the composite maps can be reflected in this view
  * </pre>
  */
-public class CompositeMapView implements Map {
+@EqualsAndHashCode(callSuper = false)
+public class CompositeMapView<K, V> extends AbstractMap<K, V> {
 
     /**
      * Array of all maps in the composite,
      * latter element has higher priority to be read and write
      * */
-    private final Map[] composite;
+    @EqualsAndHashCode.Include
+    private final Map<K, V>[] composite;
 
-    public CompositeMapView(Map one, Map two) {
-        this(new Map[] { one, two });
+    @SuppressWarnings("unchecked")
+    public CompositeMapView(@NotNull Map<K, V> one, @NotNull Map<K, V> two) {
+        Preconditions.checkNotNull(one);
+        Preconditions.checkNotNull(two);
+        this.composite = new Map[] { one, two };
     }
-
-    public CompositeMapView(Map[] composite) {
-        this.composite = composite;
-    }
-
 
     @Override
     public int size() {
-        throw new UnsupportedOperationException("Use size(boolean precise) instead.");
-    }
-
-    public int size(boolean precise) {
-        if (!precise) {
-            Set<Object> set = new HashSet<>();
-            for (int i = this.composite.length - 1; i >= 0; --i) {
-                set.addAll(this.composite[i].keySet());
-            }
-            return set.size();
-        } else {
-            int count = 0;
-            for (int i = this.composite.length - 1; i >= 0; --i) {
-                count += this.composite[i].size();
-            }
-            return count;
-        }
+        return this.keySet().size();
     }
 
     @Override
     public boolean isEmpty() {
-        for (int i = this.composite.length - 1; i >= 0; --i) {
-            if (!this.composite[i].isEmpty()) {
-                return false;
-            }
-        }
-        return true;
+        return Arrays.stream(composite).allMatch(Map::isEmpty);
     }
 
     @Override
     public boolean containsKey(Object key) {
-        for (int i = this.composite.length - 1; i >= 0; --i) {
-            if (this.composite[i].containsKey(key)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(composite).anyMatch(map -> map.containsKey(key));
     }
 
     @Override
     public boolean containsValue(Object value) {
-        for (int i = this.composite.length - 1; i >= 0; --i) {
-            if (this.composite[i].containsValue(value)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(composite).anyMatch(map -> map.containsValue(value));
     }
 
     @Override
-    public Object get(Object key) {
+    public V get(final Object key) {
         for (int i = this.composite.length - 1; i >= 0; --i) {
             if (this.composite[i].containsKey(key)) {
                 return this.composite[i].get(key);
@@ -118,12 +91,12 @@ public class CompositeMapView implements Map {
     }
 
     @Override
-    public Object put(Object key, Object value) {
+    public V put(K key, V value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Object remove(Object key) {
+    public V remove(Object key) {
         throw new UnsupportedOperationException();
     }
 
@@ -138,40 +111,27 @@ public class CompositeMapView implements Map {
     }
 
     @Override
-    public Object clone() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String toString() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Set<Object> keySet() {
-        Set[] keys = new Set[composite.length];
-        for (int i = 0; i < composite.length; i++) {
-            keys[i] = this.composite[i].keySet();
-        }
-        return new CompositeSetView(keys);
+    public Set<K> keySet() {
+        val keySet = Sets.<K> newHashSet();
+        Arrays.stream(composite).map(Map::keySet).forEach(keySet::addAll);
+        return keySet;
     }
 
     @Override
-    public Set<Map.Entry<Object, Object>> entrySet() {
-        Set[] entries = new Set[composite.length];
-        for (int i = 0; i < composite.length; i++) {
-            entries[i] = this.composite[i].entrySet();
-        }
-        return new CompositeSetView(entries);
+    public Set<Map.Entry<K, V>> entrySet() {
+        val compositeMap = Maps.<K, V> newHashMapWithExpectedSize(this.size());
+        Arrays.stream(composite).forEach(compositeMap::putAll);
+        return compositeMap.entrySet();
     }
 
     @Override
-    public Collection<Object> values() {
-        Collection[] values = new Collection[composite.length];
-        for (int i = 0; i < composite.length; i++) {
-            values[i] = this.composite[i].values();
-        }
-        return new CompositeCollectionView(values);
+    public Collection<V> values() {
+        return this.entrySet().stream().map(Entry::getValue).collect(Collectors.toList());
     }
 
     @Override
@@ -185,7 +145,7 @@ public class CompositeMapView implements Map {
     }
 
     @Override
-    public Object putIfAbsent(Object key, Object value) {
+    public V putIfAbsent(K key, V value) {
         throw new UnsupportedOperationException();
     }
 
@@ -195,154 +155,32 @@ public class CompositeMapView implements Map {
     }
 
     @Override
-    public boolean replace(Object key, Object oldValue, Object newValue) {
+    public boolean replace(K key, V oldValue, V newValue) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Object replace(Object key, Object value) {
+    public V replace(K key, V value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Object computeIfAbsent(Object key, Function mappingFunction) {
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Object computeIfPresent(Object key, BiFunction remappingFunction) {
+    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public synchronized Object compute(Object key, BiFunction remappingFunction) {
+    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public synchronized Object merge(Object key, Object value, BiFunction remappingFunction) {
+    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         throw new UnsupportedOperationException();
-    }
-
-    private static class CompositeCollectionView implements Collection {
-        protected Collection[] all;
-
-        public CompositeCollectionView(Collection[] colls) {
-            this.all = colls;
-        }
-
-        @Override
-        public int size() {
-            int size = 0;
-            for (int i = this.all.length - 1; i >= 0; i--) {
-                size += this.all[i].size();
-            }
-            return size;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            for (int i = this.all.length - 1; i >= 0; i--) {
-                if (!this.all[i].isEmpty()) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        @Override
-        public boolean contains(Object obj) {
-            for (int i = this.all.length - 1; i >= 0; i--) {
-                if (this.all[i].contains(obj)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public Iterator iterator() {
-            if (this.all.length == 0) {
-                return EmptyIterator.INSTANCE;
-            }
-            IteratorChain chain = new IteratorChain();
-            for (int i = 0; i < this.all.length; ++i) {
-                chain.addIterator(this.all[i].iterator());
-            }
-            return chain;
-        }
-
-        @Override
-        public Object[] toArray() {
-            final Object[] result = new Object[this.size()];
-            int i = 0;
-            for (Iterator it = this.iterator(); it.hasNext(); i++) {
-                result[i] = it.next();
-            }
-            return result;
-        }
-
-        @Override
-        public boolean add(Object o) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean remove(Object o) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean addAll(Collection c) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void clear() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean retainAll(Collection c) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean removeAll(Collection c) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean containsAll(Collection c) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Object[] toArray(Object[] array) {
-            int size = this.size();
-            Object[] result = null;
-            if (array.length >= size) {
-                result = array;
-            } else {
-                result = (Object[]) Array.newInstance(array.getClass().getComponentType(), size);
-            }
-
-            int offset = 0;
-            for (int i = 0; i < this.all.length; ++i) {
-                for (Iterator it = this.all[i].iterator(); it.hasNext();) {
-                    result[offset++] = it.next();
-                }
-            }
-            if (result.length > size) {
-                result[size] = null;
-            }
-            return result;
-        }
-    }
-
-    private static class CompositeSetView extends CompositeCollection implements Set {
-        public CompositeSetView(Collection[] colls) {
-            super(colls);
-        }
     }
 }

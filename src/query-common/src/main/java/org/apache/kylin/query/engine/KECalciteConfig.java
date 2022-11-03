@@ -53,7 +53,7 @@ public class KECalciteConfig extends CalciteConnectionConfigImpl {
 
     @Override
     public NullCollation defaultNullCollation() {
-        String nullCollation = kylinConfig.getCalciteExtrasProperties.get("defaultNullCollation");
+        String nullCollation = kylinConfig.getCalciteExtrasProperties().get("defaultNullCollation");
         if (null == nullCollation) {
             return NullCollation.HIGH;
         }

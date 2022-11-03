@@ -27,6 +27,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -49,7 +52,8 @@ public class KapGetClusterInfo {
     private static final String AVAILABLE_VIRTUAL_CORE = "availableVirtualCores";
     private static final String AVAILABLE_MEMORY = "availableMB";
     private String fileName = "cluster.info";
-
+    private String queueName = "";
+    private Configuration configuration = null;
     private String yarnMasterUrlBase;
 
     private Map<String, Integer> clusterMetricsMap = new HashMap<>();
@@ -61,12 +65,23 @@ public class KapGetClusterInfo {
         this.fileName = fileName;
     }
 
-    public static void main(String[] args) throws IOException, ShellException {
-        if (args.length != 1) {
-            System.out.println("Usage: KapGetClusterInfo fileName");
+    public KapGetClusterInfo(String fileName, String queue) {
+        this.fileName = fileName;
+        this.queueName = queue;
+        String confPath = System.getProperty("kylin.hadoop.conf.dir", HadoopUtil.getHadoopConfDir());
+        configuration = new Configuration();
+        configuration.addResource(new Path(confPath + File.separator + "core-site.xml"));
+        configuration.addResource(new Path(confPath + File.separator + "hdfs-site.xml"));
+        configuration.addResource(new Path(confPath + File.separator + "yarn-site.xml"));
+    }
+
+    public static void main(String[] args) throws IOException, ShellException, YarnException {
+        if (args.length < 1) {
+            logger.error("Usage: KapGetClusterInfo fileName [queue]");
             Unsafe.systemExit(1);
         }
-        KapGetClusterInfo kapSetupConcurrency = new KapGetClusterInfo(args[0]);
+        KapGetClusterInfo kapSetupConcurrency = args.length >= 2 ? new KapGetClusterInfo(args[0], args[1])
+                : new KapGetClusterInfo(args[0]);
         kapSetupConcurrency.getYarnMetrics();
         kapSetupConcurrency.saveToFile();
         Unsafe.systemExit(0);
@@ -80,29 +95,50 @@ public class KapGetClusterInfo {
                 return;
             }
         }
-        yarnMasterUrlBase = HadoopConfExtractor.extractYarnMasterUrl(HadoopUtil.getCurrentConfiguration());
+        if (this.configuration != null) {
+            yarnMasterUrlBase = HadoopConfExtractor.extractYarnMasterUrl(this.configuration);
+        } else {
+            yarnMasterUrlBase = HadoopConfExtractor.extractYarnMasterUrl(HadoopUtil.getCurrentConfiguration());
+        }
+
     }
 
-    public void getYarnMetrics() throws IOException, ShellException {
+    public void getYarnMetrics() throws IOException, ShellException, YarnException {
         extractYarnMasterHost();
         String url = yarnMasterUrlBase + YARN_METRICS_SUFFIX;
         String command = "curl -s -k --negotiate -u : " + url;
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         val patternedLogger = new BufferedLogger(logger);
-
         val response = config.getCliCommandExecutor().execute(command, patternedLogger).getCmd();
+        logger.info("yarn metrics response: {}", response);
+        Map<String, Integer> clusterMetricsInfos;
         if (response == null) {
             throw new IllegalStateException(
                     "Cannot get yarn metrics with url: " + yarnMasterUrlBase + YARN_METRICS_SUFFIX);
         }
 
-        logger.info("yarn metrics response: {}", response);
         JsonNode clusterMetrics;
         try {
             clusterMetrics = new ObjectMapper().readTree(response).path("clusterMetrics");
         } catch (Exception e) {
             logger.warn("Failed to get clusterMetrics from cluster.", e);
-            clusterMetrics = new ObjectMapper().readTree(SchedulerInfoCmdHelper.metricsInfo()).path("clusterMetrics");
+            try {
+                clusterMetrics = new ObjectMapper().readTree(SchedulerInfoCmdHelper.metricsInfo())
+                        .path("clusterMetrics");
+            } catch (IOException | RuntimeException exception) {
+                // If all previous attempts to access RM's REST API through curl cmd have failed
+                // try to use YARN SDK to obtain yarn cluster information
+                logger.warn("Failed to get clusterMetrics from cluster via SchedulerInfoCmdHelper.", exception);
+                YarnResourceInfoTool yarnClusterMetrics = new YarnResourceInfoTool();
+                if (this.queueName.equals("")) {
+                    clusterMetricsInfos = yarnClusterMetrics.getYarnResourceInfo();
+                } else {
+                    clusterMetricsInfos = yarnClusterMetrics.getYarnResourceInfoByQueueName(this.queueName);
+                }
+                clusterMetricsMap.put(AVAILABLE_VIRTUAL_CORE, clusterMetricsInfos.get(AVAILABLE_VIRTUAL_CORE));
+                clusterMetricsMap.put(AVAILABLE_MEMORY, clusterMetricsInfos.get(AVAILABLE_MEMORY));
+                return;
+            }
         }
         clusterMetricsMap.put(AVAILABLE_VIRTUAL_CORE, clusterMetrics.path(AVAILABLE_VIRTUAL_CORE).intValue());
         clusterMetricsMap.put(AVAILABLE_MEMORY, clusterMetrics.path(AVAILABLE_MEMORY).intValue());

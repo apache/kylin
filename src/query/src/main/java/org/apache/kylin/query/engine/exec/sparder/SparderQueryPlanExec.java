@@ -32,7 +32,6 @@ import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPRel;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
@@ -44,10 +43,10 @@ import org.apache.kylin.query.engine.meta.SimpleDataContext;
 import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.relnode.KapContext;
 import org.apache.kylin.query.relnode.KapRel;
+import org.apache.kylin.query.runtime.SparkEngine;
 import org.apache.kylin.query.util.QueryContextCutter;
 import org.apache.spark.SparkException;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -85,12 +84,9 @@ public class SparderQueryPlanExec implements QueryPlanExec {
             }
         }
 
-        Preconditions.checkArgument(dataContext instanceof SimpleDataContext);
-        SimpleDataContext sparderDataContext = (SimpleDataContext) dataContext;
-
         // rewrite
         rewrite(rel);
-        return doExecute(rel, sparderDataContext);
+        return doExecute(rel, dataContext);
     }
 
     /**
@@ -99,8 +95,8 @@ public class SparderQueryPlanExec implements QueryPlanExec {
      * @param dataContext
      * @return
      */
-    private ExecuteResult doExecute(RelNode rel, SimpleDataContext dataContext) {
-        QueryEngine queryEngine = (QueryEngine) ClassUtil.newInstance(dataContext.getKylinConfig().getQueryEngineClass());
+    private ExecuteResult doExecute(RelNode rel, DataContext dataContext) {
+        QueryEngine queryEngine = new SparkEngine();
         return internalCompute(queryEngine, dataContext, rel.getInput(0));
     }
 

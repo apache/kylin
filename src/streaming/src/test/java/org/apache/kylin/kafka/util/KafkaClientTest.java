@@ -21,13 +21,15 @@ import static org.apache.kafka.common.config.SaslConfigs.SASL_JAAS_CONFIG;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kafka.clients.Metadata;
+import org.apache.kafka.clients.MetadataCache;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.internals.AdminMetadataManager;
-import org.apache.kafka.clients.consumer.internals.ConsumerCoordinator;
 import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.Node;
 import org.apache.kylin.common.KapConfig;
@@ -89,16 +91,18 @@ public class KafkaClientTest extends StreamingTestCase {
     public void testGetKafkaConsumer() {
         val prop = KafkaClient.constructDefaultKafkaConsumerProperties("localhost:9092", "client1", new Properties());
         val consumer = KafkaClient.getKafkaConsumer("localhost:9092", "client2");
-
-        ConsumerCoordinator coordinator = (ConsumerCoordinator) ReflectionUtils.getField(consumer, "coordinator");
-        String groupId = (String) ReflectionUtils.getField(coordinator, "groupId");
-        Assert.assertEquals("client2", groupId);
+        Optional<String> groupId = (Optional<String>) ReflectionUtils.getField(consumer, "groupId");
+        if (groupId.isPresent()) {
+            Assert.assertEquals("client2", groupId.get());
+        } else {
+            Assert.fail();
+        }
 
         Metadata meta = (Metadata) ReflectionUtils.getField(consumer, "metadata");
-        Cluster cluster = (Cluster) ReflectionUtils.getField(meta, "cluster");
-        List<Node> nodes = cluster.nodes();
-        Assert.assertEquals("localhost", nodes.get(0).host());
-        Assert.assertEquals(9092, nodes.get(0).port());
+        MetadataCache cache = (MetadataCache) ReflectionUtils.getField(meta, "cache");
+        Map<Integer, Node> nodes = (Map<Integer, Node>) ReflectionUtils.getField(cache, "nodes");
+        Assert.assertEquals("localhost", nodes.get(-1).host());
+        Assert.assertEquals(9092, nodes.get(-1).port());
     }
 
     @Test

@@ -41,6 +41,7 @@ trait IClusterManager {
 
   def applicationExisted(jobId: String): Boolean
 
+  def getApplicationNameById(yarnAppId: Int): String
 }
 
 // memory unit is MB

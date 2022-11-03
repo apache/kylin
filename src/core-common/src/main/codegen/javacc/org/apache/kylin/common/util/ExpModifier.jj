@@ -1,0 +1,173 @@
+options {
+    IGNORE_CASE = true;
+    STATIC = false;
+    UNICODE_INPUT=true;
+}
+
+PARSER_BEGIN(ExpModifier)
+package org.apache.kylin.common.util;
+
+import java.io.StringReader;
+import java.nio.charset.Charset;
+import java.util.Scanner;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class ExpModifier {
+    public static void main(String[] args) throws ParseException {
+
+        Scanner reader = new Scanner(System.in, Charset.defaultCharset().name());
+        while (true) {
+            System.out.println("Input the expression: ");
+            String sql = reader.nextLine();
+            ExpModifier modifier = new ExpModifier(new StringReader(sql));
+            String parseResult = modifier.transform();
+            System.out.println("The translated expression is: ");
+            System.out.println(parseResult);
+        }
+    }
+
+    private String exp;
+
+    public ExpModifier(String exp) {
+        this(new StringReader(exp));
+    }
+}
+
+PARSER_END(ExpModifier)
+
+/** Root production. */
+String transform() :
+{
+    String innerString;
+    StringBuilder sb = new StringBuilder();
+}
+{
+    ( LOOKAHEAD(2) innerString = expression()
+    {
+        sb.append(innerString);
+    }
+    )*
+    <EOF>
+    {
+        String str = sb.toString();
+        str = str.replaceAll("\\(\\)\\(\\s*\\)", "()");
+        return str;
+    }
+}
+
+
+< DEFAULT >
+TOKEN : {
+
+
+< SPACE : [" ", "\t","\n", "\r"] >
+| < CURRENT_DATE : "CURRENT_DATE" >
+| < CURRENT_TIME : "CURRENT_TIME" >
+| < CURRENT_TIMESTAMP : "CURRENT_TIMESTAMP" >
+| < PI : "PI" >
+| < QUOTE: "'" >
+| < DOUBLE_QUOTE : "\"" >
+| < PUNCTUATION: [">", "<", "|", ":", ".", "+", "-", "*", "/", "%", "=", "^", "~", ",", ".", ";", "(", ")"]>
+// possible strings copied from calcite
+|
+    < BINARY_STRING_LITERAL: ["x","X"] <QUOTE> ( (~["'"]) | ("''"))* <QUOTE> >
+|
+    < QUOTED_STRING: <QUOTE> ( (~["'"]) | ("''"))* <QUOTE> >
+|
+    < PREFIXED_STRING_LITERAL: ("_" <CHARSETNAME> | "N") <QUOTED_STRING> >
+|
+    < UNICODE_STRING_LITERAL: "U" "&" <QUOTED_STRING> >
+|
+    < #CHARSETNAME: (["a"-"z","A"-"Z","0"-"9"])
+    (["a"-"z","A"-"Z","0"-"9",":",".","-","_"])*
+    >
+| < QUOTED_IDENTIFIER: <DOUBLE_QUOTE> ( (~["\"","\n","\r"]) | ("\"\"") )+ <DOUBLE_QUOTE> >
+| <ANY : (~[" ", "\t","\n", "\r", ">", "<", "|", ":", ".", "+", "-", "*", "/", "%", "=", "^", "~", ",", ".", ";", "(", ")" ])+ >
+}
+
+String space() :
+{}
+{
+    < SPACE >
+    {
+        log.trace("meet token <SPACE>");
+        return getToken(0).image;
+    }
+}
+
+String punctuation() :
+{}
+{
+    <PUNCTUATION>
+    {
+        String s = getToken(0).image;
+        log.trace("meet token: {}", s);
+        return s;
+    }
+}
+
+
+String any() :
+{}
+{
+    < ANY >
+    {
+        log.trace("meet token in <ANY>: {}", getToken(0).image);
+        return getToken(0).image;
+    }
+}
+
+String doubleQuotedString() :
+{}
+{
+    <QUOTED_IDENTIFIER>
+    {
+        log.trace("meet token in quoted identifier: {}", getToken(0).image);
+        return getToken(0).image;
+    }
+}
+
+
+String quotedString() :
+{
+    String s;
+}
+{
+    (<BINARY_STRING_LITERAL> | <QUOTED_STRING> | <PREFIXED_STRING_LITERAL> | <UNICODE_STRING_LITERAL> )
+    {
+        log.trace("meet token quote String: {}", getToken(0).image);
+        return getToken(0).image;
+    }
+}
+
+String niladicFunction() :
+{
+}
+{
+     (<CURRENT_TIMESTAMP> | <CURRENT_TIME> | <CURRENT_DATE> | <PI>)
+    {
+        log.trace("meet token of niladic function: {}", getToken(0).image);
+        return getToken(0).image + "()";
+    }
+}
+
+
+String expression() :
+{
+    String innerString = "";
+}
+{
+    (
+    innerString = doubleQuotedString()
+    | innerString = quotedString()
+    | innerString = niladicFunction()
+    | innerString = punctuation()
+    | innerString = space()
+    | innerString = any()
+    )
+    {
+        return innerString;
+    }
+}

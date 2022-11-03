@@ -22,7 +22,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import java.util.List;
 
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.apache.kylin.rest.controller.v2.NUserGroupControllerV2;
 import org.apache.kylin.rest.service.NUserGroupService;
 import org.junit.After;

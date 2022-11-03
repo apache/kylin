@@ -5,15 +5,15 @@
   "enabled" : "true",
   "name" : "submitter",
   "conds" : [ {
-    "@class" : "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
+    "@class" : "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
     "rightThreshold" : "userA"
   },
     {
-      "@class" : "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
+      "@class" : "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
       "rightThreshold" : "userB"
     },
     {
-      "@class" : "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
+      "@class" : "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
       "rightThreshold" : "userC"
     }]
 }

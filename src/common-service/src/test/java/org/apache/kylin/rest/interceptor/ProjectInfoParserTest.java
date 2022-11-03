@@ -116,6 +116,33 @@ public class ProjectInfoParserTest {
         request.setContentType("application/json");
         pair = ProjectInfoParser.parseProjectInfo(request);
         Assert.assertEquals("_global", pair.getFirst());
+
+        // param project is empty
+        request = new MockHttpServletRequest();
+        request.setServerName("localhost");
+        request.setRequestURI("/kylin/api/projects/acceleration_tag");
+        request.setParameter("project", "");
+        request.setContentType("application/json");
+        pair = ProjectInfoParser.parseProjectInfo(request);
+        Assert.assertEquals("_global", pair.getFirst());
+
+        // body project is empty
+        request = new MockHttpServletRequest();
+        request.setServerName("localhost");
+        request.setRequestURI("/kylin/api/projects/acceleration_tag");
+        request.setContentType("application/json");
+        request.setContent("{\"project\": \"\",\"key\": \"value1\"}".getBytes(StandardCharsets.UTF_8));
+        pair = ProjectInfoParser.parseProjectInfo(request);
+        Assert.assertEquals("_global", pair.getFirst());
+
+        // body & param project is empty
+        request = new MockHttpServletRequest();
+        request.setServerName("localhost");
+        request.setRequestURI("/kylin/api/projects/acceleration_tag");
+        request.setContentType("application/json");
+        request.setContent("{\"key\": \"value1\"}".getBytes(StandardCharsets.UTF_8));
+        pair = ProjectInfoParser.parseProjectInfo(request);
+        Assert.assertEquals("_global", pair.getFirst());
     }
 
     private void checkProjectInfoParser(String uriString, String project) {

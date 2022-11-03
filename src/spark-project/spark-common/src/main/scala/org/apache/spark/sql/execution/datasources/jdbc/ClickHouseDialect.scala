@@ -17,14 +17,14 @@
  */
 package org.apache.spark.sql.execution.datasources.jdbc
 
-import java.sql.{Connection, Driver, DriverManager, Timestamp, Types}
+import java.sql.{Connection, Date, Driver, DriverManager, Timestamp, Types}
 import java.util.Locale
-
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
+import scala.util.control.NonFatal
 import scala.util.matching.Regex
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.util.{DateTimeUtils, TimestampFormatter}
+import org.apache.spark.sql.connector.expressions.Expression
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.jdbc.{JdbcDialect, JdbcType}
@@ -41,9 +41,14 @@ object ClickHouseDialect extends JdbcDialect with Logging {
   private[jdbc] val fixedStringTypePattern: Regex = "^FixedString\\((\\d+)\\)$".r
   private[jdbc] val nullableTypePattern: Regex = "^Nullable\\((.*)\\)".r
 
-  private val supportedFunctions =
-    Set("ABS", "COALESCE", "LN", "EXP", "POWER", "SQRT", "FLOOR", "CEIL",
-      "SUBSTRING", "UPPER", "LOWER", "TRANSLATE", "TRIM")
+  private val supportedAggregateFunctions = Set("MAX", "MIN", "SUM", "COUNT", "AVG")
+
+  private val supportedFunctions = supportedAggregateFunctions ++
+    Set("ABS", "COALESCE", "GREATEST", "LEAST", "RAND", "LOG", "LOG10", "LOG2", "LN", "EXP",
+      "POWER", "SQRT", "FLOOR", "CEIL", "ROUND", "SIN", "SINH", "COS", "COSH", "TAN",
+      "TANH", "COT", "ASIN", "ACOS", "ATAN", "ATAN2", "DEGREES", "RADIANS", "SIGN",
+      "PI", "CBRT", "SUBSTRING", "UPPER", "LOWER", "TRANSLATE", "TRIM", "DATE_ADD", "DATE_DIFF",
+      "TRUNC", "CHAR_LENGTH", "CONCAT")
 
   override def isSupportedFunction(funcName: String): Boolean =
     supportedFunctions.contains(funcName)
@@ -162,11 +167,51 @@ object ClickHouseDialect extends JdbcDialect with Logging {
       val timestampFormatter = TimestampFormatter.getFractionFormatter(
         DateTimeUtils.getZoneId(SQLConf.get.sessionLocalTimeZone))
       s"'${timestampFormatter.format(ts)}'"
+    case dateValue: Date => "toDate('" + dateValue + "')"
     case arrayValue: Array[Any] => arrayValue.map(compileValue).mkString("[", ",", "]")
     case _ => super.compileValue(value)
   }
 
   override def getSchemaQuery(table: String): String = {
     s"SELECT * FROM $table limit 0"
+  }
+
+  override def compileExpression(expr: Expression): Option[String] = {
+    val jdbcSQLBuilder = new ClickhouseJDBCSQLBuilder()
+    try {
+      Some(jdbcSQLBuilder.build(expr))
+    } catch {
+      case NonFatal(e) =>
+        logWarning("Error occurs while compiling V2 expression", e)
+        None
+    }
+  }
+
+  class ClickhouseJDBCSQLBuilder extends JDBCSQLBuilder {
+
+    override def visitExtract(field: String, source: String): String = {
+      field match {
+        case "DAY_OF_YEAR" => s"toDayOfYear($source)"
+        case "DAY_OF_WEEK" => s"DAYOFWEEK($source)"
+        case "YEAR_OF_WEEK" => s"toISOYear($source)"
+        case "WEEK" => s"toISOWeek($source)"
+        case _ => super.visitExtract(field, source)
+      }
+    }
+
+    override def visitSQLFunction(funcName: String, inputs: Array[String]): String = {
+      funcName match {
+        case "DATE_DIFF" => s"DATE_DIFF('day', " + inputs(0) + ", " + inputs(1) + ")"
+        case "TRUNC" => s"DATE_TRUNC( " + inputs(1) + ", " + inputs(0) + ")"
+        case "SINH" => s"sinh(" + inputs(0) + ")"
+        case "COSH" => s"cosh(" + inputs(0) + ")"
+        case "CBRT" => s"cbrt(" + inputs(0) + ")"
+        case "DEGREES" => s"(" + inputs(0) + "*180/pi())"
+        case "LOG" if inputs.length > 1 =>
+          // clickhouse only support log(N)
+          s"log(" + inputs(1) + ")/log(" + inputs(0) + ")"
+        case _ => super.visitSQLFunction(funcName, inputs)
+      }
+    }
   }
 }

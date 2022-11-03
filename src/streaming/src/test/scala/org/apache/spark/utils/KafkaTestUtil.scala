@@ -23,11 +23,11 @@ import java.net.InetSocketAddress
 import java.util.concurrent.TimeoutException
 import java.util.{Properties, Map => JMap}
 
-import kafka.admin.AdminUtils
 import kafka.api.Request
 import kafka.server.{KafkaConfig, KafkaServer}
-import kafka.utils.ZkUtils
+import kafka.zk.{AdminZkClient, KafkaZkClient}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
+import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.network.ListenerName
 import org.apache.kafka.common.serialization.StringSerializer
 import org.apache.spark.internal.Logging
@@ -50,7 +50,8 @@ trait KafkaTestUtils extends Logging {
 
   private var zookeeper: EmbeddedZookeeper = _
 
-  private var zkUtils: ZkUtils = _
+  private var zkUtils: KafkaZkClient = _
+  private var adminClient: AdminZkClient = _
 
   // Kafka broker related configurations
   private val brokerHost = "127.0.0.1"
@@ -78,7 +79,7 @@ trait KafkaTestUtils extends Logging {
     s"$brokerHost:$brokerPort"
   }
 
-  def zookeeperClient: ZkUtils = {
+  def zookeeperClient: KafkaZkClient = {
     assert(zkReady, "Zookeeper not setup yet or already torn down, cannot get zookeeper client")
     Option(zkUtils).getOrElse(
       throw new IllegalStateException("Zookeeper client is not yet initialized"))
@@ -90,7 +91,7 @@ trait KafkaTestUtils extends Logging {
     zookeeper = new EmbeddedZookeeper(s"$zkHost:$zkPort")
     // Get the actual zookeeper binding port
     zkPort = zookeeper.actualPort
-    zkUtils = ZkUtils(s"$zkHost:$zkPort", zkSessionTimeout, zkConnectionTimeout, false)
+    zkUtils = KafkaZkClient(s"$zkHost:$zkPort", false, zkSessionTimeout, zkConnectionTimeout, 10, org.apache.kafka.common.utils.Time.SYSTEM)
     zkReady = true
   }
 
@@ -168,7 +169,8 @@ trait KafkaTestUtils extends Logging {
 
   /** Create a Kafka topic and wait until it is propagated to the whole cluster */
   def createTopic(topic: String, partitions: Int, config: Properties): Unit = {
-    AdminUtils.createTopic(zkUtils, topic, partitions, 1, config)
+    adminClient = new AdminZkClient(zkUtils)
+    adminClient.createTopic(topic, partitions, 1, config)
     // wait until metadata is propagated
     (0 until partitions).foreach { p =>
       waitUntilMetadataIsPropagated(topic, p)
@@ -293,11 +295,11 @@ trait KafkaTestUtils extends Logging {
   }
 
   private def waitUntilMetadataIsPropagated(topic: String, partition: Int): Unit = {
-    def isPropagated = server.apis.metadataCache.getPartitionInfo(topic, partition) match {
+    def isPropagated = server.metadataCache.getPartitionInfo(topic, partition) match {
       case Some(partitionState) =>
-        val leader = partitionState.basePartitionState.leader
-        val isr = partitionState.basePartitionState.isr
-        zkUtils.getLeaderForPartition(topic, partition).isDefined &&
+        val leader = partitionState.leader
+        val isr = partitionState.isr
+        zkUtils.getLeaderForPartition(new TopicPartition(topic, partition)).isDefined &&
           Request.isValidBrokerId(leader) && !isr.isEmpty
       case _ =>
         false

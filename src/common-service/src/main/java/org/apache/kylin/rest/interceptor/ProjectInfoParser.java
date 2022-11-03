@@ -141,6 +141,9 @@ public class ProjectInfoParser {
     }
 
     static String extractProject(String url) {
+        if (ProjectInfoParserConstant.INSTANCE.PROJECT_PARSER_URI_EXCLUDED_LIST.contains(url)) {
+            return null;
+        }
         for (String needParserURI : ProjectInfoParserConstant.INSTANCE.PROJECT_PARSER_URI_LIST) {
             val uriTemplate = new UriTemplate(needParserURI);
             val kvMap = new HashMap<String, String>();

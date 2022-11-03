@@ -18,8 +18,37 @@
 
 package org.apache.kylin.common.util;
 
+import java.io.File;
+
 public class FilePathUtil {
+
+    // Utility classes, which are collections of static members, are not meant to be instantiated.
+    // Even abstract utility classes, which can be extended, should not have public constructors.
+    private FilePathUtil() {
+    }
+
     public static String completeFolderPathWithSlash(String folderPath) {
         return folderPath.endsWith("/") ? folderPath : folderPath + "/";
+    }
+
+    /**
+     * Always return the empty string instead of the empty pointer
+     * @param filePath Multiple possible file paths
+     * @return The first file path that exists
+     */
+    public static String returnFilePathIfExists(String... filePath) {
+        if (filePath == null) {
+            return "";
+        }
+        for (String singleFilePath : filePath) {
+            if (singleFilePath == null || singleFilePath.isEmpty()) {
+                continue;
+            }
+            File file = new File(singleFilePath);
+            if (file.exists() && file.isFile()) {
+                return singleFilePath;
+            }
+        }
+        return "";
     }
 }

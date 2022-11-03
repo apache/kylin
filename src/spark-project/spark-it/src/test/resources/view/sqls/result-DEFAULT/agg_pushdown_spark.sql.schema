@@ -1,0 +1,1 @@
+`sum((O_TOTALPRICE + 1))` DOUBLE,`from` DOUBLE

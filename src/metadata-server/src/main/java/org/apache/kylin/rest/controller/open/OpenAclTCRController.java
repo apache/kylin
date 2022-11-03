@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.controller.open;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
+import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_USERGROUP_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 
@@ -27,13 +28,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.service.AccessService;
+import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.request.AclTCRRequest;
@@ -65,6 +70,10 @@ public class OpenAclTCRController extends NBasicController {
     @Qualifier("accessService")
     private AccessService accessService;
 
+    @Autowired
+    @Qualifier("userGroupService")
+    private IUserGroupService userGroupService;
+
     @ApiOperation(value = "updateProjectAcl", tags = { "MID" }, notes = "Update URL: {project}; Update Param: project")
     @PutMapping(value = "/sid/{sid_type:.+}/{sid:.+}")
     @ResponseBody
@@ -93,7 +102,16 @@ public class OpenAclTCRController extends NBasicController {
 
     private void mergeSidAclTCR(String project, String sid, boolean principal, List<AclTCRRequest> requests)
             throws IOException {
-        accessService.checkSid(sid, principal);
+        mergeSidAclTCR(project, sid, principal, requests, null);
+    }
+
+    private void mergeSidAclTCR(String project, String sid, boolean principal, List<AclTCRRequest> requests, Set<String> allGroups)
+            throws IOException {
+        if (allGroups != null) {
+            accessService.batchCheckSid(sid, principal, allGroups);
+        } else {
+            accessService.checkSid(sid, principal);
+        }
         boolean hasProjectPermission = accessService.hasProjectPermission(project, sid, principal);
 
         if (!hasProjectPermission) {
@@ -114,8 +132,13 @@ public class OpenAclTCRController extends NBasicController {
         checkProjectName(project);
         Preconditions.checkState(sidType.equalsIgnoreCase(MetadataConstants.TYPE_GROUP));
         AclPermissionUtil.checkAclUpdatable(project, aclTCRService.getCurrentUserGroups());
+        List<String> allGroups = userGroupService.getAllUserGroups();
+        if (CollectionUtils.isEmpty(allGroups)) {
+            throw new KylinException(EMPTY_USERGROUP_NAME, MsgPicker.getMsg().getEmptySid());
+        }
+        Set<String> groupSet = Sets.newHashSet(allGroups);
         for (Map.Entry<String, List<AclTCRRequest>> entry : requests.entrySet()) {
-            mergeSidAclTCR(project, entry.getKey(), false, entry.getValue());
+            mergeSidAclTCR(project, entry.getKey(), false, entry.getValue(), groupSet);
         }
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }

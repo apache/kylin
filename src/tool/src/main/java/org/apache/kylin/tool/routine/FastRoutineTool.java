@@ -24,22 +24,17 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.MaintainModeTool;
+import org.apache.kylin.tool.util.ToolMainWrapper;
 
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class FastRoutineTool extends RoutineTool {
-
-    public static void main(String[] args) {
-        FastRoutineTool tool = new FastRoutineTool();
-        tool.execute(args);
-        Unsafe.systemExit(0);
-    }
 
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
@@ -69,5 +64,13 @@ public class FastRoutineTool extends RoutineTool {
         } catch (Exception e) {
             log.error("Failed to execute fast routintool", e);
         }
+    }
+
+    public static void main(String[] args) {
+        ToolMainWrapper.wrap(args, () -> {
+            FastRoutineTool tool = new FastRoutineTool();
+            tool.execute(args);
+        });
+        Unsafe.systemExit(0);
     }
 }

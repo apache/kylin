@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_USER_NAME;
@@ -42,8 +24,10 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_LOGIN_
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -52,19 +36,24 @@ import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.metadata.user.NKylinUserManager;
-import org.apache.kylin.rest.aspect.Transaction;
+import org.apache.kylin.rest.security.AclPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Preconditions;
 
+import io.kyligence.kap.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.NKylinUserManager;
+import lombok.SneakyThrows;
 import lombok.val;
 
 public class KylinUserService implements UserService {
@@ -73,9 +62,11 @@ public class KylinUserService implements UserService {
 
     public static final String DIR_PREFIX = "/user/";
 
-    public static final String SUPER_ADMIN = "ADMIN";
-
     public static final Serializer<ManagedUser> SERIALIZER = new JsonSerializer<>(ManagedUser.class);
+
+    @Autowired
+    @Qualifier("userAclService")
+    protected UserAclService userAclService;
 
     @Override
     @Transaction
@@ -99,16 +90,21 @@ public class KylinUserService implements UserService {
             throw new KylinException(PERMISSION_DENIED, MsgPicker.getMsg().getInvalidRemoveUserFromAllUser());
         }
         getKylinUserManager().update(managedUser);
+        userAclService.updateUserAclPermission(user, AclPermission.DATA_QUERY);
         logger.trace("update user : {}", user.getUsername());
     }
 
+    @SneakyThrows
     @Override
     @Transaction
     public void deleteUser(String userName) {
-        if (userName.equals(SUPER_ADMIN)) {
+        val superAdminUsers = listSuperAdminUsers();
+        if (!CollectionUtils.isEmpty(superAdminUsers) && !superAdminUsers.stream()
+                .filter(u -> u.equalsIgnoreCase(userName)).collect(Collectors.toList()).isEmpty()) {
             throw new InternalErrorException("User " + userName + " is not allowed to be deleted.");
         }
 
+        userAclService.deleteUserAcl(userName);
         getKylinUserManager().delete(userName);
         logger.trace("delete user : {}", userName);
     }
@@ -173,6 +169,11 @@ public class KylinUserService implements UserService {
     }
 
     @Override
+    public List<String> listSuperAdminUsers() {
+        return Collections.singletonList("ADMIN");
+    }
+
+    @Override
     public void completeUserInfo(ManagedUser user) {
     }
 
@@ -183,4 +184,5 @@ public class KylinUserService implements UserService {
     protected NKylinUserManager getKylinUserManager() {
         return NKylinUserManager.getInstance(KylinConfig.getInstanceFromEnv());
     }
+
 }

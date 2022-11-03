@@ -54,6 +54,11 @@ public class MetricsController {
         return defaultMetricRegistry;
     }
 
+    public static void init(KapConfig verifiableProps) {
+        final MetricsReporter influxDbReporter = MetricsInfluxdbReporter.getInstance();
+        influxDbReporter.init(verifiableProps);
+    }
+
     public static void startReporters(KapConfig verifiableProps) {
         if (KylinConfig.getInstanceFromEnv().isDevOrUT()) {
             return;
@@ -62,7 +67,7 @@ public class MetricsController {
             if (!reporterStarted.get()) {
                 try {
                     final MetricsReporter influxDbReporter = MetricsInfluxdbReporter.getInstance();
-                    influxDbReporter.init(verifiableProps);
+                    influxDbReporter.start(verifiableProps);
 
                     final JmxReporter jmxReporter = JmxReporter.forRegistry(getDefaultMetricRegistry()).build();
                     jmxReporter.start();

@@ -18,10 +18,6 @@
 package org.apache.spark.tracker
 
 import org.apache.kylin.common.KylinConfig
-
-import java.util.Objects
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
 import org.apache.kylin.engine.spark.smarter.{BuildAppStatusStore, BuildListener}
 import org.apache.kylin.engine.spark.utils.SparkUtils
 import org.apache.spark.SparkContext
@@ -29,25 +25,22 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.tracker.ResourceState.ResourceState
 import org.apache.spark.util.Utils
 
+import java.util.concurrent.{CountDownLatch, Executors, ScheduledExecutorService, TimeUnit}
+import java.util.{Objects, Timer, TimerTask}
 import scala.collection.JavaConverters._
 
 class BuildAppStatusTracker(val kylinConfig: KylinConfig, val sc: SparkContext,
                             val statusStore: BuildAppStatusStore) extends BuildListener with Logging {
 
-  private val coldStart = new AtomicBoolean(true)
-
   private val buildResourceLoadRateThreshold: Double = kylinConfig.buildResourceLoadRateThreshold
 
-  private val buildResourceConsecutiveIdleStateNum: Int = kylinConfig.buildResourceConsecutiveIdleStateNum
+  private val buildResourceStateCheckInterval: Long = kylinConfig.buildResourceStateCheckInterval
+
+  private val stateWindTimer = new Timer("state-window-timer", true)
 
   private var resourceChecker: ScheduledExecutorService = _
 
   override def startMonitorBuildResourceState(): Unit = {
-    if (!kylinConfig.isAdaptiveSpanningTreeEnabled) {
-      // do nothing
-      return
-    }
-    val buildResourceStateCheckInterval = kylinConfig.buildResourceStateCheckInterval
     resourceChecker = Executors.newSingleThreadScheduledExecutor
     resourceChecker.scheduleAtFixedRate(new Runnable {
       override def run(): Unit = Utils.tryLogNonFatalError {
@@ -58,22 +51,45 @@ class BuildAppStatusTracker(val kylinConfig: KylinConfig, val sc: SparkContext,
   }
 
   override def shutdown(): Unit = {
-    if (Objects.isNull(resourceChecker)) {
-      return
+    if (Objects.nonNull(resourceChecker)) {
+      resourceChecker.shutdownNow()
     }
-    resourceChecker.shutdown()
+
+    if (Objects.nonNull(stateWindTimer)) {
+      stateWindTimer.cancel()
+    }
   }
 
   def currentResourceState(): ResourceState = {
-    val currState = if (coldStart.compareAndSet(true, false)) ResourceState.Idle
-    else if (statusStore.resourceStateQueue.asScala //
-      .count(state => (state._1 / state._2) < buildResourceLoadRateThreshold) //
-      == buildResourceConsecutiveIdleStateNum) {
-      statusStore.resourceStateQueue.poll()
-      ResourceState.Idle
-    } else ResourceState.Fulled
-    log.info(s"App ip ${sc.applicationId} curr resource state is ${currState}")
+    val currState = getResourceState
+    log.info(s"Application ${sc.applicationId} current resource state is $currState")
     currState
+  }
+
+  private def getResourceState: ResourceState = {
+    val stateWind = statusStore.resourceStateQueue
+    if (stateWind.remainingCapacity() > 0) {
+      val cdl = new CountDownLatch(1)
+      stateWindTimer.scheduleAtFixedRate(new TimerTask {
+        override def run(): Unit = {
+          if (stateWind.remainingCapacity() > 0) {
+            logInfo("Resource state window's remaining capacity still be greater than 0.")
+          } else {
+            this.cancel()
+            cdl.countDown()
+          }
+        }
+      }, 0, TimeUnit.SECONDS.toMillis(Math.max(1, buildResourceStateCheckInterval >> 1)))
+      cdl.await(buildResourceStateCheckInterval, TimeUnit.SECONDS)
+    }
+
+    if (stateWind.asScala.forall(state => (state._1.toDouble / state._2) < buildResourceLoadRateThreshold)) {
+      // shift right the window
+      stateWind.poll(1, TimeUnit.SECONDS)
+      return ResourceState.Idle
+    }
+
+    ResourceState.Fulled
   }
 }
 

@@ -72,28 +72,26 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.util.CollectionUtil;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.query.enumerator.OLAPQuery;
-import org.apache.kylin.query.relnode.OLAPTableScan;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.common.util.CollectionUtil;
-import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.QueryExtension;
+import org.apache.kylin.query.enumerator.OLAPQuery;
+import org.apache.kylin.query.relnode.OLAPTableScan;
+import org.apache.kylin.rest.constant.Constant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import lombok.val;
 
@@ -299,43 +297,10 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
                     .map(NDataModel::getComputedColumnDescs).flatMap(List::stream).collect(Collectors.toList()));
         }
 
-        val authorizedCC = Lists.<ComputedColumnDesc> newArrayList();
-        val checkedCC = Sets.<ComputedColumnDesc> newHashSet();
-        for (NDataModel model : modelsMap.get(sourceTable.getIdentity())) {
-            val ccUsedColsMap = Maps.<String, Set<String>> newHashMap();
-            for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
-                if (checkedCC.contains(cc))
-                    continue;
-                ccUsedColsMap.put(cc.getColumnName(), ComputedColumnUtil.getCCUsedColsWithModel(model, cc));
-            }
-
-            // parse inner expression might cause error, for example timestampdiff
-            // so have to do parsing cc expression recursively
-            for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
-                if (checkedCC.contains(cc))
-                    continue;
-                val ccUsedSourceCols = Sets.<String> newHashSet();
-                collectCCUsedSourceCols(cc.getColumnName(), ccUsedColsMap, ccUsedSourceCols);
-                if (isColumnAuthorized(ccUsedSourceCols)) {
-                    authorizedCC.add(cc);
-                }
-                checkedCC.add(cc);
-            }
-        }
+        val authorizedCC = ComputedColumnUtil.getAuthorizedCC(modelsMap.get(sourceTable.getIdentity()),
+                this::isColumnAuthorized);
 
         return removeDuplicatedNamedComputedCols(authorizedCC);
-    }
-
-    private void collectCCUsedSourceCols(String ccColName, Map<String, Set<String>> ccUsedColsMap,
-            Set<String> ccUsedSourceCols) {
-        if (!ccUsedColsMap.containsKey(ccColName)) {
-            ccUsedSourceCols.add(ccColName);
-            return;
-        }
-
-        for (String usedColumn : ccUsedColsMap.get(ccColName)) {
-            collectCCUsedSourceCols(usedColumn, ccUsedColsMap, ccUsedSourceCols);
-        }
     }
 
     private boolean isACLDisabledOrAdmin() {

@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Unsafe;
@@ -45,7 +46,8 @@ import org.apache.kylin.metadata.cube.optimization.IncludedLayoutOptStrategy;
 import org.apache.kylin.metadata.cube.optimization.IndexOptimizer;
 import org.apache.kylin.metadata.cube.optimization.LowFreqLayoutOptStrategy;
 import org.apache.kylin.metadata.cube.optimization.SimilarLayoutOptStrategy;
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
+import io.kyligence.kap.metadata.recommendation.candidate.JdbcRawRecStore;
+import org.apache.kylin.metrics.HdfsCapacityMetrics;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -454,4 +456,26 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
         Assert.assertEquals("catch me", storageVolumeInfo.getThrowableMap().values().iterator().next().getMessage());
 
     }
+
+    @Test
+    public void testGetStorageVolumeWithOutHdfsCapacityMetrics() throws IOException {
+        KylinConfig testConfig = getTestConfig();
+        overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "false");
+        StorageVolumeInfo storageVolumeInfo = Mockito.spy(StorageVolumeInfo.class);
+        TotalStorageCollector totalStorageCollector = new TotalStorageCollector();
+        totalStorageCollector.collect(testConfig, DEFAULT_PROJECT, storageVolumeInfo);
+        Assert.assertEquals(0, storageVolumeInfo.getTotalStorageSize());
+    }
+
+    @Test
+    public void testGetStorageVolumeWithHdfsCapacityMetrics() throws IOException {
+        KylinConfig testConfig = getTestConfig();
+        overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
+        HdfsCapacityMetrics.registerHdfsMetrics();
+        StorageVolumeInfo storageVolumeInfo = Mockito.spy(StorageVolumeInfo.class);
+        TotalStorageCollector totalStorageCollector = new TotalStorageCollector();
+        totalStorageCollector.collect(testConfig, DEFAULT_PROJECT, storageVolumeInfo);
+        Assert.assertEquals(0, storageVolumeInfo.getTotalStorageSize());
+    }
+
 }

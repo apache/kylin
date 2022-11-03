@@ -20,7 +20,7 @@ package org.apache.kylin.rest.security;
 
 import java.util.Map;
 
-import org.apache.kylin.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.ManagedUser;
 
 import com.google.common.collect.Maps;
 

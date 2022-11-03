@@ -51,7 +51,7 @@ object DFBuilderHelper extends Logging {
 
   def selectColumnsInTable(table: Dataset[Row], columns: Set[TblColRef]): Set[TblColRef] = {
     columns.filter(col =>
-      isColumnInTable(convertFromDot(col.getExpressionInSourceDB), table))
+      isColumnInTable(convertFromDot(col.getBackTickExpressionInSourceDB), table))
   }
 
   // ============================= Used by {@link DFBuildJob}.Functions are deprecated. ========================= //
@@ -63,7 +63,7 @@ object DFBuilderHelper extends Logging {
   @deprecated
   def filterOutIntegerFamilyType(table: Dataset[Row], columns: Set[TblColRef]): Set[TblColRef] = {
     columns.filterNot(_.getType.isIntegerFamily).filter(cc =>
-      isColumnInTable(convertFromDot(cc.getExpressionInSourceDB), table))
+      isColumnInTable(convertFromDot(cc.getBackTickExpressionInSourceDB), table))
   }
 
   def isColumnInTable(colExpr: String, table: Dataset[Row]): Boolean = {
@@ -78,7 +78,8 @@ object DFBuilderHelper extends Logging {
   def chooseSuitableCols(ds: Dataset[Row], needCheckCols: Iterable[TblColRef]): Seq[Column] = {
     needCheckCols
       .filter(ref => isColumnInTable(ref.getExpressionInSourceDB, ds))
-      .map(ref => expr(convertFromDot(ref.getExpressionInSourceDB)).alias(convertFromDot(ref.getIdentity)))
+      .map(ref => expr(convertFromDotWithBackTick(ref.getBackTickExpressionInSourceDB))
+        .alias(convertFromDot(ref.getBackTickIdentity)))
       .toSeq
   }
 

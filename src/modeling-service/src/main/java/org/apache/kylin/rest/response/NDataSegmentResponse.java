@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.kylin.job.common.SegmentUtil;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.metadata.model.SegmentSecondStorageStatusEnum;
 import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -56,6 +57,9 @@ public class NDataSegmentResponse extends NDataSegment {
 
     @JsonProperty("status_to_display")
     private SegmentStatusEnumToDisplay statusToDisplay;
+
+    @JsonProperty("status_second_storage_to_display")
+    private SegmentSecondStorageStatusEnum statusSecondStorageToDisplay;
 
     @JsonProperty("index_count")
     private long indexCount;
@@ -124,9 +128,9 @@ public class NDataSegmentResponse extends NDataSegment {
         if (segment.getIndexPlan().getBaseTableLayout() != null) {
             val indexPlan = segment.getDataflow().getIndexPlan();
             long segmentFileCount = segment.getSegDetails().getLayouts().stream()
-                    .filter(layout -> indexPlan.getLayoutEntity(layout.getLayoutId()).isBaseIndex())
+                    .filter(layout -> indexPlan.getLayoutEntity(layout.getLayoutId()) != null
+                            && indexPlan.getLayoutEntity(layout.getLayoutId()).isBaseIndex())
                     .mapToLong(NDataLayout::getFileCount).sum();
-
             hasBaseTableIndexData = segmentFileCount > 0;
         } else {
             hasBaseTableIndexData = false;

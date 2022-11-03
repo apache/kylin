@@ -31,8 +31,10 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.response.AccessEntryResponse;
+import org.apache.kylin.rest.response.ProjectPermissionResponse;
 import org.apache.kylin.rest.security.AclEntityFactory;
 import org.apache.kylin.rest.security.AclEntityType;
+import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -59,6 +61,7 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -234,5 +237,44 @@ public class OpenAccessControllerTest extends NLocalFileMetadataTestCase {
         request.setNames(Lists.newArrayList("newGroup"));
         accessRequests = openAccessController.convertBatchPermissionRequestToAccessRequests(ae, request);
         Assert.assertEquals("newGroup", accessRequests.get(0).getSid());
+    }
+
+    @Test
+    public void testConvertAceResponseToProjectPermissionResponse() throws Exception {
+        {
+            ProjectPermissionRequest projectPermissionRequest = new ProjectPermissionRequest();
+            projectPermissionRequest.setProject("default");
+            projectPermissionRequest.setType(MetadataConstants.TYPE_USER);
+            projectPermissionRequest.setPermission("OPERATION");
+            projectPermissionRequest.setName("test");
+            openAccessController.updateProjectPermission(projectPermissionRequest);
+        }
+        {
+            ProjectPermissionRequest projectPermissionRequest = new ProjectPermissionRequest();
+            projectPermissionRequest.setProject("default");
+            projectPermissionRequest.setType(MetadataConstants.TYPE_GROUP);
+            projectPermissionRequest.setPermission("OPERATION");
+            projectPermissionRequest.setName("ALL_USERS");
+            openAccessController.updateProjectPermission(projectPermissionRequest);
+        }
+        List<AccessEntryResponse> aclResponseList = new ArrayList<>();
+        {
+            Sid sid = new PrincipalSid("test");
+            Permission permission = AclPermission.OPERATION;
+            AccessEntryResponse accessEntryResponse = new AccessEntryResponse("1L", sid, permission, false);
+            aclResponseList.add(accessEntryResponse);
+        }
+        {
+            Sid sid = new GrantedAuthoritySid("ALL_USERS");
+            Permission permission = AclPermission.MANAGEMENT;
+            AccessEntryResponse accessEntryResponse = new AccessEntryResponse("2L", sid, permission, false);
+            aclResponseList.add(accessEntryResponse);
+        }
+
+        ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject("default");
+        List<ProjectPermissionResponse> responseList = ReflectionTestUtils.invokeMethod(openAccessController,
+                "convertAceResponseToProjectPermissionResponse", aclResponseList);
+        Assert.assertEquals(2, responseList.size());
     }
 }

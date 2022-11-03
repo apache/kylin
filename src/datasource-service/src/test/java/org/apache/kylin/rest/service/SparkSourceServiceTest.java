@@ -42,14 +42,12 @@ import org.apache.spark.sql.SparkSession;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 
 import com.google.common.collect.Maps;
 
-@Ignore("TODO: Class load conflict")
 public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
 
     protected static SparkSession ss;
@@ -60,6 +58,7 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setUp() throws Exception {
+        createTestMetadata();
         ss = SparkSession.builder().appName("local").master("local[1]").enableHiveSupport().getOrCreate();
         ss.sparkContext().hadoopConfiguration().set("javax.jdo.option.ConnectionURL",
                 "jdbc:derby:memory:db;create=true");
@@ -81,8 +80,8 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
         sparkSourceService.executeSQL(ddlRequest);
         zkTestServer = new TestingServer(true);
         overwriteSystemProp("kylin.env.zookeeper-connect-string", zkTestServer.getConnectString());
-        overwriteSystemProp("kylin.env.zookeeper-max-retries", "1");
-        overwriteSystemProp("kylin.env.zookeeper-base-sleep-time", "1000");
+        overwriteSystemProp("kap.env.zookeeper-max-retries", "1");
+        overwriteSystemProp("kap.env.zookeeper-base-sleep-time", "1000");
     }
 
     @After

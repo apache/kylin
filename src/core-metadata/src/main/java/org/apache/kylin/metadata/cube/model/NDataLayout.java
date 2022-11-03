@@ -182,6 +182,10 @@ public class NDataLayout implements Serializable {
         this.sourceByteSize = sourceByteSize;
     }
 
+    public boolean isEmpty() {
+        return rows == 0;
+    }
+
     public boolean isReady() {
         return isReady;
     }

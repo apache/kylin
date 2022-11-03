@@ -18,23 +18,18 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_FAIL;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
-
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import io.kyligence.kap.engine.spark.job.NSparkSnapshotJob;
+import lombok.val;
+import lombok.var;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
 import org.apache.kylin.job.exception.JobSubmissionException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -42,6 +37,7 @@ import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
@@ -68,12 +64,15 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import lombok.val;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_FAIL;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
 
 public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
 
@@ -125,7 +124,11 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         Set<String> tables = Sets.newHashSet(table1, table2);
         thrown.expect(KylinException.class);
         thrown.expectMessage("Snapshot management is not enable");
-        snapshotService.buildSnapshots(PROJECT, tables, Maps.newHashMap(), false, 3, null, null);
+        val request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setTables(tables);
+        request.setPriority(3);
+        snapshotService.buildSnapshots(request, false);
     }
 
     @Test
@@ -134,7 +137,11 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         Set<String> tables = Sets.newHashSet("non-exist");
         thrown.expect(KylinException.class);
         thrown.expectMessage("Can’t find table \"non-exist\". Please check and try again.");
-        snapshotService.buildSnapshots(PROJECT, tables, Maps.newHashMap(), false, 3, null, null);
+        val request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setTables(tables);
+        request.setPriority(3);
+        snapshotService.buildSnapshots(request, false);
     }
 
     @Test
@@ -143,7 +150,11 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         Set<String> tables = Sets.newHashSet("DEFAULT.TEST_KYLIN_FACT");
         thrown.expect(KylinException.class);
         thrown.expectMessage("Can't find the snapshot \"DEFAULT.TEST_KYLIN_FACT\". Please check and try again.");
-        snapshotService.buildSnapshots(PROJECT, tables, Maps.newHashMap(), true, 3, null, null);
+        val request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setTables(tables);
+        request.setPriority(3);
+        snapshotService.buildSnapshots(request, true);
     }
 
     @Test
@@ -153,7 +164,11 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         final String table2 = "DEFAULT.TEST_ACCOUNT";
         Set<String> tables = Sets.newHashSet(table1, table2);
         Set<String> databases = Sets.newHashSet();
-        snapshotService.buildSnapshots(PROJECT, databases, tables, Maps.newHashMap(), false, 0, null, null);
+        var request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setTables(tables);
+        request.setPriority(0);
+        snapshotService.buildSnapshots(request, false);
 
         NExecutableManager executableManager = NExecutableManager.getInstance(getTestConfig(), PROJECT);
 
@@ -187,9 +202,59 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         String expected = JOB_CREATE_CHECK_FAIL.getMsg();
         String actual = "";
         try {
-            snapshotService.buildSnapshots(PROJECT, databases, tables, Maps.newHashMap(), true, 3, null, null);
-        } catch (TransactionException e) {
-            actual = e.getCause().getMessage();
+            request = new SnapshotRequest();
+            request.setProject(PROJECT);
+            request.setTables(tables);
+            request.setPriority(3);
+            snapshotService.buildSnapshots(request, true);
+        } catch (KylinException e) {
+            actual = e.getMessage();
+        }
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void buildSnapshotsAutomatic() {
+        enableSnapshotManualManagement();
+        val table = "DEFAULT.TEST_KYLIN_FACT";
+        Set<String> tables = Sets.newHashSet(table);
+        var request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setTables(tables);
+        request.setPriority(0);
+        val tableMetadataManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
+        val tableExt = tableMetadataManager.getOrCreateTableExt(table);
+        val copyForWrite = tableMetadataManager.copyForWrite(tableExt);
+        tableMetadataManager.saveTableExt(copyForWrite);
+
+        snapshotService.autoRefreshSnapshots(request, false);
+
+        NExecutableManager executableManager = NExecutableManager.getInstance(getTestConfig(), PROJECT);
+        final List<AbstractExecutable> allExecutables = executableManager.getAllExecutables();
+        Assert.assertEquals(1, allExecutables.size());
+
+        final AbstractExecutable job1 = allExecutables.get(0);
+        Assert.assertEquals(0, job1.getPriority());
+        Assert.assertTrue(job1 instanceof NSparkSnapshotJob);
+        NSparkSnapshotJob snapshotJob1 = (NSparkSnapshotJob) job1;
+        Assert.assertEquals("SNAPSHOT_BUILD", snapshotJob1.getName());
+        Assert.assertEquals(PROJECT, snapshotJob1.getProject());
+        final String tableNameOfSamplingJob1 = snapshotJob1.getParam(NBatchConstants.P_TABLE_NAME);
+        Assert.assertTrue(tables.contains(tableNameOfSamplingJob1));
+        Assert.assertEquals(PROJECT, snapshotJob1.getParam(NBatchConstants.P_PROJECT_NAME));
+        Assert.assertEquals("ADMIN", snapshotJob1.getSubmitter());
+
+        // refresh failed
+        String expected = JOB_CREATE_CHECK_FAIL.getMsg();
+        String actual = "";
+        try {
+            request = new SnapshotRequest();
+            request.setProject(PROJECT);
+            request.setTables(tables);
+            request.setPriority(0);
+            snapshotService.autoRefreshSnapshots(request, true);
+        } catch (KylinException e) {
+            actual = e.getMessage();
         }
         Assert.assertEquals(expected, actual);
     }
@@ -208,8 +273,11 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         }, PROJECT);
         TableDesc table = NTableMetadataManager.getInstance(getTestConfig(), PROJECT).getTableDesc(tableName);
         Assert.assertTrue(table.isSnapshotHasBroken());
-        snapshotService.buildSnapshots(PROJECT, Sets.newHashSet(), Sets.newHashSet(tableName), Maps.newHashMap(), false,
-                1, null, null);
+        var request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setTables(Sets.newHashSet(tableName));
+        request.setPriority(1);
+        snapshotService.buildSnapshots(request, false);
         table = NTableMetadataManager.getInstance(getTestConfig(), PROJECT).getTableDesc(tableName);
         Assert.assertTrue(!table.isSnapshotHasBroken());
     }
@@ -221,19 +289,29 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         final String database = "DEFAULT";
         Set<String> databases = Sets.newHashSet(database);
         Set<String> tables = Sets.newHashSet();
-        snapshotService.buildSnapshots(PROJECT, databases, tables, Maps.newHashMap(), false, 3, null, null);
+        var request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setDatabases(databases);
+        request.setTables(tables);
+        request.setPriority(3);
+        snapshotService.buildSnapshots(request, false);
         val executableManager = NExecutableManager.getInstance(getTestConfig(), PROJECT);
         final List<AbstractExecutable> allExecutables = executableManager.getAllExecutables();
         val tableManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
         long expectedTableSize = tableManager.listAllTables().stream()
                 .filter(tableDesc -> tableDesc.getDatabase().equals(database)).count();
-        Assert.assertEquals(expectedTableSize, allExecutables.size());
+        Assert.assertEquals(expectedTableSize - 1, allExecutables.size());
 
         // build snapshots of non-exist database
         databases = Sets.newHashSet("non-exist");
         thrown.expect(KylinException.class);
         thrown.expectMessage("Can’t find database \"NON-EXIST\". Please check and try again.");
-        snapshotService.buildSnapshots(PROJECT, databases, tables, Maps.newHashMap(), false, 3, null, null);
+        request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setDatabases(databases);
+        request.setTables(tables);
+        request.setPriority(3);
+        snapshotService.buildSnapshots(request, false);
     }
 
     @Test
@@ -259,8 +337,13 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         SnapshotRequest.TableOption option = new SnapshotRequest.TableOption();
         option.setPartitionCol(partitionCol);
         option.setIncrementalBuild(true);
-        snapshotService.buildSnapshots(PROJECT, databases, tables, ImmutableMap.of(table1, option), false, 3, null,
-                null);
+        var request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setDatabases(databases);
+        request.setTables(tables);
+        request.setPriority(3);
+        request.setOptions(ImmutableMap.of(table1, option));
+        snapshotService.buildSnapshots(request, false);
 
         NExecutableManager executableManager = NExecutableManager.getInstance(getTestConfig(), PROJECT);
 
@@ -307,8 +390,13 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         thrown.expect(KylinException.class);
         thrown.expectMessage(
                 "Please select at least one partition for the following snapshots when conducting custom partition value refresh: [DEFAULT.TEST_KYLIN_FACT]");
-        snapshotService.buildSnapshots(PROJECT, databases, tables, ImmutableMap.of(table1, option1), false, 3, null,
-                null);
+        var request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setDatabases(databases);
+        request.setTables(tables);
+        request.setPriority(3);
+        request.setOptions(ImmutableMap.of(table1, option1));
+        snapshotService.buildSnapshots(request, false);
     }
 
     @Test
@@ -316,7 +404,11 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         enableSnapshotManualManagement();
         // initialize a sampling job and assert the status of it
         String table = "DEFAULT.TEST_KYLIN_FACT";
-        snapshotService.buildSnapshots(PROJECT, Sets.newHashSet(table), Maps.newHashMap(), false, 3, null, null);
+        var request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setTables(Sets.newHashSet(table));
+        request.setPriority(3);
+        snapshotService.buildSnapshots(request, false);
         NExecutableManager executableManager = NExecutableManager.getInstance(getTestConfig(), PROJECT);
         List<AbstractExecutable> allExecutables = executableManager.getAllExecutables();
         Assert.assertEquals(1, allExecutables.size());
@@ -324,10 +416,13 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         val initialJob = allExecutables.get(0);
         Assert.assertEquals(ExecutableState.READY, initialJob.getStatus());
         try {
-            snapshotService.buildSnapshots(PROJECT, Sets.newHashSet(table), Maps.newHashMap(), false, 3, null, null);
-        } catch (TransactionException e) {
-            Assert.assertTrue(e.getCause() instanceof JobSubmissionException);
-            Assert.assertEquals(JOB_CREATE_CHECK_FAIL.getMsg(), (e.getCause()).getMessage());
+            request.setProject(PROJECT);
+            request.setTables(Sets.newHashSet(table));
+            request.setPriority(3);
+            snapshotService.buildSnapshots(request, false);
+        } catch (KylinException e) {
+            Assert.assertTrue(e instanceof JobSubmissionException);
+            Assert.assertEquals(JOB_CREATE_CHECK_FAIL.getMsg(), e.getMessage());
         }
     }
 
@@ -350,7 +445,11 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         NTableMetadataManager tableManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
         tableManager.getTableDesc(tableName).setLastSnapshotPath("file://a/b");
         Assert.assertNotNull(getSnapshotPath(tableName));
-        snapshotService.buildSnapshots(PROJECT, Sets.newHashSet(tableName), Maps.newHashMap(), false, 3, null, null);
+        var request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setTables(Sets.newHashSet(tableName));
+        request.setPriority(3);
+        snapshotService.buildSnapshots(request, false);
         SnapshotCheckResponse response = snapshotService.deleteSnapshots(PROJECT, Sets.newHashSet(tableName));
         Assert.assertEquals(1, response.getAffectedJobs().size());
         Assert.assertNull(getSnapshotPath(tableName));
@@ -363,7 +462,11 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         NTableMetadataManager tableManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
         tableManager.getTableDesc(tableName).setLastSnapshotPath("file://a/b");
         Assert.assertNotNull(getSnapshotPath(tableName));
-        snapshotService.buildSnapshots(PROJECT, Sets.newHashSet(tableName), Maps.newHashMap(), false, 3, null, null);
+        var request = new SnapshotRequest();
+        request.setProject(PROJECT);
+        request.setTables(Sets.newHashSet(tableName));
+        request.setPriority(3);
+        snapshotService.buildSnapshots(request, false);
         SnapshotCheckResponse response = snapshotService.checkBeforeDeleteSnapshots(PROJECT,
                 Sets.newHashSet(tableName));
         Assert.assertEquals(1, response.getAffectedJobs().size());
@@ -609,6 +712,26 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         assert responses.get("SSB.SUPPLIER").getNotReadyPartitions().size() == 2;
         assert responses.get("SSB.SUPPLIER").getReadyPartitions().size() == 0;
         assert responses.get("SSB.DATES") == null;
+    }
+
+    @Test
+    public void testGetSnapshotHitCount() {
+        enableSnapshotManualManagement();
+        String tableName = "DEFAULT.TEST_KYLIN_FACT";
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            NTableMetadataManager tbgr = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
+            TableDesc copy = tbgr.copyForWrite(tbgr.getTableDesc(tableName));
+            TableExtDesc tableExtDesc = tbgr.copyForWrite(tbgr.getOrCreateTableExt(copy));
+            copy.setSnapshotHasBroken(true);
+            tableExtDesc.setSnapshotHitCount(10);
+            tbgr.updateTableDesc(copy);
+            tbgr.saveTableExt(tableExtDesc);
+            return null;
+        }, PROJECT);
+        List<SnapshotInfoResponse> responses = snapshotService.getProjectSnapshots(PROJECT, tableName,
+                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), null, true);
+        Assert.assertEquals(1, responses.size());
+        Assert.assertEquals(10, responses.get(0).getUsage());
     }
 
     private String getSnapshotPath(String tableName) {

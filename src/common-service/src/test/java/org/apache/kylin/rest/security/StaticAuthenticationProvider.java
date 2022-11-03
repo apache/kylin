@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.security;
 
-import org.apache.kylin.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.springframework.security.core.Authentication;
 
 public class StaticAuthenticationProvider extends OpenAuthenticationProvider {

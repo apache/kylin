@@ -18,10 +18,11 @@
 
 package org.apache.spark.sql.execution
 
+import io.kyligence.kap.softaffinity.SoftAffinityManager
 import org.apache.hadoop.fs.{BlockLocation, FileStatus, LocatedFileStatus, Path}
 import org.apache.kylin.common.KylinConfig
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.catalyst.expressions.{Ascending, Attribute, Expression, SortOrder}
+import org.apache.spark.sql.catalyst.expressions.{Ascending, Attribute, BloomAndRangeFilterExpression, Expression, SortOrder}
 import org.apache.spark.sql.catalyst.plans.physical.{HashPartitioning, Partitioning, UnknownPartitioning}
 import org.apache.spark.sql.catalyst.{InternalRow, TableIdentifier}
 import org.apache.spark.sql.execution.datasource.{FilePruner, ShardSpec}
@@ -43,7 +44,7 @@ class KylinFileSourceScanExec(
      tableIdentifier: Option[TableIdentifier],
      disableBucketedScan: Boolean = false,
      sourceScanRows: Long) extends LayoutFileSourceScanExec(
-  relation, output, requiredSchema, partitionFilters, None, optionalNumCoalescedBuckets, dataFilters, tableIdentifier, disableBucketedScan) {
+  relation, output, requiredSchema, partitionFilters, None, optionalNumCoalescedBuckets, dataFilters, tableIdentifier, disableBucketedScan, sourceScanRows) {
 
   def getSourceScanRows: Long = {
     sourceScanRows
@@ -52,7 +53,12 @@ class KylinFileSourceScanExec(
   @transient override lazy val selectedPartitions: Array[PartitionDirectory] = {
     val optimizerMetadataTimeNs = relation.location.metadataOpsTimeNs.getOrElse(0L)
     val startTime = System.nanoTime()
-    val ret = relation.location.listFiles(partitionFilters, dataFilters)
+    val rangeRuntimeFilters = dataFilters.filter(_.isInstanceOf[BloomAndRangeFilterExpression])
+      .flatMap(filter => filter.asInstanceOf[BloomAndRangeFilterExpression].rangeRow)
+    logInfo(s"Extra runtime filters from BloomAndRangeFilterExpression to " +
+      s"prune segment: ${rangeRuntimeFilters.mkString(",")}")
+    val collectFilters = dataFilters ++ rangeRuntimeFilters
+    val ret = relation.location.listFiles(partitionFilters, collectFilters)
     val timeTakenMs = ((System.nanoTime() - startTime) + optimizerMetadataTimeNs) / 1000 / 1000
 
     metrics("numFiles").add(ret.map(_.files.size.toLong).sum)
@@ -136,7 +142,7 @@ class KylinFileSourceScanExec(
    * @param fsRelation         [[HadoopFsRelation]] associated with the read.
    */
   private def createShardingReadRDD(shardSpec: ShardSpec,
-                                    readFile: (PartitionedFile) => Iterator[InternalRow],
+                                    readFile: PartitionedFile => Iterator[InternalRow],
                                     selectedPartitions: Seq[PartitionDirectory],
                                     fsRelation: HadoopFsRelation): RDD[InternalRow] = {
     logInfo(s"Planning with ${shardSpec.numShards} shards")
@@ -154,7 +160,15 @@ class KylinFileSourceScanExec(
       FilePartition(shardId, filesToPartitionId.getOrElse(shardId, Nil).toArray)
     }
 
-    new FileScanRDD(fsRelation.sparkSession, readFile, filePartitions)
+    if (SoftAffinityManager.usingSoftAffinity) {
+      val start = System.currentTimeMillis()
+      val cachePartitions = filePartitions.map(CacheFilePartition.convertFilePartitionToCache)
+      logInfo(s"Convert bucketed file partition took: ${System.currentTimeMillis() - start}")
+      new CacheFileScanRDD(fsRelation.sparkSession, readFile, cachePartitions)
+    } else {
+      logInfo(s"Create FileScanRDD")
+      new FileScanRDD(fsRelation.sparkSession, readFile, filePartitions)
+    }
   }
 
   /**
@@ -167,7 +181,7 @@ class KylinFileSourceScanExec(
    * @param selectedPartitions Hive-style partition that are part of the read.
    * @param fsRelation         [[HadoopFsRelation]] associated with the read.
    */
-  private def createNonShardingReadRDD(readFile: (PartitionedFile) => Iterator[InternalRow],
+  private def createNonShardingReadRDD(readFile: PartitionedFile => Iterator[InternalRow],
                                        selectedPartitions: Seq[PartitionDirectory],
                                        fsRelation: HadoopFsRelation): RDD[InternalRow] = {
 
@@ -234,12 +248,21 @@ class KylinFileSourceScanExec(
       currentFiles += file
     }
     closePartition()
-    new FileScanRDD(fsRelation.sparkSession, readFile, partitions)
+
+    if (SoftAffinityManager.usingSoftAffinity) {
+      val start = System.currentTimeMillis()
+      val cachePartitions = partitions.map(CacheFilePartition.convertFilePartitionToCache)
+      logInfo(s"Convert file partition took: ${System.currentTimeMillis() - start}")
+      new CacheFileScanRDD(fsRelation.sparkSession, readFile, cachePartitions)
+    } else {
+      logInfo(s"Create FileScanRDD")
+      new FileScanRDD(fsRelation.sparkSession, readFile, partitions)
+    }
   }
 
   private def getBlockLocations(file: FileStatus): Array[BlockLocation] = file match {
     case f: LocatedFileStatus => f.getBlockLocations
-    case f => Array.empty[BlockLocation]
+    case _ => Array.empty[BlockLocation]
   }
 
   // Given locations of all blocks of a single file, `blockLocations`, and an `(offset, length)`

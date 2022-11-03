@@ -1,1 +1,0 @@
-`round(percentile(PRICE, 0.5, 1), -1)` DOUBLE,`sum(CASE WHEN (TRANS_ID > 100) THEN ITEM_COUNT ELSE 0 END)` BIGINT

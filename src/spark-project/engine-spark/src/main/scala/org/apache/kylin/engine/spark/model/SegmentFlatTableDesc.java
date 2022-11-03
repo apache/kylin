@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.spark.model;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -75,7 +77,7 @@ public class SegmentFlatTableDesc {
     }
 
     public SegmentFlatTableDesc(KylinConfig config, NDataSegment dataSegment, AdaptiveSpanningTree spanningTree,
-            List<String> relatedTables) {
+                                List<String> relatedTables) {
         this.config = config;
         this.kapConfig = KapConfig.getInstanceFromEnv();
         this.dataSegment = dataSegment;
@@ -123,6 +125,13 @@ public class SegmentFlatTableDesc {
 
     public SegmentRange getSegmentRange() {
         return this.dataSegment.getSegRange();
+    }
+
+    public boolean buildFilesSeparationPathExists(Path flatTablePath) throws IOException {
+        if (config.isBuildFilesSeparationEnabled()) {
+            return HadoopUtil.getWritingClusterFileSystem().exists(flatTablePath);
+        }
+        return HadoopUtil.getWorkingFileSystem().exists(flatTablePath);
     }
 
     public Path getFlatTablePath() {
@@ -202,7 +211,7 @@ public class SegmentFlatTableDesc {
         return spanningTree.getLevel0thIndices().stream().anyMatch(index -> index.getEffectiveDimCols().values() //
                 .stream().anyMatch(col -> !col.getTableRef().getTableIdentity().equalsIgnoreCase(factTableId)) //
                 || index.getEffectiveMeasures().values().stream().anyMatch(m -> m.getFunction().getColRefs().stream() //
-                        .anyMatch(col -> !col.getTableRef().getTableIdentity().equalsIgnoreCase(factTableId))));
+                .anyMatch(col -> !col.getTableRef().getTableIdentity().equalsIgnoreCase(factTableId))));
     }
 
     public int getFlatTableCoalescePartitionNum() {

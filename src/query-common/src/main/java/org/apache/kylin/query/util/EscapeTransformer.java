@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.util;
 
+import io.kyligence.kap.query.util.KapQueryUtil;
 import org.apache.kylin.common.KapConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -25,6 +25,6 @@ import org.apache.kylin.rest.constant.SnapshotStatus;
 import org.apache.kylin.rest.response.SnapshotInfoResponse;
 
 public interface SnapshotSupporter {
-    List<SnapshotInfoResponse> getProjectSnapshots(String project, String table, Set<SnapshotStatus> statusFilter,
-            Set<Boolean> partitionFilter, String sortBy, boolean isReversed);
+    List<SnapshotInfoResponse> getProjectSnapshots(String project, String table,
+                                                   Set<SnapshotStatus> statusFilter, Set<Boolean> partitionFilter, String sortBy, boolean isReversed);
 }

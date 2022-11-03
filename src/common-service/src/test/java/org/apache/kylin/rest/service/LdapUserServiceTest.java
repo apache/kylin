@@ -27,6 +27,8 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,13 +38,16 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.EncryptUtil;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.response.UserGroupResponseKI;
+import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.security.UserAclManager;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclUtil;
+import org.apache.kylin.rest.util.SpringContext;
+import org.apache.kylin.tool.upgrade.UpdateUserAclTool;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -79,6 +84,8 @@ import com.unboundid.ldap.listener.InMemoryDirectoryServer;
 import com.unboundid.ldap.listener.InMemoryDirectoryServerConfig;
 import com.unboundid.ldap.listener.InMemoryListenerConfig;
 
+import io.kyligence.kap.metadata.epoch.EpochManager;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -221,6 +228,12 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testListAdminUsers() throws Exception {
         Assert.assertEquals("jenny", ldapUserService.listAdminUsers().get(0));
+    }
+
+    @Test
+    public void testListSuperAdminUsers() throws Exception {
+        getTestConfig().setProperty("kylin.security.acl.super-admin-username", "jenny");
+        Assert.assertEquals("jenny", ldapUserService.listSuperAdminUsers().get(0));
     }
 
     @Test
@@ -377,4 +390,45 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
                 .contains("itpeople"));
     }
 
+    @Test
+    public void testGetLdapAdminUsers() {
+        UpdateUserAclTool tool = Mockito.spy(new UpdateUserAclTool());
+        val properties = getTestConfig().exportToProperties();
+        val password = properties.getProperty("kylin.security.ldap.connection-password");
+        Mockito.when(tool.getPassword(properties)).thenReturn(EncryptUtil.decrypt(password));
+        Assert.assertNotNull(tool.getLdapAdminUsers());
+    }
+
+    @Test
+    public void testSyncAdminUserAcl() throws IOException {
+        EpochManager epochManager = EpochManager.getInstance();
+        epochManager.tryUpdateEpoch(EpochManager.GLOBAL, true);
+        val userAclService = SpringContext.getBean(UserAclService.class);
+        val userAclManager = UserAclManager.getInstance(getTestConfig());
+        userAclManager.delete("jenny");
+        getTestConfig().setProperty("kylin.security.acl.super-admin-username", "");
+        userAclService.syncSuperAdminUserAcl();
+        Assert.assertNull(userAclManager.get("jenny"));
+
+        getTestConfig().setProperty("kylin.security.acl.super-admin-username", "jenny");
+        Assert.assertEquals(1, ldapUserService.getGlobalAdmin().size());
+        userAclService.syncAdminUserAcl();
+        Assert.assertTrue(userAclManager.get("jenny").hasPermission(AclPermission.DATA_QUERY));
+        userAclManager.add("sunny");
+        userAclService.syncAdminUserAcl(Arrays.asList("jenny", "sun"), true);
+        Assert.assertFalse(userAclManager.exists("sunny"));
+        Assert.assertTrue(userAclManager.exists("sun"));
+
+        userAclManager.delete("jenny");
+        getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "false");
+        userAclService.syncAdminUserAcl(Collections.emptyList(), false);
+        Assert.assertNull(userAclManager.get("jenny"));
+        userAclService.syncAdminUserAcl(Arrays.asList("jenny"), true);
+        Assert.assertTrue(userAclManager.get("jenny").hasPermission(AclPermission.DATA_QUERY));
+
+        getTestConfig().setProperty("kylin.security.acl.super-admin-username", "");
+        userAclManager.delete("jenny");
+        userAclService.syncAdminUserAcl(Arrays.asList("jenny"), true);
+        Assert.assertFalse(userAclManager.get("jenny").hasPermission(AclPermission.DATA_QUERY));
+    }
 }

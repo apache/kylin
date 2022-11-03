@@ -24,6 +24,22 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-common-service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-modeling-service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-data-loading-service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-query-service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kap-second-storage-core</artifactId>
         </dependency>
         <dependency>
@@ -58,13 +74,6 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-azure</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <!--server-->
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-server-base</artifactId>
             <scope>provided</scope>
         </dependency>
 

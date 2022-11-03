@@ -25,24 +25,25 @@ import java.util.stream.Collectors;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.ExecutableApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.SetThreadName;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.util.QueryHisStoreUtil;
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.streaming.util.StreamingJobRecordStoreUtil;
 import org.apache.kylin.metadata.streaming.util.StreamingJobStatsStoreUtil;
 import org.apache.kylin.tool.MaintainModeTool;
 import org.apache.kylin.tool.garbage.GarbageCleaner;
 import org.apache.kylin.tool.garbage.SourceUsageCleaner;
 import org.apache.kylin.tool.garbage.StorageCleaner;
+import org.apache.kylin.tool.util.ToolMainWrapper;
 
+import io.kyligence.kap.metadata.epoch.EpochManager;
+import io.kyligence.kap.metadata.recommendation.candidate.JdbcRawRecStore;
 import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -64,8 +65,10 @@ public class RoutineTool extends ExecutableApplication {
     private double requestFSRate;
 
     public static void main(String[] args) {
-        RoutineTool tool = new RoutineTool();
-        tool.execute(args);
+        ToolMainWrapper.wrap(args, () -> {
+            RoutineTool tool = new RoutineTool();
+            tool.execute(args);
+        });
         Unsafe.systemExit(0);
     }
 
@@ -140,7 +143,7 @@ public class RoutineTool extends ExecutableApplication {
 
     protected void cleanMeta(List<String> projectsToCleanup) throws IOException {
         try {
-            cleanGlobalMeta();
+            cleanGlobalSourceUsage();
             for (String projName : projectsToCleanup) {
                 cleanMetaByProject(projName);
             }
@@ -157,7 +160,7 @@ public class RoutineTool extends ExecutableApplication {
 
     }
 
-    public void cleanGlobalMeta() {
+    public static void cleanGlobalSourceUsage() {
         log.info("Start to clean up global meta");
         try {
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
@@ -171,7 +174,7 @@ public class RoutineTool extends ExecutableApplication {
 
     }
 
-    public void cleanMetaByProject(String projectName) {
+    public static void cleanMetaByProject(String projectName) {
         log.info("Start to clean up {} meta", projectName);
         try {
             GarbageCleaner.cleanMetadata(projectName);

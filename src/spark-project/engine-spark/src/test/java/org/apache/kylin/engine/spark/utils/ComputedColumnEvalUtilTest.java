@@ -237,6 +237,23 @@ public class ComputedColumnEvalUtilTest extends NLocalWithSparkSessionTest {
     }
 
     @Test
+    public void testEvalDataTypeOfCCWithChineseAndSpecialCharacter() {
+        List<ComputedColumnDesc> computedColumns = Lists.newArrayList();
+
+        ComputedColumnDesc computedColumnDesc = new ComputedColumnDesc();
+        computedColumnDesc.setInnerExpression("`123TABLE`.`中文列` + `123TABLE`.`DAY#` + 1 + `123TABLE`.`DAY` + 1");
+        computedColumnDesc.setColumnName("cc_test");
+        computedColumns.add(computedColumnDesc);
+
+        NDataModel nDataModel = NDataModelManager
+                .getInstance(KylinConfig.getInstanceFromEnv(), "special_character_in_column")
+                .getDataModelDesc("8c08822f-296a-b097-c910-e38d8934b6f9");
+
+        ComputedColumnEvalUtil.evaluateExprAndTypeBatch(nDataModel, computedColumns);
+        Assert.assertEquals(1, computedColumns.size());
+    }
+
+    @Test
     public void testNotShareExpressionUnmatchingSubgraph() throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         final String project = "default";

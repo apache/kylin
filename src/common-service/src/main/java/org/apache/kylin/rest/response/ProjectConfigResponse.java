@@ -51,8 +51,22 @@ public class ProjectConfigResponse {
     private boolean pushDownEnabled;
     @JsonProperty("scd2_enabled")
     private boolean scd2Enabled;
+
     @JsonProperty("snapshot_manual_management_enabled")
     private boolean snapshotManualManagementEnabled;
+    @JsonProperty("snapshot_automatic_refresh_enabled")
+    private boolean snapshotAutoRefreshEnabled;
+    @JsonProperty("snapshot_automatic_refresh_time_mode")
+    private String snapshotAutoRefreshTimeMode = "DAY";
+    @JsonProperty("snapshot_automatic_refresh_time_interval")
+    private String snapshotAutoRefreshTimeInterval = "1";
+    @JsonProperty("snapshot_automatic_refresh_trigger_hours")
+    private String snapshotAutoRefreshTriggerHours = "0";
+    @JsonProperty("snapshot_automatic_refresh_trigger_minute")
+    private String snapshotAutoRefreshTriggerMinute = "0";
+    @JsonProperty("snapshot_automatic_refresh_trigger_second")
+    private String snapshotAutoRefreshTriggerSecond = "0";
+
     @JsonProperty("second_storage_enabled")
     private Boolean secondStorageEnabled;
     @JsonProperty("second_storage_nodes")

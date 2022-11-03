@@ -17,11 +17,13 @@
  */
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -38,7 +40,8 @@ public class MetadataBackupService {
 
     private ExecutorService executors = Executors.newSingleThreadExecutor();
 
-    public void backupAll() throws Exception {
+    @SneakyThrows(IOException.class)
+    public void backupAll(){
 
         try (SetThreadName ignored = new SetThreadName("MetadataBackupWorker")) {
             String[] args = new String[] { "-backup", "-compress", "-dir", getBackupDir() };
@@ -47,10 +50,12 @@ public class MetadataBackupService {
         }
     }
 
-    public void backup(String[] args) throws Exception {
+    public void backup(String[] args) throws IOException {
         val kylinConfig = KylinConfig.getInstanceFromEnv();
-        HDFSMetadataTool.cleanBeforeBackup(kylinConfig);
-        val metadataTool = new MetadataTool(kylinConfig);
+        HDFSMetadataTool.cleanBeforeBackup(KylinConfig.getInstanceFromEnv());
+        val backupConfig = kylinConfig.getMetadataBackupFromSystem() ? kylinConfig
+                : KylinConfig.createKylinConfig(kylinConfig);
+        val metadataTool = new MetadataTool(backupConfig);
         metadataTool.execute(args);
     }
 
@@ -61,7 +66,7 @@ public class MetadataBackupService {
         auditLogStore.rotate();
     }
 
-    public String backupProject(String project) throws Exception {
+    public String backupProject(String project) throws IOException {
         val folder = LocalDateTime.now(Clock.systemDefaultZone()).format(MetadataTool.DATE_TIME_FORMATTER) + "_backup";
         String[] args = new String[] { "-backup", "-compress", "-project", project, "-folder", folder, "-dir",
                 getBackupDir() };

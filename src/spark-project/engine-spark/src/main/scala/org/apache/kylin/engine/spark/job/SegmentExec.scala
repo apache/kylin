@@ -18,6 +18,10 @@
 
 package org.apache.kylin.engine.spark.job
 
+import java.util
+import java.util.Objects
+import java.util.concurrent.{BlockingQueue, ForkJoinPool, LinkedBlockingQueue, TimeUnit}
+
 import com.google.common.collect.{Lists, Queues}
 import org.apache.kylin.engine.spark.job.SegmentExec.{LayoutResult, ResultType, SourceStats}
 import org.apache.kylin.engine.spark.job.stage.merge.MergeStage
@@ -31,10 +35,8 @@ import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.datasource.storage.{StorageListener, StorageStoreFactory, WriteTaskStats}
 import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
+import org.apache.spark.tracker.BuildContext
 
-import java.util
-import java.util.Objects
-import java.util.concurrent.ForkJoinPool
 import scala.collection.JavaConverters._
 import scala.collection.parallel.ForkJoinTaskSupport
 
@@ -51,39 +53,131 @@ trait SegmentExec extends Logging {
   protected val dataModel: NDataModel
   protected val storageType: Int
 
-  protected def runtime: JobRuntime
+  protected val resourceContext: BuildContext
+  protected val runtime: JobRuntime
 
-  @volatile protected var backgroundFailure: Option[Throwable] = None
+  @volatile protected var anonymousFailure: Option[Throwable] = None
 
   // Layout result pipe.
   protected final lazy val pipe = Queues.newLinkedBlockingQueue[ResultType]()
 
-  // Await or fail fast.
-  private lazy val noneOrFailure = Queues.newLinkedBlockingQueue[Option[Throwable]]()
+  // Share failed task 'throwable' with main thread.
+  protected final lazy val failFastQueue: LinkedBlockingQueue[Option[Throwable]] = Queues.newLinkedBlockingQueue[Option[Throwable]]()
 
-  protected def awaitOrFailFast(countDown: Int): Unit = {
-    // Await layer or fail fast.
-    var i = countDown
-    while (i > 0) {
-      val failure = noneOrFailure.take()
-      if (failure.nonEmpty) {
-        val t = failure.get
-        logError(s"Segment $segmentId fail fast.", t)
-        drain()
-        throw t
+  protected trait Task {
+    def getTaskDesc: String
+  }
+
+  protected def recordTaskInfo(t: Task): Unit = {
+    // Default: do nothing
+  }
+
+  protected def reportTaskProgress(): Unit = {
+    // Default: do nothing
+  }
+
+  protected def slowStartExec[T <: Task](taskIter: Iterator[T], taskExec: T => Unit): Unit = {
+    // Slow Start and Congestion Avoidance
+    // congestion window
+    var cwnd = 1
+    // slow start threshold
+    var ssthresh = 10
+    var inflight = 0
+    var shrinkable = true
+    var reportable = false
+    while (taskIter.hasNext) {
+      if (resourceContext.isAvailable) {
+        shrinkable = true
+        while (taskIter.hasNext && inflight < cwnd) {
+          val task = taskIter.next()
+          submitTaskExec(task, taskExec)
+          inflight += 1
+          recordTaskInfo(task)
+          reportable = true
+        }
+        cwnd = adjustCwnd(cwnd, ssthresh)
+      } else if (shrinkable) {
+        // Adjust ssthresh
+        ssthresh = Math.max(1, cwnd >> 1)
+        cwnd = 1
+        shrinkable = false
       }
-      i -= 1
+
+      // report progress
+      if (reportable) {
+        reportTaskProgress()
+        reportable = false
+      }
+
+      // Poll and fail fast.
+      inflight -= failFastPoll(3L, TimeUnit.SECONDS)
+    }
+
+    // Await or fail fast.
+    while (inflight > 0) {
+      inflight -= failFastPoll()
+    }
+    // Drain immediately after all layouts built.
+    drain()
+  }
+
+  private def submitTaskExec[T <: Task](task: T, taskExec: T => Unit): Unit = {
+    runtime.submit(() => try {
+      // If unset
+      setConfig4CurrentThread()
+      // Build layout.
+      taskExec(task)
+      // Offer 'None' if everything was well.
+      failFastQueue.offer(None)
+    } catch {
+      case t: Throwable =>
+        logError(s"Segment $segmentId task exec failed", t)
+        failFastQueue.offer(Some(t))
+    })
+  }
+
+  private def adjustCwnd(cwnd: Int, ssthresh: Int): Int = {
+    if (cwnd << 1 < ssthresh) {
+      // slow start
+      cwnd << 1
+    } else if (cwnd < ssthresh) {
+      // congestion avoidance
+      ssthresh
+    } else {
+      // congestion avoidance
+      cwnd + 1
     }
   }
 
-  protected final def asyncExecute(f: => Unit): Unit = {
-    runtime.submit(() => try {
-      setConfig4CurrentThread()
-      f
-      noneOrFailure.offer(None)
-    } catch {
-      case t: Throwable => noneOrFailure.offer(Some(t))
-    })
+  protected final def failFastCheck(): Unit = {
+    handleFailure(anonymousFailure)
+    // Do not poll any element here!!
+    val iter = failFastQueue.iterator()
+    while (iter.hasNext) {
+      handleFailure(iter.next())
+    }
+  }
+
+  protected final def failFastPoll(timeout: Long = 1, unit: TimeUnit = TimeUnit.SECONDS): Int = {
+    handleFailure(anonymousFailure)
+    assert(unit.toSeconds(timeout) > 0, s"Timeout should be positive seconds to avoid a busy loop.")
+    var count = 0
+    var failure = failFastQueue.poll(timeout, unit)
+    while (Objects.nonNull(failure)) {
+      handleFailure(failure)
+      count += 1
+      failure = failFastQueue.poll()
+    }
+    count
+  }
+
+  protected final def handleFailure(failure: Option[Throwable]): Unit = {
+    if (Objects.isNull(failure) || failure.isEmpty) {
+      return
+    }
+    logError(s"Fail fast.", failure.get)
+    drain()
+    throw failure.get
   }
 
   protected final def setConfig4CurrentThread(): Unit = {
@@ -94,8 +188,8 @@ trait SegmentExec extends Logging {
     KylinConfig.setAndUnsetThreadLocalConfig(config)
   }
 
-  protected def drain(): Unit = synchronized {
-    var entry = pipe.poll()
+  protected def drain(timeout: Long = 1, unit: TimeUnit = TimeUnit.SECONDS): Unit = synchronized {
+    var entry = pipe.poll(timeout, unit)
     if (Objects.isNull(entry)) {
       return
     }
@@ -155,7 +249,7 @@ trait SegmentExec extends Logging {
       setConfig4CurrentThread()
       drain()
     } catch {
-      case t: Throwable => logError(s"Segment $segmentId checkpoint failed.", t); backgroundFailure = Some(t); throw t
+      case t: Throwable => logError(s"Segment $segmentId checkpoint failed.", t); anonymousFailure = Some(t); throw t
     })
   }
 
@@ -302,6 +396,16 @@ trait SegmentExec extends Logging {
       forkJoinPool.shutdownNow()
     }
     logInfo(s"Segment $segmentId cleanup layout temp data: ${cleanups.map(_.getName).mkString("[", ",", "]")}")
+  }
+
+  protected def polledResultSeq[T](resultQueue: BlockingQueue[T]): Seq[T] = {
+    val collected = Lists.newArrayList[T]()
+    var entry = resultQueue.poll()
+    while (Objects.nonNull(entry)) {
+      collected.add(entry)
+      entry = resultQueue.poll()
+    }
+    collected.asScala
   }
 
 }

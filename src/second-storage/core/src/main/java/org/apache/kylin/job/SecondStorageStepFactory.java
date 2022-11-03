@@ -18,12 +18,12 @@
 
 package org.apache.kylin.job;
 
-import org.apache.kylin.job.execution.AbstractExecutable;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import org.apache.kylin.job.execution.AbstractExecutable;
 
 public class SecondStorageStepFactory {
     private static final Map<Class<? extends SecondStorageStep>, Supplier<AbstractExecutable>> SUPPLIER_MAP = new ConcurrentHashMap<>(5);
@@ -47,5 +47,7 @@ public class SecondStorageStepFactory {
     public interface SecondStorageRefreshStep extends SecondStorageStep {}
 
     public interface SecondStorageMergeStep extends SecondStorageStep {}
+
+    public interface SecondStorageIndexClean extends SecondStorageStep {}
 
 }

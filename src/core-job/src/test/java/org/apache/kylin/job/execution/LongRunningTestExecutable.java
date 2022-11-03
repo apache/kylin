@@ -21,7 +21,7 @@ import org.apache.kylin.job.exception.ExecuteException;
 
 public class LongRunningTestExecutable extends BaseTestExecutable {
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    public ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         try {
             Thread.sleep(Long.MAX_VALUE);
         } catch (InterruptedException e) {

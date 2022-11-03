@@ -19,6 +19,8 @@ package org.apache.kylin.tool.util;
 
 import static org.apache.kylin.tool.util.ScreenPrintUtil.systemExitWhenMainThread;
 
+import org.apache.commons.lang3.StringUtils;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -35,9 +37,10 @@ public class ToolMainWrapper {
     public static void wrap(int errorExitCode, String[] args, Wrapper wrapper) {
         try {
             wrapper.run();
-        } catch (Exception e) {
-            log.error("Failed to run tool: {} {}", Thread.currentThread().getStackTrace()[2].getClassName(),
-                    org.apache.commons.lang3.StringUtils.join(args, org.apache.commons.lang3.StringUtils.SPACE), e);
+        } catch (Throwable e) {
+            int last = Thread.currentThread().getStackTrace().length - 1;
+            log.error("Failed to run tool: {} {}", Thread.currentThread().getStackTrace()[last].getClassName(),
+                    StringUtils.join(args, StringUtils.SPACE), e);
             systemExitWhenMainThread(errorExitCode);
         }
     }

@@ -18,19 +18,20 @@
 
 package org.apache.kylin.engine.spark.job
 
-import java.io.IOException
 import com.google.common.collect.Maps
+import io.kyligence.kap.engine.spark.job.RDSegmentBuildJob
+import org.apache.hadoop.fs.Path
 import org.apache.kylin.engine.spark.builder.SegmentFlatTable
 import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
 import org.apache.kylin.metadata.cube.model.NDataSegment
-import org.apache.hadoop.fs.Path
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparderEnv
 import org.apache.spark.sql.datasource.storage.StorageStoreUtils
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 
+import java.io.IOException
 import scala.collection.JavaConverters._
 
 class RDSegmentBuildExec(private val jobContext: RDSegmentBuildJob, //

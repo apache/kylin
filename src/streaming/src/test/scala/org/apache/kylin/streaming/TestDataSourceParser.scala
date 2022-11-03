@@ -74,7 +74,7 @@ class TestDataSourceParser extends AnyFunSuite {
     val df = spark.createDataFrame(rowList, valueSchema)
 
     assert(df.count() == 4)
-    val parsedDataframe = castDF(df.toDF(), schema)
+    val parsedDataframe = castDF(df.toDF(), schema, "windowDateLong")
     assert(parsedDataframe.count() == 4)
     assert(parsedDataframe.selectExpr("windowDate").head().get(0) == "2021-06-01 00:00:00")
     assert(parsedDataframe.selectExpr("windowDateLong").head().get(0) == "1625037465002")

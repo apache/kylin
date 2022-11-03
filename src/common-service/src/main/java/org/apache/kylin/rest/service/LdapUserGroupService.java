@@ -37,9 +37,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.common.scheduler.EventBusFactory;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.response.UserGroupResponseKI;
+import org.apache.kylin.rest.security.AdminUserSyncEventNotifier;
+import org.apache.kylin.tool.util.LdapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -199,57 +202,26 @@ public class LdapUserGroupService extends NUserGroupService {
         List<String> users = ldapGroupsAndMembersCache.getIfPresent(name);
         if (null == users) {
             users = new ArrayList<>();
-            Set<String> ldapUserDNs = getAllGroupMembers(name).stream().filter(StringUtils::isNotBlank)
-                    .collect(Collectors.toSet());
+            Set<String> ldapUserDNs = LdapUtils.getAllGroupMembers(ldapTemplate, name).stream()
+                    .filter(StringUtils::isNotBlank).collect(Collectors.toSet());
 
             Map<String, String> dnMapperMap = ldapUserService.getDnMapperMap();
 
             for (String u : ldapUserDNs) {
                 Optional.ofNullable(dnMapperMap.get(u)).ifPresent(users::add);
             }
-            ldapGroupsAndMembersCache.put(name, Collections.unmodifiableList(users));
+            List<String> userList = Collections.unmodifiableList(users);
+            syncAdminUser(name, userList);
+            ldapGroupsAndMembersCache.put(name, userList);
         }
         return users;
     }
 
-    private Set<String> getAllGroupMembers(String name) {
-        String ldapGroupSearchBase = KylinConfig.getInstanceFromEnv().getLDAPGroupSearchBase();
-        String ldapGroupMemberSearchFilter = KapConfig.getInstanceFromEnv().getLDAPGroupMemberSearchFilter();
-        String ldapGroupMemberAttr = KapConfig.getInstanceFromEnv().getLDAPGroupMemberAttr();
-        Set<String> ldapUserDNs = ldapTemplate.searchForSingleAttributeValues(ldapGroupSearchBase,
-                ldapGroupMemberSearchFilter, new String[] { name }, ldapGroupMemberAttr);
-        logger.info("Ldap group members search config, base: {},member search filter: {}, member identifier: {}",
-                ldapGroupSearchBase, ldapGroupMemberSearchFilter, ldapGroupMemberAttr);
-
-        if (ldapUserDNs.isEmpty()) {
-            // try using range retrieval
-            int left = 0;
-            Integer maxValRange = KapConfig.getInstanceFromEnv().getLDAPMaxValRange();
-            while (true) {
-                String ldapGroupMemberRangeAttr = String.format(Locale.ROOT, "%s;range=%s-%s", ldapGroupMemberAttr,
-                        left, left + (maxValRange - 1));
-                logger.info(
-                        "Ldap group members search config, base: {},member search filter: {}, member identifier: {}",
-                        ldapGroupSearchBase, ldapGroupMemberSearchFilter, ldapGroupMemberRangeAttr);
-                Set<String> rangeResults = ldapTemplate.searchForSingleAttributeValues(ldapGroupSearchBase,
-                        ldapGroupMemberSearchFilter, new String[] { name }, ldapGroupMemberRangeAttr);
-                if (rangeResults.isEmpty()) {
-                    // maybe the last page
-                    ldapGroupMemberRangeAttr = String.format(Locale.ROOT, "%s;range=%s-%s", ldapGroupMemberAttr, left,
-                            "*");
-                    logger.info(
-                            "Last page, ldap group members search config, base: {},member search filter: {}, member identifier: {}",
-                            ldapGroupSearchBase, ldapGroupMemberSearchFilter, ldapGroupMemberRangeAttr);
-                    ldapUserDNs.addAll(ldapTemplate.searchForSingleAttributeValues(ldapGroupSearchBase,
-                            ldapGroupMemberSearchFilter, new String[] { name }, ldapGroupMemberRangeAttr));
-                    break;
-                }
-                ldapUserDNs.addAll(rangeResults);
-                left += maxValRange;
-            }
+    private void syncAdminUser(String groupName, List<String> userList) {
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        if (conf.getLDAPAdminRole().equalsIgnoreCase(groupName)) {
+            EventBusFactory.getInstance().postSync(new AdminUserSyncEventNotifier(userList, true));
         }
-
-        return ldapUserDNs;
     }
 
     @Override

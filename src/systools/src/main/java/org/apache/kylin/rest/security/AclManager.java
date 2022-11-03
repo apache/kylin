@@ -37,7 +37,6 @@ import org.apache.kylin.rest.util.SpringContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.acls.domain.ConsoleAuditLogger;
-import org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy;
 import org.springframework.security.acls.domain.PermissionFactory;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Acl;
@@ -60,7 +59,19 @@ import lombok.val;
 public class AclManager {
 
     private static final Logger logger = LoggerFactory.getLogger(AclManager.class);
-    private final PermissionGrantingStrategy permissionGrantingStrategy = new DefaultPermissionGrantingStrategy(
+
+    public static AclManager getInstance(KylinConfig config) {
+        return config.getManager(AclManager.class);
+    }
+
+    // called by reflection
+    static AclManager newInstance(KylinConfig config) {
+        return new AclManager(config);
+    }
+
+    // ============================================================================
+
+    private final PermissionGrantingStrategy permissionGrantingStrategy = new KylinPermissionGrantingStrategy(
             new ConsoleAuditLogger());
     private final PermissionFactory aclPermissionFactory = new AclPermissionFactory();
 
@@ -74,22 +85,26 @@ public class AclManager {
         this.crud = new CachedCrudAssist<AclRecord>(aclStore, ResourceStore.ACL_ROOT, "", AclRecord.class) {
             @Override
             protected AclRecord initEntityAfterReload(AclRecord acl, String resourceName) {
-                val aclPermissionFactory = SpringContext.getBean(PermissionFactory.class);
-                val permissionGrantingStrategy = SpringContext.getBean(PermissionGrantingStrategy.class);
-                acl.init(null, aclPermissionFactory, permissionGrantingStrategy);
+                acl.init(null, SpringContext.getBean(PermissionFactory.class),
+                        SpringContext.getBean(PermissionGrantingStrategy.class));
                 return acl;
             }
         };
         crud.reloadAll();
     }
 
-    public static AclManager getInstance(KylinConfig config) {
-        return config.getManager(AclManager.class);
-    }
-
-    // called by reflection
-    static AclManager newInstance(KylinConfig config) {
-        return new AclManager(config);
+    public AclManager(KylinConfig config, PermissionFactory permissionFactory,
+            PermissionGrantingStrategy permissionGrantingStrategy) {
+        this.config = config;
+        ResourceStore aclStore = ResourceStore.getKylinMetaStore(config);
+        this.crud = new CachedCrudAssist<AclRecord>(aclStore, ResourceStore.ACL_ROOT, "", AclRecord.class) {
+            @Override
+            protected AclRecord initEntityAfterReload(AclRecord acl, String resourceName) {
+                acl.init(null, permissionFactory, permissionGrantingStrategy);
+                return acl;
+            }
+        };
+        crud.reloadAll();
     }
 
     public KylinConfig getConfig() {
@@ -148,8 +163,7 @@ public class AclManager {
         for (ObjectIdentity oid : oids) {
             AclRecord record = getAclRecordByCache(AclPermissionUtil.objID(oid));
             if (record == null) {
-                throw new NotFoundException(
-                        String.format(Locale.ROOT, MsgPicker.getMsg().getAclInfoNotFound(), oid));
+                throw new NotFoundException(String.format(Locale.ROOT, MsgPicker.getMsg().getAclInfoNotFound(), oid));
             }
 
             Acl parentAcl = null;

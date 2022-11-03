@@ -23,7 +23,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_LOGIN_
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.common.annotation.ThirdPartyDependencies;
-import org.apache.kylin.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.apache.kylin.rest.service.NUserGroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

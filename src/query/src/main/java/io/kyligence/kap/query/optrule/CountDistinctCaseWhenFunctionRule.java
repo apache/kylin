@@ -18,9 +18,9 @@
 
 package io.kyligence.kap.query.optrule;
 
-import static org.apache.kylin.query.util.KapQueryUtil.isCast;
-import static org.apache.kylin.query.util.KapQueryUtil.isNullLiteral;
-import static org.apache.kylin.query.util.KapQueryUtil.isPlainTableColumn;
+import static io.kyligence.kap.query.util.KapQueryUtil.isCast;
+import static io.kyligence.kap.query.util.KapQueryUtil.isNullLiteral;
+import static io.kyligence.kap.query.util.KapQueryUtil.isPlainTableColumn;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -111,6 +111,11 @@ public class RuleBasedIndex implements Serializable {
     @JsonProperty("index_update_enabled")
     private boolean indexUpdateEnabled = true;
 
+    @Setter
+    @Getter
+    @JsonProperty("base_layout_enabled")
+    private Boolean baseLayoutEnabled;
+
     // computed fields below
 
     @Getter
@@ -281,8 +286,9 @@ public class RuleBasedIndex implements Serializable {
                 .map(LayoutEntity::getIndex).collect(Collectors.groupingBy(IndexEntity::createIndexIdentifier,
                         Collectors.reducing(null, (l, r) -> r)));
         boolean needAllocationId = layoutIdMapping.isEmpty();
+        boolean isBaseCuboidValid = getIndexPlan().getConfig().isBaseCuboidAlwaysValid();
+        val baseColOrder = new ColOrder(getDimensions(), getMeasures());
         long proposalId = indexStartId + 1;
-
         val colOrders = getCuboidScheduler().getAllColOrders();
         for (int i = 0; i < colOrders.size(); i++) {
             val colOrder = colOrders.get(i);
@@ -332,7 +338,9 @@ public class RuleBasedIndex implements Serializable {
                         Math.max(layout.getId() % IndexEntity.INDEX_ID_STEP + 1, layoutIndex.getNextLayoutOffset()));
             }
             layout.setIndex(layoutIndex);
-
+            if (!isBaseCuboidValid && colOrder.equals(baseColOrder)) {
+                continue;
+            }
             genLayouts.add(layout);
         }
 

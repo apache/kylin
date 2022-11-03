@@ -22,23 +22,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
-import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.cube.model.NDataflow;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NDataModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +62,6 @@ public class HybridRealization implements IRealization {
 
     private List<TblColRef> allDimensions = null;
     private Set<TblColRef> allColumns = null;
-    private Set<ColumnDesc> allColumnDescs = null;
     private List<MeasureDesc> allMeasures = null;
     private long dateRangeStart;
     private long dateRangeEnd;
@@ -104,7 +103,6 @@ public class HybridRealization implements IRealization {
 
         allDimensions = Lists.newArrayList(dimensions);
         allColumns = columns;
-        allColumnDescs = asColumnDescs(allColumns);
         uuid = streamingRealization.getUuid();
 
         Collections.sort(realizations, (realization1, realization2) -> {
@@ -126,21 +124,14 @@ public class HybridRealization implements IRealization {
         });
     }
 
-    private Set<ColumnDesc> asColumnDescs(Set<TblColRef> columns) {
-        LinkedHashSet<ColumnDesc> result = new LinkedHashSet<>();
-        for (TblColRef col : columns) {
-            result.add(col.getColumnDesc());
-        }
-        return result;
-    }
-
     @Override
-    public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments) {
+    public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
+            Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
         return new CapabilityResult();
     }
 
     public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            List<NDataSegment> prunedStreamingSegments) {
+            List<NDataSegment> prunedStreamingSegments, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
         CapabilityResult result = new CapabilityResult();
         result.cost = Integer.MAX_VALUE;
 
@@ -148,13 +139,13 @@ public class HybridRealization implements IRealization {
         for (IRealization realization : getRealizations()) {
             CapabilityResult child;
             if (realization.isStreaming()) {
-                child = realization.isCapable(digest, prunedStreamingSegments);
+                child = realization.isCapable(digest, prunedStreamingSegments, secondStorageSegmentLayoutMap);
                 result.setSelectedStreamingCandidate(child.getSelectedStreamingCandidate());
                 if (child.capable) {
                     result.cost = Math.min(result.cost, (int) child.getSelectedStreamingCandidate().getCost());
                 }
             } else {
-                child = realization.isCapable(digest, prunedSegments);
+                child = realization.isCapable(digest, prunedSegments, secondStorageSegmentLayoutMap);
                 result.setSelectedCandidate(child.getSelectedCandidate());
                 if (child.capable) {
                     result.cost = Math.min(result.cost, (int) child.getSelectedCandidate().getCost());
@@ -249,11 +240,6 @@ public class HybridRealization implements IRealization {
     @Override
     public Set<TblColRef> getAllColumns() {
         return allColumns;
-    }
-
-    @Override
-    public Set<ColumnDesc> getAllColumnDescs() {
-        return allColumnDescs;
     }
 
     @Override

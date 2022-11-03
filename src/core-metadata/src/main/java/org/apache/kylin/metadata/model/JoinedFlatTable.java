@@ -43,6 +43,8 @@ public class JoinedFlatTable {
     private static final String QUOTE = Quoting.DOUBLE_QUOTE.string;
     private static final String UNDER_LINE = "_";
     private static final String DOT = ".";
+    private static final Pattern BACK_TICK_DOT_PATTERN = Pattern
+            .compile("`[^\\f\\n\\r\\t\\v]+?`\\.`[^\\f\\n\\r\\t\\v]+?`");
 
     private JoinedFlatTable() {
     }
@@ -310,6 +312,9 @@ public class JoinedFlatTable {
      */
     @VisibleForTesting
     public static String quoteIdentifierInSqlExpr(NDataModel modelDesc, String sqlExpr, String quotation) {
+        if (BACK_TICK_DOT_PATTERN.matcher(sqlExpr).find()) {
+            return quoteIdentifierInSqlBackTickExpr(sqlExpr, quotation);
+        }
         Map<String, String> tabToAliasMap = buildTableToTableAliasMap(modelDesc);
         Map<String, Map<String, String>> tabToColsMap = buildTableToColumnsMap(modelDesc);
 
@@ -351,4 +356,16 @@ public class JoinedFlatTable {
         }
         return sqlExpr;
     }
+
+    private static String quoteIdentifierInSqlBackTickExpr(String sqlExpr, String quotation) {
+        String result = sqlExpr;
+        Matcher matcher = BACK_TICK_DOT_PATTERN.matcher(sqlExpr);
+        while (matcher.find()) {
+            String target = matcher.group();
+            target = target.replace("`", quotation);
+            result = result.replace(matcher.group(), target);
+        }
+        return result;
+    }
+
 }

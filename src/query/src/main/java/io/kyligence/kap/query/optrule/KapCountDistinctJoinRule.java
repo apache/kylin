@@ -33,7 +33,7 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.kylin.query.relnode.KapAggregateRel;
 import org.apache.kylin.query.relnode.KapJoinRel;
-import org.apache.kylin.query.util.KapQueryUtil;
+import io.kyligence.kap.query.util.KapQueryUtil;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

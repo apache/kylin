@@ -19,19 +19,21 @@ package io.kyligence.kap.secondstorage.metadata;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import io.kyligence.kap.secondstorage.metadata.annotation.TableDefinition;
 
 @TableDefinition
@@ -118,6 +120,27 @@ public class TablePlan extends RootPersistentEntity
         this.tableMetas.removeIf(tableEntity -> layoutIds.contains(tableEntity.getLayoutID()));
     }
 
+    public void updatePrimaryIndexColumns(long layoutId, List<Integer> primaryIndexColumns) {
+        checkIsNotCachedAndShared();
+        TableEntity entity = this.tableMetas.stream().filter(tableEntity -> tableEntity.getLayoutID() == layoutId)
+                .findFirst().orElse(null);
+        if (entity == null) {
+            return;
+        }
+
+        entity.setPrimaryIndexColumns(primaryIndexColumns);
+    }
+
+    public void updateSecondaryIndexColumns(long layoutId, Set<Integer> secondaryIndexColumns) {
+        checkIsNotCachedAndShared();
+        TableEntity entity = this.tableMetas.stream().filter(tableEntity -> tableEntity.getLayoutID() == layoutId)
+                .findFirst().orElse(null);
+        if (entity == null) {
+            return;
+        }
+        entity.setSecondaryIndexColumns(secondaryIndexColumns);
+    }
+
     public String getDescription() {
         return description;
     }
@@ -144,15 +167,24 @@ public class TablePlan extends RootPersistentEntity
     }
 
     // update
-    public TablePlan
-    createTableEntityIfNotExists(LayoutEntity layoutEntity, boolean throwOnDifferentLayout){
+    public TablePlan createTableEntityIfNotExists(LayoutEntity layoutEntity, boolean throwOnDifferentLayout) {
         Preconditions.checkArgument(manager != null);
         if (containIndex(layoutEntity, throwOnDifferentLayout))
             return this;
-        TableEntity entity = TableEntity.builder()
-                .setLayoutEntity(layoutEntity)
+
+        Optional<TableEntity> preTableEntity = getTableMetas().stream()
+                .max(Comparator.comparing(TableEntity::getLayoutID));
+
+        TableEntity entity = TableEntity.builder().setLayoutEntity(layoutEntity)
+                .setPrimaryIndexColumns(preTableEntity.map(TableEntity::getPrimaryIndexColumns).orElse(null))
+                .setSecondaryIndexColumns(preTableEntity.map(TableEntity::getSecondaryIndexColumns).orElse(null))
                 .build();
-        return manager.update(uuid, copyForWrite -> copyForWrite.addTable(entity));
+        return createTableEntity(entity);
+    }
+
+    public TablePlan createTableEntity(TableEntity tableEntity) {
+        Preconditions.checkArgument(manager != null);
+        return manager.update(uuid, copyForWrite -> copyForWrite.addTable(tableEntity));
     }
 
     public TablePlan update(Consumer<TablePlan> updater) {

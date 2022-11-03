@@ -18,21 +18,19 @@
 
 package org.apache.kylin.query.asyncprofiler
 
-import java.io.{File, OutputStream}
-import java.nio.charset.Charset
-import java.nio.file.Files
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import org.apache.commons.io.FileUtils
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.common.asyncprofiler.Message._
+import org.apache.kylin.common.asyncprofiler.{AsyncProfilerTool, AsyncProfilerUtils}
 import org.apache.kylin.common.exception.{KylinException, QueryErrorCode}
-import org.apache.kylin.common.util.ZipFileUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparderEnv
 
+import java.io.OutputStream
+import java.nio.file.Files
+import java.util.concurrent.CountDownLatch
+
 
 object AsyncProfiling extends Logging {
-
-  import Message._
 
   private val localCacheDir = Files.createTempDirectory("ke-async-profiler-result-").toFile
   localCacheDir.deleteOnExit()
@@ -45,6 +43,9 @@ object AsyncProfiling extends Logging {
   private var dumped = false
   private var cachedResult: CountDownLatch = _
 
+  val asyncProfilerUtils: AsyncProfilerUtils = AsyncProfilerUtils.getInstance()
+  asyncProfilerUtils.build(resultCollectionTimeout, localCacheDir)
+
   def nextCommand(): String = {
     command
   }
@@ -56,11 +57,12 @@ object AsyncProfiling extends Logging {
         throw new KylinException(QueryErrorCode.PROFILING_ALREADY_STARTED, "profiling is already started, stop it first")
       }
       logDebug("profiler start")
-      cleanLocalCache()
+      asyncProfilerUtils.cleanLocalCache()
       // expecting driver + count(executor) amount of results
       cachedResult = new CountDownLatch(
         SparderEnv.getSparkSession.sparkContext.getExecutorMemoryStatus.size
       )
+      asyncProfilerUtils.build(cachedResult)
       logDebug(s"expecting ${cachedResult.getCount} to be collected")
 
       running = true
@@ -110,54 +112,15 @@ object AsyncProfiling extends Logging {
 
       dumped = true
       command = createDriverMessage(DUMP, dumpParam) // inform executors
-      cacheDriverResult(AsyncProfilerTool.dump(dumpParam)) // dump driver prof
+      asyncProfilerUtils.cacheDriverResult(AsyncProfilerTool.dump(dumpParam)) // dump driver prof
     }
   }
 
   def waitForResult(outStream: OutputStream): Unit = {
-    if (!cachedResult.await(resultCollectionTimeout, TimeUnit.MILLISECONDS)) {
-      logWarning(s"timeout while waiting for profile result")
-    }
-    logDebug(s"profiler stopped and result dumped to $localCacheDir")
-    ZipFileUtils.compressZipFile(localCacheDir.getAbsolutePath, outStream)
-  }
-
-  private def suffix(content: String): String = {
-    if (content.startsWith("<!DOCTYPE html>")) {
-      ".html"
-    } else {
-      ""
-    }
+    asyncProfilerUtils.waitForResult(outStream)
   }
 
   private[asyncprofiler] def cacheExecutorResult(content: String, executorId: String): Unit = {
-    cacheResult(content, s"executor-$executorId${suffix(content)}")
-    logDebug(s"cached result from executor-$executorId")
-    cachedResult.countDown()
-  }
-
-  private[asyncprofiler] def cacheDriverResult(content: String): Unit = {
-    cacheResult(content, s"driver${suffix(content)}")
-    logDebug(s"cached result from driver")
-    cachedResult.countDown()
-  }
-
-  private def cacheResult(content: String, destPath: String): Unit = {
-    val path = s"${localCacheDir.getAbsolutePath}/$destPath"
-    try {
-      Files.write(new File(path).toPath, content.getBytes(Charset.defaultCharset()))
-    } catch {
-      case e: Exception =>
-        logError("error writing dumped data to disk", e)
-    }
-  }
-
-  private def cleanLocalCache(): Unit = {
-    try {
-      FileUtils.cleanDirectory(localCacheDir)
-    } catch {
-      case e: Exception =>
-        logError("error clean cache directory", e)
-    }
+    asyncProfilerUtils.cacheExecutorResult(content, executorId)
   }
 }

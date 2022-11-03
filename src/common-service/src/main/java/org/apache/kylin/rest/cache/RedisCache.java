@@ -332,11 +332,11 @@ public class RedisCache implements KylinCache {
                 }
                 logger.trace("redis get start");
                 sqlResp = jedisCluster.get(realKey);
-                logger.trace("redis get done, size = {}bytes", sqlResp.length);
+                logger.trace("redis get done, size = {}bytes", sqlResp == null ? 0 : sqlResp.length);
             } else {
                 logger.trace("redis get start");
                 sqlResp = singleRedisGet(realKey);
-                logger.trace("redis get done, size = {}bytes", sqlResp.length);
+                logger.trace("redis get done, size = {}bytes", sqlResp == null ? 0 : sqlResp.length);
             }
         } catch (JedisConnectionException | JedisClusterException e) {
             logger.error("Get jedis connection failed: ", e);

@@ -17,6 +17,8 @@
  */
 package org.apache.spark.sql.execution
 
+import io.kyligence.kap.softaffinity.SoftAffinityManager
+
 import java.util.concurrent.TimeUnit.NANOSECONDS
 import org.apache.spark.TaskContext
 import org.apache.hadoop.fs.Path
@@ -60,7 +62,8 @@ case class LayoutFileSourceScanExec(
    optionalNumCoalescedBuckets: Option[Int],
    dataFilters: Seq[Expression],
    tableIdentifier: Option[TableIdentifier],
-   disableBucketedScan: Boolean = false)
+   disableBucketedScan: Boolean = false,
+   sourceScanRows: Long = 1L)
   extends DataSourceScanExec {
 
   // Note that some vals referring the file-based relation are lazy intentionally
@@ -477,7 +480,14 @@ case class LayoutFileSourceScanExec(
       }
     }
 
-    new FileScanRDD(fsRelation.sparkSession, readFile, filePartitions)
+    if (SoftAffinityManager.usingSoftAffinity) {
+      val start = System.currentTimeMillis()
+      val cachePartitions = filePartitions.map(CacheFilePartition.convertFilePartitionToCache(_))
+      logInfo(s"Convert bucketed file partition took: ${(System.currentTimeMillis() - start)}")
+      new CacheFileScanRDD(fsRelation.sparkSession, readFile, cachePartitions)
+    } else {
+      new FileScanRDD(fsRelation.sparkSession, readFile, filePartitions)
+    }
   }
 
   /**
@@ -518,7 +528,14 @@ case class LayoutFileSourceScanExec(
     val partitions =
       FilePartition.getFilePartitions(relation.sparkSession, splitFiles, maxSplitBytes)
 
-    new FileScanRDD(fsRelation.sparkSession, readFile, partitions)
+    if (SoftAffinityManager.usingSoftAffinity) {
+      val start = System.currentTimeMillis()
+      val cachePartitions = partitions.map(CacheFilePartition.convertFilePartitionToCache(_))
+      logInfo(s"Convert bucketed file partition took: ${(System.currentTimeMillis() - start)}")
+      new CacheFileScanRDD(fsRelation.sparkSession, readFile, cachePartitions)
+    } else {
+      new FileScanRDD(fsRelation.sparkSession, readFile, partitions)
+    }
   }
 
   // Filters unused DynamicPruningExpression expressions - one which has been replaced
@@ -539,6 +556,7 @@ case class LayoutFileSourceScanExec(
       optionalNumCoalescedBuckets,
       QueryPlan.normalizePredicates(dataFilters, output),
       None,
-      disableBucketedScan)
+      disableBucketedScan,
+      sourceScanRows)
   }
 }

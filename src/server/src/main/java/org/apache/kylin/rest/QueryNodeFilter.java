@@ -22,9 +22,9 @@ import static org.apache.kylin.common.exception.ServerErrorCode.NO_ACTIVE_ALL_NO
 import static org.apache.kylin.common.exception.ServerErrorCode.PROJECT_WITHOUT_RESOURCE_GROUP;
 import static org.apache.kylin.common.exception.ServerErrorCode.SYSTEM_IS_RECOVER;
 import static org.apache.kylin.common.exception.ServerErrorCode.TRANSFER_FAILED;
-import static org.apache.kylin.common.exception.SystemErrorCode.QUERYNODE_API_INVALID;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeSystem.MAINTENANCE_MODE_WRITE_FAILED;
+import static org.apache.kylin.common.exception.code.ErrorCodeSystem.QUERY_NODE_API_INVALID;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -46,19 +46,19 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.ErrorCode;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.rest.response.ErrorResponse;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.interceptor.ProjectInfoParser;
+import org.apache.kylin.rest.response.ErrorResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -76,6 +76,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.google.common.collect.Sets;
 
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,7 +96,7 @@ public class QueryNodeFilter implements Filter {
     private static Set<String> notRouteDeleteApiSet = Sets.newHashSet();
     private static Set<String> notRoutePutApiSet = Sets.newHashSet();
 
-    private static String ERROR_REQUEST_URL = "/kylin/api/error";
+    private static final String ERROR_REQUEST_URL = "/kylin/api/error";
 
     static {
         // data source
@@ -111,9 +112,9 @@ public class QueryNodeFilter implements Filter {
         notRoutePostApiSet.add("/kylin/api/system/maintenance_mode");
         notRouteDeleteApiSet.add("/kylin/api/query");
 
-        notRoutePostApiSet.add("/kylin/api/health/instance_info");
-        notRoutePostApiSet.add("/kylin/api/health/instance_service/query_up_grade");
-        notRoutePostApiSet.add("/kylin/api/health/instance_service/query_down_grade");
+        notRoutePostApiSet.add("/kylin/api/kg/health/instance_info");
+        notRoutePostApiSet.add("/kylin/api/kg/health/instance_service/query_up_grade");
+        notRoutePostApiSet.add("/kylin/api/kg/health/instance_service/query_down_grade");
 
         // license
         notRoutePostApiSet.add("/kylin/api/system/license/content");
@@ -146,6 +147,13 @@ public class QueryNodeFilter implements Filter {
         routeGetApiSet.add("/kylin/api/storage/table/sync");
         notRoutePostApiSet.add("/kylin/api/storage/config/refresh");
         notRoutePostApiSet.add("/kylin/api/storage/node/status");
+
+        // snapshot source table
+        notRoutePostApiSet.add("/kylin/api/snapshots/source_table_stats");
+        notRoutePostApiSet.add("/kylin/api/snapshots/view_mapping");
+
+        //user refresh
+        notRoutePutApiSet.add("/kylin/api/user/refresh");
     }
 
     @Autowired
@@ -195,25 +203,8 @@ public class QueryNodeFilter implements Filter {
 
                 request = projectInfo.getSecond();
 
-                if (checkProcessLocal(kylinConfig, project, contentType)) {
-                    log.info("process local caused by project owner");
-                    chain.doFilter(request, response);
+                if (checkServer(request, response, chain, servletRequest, kylinConfig, project, contentType))
                     return;
-                }
-
-                if (EpochManager.getInstance().isMaintenanceMode()) {
-                    servletRequest.setAttribute(ERROR, new KylinException(MAINTENANCE_MODE_WRITE_FAILED));
-                    servletRequest.getRequestDispatcher(API_ERROR).forward(servletRequest, response);
-                    return;
-                }
-
-                if (Boolean.FALSE.equals(kylinConfig.isQueryNodeRequestForwardEnabled())
-                        && kylinConfig.isQueryNodeOnly()) {
-                    request.setAttribute(ERROR,
-                            new KylinException(QUERYNODE_API_INVALID, MsgPicker.getMsg().getQueryNodeInvalid()));
-                    request.getRequestDispatcher(API_ERROR).forward(request, response);
-                    return;
-                }
             } catch (CannotCreateTransactionException e) {
                 writeConnectionErrorResponse(servletRequest, servletResponse);
                 return;
@@ -244,14 +235,7 @@ public class QueryNodeFilter implements Filter {
             } catch (IllegalStateException | ResourceAccessException e) {
                 responseStatus = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
                 Message msg = MsgPicker.getMsg();
-                KylinException exception;
-                val manager = ResourceGroupManager.getInstance(KylinConfig.getInstanceFromEnv());
-                if (manager.isResourceGroupEnabled() && !manager.isProjectBindToResourceGroup(project)) {
-                    exception = new KylinException(PROJECT_WITHOUT_RESOURCE_GROUP,
-                            msg.getProjectWithoutResourceGroup());
-                } else {
-                    exception = new KylinException(SYSTEM_IS_RECOVER, msg.getLeadersHandleOver());
-                }
+                KylinException exception = getKylinException(project, msg);
                 ErrorResponse errorResponse = new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(servletRequest),
                         exception);
                 responseBody = JsonUtil.writeValueAsBytes(errorResponse);
@@ -275,7 +259,41 @@ public class QueryNodeFilter implements Filter {
             servletResponse.getOutputStream().write(responseBody);
             return;
         }
-        throw new RuntimeException("unknown status");
+        throw new KylinRuntimeException("unknown status");
+    }
+
+    private boolean checkServer(ServletRequest request, ServletResponse response, FilterChain chain,
+            HttpServletRequest servletRequest, KylinConfig kylinConfig, String project, String contentType)
+            throws IOException, ServletException {
+        if (checkProcessLocal(kylinConfig, project, contentType)) {
+            log.info("process local caused by project owner");
+            chain.doFilter(request, response);
+            return true;
+        }
+
+        if (EpochManager.getInstance().isMaintenanceMode()) {
+            servletRequest.setAttribute(ERROR, new KylinException(MAINTENANCE_MODE_WRITE_FAILED));
+            servletRequest.getRequestDispatcher(API_ERROR).forward(servletRequest, response);
+            return true;
+        }
+
+        if (Boolean.FALSE.equals(kylinConfig.isQueryNodeRequestForwardEnabled()) && kylinConfig.isQueryNodeOnly()) {
+            request.setAttribute(ERROR, new KylinException(QUERY_NODE_API_INVALID));
+            request.getRequestDispatcher(API_ERROR).forward(request, response);
+            return true;
+        }
+        return false;
+    }
+
+    private static KylinException getKylinException(String project, Message msg) {
+        KylinException exception;
+        val manager = ResourceGroupManager.getInstance(KylinConfig.getInstanceFromEnv());
+        if (manager.isResourceGroupEnabled() && !manager.isProjectBindToResourceGroup(project)) {
+            exception = new KylinException(PROJECT_WITHOUT_RESOURCE_GROUP, msg.getProjectWithoutResourceGroup());
+        } else {
+            exception = new KylinException(SYSTEM_IS_RECOVER, msg.getLeadersHandleOver());
+        }
+        return exception;
     }
 
     private void setResponseHeaders(HttpHeaders responseHeaders, HttpServletResponse servletResponse) {

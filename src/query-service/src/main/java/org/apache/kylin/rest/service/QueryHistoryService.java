@@ -54,8 +54,8 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffset;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
+import io.kyligence.kap.metadata.favorite.QueryHistoryIdOffset;
+import io.kyligence.kap.metadata.favorite.QueryHistoryIdOffsetManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
@@ -152,17 +152,19 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
         processRequestParams(request);
 
         if (haveSpaces(request.getSql())) {
-            return ImmutableMap.of("total_scan_count", 0L);
+            return ImmutableMap.of("total_scan_count", 0L, "source_result_count", 0L, "total_scan_bytes", 0L);
         }
 
         QueryHistoryDAO queryHistoryDAO = getQueryHistoryDao();
         List<QueryHistory> queryHistories = queryHistoryDAO.getQueryHistoriesByConditions(request, 1, 0);
 
         if (queryHistories.isEmpty()) {
-            return ImmutableMap.of("total_scan_count", 0L);
+            return ImmutableMap.of("total_scan_count", 0L, "source_result_count", 0L, "total_scan_bytes", 0L);
         }
 
-        return ImmutableMap.of("total_scan_count", queryHistories.get(0).getTotalScanCount());
+        return ImmutableMap.of("total_scan_count", queryHistories.get(0).getTotalScanCount(),
+                "source_result_count", queryHistories.get(0).getQueryHistoryInfo().getSourceResultCount(),
+                "total_scan_bytes", queryHistories.get(0).getTotalScanBytes());
     }
 
     private void processRequestParams(QueryHistoryRequest request) {
@@ -197,7 +199,7 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
             NDataModel nDataModel = dataModelManager.getDataModelDesc(realization.getModelId());
             if (noBrokenModels.containsValue(realization.getModelId())) {
                 NDataModelResponse model = (NDataModelResponse) modelService
-                        .updateReponseAcl(new NDataModelResponse(nDataModel), project);
+                        .updateResponseAcl(new NDataModelResponse(nDataModel), project);
                 realization.setModelAlias(model.getFusionModelAlias());
                 realization.setAclParams(model.getAclParams());
                 realization.setLayoutExist(

@@ -71,7 +71,7 @@ public class JdbcMetadataStore extends MetadataStore {
     static final String META_TABLE_TS = "META_TABLE_TS";
     static final String META_TABLE_MVCC = "META_TABLE_MVCC";
 
-    private static final String SELECT_TERM = "select ";
+    public static final String SELECT_TERM = "select ";
 
     private static final String SELECT_ALL_KEY_SQL = SELECT_TERM + META_TABLE_KEY + " from %s";
     private static final String SELECT_BY_RANGE_SQL = SELECT_TERM

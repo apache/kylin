@@ -40,18 +40,18 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.streaming.constants.StreamingConstants;
 import org.apache.kylin.streaming.jobs.thread.StreamingJobRunner;
@@ -74,20 +74,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StreamingScheduler {
 
-    private static final Map<String, StreamingScheduler> INSTANCE_MAP = Maps.newConcurrentMap();
-    private static final List<JobStatusEnum> STARTABLE_STATUS_LIST = Arrays.asList(JobStatusEnum.ERROR,
-            JobStatusEnum.STOPPED, JobStatusEnum.NEW, JobStatusEnum.LAUNCHING_ERROR);
-    private static StreamingJobStatusWatcher jobStatusUpdater = new StreamingJobStatusWatcher();
     @Getter
     private String project;
+
     @Getter
     private AtomicBoolean initialized = new AtomicBoolean(false);
+
     @Getter
     private AtomicBoolean hasStarted = new AtomicBoolean(false);
+
     private ExecutorService jobPool;
     private Map<String, StreamingJobRunner> runnerMap = Maps.newHashMap();
     private Map<String, AbstractMap.SimpleEntry<AtomicInteger, AtomicInteger>> retryMap = Maps.newHashMap();
+
+    private static final Map<String, StreamingScheduler> INSTANCE_MAP = Maps.newConcurrentMap();
     private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+    private static final List<JobStatusEnum> STARTABLE_STATUS_LIST = Arrays.asList(JobStatusEnum.ERROR,
+            JobStatusEnum.STOPPED, JobStatusEnum.NEW, JobStatusEnum.LAUNCHING_ERROR);
+
+    private static StreamingJobStatusWatcher jobStatusUpdater = new StreamingJobStatusWatcher();
 
     public StreamingScheduler(String project) {
         Preconditions.checkNotNull(project);
@@ -101,14 +106,6 @@ public class StreamingScheduler {
 
     public static synchronized StreamingScheduler getInstance(String project) {
         return INSTANCE_MAP.computeIfAbsent(project, StreamingScheduler::new);
-    }
-
-    public static synchronized void shutdownByProject(String project) {
-        val instance = INSTANCE_MAP.get(project);
-        if (instance != null) {
-            INSTANCE_MAP.remove(project);
-            instance.forceShutdown();
-        }
     }
 
     public synchronized void init() {
@@ -129,8 +126,8 @@ public class StreamingScheduler {
             int maxPoolSize = config.getMaxStreamingConcurrentJobLimit();
             ThreadFactory executorThreadFactory = new BasicThreadFactory.Builder()
                     .namingPattern("StreamingJobWorker(project:" + project + ")").uncaughtExceptionHandler((t, e) -> {
-                        log.error(e.getMessage(), e);
-                        throw new RuntimeException(e);
+                        log.error("Something wrong happened when building threadFactory of streaming.", e);
+                        throw new IllegalStateException(e);
                     }).build();
 
             jobPool = new ThreadPoolExecutor(maxPoolSize, maxPoolSize * 2, Long.MAX_VALUE, TimeUnit.DAYS,
@@ -211,6 +208,14 @@ public class StreamingScheduler {
             }
         }
         runner.stop();
+    }
+
+    public static synchronized void shutdownByProject(String project) {
+        val instance = INSTANCE_MAP.get(project);
+        if (instance != null) {
+            INSTANCE_MAP.remove(project);
+            instance.forceShutdown();
+        }
     }
 
     public void forceShutdown() {

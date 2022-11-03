@@ -37,7 +37,7 @@ import org.apache.kylin.metadata.model.util.scd2.SCD2CondChecker;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
+import io.kyligence.kap.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.sourceusage.SourceUsageManager;
 import org.springframework.util.CollectionUtils;
 

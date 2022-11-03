@@ -22,4 +22,8 @@ import java.util.Map;
 
 public interface QueryOperator {
     Map<String, Object> getQueryMetric(String queryId);
+
+    void modifyColumnByCardinality(String database, String destTableName);
+
+    void modifyColumnByCardinality(String database, String destTableName, String column, String datatype);
 }

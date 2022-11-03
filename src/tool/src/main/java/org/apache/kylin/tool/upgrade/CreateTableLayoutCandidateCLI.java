@@ -32,8 +32,8 @@ import org.apache.kylin.common.util.ExecutableApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.common.util.OptionBuilder;
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
-import org.apache.kylin.metadata.recommendation.util.RawRecStoreUtil;
+import io.kyligence.kap.metadata.recommendation.candidate.JdbcRawRecStore;
+import io.kyligence.kap.metadata.recommendation.util.RawRecStoreUtil;
 import org.apache.kylin.tool.util.MetadataUtil;
 
 import com.google.common.collect.Lists;

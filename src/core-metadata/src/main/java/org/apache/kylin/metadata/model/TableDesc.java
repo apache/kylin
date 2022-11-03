@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
@@ -41,10 +23,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -56,8 +40,6 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -77,14 +59,10 @@ import lombok.Setter;
 /**
  * Table Metadata from Source. All name should be uppercase.
  */
-@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class TableDesc extends RootPersistentEntity implements Serializable, ISourceAware {
-    @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(TableDesc.class);
 
     public static final String TABLE_TYPE_VIEW = "VIEW";
-    private static final String materializedTableNamePrefix = "kylin_intermediate_";
     public static final long NOT_READY = -1;
     private static final String TRANSACTIONAL_TABLE_NAME_SUFFIX = "_hive_tx_intermediate";
 
@@ -97,7 +75,8 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         if (cut >= 0)
             path = path.substring(cut + 1);
 
-        String table, prj;
+        String table;
+        String prj;
         int dash = path.indexOf("--");
         if (dash >= 0) {
             table = path.substring(0, dash);
@@ -148,7 +127,6 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
     @JsonProperty("last_snapshot_size")
     private long lastSnapshotSize;
 
-    @Getter
     @Setter
     @JsonProperty("snapshot_last_modified")
     private long snapshotLastModified;
@@ -202,9 +180,8 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
     private boolean snapshotHasBroken;
 
     protected String project;
-    private DatabaseDesc database = new DatabaseDesc();
+    private final DatabaseDesc database = new DatabaseDesc();
     private String identity = null;
-    private boolean isBorrowedFromGlobal = false;
     private KafkaConfig kafkaConfig;
 
     @Setter
@@ -260,13 +237,20 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         setMvcc(other.getMvcc());
     }
 
+    /**
+     * Streaming table can't be accessed when streaming disabled
+     */
+    public boolean isAccessible(boolean turnOnStreaming) {
+        return turnOnStreaming || getSourceType() != ID_STREAMING;
+    }
+
     @Override
     public String resourceName() {
         return getIdentity();
     }
 
     public TableDesc appendColumns(ColumnDesc[] computedColumns, boolean makeCopy) {
-        if (computedColumns == null || computedColumns.length == 0) {
+        if (ArrayUtils.isEmpty(computedColumns)) {
             return this;
         }
 
@@ -274,25 +258,26 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         ColumnDesc[] existingColumns = ret.columns;
         List<ColumnDesc> newColumns = Lists.newArrayList();
 
-        for (int j = 0; j < computedColumns.length; j++) {
+        for (ColumnDesc computedColumn : computedColumns) {
 
             //check name conflict
             boolean isFreshCC = true;
-            for (int i = 0; i < existingColumns.length; i++) {
-                if (existingColumns[i].getName().equalsIgnoreCase(computedColumns[j].getName())) {
-                    // if we're adding a computed column twice, it should be allowed without producing duplicates
-                    if (!existingColumns[i].isComputedColumn()) {
-                        throw new IllegalArgumentException(String.format(Locale.ROOT,
-                                "There is already a column named %s on table %s, please change your computed column name",
-                                computedColumns[j].getName(), this.getIdentity()));
-                    } else {
-                        isFreshCC = false;
-                    }
+            for (ColumnDesc existingColumn : existingColumns) {
+                if (!StringUtils.equalsIgnoreCase(existingColumn.getName(), computedColumn.getName())) {
+                    continue;
+                }
+                // if we're adding a computed column twice, it should be allowed without producing duplicates
+                if (!existingColumn.isComputedColumn()) {
+                    throw new IllegalArgumentException(String.format(Locale.ROOT,
+                            "There is already a column named %s on table %s, please change your computed column name",
+                            computedColumn.getName(), this.getIdentity()));
+                } else {
+                    isFreshCC = false;
                 }
             }
 
             if (isFreshCC) {
-                newColumns.add(computedColumns[j]);
+                newColumns.add(computedColumn);
             }
         }
 
@@ -337,6 +322,14 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         return originIdentity.toUpperCase(Locale.ROOT);
     }
 
+    public String getBackTickIdentity() {
+        return getBackTickCaseSensitiveIdentity("");
+    }
+
+    public String getBackTickTransactionalTableIdentity(String suffix) {
+        return getBackTickCaseSensitiveIdentity(TRANSACTIONAL_TABLE_NAME_SUFFIX.toUpperCase(Locale.ROOT) + suffix);
+    }
+
     public String getCaseSensitiveIdentity() {
         if (identity == null) {
             if (this.getCaseSensitiveDatabase().equals("null")) {
@@ -349,16 +342,15 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         return identity;
     }
 
+    private String getBackTickCaseSensitiveIdentity(String suffix) {
+        return "null".equals(this.getCaseSensitiveDatabase())
+                ? String.format(Locale.ROOT, "`%s`", this.getCaseSensitiveName())
+                : String.format(Locale.ROOT, "`%s`.`%s`", this.getCaseSensitiveDatabase(),
+                        this.getCaseSensitiveName() + suffix);
+    }
+
     public boolean isView() {
         return StringUtils.containsIgnoreCase(tableType, TABLE_TYPE_VIEW);
-    }
-
-    public boolean isBorrowedFromGlobal() {
-        return isBorrowedFromGlobal;
-    }
-
-    public void setBorrowedFromGlobal(boolean borrowedFromGlobal) {
-        isBorrowedFromGlobal = borrowedFromGlobal;
     }
 
     public String getProject() {
@@ -469,17 +461,13 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
 
         if (sourceType != tableDesc.sourceType)
             return false;
-        if (name != null ? !name.equals(tableDesc.name) : tableDesc.name != null)
+        if (!Objects.equals(name, tableDesc.name))
             return false;
         if (!Arrays.equals(columns, tableDesc.columns))
             return false;
 
         return getIdentity().equals(tableDesc.getIdentity());
 
-    }
-
-    public String getMaterializedName() {
-        return materializedTableNamePrefix + database.getName() + "_" + name;
     }
 
     public String getTransactionalTableIdentity() {

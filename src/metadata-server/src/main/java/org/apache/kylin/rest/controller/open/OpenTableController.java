@@ -114,6 +114,7 @@ public class OpenTableController extends NBasicController {
             @RequestParam(value = "source_type", required = false, defaultValue = "9") Integer sourceType)
             throws IOException {
         checkProjectName(project);
+        checkNonNegativeIntegerArg("page_offset", offset);
         if (sourceType == ISourceAware.ID_STREAMING) {
             throw new KylinException(UNSUPPORTED_STREAMING_OPERATION,
                     MsgPicker.getMsg().getStreamingOperationNotSupport());
@@ -178,10 +179,13 @@ public class OpenTableController extends NBasicController {
     @GetMapping(value = "/pre_reload")
     @ResponseBody
     public EnvelopeResponse<OpenPreReloadTableResponse> preReloadTable(@RequestParam(value = "project") String project,
-            @RequestParam(value = "table") String table) throws Exception {
+            @RequestParam(value = "table") String table,
+            @RequestParam(value = "need_details", required = false, defaultValue = "false") boolean needDetails)
+            throws Exception {
         String projectName = checkProjectName(project);
         checkStreamingOperation(project, table);
-        OpenPreReloadTableResponse result = tableService.preProcessBeforeReloadWithoutFailFast(projectName, table);
+        OpenPreReloadTableResponse result = tableService.preProcessBeforeReloadWithoutFailFast(projectName, table,
+                needDetails);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
     }
 

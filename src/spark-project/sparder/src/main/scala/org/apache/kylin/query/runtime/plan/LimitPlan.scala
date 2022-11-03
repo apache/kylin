@@ -25,8 +25,8 @@ import org.apache.spark.sql.DataFrame
 // scalastyle:off
 object LimitPlan {
   def limit(inputs: java.util.List[DataFrame],
-    rel: KapLimitRel,
-    dataContext: DataContext): DataFrame = {
+            rel: KapLimitRel,
+            dataContext: DataContext): DataFrame = {
     //    val schema = statefulDF.indexSchema
     val visitor = new SparderRexVisitor(inputs.get(0),
       rel.getInput.getRowType,
@@ -40,7 +40,7 @@ object LimitPlan {
       val offset = BigDecimal(rel.localOffset.accept(visitor).toString).toInt
       inputs
         .get(0)
-        .limitRange(offset, offset + limit)
+        .offset(offset).limit(limit)
     }
   }
 }

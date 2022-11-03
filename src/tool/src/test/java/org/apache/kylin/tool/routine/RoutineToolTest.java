@@ -17,10 +17,9 @@
  */
 package org.apache.kylin.tool.routine;
 
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.persistence.metadata.Epoch;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.rest.constant.Constant;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +27,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import lombok.val;
 
 public class RoutineToolTest extends NLocalFileMetadataTestCase {

@@ -18,9 +18,9 @@
 
 package org.apache.kylin.engine.spark.job.stage.tablesampling
 
+import io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob
 import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.job.stage.StageExec
-import org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob
 import org.apache.kylin.metadata.cube.model.NDataSegment
 
 class AnalyzerTable(jobContext: TableAnalyzerJob) extends StageExec {

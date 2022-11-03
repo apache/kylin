@@ -46,7 +46,7 @@ import org.apache.kylin.metadata.acl.AclTCR;
 import org.apache.kylin.metadata.acl.AclTCRManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.query.exception.NoAuthorizedColsError;
-import org.apache.kylin.query.util.KapQueryUtil;
+import io.kyligence.kap.query.util.KapQueryUtil;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

@@ -55,23 +55,20 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.ShellException;
+import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.hive.HiveCmdBuilder;
-import org.apache.kylin.engine.spark.job.KylinBuildEnv;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
-public class HiveTransactionTableHelper {
-    private static final Logger logger = LoggerFactory.getLogger(HiveTransactionTableHelper.class);
-    private static final String QUOTE = "`";
+import lombok.extern.slf4j.Slf4j;
 
-    public HiveTransactionTableHelper() {
-        throw new IllegalStateException("HiveTransactionTableHelper class");
+@Slf4j
+public class HiveTransactionTableHelper {
+    private HiveTransactionTableHelper() {
     }
 
     public static String doGetQueryHiveTemporaryTableSql(TableDesc table, Map<String, String> params, String colString,
@@ -82,20 +79,23 @@ public class HiveTransactionTableHelper {
         KylinConfig kylinConfig = kylinBuildEnv.kylinConfig();
 
         String dir = kylinConfig.getJobTmpTransactionalTableDir(project, jobId);
-        String tableSuffix = jobId.substring(jobId.lastIndexOf("-") + 1);
+        // jobId: 80c95c04-4291-9f95-3c0f-0b014f7f14af-ad53bba1-e9f2-cee2-5b21-21f2e3a73312
+        // tableSuffix: 80c95c04-4291 => 80c95c044291
+        String tableSuffix = StringUtils.replace(StringUtils.substring(jobId, 0, 13), "-", "");
         String tempTableName = table.getTransactionalTableIdentity().concat(tableSuffix);
+        String tempBackTickTableName = table.getBackTickTransactionalTableIdentity(tableSuffix);
         String tableDir = getTableDir(tempTableName, dir);
         checkInterTableExistFirst(table, params, kylinBuildEnv, jobId, dir, tableSuffix, tempTableName, tableDir);
-        sql = checkInterTableExistSecondAndGetSql(table, params, colString, jobId, tempTableName, tableDir);
+        sql = checkInterTableExistSecondAndGetSql(table, params, colString, jobId, tempBackTickTableName, tableDir);
         return sql;
     }
 
     public static String checkInterTableExistSecondAndGetSql(TableDesc table, Map<String, String> params,
             String colString, String jobId, String tempTableName, String tableDir) {
         boolean secondCheck = checkInterTableExist(tableDir);
-        logger.info("second check is table ready : {} ", secondCheck);
+        log.info("second check is table ready : {} ", secondCheck);
         if (secondCheck) {
-            logger.info("table ready,start build sql");
+            log.info("table ready,start build sql");
             String queryCondition = generateTxTableQueryCondition(table, params);
             return String.format(Locale.ROOT, "select %s from %s %s", colString, tempTableName, queryCondition);
         } else {
@@ -108,12 +108,12 @@ public class HiveTransactionTableHelper {
             KylinBuildEnv kylinBuildEnv, String jobId, String dir, String tableSuffix, String tempTableName,
             String tableDir) {
         boolean firstCheck = checkInterTableExist(tableDir);
-        logger.info("first check is table ready : {} ", firstCheck);
+        log.info("first check is table ready : {} ", firstCheck);
         if (!firstCheck) {
             try {
                 createHiveTableDirIfNeeded(dir, tempTableName);
             } catch (IOException ioException) {
-                logger.error(READ_TRANSACTIONAL_TBALE_FAILED.name(), ioException);
+                log.error(READ_TRANSACTIONAL_TBALE_FAILED.name(), ioException);
                 throw new KylinException(READ_TRANSACTIONAL_TBALE_FAILED,
                         String.format(Locale.ROOT, "Can't create hive table dir, jobId %s.", jobId));
             }
@@ -121,13 +121,15 @@ public class HiveTransactionTableHelper {
         }
     }
 
+    private static final String QUOTE = "`";
+
     private static String doQuote(String identifier) {
         return QUOTE + identifier + QUOTE;
     }
 
     public static String generateHiveInitStatements(String flatTableDatabase) {
         if (StringUtils.isEmpty(flatTableDatabase)) {
-            logger.info("database name is empty.");
+            log.info("database name is empty.");
             return "";
         }
         return "USE " + doQuote(flatTableDatabase) + ";\n";
@@ -208,7 +210,7 @@ public class HiveTransactionTableHelper {
 
     static boolean checkInterTableExist(String tableDir) {
         try {
-            logger.info("check intermediate table dir : {}", tableDir);
+            log.info("check intermediate table dir : {}", tableDir);
             Path path = new Path(tableDir);
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             if (fs.exists(path)) {
@@ -223,7 +225,7 @@ public class HiveTransactionTableHelper {
     public static void generateTxTable(KylinBuildEnv kylinBuildEnv, TableDesc table, String tableSuffix,
             Map<String, String> params, String tableDir) {
         String jobId = kylinBuildEnv.buildJobInfos().getJobId();
-        logger.info("job wait for generate intermediate table, job id : {}", jobId);
+        log.info("job wait for generate intermediate table, job id : {}", jobId);
         KylinConfig config = kylinBuildEnv.kylinConfig();
         String database = table.getCaseSensitiveDatabase().endsWith("null") ? "default"
                 : table.getCaseSensitiveDatabase();
@@ -243,12 +245,12 @@ public class HiveTransactionTableHelper {
         try {
             CliCommandExecutor.CliCmdExecResult result = cliCommandExecutor.execute(cmd, null);
             if (result.getCode() != 0) {
-                logger.error("execute create intermediate table return fail, jobId : {}", jobId);
+                log.error("execute create intermediate table return fail, jobId : {}", jobId);
             } else {
-                logger.info("execute create intermediate table succeeded, jobId : {}", jobId);
+                log.info("execute create intermediate table succeeded, jobId : {}", jobId);
             }
         } catch (ShellException e) {
-            logger.error("failed to execute create intermediate table, jobId : {}, result : {}", jobId, e);
+            log.error("failed to execute create intermediate table, jobId : {}, result : {}", jobId, e);
         }
     }
 
@@ -259,11 +261,11 @@ public class HiveTransactionTableHelper {
      * @return table query condition string
      */
     private static String generateTxTableQueryCondition(TableDesc table, Map<String, String> params) {
-        logger.info("table ready,start build sql");
+        log.info("table ready,start build sql");
         PartitionDesc partitionDesc = table.getPartitionDesc();
-        logger.info("table partition desc is :{}", partitionDesc);
-        logger.info("whether partition query is required ? :{}", Objects.nonNull(partitionDesc));
-        logger.info("table segment range start: {}; end: {}", params.get("segmentStart"), params.get("segmentEnd"));
+        log.info("table partition desc is :{}", partitionDesc);
+        log.info("whether partition query is required ? :{}", Objects.nonNull(partitionDesc));
+        log.info("table segment range start: {}; end: {}", params.get("segmentStart"), params.get("segmentEnd"));
 
         String sql = "";
         Boolean hasParam = Objects.nonNull(partitionDesc) && params.containsKey("segmentStart")
@@ -273,9 +275,9 @@ public class HiveTransactionTableHelper {
         if (hasParam) {
             ColumnDesc partitionColumnDesc = partitionDesc.getPartitionDateColumnRef().getColumnDesc();
             String partitionDataColumn = partitionColumnDesc.getName();
-            logger.info("table partition column name is :{}", partitionDataColumn);
+            log.info("table partition column name is :{}", partitionDataColumn);
             String columnDataTypeName = partitionColumnDesc.getType().getName();
-            logger.info("table partition column data type is :{}", columnDataTypeName);
+            log.info("table partition column data type is :{}", columnDataTypeName);
 
             boolean intDataTypeFlag = columnDataTypeName.equalsIgnoreCase(DataType.INT)
                     || columnDataTypeName.equalsIgnoreCase(DataType.INTEGER);
@@ -290,15 +292,15 @@ public class HiveTransactionTableHelper {
 
             if (intDataTypeFlag || dateDataTypeFlag || strDataTypeFlag) {
                 String partitionDateFormat = partitionDesc.getPartitionDateFormat();
-                logger.info("table partition data format is :{}", partitionDateFormat);
-                String beginDate = DateFormat.formatToDateStr(Long.parseLong(params.getOrDefault("segmentStart", "0")),
-                        partitionDateFormat);
-                String endDate = DateFormat.formatToDateStr(Long.parseLong(params.getOrDefault("segmentEnd", "0")),
-                        partitionDateFormat);
-                logger.info("segment range is :[{},{}]", beginDate, endDate);
-                if (intDataTypeFlag) {
-                    sql = String.format(Locale.ROOT, "WHERE %s BETWEEN %d AND %d", doQuote(partitionDataColumn),
-                            Integer.parseInt(beginDate), Integer.parseInt(endDate));
+                log.info("table partition data format is :{}", partitionDateFormat);
+                String beginDate = DateFormat.formatToDateStr(Long.parseLong(params.getOrDefault("segmentStart", "0")), partitionDateFormat);
+                String endDate = DateFormat.formatToDateStr(Long.parseLong(params.getOrDefault("segmentEnd", "0")), partitionDateFormat);
+                log.info("segment range is :[{},{}]", beginDate, endDate);
+                if(intDataTypeFlag) {
+                    sql = String.format(Locale.ROOT,
+                            "WHERE %s BETWEEN %d AND %d", doQuote(partitionDataColumn),
+                            Integer.parseInt(beginDate),
+                            Integer.parseInt(endDate));
                 } else {
                     sql = String.format(Locale.ROOT, "WHERE %s BETWEEN '%s' AND '%s'", doQuote(partitionDataColumn),
                             beginDate, endDate);
@@ -321,9 +323,9 @@ public class HiveTransactionTableHelper {
         FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
 
         if (!fileSystem.exists(path)) {
-            logger.info("Create hive table dir in hdfs: {}: ", path);
+            log.info("Create hive table dir in hdfs: {}: ", path);
         } else {
-            logger.info("Hive table dir already exists in hdfs: {}, delete old dir and recreate it", path);
+            log.info("Hive table dir already exists in hdfs: {}, delete old dir and recreate it", path);
             fileSystem.delete(path, true);
         }
         fileSystem.mkdirs(path);

@@ -1,0 +1,75 @@
+{
+  "uuid" : "e286e39e-40d7-44c2-8fa2-41b365522771",
+  "name" : "TEST_KYLIN_FACT",
+  "data_gen" : "1",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "TRANS_ID",
+    "datatype" : "bigint",
+    "data_gen" : "ID"
+  }, {
+    "id" : "2",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint",
+    "index": "T"
+  }, {
+    "id" : "3",
+    "name" : "CAL_DT",
+    "datatype" : "string",
+    "data_gen" : "FK,order",
+    "index": "T"
+  }, {
+    "id" : "4",
+    "name" : "LSTG_FORMAT_NAME",
+    "datatype" : "string",
+    "data_gen" : "FP-GTC|FP-non GTC|ABIN|Auction|Others",
+    "index": "T"
+  }, {
+    "id" : "5",
+    "name" : "LEAF_CATEG_ID",
+    "datatype" : "bigint",
+    "data_gen" : "FK,null,nullstr=0",
+    "index": "T"
+  }, {
+    "id" : "6",
+    "name" : "LSTG_SITE_ID",
+    "datatype" : "int",
+    "index": "T"
+  }, {
+    "id" : "7",
+    "name" : "SLR_SEGMENT_CD",
+    "datatype" : "smallint",
+    "data_gen" : "FK,pk=EDW.TEST_SELLER_TYPE_DIM.SELLER_TYPE_CD",
+    "index": "T"
+  }, {
+    "id" : "8",
+    "name" : "SELLER_ID",
+    "datatype" : "int",
+    "data_gen" : "RAND||10000000|10001000",
+    "index": "T"
+  }, {
+    "id" : "9",
+    "name" : "PRICE",
+    "datatype" : "decimal",
+    "data_gen" : "RAND|.##|-100|1000"
+  }, {
+    "id" : "10",
+    "name" : "ITEM_COUNT",
+    "datatype" : "int",
+    "data_gen" : "RAND"
+  }, {
+    "id" : "11",
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "datatype" : "string",
+    "data_gen" : "RAND"
+  }, {
+    "id" : "12",
+    "name" : "IS_EFFECTUAL",
+    "datatype" : "boolean",
+    "data_gen" : "true|false|TRUE|FALSE|True|False"
+  } ],
+  "database" : "DEFAULT",
+  "last_modified" : 0,
+  "source_type" : 9,
+  "last_snapshot_path" : "table_index/table_snapshot/DEFAULT.TEST_KYLIN_FACT/4e64c021-066c-4d09-ab0c-c5e6a953ccb6"
+}

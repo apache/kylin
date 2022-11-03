@@ -19,6 +19,9 @@ package org.apache.kylin.metadata.model.util;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_COMPUTED_COLUMN_EXPRESSION;
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_COMPUTED_COLUMN_NAME;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.COMPUTED_COLUMN_CONFLICT_ADJUST_INFO;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.COMPUTED_COLUMN_EXPR_CONFLICT;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.COMPUTED_COLUMN_NAME_CONFLICT;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,31 +29,35 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
-import org.apache.calcite.sql.util.SqlVisitor;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.JoinsGraph;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.BadModelException;
 import org.apache.kylin.metadata.model.BadModelException.CauseType;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
+import org.apache.kylin.metadata.model.JoinsGraph;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.alias.AliasDeduce;
 import org.apache.kylin.metadata.model.alias.AliasMapping;
 import org.apache.kylin.metadata.model.alias.ExpressionComparator;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +67,12 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.val;
 
 public class ComputedColumnUtil {
     private static final Logger logger = LoggerFactory.getLogger(ComputedColumnUtil.class);
@@ -312,31 +325,11 @@ public class ComputedColumnUtil {
     // model X contains table f,a,b,c, and model Y contains table f,a,b,d
     // if two cc involve table a,b, they might still be treated equal regardless of the model difference on c,d
     private static JoinsGraph getCCExprRelatedSubgraph(ComputedColumnDesc cc, NDataModel model) {
-        Set<String> aliasSets = getUsedAliasSet(cc.getExpression());
+        Set<String> aliasSets = CalciteParser.getUsedAliasSet(cc.getExpression());
         if (cc.getTableAlias() != null) {
             aliasSets.add(cc.getTableAlias());
         }
         return model.getJoinsGraph().getSubgraphByAlias(aliasSets);
-    }
-
-    public static Set<String> getUsedAliasSet(String expr) {
-        if (expr == null) {
-            return Sets.newHashSet();
-        }
-        SqlNode sqlNode = CalciteParser.getReadonlyExpNode(expr);
-
-        final Set<String> s = Sets.newHashSet();
-        SqlVisitor sqlVisitor = new SqlBasicVisitor() {
-            @Override
-            public Object visit(SqlIdentifier id) {
-                Preconditions.checkState(id.names.size() == 2);
-                s.add(id.names.get(0));
-                return null;
-            }
-        };
-
-        sqlNode.accept(sqlVisitor);
-        return s;
     }
 
     public static boolean isSameName(ComputedColumnDesc col1, ComputedColumnDesc col2) {
@@ -563,6 +556,128 @@ public class ComputedColumnUtil {
         }
     }
 
+    @AllArgsConstructor
+    public static class AdjustCCConflictHandler extends DefaultCCConflictHandler {
+
+        @Getter
+        private CCConflictInfo ccConflictInfo;
+
+        @Override
+        public void handleOnSameNameDiffExpr(NDataModel existingModel, NDataModel newModel,
+                ComputedColumnDesc existingCC, ComputedColumnDesc newCC) {
+            val detail = new CCConflictDetail(existingModel.getAlias(), existingCC, newCC);
+            ccConflictInfo.addSameNameDiffExprDetail(detail);
+        }
+
+        @Override
+        public void handleOnSameExprDiffName(NDataModel existingModel, ComputedColumnDesc existingCC,
+                ComputedColumnDesc newCC) {
+            val detail = new CCConflictDetail(existingModel.getAlias(), existingCC, newCC);
+            ccConflictInfo.addSameExprDiffNameDetail(detail);
+        }
+
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class CCConflictInfo {
+
+        private List<CCConflictDetail> sameExprDiffNameDetails = Lists.newArrayList();
+        private List<CCConflictDetail> sameNameDiffExprDetails = Lists.newArrayList();
+
+        public void addSameExprDiffNameDetail(CCConflictDetail ccConflictDetail) {
+            this.sameExprDiffNameDetails.add(ccConflictDetail);
+        }
+
+        public void addSameNameDiffExprDetail(CCConflictDetail ccConflictDetail) {
+            this.sameNameDiffExprDetails.add(ccConflictDetail);
+        }
+
+        public boolean noneConflict() {
+            return !hasSameNameConflict() && !hasSameExprConflict();
+        }
+
+        public boolean hasSameNameConflict() {
+            return CollectionUtils.isNotEmpty(this.sameNameDiffExprDetails);
+        }
+
+        public boolean hasSameExprConflict() {
+            return CollectionUtils.isNotEmpty(this.sameExprDiffNameDetails);
+        }
+
+        public List<KylinException> getSameNameConflictException() {
+            return this.sameNameDiffExprDetails.stream() //
+                    .filter(Objects::nonNull) //
+                    .map(CCConflictDetail::getNameConflictKylinException) //
+                    .collect(Collectors.toList());
+        }
+
+        public List<KylinException> getSameExprConflictException() {
+            return this.sameExprDiffNameDetails.stream() //
+                    .filter(Objects::nonNull) //
+                    .map(CCConflictDetail::getExprConflictKylinException) //
+                    .collect(Collectors.toList());
+        }
+
+        public List<KylinException> getAllConflictException() {
+            List<KylinException> exceptionList = Lists.newArrayList();
+            exceptionList.addAll(getSameExprConflictException());
+            exceptionList.addAll(getSameNameConflictException());
+            return exceptionList;
+        }
+
+        public Pair<List<ComputedColumnDesc>, List<KylinException>> getAdjustedCCList(
+                List<ComputedColumnDesc> inputCCDescList) {
+            List<ComputedColumnDesc> resultCCDescList = Lists.newArrayList();
+            List<KylinException> adjustExceptionList = Lists.newArrayList();
+
+            for (ComputedColumnDesc ccDesc : inputCCDescList) {
+                for (CCConflictDetail detail : this.sameExprDiffNameDetails) {
+                    val existingCC = detail.getExistingCC();
+                    val newCC = detail.getNewCC();
+                    if (newCC.equals(ccDesc)) {
+                        logger.info("adjust cc name {} to {}", newCC.getColumnName(), existingCC.getColumnName());
+                        ccDesc.setColumnName(existingCC.getColumnName());
+                        adjustExceptionList.add(detail.getAdjustKylinException());
+                        break;
+                    }
+                }
+                resultCCDescList.add(ccDesc);
+            }
+            return Pair.newPair(resultCCDescList, adjustExceptionList);
+        }
+    }
+
+    @Data
+    public static class CCConflictDetail {
+
+        private String existingModelName;
+        private ComputedColumnDesc existingCC;
+        private ComputedColumnDesc newCC;
+
+        public CCConflictDetail(String existingModelName, ComputedColumnDesc existingCC, ComputedColumnDesc newCC) {
+            this.existingModelName = existingModelName;
+            this.existingCC = existingCC;
+            this.newCC = newCC;
+        }
+
+        public KylinException getAdjustKylinException() {
+            return new KylinException(COMPUTED_COLUMN_CONFLICT_ADJUST_INFO, newCC.getColumnName(),
+                    newCC.getExpression(), existingCC.getColumnName(), existingCC.getExpression(),
+                    existingCC.getColumnName());
+        }
+
+        public KylinException getNameConflictKylinException() {
+            return new KylinException(COMPUTED_COLUMN_NAME_CONFLICT, newCC.getColumnName(), newCC.getExpression(),
+                    existingModelName);
+        }
+
+        public KylinException getExprConflictKylinException() {
+            return new KylinException(COMPUTED_COLUMN_EXPR_CONFLICT, newCC.getColumnName(), newCC.getExpression(),
+                    existingModelName);
+        }
+    }
+
     public static List<Pair<ComputedColumnDesc, NDataModel>> getExistingCCs(String modelId,
             List<NDataModel> otherModels) {
         List<Pair<ComputedColumnDesc, NDataModel>> existingCCs = Lists.newArrayList();
@@ -574,5 +689,53 @@ public class ComputedColumnUtil {
             }
         }
         return existingCCs;
+    }
+
+    public static List<ComputedColumnDesc> getAuthorizedCC(List<NDataModel> modelList,
+            Predicate<Set<String>> isColumnAuthorizedFunc) {
+        val authorizedCC = Lists.<ComputedColumnDesc> newArrayList();
+        val checkedCC = Sets.<ComputedColumnDesc> newHashSet();
+        val checkedCCUsedSourceCols = Sets.<String> newHashSet();
+        for (NDataModel model : modelList) {
+            val ccUsedColsMap = Maps.<String, Set<String>> newHashMap();
+            for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
+                if (checkedCC.contains(cc)) {
+                    continue;
+                }
+                ccUsedColsMap.put(cc.getColumnName(), ComputedColumnUtil.getCCUsedColsWithModel(model, cc));
+            }
+
+            // parse inner expression might cause error, for example timestampdiff
+            // so have to do parsing cc expression recursively
+            for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
+                if (checkedCC.contains(cc)) {
+                    continue;
+                }
+                val ccUsedSourceCols = Sets.<String> newHashSet();
+                collectCCUsedSourceCols(cc.getColumnName(), ccUsedColsMap, ccUsedSourceCols);
+                ccUsedSourceCols.removeIf(checkedCCUsedSourceCols::contains);
+                if (ccUsedSourceCols.isEmpty() || isColumnAuthorizedFunc.test(ccUsedSourceCols)) {
+                    authorizedCC.add(cc);
+                    checkedCCUsedSourceCols.addAll(ccUsedSourceCols);
+                }
+                checkedCC.add(cc);
+            }
+        }
+        return authorizedCC;
+    }
+
+    public static void collectCCUsedSourceCols(String ccColName, Map<String, Set<String>> ccUsedColsMap,
+            Set<String> ccUsedSourceCols) {
+        String ccColNameWithoutDot = ccColName.contains(".") ? ccColName.substring(ccColName.lastIndexOf(".") + 1)
+                : ccColName;
+
+        if (!ccUsedColsMap.containsKey(ccColNameWithoutDot)) {
+            ccUsedSourceCols.add(ccColName);
+            return;
+        }
+
+        for (String usedColumn : ccUsedColsMap.get(ccColNameWithoutDot)) {
+            collectCCUsedSourceCols(usedColumn, ccUsedColsMap, ccUsedSourceCols);
+        }
     }
 }

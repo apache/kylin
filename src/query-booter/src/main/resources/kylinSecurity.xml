@@ -66,13 +66,20 @@
           class="org.springframework.security.acls.domain.ConsoleAuditLogger"/>
 
     <bean id="permissionGrantingStrategy"
-          class="org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy">
+          class="org.apache.kylin.rest.security.KylinPermissionGrantingStrategy">
         <constructor-arg ref="auditLogger"/>
     </bean>
 
     <beans profile="ldap,saml">
         <bean id="userService" class="org.apache.kylin.rest.service.LdapUserService"/>
         <bean id="userGroupService" class="org.apache.kylin.rest.service.LdapUserGroupService"/>
+
+        <bean id="ldapSource"
+              class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
+            <constructor-arg value="${kylin.security.ldap.connection-server}"/>
+            <property name="userDn" value="${kylin.security.ldap.connection-username}"/>
+            <property name="password" value="${kylin.security.ldap.connection-password}"/>
+        </bean>
 
         <bean id="ldapTemplate" class="org.springframework.security.ldap.SpringSecurityLdapTemplate">
             <constructor-arg index="0" ref="ldapSource"/>
@@ -226,6 +233,89 @@
     <beans profile="case-insensitive-service">
         <bean id="userService" class="org.apache.kylin.rest.service.CaseInsensitiveKylinUserService"/>
         <bean id="userGroupService" class="org.apache.kylin.rest.service.CaseInsensitiveUserGroupService"/>
+    </beans>
+
+    <beans profile="testing,ldap,custom">
+        <scr:http auto-config="true" use-expressions="true">
+            <scr:headers>
+                <scr:frame-options policy="SAMEORIGIN"/>
+            </scr:headers>
+            <scr:csrf disabled="true"/>
+            <scr:custom-filter before="BASIC_AUTH_FILTER" ref="fillEmptyAuthorizationFilter" />
+            <scr:http-basic entry-point-ref="nUnauthorisedEntryPoint"/>
+            <scr:intercept-url pattern="/api/streaming_jobs/spark" access="permitAll"/>
+            <scr:intercept-url pattern="/api/streaming_jobs/stats" access="permitAll"/>
+            <scr:intercept-url pattern="/api/streaming_jobs/dataflow/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/epoch/maintenance_mode" access="permitAll"/>
+            <scr:intercept-url pattern="/api/health" access="permitAll"/>
+            <scr:intercept-url pattern="/api/health/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/kg/health" access="permitAll"/>
+            <scr:intercept-url pattern="/api/kg/health/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/prometheus" access="permitAll"/>
+            <scr:intercept-url pattern="/api/monitor/spark/prometheus" access="permitAll"/>
+            <scr:intercept-url pattern="/api/monitor/alert" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/user/update_user" access="permitAll"/>
+            <scr:intercept-url pattern="/api/metastore/cleanup" access="permitAll"/>
+            <scr:intercept-url pattern="/api/metastore/cleanup_storage" access="permitAll"/>
+            <scr:intercept-url pattern="/api/epoch" access="permitAll"/>
+            <scr:intercept-url pattern="/api/broadcast/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/config/is_cloud" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/license/file" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/license/content" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/license/trial" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/license" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/diag/progress" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/roll_event_log" access="permitAll"/>
+            <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/query/history_queries/table_names" access="permitAll"/>
+            <scr:intercept-url pattern="/api/models/model_info" access="permitAll"/>
+            <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
+            <scr:intercept-url pattern="/api/metrics/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/logfile" access="permitAll"/>
+            <scr:intercept-url pattern="/api/httptrace" access="permitAll"/>
+            <scr:intercept-url pattern="/api/heapdump" access="permitAll"/>
+            <scr:intercept-url pattern="/api/trace" access="permitAll"/>
+            <scr:intercept-url pattern="/api/env" access="permitAll"/>
+            <scr:intercept-url pattern="/api/auditevents" access="permitAll"/>
+            <scr:intercept-url pattern="/api/refresh" access="permitAll"/>
+            <scr:intercept-url pattern="/api/flyway" access="permitAll"/>
+            <scr:intercept-url pattern="/api/scheduledtasks" access="permitAll"/>
+            <scr:intercept-url pattern="/api/beans" access="permitAll"/>
+            <scr:intercept-url pattern="/api/info" access="permitAll"/>
+            <scr:intercept-url pattern="/api/jolokia/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/liquibase" access="permitAll"/>
+            <scr:intercept-url pattern="/api/threaddump" access="permitAll"/>
+            <scr:intercept-url pattern="/api/loggers/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/mappings" access="permitAll"/>
+            <scr:intercept-url pattern="/api/dump" access="permitAll"/>
+            <scr:intercept-url pattern="/api/configprops" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/backup" access="permitAll"/>
+            <scr:intercept-url pattern="/api/jobs/spark" access="permitAll"/>
+            <scr:intercept-url pattern="/api/jobs/stage/status" access="permitAll"/>
+            <scr:intercept-url pattern="/api/jobs/error" access="permitAll"/>
+            <scr:intercept-url pattern="/api/jobs/wait_and_run_time" access="permitAll"/>
+            <scr:intercept-url pattern="/api/snapshots/source_table_stats" access="permitAll"/>
+            <scr:intercept-url pattern="/api/snapshots/auto_refresh" access="permitAll"/>
+            <scr:intercept-url pattern="/api/snapshots/view_mapping" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>
+            <scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/models*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/job*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/admin/public_config" access="permitAll"/>
+            <scr:intercept-url pattern="/api/admin/instance_info" access="permitAll"/>
+            <scr:intercept-url pattern="/api/projects" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/license/info" access="permitAll"/>
+            <scr:intercept-url pattern="/api/error" access="permitAll"/>
+            <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
+
+            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/api/j_spring_security_logout"
+                        success-handler-ref="logoutSuccessHandler"/>
+            <scr:session-management session-fixation-protection="newSession"/>
+        </scr:http>
     </beans>
 
     <beans profile="saml">
@@ -611,7 +701,6 @@
     </beans>
 
     <beans profile="custom">
-
         <scr:authentication-manager alias="customAuthManager" erase-credentials="false">
             <scr:authentication-provider ref="customAuthProvider"/>
         </scr:authentication-manager>

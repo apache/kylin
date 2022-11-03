@@ -17,26 +17,16 @@
  */
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.TABLE_RELOAD_HAVING_NOT_FINAL_JOB;
-import static org.awaitility.Awaitility.await;
-import static org.hamcrest.CoreMatchers.is;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import io.kyligence.kap.clickhouse.MockSecondStorage;
+import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import io.kyligence.kap.engine.spark.job.NTableSamplingJob;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
@@ -46,8 +36,6 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.model.SelectRule;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
-import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -94,15 +82,25 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import io.kyligence.kap.clickhouse.MockSecondStorage;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import lombok.val;
-import lombok.var;
-import lombok.extern.slf4j.Slf4j;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.TABLE_RELOAD_HAVING_NOT_FINAL_JOB;
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.is;
 
 @Slf4j
 public class TableReloadServiceTest extends CSVSourceTestCase {
@@ -630,7 +628,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         Assert.assertNotNull(reModel);
         Assert.assertFalse(reModel.isBroken());
         Assert.assertEquals(9, reModel.getJoinTables().size());
-        Assert.assertEquals(17, reModel.getAllMeasures().size());
+        Assert.assertEquals(18, reModel.getAllMeasures().size());
         Assert.assertEquals(198, reModel.getAllNamedColumns().size());
         Assert.assertEquals("ORDER_ID", reModel.getAllNamedColumns().get(13).getName());
         Assert.assertEquals(NDataModel.ColumnStatus.TOMB, reModel.getAllNamedColumns().get(13).getStatus());
@@ -692,7 +690,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         Assert.assertNotNull(reModel);
         Assert.assertFalse(reModel.isBroken());
         Assert.assertEquals(9, reModel.getJoinTables().size());
-        Assert.assertEquals(17, reModel.getAllMeasures().size());
+        Assert.assertEquals(18, reModel.getAllMeasures().size());
         Assert.assertEquals(198, reModel.getAllNamedColumns().size());
         Assert.assertEquals("CAL_DT", reModel.getAllNamedColumns().get(2).getName());
         Assert.assertEquals("DEAL_YEAR", reModel.getAllNamedColumns().get(28).getName());
@@ -742,7 +740,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         Assert.assertNotNull(reModel);
         Assert.assertFalse(reModel.isBroken());
         Assert.assertEquals(9, reModel.getJoinTables().size());
-        Assert.assertEquals(17, reModel.getAllMeasures().size());
+        Assert.assertEquals(18, reModel.getAllMeasures().size());
         Assert.assertEquals(198, reModel.getAllNamedColumns().size());
         Assert.assertEquals("CAL_DT", reModel.getAllNamedColumns().get(2).getName());
         Assert.assertEquals("DEAL_YEAR", reModel.getAllNamedColumns().get(28).getName());
@@ -1002,7 +1000,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         addColumn("DEFAULT.TEST_KYLIN_FACT", true, new ColumnDesc("", "DEAL_YEAR", "int", "", "", "", null));
 
         OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT,
-                "DEFAULT.TEST_KYLIN_FACT");
+                "DEFAULT.TEST_KYLIN_FACT", false);
         Assert.assertTrue(response.isHasDatasourceChanged());
         Assert.assertTrue(response.isHasDuplicatedColumns());
         Assert.assertEquals(1, response.getDuplicatedColumns().size());
@@ -1024,7 +1022,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         addColumn("EDW.TEST_CAL_DT", true, new ColumnDesc("", "DEAL_YEAR", "int", "", "", "", null));
 
         OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT,
-                "EDW.TEST_CAL_DT");
+                "EDW.TEST_CAL_DT", false);
         Assert.assertTrue(response.isHasDatasourceChanged());
         Assert.assertTrue(response.isHasDuplicatedColumns());
         Assert.assertEquals(1, response.getDuplicatedColumns().size());
@@ -1041,31 +1039,64 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         Assert.assertTrue(modelManager.listAllModels().isEmpty());
 
         OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT,
-                "EDW.TEST_CAL_DT");
+                "EDW.TEST_CAL_DT", false);
         Assert.assertTrue(response.isHasDatasourceChanged());
         Assert.assertFalse(response.isHasDuplicatedColumns());
     }
 
     @Test
-    public void testCheckEffectedJobs() throws Exception {
+    public void testReloadTableRemoveCol() throws Exception {
         NExecutableManager executableManager = NExecutableManager.getInstance(getTestConfig(), PROJECT);
-        AbstractExecutable job1 = new NTableSamplingJob();
-        job1.setTargetSubject("DEFAULT.TEST_ORDER");
-        job1.setJobType(JobTypeEnum.TABLE_SAMPLING);
-        executableManager.addJob(job1);
-        removeColumn("DEFAULT.TEST_ORDER", "TEST_TIME_ENC");
+        AbstractExecutable job = new NTableSamplingJob();
+        String tableIdentity = "DEFAULT.TEST_ORDER";
+        job.setTargetSubject(tableIdentity);
+        job.setJobType(JobTypeEnum.TABLE_SAMPLING);
+        executableManager.addJob(job);
+        removeColumn(tableIdentity, "TEST_TIME_ENC");
 
         OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT,
-                "DEFAULT.TEST_ORDER");
+                tableIdentity, false);
         Assert.assertTrue(response.isHasEffectedJobs());
         Assert.assertEquals(1, response.getEffectedJobs().size());
+        Assert.assertThrows(TABLE_RELOAD_HAVING_NOT_FINAL_JOB.getMsg(job.getId()), KylinException.class,
+                () -> tableService.preProcessBeforeReloadWithFailFast(PROJECT, tableIdentity));
+    }
 
-        try {
-            tableService.preProcessBeforeReloadWithFailFast(PROJECT, "DEFAULT.TEST_ORDER");
-            Assert.fail();
-        } catch (KylinException e) {
-            Assert.assertTrue(e.toString().contains(TABLE_RELOAD_HAVING_NOT_FINAL_JOB.getErrorCode().getCode()));
-        }
+    @Test
+    public void testReloadTableAddCol() throws Exception {
+        NExecutableManager executableManager = NExecutableManager.getInstance(getTestConfig(), PROJECT);
+        AbstractExecutable job = new NTableSamplingJob();
+        String tableIdentity = "DEFAULT.TEST_ORDER";
+        job.setTargetSubject(tableIdentity);
+        job.setJobType(JobTypeEnum.TABLE_SAMPLING);
+        executableManager.addJob(job);
+        addColumn(tableIdentity, true, new ColumnDesc("", "TEST_COL", "int", "", "", "", null));
+        OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT,
+                tableIdentity, false);
+        Assert.assertTrue(response.isHasEffectedJobs());
+        Assert.assertEquals(1, response.getEffectedJobs().size());
+        tableService.preProcessBeforeReloadWithFailFast(PROJECT, tableIdentity);
+    }
+
+    @Test
+    public void testReloadTableChangeColType() throws Exception {
+        NExecutableManager executableManager = NExecutableManager.getInstance(getTestConfig(), PROJECT);
+        AbstractExecutable job = new NTableSamplingJob();
+        String tableIdentity = "DEFAULT.TEST_KYLIN_FACT";
+        job.setTargetSubject(tableIdentity);
+        job.setJobType(JobTypeEnum.TABLE_SAMPLING);
+        executableManager.addJob(job);
+        changeTypeColumn(tableIdentity, new HashMap<String, String>() {
+            {
+                put("SLR_SEGMENT_CD", "bigint");
+            }
+        }, true);
+        OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT,
+                tableIdentity, false);
+        Assert.assertTrue(response.isHasEffectedJobs());
+        Assert.assertEquals(1, response.getEffectedJobs().size());
+        Assert.assertThrows(TABLE_RELOAD_HAVING_NOT_FINAL_JOB.getMsg(job.getId()), KylinException.class,
+                () -> tableService.preProcessBeforeReloadWithFailFast(PROJECT, tableIdentity));
     }
 
     @Test
@@ -1631,6 +1662,79 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         return tableExtInfo;
     }
 
+    @Test
+    public void testPreProcessBeforeReloadDetailWithContext() throws Exception {
+        String tableIdentity = "DEFAULT.TEST_KYLIN_FACT";
+        changeTypeColumn(tableIdentity, new HashMap<String, String>() {
+            {
+                put("SLR_SEGMENT_CD", "string");
+            }
+        }, false);
+        OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT, tableIdentity,
+                true);
+        Assert.assertEquals(Sets.newHashSet("SLR_SEGMENT_CD"), response.getDetails().getDataTypeChangedColumns());
+        Assert.assertEquals(Sets.newHashSet(20000020001L, 1000001L, 1020001L, 1040001L),
+                response.getDetails().getRefreshedLayouts().get("nmodel_basic_inner"));
+        Assert.assertEquals(Sets.newHashSet(20000020001L, 1000001L),
+                response.getDetails().getRefreshedLayouts().get("nmodel_basic"));
+        Assert.assertEquals(
+                Sets.newHashSet(100001L, 80001L, 120001L, 60001L, 20001L, 1L, 40001L, 240001L, 260001L, 220001L,
+                        200001L, 140001L, 160001L, 180001L, 300001L, 280001L),
+                response.getDetails().getRefreshedLayouts().get("ut_inner_join_cube_partial"));
+
+        removeColumn(tableIdentity, "ITEM_COUNT", "LSTG_FORMAT_NAME");
+        addColumn(tableIdentity, false, new ColumnDesc("", "NEW_COL", "double", "", "", "", null));
+
+        response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT, tableIdentity, true);
+        Assert.assertEquals(Sets.newHashSet("NEW_COL"), response.getDetails().getAddedColumns());
+        Assert.assertEquals(Sets.newHashSet("ITEM_COUNT", "LSTG_FORMAT_NAME"),
+                response.getDetails().getRemovedColumns());
+        Assert.assertEquals(Sets.newHashSet("nmodel_basic/COUNT_DISTINCT", "nmodel_basic_inner/ITEM_COUNT_SUM",
+                "ut_inner_join_cube_partial/ITEM_COUNT_SUM", "all_fixed_length/COUNT_DISTINCT",
+                "nmodel_basic_inner/ITEM_COUNT_MAX", "ut_inner_join_cube_partial/COUNT_DISTINCT",
+                "nmodel_basic/ITEM_COUNT_SUM", "nmodel_basic_inner/COUNT_DISTINCT",
+                "ut_inner_join_cube_partial/ITEM_COUNT_MAX", "nmodel_basic/SUM_NEST4", "nmodel_basic_inner/SUM_NEST4",
+                "nmodel_basic/ITEM_COUNT_MAX", "nmodel_basic_inner/SUM_DEAL_AMOUNT", "all_fixed_length/ITEM_COUNT_SUM",
+                "nmodel_basic/SUM_DEAL_AMOUNT", "all_fixed_length/ITEM_COUNT_MAX"),
+                response.getDetails().getRemovedMeasures());
+        Assert.assertEquals(
+                Sets.newHashSet("all_fixed_length/LSTG_FORMAT_NAME", "nmodel_basic_inner/NEST4",
+                        "nmodel_basic/LSTG_FORMAT_NAME", "nmodel_basic/DEAL_AMOUNT", "nmodel_basic/NEST5",
+                        "nmodel_basic_inner/LSTG_FORMAT_NAME", "nmodel_basic_inner/DEAL_AMOUNT", "nmodel_basic/NEST4",
+                        "all_fixed_length/ITEM_COUNT", "ut_inner_join_cube_partial/LSTG_FORMAT_NAME"),
+                response.getDetails().getRemovedDimensions());
+        Assert.assertEquals(Sets.newHashSet(1L), response.getDetails().getRemovedLayouts().get("all_fixed_length"));
+        Assert.assertEquals(
+                Sets.newHashSet(20001L, 1070001L, 1090001L, 1050001L, 1020001L, 1000001L, 1040001L, 30001L, 1080001L,
+                        1100001L, 1060001L, 20000020001L, 1010001L, 1030001L),
+                response.getDetails().getRemovedLayouts().get("nmodel_basic_inner"));
+        Assert.assertEquals(Sets.newHashSet(30001L, 20001L, 20000030001L, 20000020001L, 1000001L),
+                response.getDetails().getRemovedLayouts().get("nmodel_basic"));
+        Assert.assertEquals(
+                Sets.newHashSet(80001L, 120001L, 40001L, 1L, 200001L, 240001L, 160001L, 280001L, 90001L, 130001L,
+                        10001L, 50001L, 250001L, 210001L, 170001L, 290001L, 100001L, 60001L, 20001L, 220001L, 260001L,
+                        140001L, 180001L, 300001L, 110001L, 70001L, 30001L, 230001L, 190001L, 150001L, 270001L),
+                response.getDetails().getRemovedLayouts().get("ut_inner_join_cube_partial"));
+        Assert.assertEquals(
+                Sets.newHashSet(1150001L, 1170001L, 1140001L, 1160001L, 1130001L, 1220001L, 1190001L, 1200001L,
+                        1230001L, 1210001L, 1180001L),
+                response.getDetails().getAddedLayouts().get("nmodel_basic_inner"));
+        Assert.assertEquals(Sets.newHashSet(360001L, 320001L, 520001L, 480001L, 400001L, 440001L, 600001L, 560001L,
+                330001L, 370001L, 490001L, 410001L, 450001L, 610001L, 530001L, 570001L, 340001L, 380001L, 500001L,
+                460001L, 420001L, 540001L, 580001L, 350001L, 390001L, 310001L, 510001L, 470001L, 430001L, 590001L,
+                550001L), response.getDetails().getAddedLayouts().get("ut_inner_join_cube_partial"));
+
+        response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT, tableIdentity, false);
+
+        Assert.assertEquals(0, response.getDetails().getAddedColumns().size());
+        Assert.assertEquals(0, response.getDetails().getRemovedColumns().size());
+        Assert.assertEquals(0, response.getDetails().getDataTypeChangedColumns().size());
+        Assert.assertEquals(0, response.getDetails().getRemovedMeasures().size());
+        Assert.assertEquals(0, response.getDetails().getRemovedDimensions().size());
+        Assert.assertEquals(0, response.getDetails().getRemovedLayouts().size());
+        Assert.assertEquals(0, response.getDetails().getAddedLayouts().size());
+        Assert.assertEquals(0, response.getDetails().getRefreshedLayouts().size());
+    }
 
     private void prepareTableExt(String tableIdentity) {
         val tableManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);

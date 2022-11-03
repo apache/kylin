@@ -1,0 +1,516 @@
+{
+  "uuid" : "e31343d1-d921-4d61-83ec-5510b35a0409",
+  "last_modified" : 1614306621401,
+  "create_time" : 1599187928333,
+  "version" : "4.0.0.0",
+  "alias" : "AUTO_MODEL_STAPLES_1",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "TDVT.STAPLES",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "ORDER_STATUS",
+    "column" : "STAPLES.ORDER_STATUS"
+  }, {
+    "id" : 1,
+    "name" : "STAPLES_0_DOT_0_EMPLOYEE_NAME",
+    "column" : "STAPLES.EMPLOYEE_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "SHIP_CHARGE",
+    "column" : "STAPLES.SHIP_CHARGE"
+  }, {
+    "id" : 3,
+    "name" : "STAPLES_0_DOT_0_PROD_TYPE4",
+    "column" : "STAPLES.PROD_TYPE4",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "STAPLES_0_DOT_0_PRODUCT_CONTAINER",
+    "column" : "STAPLES.PRODUCT_CONTAINER",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "ORDER_YEAR",
+    "column" : "STAPLES.ORDER_YEAR"
+  }, {
+    "id" : 6,
+    "name" : "SHIP_HANDLE_COST",
+    "column" : "STAPLES.SHIP_HANDLE_COST"
+  }, {
+    "id" : 7,
+    "name" : "CUSTOMER_SEGMENT",
+    "column" : "STAPLES.CUSTOMER_SEGMENT"
+  }, {
+    "id" : 8,
+    "name" : "EMPLOYEE_DEPT",
+    "column" : "STAPLES.EMPLOYEE_DEPT"
+  }, {
+    "id" : 9,
+    "name" : "STAPLES_0_DOT_0_PROD_TYPE1",
+    "column" : "STAPLES.PROD_TYPE1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "ORDER_QUANTITY",
+    "column" : "STAPLES.ORDER_QUANTITY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "ORDER_MONTH",
+    "column" : "STAPLES.ORDER_MONTH"
+  }, {
+    "id" : 12,
+    "name" : "STAPLES_0_DOT_0_SHIP_MODE",
+    "column" : "STAPLES.SHIP_MODE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "ORDER_DAY",
+    "column" : "STAPLES.ORDER_DAY"
+  }, {
+    "id" : 14,
+    "name" : "SALES_TOTAL",
+    "column" : "STAPLES.SALES_TOTAL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "STAPLES_0_DOT_0_CALL_CENTER_REGION",
+    "column" : "STAPLES.CALL_CENTER_REGION",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "SUPPLIER_REGION",
+    "column" : "STAPLES.SUPPLIER_REGION"
+  }, {
+    "id" : 17,
+    "name" : "FILL_TIME",
+    "column" : "STAPLES.FILL_TIME"
+  }, {
+    "id" : 18,
+    "name" : "STAPLES_0_DOT_0_DISCOUNT",
+    "column" : "STAPLES.DISCOUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 19,
+    "name" : "SUPPLIER_BALANCE",
+    "column" : "STAPLES.SUPPLIER_BALANCE"
+  }, {
+    "id" : 20,
+    "name" : "EMPLOYEE_SALARY",
+    "column" : "STAPLES.EMPLOYEE_SALARY"
+  }, {
+    "id" : 21,
+    "name" : "STAPLES_0_DOT_0_RECEIVED_DATE",
+    "column" : "STAPLES.RECEIVED_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 22,
+    "name" : "CUSTOMER_BALANCE",
+    "column" : "STAPLES.CUSTOMER_BALANCE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 23,
+    "name" : "TAX_RATE",
+    "column" : "STAPLES.TAX_RATE"
+  }, {
+    "id" : 24,
+    "name" : "STAPLES_0_DOT_0_PROD_TYPE2",
+    "column" : "STAPLES.PROD_TYPE2",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 25,
+    "name" : "SUPPLIER_NAME",
+    "column" : "STAPLES.SUPPLIER_NAME"
+  }, {
+    "id" : 26,
+    "name" : "ITEM_COUNT",
+    "column" : "STAPLES.ITEM_COUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 27,
+    "name" : "ORDER_PRIORITY",
+    "column" : "STAPLES.ORDER_PRIORITY"
+  }, {
+    "id" : 28,
+    "name" : "MANAGER_NAME",
+    "column" : "STAPLES.MANAGER_NAME"
+  }, {
+    "id" : 29,
+    "name" : "PRODUCT_ID",
+    "column" : "STAPLES.PRODUCT_ID"
+  }, {
+    "id" : 30,
+    "name" : "ORDER_QUARTER",
+    "column" : "STAPLES.ORDER_QUARTER"
+  }, {
+    "id" : 31,
+    "name" : "PRODUCT_IN_STOCK",
+    "column" : "STAPLES.PRODUCT_IN_STOCK"
+  }, {
+    "id" : 32,
+    "name" : "PID",
+    "column" : "STAPLES.PID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 33,
+    "name" : "SHIP_PRIORITY",
+    "column" : "STAPLES.SHIP_PRIORITY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 34,
+    "name" : "GROSS_PROFIT",
+    "column" : "STAPLES.GROSS_PROFIT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 35,
+    "name" : "PRICE",
+    "column" : "STAPLES.PRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 36,
+    "name" : "SHIP_PROMO",
+    "column" : "STAPLES.SHIP_PROMO"
+  }, {
+    "id" : 37,
+    "name" : "PRODUCT_BASE_MARGIN",
+    "column" : "STAPLES.PRODUCT_BASE_MARGIN"
+  }, {
+    "id" : 38,
+    "name" : "SUPPLIER_STATE",
+    "column" : "STAPLES.SUPPLIER_STATE"
+  }, {
+    "id" : 39,
+    "name" : "STAPLES_0_DOT_0_CUSTOMER_STATE",
+    "column" : "STAPLES.CUSTOMER_STATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 40,
+    "name" : "TOTAL_CYCLE_TIME",
+    "column" : "STAPLES.TOTAL_CYCLE_TIME"
+  }, {
+    "id" : 41,
+    "name" : "STAPLES_0_DOT_0_CUSTOMER_NAME",
+    "column" : "STAPLES.CUSTOMER_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 42,
+    "name" : "RECEIVE_TIME",
+    "column" : "STAPLES.RECEIVE_TIME"
+  }, {
+    "id" : 43,
+    "name" : "STAPLES_0_DOT_0_ORDER_DATE",
+    "column" : "STAPLES.ORDER_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 44,
+    "name" : "STAPLES_0_DOT_0_PRODUCT_NAME",
+    "column" : "STAPLES.PRODUCT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 45,
+    "name" : "STAPLES_0_DOT_0_PROD_TYPE3",
+    "column" : "STAPLES.PROD_TYPE3",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 46,
+    "name" : "STAPLES_0_DOT_0_ORDER_ID",
+    "column" : "STAPLES.ORDER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 47,
+    "name" : "EMPLOYEE_YRS_EXP",
+    "column" : "STAPLES.EMPLOYEE_YRS_EXP"
+  }, {
+    "id" : 48,
+    "name" : "STAPLES_0_DOT_0_MARKET_SEGMENT",
+    "column" : "STAPLES.MARKET_SEGMENT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 49,
+    "name" : "STAPLES_0_DOT_0_SHIP_DATE",
+    "column" : "STAPLES.SHIP_DATE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 50,
+    "name" : "STAPLES_CC_AUTO_8",
+    "column" : "STAPLES.CC_AUTO_8"
+  }, {
+    "id" : 51,
+    "name" : "STAPLES_CC_AUTO_11",
+    "column" : "STAPLES.CC_AUTO_11"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  }, {
+    "name" : "SUM_STAPLES_GROSS_PROFIT",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.GROSS_PROFIT"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100001
+  }, {
+    "name" : "SUM_STAPLES_DISCOUNT",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.DISCOUNT"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100002
+  }, {
+    "name" : "COUNT_STAPLES_DISCOUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.DISCOUNT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100003
+  }, {
+    "name" : "SUM_STAPLES_CUSTOMER_BALANCE",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.CUSTOMER_BALANCE"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100004
+  }, {
+    "name" : "SUM_STAPLES_ORDER_QUANTITY",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.ORDER_QUANTITY"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100005
+  }, {
+    "name" : "SUM_STAPLES_SALES_TOTAL",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.SALES_TOTAL"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100006
+  }, {
+    "name" : "SUM_STAPLES_PRODUCT_BASE_MARGIN",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.PRODUCT_BASE_MARGIN"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100007
+  }, {
+    "name" : "MIN_STAPLES_ORDER_DATE",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.ORDER_DATE"
+      } ],
+      "returntype" : "timestamp"
+    },
+    "id" : 100008
+  }, {
+    "name" : "MIN_STAPLES_CUSTOMER_BALANCE",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.CUSTOMER_BALANCE"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100009
+  }, {
+    "name" : "SUM_STAPLES_ITEM_COUNT",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100010
+  }, {
+    "name" : "SUM_STAPLES_EMPLOYEE_SALARY",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.EMPLOYEE_SALARY"
+      } ],
+      "returntype" : "decimal(28,4)"
+    },
+    "id" : 100011
+  }, {
+    "name" : "COUNT_STAPLES_EMPLOYEE_SALARY",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.EMPLOYEE_SALARY"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100012
+  }, {
+    "name" : "COUNT_STAPLES_CUSTOMER_BALANCE",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.CUSTOMER_BALANCE"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100013
+  }, {
+    "name" : "MAX_STAPLES_CUSTOMER_BALANCE",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.CUSTOMER_BALANCE"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100014
+  }, {
+    "name" : "COUNT_STAPLES_GROSS_PROFIT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.GROSS_PROFIT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100015
+  }, {
+    "name" : "SUM_STAPLES_PRICE",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.PRICE"
+      } ],
+      "returntype" : "decimal(28,4)"
+    },
+    "id" : 100016
+  }, {
+    "name" : "SUM_STAPLES_CC_AUTO_8",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.CC_AUTO_8"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100017
+  }, {
+    "name" : "COUNT_DISTINCT_STAPLES_ORDER_DATE",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.ORDER_DATE"
+      } ],
+      "returntype" : "bitmap"
+    },
+    "id" : 100018
+  }, {
+    "name" : "SUM_STAPLES_CC_AUTO_11",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "STAPLES.CC_AUTO_11"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100019
+  } ],
+  "recommendations_count" : 2,
+  "computed_columns" : [ {
+    "tableIdentity" : "TDVT.STAPLES",
+    "tableAlias" : "STAPLES",
+    "columnName" : "CC_AUTO_8",
+    "expression" : "CAST(STAPLES.PRICE / 1.1000000000000001 AS DOUBLE)",
+    "innerExpression" : "CAST(STAPLES.PRICE / 1.1000000000000001 AS DOUBLE)",
+    "datatype" : "DOUBLE",
+    "comment" : "Auto suggested from: CAST(STAPLES.PRICE / 1.1000000000000001 AS DOUBLE)",
+    "rec_uuid" : null
+  }, {
+    "tableIdentity" : "TDVT.STAPLES",
+    "tableAlias" : "STAPLES",
+    "columnName" : "CC_AUTO_11",
+    "expression" : "CAST(STAPLES.PRICE AS DOUBLE) / 1.1000000000000001",
+    "innerExpression" : "CAST(STAPLES.PRICE AS DOUBLE) / 1.1000000000000001",
+    "datatype" : "DOUBLE",
+    "comment" : "Auto suggested from: CAST(STAPLES.PRICE AS DOUBLE) / 1.1000000000000001",
+    "rec_uuid" : null
+  } ],
+  "canvas" : {
+    "coordinate" : {
+      "STAPLES" : {
+        "x" : 696.5555487738716,
+        "y" : 282.5555589463976,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null
+}

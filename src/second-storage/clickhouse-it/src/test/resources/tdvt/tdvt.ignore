@@ -1,0 +1,102 @@
+sql027:org.apache.calcite.sql.parser.impl.ParseException
+sql031:CalciteContextException
+sql121:CalciteContextException
+sql126:CalciteContextException
+sql602:CalciteContextException
+sql604:CalciteContextException
+sql649:CalciteContextException
+sql655:CalciteContextException
+sql706:CalciteContextException
+sql708:CalciteContextException
+sql733:CalciteContextException
+sql780:CalciteContextException
+sql781:CalciteContextException
+sql782:CalciteContextException
+sql795:CalciteContextException
+sql797:CalciteContextException
+sql805:CalciteContextException
+sql806:CalciteContextException
+sql810:CalciteContextException
+sql811:CalciteContextException
+sql815:CalciteContextException
+sql816:CalciteContextException
+sql817:CalciteContextException
+sql825:CalciteContextException
+sql826:CalciteContextException
+sql827:CalciteContextException
+sql029:java.sql.SQLException
+sql168:java.lang.ArrayIndexOutOfBoundsException
+sql182:java.lang.ArrayIndexOutOfBoundsException
+sql650:java.lang.ArrayIndexOutOfBoundsException
+sql653:java.lang.ArrayIndexOutOfBoundsException
+sql662:java.lang.ArrayIndexOutOfBoundsException
+sql665:java.lang.ArrayIndexOutOfBoundsException
+sql698:java.lang.RuntimeException
+sql717:java.lang.IndexOutOfBoundsException
+sql718:java.lang.IndexOutOfBoundsException
+sql720:java.lang.IndexOutOfBoundsException
+sql812:java.lang.IndexOutOfBoundsException
+sql820:java.lang.IndexOutOfBoundsException
+sql786:java.lang.UnsupportedOperationException
+sql801:java.lang.UnsupportedOperationException
+sql802:java.lang.UnsupportedOperationException
+sql803:java.lang.UnsupportedOperationException
+sql804:java.lang.UnsupportedOperationException
+sql043:must "set max_parser_depth = 0"
+sql038:KE-29253, 浮点数不准确
+sql084:KE-29253, 浮点数不准确
+sql090:KE-29253, 浮点数不准确
+sql095:KE-29253, 浮点数不准确
+sql096:KE-29253, 浮点数不准确
+SQL100:KE-29253, 浮点数不准确
+sql102:KE-29253, 浮点数不准确
+sql081:KE-29253, 浮点数不准确
+sql082:KE-29253, 浮点数不准确
+sql087:KE-29253, 浮点数不准确
+sql097:KE-29253, 浮点数不准确
+sql103:KE-29253, 浮点数不准确
+sql677:KE-29253, 浮点数不准确
+sql678:KE-29253, 浮点数不准确
+sql686:KE-29253, 浮点数不准确
+sql695:KE-29253, 浮点数不准确
+sql696:KE-29253, 浮点数不准确
+sql721:KE-29253, 浮点数不准确
+sql730:KE-29253, 浮点数不准确
+sql009:KE-29251,不支持的日期范围
+sql036:KE-29251,不支持的日期范围
+sql039:KE-29251,不支持的日期范围
+sql042:KE-29251,不支持的日期范围
+sql045:KE-29251,不支持的日期范围
+sql046:KE-29251,不支持的日期范围
+sql047:KE-29251,不支持的日期范围
+sql077:KE-29251,不支持的日期范围
+sql079:KE-29251,不支持的日期范围
+sql083:KE-29251,不支持的日期范围
+sql085:KE-29251,不支持的日期范围
+sql093:KE-29251,不支持的日期范围
+sql148:KE-29251,不支持的日期范围
+sql180:KE-29251,不支持的日期范围
+sql191:KE-29251,不支持的日期范围
+sql618:divide float,e.g. x /24.0, x is integer, related with PromotePrecision
+sql745:divide float,e.g. x /24.0, x is integer, related with PromotePrecision
+sql746:divide float,e.g. x /24.0, x is integer, related with PromotePrecision
+sql035:KE-37669, 浮点数不准确
+sql040:KE-37669, 浮点数不准确
+sql044:KE-37669, 浮点数不准确
+sql065:KE-37669, 浮点数不准确
+sql066:KE-37669, 浮点数不准确
+sql067:KE-37669, 浮点数不准确
+sql068:KE-37669, 浮点数不准确
+sql069:KE-37669, 浮点数不准确
+sql086:KE-37669, 浮点数不准确
+sql088:KE-37669, 浮点数不准确
+sql091:KE-37669, 浮点数不准确
+sql092:KE-37669, 浮点数不准确
+sql098:KE-37669, 浮点数不准确
+sql106:KE-37669, 浮点数不准确
+sql127:KE-37669, 浮点数不准确
+sql130:KE-37669, 浮点数不准确
+sql131:KE-37669, 浮点数不准确
+sql132:KE-37669, 浮点数不准确
+sql714:KE-37669, 浮点数不准确
+sql839:KE-37669, 浮点数不准确

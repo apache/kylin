@@ -62,6 +62,9 @@ public class ExternalAclProviderTest {
         value = ExternalAclProvider.convertToExternalPermission(AclPermission.ADMINISTRATION);
         Assert.assertEquals("ADMIN", value);
 
+        value = ExternalAclProvider.convertToExternalPermission(AclPermission.DATA_QUERY);
+        Assert.assertEquals("DATA_QUERY", value);
+
         value = ExternalAclProvider.convertToExternalPermission(AclPermission.CREATE);
         Assert.assertEquals(".............................C..", value);
     }

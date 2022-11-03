@@ -57,4 +57,10 @@ public class UnitOfWorkParams<T> {
 
     private String tempLockName;
 
+    /**
+     * only for debug or test
+     */
+    @Builder.Default
+    private long sleepMills = -1;
+
 }

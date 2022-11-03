@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,6 +46,7 @@ import org.apache.kylin.rest.request.CreateBaseIndexRequest.LayoutProperty;
 import org.apache.kylin.rest.request.CreateTableIndexRequest;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.response.BuildBaseIndexResponse;
+import org.apache.kylin.rest.response.IndexResponse;
 import org.apache.kylin.rest.response.IndexStatResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
@@ -60,7 +62,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import lombok.var;
 
 public class BaseIndexTest extends SourceTestCase {
 
@@ -211,8 +212,7 @@ public class BaseIndexTest extends SourceTestCase {
     public void testCreateBaseIndexSameWithToBeDelete() {
         NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(getTestConfig(), getProject());
         indexPlanManager.updateIndexPlan(COMMON_MODEL_ID, copyForWrite -> {
-            copyForWrite.markIndexesToBeDeleted(copyForWrite.getId(),
-                    copyForWrite.getAllLayouts().stream().collect(Collectors.toSet()));
+            copyForWrite.markIndexesToBeDeleted(copyForWrite.getId(), new HashSet<>(copyForWrite.getAllLayouts()));
 
         });
 
@@ -233,8 +233,7 @@ public class BaseIndexTest extends SourceTestCase {
     public void testCreateBaseLayoutSameWithToBeDelete() {
         NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(getTestConfig(), getProject());
         indexPlanManager.updateIndexPlan(COMMON_MODEL_ID, copyForWrite -> {
-            copyForWrite.markIndexesToBeDeleted(copyForWrite.getId(),
-                    copyForWrite.getAllLayouts().stream().collect(Collectors.toSet()));
+            copyForWrite.markIndexesToBeDeleted(copyForWrite.getId(), new HashSet<>(copyForWrite.getAllLayouts()));
 
         });
         CreateBaseIndexRequest request = new CreateBaseIndexRequest();
@@ -254,10 +253,10 @@ public class BaseIndexTest extends SourceTestCase {
         LayoutEntity baseTableLayout = LayoutBuilder.builder().colOrder(0, 1, 2, 3).build();
         compareBaseIndex(modelId, baseTableLayout, baseAggLayout);
 
-        var baseIndexResponse = indexPlanService.getIndexes(getProject(), modelId, "",
+        List<IndexResponse> baseIndexResponse = indexPlanService.getIndexes(getProject(), modelId, "",
                 Lists.newArrayList(IndexEntity.Status.NO_BUILD), "data_size", false,
                 Lists.newArrayList(Source.BASE_AGG_INDEX, Source.BASE_TABLE_INDEX), null);
-        Assert.assertThat(baseIndexResponse.size(), is(2));
+        Assert.assertEquals(2, baseIndexResponse.size());
     }
 
     @Test

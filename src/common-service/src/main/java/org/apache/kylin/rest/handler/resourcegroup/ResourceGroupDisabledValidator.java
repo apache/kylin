@@ -18,12 +18,11 @@
 
 package org.apache.kylin.rest.handler.resourcegroup;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.RESOURCE_GROUP_DISABLE_FAILED;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.apache.kylin.rest.request.resourecegroup.ResourceGroupRequest;
 import org.springframework.core.annotation.Order;
@@ -46,6 +45,6 @@ public class ResourceGroupDisabledValidator implements IResourceGroupRequestVali
                 && CollectionUtils.isEmpty(request.getResourceGroupMappingInfoList())) {
             return;
         }
-        throw new KylinException(INVALID_PARAMETER, MsgPicker.getMsg().getResourceGroupDisabledWithInvliadParam());
+        throw new KylinException(RESOURCE_GROUP_DISABLE_FAILED);
     }
 }

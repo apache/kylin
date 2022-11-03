@@ -18,9 +18,9 @@
 package org.apache.kylin.rest.service.task;
 
 import static org.apache.commons.lang3.time.DateUtils.MILLIS_PER_DAY;
-import static org.apache.kylin.metadata.epoch.EpochManager.GLOBAL;
-import static org.apache.kylin.metadata.favorite.AsyncTaskManager.ASYNC_ACCELERATION_TASK;
-import static org.apache.kylin.metadata.favorite.AsyncTaskManager.getInstance;
+import static io.kyligence.kap.metadata.epoch.EpochManager.GLOBAL;
+import static io.kyligence.kap.metadata.favorite.AsyncTaskManager.ASYNC_ACCELERATION_TASK;
+import static io.kyligence.kap.metadata.favorite.AsyncTaskManager.getInstance;
 
 import java.time.LocalTime;
 import java.util.Map;
@@ -36,9 +36,9 @@ import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.common.metrics.MetricsCategory;
 import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.metrics.MetricsName;
-import org.apache.kylin.metadata.favorite.AsyncAccelerationTask;
-import org.apache.kylin.metadata.favorite.FavoriteRule;
-import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
+import io.kyligence.kap.metadata.favorite.AsyncAccelerationTask;
+import io.kyligence.kap.metadata.favorite.FavoriteRule;
+import io.kyligence.kap.metadata.favorite.FavoriteRuleManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.service.ProjectSmartSupporter;

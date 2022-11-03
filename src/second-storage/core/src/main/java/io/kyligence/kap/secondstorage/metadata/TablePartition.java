@@ -21,11 +21,13 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 
+import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import io.kyligence.kap.secondstorage.metadata.annotation.DataDefinition;
 
 @JsonAutoDetect(
@@ -46,6 +48,8 @@ public class TablePartition implements Serializable {
     private String id;
     @JsonProperty("node_file_map")
     private Map<String, List<SegmentFileStatus>> nodeFileMap;
+    @JsonProperty("secondary_index_columns")
+    private Set<Integer> secondaryIndexColumns = Sets.newHashSet();
 
     public static Builder builder() {
         return new Builder();
@@ -65,6 +69,7 @@ public class TablePartition implements Serializable {
         private String id;
         private Map<String, Long> sizeInNode;
         private Map<String, List<SegmentFileStatus>> nodeFileMap;
+        private Set<Integer> secondaryIndexColumns = Sets.newHashSet();
 
         public Builder setSegmentId(String segmentId) {
             this.segmentId = segmentId;
@@ -89,6 +94,12 @@ public class TablePartition implements Serializable {
             this.sizeInNode = sizeInNode;
             return this;
         }
+
+        public Builder setSecondaryIndexColumns(Set<Integer> secondaryIndexColumns) {
+            this.secondaryIndexColumns = secondaryIndexColumns;
+            return this;
+        }
+
         public TablePartition build() {
             TablePartition partition = new TablePartition();
             partition.shardNodes.addAll(shardNodes);
@@ -96,6 +107,7 @@ public class TablePartition implements Serializable {
             partition.id = id;
             partition.nodeFileMap = nodeFileMap;
             partition.sizeInNode = sizeInNode;
+            partition.secondaryIndexColumns = secondaryIndexColumns;
             return partition;
         }
     }
@@ -109,5 +121,17 @@ public class TablePartition implements Serializable {
 
     public Map<String, List<SegmentFileStatus>> getNodeFileMap() {
         return nodeFileMap == null ? Collections.emptyMap() : nodeFileMap;
+    }
+
+    public void removeSecondaryIndex(Set<Integer> cols) {
+        this.secondaryIndexColumns.removeAll(cols);
+    }
+
+    public Set<Integer> getSecondaryIndexColumns() {
+        return this.secondaryIndexColumns;
+    }
+
+    public void addSecondaryIndex(Set<Integer> cols) {
+        this.secondaryIndexColumns.addAll(cols);
     }
 }

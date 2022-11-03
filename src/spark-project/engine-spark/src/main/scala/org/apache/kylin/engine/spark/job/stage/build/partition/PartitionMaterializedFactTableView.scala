@@ -25,7 +25,10 @@ import org.apache.kylin.engine.spark.smarter.IndexDependencyParser
 import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree.PartitionTreeBuilder
 import org.apache.kylin.metadata.cube.model.NDataSegment
+import org.apache.kylin.metadata.job.JobBucket
 import org.apache.spark.sql.{Dataset, Row}
+
+import java.util.stream.Collectors
 
 class PartitionMaterializedFactTableView(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
   extends PartitionFlatTableAndDictBase(jobContext, dataSegment, buildParam) {
@@ -33,8 +36,9 @@ class PartitionMaterializedFactTableView(jobContext: SegmentJob, dataSegment: ND
 
   override def execute(): Unit = {
     logInfo(s"Build SEGMENT $segmentId")
-    val spanTree = new PartitionSpanningTree(config, //
-      new PartitionTreeBuilder(dataSegment, readOnlyLayouts, jobId, partitions))
+    val spanTree = new PartitionSpanningTree(config,
+      new PartitionTreeBuilder(dataSegment, readOnlyLayouts, jobId, partitions,
+        jobContext.getReadOnlyBuckets.stream.filter(_.getSegmentId.equals(segmentId)).collect(Collectors.toSet[JobBucket])))
     buildParam.setPartitionSpanningTree(spanTree)
 
     val tableDesc = if (jobContext.isPartialBuild) {

@@ -16,42 +16,28 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.rest.constant.Constant.ROLE_ADMIN;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.CaseInsensitiveStringSet;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.annotation.ThirdPartyDependencies;
-import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.common.util.CaseInsensitiveStringSet;
+import org.apache.kylin.rest.request.CachedUserUpdateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.provisioning.UserDetailsManager;
+
+import io.kyligence.kap.metadata.user.ManagedUser;
 
 @ThirdPartyDependencies({ @ThirdPartyDependencies.ThirdPartyDependent(repository = "static-user-manager", classes = {
         "StaticUserGroupService" }) })
@@ -66,6 +52,21 @@ public interface UserService extends UserDetailsManager {
     }
 
     List<String> listAdminUsers() throws IOException;
+
+    default List<String> listSuperAdminUsers() {
+        String superAdminUsername = KylinConfig.getInstanceFromEnv().getSuperAdminUsername();
+        if (StringUtils.isEmpty(superAdminUsername)) {
+            return Collections.emptyList();
+        }
+        List<String> superAdmins = Collections.emptyList();
+        try {
+            superAdmins = listAdminUsers().stream().filter(user -> user.equalsIgnoreCase(superAdminUsername))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            logger.error("listSuperAdminUsers error", e);
+        }
+        return superAdmins;
+    }
 
     default List<String> listNormalUsers() throws IOException {
         List<String> adminUserNames = listAdminUsers();
@@ -129,5 +130,9 @@ public interface UserService extends UserDetailsManager {
         Set<String> globalAdmin = getGlobalAdmin();
         results.removeIf(globalAdmin::contains);
         return results;
+    }
+
+    default void refresh(CachedUserUpdateRequest request) {
+
     }
 }

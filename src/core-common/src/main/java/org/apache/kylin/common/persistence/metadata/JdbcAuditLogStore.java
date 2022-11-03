@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.common.persistence.metadata;
 
+import static org.apache.kylin.common.persistence.metadata.JdbcMetadataStore.SELECT_TERM;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.datasourceParameters;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.isIndexExists;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.isTableExists;
@@ -31,28 +32,34 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.persistence.AuditLog;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.UnitMessages;
 import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
 import org.apache.kylin.common.persistence.event.ResourceDeleteEvent;
 import org.apache.kylin.common.persistence.metadata.jdbc.AuditLogRowMapper;
+import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
 import org.apache.kylin.common.persistence.transaction.AbstractAuditLogReplayWorker;
 import org.apache.kylin.common.persistence.transaction.AuditLogReplayWorker;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.CompressionUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.TransactionDefinition;
 
 import com.google.common.base.Joiner;
 
 import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
 import io.kyligence.kap.guava20.shaded.common.base.Strings;
+import io.kyligence.kap.guava20.shaded.common.collect.Lists;
 import lombok.Getter;
 import lombok.val;
 import lombok.var;
@@ -79,12 +86,16 @@ public class JdbcAuditLogStore implements AuditLogStore {
             + Joiner.on(",").join(AUDIT_LOG_TABLE_KEY, AUDIT_LOG_TABLE_CONTENT, AUDIT_LOG_TABLE_TS,
                     AUDIT_LOG_TABLE_MVCC, AUDIT_LOG_TABLE_UNIT, AUDIT_LOG_TABLE_OPERATOR, AUDIT_LOG_TABLE_INSTANCE)
             + ") values (?, ?, ?, ?, ?, ?, ?)";
-    static final String SELECT_BY_RANGE_SQL = "select "
+    static final String SELECT_BY_RANGE_SQL = SELECT_TERM
             + Joiner.on(",").join(AUDIT_LOG_TABLE_ID, AUDIT_LOG_TABLE_KEY, AUDIT_LOG_TABLE_CONTENT, AUDIT_LOG_TABLE_TS,
                     AUDIT_LOG_TABLE_MVCC, AUDIT_LOG_TABLE_UNIT, AUDIT_LOG_TABLE_OPERATOR, AUDIT_LOG_TABLE_INSTANCE)
             + " from %s where id > %d and id <= %d order by id";
+    static final String SELECT_BY_ID_SQL = SELECT_TERM
+            + Joiner.on(",").join(AUDIT_LOG_TABLE_ID, AUDIT_LOG_TABLE_KEY, AUDIT_LOG_TABLE_CONTENT, AUDIT_LOG_TABLE_TS,
+                    AUDIT_LOG_TABLE_MVCC, AUDIT_LOG_TABLE_UNIT, AUDIT_LOG_TABLE_OPERATOR, AUDIT_LOG_TABLE_INSTANCE)
+            + " from %s where id in(%s) order by id";
 
-    static final String SELECT_BY_PROJECT_RANGE_SQL = "select "
+    static final String SELECT_BY_PROJECT_RANGE_SQL = SELECT_TERM
             + Joiner.on(",").join(AUDIT_LOG_TABLE_ID, AUDIT_LOG_TABLE_KEY, AUDIT_LOG_TABLE_CONTENT, AUDIT_LOG_TABLE_TS,
                     AUDIT_LOG_TABLE_MVCC, AUDIT_LOG_TABLE_UNIT, AUDIT_LOG_TABLE_OPERATOR, AUDIT_LOG_TABLE_INSTANCE)
             + " from %s where meta_key like '/%s/%%' and id > %d and id <= %d order by id";
@@ -94,12 +105,12 @@ public class JdbcAuditLogStore implements AuditLogStore {
     static final String SELECT_MIN_ID_SQL = "select min(id) from %s";
     static final String SELECT_COUNT_ID_RANGE = "select count(id) from %s where id > %d and id <= %d";
     static final String DELETE_ID_LESSTHAN_SQL = "delete from %s where id < ?";
-    static final String SELECT_TS_RANGE = "select "
+    static final String SELECT_TS_RANGE = SELECT_TERM
             + Joiner.on(",").join(AUDIT_LOG_TABLE_ID, AUDIT_LOG_TABLE_KEY, AUDIT_LOG_TABLE_CONTENT, AUDIT_LOG_TABLE_TS,
                     AUDIT_LOG_TABLE_MVCC, AUDIT_LOG_TABLE_UNIT, AUDIT_LOG_TABLE_OPERATOR, AUDIT_LOG_TABLE_INSTANCE)
             + " from %s where id < %d and meta_ts between %d and %d order by id desc limit %d";
 
-    static final String SELECT_BY_META_KET_AND_MVCC = "select "
+    static final String SELECT_BY_META_KET_AND_MVCC = SELECT_TERM
             + Joiner.on(",").join(AUDIT_LOG_TABLE_ID, AUDIT_LOG_TABLE_KEY, AUDIT_LOG_TABLE_CONTENT, AUDIT_LOG_TABLE_TS,
                     AUDIT_LOG_TABLE_MVCC, AUDIT_LOG_TABLE_UNIT, AUDIT_LOG_TABLE_OPERATOR, AUDIT_LOG_TABLE_INSTANCE)
             + " from %s where meta_key = '%s' and meta_mvcc = %s";
@@ -110,7 +121,7 @@ public class JdbcAuditLogStore implements AuditLogStore {
     @Getter
     private final String table;
 
-    private final AbstractAuditLogReplayWorker replayWorker;
+    protected final AbstractAuditLogReplayWorker replayWorker;
 
     private String instance;
     @Getter
@@ -152,6 +163,22 @@ public class JdbcAuditLogStore implements AuditLogStore {
         val unitId = unitMessages.getUnitId();
         val operator = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
                 .map(Principal::getName).orElse(null);
+
+        JdbcUtil.Callback<Object> beforeCommit = null;
+        if (config.isUnitOfWorkSimulationEnabled() && UnitOfWork.isAlreadyInTransaction()
+                && UnitOfWork.get().getSleepMills() > 0) {
+            beforeCommit = () -> {
+                long sleepMills = UnitOfWork.get().getSleepMills();
+                log.debug("audit log sleep {} ", sleepMills);
+                try {
+                    TimeUnit.MILLISECONDS.sleep(sleepMills);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+                return null;
+            };
+        }
+
         withTransaction(transactionManager,
                 () -> jdbcTemplate.batchUpdate(String.format(Locale.ROOT, INSERT_SQL, table),
                         unitMessages.getMessages().stream().map(e -> {
@@ -172,7 +199,8 @@ public class JdbcAuditLogStore implements AuditLogStore {
                                         unitId, operator, instance };
                             }
                             return null;
-                        }).filter(Objects::nonNull).collect(Collectors.toList())));
+                        }).filter(Objects::nonNull).collect(Collectors.toList())),
+                TransactionDefinition.ISOLATION_REPEATABLE_READ, beforeCommit);
     }
 
     public void batchInsert(List<AuditLog> auditLogs) {
@@ -192,6 +220,16 @@ public class JdbcAuditLogStore implements AuditLogStore {
         log.trace("fetch log from {} < id <= {}", currentId, currentId + size);
         return jdbcTemplate.query(String.format(Locale.ROOT, SELECT_BY_RANGE_SQL, table, currentId, currentId + size),
                 new AuditLogRowMapper());
+    }
+
+    public List<AuditLog> fetch(List<Long> auditIdList) {
+        if (CollectionUtils.isEmpty(auditIdList)) {
+            return Lists.newArrayList();
+        }
+        log.trace("fetch log from {} =< id <= {},{}", auditIdList.get(0), auditIdList.get(auditIdList.size() - 1),
+                auditIdList.size());
+        val sqlIn = auditIdList.stream().map(String::valueOf).collect(Collectors.joining(","));
+        return jdbcTemplate.query(String.format(Locale.ROOT, SELECT_BY_ID_SQL, table, sqlIn), new AuditLogRowMapper());
     }
 
     public List<AuditLog> fetch(String project, long currentId, long size) {
@@ -263,12 +301,6 @@ public class JdbcAuditLogStore implements AuditLogStore {
     public void catchup() {
         val store = ResourceStore.getKylinMetaStore(config);
         replayWorker.catchupFrom(store.getOffset());
-    }
-
-    @Override
-    public void forceCatchup() {
-        val store = ResourceStore.getKylinMetaStore(config);
-        replayWorker.forceCatchFrom(store.getOffset());
     }
 
     @Override

@@ -24,23 +24,36 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.metadata.user.NKylinUserManager;
+import io.kyligence.kap.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.NKylinUserManager;
+import org.apache.kylin.rest.constant.Constant;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.springframework.security.acls.model.Permission;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.google.common.collect.Sets;
 
 public class CaseInsensitiveKylinUserServiceTest extends NLocalFileMetadataTestCase {
 
+    @Mock
+    UserAclService userAclService = Mockito.spy(UserAclService.class);
+
+    @InjectMocks
+    private KylinUserService kylinUserService1;
+
+    @InjectMocks
+    @Spy
     private CaseInsensitiveKylinUserService kylinUserService;
 
     @Before
@@ -48,6 +61,7 @@ public class CaseInsensitiveKylinUserServiceTest extends NLocalFileMetadataTestC
         createTestMetadata();
         overwriteSystemProp("kylin.metadata.key-case-insensitive", "true");
         kylinUserService = Mockito.spy(new CaseInsensitiveKylinUserService());
+        ReflectionTestUtils.setField(kylinUserService, "userAclService", userAclService);
         NKylinUserManager userManager = NKylinUserManager.getInstance(getTestConfig());
         userManager.update(new ManagedUser("ADMIN", "KYLIN", false, Arrays.asList(//
                 new SimpleGrantedAuthority(Constant.ROLE_ADMIN), new SimpleGrantedAuthority(Constant.ROLE_ANALYST),
@@ -93,6 +107,8 @@ public class CaseInsensitiveKylinUserServiceTest extends NLocalFileMetadataTestC
         List<SimpleGrantedAuthority> roles = new ArrayList<>();
         roles.add(new SimpleGrantedAuthority("ALL_USERS"));
         user.setGrantedAuthorities(roles);
+        Mockito.doNothing().when(userAclService).updateUserAclPermission(Mockito.any(UserDetails.class),
+                Mockito.any(Permission.class));
         kylinUserService.createUser(user);
         Assert.assertTrue(kylinUserService.userExists("tTtUser"));
         Assert.assertTrue(kylinUserService.userExists("tttuser"));

@@ -25,7 +25,7 @@ import java.nio.charset.Charset;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.user.NKylinUserManager;
+import io.kyligence.kap.metadata.user.NKylinUserManager;
 import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.junit.After;
 import org.junit.Assert;

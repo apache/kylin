@@ -17,17 +17,16 @@
  */
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SIMPLIFIED_MEASURES_MISSING_ID;
 import static org.hamcrest.Matchers.is;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import io.kyligence.kap.engine.spark.job.ExecutableAddCuboidHandler;
+import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -37,8 +36,6 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.SelectRule;
 import org.apache.kylin.engine.spark.ExecutableUtils;
-import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -62,7 +59,7 @@ import org.apache.kylin.metadata.model.NDataModel.NamedColumn;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
+import io.kyligence.kap.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AggShardByColumnsRequest;
 import org.apache.kylin.rest.request.ModelParatitionDescRequest;
@@ -87,12 +84,16 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
-import lombok.val;
-import lombok.var;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
@@ -290,20 +291,8 @@ public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
                     .forEach(column -> column.setStatus(ColumnStatus.TOMB));
             request.getSimplifiedDimensions()
                     .removeIf(column -> column.getAliasDotColumn().equalsIgnoreCase(ccColName));
-            try {
-                modelService.updateDataModelSemantic(request.getProject(), request);
-                Assert.fail();
-            } catch (Exception e) {
-                Assert.assertTrue(e instanceof KylinException);
-                Assert.assertEquals(
-                        "Can’t initialize metadata at the moment. Please try restarting first. If the problem still exist, please contact technical support.",
-                        e.getMessage());
-            }
 
-            // remove broken measure
-            request.getSimplifiedMeasures().removeIf(m -> m.getName().equals("TEST_MEASURE_WITH_CC"));
             modelService.updateDataModelSemantic(request.getProject(), request);
-
             NDataModel model = getTestModel();
             Assert.assertFalse(model.getAllNamedColumns().stream().filter(c -> c.getId() == colIdOfCC).findFirst().get()
                     .isExist());
@@ -421,6 +410,27 @@ public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testRenameTableAliasUsedWithSimplifiedMeasure() throws IOException {
+        val modelManager = NDataModelManager.getInstance(getTestConfig(), getProject());
+        modelManager.listAllModels().forEach(modelManager::dropModel);
+        val request = JsonUtil.readValue(
+                getClass().getResourceAsStream("/ut_request/model_update/model_with_measure.json"), ModelRequest.class);
+        request.setAlias("model_with_measure");
+        val newModel = modelService.createModel(request.getProject(), request);
+        val updateRequest = JsonUtil.readValue(
+                getClass().getResourceAsStream("/ut_request/model_update/model_with_measure_change_alias.json"),
+                ModelRequest.class);
+        updateRequest.setAlias("model_with_measure_change_alias");
+        updateRequest.setUuid(newModel.getUuid());
+        try {
+            modelService.updateDataModelSemantic(getProject(), updateRequest);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(SIMPLIFIED_MEASURES_MISSING_ID.getErrorCode().getCode(), e.getErrorCodeString());
+        }
+    }
+
+    @Test
     public void testRenameTableAliasUsedAsMeasure() throws Exception {
         val modelManager = NDataModelManager.getInstance(getTestConfig(), getProject());
         modelManager.listAllModels().forEach(modelManager::dropModel);
@@ -428,20 +438,21 @@ public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
                 getClass().getResourceAsStream("/ut_request/model_update/model_with_measure.json"), ModelRequest.class);
         request.setAlias("model_with_measure");
         val newModel = modelService.createModel(request.getProject(), request);
-
+        Map<String, Integer> measureMap = newModel.getAllMeasures().stream()
+                .collect(Collectors.toMap(Measure::getName, Measure::getId));
         val updateRequest = JsonUtil.readValue(
                 getClass().getResourceAsStream("/ut_request/model_update/model_with_measure_change_alias.json"),
                 ModelRequest.class);
         updateRequest.setAlias("model_with_measure_change_alias");
         updateRequest.setUuid(newModel.getUuid());
+        updateRequest.getSimplifiedMeasures().forEach(measure -> measure.setId(measureMap.get(measure.getName())));
         modelService.updateDataModelSemantic(getProject(), updateRequest);
 
         var model = modelService.getManager(NDataModelManager.class, getProject())
                 .getDataModelDesc(updateRequest.getUuid());
-        Assert.assertThat(
+        Assert.assertEquals(Lists.newArrayList("MAX1", "COUNT_ALL"),
                 model.getAllMeasures().stream().filter(m -> !m.isTomb()).sorted(Comparator.comparing(Measure::getId))
-                        .map(MeasureDesc::getName).collect(Collectors.toList()),
-                CoreMatchers.is(Lists.newArrayList("MAX1", "COUNT_ALL")));
+                        .map(MeasureDesc::getName).collect(Collectors.toList()));
 
         // make sure update again is ok
         val updateRequest2 = JsonUtil.readValue(
@@ -449,14 +460,15 @@ public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
                 ModelRequest.class);
         updateRequest2.setUuid(newModel.getUuid());
         updateRequest2.setAlias("model_with_measure_change_alias_twice");
+        updateRequest2.getSimplifiedMeasures().forEach(measure -> measure.setId(measureMap.get(measure.getName())));
         modelService.updateDataModelSemantic(getProject(), updateRequest2);
         model = modelService.getManager(NDataModelManager.class, getProject())
                 .getDataModelDesc(updateRequest.getUuid());
-        Assert.assertThat(
-                model.getAllMeasures().stream().filter(m -> !m.isTomb()).sorted(Comparator.comparing(Measure::getId))
-                        .map(MeasureDesc::getName).collect(Collectors.toList()),
-                CoreMatchers.is(Lists.newArrayList("MAX1", "COUNT_ALL")));
-        Assert.assertEquals(2, model.getAllMeasures().size());
+        List<Measure> allMeasures = model.getAllMeasures();
+        Assert.assertEquals(Lists.newArrayList("MAX1", "COUNT_ALL"), allMeasures.stream().filter(m -> !m.isTomb())
+                .sorted(Comparator.comparing(Measure::getId)).map(MeasureDesc::getName).collect(Collectors.toList()));
+        Assert.assertEquals(2, allMeasures.size());
+        Assert.assertEquals(2, allMeasures.stream().filter(measure -> !measure.isTomb()).count());
     }
 
     @Test

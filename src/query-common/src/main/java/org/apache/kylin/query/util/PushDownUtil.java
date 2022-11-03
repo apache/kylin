@@ -16,30 +16,13 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.query.util;
 
 import static org.apache.kylin.common.exception.QueryErrorCode.EMPTY_TABLE;
 import static org.apache.kylin.common.exception.ServerErrorCode.VIEW_PARTITION_DATE_FORMAT_DETECTION_FORBIDDEN;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -47,9 +30,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
 
+import io.kyligence.kap.query.util.KapQueryUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -189,8 +174,9 @@ public class PushDownUtil {
 
     public static Pair<String, String> getMaxAndMinTime(String partitionColumn, String table, String project)
             throws Exception {
-        String sql = String.format(Locale.ROOT, "select min(%s), max(%s) from %s", partitionColumn, partitionColumn,
-                table);
+        Pair<String, String> pair = addBackTickForIdentity(table, partitionColumn);
+        String sql = String.format(Locale.ROOT, "select min(%s), max(%s) from %s", pair.getSecond(), pair.getSecond(),
+                pair.getFirst());
         Pair<String, String> result = new Pair<>();
         // pushdown
         List<List<String>> returnRows = PushDownUtil.selectPartitionColumn(sql, table, project).getFirst();
@@ -242,8 +228,9 @@ public class PushDownUtil {
     }
 
     public static String getFormatIfNotExist(String table, String partitionColumn, String project) throws Exception {
-        String sql = String.format(Locale.ROOT, "select %s from %s where %s is not null limit 1", partitionColumn,
-                table, partitionColumn);
+        Pair<String, String> pair = addBackTickForIdentity(table, partitionColumn);
+        String sql = String.format(Locale.ROOT, "select %s from %s where %s is not null limit 1", pair.getSecond(),
+                pair.getFirst(), pair.getSecond());
 
         // push down
         List<List<String>> returnRows = PushDownUtil.selectPartitionColumn(sql, table, project).getFirst();
@@ -309,4 +296,12 @@ public class PushDownUtil {
         }
         return new Pair<>(ImmutableList.copyOf(results.getRows()), results.getColumnMetas());
     }
+
+    protected static Pair<String, String> addBackTickForIdentity(String table, String partitionColumn) {
+        String tableName = Arrays.stream(table.split("\\.")).map(s -> "`" + s + "`").collect(Collectors.joining("."));
+        String partitionColumnName = Arrays.stream(partitionColumn.split("\\.")).map(s -> "`" + s + "`")
+                .collect(Collectors.joining("."));
+        return Pair.newPair(tableName, partitionColumnName);
+    }
+
 }

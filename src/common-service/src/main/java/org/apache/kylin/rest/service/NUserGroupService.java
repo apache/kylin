@@ -37,18 +37,19 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.usergroup.NUserGroupManager;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.response.UserGroupResponseKI;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,10 +138,12 @@ public class NUserGroupService implements IUserGroupService {
         List<String> moveList = new ArrayList<String>();
         moveList.addAll(moveInUsers);
         moveList.addAll(moveOutUsers);
-
+        val superAdminList = userService.listSuperAdminUsers();
         for (String user : moveList) {
-            if (StringUtils.equalsIgnoreCase(KylinUserService.SUPER_ADMIN, user)) {
+            if (!CollectionUtils.isEmpty(superAdminList) && superAdminList.stream()
+                    .filter(superAdmin -> superAdmin.equalsIgnoreCase(user)).collect(Collectors.toList()).size() > 0) {
                 throw new KylinException(PERMISSION_DENIED, MsgPicker.getMsg().getChangeGlobaladmin());
+
             }
             if (StringUtils.equalsIgnoreCase(currentUser, user)) {
                 throw new KylinException(FAILED_UPDATE_USER, msg.getSelfEditForbidden());

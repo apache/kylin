@@ -53,7 +53,7 @@ import lombok.val;
 import scala.collection.JavaConversions;
 
 /**
- * @deprecated After KE 4.3, we use {@link org.apache.kylin.engine.spark.job.RDSegmentBuildJob} to detect build resource
+ * @deprecated After KE 4.3, we use {@link io.kyligence.kap.engine.spark.job.RDSegmentBuildJob} to detect build resource
  */
 @Deprecated
 public class ResourceDetectBeforeCubingJob extends SparkApplication {

@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.msgpack.core.Preconditions;
 
 import java.sql.Date;
@@ -92,13 +91,7 @@ public class ShardCleaner {
 
     public ClickHouse getClickHouse() {
         if (Objects.isNull(clickHouse)) {
-            try {
-                clickHouse = new ClickHouse(SecondStorageNodeHelper.resolve(node));
-            } catch (SQLException e) {
-                log.error("node {} connect failed, jdbc url: {}. Please check node status.", node,
-                        SecondStorageNodeHelper.resolve(node));
-                return ExceptionUtils.rethrow(e);
-            }
+            clickHouse = new ClickHouse(SecondStorageNodeHelper.resolve(node));
         }
         return clickHouse;
     }

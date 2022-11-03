@@ -32,7 +32,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.apache.kylin.tool.util.ToolMainWrapper;

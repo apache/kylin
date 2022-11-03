@@ -18,18 +18,22 @@
 
 package org.apache.kylin.rest.request;
 
-import static org.apache.kylin.metadata.user.ManagedUser.DEFAULT_GROUP;
-import static org.apache.kylin.metadata.user.ManagedUser.DISABLED_ROLE;
+import static io.kyligence.kap.metadata.user.ManagedUser.DEFAULT_GROUP;
+import static io.kyligence.kap.metadata.user.ManagedUser.DISABLED_ROLE;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.util.ArgsTypeJsonDeserializer;
 import org.apache.kylin.metadata.insensitive.UserInsensitiveRequest;
-import org.apache.kylin.metadata.user.ManagedUser;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import io.kyligence.kap.metadata.user.ManagedUser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.Lists;
 
 import lombok.Data;
@@ -45,6 +49,7 @@ public class UserRequest implements UserInsensitiveRequest {
     @JsonProperty
     private List<String> authorities = Lists.newArrayList();
     @JsonProperty
+    @JsonDeserialize(using = ArgsTypeJsonDeserializer.BooleanJsonDeserializer.class)
     private Boolean disabled;
     @JsonProperty
     private Boolean defaultPassword;
@@ -52,28 +57,34 @@ public class UserRequest implements UserInsensitiveRequest {
     public UserRequest() {
     }
 
+    public List<SimpleGrantedAuthority> transformSimpleGrantedAuthorities() {
+        return this.authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+    }
+
     public ManagedUser updateManager(ManagedUser managedUser) {
-        if (disabled != null) {
+        if (Objects.nonNull(disabled)) {
             managedUser.setDisabled(disabled);
         }
-        if (defaultPassword != null) {
+        if (Objects.nonNull(defaultPassword)) {
             managedUser.setDefaultPassword(defaultPassword);
         }
-        if (!StringUtils.isEmpty(password))
+        if (StringUtils.isNotEmpty(password)) {
             managedUser.setPassword(password);
-        if (authorities != null && !authorities.isEmpty()) {
-            if (authorities.stream().anyMatch(authority -> DISABLED_ROLE.equals(authority))) {
+        }
+        if (StringUtils.isNotEmpty(username) && StringUtils.isEmpty(managedUser.getUsername())) {
+            managedUser.setUsername(username);
+        }
+        if (CollectionUtils.isNotEmpty(authorities)) {
+            if (authorities.stream().anyMatch(DISABLED_ROLE::equals)) {
                 managedUser.setDisabled(true);
                 authorities.remove(DISABLED_ROLE);
             }
-            List<SimpleGrantedAuthority> authorities = this.authorities.stream().map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
-            if (!authorities.contains(DEFAULT_GROUP)) {
-                authorities.add(DEFAULT_GROUP);
+            List<SimpleGrantedAuthority> simpleGrantedAuthorities = transformSimpleGrantedAuthorities();
+            if (!simpleGrantedAuthorities.contains(DEFAULT_GROUP)) {
+                simpleGrantedAuthorities.add(DEFAULT_GROUP);
             }
-            managedUser.setAuthorities(authorities);
+            managedUser.setAuthorities(simpleGrantedAuthorities);
         }
-
         return managedUser;
     }
 

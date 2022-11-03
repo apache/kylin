@@ -141,14 +141,14 @@ public class FusionModelService extends BasicService implements TableFusionModel
     }
 
     @Transaction(project = 0)
-    public void renameDataModel(String project, String modelId, String newAlias) {
+    public void renameDataModel(String project, String modelId, String newAlias, String description) {
         val model = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
         if (model.isFusionModel()) {
             val fusionModelManager = FusionModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
             String batchId = fusionModelManager.getFusionModel(modelId).getBatchModel().getUuid();
-            modelService.renameDataModel(project, batchId, FusionModel.getBatchName(newAlias, modelId));
+            modelService.renameDataModel(project, batchId, FusionModel.getBatchName(newAlias, modelId), description);
         }
-        modelService.renameDataModel(project, modelId, newAlias);
+        modelService.renameDataModel(project, modelId, newAlias, description);
         if (model.isStreaming() || model.isFusionModel()) {
             // Sync update of streaming job meta model name
             EventBusFactory.getInstance().postSync(new NDataModel.ModelRenameEvent(project, modelId, newAlias));

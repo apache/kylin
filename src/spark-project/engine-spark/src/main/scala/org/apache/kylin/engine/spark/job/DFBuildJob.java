@@ -75,7 +75,7 @@ import lombok.val;
 import scala.collection.JavaConversions;
 
 /**
- * After KE 4.3, we use {@link org.apache.kylin.engine.spark.job.SegmentBuildJob} to build segment
+ * After KE 4.3, we use {@link io.kyligence.kap.engine.spark.job.SegmentBuildJob} to build segment
  */
 @Deprecated
 public class DFBuildJob extends SparkApplication {

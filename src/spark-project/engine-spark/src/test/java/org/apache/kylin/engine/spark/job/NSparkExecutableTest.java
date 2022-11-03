@@ -23,9 +23,10 @@ import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.junit.After;
@@ -71,6 +72,24 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
         }
         executable.attachMetadataAndKylinProps(config);
         Assert.assertEquals(2, Objects.requireNonNull(junitFolder.listFiles()).length);
+    }
+
+    class AddModelRunner implements Runnable {
+
+        private final NDataModel model;
+
+        AddModelRunner(NDataModel model) {
+            this.model = model;
+        }
+
+        @Override
+        public void run() {
+            UnitOfWork.doInTransactionWithRetry(() -> {
+                addModel(model);
+                Thread.sleep(new Random().nextInt(50));
+                return null;
+            }, "default");
+        }
     }
 
     private void addModel(NDataModel model) {
@@ -123,6 +142,48 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             Assert.assertTrue(cmd.contains("/this_new_path.jar"));
         }
 
+        // Spark plugin
+        overwriteSystemProp("kylin.engine.async-profiler-enabled", "true");
+        {
+            val desc = sparkExecutable.getSparkAppDesc();
+            desc.setHadoopConfDir(hadoopConf);
+            desc.setKylinJobJar(kylinJobJar);
+            desc.setAppArgs(appArgs);
+            String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
+
+            Assert.assertNotNull(cmd);
+            Assert.assertTrue(
+                    cmd.contains("spark.plugins=io.kyligence.kap.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
+        }
+
+        overwriteSystemProp("kylin.engine.spark-conf.spark.plugins",
+                "org.apache.kylin.query.asyncprofiler.QueryAsyncProfilerSparkPlugin");
+        {
+            val desc = sparkExecutable.getSparkAppDesc();
+            desc.setHadoopConfDir(hadoopConf);
+            desc.setKylinJobJar(kylinJobJar);
+            desc.setAppArgs(appArgs);
+            String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
+
+            Assert.assertNotNull(cmd);
+            Assert.assertTrue(
+                    cmd.contains("spark.plugins=org.apache.kylin.query.asyncprofiler.QueryAsyncProfilerSparkPlugin,"
+                            + "io.kyligence.kap.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
+        }
+
+        overwriteSystemProp("kylin.engine.async-profiler-enabled", "false");
+        {
+            val desc = sparkExecutable.getSparkAppDesc();
+            desc.setHadoopConfDir(hadoopConf);
+            desc.setKylinJobJar(kylinJobJar);
+            desc.setAppArgs(appArgs);
+            String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
+
+            Assert.assertNotNull(cmd);
+            Assert.assertFalse(
+                    cmd.contains("spark.plugins=io.kyligence.kap.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
+        }
+
         overwriteSystemProp("kylin.engine.spark-conf.spark.driver.extraJavaOptions",
                 "'`touch /tmp/foo.bar` $(touch /tmp/foo.bar)'");
         {
@@ -158,21 +219,43 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
         Assert.assertFalse(StringUtils.contains(driverExtraJavaOptions, "-Djava.security.auth.login.config="));
     }
 
-    class AddModelRunner implements Runnable {
+    @Test
+    public void testDriverProfileExtraJavaOptions() {
+        KylinConfig kylinConfig = getTestConfig();
+        overwriteSystemProp("KYLIN_HOME", "/kylin");
+        NSparkExecutable sparkExecutable = new NSparkExecutable();
+        sparkExecutable.setProject("default");
 
-        private final NDataModel model;
+        kylinConfig.setProperty("kylin.engine.async-profiler-enabled", "false");
 
-        AddModelRunner(NDataModel model) {
-            this.model = model;
-        }
+        val driverExtraJavaOptions = sparkExecutable.getDriverExtraJavaOptions(kylinConfig);
+        Assert.assertFalse(StringUtils.contains(driverExtraJavaOptions, "-Dspark.profiler.flagsDir="));
+        Assert.assertFalse(StringUtils.contains(driverExtraJavaOptions, "-Dspark.profiler.collection.timeout="));
+        Assert.assertFalse(StringUtils.contains(driverExtraJavaOptions, "-Dspark.profiler.profiling.timeout="));
 
-        @Override
-        public void run() {
-            UnitOfWork.doInTransactionWithRetry(() -> {
-                addModel(model);
-                Thread.sleep(new Random().nextInt(50));
-                return null;
-            }, "default");
-        }
+        kylinConfig.setProperty("kylin.engine.async-profiler-enabled", "true");
+        val reWriteDriverExtraJavaOptions = sparkExecutable.getDriverExtraJavaOptions(kylinConfig);
+        Assert.assertTrue(StringUtils.contains(reWriteDriverExtraJavaOptions, "-Dspark.profiler.flagsDir="));
+        Assert.assertTrue(StringUtils.contains(reWriteDriverExtraJavaOptions, "-Dspark.profiler.collection.timeout="));
+        Assert.assertTrue(StringUtils.contains(reWriteDriverExtraJavaOptions, "-Dspark.profiler.profiling.timeout="));
+    }
+
+    @Test
+    public void testGetKylinConfigExt() {
+        KylinConfig kylinConfig = KylinConfig.createKylinConfig(getTestConfig());
+        NSparkExecutable sparkExecutable = new NSparkExecutable();
+        sparkExecutable.setProject("default");
+        kylinConfig.setProperty("kylin.engine.spark-conf.test", "123");
+
+        var kylinConfigExt = sparkExecutable.getKylinConfigExt(kylinConfig, "default");
+        Assert.assertEquals("123", kylinConfigExt.getOptional("kylin.engine.spark-conf.test", null));
+
+        sparkExecutable.setParam(NBatchConstants.P_DATAFLOW_ID, RandomUtil.randomUUIDStr());
+        kylinConfigExt = sparkExecutable.getKylinConfigExt(kylinConfig, "default");
+        Assert.assertEquals("123", kylinConfigExt.getOptional("kylin.engine.spark-conf.test", null));
+
+        sparkExecutable.setParam(NBatchConstants.P_DATAFLOW_ID, "89af4ee2-2cdb-4b07-b39e-4c29856309aa");
+        kylinConfigExt = sparkExecutable.getKylinConfigExt(kylinConfig, "default");
+        Assert.assertEquals("123", kylinConfigExt.getOptional("kylin.engine.spark-conf.test", null));
     }
 }

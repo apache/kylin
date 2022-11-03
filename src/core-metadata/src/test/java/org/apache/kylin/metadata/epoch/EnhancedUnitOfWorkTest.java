@@ -23,6 +23,7 @@ import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.datasou
 import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import org.apache.commons.dbcp.BasicDataSourceFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;

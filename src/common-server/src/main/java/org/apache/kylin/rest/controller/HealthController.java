@@ -54,7 +54,7 @@ import lombok.extern.log4j.Log4j;
 
 @Log4j
 @Controller
-@RequestMapping(value = "/api/health", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+@RequestMapping(value = "/api/kg/health", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
 public class HealthController extends NBasicController {
 
     private static final int MAX_TOKEN_LENGTH = 64;

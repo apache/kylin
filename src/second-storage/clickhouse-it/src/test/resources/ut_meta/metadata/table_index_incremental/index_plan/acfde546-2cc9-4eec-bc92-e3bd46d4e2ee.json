@@ -1,0 +1,78 @@
+{
+  "uuid": "acfde546-2cc9-4eec-bc92-e3bd46d4e2ee",
+  "last_modified": 1509531215483,
+  "version": "2.3.0.20500",
+  "description": "test_description",
+  "rule_based_index": {},
+  "index_plan_override_encodings": {},
+  "indexes": [
+    {
+      "id": 0,
+      "dimensions": [
+        4
+      ],
+      "measures": [
+        100001,
+        100002,
+        100003,
+        100004,
+        100005
+      ],
+      "layouts": [
+        {
+          "id": 1,
+          "auto": true,
+          "base": true,
+          "col_order": [
+            4,
+            100001,
+            100002,
+            100003,
+            100004,
+            100005
+          ],
+          "storage_type": 20
+        }
+      ]
+    },
+    {
+      "id": 20000000000,
+      "dimensions": [
+        2,
+        3,
+        4,
+        8,
+        9
+      ],
+      "layouts": [
+        {
+          "id": 20000000001,
+          "auto": true,
+          "base": true,
+          "col_order": [
+            2,
+            3,
+            4,
+            8,
+            9
+          ],
+          "sort_by_columns": [
+            0
+          ],
+          "storage_type": 20
+        }
+      ]
+    }
+  ],
+  "dictionaries": [],
+  "next_aggregation_index_id": 3,
+  "next_table_index_id": 30000000000,
+  "override_properties": {},
+  "segment_range_start": 0,
+  "segment_range_end": 9223372036854775807,
+  "auto_merge_time_ranges": null,
+  "retention_range": 0,
+  "notify_list": null,
+  "status_need_notify": [],
+  "engine_type": 0
+}

@@ -17,23 +17,22 @@
  */
 package org.apache.kylin.engine.spark;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import io.kyligence.kap.engine.spark.job.NSparkCubingStep;
+import io.kyligence.kap.engine.spark.job.NSparkMergingJob;
+import io.kyligence.kap.engine.spark.job.NSparkSnapshotJob;
+import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
-import org.apache.kylin.engine.spark.job.NSparkCubingStep;
-import org.apache.kylin.engine.spark.job.NSparkMergingJob;
-import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 
-import lombok.val;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ExecutableUtils {
 

@@ -18,14 +18,14 @@
 
 package org.apache.kylin.engine.spark.job
 
+import io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.NSparkCubingEngine
 import org.apache.kylin.engine.spark.builder.CreateFlatTable
 import org.apache.kylin.engine.spark.source.SparkSqlUtil
-import org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob
 import org.apache.kylin.engine.spark.utils.SparkConfHelper
-import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.metadata.model.TableDesc
+import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.source.SourceFactory
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DataFrameEnhancement._
@@ -60,10 +60,10 @@ class TableAnalysisJob(tableDesc: TableDesc,
       .getSourceData(tableDesc, ss, params)
       .coalesce(numPartitions)
 
-    calculateViewMetasIfNeeded(tableDesc.getIdentity)
+    calculateViewMetasIfNeeded(tableDesc.getBackTickIdentity)
 
     val dat = dataFrame.localLimit(rowsTakenInEachPartition)
-    val sampledDataset = CreateFlatTable.changeSchemaToAliasDotName(dat, tableDesc.getIdentity)
+    val sampledDataset = CreateFlatTable.changeSchemaToAliasDotName(dat, tableDesc.getBackTickIdentity)
     // todo: use sample data to estimate total info
     // calculate the stats info
     val statsMetrics = buildStatsMetric(sampledDataset)

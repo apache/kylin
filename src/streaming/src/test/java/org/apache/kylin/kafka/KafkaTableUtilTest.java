@@ -72,7 +72,7 @@ public class KafkaTableUtilTest extends StreamingTestCase {
         ReflectionUtils.setField(kafkaConfig, "subscribe", "ssb-topic1");
         ReflectionUtils.setField(kafkaConfig, "startingOffsets", "latest");
         ReflectionUtils.setField(kafkaConfig, "batchTable", "");
-        ReflectionUtils.setField(kafkaConfig, "parserName", "org.apache.kylin.parser.TimedJsonStreamParser");
+        ReflectionUtils.setField(kafkaConfig, "parserName", "io.kyligence.kap.parser.TimedJsonStreamParser");
     }
 
     @Test

@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.metadata.model;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -44,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.commons.lang.StringUtils;
@@ -58,6 +41,8 @@ import lombok.Setter;
 public class TblColRef implements Serializable {
 
     private static final String INNER_TABLE_NAME = "_kylin_table";
+    private static final String BACK_TICK = Quoting.BACK_TICK.string;
+    private static final String DOUBLE_QUOTE = Quoting.DOUBLE_QUOTE.string;
     public static final String DYNAMIC_DATA_TYPE = "_dynamic_type";
     public static final String UNKNOWN_ALIAS = "UNKNOWN_ALIAS";
 
@@ -218,6 +203,10 @@ public class TblColRef implements Serializable {
         this.table = table;
         this.column = column;
     }
+    
+    private String wrapIdentity(String wrap) {
+        return wrap + getTableAlias() + wrap + "." + wrap + getName() + wrap;
+    }
 
     public void fixTableRef(TableRef tableRef) {
         this.backupTable = this.table;
@@ -262,11 +251,18 @@ public class TblColRef implements Serializable {
         }
     }
 
-    public String getExpressionInSourceDBWithDoubleQuote() {
+    public String getDoubleQuoteExpressionInSourceDB() {
         if (column.isComputedColumn())
             return column.getComputedColumnExpr();
 
-        return "\"" + getTableAlias() + "\".\"" + getName() + "\"";
+        return wrapIdentity(DOUBLE_QUOTE);
+    }
+
+    public String getBackTickExpressionInSourceDB() {
+        if (column.isComputedColumn())
+            return column.getComputedColumnExpr();
+
+        return wrapIdentity(BACK_TICK);
     }
 
     public String getTable() {
@@ -353,6 +349,10 @@ public class TblColRef implements Serializable {
         if (identity == null)
             identity = getTableAlias() + "." + getName();
         return identity;
+    }
+
+    public String getBackTickIdentity() {
+        return wrapIdentity(BACK_TICK);
     }
 
     @Override

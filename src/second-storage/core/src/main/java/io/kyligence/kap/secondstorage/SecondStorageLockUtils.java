@@ -18,10 +18,6 @@
 
 package io.kyligence.kap.secondstorage;
 
-import com.google.common.base.Preconditions;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.SegmentRange;
-
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -30,12 +26,20 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.model.SegmentRange;
+
+import com.google.common.base.Preconditions;
+
 
 public class SecondStorageLockUtils {
     private static final Map<Pair<String, SegmentRange<Long>>, Lock> JOB_LOCKS = new ConcurrentHashMap<>();
     private static final Object guard = new Object();
 
-
+    public static boolean containsKey(String modelId) {
+        return JOB_LOCKS.keySet().stream().anyMatch(item -> item.getFirst().equals(modelId));
+    }
     public static boolean containsKey(String modelId, SegmentRange<Long> range) {
         return JOB_LOCKS.keySet().stream().anyMatch(item -> item.getFirst().equals(modelId) && item.getSecond().overlaps(range));
     }
@@ -48,13 +52,14 @@ public class SecondStorageLockUtils {
     public static Lock acquireLock(String modelId, SegmentRange<Long> range) {
         Preconditions.checkNotNull(modelId);
         Preconditions.checkNotNull(range);
+        int second = KylinConfig.getInstanceFromEnv().getSecondStorageWaitLockTimeout();
         synchronized (guard) {
             while (containsKey(modelId, range)) {
                 Optional<Pair<String, SegmentRange<Long>>> key = getOverlapKey(modelId, range);
                 if (key.isPresent()) {
                     Lock lock = JOB_LOCKS.get(key.get());
                     try {
-                        if (lock.tryLock(1, TimeUnit.MINUTES)) {
+                        if (lock.tryLock(second, TimeUnit.SECONDS)) {
                             lock.unlock();
                             JOB_LOCKS.remove(key.get());
                         } else {

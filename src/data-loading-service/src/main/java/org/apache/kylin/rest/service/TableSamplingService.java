@@ -18,14 +18,11 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_SAMPLING_RANGE_INVALID;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import io.kyligence.kap.engine.spark.job.NTableSamplingJob;
+import lombok.val;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
@@ -37,18 +34,19 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.manager.JobManager;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.rest.aspect.Transaction;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import lombok.val;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_SAMPLING_RANGE_INVALID;
 
 @Component("tableSamplingService")
 public class TableSamplingService extends BasicService implements TableSamplingSupporter {

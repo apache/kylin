@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.controller;
 
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SORT_BY_FIELD_NOT_EXIST;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 
 import java.util.Map;
@@ -92,8 +93,7 @@ public class SnapshotControllerTest extends NLocalFileMetadataTestCase {
         request.setProject(project);
         request.setTables(needBuildSnapshotTables);
 
-        Mockito.doAnswer(x -> null).when(snapshotService).buildSnapshots(project, needBuildSnapshotTables,
-                Maps.newHashMap(), false, 3, null, null);
+        Mockito.doAnswer(x -> null).when(snapshotService).buildSnapshots(request, false);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/snapshots").contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValueAsString(request))
                 .accept(MediaType.parseMediaType(APPLICATION_PUBLIC_JSON)))
@@ -108,8 +108,7 @@ public class SnapshotControllerTest extends NLocalFileMetadataTestCase {
         SnapshotRequest request = new SnapshotRequest();
         request.setProject(project);
         request.setTables(needBuildSnapshotTables);
-        Mockito.doAnswer(x -> null).when(snapshotService).buildSnapshots(project, needBuildSnapshotTables,
-                Maps.newHashMap(), false, 3, null, null);
+        Mockito.doAnswer(x -> null).when(snapshotService).buildSnapshots(request, false);
         final MvcResult mvcResult = mockMvc
                 .perform(MockMvcRequestBuilders.post("/api/snapshots").contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.writeValueAsString(request))
@@ -145,8 +144,7 @@ public class SnapshotControllerTest extends NLocalFileMetadataTestCase {
         request.setProject(project);
         request.setTables(needBuildSnapshotTables);
 
-        Mockito.doAnswer(x -> null).when(snapshotService).buildSnapshots(project, needBuildSnapshotTables,
-                Maps.newHashMap(), false, 3, null, null);
+        Mockito.doAnswer(x -> null).when(snapshotService).buildSnapshots(request, false);
         mockMvc.perform(MockMvcRequestBuilders.put("/api/snapshots").contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValueAsString(request))
                 .accept(MediaType.parseMediaType(APPLICATION_PUBLIC_JSON)))
@@ -161,8 +159,7 @@ public class SnapshotControllerTest extends NLocalFileMetadataTestCase {
         SnapshotRequest request = new SnapshotRequest();
         request.setProject(project);
         request.setTables(needBuildSnapshotTables);
-        Mockito.doAnswer(x -> null).when(snapshotService).buildSnapshots(project, needBuildSnapshotTables,
-                Maps.newHashMap(), false, 3, null, null);
+        Mockito.doAnswer(x -> null).when(snapshotService).buildSnapshots(request, false);
         final MvcResult mvcResult = mockMvc
                 .perform(MockMvcRequestBuilders.put("/api/snapshots").contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.writeValueAsString(request))
@@ -172,6 +169,22 @@ public class SnapshotControllerTest extends NLocalFileMetadataTestCase {
         Mockito.verify(snapshotController).refreshSnapshotsManually(Mockito.any(SnapshotRequest.class));
         String errorMsg = "KE-010000005(Empty Parameter):You should select at least one table or database to load!!";
         Assert.assertEquals(errorMsg, jsonNode.get("exception").textValue());
+    }
+
+    @Test
+    public void testRefreshSnapshotsAutomatic() throws Exception {
+        String project = "default";
+        Set<String> needBuildSnapshotTables = Sets.newHashSet("TEST_ACCOUNT");
+        SnapshotRequest request = new SnapshotRequest();
+        request.setProject(project);
+        request.setTables(needBuildSnapshotTables);
+
+        Mockito.doAnswer(x -> null).when(snapshotService).autoRefreshSnapshots(request, false);
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/snapshots/auto_refresh").contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonUtil.writeValueAsString(request))
+                        .accept(MediaType.parseMediaType(APPLICATION_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(snapshotController).autoRefreshSnapshots(Mockito.any(SnapshotRequest.class));
     }
 
     @Test
@@ -199,6 +212,15 @@ public class SnapshotControllerTest extends NLocalFileMetadataTestCase {
         request.setTables(deleteSnapshot);
 
         Mockito.doAnswer(x -> null).when(snapshotService).checkBeforeDeleteSnapshots(project, deleteSnapshot);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/snapshots").param("project", project)
+                .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(APPLICATION_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is4xxClientError());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/snapshots").param("project", project)
+                .param("tables", "").contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.parseMediaType(APPLICATION_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/snapshots").param("project", project)
                 .param("tables", "TEST_ACCOUNT").contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.parseMediaType(APPLICATION_PUBLIC_JSON)))
@@ -239,8 +261,7 @@ public class SnapshotControllerTest extends NLocalFileMetadataTestCase {
         Mockito.verify(snapshotController).getSnapshots(project, table, 0, 10, statusFilter, Sets.newHashSet(), sortBy,
                 isReversed);
         final JsonNode jsonNode = JsonUtil.readValueAsTree(mvcResult.getResponse().getContentAsString());
-        String errorMsg = "KE-010000003(Invalid Parameter):No field called 'UNKNOWN'.";
-        Assert.assertEquals(errorMsg, jsonNode.get("exception").textValue());
+        Assert.assertEquals(SORT_BY_FIELD_NOT_EXIST.getCodeMsg("UNKNOWN"), jsonNode.get("exception").textValue());
     }
 
     @Test

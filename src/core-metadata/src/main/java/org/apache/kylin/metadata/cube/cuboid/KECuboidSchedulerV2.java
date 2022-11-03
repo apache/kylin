@@ -49,7 +49,6 @@ public class KECuboidSchedulerV2 extends CuboidScheduler {
 
         this.max = ruleBasedAggIndex.getFullMask();
         this.measureSize = ruleBasedAggIndex.getMeasures().size();
-        boolean isBaseCuboidValid = ruleBasedAggIndex.getIndexPlan().getConfig().isBaseCuboidAlwaysValid();
 
         // handle nRuleBasedCuboidDesc has 0 dimensions
         allColOrders = new OrderedSet<>();
@@ -58,7 +57,10 @@ public class KECuboidSchedulerV2 extends CuboidScheduler {
         }
         long maxCombination = indexPlan.getConfig().getCubeAggrGroupMaxCombination() * 10;
         maxCombination = maxCombination < 0 ? Long.MAX_VALUE : maxCombination;
-        if (isBaseCuboidValid) {
+        if (ruleBasedAggIndex.getBaseLayoutEnabled() == null) {
+            ruleBasedAggIndex.setBaseLayoutEnabled(true);
+        }
+        if (Boolean.TRUE.equals(ruleBasedAggIndex.getBaseLayoutEnabled())) {
             allColOrders.add(new ColOrder(ruleBasedAggIndex.getDimensions(), ruleBasedAggIndex.getMeasures()));
         }
         for (NAggregationGroup agg : ruleBasedAggIndex.getAggregationGroups()) {

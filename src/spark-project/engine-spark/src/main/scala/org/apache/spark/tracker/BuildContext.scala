@@ -23,6 +23,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.Utils
 
+import java.util.Objects
 import scala.util.control.NonFatal
 
 class BuildContext(sparkContext: SparkContext, kylinConfig: KylinConfig) extends Logging {
@@ -34,8 +35,6 @@ class BuildContext(sparkContext: SparkContext, kylinConfig: KylinConfig) extends
 
   private var _appStatusTracker: BuildAppStatusTracker = _
   private var _appStatusStore: BuildAppStatusStore = _
-
-  private val adaptive = kylinConfig.isAdaptiveSpanningTreeEnabled
 
   /* ------------------------------------------------------------------------------------- *
  | Accessors and public fields. These provide access to the internal state of the        |
@@ -55,19 +54,11 @@ class BuildContext(sparkContext: SparkContext, kylinConfig: KylinConfig) extends
   }
 
   def isAvailable: Boolean = {
-    if (adaptive) {
-      appStatusTracker.currentResourceState() == ResourceState.Idle
-    } else {
-      true
-    }
+    appStatusTracker.currentResourceState() == ResourceState.Idle
   }
 
   def stop(): Unit = {
-    if (!adaptive) {
-      // do nothing
-      return
-    }
-    if (_appStatusTracker != null) {
+    if (Objects.nonNull(_appStatusTracker)) {
       Utils.tryLogNonFatalError {
         _appStatusTracker.shutdown()
       }

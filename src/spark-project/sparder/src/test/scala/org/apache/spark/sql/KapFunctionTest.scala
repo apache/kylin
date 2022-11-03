@@ -26,17 +26,6 @@ import org.junit.Assert
 
 class KapFunctionsTest extends SparderBaseFunSuite with SharedSparkSession {
 
-  test("kapDayOfWeekTest") {
-    val cl = Calendar.getInstance(TimeZone.getDefault, Locale.getDefault(Locale.Category.FORMAT))
-    cl.set(2013, 1, 9)
-    val expected = cl.get(Calendar.DAY_OF_WEEK)
-    val startTime = cl.getTimeInMillis
-    cl.set(1970, 0, 1)
-    val endTime = cl.getTimeInMillis
-    Assert.assertEquals(expected,
-      KapDateTimeUtils.dayOfWeek(((startTime - endTime) / (3600 * 1000 * 24)).toInt))
-  }
-
   ignore("kapAddMonths") {
     Assert.assertEquals(KapDateTimeUtils.subtractMonths(1585411200000L, 1582819200000L), 1)
     Assert.assertEquals(KapDateTimeUtils.subtractMonths(1585497600000L, 1582905600000L), 0)

@@ -19,21 +19,23 @@ package org.apache.kylin.rest.security;
 
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_LOGIN_FAILED;
 
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.service.KylinUserService;
-import org.apache.kylin.rest.service.UserService;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.rest.service.UserAclService;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -53,10 +55,15 @@ public class LimitLoginAuthenticationProviderTest extends NLocalFileMetadataTest
     @Mock
     private ServletRequestAttributes attrs;
 
-    private UserService userService = new KylinUserService();
+    @Mock
+    private UserAclService userAclService;
 
     @InjectMocks
-    private KylinUserService kylinUserService = Mockito.spy(new KylinUserService());
+    private KylinUserService userService;
+
+    @InjectMocks
+    @Spy
+    private KylinUserService kylinUserService;
 
     private ManagedUser userAdmin = new ManagedUser("ADMIN", "KYLIN", false, Constant.ROLE_ADMIN);
 
@@ -171,9 +178,9 @@ public class LimitLoginAuthenticationProviderTest extends NLocalFileMetadataTest
 
     @Test
     public void testBuildBadCredentialsException() {
-        Assert.assertThrows(BadCredentialsException.class,
-                () -> ReflectionTestUtils.invokeMethod(limitLoginAuthenticationProvider, "buildBadCredentialsException",
-                        "userName", new BadCredentialsException("test")));
+        ThrowingRunnable func = () -> ReflectionTestUtils.invokeMethod(limitLoginAuthenticationProvider,
+                "buildBadCredentialsException", "userName", new BadCredentialsException("test"));
+        Assert.assertThrows(BadCredentialsException.class, func);
     }
 
     @Test

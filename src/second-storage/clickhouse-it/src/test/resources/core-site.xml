@@ -1,0 +1,76 @@
+<!--
+  ~ Copyright (C) 2016 Kyligence Inc. All rights reserved.
+  ~
+  ~ http://kyligence.io
+  ~
+  ~ This software is the confidential and proprietary information of
+  ~ Kyligence Inc. ("Confidential Information"). You shall not disclose
+  ~ such Confidential Information and shall use it only in accordance
+  ~ with the terms of the license agreement you entered into with
+  ~ Kyligence Inc.
+  ~
+  ~ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+  ~ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+  ~ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+  ~ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+  ~ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  ~ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  ~ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  ~ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  ~ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  ~ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  ~ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  -->
+
+<configuration>
+    <property>
+        <name>fs.azure.account.key.devstoreaccount1.localhost:10000</name>
+        <value>Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==</value>
+    </property>
+    <property>
+        <name>fs.azure.skip.metrics</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>fs.s3a.endpoint</name>
+        <value>http://127.0.0.1:9000</value>
+    </property>
+    <property>
+        <name>fs.s3a.connection.ssl.enabled</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>fs.s3a.access.key</name>
+        <value>test</value>
+    </property>
+
+    <property>
+        <name>fs.s3a.secret.key</name>
+        <value>test1234</value>
+    </property>
+
+    <property>
+        <name>fs.azure.storage.emulator.account.name</name>
+        <value>devstoreaccount1.localhost:10000</value>
+    </property>
+    <property>
+        <name>fs.AbstractFileSystem.wasb.impl</name>
+        <value>org.apache.hadoop.fs.azure.Wasb</value>
+    </property>
+    <property>
+        <name>fs.wasb.impl</name>
+        <value>org.apache.hadoop.fs.azure.NativeAzureFileSystem</value>
+    </property>
+    <property>
+        <name>fs.AbstractFileSystem.s3a.impl</name>
+        <value>org.apache.hadoop.fs.s3a.S3A</value>
+    </property>
+    <property>
+        <name>fs.s3a.impl</name>
+        <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
+    </property>
+    <property>
+        <name>fs.azure.block.size</name>
+        <value>67108864</value>
+    </property>
+</configuration>

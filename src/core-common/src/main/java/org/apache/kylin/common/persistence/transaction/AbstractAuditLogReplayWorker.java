@@ -26,18 +26,23 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.util.ExecutorServiceUtil;
-import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.persistence.AuditLog;
 import org.apache.kylin.common.persistence.UnitMessages;
 import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
+import org.apache.kylin.common.util.ExecutorServiceUtil;
+import org.apache.kylin.common.util.NamedThreadFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,9 +59,17 @@ public abstract class AbstractAuditLogReplayWorker {
 
     protected final AtomicBoolean isStopped = new AtomicBoolean(false);
 
+    protected final int replayWaitMaxRetryTimes;
+    protected final long replayWaitMaxTimeoutMills;
+
+    @Setter
+    protected Predicate<String> filterByResPath;
+
     protected AbstractAuditLogReplayWorker(KylinConfig config, JdbcAuditLogStore auditLogStore) {
         this.config = config;
         this.auditLogStore = auditLogStore;
+        this.replayWaitMaxRetryTimes = config.getReplayWaitMaxRetryTimes();
+        this.replayWaitMaxTimeoutMills = config.getReplayWaitMaxTimeout();
     }
 
     public abstract void startSchedule(long currentId, boolean syncImmediately);
@@ -66,6 +79,11 @@ public abstract class AbstractAuditLogReplayWorker {
             return;
         }
         consumeExecutor.submit(() -> catchupInternal(1));
+    }
+
+    public void catchupFrom(long expected) {
+        updateOffset(expected);
+        catchup();
     }
 
     public void close(boolean isGracefully) {
@@ -78,8 +96,15 @@ public abstract class AbstractAuditLogReplayWorker {
     }
 
     protected void replayLogs(MessageSynchronization replayer, List<AuditLog> logs) {
+        if (CollectionUtils.isEmpty(logs)) {
+            return;
+        }
         Map<String, UnitMessages> messagesMap = Maps.newLinkedHashMap();
         for (AuditLog log : logs) {
+            if (filterByResPath != null && !filterByResPath.test(log.getResPath())) {
+                continue;
+            }
+
             val event = Event.fromLog(log);
             String unitId = log.getUnitId();
             if (messagesMap.get(unitId) == null) {
@@ -101,21 +126,9 @@ public abstract class AbstractAuditLogReplayWorker {
 
     public abstract void updateOffset(long expected);
 
-    public abstract void forceUpdateOffset(long expected);
-
     protected abstract void catchupInternal(int countDown);
 
     protected abstract boolean hasCatch(long targetId);
-
-    public void forceCatchFrom(long expected) {
-        forceUpdateOffset(expected);
-        catchup();
-    }
-
-    public void catchupFrom(long expected) {
-        updateOffset(expected);
-        catchup();
-    }
 
     protected boolean logAllCommit(long startOffset, long endOffset) {
         return auditLogStore.count(startOffset, endOffset) == (endOffset - startOffset);
@@ -131,6 +144,14 @@ public abstract class AbstractAuditLogReplayWorker {
             log.error("reload all failed", th);
         }
         log.info("Reload finished");
+    }
+
+    protected void threadWait(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public void waitForCatchup(long targetId, long timeout) throws TimeoutException {
@@ -169,6 +190,66 @@ public abstract class AbstractAuditLogReplayWorker {
     protected static class DatabaseNotAvailableException extends KylinException {
         public DatabaseNotAvailableException(Exception e) {
             super(FAILED_CONNECT_META_DATABASE, e);
+        }
+    }
+
+    @Getter
+    /**
+     * (start,end]
+     */
+    protected static class FixedWindow {
+        protected long start;
+        protected long end;
+
+        public FixedWindow(long start, long end) {
+            this.start = start;
+            this.end = end;
+            Preconditions.checkState(start <= end);
+        }
+
+        boolean isEmpty() {
+            return length() == 0;
+        }
+
+        long length() {
+            return end - start;
+        }
+
+        @Override
+        public String toString() {
+            return String.format(Locale.ROOT, "(%s,%s]", start, end);
+        }
+    }
+
+    protected static class SlideWindow extends FixedWindow {
+
+        private final long upperLimit;
+
+        public SlideWindow(FixedWindow batchWindow) {
+            super(batchWindow.getStart(), batchWindow.getStart());
+            upperLimit = batchWindow.getEnd();
+            Preconditions.checkState(end <= upperLimit);
+        }
+
+        boolean canForwardRight() {
+            return upperLimit > end;
+        }
+
+        boolean forwardRightStep(long step) {
+            if (!canForwardRight()) {
+                return false;
+            }
+            end = Math.min(end + step, upperLimit);
+            return true;
+        }
+
+        void syncRightStep() {
+            start = end;
+        }
+
+        @Override
+        public String toString() {
+            return String.format(Locale.ROOT, "(%s,%s,%s]", start, end, upperLimit);
         }
     }
 

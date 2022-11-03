@@ -5,7 +5,7 @@
   "enabled" : "true",
   "name" : "submitter_group",
   "conds" : [ {
-    "@class" : "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
+    "@class" : "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
     "rightThreshold" : "ROLE_ADMIN"
   }]
 }

@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -82,18 +81,8 @@ public class StreamingMergeEntry extends StreamingMergeApplication {
         entry.execute(args);
     }
 
-    public static boolean stop() {
+    public static void stop() {
         gracefulStop.set(true);
-        var result = false;
-        try {
-            result = latch.await(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            logger.error(e.getMessage(), e);
-            Thread.currentThread().interrupt();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-        return result;
     }
 
     public void doExecute() throws ExecuteException {

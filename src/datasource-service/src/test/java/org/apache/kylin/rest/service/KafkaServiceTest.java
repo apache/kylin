@@ -78,7 +78,7 @@ public class KafkaServiceTest extends NLocalFileMetadataTestCase {
         ReflectionTestUtils.setField(kafkaConfig, "subscribe", "ssb-topic1");
         ReflectionTestUtils.setField(kafkaConfig, "startingOffsets", "latest");
         ReflectionTestUtils.setField(kafkaConfig, "batchTable", "");
-        ReflectionTestUtils.setField(kafkaConfig, "parserName", "org.apache.kylin.parser.TimedJsonStreamParser");
+        ReflectionTestUtils.setField(kafkaConfig, "parserName", "io.kyligence.kap.parser.TimedJsonStreamParser");
     }
 
     @Test

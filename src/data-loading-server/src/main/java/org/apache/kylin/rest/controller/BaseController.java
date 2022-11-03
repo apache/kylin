@@ -26,9 +26,9 @@ import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_DOWNLOAD_
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.exception.ServerErrorCode.UNSUPPORTED_STREAMING_OPERATION;
 import static org.apache.kylin.common.exception.ServerErrorCode.USER_UNAUTHORIZED;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.PARAMETER_INVALID_SUPPORT_LIST;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.BOOLEAN_TYPE_CHECK;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ARGS_TYPE_CHECK;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.INTEGER_NON_NEGATIVE_CHECK;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.PARAMETER_INVALID_SUPPORT_LIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_CONFLICT_PARAMETER;
@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -194,11 +195,20 @@ public class BaseController {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler({ MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class,
-            IllegalArgumentException.class })
+    @ExceptionHandler({ MethodArgumentTypeMismatchException.class, IllegalArgumentException.class })
     @ResponseBody
     ErrorResponse handleInvalidRequestParam(HttpServletRequest req, Throwable ex) {
         KylinException e = new KylinException(INVALID_PARAMETER, ex);
+        getLogger().error("", e);
+        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), e);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseBody
+    ErrorResponse handleMissingServletRequestParam(HttpServletRequest req, MissingServletRequestParameterException ex) {
+        String parameterName = ex.getParameterName();
+        KylinException e = new KylinException(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, parameterName);
         getLogger().error("", e);
         return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), e);
     }
@@ -267,7 +277,7 @@ public class BaseController {
         checkRequiredArg(fieldName, fieldValue);
         String booleanString = String.valueOf(fieldValue);
         if (!"true".equalsIgnoreCase(booleanString) && !"false".equalsIgnoreCase(booleanString)) {
-            throw new KylinException(BOOLEAN_TYPE_CHECK, booleanString, "Boolean");
+            throw new KylinException(ARGS_TYPE_CHECK, booleanString, "Boolean");
         }
     }
 
@@ -319,13 +329,19 @@ public class BaseController {
         return prjInstance.getName();
     }
 
+    protected void checkCollectionRequiredArg(String fieldName, Collection<?> fieldValue) {
+        if (CollectionUtils.isEmpty(fieldValue)) {
+            throw new KylinException(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, fieldName);
+        }
+    }
+
     @SneakyThrows
     public void checkParamLength(String paramName, Object param, int length) {
         if (param == null) {
             return;
         }
         String paramStr = JsonUtil.writeValueAsString(param);
-        if (paramStr.length() * 2 > length) {
+        if (paramStr.length() * 2 > length * 1024) {
             throw new KylinException(INVALID_PARAMETER,
                     String.format(Locale.ROOT, MsgPicker.getMsg().getParamTooLarge(), paramName, length));
         }
@@ -357,8 +373,7 @@ public class BaseController {
                 .collect(Collectors.toList());
 
         if (!illegalStatus.isEmpty()) {
-            throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "status",
-                    "ONLINE, OFFLINE, WARNING, BROKEN");
+            throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "status", "ONLINE, OFFLINE, WARNING, BROKEN");
         }
         return formattedStatus;
     }

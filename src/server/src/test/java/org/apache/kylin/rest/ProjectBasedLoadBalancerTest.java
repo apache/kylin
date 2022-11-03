@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.junit.After;
 import org.junit.Assert;

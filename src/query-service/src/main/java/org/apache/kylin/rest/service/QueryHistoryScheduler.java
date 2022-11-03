@@ -184,6 +184,10 @@ public class QueryHistoryScheduler {
                     if (secondStorageMetrics.containsKey(QueryMetrics.TOTAL_SCAN_COUNT)) {
                         metric.setTotalScanCount((long) secondStorageMetrics.get(QueryMetrics.TOTAL_SCAN_COUNT));
                     }
+
+                    if (secondStorageMetrics.containsKey(QueryMetrics.SOURCE_RESULT_COUNT)) {
+                        metric.getQueryHistoryInfo().setSourceResultCount((long) secondStorageMetrics.get(QueryMetrics.SOURCE_RESULT_COUNT));
+                    }
                 }
             } catch (Exception e) {
                 logger.error("Get tired storage metric fail. query_id: {}, message: {}", metric.getQueryId(), e.getMessage());

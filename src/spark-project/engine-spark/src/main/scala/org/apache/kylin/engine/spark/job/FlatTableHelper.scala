@@ -18,10 +18,10 @@
 
 package org.apache.kylin.engine.spark.job
 
+import io.kyligence.kap.query.util.KapQueryUtil
 import org.apache.kylin.engine.spark.builder.CreateFlatTable.replaceDot
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc
-import org.apache.kylin.query.util.KapQueryUtil
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Dataset, Row}
 

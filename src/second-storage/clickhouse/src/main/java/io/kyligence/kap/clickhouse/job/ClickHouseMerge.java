@@ -18,20 +18,23 @@
 
 package io.kyligence.kap.clickhouse.job;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.metadata.cube.model.NBatchConstants;
-import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
-import io.kyligence.kap.secondstorage.SecondStorage;
-import io.kyligence.kap.secondstorage.SecondStorageConstants;
-import io.kyligence.kap.secondstorage.metadata.TableFlow;
-import io.kyligence.kap.secondstorage.metadata.TablePartition;
-import lombok.val;
-
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
+
+import io.kyligence.kap.secondstorage.SecondStorage;
+import io.kyligence.kap.secondstorage.SecondStorageConstants;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import io.kyligence.kap.secondstorage.metadata.TableFlow;
+import io.kyligence.kap.secondstorage.metadata.TablePartition;
+import lombok.val;
 
 public class ClickHouseMerge extends ClickHouseLoad {
     private Set<String> oldSegmentIds;
@@ -68,18 +71,57 @@ public class ClickHouseMerge extends ClickHouseLoad {
         val existedSegments = tableFlow.getTableDataList().stream()
                 .flatMap(tableData -> tableData.getPartitions().stream()).map(TablePartition::getSegmentId)
                 .collect(Collectors.toSet());
-        return existedSegments.containsAll(oldSegmentIds) ? Collections.emptySet() : oldSegmentIds;
+
+        if (existedSegments.containsAll(oldSegmentIds)) {
+            return Collections.emptySet();
+        }
+
+        if (isDAGJobScheduler()) {
+            return Collections.singleton(targetSegmentId);
+        }
+
+        return oldSegmentIds;
     }
 
     @Override
     protected void updateMeta() {
-        if (!getSegmentIds().isEmpty()) {
-            super.updateMeta();
+        if (getSegmentIds().isEmpty()) {
+            EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() ->
+                    getDataFlow().update(copied -> copied.getTableDataList().forEach(tableData -> {
+                        tableData.mergePartitions(oldSegmentIds, targetSegmentId);
+                    })), project, 1, getEpochId());
+            return;
         }
-        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-            return getDataFlow().update(copied -> copied.getTableDataList().forEach(tableData -> {
-                tableData.mergePartitions(oldSegmentIds, targetSegmentId);
-            }));
-        }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+
+        super.updateMeta();
+        boolean isDAGJobScheduler = isDAGJobScheduler();
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(
+                () -> getDataFlow().update(copied -> copied.getTableDataList().forEach(tableData -> {
+                    if (isDAGJobScheduler) {
+                        tableData.removePartitions(partition -> oldSegmentIds.contains(partition.getSegmentId()));
+                    } else {
+                        tableData.mergePartitions(oldSegmentIds, targetSegmentId);
+                    }
+                })), project, 1, getEpochId());
+    }
+
+    @Override
+    protected void updateDFSSegmentIfNeeded(MethodContext mc) {
+        // Do nothing because merge is always after dfs, not need update dfs.
+    }
+
+    @Override
+    protected boolean isFlatTableSuccess(AbstractExecutable executable) {
+        return SecondStorageUtil.checkMergeFlatTableIsSuccess(executable);
+    }
+
+    @Override
+    protected boolean isDfsSuccess(AbstractExecutable executable) {
+        return SecondStorageUtil.checkMergeDfsIsSuccess(executable);
+    }
+
+    @Override
+    protected boolean needWaitDFSEnd() {
+        return true;
     }
 }

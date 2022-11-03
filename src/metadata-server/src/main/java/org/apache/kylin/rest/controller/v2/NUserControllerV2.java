@@ -17,8 +17,8 @@
  */
 package org.apache.kylin.rest.controller.v2;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_AUTH_INFO_NOTFOUND;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_AUTH_INFO_NOTFOUND;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,12 +26,12 @@ import java.util.Map;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.rest.controller.NBasicController;
+import org.apache.kylin.rest.controller.NUserController;
 import org.apache.kylin.rest.exception.UnauthorizedException;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.rest.controller.NBasicController;
-import org.apache.kylin.rest.controller.NUserController;
+import org.apache.kylin.rest.response.ManagedUserResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +67,7 @@ public class NUserControllerV2 extends NBasicController {
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
             throws IOException {
 
-        EnvelopeResponse<DataResult<List<ManagedUser>>> dataResult = nUserController.listAllUsers(nameSeg,
+        EnvelopeResponse<DataResult<List<ManagedUserResponse>>> dataResult = nUserController.listAllUsers(nameSeg,
                 isCaseSensitive, pageOffset, pageSize);
         Map<String, Object> result = Maps.newHashMap();
         result.put("users", dataResult.getData().getValue());

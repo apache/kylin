@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
 package org.apache.kylin.rest.util;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
@@ -45,6 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
@@ -55,6 +38,9 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.security.AclEntityFactory;
 import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclManager;
+import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.security.AclPermissionFactory;
+import org.apache.kylin.rest.security.CompositeAclPermission;
 import org.apache.kylin.rest.security.MutableAclRecord;
 import org.apache.kylin.rest.security.ObjectIdentityImpl;
 import org.apache.kylin.metadata.project.NProjectManager;
@@ -128,17 +114,22 @@ public class AclPermissionUtil {
         return Objects.nonNull(groups) && groups.stream().anyMatch(Constant.ROLE_ADMIN::equals);
     }
 
+    public static boolean isProjectAdminPermission(String permission) {
+        return AclPermission.ADMINISTRATION.equals(AclPermissionFactory.getPermission(permission));
+    }
+
     public static boolean isAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return Objects.nonNull(auth) && auth.getAuthorities().stream().map(GrantedAuthority::getAuthority)
                 .anyMatch(Constant.ROLE_ADMIN::equals);
     }
 
-    public static boolean canUseACLGreenChannel(String project, Set<String> groups, boolean showTable) {
-        if (showTable) {
-            return !KylinConfig.getInstanceFromEnv().isAclTCREnabled() || isAdmin();
-        }
-        return !KylinConfig.getInstanceFromEnv().isAclTCREnabled() || isAdmin() || isAdminInProject(project, groups);
+    public static boolean canUseACLGreenChannel(String project, Set<String> groups) {
+        return !KylinConfig.getInstanceFromEnv().isAclTCREnabled() || hasProjectAdminPermission(project, groups);
+    }
+
+    public static boolean hasProjectAdminPermission(String project, Set<String> groups) {
+        return isAdmin() || isAdminInProject(project, groups);
     }
 
     public static boolean isAdminInProject(String project, Set<String> usergroups) {
@@ -159,7 +150,7 @@ public class AclPermissionUtil {
         }
         Sid sid;
         for (AccessControlEntry ace : acl.getEntries()) {
-            if (ace.getPermission().getMask() == aclPermission.getMask()) {
+            if ((ace.getPermission().getMask() & aclPermission.getMask()) != 0) {
                 sid = ace.getSid();
                 if (isCurrentUser(sid, username)) {
                     return true;
@@ -183,7 +174,7 @@ public class AclPermissionUtil {
         }
         Sid sid;
         for (AccessControlEntry ace : acl.getEntries()) {
-            if (ace.getPermission().getMask() == aclPermission.getMask()) {
+            if ((ace.getPermission().getMask() & aclPermission.getMask()) != 0) {
                 sid = ace.getSid();
                 if (isCurrentGroup(sid, Sets.newHashSet(group))) {
                     return true;
@@ -242,5 +233,43 @@ public class AclPermissionUtil {
 
     public static QueryContext.AclInfo prepareQueryContextACLInfo(String project, Set<String> groups) {
         return new QueryContext.AclInfo(getCurrentUsername(), groups, isAdminInProject(project, groups));
+    }
+
+    public static boolean hasExtPermission(Permission permission) {
+        return (permission instanceof CompositeAclPermission
+                && CollectionUtils.isNotEmpty(((CompositeAclPermission) permission).getExtMasks()));
+    }
+
+    public static Permission modifyBasePermission(Permission sourcePermission, Permission targetPermission) {
+        Permission newPermission = targetPermission;
+        if (sourcePermission instanceof CompositeAclPermission) {
+            List<Permission> extPermissions = ((CompositeAclPermission) sourcePermission).getExtPermissions();
+            newPermission = new CompositeAclPermission(targetPermission, extPermissions);
+        }
+        return newPermission;
+    }
+
+    public static Permission addExtPermission(Permission permission, Permission extPermission) {
+        CompositeAclPermission compositeAclPermission = convertToCompositePermission(permission);
+        compositeAclPermission.addExtPermission(extPermission);
+        return compositeAclPermission;
+    }
+
+    public static CompositeAclPermission convertToCompositePermission(Permission permission) {
+        if (permission instanceof CompositeAclPermission) {
+            return (CompositeAclPermission) permission;
+        }
+        return new CompositeAclPermission(permission);
+    }
+
+    public static Permission convertToBasePermission(Permission permission) {
+        if (permission instanceof CompositeAclPermission) {
+            return ((CompositeAclPermission) permission).getBasePermission();
+        }
+        return permission;
+    }
+
+    public static boolean hasQueryPermission(Permission permission) {
+        return (permission.getMask() & AclPermission.DATA_QUERY.getMask()) != 0;
     }
 }

@@ -60,10 +60,11 @@ public class MessageSynchronization {
             return;
         }
 
+        if (checker != null && checker.check(messages)) {
+            return;
+        }
+
         UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().processor(() -> {
-            if (checker != null && checker.check(messages)) {
-                return null;
-            }
             if (Thread.interrupted()) {
                 throw new InterruptedException("skip this replay");
             }

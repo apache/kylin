@@ -23,7 +23,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

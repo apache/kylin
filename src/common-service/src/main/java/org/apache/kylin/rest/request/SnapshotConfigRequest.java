@@ -26,4 +26,16 @@ import lombok.Data;
 public class SnapshotConfigRequest {
     @JsonProperty("snapshot_manual_management_enabled")
     private Boolean snapshotManualManagementEnabled = false;
+    @JsonProperty("snapshot_automatic_refresh_enabled")
+    private Boolean snapshotAutoRefreshEnabled = false;
+    @JsonProperty("snapshot_automatic_refresh_time_mode")
+    private String snapshotAutoRefreshTimeMode;
+    @JsonProperty("snapshot_automatic_refresh_time_interval")
+    private String snapshotAutoRefreshTimeInterval;
+    @JsonProperty("snapshot_automatic_refresh_trigger_hours")
+    private String snapshotAutoRefreshTriggerHours;
+    @JsonProperty("snapshot_automatic_refresh_trigger_minute")
+    private String snapshotAutoRefreshTriggerMinute;
+    @JsonProperty("snapshot_automatic_refresh_trigger_second")
+    private String snapshotAutoRefreshTriggerSecond;
 }

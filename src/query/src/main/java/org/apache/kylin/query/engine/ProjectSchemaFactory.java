@@ -31,17 +31,16 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.metadata.model.DatabaseDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.model.DatabaseDesc;
 import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.QueryExtension;
 import org.apache.kylin.query.engine.view.ViewAnalyzer;
 import org.apache.kylin.query.engine.view.ViewSchema;
 import org.apache.kylin.query.schema.KapOLAPSchema;
+import org.apache.kylin.rest.constant.Constant;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,9 +52,9 @@ class ProjectSchemaFactory {
 
     private final String projectName;
     private final KylinConfig kylinConfig;
-    private Map<String, List<TableDesc>> schemasMap;
-    private Map<String, List<NDataModel>> modelsMap;
-    private String defaultSchemaName;
+    private final Map<String, List<TableDesc>> schemasMap;
+    private final Map<String, List<NDataModel>> modelsMap;
+    private final String defaultSchemaName;
 
     ProjectSchemaFactory(String projectName, KylinConfig kylinConfig) {
         this.projectName = projectName;
@@ -67,7 +66,7 @@ class ProjectSchemaFactory {
         Set<String> groups = Objects.nonNull(aclInfo) ? aclInfo.getGroups() : null;
         schemasMap = QueryExtension.getFactory().getSchemaMapExtension().getAuthorizedTablesAndColumns(kylinConfig,
                 projectName, aclDisabledOrIsAdmin(aclInfo), user, groups);
-        removeStreamingTables(schemasMap);
+        removeStreamingTables(schemasMap, kylinConfig.streamingEnabled());
         modelsMap = NDataflowManager.getInstance(kylinConfig, projectName).getModelsGroupbyTable();
 
         // "database" in TableDesc correspond to our schema
@@ -85,9 +84,9 @@ class ProjectSchemaFactory {
     /**
      * remove streaming tables when streaming function is disabled
      */
-    private void removeStreamingTables(Map<String, List<TableDesc>> schemasMap) {
-        schemasMap.values().stream().forEach(tableDescList -> tableDescList
-                .removeIf(tableDesc -> !NTableMetadataManager.isTableAccessible(tableDesc)));
+    private void removeStreamingTables(Map<String, List<TableDesc>> schemasMap, boolean streamingEnabled) {
+        schemasMap.values()
+                .forEach(tableDescList -> tableDescList.removeIf(table -> !table.isAccessible(streamingEnabled)));
         schemasMap.keySet().removeIf(key -> CollectionUtils.isEmpty(schemasMap.get(key)));
     }
 
@@ -103,10 +102,6 @@ class ProjectSchemaFactory {
         addProjectSchemas(rootSchema);
 
         return rootSchema;
-    }
-
-    public void setDefaultSchemaName(String defaultSchemaName) {
-        this.defaultSchemaName = defaultSchemaName;
     }
 
     public String getDefaultSchema() {

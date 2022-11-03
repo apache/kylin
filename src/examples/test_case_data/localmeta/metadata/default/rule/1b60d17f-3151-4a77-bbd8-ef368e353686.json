@@ -4,7 +4,7 @@
   "version" : "3.0.0.0",
   "enabled" : "false",
   "conds" : [ {
-    "@class" : "org.apache.kylin.metadata.favorite.FavoriteRule$SQLCondition",
+    "@class" : "io.kyligence.kap.metadata.favorite.FavoriteRule$SQLCondition",
     "id": "1",
     "sql_pattern" : "SELECT *\nFROM \"TEST_KYLIN_FACT\"",
     "create_time" : 1514764800000

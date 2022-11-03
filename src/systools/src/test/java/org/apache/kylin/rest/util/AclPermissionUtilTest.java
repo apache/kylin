@@ -19,8 +19,11 @@
 package org.apache.kylin.rest.util;
 
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.security.CompositeAclPermission;
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.security.acls.model.Permission;
 import org.springframework.test.util.ReflectionTestUtils;
 
 public class AclPermissionUtilTest {
@@ -31,5 +34,19 @@ public class AclPermissionUtilTest {
                 "checkIfAllowedProjectAdminGrantAcl", true));
         Assert.assertThrows(KylinException.class, () -> ReflectionTestUtils.invokeMethod(AclPermissionUtil.class,
                 "checkIfAllowedProjectAdminGrantAcl", false));
+    }
+
+    @Test
+    public void testAddExtPermission() {
+        Permission permission = AclPermission.OPERATION;
+        Assert.assertFalse(AclPermissionUtil.hasExtPermission(permission));
+        Permission extPermission = AclPermission.DATA_QUERY;
+        Assert.assertTrue(
+                AclPermissionUtil.hasExtPermission(AclPermissionUtil.addExtPermission(permission, extPermission)));
+
+        Permission compositePermission = new CompositeAclPermission(AclPermission.OPERATION);
+        Assert.assertFalse(AclPermissionUtil.hasExtPermission(compositePermission));
+        Assert.assertTrue(AclPermissionUtil
+                .hasExtPermission(AclPermissionUtil.addExtPermission(compositePermission, extPermission)));
     }
 }

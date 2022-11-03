@@ -211,6 +211,7 @@ object SparderEnv extends Logging {
 
   def doInitSpark(): Unit = {
     try {
+      SparkSession.clearActiveSession
       val hostInfoFetcher = new DefaultHostInfoFetcher
       val appName = "sparder-" + UserGroupInformation.getCurrentUser.getShortUserName + "-" + hostInfoFetcher.getHostname
 
@@ -240,7 +241,7 @@ object SparderEnv extends Logging {
             ext.injectPlannerStrategy(_ => LayoutFileSourceStrategy)
             ext.injectPostHocResolutionRule(ReplaceLocationRule)
             ext.injectOptimizerRule(_ => new ConvertInnerJoinToSemiJoin())
-            }
+          }
             .enableHiveSupport()
             .getOrCreateKylinSession()
       }
@@ -261,7 +262,7 @@ object SparderEnv extends Logging {
       if (KylinConfig.getInstanceFromEnv.useDynamicS3RoleCredentialInTable) {
         NProjectManager.getInstance(KylinConfig.getInstanceFromEnv).listAllProjects().forEach(project => {
           val tableMetadataManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv, project.getName)
-          tableMetadataManager.listAllTables().forEach(tableDesc => SparderEnv.addS3CredentialFromTableToSpark(tableMetadataManager.getOrCreateTableExt(tableDesc), spark))
+          tableMetadataManager.listAllTables().forEach(tableDesc => SparderEnv.addS3Credential(tableMetadataManager.getOrCreateTableExt(tableDesc).getS3RoleCredentialInfo, spark))
         })
       }
     } catch {
@@ -330,8 +331,7 @@ object SparderEnv extends Logging {
     _needCompute.set(false)
   }
 
-  def addS3CredentialFromTableToSpark(tableExtDesc: TableExtDesc, sparkSession: SparkSession): Unit = {
-    val s3CredentialInfo = tableExtDesc.getS3RoleCredentialInfo
+  def addS3Credential(s3CredentialInfo: TableExtDesc.S3RoleCredentialInfo, sparkSession: SparkSession): Unit = {
     if (s3CredentialInfo != null) {
       val conf: Map[String, String] = S3AUtil.generateRoleCredentialConfByBucketAndRoleAndEndpoint(s3CredentialInfo.getBucket, s3CredentialInfo.getRole, s3CredentialInfo.getEndpoint)
       conf.forEach((key: String, value: String) => sparkSession.conf.set(key, value))

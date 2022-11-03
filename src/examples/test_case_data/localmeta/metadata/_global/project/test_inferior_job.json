@@ -13,7 +13,7 @@
   "keytab" : null,
   "maintain_model_type" : "MANUAL_MAINTAIN",
   "override_kylin_properties" : {
-    "kylin.engine.steps.skip" : "org.apache.kylin.engine.spark.job.NResourceDetectStep",
+    "kylin.engine.steps.skip" : "io.kyligence.kap.engine.spark.job.NResourceDetectStep",
     "kylin.engine.inferior-flattable-enabled": "true",
     "kylin.engine.adaptive-spanning-tree-enabled": "true",
     "kylin.engine.index-column-flattable-enabled": "true",

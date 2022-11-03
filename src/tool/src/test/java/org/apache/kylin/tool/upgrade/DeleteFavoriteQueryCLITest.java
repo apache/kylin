@@ -19,7 +19,7 @@ package org.apache.kylin.tool.upgrade;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
+import io.kyligence.kap.metadata.favorite.FavoriteRuleManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

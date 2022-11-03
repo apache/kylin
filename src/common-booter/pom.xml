@@ -32,12 +32,6 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>org.apache.kylin</groupId>-->
-<!--            <artifactId>kap-license-service</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-common-server</artifactId>
@@ -193,7 +187,7 @@
                                 <descriptor>src/main/resources/assembly.xml</descriptor>
                             </descriptors>
                             <tarLongFileMode>posix</tarLongFileMode>
-                            <finalName>common-${project.version}</finalName>
+                            <finalName>yinglong-common-${project.version}</finalName>
                         </configuration>
                         <executions>
                             <execution>

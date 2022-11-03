@@ -32,25 +32,24 @@ import static org.mockito.Mockito.when;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.response.DataResult;
-import org.apache.kylin.rest.response.EnvelopeResponse;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.SegmentController;
 import org.apache.kylin.rest.request.BuildIndexRequest;
 import org.apache.kylin.rest.request.BuildSegmentsRequest;
@@ -59,12 +58,15 @@ import org.apache.kylin.rest.request.IndexesToSegmentsRequest;
 import org.apache.kylin.rest.request.PartitionsBuildRequest;
 import org.apache.kylin.rest.request.PartitionsRefreshRequest;
 import org.apache.kylin.rest.request.SegmentsRequest;
+import org.apache.kylin.rest.response.DataResult;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.IndexResponse;
 import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.apache.kylin.rest.response.SegmentPartitionResponse;
 import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -88,6 +90,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 @RunWith(MockitoJUnitRunner.class)
 public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
@@ -175,17 +178,27 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
         String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
         String project = "default";
         mockGetModelName(modelName, project, modelId);
-        when(nModelController.getSegments(modelId, project, "", 1, 5, "432", "2234", null, null, false,
-                "end_time", true)).thenReturn(
-                        new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(mockSegments(), 1, 5), ""));
         mockMvc.perform(MockMvcRequestBuilders.get("/api/models/{model_name}/segments", modelName)
                 .contentType(MediaType.APPLICATION_JSON).param("page_offset", "1").param("project", project)
                 .param("page_size", "5").param("start", "432").param("end", "2234").param("sort_by", "end_time")
                 .param("reverse", "true").param("status", "")
+                .param("statuses", "").param("statuses_second_storage", "")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
-        Mockito.verify(openSegmentController).getSegments(modelName, project, "", 1, 5, "432", "2234", "end_time",
-                true);
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/{model_name}/segments", modelName)
+                .contentType(MediaType.APPLICATION_JSON).param("page_offset", "1").param("project", project)
+                .param("page_size", "-5").param("start", "432").param("end", "2234").param("sort_by", "end_time")
+                .param("reverse", "true").param("status", "")
+                .param("statuses", "").param("statuses_second_storage", "")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/{model_name}/segments", modelName)
+                .contentType(MediaType.APPLICATION_JSON).param("page_offset", "1").param("project", project)
+                .param("page_size", "a").param("start", "432").param("end", "2234").param("sort_by", "end_time")
+                .param("reverse", "true").param("status", "")
+                .param("statuses", "").param("statuses_second_storage", "")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     private List<IndexResponse> getIndexResponses() throws Exception {
@@ -233,6 +246,19 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+        HashMap<String, String> req = Maps.newHashMap();
+        req.put("project", project);
+        req.put("type", SegmentsRequest.SegmentsRequestType.REFRESH.name().toLowerCase(Locale.ROOT));
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/models/{model_name}/segments", modelName)
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(req))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        req.put("priority", "a");
+        req.put("type", SegmentsRequest.SegmentsRequestType.REFRESH.name());
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/models/{model_name}/segments", modelName)
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(req))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
         Mockito.verify(openSegmentController).refreshOrMergeSegments(eq(modelName), Mockito.any(SegmentsRequest.class));
     }
 
@@ -397,6 +423,15 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testBuildIndicesManually2() throws Exception {
+        HashMap<String, String> request = getBuildIndexRequest();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/models/{model}/indexes", request.get("model_name"))
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+    }
+
+    @Test
     public void testCheckSegments() throws Exception {
         mockGetModelName("test", "default", "modelId");
         Mockito.doAnswer(x -> null).when(modelService).checkSegments(Mockito.any(), Mockito.anyString(),
@@ -425,6 +460,25 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
                 "last_modify_time", true)).thenReturn(null);
         mockMvc.perform(MockMvcRequestBuilders.get("/api/models/{model_name}/segments/multi_partition", modelName)
                 .param("project", project).param("segment_id", segmentId)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/{model_name}/segments/multi_partition", modelName)
+                .param("project", project).param("segment_id", segmentId)
+                .param("page_offset", "a")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/{model_name}/segments/multi_partition", modelName)
+                .param("project", project).param("segment_id", segmentId)
+                .param("page_offset", "-1")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/models/{model_name}/segments/multi_partition", modelName)
+                .param("project", project).param("segment_id", segmentId)
+                .param("page_offset", "1")
+                .param("page_size", "1")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
@@ -513,6 +567,14 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
                 Assert.assertEquals(PROJECT_MULTI_PARTITION_DISABLE.getCodeMsg("TEST_PROJECT_NAME"), e.getLocalizedMessage());
             }
         }
+    }
+
+    private HashMap<String, String> getBuildIndexRequest() {
+        HashMap result = new HashMap();
+        result.put("project", "default");
+        result.put("priority", "2");
+        result.put("model_name", "default_model_name");
+        return result;
     }
 
 }

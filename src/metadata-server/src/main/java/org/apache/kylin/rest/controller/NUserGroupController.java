@@ -18,10 +18,10 @@
 
 package org.apache.kylin.rest.controller;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_USERGROUP_NAME;
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_USERGROUP_NAME;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_USERGROUP_NAME;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,7 +40,7 @@ import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.PagingUtil;
 import org.apache.kylin.common.persistence.transaction.AclTCRRevokeEventNotifier;
 import org.apache.kylin.common.scheduler.EventBusFactory;
-import org.apache.kylin.metadata.user.ManagedUser;
+import io.kyligence.kap.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.request.UpdateGroupRequest;
 import org.apache.kylin.rest.request.UserGroupRequest;
@@ -112,9 +112,19 @@ public class NUserGroupController extends NBasicController {
     @GetMapping(value = "/groups")
     @ResponseBody
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public EnvelopeResponse<List<String>> listUserAuthorities() throws IOException {
+    public EnvelopeResponse<DataResult<List<String>>> listUserAuthorities(
+            @RequestParam(value = "name", required = false) String groupName,
+            @RequestParam(value = "is_case_sensitive", required = false) boolean isCaseSensitive,
+            @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer pageOffset,
+            @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer pageSize)
+            throws IOException {
         List<String> groups = userGroupService.listAllAuthorities();
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, groups, "get groups");
+        if (StringUtils.isNotBlank(groupName)) {
+            groups = groups.stream().filter(group -> isCaseSensitive ? group.contains(groupName)
+                    : StringUtils.containsIgnoreCase(group, groupName)).collect(Collectors.toList());
+        }
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(groups, pageOffset, pageSize),
+                "get groups");
     }
 
     @ApiOperation(value = "getUsersByGroup", tags = {
@@ -207,7 +217,7 @@ public class NUserGroupController extends NBasicController {
     public void checkGroupName(String groupName) {
         val msg = MsgPicker.getMsg();
         if (StringUtils.isEmpty(groupName)) {
-            throw new KylinException(EMPTY_USERGROUP_NAME, msg.getEmptyGroupName());
+            throw new KylinException(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, "group_name");
         }
         if (groupName.startsWith(".")) {
             throw new KylinException(INVALID_USERGROUP_NAME, msg.getInvalidNameStartWithDot());

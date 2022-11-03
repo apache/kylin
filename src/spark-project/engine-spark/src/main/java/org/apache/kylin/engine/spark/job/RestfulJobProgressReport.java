@@ -41,9 +41,6 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kyligence.kap.engine.spark.job.IJobProgressReport;
-import io.kyligence.kap.engine.spark.job.ParamsConstants;
-
 public class RestfulJobProgressReport implements IJobProgressReport {
 
     private static final Logger logger = LoggerFactory.getLogger(RestfulJobProgressReport.class);

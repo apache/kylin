@@ -19,9 +19,15 @@
 package org.apache.kylin.engine.spark.job.stage.build
 
 import com.google.common.collect.Sets
+import io.kyligence.kap.query.util.KapQueryUtil
+import org.apache.commons.lang3.StringUtils
+import org.apache.hadoop.fs.Path
+import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
 import org.apache.kylin.engine.spark.builder._
+import org.apache.kylin.engine.spark.builder.v3dict.DictionaryBuilder
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil.convertFromDot
 import org.apache.kylin.engine.spark.job.stage.{BuildParam, StageExec}
 import org.apache.kylin.engine.spark.job.{FiltersUtil, SegmentJob, TableMetaManager}
@@ -29,13 +35,8 @@ import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.metadata.cube.model.NDataSegment
-import org.apache.kylin.metadata.model.{NDataModel, NTableMetadataManager}
-import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.fs.Path
-import org.apache.kylin.common.{KapConfig, KylinConfig}
-import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.metadata.model._
-import org.apache.kylin.query.util.KapQueryUtil
+import org.apache.spark.sql.KapFunctions.dict_encode_v3
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StructField
@@ -80,7 +81,7 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
 
   // Flat table.
   private lazy val shouldPersistFT = tableDesc.shouldPersistFlatTable()
-  private lazy val isFTReady = dataSegment.isFlatTableReady && HadoopUtil.getWorkingFileSystem.exists(flatTablePath)
+  private lazy val isFTReady = dataSegment.isFlatTableReady && tableDesc.buildFilesSeparationPathExists(flatTablePath)
 
   // Fact table view.
   private lazy val isFTV = rootFactTable.getTableDesc.isView
@@ -309,7 +310,7 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     DFBuilderHelper.checkPointSegment(dataSegment, (copied: NDataSegment) => {
       copied.setFlatTableReady(true)
       if (dataSegment.isFlatTableReady) {
-        // if flat table is updated, there might be some data inconsistency across indexes
+        // KE-14714 if flat table is updated, there might be some data inconsistency across indexes
         copied.setStatus(SegmentStatusEnum.WARNING)
       }
     })
@@ -501,24 +502,47 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     } else {
       buildDict(table, dictCols)
     }
-    encodeColumn(table, encodeCols)
+
+    if(config.isV3DictEnable) {
+      buildV3DictIfNeeded(table, encodeCols)
+    } else {
+      encodeColumn(table, encodeCols)
+    }
+  }
+
+  protected def buildV3DictIfNeeded(table: Dataset[Row], dictCols: Set[TblColRef]): Dataset[Row] = {
+    logInfo("Build v3 dict if needed.")
+    val matchedCols = selectColumnsInTable(table, dictCols)
+    val cols = matchedCols.map{ dictColumn =>
+      val wrapDictCol = DictionaryBuilder.wrapCol(dictColumn)
+      dict_encode_v3(col(wrapDictCol)).alias(wrapDictCol + "_KE_ENCODE")
+    }.toSeq
+    val dictPlan = table
+      .select(table.schema.map(ty => col(ty.name)) ++ cols: _*)
+        .queryExecution
+        .analyzed
+    val encodePlan = DictionaryBuilder.buildGlobalDict(project, sparkSession, dictPlan)
+    SparkInternalAgent.getDataFrame(sparkSession, encodePlan)
   }
 
   private def concatCCs(table: Dataset[Row], computColumns: Set[TblColRef]): Dataset[Row] = {
     val matchedCols = selectColumnsInTable(table, computColumns)
     var tableWithCcs = table
     matchedCols.foreach(m =>
-      tableWithCcs = tableWithCcs.withColumn(convertFromDot(m.getIdentity), expr(convertFromDot(m.getExpressionInSourceDB))))
+      tableWithCcs = tableWithCcs.withColumn(convertFromDot(m.getBackTickIdentity),
+        expr(convertFromDot(m.getBackTickExpressionInSourceDB))))
     tableWithCcs
   }
 
   private def buildDict(ds: Dataset[Row], dictCols: Set[TblColRef]): Unit = {
-    var matchedCols = selectColumnsInTable(ds, dictCols)
-    if (dataSegment.getIndexPlan.isSkipEncodeIntegerFamilyEnabled) {
-      matchedCols = matchedCols.filterNot(_.getType.isIntegerFamily)
+    if (config.isV2DictEnable) {
+      var matchedCols = selectColumnsInTable(ds, dictCols)
+      if (dataSegment.getIndexPlan.isSkipEncodeIntegerFamilyEnabled) {
+        matchedCols = matchedCols.filterNot(_.getType.isIntegerFamily)
+      }
+      val builder = new DFDictionaryBuilder(ds, dataSegment, sparkSession, Sets.newHashSet(matchedCols.asJavaCollection))
+      builder.buildDictSet()
     }
-    val builder = new DFDictionaryBuilder(ds, dataSegment, sparkSession, Sets.newHashSet(matchedCols.asJavaCollection))
-    builder.buildDictSet()
   }
 
   private def encodeColumn(ds: Dataset[Row], encodeCols: Set[TblColRef]): Dataset[Row] = {
@@ -529,7 +553,6 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     }
     encodeDs
   }
-
 }
 
 object FlatTableAndDictBase extends LogEx {
@@ -550,7 +573,8 @@ object FlatTableAndDictBase extends LogEx {
   }
 
   def wrapAlias(originDS: Dataset[Row], alias: String): Dataset[Row] = {
-    val newFields = originDS.schema.fields.map(f => convertFromDot(alias + "." + f.name)).toSeq
+    val newFields = originDS.schema.fields.map(f =>
+      convertFromDot("`" + alias + "`" + "." + "`" + f.name + "`")).toSeq
     val newDS = originDS.toDF(newFields: _*)
     logInfo(s"Wrap ALIAS ${originDS.schema.treeString} TO ${newDS.schema.treeString}")
     newDS
@@ -583,8 +607,8 @@ object FlatTableAndDictBase extends LogEx {
             s" lookup table:$lookupDesc, pk: ${pk.mkString(",")}")
       }
       val equiConditionColPairs = fk.zip(pk).map(joinKey =>
-        col(convertFromDot(joinKey._1.getIdentity))
-          .equalTo(col(convertFromDot(joinKey._2.getIdentity))))
+        col(convertFromDot(joinKey._1.getBackTickIdentity))
+          .equalTo(col(convertFromDot(joinKey._2.getBackTickIdentity))))
       logInfo(s"Lookup table schema ${lookupDataset.schema.treeString}")
 
       if (join.getNonEquiJoinCondition != null) {
@@ -612,7 +636,7 @@ object FlatTableAndDictBase extends LogEx {
     val columnIds = tableDesc.getColumnIds.asScala
     val columnName2Id = tableDesc.getColumns
       .asScala
-      .map(column => convertFromDot(column.getIdentity))
+      .map(column => convertFromDot(column.getBackTickIdentity))
       .zip(columnIds)
     val columnName2IdMap = columnName2Id.toMap
     val encodeSeq = structType.filter(_.name.endsWith(ENCODE_SUFFIX)).map {
@@ -621,7 +645,7 @@ object FlatTableAndDictBase extends LogEx {
         val columnId = columnName2IdMap.apply(columnName)
         col(tp.name).alias(columnId.toString + ENCODE_SUFFIX)
     }
-    val columns = columnName2Id.map(tp => expr(tp._1).alias(tp._2.toString))
+    val columns = columnName2Id.map(tp => expr("`" + tp._1 + "`").alias(tp._2.toString))
     logInfo(s"Select model column is ${columns.mkString(",")}")
     logInfo(s"Select model encoding column is ${encodeSeq.mkString(",")}")
     val selectedColumns = columns ++ encodeSeq
@@ -683,7 +707,7 @@ object FlatTableAndDictBase extends LogEx {
       // try replacing quoted identifiers if any
       val quotedColName = colName.split('.').mkString("`", "`.`", "`")
       if (quotedColName.nonEmpty) {
-        doReplaceDot(sb, quotedColName, namedColumn.getAliasDotColumn)
+        doReplaceDot(sb, quotedColName, namedColumn.getAliasDotColumn.split('.').mkString("`", "`.`", "`"))
       }
     }
     sb.toString()
@@ -694,7 +718,7 @@ object FlatTableAndDictBase extends LogEx {
     while (start != -1) {
       sb.replace(start,
         start + namedCol.length,
-        convertFromDot(colAliasDotColumn))
+        "`" + convertFromDot(colAliasDotColumn) + "`")
       start = sb.toString.toLowerCase(Locale.ROOT)
         .indexOf(namedCol)
     }

@@ -60,6 +60,12 @@ public class Connection {
     @JacksonXmlProperty(localName = "connection-customization", isAttribute = true)
     private ConnectionCustomization connectionCustomization;
 
+    @JacksonXmlProperty(localName = "vendor1", isAttribute = true)
+    private String vendor1;
+
+    @JacksonXmlProperty(localName = "vendor2", isAttribute = true)
+    private String vendor2;
+
     public void setOdbcConnectStringExtras(String odbcConnectStringExtras) {
         this.odbcConnectStringExtras = odbcConnectStringExtras;
     }
@@ -94,5 +100,21 @@ public class Connection {
 
     public void setDbName(String dbName) {
         this.dbName = dbName;
+    }
+
+    public String getVendor1() {
+        return vendor1;
+    }
+
+    public void setVendor1(String vendor1) {
+        this.vendor1 = vendor1;
+    }
+
+    public String getVendor2() {
+        return vendor2;
+    }
+
+    public void setVendor2(String vendor2) {
+        this.vendor2 = vendor2;
     }
 }

@@ -240,7 +240,7 @@ public class BaseControllerTest extends NLocalFileMetadataTestCase {
         List param = new ArrayList();
         param.add(1);
         param.add(6);
-        param.add(String.join("", Collections.nCopies(1000, "l")));
+        param.add(String.join("", Collections.nCopies(1000 * 1024, "l")));
         baseController.checkParamLength("tag", param, 1000);
     }
 

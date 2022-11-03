@@ -18,23 +18,27 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import io.kyligence.kap.engine.spark.job.NResourceDetectStep;
+import io.kyligence.kap.engine.spark.job.NSparkCleanupAfterMergeStep;
+import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import io.kyligence.kap.engine.spark.job.NSparkMergingJob;
+import io.kyligence.kap.engine.spark.job.NTableSamplingJob;
+import io.kyligence.kap.engine.spark.job.RDSegmentBuildJob;
+import io.kyligence.kap.engine.spark.job.ResourceDetectBeforeMergingJob;
+import io.kyligence.kap.engine.spark.job.ResourceDetectBeforeSampling;
+import io.kyligence.kap.engine.spark.job.SparkCleanupTransactionalTableStep;
+import io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob;
+import lombok.val;
+import lombok.var;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
-import org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -42,14 +46,18 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.sparkproject.guava.collect.Sets;
 
-import lombok.val;
-import lombok.var;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JobStepFactoryTest extends NLocalWithSparkSessionTest {
     private KylinConfig config;

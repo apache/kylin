@@ -387,4 +387,5 @@ class MockClusterManager extends IClusterManager {
 
   override def applicationExisted(jobId: String): Boolean = false
 
+  override def getApplicationNameById(yarnAppId: Int): String = ""
 }

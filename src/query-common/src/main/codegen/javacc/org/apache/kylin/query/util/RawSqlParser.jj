@@ -8,13 +8,8 @@ PARSER_BEGIN(RawSqlParser)
 package org.apache.kylin.query.util;
 
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
-
-import org.apache.kylin.query.util.RawSql;
-import org.apache.kylin.query.util.RawSqlBlock;
 
 public class RawSqlParser {
 
@@ -93,6 +88,7 @@ public class RawSqlParser {
         DoParse(stmtBlockList, allBlockList);
         return new RawSql(sql, stmtBlockList, allBlockList);
     }
+
 
 }
 PARSER_END(RawSqlParser)

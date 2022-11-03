@@ -388,8 +388,7 @@ public class StreamingJobService extends BasicService {
             }
             return jobFilter.getStatuses().contains(item.getCurrentStatus().name());
         }).sorted(comparator).collect(Collectors.toList());
-        List<StreamingJobResponse> targetList = PagingUtil.cutPage(filterList, offset, limit).stream()
-                .collect(Collectors.toList());
+        List<StreamingJobResponse> targetList = new ArrayList<>(PagingUtil.cutPage(filterList, offset, limit));
         if (CollectionUtils.isNotEmpty(targetList)) {
             Map<String, NDataModel> modelMap = getAllDataModels(jobFilter.getProject());
             targetList.forEach(jobResponse -> setModelInfo(jobResponse, modelMap));
@@ -424,11 +423,11 @@ public class StreamingJobService extends BasicService {
     private Map<String, NDataModel> getAllDataModels(String project) {
         val config = KylinConfig.getInstanceFromEnv();
         val modelMap = new HashMap<String, NDataModel>();
-        getAllProjects(project).stream().forEach(instance -> {
+        getAllProjects(project).forEach(instance -> {
             val modelMgr = NDataModelManager.getInstance(config, instance.getName());
             val modelList = modelMgr.listAllModels();
             if (CollectionUtils.isNotEmpty(modelList)) {
-                modelList.stream().forEach(model -> modelMap.put(model.getUuid(), model));
+                modelList.forEach(model -> modelMap.put(model.getUuid(), model));
             }
         });
         return modelMap;

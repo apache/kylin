@@ -154,7 +154,7 @@ public class JdbcQueryHistoryStore {
             insertQhRealProviderList.forEach(qhRealizationMapper::insert);
 
             session.commit();
-            if (queryMetricsList.size() > 0) {
+            if (!queryMetricsList.isEmpty()) {
                 log.info("Insert {} query history into database takes {} ms", queryMetricsList.size(),
                         System.currentTimeMillis() - startTime);
             }
@@ -183,7 +183,7 @@ public class JdbcQueryHistoryStore {
             return mapper.selectDaily(qhTableName, startTime, endTime);
         }
     }
-    
+
     public List<QueryHistory> queryQueryHistoriesSubmitters(QueryHistoryRequest request, int size) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
@@ -222,16 +222,36 @@ public class JdbcQueryHistoryStore {
         }
     }
 
-    public QueryHistory queryOldestQueryHistory(long maxSize) {
+    public long getMaxId() {
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
+            SelectStatementProvider statementProvider = select(max(queryHistoryTable.id))
+                    .from(queryHistoryTable)
+                    .build().render(RenderingStrategies.MYBATIS3);
+            Long maxId = mapper.selectAsLong(statementProvider);
+            return maxId == null ? 0 : maxId;
+        }
+    }
+
+    public QueryHistory queryOldestQueryHistory(long retainMinId) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
             SelectStatementProvider statementProvider = select(getSelectFields(queryHistoryTable))
-                    .from(queryHistoryTable) //
-                    .orderBy(queryHistoryTable.id.descending()) //
-                    .limit(1) //
-                    .offset(maxSize - 1) //
+                    .from(queryHistoryTable)
+                    .where(queryHistoryTable.id, isEqualTo(retainMinId))
                     .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectOne(statementProvider);
+        }
+    }
+
+    public long getProjectCount(String project) {
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
+            SelectStatementProvider statementProvider = select(count(queryHistoryTable.id)) //
+                    .from(queryHistoryTable) //
+                    .where(queryHistoryTable.projectName, isEqualTo(project)) //
+                    .build().render(RenderingStrategies.MYBATIS3);
+            return mapper.selectAsLong(statementProvider);
         }
     }
 
@@ -240,11 +260,12 @@ public class JdbcQueryHistoryStore {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
             SelectStatementProvider statementProvider = select(getSelectFields(queryHistoryTable)) //
                     .from(queryHistoryTable) //
-                    .where(queryHistoryTable.projectName, isEqualTo(project)) //
-                    .orderBy(queryHistoryTable.id.descending()) //
-                    .limit(1) //
-                    .offset(maxSize - 1) //
-                    .build().render(RenderingStrategies.MYBATIS3);
+                    .where(queryHistoryTable.id, //
+                            isEqualTo(select(queryHistoryTable.id) //
+                                    .from(queryHistoryTable) //
+                                    .where(queryHistoryTable.projectName, isEqualTo(project)) //
+                                    .orderBy(queryHistoryTable.id.descending()).limit(1).offset(maxSize - 1)) //
+                    ).build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectOne(statementProvider);
         }
     }
@@ -499,7 +520,7 @@ public class JdbcQueryHistoryStore {
             idToQHInfoList.forEach(pair -> providers.add(changeQHInfoProvider(pair.getFirst(), pair.getSecond())));
             providers.forEach(mapper::update);
             session.commit();
-            if (idToQHInfoList.size() > 0) {
+            if (!idToQHInfoList.isEmpty()) {
                 log.info("Update {} query history info takes {} ms", idToQHInfoList.size(),
                         System.currentTimeMillis() - start);
             }
@@ -591,8 +612,7 @@ public class JdbcQueryHistoryStore {
             filterSql = filterSql
                     .and(queryHistoryTable.duration,
                             isGreaterThanOrEqualTo(Long.parseLong(request.getLatencyFrom()) * 1000L))
-                    .and(queryHistoryTable.duration, isLessThan(Long.parseLong(request.getLatencyTo()) * 1000L))
-                    .and(queryHistoryTable.queryStatus, isEqualTo("SUCCEEDED"));
+                    .and(queryHistoryTable.duration, isLessThan(Long.parseLong(request.getLatencyTo()) * 1000L));
         }
 
         if (StringUtils.isNotEmpty(request.getServer())) {

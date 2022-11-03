@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.common.persistence;
 
 import java.io.ByteArrayOutputStream;
@@ -93,6 +75,8 @@ public abstract class ResourceStore implements AutoCloseable {
     public static final String USER_GROUP_ROOT = GLOBAL_PROJECT + "/user_group";
     public static final String ACL_ROOT = GLOBAL_PROJECT + "/acl";
     public static final String PROJECT_ROOT = GLOBAL_PROJECT + "/project";
+    public static final String ACL_GLOBAL_ROOT = GLOBAL_PROJECT + "/sys_acl/user";
+    public static final String UPGRADE = GLOBAL_PROJECT + "/upgrade";
 
     public static final String DATA_MODEL_DESC_RESOURCE_ROOT = "/model_desc";
     public static final String FUSION_MODEL_RESOURCE_ROOT = "/fusion_model";
@@ -360,12 +344,6 @@ public abstract class ResourceStore implements AutoCloseable {
         deleteResourceImpl(resPath);
     }
 
-    public final void deleteResourceRecursively(String resPath) {
-        for (String path : listResourcesRecursively(resPath)) {
-            deleteResource(path);
-        }
-    }
-
     protected abstract void deleteResourceImpl(String resPath);
 
     /**
@@ -401,19 +379,14 @@ public abstract class ResourceStore implements AutoCloseable {
         val auditLogStore = getAuditLogStore();
         val raw = getResource(METASTORE_IMAGE);
         try {
-            long offset = 0;
+            long restoreOffset = this.offset;
             if (raw != null) {
                 val imageDesc = JsonUtil.readValue(raw.getByteSource().read(), ImageDesc.class);
-                offset = imageDesc.getOffset();
+                restoreOffset = imageDesc.getOffset();
             }
-            auditLogStore.restore(offset);
+            auditLogStore.restore(restoreOffset);
         } catch (IOException ignore) {
         }
-    }
-
-    public void forceCatchup() {
-        val auditLogStore = getAuditLogStore();
-        auditLogStore.forceCatchup();
     }
 
     public void leaderCatchup() {
@@ -455,8 +428,7 @@ public abstract class ResourceStore implements AutoCloseable {
         clearCache(this.getConfig());
     }
 
-    public static void dumpResourceMaps(KylinConfig kylinConfig, File metaDir, Map<String, RawResource> dumpMap,
-            Properties properties) {
+    public static void dumpResourceMaps(File metaDir, Map<String, RawResource> dumpMap, Properties properties) {
         long startTime = System.currentTimeMillis();
         metaDir.mkdirs();
         for (Map.Entry<String, RawResource> entry : dumpMap.entrySet()) {
@@ -467,8 +439,9 @@ public abstract class ResourceStore implements AutoCloseable {
             try {
                 File f = Paths.get(metaDir.getAbsolutePath(), res.getResPath()).toFile();
                 f.getParentFile().mkdirs();
-                try (FileOutputStream out = new FileOutputStream(f)) {
-                    IOUtils.copy(res.getByteSource().openStream(), out);
+                try (FileOutputStream out = new FileOutputStream(f);
+                        InputStream input = res.getByteSource().openStream()) {
+                    IOUtils.copy(input, out);
                     if (!f.setLastModified(res.getTimestamp())) {
                         logger.info("{} modified time change failed", f);
                     }

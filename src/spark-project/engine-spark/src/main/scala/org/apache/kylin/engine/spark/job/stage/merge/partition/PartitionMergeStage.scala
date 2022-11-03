@@ -18,6 +18,8 @@
 
 package org.apache.kylin.engine.spark.job.stage.merge.partition
 
+import java.util.Objects
+
 import com.google.common.collect.Lists
 import org.apache.kylin.engine.spark.job.stage.merge.MergeStage
 import org.apache.kylin.engine.spark.job.{PartitionExec, SegmentJob}
@@ -28,7 +30,6 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork.Callback
 import org.apache.spark.sql.datasource.storage.StorageStoreUtils
 import org.apache.spark.sql.{Dataset, Row}
 
-import java.util.Objects
 import scala.collection.JavaConverters._
 
 abstract class PartitionMergeStage(private val jobContext: SegmentJob,
@@ -40,17 +41,23 @@ abstract class PartitionMergeStage(private val jobContext: SegmentJob,
   // Multi level partition FLAT-TABLE is not reusable.
   override protected def getUnmergedFTPaths: Seq[Path] = Seq.empty[Path]
 
-  override protected def mergeIndices(): Unit = {
-    val sources = unmerged.flatMap(segment =>
-      segment.getSegDetails.getLayouts.asScala.flatMap(layout =>
-        layout.getMultiPartition.asScala.map(partition => (layout, partition))
-      )).groupBy(tp => (tp._1.getLayoutId, tp._2.getPartitionId)).values.toSeq
-    sources.foreach(grouped => asyncExecute(mergeLayouts(grouped)))
-    awaitOrFailFast(sources.size)
+  private case class PartitionMergeTask(grouped: Seq[(NDataLayout, LayoutPartition)]) extends Task {
+    override def getTaskDesc: String = {
+      val item = grouped.head
+      s"layout ${item._1.getLayoutId} partition ${item._2.getPartitionId}"
+    }
   }
 
-  private def mergeLayouts(grouped: Seq[(NDataLayout, LayoutPartition)]): Unit = {
-    val head = grouped.head
+  override protected def mergeIndices(): Unit = {
+    val tasks = unmerged.flatMap(segment =>
+      segment.getSegDetails.getLayouts.asScala.flatMap(layout =>
+        layout.getMultiPartition.asScala.map(partition => (layout, partition))
+      )).groupBy(tp => (tp._1.getLayoutId, tp._2.getPartitionId)).values.map(PartitionMergeTask)
+    slowStartExec(tasks.iterator, mergePartition)
+  }
+
+  private def mergePartition(task: PartitionMergeTask): Unit = {
+    val head = task.grouped.head
     val layout = head._1.getLayout
     val partition = head._2
     val layoutId = layout.getId

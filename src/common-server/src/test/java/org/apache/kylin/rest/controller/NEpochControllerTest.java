@@ -18,10 +18,16 @@
 package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 
+import java.util.Arrays;
+import java.util.Map;
+
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.SystemPropertiesCache;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.rest.request.EpochRequest;
 import org.apache.kylin.rest.service.EpochService;
 import org.junit.After;
 import org.junit.Before;
@@ -38,6 +44,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import lombok.val;
 
 public class NEpochControllerTest extends NLocalFileMetadataTestCase {
 
@@ -73,6 +84,47 @@ public class NEpochControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testUpdateEpochOwner() throws Exception {
+        val request = mockStreamingEpochRequest();
+        val mapRequest1 = mockStreamingEpochRequestMap1();
+        val mapRequest2 = mockStreamingEpochRequestMap2();
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch")
+                .content(JsonUtil.writeValueAsString(mapRequest1))
+                .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch")
+                .content(JsonUtil.writeValueAsString(mapRequest2))
+                .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        request.setProjects(Lists.newArrayList());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch")
+                .content(JsonUtil.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        request.setProjects(Lists.newArrayList());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch")
+                .content(JsonUtil.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        request.setProjects(Arrays.asList("DEFAULT"));
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch")
+                .content(JsonUtil.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testUpdateAllEpochOwner() throws Exception {
+        val request = mockStreamingEpochRequest();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch/all")
+                .content(JsonUtil.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nEpochController).updateAllEpochOwner(Mockito.any(request.getClass()));
+    }
+
+    @Test
     public void testIsMaintenanceMode() throws Exception {
         Mockito.doReturn(true).when(epochService).isMaintenanceMode();
         mockMvc.perform(MockMvcRequestBuilders.get("/api/epoch/maintenance_mode")
@@ -81,5 +133,25 @@ public class NEpochControllerTest extends NLocalFileMetadataTestCase {
 
         Mockito.verify(nEpochController).isMaintenanceMode();
     }
+
+    private EpochRequest mockStreamingEpochRequest() {
+        val request = new EpochRequest();
+        request.setProjects(Arrays.asList("test"));
+        request.setForce(false);
+        return request;
+    }
+
+    private Map<String, Object> mockStreamingEpochRequestMap1() {
+        Map<String, Object> map = Maps.newHashMap();
+        map.put("projects", "abc");
+        return map;
+    }
+
+    private Map<String, Object> mockStreamingEpochRequestMap2() {
+        Map<String, Object> map = Maps.newHashMap();
+        map.put("force", "true");
+        return map;
+    }
+
 
 }

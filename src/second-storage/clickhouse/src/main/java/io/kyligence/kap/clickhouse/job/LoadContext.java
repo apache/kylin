@@ -18,13 +18,11 @@
 
 package io.kyligence.kap.clickhouse.job;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.job.execution.ExecutableState;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Collections;
@@ -64,6 +62,10 @@ public class LoadContext {
         return Collections.unmodifiableList(this.history.getOrDefault(keyUtil.toKey(), Collections.emptyList()));
     }
 
+    public Map<String, List<String>> getHistory() {
+        return Collections.unmodifiableMap(this.history);
+    }
+    
     public List<String> getHistorySegments(CompletedSegmentKeyUtil keyUtil) {
         return Collections.unmodifiableList(this.historySegments.getOrDefault(keyUtil.toKey(), Collections.emptyList()));
     }
@@ -94,10 +96,6 @@ public class LoadContext {
 
     public ClickHouseLoad getJob() {
         return this.job;
-    }
-
-    public ExecutableState getJobStatus() {
-        return SecondStorageUtil.getJobStatus(job.getProject(), job.getParentId());
     }
 
     public boolean isNewJob() {

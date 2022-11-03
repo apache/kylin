@@ -231,8 +231,7 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
                             srcResourceStore.copy(resPath, backupResourceStore);
                         }
                         val auditLogStore = srcResourceStore.getAuditLogStore();
-                        long finalOffset = auditLogStore.getLogOffset() == 0 ? srcResourceStore.getOffset()
-                                : auditLogStore.getLogOffset();
+                        long finalOffset = auditLogStore.getMaxId();
                         backupResourceStore.putResourceWithoutCheck(ResourceStore.METASTORE_IMAGE,
                                 ByteSource.wrap(JsonUtil.writeValueAsBytes(new ImageDesc(finalOffset))),
                                 System.currentTimeMillis(), -1);

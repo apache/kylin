@@ -114,7 +114,7 @@ class IndexDependencyParser(val model: NDataModel) {
     })
     val df = SegmentFlatTable.joinFactTableWithLookupTables(rootDF, joinTableDFMap, model, ss)
     if (StringUtils.isNotEmpty(model.getFilterCondition)) {
-      df.where(NSparkCubingUtil.convertFromDot(model.getFilterCondition))
+      df.where(NSparkCubingUtil.convertFromDotWithBackTick(model.getFilterCondition))
     }
     df
   }
@@ -131,7 +131,8 @@ class IndexDependencyParser(val model: NDataModel) {
     val ccList = model.getComputedColumnDescs
     val originDf = generateFullFlatTableDF(SparderEnv.getSparkSession, model)
     val colFields = originDf.schema.fields
-    val ds = originDf.selectExpr(ccList.asScala.map(_.getInnerExpression).map(NSparkCubingUtil.convertFromDot): _*)
+    val ds = originDf.selectExpr(ccList.asScala.map(_.getInnerExpression)
+      .map(NSparkCubingUtil.convertFromDotWithBackTick): _*)
     ccList.asScala.zip(ds.schema.fields).foreach(pair => {
       val ccFieldName = pair._2.name
       colFields.foreach(col => {
@@ -155,7 +156,7 @@ class IndexDependencyParser(val model: NDataModel) {
     val result: util.Set[TblColRef] = Sets.newHashSet()
     val originDf = generateFullFlatTableDF(SparderEnv.getSparkSession, model)
     val colFields = originDf.schema.fields
-    val ccDs = originDf.selectExpr(NSparkCubingUtil.convertFromDot(ccInnerExpression))
+    val ccDs = originDf.selectExpr(NSparkCubingUtil.convertFromDotWithBackTick(ccInnerExpression))
     ccDs.schema.fields.foreach(fieldName => {
       colFields.foreach(col => {
         if (StringUtils.containsIgnoreCase(fieldName.name, col.name)) {
@@ -172,7 +173,7 @@ class IndexDependencyParser(val model: NDataModel) {
 
   private def initFilterConditionTableNames(originDf: Dataset[Row], colFields: Array[StructField]): Unit =
     if (StringUtils.isNotEmpty(model.getFilterCondition)) {
-      val whereDs = originDf.selectExpr(NSparkCubingUtil.convertFromDot(model.getFilterCondition))
+      val whereDs = originDf.selectExpr(NSparkCubingUtil.convertFromDotWithBackTick(model.getFilterCondition.replace("\"", "`")))
       whereDs.schema.fields.foreach(whereField => {
         colFields.foreach(colField => {
           if (whereField.name.contains(colField.name)) {

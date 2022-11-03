@@ -26,17 +26,17 @@ import java.util.List;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.junit.rule.ClearKEPropertiesRule;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.controller.NUserController;
+import org.apache.kylin.rest.request.CachedUserUpdateRequest;
+import org.apache.kylin.rest.request.PasswordChangeRequest;
+import org.apache.kylin.rest.request.UserRequest;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.UserService;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.junit.rule.ClearKEPropertiesRule;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.rest.controller.NUserController;
-import org.apache.kylin.rest.request.PasswordChangeRequest;
-import org.apache.kylin.rest.request.UserRequest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,6 +54,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -62,11 +63,12 @@ import org.springframework.web.accept.ContentNegotiationManager;
 
 import com.google.common.collect.Lists;
 
+import io.kyligence.kap.metadata.user.ManagedUser;
 import lombok.val;
 
 public class OpenUserControllerTest extends NLocalFileMetadataTestCase {
     private MockMvc mockMvc;
-    private static BCryptPasswordEncoder pwdEncoder = new BCryptPasswordEncoder();
+    private static final BCryptPasswordEncoder pwdEncoder = new BCryptPasswordEncoder();
 
     @Rule
     public ClearKEPropertiesRule clearKEProperties = new ClearKEPropertiesRule();
@@ -108,6 +110,7 @@ public class OpenUserControllerTest extends NLocalFileMetadataTestCase {
         ManagedUser user = new ManagedUser("ADMIN", "KYLIN", false, authorities);
         Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", Constant.ROLE_ADMIN);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        ReflectionTestUtils.setField(openUserController, "userController", userController);
     }
 
     @After
@@ -130,16 +133,17 @@ public class OpenUserControllerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testCreateUser() throws Exception {
-        val user = new ManagedUser();
+        val user = new UserRequest();
         user.setUsername("azAZ_#");
         user.setPassword("p14532522?");
+        user.setDisabled(false);
         Mockito.doNothing().when(userService).createUser(Mockito.any(UserDetails.class));
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user").contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValueAsString(user))
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(openUserController).createUser(Mockito.any(ManagedUser.class));
+        Mockito.verify(openUserController).createUser(Mockito.any(UserRequest.class));
     }
 
     @Test
@@ -202,7 +206,7 @@ public class OpenUserControllerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testBatchAddUsers() throws Exception {
-        List<ManagedUser> users = new ArrayList<>();
+        List<UserRequest> users = new ArrayList<>();
         {
             ManagedUser user = new ManagedUser();
             user.setPassword("KYLIN");
@@ -233,5 +237,17 @@ public class OpenUserControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openUserController).batchDelete(users);
+    }
+
+    @Test
+    public void testRefreshUsers() throws Exception {
+        CachedUserUpdateRequest request = new CachedUserUpdateRequest();
+        request.setOperationType("USER_DELETE");
+        request.setUsernameList(Arrays.asList("oliver"));
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/refresh").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(openUserController).refreshUser(Mockito.any(CachedUserUpdateRequest.class));
     }
 }

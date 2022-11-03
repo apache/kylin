@@ -89,7 +89,7 @@ object NonEquiJoinConditionBuilder {
     val opName = condDesc.getOpName
     op match {
       case INPUT_REF =>
-        col(NSparkCubingUtil.convertFromDot(condDesc.getColRef.getIdentity))
+        col(NSparkCubingUtil.convertFromDot(condDesc.getColRef.getBackTickIdentity))
       case LITERAL =>
         getLiteral(condDesc.getTypedValue, relDataType)
       case AND =>

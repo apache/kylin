@@ -41,12 +41,14 @@ import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_USER_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.common.exception.ServerErrorCode.USER_NOT_EXIST;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_GROUP_NOT_EXIST;
 import static org.apache.kylin.rest.constant.Constant.ROLE_ADMIN;
 import static org.springframework.security.acls.domain.BasePermission.ADMINISTRATION;
 
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,6 +56,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -61,37 +64,38 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.persistence.transaction.AccessBatchGrantEventNotifier;
+import org.apache.kylin.common.persistence.transaction.AccessGrantEventNotifier;
+import org.apache.kylin.common.persistence.transaction.AccessRevokeEventNotifier;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
+import org.apache.kylin.rest.response.AclTCRResponse;
 import org.apache.kylin.rest.response.SidPermissionWithAclResponse;
 import org.apache.kylin.rest.security.AclEntityFactory;
 import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AclPermissionFactory;
 import org.apache.kylin.rest.security.AclRecord;
+import org.apache.kylin.rest.security.CompositeAclPermission;
 import org.apache.kylin.rest.security.ExternalAclProvider;
 import org.apache.kylin.rest.security.MutableAclRecord;
 import org.apache.kylin.rest.security.ObjectIdentityImpl;
 import org.apache.kylin.rest.util.AclPermissionUtil;
-import org.apache.kylin.common.persistence.transaction.AccessBatchGrantEventNotifier;
-import org.apache.kylin.common.persistence.transaction.AccessGrantEventNotifier;
-import org.apache.kylin.common.persistence.transaction.AccessRevokeEventNotifier;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.rest.aspect.Transaction;
-import org.apache.kylin.rest.request.AccessRequest;
-import org.apache.kylin.rest.response.AclTCRResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +124,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import io.kyligence.kap.metadata.user.ManagedUser;
+import lombok.SneakyThrows;
 import lombok.val;
 
 @Component("accessService")
@@ -138,6 +144,10 @@ public class AccessService extends BasicService {
     @Autowired(required = false)
     @Qualifier("aclTCRService")
     private AclTCRServiceSupporter aclTCRService;
+
+    @Autowired
+    @Qualifier("userAclService")
+    private UserAclService userAclService;
 
     @Transaction
     public MutableAclRecord init(AclEntity ae, Permission initPermission) {
@@ -166,13 +176,20 @@ public class AccessService extends BasicService {
         Map<Sid, Permission> sid2perm = requests.stream().map(r -> {
             Sid sid = getSid(r.getSid(), r.isPrincipal());
             Permission permission = AclPermissionFactory.getPermission(r.getPermission());
-            if (Objects.nonNull(sid) && Objects.nonNull(permission)) {
-                return new AbstractMap.SimpleEntry<>(sid, permission);
+            if (Objects.nonNull(sid) && ObjectUtils.isNotEmpty(permission)) {
+                return new AbstractMap.SimpleEntry<>(sid, convertToCompositeAclPermission(permission));
             } else {
                 return null;
             }
         }).filter(Objects::nonNull).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         batchGrant(ae, sid2perm);
+    }
+
+    private Permission convertToCompositeAclPermission(Permission permission) {
+        val isDataPermissionDefaultEnabled = KylinConfig.getInstanceFromEnv().isDataPermissionDefaultEnabled();
+        return isDataPermissionDefaultEnabled
+                ? new CompositeAclPermission(permission, Collections.singletonList(AclPermission.DATA_QUERY))
+                : permission;
     }
 
     @Transaction
@@ -211,8 +228,7 @@ public class AccessService extends BasicService {
         }
 
         secureOwner(acl, sid);
-
-        return aclService.upsertAce(acl, sid, permission);
+        return aclService.upsertAce(acl, sid, convertToCompositeAclPermission(permission));
     }
 
     @Transaction
@@ -236,8 +252,47 @@ public class AccessService extends BasicService {
         Sid sid = acl.getAclRecord().getAccessControlEntryAt(accessEntryIndex).getSid();
 
         secureOwner(acl, sid);
+        Permission permission = acl.getAclRecord().getAccessControlEntryAt(accessEntryIndex).getPermission();
+        return aclService.upsertAce(acl, sid, AclPermissionUtil.modifyBasePermission(permission, newPermission));
+    }
+
+    @Transaction
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + //
+            " or (hasPermission(#ae, 'DATA_QUERY') and hasPermission(#ae, 'ADMINISTRATION'))")
+    public MutableAclRecord updateExtensionPermission(AclEntity ae, AccessRequest accessRequest) {
+        Message msg = MsgPicker.getMsg();
+        if (ae == null)
+            throw new KylinException(INVALID_PARAMETER, msg.getAclDomainNotFound());
+        if (SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                .contains(new SimpleGrantedAuthority(Constant.ROLE_ADMIN)) && !userAclService.canAdminUserQuery()) {
+            throw new KylinException(PERMISSION_DENIED, msg.getAclPermissionRequired());
+        }
+        MutableAclRecord acl = aclService.readAcl(new ObjectIdentityImpl(ae));
+        Sid sid = getSid(accessRequest.getSid(), accessRequest.isPrincipal());
+        Permission permission = getPermission(accessRequest, acl);
+        if (Objects.isNull(permission)) {
+            throw new KylinException(PERMISSION_DENIED, msg.getAclPermissionRequired());
+        }
+        if (accessRequest.getAccessEntryId() != null) {
+            sid = acl.getAclRecord().getAccessControlEntryAt(accessRequest.getAccessEntryId()).getSid();
+        }
+        secureOwner(acl, sid);
+
+        List<Permission> extPermissions = AclPermissionFactory.getExtPermissions(accessRequest.getExtPermissions());
+        Permission basePermission = AclPermissionUtil.convertToBasePermission(permission);
+        Permission newPermission = new CompositeAclPermission(basePermission, extPermissions);
 
         return aclService.upsertAce(acl, sid, newPermission);
+    }
+
+    private Permission getPermission(AccessRequest accessRequest, MutableAclRecord acl) {
+        Sid sid = getSid(accessRequest.getSid(), accessRequest.isPrincipal());
+        if (accessRequest.getAccessEntryId() != null) {
+            return acl.getAclRecord().getAccessControlEntryAt(accessRequest.getAccessEntryId()).getPermission();
+        }
+        Optional<AccessControlEntry> optAce = acl.getEntries().stream().filter(ace -> ace.getSid().equals(sid))
+                .findFirst();
+        return optAce.isPresent() ? optAce.get().getPermission() : null;
     }
 
     @Transaction
@@ -424,7 +479,7 @@ public class AccessService extends BasicService {
             return Collections.emptyList();
         }
 
-        List<AccessEntryResponse> result = new ArrayList<AccessEntryResponse>();
+        List<AccessEntryResponse> result = new ArrayList<>();
         for (AccessControlEntry ace : acl.getEntries()) {
             if (StringUtils.isNotEmpty(nameSeg) && !needAdd(nameSeg, isCaseSensitive, getName(ace.getSid()))) {
                 continue;
@@ -457,8 +512,11 @@ public class AccessService extends BasicService {
         Map<String, List<String>> result = Maps.newHashMap();
         // get users
         val userList = new ArrayList<String>();
-        userList.addAll(getAllAclSids(ae, MetadataConstants.TYPE_USER));
-        userList.addAll(userService.getGlobalAdmin());
+        val normalUsers = getAllAclSids(ae, MetadataConstants.TYPE_USER);
+        val adminUsers = userService.getGlobalAdmin();
+        normalUsers.removeIf(adminUsers::contains);
+        userList.addAll(normalUsers);
+        userList.addAll(adminUsers);
         result.put(MetadataConstants.TYPE_USER, userList);
 
         // get groups
@@ -529,37 +587,29 @@ public class AccessService extends BasicService {
 
         // get user's greater permission between user and groups
         Map<Sid, Integer> projectPermissions = getProjectPermission(project);
-        Integer greaterPermissionMask = projectPermissions.get(getSid(username, true));
-        String greaterPermissionGroup = null;
         List<String> groups = getGroupsOfUser(username);
-        for (String group : groups) {
-            if (Objects.nonNull(greaterPermissionMask) && greaterPermissionMask == ADMINISTRATION.getMask()) {
-                break;
-            }
-            Integer groupMask = projectPermissions.get(getSid(group, false));
-            Integer compareResultMask = getGreaterPermissionMask(groupMask, greaterPermissionMask);
-            // greater permission from group
-            if (!compareResultMask.equals(greaterPermissionMask)) {
-                greaterPermissionGroup = group;
-                greaterPermissionMask = compareResultMask;
-            }
-        }
-
-        Pair<Boolean, String> groupInfo = Pair.newPair(Boolean.FALSE, null);
-        if (Objects.nonNull(greaterPermissionGroup)) {
-            groupInfo.setKey(Boolean.TRUE);
-            groupInfo.setValue(greaterPermissionGroup);
-        }
-        return Pair.newPair(ExternalAclProvider.convertToExternalPermission(greaterPermissionMask), groupInfo);
+        return getUserNormalPermission(projectPermissions, groups, username);
     }
 
     public Pair<String, Pair<Boolean, String>> getUserNormalPermission(String project, UserDetails user) {
         // get user's greater permission between user and groups
         Map<Sid, Integer> projectPermissions = getProjectPermission(project);
-        Integer greaterPermissionMask = projectPermissions.get(getSid(user.getUsername(), true));
-        String greaterPermissionGroup = null;
         List<String> groups = user.getAuthorities().stream().map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
+        return getUserNormalPermission(projectPermissions, groups, user.getUsername());
+    }
+
+    public Pair<String, Pair<Boolean, String>> getUserNormalPermission(String projectUuid, String username) {
+        // get user's greater permission between user and groups
+        Map<Sid, Integer> projectPermissions = getProjectUuidPermission(projectUuid);
+        List<String> groups = getGroupsOfUser(username);
+        return getUserNormalPermission(projectPermissions, groups, username);
+    }
+
+    public Pair<String, Pair<Boolean, String>> getUserNormalPermission(Map<Sid, Integer> projectPermissions,
+            List<String> groups, String userName) {
+        Integer greaterPermissionMask = projectPermissions.get(getSid(userName, true));
+        String greaterPermissionGroup = null;
         for (String group : groups) {
             if (Objects.nonNull(greaterPermissionMask) && greaterPermissionMask == ADMINISTRATION.getMask()) {
                 break;
@@ -597,6 +647,62 @@ public class AccessService extends BasicService {
         return null;
     }
 
+    private Map<Sid, Set<Integer>> getProjectExtPermissions(String projectUuid) {
+        Map<Sid, Set<Integer>> sidWithPermissions = new HashMap<>();
+        AclEntity ae = getAclEntity(AclEntityType.PROJECT_INSTANCE, projectUuid);
+        AclRecord aclRecord = getAcl(ae).getAclRecord();
+        if (aclRecord != null && aclRecord.getEntries() != null) {
+            List<AccessControlEntry> aces = aclRecord.getEntries();
+            sidWithPermissions = aces.stream().filter(ace -> AclPermissionUtil.hasExtPermission(ace.getPermission()))
+                    .collect(Collectors.toMap(AccessControlEntry::getSid, ace -> new HashSet<>(
+                            AclPermissionUtil.convertToCompositePermission(ace.getPermission()).getExtMasks())));
+        }
+        return sidWithPermissions;
+    }
+
+    @SneakyThrows(IOException.class)
+    public Set<String> getUserNormalExtPermissions(String project) {
+        String projectUuid = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project)
+                .getUuid();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (Objects.nonNull(authentication)) {
+            val userName = authentication.getName();
+            if (userAclService.canAdminUserQuery(userName)) {
+                return Collections.singleton(ExternalAclProvider.DATA_QUERY);
+            }
+            if (userService.isGlobalAdmin(userName)) {
+                val hasDataQueryPermission = userAclService.hasUserAclPermissionInProject(userName, project);
+                return hasDataQueryPermission ? Collections.singleton(ExternalAclProvider.DATA_QUERY)
+                        : Collections.emptySet();
+            }
+            return getUserNormalExtPermissions(projectUuid, userName).stream()
+                    .map(ExternalAclProvider::convertToExternalPermission).collect(Collectors.toSet());
+        }
+        return new HashSet<>();
+    }
+
+    public Set<Integer> getUserNormalExtPermissions(String projectUuid, String username) {
+        // get user's greater permission between user and groups
+        Map<Sid, Set<Integer>> projectPermissions = getProjectExtPermissions(projectUuid);
+        return getUserNormalExtPermissions(projectPermissions, getGroupsOfUser(username), username);
+    }
+
+    public Set<Integer> getUserNormalExtPermissions(Map<Sid, Set<Integer>> projectPermissions, List<String> groups,
+            String userName) {
+        // get user's greater permission between user and groups
+        Set<Integer> allPermissionMasks = projectPermissions.get(getSid(userName, true));
+        if (CollectionUtils.isEmpty(allPermissionMasks)) {
+            allPermissionMasks = new HashSet<>();
+        }
+        for (String group : groups) {
+            Set<Integer> groupMasks = projectPermissions.get(getSid(group, false));
+            if (!CollectionUtils.isEmpty(groupMasks)) {
+                allPermissionMasks.addAll(groupMasks);
+            }
+        }
+        return allPermissionMasks;
+    }
+
     private String getGroupPermissionInProject(String project, String groupName) throws IOException {
         checkSid(groupName, false);
         if (ROLE_ADMIN.equals(groupName)) {
@@ -608,16 +714,20 @@ public class AccessService extends BasicService {
     }
 
     private Map<Sid, Integer> getProjectPermission(String project) {
-        Map<Sid, Integer> sidWithPermission = new HashMap<>();
-
         String uuid = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project).getUuid();
-        AclEntity ae = getAclEntity(AclEntityType.PROJECT_INSTANCE, uuid);
-        Acl acl = getAcl(ae);
-        if (acl != null && acl.getEntries() != null) {
-            List<AccessControlEntry> aces = acl.getEntries();
+        return getProjectUuidPermission(uuid);
+    }
+
+    private Map<Sid, Integer> getProjectUuidPermission(String projectUuid) {
+        Map<Sid, Integer> sidWithPermission = new HashMap<>();
+        AclEntity ae = getAclEntity(AclEntityType.PROJECT_INSTANCE, projectUuid);
+
+        if (getAcl(ae) != null && getAcl(ae).getEntries() != null) {
+            AclRecord aclRecord = getAcl(ae).getAclRecord();
+            List<? extends AccessControlEntry> aces = aclRecord.getEntries();
             for (AccessControlEntry ace : aces) {
                 Sid sid = ace.getSid();
-                sidWithPermission.put(sid, ace.getPermission().getMask());
+                sidWithPermission.put(sid, AclPermissionUtil.convertToBasePermission(ace.getPermission()).getMask());
             }
         }
         return sidWithPermission;
@@ -842,10 +952,12 @@ public class AccessService extends BasicService {
     }
 
     public void checkDefaultAdmin(String username, boolean isDefaultAdminHasRight) {
-        if (StringUtils.equalsIgnoreCase(username, KylinUserService.SUPER_ADMIN)) {
+        val superAdminUsers = userService.listSuperAdminUsers();
+        if (!org.springframework.util.CollectionUtils.isEmpty(superAdminUsers) && superAdminUsers.stream()
+                .filter(u -> u.equalsIgnoreCase(username)).collect(Collectors.toList()).size() > 0) {
             String currentUser = AclPermissionUtil.getCurrentUsername();
-            if (!isDefaultAdminHasRight || !StringUtils.equalsIgnoreCase(KylinUserService.SUPER_ADMIN, currentUser)) {
-                throw new KylinException(PERMISSION_DENIED, MsgPicker.getMsg().getChangeDegaultadmin());
+            if (!isDefaultAdminHasRight || !superAdminUsers.stream().anyMatch(u -> u.equalsIgnoreCase(currentUser))) {
+                throw new KylinException(PERMISSION_DENIED, MsgPicker.getMsg().getChangeDefaultadmin());
             }
         }
     }
@@ -861,8 +973,13 @@ public class AccessService extends BasicService {
         if (CollectionUtils.isEmpty(requests)) {
             return;
         }
+        List<String> allGroups = userGroupService.getAllUserGroups();
+        if (CollectionUtils.isEmpty(allGroups)) {
+            throw new KylinException(EMPTY_USERGROUP_NAME, MsgPicker.getMsg().getEmptySid());
+        }
+        Set<String> groupSet = Sets.newHashSet(allGroups);
         for (AccessRequest r : requests) {
-            checkSid(r.getSid(), r.isPrincipal());
+            batchCheckSid(r.getSid(), r.isPrincipal(), groupSet);
         }
     }
 
@@ -876,6 +993,33 @@ public class AccessService extends BasicService {
         }
     }
 
+    private void checkUserValid(String user) {
+        if (StringUtils.isEmpty(user)) {
+            throw new KylinException(EMPTY_USER_NAME, MsgPicker.getMsg().getEmptySid());
+        }
+        if (!userService.userExists(user)) {
+            throw new KylinException(PERMISSION_DENIED,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getOperationFailedByUserNotExist(), user));
+        }
+    }
+
+    private void checkGroupValid(String group, Collection<String> allGroups) {
+        if (StringUtils.isEmpty(group) || CollectionUtils.isEmpty(allGroups)) {
+            throw new KylinException(EMPTY_USERGROUP_NAME, MsgPicker.getMsg().getEmptySid());
+        }
+        if (!allGroups.contains(group)) {
+            throw new KylinException(USER_GROUP_NOT_EXIST, group);
+        }
+    }
+
+    public void batchCheckSid(String sid, boolean principal, Collection<String> groups) {
+        if (principal) {
+            checkUserValid(sid);
+        } else {
+            checkGroupValid(sid, groups);
+        }
+    }
+
     public void checkSid(String sid, boolean principal) throws IOException {
         checkSidNotEmpty(sid, principal);
         if (principal && !userService.userExists(sid)) {
@@ -883,8 +1027,7 @@ public class AccessService extends BasicService {
                     String.format(Locale.ROOT, MsgPicker.getMsg().getOperationFailedByUserNotExist(), sid));
         }
         if (!principal && !userGroupService.exists(sid)) {
-            throw new KylinException(PERMISSION_DENIED,
-                    String.format(Locale.ROOT, MsgPicker.getMsg().getOperationFailedByGroupNotExist(), sid));
+            throw new KylinException(USER_GROUP_NOT_EXIST, sid);
         }
     }
 

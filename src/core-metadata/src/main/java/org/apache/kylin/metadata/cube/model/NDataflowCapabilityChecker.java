@@ -20,21 +20,22 @@ package org.apache.kylin.metadata.cube.model;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.metadata.realization.IRealizationCandidate;
-import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
 import org.apache.kylin.metadata.cube.cuboid.NQueryLayoutChooser;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.IRealizationCandidate;
+import org.apache.kylin.metadata.realization.SQLDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,8 @@ import com.google.common.collect.Sets;
 public class NDataflowCapabilityChecker {
     private static final Logger logger = LoggerFactory.getLogger(NDataflowCapabilityChecker.class);
 
-    public static CapabilityResult check(NDataflow dataflow, List<NDataSegment> prunedSegments, SQLDigest digest) {
+    public static CapabilityResult check(NDataflow dataflow, List<NDataSegment> prunedSegments, SQLDigest digest,
+            Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
         logger.info("Matching Layout in dataflow {}, SQL digest {}", dataflow, digest);
         CapabilityResult result = new CapabilityResult();
         if (digest.limitPrecedesAggr) {
@@ -73,12 +75,12 @@ public class NDataflowCapabilityChecker {
             // for query-on-facttable
             logger.trace("Normal dataflow matching");
             boolean partialMatchIndex = QueryContext.current().isPartialMatchIndex();
-            NLayoutCandidate candidateAndInfluence = NQueryLayoutChooser.selectLayoutCandidate(dataflow, prunedSegments,
-                    digest);
+            NLayoutCandidate candidateAndInfluence = NQueryLayoutChooser
+                    .selectLayoutCandidate(dataflow, prunedSegments, digest, secondStorageSegmentLayoutMap);
             if (partialMatchIndex && candidateAndInfluence == null) {
                 logger.trace("Partial dataflow matching");
-                candidateAndInfluence = NQueryLayoutChooser.selectPartialLayoutCandidate(dataflow, prunedSegments,
-                        digest);
+                candidateAndInfluence = NQueryLayoutChooser.selectPartialLayoutCandidate(dataflow, prunedSegments, digest,
+                        secondStorageSegmentLayoutMap);
             }
             if (candidateAndInfluence != null) {
                 chosenCandidate = candidateAndInfluence;

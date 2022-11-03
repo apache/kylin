@@ -17,24 +17,23 @@
  */
 package org.apache.kylin.engine.spark;
 
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
-
+import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import io.kyligence.kap.engine.spark.job.NSparkCubingStep;
+import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.engine.spark.merger.AfterBuildResourceMerger;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
-import org.apache.kylin.engine.spark.job.NSparkCubingStep;
-import org.apache.kylin.engine.spark.merger.AfterBuildResourceMerger;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -43,13 +42,14 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.job.JobBucket;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.junit.Assert;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.val;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 public class IndexDataConstructor {
 
@@ -134,14 +134,21 @@ public class IndexDataConstructor {
 
     // return segment id
     public String buildIndex(String dfName, SegmentRange segmentRange, Set<LayoutEntity> toBuildLayouts,
-            boolean isAppend, List<String[]> partitionValues) throws Exception {
+                             boolean isAppend, List<String[]> partitionValues) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         NDataflowManager dsMgr = NDataflowManager.getInstance(config, project);
         NDataflow df = dsMgr.getDataflow(dfName);
         // ready dataflow, segment, cuboid layout
         NDataSegment oneSeg = dsMgr.appendSegment(df, segmentRange, SegmentStatusEnum.NEW, partitionValues);
+        // If cached, will not build target segment, and return the cached segment
         buildSegment(dfName, oneSeg, toBuildLayouts, isAppend, partitionValues);
-        return oneSeg.getId();
+        Set<NDataSegment> segmentInCache = dsMgr.getDataflow(df.getId()).getSegments().stream()
+                .filter(segment -> segment.getSegRange().equals(segmentRange)).collect(Collectors.toSet());
+        if (segmentInCache.size() != 1) {
+            throw new RuntimeException("Please check cached segment data for build. The environment may be outdated!"
+                    + "Please manually delete the cache on the cloud.");
+        }
+        return segmentInCache.iterator().next().getId();
     }
 
     public void buildSegment(String dfName, NDataSegment segment, Set<LayoutEntity> toBuildLayouts, boolean isAppend,
