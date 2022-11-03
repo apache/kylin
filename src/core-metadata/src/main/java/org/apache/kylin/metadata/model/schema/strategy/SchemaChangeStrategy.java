@@ -33,64 +33,68 @@ import org.apache.kylin.metadata.model.schema.SchemaUtil;
 import io.kyligence.kap.guava20.shaded.common.collect.MapDifference;
 import io.kyligence.kap.guava20.shaded.common.graph.Graph;
 import io.kyligence.kap.guava20.shaded.common.graph.Graphs;
+import lombok.val;
 
 public interface SchemaChangeStrategy {
     List<SchemaNodeType> supportedSchemaNodeTypes();
 
     default List<SchemaChangeCheckResult.ChangedItem> missingItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         return Collections.emptyList();
     }
 
     default List<SchemaChangeCheckResult.ChangedItem> missingItems(SchemaUtil.SchemaDifference difference,
-            Set<String> importModels, Set<String> originalModels) {
+            Set<String> importModels, Set<String> originalModels, Set<String> originalBrokenModels) {
         return Collections.emptyList();
     }
 
     default List<SchemaChangeCheckResult.ChangedItem> newItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         return Collections.emptyList();
     }
 
     default List<SchemaChangeCheckResult.ChangedItem> newItems(SchemaUtil.SchemaDifference difference,
-            Set<String> importModels, Set<String> originalModels) {
+            Set<String> importModels, Set<String> originalModels, Set<String> originalBrokenModels) {
         return difference.getNodeDiff().entriesOnlyOnRight().entrySet().stream()
                 .filter(entry -> supportedSchemaNodeTypes().contains(entry.getKey().getType()))
-                .map(entry -> newItemFunction(difference, entry, importModels, originalModels))
+                .map(entry -> newItemFunction(difference, entry, importModels, originalModels, originalBrokenModels))
                 .flatMap(Collection::stream).filter(schemaChange -> importModels.contains(schemaChange.getModelAlias()))
                 .collect(Collectors.toList());
     }
 
     default List<SchemaChangeCheckResult.UpdatedItem> updateItemFunction(SchemaUtil.SchemaDifference difference,
-            MapDifference.ValueDifference<SchemaNode> diff, Set<String> importModels, Set<String> originalModels) {
+            MapDifference.ValueDifference<SchemaNode> diff, Set<String> importModels, Set<String> originalModels,
+            Set<String> originalBrokenModels) {
         String modelAlias = diff.rightValue().getSubject();
         boolean overwritable = overwritable(importModels, originalModels, modelAlias);
+        val parameter = new SchemaChangeCheckResult.BaseItemParameter(hasSameName(modelAlias, originalModels),
+                hasSameWithBroken(modelAlias, originalBrokenModels), true, true, overwritable);
         return Collections.singletonList(SchemaChangeCheckResult.UpdatedItem.getSchemaUpdate(diff.leftValue(),
-                diff.rightValue(), modelAlias, hasSameName(modelAlias, originalModels), true, true, overwritable));
+                diff.rightValue(), modelAlias, parameter));
     }
 
     default List<SchemaChangeCheckResult.UpdatedItem> updateItems(SchemaUtil.SchemaDifference difference,
-            Set<String> importModels, Set<String> originalModels) {
+            Set<String> importModels, Set<String> originalModels, Set<String> originalBrokenModels) {
         return difference.getNodeDiff().entriesDiffering().values().stream()
                 .filter(entry -> supportedSchemaNodeTypes().contains(entry.leftValue().getType()))
-                .map(diff -> updateItemFunction(difference, diff, importModels, originalModels))
+                .map(diff -> updateItemFunction(difference, diff, importModels, originalModels, originalBrokenModels))
                 .flatMap(Collection::stream).filter(schemaChange -> importModels.contains(schemaChange.getModelAlias()))
                 .collect(Collectors.toList());
     }
 
     default List<SchemaChangeCheckResult.ChangedItem> reduceItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         return Collections.emptyList();
     }
 
     default List<SchemaChangeCheckResult.ChangedItem> reduceItems(SchemaUtil.SchemaDifference difference,
-            Set<String> importModels, Set<String> originalModels) {
+            Set<String> importModels, Set<String> originalModels, Set<String> originalBrokenModels) {
         return difference.getNodeDiff().entriesOnlyOnLeft().entrySet().stream()
                 .filter(entry -> supportedSchemaNodeTypes().contains(entry.getKey().getType()))
-                .map(entry -> reduceItemFunction(difference, entry, importModels, originalModels))
+                .map(entry -> reduceItemFunction(difference, entry, importModels, originalModels, originalBrokenModels))
                 .flatMap(Collection::stream).filter(schemaChange -> importModels.contains(schemaChange.getModelAlias()))
                 .collect(Collectors.toList());
     }
@@ -113,6 +117,10 @@ public interface SchemaChangeStrategy {
     default Set<String> reachableModel(Graph<SchemaNode> graph, SchemaNode schemaNode) {
         return Graphs.reachableNodes(graph, schemaNode).stream().filter(SchemaNode::isModelNode)
                 .map(SchemaNode::getSubject).collect(Collectors.toSet());
+    }
+
+    default boolean hasSameWithBroken(String modelAlias, Set<String> originalBrokenModels) {
+        return originalBrokenModels.contains(modelAlias);
     }
 
 }

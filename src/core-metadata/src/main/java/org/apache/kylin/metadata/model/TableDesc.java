@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -305,23 +304,6 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
             }
         }
         return null;
-    }
-
-    public Pair<Set<ColumnDesc>, Set<ColumnDesc>> findColumns(Set<ColumnDesc> columnDescSet) {
-        Set<ColumnDesc> existColSet = Sets.newHashSet();
-        Set<ColumnDesc> notExistColSet = Sets.newHashSet();
-        if (CollectionUtils.isEmpty(columnDescSet)) {
-            return Pair.newPair(existColSet, notExistColSet);
-        }
-        for (ColumnDesc searchColumnDesc : columnDescSet) {
-            ColumnDesc columnDesc = findColumnByName(searchColumnDesc.getName());
-            if (Objects.isNull(columnDesc)) {
-                notExistColSet.add(searchColumnDesc);
-            } else {
-                existColSet.add(columnDesc);
-            }
-        }
-        return Pair.newPair(existColSet, notExistColSet);
     }
 
     @Override

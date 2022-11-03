@@ -21,17 +21,12 @@ package org.apache.kylin.metadata.model;
 import static org.apache.kylin.metadata.model.NTableMetadataManager.getInstance;
 
 import java.util.Locale;
-import java.util.Set;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.Sets;
-
-import lombok.val;
 
 public class TableDescTest extends NLocalFileMetadataTestCase {
     private final String project = "default";
@@ -71,55 +66,5 @@ public class TableDescTest extends NLocalFileMetadataTestCase {
         final String tableName = "DEFAULT.TEST_KYLIN_FACT";
         final TableDesc tableDesc = tableMetadataManager.getTableDesc(tableName);
         Assert.assertFalse(tableDesc.isRangePartition());
-    }
-
-    @Test
-    public void testFindColumns() {
-        final String tableName = "DEFAULT.TEST_KYLIN_FACT";
-        final TableDesc tableDesc = tableMetadataManager.getTableDesc(tableName);
-        ColumnDesc[] columns = tableDesc.getColumns();
-        Assert.assertEquals(12, columns.length);
-
-        {
-            // test search column empty
-            Set<ColumnDesc> searchColSet = Sets.newHashSet();
-            val pair = tableDesc.findColumns(searchColSet);
-            Assert.assertTrue(pair.getFirst().isEmpty());
-            Assert.assertTrue(pair.getSecond().isEmpty());
-        }
-
-        {
-            // test all founded
-            Set<ColumnDesc> searchColSet = Sets.newHashSet(
-                    new ColumnDesc("1", "TRANS_ID", "bigint", "TRANS_ID", "", "", ""),
-                    new ColumnDesc("2", "ORDER_ID", "bigint", "TRANS_ID", "", "", ""));
-            val pair = tableDesc.findColumns(searchColSet);
-            Assert.assertFalse(pair.getFirst().isEmpty());
-            Assert.assertTrue(pair.getSecond().isEmpty());
-            Assert.assertEquals(2, pair.getFirst().size());
-        }
-
-        {
-            // test part founded
-            Set<ColumnDesc> searchColSet = Sets.newHashSet(
-                    new ColumnDesc("1", "TRANS_ID_1", "bigint", "TRANS_ID", "", "", ""),
-                    new ColumnDesc("2", "ORDER_ID", "bigint", "TRANS_ID", "", "", ""));
-            val pair = tableDesc.findColumns(searchColSet);
-            Assert.assertFalse(pair.getFirst().isEmpty());
-            Assert.assertFalse(pair.getSecond().isEmpty());
-            Assert.assertEquals(1, pair.getFirst().size());
-            Assert.assertEquals(1, pair.getSecond().size());
-        }
-
-        {
-            // test part founded
-            Set<ColumnDesc> searchColSet = Sets.newHashSet(
-                    new ColumnDesc("1", "TRANS_ID_1", "bigint", "TRANS_ID", "", "", ""),
-                    new ColumnDesc("2", "ORDER_ID_1", "bigint", "TRANS_ID", "", "", ""));
-            val pair = tableDesc.findColumns(searchColSet);
-            Assert.assertTrue(pair.getFirst().isEmpty());
-            Assert.assertFalse(pair.getSecond().isEmpty());
-            Assert.assertEquals(2, pair.getSecond().size());
-        }
     }
 }

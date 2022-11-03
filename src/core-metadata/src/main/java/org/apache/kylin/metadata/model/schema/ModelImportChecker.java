@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.schema.strategy.ComputedColumnStrategy;
 import org.apache.kylin.metadata.model.schema.strategy.MultiplePartitionStrategy;
@@ -43,24 +45,29 @@ public class ModelImportChecker {
             new UnOverWritableStrategy(), new TableColumnStrategy(), new TableStrategy(), new OverWritableStrategy(),
             new MultiplePartitionStrategy());
 
-    public static SchemaChangeCheckResult check(SchemaUtil.SchemaDifference difference,
-            ImportModelContext importModelContext) {
+    public static SchemaChangeCheckResult check(SchemaUtil.SchemaDifference diff, ImportModelContext context) {
+        String targetProject = context.getTargetProject();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+
         Set<String> importModels = NDataModelManager
-                .getInstance(importModelContext.getImportKylinConfig(), importModelContext.getTargetProject())
-                .listAllModelAlias().stream().map(model -> importModelContext.getNewModels().getOrDefault(model, model))
+                .getInstance(context.getImportKylinConfig(), targetProject).listAllModelAlias().stream()
+                .map(model -> context.getNewModels().getOrDefault(model, model))
                 .collect(Collectors.toSet());
 
-        Set<String> originalModels = NDataModelManager
-                .getInstance(KylinConfig.getInstanceFromEnv(), importModelContext.getTargetProject())
-                .listAllModelAlias();
+        // all models include broken
+        Set<String> originalModels = NDataModelManager.getInstance(kylinConfig, targetProject).listAllModelAlias();
+        // broken models
+        Set<String> originBrokenModels = NDataflowManager.getInstance(kylinConfig, targetProject).listAllDataflows(true)
+                .stream().filter(NDataflow::checkBrokenWithRelatedInfo).map(df -> df.getModel().getAlias())
+                .collect(Collectors.toSet());
 
         val result = new SchemaChangeCheckResult();
         for (SchemaChangeStrategy strategy : strategies) {
-            result.addMissingItems(strategy.missingItems(difference, importModels, originalModels));
-            result.addNewItems(strategy.newItems(difference, importModels, originalModels));
-            result.addReduceItems(strategy.reduceItems(difference, importModels, originalModels));
-            result.addUpdateItems(strategy.updateItems(difference, importModels, originalModels));
-            result.areEqual(strategy.areEqual(difference, importModels));
+            result.addMissingItems(strategy.missingItems(diff, importModels, originalModels, originBrokenModels));
+            result.addNewItems(strategy.newItems(diff, importModels, originalModels, originBrokenModels));
+            result.addReduceItems(strategy.reduceItems(diff, importModels, originalModels, originBrokenModels));
+            result.addUpdateItems(strategy.updateItems(diff, importModels, originalModels, originBrokenModels));
+            result.areEqual(strategy.areEqual(diff, importModels));
         }
         return result;
     }

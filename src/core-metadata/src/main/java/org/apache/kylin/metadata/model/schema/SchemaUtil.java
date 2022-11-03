@@ -25,15 +25,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
 
 import com.google.common.collect.Lists;
 
@@ -47,6 +47,22 @@ import lombok.Data;
 import lombok.val;
 
 public class SchemaUtil {
+
+    public static SchemaDifference diff(String project, KylinConfig sourceConfig, KylinConfig targetConfig,
+            List<TableDesc> incrTableDescList) {
+        val sourceGraph = dependencyGraph(project, sourceConfig, incrTableDescList);
+        val targetGraph = dependencyGraph(project, targetConfig);
+        return new SchemaDifference(sourceGraph, targetGraph);
+    }
+
+    public static Graph<SchemaNode> dependencyGraph(String project, KylinConfig config,
+            List<TableDesc> incrTableDescList) {
+        val tableManager = NTableMetadataManager.getInstance(config, project);
+        val planManager = NIndexPlanManager.getInstance(config, project);
+        List<TableDesc> tableDescs = Lists.newArrayList(tableManager.listAllTables());
+        tableDescs.addAll(incrTableDescList);
+        return dependencyGraph(tableDescs, planManager.listAllIndexPlans());
+    }
 
     public static SchemaDifference diff(String project, KylinConfig sourceConfig, KylinConfig targetConfig) {
         val sourceGraph = dependencyGraph(project, sourceConfig);
