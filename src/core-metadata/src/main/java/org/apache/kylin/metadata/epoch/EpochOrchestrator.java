@@ -70,13 +70,15 @@ public class EpochOrchestrator {
 
     private void startEpochChecker(KylinConfig kylinConfig) {
         // first renew and update epoch at org.apache.kylin.rest.discovery.KylinServiceDiscoveryCache#createServiceCache
+        long pollSecond = kylinConfig.getEpochCheckerIntervalSecond();
+        logger.info("Try to update/renew epoch every {} seconds", pollSecond);
         if (!kylinConfig.getEpochCheckerEnabled()) {
             // this logic can be used when there is only one All or Job KE node
-            logger.info("Disable epoch timing renew and update, renew and update epoch only once");
+            logger.info("Disable epoch timing renew, renew epoch only once");
+            checkerPool = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("EpochChecker"));
+            checkerPool.scheduleWithFixedDelay(new EpochChecker(), 1, pollSecond, TimeUnit.SECONDS);
             return;
         }
-        long pollSecond = kylinConfig.getEpochCheckerIntervalSecond();
-        logger.info("Try to update epoch every {} seconds", pollSecond);
         logger.info("Renew executor work size is :{}", kylinConfig.getRenewEpochWorkerPoolSize());
         checkerPool = Executors.newScheduledThreadPool(2, new NamedThreadFactory("EpochChecker"));
         checkerPool.scheduleWithFixedDelay(new EpochChecker(), 1, pollSecond, TimeUnit.SECONDS);
