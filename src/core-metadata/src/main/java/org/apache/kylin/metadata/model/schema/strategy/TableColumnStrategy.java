@@ -35,6 +35,7 @@ import org.apache.kylin.metadata.model.schema.SchemaUtil;
 
 import io.kyligence.kap.guava20.shaded.common.collect.MapDifference;
 import io.kyligence.kap.guava20.shaded.common.graph.Graphs;
+import lombok.val;
 
 public class TableColumnStrategy implements SchemaChangeStrategy {
     @Override
@@ -44,10 +45,10 @@ public class TableColumnStrategy implements SchemaChangeStrategy {
 
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> missingItems(SchemaUtil.SchemaDifference difference,
-            Set<String> importModels, Set<String> originalModels) {
+            Set<String> importModels, Set<String> originalModels, Set<String> originalBrokenModels) {
         return difference.getNodeDiff().entriesOnlyOnRight().entrySet().stream()
                 .filter(pair -> supportedSchemaNodeTypes().contains(pair.getKey().getType()))
-                .map(pair -> missingItemFunction(difference, pair, importModels, originalModels))
+                .map(pair -> missingItemFunction(difference, pair, importModels, originalModels, originalBrokenModels))
                 .flatMap(Collection::stream).filter(schemaChange -> importModels.contains(schemaChange.getModelAlias()))
                 .collect(Collectors.toList());
     }
@@ -55,34 +56,40 @@ public class TableColumnStrategy implements SchemaChangeStrategy {
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> missingItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         return reachableModel(difference.getTargetGraph(), entry.getValue()).stream()
                 .map(modelAlias -> SchemaChangeCheckResult.ChangedItem.createUnImportableSchemaNode(
                         entry.getKey().getType(), entry.getValue(), modelAlias, USED_UNLOADED_TABLE,
-                        entry.getValue().getDetail(), hasSameName(modelAlias, originalModels)))
+                        entry.getValue().getDetail(), hasSameName(modelAlias, originalModels),
+                        hasSameWithBroken(modelAlias, originalBrokenModels)))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<SchemaChangeCheckResult.UpdatedItem> updateItemFunction(SchemaUtil.SchemaDifference difference,
-            MapDifference.ValueDifference<SchemaNode> diff, Set<String> importModels, Set<String> originalModels) {
+            MapDifference.ValueDifference<SchemaNode> diff, Set<String> importModels, Set<String> originalModels,
+            Set<String> originalBrokenModels) {
         return Graphs.reachableNodes(difference.getTargetGraph(), diff.rightValue()).stream()
                 .filter(SchemaNode::isModelNode).map(SchemaNode::getSubject).distinct()
-                .map(modelAlias -> SchemaChangeCheckResult.UpdatedItem.getSchemaUpdate(diff.leftValue(),
-                        diff.rightValue(), modelAlias, TABLE_COLUMN_DATATYPE_CHANGED, diff.rightValue().getDetail(),
-                        hasSameName(modelAlias, originalModels), false, false, false))
+                .map(modelAlias -> {
+                    val parameter = new SchemaChangeCheckResult.BaseItemParameter(
+                            hasSameName(modelAlias, originalModels),
+                            hasSameWithBroken(modelAlias, originalBrokenModels), false, false, false);
+                    return SchemaChangeCheckResult.UpdatedItem.getSchemaUpdate(diff.leftValue(), diff.rightValue(),
+                            modelAlias, TABLE_COLUMN_DATATYPE_CHANGED, diff.rightValue().getDetail(), parameter);
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> reduceItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         return Graphs.reachableNodes(difference.getSourceGraph(), entry.getValue()).stream()
                 .filter(SchemaNode::isModelNode).map(SchemaNode::getSubject).distinct()
                 .map(modelAlias -> SchemaChangeCheckResult.ChangedItem.createOverwritableSchemaNode(
                         entry.getKey().getType(), entry.getValue(), modelAlias,
-                        hasSameName(modelAlias, originalModels)))
+                        hasSameName(modelAlias, originalModels), hasSameWithBroken(modelAlias, originalBrokenModels)))
                 .collect(Collectors.toList());
     }
 }

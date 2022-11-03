@@ -40,27 +40,29 @@ public class OverWritableStrategy implements SchemaChangeStrategy {
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> newItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
-        return createSchemaChange(difference, entry, importModels, originalModels);
+            Set<String> originalModels, Set<String> originalBrokenModels) {
+        return createSchemaChange(difference, entry, importModels, originalModels, originalBrokenModels);
     }
 
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> reduceItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
-        return createSchemaChange(difference, entry, importModels, originalModels);
+            Set<String> originalModels, Set<String> originalBrokenModels) {
+        return createSchemaChange(difference, entry, importModels, originalModels, originalBrokenModels);
     }
 
     private List<SchemaChangeCheckResult.ChangedItem> createSchemaChange(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         String modelAlias = entry.getValue().getSubject();
         if (overwritable(importModels, originalModels, modelAlias)) {
             return Collections.singletonList(SchemaChangeCheckResult.ChangedItem.createOverwritableSchemaNode(
-                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels)));
+                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels),
+                    hasSameWithBroken(modelAlias, originalBrokenModels)));
         } else {
             return Collections.singletonList(SchemaChangeCheckResult.ChangedItem.createCreatableSchemaNode(
-                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels)));
+                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels),
+                    hasSameWithBroken(modelAlias, originalBrokenModels)));
         }
     }
 }

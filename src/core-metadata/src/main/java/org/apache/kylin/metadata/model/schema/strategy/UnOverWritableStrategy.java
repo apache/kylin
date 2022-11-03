@@ -30,6 +30,7 @@ import org.apache.kylin.metadata.model.schema.SchemaNodeType;
 import org.apache.kylin.metadata.model.schema.SchemaUtil;
 
 import io.kyligence.kap.guava20.shaded.common.collect.MapDifference;
+import lombok.val;
 
 public class UnOverWritableStrategy implements SchemaChangeStrategy {
 
@@ -42,26 +43,31 @@ public class UnOverWritableStrategy implements SchemaChangeStrategy {
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> newItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         String modelAlias = entry.getValue().getSubject();
         return Collections.singletonList(SchemaChangeCheckResult.ChangedItem.createCreatableSchemaNode(
-                entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels)));
+                entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels),
+                hasSameWithBroken(modelAlias, originalBrokenModels)));
     }
 
     @Override
     public List<SchemaChangeCheckResult.UpdatedItem> updateItemFunction(SchemaUtil.SchemaDifference difference,
-            MapDifference.ValueDifference<SchemaNode> diff, Set<String> importModels, Set<String> originalModels) {
+            MapDifference.ValueDifference<SchemaNode> diff, Set<String> importModels, Set<String> originalModels,
+            Set<String> originalBrokenModels) {
         String modelAlias = diff.rightValue().getSubject();
+        val parameter = new SchemaChangeCheckResult.BaseItemParameter(hasSameName(modelAlias, originalModels),
+                hasSameWithBroken(modelAlias, originalBrokenModels), true, true, false);
         return Collections.singletonList(SchemaChangeCheckResult.UpdatedItem.getSchemaUpdate(diff.leftValue(),
-                diff.rightValue(), modelAlias, hasSameName(modelAlias, originalModels), true, true, false));
+                diff.rightValue(), modelAlias, parameter));
     }
 
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> reduceItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         String modelAlias = entry.getValue().getSubject();
         return Collections.singletonList(SchemaChangeCheckResult.ChangedItem.createCreatableSchemaNode(
-                entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels)));
+                entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels),
+                hasSameWithBroken(modelAlias, originalBrokenModels)));
     }
 }

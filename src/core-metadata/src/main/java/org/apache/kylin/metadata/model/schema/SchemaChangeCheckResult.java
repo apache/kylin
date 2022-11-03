@@ -24,25 +24,29 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.apache.kylin.metadata.model.TableDesc;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.google.common.collect.Sets;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.val;
 
 @Data
 public class SchemaChangeCheckResult {
 
     @JsonProperty
     private Map<String, ModelSchemaChange> models = new HashMap<>();
+
+    @JsonIgnore
+    private List<TableDesc> existTableList = new ArrayList<>();
 
     @Data
     public static class ModelSchemaChange {
@@ -67,13 +71,13 @@ public class SchemaChangeCheckResult {
         @JsonProperty("importable")
         public boolean importable() {
             return Stream.of(missingItems, newItems, updateItems, reduceItems).flatMap(Collection::stream)
-                    .allMatch(BaseItem::isImportable) || isLoadTableAble();
+                    .allMatch(BaseItem::isImportable);
         }
 
         @JsonProperty("creatable")
         public boolean creatable() {
             return Stream.of(missingItems, newItems, updateItems, reduceItems).flatMap(Collection::stream)
-                    .allMatch(BaseItem::isCreatable) || isLoadTableAble();
+                    .allMatch(BaseItem::isCreatable);
         }
 
         @JsonProperty("")
@@ -92,13 +96,12 @@ public class SchemaChangeCheckResult {
                     .allMatch(BaseItem::isHasSameName);
         }
 
-        @Setter
-        @JsonIgnore
-        private boolean loadTableAble = false;
-
-        @Getter
-        @JsonIgnore
-        private Set<String> loadTables = Sets.newHashSet();
+        @JsonProperty("has_same_name_broken")
+        public boolean hasSameNameBroken() {
+            val set = Stream.of(missingItems, newItems, updateItems, reduceItems).flatMap(Collection::stream)
+                    .collect(Collectors.toSet());
+            return !set.isEmpty() && set.stream().allMatch(BaseItem::isHasSameNameBroken);
+        }
     }
 
     @Data
@@ -116,6 +119,9 @@ public class SchemaChangeCheckResult {
 
         @JsonProperty("has_same_name")
         boolean hasSameName;
+
+        @JsonProperty("has_same_name_broken")
+        boolean hasSameNameBroken;
 
         @JsonProperty("importable")
         boolean importable;
@@ -142,40 +148,45 @@ public class SchemaChangeCheckResult {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ChangedItem extends BaseItem {
-        @Getter(PRIVATE)
+
         private SchemaNode schemaNode;
 
         public ChangedItem(SchemaNodeType type, SchemaNode schemaNode, String modelAlias, UN_IMPORT_REASON reason,
-                String conflictItem, boolean hasSameName, boolean importable, boolean creatable, boolean overwritable) {
-            super(type, modelAlias, new ConflictReason(reason, conflictItem), hasSameName, importable, creatable,
-                    overwritable);
+                String conflictItem, BaseItemParameter parameter) {
+            super(type, modelAlias, new ConflictReason(reason, conflictItem), parameter.hasSameName,
+                    parameter.hasSameNameBroken, parameter.importable, parameter.creatable, parameter.overwritable);
             this.schemaNode = schemaNode;
         }
 
         public static ChangedItem createUnImportableSchemaNode(SchemaNodeType type, SchemaNode schemaNode,
-                UN_IMPORT_REASON reason, String conflictItem, boolean hasSameName) {
-            return new ChangedItem(type, schemaNode, null, reason, conflictItem, hasSameName, false, false, false);
+                UN_IMPORT_REASON reason, String conflictItem, boolean hasSameName, boolean hasSameNameBroken) {
+            return new ChangedItem(type, schemaNode, null, reason, conflictItem,
+                    new BaseItemParameter(hasSameName, hasSameNameBroken, false, false, false));
         }
 
         public static ChangedItem createUnImportableSchemaNode(SchemaNodeType type, SchemaNode schemaNode,
-                String modelAlias, UN_IMPORT_REASON reason, String conflictItem, boolean hasSameName) {
-            return new ChangedItem(type, schemaNode, modelAlias, reason, conflictItem, hasSameName, false, false,
-                    false);
+                String modelAlias, UN_IMPORT_REASON reason, String conflictItem, boolean hasSameName,
+                boolean hasSameNameBroken) {
+            return new ChangedItem(type, schemaNode, modelAlias, reason, conflictItem,
+                    new BaseItemParameter(hasSameName, hasSameNameBroken, false, false, false));
         }
 
         public static ChangedItem createOverwritableSchemaNode(SchemaNodeType type, SchemaNode schemaNode,
-                boolean hasSameName) {
-            return new ChangedItem(type, schemaNode, null, null, null, hasSameName, true, true, true);
+                boolean hasSameName, boolean hasSameNameBroken) {
+            return new ChangedItem(type, schemaNode, null, null, null,
+                    new BaseItemParameter(hasSameName, hasSameNameBroken, true, true, true));
         }
 
         public static ChangedItem createOverwritableSchemaNode(SchemaNodeType type, SchemaNode schemaNode,
-                String modelAlias, boolean hasSameName) {
-            return new ChangedItem(type, schemaNode, modelAlias, null, null, hasSameName, true, true, true);
+                String modelAlias, boolean hasSameName, boolean hasSameNameBroken) {
+            return new ChangedItem(type, schemaNode, modelAlias, null, null,
+                    new BaseItemParameter(hasSameName, hasSameNameBroken, true, true, true));
         }
 
         public static ChangedItem createCreatableSchemaNode(SchemaNodeType type, SchemaNode schemaNode,
-                boolean hasSameName) {
-            return new ChangedItem(type, schemaNode, null, null, null, hasSameName, true, true, false);
+                boolean hasSameName, boolean hasSameNameBroken) {
+            return new ChangedItem(type, schemaNode, null, null, null,
+                    new BaseItemParameter(hasSameName, hasSameNameBroken, true, true, false));
         }
 
         public String getModelAlias() {
@@ -219,26 +230,22 @@ public class SchemaChangeCheckResult {
             return getDetail(secondSchemaNode);
         }
 
-        public UpdatedItem(SchemaNode firstSchemaNode, SchemaNode secondSchemaNode, String modelAlias,
-                UN_IMPORT_REASON reason, String conflictItem, boolean hasSameName, boolean importable,
-                boolean creatable, boolean overwritable) {
-            super(secondSchemaNode.getType(), modelAlias, new ConflictReason(reason, conflictItem), hasSameName,
-                    importable, creatable, overwritable);
-            this.firstSchemaNode = firstSchemaNode;
-            this.secondSchemaNode = secondSchemaNode;
+        public UpdatedItem(SchemaNode first, SchemaNode second, String modelAlias, UN_IMPORT_REASON reason,
+                String conflictItem, BaseItemParameter parameter) {
+            super(second.getType(), modelAlias, new ConflictReason(reason, conflictItem), parameter.hasSameName,
+                    parameter.hasSameNameBroken, parameter.importable, parameter.creatable, parameter.overwritable);
+            this.firstSchemaNode = first;
+            this.secondSchemaNode = second;
         }
 
         public static UpdatedItem getSchemaUpdate(SchemaNode first, SchemaNode second, String modelAlias,
-                UN_IMPORT_REASON reason, String conflictItem, boolean hasSameName, boolean importable,
-                boolean creatable, boolean overwritable) {
-            return new UpdatedItem(first, second, modelAlias, reason, conflictItem, hasSameName, importable, creatable,
-                    overwritable);
+                UN_IMPORT_REASON reason, String conflictItem, BaseItemParameter parameter) {
+            return new UpdatedItem(first, second, modelAlias, reason, conflictItem, parameter);
         }
 
         public static UpdatedItem getSchemaUpdate(SchemaNode first, SchemaNode second, String modelAlias,
-                boolean hasSameName, boolean importable, boolean creatable, boolean overwritable) {
-            return getSchemaUpdate(first, second, modelAlias, UN_IMPORT_REASON.NONE, null, hasSameName, importable,
-                    creatable, overwritable);
+                BaseItemParameter parameter) {
+            return getSchemaUpdate(first, second, modelAlias, UN_IMPORT_REASON.NONE, null, parameter);
         }
     }
 
@@ -301,5 +308,15 @@ public class SchemaChangeCheckResult {
         MISSING_TABLE_COLUMN, //
         MISSING_TABLE, //
         NONE;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class BaseItemParameter {
+        private boolean hasSameName;
+        private boolean hasSameNameBroken;
+        private boolean importable;
+        private boolean creatable;
+        private boolean overwritable;
     }
 }

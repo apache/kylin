@@ -20,8 +20,6 @@ package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.constant.Constants.KE_VERSION;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
-import static org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult.UN_IMPORT_REASON.SAME_CC_NAME_HAS_DIFFERENT_EXPR;
-import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_TABLE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,7 +37,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -71,6 +68,7 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
 import org.apache.kylin.metadata.model.schema.SchemaNodeType;
@@ -105,7 +103,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
@@ -755,17 +752,16 @@ public class MetaStoreServiceTest extends ServiceTestBase {
                 "src/test/resources/ut_model_metadata/metastore_model_metadata_c4a20039c16dfbb5dcc5610c5052d7b3.zip");
         val multipartFile = new MockMultipartFile(file.getName(), file.getName(), null,
                 Files.newInputStream(file.toPath()));
-        val metadataCheckResponse = metaStoreService.checkModelMetadata("original_project", multipartFile, null);
+        val checkResult = metaStoreService.checkModelMetadata("original_project", multipartFile, null);
+        Assert.assertEquals(1, checkResult.getExistTableList().size());
+        Assert.assertEquals("SSB.CUSTOMER_NEW", checkResult.getExistTableList().get(0).getIdentity());
 
-        SchemaChangeCheckResult.ModelSchemaChange modelSchemaChange = metadataCheckResponse.getModels()
+        SchemaChangeCheckResult.ModelSchemaChange change = checkResult.getModels()
                 .get("missing_table_model");
-        Assert.assertNotNull(modelSchemaChange);
-
-        Assert.assertEquals(11, modelSchemaChange.getDifferences());
-        Assert.assertTrue(
-                modelSchemaChange.getMissingItems().stream().anyMatch(sc -> sc.getType() == SchemaNodeType.MODEL_TABLE
-                        && sc.getDetail().equals("SSB.CUSTOMER_NEW") && !sc.isImportable()));
-        Assert.assertTrue(modelSchemaChange.importable());
+        Assert.assertNotNull(change);
+        Assert.assertTrue(change.getMissingItems().isEmpty());
+        Assert.assertTrue(change.importable());
+        Assert.assertTrue(change.creatable());
     }
 
     @Test
@@ -1244,10 +1240,6 @@ public class MetaStoreServiceTest extends ServiceTestBase {
         Assert.assertNull(manager.getTableDesc("SSB.CUSTOMER_NEW"));
         metaStoreService.importModelMetadata("original_project", multipartFile, request);
         Assert.assertNotNull(manager.getTableDesc("SSB.CUSTOMER_NEW"));
-
-        {
-
-        }
     }
 
     @Test
@@ -1389,135 +1381,46 @@ public class MetaStoreServiceTest extends ServiceTestBase {
 
     @Test
     public void testMissTable() throws IOException {
+        String table = "SSB.CUSTOMER_NEW";
         val file = new File(
                 "src/test/resources/ut_meta/schema_utils/model_missing_table_update/model_table_missing_update_model_metadata_2020_11_16_02_37_33_3182D4A7694DA64E3D725C140CF80A47.zip");
         val multipartFile = new MockMultipartFile(file.getName(), file.getName(), null,
                 Files.newInputStream(file.toPath()));
-        val metadataCheckResponse = metaStoreService.checkModelMetadata("original_project", multipartFile, null);
-
-        val modelSchemaChange = metadataCheckResponse.getModels().get("ssb_model");
+        val checkResult = metaStoreService.checkModelMetadata("original_project", multipartFile, null);
+        val modelSchemaChange = checkResult.getModels().get("ssb_model");
+        Assert.assertEquals(1, checkResult.getExistTableList().size());
+        Assert.assertEquals(table, checkResult.getExistTableList().get(0).getIdentity());
         Assert.assertNotNull(modelSchemaChange);
-        Assert.assertTrue(modelSchemaChange.isLoadTableAble());
-        Set<String> loadTables = modelSchemaChange.getLoadTables();
-        Assert.assertEquals(1, loadTables.size());
-        Assert.assertEquals("SSB.CUSTOMER_NEW", loadTables.iterator().next());
         Assert.assertTrue(modelSchemaChange.creatable());
         Assert.assertTrue(modelSchemaChange.importable());
         Assert.assertFalse(modelSchemaChange.overwritable());
-
-        testModelImportable(metadataCheckResponse);
-
-        {
-            val mockChange = Mockito.spy(modelSchemaChange);
-            mockChange.setLoadTableAble(false);
-            mockChange.setLoadTables(Sets.newHashSet());
-            Mockito.doReturn(false).when(mockChange).overwritable();
-            Mockito.doReturn(false).when(mockChange).creatable();
-            Mockito.doReturn(false).when(mockChange).importable();
-            metadataCheckResponse.getModels().put("ssb_model", mockChange);
-            metaStoreService.checkTableLoadAble(Sets.newHashSet("SSB.CUSTOMER_NEW"), metadataCheckResponse);
-            val change = metadataCheckResponse.getModels().get("ssb_model");
-            Assert.assertTrue(change.isLoadTableAble());
-            Assert.assertFalse(change.getLoadTables().isEmpty());
-        }
-
-        {
-            val mockChange = Mockito.spy(modelSchemaChange);
-            mockChange.setLoadTableAble(false);
-            mockChange.setLoadTables(Sets.newHashSet());
-            metadataCheckResponse.getModels().put("ssb_model", mockChange);
-            metaStoreService.checkTableLoadAble(Sets.newHashSet("SSB.CUSTOMER_NEWNEW"), metadataCheckResponse);
-            val change = metadataCheckResponse.getModels().get("ssb_model");
-            Assert.assertFalse(change.isLoadTableAble());
-            Assert.assertTrue(change.getLoadTables().isEmpty());
-        }
-
-        {
-            val mockChange = Mockito.spy(modelSchemaChange);
-            mockChange.setLoadTableAble(false);
-            mockChange.setLoadTables(Sets.newHashSet());
-            val missItems = mockChange.getMissingItems().stream().filter(item -> item.getType() != MODEL_TABLE)
-                    .collect(Collectors.toList());
-            ReflectionTestUtils.setField(mockChange, "missingItems", missItems);
-            metadataCheckResponse.getModels().put("ssb_model", mockChange);
-            metaStoreService.checkTableLoadAble(Sets.newHashSet("SSB.CUSTOMER_NEW"), metadataCheckResponse);
-            val change = metadataCheckResponse.getModels().get("ssb_model");
-            Assert.assertFalse(change.isLoadTableAble());
-            Assert.assertTrue(change.getLoadTables().isEmpty());
-        }
-
-        {
-            val mockChange = Mockito.spy(modelSchemaChange);
-            mockChange.setLoadTableAble(false);
-            mockChange.setLoadTables(Sets.newHashSet());
-            val newItems = mockChange.getNewItems().stream()
-                    .peek(item -> item.getConflictReason().setReason(SAME_CC_NAME_HAS_DIFFERENT_EXPR))
-                    .collect(Collectors.toList());
-            ReflectionTestUtils.setField(mockChange, "newItems", newItems);
-            metadataCheckResponse.getModels().put("ssb_model", mockChange);
-            metaStoreService.checkTableLoadAble(Sets.newHashSet("SSB.CUSTOMER_NEW"), metadataCheckResponse);
-            val change = metadataCheckResponse.getModels().get("ssb_model");
-            Assert.assertFalse(change.isLoadTableAble());
-            Assert.assertTrue(change.getLoadTables().isEmpty());
-        }
     }
 
-    private void testModelImportable(SchemaChangeCheckResult metadataCheckResponse) {
-        val modelSchemaChange = metadataCheckResponse.getModels().get("ssb_model");
+    @Test
+    public void testSearchTablesInDataSource() {
         {
-            val mockChange = Mockito.spy(modelSchemaChange);
-            mockChange.setLoadTableAble(false);
-            mockChange.setLoadTables(Sets.newHashSet());
-            Mockito.doReturn(true).when(mockChange).overwritable();
-            Mockito.doReturn(true).when(mockChange).creatable();
-            Mockito.doReturn(true).when(mockChange).importable();
-            metadataCheckResponse.getModels().put("ssb_model", mockChange);
-            metaStoreService.checkTableLoadAble(Sets.newHashSet("SSB.CUSTOMER_NEW"), metadataCheckResponse);
-            val change = metadataCheckResponse.getModels().get("ssb_model");
-            Assert.assertFalse(change.isLoadTableAble());
-            Assert.assertTrue(change.getLoadTables().isEmpty());
+            val existTables = metaStoreService.searchTablesInDataSource("original_project", Lists.newArrayList());
+            Assert.assertTrue(existTables.isEmpty());
         }
 
         {
-            val mockChange = Mockito.spy(modelSchemaChange);
-            mockChange.setLoadTableAble(false);
-            mockChange.setLoadTables(Sets.newHashSet());
-            Mockito.doReturn(true).when(mockChange).overwritable();
-            Mockito.doReturn(false).when(mockChange).creatable();
-            Mockito.doReturn(false).when(mockChange).importable();
-            metadataCheckResponse.getModels().put("ssb_model", mockChange);
-            metaStoreService.checkTableLoadAble(Sets.newHashSet("SSB.CUSTOMER_NEW"), metadataCheckResponse);
-            val change = metadataCheckResponse.getModels().get("ssb_model");
-            Assert.assertFalse(change.isLoadTableAble());
-            Assert.assertTrue(change.getLoadTables().isEmpty());
+            TableDesc tableDesc = new TableDesc();
+            tableDesc.setDatabase("SSB");
+            tableDesc.setName("CUSTOMER_NEW");
+            val existTables = metaStoreService.searchTablesInDataSource("original_project",
+                    Lists.newArrayList(tableDesc));
+            Assert.assertFalse(existTables.isEmpty());
+            Assert.assertEquals(1, existTables.size());
+            Assert.assertEquals("SSB.CUSTOMER_NEW", existTables.get(0).getIdentity());
         }
 
         {
-            val mockChange = Mockito.spy(modelSchemaChange);
-            mockChange.setLoadTableAble(false);
-            mockChange.setLoadTables(Sets.newHashSet());
-            Mockito.doReturn(false).when(mockChange).overwritable();
-            Mockito.doReturn(true).when(mockChange).creatable();
-            Mockito.doReturn(false).when(mockChange).importable();
-            metadataCheckResponse.getModels().put("ssb_model", mockChange);
-            metaStoreService.checkTableLoadAble(Sets.newHashSet("SSB.CUSTOMER_NEW"), metadataCheckResponse);
-            val change = metadataCheckResponse.getModels().get("ssb_model");
-            Assert.assertFalse(change.isLoadTableAble());
-            Assert.assertTrue(change.getLoadTables().isEmpty());
-        }
-
-        {
-            val mockChange = Mockito.spy(modelSchemaChange);
-            mockChange.setLoadTableAble(false);
-            mockChange.setLoadTables(Sets.newHashSet());
-            Mockito.doReturn(false).when(mockChange).overwritable();
-            Mockito.doReturn(false).when(mockChange).creatable();
-            Mockito.doReturn(true).when(mockChange).importable();
-            metadataCheckResponse.getModels().put("ssb_model", mockChange);
-            metaStoreService.checkTableLoadAble(Sets.newHashSet("SSB.CUSTOMER_NEW"), metadataCheckResponse);
-            val change = metadataCheckResponse.getModels().get("ssb_model");
-            Assert.assertFalse(change.isLoadTableAble());
-            Assert.assertTrue(change.getLoadTables().isEmpty());
+            TableDesc tableDesc = new TableDesc();
+            tableDesc.setDatabase("SSB");
+            tableDesc.setName("CUSTOMER_NEW_NEW");
+            val existTables = metaStoreService.searchTablesInDataSource("original_project",
+                    Lists.newArrayList(tableDesc));
+            Assert.assertTrue(existTables.isEmpty());
         }
     }
 

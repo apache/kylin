@@ -28,10 +28,8 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_
 import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_TAG;
 import static org.apache.kylin.common.persistence.ResourceStore.VERSION_FILE;
 import static org.apache.kylin.metadata.model.schema.ImportModelContext.MODEL_REC_PATH;
-import static org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult.UN_IMPORT_REASON.DIFFERENT_CC_NAME_HAS_SAME_EXPR;
-import static org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult.UN_IMPORT_REASON.SAME_CC_NAME_HAS_DIFFERENT_EXPR;
-import static org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult.UN_IMPORT_REASON.TABLE_COLUMN_DATATYPE_CHANGED;
-import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_TABLE;
+import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_DIM;
+import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_FACT;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -39,8 +37,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,13 +70,13 @@ import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.MetadataChecker;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -99,6 +97,7 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.request.ModelImportRequest;
+import org.apache.kylin.rest.request.ModelImportRequest.ImportType;
 import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
 import org.apache.kylin.rest.response.LoadTableResponse;
 import org.apache.kylin.rest.response.ModelPreviewResponse;
@@ -136,9 +135,6 @@ public class MetaStoreService extends BasicService {
     private static final String BASE_CUBOID_ALWAYS_VALID_KEY = "kylin.cube.aggrgroup.is-base-cuboid-always-valid";
     private static final Pattern MD5_PATTERN = Pattern.compile(".*([a-fA-F\\d]{32})\\.zip");
     private static final String RULE_SCHEDULER_DATA_KEY = "kylin.index.rule-scheduler-data";
-
-    private static final Set<SchemaChangeCheckResult.UN_IMPORT_REASON> UN_IMPORT_REASONS = Sets.newHashSet(
-            SAME_CC_NAME_HAS_DIFFERENT_EXPR, DIFFERENT_CC_NAME_HAS_SAME_EXPR, TABLE_COLUMN_DATATYPE_CHANGED);
 
     @Autowired
     public AclEvaluate aclEvaluate;
@@ -378,12 +374,12 @@ public class MetaStoreService extends BasicService {
 
         if (request != null) {
             val newModels = request.getModels().stream()
-                    .filter(modelImport -> modelImport.getImportType() == ModelImportRequest.ImportType.NEW)
+                    .filter(modelImport -> modelImport.getImportType() == ImportType.NEW)
                     .collect(Collectors.toMap(ModelImportRequest.ModelImport::getOriginalName,
                             ModelImportRequest.ModelImport::getTargetName));
 
             val unImportModels = request.getModels().stream()
-                    .filter(modelImport -> modelImport.getImportType() == ModelImportRequest.ImportType.UN_IMPORT)
+                    .filter(modelImport -> modelImport.getImportType() == ImportType.UN_IMPORT)
                     .map(ModelImportRequest.ModelImport::getOriginalName).collect(Collectors.toList());
 
             return new ImportModelContext(targetProject, srcProject, rawResourceMap, newModels, unImportModels);
@@ -418,83 +414,44 @@ public class MetaStoreService extends BasicService {
 
     public SchemaChangeCheckResult checkModelMetadata(String targetProject, ImportModelContext context,
             MultipartFile uploadFile) throws IOException {
-        Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(uploadFile);
 
-        checkModelMetadataFile(ResourceStore.getKylinMetaStore(context.getTargetKylinConfig()).getMetadataStore(),
+        KylinConfig targetKylinConfig = context.getTargetKylinConfig();
+        Map<String, RawResource> rawResourceMap = getRawResourceFromUploadFile(uploadFile);
+        checkModelMetadataFile(ResourceStore.getKylinMetaStore(targetKylinConfig).getMetadataStore(),
                 rawResourceMap.keySet());
 
-        SchemaUtil.SchemaDifference difference = SchemaUtil.diff(targetProject, KylinConfig.getInstanceFromEnv(),
-                context.getTargetKylinConfig());
-
-        SchemaChangeCheckResult checkResult = ModelImportChecker.check(difference, context);
-
-        Set<String> loadAbleTables = getLoadAbleTables(targetProject, context.getTargetMissTableList());
-        if (CollectionUtils.isEmpty(loadAbleTables)) {
-            return checkResult;
-        }
-        // mark every model loadTableAble
-        return checkTableLoadAble(loadAbleTables, checkResult);
-    }
-
-    public SchemaChangeCheckResult checkTableLoadAble(Set<String> loadAbleTables, SchemaChangeCheckResult checkResult) {
-        checkResult.getModels().forEach((modelName, change) -> {
-            if (change.creatable() || change.importable() || change.overwritable()) {
-                return;
-            }
-            // Verify that tables used by the model can be fully loaded
-            Set<String> missedTableSet = change.getMissingItems().stream()//
-                    .filter(item -> item.getType().equals(MODEL_TABLE))
-                    .map(SchemaChangeCheckResult.ChangedItem::getDetail).collect(Collectors.toSet());
-            if (missedTableSet.isEmpty() || !loadAbleTables.containsAll(missedTableSet)) {
-                return;
-            }
-            // Verify that model has no conflicts
-            List<SchemaChangeCheckResult.BaseItem> items = Lists.newArrayList();
-            items.addAll(change.getNewItems());
-            items.addAll(change.getUpdateItems());
-            boolean hasConflict = items.stream().anyMatch(item -> {
-                val reason = item.getConflictReason().getReason();
-                return UN_IMPORT_REASONS.contains(reason);
-            });
-            if (hasConflict) {
-                return;
-            }
-            change.setLoadTableAble(true);
-            change.getLoadTables().addAll(missedTableSet);
-        });
+        // check missing table exists in datasource
+        List<TableDesc> existTableList = searchTablesInDataSource(targetProject, context.getTargetMissTableList());
+        // diff (local metadata + searched tables) and import metadata
+        val diff = SchemaUtil.diff(targetProject, KylinConfig.getInstanceFromEnv(), targetKylinConfig, existTableList);
+        SchemaChangeCheckResult checkResult = ModelImportChecker.check(diff, context);
+        checkResult.getExistTableList().addAll(existTableList);
         return checkResult;
     }
 
-    public Set<String> getLoadAbleTables(String targetProject, List<TableDesc> missTableList) {
+    public List<TableDesc> searchTablesInDataSource(String targetProject, List<TableDesc> missTableList) {
         if (CollectionUtils.isEmpty(missTableList)) {
-            return Sets.newHashSet();
+            return Collections.emptyList();
         }
         ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(targetProject);
         ISourceMetadataExplorer explorer = SourceFactory.getSource(projectInstance).getSourceMetadataExplorer();
-        Set<String> loadAbleList = Sets.newHashSet();
+
+        List<TableDesc> existTableSet = Lists.newArrayList();
         for (TableDesc missTableDesc : missTableList) {
             try {
-                // get new table desc from datasource
+                // check datasource exist table
+                // no need to check column
                 TableDesc newTableDesc = explorer
                         .loadTableMetadata(missTableDesc.getDatabase(), missTableDesc.getName(), targetProject)
                         .getFirst();
-                // check column all exists
-                Set<ColumnDesc> columnDescList = Arrays.stream(missTableDesc.getColumns())
-                        .filter(col -> !col.isComputedColumn()).collect(Collectors.toSet());
-                Set<ColumnDesc> notExistColSet = newTableDesc.findColumns(columnDescList).getSecond();
-                if (CollectionUtils.isNotEmpty(notExistColSet)) {
-                    // some column not exist in new table desc, mark table cannot load
-                    String missCols = notExistColSet.stream().map(ColumnDesc::getName).collect(Collectors.joining(","));
-                    logger.warn("Can not find columns [{}] in table [{}]", missCols, newTableDesc.getIdentity());
-                    continue;
-                }
-                loadAbleList.add(newTableDesc.getIdentity());
+                newTableDesc.init(targetProject);
+                existTableSet.add(newTableDesc);
             } catch (Exception e) {
                 logger.warn("try load table: {} failed.", missTableDesc.getIdentity(), e);
             }
         }
-        return loadAbleList;
+        return existTableSet;
     }
 
     private void checkModelMetadataFile(MetadataStore metadataStore, Set<String> rawResourceList) {
@@ -654,24 +611,55 @@ public class MetaStoreService extends BasicService {
         }
     }
 
-    public LoadTableResponse innerLoadTables(String project, Set<SchemaChangeCheckResult.ModelSchemaChange> changes)
-            throws Exception {
-        Set<String> loadTables = Sets.newHashSet();
-        changes.forEach(change -> loadTables.addAll(change.getLoadTables()));
-        return tableExtService.loadDbTables(loadTables.toArray(new String[0]), project, false);
+    public LoadTableResponse innerLoadTables(String project, Set<String> needLoadTables) throws Exception {
+        return tableExtService.loadDbTables(needLoadTables.toArray(new String[0]), project, false);
+    }
+
+    public Pair<Set<String>, Map<String, Set<String>>> checkNewModelTables(SchemaChangeCheckResult checkResult,
+            ModelImportRequest request) {
+        List<String> existTableList = checkResult.getExistTableList().stream().map(TableDesc::getIdentity)
+                .collect(Collectors.toList());
+        List<String> newImportModelList = request.getModels().stream()
+                .filter(modelRequest -> modelRequest.getImportType() == ImportType.NEW)
+                .map(ModelImportRequest.ModelImport::getTargetName).collect(Collectors.toList());
+        // all tables need to be loaded
+        Set<String> needLoadTableSet = Sets.newHashSet();
+        // every model need to be loaded tables
+        Map<String, Set<String>> modelTablesMap = Maps.newHashMap();
+
+        checkResult.getModels().forEach((modelName, change) -> {
+            if (!newImportModelList.contains(modelName) || !change.creatable()) {
+                return;
+            }
+            Set<String> modelTables = Sets.newHashSet();
+            change.getNewItems().stream()//
+                    .filter(item -> item.getSchemaNode().getType().equals(MODEL_DIM)
+                            || item.getSchemaNode().getType().equals(MODEL_FACT))
+                    .map(SchemaChangeCheckResult.ChangedItem::getDetail).filter(existTableList::contains)
+                    .forEach(table -> {
+                        needLoadTableSet.add(table);
+                        modelTables.add(table);
+                    });
+            modelTablesMap.put(modelName, modelTables);
+        });
+        return Pair.newPair(needLoadTableSet, modelTablesMap);
     }
 
     private void innerImportModelMetadata(String project, MultipartFile metadataFile, ModelImportRequest request,
             ImportModelContext context, List<Exception> exceptions) throws Exception {
         val schemaChangeCheckResult = checkModelMetadata(project, context, metadataFile);
 
-        val schemaChanges = schemaChangeCheckResult.getModels().entrySet().stream()//
-                .filter(entry -> context.getNewModels().containsValue(entry.getKey())).map(Map.Entry::getValue)
-                .collect(Collectors.toSet());
-        boolean needLoadTable = schemaChanges.stream().anyMatch(change -> !change.getLoadTables().isEmpty());
+        val pair = checkNewModelTables(schemaChangeCheckResult, request);
+        Set<String> needLoadTableSet = pair.getFirst();
+        Map<String, Set<String>> modelTablesMap = pair.getSecond();
+
         LoadTableResponse loadTableResponse = null;
+        boolean needLoadTable = CollectionUtils.isNotEmpty(needLoadTableSet);
         if (needLoadTable) {
-            loadTableResponse = innerLoadTables(project, schemaChanges);
+            // try load tables
+            String needLoadTableStr = String.join(",", needLoadTableSet);
+            logger.info("try load tables: [{}]", needLoadTableStr);
+            loadTableResponse = innerLoadTables(project, needLoadTableSet);
             if (CollectionUtils.isNotEmpty(loadTableResponse.getFailed())) {
                 String loadFailedTables = String.join(",", loadTableResponse.getFailed());
                 logger.warn("Load Table failed: [{}]", loadFailedTables);
@@ -685,10 +673,10 @@ public class MetaStoreService extends BasicService {
         for (ModelImportRequest.ModelImport modelImport : request.getModels()) {
             try {
                 validateModelImport(project, modelImport, schemaChangeCheckResult);
-                if (modelImport.getImportType() == ModelImportRequest.ImportType.NEW) {
-                    val modelSchemaChange = schemaChangeCheckResult.getModels().get(modelImport.getTargetName());
-                    if (needLoadTable && modelSchemaChange.isLoadTableAble()) {
-                        Set<String> needLoadTables = modelSchemaChange.getLoadTables();
+                if (modelImport.getImportType() == ImportType.NEW) {
+                    if (needLoadTable) {
+                        Set<String> needLoadTables = modelTablesMap.getOrDefault(modelImport.getTargetName(),
+                                Collections.emptySet());
                         if (!loadTableResponse.getLoaded().containsAll(needLoadTables)) {
                             logger.warn("Import model [{}] failed, skip import.", modelImport.getOriginalName());
                             continue;
@@ -698,7 +686,7 @@ public class MetaStoreService extends BasicService {
                     var nDataModel = importDataModelManager.copyForWrite(importDataModel);
                     createNewModel(nDataModel, modelImport, project, importIndexPlanManager);
                     importRecommendations(project, nDataModel.getUuid(), importDataModel.getUuid(), targetKylinConfig);
-                } else if (modelImport.getImportType() == ModelImportRequest.ImportType.OVERWRITE) {
+                } else if (modelImport.getImportType() == ImportType.OVERWRITE) {
                     val importDataModel = importDataModelManager.getDataModelDescByAlias(modelImport.getOriginalName());
                     val nDataModel = importDataModelManager.copyForWrite(importDataModel);
 
@@ -733,7 +721,7 @@ public class MetaStoreService extends BasicService {
 
         Message msg = MsgPicker.getMsg();
 
-        if (modelImport.getImportType() == ModelImportRequest.ImportType.OVERWRITE) {
+        if (modelImport.getImportType() == ImportType.OVERWRITE) {
             NDataModel dataModel = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
                     .getDataModelDescByAlias(modelImport.getOriginalName());
 
@@ -753,7 +741,7 @@ public class MetaStoreService extends BasicService {
                         String.format(Locale.ROOT, msg.getUnSuitableImportType(createType), modelImport.getImportType(),
                                 modelImport.getOriginalName()));
             }
-        } else if (modelImport.getImportType() == ModelImportRequest.ImportType.NEW) {
+        } else if (modelImport.getImportType() == ImportType.NEW) {
 
             if (!org.apache.commons.lang.StringUtils.containsOnly(modelImport.getTargetName(),
                     ModelService.VALID_NAME_FOR_MODEL)) {
