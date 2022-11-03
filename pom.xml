@@ -65,7 +65,7 @@
 
         <!-- Spark versions -->
         <delta.version>1.2.1</delta.version>
-        <spark.version>3.2.0-kylin-4.6.1.0-SNAPSHOT</spark.version>
+        <spark.version>3.2.0-kylin-4.6.1.0</spark.version>
 
         <roaring.version>0.9.2-kylin-r4</roaring.version>
 
