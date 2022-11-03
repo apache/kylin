@@ -6,6 +6,12 @@
   "join_tables": [],
   "all_named_columns": [
     {
+      "id": 1,
+      "name": "TEST_KYLIN_FACT_CAL_DT",
+      "column": "TEST_KYLIN_FACT_WITH_INT_DATE.CAL_DT",
+      "status": "TOMB"
+    },
+    {
       "id": 2,
       "name": "TEST_KYLIN_FACT_ORDER_ID",
       "column": "TEST_KYLIN_FACT_WITH_INT_DATE.ORDER_ID",

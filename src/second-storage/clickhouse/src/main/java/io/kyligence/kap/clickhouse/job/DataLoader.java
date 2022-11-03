@@ -43,6 +43,7 @@ import io.kyligence.kap.secondstorage.util.SecondStorageDateUtils;
 import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kylin.metadata.model.NDataModel;
 
 @Slf4j
 public class DataLoader {
@@ -182,8 +183,9 @@ public class DataLoader {
                 if (isIncremental) {
                     String partitionColName = loadInfo.model.getPartitionDesc().getPartitionDateColumn();
                     val dateCol = loadInfo.model.getAllNamedColumns().stream()
-                            .filter(column -> column.getAliasDotColumn().equals(partitionColName)).findFirst()
-                            .orElseThrow(
+                            .filter(column -> column.getAliasDotColumn().equals(partitionColName)
+                                    && NDataModel.ColumnStatus.DIMENSION.equals(column.getStatus()))
+                            .findFirst().orElseThrow(
                                     () -> new IllegalStateException("can't find partition column " + partitionColName));
                     Preconditions.checkState(loadInfo.getLayout().getColumns().stream()
                             .anyMatch(col -> col.getAliasDotName().equals(dateCol.getAliasDotColumn())));
