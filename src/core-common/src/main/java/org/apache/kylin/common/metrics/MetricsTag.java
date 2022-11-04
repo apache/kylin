@@ -36,6 +36,8 @@ public enum MetricsTag {
     RUNNING("running"), //
     JOB_CATEGORY("category"), //
     HOST("host"), //
+    TIMEOUT("timeout"), //
+    WAITING("waiting"), //
     HIT_SECOND_STORAGE("hit_second_storage");
 
     private final String value;

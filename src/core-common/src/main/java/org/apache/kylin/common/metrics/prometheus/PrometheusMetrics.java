@@ -42,6 +42,7 @@ public enum PrometheusMetrics {
 
     JOB_COUNTS("ke_job_counts", Type.PROJECT_METRIC), //
     JOB_MINUTES("ke_job_minutes", Type.PROJECT_METRIC), //
+    JOB_LONG_RUNNING("ke_long_running_jobs", Type.PROJECT_METRIC), //
 
     MODEL_BUILD_DURATION("ke_model_build_minutes", Type.PROJECT_METRIC | Type.MODEL_METRIC);
 

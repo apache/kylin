@@ -79,6 +79,7 @@ public class MetricsConfig {
             Set<String> allProjects = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects()
                     .stream().map(ProjectInstance::getName).collect(Collectors.toSet());
 
+            MetricsRegistry.refreshProjectLongRunningJobs(KylinConfig.getInstanceFromEnv(), allProjects);
             Sets.SetView<String> newProjects = Sets.difference(allProjects, allControlledProjects);
             for (String newProject : newProjects) {
                 log.info("Register project metrics for {}", newProject);
