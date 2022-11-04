@@ -459,6 +459,10 @@ class SnapshotBuilder(var jobId: String) extends Logging with Serializable {
   }
 
   private[builder] def decideSparkJobArg(sourceData: Dataset[Row]): (Int, Double) = {
+    var hadoopConf = SparderEnv.getHadoopConfiguration()
+    if (kylinConfig.getClusterManagerClassName.contains("AWSServerless")) {
+      hadoopConf = sourceData.sparkSession.sparkContext.hadoopConfiguration
+    }
     try {
       val sizeInMB = ResourceDetectUtils.getPaths(sourceData.queryExecution.sparkPlan)
         .map(path => HadoopUtil.getContentSummary(path.getFileSystem(SparderEnv.getHadoopConfiguration()), path).getLength)
