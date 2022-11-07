@@ -289,7 +289,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             allColumns.addAll(Lists.newArrayList(ccAsColumnDesc));
         }
 
-        return allColumns;
+        return allColumns.stream().distinct().collect(Collectors.toList());
     }
 
     // since computed columns are either of different expr and different names,
