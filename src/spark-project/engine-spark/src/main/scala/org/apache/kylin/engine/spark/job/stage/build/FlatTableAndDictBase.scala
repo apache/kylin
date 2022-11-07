@@ -19,7 +19,6 @@
 package org.apache.kylin.engine.spark.job.stage.build
 
 import com.google.common.collect.Sets
-import io.kyligence.kap.query.util.KapQueryUtil
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.util.HadoopUtil
@@ -36,6 +35,7 @@ import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.kylin.metadata.model._
+import org.apache.kylin.query.util.KapQueryUtil
 import org.apache.spark.sql.KapFunctions.dict_encode_v3
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{col, expr}

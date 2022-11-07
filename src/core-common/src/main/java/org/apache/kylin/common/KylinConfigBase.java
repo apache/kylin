@@ -1457,7 +1457,7 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getSnapshotBuildClassName() {
         return getOptional("kylin.engine.spark.snapshot-build-class-name",
-                "io.kyligence.kap.engine.spark.job.SnapshotBuildJob");
+                "org.apache.kylin.engine.spark.job.SnapshotBuildJob");
     }
 
     public String getSparkMaster() {
@@ -1469,7 +1469,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getSparkBuildClassName() {
-        return getOptional("kylin.engine.spark.build-class-name", "io.kyligence.kap.engine.spark.job.SegmentBuildJob");
+        return getOptional("kylin.engine.spark.build-class-name", "org.apache.kylin.engine.spark.job.SegmentBuildJob");
     }
 
     public List<String> getSparkBuildConfExtraRules() {
@@ -1482,11 +1482,11 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getSparkTableSamplingClassName() {
         return getOptional("kylin.engine.spark.sampling-class-name",
-                "io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob");
+                "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob");
     }
 
     public String getSparkMergeClassName() {
-        return getOptional("kylin.engine.spark.merge-class-name", "io.kyligence.kap.engine.spark.job.SegmentMergeJob");
+        return getOptional("kylin.engine.spark.merge-class-name", "org.apache.kylin.engine.spark.job.SegmentMergeJob");
     }
 
     public String getClusterManagerClassName() {

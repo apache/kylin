@@ -49,7 +49,7 @@ import org.mockito.Mockito;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.io.Files;
 
-import io.kyligence.kap.engine.spark.job.NSparkCubingStep;
+import org.apache.kylin.engine.spark.job.NSparkCubingStep;
 import io.kyligence.kap.guava20.shaded.common.collect.ImmutableMap;
 import io.kyligence.kap.guava20.shaded.common.collect.Lists;
 import io.kyligence.kap.guava20.shaded.common.collect.Maps;

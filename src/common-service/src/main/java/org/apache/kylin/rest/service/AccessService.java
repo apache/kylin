@@ -124,7 +124,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import io.kyligence.kap.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.ManagedUser;
 import lombok.SneakyThrows;
 import lombok.val;
 

@@ -80,7 +80,7 @@ public class QueryRouteTest {
 
     @ClassRule
     public static SharedSparkSession sharedSpark = new SharedSparkSession(
-            ImmutableMap.of("spark.sql.extensions", "io.kyligence.kap.query.SQLPushDownExtensions"));
+            ImmutableMap.of("spark.sql.extensions", "org.apache.kylin.query.SQLPushDownExtensions"));
     @ClassRule
     public static ClickHouseClassRule clickHouseClassRule = new ClickHouseClassRule(clickhouseNumber);
     public EnableTestUser enableTestUser = new EnableTestUser();

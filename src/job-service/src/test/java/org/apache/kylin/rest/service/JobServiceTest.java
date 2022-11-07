@@ -137,10 +137,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import io.kyligence.kap.clickhouse.MockSecondStorage;
-import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
-import io.kyligence.kap.engine.spark.job.NSparkSnapshotJob;
-import io.kyligence.kap.engine.spark.job.NTableSamplingJob;
-import io.kyligence.kap.engine.spark.job.step.NStageForBuild;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
+import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
+import org.apache.kylin.engine.spark.job.NTableSamplingJob;
+import org.apache.kylin.engine.spark.job.step.NStageForBuild;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 import lombok.var;

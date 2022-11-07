@@ -79,7 +79,7 @@ import org.springframework.web.accept.ContentNegotiationManager;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.kyligence.kap.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.ManagedUser;
 import lombok.val;
 
 public class NUserControllerTest extends NLocalFileMetadataTestCase {

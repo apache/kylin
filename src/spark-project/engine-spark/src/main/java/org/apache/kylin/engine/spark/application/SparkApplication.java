@@ -19,7 +19,7 @@
 package org.apache.kylin.engine.spark.application;
 
 import com.google.common.collect.Maps;
-import io.kyligence.kap.engine.spark.job.SegmentBuildJob;
+import org.apache.kylin.engine.spark.job.SegmentBuildJob;
 import lombok.val;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;

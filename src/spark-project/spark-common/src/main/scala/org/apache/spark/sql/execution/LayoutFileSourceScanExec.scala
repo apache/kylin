@@ -17,11 +17,10 @@
  */
 package org.apache.spark.sql.execution
 
-import io.kyligence.kap.softaffinity.SoftAffinityManager
-
 import java.util.concurrent.TimeUnit.NANOSECONDS
 import org.apache.spark.TaskContext
 import org.apache.hadoop.fs.Path
+import org.apache.kylin.softaffinity.SoftAffinityManager
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.catalog.BucketSpec
 import org.apache.spark.sql.catalyst.expressions.{And, Ascending, Attribute, AttributeReference, BoundReference, DynamicPruningExpression, Expression, Literal, PlanExpression, Predicate, SortOrder, UnsafeProjection}

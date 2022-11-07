@@ -127,7 +127,7 @@ import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import io.kyligence.kap.metadata.recommendation.ref.OptRecManagerV2;
+import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.sourceusage.SourceUsageManager;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
@@ -1194,7 +1194,7 @@ public class TableService extends BasicService {
                         .toMap(AffectedModelContext::getModelAlias, AffectedModelContext::getUpdatedLayouts)));
         result.getDetails().setAddedLayouts(removeAffectedModelsList.stream().filter(m -> !m.getAddLayouts().isEmpty())
                 .collect(Collectors.toMap(AffectedModelContext::getModelAlias, AffectedModelContext::getAddLayouts)));
-        
+
         Map<String, Set<Long>> refreshedLayouts = Maps.newHashMap();
         context.getChangeTypeAffectedModels().values().forEach(m -> {
             Sets.SetView<Long> difference = Sets.difference(m.getUpdatedLayouts(),

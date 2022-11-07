@@ -349,18 +349,18 @@ class KylinConfigBaseTest {
 
         map.put("getSparkBuildClassName",
                 new PropertiesEntity("kylin.engine.spark.build-class-name",
-                        "io.kyligence.kap.engine.spark.job.SegmentBuildJob",
-                        "io.kyligence.kap.engine.spark.job.SegmentBuildJob"));
+                        "org.apache.kylin.engine.spark.job.SegmentBuildJob",
+                        "org.apache.kylin.engine.spark.job.SegmentBuildJob"));
 
         map.put("getSparkTableSamplingClassName",
                 new PropertiesEntity("kylin.engine.spark.sampling-class-name",
-                        "io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob",
-                        "io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob"));
+                        "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob",
+                        "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob"));
 
         map.put("getSparkMergeClassName",
                 new PropertiesEntity("kylin.engine.spark.merge-class-name",
-                        "io.kyligence.kap.engine.spark.job.SegmentMergeJob",
-                        "io.kyligence.kap.engine.spark.job.SegmentMergeJob"));
+                        "org.apache.kylin.engine.spark.job.SegmentMergeJob",
+                        "org.apache.kylin.engine.spark.job.SegmentMergeJob"));
 
         map.put("getClusterManagerClassName", new PropertiesEntity("kylin.engine.spark.cluster-manager-class-name",
                 "org.apache.kylin.cluster.YarnClusterManager", "org.apache.kylin.cluster.YarnClusterManager"));

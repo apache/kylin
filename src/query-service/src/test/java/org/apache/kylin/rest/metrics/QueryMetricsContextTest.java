@@ -41,7 +41,7 @@ import org.apache.kylin.metadata.query.QueryHistoryInfo;
 import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.query.QueryMetricsContext;
 import org.apache.kylin.query.engine.QueryExec;
-import io.kyligence.kap.query.util.KapQueryUtil;
+import org.apache.kylin.query.util.KapQueryUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

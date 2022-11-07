@@ -23,7 +23,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-import io.kyligence.kap.query.util.KapQueryUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;

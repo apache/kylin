@@ -51,7 +51,7 @@ import org.apache.calcite.util.mapping.Mapping;
 import org.apache.calcite.util.mapping.Mappings;
 import org.apache.kylin.query.relnode.KapAggregateRel;
 import org.apache.kylin.query.relnode.KapJoinRel;
-import io.kyligence.kap.query.util.KapQueryUtil;
+import org.apache.kylin.query.util.KapQueryUtil;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

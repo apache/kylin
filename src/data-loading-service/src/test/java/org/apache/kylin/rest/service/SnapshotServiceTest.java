@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.kyligence.kap.engine.spark.job.NSparkSnapshotJob;
+import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
 import lombok.val;
 import lombok.var;
 import org.apache.kylin.common.KylinConfig;

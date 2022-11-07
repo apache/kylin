@@ -52,8 +52,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import io.kyligence.kap.metadata.epoch.EpochManager;
-import io.kyligence.kap.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.user.ManagedUser;
 
 public class UserAclServiceTest extends ServiceTestBase {
 

@@ -59,8 +59,8 @@ import org.apache.kylin.common.util.OptionBuilder;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
-import io.kyligence.kap.metadata.recommendation.candidate.JdbcRawRecStore;
-import io.kyligence.kap.metadata.recommendation.candidate.RawRecItem;
+import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
+import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

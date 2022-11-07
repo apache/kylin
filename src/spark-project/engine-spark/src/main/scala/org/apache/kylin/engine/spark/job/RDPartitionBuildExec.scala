@@ -18,7 +18,6 @@
 
 package org.apache.kylin.engine.spark.job
 
-import io.kyligence.kap.engine.spark.job.RDSegmentBuildJob
 import io.kyligence.kap.guava20.shaded.common.collect.{Maps, Sets}
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.engine.spark.builder.PartitionFlatTable

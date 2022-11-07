@@ -421,7 +421,7 @@ public class ClickHouseUtils {
     public static final Map<String, String> columnMapping = ImmutableMap.of("PRICE", "c9");
 
     public static void InjectNewPushDownRule(SparkConf conf) {
-        conf.set("spark.sql.extensions", "io.kyligence.kap.query.SQLPushDownExtensions");
+        conf.set("spark.sql.extensions", "org.apache.kylin.query.SQLPushDownExtensions");
     }
 
     public static JobParam triggerClickHouseJob(NDataflow df) {

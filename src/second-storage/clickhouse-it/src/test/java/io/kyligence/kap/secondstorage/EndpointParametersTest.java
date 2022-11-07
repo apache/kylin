@@ -100,7 +100,7 @@ public class EndpointParametersTest extends SecondStorageMetadataHelperTest impl
 
     @ClassRule
     public static SharedSparkSession sharedSpark = new SharedSparkSession(ImmutableMap.of("spark.sql.extensions",
-            "io.kyligence.kap.query.SQLPushDownExtensions", "spark.sql.broadcastTimeout", "900"));
+            "org.apache.kylin.query.SQLPushDownExtensions", "spark.sql.broadcastTimeout", "900"));
 
     public EnableTestUser enableTestUser = new EnableTestUser();
 

@@ -46,7 +46,7 @@ import org.apache.kylin.metadata.cube.optimization.IncludedLayoutOptStrategy;
 import org.apache.kylin.metadata.cube.optimization.IndexOptimizer;
 import org.apache.kylin.metadata.cube.optimization.LowFreqLayoutOptStrategy;
 import org.apache.kylin.metadata.cube.optimization.SimilarLayoutOptStrategy;
-import io.kyligence.kap.metadata.recommendation.candidate.JdbcRawRecStore;
+import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metrics.HdfsCapacityMetrics;
 import org.junit.After;
 import org.junit.Assert;

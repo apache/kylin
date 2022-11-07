@@ -44,7 +44,7 @@ import org.apache.kylin.job.runners.LicenseCapacityCheckRunner;
 import org.apache.kylin.job.runners.QuotaStorageCheckRunner;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.SystemInfoCollector;
-import io.kyligence.kap.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

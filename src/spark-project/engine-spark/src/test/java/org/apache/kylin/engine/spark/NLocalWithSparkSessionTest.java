@@ -18,7 +18,7 @@
 package org.apache.kylin.engine.spark;
 
 import com.google.common.base.Preconditions;
-import io.kyligence.kap.engine.spark.job.NSparkMergingJob;
+import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.FileUtils;

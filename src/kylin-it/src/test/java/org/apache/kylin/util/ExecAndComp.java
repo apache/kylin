@@ -55,7 +55,7 @@ import org.apache.spark.sql.util.SparderTypeUtil;
 import io.kyligence.kap.guava20.shaded.common.base.Preconditions;
 import io.kyligence.kap.guava20.shaded.common.collect.Lists;
 import io.kyligence.kap.guava20.shaded.common.collect.Sets;
-import io.kyligence.kap.query.util.KapQueryUtil;
+import org.apache.kylin.query.util.KapQueryUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

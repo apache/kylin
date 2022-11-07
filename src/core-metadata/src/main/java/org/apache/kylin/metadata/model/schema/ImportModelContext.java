@@ -56,11 +56,11 @@ import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
-import io.kyligence.kap.metadata.recommendation.candidate.RawRecItem;
-import io.kyligence.kap.metadata.recommendation.entity.DimensionRecItemV2;
-import io.kyligence.kap.metadata.recommendation.entity.LayoutRecItemV2;
-import io.kyligence.kap.metadata.recommendation.entity.MeasureRecItemV2;
-import io.kyligence.kap.metadata.recommendation.entity.RecItemV2;
+import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
+import org.apache.kylin.metadata.recommendation.entity.DimensionRecItemV2;
+import org.apache.kylin.metadata.recommendation.entity.LayoutRecItemV2;
+import org.apache.kylin.metadata.recommendation.entity.MeasureRecItemV2;
+import org.apache.kylin.metadata.recommendation.entity.RecItemV2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

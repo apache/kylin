@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.MaintainModeTool;
 import org.apache.kylin.tool.util.ToolMainWrapper;
 
-import io.kyligence.kap.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

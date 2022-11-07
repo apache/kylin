@@ -20,11 +20,11 @@ package org.apache.kylin.rest.config.initialize;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import io.kyligence.kap.engine.spark.job.ExecutableAddCuboidHandler;
-import io.kyligence.kap.engine.spark.job.ExecutableAddSegmentHandler;
-import io.kyligence.kap.engine.spark.job.ExecutableMergeOrRefreshHandler;
-import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
-import io.kyligence.kap.engine.spark.job.NSparkMergingJob;
+import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
+import org.apache.kylin.engine.spark.job.ExecutableAddSegmentHandler;
+import org.apache.kylin.engine.spark.job.ExecutableMergeOrRefreshHandler;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
+import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;

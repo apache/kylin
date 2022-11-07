@@ -32,7 +32,7 @@ import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifi
 import org.apache.kylin.common.persistence.transaction.EpochCheckBroadcastNotifier;
 import org.apache.kylin.common.persistence.transaction.StopQueryBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.UpdateJobStatusEventNotifier;
-import io.kyligence.kap.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.broadcaster.Broadcaster;
 import org.apache.kylin.rest.security.AdminUserSyncEventNotifier;

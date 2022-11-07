@@ -18,16 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import io.kyligence.kap.engine.spark.job.NResourceDetectStep;
-import io.kyligence.kap.engine.spark.job.NSparkCleanupAfterMergeStep;
-import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
-import io.kyligence.kap.engine.spark.job.NSparkMergingJob;
-import io.kyligence.kap.engine.spark.job.NTableSamplingJob;
-import io.kyligence.kap.engine.spark.job.RDSegmentBuildJob;
-import io.kyligence.kap.engine.spark.job.ResourceDetectBeforeMergingJob;
-import io.kyligence.kap.engine.spark.job.ResourceDetectBeforeSampling;
-import io.kyligence.kap.engine.spark.job.SparkCleanupTransactionalTableStep;
-import io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob;
+import org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob;
 import lombok.val;
 import lombok.var;
 import org.apache.kylin.common.KylinConfig;

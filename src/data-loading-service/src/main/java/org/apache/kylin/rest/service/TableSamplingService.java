@@ -21,7 +21,7 @@ package org.apache.kylin.rest.service;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.kyligence.kap.engine.spark.job.NTableSamplingJob;
+import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import lombok.val;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;

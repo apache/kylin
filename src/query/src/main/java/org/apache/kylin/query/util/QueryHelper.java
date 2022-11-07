@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.util;
 
-import io.kyligence.kap.query.util.KapQueryUtil;
 import lombok.val;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Unsafe;

@@ -1,26 +1,17 @@
+-- Licensed to the Apache Software Foundation (ASF) under one or more
+-- contributor license agreements.  See the NOTICE file distributed with
+-- this work for additional information regarding copyright ownership.
+-- The ASF licenses this file to You under the Apache License, Version 2.0
+-- (the "License"); you may not use this file except in compliance with
+-- the License.  You may obtain a copy of the License at
 --
--- Copyright (C) 2020 Kyligence Inc. All rights reserved.
+--    http://www.apache.org/licenses/LICENSE-2.0
 --
--- http://kyligence.io
---
--- This software is the confidential and proprietary information of
--- Kyligence Inc. ("Confidential Information"). You shall not disclose
--- such Confidential Information and shall use it only in accordance
--- with the terms of the license agreement you entered into with
--- Kyligence Inc.
---
--- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
--- "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
--- LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
--- A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
--- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
--- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
--- LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
--- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
--- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
--- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
--- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
---
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
 select concat(ID1,name1),concat(ID2,name1),concat(ID3,name1),concat(ID4,name1),concat(price1,name1),concat(price2,name1),concat(price3,name1),concat(price5,name1),concat(price6,name1),concat(price7,name1),concat(name1,name1),concat(name2,name1),concat(name3,name1),concat(name4,name1),concat(time1,name1),concat(time2,name1),concat(flag,name1),
        concat(ID1,name2),concat(ID2,name2),concat(ID3,name2),concat(ID4,name2),concat(price1,name2),concat(price2,name2),concat(price3,name2),concat(price5,name2),concat(price6,name2),concat(price7,name2),concat(name1,name2),concat(name2,name2),concat(name3,name2),concat(name4,name2),concat(time1,name2),concat(time2,name2),concat(flag,name2),
        concat(ID1,'A'),concat(ID2,'A'),concat(ID3,'A'),concat(ID4,'A'),concat(price1,'A'),concat(price2,'A'),concat(price3,'A'),concat(price5,'A'),concat(price6,'A'),concat(price7,'A'),concat(name1,'A'),concat(name2,'A'),concat(name3,'A'),concat(name4,'A'),concat(time1,'A'),concat(time2,'A'),concat(flag,'A'),

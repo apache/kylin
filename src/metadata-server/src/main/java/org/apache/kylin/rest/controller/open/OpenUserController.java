@@ -31,7 +31,7 @@ import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.UserInfoResponse;
 import org.apache.kylin.rest.service.UserService;
-import io.kyligence.kap.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.controller.NUserController;
 import org.apache.kylin.rest.request.PasswordChangeRequest;

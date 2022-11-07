@@ -18,8 +18,8 @@
 
 package org.apache.kylin.query.asyncprofiler
 
-import io.kyligence.kap.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin
 import org.apache.spark.launcher.SparkLauncher
 import org.apache.spark.{SparkConf, SparkContext}
 import org.mockito.Mockito.mock

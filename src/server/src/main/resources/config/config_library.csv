@@ -110,7 +110,7 @@ kylin.engine.spark.sampling-class-name,String,spark抽样作业实现类,SPARK s
 kylin.engine.spark.snapshot-build-class-name,String,构建 snapshot job 的类名,Build the name of Snapshot Job,TRUE,TRUE
 kylin.engine.spark.task-core-factor,Int,多少 spark 任务使用一个 core,How many spark tasks use a core,TRUE,TRUE
 kylin.engine.spark.task-impact-instance-enabled,boolean,spark 构建作业是否根据任务数量来计算core数量,Whether spark builds a job based on the number of tasks calculates the number of cores,TRUE,TRUE
-kylin.engine.steps.skip,String,值为`io.kyligence.kap.engine.spark.job.NResourceDetectStep` 时代表关闭资源探测，KC 如果配置此值将无法自动伸缩构建节点，所以建议永远不要配置,"The value is `IO. Kyligence.kap.engine.Spark.job.nRsourceDeteCTStep` Anti -resource detection. If you configure this value, it will not be automatically expanded to build nodes, so it is recommended not to configure the configuration.",TRUE,TRUE
+kylin.engine.steps.skip,String,值为`org.apache.kylin.engine.spark.job.NResourceDetectStep` 时代表关闭资源探测，KC 如果配置此值将无法自动伸缩构建节点，所以建议永远不要配置,"The value is `IO. Kyligence.kap.engine.Spark.job.nRsourceDeteCTStep` Anti -resource detection. If you configure this value, it will not be automatically expanded to build nodes, so it is recommended not to configure the configuration.",TRUE,TRUE
 kylin.engine.streaming-base-ckeckpoint-location,String,实时OLAP构建作业的check point目录,Real -time OLAP CHCK POINT directory that builds homework,TRUE,TRUE
 kylin.engine.streaming-duration,Long,实时OLAP构建定时触发，单位毫秒,"Real -time OLAP builds regular triggers, the unit milliseconds",TRUE,TRUE
 kylin.engine.streaming-metrics-enabled,boolean,实时OLAP构建监控是否开启,Real -time OLAP Construction Monitoring Whether it is turned on,TRUE,TRUE

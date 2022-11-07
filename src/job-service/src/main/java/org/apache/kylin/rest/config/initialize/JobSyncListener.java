@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -253,7 +253,7 @@ public class JobSyncListener {
                 .errorCode(errorCode).suggestion(suggestion).msg(msg).code(code).stacktrace(stacktrace).build();
 
     }
-    
+
     private static SnapshotJobInfo getSnapshotJobInfo(TableDesc tableDesc, JobFinishedNotifier notifier) {
         SnapshotJobInfo snapshotJobInfo = null;
         if (tableDesc != null && (JobTypeEnum.SNAPSHOT_BUILD.toString().equals(notifier.getJobType())

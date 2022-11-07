@@ -112,7 +112,7 @@
           "version": "4.0.0.0",
           "name": "Detect Resource",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NResourceDetectStep",
+          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f8b637da-33ef-40e1-b08e-ce549c53f87b/00/meta",
             "submitter": "ADMIN",
@@ -152,7 +152,7 @@
           "version": "4.0.0.0",
           "name": "Load Data To Index",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NSparkCubingStep",
+          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f8b637da-33ef-40e1-b08e-ce549c53f87b/01/meta",
             "submitter": "ADMIN",
@@ -189,7 +189,7 @@
           }
         }
       ],
-      "type": "io.kyligence.kap.engine.spark.job.NSparkCubingJob",
+      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
       "params": {
         "submitter": "ADMIN",
         "jobId": "f8b637da-33ef-40e1-b08e-ce549c53f87b",
@@ -318,7 +318,7 @@
           "mvcc": -1,
           "name": "Detect Resource",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NResourceDetectStep",
+          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd/00/meta",
             "submitter": "ADMIN",
@@ -359,7 +359,7 @@
           "mvcc": -1,
           "name": "Load Data To Index",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NSparkCubingStep",
+          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd/01/meta",
             "submitter": "ADMIN",
@@ -396,7 +396,7 @@
           }
         }
       ],
-      "type": "io.kyligence.kap.engine.spark.job.NSparkCubingJob",
+      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
       "params": {
         "submitter": "ADMIN",
         "jobId": "73d9a24a-7ee8-4be4-98d6-ebd94ea9b8fd",
@@ -442,7 +442,7 @@
       "mvcc": 0,
       "conds": [
         {
-          "@class": "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
+          "@class": "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
           "leftThreshold": null,
           "rightThreshold": "ADMIN"
         }
@@ -487,7 +487,7 @@
       "mvcc": 0,
       "conds": [
         {
-          "@class": "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
+          "@class": "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
           "leftThreshold": null,
           "rightThreshold": "ROLE_ADMIN"
         }
@@ -508,7 +508,7 @@
       "mvcc": 0,
       "conds": [
         {
-          "@class": "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
+          "@class": "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
           "leftThreshold": null,
           "rightThreshold": "0.1"
         }
@@ -879,7 +879,7 @@
           "version": "4.0.0.0",
           "name": "Detect Resource",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NResourceDetectStep",
+          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f9bb1d79-6e88-4e93-86e0-b6fe26856072/00/meta",
             "submitter": "ADMIN",
@@ -919,7 +919,7 @@
           "version": "4.0.0.0",
           "name": "Load Data To Index",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NSparkCubingStep",
+          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/f9bb1d79-6e88-4e93-86e0-b6fe26856072/01/meta",
             "submitter": "ADMIN",
@@ -956,7 +956,7 @@
           }
         }
       ],
-      "type": "io.kyligence.kap.engine.spark.job.NSparkCubingJob",
+      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
       "params": {
         "submitter": "ADMIN",
         "jobId": "f9bb1d79-6e88-4e93-86e0-b6fe26856072",
@@ -1415,7 +1415,7 @@
           "mvcc": -1,
           "name": "Detect Resource",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NResourceDetectStep",
+          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/0f1ec2cc-3091-4e3e-86cf-2845f92aa071/00/meta",
             "submitter": "ADMIN",
@@ -1456,7 +1456,7 @@
           "mvcc": -1,
           "name": "Load Data To Index",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NSparkCubingStep",
+          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/0f1ec2cc-3091-4e3e-86cf-2845f92aa071/01/meta",
             "submitter": "ADMIN",
@@ -1493,7 +1493,7 @@
           }
         }
       ],
-      "type": "io.kyligence.kap.engine.spark.job.NSparkCubingJob",
+      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
       "params": {
         "submitter": "ADMIN",
         "jobId": "0f1ec2cc-3091-4e3e-86cf-2845f92aa071",
@@ -1755,7 +1755,7 @@
       "mvcc": 0,
       "conds": [
         {
-          "@class": "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
+          "@class": "org.apache.kylin.metadata.favorite.FavoriteRule$Condition",
           "leftThreshold": "0",
           "rightThreshold": "180"
         }
@@ -1782,7 +1782,7 @@
           "version": "4.0.0.0",
           "name": "Detect Resource",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NResourceDetectStep",
+          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/d533bd3d-a81f-47bd-850a-149fede4636f/00/meta",
             "submitter": "ADMIN",
@@ -1822,7 +1822,7 @@
           "version": "4.0.0.0",
           "name": "Load Data To Index",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NSparkCubingStep",
+          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/d533bd3d-a81f-47bd-850a-149fede4636f/01/meta",
             "submitter": "ADMIN",
@@ -1859,7 +1859,7 @@
           }
         }
       ],
-      "type": "io.kyligence.kap.engine.spark.job.NSparkCubingJob",
+      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
       "params": {
         "submitter": "ADMIN",
         "jobId": "d533bd3d-a81f-47bd-850a-149fede4636f",
@@ -2066,7 +2066,7 @@
           "version": "4.0.0.0",
           "name": "Detect Resource",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NResourceDetectStep",
+          "type": "org.apache.kylin.engine.spark.job.NResourceDetectStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5/00/meta",
             "submitter": "ADMIN",
@@ -2109,7 +2109,7 @@
           "version": "4.0.0.0",
           "name": "Load Data To Index",
           "tasks": null,
-          "type": "io.kyligence.kap.engine.spark.job.NSparkCubingStep",
+          "type": "org.apache.kylin.engine.spark.job.NSparkCubingStep",
           "params": {
             "distMetaUrl": "ke_metadata_ganyu@hdfs,path=/kylin/ke_metadata_ganyu/calories/job_tmp/9462fee8-e6cd-4d18-a5fc-b598a3c5edb5/01/meta",
             "submitter": "ADMIN",
@@ -2146,7 +2146,7 @@
           }
         }
       ],
-      "type": "io.kyligence.kap.engine.spark.job.NSparkCubingJob",
+      "type": "org.apache.kylin.engine.spark.job.NSparkCubingJob",
       "params": {
         "submitter": "ADMIN",
         "jobId": "9462fee8-e6cd-4d18-a5fc-b598a3c5edb5",

@@ -64,7 +64,7 @@ function startKG() {
     TOOL_OPTS="-Dfile.encoding=UTF-8 -Dkylin.home=${KYLIN_HOME} -Dlog4j.configurationFile=${guardian_log4j} ${TIME_ZONE}"
     TOOL_CLASSPATH=${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/ext/*:${KYLIN_HOME}/server/jars/*:${SPARK_HOME}/jars/*
 
-    nohup java -Xms128m -Xmx1g ${TOOL_OPTS} -classpath ${TOOL_CLASSPATH} io.kyligence.kap.tool.daemon.KapGuardian > /dev/null 2>&1 & echo $! > ${KYLIN_HOME}/kgid &
+    nohup java -Xms128m -Xmx1g ${TOOL_OPTS} -classpath ${TOOL_CLASSPATH} org.apache.kylin.tool.daemon.KapGuardian > /dev/null 2>&1 & echo $! > ${KYLIN_HOME}/kgid &
 
     PID=`cat ${KYLIN_HOME}/kgid`
     echo `date "${time_format} "`" new guardian process pid is "${PID} >> ${KYLIN_HOME}/logs/guardian.log

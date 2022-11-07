@@ -37,8 +37,6 @@ import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kyligence.kap.query.util.KapQueryUtil;
-
 public class DateNumberFilterTransformer implements KapQueryUtil.IQueryTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(DateNumberFilterTransformer.class);
@@ -448,7 +446,7 @@ public class DateNumberFilterTransformer implements KapQueryUtil.IQueryTransform
                         || multiplier.toString().equals("100") && addedExpression.size() == 2)
                         && YEAR_FUN.contains(expression.getOperator().toString());
             }
-            
+
             public boolean isYear(SqlNumericLiteral time) {
                 return this.timeType == 1 && time.toString().length() == 4;
             }

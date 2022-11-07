@@ -11,7 +11,7 @@
     "version" : "4.0.0.0",
     "name" : "Detect Resource",
     "tasks" : null,
-    "type" : "io.kyligence.kap.engine.spark.job.NResourceDetectStep",
+    "type" : "org.apache.kylin.engine.spark.job.NResourceDetectStep",
     "params" : {
       "distMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/cd27acf6-8c2a-42a6-890c-bf813c665ef3/00/meta",
       "submitter" : "ADMIN",
@@ -54,7 +54,7 @@
     "version" : "4.0.0.0",
     "name" : "Load Data To Index",
     "tasks" : null,
-    "type" : "io.kyligence.kap.engine.spark.job.NSparkCubingStep",
+    "type" : "org.apache.kylin.engine.spark.job.NSparkCubingStep",
     "params" : {
       "distMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/cd27acf6-8c2a-42a6-890c-bf813c665ef3/01/meta",
       "submitter" : "ADMIN",
@@ -88,7 +88,7 @@
       "wait_time" : 0
     }
   } ],
-  "type" : "io.kyligence.kap.engine.spark.job.NSparkCubingJob",
+  "type" : "org.apache.kylin.engine.spark.job.NSparkCubingJob",
   "params" : {
     "submitter" : "ADMIN",
     "jobId" : "cd27acf6-8c2a-42a6-890c-bf813c665ef3",

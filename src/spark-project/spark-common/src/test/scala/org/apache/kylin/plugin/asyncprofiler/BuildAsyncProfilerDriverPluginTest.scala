@@ -18,7 +18,6 @@
 
 package org.apache.kylin.plugin.asyncprofiler
 
-import io.kyligence.kap.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.asyncprofiler.{AsyncProfilerToolTest, Message}
 import org.apache.kylin.common.util.{HadoopUtil, NLocalFileMetadataTestCase}

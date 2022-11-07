@@ -10,5 +10,5 @@
   "subscribe" : "ssb_topic",
   "starting_offsets" : "latest",
   "batch_table_identity" : "",
-  "parser_name" : "io.kyligence.kap.parser.TimedJsonStreamParser"
+  "parser_name" : "org.apache.kylin.parser.TimedJsonStreamParser"
 }

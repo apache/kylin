@@ -11,5 +11,5 @@
   "starting_offsets" : "latest",
   "has_shadow_table" : false,
   "hive_table_identity" : "",
-  "parser_name" : "io.kyligence.kap.parser.TimedJsonStreamParser"
+  "parser_name" : "org.apache.kylin.parser.TimedJsonStreamParser"
 }

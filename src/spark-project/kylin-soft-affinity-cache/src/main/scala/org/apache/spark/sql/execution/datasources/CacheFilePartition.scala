@@ -18,7 +18,7 @@
 
 package org.apache.spark.sql.execution.datasources
 
-import io.kyligence.kap.softaffinity.SoftAffinityManager
+import org.apache.kylin.softaffinity.SoftAffinityManager
 import org.apache.spark.Partition
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.ExecutorCacheTaskLocation

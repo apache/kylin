@@ -49,7 +49,7 @@ import org.apache.kylin.common.util.ShellException;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.upgrade.GlobalAclVersion;
 import org.apache.kylin.metadata.upgrade.GlobalAclVersionManager;
-import io.kyligence.kap.metadata.user.NKylinUserManager;
+import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.security.AclManager;
 import org.apache.kylin.rest.security.AclPermission;

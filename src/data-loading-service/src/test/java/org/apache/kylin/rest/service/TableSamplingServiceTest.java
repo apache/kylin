@@ -20,8 +20,8 @@ package org.apache.kylin.rest.service;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.kyligence.kap.engine.spark.job.NResourceDetectStep;
-import io.kyligence.kap.engine.spark.job.NTableSamplingJob;
+import org.apache.kylin.engine.spark.job.NResourceDetectStep;
+import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import lombok.val;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;

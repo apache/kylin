@@ -20,9 +20,9 @@ package org.apache.kylin.rest.service;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.kyligence.kap.engine.spark.job.step.NStageForBuild;
-import io.kyligence.kap.engine.spark.job.step.NStageForMerge;
-import io.kyligence.kap.engine.spark.job.step.NStageForSnapshot;
+import org.apache.kylin.engine.spark.job.step.NStageForBuild;
+import org.apache.kylin.engine.spark.job.step.NStageForMerge;
+import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
 import lombok.val;
 import lombok.var;
 import org.apache.commons.collections4.CollectionUtils;

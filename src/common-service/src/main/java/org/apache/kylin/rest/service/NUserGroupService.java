@@ -44,7 +44,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.MetadataConstants;
-import io.kyligence.kap.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.usergroup.NUserGroupManager;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.aspect.Transaction;

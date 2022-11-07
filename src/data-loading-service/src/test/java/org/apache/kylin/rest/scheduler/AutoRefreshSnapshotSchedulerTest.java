@@ -55,7 +55,7 @@ import org.springframework.web.client.RestTemplate;
 
 import io.kyligence.kap.guava20.shaded.common.collect.ImmutableMap;
 import io.kyligence.kap.guava20.shaded.common.collect.Maps;
-import io.kyligence.kap.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;

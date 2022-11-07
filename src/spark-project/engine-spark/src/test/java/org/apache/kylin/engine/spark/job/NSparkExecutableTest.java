@@ -153,7 +153,7 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
 
             Assert.assertNotNull(cmd);
             Assert.assertTrue(
-                    cmd.contains("spark.plugins=io.kyligence.kap.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
+                    cmd.contains("spark.plugins=org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
         }
 
         overwriteSystemProp("kylin.engine.spark-conf.spark.plugins",
@@ -168,7 +168,7 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             Assert.assertNotNull(cmd);
             Assert.assertTrue(
                     cmd.contains("spark.plugins=org.apache.kylin.query.asyncprofiler.QueryAsyncProfilerSparkPlugin,"
-                            + "io.kyligence.kap.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
+                            + "org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
         }
 
         overwriteSystemProp("kylin.engine.async-profiler-enabled", "false");
@@ -181,7 +181,7 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
 
             Assert.assertNotNull(cmd);
             Assert.assertFalse(
-                    cmd.contains("spark.plugins=io.kyligence.kap.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
+                    cmd.contains("spark.plugins=org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
         }
 
         overwriteSystemProp("kylin.engine.spark-conf.spark.driver.extraJavaOptions",

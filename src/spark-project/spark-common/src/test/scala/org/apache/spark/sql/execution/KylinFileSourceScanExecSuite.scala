@@ -1,27 +1,23 @@
 /*
- * Copyright (C) 2016 Kyligence Inc. All rights reserved.
- * http://kyligence.io
- * This software is the confidential and proprietary information of
- * Kyligence Inc. ("Confidential Information"). You shall not disclose
- * such Confidential Information and shall use it only in accordance
- * with the terms of the license agreement you entered into with
- * Kyligence Inc.
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package org.apache.spark.sql.execution
 
-import io.kyligence.kap.cache.softaffinity.SoftAffinityConstants
+import org.apache.kylin.cache.softaffinity.SoftAffinityConstants
 import org.apache.spark.{SparkConf, SparkFunSuite}
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.plans.SQLHelper
@@ -89,9 +85,9 @@ class KylinFileSourceScanExecSuite extends SparkFunSuite
         .master("local[1]")
         .config(SoftAffinityConstants.PARAMS_KEY_SOFT_AFFINITY_ENABLED, "true")
         .config("spark.hadoop.spark.kylin.soft-affinity.enabled", "true")
-        .config("spark.hadoop.fs.file.impl", "io.kyligence.kap.cache.kylin.OnlyForTestCacheFileSystem")
+        .config("spark.hadoop.fs.file.impl", "org.apache.kylin.cache.kylin.OnlyForTestCacheFileSystem")
         .config("fs.file.impl.disable.cache", "true")
-        .config("spark.extraListeners", "io.kyligence.kap.softaffinity.scheduler.SoftAffinityListener")
+        .config("spark.extraListeners", "org.apache.kylin.softaffinity.scheduler.SoftAffinityListener")
         .config("spark.hadoop.spark.kylin.local-cache.enabled", "true")
         .config("spark.hadoop.spark.kylin.local-cache.use.legacy.file-input-stream", "true")
         .config("spark.hadoop.spark.kylin.local-cache.use.buffer.file-input-stream", "false")
@@ -115,9 +111,9 @@ class KylinFileSourceScanExecSuite extends SparkFunSuite
         .master("local[1]")
         .config(SoftAffinityConstants.PARAMS_KEY_SOFT_AFFINITY_ENABLED, "true")
         .config("spark.hadoop.spark.kylin.soft-affinity.enabled", "true")
-        .config("spark.hadoop.fs.file.impl", "io.kyligence.kap.cache.kylin.OnlyForTestCacheFileSystem")
+        .config("spark.hadoop.fs.file.impl", "org.apache.kylin.cache.kylin.OnlyForTestCacheFileSystem")
         .config("fs.file.impl.disable.cache", "true")
-        .config("spark.extraListeners", "io.kyligence.kap.softaffinity.scheduler.SoftAffinityListener")
+        .config("spark.extraListeners", "org.apache.kylin.softaffinity.scheduler.SoftAffinityListener")
         .config("spark.hadoop.spark.kylin.local-cache.enabled", "true")
         .config("spark.hadoop.spark.kylin.local-cache.use.legacy.file-input-stream", "false")
         .config("spark.hadoop.spark.kylin.local-cache.use.buffer.file-input-stream", "true")

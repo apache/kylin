@@ -35,7 +35,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob;
 import lombok.val;
 import lombok.var;
 

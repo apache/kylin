@@ -24,7 +24,6 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.kyligence.kap.query.util.KapQueryUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.security.AccessDeniedException;

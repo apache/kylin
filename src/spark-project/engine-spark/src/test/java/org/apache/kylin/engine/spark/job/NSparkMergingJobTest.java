@@ -21,8 +21,6 @@ package org.apache.kylin.engine.spark.job;
 import com.clearspring.analytics.util.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.kyligence.kap.engine.spark.job.NSparkMergingJob;
-import io.kyligence.kap.engine.spark.job.NSparkMergingStep;
 import lombok.val;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.RandomUtil;
@@ -104,14 +102,14 @@ public class NSparkMergingJobTest extends NLocalWithSparkSessionTest {
 
         val segmentId = mergedSegment.getId();
         val bucketStart = new AtomicLong(0);
-        val jobBucketSet = layoutList.stream().flatMap(layout -> // 
-        partitionIdList.stream().map(partition -> // 
+        val jobBucketSet = layoutList.stream().flatMap(layout -> //
+        partitionIdList.stream().map(partition -> //
         new JobBucket(segmentId, layout.getId(), bucketStart.incrementAndGet(), partition)))
                 .collect(Collectors.toSet());
 
-        NSparkMergingJob mergeJob = NSparkMergingJob.merge(mergedSegment, // 
+        NSparkMergingJob mergeJob = NSparkMergingJob.merge(mergedSegment, //
                 Sets.newLinkedHashSet(layoutList), //
-                "ADMIN", // 
+                "ADMIN", //
                 RandomUtil.randomUUIDStr(), //
                 Sets.newHashSet(partitionIdList), //
                 jobBucketSet);
@@ -132,7 +130,7 @@ public class NSparkMergingJobTest extends NLocalWithSparkSessionTest {
     private void fakeEmptyPartitionLayoutData(NDataSegment segment) {
 
         Map<String, DataType> partitionMap = Maps.newLinkedHashMap();
-        segment.getModel().getMultiPartitionDesc().getColumnRefs().forEach(ref -> // 
+        segment.getModel().getMultiPartitionDesc().getColumnRefs().forEach(ref -> //
         partitionMap.put(String.valueOf(segment.getModel() //
                 .getColumnIdByColumnName(ref.getIdentity())), ref.getType()));
 
@@ -143,11 +141,11 @@ public class NSparkMergingJobTest extends NLocalWithSparkSessionTest {
             // partition column
             fields.putAll(partitionMap);
             // dimesions
-            layout.getOrderedDimensions().forEach((k, v) -> // 
+            layout.getOrderedDimensions().forEach((k, v) -> //
             fields.put(String.valueOf(k), v.getType()));
 
             // measures
-            layout.getOrderedMeasures().forEach((k, v) -> // 
+            layout.getOrderedMeasures().forEach((k, v) -> //
             fields.put(String.valueOf(k), v.getFunction().getReturnDataType()));
 
             // schema

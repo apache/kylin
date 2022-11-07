@@ -33,7 +33,7 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kyligence.kap.query.util.KapQueryUtil;
+import org.apache.kylin.query.util.KapQueryUtil;
 
 public class QueryUtils {
 

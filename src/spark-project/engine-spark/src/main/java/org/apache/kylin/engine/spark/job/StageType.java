@@ -18,13 +18,12 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import io.kyligence.kap.engine.spark.job.SnapshotBuildJob;
-import io.kyligence.kap.engine.spark.job.step.NStageForBuild;
-import io.kyligence.kap.engine.spark.job.step.NStageForMerge;
-import io.kyligence.kap.engine.spark.job.step.NStageForSnapshot;
-import io.kyligence.kap.engine.spark.job.step.NStageForTableSampling;
-import io.kyligence.kap.engine.spark.job.step.NStageForWaitingForYarnResource;
-import io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob;
+import org.apache.kylin.engine.spark.job.step.NStageForBuild;
+import org.apache.kylin.engine.spark.job.step.NStageForMerge;
+import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
+import org.apache.kylin.engine.spark.job.step.NStageForTableSampling;
+import org.apache.kylin.engine.spark.job.step.NStageForWaitingForYarnResource;
+import org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.application.SparkApplication;
 import org.apache.kylin.engine.spark.job.exec.BuildExec;

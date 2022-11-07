@@ -42,8 +42,8 @@ import org.apache.kylin.tool.garbage.SourceUsageCleaner;
 import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.apache.kylin.tool.util.ToolMainWrapper;
 
-import io.kyligence.kap.metadata.epoch.EpochManager;
-import io.kyligence.kap.metadata.recommendation.candidate.JdbcRawRecStore;
+import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

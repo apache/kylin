@@ -18,9 +18,9 @@
 
 package org.apache.spark.sql.execution.datasources
 
-import io.kyligence.kap.cache.softaffinity.SoftAffinityConstants
-import io.kyligence.kap.softaffinity.SoftAffinityManager
-import io.kyligence.kap.softaffinity.scheduler.SoftAffinityListener
+import org.apache.kylin.cache.softaffinity.SoftAffinityConstants
+import org.apache.kylin.softaffinity.SoftAffinityManager
+import org.apache.kylin.softaffinity.scheduler.SoftAffinityListener
 import org.apache.spark.SparkConf
 import org.apache.spark.scheduler.{SparkListenerExecutorAdded, SparkListenerExecutorRemoved}
 import org.apache.spark.scheduler.cluster.ExecutorInfo

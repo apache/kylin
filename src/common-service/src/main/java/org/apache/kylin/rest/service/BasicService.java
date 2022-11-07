@@ -49,7 +49,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.google.common.base.CaseFormat;
 
-import io.kyligence.kap.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

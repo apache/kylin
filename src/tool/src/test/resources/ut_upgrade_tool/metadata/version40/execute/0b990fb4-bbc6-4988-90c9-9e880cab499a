@@ -11,14 +11,14 @@
     "version" : "4.0.0.0",
     "name" : "Detect Resource",
     "tasks" : null,
-    "type" : "io.kyligence.kap.engine.spark.job.NResourceDetectStep",
+    "type" : "org.apache.kylin.engine.spark.job.NResourceDetectStep",
     "params" : {
       "distMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/0b990fb4-bbc6-4988-90c9-9e880cab499a/00/meta",
       "submitter" : "ADMIN",
       "jobId" : "0b990fb4-bbc6-4988-90c9-9e880cab499a",
       "outputMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/0b990fb4-bbc6-4988-90c9-9e880cab499a/00/meta_output",
       "project" : "version40",
-      "className" : "io.kyligence.kap.engine.spark.job.ResourceDetectBeforeSampling",
+      "className" : "org.apache.kylin.engine.spark.job.ResourceDetectBeforeSampling",
       "table" : "SSB.P_LINEORDER",
       "parentId" : "0b990fb4-bbc6-4988-90c9-9e880cab499a",
       "samplingRows" : "20000000"
@@ -50,14 +50,14 @@
     "version" : "4.0.0.0",
     "name" : "Table Sampling",
     "tasks" : null,
-    "type" : "io.kyligence.kap.engine.spark.job.NTableSamplingJob$SamplingStep",
+    "type" : "org.apache.kylin.engine.spark.job.NTableSamplingJob$SamplingStep",
     "params" : {
       "distMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/0b990fb4-bbc6-4988-90c9-9e880cab499a/01/meta",
       "submitter" : "ADMIN",
       "jobId" : "0b990fb4-bbc6-4988-90c9-9e880cab499a",
       "outputMetaUrl" : "xf_rename_resource_tool@hdfs,path=hdfs://hdp26.hadoop.com:8020/quard_newten/xf_rename_resource_tool/version40/job_tmp/0b990fb4-bbc6-4988-90c9-9e880cab499a/01/meta_output",
       "project" : "version40",
-      "className" : "io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob",
+      "className" : "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob",
       "table" : "SSB.P_LINEORDER",
       "parentId" : "0b990fb4-bbc6-4988-90c9-9e880cab499a",
       "samplingRows" : "20000000"
@@ -85,7 +85,7 @@
       "wait_time" : 0
     }
   } ],
-  "type" : "io.kyligence.kap.engine.spark.job.NTableSamplingJob",
+  "type" : "org.apache.kylin.engine.spark.job.NTableSamplingJob",
   "params" : {
     "submitter" : "ADMIN",
     "jobId" : "0b990fb4-bbc6-4988-90c9-9e880cab499a",

@@ -18,9 +18,9 @@
 
 package org.apache.spark.sql.execution
 
-import io.kyligence.kap.softaffinity.SoftAffinityManager
 import org.apache.hadoop.fs.{BlockLocation, FileStatus, LocatedFileStatus, Path}
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.softaffinity.SoftAffinityManager
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.expressions.{Ascending, Attribute, BloomAndRangeFilterExpression, Expression, SortOrder}
 import org.apache.spark.sql.catalyst.plans.physical.{HashPartitioning, Partitioning, UnknownPartitioning}

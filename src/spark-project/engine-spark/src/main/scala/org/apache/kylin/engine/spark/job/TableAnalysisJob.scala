@@ -18,11 +18,11 @@
 
 package org.apache.kylin.engine.spark.job
 
-import io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.NSparkCubingEngine
 import org.apache.kylin.engine.spark.builder.CreateFlatTable
 import org.apache.kylin.engine.spark.source.SparkSqlUtil
+import org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob
 import org.apache.kylin.engine.spark.utils.SparkConfHelper
 import org.apache.kylin.metadata.model.TableDesc
 import org.apache.kylin.metadata.project.NProjectManager

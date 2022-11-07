@@ -83,7 +83,7 @@ public class IncrementalTest implements JobWaiter {
 
     @ClassRule
     public static SharedSparkSession sharedSpark = new SharedSparkSession(
-            ImmutableMap.of("spark.sql.extensions", "io.kyligence.kap.query.SQLPushDownExtensions"));
+            ImmutableMap.of("spark.sql.extensions", "org.apache.kylin.query.SQLPushDownExtensions"));
     private final SparkSession sparkSession = sharedSpark.getSpark();
     @ClassRule
     public static ClickHouseClassRule clickHouseClassRule = new ClickHouseClassRule(1);

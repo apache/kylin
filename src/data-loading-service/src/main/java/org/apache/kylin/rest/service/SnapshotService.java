@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.kyligence.kap.engine.spark.job.NSparkSnapshotJob;
+import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
 import lombok.val;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.exception.KylinException;

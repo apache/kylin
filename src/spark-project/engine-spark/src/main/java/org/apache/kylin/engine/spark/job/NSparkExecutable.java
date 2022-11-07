@@ -23,7 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.kyligence.kap.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin;
+import org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin;
 import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;

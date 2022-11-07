@@ -18,14 +18,6 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import io.kyligence.kap.engine.spark.job.NResourceDetectStep;
-import io.kyligence.kap.engine.spark.job.NSparkCleanupAfterMergeStep;
-import io.kyligence.kap.engine.spark.job.NSparkCubingStep;
-import io.kyligence.kap.engine.spark.job.NSparkMergingStep;
-import io.kyligence.kap.engine.spark.job.NSparkSnapshotBuildingStep;
-import io.kyligence.kap.engine.spark.job.NSparkUpdateMetadataStep;
-import io.kyligence.kap.engine.spark.job.NTableSamplingJob;
-import io.kyligence.kap.engine.spark.job.SparkCleanupTransactionalTableStep;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;

@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.util;
 
-import io.kyligence.kap.query.util.KapQueryUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.source.adhocquery.IPushDownConverter;
 

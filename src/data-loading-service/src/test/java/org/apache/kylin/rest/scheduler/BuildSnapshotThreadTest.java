@@ -51,7 +51,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import io.kyligence.kap.engine.spark.job.NSparkSnapshotJob;
+import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
 import io.kyligence.kap.guava20.shaded.common.collect.Lists;
 import io.kyligence.kap.guava20.shaded.common.collect.Maps;
 import io.kyligence.kap.guava20.shaded.common.collect.Sets;

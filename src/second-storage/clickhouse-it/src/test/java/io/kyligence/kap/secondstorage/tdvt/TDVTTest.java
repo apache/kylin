@@ -102,7 +102,7 @@ public class TDVTTest implements JobWaiter {
 
     @ClassRule
     public static SharedSparkSession sharedSpark = new SharedSparkSession(
-            ImmutableMap.of("spark.sql.extensions", "io.kyligence.kap.query.SQLPushDownExtensions"));
+            ImmutableMap.of("spark.sql.extensions", "org.apache.kylin.query.SQLPushDownExtensions"));
 
     public static EnableTestUser enableTestUser = new EnableTestUser();
     public static ClickHouseClassRule clickHouse = new ClickHouseClassRule(clickhouseNumber);

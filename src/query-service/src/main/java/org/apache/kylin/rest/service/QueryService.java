@@ -168,7 +168,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import com.google.gson.Gson;
 
-import io.kyligence.kap.query.util.KapQueryUtil;
+import org.apache.kylin.query.util.KapQueryUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;

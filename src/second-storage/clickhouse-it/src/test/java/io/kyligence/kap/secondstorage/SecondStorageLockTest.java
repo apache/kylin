@@ -191,10 +191,10 @@ import io.kyligence.kap.clickhouse.job.LoadContext;
 import io.kyligence.kap.clickhouse.job.S3TableSource;
 import io.kyligence.kap.clickhouse.management.ClickHouseConfigLoader;
 import io.kyligence.kap.clickhouse.parser.ShowDatabasesParser;
-import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import io.kyligence.kap.guava20.shaded.common.collect.ImmutableSet;
 import io.kyligence.kap.guava20.shaded.common.collect.Lists;
-import io.kyligence.kap.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import io.kyligence.kap.newten.clickhouse.ClickHouseSimpleITTestUtils;
 import io.kyligence.kap.newten.clickhouse.ClickHouseUtils;
 import io.kyligence.kap.newten.clickhouse.EmbeddedHttpServer;
@@ -249,7 +249,7 @@ public class SecondStorageLockTest implements JobWaiter {
 
     @ClassRule
     public static SharedSparkSession sharedSpark = new SharedSparkSession(ImmutableMap.of("spark.sql.extensions",
-            "io.kyligence.kap.query.SQLPushDownExtensions", "spark.sql.broadcastTimeout", "900"));
+            "org.apache.kylin.query.SQLPushDownExtensions", "spark.sql.broadcastTimeout", "900"));
 
     public EnableTestUser enableTestUser = new EnableTestUser();
 

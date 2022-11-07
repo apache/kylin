@@ -51,8 +51,8 @@ import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Preconditions;
 
-import io.kyligence.kap.metadata.user.ManagedUser;
-import io.kyligence.kap.metadata.user.NKylinUserManager;
+import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.NKylinUserManager;
 import lombok.SneakyThrows;
 import lombok.val;
 

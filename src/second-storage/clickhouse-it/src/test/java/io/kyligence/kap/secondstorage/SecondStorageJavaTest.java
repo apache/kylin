@@ -82,7 +82,7 @@ import io.kyligence.kap.clickhouse.job.ClickHouseSegmentCleanJob;
 import io.kyligence.kap.clickhouse.job.Engine;
 import io.kyligence.kap.clickhouse.job.LoadContext;
 import io.kyligence.kap.clickhouse.management.ClickHouseConfigLoader;
-import io.kyligence.kap.engine.spark.job.NResourceDetectStep;
+import org.apache.kylin.engine.spark.job.NResourceDetectStep;
 import io.kyligence.kap.newten.clickhouse.ClickHouseUtils;
 import io.kyligence.kap.secondstorage.config.ClusterInfo;
 import io.kyligence.kap.secondstorage.config.Node;
@@ -107,7 +107,7 @@ public class SecondStorageJavaTest implements JobWaiter {
 
     @ClassRule
     public static SharedSparkSession sharedSpark = new SharedSparkSession(
-            ImmutableMap.of("spark.sql.extensions", "io.kyligence.kap.query.SQLPushDownExtensions"));
+            ImmutableMap.of("spark.sql.extensions", "org.apache.kylin.query.SQLPushDownExtensions"));
 
     public EnableTestUser enableTestUser = new EnableTestUser();
     @ClassRule

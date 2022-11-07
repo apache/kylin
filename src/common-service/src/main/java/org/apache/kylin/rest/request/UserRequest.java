@@ -18,8 +18,8 @@
 
 package org.apache.kylin.rest.request;
 
-import static io.kyligence.kap.metadata.user.ManagedUser.DEFAULT_GROUP;
-import static io.kyligence.kap.metadata.user.ManagedUser.DISABLED_ROLE;
+import static org.apache.kylin.metadata.user.ManagedUser.DEFAULT_GROUP;
+import static org.apache.kylin.metadata.user.ManagedUser.DISABLED_ROLE;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,7 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.ArgsTypeJsonDeserializer;
 import org.apache.kylin.metadata.insensitive.UserInsensitiveRequest;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import io.kyligence.kap.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.ManagedUser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

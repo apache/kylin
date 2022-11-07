@@ -59,7 +59,7 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
-import io.kyligence.kap.metadata.user.NKylinUserManager;
+import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.request.AclTCRRequest;

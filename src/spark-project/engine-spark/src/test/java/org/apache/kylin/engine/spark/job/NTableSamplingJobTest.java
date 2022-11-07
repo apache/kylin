@@ -18,7 +18,6 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import io.kyligence.kap.engine.spark.job.NTableSamplingJob;
 import lombok.val;
 import lombok.var;
 import org.apache.commons.io.FileUtils;

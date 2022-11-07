@@ -21,7 +21,6 @@ package org.apache.kylin.engine.spark.builder
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 import java.util.{Locale, Objects, Timer, TimerTask}
 import com.google.common.collect.Sets
-import io.kyligence.kap.query.util.KapQueryUtil
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
 import org.apache.kylin.engine.spark.job.{FiltersUtil, TableMetaManager}
@@ -34,6 +33,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.metadata.model._
+import org.apache.kylin.query.util.KapQueryUtil
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StructField

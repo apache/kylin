@@ -19,7 +19,6 @@
 package org.apache.kylin.engine.spark.job
 
 import com.google.common.collect.Maps
-import io.kyligence.kap.engine.spark.job.RDSegmentBuildJob
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.engine.spark.builder.SegmentFlatTable
 import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc

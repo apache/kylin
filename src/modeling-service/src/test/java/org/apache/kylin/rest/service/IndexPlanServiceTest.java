@@ -19,8 +19,8 @@ package org.apache.kylin.rest.service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import io.kyligence.kap.engine.spark.job.ExecutableAddCuboidHandler;
-import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
