@@ -28,26 +28,13 @@ import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree.PartitionTreeBuilder
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.kylin.metadata.job.JobBucket
-import org.apache.spark.sql.{Dataset, Row}
 
 class PartitionCostBasedPlanner(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
   extends PartitionFlatTableAndDictBase(jobContext, dataSegment, buildParam) {
   override def execute(): Unit = {
-    logInfo(s"Begin partition cost based planner $segmentId")
-    // table desc for the flat table
-    logInfo(s"Flat table desc $tableDesc")
-    // layout for the data
-    logInfo(s"Parition layout: $readOnlyLayouts")
-    // step1
-    val costTable: Dataset[Row] = generateCostTable()
-    // step2
-    // persist the cost table
-    persistCostTable(costTable)
-    // step3
-    getRecommendedLayoutAndUpdateMetadata()
-
-    logInfo(s"Add mock agg index")
-    jobContext.addMockIndex()
+    val (cost, sourceCount) = generateCostTable()
+    getRecommendedLayoutAndUpdateMetadata(cost, sourceCount)
+    //    jobContext.addMockIndex()
     val result = jobContext.updateIndexPlanIfNeed()
     if (result) {
       // update span tree and table desc with the new build job layouts

@@ -18,7 +18,6 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -95,24 +94,6 @@ public abstract class SegmentJob extends SparkApplication {
         recommendAggLayouts.addAll(aggIndexLayouts);
     }
 
-    public void addMockIndex() {
-        Set<LayoutEntity> set = new HashSet<>();
-        List<Integer> colOrder = new ArrayList<>();
-        colOrder.add(1);
-        colOrder.addAll(indexPlan.getEffectiveMeasures().keySet());
-        LayoutEntity aggLayout = indexPlan.createRecommendAggIndexLayout(colOrder);
-        set.add(aggLayout);
-
-        colOrder = new ArrayList<>();
-        colOrder.add(1);
-        colOrder.add(2);
-        colOrder.addAll(indexPlan.getEffectiveMeasures().keySet());
-        LayoutEntity aggLayout2 = indexPlan.createRecommendAggIndexLayout(colOrder);
-        set.add(aggLayout2);
-
-        setRecommendAggLayouts(set);
-    }
-
     public boolean updateIndexPlanIfNeed() {
         // when run the cube planner, there will be some recommended index layouts for this model
         if (getRecommendAggLayouts().size() != 0) {
@@ -120,7 +101,7 @@ public abstract class SegmentJob extends SparkApplication {
                 // update and add the recommended index layout to the index plan
                 val recommendAggLayouts = Lists.newArrayList(getRecommendAggLayouts());
                 NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(config, project);
-                logger.info("Update the index plan and add recommended agg index {}", recommendAggLayouts);
+                logger.debug("Update the index plan and add recommended agg index {}", recommendAggLayouts);
                 indexPlanManager.updateIndexPlan(dataflowId, copyForWrite -> {
                     copyForWrite.createAndAddRecommendAggIndex(recommendAggLayouts);
                 });
@@ -141,7 +122,7 @@ public abstract class SegmentJob extends SparkApplication {
         indexPlan = dataflowManager.getDataflow(dataflowId).getIndexPlan();
         // get the new layout
         val newJobLayouts = indexPlan.getAllLayouts();
-        logger.info("Update Job layouts from {} to {}", readOnlyLayouts, newJobLayouts);
+        logger.debug("Update Job layouts from {} to {}", readOnlyLayouts, newJobLayouts);
         readOnlyLayouts = new HashSet<>(newJobLayouts);
         // rewrite the `P_LAYOUT_IDS` parameters
         setParam(NBatchConstants.P_LAYOUT_IDS, NSparkCubingUtil.ids2Str(NSparkCubingUtil.toLayoutIds(readOnlyLayouts)));

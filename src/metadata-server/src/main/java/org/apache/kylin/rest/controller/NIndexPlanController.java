@@ -215,7 +215,7 @@ public class NIndexPlanController extends NBasicController {
         // https://jirap.corp.ebay.com/browse/KYLIN-3601
         // Now we forbid the feature to align with the kylin3.1 for the cube planner
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        if (kylinConfig.isCubePlannerEnabled()) {
+        if (kylinConfig.enableCostBasedIndexPlanner()) {
             throw new RuntimeException("Can't delete index when use the cost based index planner");
         }
         checkProjectName(project);
@@ -231,7 +231,7 @@ public class NIndexPlanController extends NBasicController {
         // https://jirap.corp.ebay.com/browse/KYLIN-3601
         // Now we forbid the feature to align with the kylin3.1 for the cube planner
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        if (kylinConfig.isCubePlannerEnabled()) {
+        if (kylinConfig.enableCostBasedIndexPlanner()) {
             throw new RuntimeException("Can't delete index when use the cost based index planner");
         }
         checkProjectName(project);

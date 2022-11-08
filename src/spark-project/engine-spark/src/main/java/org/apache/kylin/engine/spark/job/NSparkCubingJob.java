@@ -39,6 +39,7 @@ import org.apache.kylin.job.execution.ExecutableParams;
 import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.factory.JobFactory;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -164,9 +165,18 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
             job.setParam(NBatchConstants.P_BUCKETS, ExecutableParams.toBucketParam(buckets));
         }
         // Add the parameter `P_JOB_ENABLE_PLANNER` which is used to decide whether to use the  cube planner
-        if (kylinConfig.isCubePlannerEnabled()
-                && jobType.equals(JobTypeEnum.INC_BUILD)
-                && segments.size() == 1 && noSegmentExist(df.getProject(), job.getTargetSubject(), kylinConfig)) {
+        if (kylinConfig.enableCostBasedIndexPlanner() && jobType.equals(JobTypeEnum.INC_BUILD) && segments.size() == 1
+                && noSegmentExist(df.getProject(), job.getTargetSubject(), kylinConfig)) {
+            // check the count of rowkey:
+            // if the count of row key exceed the 63, throw exception
+            if (!layouts.isEmpty()) {
+                IndexPlan indexPlan = (new ArrayList<LayoutEntity>(layouts)).get(0).getIndex().getIndexPlan();
+                if (indexPlan.getEffectiveDimCols().size() > (Long.SIZE - 1)) {
+                    throw new RuntimeException(
+                            String.format("The count of row key %d can't be larger than 63, when use the cube planner",
+                                    indexPlan.getEffectiveDimCols().size()));
+                }
+            }
             job.setParam(NBatchConstants.P_JOB_ENABLE_PLANNER, Boolean.TRUE.toString());
         }
         job.setParam(NBatchConstants.P_JOB_ID, jobId);

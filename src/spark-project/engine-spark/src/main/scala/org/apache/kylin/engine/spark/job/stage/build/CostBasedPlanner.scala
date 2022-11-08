@@ -25,25 +25,13 @@ import org.apache.kylin.engine.spark.smarter.IndexDependencyParser
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
 import org.apache.kylin.metadata.cube.model.NDataSegment
-import org.apache.spark.sql.{Dataset, Row}
 
 class CostBasedPlanner(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
   extends FlatTableAndDictBase(jobContext, dataSegment, buildParam) {
   override def execute(): Unit = {
-    // calculate the recommended index for this model
-    logInfo(s"Begin cost based planner $segmentId")
-    // table desc for the flat table
-    logInfo(s"Flat table desc $tableDesc")
-    // layout for the data
-    logInfo(s"layout: $readOnlyLayouts")
-    val costTable: Dataset[Row] = generateCostTable()
-    // persist the cost table
-    persistCostTable(costTable)
-    getRecommendedLayoutAndUpdateMetadata()
+    val (cost, sourceCount) = generateCostTable()
+    getRecommendedLayoutAndUpdateMetadata(cost, sourceCount)
 
-    // update the recommended index to the index plan in the remote hdfs
-    logInfo(s"Add mock agg index")
-    jobContext.addMockIndex()
     val result = jobContext.updateIndexPlanIfNeed()
     if (result) {
       // update span tree and table desc with the new build job layouts

@@ -262,6 +262,10 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
 
     private BuildIndexResponse createTableIndex(String project, String modelId, LayoutEntity newLayout,
             boolean loadData) {
+        val kylinConfig = KylinConfig.getInstanceFromEnv();
+        if (kylinConfig.enableCostBasedIndexPlanner()) {
+            throw new RuntimeException("Can't create table index when enable cube planner");
+        }
         NIndexPlanManager indexPlanManager = getManager(NIndexPlanManager.class, project);
         val jobManager = getManager(JobManager.class, project);
         IndexPlan indexPlan = indexPlanManager.getIndexPlan(modelId);

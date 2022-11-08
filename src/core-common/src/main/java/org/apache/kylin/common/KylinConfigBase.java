@@ -991,7 +991,8 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public Path getPlannerCostTableDir(String project, String dataFlowId, String segmentId) {
-        String path = getHdfsWorkingDirectory() + project + "/planner_cost_table/" + dataFlowId + PATH_DELIMITER + segmentId;
+        String path = getHdfsWorkingDirectory() + project + "/planner_cost_table/" + dataFlowId + PATH_DELIMITER
+                + segmentId;
         return new Path(path);
     }
 
@@ -3683,8 +3684,53 @@ public abstract class KylinConfigBase implements Serializable {
     // Cost case cuboid Planner
     // ============================================================================
 
-    public boolean isCubePlannerEnabled() {
-        // If we enable the cost based cuboid planner, we need to disable some function in the rule index recommended
-        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", FALSE));
+    public boolean enableCostBasedIndexPlanner() {
+        // If we enable the cost base cuboid planner, we need to disable some function in the rule index recommended
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", TRUE));
+    }
+
+    public int getCubePlannerGreedyAlgorithmAutoThreshold() {
+        return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-greedy", "8"));
+    }
+
+    public int getCubePlannerGeneticAlgorithmAutoThreshold() {
+        return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-genetic", "23"));
+    }
+
+    public double getCubePlannerExpansionRateThreshold() {
+        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.expansion-threshold", "15.0"));
+    }
+
+    public double getCubePlannerBPUSMinBenefitRatio() {
+        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.bpus-min-benefit-ratio", "0.01"));
+    }
+
+    public int getCubeStatsHLLPrecision() {
+        return Integer.parseInt(getOptional("kylin.job.sampling-hll-precision", "14"));
+    }
+
+    public double getJobCuboidSizeRatio() {
+        return Double.parseDouble(getOptional("kylin.cube.size-estimate-ratio", "0.25"));
+    }
+
+    public double getJobCuboidSizeCountDistinctRatio() {
+        return Double.parseDouble(getOptional("kylin.cube.size-estimate-countdistinct-ratio", "0.5"));
+    }
+
+    public double getJobCuboidSizeTopNRatio() {
+        return Double.parseDouble(getOptional("kylin.cube.size-estimate-topn-ratio", "0.5"));
+    }
+
+    public boolean enableJobCuboidSizeOptimize() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.size-estimate-enable-optimize", FALSE));
+    }
+
+    public int getHadoopJobPerReducerHLLCuboidNumber() {
+        return Integer.parseInt(getOptional("kylin.engine.mr.per-reducer-hll-cuboid-number", "100"));
+    }
+
+    public int getHadoopJobHLLMaxReducerNumber() {
+        // by default multi-reducer hll calculation is disabled
+        return Integer.parseInt(getOptional("kylin.engine.mr.hll-max-reducer-number", "1"));
     }
 }

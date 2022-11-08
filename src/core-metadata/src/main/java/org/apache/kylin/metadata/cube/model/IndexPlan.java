@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -375,6 +376,26 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         return effectiveMeasures;
     }
 
+    public Map<Integer, Integer> getColumnIdToRowKeyId() {
+        int rowKeyId = 0;
+        Map<Integer, Integer> result = new HashMap<>();
+        for (Integer columnId : effectiveDimCols.keySet()) {
+            result.put(columnId, rowKeyId);
+            rowKeyId++;
+        }
+        return result;
+    }
+
+    public Map<Integer, Integer> getRowKeyIdToColumnId() {
+        int rowKeyId = 0;
+        Map<Integer, Integer> result = new HashMap<>();
+        for (Integer columnId : effectiveDimCols.keySet()) {
+            result.put(rowKeyId, columnId);
+            rowKeyId++;
+        }
+        return result;
+    }
+
     public Set<TblColRef> listAllTblColRefs() {
         return allColumns;
     }
@@ -415,8 +436,54 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         return getAllIndexes(true);
     }
 
-    /**
-     * Get a copy of all IndexEntity List, which is a time cost operation
+    private List<IndexEntity> getAllIndexesForCubePlanner() {
+        Map<Long, Integer> retSubscriptMap = Maps.newHashMap();
+        List<IndexEntity> mergedIndexes = Lists.newArrayList();
+        int retSubscript = 0;
+        for (IndexEntity indexEntity : indexes) {
+            val copy = JsonUtil.deepCopyQuietly(indexEntity, IndexEntity.class);
+            retSubscriptMap.put(indexEntity.getId(), retSubscript);
+            mergedIndexes.add(copy);
+            Map<Long, LayoutEntity> layouts = Maps.newHashMap();
+            indexEntity.getLayouts().forEach(layout -> layouts.putIfAbsent(layout.getId(), layout));
+            copy.getLayouts().forEach(layout -> layout.setInProposing(layouts.get(layout.getId()).isInProposing()));
+            retSubscript++;
+        }
+        for (LayoutEntity ruleBasedLayout : getRuleBaseLayoutsWithoutPlannerCheck()) {
+            val ruleRelatedIndex = ruleBasedLayout.getIndex();
+            if (!retSubscriptMap.containsKey(ruleRelatedIndex.getId())) {
+                val copy = JsonUtil.deepCopyQuietly(ruleRelatedIndex, IndexEntity.class);
+                retSubscriptMap.put(ruleRelatedIndex.getId(), retSubscript);
+                mergedIndexes.add(copy);
+                retSubscript++;
+            }
+            val subscript = retSubscriptMap.get(ruleRelatedIndex.getId());
+            val targetIndex = mergedIndexes.get(subscript);
+            addLayout2TargetIndex(ruleBasedLayout, targetIndex);
+        }
+
+        for (IndexEntity indexEntity : toBeDeletedIndexes) {
+            if (!retSubscriptMap.containsKey(indexEntity.getId())) {
+                IndexEntity copy = JsonUtil.deepCopyQuietly(indexEntity, IndexEntity.class);
+                retSubscriptMap.put(indexEntity.getId(), retSubscript);
+                mergedIndexes.add(copy);
+                copy.getLayouts().forEach(layoutEntity -> layoutEntity.setToBeDeleted(true));
+                retSubscript++;
+            } else {
+                val subscript = retSubscriptMap.get(indexEntity.getId());
+                val targetIndex = mergedIndexes.get(subscript);
+                for (LayoutEntity layoutEntity : indexEntity.getLayouts()) {
+                    addLayout2TargetIndex(layoutEntity, targetIndex, true);
+                }
+            }
+        }
+
+        mergedIndexes.forEach(value -> value.setIndexPlan(this));
+        return mergedIndexes;
+    }
+
+    /*
+        Get a copy of all IndexEntity List, which is a time cost operation
      */
     public List<IndexEntity> getAllIndexes(boolean withToBeDeletedIndexes) {
         Map<Long, Integer> retSubscriptMap = Maps.newHashMap();
@@ -475,6 +542,19 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         return r;
     }
 
+    /**
+     * It's used to get all layouts for cube planner
+     * @return all layouts with the rule based index
+     */
+    public List<LayoutEntity> getAllLayoutsWithCubePlanner() {
+        List<LayoutEntity> r = Lists.newArrayList();
+
+        for (IndexEntity cd : getAllIndexesForCubePlanner()) {
+            r.addAll(cd.getLayouts());
+        }
+        return r;
+    }
+
     public List<ImmutablePair<LayoutEntity, Boolean>> getAllLayoutsReadOnly() {
         Map<Long, Map<LayoutEntity, Boolean>> resultMap = Maps.newHashMap();
         for (IndexEntity indexEntity : indexes) {
@@ -519,14 +599,15 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
 
     public List<LayoutEntity> getRuleBaseLayouts() {
         // If use the cost based planner, there is no rule base layout to return
-        if (config.isCubePlannerEnabled()) {
+        // TODO: remove this checker with the config later
+        if (config.enableCostBasedIndexPlanner()) {
             return Lists.newArrayList();
         } else {
             return isCachedAndShared ? ImmutableList.copyOf(ruleBasedLayouts) : ruleBasedLayouts;
         }
     }
 
-    public List<LayoutEntity> getRuleBaseLayoutsWithoutPlannerCheck() {
+    private List<LayoutEntity> getRuleBaseLayoutsWithoutPlannerCheck() {
         // Return the rule base layout without the checker for planner
         return isCachedAndShared ? ImmutableList.copyOf(ruleBasedLayouts) : ruleBasedLayouts;
     }
@@ -954,6 +1035,10 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
     }
 
     public LayoutEntity createBaseTableIndex(NDataModel model) {
+        // if enable the cube planner, we don't create the base table index
+        if (this.config.enableCostBasedIndexPlanner()) {
+            return null;
+        }
         List<Integer> dims = model.getEffectiveDimensions().keySet().asList();
         List<Integer> measureCols = model.getMeasureRelatedCols();
         List<Integer> colOrder = naturalOrderCombine(dims, measureCols);

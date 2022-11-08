@@ -18,6 +18,8 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
+import java.lang
+import java.util.{Locale, Objects}
 
 import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
@@ -32,9 +34,11 @@ import org.apache.kylin.engine.spark.job.NSparkCubingUtil.convertFromDot
 import org.apache.kylin.engine.spark.job.stage.{BuildParam, StageExec}
 import org.apache.kylin.engine.spark.job.{FiltersUtil, SegmentJob, TableMetaManager}
 import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
+import org.apache.kylin.engine.spark.model.planner.{CuboIdToLayoutUtils, FlatTableToCostUtils}
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.metadata.cube.model.NDataSegment
+import org.apache.kylin.metadata.cube.planner.CostBasePlannerUtils
 import org.apache.kylin.metadata.model._
 import org.apache.kylin.query.util.KapQueryUtil
 import org.apache.spark.sql.KapFunctions.dict_encode_v3
@@ -43,7 +47,6 @@ import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils
-import java.util.{Locale, Objects}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -67,6 +70,7 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
   // These parameters can be changed when running the cube planner, should use the
   // `def` to get the latest data
   protected def spanningTree = buildParam.getSpanningTree
+
   protected def tableDesc = buildParam.getFlatTableDesc
 
   protected lazy final val indexPlan = tableDesc.getIndexPlan
@@ -142,24 +146,35 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     changeSchemeToColumnId(flatTableDS, tableDesc)
   }
 
-  protected def generateCostTable(): Dataset[Row] = {
-    // TODO got the cost class
-    logInfo(s"Segment $segmentId generate the planner cost table")
-    FLAT_TABLE
+  protected def generateCostTable(): (java.util.Map[lang.Long, lang.Long], Long) = {
+    val rowkeyCount = indexPlan.getEffectiveDimCols.keySet().size()
+    val stepDesc = s"Segment $segmentId generate the cost for the planner from the flat table, rowkey count is $rowkeyCount"
+    logInfo(stepDesc)
+    sparkSession.sparkContext.setJobDescription(stepDesc)
+    // get the cost from the flat table
+    val javaRddFlatTable = FLAT_TABLE.javaRDD
+    // log dimension and table desc
+    logInfo(s"Segment $segmentId calculate the cost, the dimension in index is: " +
+      s"${indexPlan.getEffectiveDimCols.keySet}, the column in flat table is: ${tableDesc.getColumnIds}")
+    val cuboIdsCost = FlatTableToCostUtils.generateCost(javaRddFlatTable, config, indexPlan, tableDesc)
+    // get the count for the flat table
+    val sourceCount = FLAT_TABLE.count()
+    logInfo(s"The total source count is $sourceCount")
+    sparkSession.sparkContext.setJobDescription(null)
+    val cuboIdToRowCount = FlatTableToCostUtils.getCuboidRowCountMapFromSampling(cuboIdsCost)
+    (cuboIdToRowCount, sourceCount)
   }
 
-  protected def persistCostTable(costTable: Dataset[Row]): Unit = {
-    // persist the cost class
-    //    sparkSession.sparkContext.setJobDescription(s"Segment $segmentId persist planner cost table.")
-    //    costTable.write.mode(SaveMode.Overwrite).parquet(plannerCostTablePath.toString)
-    //    sparkSession.sparkContext.setJobDescription(null)
-  }
-
-  protected def getRecommendedLayoutAndUpdateMetadata(): Unit = {
-    // val cuboids = CostBasePlannerUtils.getRecommendCuboidList()
-    // val recommendedLayouts = CuboIdToLayoutUtils.convertCuboIdsToLayoutEntity(cuboids, tableDesc)
-    // logInfo(s"Segment $segmentId get the recommended layouts $recommendedLayouts")
-    // jobContext.setRecommendAggLayouts(recommendedLayouts)
+  protected def getRecommendedLayoutAndUpdateMetadata(cuboIdToRowCount: java.util.Map[lang.Long, lang.Long], sourceCount: Long): Unit = {
+    logDebug(s"Segment $segmentId get the row count cost $cuboIdToRowCount")
+    val cuboIdToSize = FlatTableToCostUtils.getCuboidSizeMapFromSampling(cuboIdToRowCount, sourceCount, indexPlan, config, tableDesc)
+    logDebug(s"Segment $segmentId get the size cost $cuboIdToSize")
+    val cuboids = CostBasePlannerUtils.getRecommendCuboidList(indexPlan, config, dataModel.getAlias, cuboIdToRowCount, cuboIdToSize)
+    logDebug(s"Segment $segmentId get the recommended cuboid ${cuboids.keySet()}")
+    val allRecommendedLayouts = CuboIdToLayoutUtils.convertCuboIdsToLayoutEntity(cuboids, indexPlan)
+    val removeDuplicatedLayouts = CuboIdToLayoutUtils.tryRemoveExistLayouts(allRecommendedLayouts, indexPlan)
+    logInfo(s"Segment $segmentId get ${removeDuplicatedLayouts.size()} recommended layouts with duplicate layouts removed.")
+    jobContext.setRecommendAggLayouts(removeDuplicatedLayouts)
   }
 
   protected def generateFlatTable(): Dataset[Row] = {
