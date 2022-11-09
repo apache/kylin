@@ -31,6 +31,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -50,6 +51,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.calcite.rel.RelNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -2671,5 +2673,29 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         overwriteSystemProp("kylin.model.tds-expose-all-model-related-columns", "false");
         List<String> modelColumns2 = queryService.getTargetModelColumns("nmodel_basic", dataModels, project);
         Assert.assertEquals(172, modelColumns2.size());
+    }
+
+    @Test
+    public void testDistinctAggregationInSql() throws Exception {
+        final String project = "default";
+        String sql1 = "SELECT COUNT(DISTINCT TEST_BANK_INCOME.INCOME) FROM TEST_BANK_INCOME inner join TEST_BANK_LOCATION on TEST_BANK_INCOME.COUNTRY = TEST_BANK_LOCATION.COUNTRY WHERE \n"
+                + "1 = 1\n" + "and TEST_BANK_INCOME.DT = '2021-11-02'\n"
+                + "and TEST_BANK_INCOME.COUNTRY = 'INDONESIA'\n" + "and TEST_BANK_INCOME.COUNTRY = 'KENYA'";
+        QueryExec queryExec = new QueryExec(project, getTestConfig());
+        Class<? extends QueryExec> clazz = queryExec.getClass();
+        Method isCalciteEngineCapable = clazz.getDeclaredMethod("isCalciteEngineCapable", RelNode.class);
+        isCalciteEngineCapable.setAccessible(true);
+        RelNode rel1 = queryExec.parseAndOptimize(sql1);
+        QueryResult queryResult1 = queryExec.executeQuery(sql1);
+        Assert.assertEquals(1, queryResult1.getColumns().size());
+        Object routeToCalcite1 = isCalciteEngineCapable.invoke(queryExec, rel1);
+        Assert.assertEquals(false, routeToCalcite1);
+
+        String sql2 = "SELECT COUNT(*) FROM TEST_BANK_INCOME inner join TEST_BANK_LOCATION on TEST_BANK_INCOME.COUNTRY = TEST_BANK_LOCATION.COUNTRY WHERE \n"
+                + "1 = 1\n" + "and TEST_BANK_INCOME.DT = '2021-11-02'\n"
+                + "and TEST_BANK_INCOME.COUNTRY = 'INDONESIA'\n" + "and TEST_BANK_INCOME.COUNTRY = 'KENYA'";
+        RelNode rel2 = queryExec.parseAndOptimize(sql2);
+        Object routeToCalcite2 = isCalciteEngineCapable.invoke(queryExec, rel2);
+        Assert.assertEquals(true, routeToCalcite2);
     }
 }
