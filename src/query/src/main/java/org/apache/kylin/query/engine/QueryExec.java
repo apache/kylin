@@ -37,8 +37,10 @@ import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexExecutorImpl;
@@ -417,6 +419,10 @@ public class QueryExec {
             KapAggregateRel aggregateRel = (KapAggregateRel) rel;
             if (aggregateRel.getAggCallList().stream().anyMatch(
                     aggCall -> FunctionDesc.FUNC_BITMAP_BUILD.equalsIgnoreCase(aggCall.getAggregation().getName()))) {
+                return false;
+            }
+            if (aggregateRel.getInput() instanceof Values
+                    && aggregateRel.getAggCallList().stream().anyMatch(AggregateCall::isDistinct)) {
                 return false;
             }
         }
