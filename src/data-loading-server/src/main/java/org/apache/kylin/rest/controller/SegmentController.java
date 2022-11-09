@@ -166,7 +166,8 @@ public class SegmentController extends BaseController {
                 modelId);
         validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
         val res = modelService.checkSegHoleExistIfNewRangeBuild(buildSegmentsRequest.getProject(), modelId,
-                buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd());
+                buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),
+                buildSegmentsRequest.isBuildAllIndexes(), buildSegmentsRequest.getBatchIndexIds());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, res, "");
     }
 

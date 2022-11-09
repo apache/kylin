@@ -3889,17 +3889,91 @@ public class ModelServiceTest extends SourceTestCase {
         Assert.assertEquals(0, res.getOverlapSegments().size());
         Assert.assertEquals(1, res.getSegmentHoles().size());
 
-        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "20000", "30000");
+        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "20000", "30000", true, null);
         Assert.assertEquals(0, res.getOverlapSegments().size());
         Assert.assertEquals(3, res.getSegmentHoles().size());
 
-        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "1", "10");
+        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "1", "10", true, null);
         Assert.assertEquals(0, res.getOverlapSegments().size());
         Assert.assertEquals(1, res.getSegmentHoles().size());
 
-        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "1", "5");
+        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "1", "5", true, null);
         Assert.assertEquals(0, res.getOverlapSegments().size());
         Assert.assertEquals(2, res.getSegmentHoles().size());
+    }
+
+    @Test
+    public void testCheckSegmentToBuildOverlapsBuilt() throws IOException {
+        KylinConfig kylinConfig = getTestConfig();
+        final String defaultProject = getProject();
+        final String streamingProject = "streaming_test";
+        NDataModelManager modelManager = NDataModelManager.getInstance(kylinConfig, defaultProject);
+
+        kylinConfig.setProperty("kylin.build.segment-overlap-enabled", "true");
+
+        List<NDataSegment> overlapSegments = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                modelManager.getDataModelDesc("b780e4e4-69af-449e-b09f-05c90dfa04b6"),
+                new SegmentRange.TimePartitionedSegmentRange(1604188800000L, 1604361600000L), true, null);
+        Assert.assertEquals(3, overlapSegments.size());
+
+        val streamingModelManager = NDataModelManager.getInstance(getTestConfig(), streamingProject);
+        List<NDataSegment> overlapSegments2 = modelService.checkSegmentToBuildOverlapsBuilt(streamingProject,
+                streamingModelManager.getDataModelDesc("e78a89dd-847f-4574-8afa-8768b4228b74"),
+                new SegmentRange.KafkaOffsetPartitionedSegmentRange(1613957110000L, 1613957130000L), true, null);
+        Assert.assertEquals(2, overlapSegments2.size());
+
+        String modelId = "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96";
+        NDataModel dataModelDesc = modelManager.getDataModelDesc(modelId);
+        List<NDataSegment> overlapSegments3 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1509891513770L), true,
+                null);
+        Assert.assertEquals(0, overlapSegments3.size());
+
+        List<NDataSegment> overlapSegments4 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1609891513770L), true,
+                null);
+        Assert.assertEquals(0, overlapSegments4.size());
+
+        List<NDataSegment> overlapSegments5 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1609891513770L), false,
+                null);
+        Assert.assertEquals(1, overlapSegments5.size());
+
+        List<NDataSegment> overlapSegments6 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1609891513770L), true,
+                Lists.newArrayList());
+        Assert.assertEquals(0, overlapSegments6.size());
+
+        List<NDataSegment> overlapSegments7 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1609891513770L), true,
+                Lists.newArrayList(10000L));
+        Assert.assertEquals(1, overlapSegments7.size());
+
+        List<NDataSegment> overlapSegments8 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513780L, 1509891513760L), true,
+                null);
+        Assert.assertEquals(1, overlapSegments8.size());
+
+        MockSecondStorage.mock(defaultProject, new ArrayList<>(), this);
+        val indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), defaultProject);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            indexPlanManager.updateIndexPlan(modelId, indexPlan -> {
+                indexPlan.createAndAddBaseIndex(indexPlan.getModel());
+            });
+            return null;
+        }, defaultProject);
+        SecondStorageUtil.initModelMetaData(defaultProject, modelId);
+        Assert.assertTrue(SecondStorageUtil.isModelEnable(defaultProject, modelId));
+        List<NDataSegment> overlapSegments31 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1509891513770L), true,
+                null);
+        Assert.assertEquals(1, overlapSegments31.size());
+
+        kylinConfig.setProperty("kylin.build.segment-overlap-enabled", "false");
+        List<NDataSegment> overlapSegments9 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1509891513770L), true,
+                null);
+        Assert.assertEquals(1, overlapSegments9.size());
     }
 
     @Test
