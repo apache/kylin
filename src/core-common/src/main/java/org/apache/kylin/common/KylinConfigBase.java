@@ -3670,6 +3670,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.second-storage.wait-lock-timeout", "180"));
     }
 
+    public boolean isBuildSegmentOverlapEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.build.segment-overlap-enabled", FALSE));
+    }
+
     public boolean getDDLEnabled(){
         return Boolean.parseBoolean(getOptional("kylin.source.ddl.enabled", FALSE));
     }

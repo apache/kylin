@@ -1380,6 +1380,15 @@ class KylinConfigBaseTest {
         val sub2 = config.getSubstitutor();
         Assertions.assertSame(sub1, sub2);
     }
+
+    @Test
+    void testIsBuildSegmentOverlapEnabled() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.build.segment-overlap-enabled", "false");
+        assertFalse(config.isBuildSegmentOverlapEnabled());
+        config.setProperty("kylin.build.segment-overlap-enabled", "true");
+        assertTrue(config.isBuildSegmentOverlapEnabled());
+    }
 }
 
 class EnvironmentUpdateUtils {

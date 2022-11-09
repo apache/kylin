@@ -57,7 +57,6 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PARAMETER_INVALID_SUPPORT_LIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_BUILD_RANGE_OVERLAP;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_LOCKED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_MERGE_CONTAINS_GAPS;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_NOT_EXIST_ID;
@@ -929,7 +928,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         NExecutableManager execManager = NExecutableManager.getInstance(kylinConfig, project);
         return execManager.listPartialExec(path -> StringUtils.endsWith(path, modelId), ExecutableState::isRunning,
-                INDEX_BUILD, JobTypeEnum.SUB_PARTITION_BUILD);
+                INDEX_BUILD, INC_BUILD, JobTypeEnum.SUB_PARTITION_BUILD);
     }
 
     public List<NDataSegmentResponse> getSegmentsResponse(String modelId, String project, String start, String end,
@@ -2295,7 +2294,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     }
 
     public SegmentCheckResponse checkSegHoleExistIfNewRangeBuild(String project, String modelId, String start,
-            String end) {
+            String end, boolean isBuildAllIndexes, List<Long> batchIndexIds) {
         aclEvaluate.checkProjectOperationPermission(project);
         Preconditions.checkArgument(!PushDownUtil.needPushdown(start, end), "Load data must set start and end date");
         NDataModel dataModelDesc = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
@@ -2304,18 +2303,17 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         SegmentRange segmentRangeToBuild = SourceFactory.getSource(table).getSegmentRange(start, end);
         List<NDataSegment> segmentGaps = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
                 .checkHoleIfNewSegBuild(modelId, segmentRangeToBuild);
-
-        Segments<NDataSegment> segments = getSegmentsByRange(modelId, project, "0", "" + Long.MAX_VALUE);
-        val overlapSegments = segments.stream().filter(seg -> seg.getSegRange().overlaps(segmentRangeToBuild))
-                .map(seg -> new SegmentRangeResponse(seg.getTSRange().getStart(), seg.getTSRange().getEnd()))
+        List<NDataSegment> overlapSegments = checkSegmentToBuildOverlapsBuilt(project, dataModelDesc,
+                segmentRangeToBuild, isBuildAllIndexes, batchIndexIds);
+        val overlapSegmentResponses = overlapSegments.stream().map(
+                segment -> new SegmentRangeResponse(segment.getTSRange().getStart(), segment.getTSRange().getEnd()))
                 .collect(Collectors.toList());
-
         SegmentCheckResponse segmentCheckResponse = new SegmentCheckResponse();
         val segHoles = segmentGaps.stream()
                 .map(seg -> new SegmentRangeResponse(seg.getTSRange().getStart(), seg.getTSRange().getEnd()))
                 .collect(Collectors.toList());
         segmentCheckResponse.setSegmentHoles(segHoles);
-        segmentCheckResponse.setOverlapSegments(overlapSegments);
+        segmentCheckResponse.setOverlapSegments(overlapSegmentResponses);
         return segmentCheckResponse;
     }
 
@@ -2563,17 +2561,36 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         datamodelManager.updateDataModelDesc(modelUpdate);
     }
 
-    public void checkSegmentToBuildOverlapsBuilt(String project, String model, SegmentRange segmentRangeToBuild) {
-        Segments<NDataSegment> segments = getSegmentsByRange(model, project, "0", "" + Long.MAX_VALUE);
-        if (!CollectionUtils.isEmpty(segments)) {
-            for (NDataSegment existedSegment : segments) {
-                if (existedSegment.getSegRange().overlaps(segmentRangeToBuild)) {
-                    throw new KylinException(SEGMENT_BUILD_RANGE_OVERLAP,
-                            existedSegment.getSegRange().getStart().toString(),
-                            existedSegment.getSegRange().getEnd().toString());
-                }
+    public List<NDataSegment> checkSegmentToBuildOverlapsBuilt(String project, NDataModel model,
+            SegmentRange<Long> segmentRangeToBuild, boolean isBuildAllIndexes, List<Long> batchIndexIds) {
+        boolean isOverlap;
+        Segments<NDataSegment> segments = getSegmentsByRange(model.getId(), project, "0", "" + Long.MAX_VALUE);
+        List<NDataSegment> overlapsBuiltSegment = Lists.newArrayListWithCapacity(segments.size());
+
+        if (CollectionUtils.isEmpty(segments)) {
+            return overlapsBuiltSegment;
+        }
+
+        boolean buildSegmentOverlapEnable = getIndexPlan(model.getId(), project).getConfig()
+                .isBuildSegmentOverlapEnabled();
+        boolean isBuildAllIndexesFinally = batchIndexIds == null || batchIndexIds.size() == 0
+                || batchIndexIds.size() == getIndexPlan(model.getId(), project).getAllIndexes().size();
+
+        for (NDataSegment existedSegment : segments) {
+            if (buildSegmentOverlapEnable && NDataModel.ModelType.BATCH == model.getModelType()
+                    && !model.isMultiPartitionModel() && isBuildAllIndexes && isBuildAllIndexesFinally
+                    && !SecondStorageUtil.isModelEnable(project, model.getId())) {
+                isOverlap = existedSegment.getSegRange().overlaps(segmentRangeToBuild)
+                        && !segmentRangeToBuild.contains(existedSegment.getSegRange());
+            } else {
+                isOverlap = existedSegment.getSegRange().overlaps(segmentRangeToBuild);
+            }
+            if (isOverlap) {
+                overlapsBuiltSegment.add(existedSegment);
             }
         }
+
+        return overlapsBuiltSegment;
     }
 
     public ComputedColumnUsageResponse getComputedColumnUsages(String project) {

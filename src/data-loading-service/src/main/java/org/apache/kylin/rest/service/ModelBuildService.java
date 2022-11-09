@@ -25,6 +25,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CONCURR
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_MULTI_PARTITION_ABANDON;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_MULTI_PARTITION_DUPLICATE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_MULTI_PARTITION_EMPTY;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_BUILD_RANGE_OVERLAP;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -371,7 +373,9 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
         Preconditions.checkArgument(!PushDownUtil.needPushdown(params.getStart(), params.getEnd()),
                 "Load data must set start and end date");
         val segmentRangeToBuild = SourceFactory.getSource(table).getSegmentRange(params.getStart(), params.getEnd());
-        modelService.checkSegmentToBuildOverlapsBuilt(project, modelId, segmentRangeToBuild);
+        List<NDataSegment> overlapSegments = modelService.checkSegmentToBuildOverlapsBuilt(project,
+                modelDescInTransaction, segmentRangeToBuild, params.isNeedBuild(), params.getBatchIndexIds());
+        buildSegmentOverlapExceptionInfo(overlapSegments);
         modelService.saveDateFormatIfNotExist(project, modelId, params.getPartitionColFormat());
         checkMultiPartitionBuildParam(modelDescInTransaction, params);
         NDataSegment newSegment = getManager(NDataflowManager.class, project).appendSegment(df, segmentRangeToBuild,
@@ -392,6 +396,18 @@ public class ModelBuildService extends AbstractModelService implements ModelBuil
         }
         return new JobInfoResponse.JobInfo(JobTypeEnum.INC_BUILD.toString(), getManager(SourceUsageManager.class)
                 .licenseCheckWrap(project, () -> jobManager.addSegmentJob(jobParam)));
+    }
+
+    private void buildSegmentOverlapExceptionInfo(List<NDataSegment> overlapSegments) {
+        if (CollectionUtils.isEmpty(overlapSegments)) {
+            return;
+        }
+
+        StringJoiner joiner = new StringJoiner(",", "[", "]");
+        for (NDataSegment seg : overlapSegments) {
+            joiner.add(seg.getName());
+        }
+        throw new KylinException(SEGMENT_BUILD_RANGE_OVERLAP, joiner.toString());
     }
 
     public void checkMultiPartitionBuildParam(NDataModel model, IncrementBuildSegmentParams params) {
