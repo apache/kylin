@@ -18,10 +18,10 @@
 
 package org.apache.spark.sql.udaf
 
+import org.apache.spark.unsafe.types.UTF8String
+
 import java.io.{DataInput, DataOutput}
 import java.nio.charset.StandardCharsets
-
-import org.apache.spark.unsafe.types.UTF8String
 
 @SerialVersionUID(1)
 sealed trait NullSafeValueSerializer {
@@ -150,6 +150,29 @@ class StringSerializer extends NullSafeValueSerializer {
 class DecimalSerializer extends NullSafeValueSerializer {
   override def serialize0(output: DataOutput, value: Any): Unit = {
     val decimal = value.asInstanceOf[BigDecimal]
+    DecimalCodecUtil.encode(decimal, output)
+  }
+
+  override def deSerialize0(input: DataInput, length: Int): Any = {
+    DecimalCodecUtil.decode(input)
+  }
+}
+
+@SerialVersionUID(1)
+class JavaBigDecimalSerializer extends NullSafeValueSerializer {
+  override def serialize0(output: DataOutput, value: Any): Unit = {
+    val decimal = BigDecimal.apply(value.asInstanceOf[java.math.BigDecimal])
+    DecimalCodecUtil.encode(decimal, output);
+  }
+
+  override def deSerialize0(input: DataInput, length: Int): Any = {
+    val decimal = DecimalCodecUtil.decode(input)
+    decimal.asInstanceOf[BigDecimal].bigDecimal
+  }
+}
+
+object DecimalCodecUtil {
+  def encode(decimal: BigDecimal, output: DataOutput): Unit = {
     val bytes = decimal.toString().getBytes(StandardCharsets.UTF_8)
     output.writeInt(1 + bytes.length)
     output.writeByte(decimal.scale)
@@ -157,7 +180,7 @@ class DecimalSerializer extends NullSafeValueSerializer {
     output.write(bytes)
   }
 
-  override def deSerialize0(input: DataInput, length: Int): Any = {
+  def decode(input: DataInput): Any = {
     val scale = input.readByte()
     val length = input.readInt()
     val bytes = new Array[Byte](length)
@@ -166,4 +189,3 @@ class DecimalSerializer extends NullSafeValueSerializer {
     decimal.setScale(scale)
   }
 }
-

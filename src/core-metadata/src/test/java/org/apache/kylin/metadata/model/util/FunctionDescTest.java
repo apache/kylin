@@ -26,14 +26,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NDataModelManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,6 +86,12 @@ public class FunctionDescTest extends NLocalFileMetadataTestCase {
             Assert.fail();
         } catch (KylinException ignored) {
         }
+        Assert.assertThrows(IllegalArgumentException.class,
+                () -> FunctionDesc.proposeReturnType("SUM_LC", "", Maps.newHashMap(), true));
+        Assert.assertThrows(KylinException.class,
+                () -> FunctionDesc.proposeReturnType("SUM_LC", "char", Maps.newHashMap(), true));
+        String returnType = FunctionDesc.proposeReturnType("SUM_LC", "bigint", Maps.newHashMap(), true);
+        Assert.assertEquals("bigint", returnType);
     }
 
     @Test
