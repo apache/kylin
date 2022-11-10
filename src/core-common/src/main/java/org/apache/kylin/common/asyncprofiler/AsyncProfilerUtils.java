@@ -53,6 +53,10 @@ public class AsyncProfilerUtils {
         this.cachedResult = countDownLatch;
     }
 
+    public void build(File localCacheDir) {
+        this.localCacheDir = localCacheDir;
+    }
+
     public void build(long resultCollectionTimeout, File localCacheDir) {
         this.resultCollectionTimeout = resultCollectionTimeout;
         this.localCacheDir = localCacheDir;

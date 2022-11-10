@@ -41,6 +41,30 @@ public class AsyncProfilerToolTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testLoadLocalAsyncProfilerLib() {
+        AsyncProfilerTool.loadAsyncProfilerLib(true);
+        String errorMsg = "";
+        try {
+            AsyncProfilerTool.status();
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertTrue(errorMsg.isEmpty());
+    }
+
+    @Test
+    public void testLoadRemoteAsyncProfilerLib() {
+        AsyncProfilerTool.loadAsyncProfilerLib(false);
+        String errorMsg = "";
+        try {
+            AsyncProfilerTool.status();
+        } catch (Exception e) {
+            errorMsg = e.getMessage();
+        }
+        Assert.assertTrue(errorMsg.isEmpty());
+    }
+
+    @Test
     public void testStartAndStop() {
         try {
             Assert.assertTrue(StringUtils.contains(AsyncProfilerTool.status(), "Profiler is not active"));

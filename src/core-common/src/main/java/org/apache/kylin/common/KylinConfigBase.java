@@ -19,6 +19,8 @@
 package org.apache.kylin.common;
 
 import static java.lang.Math.toIntExact;
+import static org.apache.kylin.common.asyncprofiler.AsyncProfiler.ASYNC_PROFILER_LIB_LINUX_ARM64;
+import static org.apache.kylin.common.asyncprofiler.AsyncProfiler.ASYNC_PROFILER_LIB_LINUX_X64;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_DRIVER_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_PASS_KEY;
@@ -2636,6 +2638,13 @@ public abstract class KylinConfigBase implements Serializable {
         return getLogPropertyFile("spark-appmaster-log4j.xml");
     }
 
+    public String getAsyncProfilerFiles() throws IOException {
+        String kylinHome = getKylinHomeWithoutWarn();
+        File libX64 = new File(kylinHome + "/lib/" + ASYNC_PROFILER_LIB_LINUX_X64);
+        File libArm64 = new File(kylinHome + "/lib/" + ASYNC_PROFILER_LIB_LINUX_ARM64);
+        return libX64.getCanonicalPath() + "," + libArm64.getCanonicalPath();
+    }
+
     private String getLogPropertyFile(String filename) {
         String parentFolder;
         if (isDevEnv()) {
@@ -3597,7 +3606,7 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean buildJobProfilingEnabled() {
         return !Boolean.parseBoolean(System.getProperty("spark.local", FALSE))
-                && Boolean.parseBoolean(getOptional("kylin.engine.async-profiler-enabled", FALSE));
+                && Boolean.parseBoolean(getOptional("kylin.engine.async-profiler-enabled", TRUE));
     }
 
     public long buildJobProfilingResultTimeout() {
