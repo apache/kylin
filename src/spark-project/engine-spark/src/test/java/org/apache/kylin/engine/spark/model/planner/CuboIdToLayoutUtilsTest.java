@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark.model.planner;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -67,6 +68,76 @@ public class CuboIdToLayoutUtilsTest {
         Set<List<Integer>> expected = new LinkedHashSet<>();
         expected.add(Lists.newArrayList(11 - 7, 11 - 3, 11 - 0, 1001, 1002, 1003));
         expected.add(Lists.newArrayList(11 - 10, 11 - 5, 11 - 4, 1001, 1002, 1003));
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testConvertCuboIdsToColOrdersWithReverseOrder() {
+        int maxCountDimension = 12;
+        Map<Long, Long> cuboids = new HashMap<>();
+        long cuboid = 1 << 0 | 1 << 3 | 1 << 7;
+        cuboids.put(cuboid, (long) 0);
+        cuboid = 1 << 4 | 1 << 10 | 1 << 5;
+        cuboids.put(cuboid, (long) 0);
+        Set<Integer> measureIds = new LinkedHashSet<>();
+        measureIds.add(1001);
+        measureIds.add(1002);
+        measureIds.add(1003);
+        List<Integer> sortOrder = getSortList(maxCountDimension);
+        Collections.reverse(sortOrder);
+        Set<List<Integer>> result = CuboIdToLayoutUtils.convertCuboIdsToColOrders(cuboids, maxCountDimension,
+                measureIds, getMap(maxCountDimension), sortOrder);
+        Set<List<Integer>> expected = new LinkedHashSet<>();
+        expected.add(Lists.newArrayList(11 - 0, 11 - 3, 11 - 7, 1001, 1002, 1003));
+        expected.add(Lists.newArrayList(11 - 4, 11 - 5, 11 - 10, 1001, 1002, 1003));
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testConvertCuboIdsToColOrdersWithEmptyOrder() {
+        int maxCountDimension = 12;
+        Map<Long, Long> cuboids = new HashMap<>();
+        long cuboid = 1 << 0 | 1 << 3 | 1 << 7;
+        cuboids.put(cuboid, (long) 0);
+        cuboid = 1 << 4 | 1 << 10 | 1 << 5;
+        cuboids.put(cuboid, (long) 0);
+        Set<Integer> measureIds = new LinkedHashSet<>();
+        measureIds.add(1001);
+        measureIds.add(1002);
+        measureIds.add(1003);
+        List<Integer> sortOrder = getSortList(maxCountDimension - 8);
+        Collections.reverse(sortOrder);
+        Set<List<Integer>> result = CuboIdToLayoutUtils.convertCuboIdsToColOrders(cuboids, maxCountDimension,
+                measureIds, getMap(maxCountDimension), sortOrder);
+        Set<List<Integer>> expected = new LinkedHashSet<>();
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testConvertCuboIdsToColOrdersWithMultiOrder() {
+        int maxCountDimension = 12;
+        Map<Long, Long> cuboids = new HashMap<>();
+        long cuboid = 1 << 0 | 1 << 3 | 1 << 7;
+        cuboids.put(cuboid, (long) 0);
+        cuboid = 1 << 4 | 1 << 10 | 1 << 5;
+        cuboids.put(cuboid, (long) 0);
+        Set<Integer> measureIds = new LinkedHashSet<>();
+        measureIds.add(1001);
+        measureIds.add(1002);
+        measureIds.add(1003);
+        List<Integer> sortOrder = getSortList(maxCountDimension);
+        // order1: 0,1,2,3,4,5,6,7,8,9,10,11
+        Set<List<Integer>> result = CuboIdToLayoutUtils.convertCuboIdsToColOrders(cuboids, maxCountDimension,
+                measureIds, getMap(maxCountDimension), sortOrder);
+        Set<List<Integer>> expected = new LinkedHashSet<>();
+        expected.add(Lists.newArrayList(11 - 7, 11 - 3, 11 - 0, 1001, 1002, 1003)); // 4,8,11
+        expected.add(Lists.newArrayList(11 - 10, 11 - 5, 11 - 4, 1001, 1002, 1003)); // 1,6,7
+        // order2: 11,10,9,8,7,6,5,4,3,2,1,0
+        Collections.reverse(sortOrder);
+        result.addAll(CuboIdToLayoutUtils.convertCuboIdsToColOrders(cuboids, maxCountDimension, measureIds,
+                getMap(maxCountDimension), sortOrder));
+        expected.add(Lists.newArrayList(11 - 0, 11 - 3, 11 - 7, 1001, 1002, 1003)); // 11,8,4
+        expected.add(Lists.newArrayList(11 - 4, 11 - 5, 11 - 10, 1001, 1002, 1003)); // 7,6,1
         assertEquals(expected, result);
     }
 

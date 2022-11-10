@@ -26,8 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+
+import com.google.common.collect.Lists;
 
 public class CuboIdToLayoutUtils {
     /**
@@ -39,12 +42,16 @@ public class CuboIdToLayoutUtils {
     public static Set<LayoutEntity> convertCuboIdsToLayoutEntity(Map<Long, Long> cuboids, IndexPlan indexPlan) {
         Set<Integer> measuresIds = indexPlan.getEffectiveMeasures().keySet();
         Set<LayoutEntity> result = new HashSet<>();
-        // this is the base order for all the dimensions
-        List<Integer> sortOfDims = indexPlan.getRuleBasedIndex().getDimensions();
-        Set<List<Integer>> colOrders = convertCuboIdsToColOrders(cuboids, indexPlan.getEffectiveDimCols().size(),
-                measuresIds, indexPlan.getRowKeyIdToColumnId(), sortOfDims);
-        for (List<Integer> colOrder : colOrders) {
-            result.add(indexPlan.createRecommendAggIndexLayout(colOrder));
+        List<NAggregationGroup> aggregationGroups = indexPlan.getRuleBasedIndex().getAggregationGroups();
+        for (NAggregationGroup group : aggregationGroups) {
+            // each agg group may has different order for the dimensions
+            // https://jirap.corp.ebay.com/browse/KYLIN-3638
+            List<Integer> dimensionOrder = Lists.newArrayList(group.getIncludes());
+            Set<List<Integer>> colOrders = convertCuboIdsToColOrders(cuboids, indexPlan.getEffectiveDimCols().size(),
+                    measuresIds, indexPlan.getRowKeyIdToColumnId(), dimensionOrder);
+            for (List<Integer> colOrder : colOrders) {
+                result.add(indexPlan.createRecommendAggIndexLayout(colOrder));
+            }
         }
         return result;
     }
