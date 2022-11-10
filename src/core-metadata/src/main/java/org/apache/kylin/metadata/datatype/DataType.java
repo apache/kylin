@@ -171,9 +171,9 @@ public class DataType implements Serializable {
     }
 
     public static DataType getType(String type) {
-        if (type == null)
+        if (type == null) {
             return null;
-
+        }
         DataType dataType = new DataType(type);
         DataType cached = CACHE.get(dataType);
         if (cached == null) {
@@ -409,10 +409,13 @@ public class DataType implements Serializable {
     public static final BytesSerializer<DataType> serializer = new BytesSerializer<DataType>() {
         @Override
         public void serialize(DataType value, ByteBuffer out) {
+            serializeDataType(value, out);
+        }
+
+        private void serializeDataType(DataType value, ByteBuffer out) {
             BytesUtil.writeUTFString(value.name, out);
             BytesUtil.writeVInt(value.precision, out);
             BytesUtil.writeVInt(value.scale, out);
-
         }
 
         @Override
@@ -420,7 +423,6 @@ public class DataType implements Serializable {
             String name = BytesUtil.readUTFString(in);
             int precision = BytesUtil.readVInt(in);
             int scale = BytesUtil.readVInt(in);
-
             return new DataType(name, precision, scale);
         }
     };

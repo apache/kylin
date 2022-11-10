@@ -46,13 +46,13 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.measure.corr.CorrMeasureType;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.PartitionDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.util.ICutContextStrategy;
 
 import com.google.common.collect.ImmutableList;
@@ -65,7 +65,7 @@ import com.google.common.collect.Sets;
 public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
 
     protected static final List<String> supportedFunction = Lists.newArrayList("SUM", "MIN", "MAX", "COUNT_DISTINCT",
-            "BITMAP_UUID", "PERCENTILE_APPROX", FunctionDesc.FUNC_BITMAP_BUILD);
+            "BITMAP_UUID", "PERCENTILE_APPROX", FunctionDesc.FUNC_BITMAP_BUILD, FunctionDesc.FUNC_SUM_LC);
     private ImmutableList<Integer> rewriteGroupKeys; // preserve the ordering of group keys after CC replacement
     private List<ImmutableBitSet> rewriteGroupSets; // group sets with cc replaced
     List<AggregateCall> aggregateCalls;
@@ -203,8 +203,8 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
             TblColRef originalColumn = inputColumnRowType.getColumnByIndex(i);
             if (null != this.context && this.context.getGroupCCColRewriteMapping().containsKey(originalColumn)) {
                 groups.add(this.context.getGroupCCColRewriteMapping().get(originalColumn));
-                groupKeys
-                        .add(inputColumnRowType.getIndexByName(this.context.getGroupCCColRewriteMapping().get(originalColumn).getName()));
+                groupKeys.add(inputColumnRowType
+                        .getIndexByName(this.context.getGroupCCColRewriteMapping().get(originalColumn).getName()));
             } else {
                 Set<TblColRef> sourceColumns = inputColumnRowType.getSourceColumnsByIndex(i);
                 groups.addAll(sourceColumns);
@@ -307,7 +307,6 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
         // rebuild rowType & columnRowType
         this.rowType = this.deriveRowType();
         this.columnRowType = this.buildColumnRowType();
-
     }
 
     private Boolean isExactlyMatched() {
@@ -330,7 +329,8 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
             return false;
         }
 
-        if (!checkAggCall()) return false;
+        if (!checkAggCall())
+            return false;
         Set<String> cuboidDimSet = new HashSet<>();
         if (getContext() != null && getContext().storageContext.getCandidate() != null) {
             cuboidDimSet = getContext().storageContext.getCandidate().getLayoutEntity().getOrderedDimensions().values()
@@ -403,7 +403,7 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
     private boolean isDimExactlyMatch(Set<String> groupByCols, Set<String> cuboidDimSet) {
         return groupByCols.equals(cuboidDimSet) && isSimpleGroupType()
                 && (this.context.getInnerGroupByColumns().isEmpty()
-                || !this.context.getGroupCCColRewriteMapping().isEmpty());
+                        || !this.context.getGroupCCColRewriteMapping().isEmpty());
 
     }
 
@@ -502,7 +502,8 @@ public class KapAggregateRel extends OLAPAggregateRel implements KapRel {
     }
 
     public boolean isContainCountDistinct() {
-        return aggregateCalls.stream().anyMatch(agg -> agg.getAggregation().getKind() == SqlKind.COUNT && agg.isDistinct());
+        return aggregateCalls.stream()
+                .anyMatch(agg -> agg.getAggregation().getKind() == SqlKind.COUNT && agg.isDistinct());
     }
 
 }

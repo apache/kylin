@@ -20,19 +20,19 @@ package org.apache.kylin.engine.spark.job
 
 import org.apache.kylin.common.KapConfig
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
+import org.apache.kylin.measure.bitmap.BitmapMeasureType
+import org.apache.kylin.measure.hllc.HLLCMeasureType
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTree
 import org.apache.kylin.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataSegment}
 import org.apache.kylin.metadata.model.NDataModel.Measure
-import org.apache.kylin.measure.bitmap.BitmapMeasureType
-import org.apache.kylin.measure.hllc.HLLCMeasureType
 import org.apache.kylin.metadata.model.TblColRef
-import org.apache.spark.sql.functions.{col, _}
+import org.apache.spark.sql.catalyst.expressions.Literal
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.udaf._
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql.util.SparderTypeUtil.toSparkType
-import org.apache.spark.sql.{Column, DataFrame, Dataset, Row, SparkSession}
-import org.apache.spark.sql.catalyst.expressions.Literal
+import org.apache.spark.sql.{Column, DataFrame}
 
 import java.util
 import java.util.Locale
@@ -60,20 +60,20 @@ object CuboidAggregator {
       dataset.schema.fieldNames.zipWithIndex.map(tp => (tp._2, tp._1)).toMap
 
     aggregate(dataset, dimensions, measures, //
-      (colRef: TblColRef) => columnIndex.apply(flatTableDesc.getColumnIndex(colRef)) )
+      (colRef: TblColRef) => columnIndex.apply(flatTableDesc.getColumnIndex(colRef)))
   }
 
   /**
-    * Avoid compilation error when invoking aggregate in java
-    * incompatible types: Function1 is not a functional interface
-    *
-    * @param dataset
-    * @param dimensions
-    * @param measures
-    * @param tableDesc
-    * @param isSparkSQL
-    * @return
-    */
+   * Avoid compilation error when invoking aggregate in java
+   * incompatible types: Function1 is not a functional interface
+   *
+   * @param dataset
+   * @param dimensions
+   * @param measures
+   * @param tableDesc
+   * @param isSparkSQL
+   * @return
+   */
   def aggregateJava(dataset: DataFrame,
                     dimensions: util.Set[Integer],
                     measures: util.Map[Integer, Measure],
@@ -223,6 +223,15 @@ object CuboidAggregator {
           }
         case "CORR" =>
           new Column(Literal(null, DoubleType)).as(measureEntry._1.toString)
+        case "SUM_LC" =>
+          val colDataType = function.getReturnDataType
+          val sparkDataType = toSparkType(colDataType)
+          if (reuseLayout) {
+            new Column(ReuseSumLC(columns.head.expr, sparkDataType).toAggregateExpression()).as(measureEntry._1.toString)
+          } else {
+            new Column(EncodeSumLC(columns.head.expr, columns.drop(1).head.expr, sparkDataType)
+              .toAggregateExpression()).as(measureEntry._1.toString)
+          }
       }
     }.toSeq
 

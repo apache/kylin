@@ -24,12 +24,14 @@ import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Date;
 
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.junit.annotation.MultiTimezoneTest;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Created by dongli on 1/4/16.
@@ -188,5 +190,54 @@ public class DateFormatTest {
             }
         }
 
+    }
+
+    @Test
+    public void testStringToMillis() {
+        // 2022-12-01 00:00:00
+        long expectedMillis = 1669824000000L;
+
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("202212"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00:00"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00:00:000"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00:00:000"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00:00.000"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00:00:000"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00:00:000"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00:00"));
+    }
+
+    @Test
+    public void testStringToMillisSupplement() {
+        long expectedMillis = 1669824000000L;
+
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00:00"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201T00:00:00.000Z"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01T00:00:00.000Z"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00:00"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00:00.000"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01T00:00:00.000Z"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01T00:00:00.000Z"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00:00.000"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01T00:00:00.000+08:00"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00:00.000"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("1669824000000000"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("1669824000000"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("1669824000"));
+    }
+
+    @Test
+    public void testUnsupportedStringToMillis() {
+        Assert.assertThrows(KylinException.class, () -> DateFormat.stringToMillis("12/01"));
+        Assert.assertThrows(KylinException.class, () -> DateFormat.stringToMillis("-12345"));
     }
 }

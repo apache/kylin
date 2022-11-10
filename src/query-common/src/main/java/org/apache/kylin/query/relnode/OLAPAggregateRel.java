@@ -101,6 +101,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     protected List<AggregateCall> rewriteAggCalls;
     protected List<TblColRef> groups;
     protected List<FunctionDesc> aggregations;
+
     public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator,
             ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls)
             throws InvalidRelException {
@@ -501,7 +502,6 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
         // rebuild aggregate call
         return new AggregateCall(newAgg, false, newArgList, fieldType, callName);
-
     }
 
     /**

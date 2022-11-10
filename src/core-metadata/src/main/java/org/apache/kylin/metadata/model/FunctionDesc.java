@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
@@ -55,6 +56,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -91,21 +93,31 @@ public class FunctionDesc implements Serializable {
 
     public static String proposeReturnType(String expression, String colDataType, Map<String, String> override,
             boolean saveCheck) {
-        String returnType = override.getOrDefault(expression,
-                EXPRESSION_DEFAULT_TYPE_MAP.getOrDefault(expression, colDataType));
-        if (saveCheck && colDataType != null && DataType.getType(colDataType).isStringFamily()) {
+        if (saveCheck) {
             switch (expression) {
             case FunctionDesc.FUNC_SUM:
-            case FunctionDesc.FUNC_PERCENTILE:
-                throw new KylinException(INVALID_MEASURE_DATA_TYPE,
-                        String.format(Locale.ROOT, "Invalid column type %s for measure %s", colDataType, expression));
+            case FunctionDesc.FUNC_PERCENTILE: {
+                if (colDataType != null && DataType.getType(colDataType).isStringFamily()) {
+                    throw new KylinException(INVALID_MEASURE_DATA_TYPE, String.format(Locale.ROOT,
+                            "Invalid column type %s for measure %s", colDataType, expression));
+                }
+                break;
+            }
+            case FunctionDesc.FUNC_SUM_LC: {
+                Preconditions.checkArgument(Strings.isNotEmpty(colDataType),
+                        "SUM_LC Measure's input type shouldn't be null or empty");
+                checkSumLCDataType(colDataType);
+                break;
+            }
             default:
                 break;
             }
         }
 
-        switch (expression) {
-        case FunctionDesc.FUNC_SUM:
+        String returnType = override.getOrDefault(expression,
+                EXPRESSION_DEFAULT_TYPE_MAP.getOrDefault(expression, colDataType));
+        // widen return type for sum or sum_lc measure
+        if (FunctionDesc.FUNC_SUM.equals(expression) || FunctionDesc.FUNC_SUM_LC.equals(expression)) {
             if (colDataType != null) {
                 DataType type = DataType.getType(returnType);
                 if (type.isIntegerFamily()) {
@@ -119,11 +131,17 @@ public class FunctionDesc implements Serializable {
             } else {
                 returnType = "decimal(19,4)";
             }
-            break;
-        default:
-            break;
         }
         return returnType;
+    }
+
+    private static void checkSumLCDataType(String dataTypeName) {
+        DataType dataType = DataType.getType(dataTypeName);
+        if (!dataType.isNumberFamily()) {
+            throw new KylinException(INVALID_MEASURE_DATA_TYPE,
+                    String.format(Locale.ROOT, "SUM_LC Measure's return type '%s' is illegal. It must be one of %s",
+                            dataType, DataType.NUMBER_FAMILY));
+        }
     }
 
     public static final String FUNC_SUM = "SUM";
@@ -147,6 +165,7 @@ public class FunctionDesc implements Serializable {
     public static final String FUNC_PERCENTILE = "PERCENTILE_APPROX";
     public static final String FUNC_GROUPING = "GROUPING";
     public static final String FUNC_TOP_N = "TOP_N";
+    public static final String FUNC_SUM_LC = "SUM_LC";
     public static final ImmutableSet<String> DIMENSION_AS_MEASURES = ImmutableSet.<String> builder()
             .add(FUNC_MAX, FUNC_MIN, FUNC_COUNT_DISTINCT).build();
     public static final ImmutableSet<String> NOT_SUPPORTED_FUNCTION = ImmutableSet.<String> builder().build();
@@ -195,19 +214,30 @@ public class FunctionDesc implements Serializable {
         for (ParameterDesc p : getParameters()) {
             if (p.isColumnType()) {
                 TblColRef colRef = model.findColumn(p.getValue());
-                returnDataType = DataType.getType(
-                        proposeReturnType(expression, colRef.getDatatype(), Maps.newHashMap(), model.isSaveCheck()));
                 p.setValue(colRef.getIdentity());
                 p.setColRef(colRef);
+                if (expression.equals(FUNC_SUM_LC)) {
+                    if (Objects.isNull(returnDataType)) {
+                        // use the first column to init returnType and returnDataType, ignore the second timestamp column
+                        returnType = proposeReturnType(expression, colRef.getDatatype(), Maps.newHashMap(),
+                                model.isSaveCheck());
+                        returnDataType = DataType.getType(returnType);
+                    }
+                } else {
+                    returnDataType = DataType.getType(proposeReturnType(expression, colRef.getDatatype(),
+                            Maps.newHashMap(), model.isSaveCheck()));
+                }
             }
         }
-        if (returnDataType == null) {
-            returnDataType = DataType.getType(BIGINT);
+        if (!expression.equals(FUNC_SUM_LC)) {
+            if (returnDataType == null) {
+                returnDataType = DataType.getType(BIGINT);
+            }
+            if (!StringUtils.isEmpty(returnType)) {
+                returnDataType = DataType.getType(returnType);
+            }
+            returnType = returnDataType.toString();
         }
-        if (!StringUtils.isEmpty(returnType)) {
-            returnDataType = DataType.getType(returnType);
-        }
-        returnType = returnDataType.toString();
     }
 
     private void reInitMeasureType() {

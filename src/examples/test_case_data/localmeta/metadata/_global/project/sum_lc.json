@@ -1,0 +1,35 @@
+{
+  "uuid" : "d1ceb3a4-4d2c-27af-5b7d-92c8a4055776",
+  "last_modified" : 1667464991353,
+  "create_time" : 1667464991347,
+  "version" : "4.0.0.0",
+  "name" : "sum_lc",
+  "owner" : "ADMIN",
+  "status" : "ENABLED",
+  "create_time_utc" : 1667464991347,
+  "default_database" : "DEFAULT",
+  "description" : "",
+  "principal" : null,
+  "keytab" : null,
+  "maintain_model_type" : "MANUAL_MAINTAIN",
+  "override_kylin_properties" : {
+    "kylin.metadata.semi-automatic-mode" : "false",
+    "kylin.query.metadata.expose-computed-column" : "true",
+    "kylin.source.default" : "9"
+  },
+  "segment_config" : {
+    "auto_merge_enabled" : false,
+    "auto_merge_time_ranges" : [ "WEEK", "MONTH", "QUARTER", "YEAR" ],
+    "volatile_range" : {
+      "volatile_range_number" : 0,
+      "volatile_range_enabled" : false,
+      "volatile_range_type" : "DAY"
+    },
+    "retention_range" : {
+      "retention_range_number" : 1,
+      "retention_range_enabled" : false,
+      "retention_range_type" : "MONTH"
+    },
+    "create_empty_segment_enabled" : false
+  }
+}
