@@ -22,7 +22,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.apache.hadoop.fs.{FSDataOutputStream, FileSystem, Path}
 import org.apache.kylin.common.asyncprofiler.Message._
 import org.apache.kylin.common.asyncprofiler.{AsyncProfilerTool, AsyncProfilerUtils}
-import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.common.util.{ExecutorServiceUtil, HadoopUtil}
 import org.apache.spark.SparkContext
 import org.apache.spark.api.plugin.{DriverPlugin, PluginContext}
 import org.apache.spark.internal.Logging
@@ -71,7 +71,10 @@ class BuildAsyncProfilerDriverPlugin extends DriverPlugin with Logging {
       val profile = new Runnable {
         override def run(): Unit = checkAction()
       }
-      log.debug(s"AsyncProfiler status: ${AsyncProfilerTool.status()}")
+      val deployMode = sc.getConf.get("spark.submit.deployMode", "")
+      log.info("Current spark.submit.deployMode: {}", deployMode)
+      AsyncProfilerTool.loadAsyncProfilerLib(deployMode.equals("client"))
+      log.info(s"AsyncProfiler status: ${AsyncProfilerTool.status()}")
       scheduledExecutorService.scheduleWithFixedDelay(
         profile, 0, checkingInterval, TimeUnit.MILLISECONDS)
 
@@ -129,6 +132,8 @@ class BuildAsyncProfilerDriverPlugin extends DriverPlugin with Logging {
   override def shutdown(): Unit = {
     val fs: FileSystem = HadoopUtil.getFileSystem(statusFileName)
     HadoopUtil.writeStringToHdfs(fs, ProfilerStatus.CLOSED, statusFileName)
+    ExecutorServiceUtil.shutdownGracefully(scheduledExecutorService, 3)
+    super.shutdown()
   }
 
   def start(params: String): Unit = {

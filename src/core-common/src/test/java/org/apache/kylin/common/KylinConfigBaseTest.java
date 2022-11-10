@@ -1191,6 +1191,7 @@ class KylinConfigBaseTest {
     @Test
     void testBuildJobProfilingEnabled() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.engine.async-profiler-enabled", "false");
         assertFalse(config.buildJobProfilingEnabled());
         config.setProperty("kylin.engine.async-profiler-enabled", "true");
         assertTrue(config.buildJobProfilingEnabled());

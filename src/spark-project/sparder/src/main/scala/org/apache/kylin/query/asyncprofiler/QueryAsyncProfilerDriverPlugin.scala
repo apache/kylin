@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.asyncprofiler
 
+import org.apache.kylin.common.asyncprofiler.AsyncProfilerTool
 import org.apache.spark.SparkContext
 import org.apache.spark.api.plugin.{DriverPlugin, PluginContext}
 import org.apache.spark.internal.Logging
@@ -26,7 +27,11 @@ import java.util
 
 class QueryAsyncProfilerDriverPlugin extends DriverPlugin with Logging {
 
-  override def init(sc: SparkContext, pluginContext: PluginContext): util.Map[String, String] = super.init(sc, pluginContext)
+  override def init(sc: SparkContext, pluginContext: PluginContext): util.Map[String, String] = {
+    // Sparder Driver and KE are always in one JVM, in client mode
+    AsyncProfilerTool.loadAsyncProfilerLib(true)
+    super.init(sc, pluginContext)
+  }
 
   override def receive(message: Any): AnyRef = {
     import org.apache.kylin.common.asyncprofiler.Message._

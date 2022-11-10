@@ -47,7 +47,6 @@ import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
@@ -98,6 +97,7 @@ import org.apache.kylin.job.execution.StageBase;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -1340,6 +1340,7 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
     }
 
     public void setResponseLanguage(HttpServletRequest request) {
+        aclEvaluate.checkIsGlobalAdmin();
         String languageToHandle = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
         if (languageToHandle == null) {
             ErrorCode.setMsg("cn");

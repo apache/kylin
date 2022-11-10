@@ -58,6 +58,22 @@ public class AsyncProfilerUtilsTest {
     }
 
     @Test
+    public void testBuildWithNewLocalCacheDir() throws IOException {
+        AsyncProfilerUtils asyncProfilerUtilsBuild = AsyncProfilerUtils.getInstance();
+        asyncProfilerUtilsBuild.build(new CountDownLatch(2));
+        Assert.assertEquals(2, asyncProfilerUtilsBuild.cachedResult.getCount());
+
+        File testFile = Files.createTempDirectory("ke-build-async-test-profiler-").toFile();
+        asyncProfilerUtilsBuild.build(2L, testFile);
+        Assert.assertEquals(2L, asyncProfilerUtilsBuild.resultCollectionTimeout);
+        Assert.assertEquals(testFile, asyncProfilerUtilsBuild.localCacheDir);
+
+        testFile = Files.createTempDirectory("ke-build-async-test-profiler-").toFile();
+        asyncProfilerUtilsBuild.build(testFile);
+        Assert.assertEquals(testFile, asyncProfilerUtilsBuild.localCacheDir);
+    }
+
+    @Test
     public void testWaitForResultTimeout() throws IOException, InterruptedException {
         AsyncProfilerUtils asyncProfilerUtils = AsyncProfilerUtils.getInstance();
         asyncProfilerUtils.build(new CountDownLatch(3));
