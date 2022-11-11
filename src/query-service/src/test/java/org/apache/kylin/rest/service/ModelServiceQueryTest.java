@@ -115,7 +115,7 @@ public class ModelServiceQueryTest extends SourceTestCase {
         ReflectionTestUtils.setField(semanticService, "expandableMeasureUtil",
                 new ExpandableMeasureUtil((model, ccDesc) -> {
                     String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
-                            AclPermissionUtil.prepareQueryContextACLInfo(model.getProject(),
+                            AclPermissionUtil.createAclInfo(model.getProject(),
                                     semanticService.getCurrentUserGroups()));
                     ccDesc.setInnerExpression(ccExpression);
                     ComputedColumnEvalUtil.evaluateExprAndType(model, ccDesc);

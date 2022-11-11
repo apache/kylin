@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_EXECUTE_MODEL_SQL;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARTITION_COLUMN;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.COMPUTED_COLUMN_CONFLICT;
@@ -289,7 +290,7 @@ public class ModelServiceTest extends SourceTestCase {
         ReflectionTestUtils.setField(semanticService, "expandableMeasureUtil",
                 new ExpandableMeasureUtil((model, ccDesc) -> {
                     String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
-                            AclPermissionUtil.prepareQueryContextACLInfo(model.getProject(),
+                            AclPermissionUtil.createAclInfo(model.getProject(),
                                     semanticService.getCurrentUserGroups()));
                     ccDesc.setInnerExpression(ccExpression);
                     ComputedColumnEvalUtil.evaluateExprAndType(model, ccDesc);
@@ -4868,6 +4869,23 @@ public class ModelServiceTest extends SourceTestCase {
         Assert.assertEquals("GMV_SUM", model.getMeasures().get(1).getName());
         Assert.assertNull(model.getMeasures().get(1).getColumn());
         Assert.assertNull(model.getMeasures().get(1).getComment());
+    }
+
+    @Test
+    public void testCheckFlatTableSql() {
+        String project = "default";
+        String modelId = "a8ba3ff1-83bd-4066-ad54-d2fb3d1f0e94";
+        NDataModel model = NDataModelManager.getInstance(getTestConfig(), project).getDataModelDesc(modelId);
+        modelService.checkFlatTableSql(model);
+
+        getTestConfig().setProperty("kylin.env", "PROD");
+        try {
+            modelService.checkFlatTableSql(model);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(FAILED_EXECUTE_MODEL_SQL.toErrorCode().getCodeString(),
+                    e.getErrorCode().getCodeString());
+        }
     }
 
     @Test
