@@ -69,6 +69,11 @@
             <artifactId>spymemcached</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+        </dependency>
+
         <!-- Test & Env -->
         <dependency>
             <groupId>junit</groupId>

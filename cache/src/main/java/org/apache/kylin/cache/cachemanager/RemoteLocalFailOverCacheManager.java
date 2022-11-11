@@ -34,7 +34,7 @@ public class RemoteLocalFailOverCacheManager extends AbstractCacheManager {
     private static final Logger logger = LoggerFactory.getLogger(RemoteLocalFailOverCacheManager.class);
 
     @Autowired
-    private MemcachedCacheManager remoteCacheManager;
+    private AbstractRemoteCacheManager remoteCacheManager;
 
     @Autowired
     private CacheManager localCacheManager;
@@ -70,7 +70,7 @@ public class RemoteLocalFailOverCacheManager extends AbstractCacheManager {
     }
 
     @VisibleForTesting
-    MemcachedCacheManager getRemoteCacheManager() {
+    AbstractRemoteCacheManager getRemoteCacheManager() {
         return remoteCacheManager;
     }
 }
