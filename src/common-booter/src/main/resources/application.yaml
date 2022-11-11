@@ -48,7 +48,7 @@ spring:
       max-file-size: "5MB"
       max-request-size: "5MB"
   application:
-    name: yinglong-common-booter
+    name: common-booter
   resources:
     chain:
       gzipped: true

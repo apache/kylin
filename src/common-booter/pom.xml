@@ -187,7 +187,7 @@
                                 <descriptor>src/main/resources/assembly.xml</descriptor>
                             </descriptors>
                             <tarLongFileMode>posix</tarLongFileMode>
-                            <finalName>yinglong-common-${project.version}</finalName>
+                            <finalName>common-${project.version}</finalName>
                         </configuration>
                         <executions>
                             <execution>

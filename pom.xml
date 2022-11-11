@@ -347,13 +347,13 @@
         <module>src/integration-service</module>
         <module>src/kylin-it</module>
 
-        <!-- yinglong controller  -->
+        <!-- controller  -->
         <module>src/common-server</module>
         <module>src/metadata-server</module>
         <module>src/data-loading-server</module>
         <module>src/query-server</module>
 
-        <!-- yinglong server (starter) -->
+        <!-- server (starter) -->
         <module>src/data-loading-booter</module>
         <module>src/query-booter</module>
         <module>src/common-booter</module>

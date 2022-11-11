@@ -28,9 +28,9 @@ kylin:
         - target: org.apache.kylin.common.KylinConfig
           type: nacos
           properties:
-            app: "${APP_NAME:yinglong-common-booter}"
+            app: "${APP_NAME:common-booter}"
             zhName: "${APP_DISPLAY_NAME:基础服务}"
-            dataIds: "${APP_NAME:yinglong-common-booter}-kylin-config"
+            dataIds: "${APP_NAME:common-booter}-kylin-config"
             group: "${TENANT_ID}"
             autoRefresh: true
             needInit: true
