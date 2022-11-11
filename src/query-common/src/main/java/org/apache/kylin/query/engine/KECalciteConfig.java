@@ -53,7 +53,22 @@ public class KECalciteConfig extends CalciteConnectionConfigImpl {
 
     @Override
     public NullCollation defaultNullCollation() {
-        return NullCollation.LOW;
+        String nullCollation = kylinConfig.getCalciteExtrasProperties.get("defaultNullCollation");
+        if (null == nullCollation) {
+            return NullCollation.HIGH;
+        }
+        switch (nullCollation.toLowerCase(Locale.ROOT)) {
+            case "low":
+                return NullCollation.LOW;
+            case "high":
+                return NullCollation.HIGH;
+            case "first":
+                return NullCollation.FIRST;
+            case "last":
+                return NullCollation.LAST;
+            default:
+                throw new UnsupportedOperationException("unsupported null collation type: " + nullCollation);
+        }
     }
 
     @Override
