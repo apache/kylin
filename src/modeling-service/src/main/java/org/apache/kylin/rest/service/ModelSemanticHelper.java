@@ -131,7 +131,7 @@ public class ModelSemanticHelper extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(ModelSemanticHelper.class);
     private final ExpandableMeasureUtil expandableMeasureUtil = new ExpandableMeasureUtil((model, ccDesc) -> {
         String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
-                AclPermissionUtil.prepareQueryContextACLInfo(model.getProject(), getCurrentUserGroups()));
+                AclPermissionUtil.createAclInfo(model.getProject(), getCurrentUserGroups()));
         ccDesc.setInnerExpression(ccExpression);
         ComputedColumnEvalUtil.evaluateExprAndType(model, ccDesc);
     });
