@@ -11,6 +11,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-it</artifactId>
+    <name>Kylin - Integration Test</name>
+
+    <properties>
+        <beanutils.version>1.9.4</beanutils.version>
+    </properties>
 
     <dependencies>
         <!--Springfox Swagger2 v2.9.2, swagger2markup v1.3.3. has specific requirement on guava and commons-beanutils -->

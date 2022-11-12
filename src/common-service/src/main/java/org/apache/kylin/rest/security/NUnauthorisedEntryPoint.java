@@ -37,7 +37,6 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.response.ErrorResponse;
-import org.apache.kylin.common.util.Unsafe;
 import org.springframework.http.MediaType;
 import org.springframework.ldap.CommunicationException;
 import org.springframework.security.authentication.DisabledException;
@@ -94,7 +93,7 @@ public class NUnauthorisedEntryPoint implements AuthenticationEntryPoint {
             throws IOException {
         response.setStatus(statusCode);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        ErrorResponse errorResponse = new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(request), ex);
+        ErrorResponse errorResponse = new ErrorResponse(request.getRequestURL().toString(), ex);
         String errorStr = JsonUtil.writeValueAsIndentString(errorResponse);
         response.setCharacterEncoding("UTF-8");
         PrintWriter writer = response.getWriter();

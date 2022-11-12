@@ -29,7 +29,6 @@
     <name>Kylin - Engine Build SDK</name>
     <artifactId>kylin-engine-build-sdk</artifactId>
 
-
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
