@@ -317,6 +317,8 @@
         <module>src/query</module>
         <module>src/core-common</module>
         <module>src/core-metadata</module>
+        <module>src/distributed-lock-ext</module>
+        <module>src/core-metrics</module>
         <module>src/source-hive</module>
         <module>src/server</module>
         <module>src/spark-project/kylin-soft-affinity-cache</module>
@@ -522,6 +524,22 @@
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-integration-service</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>distributed-lock-ext</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-core-metrics</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-streaming</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
 
             <!-- arthas -->

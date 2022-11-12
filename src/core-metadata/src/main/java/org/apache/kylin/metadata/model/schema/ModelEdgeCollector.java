@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.metadata.model.schema;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,14 +27,14 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.ParameterDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 
 import com.google.common.collect.ImmutableBiMap;
@@ -41,7 +42,6 @@ import com.google.common.collect.Maps;
 
 import io.kyligence.kap.guava20.shaded.common.graph.Graph;
 import io.kyligence.kap.guava20.shaded.common.graph.MutableGraph;
-import io.kyligence.kap.shaded.curator.org.apache.curator.shaded.com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -79,9 +79,9 @@ class ModelEdgeCollector {
         collectModelSignificant();
         collectDimensionAndMeasure();
 
-        collectIndex(indexPlan.getWhitelistLayouts(), SchemaNodeType.WHITE_LIST_INDEX, Lists.newArrayList());
+        collectIndex(indexPlan.getWhitelistLayouts(), SchemaNodeType.WHITE_LIST_INDEX, new ArrayList<>());
         collectIndex(indexPlan.getToBeDeletedIndexes().stream().flatMap(index -> index.getLayouts().stream())
-                .collect(Collectors.toList()), SchemaNodeType.TO_BE_DELETED_INDEX, Lists.newArrayList());
+                .collect(Collectors.toList()), SchemaNodeType.TO_BE_DELETED_INDEX, new ArrayList<>());
         collectIndex(indexPlan.getRuleBaseLayouts(), SchemaNodeType.RULE_BASED_INDEX, indexPlan.getAggShardByColumns());
 
         collectAggGroup();

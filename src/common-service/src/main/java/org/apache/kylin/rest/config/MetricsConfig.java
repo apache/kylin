@@ -28,11 +28,11 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.NamedThreadFactory;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.common.metrics.MetricsController;
 import org.apache.kylin.common.metrics.MetricsGroup;
+import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.config.initialize.MetricsRegistry;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -42,8 +42,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.directory.api.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
@@ -104,7 +103,7 @@ public class FunctionDesc implements Serializable {
                 break;
             }
             case FunctionDesc.FUNC_SUM_LC: {
-                Preconditions.checkArgument(Strings.isNotEmpty(colDataType),
+                Preconditions.checkArgument(StringUtils.isNotEmpty(colDataType),
                         "SUM_LC Measure's input type shouldn't be null or empty");
                 checkSumLCDataType(colDataType);
                 break;

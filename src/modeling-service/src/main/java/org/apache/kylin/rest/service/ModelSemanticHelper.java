@@ -423,7 +423,7 @@ public class ModelSemanticHelper extends BasicService {
                     .forEach(x -> x.changeTableAlias(oldAliasName, newAliasName));
             model.getAllMeasures().stream().filter(x -> !x.isTomb())
                     .forEach(x -> x.changeTableAlias(oldAliasName, newAliasName));
-            model.getComputedColumnDescs().forEach(x -> x.changeTableAlias(oldAliasName, newAliasName));
+            model.getComputedColumnDescs().forEach(x -> changeTableAlias(x, oldAliasName, newAliasName));
 
             String filterCondition = model.getFilterCondition();
             if (StringUtils.isNotEmpty(filterCondition)) {
@@ -434,6 +434,13 @@ public class ModelSemanticHelper extends BasicService {
                 model.setFilterCondition(newFilterCondition);
             }
         }
+    }
+
+    private void changeTableAlias(ComputedColumnDesc computedColumnDesc, String oldAlias, String newAlias) {
+        SqlVisitor<Object> modifyAlias = new ModifyTableNameSqlVisitor(oldAlias, newAlias);
+        SqlNode sqlNode = CalciteParser.getExpNode(computedColumnDesc.getExpression());
+        sqlNode.accept(modifyAlias);
+        computedColumnDesc.setExpression(sqlNode.toSqlString(HiveSqlDialect.DEFAULT).toString());
     }
 
     private Map<String, String> getAliasTransformMap(NDataModel originModel, NDataModel expectModel) {

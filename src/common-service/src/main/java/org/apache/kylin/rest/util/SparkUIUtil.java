@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.kylin.common.util.Unsafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -59,7 +58,7 @@ public class SparkUIUtil {
         final HttpMethod method = HttpMethod.resolve(servletRequest.getMethod());
 
         try (ClientHttpResponse response = execute(target, method, proxyLocationBase)) {
-            rewrite(response, servletResponse, method, Unsafe.getUrlFromHttpServletRequest(servletRequest),
+            rewrite(response, servletResponse, method, servletRequest.getRequestURL().toString(),
                     REDIRECT_THRESHOLD, proxyLocationBase);
         }
     }
