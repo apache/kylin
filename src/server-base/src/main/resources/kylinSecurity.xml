@@ -616,7 +616,21 @@
         <bean id="userService" class="${kylin.security.custom.user-service-class-name}"/>
         <bean id="userGroupService" class="${kylin.security.custom.user-group-service-class-name}"/>
         <!-- user auth -->
-        <bean id="customAuthProvider" class="${kylin.security.custom.authentication-provider-class-name}"></bean>
+        <bean id="customAuthProvider" class="${kylin.security.custom.authentication-provider-class-name}">
+            <constructor-arg>
+                <bean class="${kylin.security.custom.selfAuthenticator}"/>
+            </constructor-arg>
+            <constructor-arg ref="customAuthoritiesPopulator"/>
+
+        </bean>
+        <bean id="customAuthoritiesPopulator" class="${kylin.security.custom.AuthoritiesPopulator}"/>
+
+        <bean id="userServiceImpl" class="${kylin.security.custom.CustomUserServiceWithAccess}">
+            <constructor-arg>
+                <bean class="org.apache.kylin.rest.security.AlwaysTrueAccessProvider"/>
+            </constructor-arg>
+            <constructor-arg ref="userService"/>
+        </bean>
 
         <scr:authentication-manager alias="customAuthManager" erase-credentials="false">
             <scr:authentication-provider ref="customAuthProvider"/>

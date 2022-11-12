@@ -2,10 +2,10 @@
   <div class="source-hive clearfix" :class="{'zh-lang': $store.state.system.lang !== 'en'}">
     <div class="list clearfix">
       <div class="ksd-ml-24 ksd-mt-24">
-        <el-input :placeholder="$t('filterTableName')" 
-                  v-model="filterText" 
-                  prefix-icon="el-icon-search" 
-                  @keyup.enter.native="handleFilter()" 
+        <el-input :placeholder="$t('filterTableName')"
+                  v-model="filterText"
+                  prefix-icon="el-icon-search"
+                  @keyup.enter.native="handleFilter()"
                   @clear="handleFilter()">
         </el-input>
       </div>
@@ -48,11 +48,11 @@
               :validateRegex="regex.validateDB"
               @validateFail="selectedDBValidateFail"
               @refreshData="refreshDBData"
-              splitChar="," 
+              splitChar=","
               :selectedlabels="selectDBNames"
               :allowcreate="true"
               :placeholder="$t('dbPlaceholder')"
-              @removeTag="removeSelectedDB" 
+              @removeTag="removeSelectedDB"
               :datamap="{label: 'label', value: 'value'}">
             </arealabel>
           </div>
@@ -68,11 +68,11 @@
               :validateRegex="regex.validateTable"
               @validateFail="selectedTableValidateFail"
               @refreshData="refreshTableData"
-              splitChar="," 
+              splitChar=","
               :selectedlabels="selectTablesNames"
               :allowcreate="true"
               :placeholder="$t('dbTablePlaceholder')"
-              @removeTag="removeSelectedTable" 
+              @removeTag="removeSelectedTable"
               :datamap="{label: 'label', value: 'value'}">
             </arealabel>
           </div>
@@ -93,7 +93,7 @@
     <div :class="['sample-block', {'has-error': needSampling && errorMsg}]">
       <span class="ksd-title-label-small ksd-mr-10">{{$t('samplingTitle')}}</span><el-switch
         @change="handleSampling"
-        :value="needSampling"
+        v-model="needSampling"
         :active-text="$t('kylinLang.common.OFF')"
         :inactive-text="$t('kylinLang.common.ON')">
       </el-switch>
@@ -126,7 +126,10 @@ import arealabel from '../../area_label.vue'
     selectedDatabases: {
       default: () => []
     },
-    needSampling: Boolean,
+    needSampling: {
+      type: Boolean,
+      default: false
+    },
     samplingRows: {
       default: 20000000
     },
