@@ -59,6 +59,7 @@ import org.apache.kylin.job.exception.IllegalStateTranferException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.TableMetadataManager;
+import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -452,7 +453,7 @@ public class ExecutableManager {
                     AbstractExecutable ae = parseTo(po);
                     ret.add(ae);
                 } catch (IllegalArgumentException e) {
-                    logger.error("error parsing one executabePO: ", e);
+                    logger.error("error parsing one executablePO: ", e);
                 }
             }
             return ret;
@@ -470,7 +471,7 @@ public class ExecutableManager {
                     AbstractExecutable ae = parseTo(po);
                     ret.add(ae);
                 } catch (IllegalArgumentException e) {
-                    logger.error("error parsing one executabePO: ", e);
+                    logger.error("error parsing one executablePO: ", e);
                 }
             }
             return ret;
@@ -487,7 +488,7 @@ public class ExecutableManager {
                 AbstractExecutable ae = parseTo(po);
                 ret.add(ae);
             } catch (IllegalArgumentException e) {
-                logger.error("error parsing one executabePO: ", e);
+                logger.error("error parsing one executablePO: ", e);
             }
         }
         return ret;
@@ -662,7 +663,7 @@ public class ExecutableManager {
 
     public void updateJobOutput(String project, String jobId, ExecutableState newStatus, Map<String, String> info, String output, String logPath) {
         if (Thread.currentThread().isInterrupted()) {
-            throw new RuntimeException("Current thread is interruptted, aborting");
+            throw new RuntimeException("Current thread is interrupted, aborting");
         }
 
         try {
@@ -698,8 +699,8 @@ public class ExecutableManager {
 
             if (needDestroyProcess(oldStatus, newStatus)) {
                 logger.debug("need kill {}, from {} to {}", jobId, oldStatus, newStatus);
-                // kill spark-submit process
-                destroyProcess(jobId);
+                // the SparkSubmit runs on a job node in the kylin cluster, so it needs to be broadcast.
+                Broadcaster.getInstance(config).announce("kill_job", Broadcaster.Event.KILL.getType(), jobId);
             }
         } catch (PersistentException e) {
             logger.error("error change job:" + jobId + " to " + newStatus);
@@ -747,7 +748,7 @@ public class ExecutableManager {
                 || to == ExecutableState.ERROR;
     }
 
-    public void destroyProcess(String jobId) {
+    public boolean destroyProcess(String jobId) {
         Process originProc = JobProcessContext.getProcess(jobId);
         if (Objects.nonNull(originProc) && originProc.isAlive()) {
             try {
@@ -765,7 +766,7 @@ public class ExecutableManager {
                             killCmd, killProc.exitValue());
                     if (!originProc.isAlive()) {
                         logger.info("destroy process {} of job {} SUCCEED.", ppid, jobId);
-                        return;
+                        return true;
                     }
                     logger.info("destroy process {} of job {} FAILED.", ppid, jobId);
                 }
@@ -776,6 +777,7 @@ public class ExecutableManager {
                 logger.error("destroy process of job {} FAILED.", jobId, e);
             }
         }
+        return false;
     }
 
     public void reloadAll() throws IOException {
@@ -788,9 +790,9 @@ public class ExecutableManager {
             List<ExecutablePO> tasks = executableDao.getJob(jobId).getTasks();
 
             for (ExecutablePO task : tasks) {
-                if (executableDao.getJobOutput(task.getId()).getStatus().equals("SUCCEED")) {
+                if ("SUCCEED".equals(executableDao.getJobOutput(task.getId()).getStatus())) {
                     continue;
-                } else if (executableDao.getJobOutput(task.getId()).getStatus().equals("RUNNING")) {
+                } else if ("RUNNING".equals(executableDao.getJobOutput(task.getId()).getStatus())) {
                     updateJobOutput(null, task.getId(), ExecutableState.READY, Maps.<String, String>newHashMap(), "", null);
                 }
                 break;
@@ -869,7 +871,7 @@ public class ExecutableManager {
             output.getInfo().putAll(info);
             executableDao.updateJobOutput(output);
         } catch (PersistentException e) {
-            logger.error("error update job info, id:" + id + "  info:" + info.toString());
+            logger.error("error update job info, id:" + id + "  info:" + info);
             throw new RuntimeException(e);
         }
     }
@@ -949,7 +951,7 @@ public class ExecutableManager {
         try {
             job = exeMgt.getJob(jobID);
         } catch (RuntimeException e) {
-            /**
+            /*
              * TODO: remove this
              * By design, HiveTableExtSampleJob is moved from kap-engine-mr to kap-source-hive in kap2.3,
              * therefore, kap2.3 or higher version can not parse kap2.2 stats job info.
