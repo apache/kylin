@@ -42,7 +42,9 @@ public class CuboIdToLayoutUtils {
     public static Set<LayoutEntity> convertCuboIdsToLayoutEntity(Map<Long, Long> cuboids, IndexPlan indexPlan) {
         Set<Integer> measuresIds = indexPlan.getEffectiveMeasures().keySet();
         Set<LayoutEntity> result = new HashSet<>();
-        List<NAggregationGroup> aggregationGroups = indexPlan.getRuleBasedIndex().getAggregationGroups();
+        List<NAggregationGroup> aggregationGroups = indexPlan.getRuleBasedIndex() != null
+                ? indexPlan.getRuleBasedIndex().getAggregationGroups()
+                : Lists.newArrayList();
         for (NAggregationGroup group : aggregationGroups) {
             // each agg group may has different order for the dimensions
             // https://jirap.corp.ebay.com/browse/KYLIN-3638
