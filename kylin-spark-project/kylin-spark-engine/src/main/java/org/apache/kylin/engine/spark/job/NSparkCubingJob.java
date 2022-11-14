@@ -158,4 +158,19 @@ public class NSparkCubingJob extends CubingJob {
             logger.warn("Delete resource file failed after job be discarded, due to", e);
         }
     }
+
+    public void cleanupJobTempAfterJobDiscard() {
+        PathManager.deleteJobTempPath(getConfig(), getParam(MetadataConstants.P_PROJECT_NAME),
+                getParam(MetadataConstants.P_JOB_ID));
+    }
+
+    public void cleanupSegmentAfterJobDiscard(String segmentName, String segmentIdentifier) {
+        try {
+            CubeManager cubeManager = CubeManager.getInstance(getConfig());
+            CubeInstance cube = cubeManager.getCube(getParam(MetadataConstants.P_CUBE_NAME));
+            PathManager.deleteSegmentParquetStoragePath(cube, segmentName, segmentIdentifier);
+        } catch (IOException e) {
+            logger.warn("Delete resource file failed after job be discarded, due to", e);
+        }
+    }
 }

@@ -737,13 +737,17 @@ public class JobService extends BasicService implements InitializingBean {
 
         if (job.getStatus() != JobStatusEnum.DISCARDED) {
             if (executable instanceof CubingJob) {
-                String segmentName = job.getRelatedSegmentName();
-                CubeSegment segment = getCubeManager().getCube(job.getRelatedCube()).getSegment(segmentName, SegmentStatusEnum.NEW);
-                String segmentIdentifier = segment.getStorageLocationIdentifier();
                 cancelCubingJobInner((CubingJob) executable);
                 //Clean up job tmp and segment storage from hdfs after job be discarded
                 if (executable instanceof NSparkCubingJob) {
-                    ((NSparkCubingJob) executable).cleanupAfterJobDiscard(segmentName, segmentIdentifier);
+                    NSparkCubingJob nSparkCubingJob = (NSparkCubingJob) executable;
+                    nSparkCubingJob.cleanupJobTempAfterJobDiscard();
+                    String segmentName = job.getRelatedSegmentName();
+                    CubeSegment segment = getCubeManager().getCube(job.getRelatedCube()).getSegment(segmentName, SegmentStatusEnum.NEW);
+                    if (segment != null) {
+                        String segmentIdentifier = segment.getStorageLocationIdentifier();
+                        nSparkCubingJob.cleanupSegmentAfterJobDiscard(segmentName, segmentIdentifier);
+                    }
                 }
                 //release global mr hive dict lock if exists
                 if (executable.getStatus().isFinalState()) {
