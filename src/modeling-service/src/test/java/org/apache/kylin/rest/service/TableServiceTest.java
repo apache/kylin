@@ -136,6 +136,15 @@ public class TableServiceTest extends CSVSourceTestCase {
     @Mock
     private final AclEvaluate aclEvaluate = Mockito.spy(AclEvaluate.class);
 
+    @InjectMocks
+    private final UserAclService userAclService = Mockito.spy(new UserAclService());
+
+    @Mock
+    private final UserService userService = Mockito.spy(UserService.class);
+
+    @InjectMocks
+    private AccessService accessService = Mockito.spy(new AccessService());
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
@@ -165,6 +174,10 @@ public class TableServiceTest extends CSVSourceTestCase {
         ReflectionTestUtils.setField(fusionModelService, "modelService", modelService);
         ReflectionTestUtils.setField(tableService, "fusionModelService", fusionModelService);
         ReflectionTestUtils.setField(tableService, "jobService", jobService);
+        ReflectionTestUtils.setField(userAclService, "userService", userService);
+        ReflectionTestUtils.setField(accessService, "userAclService", userAclService);
+        ReflectionTestUtils.setField(accessService, "userService", userService);
+        ReflectionTestUtils.setField(tableService, "accessService", accessService);
         NProjectManager projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
         ProjectInstance projectInstance = projectManager.getProject("default");
         LinkedHashMap<String, String> overrideKylinProps = projectInstance.getOverrideKylinProps();
@@ -174,6 +187,7 @@ public class TableServiceTest extends CSVSourceTestCase {
                 projectInstance.getOwner(), projectInstance.getDescription(), overrideKylinProps);
         projectManager.updateProject(projectInstance, projectInstanceUpdate.getName(),
                 projectInstanceUpdate.getDescription(), projectInstanceUpdate.getOverrideKylinProps());
+        Mockito.when(userService.listSuperAdminUsers()).thenReturn(Arrays.asList("admin"));
         try {
             new JdbcRawRecStore(getTestConfig());
         } catch (Exception e) {
@@ -191,7 +205,6 @@ public class TableServiceTest extends CSVSourceTestCase {
 
     @Test
     public void testGetTableDesc() throws IOException {
-
         List<TableDesc> tableDesc = tableService.getTableDesc("default", true, "", "DEFAULT", true);
         Assert.assertEquals(12, tableDesc.size());
         List<TableDesc> tableDesc2 = tableService.getTableDesc("default", true, "TEST_COUNTRY", "DEFAULT", false);
@@ -254,6 +267,9 @@ public class TableServiceTest extends CSVSourceTestCase {
         col1.setMaxValue("Zimbabwe");
         col1.setNullCount(0);
         tableExt.setColumnStats(Lists.newArrayList(col1));
+        List<String[]> sampleRows = new ArrayList<>();
+        sampleRows.add(new String[] { "America" });
+        tableExt.setSampleRows(sampleRows);
         tableMgr.mergeAndUpdateTableExt(oldExtDesc, tableExt);
 
         // verify the column stats update successfully
@@ -270,6 +286,44 @@ public class TableServiceTest extends CSVSourceTestCase {
         Assert.assertEquals("America", extColumns[0].getMinValue());
         Assert.assertEquals("Zimbabwe", extColumns[0].getMaxValue());
         Assert.assertEquals(0L, extColumns[0].getNullCount().longValue());
+
+        // check sample rows
+        Assert.assertEquals(1, t.getSamplingRows().size());
+    }
+
+    @Test
+    public void testGetSamplingRows() throws IOException {
+        final String tableIdentity = "DEFAULT.TEST_COUNTRY";
+        final NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(getTestConfig(), "newten");
+        final TableDesc tableDesc = tableMgr.getTableDesc(tableIdentity);
+        final TableExtDesc oldExtDesc = tableMgr.getOrCreateTableExt(tableDesc);
+
+        // mock table ext desc
+        TableExtDesc tableExt = new TableExtDesc(oldExtDesc);
+        tableExt.setIdentity(tableIdentity);
+        TableExtDesc.ColumnStats col1 = new TableExtDesc.ColumnStats();
+        col1.setCardinality(100);
+        col1.setTableExtDesc(tableExt);
+        col1.setColumnName(tableDesc.getColumns()[0].getName());
+        col1.setMinValue("America");
+        col1.setMaxValue("Zimbabwe");
+        col1.setNullCount(0);
+        tableExt.setColumnStats(Lists.newArrayList(col1));
+        List<String[]> sampleRows = new ArrayList<>();
+        sampleRows.add(new String[] { "America" });
+        tableExt.setSampleRows(sampleRows);
+        tableMgr.mergeAndUpdateTableExt(oldExtDesc, tableExt);
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("test", "test", Constant.ROLE_MODELER));
+        Mockito.when(userService.isGlobalAdmin(Mockito.anyString())).thenReturn(true);
+        Mockito.when(userAclService.hasUserAclPermissionInProject(Mockito.anyString(), Mockito.anyString()))
+                .thenReturn(false);
+
+        List<TableDesc> tableExtList = tableService.getTableDesc("newten", true, "TEST_COUNTRY", "DEFAULT", true);
+        Assert.assertEquals(0, ((TableDescResponse) tableExtList.get(0)).getSamplingRows().size());
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
     }
 
     @Test
