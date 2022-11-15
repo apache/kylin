@@ -376,7 +376,9 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
     @Test
     public void testRemoveLastL0Segment_EmptySegment() {
         val entry = Mockito.spy(new StreamingMergeEntry());
-        ReflectionTestUtils.invokeMethod(entry, "removeLastL0Segment", new Segments<NDataSegment>());
+        val segments = new Segments<NDataSegment>();
+        ReflectionTestUtils.invokeMethod(entry, "removeLastL0Segment", segments);
+        Assert.assertTrue(segments.isEmpty());
     }
 
     @Test
@@ -402,6 +404,7 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
         }
 
         ReflectionTestUtils.invokeMethod(entry, "removeLastL0Segment", segments);
+        Assert.assertEquals(3, segments.size());
     }
 
     @Test
@@ -429,6 +432,7 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
         }
 
         ReflectionTestUtils.invokeMethod(entry, "removeLastL0Segment", segments);
+        Assert.assertEquals(2, segments.size());
     }
 
     @Test
@@ -456,6 +460,7 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
         }
 
         ReflectionTestUtils.invokeMethod(entry, "removeLastL0Segment", segments);
+        Assert.assertEquals(3, segments.size());
     }
 
     @Test
@@ -465,7 +470,16 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
         val args = new String[] { PROJECT, DATAFLOW_ID + "-err", "5k", "5", "xx" };
         try {
             createSparkSession();
-            StreamingMergeEntry.main(args);
+            val entry = new StreamingMergeEntry() {
+                public RestSupport createRestSupport(KylinConfig config) {
+                    return new RestSupport(config) {
+                        public RestResponse<String> execute(HttpRequestBase httpReqBase, Object param) {
+                            return RestResponse.ok("001");
+                        }
+                    };
+                }
+            };
+            entry.execute(args);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ExecuteException);
         }
@@ -506,6 +520,8 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
         val seg = NDataSegment.empty();
         entry.parseParams(new String[] { PROJECT, DATAFLOW_ID, "32m", "3", "xx" });
         entry.removeSegment(PROJECT, DATAFLOW_ID, seg);
+        val dataflow = NDataflowManager.getInstance(config, PROJECT).getDataflow(DATAFLOW_ID);
+        Assert.assertNull(dataflow.getSegment(seg.getId()));
     }
 
     @Test
@@ -550,6 +566,7 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
         Mockito.doNothing().when(entry).process(PROJECT, DATAFLOW_ID);
         Mockito.doReturn(true).when(entry).isGracefulShutdown(PROJECT, jobId);
         entry.doExecute();
+        Assert.assertTrue(entry.getStopFlag());
     }
 
     @Test
@@ -729,7 +746,7 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
     public void tryReplaceHostAddress() {
         val url = "http://localhost:8080";
         StreamingMergeEntry entry = new StreamingMergeEntry();
-        val host = entry.tryReplaceHostAddress(url);
+        String host = entry.tryReplaceHostAddress(url);
         Assert.assertEquals("http://127.0.0.1:8080", host);
 
         val url1 = "http://unknow-host-9345:8080";

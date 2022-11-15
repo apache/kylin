@@ -67,8 +67,14 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
     @Mock
     private AclEvaluate aclEvaluate = Mockito.spy(AclEvaluate.class);
 
-    //    @Mock
-    //    private AclTCRService aclTCRService = Mockito.spy(AclTCRService.class);
+    @Mock
+    private UserService userService = Mockito.spy(UserService.class);
+
+    @Mock
+    private UserAclService userAclService = Mockito.spy(UserAclService.class);
+
+    @InjectMocks
+    private AccessService accessService = Mockito.spy(new AccessService());
 
     @InjectMocks
     private StreamingTableService streamingTableService = Mockito.spy(new StreamingTableService());
@@ -95,21 +101,24 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
         projectManager.forceDropProject("broken_test");
         projectManager.forceDropProject("bad_query_test");
 
-        SystemPropertiesCache.setProperty("HADOOP_USER_NAME", "root");
+        System.setProperty("HADOOP_USER_NAME", "root");
 
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
         ReflectionTestUtils.setField(streamingTableService, "aclEvaluate", aclEvaluate);
-        //ReflectionTestUtils.setField(streamingTableService, "aclTCRService", aclTCRService);
-        //ReflectionTestUtils.setField(streamingTableService, "userGroupService", userGroupService);
-        //ReflectionTestUtils.setField(streamingTableService,"tableSupporters", Arrays.asList(tableService));
         ReflectionTestUtils.setField(tableService, "aclEvaluate", aclEvaluate);
-        //ReflectionTestUtils.setField(tableService, "aclTCRService", aclTCRService);
         ReflectionTestUtils.setField(tableService, "userGroupService", userGroupService);
+        ReflectionTestUtils.setField(tableService, "accessService", accessService);
+        ReflectionTestUtils.setField(userAclService, "userService", userService);
+        ReflectionTestUtils.setField(accessService, "userAclService", userAclService);
+        ReflectionTestUtils.setField(accessService, "userService", userService);
 
         val prjManager = NProjectManager.getInstance(getTestConfig());
         val prj = prjManager.getProject(PROJECT);
         val copy = prjManager.copyForWrite(prj);
         prjManager.updateProject(copy);
+        Mockito.when(userService.listSuperAdminUsers()).thenReturn(Arrays.asList("admin"));
+        Mockito.when(userAclService.hasUserAclPermissionInProject(Mockito.anyString(), Mockito.anyString()))
+                .thenReturn(false);
 
         try {
             new JdbcRawRecStore(getTestConfig());
@@ -147,7 +156,6 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
     public void testReloadTable() {
         val database = "DEFAULT";
 
-        val config = getTestConfig();
         try {
             val tableDescList = tableService.getTableDesc(PROJECT, true, "", database, true);
             Assert.assertEquals(2, tableDescList.size());
