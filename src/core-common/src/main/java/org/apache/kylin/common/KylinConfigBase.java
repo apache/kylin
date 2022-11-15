@@ -1821,6 +1821,15 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cache.redis.batch-count", "100000"));
     }
 
+    // Memcached
+    public boolean isMemcachedEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.cache.memcached.enabled", FALSE));
+    }
+
+    public String getMemcachedHosts() {
+        return getOptional("kylin.cache.memcached.hosts", "localhost:11211");
+    }
+
     public long getMaxWaitMillis() {
         return Long.parseLong(getOptional("kylin.cache.redis.max-wait", "300000"));
     }

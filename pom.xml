@@ -115,6 +115,7 @@
         <apache-log4j.version>2.12.1</apache-log4j.version>
         <xalan.version>2.7.2</xalan.version>
         <ehcache.version>2.10.9.2</ehcache.version>
+        <net.spy.memcached.verion>2.12.3</net.spy.memcached.verion>
         <redis.version>3.8.0</redis.version>
         <apache-httpclient.version>4.5.13</apache-httpclient.version>
         <beanutils.version>1.9.4</beanutils.version>
@@ -1961,6 +1962,11 @@
                 <groupId>net.sf.ehcache</groupId>
                 <artifactId>ehcache</artifactId>
                 <version>${ehcache.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.spy</groupId>
+                <artifactId>spymemcached</artifactId>
+                <version>${net.spy.memcached.verion}</version>
             </dependency>
             <dependency>
                 <groupId>org.opensaml</groupId>
