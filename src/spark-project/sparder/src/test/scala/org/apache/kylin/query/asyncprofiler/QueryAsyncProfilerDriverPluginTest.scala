@@ -37,12 +37,12 @@ class QueryAsyncProfilerDriverPluginTest extends AsyncPluginWithMeta {
   }
 
   test("plugin initialization") {
-    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins"))
+    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins").toString)
     new QueryAsyncProfilerDriverPlugin().receive("NEX-1:start,event=cpu")
   }
 
   test("plugin initialization receive result") {
-    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins"))
+    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins").toString)
     try {
       new QueryAsyncProfilerDriverPlugin().receive("RES-1:flamegraph")
     } catch {
@@ -51,7 +51,7 @@ class QueryAsyncProfilerDriverPluginTest extends AsyncPluginWithMeta {
   }
 
   test("plugin initialization receive others") {
-    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins"))
+    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins").toString)
     try {
       new QueryAsyncProfilerDriverPlugin().receive("OTH-1:start,event=cpu")
     } catch {

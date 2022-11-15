@@ -40,7 +40,9 @@ class AsyncProfilingTest extends AsyncPluginWithMeta {
       .setAppName(getClass.getName)
       .set(SparkLauncher.SPARK_MASTER, "local[1]")
       .set("spark.plugins", sparkPluginName)
+      .set("spark.submit.deployMode", "client")
 
+    System.setProperty("spark.profiler.flagsDir", flagFileDir)
     sc = new SparkContext(conf)
   }
 

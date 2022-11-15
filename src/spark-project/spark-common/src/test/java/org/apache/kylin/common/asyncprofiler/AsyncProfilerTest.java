@@ -66,5 +66,4 @@ public class AsyncProfilerTest {
         Assert.assertThrows("Profiler is not active", IllegalStateException.class,
                 AsyncProfiler.getInstance(true)::stop);
     }
-
 }
