@@ -75,7 +75,7 @@ class BuildAsyncProfilerDriverPluginTest extends SparkFunSuite with BeforeAndAft
       .set("spark.plugins", sparkPluginName)
 
     sc = new SparkContext(conf)
-    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins"))
+    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins").toString)
 
     sc.stop()
     sc = null
@@ -89,7 +89,7 @@ class BuildAsyncProfilerDriverPluginTest extends SparkFunSuite with BeforeAndAft
     System.setProperty("spark.profiler.flagsDir", flagFileDir)
 
     sc = new SparkContext(conf)
-    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins"))
+    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins").toString)
 
     sc.stop()
     sc = null
