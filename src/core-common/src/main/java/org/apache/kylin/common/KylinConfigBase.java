@@ -3686,7 +3686,7 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean enableCostBasedIndexPlanner() {
         // If we enable the cost base cuboid planner, we need to disable some function in the rule index recommended
-        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", TRUE));
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", FALSE));
     }
 
     public int getCubePlannerGreedyAlgorithmAutoThreshold() {
