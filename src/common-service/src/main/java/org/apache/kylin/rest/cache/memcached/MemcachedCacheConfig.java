@@ -27,16 +27,20 @@ public class MemcachedCacheConfig {
     public MemcachedCacheConfig() {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         hosts = kylinConfig.getMemcachedHosts();
+        timeout = kylinConfig.getMemcachedOpTimeout();
+        maxChunkSize = kylinConfig.getMaxChunkSize();
+        maxObjectSize = kylinConfig.getMaxObjectSize();
+        enableCompression = kylinConfig.isEnableCompression();
     }
 
-    private long timeout = 500L;
+    private long timeout;
 
     // comma delimited list of net.spy.memcached servers, given as host:port combination
     private String hosts;
 
-    private int maxChunkSize = 1024;
+    private int maxChunkSize;
 
-    private int maxObjectSize = 1024 * 1024;
+    private int maxObjectSize;
 
     // net.spy.memcached client read buffer size, -1 uses the spymemcached library default
     private int readBufferSize = DefaultConnectionFactory.DEFAULT_READ_BUFFER_SIZE;
@@ -45,7 +49,7 @@ public class MemcachedCacheConfig {
     private int maxOperationQueueSize = 0;
 
     // whether enable compress the value data or not
-    private boolean enableCompression = true;
+    private boolean enableCompression;
 
     public long getTimeout() {
         return timeout;
