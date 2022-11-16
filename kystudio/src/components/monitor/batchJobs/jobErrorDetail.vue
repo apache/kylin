@@ -57,12 +57,12 @@ export default class jobErrorDetail extends Vue {
     return `${this.currentErrorJob.failed_code ?? ''}${this.currentErrorJob.failed_reason ?? (this.$t('errorStepTips', {name: this.currentErrorJob.failed_step_name ? (this.getSubTasksName(this.currentErrorJob.failed_step_name) || this.getStepLineName(this.currentErrorJob.name)) : this.getStepLineName(this.currentErrorJob.name)}))}`
   }
 
-  // 跳转至手册
+  // 跳转至 ISSUES
   jumpToManual () {
     const manualAddrs = this.currentErrorJob.failed_resolve
     if (manualAddrs) {
       const tag = document.createElement('a')
-      tag.href = `https://docs.kyligence.io/books/v4.5/${this.$lang}${manualAddrs}`
+      tag.href = `https://issues.apache.org/jira/issues/?filter=12352421`
       tag.target = '_blank'
       tag.click()
     }
