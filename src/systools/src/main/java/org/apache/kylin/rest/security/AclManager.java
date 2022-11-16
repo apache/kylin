@@ -36,7 +36,6 @@ import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.SpringContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.acls.domain.ConsoleAuditLogger;
 import org.springframework.security.acls.domain.PermissionFactory;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Acl;
@@ -71,9 +70,9 @@ public class AclManager {
 
     // ============================================================================
 
-    private final PermissionGrantingStrategy permissionGrantingStrategy = new KylinPermissionGrantingStrategy(
-            new ConsoleAuditLogger());
-    private final PermissionFactory aclPermissionFactory = new AclPermissionFactory();
+    private static final PermissionGrantingStrategy permissionGrantingStrategy
+            = SpringContext.getBean(PermissionGrantingStrategy.class);
+    private static final PermissionFactory aclPermissionFactory = SpringContext.getBean(PermissionFactory.class);
 
     // ============================================================================
     private KylinConfig config;
@@ -85,8 +84,7 @@ public class AclManager {
         this.crud = new CachedCrudAssist<AclRecord>(aclStore, ResourceStore.ACL_ROOT, "", AclRecord.class) {
             @Override
             protected AclRecord initEntityAfterReload(AclRecord acl, String resourceName) {
-                acl.init(null, SpringContext.getBean(PermissionFactory.class),
-                        SpringContext.getBean(PermissionGrantingStrategy.class));
+                acl.init(null, aclPermissionFactory, permissionGrantingStrategy);
                 return acl;
             }
         };
@@ -169,8 +167,8 @@ public class AclManager {
             Acl parentAcl = null;
             if (record.isEntriesInheriting() && record.getParentDomainObjectInfo() != null)
                 parentAcl = readAclById(record.getParentDomainObjectInfo());
-
-            record.init(parentAcl, aclPermissionFactory, permissionGrantingStrategy);
+            if (parentAcl != null)
+                record.setParent(parentAcl);
 
             aclMaps.put(oid, new MutableAclRecord(record));
         }

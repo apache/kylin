@@ -87,6 +87,7 @@ public class AclRecord extends RootPersistentEntity implements Acl, OwnershipAcl
         this.ownerInfo = new SidInfo(owner);
     }
 
+    // For each AclRecord instance, init should be called only once
     public void init(Acl parentAcl, PermissionFactory aclPermissionFactory,
             PermissionGrantingStrategy permissionGrantingStrategy) {
         this.aclPermissionFactory = aclPermissionFactory;
