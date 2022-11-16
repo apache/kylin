@@ -92,7 +92,7 @@ Support chart type: Line Chart, Bar Chart, Pie Chart.
 
 ### Other ways to execute SQL queries
 
-- [Integration with BI tools](../../integration/intro.md)
+- [Integration with BI tools](../../integration/intro.md)(Details doc will come soon.)
 
 ### Notices
 
