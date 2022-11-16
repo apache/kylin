@@ -1919,6 +1919,22 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.cache.memcached.hosts", "localhost:11211");
     }
 
+    public long getMemcachedOpTimeout() {
+        return Long.parseLong(getOptional("kylin.cache.memcached.option.timeout", "500"));
+    }
+
+    public int getMaxChunkSize() {
+        return Integer.parseInt(getOptional("kylin.cache.memcached.max-chunk-size", "1024"));
+    }
+
+    public int getMaxObjectSize() {
+        return Integer.parseInt(getOptional("kylin.cache.memcached.max-object-size", "1048576"));
+    }
+
+    public boolean isEnableCompression() {
+        return Boolean.parseBoolean((getOptional("kylin.cache.memcached.is-enable-compression", TRUE)));
+    }
+
     public long getMaxWaitMillis() {
         return Long.parseLong(getOptional("kylin.cache.redis.max-wait", "300000"));
     }

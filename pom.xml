@@ -108,6 +108,7 @@
         <assertj-core.version>3.11.1</assertj-core.version>
         <awaitility.version>3.0.0</awaitility.version>
         <embedded-redis.version>0.6</embedded-redis.version>
+        <embedded-memcached.version>4.1.3</embedded-memcached.version>
 
         <!-- Commons -->
         <commons-lang3.version>3.10</commons-lang3.version>
@@ -2147,6 +2148,11 @@
                 <artifactId>embedded-redis</artifactId>
                 <version>${embedded-redis.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.simple-spring-memcached</groupId>
+                <artifactId>jmemcached-maven-plugin</artifactId>
+                <version>${embedded-memcached.version}</version>
             </dependency>
             <dependency>
                 <groupId>mysql</groupId>
