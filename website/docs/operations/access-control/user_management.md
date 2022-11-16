@@ -67,7 +67,7 @@ $KYLIN_HOME/bin/admin-tool.sh admin-password-reset
 
 When the parameter `kylin.metadata.random-admin-password.enabled=false`, it will not regenerate a random password but the fixed password `KYLIN`. If the parameter `kylin.metadata.random-admin-password.enabled` is set from `false` to `true` , it will regenerate a random password and display it on the console after all the Kylin nodes restarted.
 
-**Caution** When run this command, Kylin will enter maintenance mode. If the command is interrupted by force, you may need to exit maintain mode manually. Refer to [maintenance_mode](../system-operation/maintenance_mode.md).
+**Caution** When run this command, Kylin will enter maintenance mode. If the command is interrupted by force, you may need to exit maintain mode manually. Refer to [Maintenance Mode](../system-operation/maintenance_mode.md).
 
 
 ### <span id="pwd">Reset password for Non-admin</span>

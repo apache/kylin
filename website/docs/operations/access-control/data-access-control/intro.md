@@ -24,8 +24,6 @@ Kylin provides a rich set of access control features for big enterprise. Start f
   - *ADMIN*: Project level administrator permission, allows to manage source tables, and all other operations in a project.
   
   See [Project ACL](project_acl.md) for more details.
-  
-- Data Access Permission: Defined on data, specifies which tables, columns, and rows a user can access. See [Table](acl_table.md) for more details.
 
 ###  Examples of Permission Check
 
