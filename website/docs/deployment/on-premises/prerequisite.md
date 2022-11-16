@@ -177,8 +177,8 @@ We recommend the following hardware configuration to install Kylin:
 We recommend using the following version of the Linux operating system:
 
 - Ubuntu 18.04 + (recommend LTS version)
-- Red Hat Enterprise Linux 6.4+ 或 7.x 
-- CentOS 6.4+ 或 7.x
+- Red Hat Enterprise Linux 6.4+ or 7.x 
+- CentOS 6.4+ or 7.x
 
 ### <span id="client">Recommended Client Configuration</span>
 

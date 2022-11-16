@@ -86,7 +86,7 @@ Model design is one of the core functions of Kylin. Good model design can help a
 
 2. **Method of Model Design**
 
-   Please create a model in the **Data Asset -> Model** interface and enter the model editing interface to visually complete the creation of the multidimensional model. The specific method of model design will be described in detail in the [Model Design Basics](../modeling/model_design/data_modeling.md) section. Here is a brief introduction to the following steps:
+   Please create a model in the **Data Asset -> Model** interface and enter the model editing interface to visually complete the creation of the multidimensional model. The specific method of model design will be described in detail in the [Model Design Basics](../modeling/data_modeling.md) section. Here is a brief introduction to the following steps:
 
    - Design Model: Select the source table according to the business logic and set the association between the tables. Then set the fact table and dimension tables.
    - Add Dimensions: Identify dimensions from table columns for business analysis.

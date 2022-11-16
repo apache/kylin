@@ -14,9 +14,6 @@ last_update:
     date: 08/12/2022
 ---
 
-
-## InfluxDB Maintenance
-
 This chapter introduces the basic maintenance of InfluxDB.
 
 ### Connectivity

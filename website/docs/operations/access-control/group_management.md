@@ -48,5 +48,5 @@ On the User Group Management page, select a user to be deleted, click the **Drop
 
 ### <span id="update_group">Modify user's user group</span>
 
-Please refer to [User Management](user_management.md) 
+Please refer to [User Management](user_management.md).
 

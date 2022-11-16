@@ -26,7 +26,6 @@ This section will describe the supported computed columns in Kylin, which includ
 - [Query on Computed Column](#query)
 - [Nested Computed Columns](#nested)
 - [Advanced Functions](#function)
-- [Known Limitations](#limitation)
 
 ### <span id="concept">Basic Concepts</span>
 
