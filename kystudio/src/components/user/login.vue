@@ -20,7 +20,7 @@
             <ul>
               <li><i class="el-icon-ksd-login_intro ksd-fs-12"></i><a :href="$t('introductionUrl')" target="_blank">{{$t('introduction')}}</a></li>
               <li><i class="el-icon-ksd-details ksd-fs-12"></i><a :href="'https://kylin.apache.org/docs/'" target="_blank">{{$t('manual')}}</a></li>
-              <li><i class="el-icon-ksd-login_email ksd-fs-12"></i><a href="mailto:user@Kyligence.io">{{$t('contactUs')}}</a></li>
+              <li><i class="el-icon-ksd-login_email ksd-fs-12"></i><a href="mailto:user@kylin.apache.org">{{$t('contactKylin')}}</a></li>
             </ul>
           </div>
         </el-col>
@@ -129,7 +129,7 @@ import { Base64 } from 'js-base64'
       introduction: 'Introduction',
       introductionUrl: 'https://kylin.apache.org/',
       manual: 'Manual',
-      contactUs: 'Contact Us',
+      contactKylin: 'Contact Kylin',
       accessForbidden: 'Access denied'
     }
   }
