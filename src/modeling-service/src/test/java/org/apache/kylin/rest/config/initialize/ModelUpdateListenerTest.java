@@ -88,7 +88,7 @@ public class ModelUpdateListenerTest extends SourceTestCase {
         String batchId = "334671fd-e383-4fc9-b5c2-94fce832f77a";
         String project = "streaming_test";
         String newModelName = "new_streaming";
-        fusionModelService.renameDataModel(project, modelId, newModelName);
+        fusionModelService.renameDataModel(project, modelId, newModelName, "");
         Assert.assertEquals(newModelName,
                 NDataModelManager.getInstance(getTestConfig(), project).getDataModelDesc(modelId).getAlias());
         Assert.assertEquals(FusionModel.getBatchName(newModelName, modelId),
@@ -100,7 +100,7 @@ public class ModelUpdateListenerTest extends SourceTestCase {
         String modelId = "e78a89dd-847f-4574-8afa-8768b4228b73";
         String project = "streaming_test";
         String newModelName = "new_streaming2";
-        fusionModelService.renameDataModel(project, modelId, newModelName);
+        fusionModelService.renameDataModel(project, modelId, newModelName, "");
         Assert.assertEquals(newModelName,
                 NDataModelManager.getInstance(getTestConfig(), project).getDataModelDesc(modelId).getAlias());
     }

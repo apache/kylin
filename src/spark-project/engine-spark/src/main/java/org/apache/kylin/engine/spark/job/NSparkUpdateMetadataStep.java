@@ -18,32 +18,30 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.util.Set;
-
+import com.google.common.base.Preconditions;
+import lombok.val;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutableOnModel;
-import org.apache.kylin.job.execution.ExecutableContext;
-import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.apache.kylin.engine.spark.cleanup.SnapshotChecker;
 import org.apache.kylin.engine.spark.utils.FileNames;
 import org.apache.kylin.engine.spark.utils.HDFSUtils;
+import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.DefaultExecutableOnModel;
+import org.apache.kylin.job.execution.ExecutableContext;
+import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
-import lombok.val;
+import java.util.Set;
 
 public class NSparkUpdateMetadataStep extends AbstractExecutable {
 
@@ -58,10 +56,10 @@ public class NSparkUpdateMetadataStep extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    public ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         val parent = getParent();
-        Preconditions.checkArgument(parent instanceof DefaultChainedExecutableOnModel);
-        val handler = ((DefaultChainedExecutableOnModel) parent).getHandler();
+        Preconditions.checkArgument(parent instanceof DefaultExecutableOnModel);
+        val handler = ((DefaultExecutableOnModel) parent).getHandler();
         try {
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                 handler.handleFinished();

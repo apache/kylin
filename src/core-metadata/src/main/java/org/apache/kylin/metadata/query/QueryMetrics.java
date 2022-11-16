@@ -44,6 +44,7 @@ public class QueryMetrics extends SchedulerEventNotifier {
     public static final String TABLE_SNAPSHOT = "Table Snapshot";
     public static final String TOTAL_SCAN_COUNT = "totalScanCount";
     public static final String TOTAL_SCAN_BYTES = "totalScanBytes";
+    public static final String SOURCE_RESULT_COUNT = "sourceResultCount";
 
     // fields below are columns in InfluxDB table which records down query history
     protected long id;
@@ -52,7 +53,7 @@ public class QueryMetrics extends SchedulerEventNotifier {
     protected String projectName;
 
     protected String sql;
-    // Using sql_pattern as normalized_sql storage
+    // KE-36662 Using sql_pattern as normalized_sql storage
     protected String sqlPattern;
 
     protected String submitter;

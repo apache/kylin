@@ -18,15 +18,19 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.kylin.engine.spark.job.step.NStageForBuild;
+import org.apache.kylin.engine.spark.job.step.NStageForMerge;
+import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
+import lombok.val;
+import lombok.var;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -37,16 +41,11 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.execution.StageBase;
 import org.apache.kylin.job.execution.SucceedChainedTestExecutable;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.response.ExecutableStepResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.job.NSparkExecutable;
-import org.apache.kylin.engine.spark.job.step.NStageForBuild;
-import org.apache.kylin.engine.spark.job.step.NStageForMerge;
-import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
-import org.apache.kylin.metadata.cube.model.NBatchConstants;
-import org.apache.kylin.rest.response.ExecutableStepResponse;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -60,11 +59,10 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-import lombok.val;
-import lombok.var;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class StageTest extends NLocalFileMetadataTestCase {
     @InjectMocks

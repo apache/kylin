@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.metadata.model;
 
 import static org.apache.kylin.common.util.DateFormat.COMPACT_DATE_PATTERN;
@@ -186,6 +168,10 @@ public class PartitionDesc implements Serializable {
         return partitionDateColumn;
     }
 
+    public String getBackTickPartitionDateColumn() {
+        return partitionDateColumnRef.getBackTickIdentity();
+    }
+
     // for test
     public void setPartitionDateColumn(String partitionDateColumn) {
         this.partitionDateColumn = partitionDateColumn;
@@ -330,7 +316,7 @@ public class PartitionDesc implements Serializable {
 
         private static void buildSingleColumnRangeCondAsDate(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive, String partitionColumnDateFormat) {
-            String partitionColumnName = partitionColumn.getExpressionInSourceDB();
+            String partitionColumnName = partitionColumn.getBackTickExpressionInSourceDB();
             builder.append(partitionColumnName).append(" >= ").append(String.format(Locale.ROOT, "to_date('%s', '%s')",
                     DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat), partitionColumnDateFormat));
             builder.append(and);
@@ -340,7 +326,7 @@ public class PartitionDesc implements Serializable {
 
         private static void buildSingleColumnRangeCondAsTimestamp(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive) {
-            String partitionColumnName = partitionColumn.getExpressionInSourceDB();
+            String partitionColumnName = partitionColumn.getBackTickExpressionInSourceDB();
             builder.append(partitionColumnName).append(" >= ").append(startInclusive);
             builder.append(and);
             builder.append(partitionColumnName).append(" < ").append(endExclusive);
@@ -348,7 +334,7 @@ public class PartitionDesc implements Serializable {
 
         private static void buildSingleColumnRangeCondAsYmInt(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive) {
-            String partitionColumnName = partitionColumn.getExpressionInSourceDB();
+            String partitionColumnName = partitionColumn.getBackTickExpressionInSourceDB();
             builder.append(partitionColumnName).append(" >= ")
                     .append(DateFormat.formatToDateStr(startInclusive, DateFormat.COMPACT_MONTH_PATTERN));
             builder.append(and);
@@ -358,7 +344,7 @@ public class PartitionDesc implements Serializable {
 
         private static void buildSingleColumnRangeCondAsYmdInt(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive) {
-            String partitionColumnName = partitionColumn.getExpressionInSourceDB();
+            String partitionColumnName = partitionColumn.getBackTickExpressionInSourceDB();
             builder.append(partitionColumnName).append(" >= ")
                     .append(DateFormat.formatToDateStr(startInclusive, DateFormat.COMPACT_DATE_PATTERN));
             builder.append(and);
@@ -368,7 +354,7 @@ public class PartitionDesc implements Serializable {
 
         private static void buildSingleColumnRangeCondition(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive, String partitionColumnDateFormat) {
-            String partitionColumnName = partitionColumn.getExpressionInSourceDB();
+            String partitionColumnName = partitionColumn.getBackTickExpressionInSourceDB();
 
             if (endExclusive <= startInclusive) {
                 builder.append("1=1");

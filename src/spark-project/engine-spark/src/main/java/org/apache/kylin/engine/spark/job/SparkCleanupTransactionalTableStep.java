@@ -18,12 +18,6 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import static org.apache.kylin.engine.spark.utils.HiveTransactionTableHelper.generateDropTableStatement;
-import static org.apache.kylin.engine.spark.utils.HiveTransactionTableHelper.generateHiveInitStatements;
-
-import java.io.IOException;
-import java.util.Locale;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,10 +30,16 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.source.hive.HiveCmdBuilder;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.source.hive.HiveCmdBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Locale;
+
+import static org.apache.kylin.engine.spark.utils.HiveTransactionTableHelper.generateDropTableStatement;
+import static org.apache.kylin.engine.spark.utils.HiveTransactionTableHelper.generateHiveInitStatements;
 
 public class SparkCleanupTransactionalTableStep extends NSparkExecutable {
 
@@ -71,7 +71,7 @@ public class SparkCleanupTransactionalTableStep extends NSparkExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    public ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         String jobId = getParam(NBatchConstants.P_JOB_ID);
         String dir = config.getJobTmpTransactionalTableDir(getProject(), jobId);

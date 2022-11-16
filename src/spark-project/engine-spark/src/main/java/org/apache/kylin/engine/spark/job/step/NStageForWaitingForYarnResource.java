@@ -18,11 +18,11 @@
 
 package org.apache.kylin.engine.spark.job.step;
 
+import io.kyligence.kap.guava20.shaded.common.base.MoreObjects;
 import org.apache.kylin.job.execution.StageBase;
 
-import io.kyligence.kap.guava20.shaded.common.base.MoreObjects;
-
 public class NStageForWaitingForYarnResource extends StageBase {
+
     public NStageForWaitingForYarnResource() {
     }
 

@@ -131,6 +131,7 @@ public class StreamingEntryTest extends StreamingTestCase {
         kafkaParam = tableDesc.getKafkaConfig().getKafkaParam();
         Assert.assertEquals("latest", kafkaParam.get("startingOffsets"));
         ss.stop();
+        Assert.assertEquals("LO_PARTITIONCOLUMN", flatTable.partitionColumn());
     }
 
     @Test

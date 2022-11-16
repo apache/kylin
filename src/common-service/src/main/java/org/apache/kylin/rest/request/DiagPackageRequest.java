@@ -27,4 +27,6 @@ public class DiagPackageRequest {
     private String end;
     @JsonProperty("job_id")
     private String jobId;
+    @JsonProperty("project")
+    private String project;
 }

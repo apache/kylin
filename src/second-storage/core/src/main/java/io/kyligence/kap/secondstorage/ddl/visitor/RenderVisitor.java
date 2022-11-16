@@ -21,6 +21,7 @@ package io.kyligence.kap.secondstorage.ddl.visitor;
 import io.kyligence.kap.secondstorage.ddl.AlterTable;
 import io.kyligence.kap.secondstorage.ddl.CreateDatabase;
 import io.kyligence.kap.secondstorage.ddl.CreateTable;
+import io.kyligence.kap.secondstorage.ddl.Desc;
 import io.kyligence.kap.secondstorage.ddl.DropDatabase;
 import io.kyligence.kap.secondstorage.ddl.DropTable;
 import io.kyligence.kap.secondstorage.ddl.ExistsDatabase;
@@ -58,4 +59,10 @@ public interface RenderVisitor {
     void visitValue(Object pram);
 
     void visit(AlterTable.ManipulatePartition movePartition);
+
+    void visit(AlterTable.ManipulateIndex manipulateIndex);
+
+    void visit(AlterTable.ModifyColumn modifyColumn);
+
+    void visit(Desc desc);
 }

@@ -15,24 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ 
 package org.apache.kylin.common.exception;
 
 public enum QueryErrorCode implements ErrorCodeSupplier {
@@ -53,7 +36,9 @@ public enum QueryErrorCode implements ErrorCodeSupplier {
     EMPTY_TABLE("KE-020007001"), //
 
     // 20008XXX general query errors
-    UNSUPPORTED_EXPRESSION("KE-020008001"), UNSUPPORTED_OPERATION("KE-020008002"),
+    UNSUPPORTED_EXPRESSION("KE-020008001"),
+    UNSUPPORTED_OPERATION("KE-020008002"),
+    TARGET_SEGMENT_NOT_FOUND("KE-020008003"),
 
     // 20029XXX optimization rule
     UNSUPPORTED_SUM_CASE_WHEN("KE-020029001"), //

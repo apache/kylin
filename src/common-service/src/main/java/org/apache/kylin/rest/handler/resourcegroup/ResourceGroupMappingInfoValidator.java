@@ -18,18 +18,18 @@
 
 package org.apache.kylin.rest.handler.resourcegroup;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.PARAMETER_IN_PARAMETER_NOT_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.RESOURCE_GROUP_BINDING_PROJECT_INVALID;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.RESOURCE_GROUP_ID_NOT_EXIST_IN_MAPPING_INFO;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.resourcegroup.RequestTypeEnum;
@@ -54,19 +54,17 @@ public class ResourceGroupMappingInfoValidator implements IResourceGroupRequestV
         List<ResourceGroupMappingInfo> mappingInfo = request.getResourceGroupMappingInfoList();
         for (ResourceGroupMappingInfo info : mappingInfo) {
             if (StringUtils.isBlank(info.getProject())) {
-                throw new KylinException(INVALID_PARAMETER, MsgPicker.getMsg().getEmptyProjectInMappingInfo());
+                throw new KylinException(PARAMETER_IN_PARAMETER_NOT_EMPTY, "project", "mapping_info");
             }
             ProjectInstance prjInstance = projectManager.getProject(info.getProject());
             if (prjInstance == null) {
                 throw new KylinException(PROJECT_NOT_EXIST, info.getProject());
             }
             if (StringUtils.isBlank(info.getResourceGroupId())) {
-                throw new KylinException(INVALID_PARAMETER,
-                        MsgPicker.getMsg().getEmptyResourceGroupIdInMappingInfo());
+                throw new KylinException(PARAMETER_IN_PARAMETER_NOT_EMPTY, "resource_group_id", "mapping_info");
             }
             if (!resourceGroups.contains(info.getResourceGroupId())) {
-                throw new KylinException(INVALID_PARAMETER,
-                        MsgPicker.getMsg().getResourceGroupIdNotExistInMappingInfo(info.getResourceGroupId()));
+                throw new KylinException(RESOURCE_GROUP_ID_NOT_EXIST_IN_MAPPING_INFO, info.getResourceGroupId());
             }
         }
 
@@ -84,8 +82,7 @@ public class ResourceGroupMappingInfoValidator implements IResourceGroupRequestV
                     .count() > 1;
 
             if (bindInvalidTotalNum || bindInvalidNumInOneType) {
-                throw new KylinException(INVALID_PARAMETER, String.format(Locale.ROOT,
-                        MsgPicker.getMsg().getProjectBindingResourceGroupInvalid(), project));
+                throw new KylinException(RESOURCE_GROUP_BINDING_PROJECT_INVALID, project);
             }
         }
     }

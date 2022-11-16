@@ -75,13 +75,15 @@ trait SharedSparkSession
       .config("spark.memory.fraction", "0.1")
       .config("fs.file.impl", classOf[DebugFilesystem].getCanonicalName)
       .config("spark.sql.adaptive.enabled", "true")
-      .config("spark.sql.legacy.parquet.int96RebaseModeInWrite", "LEGACY")
-      .config("spark.sql.legacy.parquet.datetimeRebaseModeInWrite", "LEGACY")
-      .config("spark.sql.legacy.parquet.int96RebaseModeInRead", "CORRECTED")
-      .config("spark.sql.legacy.parquet.datetimeRebaseModeInRead", "CORRECTED")
+      .config("spark.sql.parquet.int96RebaseModeInWrite", "LEGACY")
+      .config("spark.sql.parquet.datetimeRebaseModeInWrite", "LEGACY")
+      .config("spark.sql.parquet.int96RebaseModeInRead", "CORRECTED")
+      .config("spark.sql.parquet.datetimeRebaseModeInRead", "CORRECTED")
       .config("spark.sql.legacy.timeParserPolicy", "LEGACY")
       .config("spark.sql.parquet.mergeSchema", "true")
       .config("spark.sql.legacy.allowNegativeScaleOfDecimal", "true")
+      .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+      .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
       .config(conf)
       .getOrCreate
     _jsc = new JavaSparkContext(_spark.sparkContext)
@@ -92,7 +94,7 @@ trait SharedSparkSession
     protected override def _sqlContext: SQLContext = spark.sqlContext
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     try {
       _spark.stop()
       _sc = null

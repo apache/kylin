@@ -31,7 +31,7 @@ public class SucceedSubTaskTestExecutable extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) {
+    public ExecuteResult doWork(ExecutableContext context) {
         return ExecuteResult.createSucceed();
     }
 }

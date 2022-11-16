@@ -37,6 +37,10 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-storage</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kap-second-storage-core</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

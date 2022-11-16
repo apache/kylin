@@ -22,6 +22,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.kylin.rest.response.ManagedUserResponse;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.response.DataResult;
@@ -110,7 +111,9 @@ public class NUserControllerV2Test extends NLocalFileMetadataTestCase {
         user1.setUsername("ADMIN");
         user1.setPassword("KYLIN");
         user1.setDefaultPassword(false);
-        List<ManagedUser> managedUsers = Lists.newArrayList(user1);
+        ManagedUserResponse managedUserResponse = new ManagedUserResponse();
+        managedUserResponse.setManagedUser(user1);
+        List<ManagedUserResponse> managedUsers = Lists.newArrayList(managedUserResponse);
         Mockito.when(nUserController.listAllUsers("KYLIN", false, 0, 10)).thenReturn(new EnvelopeResponse<>(
                 KylinException.CODE_SUCCESS, DataResult.get(managedUsers, 0, 10), "testListAllUsers"));
 

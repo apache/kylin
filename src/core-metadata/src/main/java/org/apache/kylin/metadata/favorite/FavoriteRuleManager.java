@@ -18,8 +18,6 @@
 
 package org.apache.kylin.metadata.favorite;
 
-import static org.apache.kylin.metadata.favorite.FavoriteRule.FAVORITE_RULE_NAMES;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -92,7 +90,7 @@ public class FavoriteRuleManager {
     }
 
     public List<FavoriteRule> listAll() {
-        return FAVORITE_RULE_NAMES.stream().map(this::getOrDefaultByName).collect(Collectors.toList());
+        return FavoriteRule.FAVORITE_RULE_NAMES.stream().map(this::getOrDefaultByName).collect(Collectors.toList());
     }
 
     public FavoriteRule getByName(String name) {

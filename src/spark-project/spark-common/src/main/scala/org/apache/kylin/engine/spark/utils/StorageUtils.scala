@@ -1,13 +1,12 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -141,11 +140,26 @@ object StorageUtils extends Logging {
 
   def getCurrentYarnConfiguration: YarnConfiguration = {
     val conf = new YarnConfiguration()
+    setSystemPropertiesToYarnYarnConfiguration(conf)
+    conf
+  }
+
+  private def setSystemPropertiesToYarnYarnConfiguration(conf: YarnConfiguration): Unit = {
     System.getProperties.entrySet()
       .asScala
       .filter(_.getKey.asInstanceOf[String].startsWith("spark.hadoop."))
       .map(entry => (entry.getKey.asInstanceOf[String].substring("spark.hadoop.".length), entry.getValue.asInstanceOf[String]))
       .foreach(tp => conf.set(tp._1, tp._2))
+  }
+
+  /**
+   * if write_hadoop_dir exists, Yarn Client Hadoop conf dir is write_hadoop_dir
+   * if not exists, use system env: HADOOP_CONF_DIR
+   * if HADOOP_CONF_DIR not exists. use system properties: kylin.hadoop.conf.dir
+   */
+  def getCurrentYarnConfigurationFromWriteCluster: YarnConfiguration = {
+    val conf = new YarnConfiguration(HadoopUtil.getHadoopConfFromSparkEngine)
+    setSystemPropertiesToYarnYarnConfiguration(conf)
     conf
   }
 }

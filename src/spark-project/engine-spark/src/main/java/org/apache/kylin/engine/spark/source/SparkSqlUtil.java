@@ -53,6 +53,12 @@ public class SparkSqlUtil {
         for (Object l : scala.collection.JavaConverters.seqAsJavaListConverter(logicalPlan.collectLeaves()).asJava()) {
             if (l instanceof UnresolvedRelation) {
                 val tableName = ((UnresolvedRelation) l).tableName();
+                val size = ((UnresolvedRelation) l).multipartIdentifier().size();
+                //In the Hive view, multipartIdentifier size <= 2 and exists in the spark.catalog
+                if (size > 2 || !spark.catalog().tableExists(tableName)) {
+                    viewTables.add(tableName);
+                    continue;
+                }
                 //if nested view
                 if (spark.catalog().getTable(tableName).tableType().equals(CatalogTableType.VIEW().name())) {
                     viewTables.addAll(getViewOrignalTables(tableName, spark));

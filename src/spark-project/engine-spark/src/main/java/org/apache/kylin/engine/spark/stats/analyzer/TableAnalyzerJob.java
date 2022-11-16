@@ -17,27 +17,23 @@
  */
 package org.apache.kylin.engine.spark.stats.analyzer;
 
-import static org.apache.kylin.engine.spark.job.StageType.TABLE_SAMPLING;
-
-import java.io.Serializable;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import lombok.val;
+import lombok.var;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.engine.spark.application.SparkApplication;
 import org.apache.kylin.engine.spark.job.TableAnalysisJob;
 import org.apache.kylin.engine.spark.job.exec.TableAnalyzerExec;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
@@ -45,11 +41,13 @@ import org.apache.spark.utils.ResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
 
-import lombok.val;
-import lombok.var;
+import static org.apache.kylin.engine.spark.job.StageType.TABLE_SAMPLING;
 
 public class TableAnalyzerJob extends SparkApplication implements Serializable {
     public static final ImmutableList<String> TABLE_STATS_METRICS = ImmutableList.<String> builder()
@@ -77,7 +75,8 @@ public class TableAnalyzerJob extends SparkApplication implements Serializable {
         analyzeTable(tableDesc, prjName, (int) rowCount, ss);
     }
 
-    void analyzeTable(TableDesc tableDesc, String project, int rowCount, SparkSession ss) {
+    // Ensure metadata compatibility
+    public void analyzeTable(TableDesc tableDesc, String project, int rowCount, SparkSession ss) {
 
         long start = System.currentTimeMillis();
         Row[] row = new TableAnalysisJob(tableDesc, project, rowCount, ss, jobId).analyzeTable();

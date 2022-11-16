@@ -37,6 +37,7 @@ import java.util.Properties;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.slf4j.Logger;
@@ -55,7 +56,7 @@ public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
 
     private final File propFile;
 
-    private final Properties properties;
+    private final Map<String, String> properties;
 
     private final ImmutableMap<Object, Object> propertyEntries;
 
@@ -69,13 +70,12 @@ public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
         this.propertyEntries = ImmutableMap.copyOf(properties);
     }
 
-    private Properties loadProperties() {
-        Properties siteProperties = new Properties();
+    private Map<String, String> loadProperties() {
+        Map<String, String> siteProperties = Maps.newConcurrentMap();
         OrderedProperties orderedProperties = buildSiteOrderedProps();
         for (Map.Entry<String, String> each : orderedProperties.entrySet()) {
-            siteProperties.put(each.getKey(), each.getValue());
+            siteProperties.put(String.valueOf(each.getKey()), String.valueOf(each.getValue()));
         }
-
         return siteProperties;
     }
 
@@ -153,18 +153,15 @@ public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
     @Override
     public String getConfig() {
         StringWriter writer = new StringWriter();
-        try {
-            properties.store(writer, "");
-        } catch (IOException e) {
-            throw new KylinException(UNKNOWN_ERROR_CODE, e);
+        for (Map.Entry<String, String> entry: properties.entrySet()) {
+            writer.append(entry.getKey() + "=" + entry.getValue()).append("\n");
         }
-        return writer.getBuffer().toString();
+        return writer.toString();
     }
 
     @Override
     public String getProperty(String key) {
-        Object oval = propertyEntries.get(key);
-        return (oval instanceof String) ? (String) oval : null;
+        return properties.get(key);
     }
 
     /**
@@ -173,7 +170,9 @@ public class KylinExternalConfigLoader implements ICachedExternalConfigLoader {
     @Override
     @Deprecated
     public Properties getProperties() {
-        return this.properties;
+        Properties newProperties = new Properties();
+        newProperties.putAll(properties);
+        return newProperties;
     }
 
     @Override

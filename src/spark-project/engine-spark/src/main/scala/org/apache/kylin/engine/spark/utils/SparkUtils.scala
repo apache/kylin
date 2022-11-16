@@ -39,15 +39,17 @@ object SparkUtils extends Logging {
   }
 
   def currentResourceLoad(sc: SparkContext): (Int, Int) = {
-    val executorInfos = sc.statusTracker.getExecutorInfos
-    val startupExecSize = executorInfos.length
-    var runningTaskNum = 0
-    executorInfos.foreach(execInfo => runningTaskNum += execInfo.numRunningTasks())
+    val statusTracker = sc.statusTracker
+    val executorInfos = statusTracker.getExecutorInfos
+    val runningTaskNum = executorInfos.map(_.numRunningTasks()).sum
+    val pendingTaskNum = statusTracker.getActiveStageIds().map(statusTracker.getStageInfo)
+      .map(_.map(stg => stg.numTasks() - stg.numCompletedTasks()).sum).sum
     val coresPerExecutor = sc.getConf.getInt("spark.executor.cores", 1)
-    val appTaskThreshold = startupExecSize * coresPerExecutor
+    val appTaskThreshold = coresPerExecutor * executorInfos.length
     val appId = sc.applicationId
-    log.info(s"App: ${appId} current running task num is ${runningTaskNum}, Task number threshold is ${appTaskThreshold}")
-    (runningTaskNum, appTaskThreshold)
+    log.debug(s"Application $appId current runningTaskNum " + //
+      s"$runningTaskNum pendingTaskNum $pendingTaskNum appTaskThreshold $appTaskThreshold")
+    (runningTaskNum + pendingTaskNum, appTaskThreshold)
   }
 }
 

@@ -42,10 +42,12 @@ class BuildParam {
   private var tableDesc: PartitionFlatTableDesc = _
   private var partitionFlatTable: PartitionFlatTableAndDictBase = _
   private var partitionSpanningTree: PartitionSpanningTree = _
-  private var cachedPartitionFlatTableDS: Map[java.lang.Long, Dataset[Row]] =
-    immutable.Map.newBuilder[java.lang.Long, Dataset[Row]].result()
-  private var cachedPartitionFlatTableStats: Map[java.lang.Long, Statistics] =
-    immutable.Map.newBuilder[java.lang.Long, Statistics].result()
+  // Partition flat table.
+  private var cachedPartitionDS: Map[Long, Dataset[Row]] =
+    immutable.Map.newBuilder[Long, Dataset[Row]].result()
+  // Partition flat table statistics.
+  private var cachedPartitionStats: Map[Long, Statistics] =
+    immutable.Map.newBuilder[Long, Statistics].result()
 
   private var skipGenerateFlatTable: Boolean = _
   private var skipMaterializedFactTableView: Boolean = _
@@ -56,6 +58,14 @@ class BuildParam {
   private var cachedLayoutDS = mutable.HashMap[Long, Dataset[Row]]()
   // thread unsafe
   private var cachedIndexInferior: Option[Map[Long, InferiorGroup]] = None
+
+  // Thread unsafe
+  // [layout, [partition, dataset]]
+  private var cachedLayoutPartitionDS = mutable.HashMap[Long, mutable.HashMap[Long, Dataset[Row]]]()
+
+  // Thread unsafe
+  // [layout, [partition, sanity]]
+  private var cachedLayoutPartitionSanity: Option[mutable.HashMap[Long, mutable.HashMap[Long, Long]]] = None
 
   def isSkipMaterializedFactTableView: Boolean = skipMaterializedFactTableView
 
@@ -69,16 +79,16 @@ class BuildParam {
     this.skipGenerateFlatTable = skipGenerateFlatTable
   }
 
-  def getCachedPartitionFlatTableStats: Map[java.lang.Long, Statistics] = cachedPartitionFlatTableStats
+  def getCachedPartitionStats: Map[Long, Statistics] = cachedPartitionStats
 
-  def setCachedPartitionFlatTableStats(cachedPartitionFlatTableStats: Map[java.lang.Long, Statistics]): Unit = {
-    this.cachedPartitionFlatTableStats = cachedPartitionFlatTableStats
+  def setCachedPartitionStats(cachedPartitionStats: Map[Long, Statistics]): Unit = {
+    this.cachedPartitionStats = cachedPartitionStats
   }
 
-  def getCachedPartitionFlatTableDS: Map[java.lang.Long, Dataset[Row]] = cachedPartitionFlatTableDS
+  def getCachedPartitionDS: Map[Long, Dataset[Row]] = cachedPartitionDS
 
-  def setCachedPartitionFlatTableDS(cachedPartitionFlatTableDS: Map[java.lang.Long, Dataset[Row]]): Unit = {
-    this.cachedPartitionFlatTableDS = cachedPartitionFlatTableDS
+  def setCachedPartitionDS(cachedPartitionDS: Map[Long, Dataset[Row]]): Unit = {
+    this.cachedPartitionDS = cachedPartitionDS
   }
 
   def getPartitionSpanningTree: PartitionSpanningTree = partitionSpanningTree
@@ -169,5 +179,17 @@ class BuildParam {
 
   def setCachedIndexInferior(cachedIndexInferior: Option[Map[Long, InferiorGroup]]): Unit = {
     this.cachedIndexInferior = cachedIndexInferior
+  }
+
+  def getCachedLayoutPartitionDS: mutable.HashMap[Long, mutable.HashMap[Long, Dataset[Row]]] = cachedLayoutPartitionDS
+
+  def setCachedLayoutPartitionDS(cachedPartitionDS: mutable.HashMap[Long, mutable.HashMap[Long, Dataset[Row]]]): Unit = {
+    this.cachedLayoutPartitionDS = cachedPartitionDS
+  }
+
+  def getCachedLayoutPartitionSanity: Option[mutable.HashMap[Long, mutable.HashMap[Long, Long]]] = cachedLayoutPartitionSanity
+
+  def setCachedLayoutPartitionSanity(cachedPartitionSanity: Option[mutable.HashMap[Long, mutable.HashMap[Long, Long]]]): Unit = {
+    this.cachedLayoutPartitionSanity = cachedPartitionSanity
   }
 }

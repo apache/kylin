@@ -20,6 +20,7 @@ package org.apache.kylin.rest.response;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.job.constant.JobStatusEnum;
@@ -28,6 +29,7 @@ import org.apache.kylin.job.constant.JobStepCmdTypeEnum;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
+import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -75,6 +77,12 @@ public class ExecutableStepResponse {
 
     @JsonProperty("info")
     private ConcurrentHashMap<String, String> info = new ConcurrentHashMap<String, String>();
+
+    @JsonProperty("previous_step")
+    private String previousStep;
+
+    @JsonProperty("next_steps")
+    private Set<String> nextSteps = Sets.newHashSet();
 
     @JsonProperty("failed_msg")
     private String shortErrMsg;

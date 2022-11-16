@@ -19,12 +19,13 @@ package org.apache.kylin.engine.spark.source;
 
 import java.util.List;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
@@ -32,6 +33,8 @@ import org.apache.spark.sql.internal.SQLConf;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import lombok.val;
 
 public class NSparkMetadataExplorerTest extends NLocalWithSparkSessionTest {
 
@@ -97,24 +100,28 @@ public class NSparkMetadataExplorerTest extends NLocalWithSparkSessionTest {
         TableDesc fact1 = tableDescTableExtDescPair.getKey();
         Assert.assertEquals(Boolean.FALSE, fact1.isRangePartition());
 
-        tableDescTableExtDescPair = sparkMetadataExplorer.loadTableMetadata("", "DATES_RANGE", "tdh");
+        tableDescTableExtDescPair = sparkMetadataExplorer.loadTableMetadata("",
+                "DATES_RANGE", "tdh");
         TableDesc fact2 = tableDescTableExtDescPair.getFirst();
         Assert.assertEquals(Boolean.FALSE, fact2.isRangePartition());
 
-        tableDescTableExtDescPair = sparkMetadataExplorer.loadTableMetadata("", "DATES_TRANSACTION_RANGE", "tdh");
+        tableDescTableExtDescPair = sparkMetadataExplorer.loadTableMetadata("",
+                "DATES_TRANSACTION_RANGE", "tdh");
         TableDesc fact4 = tableDescTableExtDescPair.getKey();
         Assert.assertEquals(Boolean.FALSE, fact4.isRangePartition());
 
-        tableDescTableExtDescPair = sparkMetadataExplorer.loadTableMetadata("", "LINEORDER_PARTITION", "tdh");
+        tableDescTableExtDescPair = sparkMetadataExplorer.loadTableMetadata("",
+                "LINEORDER_PARTITION", "tdh");
         TableDesc fact5 = tableDescTableExtDescPair.getKey();
         Assert.assertEquals(Boolean.FALSE, fact5.isRangePartition());
 
-        tableDescTableExtDescPair = sparkMetadataExplorer.loadTableMetadata("", "LINEORDER_TRANSACTION", "tdh");
+        tableDescTableExtDescPair = sparkMetadataExplorer.loadTableMetadata("",
+                "LINEORDER_TRANSACTION", "tdh");
         TableDesc fact6 = tableDescTableExtDescPair.getKey();
         Assert.assertEquals(Boolean.FALSE, fact6.isRangePartition());
 
-        tableDescTableExtDescPair = sparkMetadataExplorer.loadTableMetadata("", "LINEORDER_TRANSACTION_PARTITION",
-                "tdh");
+        tableDescTableExtDescPair = sparkMetadataExplorer.loadTableMetadata("",
+                "LINEORDER_TRANSACTION_PARTITION", "tdh");
         TableDesc fact7 = tableDescTableExtDescPair.getFirst();
         Assert.assertEquals(Boolean.FALSE, fact7.isRangePartition());
     }
@@ -167,5 +174,18 @@ public class NSparkMetadataExplorerTest extends NLocalWithSparkSessionTest {
                 "hdfs://writecluster");
         Assert.assertFalse(sparkMetadataExplorer.checkTableAccess("DEFAULT.TEST_KYLIN_FACT"));
         SparderEnv.getSparkSession().sessionState().conf().unsetConf(SQLConf.HIVE_SPECIFIC_FS_LOCATION());
+    }
+
+    @Test
+    public void testCheckDeltaTableAccess() {
+        NSparkMetadataExplorer sparkMetadataExplorer = new NSparkMetadataExplorer();
+        val workingDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
+        val path = workingDir + "/tmp/delta_table";
+        val data = ss.range(1, 3);
+        data.write().format("delta").mode("overwrite").save(path);
+        ss.sql("CREATE VIEW IF NOT EXISTS delta_table_v AS select * from delta.`" + path + "`");
+        Assert.assertTrue(sparkMetadataExplorer.checkTableAccess("delta_table_v"));
+        ss.sql("CREATE VIEW IF NOT EXISTS delta_table_v_v AS select * from delta_table_v");
+        Assert.assertTrue(sparkMetadataExplorer.checkTableAccess("delta_table_v_v"));
     }
 }

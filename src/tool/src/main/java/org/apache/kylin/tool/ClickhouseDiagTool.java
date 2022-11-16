@@ -79,6 +79,7 @@ public class ClickhouseDiagTool {
 
             if (!SecondStorage.enabled()) {
                 logger.error("TieredStorage is not enabled. Skip to fetch diag log.");
+                return;
             }
 
             File ckLogsDir = new File(exportDir, SUB_DIR);

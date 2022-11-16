@@ -31,20 +31,18 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.code.ErrorCodeServer;
+import org.apache.kylin.common.hystrix.NCircuitBreaker;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
-import org.apache.kylin.common.hystrix.NCircuitBreaker;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.exception.ModelBrokenException;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -69,7 +67,7 @@ public class NDataModelManager {
             Class<? extends NDataModelManager> clz = ClassUtil.forName(cls, NDataModelManager.class);
             return clz.getConstructor(KylinConfig.class, String.class).newInstance(conf, project);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to init DataModelManager from " + conf, e);
+            throw new IllegalStateException("Failed to init DataModelManager from " + conf, e);
         }
     }
 
@@ -80,7 +78,7 @@ public class NDataModelManager {
 
     private CachedCrudAssist<NDataModel> crud;
 
-    public NDataModelManager(KylinConfig config, String project) throws IOException {
+    public NDataModelManager(KylinConfig config, String project) {
         init(config, project);
     }
 
@@ -181,7 +179,7 @@ public class NDataModelManager {
             modelDesc.setProject(project);
             return modelDesc;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
@@ -251,7 +249,7 @@ public class NDataModelManager {
 
         copy.setOwner(owner);
         copy.setStorageType(getConfig().getDefaultStorageType());
-        model = saveDataModelDesc(copy);
+        model = saveModel(copy);
         return model;
     }
 
@@ -297,9 +295,9 @@ public class NDataModelManager {
     public NDataModel updateDataModelDesc(NDataModel desc) {
         String name = desc.getUuid();
         if (!crud.contains(desc.getUuid())) {
-            throw new IllegalArgumentException("DataModelDesc '" + name + "' does not exist.");
+            throw new IllegalArgumentException("Model '" + name + "' does not exist.");
         }
-        return saveDataModelDesc(desc);
+        return saveModel(desc);
     }
 
     public NDataModel updateDataBrokenModelDesc(NDataModel desc) {
@@ -310,31 +308,12 @@ public class NDataModelManager {
         crud.reloadAll();
     }
 
-    private NDataModel saveDataModelDesc(NDataModel dataModelDesc) {
-        dataModelDesc.checkSingleIncrementingLoadingTable();
-        if (!dataModelDesc.getComputedColumnDescs().isEmpty()) {
-            List<NDataModel> models = readAllModelsFromSystem(dataModelDesc.getProject());
-            dataModelDesc.init(config, project,
-                    models.stream().filter(model -> !model.isBroken()).collect(Collectors.toList()));
-        } else {
-            dataModelDesc.init(config, project, Lists.newArrayList());
-        }
+    private NDataModel saveModel(NDataModel model) {
+        model.checkSingleIncrementingLoadingTable();
+        model.init(config, project, getCCRelatedModels(model));
+        crud.save(model);
+        return model;
 
-        crud.save(dataModelDesc);
-        return dataModelDesc;
-
-    }
-
-    /**
-     * @param resPath should be exactly like this: /{project_name}/model_desc/{model_name}.json
-     * @return {project_name}
-     */
-    private String getProjectFromPath(String resPath) {
-        Preconditions.checkNotNull(resPath);
-
-        String[] parts = resPath.split("/");
-        Preconditions.checkArgument(4 == parts.length);
-        return parts[1];
     }
 
     public NDataModel copyForWrite(NDataModel nDataModel) {
@@ -353,10 +332,6 @@ public class NDataModelManager {
         return dataModelDesc == null ? "NotFoundModel(" + modelId + ")" : dataModelDesc.toString();
     }
 
-    public static boolean isModelAccessible(NDataModel model) {
-        return KylinConfig.getInstanceFromEnv().streamingEnabled() || !model.isStreaming();
-    }
-
     public static Map<String, TableDesc> getRelatedTables(NDataModel dataModel, String project) {
         Map<String, TableDesc> tableMapping = Maps.newHashMap();
         NTableMetadataManager tableManager = NTableMetadataManager.getInstance(dataModel.getConfig(), project);
@@ -371,8 +346,23 @@ public class NDataModelManager {
         return tableMapping;
     }
 
-    private NProjectManager getProjectManager() {
-        return NProjectManager.getInstance(config);
+    /**
+     * 1. model initialization only considers models with computed-columns
+     * 2. reloading table may update more than 2 models
+     * 3. reloading table may set model to status of broken and delete computed-columns, other than add computed-columns
+     * 4. in order to avoid broken models produced by the current process, get these models in UnitOfWork again
+     */
+    public List<NDataModel> getCCRelatedModels(NDataModel model) {
+        if (model.getComputedColumnDescs().isEmpty()) {
+            return Lists.newArrayList();
+        }
+        NDataflowManager manager = NDataflowManager.getInstance(KylinConfig.readSystemKylinConfig(), project);
+        return manager.listAllDataflows(true).stream() //
+                .filter(df -> df.checkBrokenWithRelatedInfo() || !df.getModel().getComputedColumnDescs().isEmpty()) //
+                .map(df -> NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                        .getDataflow(df.getId()))
+                .filter(df -> !df.checkBrokenWithRelatedInfo()) //
+                .map(NDataflow::getModel).collect(Collectors.toList());
     }
 
     public interface NDataModelUpdater {

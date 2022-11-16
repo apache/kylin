@@ -30,12 +30,23 @@ import lombok.val;
 public class ProjectInfoParserConstant {
     public static final ProjectInfoParserConstant INSTANCE = new ProjectInfoParserConstant();
     public final List<String> PROJECT_PARSER_URI_LIST;
+    public final List<String> PROJECT_PARSER_URI_EXCLUDED_LIST;
 
     private ProjectInfoParserConstant() {
         ImmutableList.Builder<String> urisBuilder = ImmutableList.builder();
         constructUris(urisBuilder);
         PROJECT_PARSER_URI_LIST = urisBuilder.build();
 
+        ImmutableList.Builder<String> uriExcludedBuilder = ImmutableList.builder();
+        constructExcludeUris(uriExcludedBuilder);
+        PROJECT_PARSER_URI_EXCLUDED_LIST = uriExcludedBuilder.build();
+    }
+
+    private void constructExcludeUris(final ImmutableList.Builder<String> uriExcludedBuilder) {
+        List<String> projectsSubUris = Arrays.asList("statistics", "acceleration", "acceleration_tag",
+                "config/deletion", "default_configs");
+        projectsSubUris.forEach(projectsSubUri -> uriExcludedBuilder
+                .add(format(Locale.ROOT, "/kylin/api/projects/%s", projectsSubUri)));
     }
 
     private void constructUris(final ImmutableList.Builder<String> urisBuilder) {
@@ -49,9 +60,8 @@ public class ProjectInfoParserConstant {
                     "segment_config", "project_general_info", "project_config", "source_type", "yarn_queue",
                     "project_kerberos_info", "owner", "config", "jdbc_config");
 
-            projectsSubUris.forEach(projectsSubUri -> {
-                urisBuilder.add(format(Locale.ROOT, "/kylin/api/projects/{project}/%s", projectsSubUri));
-            });
+            projectsSubUris.forEach(projectsSubUri -> urisBuilder
+                    .add(format(Locale.ROOT, "/kylin/api/projects/{project}/%s", projectsSubUri)));
 
             urisBuilder.add("/kylin/api/projects/{project}");
         }

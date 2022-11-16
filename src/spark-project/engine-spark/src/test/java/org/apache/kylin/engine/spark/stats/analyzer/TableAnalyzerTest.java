@@ -22,12 +22,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.engine.spark.utils.SparkConfHelper;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
-import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.spark.sql.AnalysisException;
+import org.apache.spark.sql.SparderEnv;
+import org.apache.spark.sql.SparkSession;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +45,13 @@ public class TableAnalyzerTest extends NLocalWithSparkSessionTest {
     @Before
     public void setup() {
         tableMgr = NTableMetadataManager.getInstance(getTestConfig(), getProject());
+        if (ss != null && !ss.sparkContext().isStopped()) {
+            ss.stop();
+        }
+        sparkConf.set(SparkConfHelper.EXECUTOR_INSTANCES, "1");
+        sparkConf.set(SparkConfHelper.EXECUTOR_CORES, "1");
+        ss = SparkSession.builder().config(sparkConf).getOrCreate();
+        SparderEnv.setSparkSession(ss);
     }
 
     @Test

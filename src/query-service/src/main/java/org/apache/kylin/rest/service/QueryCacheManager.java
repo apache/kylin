@@ -27,6 +27,8 @@ import javax.annotation.PostConstruct;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.query.util.QueryUtil;
@@ -41,6 +43,8 @@ import org.apache.kylin.rest.util.QueryCacheSignatureUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import lombok.val;
 
 /**
  * query cache manager that
@@ -184,6 +188,16 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
         String cacheType = KylinConfig.getInstanceFromEnv().isRedisEnabled() ? "Redis" : "Ehcache";
         cached.setStorageCacheType(cacheType);
         QueryContext.current().getQueryTagInfo().setStorageCacheType(cacheType);
+
+        val realizations = cached.getNativeRealizations();
+        String project = sqlRequest.getProject();
+        for (NativeQueryRealization nativeQueryRealization : realizations) {
+            val modelId = nativeQueryRealization.getModelId();
+            val dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                    .getDataflow(modelId);
+            nativeQueryRealization.setModelAlias(dataflow.getModelAlias());
+        }
+
         return cached;
     }
 

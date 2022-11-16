@@ -119,10 +119,12 @@ public class SegmentControllerTest extends NLocalFileMetadataTestCase {
                         .contentType(MediaType.APPLICATION_JSON).param("offset", "0").param("project", "default")
                         .param("limit", "10").param("start", "432").param("end", "2234").param("sort_by", "end_time")
                         .param("reverse", "true").param("status", "")
+                        .param("statuses", "").param("statuses_second_storage", "")
                         .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
         Mockito.verify(segmentController).getSegments("89af4ee2-2cdb-4b07-b39e-4c29856309aa", "default", "", 0, 10,
-                "432", "2234", null, null, false, "end_time", true);
+                "432", "2234", null, null, false, "end_time", true,
+                Lists.newArrayList(), Lists.newArrayList());
     }
 
     @Test

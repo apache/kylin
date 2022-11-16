@@ -43,8 +43,6 @@ public interface AuditLogStore extends Closeable {
 
     void catchup();
 
-    void forceCatchup();
-
     void setInstance(String instance);
 
     AuditLog get(String resPath, long mvcc);

@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
@@ -33,6 +34,7 @@ import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.LayoutPartition;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.job.JobBucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,9 +145,16 @@ public class PartitionSpanningTree extends AdaptiveSpanningTree {
                 .map(index -> getPartitionNode(index, partition)).filter(Objects::nonNull) //
                 .map(parent -> parent.getLayouts().stream() //
                         .map(layout -> getLayoutPartition(layout, partition, dataSegment)).filter(Objects::nonNull) //
+                        .filter(pair -> checkLayoutPartitionNewBucketCompleted(parent, pair))
                         .findAny().map(pair -> new PartitionCandidate(node, parent, pair.getFirst(), pair.getSecond())) //
                         .orElse(null)) //
-                .filter(Objects::nonNull).collect(Collectors.toList());
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private boolean checkLayoutPartitionNewBucketCompleted(PartitionTreeNode node, Pair<NDataLayout, LayoutPartition> pair) {
+        LayoutPartition lp = pair.getSecond();
+        return node.matchNewBucket(lp.getBucketId());
     }
 
     private static Pair<NDataLayout, LayoutPartition> getLayoutPartition(LayoutEntity layout, Long partition, //
@@ -167,13 +176,16 @@ public class PartitionSpanningTree extends AdaptiveSpanningTree {
 
         private final List<Long> partitions;
 
+        private final Set<JobBucket> newBuckets;
+
         public PartitionTreeBuilder(NDataSegment dataSegment, Collection<LayoutEntity> layouts, //
-                String jobId, List<Long> partitions) {
+                String jobId, List<Long> partitions, Set<JobBucket> newBuckets) {
             super(dataSegment, layouts);
             Preconditions.checkNotNull(jobId, "Job id shouldn't be null.");
             Preconditions.checkNotNull(partitions, "Partitions shouldn't be null.");
             this.jobId = jobId;
             this.partitions = Collections.unmodifiableList(partitions);
+            this.newBuckets = newBuckets;
         }
 
         @Override
@@ -185,8 +197,14 @@ public class PartitionSpanningTree extends AdaptiveSpanningTree {
                 List<LayoutEntity> layouts = indexLayouts.getValue();
                 List<IndexEntity> directParents = getDirectParents(index);
 
-                List<PartitionTreeNode> nodes = partitions.stream().map(partition -> //
-                new PartitionTreeNode(index, layouts, partition)).collect(Collectors.toList());
+                List<PartitionTreeNode> nodes = partitions.stream().map(partition -> {
+                    Set<Long> layoutIds = layouts.stream().map(LayoutEntity::getId).collect(Collectors.toSet());
+                    Set<Long> newBucketIds = newBuckets.stream().filter(nb -> layoutIds.contains(nb.getLayoutId()))
+                            .map(JobBucket::getBucketId)
+                            .collect(Collectors.toSet());
+
+                    return new PartitionTreeNode(index, layouts, partition, newBucketIds);
+                }).collect(Collectors.toList());
                 if (directParents.isEmpty()) {
                     final List<IndexEntity> candidates = indexPlanIndices.stream() //
                             .filter(parent -> parent.fullyDerive(index)) //
@@ -265,15 +283,25 @@ public class PartitionSpanningTree extends AdaptiveSpanningTree {
 
         // Every partition may have its particular parent.
         private final Long partition;
+        private final Set<Long> newBucketIds;
 
         public PartitionTreeNode(IndexEntity index, List<LayoutEntity> layouts, Long partition) {
+            this(index, layouts, partition, null);
+        }
+
+        public PartitionTreeNode(IndexEntity index, List<LayoutEntity> layouts, Long partition, Set<Long> newBucketIds) {
             super(index, layouts);
             Preconditions.checkNotNull(partition, "Partition shouldn't be null.");
             this.partition = partition;
+            this.newBucketIds = newBucketIds;
         }
 
         public Long getPartition() {
             return partition;
+        }
+
+        public boolean matchNewBucket(Long bucketId) {
+            return newBucketIds != null && newBucketIds.contains(bucketId);
         }
     }
 

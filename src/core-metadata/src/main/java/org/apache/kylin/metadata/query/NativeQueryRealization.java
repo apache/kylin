@@ -43,6 +43,7 @@ public class NativeQueryRealization implements Serializable {
     private boolean isValid = true;
     private boolean isLayoutExist = true;
     private boolean isSecondStorage = false;
+    private boolean recommendSecondStorage = false;
     private boolean isStreamingLayout = false;
     private List<String> snapshots;
 

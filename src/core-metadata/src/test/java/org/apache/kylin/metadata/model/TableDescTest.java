@@ -50,6 +50,15 @@ public class TableDescTest extends NLocalFileMetadataTestCase {
         Assert.assertFalse(tableDesc.isTransactional());
         Assert.assertTrue(
                 tableDesc.getTransactionalTableIdentity().endsWith("_hive_tx_intermediate".toUpperCase(Locale.ROOT)));
+        Assert.assertEquals("`DEFAULT`.`TEST_KYLIN_FACT_HIVE_TX_INTERMEDIATE_suffix`",
+                tableDesc.getBackTickTransactionalTableIdentity("_suffix"));
+    }
+
+    @Test
+    public void testGetIdentityWithBacktick() {
+        final String tableName = "DEFAULT.TEST_KYLIN_FACT";
+        final TableDesc tableDesc = tableMetadataManager.getTableDesc(tableName);
+        Assert.assertEquals("`DEFAULT`.`TEST_KYLIN_FACT`", tableDesc.getBackTickIdentity());
     }
 
     @Test

@@ -60,7 +60,7 @@ class WaiteForResource(jobContext: SparkApplication) extends StageExec {
       } else {
         (-1L, -1L, -1L)
       }
-      try while (!ResourceUtils.checkResource(sparkConf, buildEnv.clusterManager)) {
+      try while (!ResourceUtils.checkResource(sparkConf, buildEnv.clusterManager, config.isSkipResourceCheck)) {
         if (checkEnabled) {
           timeTaken = System.nanoTime
           if (timeTaken - startTime > timeoutLimitNs) {

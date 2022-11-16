@@ -21,14 +21,26 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import com.google.common.collect.Maps;
+import lombok.var;
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.common.util.ExecutorServiceUtil;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.ZipFileUtils;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.job.execution.DefaultExecutable;
+import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.tool.constant.SensitiveConfigKeysConstant;
 import org.apache.kylin.tool.obf.KylinConfObfuscatorTest;
+import org.apache.kylin.tool.snapshot.SnapshotSourceTableStatsTool;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.After;
@@ -41,6 +53,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
 
 import lombok.val;
+import org.mockito.Mockito;
 
 public class JobDiagInfoToolTest extends NLocalFileMetadataTestCase {
 
@@ -148,7 +161,7 @@ public class JobDiagInfoToolTest extends NLocalFileMetadataTestCase {
 
                 Throwable e = ((Exception) o).getCause();
 
-                if (!e.getClass().equals(RuntimeException.class)) {
+                if (!e.getClass().equals(KylinRuntimeException.class)) {
                     return false;
                 }
 
@@ -186,4 +199,39 @@ public class JobDiagInfoToolTest extends NLocalFileMetadataTestCase {
 
     }
 
+    @Test
+    public void exportSourceTableStats() throws IOException {
+        val projectName = RandomUtil.randomUUIDStr();
+        val config = KylinConfig.getInstanceFromEnv();
+        val testOverride = Maps.<String, String> newLinkedHashMap();
+        val projectManager = NProjectManager.getInstance(config);
+        projectManager.createProject(projectName, "test", null, testOverride);
+        val projectInstance = projectManager.getProject(projectName);
+        val job = new DefaultExecutable();
+
+        val jobDiagInfoTool = new JobDiagInfoTool();
+        var result = jobDiagInfoTool.exportSourceTableStats(new File("test"), new File("test"), projectName, job);
+        Assert.assertFalse(result);
+
+        testOverride.put("kylin.snapshot.manual-management-enabled", "true");
+        testOverride.put("kylin.snapshot.auto-refresh-enabled", "true");
+        projectManager.updateProject(projectInstance, projectName, projectInstance.getDescription(), testOverride);
+        job.setJobType(JobTypeEnum.INDEX_MERGE);
+        result = jobDiagInfoTool.exportSourceTableStats(new File("test"), new File("test"), projectName, job);
+        Assert.assertFalse(result);
+
+        job.setJobType(JobTypeEnum.INC_BUILD);
+        try (val mockedStatic = Mockito.mockStatic(SnapshotSourceTableStatsTool.class)) {
+            mockedStatic.when(() -> SnapshotSourceTableStatsTool.extractSourceTableStats(Mockito.any(), Mockito.any(),
+                    Mockito.any(), Mockito.any())).thenReturn(true);
+            jobDiagInfoTool.executorService = Executors.newScheduledThreadPool(1);
+            jobDiagInfoTool.taskQueue = new LinkedBlockingQueue<>();
+            result = jobDiagInfoTool.exportSourceTableStats(new File("test"), new File("test"), projectName, job);
+            Assert.assertTrue(result);
+        } finally {
+            if (jobDiagInfoTool.executorService != null) {
+                ExecutorServiceUtil.shutdownGracefully(jobDiagInfoTool.executorService, 60);
+            }
+        }
+    }
 }

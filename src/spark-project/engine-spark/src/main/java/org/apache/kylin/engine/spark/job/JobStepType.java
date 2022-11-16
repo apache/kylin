@@ -18,6 +18,14 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.job.SecondStorageStepFactory;
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
+import org.apache.kylin.job.execution.DefaultExecutableOnModel;
+
 import static org.apache.kylin.engine.spark.job.StageType.BUILD_DICT;
 import static org.apache.kylin.engine.spark.job.StageType.BUILD_LAYER;
 import static org.apache.kylin.engine.spark.job.StageType.GATHER_FLAT_TABLE_STATS;
@@ -32,21 +40,12 @@ import static org.apache.kylin.engine.spark.job.StageType.SNAPSHOT_BUILD;
 import static org.apache.kylin.engine.spark.job.StageType.TABLE_SAMPLING;
 import static org.apache.kylin.engine.spark.job.StageType.WAITE_FOR_RESOURCE;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.SecondStorageStepFactory;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutableOnModel;
-
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 public enum JobStepType {
 
     RESOURCE_DETECT {
         @Override
-        public AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
+        public AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
             if (config.getSparkEngineBuildStepsToSkip().contains(NResourceDetectStep.class.getName())) {
                 return null;
             }
@@ -60,7 +59,7 @@ public enum JobStepType {
 
     CLEAN_UP_AFTER_MERGE {
         @Override
-        public AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
+        public AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
             AbstractExecutable step = new NSparkCleanupAfterMergeStep();
             return step;
 
@@ -72,7 +71,7 @@ public enum JobStepType {
     },
     CUBING {
         @Override
-        public AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
+        public AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
             return new NSparkCubingStep(config.getSparkBuildClassName());
         }
 
@@ -91,7 +90,7 @@ public enum JobStepType {
     },
     MERGING {
         @Override
-        public AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
+        public AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
             return new NSparkMergingStep(config.getSparkMergeClassName());
         }
 
@@ -107,7 +106,7 @@ public enum JobStepType {
 
     BUILD_SNAPSHOT {
         @Override
-        public AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
+        public AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
             return new NSparkSnapshotBuildingStep(config.getSnapshotBuildClassName());
         }
 
@@ -120,7 +119,7 @@ public enum JobStepType {
 
     SAMPLING {
         @Override
-        public AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
+        public AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
             return new NTableSamplingJob.SamplingStep(config.getSparkTableSamplingClassName());
         }
 
@@ -133,12 +132,12 @@ public enum JobStepType {
 
     UPDATE_METADATA {
         @Override
-        public AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
-            if (!(parent instanceof DefaultChainedExecutableOnModel)) {
+        public AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
+            if (!(parent instanceof DefaultExecutableOnModel)) {
                 throw new IllegalArgumentException();
             }
-            ((DefaultChainedExecutableOnModel) parent).setHandler(
-                    ExecutableHandlerFactory.createExecutableHandler((DefaultChainedExecutableOnModel) parent));
+            ((DefaultExecutableOnModel) parent).setHandler(
+                    ExecutableHandlerFactory.createExecutableHandler((DefaultExecutableOnModel) parent));
             return new NSparkUpdateMetadataStep();
         }
 
@@ -149,7 +148,7 @@ public enum JobStepType {
 
     SECOND_STORAGE_EXPORT {
         @Override
-        protected AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
+        protected AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
             return SecondStorageStepFactory.create(SecondStorageStepFactory.SecondStorageLoadStep.class, step -> {
                 step.setProject(parent.getProject());
                 step.setParams(parent.getParams());
@@ -163,7 +162,7 @@ public enum JobStepType {
 
     SECOND_STORAGE_REFRESH {
         @Override
-        protected AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
+        protected AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
             return SecondStorageStepFactory.create(SecondStorageStepFactory.SecondStorageRefreshStep.class, step -> {
                 step.setProject(parent.getProject());
                 step.setParams(parent.getParams());
@@ -177,7 +176,7 @@ public enum JobStepType {
 
     SECOND_STORAGE_MERGE {
         @Override
-        protected AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
+        protected AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
             return SecondStorageStepFactory.create(SecondStorageStepFactory.SecondStorageMergeStep.class, step -> {
                 step.setProject(parent.getProject());
                 step.setParams(parent.getParams());
@@ -189,9 +188,24 @@ public enum JobStepType {
         }
     },
 
+    SECOND_STORAGE_INDEX_CLEAN {
+        @Override
+        protected AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
+            return SecondStorageStepFactory.create(SecondStorageStepFactory.SecondStorageIndexClean.class, step -> {
+                step.setProject(parent.getProject());
+                step.setParams(parent.getParams());
+            });
+        }
+
+        @Override
+        protected void addSubStage(NSparkExecutable parent, KylinConfig config) {
+            // not have sub stage
+        }
+    },
+
     CLEAN_UP_TRANSACTIONAL_TABLE {
         @Override
-        public AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
+        public AbstractExecutable create(DefaultExecutable parent, KylinConfig config) {
             return new SparkCleanupTransactionalTableStep();
         }
 
@@ -200,12 +214,12 @@ public enum JobStepType {
         }
     };
 
-    protected abstract AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config);
+    protected abstract AbstractExecutable create(DefaultExecutable parent, KylinConfig config);
 
     /** add stage in spark executable */
     protected abstract void addSubStage(NSparkExecutable parent, KylinConfig config);
 
-    public AbstractExecutable createStep(DefaultChainedExecutable parent, KylinConfig config) {
+    public AbstractExecutable createStep(DefaultExecutable parent, KylinConfig config) {
         AbstractExecutable step = create(parent, config);
         if (step == null) {
             log.info("{} skipped", this);
@@ -215,7 +229,7 @@ public enum JobStepType {
         return step;
     }
 
-    protected void addParam(DefaultChainedExecutable parent, AbstractExecutable step) {
+    protected void addParam(DefaultExecutable parent, AbstractExecutable step) {
         step.setParams(parent.getParams());
         step.setProject(parent.getProject());
         step.setTargetSubject(parent.getTargetSubject());

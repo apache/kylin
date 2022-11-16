@@ -20,19 +20,28 @@ package org.apache.kylin.metadata.cube.storage;
 
 import java.io.IOException;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.metrics.HdfsCapacityMetrics;
 
+@Slf4j
 public class TotalStorageCollector implements StorageInfoCollector {
 
     @Override
     public void collect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) throws IOException {
+        long totalStorageSize = HdfsCapacityMetrics.getHdfsCapacityByProject(project);
+        if (totalStorageSize != -1L) {
+            log.info("Reuse workingDirCapacity by project {}, storageSize: {}", project, totalStorageSize);
+            storageVolumeInfo.setTotalStorageSize(totalStorageSize);
+            return;
+        }
         String strPath = config.getWorkingDirectoryWithConfiguredFs(project);
         Path path = new Path(strPath);
         FileSystem fs = path.getFileSystem(HadoopUtil.getCurrentConfiguration());
-        long totalStorageSize = 0L;
+        totalStorageSize = 0L;
         if (fs.exists(path)) {
             totalStorageSize = HadoopUtil.getContentSummary(fs, path).getLength();
         }

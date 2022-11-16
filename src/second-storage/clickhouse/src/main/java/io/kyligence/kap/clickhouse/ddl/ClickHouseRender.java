@@ -17,6 +17,8 @@
  */
 package io.kyligence.kap.clickhouse.ddl;
 
+import java.util.stream.Collectors;
+
 import io.kyligence.kap.secondstorage.ddl.AlterTable;
 import io.kyligence.kap.secondstorage.ddl.CreateTable;
 import io.kyligence.kap.secondstorage.ddl.visitor.DefaultSQLRender;
@@ -47,21 +49,15 @@ public class ClickHouseRender extends DefaultSQLRender {
                     .append(' ').append("`").append(query.partitionBy()).append("`");
         }
         if (query.createTableWithColumns()) {
-            result.append(' ')
-                    .append(DefaultSQLRender.KeyWord.ORDER_BY)
-                    .append(' ')
-                    .append(KeyWord.TUPLE)
-                    .append('(')
-                    .append(String.join(",", query.orderBy()))
-                    .append(')');
+            result.append(' ').append(DefaultSQLRender.KeyWord.ORDER_BY).append(' ').append(KeyWord.TUPLE);
+            result.append('(');
+            result.append(query.orderBy().stream().map(c -> "`" + c + "`").collect(Collectors.joining(",")));
+            result.append(')');
         }
-        if (query.getDeduplicationWindow() > 0) {
-            result.append(' ')
-                    .append(KeyWord.SETTINGS)
-                    .append(' ')
-                    .append(KeyWord.NON_REPLICATED_DEDUPLICATION_WINDOW)
-                    .append(" = ")
-                    .append(query.getDeduplicationWindow());
+        if (!query.getTableSettings().isEmpty()) {
+            result.append(' ').append(KeyWord.SETTINGS).append(' ');
+            result.append(query.getTableSettings().entrySet().stream()
+                    .map(setting -> setting.getKey().toSql(setting.getValue())).collect(Collectors.joining(",")));
         }
     }
 
@@ -78,6 +74,10 @@ public class ClickHouseRender extends DefaultSQLRender {
         } else if (alterTable.getAttachPart() != null) {
             result.append(' ').append(KeyWord.ATTACH_PART).append(' ')
                     .append('\'').append(alterTable.getAttachPart()).append('\'');
+        } else if (alterTable.getManipulateIndex() != null) {
+            acceptOrVisitValue(alterTable.getManipulateIndex());
+        } else if (alterTable.getModifyColumn() != null) {
+            acceptOrVisitValue(alterTable.getModifyColumn());
         }
     }
 
@@ -96,6 +96,27 @@ public class ClickHouseRender extends DefaultSQLRender {
         }
     }
 
+    @Override
+    public void visit(AlterTable.ManipulateIndex manipulateIndex) {
+        result.append(manipulateIndex.getIndexOperation().toString()).append(' ').append(KeyWord.INDEX).append(' ')
+                .append(manipulateIndex.getName());
+
+        if (AlterTable.IndexOperation.ADD == manipulateIndex.getIndexOperation()) {
+            result.append(' ').append('`').append(manipulateIndex.getColumn()).append('`').append(' ')
+                    .append(KeyWord.TYPE).append(' ').append(manipulateIndex.getExpr()).append(' ')
+                    .append(KeyWord.GRANULARITY).append(' ').append(manipulateIndex.getGranularity());
+        }
+    }
+
+    @Override
+    public void visit(AlterTable.ModifyColumn modifyColumn) {
+        result.append(KeyWord.MODIFY_COLUMN)
+                .append(' ')
+                .append(modifyColumn.getColumn())
+                .append(' ')
+                .append(modifyColumn.getDatatype());
+    }
+
     private static class KeyWord {
         public static final String PARTITION_BY = "PARTITION BY";
         private static final String ENGINE = "ENGINE";
@@ -104,7 +125,10 @@ public class ClickHouseRender extends DefaultSQLRender {
         private static final String FREEZE = "FREEZE";
         private static final String ATTACH_PART = "ATTACH PART";
         private static final String SETTINGS = "SETTINGS";
-        private static final String NON_REPLICATED_DEDUPLICATION_WINDOW = "non_replicated_deduplication_window";
+        private static final String INDEX = "INDEX";
+        private static final String TYPE = "TYPE";
+        private static final String GRANULARITY = "GRANULARITY";
+        private static final String MODIFY_COLUMN = "MODIFY COLUMN";
 
         private KeyWord() {
         }

@@ -19,40 +19,31 @@
 package io.kyligence.kap.secondstorage.management;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_PROJECT_NAME;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
+import static org.apache.kylin.common.exception.ServerErrorCode.SECOND_STORAGE_PROJECT_STATUS_ERROR;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
 
-import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.rest.controller.NBasicController;
-import org.apache.kylin.rest.response.JobInfoResponse;
-import org.apache.kylin.rest.service.ModelService;
-import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
-import io.kyligence.kap.secondstorage.management.request.ModelEnableRequest;
-import io.kyligence.kap.secondstorage.management.request.ProjectCleanRequest;
-import io.kyligence.kap.secondstorage.management.request.ProjectEnableRequest;
-import io.kyligence.kap.secondstorage.management.request.ProjectLoadRequest;
-import io.kyligence.kap.secondstorage.management.request.ProjectLockOperateRequest;
-import io.kyligence.kap.secondstorage.management.request.ProjectNodeRequest;
-import io.kyligence.kap.secondstorage.management.request.ProjectRecoveryResponse;
-import io.kyligence.kap.secondstorage.management.request.ProjectTableSyncResponse;
-import io.kyligence.kap.secondstorage.management.request.SecondStorageMetadataRequest;
-import io.kyligence.kap.secondstorage.management.request.StorageRequest;
-import io.swagger.annotations.ApiOperation;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
-import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_PROJECT_NAME;
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
-import static org.apache.kylin.common.exception.ServerErrorCode.SECOND_STORAGE_PROJECT_STATUS_ERROR;
-
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.JobInfoResponse;
+import org.apache.kylin.rest.service.ModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -65,20 +56,34 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
+import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
+import io.kyligence.kap.secondstorage.management.request.ModelEnableRequest;
+import io.kyligence.kap.secondstorage.management.request.ProjectCleanRequest;
+import io.kyligence.kap.secondstorage.management.request.ProjectEnableRequest;
+import io.kyligence.kap.secondstorage.management.request.ProjectLoadRequest;
+import io.kyligence.kap.secondstorage.management.request.ProjectLockOperateRequest;
+import io.kyligence.kap.secondstorage.management.request.ProjectNodeRequest;
+import io.kyligence.kap.secondstorage.management.request.ProjectRecoveryResponse;
+import io.kyligence.kap.secondstorage.management.request.ProjectTableSyncResponse;
+import io.kyligence.kap.secondstorage.management.request.SecondStorageIndexResponse;
+import io.kyligence.kap.secondstorage.management.request.SecondStorageMetadataRequest;
+import io.kyligence.kap.secondstorage.management.request.StorageRequest;
+import io.kyligence.kap.secondstorage.management.request.UpdateIndexRequest;
+import io.kyligence.kap.secondstorage.management.request.UpdateIndexResponse;
+import io.swagger.annotations.ApiOperation;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping(value = "/api/storage", produces = {HTTP_VND_APACHE_KYLIN_JSON})
 @Slf4j
 @ConditionalOnProperty({"kylin.second-storage.class"})
 public class SecondStorageEndpoint extends NBasicController {
-    private static final String MODEL_ARG_NAME = "model";
+    private static final String MODEL_ARG = "model";
+    private static final String MODEL_ARG_NAME = "model_name";
+    private static final String LAYOUT_ID_ARG_NAME = "layout_id";
 
     @Autowired
     @Qualifier("modelService")
@@ -103,7 +108,7 @@ public class SecondStorageEndpoint extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<JobInfoResponse> loadStorage(@RequestBody StorageRequest request) {
         checkProjectName(request.getProject());
-        checkRequiredArg(MODEL_ARG_NAME, request.getModel());
+        checkRequiredArg(MODEL_ARG, request.getModel());
         checkSegmentParms(request.getSegmentIds().toArray(new String[0]),
                 request.getSegmentNames().toArray(new String[0]));
         return internalLoadIntoStorage(request);
@@ -116,7 +121,7 @@ public class SecondStorageEndpoint extends NBasicController {
                                          @RequestParam(name="segment_ids") List<String> segmentIds) {
         request.setSegmentIds(segmentIds);
         checkProjectName(request.getProject());
-        checkRequiredArg(MODEL_ARG_NAME, request.getModel());
+        checkRequiredArg(MODEL_ARG, request.getModel());
         checkSegmentParms(request.getSegmentIds().toArray(new String[0]),
                 request.getSegmentNames().toArray(new String[0]));
         secondStorageService.triggerSegmentsClean(request.getProject(), request.getModel(), new HashSet<>(request.getSegmentIds()));
@@ -128,12 +133,12 @@ public class SecondStorageEndpoint extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<JobInfoResponse> enableStorage(@RequestBody ModelEnableRequest modelEnableRequest) {
         checkProjectName(modelEnableRequest.getProject());
-        checkRequiredArg(MODEL_ARG_NAME, modelEnableRequest.getModel());
+        checkRequiredArg(MODEL_ARG, modelEnableRequest.getModel());
         val modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), modelEnableRequest.getProject());
         val model = modelManager.getDataModelDesc(modelEnableRequest.getModel());
         checkModel(modelEnableRequest.getProject(), model.getAlias());
         val jobInfo = secondStorageService.changeModelSecondStorageState(modelEnableRequest.getProject(),
-                modelEnableRequest.getModel(), modelEnableRequest.isEnabled());
+                modelEnableRequest.getModel(), modelEnableRequest.getEnabled());
         JobInfoResponse jobInfoResponse = new JobInfoResponse();
         jobInfoResponse.setJobs(Collections.singletonList(jobInfo.orElse(null)));
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, jobInfoResponse, "");
@@ -224,14 +229,14 @@ public class SecondStorageEndpoint extends NBasicController {
 
     @GetMapping(value = "/lock/list", produces = {HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON})
     @ResponseBody
-    public EnvelopeResponse<List<ProjectLock>> lockList(String project) {
+    public EnvelopeResponse<List<ProjectLock>> lockList(@RequestParam("project") String project) {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, secondStorageService.lockList(project), "");
     }
 
     @GetMapping(value = "/jobs/all", produces = {HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON})
     @ResponseBody
-    public EnvelopeResponse<List<String>> getAllSecondStoragrJobs() {
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, secondStorageService.getAllSecondStoragrJobs(), "");
+    public EnvelopeResponse<List<String>> getAllSecondStorageJobs() {
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, secondStorageService.getAllSecondStorageJobs(), "");
     }
 
     @GetMapping(value = "/jobs/project", produces = {HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON})
@@ -260,7 +265,7 @@ public class SecondStorageEndpoint extends NBasicController {
                     String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageProjectEnabled(), project));
 
         }
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, secondStorageService.tableSync(project), "");
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, secondStorageService.tableSync(project, true), "");
     }
 
     @PostMapping(value = "/project/load", produces = {HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON})
@@ -282,7 +287,7 @@ public class SecondStorageEndpoint extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, null, "");
     }
     @PostMapping(value = "/reset", produces = {HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON})
-    public EnvelopeResponse resetStorage() {
+    public EnvelopeResponse<Void> resetStorage() {
         secondStorageService.resetStorage();
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, null, "");
     }
@@ -291,6 +296,76 @@ public class SecondStorageEndpoint extends NBasicController {
     public EnvelopeResponse<Void> updateNodeStatus(@RequestBody Map<String, Map<String, Boolean>> nodeStatusMap) {
         secondStorageService.updateNodeStatus(nodeStatusMap);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, null, "");
+    }
+
+    @ApiOperation(value = "updateSecondStorageIndex")
+    @PostMapping(value = "/index", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<UpdateIndexResponse> updateIndex(@RequestBody UpdateIndexRequest updateIndexRequest) {
+        val model = checkProjectAndModel(updateIndexRequest.getProject(), updateIndexRequest.getModelName());
+        val project = model.getProject();
+        checkSecondStorageEnabled(project, model);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, secondStorageService.updateIndexByColumnName(project,
+                model.getId(), updateIndexRequest.getPrimaryIndexes(), updateIndexRequest.getSecondaryIndexes()), "");
+    }
+
+    @ApiOperation(value = "listSecondStorageIndex")
+    @GetMapping(value = "/index", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<List<SecondStorageIndexResponse>> listIndex(@RequestParam("project") String project,
+            @RequestParam("model_name") String modelName) {
+        val model = checkProjectAndModel(project, modelName);
+        checkSecondStorageEnabled(model.getProject(), model);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                secondStorageService.listIndex(model.getProject(), model.getId()), "");
+    }
+
+    @ApiOperation(value = "materializeSecondaryIndex")
+    @PostMapping(value = "/index/secondary/materialize", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<UpdateIndexResponse> materializeSecondaryIndex(
+            @RequestBody UpdateIndexRequest updateIndexRequest) {
+        val model = checkProjectAndModel(updateIndexRequest.getProject(), updateIndexRequest.getModelName());
+        checkSecondStorageEnabled(model.getProject(), model);
+        checkRequiredArg(LAYOUT_ID_ARG_NAME, updateIndexRequest.getLayoutId());
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, new UpdateIndexResponse(secondStorageService
+                .materializeSecondaryIndex(model.getProject(), model.getId(), updateIndexRequest.getLayoutId())), "");
+    }
+
+    @ApiOperation(value = "deletePrimaryIndex")
+    @DeleteMapping(value = "/index/primary", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<Void> deletePrimaryIndex(@RequestParam("project") String project,
+            @RequestParam("model_name") String modelName, @RequestParam("layout_id") Long layoutId) {
+        val model = checkProjectAndModel(project, modelName);
+        checkRequiredArg(LAYOUT_ID_ARG_NAME, layoutId);
+        String modelId = model.getId();
+        secondStorageService.deletePrimaryIndex(model.getProject(), modelId, layoutId);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, null, "");
+    }
+
+    @ApiOperation(value = "deleteSecondaryIndex")
+    @DeleteMapping(value = "/index/secondary", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<UpdateIndexResponse> deleteSecondaryIndex(@RequestParam("project") String project,
+            @RequestParam("model_name") String modelName, @RequestParam("layout_id") Long layoutId) {
+        val model = checkProjectAndModel(project, modelName);
+        checkRequiredArg(LAYOUT_ID_ARG_NAME, layoutId);
+        String modelId = model.getId();
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, new UpdateIndexResponse(
+                secondStorageService.deleteSecondaryIndex(model.getProject(), modelId, layoutId)), "");
+    }
+
+    public NDataModel checkoutModelName(String project, String modelName) {
+        val modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        val model = modelManager.getDataModelDescByAlias(modelName);
+        if (Objects.isNull(model)) {
+            throw new KylinException(MODEL_NAME_NOT_EXIST, modelName);
+        }
+        return model;
     }
 
     public void checkModel(String project, String modelName) {
@@ -308,6 +383,24 @@ public class SecondStorageEndpoint extends NBasicController {
 
         for (String project : projects) {
             checkProjectName(project);
+        }
+    }
+
+    private NDataModel checkProjectAndModel(String project, String modelName) {
+        project = checkProjectName(project);
+        checkRequiredArg(MODEL_ARG_NAME, modelName);
+        return checkoutModelName(project, modelName);
+    }
+
+    public void checkSecondStorageEnabled(String project, NDataModel model) {
+        if (!SecondStorageUtil.isProjectEnable(project)) {
+            throw new KylinException(SECOND_STORAGE_PROJECT_STATUS_ERROR,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageProjectEnabled(), project));
+        }
+
+        if (!SecondStorageUtil.isModelEnable(project, model.getUuid())) {
+            throw new KylinException(SECOND_STORAGE_PROJECT_STATUS_ERROR,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageModelEnabled(), model.getAlias()));
         }
     }
 }

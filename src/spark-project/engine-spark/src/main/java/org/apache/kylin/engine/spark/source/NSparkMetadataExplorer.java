@@ -146,7 +146,12 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
             FileSystem fs = null == hiveSpecFsLocation ? HadoopUtil.getWorkingFileSystem()
                     : HadoopUtil.getFileSystem(hiveSpecFsLocation);
             for (String table : needCheckTables) {
-                fs.listStatus(new Path(getLoc(spark, table, hiveSpecFsLocation)));
+                val loc = getLoc(spark, table, hiveSpecFsLocation);
+                if (loc.startsWith(fs.getScheme()) || loc.startsWith("/")) {
+                    fs.listStatus(new Path(loc));
+                } else {
+                    HadoopUtil.getFileSystem(loc).listStatus(new Path(loc));
+                }
             }
         } catch (Exception e) {
             isAccess = false;

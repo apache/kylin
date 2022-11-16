@@ -18,9 +18,13 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import org.apache.kylin.engine.spark.job.step.NStageForBuild;
+import org.apache.kylin.engine.spark.job.step.NStageForMerge;
+import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
+import org.apache.kylin.engine.spark.job.step.NStageForTableSampling;
+import org.apache.kylin.engine.spark.job.step.NStageForWaitingForYarnResource;
+import org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.execution.StageBase;
 import org.apache.kylin.engine.spark.application.SparkApplication;
 import org.apache.kylin.engine.spark.job.exec.BuildExec;
 import org.apache.kylin.engine.spark.job.stage.BuildParam;
@@ -47,12 +51,8 @@ import org.apache.kylin.engine.spark.job.stage.merge.partition.PartitionMergeFla
 import org.apache.kylin.engine.spark.job.stage.merge.partition.PartitionMergeIndices;
 import org.apache.kylin.engine.spark.job.stage.snapshots.SnapshotsBuild;
 import org.apache.kylin.engine.spark.job.stage.tablesampling.AnalyzerTable;
-import org.apache.kylin.engine.spark.job.step.NStageForBuild;
-import org.apache.kylin.engine.spark.job.step.NStageForMerge;
-import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
-import org.apache.kylin.engine.spark.job.step.NStageForTableSampling;
-import org.apache.kylin.engine.spark.job.step.NStageForWaitingForYarnResource;
-import org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob;
+import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.execution.StageBase;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 
 public enum StageType {

@@ -18,16 +18,15 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.execution.ExecutableHandler;
-import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
-
 import lombok.val;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
+import org.apache.kylin.job.execution.ExecutableHandler;
 
 public class ExecutableMergeOrRefreshHandler extends ExecutableHandler {
 
     public ExecutableMergeOrRefreshHandler(String project, String modelId, String owner, String segmentId,
-            String jobId) {
+                                           String jobId) {
         super(project, modelId, owner, segmentId, jobId);
     }
 

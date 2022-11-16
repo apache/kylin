@@ -127,8 +127,8 @@ class CreateFlatTable(val flatTable: IJoinedFlatTableDesc,
   private def withColumn(ds: Dataset[Row], withCols: Set[TblColRef]): Dataset[Row] = {
     val matchedCols = selectColumnsInTable(ds, withCols)
     var withDs = ds
-    matchedCols.foreach(m => withDs = withDs.withColumn(convertFromDot(m.getIdentity),
-      expr(convertFromDot(m.getExpressionInSourceDB))))
+    matchedCols.foreach(m => withDs = withDs.withColumn(convertFromDot(m.getBackTickIdentity),
+      expr(convertFromDot(m.getBackTickExpressionInSourceDB))))
     withDs
   }
 
@@ -234,8 +234,8 @@ object CreateFlatTable extends LogEx {
             s" lookup table:$lookupDesc, pk: ${pk.mkString(",")}")
       }
       val equiConditionColPairs = fk.zip(pk).map(joinKey =>
-        col(convertFromDot(joinKey._1.getIdentity))
-          .equalTo(col(convertFromDot(joinKey._2.getIdentity))))
+        col(convertFromDot(joinKey._1.getBackTickIdentity))
+          .equalTo(col(convertFromDot(joinKey._2.getBackTickIdentity))))
       logInfo(s"Lookup table schema ${lookupDataset.schema.treeString}")
 
       if (join.getNonEquiJoinCondition != null) {
@@ -260,7 +260,7 @@ object CreateFlatTable extends LogEx {
     val colIndices = flatTable.getIndices.asScala
     val columnNameToIndex = flatTable.getAllColumns
       .asScala
-      .map(column => convertFromDot(column.getIdentity))
+      .map(column => convertFromDot(column.getBackTickIdentity))
       .zip(colIndices)
     val columnToIndexMap = columnNameToIndex.toMap
     val encodeSeq = structType.filter(_.name.endsWith(ENCODE_SUFFIX)).map {
@@ -288,7 +288,7 @@ object CreateFlatTable extends LogEx {
       // try replacing quoted identifiers if any
       val quotedColName = colName.split('.').mkString("`", "`.`", "`");
       if (quotedColName.nonEmpty) {
-        doReplaceDot(sb, quotedColName, namedColumn.getAliasDotColumn)
+        doReplaceDot(sb, quotedColName, namedColumn.getAliasDotColumn.split('.').mkString("`", "`.`", "`"))
       }
     }
     sb.toString()
@@ -313,9 +313,10 @@ object CreateFlatTable extends LogEx {
 
   def changeSchemaToAliasDotName(original: Dataset[Row],
                                  alias: String): Dataset[Row] = {
+    val aliasConverted = convertFromDot(alias)
     val sf = original.schema.fields
     val newSchema = sf
-      .map(field => convertFromDot(alias + "." + field.name))
+      .map(field => convertFromDot("`" + aliasConverted + "`" + "." + "`" + field.name + "`"))
       .toSeq
     val newdf = original.toDF(newSchema: _*)
     logInfo(s"After change alias from ${original.schema.treeString} to ${newdf.schema.treeString}")
@@ -442,7 +443,7 @@ object CreateFlatTable extends LogEx {
                         flatCols: Set[String]): Seq[TblColRef] = {
     var cleanCols = cc
     if (flatCols != null) {
-      cleanCols = cc.filter(col => !flatCols.contains(convertFromDot(col.getIdentity)))
+      cleanCols = cc.filter(col => !flatCols.contains(convertFromDot(col.getBackTickIdentity)))
     }
     cleanCols
   }

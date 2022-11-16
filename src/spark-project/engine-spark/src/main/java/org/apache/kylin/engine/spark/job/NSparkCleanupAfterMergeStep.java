@@ -18,8 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.io.IOException;
-
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
@@ -34,7 +33,7 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import java.io.IOException;
 
 public class NSparkCleanupAfterMergeStep extends NSparkExecutable {
 
@@ -49,7 +48,7 @@ public class NSparkCleanupAfterMergeStep extends NSparkExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    public ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
 
         String name = getParam(NBatchConstants.P_DATAFLOW_ID);
         String[] segmentIds = StringUtils.split(getParam(NBatchConstants.P_SEGMENT_IDS), ",");

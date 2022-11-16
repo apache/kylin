@@ -137,7 +137,8 @@ object ResourceDetectUtils extends Logging {
   }
 
   def getResourceSizeConcurrency(configuration: Configuration, paths: Path*): Long = {
-    val threadNumber = KylinConfig.getInstanceFromEnv.getConcurrencyFetchDataSourceSizeThreadNumber
+    val kylinConfig = KylinConfig.getInstanceFromEnv
+    val threadNumber = kylinConfig.getConcurrencyFetchDataSourceSizeThreadNumber
     logInfo(s"Get resource size concurrency, thread number is $threadNumber")
     val forkJoinPool = new ForkJoinPool(threadNumber)
     val parallel = paths.par
@@ -148,7 +149,7 @@ object ResourceDetectUtils extends Logging {
         path => {
           val fs = path.getFileSystem(configuration)
           if (fs.exists(path)) {
-            sum.addAndGet(HadoopUtil.getContentSummary(fs, path).getLength)
+            sum.addAndGet(HadoopUtil.getContentSummaryFromHdfsKylinConfig(fs, path, kylinConfig).getLength)
           }
         }
       }

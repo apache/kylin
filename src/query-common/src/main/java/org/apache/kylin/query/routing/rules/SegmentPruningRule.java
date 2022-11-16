@@ -16,37 +16,24 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.query.routing.rules;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.RealizationPruner;
 import org.apache.kylin.query.routing.RoutingRule;
-import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
-import org.apache.kylin.metadata.cube.model.NDataflow;
 
+import io.kyligence.kap.guava20.shaded.common.collect.Maps;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,6 +48,16 @@ public class SegmentPruningRule extends RoutingRule {
             for (IRealization realization : realizations) {
                 NDataflow df = (NDataflow) realization;
                 val prunedSegments = RealizationPruner.pruneSegments(df, candidate.getCtx());
+                Map<String, Set<Long>> secondStorageSegmentLayoutMap = Maps.newHashMap();
+                if (SecondStorageUtil.isModelEnable(df.getProject(), df.getId())) {
+                    for (NDataSegment segment : prunedSegments) {
+                        Set<Long> chEnableLayoutIds = SecondStorageUtil.listEnableLayoutBySegment(df.getProject(), df.getId(), segment.getId());
+                        if (CollectionUtils.isNotEmpty(chEnableLayoutIds)) {
+                            secondStorageSegmentLayoutMap.put(segment.getId(), chEnableLayoutIds);
+                        }
+                    }
+                }
+                candidate.setSecondStorageSegmentLayoutMap(secondStorageSegmentLayoutMap);
                 candidate.setPrunedSegments(prunedSegments, df.isStreaming());
             }
             if (CollectionUtils.isEmpty(candidate.getPrunedSegments())

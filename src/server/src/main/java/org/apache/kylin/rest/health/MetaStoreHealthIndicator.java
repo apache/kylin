@@ -34,13 +34,14 @@ import org.apache.kylin.rest.config.initialize.AfterMetadataReadyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import com.google.common.annotations.VisibleForTesting;
 
 @Component
-public class MetaStoreHealthIndicator extends AbstractKylinHealthIndicator {
+public class MetaStoreHealthIndicator extends AbstractKylinHealthIndicator
+        implements ApplicationListener<AfterMetadataReadyEvent> {
     public static final Logger logger = LoggerFactory.getLogger(MetaStoreHealthIndicator.class);
 
     private static final String UNIT_NAME = "_health";
@@ -57,8 +58,8 @@ public class MetaStoreHealthIndicator extends AbstractKylinHealthIndicator {
         this.errorResponseMs = KapConfig.wrap(config).getMetaStoreHealthErrorResponseMs();
     }
 
-    @EventListener(AfterMetadataReadyEvent.class)
-    public void init() {
+    @Override
+    public void onApplicationEvent(AfterMetadataReadyEvent event) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         META_STORE_HEALTH_EXECUTOR.scheduleWithFixedDelay(this::healthCheck, 0, config.getMetadataCheckDuration(),
                 TimeUnit.MILLISECONDS);

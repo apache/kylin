@@ -17,28 +17,24 @@
  */
 package org.apache.kylin.tool.util;
 
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
 import java.util.Set;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
-
-import com.clearspring.analytics.util.Lists;
-import com.google.common.collect.Maps;
 
 import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 
 public class ProjectTemporaryTableCleanerHelperTest extends NLocalFileMetadataTestCase {
+    private final String TRANSACTIONAL_TABLE_NAME_SUFFIX = "_hive_tx_intermediate";
     private ProjectTemporaryTableCleanerHelper tableCleanerHelper = new ProjectTemporaryTableCleanerHelper();
 
     @Before
@@ -52,64 +48,60 @@ public class ProjectTemporaryTableCleanerHelperTest extends NLocalFileMetadataTe
     }
 
     @Test
-    public void testIsNeedClean() {
-        //  return !isEmptyJobTmp || !isEmptyDiscardJob;
-        Assert.assertFalse(tableCleanerHelper.isNeedClean(Boolean.TRUE, Boolean.TRUE));
-        Assert.assertTrue(tableCleanerHelper.isNeedClean(Boolean.FALSE, Boolean.TRUE));
-        Assert.assertTrue(tableCleanerHelper.isNeedClean(Boolean.TRUE, Boolean.FALSE));
-        Assert.assertTrue(tableCleanerHelper.isNeedClean(Boolean.FALSE, Boolean.FALSE));
+    public void testCollectDropDBTemporaryTableCmd() {
+        String project = "default";
+        {
+            Set<String> tempTables = Sets.newHashSet();
+            tempTables.add("SSB.CUSTOMER" + TRANSACTIONAL_TABLE_NAME_SUFFIX + "21f2e3a73312");
+            String result = tableCleanerHelper.getDropTmpTableCmd(project, tempTables);
+            Assert.assertFalse(result.isEmpty());
+        }
+        {
+            Set<String> tempTables = Sets.newHashSet();
+            tempTables.add("SSB.CUSTOMER");
+            String result = tableCleanerHelper.getDropTmpTableCmd(project, tempTables);
+            Assert.assertFalse(result.isEmpty());
+        }
+        {
+            Set<String> tempTables = Sets.newHashSet();
+            String result = tableCleanerHelper.getDropTmpTableCmd(project, tempTables);
+            Assert.assertTrue(result.isEmpty());
+        }
+        {
+            Set<String> tempTables = Sets.newHashSet();
+            tempTables.add("SSB.CUSTOMER_TEST");
+            String result = tableCleanerHelper.getDropTmpTableCmd(project, tempTables);
+            Assert.assertFalse(result.isEmpty());
+        }
     }
 
     @Test
-    public void testCollectDropDBTemporaryTableCmd() throws Exception {
-        ISourceMetadataExplorer explr = SourceFactory
-                .getSource(NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject("tdh"))
-                .getSourceMetadataExplorer();
-        List<StorageCleaner.FileTreeNode> jobTemps = Lists.newArrayList();
-        jobTemps.add(new StorageCleaner.FileTreeNode("TEST_KYLIN_FACT_WITH_INT_DATE"));
-        jobTemps.add(new StorageCleaner.FileTreeNode("TEST_CATEGORY_GROUPINGS"));
-        jobTemps.add(new StorageCleaner.FileTreeNode("TEST_SELLER_TYPE_DIM"));
-        Set<String> discardJobs = Sets.newConcurrentHashSet();
-        discardJobs.add("TEST_KYLIN_FACT_WITH_INT_DATE_123456780");
-        discardJobs.add("TEST_CATEGORY_GROUPINGS_123456781");
-        discardJobs.add("TEST_SELLER_TYPE_DIM_123456782");
-
-        String result = tableCleanerHelper.collectDropDBTemporaryTableCmd(KylinConfig.getInstanceFromEnv(), explr,
-                jobTemps, discardJobs);
-        Assert.assertTrue(result.isEmpty());
-
-        Map<String, List<String>> dropTableDbNameMap = Maps.newConcurrentMap();
-        tableCleanerHelper.putTableNameToDropDbTableNameMap(dropTableDbNameMap, "DEFAULT", "TEST_CATEGORY_GROUPINGS");
-        tableCleanerHelper.putTableNameToDropDbTableNameMap(dropTableDbNameMap, "DEFAULT", "TEST_COUNTRY");
-        tableCleanerHelper.putTableNameToDropDbTableNameMap(dropTableDbNameMap, "EDW", "TEST_CAL_DT");
-        ProjectTemporaryTableCleanerHelper mockCleanerHelper = Mockito.mock(ProjectTemporaryTableCleanerHelper.class);
-
-        Mockito.when(mockCleanerHelper.collectDropDBTemporaryTableNameMap(explr, jobTemps, discardJobs))
-                .thenReturn(dropTableDbNameMap);
-        Mockito.when(mockCleanerHelper.collectDropDBTemporaryTableCmd(Mockito.any(), Mockito.any(), Mockito.any(),
-                Mockito.any())).thenCallRealMethod();
-        result = mockCleanerHelper.collectDropDBTemporaryTableCmd(KylinConfig.getInstanceFromEnv(), explr, jobTemps,
-                discardJobs);
-        Assert.assertFalse(result.isEmpty());
+    public void testGetJobTransactionalTable() throws IOException {
+        String project = "default";
+        String jobId = "job-5c5851ef8544";
+        {
+            Set<String> tables = tableCleanerHelper.getJobTransactionalTable(project, jobId);
+            Assert.assertTrue(tables.isEmpty());
+        }
+        {
+            createHDFSFile(project, jobId);
+            Set<String> tables = tableCleanerHelper.getJobTransactionalTable(project, jobId);
+            Assert.assertFalse(tables.isEmpty());
+        }
     }
 
-    @Test
-    public void testIsMatchesTemporaryTables() {
-        List<StorageCleaner.FileTreeNode> jobTemps = Lists.newArrayList();
-        jobTemps.add(new StorageCleaner.FileTreeNode("TEST_KYLIN_FACT_WITH_INT_DATE"));
-        jobTemps.add(new StorageCleaner.FileTreeNode("TEST_CATEGORY_GROUPINGS"));
-        jobTemps.add(new StorageCleaner.FileTreeNode("TEST_SELLER_TYPE_DIM"));
-        Set<String> discardJobs = Sets.newConcurrentHashSet();
-        discardJobs.add("89289329392823_123456780");
-        discardJobs.add("37439483439489_123456781");
-        discardJobs.add("12309290434934_123456782");
-        Assert.assertTrue(tableCleanerHelper.isMatchesTemporaryTables(jobTemps, discardJobs,
-                "TEST_SELLER_TYPE_DIM_hive_tx_intermediate123456780"));
-        Assert.assertTrue(tableCleanerHelper.isMatchesTemporaryTables(jobTemps, discardJobs,
-                "TEST_CATEGORY_GROUPINGS_hive_tx_intermediate123456781"));
-        Assert.assertFalse(tableCleanerHelper.isMatchesTemporaryTables(jobTemps, discardJobs,
-                "TEST_SELLER_hive_tx_intermediate123456779"));
-
+    private void createHDFSFile(String project, String jobId) throws IOException {
+        KylinConfig config = getTestConfig();
+        String dir = config.getJobTmpTransactionalTableDir(project, jobId);
+        Path path = new Path(dir);
+        FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
+        if (!fileSystem.exists(path)) {
+            fileSystem.mkdirs(path);
+            fileSystem.setPermission(path, new FsPermission((short) 00777));
+            path = new Path(dir + "/SSB.CUSTOMER");
+            fileSystem.createNewFile(path);
+            path = new Path(dir + "/SSB.CUSTOMER_HIVE_TX_INTERMEDIATE5c5851ef8544");
+            fileSystem.createNewFile(path);
+        }
     }
-
 }

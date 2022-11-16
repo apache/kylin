@@ -27,9 +27,10 @@ import org.apache.kylin.rest.monitor.SparkContextCanary;
 import org.apache.spark.scheduler.SparkUIZombieJobCleaner;
 import org.apache.spark.sql.SparderEnv;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -39,15 +40,21 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfigureOrder
 public class SparderConfiguration {
 
-    @Async
-    @EventListener(SparderStartEvent.AsyncEvent.class)
-    public void initAsync(SparderStartEvent.AsyncEvent event) {
-        init();
+    @Component
+    class SparderAsyncListener implements ApplicationListener<SparderStartEvent.AsyncEvent> {
+        @Override
+        @Async
+        public void onApplicationEvent(SparderStartEvent.AsyncEvent event) {
+            init();
+        }
     }
 
-    @EventListener(SparderStartEvent.SyncEvent.class)
-    public void initSync(SparderStartEvent.SyncEvent event) {
-        init();
+    @Component
+    class SparderSyncListener implements ApplicationListener<SparderStartEvent.SyncEvent> {
+        @Override
+        public void onApplicationEvent(SparderStartEvent.SyncEvent event) {
+            init();
+        }
     }
 
     public void init() {

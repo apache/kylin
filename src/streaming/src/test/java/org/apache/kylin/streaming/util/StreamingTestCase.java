@@ -17,31 +17,28 @@
  */
 package org.apache.kylin.streaming.util;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.metadata.model.ISourceAware;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.source.ISource;
-import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.source.kafka.NSparkKafkaSource;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
-import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.streaming.app.StreamingMergeEntry;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.source.ISource;
+import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.kafka.NSparkKafkaSource;
 import org.apache.kylin.streaming.common.MergeJobEntry;
 import org.apache.spark.sql.SparkSession;
 import org.awaitility.Awaitility;
@@ -105,14 +102,6 @@ public class StreamingTestCase extends NLocalFileMetadataTestCase {
         copy.setUuid(RandomUtil.randomUUIDStr());
         CubeTestUtils.createTmpModelAndCube(testConfig, copy, project, modelId);
         return copy;
-    }
-
-    protected void shutdownStreamingMergeJob(CountDownLatch latch) {
-        new Thread(() -> {
-            StreamingUtils.sleep(10 * 1000);
-            StreamingMergeEntry.stop();
-            latch.countDown();
-        }).start();
     }
 
     protected MergeJobEntry createMergeJobEntry(NDataflowManager mgr, NDataflow df, SparkSession ss, String project) {

@@ -29,9 +29,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.job.execution.ExecutableParams;
 import org.apache.kylin.engine.spark.application.SparkApplication;
 import org.apache.kylin.engine.spark.scheduler.JobRuntime;
+import org.apache.kylin.job.execution.ExecutableParams;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
@@ -51,15 +51,23 @@ public abstract class SegmentJob extends SparkApplication {
     private static final Logger logger = LoggerFactory.getLogger(SegmentJob.class);
 
     private static final String COMMA = ",";
-    public JobRuntime runtime;
+
     protected IndexPlan indexPlan;
+
     protected String dataflowId;
+
     protected Set<LayoutEntity> readOnlyLayouts;
+
     protected Set<NDataSegment> readOnlySegments;
+
     // Resource detection results output path
     protected Path rdSharedPath;
-    protected BuildContext buildContext;
+
+    protected JobRuntime runtime;
+
     private boolean partialBuild = false;
+
+    protected BuildContext buildContext;
 
     public boolean isPartialBuild() {
         return partialBuild;
@@ -101,8 +109,11 @@ public abstract class SegmentJob extends SparkApplication {
     @Override
     public void extraDestroy() {
         super.extraDestroy();
-        if (runtime != null) {
+        if (Objects.nonNull(runtime)) {
             runtime.shutdown();
+        }
+        if (Objects.nonNull(buildContext)) {
+            buildContext.stop();
         }
     }
 
@@ -163,6 +174,10 @@ public abstract class SegmentJob extends SparkApplication {
 
     private NDataflowManager getDataflowManager() {
         return NDataflowManager.getInstance(config, project);
+    }
+
+    public JobRuntime getRuntime() {
+        return runtime;
     }
 
     public BuildContext getBuildContext() {

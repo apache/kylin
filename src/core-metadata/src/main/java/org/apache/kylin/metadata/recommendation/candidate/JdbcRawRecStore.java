@@ -18,7 +18,6 @@
 
 package org.apache.kylin.metadata.recommendation.candidate;
 
-import static org.apache.kylin.metadata.recommendation.candidate.RawRecItem.CostMethod.getCostMethod;
 import static org.mybatis.dynamic.sql.SqlBuilder.count;
 import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
 import static org.mybatis.dynamic.sql.SqlBuilder.isGreaterThanOrEqualTo;
@@ -41,6 +40,7 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
+import org.apache.kylin.metadata.recommendation.util.RawRecStoreUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
@@ -55,8 +55,6 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.schema.ImportModelContext;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.recommendation.candidate.RawRecItem.CostMethod;
-import org.apache.kylin.metadata.recommendation.util.RawRecStoreUtil;
 import org.mybatis.dynamic.sql.BasicColumn;
 import org.mybatis.dynamic.sql.SqlBuilder;
 import org.mybatis.dynamic.sql.delete.DeleteModel;
@@ -237,7 +235,7 @@ public class JdbcRawRecStore {
                     .and(table.semanticVersion, isEqualTo(semanticVersion)) //
                     .and(table.modelID, isEqualTo(model)) //
                     .and(table.type, isEqualTo(RawRecItem.RawRecType.ADDITIONAL_LAYOUT)) //
-                    .and(table.state, isEqualTo(state)); //
+                    .and(table.state, SqlBuilder.isEqualTo(state)); //
             if (minCost > 0) {
                 queryBuilder = queryBuilder.and(table.cost, isGreaterThanOrEqualTo(minCost));
             }
@@ -273,7 +271,7 @@ public class JdbcRawRecStore {
                     .and(table.semanticVersion, isEqualTo(semanticVersion)) //
                     .and(table.modelID, isEqualTo(model)) //
                     .and(table.type, isEqualTo(RawRecItem.RawRecType.ADDITIONAL_LAYOUT)) //
-                    .and(table.state, isEqualTo(state)) //
+                    .and(table.state, SqlBuilder.isEqualTo(state)) //
                     .and(table.recSource, isEqualTo(RawRecItem.IMPORTED)) //
                     .orderBy(table.id.descending()) //
                     .build().render(RenderingStrategies.MYBATIS3);
@@ -302,7 +300,7 @@ public class JdbcRawRecStore {
                     .where(table.project, isEqualTo(project)) //
                     .and(table.semanticVersion, isEqualTo(semanticVersion)) //
                     .and(table.modelID, isEqualTo(model)) //
-                    .and(table.type, isEqualTo(type)) //
+                    .and(table.type, SqlBuilder.isEqualTo(type)) //
                     .and(table.state, isNotIn(RawRecItem.RawRecState.APPLIED, RawRecItem.RawRecState.BROKEN)) //
                     .build().render(RenderingStrategies.MYBATIS3);
             List<RawRecItem> recItems = mapper.selectMany(statementProvider);
@@ -562,7 +560,7 @@ public class JdbcRawRecStore {
         SelectStatementProvider statementProvider = select(count(table.id)) //
                 .from(table) //
                 .where(table.project, isEqualTo(project)) //
-                .and(table.type, isEqualTo(type)) //
+                .and(table.type, SqlBuilder.isEqualTo(type)) //
                 .build().render(RenderingStrategies.MYBATIS3);
         try (SqlSession session = sqlSessionFactory.openSession(ExecutorType.BATCH)) {
             RawRecItemMapper mapper = session.getMapper(RawRecItemMapper.class);
@@ -575,7 +573,7 @@ public class JdbcRawRecStore {
         long currentTime = System.currentTimeMillis();
         int effectiveDays = Integer.parseInt(FavoriteRuleManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
                 .getValue(FavoriteRule.EFFECTIVE_DAYS));
-        CostMethod costMethod = getCostMethod(project);
+        RawRecItem.CostMethod costMethod = RawRecItem.CostMethod.getCostMethod(project);
         Set<String> updateModels = Sets.newHashSet();
         try (SqlSession session = sqlSessionFactory.openSession(ExecutorType.BATCH)) {
             RawRecItemMapper mapper = session.getMapper(RawRecItemMapper.class);
@@ -621,8 +619,8 @@ public class JdbcRawRecStore {
         }
     }
 
-    private void updateCost(int effectiveDays, CostMethod costMethod, long currentTime, SqlSession session,
-            RawRecItemMapper mapper, List<RawRecItem> oneBatch) {
+    private void updateCost(int effectiveDays, RawRecItem.CostMethod costMethod, long currentTime, SqlSession session,
+                            RawRecItemMapper mapper, List<RawRecItem> oneBatch) {
         if (oneBatch.isEmpty()) {
             return;
         }
@@ -735,7 +733,7 @@ public class JdbcRawRecStore {
                 .set(table.minTime).equalToWhenPresent(recItem::getMinTime) //
                 .set(table.queryHistoryInfo).equalToWhenPresent(recItem::getQueryHistoryInfo) //
                 .set(table.recSource).equalTo(recItem::getRecSource) //
-                .where(table.id, isEqualTo(recItem::getId)) //
+                .where(table.id, SqlBuilder.isEqualTo(recItem::getId)) //
                 .build().render(RenderingStrategies.MYBATIS3);
     }
 

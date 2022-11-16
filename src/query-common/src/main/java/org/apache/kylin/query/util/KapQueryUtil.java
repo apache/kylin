@@ -18,15 +18,11 @@
 
 package org.apache.kylin.query.util;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Pattern;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import io.kyligence.kap.guava20.shaded.common.collect.ImmutableSet;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
@@ -51,35 +47,36 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinTimeoutException;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
+import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.SlowQueryDetector;
 import org.apache.kylin.query.exception.UserStopQueryException;
-import org.apache.kylin.source.adhocquery.IPushDownConverter;
-import org.apache.kylin.metadata.model.ComputedColumnDesc;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.relnode.KapJoinRel;
+import org.apache.kylin.source.adhocquery.IPushDownConverter;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class KapQueryUtil {
 
     public static final String DEFAULT_SCHEMA = "DEFAULT";
+    public static final ImmutableSet<String> REMOVED_TRANSFORMERS = ImmutableSet.of("ReplaceStringWithVarchar");
 
     public static List<IQueryTransformer> queryTransformers = Collections.emptyList();
     public static List<IPushDownConverter> pushDownConverters = Collections.emptyList();
-
-    private KapQueryUtil() {
-    }
 
     public static String massageExpression(NDataModel model, String project, String expression,
             QueryContext.AclInfo aclInfo, boolean massageToPushdown) {
@@ -160,8 +157,8 @@ public class KapQueryUtil {
                 if (i > 0) {
                     sql.append(" AND ");
                 }
-                sql.append(String.format(Locale.ROOT, "%s = %s", fk[i].getExpressionInSourceDBWithDoubleQuote(),
-                        pk[i].getExpressionInSourceDBWithDoubleQuote()));
+                sql.append(String.format(Locale.ROOT, "%s = %s", fk[i].getDoubleQuoteExpressionInSourceDB(),
+                        pk[i].getDoubleQuoteExpressionInSourceDB()));
             }
             sql.append(sep);
 
@@ -334,7 +331,7 @@ public class KapQueryUtil {
             sql = sql.substring(0, sql.length() - 1);
 
         //Split keywords and variables from sql by punctuation and whitespace character
-        List<String> sqlElements = Lists.newArrayList(sql.toLowerCase(Locale.ROOT).split("(?![\\._])\\p{P}|\\s+"));
+        List<String> sqlElements = Lists.newArrayList(sql.toLowerCase(Locale.ROOT).split("(?![\\._\'\"`])\\p{P}|\\s+"));
 
         Integer maxRows = kylinConfig.getMaxResultRows();
         if (maxRows != null && maxRows > 0 && (maxRows < limit || limit <= 0)) {
@@ -375,7 +372,13 @@ public class KapQueryUtil {
 
     public static List<IQueryTransformer> initTransformers(boolean isCCNeeded, String[] configTransformers) {
         List<IQueryTransformer> transformers = Lists.newArrayList();
-        for (String clz : configTransformers) {
+        List<String> classList = io.kyligence.kap.guava20.shaded.common.collect.Lists.newArrayList(configTransformers);
+        classList.removeIf(clazz -> {
+            String name = clazz.substring(clazz.lastIndexOf(".") + 1);
+            return REMOVED_TRANSFORMERS.contains(name);
+        });
+
+        for (String clz : classList) {
             if (!isCCNeeded && clz.equals("org.apache.kylin.query.util.ConvertToComputedColumn"))
                 continue;
 
@@ -394,7 +397,7 @@ public class KapQueryUtil {
         String sql = queryParams.getSql();
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
-        // fix，filter "/*+ MODEL_PRIORITY({cube_name}) */" hint
+        // fix KE-34379，filter "/*+ MODEL_PRIORITY({cube_name}) */" hint
         String regex = "/\\*\\s*\\+\\s*(?i)MODEL_PRIORITY\\s*\\([\\s\\S]*\\)\\s*\\*/";
         sql = Pattern.compile(regex).matcher(sql).replaceAll("");
         initPushDownConvertersIfNeeded(queryParams.getKylinConfig());

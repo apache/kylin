@@ -72,11 +72,6 @@ public class NoopAuditLogStore implements AuditLogStore {
     }
 
     @Override
-    public void forceCatchup() {
-        //do nothing
-    }
-
-    @Override
     public void setInstance(String instance) {
         //do nothing
     }

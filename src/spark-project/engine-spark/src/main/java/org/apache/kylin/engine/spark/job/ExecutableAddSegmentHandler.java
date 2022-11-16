@@ -18,15 +18,15 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import com.google.common.base.Preconditions;
+import lombok.val;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.merger.AfterBuildResourceMerger;
 import org.apache.kylin.job.common.SegmentUtil;
-import org.apache.kylin.job.execution.DefaultChainedExecutableOnModel;
+import org.apache.kylin.job.execution.DefaultExecutableOnModel;
 import org.apache.kylin.job.execution.ExecutableHandler;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.engine.spark.merger.AfterBuildResourceMerger;
 import org.apache.kylin.metadata.cube.model.NDataLoadingRangeManager;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -34,10 +34,8 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.model.NDataModel;
-
-import com.google.common.base.Preconditions;
-
-import lombok.val;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 
 public class ExecutableAddSegmentHandler extends ExecutableHandler {
 
@@ -62,7 +60,7 @@ public class ExecutableAddSegmentHandler extends ExecutableHandler {
 
     @Override
     public void handleDiscardOrSuicidal() {
-        if (((DefaultChainedExecutableOnModel) getExecutable()).checkAnyLayoutExists()) {
+        if (((DefaultExecutableOnModel) getExecutable()).checkAnyLayoutExists()) {
             return;
         }
         makeSegmentReady();

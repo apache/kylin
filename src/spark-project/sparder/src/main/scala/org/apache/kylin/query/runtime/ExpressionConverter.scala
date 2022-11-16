@@ -159,7 +159,7 @@ object ExpressionConverter {
           case "WEEK" => weekofyear(k_lit(inputAsTS))
           case "DOY" => dayofyear(k_lit(inputAsTS))
           case "DAY" => dayofmonth(k_lit(inputAsTS))
-          case "DOW" => k_day_of_week(k_lit(inputAsTS))
+          case "DOW" => dayofweek(k_lit(inputAsTS))
           case "HOUR" => hour(k_lit(inputAsTS))
           case "MINUTE" => minute(k_lit(inputAsTS))
           case "SECOND" => second(k_lit(inputAsTS))

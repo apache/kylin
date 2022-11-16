@@ -18,29 +18,24 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.util.Arrays;
-import java.util.Set;
-
+import com.google.common.collect.Sets;
+import lombok.NoArgsConstructor;
+import lombok.val;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.engine.spark.merger.MetadataMerger;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import java.util.Arrays;
+import java.util.Set;
 
-import lombok.NoArgsConstructor;
-import lombok.val;
-
-/**
- */
 @NoArgsConstructor
-
 public class NSparkCubingStep extends NSparkExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(NSparkCubingStep.class);

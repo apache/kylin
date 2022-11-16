@@ -50,8 +50,8 @@ public class StreamingConstants {
     public static final String REST_SERVER_IP = "kylin.spark.rest.server.ip";
 
     // main class
-    public static final String SPARK_STREAMING_ENTRY = "StreamingEntry";
-    public static final String SPARK_STREAMING_MERGE_ENTRY = "StreamingMergeEntry";
+    public static final String SPARK_STREAMING_ENTRY = "org.apache.kylin.streaming.app.StreamingEntry";
+    public static final String SPARK_STREAMING_MERGE_ENTRY = "org.apache.kylin.streaming.app.StreamingMergeEntry";
 
     // hadoop conf
     public static final String HADOOP_CONF_DIR = "HADOOP_CONF_DIR";

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.filter;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.BOOLEAN_TYPE_CHECK;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ARGS_TYPE_CHECK;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
 
 import java.io.IOException;
@@ -110,7 +110,7 @@ public class SegmentsRequestFilter implements Filter {
         String booleanString = String.valueOf(fieldValue);
         if (!String.valueOf(true).equalsIgnoreCase(booleanString)
                 && !String.valueOf(false).equalsIgnoreCase(booleanString)) {
-            throw new KylinException(BOOLEAN_TYPE_CHECK, booleanString, "Boolean");
+            throw new KylinException(ARGS_TYPE_CHECK, booleanString, "Boolean");
         }
     }
 

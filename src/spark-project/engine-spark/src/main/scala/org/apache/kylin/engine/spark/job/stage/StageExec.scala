@@ -19,12 +19,11 @@
 package org.apache.kylin.engine.spark.job.stage
 
 import com.google.common.base.Throwables
-import io.kyligence.kap.engine.spark.job.ParamsConstants
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.JsonUtil
 import org.apache.kylin.job.execution.ExecutableState
 import org.apache.kylin.engine.spark.application.SparkApplication
-import org.apache.kylin.engine.spark.job.KylinBuildEnv
+import org.apache.kylin.engine.spark.job.{KylinBuildEnv, ParamsConstants}
 import org.apache.kylin.metadata.cube.model.{NBatchConstants, NDataSegment}
 import org.apache.spark.internal.Logging
 

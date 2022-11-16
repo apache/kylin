@@ -1,0 +1,158 @@
+{
+  "uuid" : "5b151f27-5c7d-42a7-b12e-1739d7dc2563",
+  "last_modified" : 0,
+  "create_time" : 1624448592946,
+  "version" : "4.0.0.0",
+  "name" : "CALCS",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "KEY",
+    "datatype" : "varchar(255)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "2",
+    "name" : "NUM0",
+    "datatype" : "double",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "3",
+    "name" : "NUM1",
+    "datatype" : "double",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "4",
+    "name" : "NUM2",
+    "datatype" : "double",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "5",
+    "name" : "NUM3",
+    "datatype" : "double",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "6",
+    "name" : "NUM4",
+    "datatype" : "double",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "7",
+    "name" : "STR0",
+    "datatype" : "varchar(255)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "8",
+    "name" : "STR1",
+    "datatype" : "varchar(255)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "9",
+    "name" : "STR2",
+    "datatype" : "varchar(255)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "10",
+    "name" : "STR3",
+    "datatype" : "varchar(255)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "11",
+    "name" : "INT0",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "12",
+    "name" : "INT1",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "13",
+    "name" : "INT2",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "14",
+    "name" : "INT3",
+    "datatype" : "integer",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "15",
+    "name" : "BOOL0",
+    "datatype" : "boolean",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "16",
+    "name" : "BOOL1",
+    "datatype" : "boolean",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "17",
+    "name" : "BOOL2",
+    "datatype" : "boolean",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "18",
+    "name" : "BOOL3",
+    "datatype" : "boolean",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "19",
+    "name" : "DATE0",
+    "datatype" : "date",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "20",
+    "name" : "DATE1",
+    "datatype" : "date",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "21",
+    "name" : "DATE2",
+    "datatype" : "date",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "22",
+    "name" : "DATE3",
+    "datatype" : "date",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "23",
+    "name" : "TIME0",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "24",
+    "name" : "TIME1",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "25",
+    "name" : "DATETIME0",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "26",
+    "name" : "DATETIME1",
+    "datatype" : "varchar(255)",
+    "case_sensitive_name" : null
+  }, {
+    "id" : "27",
+    "name" : "ZZZ",
+    "datatype" : "varchar(255)",
+    "case_sensitive_name" : null
+  } ],
+  "source_type" : 9,
+  "table_type" : "EXTERNAL",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "TDVT"
+}

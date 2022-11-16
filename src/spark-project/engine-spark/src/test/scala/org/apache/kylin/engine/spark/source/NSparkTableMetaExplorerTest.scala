@@ -28,7 +28,7 @@ import org.apache.spark.sql.types._
 class NSparkTableMetaExplorerTest extends SparderBaseFunSuite with SharedSparkSession {
 
   conf.set("spark.sql.catalogImplementation", "hive")
-  test("Test load error view") {
+  ignore("Test load error view") {
     Unsafe.setProperty("KYLIN_CONF", TempMetadataBuilder.SPARK_PROJECT_KAP_META_TEST_DATA)
     SparderEnv.setSparkSession(spark)
 

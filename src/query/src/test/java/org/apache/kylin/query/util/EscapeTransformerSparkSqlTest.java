@@ -309,4 +309,36 @@ public class EscapeTransformerSparkSqlTest {
         String transformedSQL = transformer.transform(originalSQL);
         Assert.assertEquals(expectedSQL, transformedSQL);
     }
+
+    @Test
+    public void testReplaceStringWithVarchar() {
+        // test cases ref: https://dev.mysql.com/doc/refman/8.0/en/select.html
+        String[] actuals = new String[] {
+                // select, from, where, like, group by, having, order by, subclause
+                "Select 0 as STRING, cast(D1.c1 as STRING) as c2 from (select distinct substring(cast(T33458.CAL_DT as STRING), 1, 30) as c1 from TEST_KYLIN_FACT T33458) D1 where cast(D1.c1 as STRING) like cast('2012-01%' as STRING) group by cast(D1.c1 as STRING) having cast(D1.c1 as STRING)>'2012-01-01' order by cast(D1.c1 as STRING)",
+                // over(window)
+                "select TRANS_ID, CAL_DT, LSTG_FORMAT_NAME, MAX(CAL_DT) over (PARTITION BY CAST(LSTG_FORMAT_NAME AS STRING)) from TEST_KYLIN_FACT",
+                // case when else
+                "select case cast(CAL_DT as STRING) when cast('2012-01-13' as STRING) THEN cast('1' as STRING) ELSE cast('null' as STRING) END AS STRING, CAL_DT from TEST_KYLIN_FACT order by cast(CAL_DT as STRING)",
+                // join
+                "select * from TEST_KYLIN_FACT a left join EDW.TEST_CAL_DT b on cast(a.CAL_DT as STRING)=cast(b.CAL_DT as STRING) limit 100",
+                // union
+                "select * from TEST_KYLIN_FACT where cast(LSTG_FORMAT_NAME as STRING)='FP-GTC' union select * from TEST_KYLIN_FACT where cast(LSTG_FORMAT_NAME as STRING)='Auction' limit 100",
+                // with
+                "WITH t1 AS (Select 0 as STRING, cast(D1.c1 as STRING) as c2 from (select distinct substring(cast(T33458.CAL_DT as STRING), 1, 30) as c1 from TEST_KYLIN_FACT T33458) D1 where cast(D1.c1 as STRING) like cast('2012-01%' as STRING) group by cast(D1.c1 as STRING) having cast(D1.c1 as STRING)> '2012-01-01' order by cast(D1.c1 as STRING)) \n"
+                        + "SELECT * from t1\n" + "UNION ALL\n" + "SELECT * from t1" };
+        String[] expecteds = new String[] {
+                "Select 0 as STRING, cast(D1.c1 as STRING) as c2 from (select distinct SUBSTRING(cast(T33458.CAL_DT as STRING), 1, 30) as c1 from TEST_KYLIN_FACT T33458) D1 where cast(D1.c1 as STRING) like cast('2012-01%' as STRING) group by cast(D1.c1 as STRING) having cast(D1.c1 as STRING)> '2012-01-01' order by cast(D1.c1 as STRING)",
+                "select TRANS_ID, CAL_DT, LSTG_FORMAT_NAME, MAX(CAL_DT) over (PARTITION BY CAST(LSTG_FORMAT_NAME AS STRING)) from TEST_KYLIN_FACT",
+                "select case cast(CAL_DT as STRING) when cast('2012-01-13' as STRING) THEN cast('1' as STRING) ELSE cast('null' as STRING) END AS STRING, CAL_DT from TEST_KYLIN_FACT order by cast(CAL_DT as STRING)",
+                "select * from TEST_KYLIN_FACT a left join EDW.TEST_CAL_DT b on cast(a.CAL_DT as STRING) = cast(b.CAL_DT as STRING) limit 100",
+                "select * from TEST_KYLIN_FACT where cast(LSTG_FORMAT_NAME as STRING) = 'FP-GTC' union select * from TEST_KYLIN_FACT where cast(LSTG_FORMAT_NAME as STRING) = 'Auction' limit 100",
+                "WITH t1 AS (Select 0 as STRING, cast(D1.c1 as STRING) as c2 from (select distinct SUBSTRING(cast(T33458.CAL_DT as STRING), 1, 30) as c1 from TEST_KYLIN_FACT T33458) D1 where cast(D1.c1 as STRING) like cast('2012-01%' as STRING) group by cast(D1.c1 as STRING) having cast(D1.c1 as STRING)> '2012-01-01' order by cast(D1.c1 as STRING))\n"
+                        + "SELECT * from t1\n" + "UNION ALL\n" + "SELECT * from t1" };
+        for (int i = 0; i < actuals.length; ++i) {
+            String transformedActual = transformer.transform(actuals[i]);
+            Assert.assertEquals(expecteds[i], transformedActual);
+            System.out.println("\nTRANSFORM SUCCEED\nBEFORE:\n" + actuals[i] + "\nAFTER:\n" + expecteds[i]);
+        }
+    }
 }

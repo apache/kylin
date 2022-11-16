@@ -23,29 +23,33 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.SegmentOnlineMode;
 import org.apache.kylin.common.exception.KylinTimeoutException;
-import org.apache.kylin.metadata.model.DeriveInfo;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.MetadataExtension;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.model.DeriveInfo;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.SQLDigest;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 
+import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;
@@ -57,13 +61,13 @@ public class NQueryLayoutChooser {
     }
 
     public static NLayoutCandidate selectPartialLayoutCandidate(NDataflow dataflow, List<NDataSegment> prunedSegments,
-            SQLDigest sqlDigest) {
+            SQLDigest sqlDigest, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
 
         NLayoutCandidate candidate = null;
         List<NDataSegment> toRemovedSegments = Lists.newArrayList();
         for (NDataSegment segment : prunedSegments) {
             if (candidate == null) {
-                candidate = selectLayoutCandidate(dataflow, Lists.newArrayList(segment), sqlDigest);
+                candidate = selectLayoutCandidate(dataflow, Lists.newArrayList(segment), sqlDigest, secondStorageSegmentLayoutMap);
                 if (candidate == null) {
                     toRemovedSegments.add(segment);
                 }
@@ -76,14 +80,15 @@ public class NQueryLayoutChooser {
     }
 
     public static NLayoutCandidate selectLayoutCandidate(NDataflow dataflow, List<NDataSegment> prunedSegments,
-            SQLDigest sqlDigest) {
+            SQLDigest sqlDigest, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
 
         if (CollectionUtils.isEmpty(prunedSegments)) {
             log.info("There is no segment to answer sql");
             return NLayoutCandidate.EMPTY;
         }
         List<NLayoutCandidate> candidates = new ArrayList<>();
-        val commonLayouts = getLayoutsFromSegments(prunedSegments, dataflow);
+        val commonLayouts = getLayoutsFromSegments(prunedSegments, dataflow,
+                secondStorageSegmentLayoutMap);
         val model = dataflow.getModel();
         log.info("Matching dataflow with seg num: {} layout num: {}", prunedSegments.size(), commonLayouts.size());
         KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -145,9 +150,10 @@ public class NQueryLayoutChooser {
         return candidates.get(0);
     }
 
-    private static Collection<NDataLayout> getLayoutsFromSegments(List<NDataSegment> segments, NDataflow dataflow) {
-        val projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(dataflow.getProject());
+    private static Collection<NDataLayout> getLayoutsFromSegments(List<NDataSegment> segments, NDataflow dataflow,
+                                                                  Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        val projectInstance = NProjectManager.getInstance(config).getProject(dataflow.getProject());
         if (!projectInstance.getConfig().isHeterogeneousSegmentEnabled()) {
             return dataflow.getLatestReadySegment().getLayoutsMap().values();
         }
@@ -159,14 +165,22 @@ public class NQueryLayoutChooser {
 
         for (int i = 0; i < segments.size(); i++) {
             val dataSegment = segments.get(i);
-            val layoutIdMapToDataLayout = dataSegment.getLayoutsMap();
+            var layoutIdMapToDataLayout = dataSegment.getLayoutsMap();
+            if (SegmentOnlineMode.ANY.toString().equalsIgnoreCase(projectInstance.getConfig().getKylinEngineSegmentOnlineMode())
+                    && MapUtils.isNotEmpty(secondStorageSegmentLayoutMap)) {
+                Set<Long> chLayouts = secondStorageSegmentLayoutMap.getOrDefault(dataSegment.getId(), Sets.newHashSet());
+                Map<Long, NDataLayout> nDataLayoutMap = chLayouts.stream().map(id -> NDataLayout.newDataLayout(dataflow, dataSegment.getId(), id))
+                        .collect(Collectors.toMap(NDataLayout::getLayoutId, nDataLayout -> nDataLayout));
+
+                nDataLayoutMap.putAll(layoutIdMapToDataLayout);
+                layoutIdMapToDataLayout = nDataLayoutMap;
+            }
             if (i == 0) {
                 commonLayouts.putAll(layoutIdMapToDataLayout);
             } else {
                 commonLayouts.keySet().retainAll(layoutIdMapToDataLayout.keySet());
             }
         }
-
         return commonLayouts.values();
     }
 
@@ -188,12 +202,27 @@ public class NQueryLayoutChooser {
                 .collect(Collectors.toList());
 
         Ordering<NLayoutCandidate> ordering = Ordering //
-                .from(derivedLayoutComparator()).compound(rowSizeComparator()) // L1 comparator, compare cuboid rows
+                .from(priorityLayoutComparator()).compound(derivedLayoutComparator())
+                .compound(rowSizeComparator()) // L1 comparator, compare cuboid rows
                 .compound(filterColumnComparator(filterColIds, chooserContext)) // L2 comparator, order filter columns
                 .compound(dimensionSizeComparator()) // the lower dimension the best
                 .compound(measureSizeComparator()) // L3 comparator, order size of cuboid columns
                 .compound(nonFilterColumnComparator(nonFilterColIds)); // L4 comparator, order non-filter columns
         candidates.sort(ordering);
+    }
+
+    private static Comparator<NLayoutCandidate> priorityLayoutComparator() {
+        return (layoutCandidate1, layoutCandidate2) -> {
+            if (!KylinConfig.getInstanceFromEnv().isPreferAggIndex()) {
+                return 0;
+            }
+            if (!layoutCandidate1.getLayoutEntity().getIndex().isTableIndex() && layoutCandidate2.getLayoutEntity().getIndex().isTableIndex()) {
+                return -1;
+            } else if (layoutCandidate1.getLayoutEntity().getIndex().isTableIndex() && !layoutCandidate2.getLayoutEntity().getIndex().isTableIndex()) {
+                return 1;
+            }
+            return 0;
+        };
     }
 
     private static Comparator<NLayoutCandidate> derivedLayoutComparator() {

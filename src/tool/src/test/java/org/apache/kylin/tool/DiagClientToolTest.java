@@ -21,13 +21,18 @@ import static org.apache.kylin.common.exception.code.ErrorCodeTool.PARAMETER_TIM
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.util.ZipFileUtils;
+import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.ZipFileUtils;
 import org.apache.kylin.tool.constant.SensitiveConfigKeysConstant;
 import org.apache.kylin.tool.obf.KylinConfObfuscatorTest;
+import org.apache.kylin.tool.snapshot.SnapshotSourceTableStatsTool;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,8 +40,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
+import org.mockito.Mockito;
 
 import lombok.val;
+import lombok.var;
 
 public class DiagClientToolTest extends NLocalFileMetadataTestCase {
 
@@ -137,4 +144,22 @@ public class DiagClientToolTest extends NLocalFileMetadataTestCase {
 
     }
 
+    @Test
+    public void testExportSourceTableStats() {
+        DiagClientTool diagClientTool = new DiagClientTool();
+        var result = new AtomicBoolean(false);
+        try (val mockedStatic = Mockito.mockStatic(SnapshotSourceTableStatsTool.class)) {
+            mockedStatic.when(() -> SnapshotSourceTableStatsTool.extractSnapshotAutoUpdate(Mockito.any()))
+                    .thenReturn(true);
+            diagClientTool.executorService = Executors.newScheduledThreadPool(1);
+            diagClientTool.taskQueue = new LinkedBlockingQueue<>();
+            diagClientTool.extractSnapshotAutoUpdate(new File("test"), new File("test"));
+            result.set(true);
+        } finally {
+            if (diagClientTool.executorService != null) {
+                ExecutorServiceUtil.shutdownGracefully(diagClientTool.executorService, 60);
+            }
+        }
+        Assert.assertTrue(result.get());
+    }
 }

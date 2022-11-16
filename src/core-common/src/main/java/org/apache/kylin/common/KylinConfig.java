@@ -279,7 +279,7 @@ public class KylinConfig extends KylinConfigBase {
      */
     public static LinkedHashMap<String, String> trimKVFromMap(@Nullable Map<String, String> originMap) {
         LinkedHashMap<String, String> newMap = Maps.newLinkedHashMap();
-        if (MapUtils.isEmpty(originMap)) {
+        if (MapUtils.isEmpty(originMap) || originMap == null) {
             return newMap;
         }
         originMap.forEach((k, v) -> newMap.put(StringUtils.trim(k), StringUtils.trim(v)));
@@ -587,6 +587,10 @@ public class KylinConfig extends KylinConfigBase {
         if (result.getProperty(DATA_WORKING_DIR_PROP) != null) {
             result.put(DATA_WORKING_DIR_PROP,
                     makeQualified(new Path(result.getProperty(DATA_WORKING_DIR_PROP))).toString());
+        }
+        if (result.getProperty(WRITING_CLUSTER_WORKING_DIR) != null) {
+            result.put(WRITING_CLUSTER_WORKING_DIR,
+                    makeQualified(new Path(result.getProperty(WRITING_CLUSTER_WORKING_DIR))).toString());
         }
         return result;
     }

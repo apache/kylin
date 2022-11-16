@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.filter;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.BOOLEAN_TYPE_CHECK;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ARGS_TYPE_CHECK;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
 
 import java.io.IOException;
@@ -83,8 +83,8 @@ class SegmentsRequestFilterTest {
         Assertions.assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, response.getStatus());
         JsonNode jsonNode = JsonUtil.readValueAsTree(response.getContentAsString());
         Assertions.assertEquals("999", jsonNode.get("code").asText());
-        Assertions.assertEquals(BOOLEAN_TYPE_CHECK.getErrorCode().getCode(), jsonNode.get("error_code").asText());
-        Assertions.assertEquals(BOOLEAN_TYPE_CHECK.getCodeMsg("null", "Boolean"),
+        Assertions.assertEquals(ARGS_TYPE_CHECK.getErrorCode().getCode(), jsonNode.get("error_code").asText());
+        Assertions.assertEquals(ARGS_TYPE_CHECK.getCodeMsg("null", "Boolean"),
                 jsonNode.get("msg").asText());
 
         chain = new MockFilterChain();
@@ -114,8 +114,8 @@ class SegmentsRequestFilterTest {
         Assertions.assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, response.getStatus());
         jsonNode = JsonUtil.readValueAsTree(response.getContentAsString());
         Assertions.assertEquals("999", jsonNode.get("code").asText());
-        Assertions.assertEquals(BOOLEAN_TYPE_CHECK.getErrorCode().getCode(), jsonNode.get("error_code").asText());
-        Assertions.assertEquals(BOOLEAN_TYPE_CHECK.getCodeMsg("123", "Boolean"),
+        Assertions.assertEquals(ARGS_TYPE_CHECK.getErrorCode().getCode(), jsonNode.get("error_code").asText());
+        Assertions.assertEquals(ARGS_TYPE_CHECK.getCodeMsg("123", "Boolean"),
                 jsonNode.get("msg").asText());
 
         chain = new MockFilterChain();
@@ -166,9 +166,9 @@ class SegmentsRequestFilterTest {
             Assertions.fail();
         } catch (Exception e) {
             Assertions.assertTrue(e instanceof KylinException);
-            Assertions.assertEquals(BOOLEAN_TYPE_CHECK.getErrorCode().getCode(),
+            Assertions.assertEquals(ARGS_TYPE_CHECK.getErrorCode().getCode(),
                     ((KylinException) e).getErrorCode().getCodeString());
-            Assertions.assertEquals(BOOLEAN_TYPE_CHECK.getMsg("123", "Boolean"), e.getMessage());
+            Assertions.assertEquals(ARGS_TYPE_CHECK.getMsg("123", "Boolean"), e.getMessage());
         }
         filter.checkBooleanArg("test", "true");
         filter.checkBooleanArg("test", "false");

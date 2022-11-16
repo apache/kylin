@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
 
@@ -45,7 +45,7 @@ public class ExecutableDurationContext {
         this.project = project;
         this.jobId = jobId;
         val manager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-        DefaultChainedExecutable job = (DefaultChainedExecutable) manager.getJob(jobId);
+        DefaultExecutable job = (DefaultExecutable) manager.getJob(jobId);
         record = new Record(job.getStatus(), job.getDuration(), job.getWaitTime(), job.getCreateTime());
         val steps = job.getTasks();
         stepRecords = steps.stream()

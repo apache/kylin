@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -49,6 +50,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.persistence.TrashRecord;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.CliCommandExecutor.CliCmdExecResult;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -57,11 +60,6 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.ShellException;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.source.SourceFactory;
-import org.apache.kylin.common.persistence.TrashRecord;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.metadata.cube.model.LayoutPartition;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegDetails;
@@ -71,6 +69,7 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.util.ProjectTemporaryTableCleanerHelper;
 
 import com.google.common.collect.Lists;
@@ -96,19 +95,19 @@ public class StorageCleaner {
     public static final String ANSI_YELLOW = "\u001B[33m";
     public static final String ANSI_BLUE = "\u001B[34m";
     public static final String ANSI_RESET = "\u001B[0m";
-    // for s3 https://olapio.atlassian.net/browse/AL-3154
-    private static RateLimiter rateLimiter = RateLimiter.create(Integer.MAX_VALUE);
+
     private final boolean cleanup;
-    private final Collection<String> projectNames;
     private boolean timeMachineEnabled;
+    private final Collection<String> projectNames;
     private long duration;
     private KylinConfig kylinConfig;
+
+    // for s3 https://olapio.atlassian.net/browse/AL-3154
+    private static RateLimiter rateLimiter = RateLimiter.create(Integer.MAX_VALUE);
+
     @Getter
     private Map<String, String> trashRecord;
     private ResourceStore resourceStore;
-    @Getter
-    private Set<StorageItem> outdatedItems = Sets.newHashSet();
-    private Set<StorageItem> allFileSystems = Sets.newHashSet();
 
     public StorageCleaner() throws Exception {
         this(true);
@@ -140,6 +139,11 @@ public class StorageCleaner {
         }
     }
 
+    @Getter
+    private Set<StorageItem> outdatedItems = Sets.newHashSet();
+
+    private Set<StorageItem> allFileSystems = Sets.newHashSet();
+
     public void execute() throws Exception {
         long start = System.currentTimeMillis();
         val config = KylinConfig.getInstanceFromEnv();
@@ -149,17 +153,23 @@ public class StorageCleaner {
                 .filter(projectInstance -> projectNames.isEmpty() || projectNames.contains(projectInstance.getName()))
                 .collect(Collectors.toList());
 
-        for (ProjectInstance project : projects) {
-            val dataflows = NDataflowManager.getInstance(config, project.getName()).listAllDataflows();
-            for (NDataflow dataflow : dataflows) {
-                KapConfig kapConfig = KapConfig.wrap(dataflow.getConfig());
-                String hdfsWorkingDir = kapConfig.getMetadataWorkingDirectory();
-                val fs = HadoopUtil.getWorkingFileSystem();
-                allFileSystems.add(new StorageItem(FileSystemDecorator.getInstance(fs), hdfsWorkingDir));
-            }
-        }
+        projects.stream().map(project -> NDataflowManager.getInstance(config, project.getName()).listAllDataflows())
+                .flatMap(Collection::stream)
+                .map(dataflow -> KapConfig.wrap(dataflow.getConfig()))
+                .map(KapConfig::getMetadataWorkingDirectory)
+                .forEach(hdfsWorkingDir -> {
+                    val fs = HadoopUtil.getWorkingFileSystem();
+                    allFileSystems.add(new StorageItem(FileSystemDecorator.getInstance(fs), hdfsWorkingDir));
+                });
         allFileSystems.add(new StorageItem(FileSystemDecorator.getInstance(HadoopUtil.getWorkingFileSystem()),
                 config.getHdfsWorkingDirectory()));
+        // Check if independent storage of flat tables under read/write separation is enabled
+        // For build tasks it is a project-level parameter(Higher project-level priority), but for cleaning up storage garbage,
+        // WRITING_CLUSTER_WORKING_DIR is a system-level parameter
+        if (kylinConfig.isBuildFilesSeparationEnabled()) {
+            allFileSystems.add(new StorageItem(FileSystemDecorator.getInstance(HadoopUtil.getWritingClusterFileSystem()),
+                    config.getWritingClusterWorkingDir("")));
+        }
         log.info("all file systems are {}", allFileSystems);
         for (StorageItem allFileSystem : allFileSystems) {
             log.debug("start to collect HDFS from {}", allFileSystem.getPath());
@@ -186,7 +196,7 @@ public class StorageCleaner {
                 }
                 try {
                     log.debug("start to add item {}", path);
-                    addItem(item.getFs(), path, protectionTime);
+                    addItem(item.getFileSystemDecorator(), path, protectionTime);
                 } catch (FileNotFoundException e) {
                     log.warn("{} not found", path);
                 }
@@ -228,11 +238,10 @@ public class StorageCleaner {
     }
 
     public void collect(String project) {
-        log.info("collect garbage for {}", project);
-        val projectTemporaryTableCleaner = new ProjectTemporaryTableCleaner(project);
-        projectTemporaryTableCleaner.execute();
-        val projectCleaner = new ProjectStorageCleaner(project);
-        projectCleaner.execute();
+        log.info("collect garbage for project: {}", project);
+        new ProjectStorageCleaner(project).execute();
+        log.info("clean temporary table for project: {}", project);
+        new ProjectTemporaryTableCleaner(project).execute();
     }
 
     public boolean cleanup() throws Exception {
@@ -250,9 +259,12 @@ public class StorageCleaner {
             stats.onAllStart(outdatedItems);
             for (StorageItem item : outdatedItems) {
                 log.debug("try to delete {}", item.getPath());
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new InterruptedException();
+                }
                 try {
                     stats.onItemStart(item);
-                    item.getFs().delete(new Path(item.getPath()), true);
+                    item.getFileSystemDecorator().delete(new Path(item.getPath()), true);
                     if (timeMachineEnabled) {
                         trashRecord.remove(item.getPath());
                     }
@@ -287,310 +299,6 @@ public class StorageCleaner {
 
     private String getDfFlatTableDir(String project, String dataFlowId) {
         return project + FLAT_TABLE_STORAGE_ROOT + "/" + dataFlowId;
-    }
-
-    private void addItem(FileSystemDecorator fs, Path itemPath, long protectionTime) throws IOException {
-        val status = fs.getFileStatus(itemPath);
-        if (status.getPath().getName().startsWith(".")) {
-            return;
-        }
-        if (timeMachineEnabled && Long.parseLong(trashRecord.get(itemPath.toString())) > protectionTime) {
-            return;
-        }
-        if (!timeMachineEnabled && status.getModificationTime() > protectionTime) {
-            return;
-        }
-
-        outdatedItems.add(new StorageCleaner.StorageItem(fs, status.getPath().toString()));
-    }
-
-    private String getDictDir(String project) {
-        return project + GLOBAL_DICT_STORAGE_ROOT;
-    }
-
-    private String getSegmentFlatTableDir(String project, NDataSegment segment) {
-        return getDfFlatTableDir(project, segment.getDataflow().getId()) + "/" + segment.getId();
-    }
-
-    private String getDataLayoutDir(NDataLayout dataLayout) {
-        NDataSegDetails segDetails = dataLayout.getSegDetails();
-        return getDataflowDir(segDetails.getProject(), segDetails.getDataSegment().getDataflow().getId()) + "/"
-                + segDetails.getUuid() + "/" + dataLayout.getLayoutId();
-    }
-
-    private String getDataPartitionDir(NDataLayout dataLayout, LayoutPartition dataPartition) {
-        return getDataLayoutDir(dataLayout) + "/" + dataPartition.getBucketId();
-    }
-
-    private void collectFromHDFS(StorageItem item) throws Exception {
-        val projectFolders = item.getFs().listStatus(new Path(item.getPath()), path -> !path.getName().startsWith("_")
-                && (this.projectNames.isEmpty() || this.projectNames.contains(path.getName())));
-        for (FileStatus projectFolder : projectFolders) {
-            List<FileTreeNode> tableSnapshotParents = Lists.newArrayList();
-            val projectNode = new ProjectFileTreeNode(projectFolder.getPath().getName());
-            for (Pair<String, List<FileTreeNode>> pair : Arrays.asList(
-                    Pair.newPair(JOB_TMP_ROOT.substring(1), projectNode.getJobTmps()),
-                    Pair.newPair(GLOBAL_DICT_STORAGE_ROOT.substring(1), projectNode.getGlobalDictTables()),
-                    Pair.newPair(PARQUET_STORAGE_ROOT.substring(1), projectNode.getDataflows()),
-                    Pair.newPair(TABLE_EXD_STORAGE_ROOT.substring(1), projectNode.getTableExds()),
-                    Pair.newPair(SNAPSHOT_STORAGE_ROOT.substring(1), tableSnapshotParents),
-                    Pair.newPair(FLAT_TABLE_STORAGE_ROOT.substring(1), projectNode.getDfFlatTables()))) {
-                val treeNode = new FileTreeNode(pair.getFirst(), projectNode);
-                try {
-                    log.debug("collect files from {}", pair.getFirst());
-                    Stream.of(item.getFs().listStatus(new Path(item.getPath(), treeNode.getRelativePath())))
-                            .forEach(x -> pair.getSecond().add(new FileTreeNode(x.getPath().getName(), treeNode)));
-                } catch (FileNotFoundException e) {
-                    log.info("folder {} not found", new Path(item.getPath(), treeNode.getRelativePath()));
-                }
-            }
-            item.getProjectNodes().add(projectNode);
-            item.getProjects().put(projectNode.getName(), projectNode);
-            for (Pair<List<FileTreeNode>, List<FileTreeNode>> pair : Arrays.asList(
-                    Pair.newPair(tableSnapshotParents, projectNode.getSnapshots()), //
-                    Pair.newPair(projectNode.getGlobalDictTables(), projectNode.getGlobalDictColumns()), //
-                    Pair.newPair(projectNode.getDataflows(), projectNode.getSegments()), //
-                    Pair.newPair(projectNode.getSegments(), projectNode.getLayouts()),
-                    Pair.newPair(projectNode.getDfFlatTables(), projectNode.getSegmentFlatTables()))) {
-                val slot = pair.getSecond();
-                for (FileTreeNode node : pair.getFirst()) {
-                    log.debug("collect from {} -> {}", node.getName(), node);
-                    Stream.of(item.getFs().listStatus(new Path(item.getPath(), node.getRelativePath())))
-                            .forEach(x -> slot.add(new FileTreeNode(x.getPath().getName(), node)));
-                }
-            }
-            collectMultiPartitions(item, projectNode);
-        }
-
-    }
-
-    private void collectMultiPartitions(StorageItem item, ProjectFileTreeNode projectNode) throws IOException {
-        String project = projectNode.getName();
-        NDataflowManager manager = NDataflowManager.getInstance(kylinConfig, project);
-        Map<String, Boolean> cached = new HashMap<>();
-        // Buckets do not certainly exist.
-        // Only multi level partition model should do this.
-        val buckets = projectNode.getBuckets();
-        for (FileTreeNode node : projectNode.getLayouts()) {
-            String dataflowId = node.getParent() // segment
-                    .getParent().getName(); // dataflow
-            if (!cached.containsKey(dataflowId)) {
-                NDataflow dataflow = manager.getDataflow(dataflowId);
-                if (Objects.nonNull(dataflow) //
-                        && Objects.nonNull(dataflow.getModel()) //
-                        && dataflow.getModel().isMultiPartitionModel()) {
-                    cached.put(dataflowId, true);
-                } else {
-                    cached.put(dataflowId, false);
-                }
-            }
-
-            if (Boolean.TRUE.equals(cached.get(dataflowId))) {
-                Stream.of(item.getFs().listStatus(new Path(item.getPath(), node.getRelativePath())))
-                        .filter(FileStatus::isDirectory) // Essential check in case of bad design.
-                        .forEach(x -> buckets.add(new FileTreeNode(x.getPath().getName(), node)));
-            }
-        }
-    }
-
-    @AllArgsConstructor
-    public static class FileSystemDecorator {
-        private static int retryTimes = 3;
-        @NonNull
-        private FileSystem fs;
-
-        public static FileSystemDecorator getInstance(FileSystem fs) {
-            return new FileSystemDecorator(fs);
-        }
-
-        private <E> E sleepAndRetry(Action<E> action) throws IOException {
-            rateLimiter.acquire();
-
-            for (int i = 0; i < retryTimes - 1; i++) {
-                try {
-                    return action.run();
-                } catch (FileNotFoundException e) {
-                    throw e;
-                } catch (Exception e) {
-                    log.error("Failed to use fs api!", e);
-                }
-
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ie) {
-                    log.error("Failed to sleep!", ie);
-                    ie.printStackTrace();
-                    Thread.currentThread().interrupt();
-                }
-            }
-
-            return action.run();
-        }
-
-        public FileStatus[] listStatus(Path f) throws IOException {
-            return sleepAndRetry(() -> fs.listStatus(f));
-        }
-
-        public FileStatus[] listStatus(Path f, PathFilter filter) throws IOException {
-            return sleepAndRetry(() -> fs.listStatus(f, filter));
-        }
-
-        public FileStatus getFileStatus(Path f) throws IOException {
-            return sleepAndRetry(() -> fs.getFileStatus(f));
-        }
-
-        public boolean delete(Path f, boolean recursive) throws IOException {
-            return sleepAndRetry(() -> fs.delete(f, recursive));
-        }
-
-        interface Action<T> {
-            T run() throws IOException;
-        }
-    }
-
-    @Data
-    @RequiredArgsConstructor
-    @AllArgsConstructor
-    public static class StorageItem {
-
-        /**
-         * File hierarchy is
-         *
-         * /working_dir
-         * |--/${project_name}
-         *    |--/parquet
-         *    |  +--/${dataflow_id}
-         *    |     +--/${segment_id}
-         *    |        +--/${layout_id}
-         *    |           +--/${bucket_id} if multi level partition enabled.
-         *    |        +--/${layout_id}_fast_bitmap  if enabled
-         *    |--/job_tmp
-         *    |  +--/${job_id}
-         *    |--/table_exd
-         *    |  +--/${table_identity}
-         *    |--/dict/global_dict
-         *    |  +--/${table_identity}
-         *    |     +--/${column_name}
-         *    |--/table_snapshot
-         *    |  +--/${table_identity}
-         *    |     +--/${snapshot_version}
-         *    |--/flat_table
-         *    |  +--/${dataflow_id}
-         *    |     +--/${segment_id}
-         */
-
-        List<FileTreeNode> projectNodes = Lists.newArrayList();
-        Map<String, ProjectFileTreeNode> projects = Maps.newHashMap();
-        @NonNull
-        private FileSystemDecorator fs;
-        @NonNull
-        private String path;
-
-        List<FileTreeNode> getAllNodes() {
-            val allNodes = projects.values().stream().flatMap(p -> p.getAllCandidates().stream())
-                    .flatMap(Collection::stream).collect(Collectors.toList());
-            allNodes.addAll(projectNodes);
-            return allNodes;
-        }
-
-        ProjectFileTreeNode getProject(String name) {
-            return projects.getOrDefault(name, new ProjectFileTreeNode(name));
-        }
-    }
-
-    @Data
-    @AllArgsConstructor
-    @RequiredArgsConstructor
-    public static class FileTreeNode {
-
-        @NonNull
-        String name;
-
-        FileTreeNode parent;
-
-        public String getRelativePath() {
-            if (parent == null) {
-                return name;
-            }
-            return parent.getRelativePath() + "/" + name;
-        }
-    }
-
-    @Data
-    @EqualsAndHashCode(callSuper = true)
-    @ToString(onlyExplicitlyIncluded = true, callSuper = true)
-    public static class ProjectFileTreeNode extends FileTreeNode {
-
-        List<FileTreeNode> jobTmps = Lists.newLinkedList();
-        List<FileTreeNode> tableExds = Lists.newLinkedList();
-        List<FileTreeNode> globalDictTables = Lists.newLinkedList();
-        List<FileTreeNode> globalDictColumns = Lists.newLinkedList();
-        List<FileTreeNode> snapshotTables = Lists.newLinkedList();
-        List<FileTreeNode> snapshots = Lists.newLinkedList();
-        List<FileTreeNode> dataflows = Lists.newLinkedList();
-        List<FileTreeNode> segments = Lists.newLinkedList();
-        List<FileTreeNode> layouts = Lists.newLinkedList();
-        List<FileTreeNode> buckets = Lists.newLinkedList();
-        List<FileTreeNode> dfFlatTables = Lists.newArrayList();
-        List<FileTreeNode> segmentFlatTables = Lists.newArrayList();
-
-        public ProjectFileTreeNode(String name) {
-            super(name);
-        }
-
-        Collection<List<FileTreeNode>> getAllCandidates() {
-            return Arrays.asList(jobTmps, tableExds, globalDictTables, globalDictColumns, snapshotTables, snapshots,
-                    dataflows, segments, layouts, buckets, dfFlatTables, segmentFlatTables);
-        }
-
-    }
-
-    public static class Stats {
-
-        public final Set<StorageItem> allItems = Collections.synchronizedSet(new HashSet<>());
-        public final Set<StorageItem> startItem = Collections.synchronizedSet(new HashSet<>());
-        public final Set<StorageItem> successItems = Collections.synchronizedSet(new HashSet<>());
-        public final Set<StorageItem> errorItems = Collections.synchronizedSet(new HashSet<>());
-
-        private void reset() {
-            allItems.clear();
-            startItem.clear();
-            successItems.clear();
-            errorItems.clear();
-        }
-
-        void onAllStart(Set<StorageItem> outDatedItems) {
-            // retry enters here too, reset everything first
-            reset();
-
-            log.debug("{} items to cleanup", outDatedItems.size());
-            allItems.addAll(outDatedItems);
-        }
-
-        void onItemStart(StorageItem item) {
-            heartBeat();
-            startItem.add(item);
-        }
-
-        void onItemError(StorageItem item) {
-            errorItems.add(item);
-        }
-
-        void onItemSuccess(StorageItem item) {
-            successItems.add(item);
-        }
-
-        public void onRetry() {
-            // for progress printing
-        }
-
-        public void heartBeat() {
-            // for progress printing
-        }
-
-        public boolean hasError() {
-            return !errorItems.isEmpty();
-        }
     }
 
     class ProjectStorageCleaner {
@@ -661,7 +369,7 @@ public class StorageCleaner {
                     .forEach(layout -> {
                         activeIndexDataPath.add(getDataLayoutDir(layout));
                         layout.getMultiPartition().forEach(partition -> //
-                        activeBucketDataPath.add(getDataPartitionDir(layout, partition)));
+                                activeBucketDataPath.add(getDataPartitionDir(layout, partition)));
                     }));
             activeIndexDataPath
                     .forEach(path -> activeFastBitmapIndexDataPath.add(path + HadoopUtil.FAST_BITMAP_SUFFIX));
@@ -729,14 +437,8 @@ public class StorageCleaner {
         }
 
         public void execute() {
-            val executableManager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-            Set<String> activeJobs = executableManager.getAllExecutables().stream()
-                    .map(e -> project + JOB_TMP_ROOT + "/" + e.getId()).collect(Collectors.toSet());
             List<FileTreeNode> jobTemps = allFileSystems.iterator().next().getProject(project).getJobTmps();
-            Set<String> discardJobs = executableManager.getAllExecutables().stream()
-                    .filter(e -> e.getStatus() == ExecutableState.DISCARDED)
-                    .map(e -> project + JOB_TMP_ROOT + "/" + e.getId()).collect(Collectors.toSet());
-            doExecuteCmd(collectDropTemporaryTransactionTable(jobTemps, activeJobs, discardJobs));
+            doExecuteCmd(collectDropTemporaryTransactionTable(jobTemps));
         }
 
         private void doExecuteCmd(String cmd) {
@@ -752,28 +454,365 @@ public class StorageCleaner {
             }
         }
 
-        public String collectDropTemporaryTransactionTable(List<FileTreeNode> jobTemps, Set<String> activeJobs,
-                Set<String> discardJobs) {
+        public String collectDropTemporaryTransactionTable(List<FileTreeNode> jobTemps) {
             String result = "";
             try {
-                Set<String> availableJobs = activeJobs.stream().filter(jobPath -> !discardJobs.contains(jobPath))
-                        .collect(Collectors.toSet());
-                jobTemps.removeIf(node -> availableJobs.contains(node.getRelativePath()));
+                KylinConfig config = KylinConfig.getInstanceFromEnv();
+                Set<String> jobTempTables = jobTemps.stream()
+                        .map(node -> tableCleanerHelper.getJobTransactionalTable(project, node.getName()))
+                        .flatMap(Collection::stream).collect(Collectors.toSet());
 
-                if (tableCleanerHelper.isNeedClean(jobTemps.isEmpty(), discardJobs.isEmpty())) {
-                    // The key of the map object is database, and the value is a table name list
-                    ISourceMetadataExplorer explr = SourceFactory
-                            .getSource(
-                                    NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project))
-                            .getSourceMetadataExplorer();
-                    result = tableCleanerHelper.collectDropDBTemporaryTableCmd(KylinConfig.getInstanceFromEnv(), explr,
-                            jobTemps, discardJobs);
+                Set<String> discardTempTables = NExecutableManager.getInstance(config, project)
+                        .getExecutablesByStatus(ExecutableState.DISCARDED).stream()
+                        .map(e -> tableCleanerHelper.getJobTransactionalTable(project, e.getId()))
+                        .flatMap(Collection::stream).collect(Collectors.toSet());
+                jobTempTables.addAll(discardTempTables);
+
+                if (CollectionUtils.isNotEmpty(jobTempTables) && config.isReadTransactionalTableEnabled()) {
+                    result = tableCleanerHelper.getDropTmpTableCmd(project, jobTempTables);
                 }
             } catch (Exception exception) {
                 log.error("Failed to delete temporary tables.", exception);
             }
             log.info("collectDropTemporaryTransactionTable end.");
             return result;
+        }
+    }
+
+    private void addItem(FileSystemDecorator fs, Path itemPath, long protectionTime) throws IOException {
+        val status = fs.getFileStatus(itemPath);
+        if (status.getPath().getName().startsWith(".")) {
+            return;
+        }
+        if (timeMachineEnabled && Long.parseLong(trashRecord.get(itemPath.toString())) > protectionTime) {
+            return;
+        }
+        if (!timeMachineEnabled && status.getModificationTime() > protectionTime) {
+            return;
+        }
+
+        outdatedItems.add(new StorageCleaner.StorageItem(fs, status.getPath().toString()));
+    }
+
+    private String getDictDir(String project) {
+        return project + GLOBAL_DICT_STORAGE_ROOT;
+    }
+
+    private String getSegmentFlatTableDir(String project, NDataSegment segment) {
+        return getDfFlatTableDir(project, segment.getDataflow().getId()) + "/" + segment.getId();
+    }
+
+    private String getDataLayoutDir(NDataLayout dataLayout) {
+        NDataSegDetails segDetails = dataLayout.getSegDetails();
+        return getDataflowDir(segDetails.getProject(), segDetails.getDataSegment().getDataflow().getId()) + "/"
+                + segDetails.getUuid() + "/" + dataLayout.getLayoutId();
+    }
+
+    private String getDataPartitionDir(NDataLayout dataLayout, LayoutPartition dataPartition) {
+        return getDataLayoutDir(dataLayout) + "/" + dataPartition.getBucketId();
+    }
+
+    private void collectFromHDFS(StorageItem item) throws Exception {
+        val projectFolders = item.getFileSystemDecorator().listStatus(new Path(item.getPath()), path -> !path.getName().startsWith("_")
+                && (this.projectNames.isEmpty() || this.projectNames.contains(path.getName())));
+        for (FileStatus projectFolder : projectFolders) {
+            List<FileTreeNode> tableSnapshotParents = Lists.newArrayList();
+            val projectNode = new ProjectFileTreeNode(projectFolder.getPath().getName());
+            for (Pair<String, List<FileTreeNode>> pair : Arrays.asList(
+                    Pair.newPair(JOB_TMP_ROOT.substring(1), projectNode.getJobTmps()),
+                    Pair.newPair(GLOBAL_DICT_STORAGE_ROOT.substring(1), projectNode.getGlobalDictTables()),
+                    Pair.newPair(PARQUET_STORAGE_ROOT.substring(1), projectNode.getDataflows()),
+                    Pair.newPair(TABLE_EXD_STORAGE_ROOT.substring(1), projectNode.getTableExds()),
+                    Pair.newPair(SNAPSHOT_STORAGE_ROOT.substring(1), tableSnapshotParents),
+                    Pair.newPair(FLAT_TABLE_STORAGE_ROOT.substring(1), projectNode.getDfFlatTables()))) {
+                val treeNode = new FileTreeNode(pair.getFirst(), projectNode);
+                try {
+                    log.debug("collect files from {}", pair.getFirst());
+                    Stream.of(item.getFileSystemDecorator().listStatus(new Path(item.getPath(), treeNode.getRelativePath())))
+                            .forEach(x -> pair.getSecond().add(new FileTreeNode(x.getPath().getName(), treeNode)));
+                } catch (FileNotFoundException e) {
+                    log.info("folder {} not found", new Path(item.getPath(), treeNode.getRelativePath()));
+                }
+            }
+            item.getProjectNodes().add(projectNode);
+            item.getProjects().put(projectNode.getName(), projectNode);
+            for (Pair<List<FileTreeNode>, List<FileTreeNode>> pair : Arrays.asList(
+                    Pair.newPair(tableSnapshotParents, projectNode.getSnapshots()), //
+                    Pair.newPair(projectNode.getGlobalDictTables(), projectNode.getGlobalDictColumns()), //
+                    Pair.newPair(projectNode.getDataflows(), projectNode.getSegments()), //
+                    Pair.newPair(projectNode.getSegments(), projectNode.getLayouts()),
+                    Pair.newPair(projectNode.getDfFlatTables(), projectNode.getSegmentFlatTables()))) {
+                val slot = pair.getSecond();
+                for (FileTreeNode node : pair.getFirst()) {
+                    log.debug("collect from {} -> {}", node.getName(), node);
+                    Stream.of(item.getFileSystemDecorator().listStatus(new Path(item.getPath(), node.getRelativePath())))
+                            .forEach(x -> slot.add(new FileTreeNode(x.getPath().getName(), node)));
+                }
+            }
+            collectMultiPartitions(item, projectNode);
+        }
+
+    }
+
+    private void collectMultiPartitions(StorageItem item, ProjectFileTreeNode projectNode) throws IOException {
+        String project = projectNode.getName();
+        NDataflowManager manager = NDataflowManager.getInstance(kylinConfig, project);
+        Map<String, Boolean> cached = new HashMap<>();
+        // Buckets do not certainly exist.
+        // Only multi level partition model should do this.
+        val buckets = projectNode.getBuckets();
+        for (FileTreeNode node : projectNode.getLayouts()) {
+            String dataflowId = node.getParent() // segment
+                    .getParent().getName(); // dataflow
+            if (!cached.containsKey(dataflowId)) {
+                NDataflow dataflow = manager.getDataflow(dataflowId);
+                if (Objects.nonNull(dataflow) //
+                        && Objects.nonNull(dataflow.getModel()) //
+                        && dataflow.getModel().isMultiPartitionModel()) {
+                    cached.put(dataflowId, true);
+                } else {
+                    cached.put(dataflowId, false);
+                }
+            }
+
+            if (Boolean.TRUE.equals(cached.get(dataflowId))) {
+                Stream.of(item.getFileSystemDecorator().listStatus(new Path(item.getPath(), node.getRelativePath())))
+                        .filter(FileStatus::isDirectory) // Essential check in case of bad design.
+                        .forEach(x -> buckets.add(new FileTreeNode(x.getPath().getName(), node)));
+            }
+        }
+    }
+
+    @AllArgsConstructor
+    public static class FileSystemDecorator {
+        @NonNull
+        private FileSystem fs;
+
+        private static int retryTimes = 3;
+
+        interface Action<T> {
+            T run() throws IOException;
+        }
+
+        private <E> E sleepAndRetry(Action<E> action) throws IOException {
+            rateLimiter.acquire();
+
+            for (int i = 0; i < retryTimes - 1; i++) {
+                try {
+                    return action.run();
+                } catch (FileNotFoundException e) {
+                    throw e;
+                } catch (Exception e) {
+                    log.error("Failed to use fs api!", e);
+                }
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ie) {
+                    log.error("Failed to sleep!", ie);
+                    ie.printStackTrace();
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+            return action.run();
+        }
+
+        public static FileSystemDecorator getInstance(FileSystem fs) {
+            return new FileSystemDecorator(fs);
+        }
+
+        public FileStatus[] listStatus(Path f) throws IOException {
+            return sleepAndRetry(() -> fs.listStatus(f));
+        }
+
+        public FileStatus[] listStatus(Path f, PathFilter filter) throws IOException {
+            return sleepAndRetry(() -> fs.listStatus(f, filter));
+        }
+
+        public FileStatus getFileStatus(Path f) throws IOException {
+            return sleepAndRetry(() -> fs.getFileStatus(f));
+        }
+
+        public boolean delete(Path f, boolean recursive) throws IOException {
+            return sleepAndRetry(() -> fs.delete(f, recursive));
+        }
+    }
+
+    @Data
+    @RequiredArgsConstructor
+    @AllArgsConstructor
+    public static class StorageItem {
+
+        @NonNull
+        private FileSystemDecorator fileSystemDecorator;
+
+        @NonNull
+        private String path;
+
+        /**
+         * File hierarchy is
+         *
+         * /working_dir
+         * |--/${project_name}
+         *    |--/parquet
+         *    |  +--/${dataflow_id}
+         *    |     +--/${segment_id}
+         *    |        +--/${layout_id}
+         *    |           +--/${bucket_id} if multi level partition enabled.
+         *    |        +--/${layout_id}_fast_bitmap  if enabled
+         *    |--/job_tmp
+         *    |  +--/${job_id}
+         *    |--/table_exd
+         *    |  +--/${table_identity}
+         *    |--/dict/global_dict
+         *    |  +--/${table_identity}
+         *    |     +--/${column_name}
+         *    |--/table_snapshot
+         *    |  +--/${table_identity}
+         *    |     +--/${snapshot_version}
+         *    |--/flat_table
+         *    |  +--/${dataflow_id}
+         *    |     +--/${segment_id}
+         */
+
+        List<FileTreeNode> projectNodes = Lists.newArrayList();
+
+        Map<String, ProjectFileTreeNode> projects = Maps.newHashMap();
+
+        List<FileTreeNode> getAllNodes() {
+            val allNodes = projects.values().stream().flatMap(p -> p.getAllCandidates().stream())
+                    .flatMap(Collection::stream).collect(Collectors.toList());
+            allNodes.addAll(projectNodes);
+            return allNodes;
+        }
+
+        ProjectFileTreeNode getProject(String name) {
+            return projects.getOrDefault(name, new ProjectFileTreeNode(name));
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            StorageItem that = (StorageItem) o;
+            return Objects.equals(fileSystemDecorator.fs, that.fileSystemDecorator.fs)
+                    && Objects.equals(path, that.path);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(fileSystemDecorator.fs, path);
+        }
+    }
+
+    @Data
+    @AllArgsConstructor
+    @RequiredArgsConstructor
+    public static class FileTreeNode {
+
+        @NonNull
+        String name;
+
+        FileTreeNode parent;
+
+        public String getRelativePath() {
+            if (parent == null) {
+                return name;
+            }
+            return parent.getRelativePath() + "/" + name;
+        }
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @ToString(onlyExplicitlyIncluded = true, callSuper = true)
+    public static class ProjectFileTreeNode extends FileTreeNode {
+
+        public ProjectFileTreeNode(String name) {
+            super(name);
+        }
+
+        List<FileTreeNode> jobTmps = Lists.newLinkedList();
+
+        List<FileTreeNode> tableExds = Lists.newLinkedList();
+
+        List<FileTreeNode> globalDictTables = Lists.newLinkedList();
+
+        List<FileTreeNode> globalDictColumns = Lists.newLinkedList();
+
+        List<FileTreeNode> snapshotTables = Lists.newLinkedList();
+
+        List<FileTreeNode> snapshots = Lists.newLinkedList();
+
+        List<FileTreeNode> dataflows = Lists.newLinkedList();
+
+        List<FileTreeNode> segments = Lists.newLinkedList();
+
+        List<FileTreeNode> layouts = Lists.newLinkedList();
+
+        List<FileTreeNode> buckets = Lists.newLinkedList();
+
+        List<FileTreeNode> dfFlatTables = Lists.newArrayList();
+
+        List<FileTreeNode> segmentFlatTables = Lists.newArrayList();
+
+        Collection<List<FileTreeNode>> getAllCandidates() {
+            return Arrays.asList(jobTmps, tableExds, globalDictTables, globalDictColumns, snapshotTables, snapshots,
+                    dataflows, segments, layouts, buckets, dfFlatTables, segmentFlatTables);
+        }
+
+    }
+
+    public static class Stats {
+
+        public final Set<StorageItem> allItems = Collections.synchronizedSet(new HashSet<>());
+        public final Set<StorageItem> startItem = Collections.synchronizedSet(new HashSet<>());
+        public final Set<StorageItem> successItems = Collections.synchronizedSet(new HashSet<>());
+        public final Set<StorageItem> errorItems = Collections.synchronizedSet(new HashSet<>());
+
+        private void reset() {
+            allItems.clear();
+            startItem.clear();
+            successItems.clear();
+            errorItems.clear();
+        }
+
+        void onAllStart(Set<StorageItem> outDatedItems) {
+            // retry enters here too, reset everything first
+            reset();
+
+            log.debug("{} items to cleanup", outDatedItems.size());
+            allItems.addAll(outDatedItems);
+        }
+
+        void onItemStart(StorageItem item) {
+            heartBeat();
+            startItem.add(item);
+        }
+
+        void onItemError(StorageItem item) {
+            errorItems.add(item);
+        }
+
+        void onItemSuccess(StorageItem item) {
+            successItems.add(item);
+        }
+
+        public void onRetry() {
+            // for progress printing
+        }
+
+        public void heartBeat() {
+            // for progress printing
+        }
+
+        public boolean hasError() {
+            return !errorItems.isEmpty();
         }
     }
 }

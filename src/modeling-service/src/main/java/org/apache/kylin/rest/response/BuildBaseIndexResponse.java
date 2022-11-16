@@ -49,6 +49,9 @@ public class BuildBaseIndexResponse extends BasicResponse {
     @JsonIgnore
     private boolean isCleanSecondStorage = false;
 
+    @JsonProperty("computed_column_conflict")
+    private ComputedColumnConflictResponse ccConflict;
+
     public static BuildBaseIndexResponse from(IndexPlan indexPlan) {
         BuildBaseIndexResponse response = new BuildBaseIndexResponse();
         response.addLayout(indexPlan.getBaseAggLayout());

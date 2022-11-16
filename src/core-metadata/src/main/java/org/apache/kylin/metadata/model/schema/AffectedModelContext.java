@@ -205,4 +205,18 @@ public class AffectedModelContext {
 
         return result;
     }
+
+    public Set<String> getMeasuresKey() {
+        return shouldDeleteNodes.stream()
+                .filter(node -> node.getType() == SchemaNodeType.MODEL_MEASURE
+                        && measures.contains(Integer.parseInt(node.getDetail())))
+                .map(SchemaNode::getKey).collect(Collectors.toSet());
+    }
+
+    public Set<String> getDimensionsKey() {
+        return shouldDeleteNodes.stream()
+                .filter(node -> node.getType() == SchemaNodeType.MODEL_DIMENSION
+                        && dimensions.contains(Integer.parseInt(node.getDetail())))
+                .map(SchemaNode::getKey).collect(Collectors.toSet());
+    }
 }

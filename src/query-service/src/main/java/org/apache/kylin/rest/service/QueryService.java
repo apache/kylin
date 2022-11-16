@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.QueryTrace.GET_ACL_INFO;
@@ -100,6 +82,7 @@ import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.acl.AclTCR;
 import org.apache.kylin.metadata.acl.AclTCRManager;
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -138,7 +121,6 @@ import org.apache.kylin.query.engine.data.TableSchema;
 import org.apache.kylin.query.exception.NotSupportedSQLException;
 import org.apache.kylin.query.exception.UserStopQueryException;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.util.KapQueryUtil;
 import org.apache.kylin.query.util.QueryLimiter;
 import org.apache.kylin.query.util.QueryModelPriorities;
 import org.apache.kylin.query.util.QueryParams;
@@ -186,7 +168,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import com.google.gson.Gson;
 
+import org.apache.kylin.query.util.KapQueryUtil;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -234,43 +218,44 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     }
 
     public ForceToTieredStorage getForcedToTieredStorage(String project, ForceToTieredStorage api) {
-        switch (api){
+        switch (api) {
+        case CH_FAIL_TO_DFS:
+        case CH_FAIL_TO_PUSH_DOWN:
+        case CH_FAIL_TO_RETURN:
+            return api;
+        case CH_FAIL_TAIL:
+            break;
+        default:
+            // Do nothing
+        }
+
+        try {
+            //project level config
+            ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                    .getProject(project);
+            api = projectInstance.getConfig().getProjectForcedToTieredStorage();
+            switch (api) {
             case CH_FAIL_TO_DFS:
             case CH_FAIL_TO_PUSH_DOWN:
             case CH_FAIL_TO_RETURN:
                 return api;
-            case CH_FAIL_TAIL:
-                break;
             default:
                 // Do nothing
-        }
-
-        try{
-            //project level config
-            ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project);
-            api = projectInstance.getConfig().getProjectForcedToTieredStorage();
-            switch (api){
-                case CH_FAIL_TO_DFS:
-                case CH_FAIL_TO_PUSH_DOWN:
-                case CH_FAIL_TO_RETURN:
-                    return api;
-                default:
-                    // Do nothing
             }
         } catch (Exception e) {
             // no define or invalid do nothing
         }
 
-        try{
+        try {
             //system
             api = KylinConfig.getInstanceFromEnv().getSystemForcedToTieredStorage();
-            switch (api){
-                case CH_FAIL_TO_DFS:
-                case CH_FAIL_TO_PUSH_DOWN:
-                case CH_FAIL_TO_RETURN:
-                    return api;
-                default:
-                    return ForceToTieredStorage.CH_FAIL_TO_DFS;
+            switch (api) {
+            case CH_FAIL_TO_DFS:
+            case CH_FAIL_TO_PUSH_DOWN:
+            case CH_FAIL_TO_RETURN:
+                return api;
+            default:
+                return ForceToTieredStorage.CH_FAIL_TO_DFS;
             }
         } catch (Exception e) {
             return ForceToTieredStorage.CH_FAIL_TO_DFS;
@@ -301,11 +286,13 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             queryParams.setACLDisabledOrAdmin(isACLDisabledOrAdmin(queryParams.getProject(), queryParams.getAclInfo()));
             int forcedToTieredStorage;
             ForceToTieredStorage enumForcedToTieredStorage;
-            try{
+            try {
                 forcedToTieredStorage = sqlRequest.getForcedToTieredStorage();
-                enumForcedToTieredStorage = getForcedToTieredStorage(sqlRequest.getProject(), ForceToTieredStorage.values()[forcedToTieredStorage]);
+                enumForcedToTieredStorage = getForcedToTieredStorage(sqlRequest.getProject(),
+                        ForceToTieredStorage.values()[forcedToTieredStorage]);
             } catch (NullPointerException e) {
-                enumForcedToTieredStorage = getForcedToTieredStorage(sqlRequest.getProject(), ForceToTieredStorage.CH_FAIL_TAIL);
+                enumForcedToTieredStorage = getForcedToTieredStorage(sqlRequest.getProject(),
+                        ForceToTieredStorage.CH_FAIL_TAIL);
             }
             logger.debug("forcedToTieredStorage={}", enumForcedToTieredStorage);
             queryParams.setForcedToTieredStorage(enumForcedToTieredStorage);
@@ -371,7 +358,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
     @Transaction(project = 1)
     public void saveQuery(final String creator, final String project, final Query query) throws IOException {
-        aclEvaluate.checkProjectReadPermission(project);
+        aclEvaluate.checkProjectQueryPermission(project);
         Message msg = MsgPicker.getMsg();
         val record = getSavedQueries(creator, project);
         List<Query> currentQueries = record.getQueries();
@@ -385,14 +372,14 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
     @Transaction(project = 1)
     public void removeSavedQuery(final String creator, final String project, final String id) throws IOException {
-        aclEvaluate.checkProjectReadPermission(project);
+        aclEvaluate.checkProjectQueryPermission(project);
         val record = getSavedQueries(creator, project);
         record.setQueries(record.getQueries().stream().filter(q -> !q.getId().equals(id)).collect(Collectors.toList()));
         getStore().checkAndPutResource(getQueryKeyById(project, creator), record, QueryRecordSerializer.getInstance());
     }
 
     public QueryRecord getSavedQueries(final String creator, final String project) throws IOException {
-        aclEvaluate.checkProjectReadPermission(project);
+        aclEvaluate.checkProjectQueryPermission(project);
         if (null == creator) {
             return null;
         }
@@ -489,7 +476,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     }
 
     public SQLResponse queryWithCache(SQLRequest sqlRequest) {
-        aclEvaluate.checkProjectReadPermission(sqlRequest.getProject());
+        aclEvaluate.checkProjectQueryPermission(sqlRequest.getProject());
         checkIfExecuteUserValid(sqlRequest);
         final QueryContext queryContext = QueryContext.current();
         queryContext.setProject(sqlRequest.getProject());
@@ -538,7 +525,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 sqlRequest.getProject());
         String username = AclPermissionUtil.getCurrentUsername();
         Set<String> groups = getCurrentUserGroups();
-        if (!AclPermissionUtil.isAdmin() && !aclTCRManager.isAllTablesAuthorized(username, groups))
+        if (!AclPermissionUtil.hasProjectAdminPermission(sqlRequest.getProject(), groups)
+                && !aclTCRManager.isAllTablesAuthorized(username, groups))
             throw new KylinException(PERMISSION_DENIED, String.format(Locale.ROOT,
                     MsgPicker.getMsg().getServiceAccountNotAllowed(), username, sqlRequest.getProject()));
 
@@ -616,7 +604,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             sqlResponse = QueryUtils.handleTempStatement(sqlRequest, kylinConfig);
 
             // search cache
-            if (sqlResponse == null && kylinConfig.isQueryCacheEnabled()) {
+            if (sqlResponse == null && kylinConfig.isQueryCacheEnabled() && !sqlRequest.isForcedToPushDown()) {
                 sqlResponse = searchCache(sqlRequest, kylinConfig);
             }
 
@@ -680,7 +668,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 && !QueryContext.current().getQueryTagInfo().isStorageCacheUsed();
     }
 
-    private SQLResponse searchCache(SQLRequest sqlRequest, KylinConfig kylinConfig) {
+    protected SQLResponse searchCache(SQLRequest sqlRequest, KylinConfig kylinConfig) {
         SQLResponse response = searchFailedCache(sqlRequest, kylinConfig);
         if (response == null) {
             response = searchSuccessCache(sqlRequest, kylinConfig);
@@ -725,9 +713,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             try {
                 if (!sqlResponse.isPrepare() && QueryMetricsContext.isStarted()) {
                     val queryMetricsContext = QueryMetricsContext.collect(QueryContext.current());
-                    // Set stored sql a structured format json string
+                    // KE-35556 Set stored sql a structured format json string
                     queryMetricsContext.setSql(constructQueryHistorySqlText(sqlRequest, sqlResponse, originalSql));
-                    // Using sql_pattern as normalized_sql storage
+                    // KE-36662 Using sql_pattern as normalized_sql storage
                     String normalizedSql = QueryContext.currentMetrics().getCorrectedSql();
                     queryMetricsContext.setSqlPattern(normalizedSql);
                     QueryHistoryScheduler queryHistoryScheduler = QueryHistoryScheduler.getInstance();
@@ -740,7 +728,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         }
     }
 
-    private String constructQueryHistorySqlText(SQLRequest sqlRequest, SQLResponse sqlResponse, String originalSql) throws JsonProcessingException, ClassNotFoundException {
+    private String constructQueryHistorySqlText(SQLRequest sqlRequest, SQLResponse sqlResponse, String originalSql)
+            throws JsonProcessingException, ClassNotFoundException {
         // Fill in params if available
         QueryUtils.fillInPrepareStatParams(sqlRequest, sqlResponse.isQueryPushDown());
 
@@ -756,7 +745,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             }
         }
 
-        // Do not store normalized_sql in sql_text, as it may exceed storage limitation
+        // KE-36662 Do not store normalized_sql in sql_text, as it may exceed storage limitation
         return QueryHistoryUtil.toQueryHistorySqlText(new QueryHistorySql(originalSql, null, params));
     }
 
@@ -833,7 +822,6 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             sqlResponse.wrapResultOfQueryContext(queryContext);
             sqlResponse.setRefused(queryContext.getQueryTagInfo().isRefused());
             sqlResponse.setTimeout(queryContext.getQueryTagInfo().isTimeout());
-
             setAppMaterURL(sqlResponse);
             sqlResponse.setDuration(QueryContext.currentMetrics().duration());
             if (queryCacheEnabled && e.getCause() != null) {
@@ -1052,7 +1040,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
         List<NDataModel> models = getModels(project, targetModelName);
         List<String> targetModelTables = getTargetModelTables(targetModelName, models);
-        List<String> targetModelColumns = getTargetModelColumns(targetModelName, models);
+        List<String> targetModelColumns = getTargetModelColumns(targetModelName, models, project);
 
         QueryContext.current().setAclInfo(getExecuteAclInfo(project));
         ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
@@ -1139,20 +1127,21 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
     @SuppressWarnings("checkstyle:methodlength")
     private List<TableMetaWithType> doGetMetadataV2(String project, String targetModelName) {
-        aclEvaluate.checkProjectReadPermission(project);
+        aclEvaluate.checkProjectQueryPermission(project);
         if (StringUtils.isBlank(project))
             return Collections.emptyList();
 
         List<NDataModel> models = getModels(project, targetModelName);
         List<String> targetModelTables = getTargetModelTables(targetModelName, models);
-        List<String> targetModelColumns = getTargetModelColumns(targetModelName, models);
+        List<String> targetModelColumns = getTargetModelColumns(targetModelName, models, project);
 
         QueryContext.current().setAclInfo(getExecuteAclInfo(project));
         ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(project);
         SchemaMetaData schemaMetaData = new SchemaMetaData(project, projectInstance.getConfig());
-        Map<String, TableMetaWithType> tableMap = constructTableMeta(schemaMetaData, targetModelTables);
-        Map<String, ColumnMetaWithType> columnMap = constructTblColMeta(schemaMetaData, project, targetModelColumns);
+        Map<TableMetaIdentify, TableMetaWithType> tableMap = constructTableMeta(schemaMetaData, targetModelTables);
+        Map<ColumnMetaIdentify, ColumnMetaWithType> columnMap = constructTblColMeta(schemaMetaData, project,
+                targetModelColumns);
         addColsToTblMeta(tableMap, columnMap);
 
         for (NDataModel model : models) {
@@ -1166,12 +1155,20 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         return tableMetas;
     }
 
-    private List<String> getTargetModelColumns(String targetModelName, List<NDataModel> models) {
-        return targetModelName == null ? null
-                : models.stream()
-                .flatMap(
-                        m -> m.getEffectiveCols().values().stream().map(TblColRef::getColumnWithTableAndSchema))
-                .collect(Collectors.toList());
+    List<String> getTargetModelColumns(String targetModelName, List<NDataModel> models, String project) {
+        List<String> targetModelColumns = null;
+        if (targetModelName != null) {
+            NIndexPlanManager indexPlanManager = getManager(NIndexPlanManager.class, project);
+            targetModelColumns = !getManager(NProjectManager.class).getProject(project).getConfig()
+                    .exposeAllModelRelatedColumns() ? models.stream().map(model -> {
+                        Set<Integer> relatedColIds = indexPlanManager.getIndexPlan(model.getId()).getRelatedColIds();
+                        return relatedColIds.stream().map(id -> model.getColRef(id).getColumnWithTableAndSchema())
+                                .collect(Collectors.toList());
+                    }).flatMap(List::stream).collect(Collectors.toList())
+                            : models.stream().flatMap(m -> m.getEffectiveCols().values().stream()
+                                    .map(TblColRef::getColumnWithTableAndSchema)).collect(Collectors.toList());
+        }
+        return targetModelColumns;
     }
 
     private List<String> getTargetModelTables(String targetModelName, List<NDataModel> models) {
@@ -1186,9 +1183,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 .collect(Collectors.toList());
     }
 
-    private LinkedHashMap<String, TableMetaWithType> constructTableMeta(SchemaMetaData schemaMetaData,
+    private LinkedHashMap<TableMetaIdentify, TableMetaWithType> constructTableMeta(SchemaMetaData schemaMetaData,
             List<String> targetModelTables) {
-        LinkedHashMap<String, TableMetaWithType> tableMap = Maps.newLinkedHashMap();
+        LinkedHashMap<TableMetaIdentify, TableMetaWithType> tableMap = Maps.newLinkedHashMap();
         for (TableSchema tableSchema : schemaMetaData.getTables()) {
             TableMetaWithType tblMeta = new TableMetaWithType(tableSchema.getCatalog(), tableSchema.getSchema(),
                     tableSchema.getTable(), tableSchema.getType(), tableSchema.getRemarks(), null, null, null, null,
@@ -1196,17 +1193,16 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
             if (!JDBC_METADATA_SCHEMA.equalsIgnoreCase(tblMeta.getTABLE_SCHEM()) && (targetModelTables == null
                     || targetModelTables.contains(tblMeta.getTABLE_SCHEM() + "." + tblMeta.getTABLE_NAME()))) {
-                tableMap.put(tblMeta.getTABLE_SCHEM() + "#" + tblMeta.getTABLE_NAME(), tblMeta);
+                tableMap.put(new TableMetaIdentify(tblMeta.getTABLE_SCHEM(), tblMeta.getTABLE_NAME()), tblMeta);
             }
         }
 
         return tableMap;
     }
 
-    private LinkedHashMap<String, ColumnMetaWithType> constructTblColMeta(SchemaMetaData schemaMetaData, String project,
-            List<String> targetModelColumns) {
-
-        LinkedHashMap<String, ColumnMetaWithType> columnMap = Maps.newLinkedHashMap();
+    private LinkedHashMap<ColumnMetaIdentify, ColumnMetaWithType> constructTblColMeta(SchemaMetaData schemaMetaData,
+            String project, List<String> targetModelColumns) {
+        LinkedHashMap<ColumnMetaIdentify, ColumnMetaWithType> columnMap = Maps.newLinkedHashMap();
         ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(project);
         SetMultimap<String, String> tbl2ccNames = collectComputedColumns(project);
@@ -1225,9 +1221,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 if (!JDBC_METADATA_SCHEMA.equalsIgnoreCase(columnMeta.getTABLE_SCHEM())
                         && !columnMeta.getCOLUMN_NAME().toUpperCase(Locale.ROOT).startsWith("_KY_")
                         && (targetModelColumns == null || targetModelColumns.contains(columnMeta.getTABLE_SCHEM() + "."
-                        + columnMeta.getTABLE_NAME() + "." + columnMeta.getCOLUMN_NAME()))) {
-                    columnMap.put(columnMeta.getTABLE_SCHEM() + "#" + columnMeta.getTABLE_NAME() + "#"
-                            + columnMeta.getCOLUMN_NAME(), columnMeta);
+                                + columnMeta.getTABLE_NAME() + "." + columnMeta.getCOLUMN_NAME()))) {
+                    columnMap.put(new ColumnMetaIdentify(columnMeta.getTABLE_SCHEM(), columnMeta.getTABLE_NAME(),
+                            columnMeta.getCOLUMN_NAME()), columnMeta);
                 }
             }
         }
@@ -1285,10 +1281,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     }
 
     /**
-     *
      * @param project
      * @param ccName
-     * @param table only support table alias like "TEST_COUNT" or table indentity "default.TEST_COUNT"
+     * @param table   only support table alias like "TEST_COUNT" or table indentity "default.TEST_COUNT"
      * @return
      */
     private boolean isComputedColumn(String project, String ccName, String table,
@@ -1298,51 +1293,64 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 && tbl2ccNames.get(table.toUpperCase(Locale.ROOT)).contains(ccName.toUpperCase(Locale.ROOT));
     }
 
-    private void addColsToTblMeta(Map<String, TableMetaWithType> tblMap,
-            Map<String, ColumnMetaWithType> columnMetaWithTypeMap) {
-        columnMetaWithTypeMap.forEach((name, columnMetaWithType) -> {
-            String tblName = name.substring(0, name.lastIndexOf('#'));
-            tblMap.get(tblName).addColumn(columnMetaWithType);
+    static void addColsToTblMeta(Map<TableMetaIdentify, TableMetaWithType> tblMap,
+            Map<ColumnMetaIdentify, ColumnMetaWithType> columnMetaWithTypeMap) {
+        columnMetaWithTypeMap.forEach((identify, columnMetaWithType) -> {
+            TableMetaIdentify tableMetaIdentify = new TableMetaIdentify(identify.getTableSchema(),
+                    identify.getTableName());
+            tblMap.get(tableMetaIdentify).addColumn(columnMetaWithType);
         });
     }
 
-    private void clarifyTblTypeToFactOrLookup(NDataModel dataModelDesc, Map<String, TableMetaWithType> tableMap) {
+    private void clarifyTblTypeToFactOrLookup(NDataModel dataModelDesc,
+            Map<TableMetaIdentify, TableMetaWithType> tableMap) {
         // update table type: FACT
         for (TableRef factTable : dataModelDesc.getFactTables()) {
-            String factTableName = factTable.getTableIdentity().replace('.', '#');
-            if (tableMap.containsKey(factTableName)) {
-                tableMap.get(factTableName).getTYPE().add(TableMetaWithType.tableTypeEnum.FACT);
+            String tableSchema = factTable.getTableIdentity().split("\\.")[0];
+            String tableName = factTable.getTableIdentity().split("\\.")[1];
+            TableMetaIdentify tableMetaIdentify = new TableMetaIdentify(tableSchema, tableName);
+
+            if (tableMap.containsKey(tableMetaIdentify)) {
+                tableMap.get(tableMetaIdentify).getTYPE().add(TableMetaWithType.tableTypeEnum.FACT);
             }
         }
 
         // update table type: LOOKUP
         for (TableRef lookupTable : dataModelDesc.getLookupTables()) {
-            String lookupTableName = lookupTable.getTableIdentity().replace('.', '#');
-            if (tableMap.containsKey(lookupTableName)) {
-                tableMap.get(lookupTableName).getTYPE().add(TableMetaWithType.tableTypeEnum.LOOKUP);
+            String tableSchema = lookupTable.getTableIdentity().split("\\.")[0];
+            String tableName = lookupTable.getTableIdentity().split("\\.")[1];
+
+            TableMetaIdentify tableMetaIdentify = new TableMetaIdentify(tableSchema, tableName);
+            if (tableMap.containsKey(tableMetaIdentify)) {
+                tableMap.get(tableMetaIdentify).getTYPE().add(TableMetaWithType.tableTypeEnum.LOOKUP);
             }
         }
     }
 
-    private void clarifyPkFkCols(NDataModel dataModelDesc, Map<String, ColumnMetaWithType> columnMap) {
+    private void clarifyPkFkCols(NDataModel dataModelDesc, Map<ColumnMetaIdentify, ColumnMetaWithType> columnMap) {
         for (JoinTableDesc joinTableDesc : dataModelDesc.getJoinTables()) {
             JoinDesc joinDesc = joinTableDesc.getJoin();
             for (String pk : joinDesc.getPrimaryKey()) {
-                String columnIdentity = (dataModelDesc.findTable(pk.substring(0, pk.indexOf('.'))).getTableIdentity()
-                        + pk.substring(pk.indexOf('.'))).replace('.', '#');
-                if (columnMap.containsKey(columnIdentity)) {
-                    columnMap.get(columnIdentity).getTYPE().add(ColumnMetaWithType.columnTypeEnum.PK);
+                ColumnMetaIdentify columnMetaIdentify = getColumnMetaIdentify(dataModelDesc, pk);
+                if (columnMap.containsKey(columnMetaIdentify)) {
+                    columnMap.get(columnMetaIdentify).getTYPE().add(ColumnMetaWithType.columnTypeEnum.PK);
                 }
             }
 
             for (String fk : joinDesc.getForeignKey()) {
-                String columnIdentity = (dataModelDesc.findTable(fk.substring(0, fk.indexOf('.'))).getTableIdentity()
-                        + fk.substring(fk.indexOf('.'))).replace('.', '#');
-                if (columnMap.containsKey(columnIdentity)) {
-                    columnMap.get(columnIdentity).getTYPE().add(ColumnMetaWithType.columnTypeEnum.FK);
+                ColumnMetaIdentify columnMetaIdentify = getColumnMetaIdentify(dataModelDesc, fk);
+                if (columnMap.containsKey(columnMetaIdentify)) {
+                    columnMap.get(columnMetaIdentify).getTYPE().add(ColumnMetaWithType.columnTypeEnum.FK);
                 }
             }
         }
+    }
+
+    private ColumnMetaIdentify getColumnMetaIdentify(NDataModel model, String joinKey) {
+        String tableName = joinKey.substring(0, joinKey.indexOf('.'));
+        String tableSchema = model.findTable(tableName).getTableIdentity().split("\\.")[0];
+        String columnName = joinKey.substring(joinKey.indexOf('.') + 1);
+        return new ColumnMetaIdentify(tableSchema, tableName, columnName);
     }
 
     protected String makeErrorMsgUserFriendly(Throwable e) {
@@ -1376,6 +1384,10 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
         response.setEngineType(QueryHistory.EngineType.NATIVE.name());
         response.setSignature(QueryCacheSignatureUtil.createCacheSignature(response, project));
+
+        if (QueryContext.current().getMetrics().getQueryExecutedPlan() != null) {
+            response.setExecutedPlan(QueryContext.current().getMetrics().getQueryExecutedPlan());
+        }
 
         return response;
     }
@@ -1573,6 +1585,21 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         public String jsonStyleLog() {
             return "[QUERY SUMMARY]: ".concat(new Gson().toJson(logs));
         }
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class TableMetaIdentify {
+        private String tableSchema;
+        private String tableName;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class ColumnMetaIdentify {
+        private String tableSchema;
+        private String tableName;
+        private String columnName;
     }
 
     @Override

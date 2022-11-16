@@ -1,0 +1,82 @@
+{
+  "uuid" : "f88dd56c-02a9-46ba-d621-17878cb4f11a",
+  "last_modified" : 1660894045346,
+  "create_time" : 1660894045052,
+  "version" : "4.0.0.0",
+  "alias" : "model_cc",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : null,
+  "fact_table" : "KEYWORD.TEST_KEYWORD_COLUMN",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "STRING",
+    "column" : "TEST_KEYWORD_COLUMN.STRING"
+  }, {
+    "id" : 1,
+    "name" : "VARCHAR",
+    "column" : "TEST_KEYWORD_COLUMN.VARCHAR"
+  }, {
+    "id" : 2,
+    "name" : "DATE2",
+    "column" : "TEST_KEYWORD_COLUMN.DATE2"
+  }, {
+    "id" : 3,
+    "name" : "DATE",
+    "column" : "TEST_KEYWORD_COLUMN.DATE"
+  }, {
+    "id" : 4,
+    "name" : "ID",
+    "column" : "TEST_KEYWORD_COLUMN.ID"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "computed_columns" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "TEST_KEYWORD_COLUMN" : {
+        "x" : -161.66666666666669,
+        "y" : 405.6110975477431,
+        "width" : 200.0,
+        "height" : 230.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null
+}

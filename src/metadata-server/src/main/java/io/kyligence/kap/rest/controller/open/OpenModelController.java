@@ -18,12 +18,13 @@
 
 package io.kyligence.kap.rest.controller.open;
 
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_UPDATE_MODEL;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.exception.ServerErrorCode.UNSUPPORTED_STREAMING_OPERATION;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.INDEX_PARAMETER_INVALID;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_MULTI_PARTITION_DISABLE;
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -36,17 +37,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.response.DataResult;
-import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.exception.LookupTableException;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
 import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.controller.NModelController;
@@ -54,14 +56,19 @@ import org.apache.kylin.rest.request.ModelParatitionDescRequest;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.ModelUpdateRequest;
 import org.apache.kylin.rest.request.MultiPartitionMappingRequest;
+import org.apache.kylin.rest.request.OpenModelRequest;
 import org.apache.kylin.rest.request.PartitionColumnRequest;
 import org.apache.kylin.rest.request.UpdateMultiPartitionValueRequest;
 import org.apache.kylin.rest.response.BuildBaseIndexResponse;
+import org.apache.kylin.rest.response.ComputedColumnConflictResponse;
+import org.apache.kylin.rest.response.DataResult;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.IndexResponse;
 import org.apache.kylin.rest.response.NModelDescResponse;
 import org.apache.kylin.rest.response.OpenGetIndexResponse;
 import org.apache.kylin.rest.response.OpenGetIndexResponse.IndexDetail;
 import org.apache.kylin.rest.service.FusionIndexService;
+import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.tool.bisync.SyncContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,12 +103,16 @@ public class OpenModelController extends NBasicController {
             .collect(Collectors.toSet());
     private static final Set<String> INDEX_STATUS_SET = Arrays.stream(IndexEntity.Status.values()).map(Enum::name)
             .collect(Collectors.toSet());
+    public static final String MODEL_ID = "modelId";
 
     @Autowired
     private NModelController modelController;
 
     @Autowired
     private FusionIndexService fusionIndexService;
+
+    @Autowired
+    private FusionModelService fusionModelService;
 
     @Autowired
     private ModelService modelService;
@@ -112,7 +123,11 @@ public class OpenModelController extends NBasicController {
     public EnvelopeResponse<BuildBaseIndexResponse> createModel(@RequestBody ModelRequest modelRequest) {
         modelRequest.setProject(checkProjectName(modelRequest.getProject()));
         checkRequiredArg(ALIAS, modelRequest.getRawAlias());
-        return modelController.createModel(modelRequest);
+        modelService.checkCCEmpty(modelRequest);
+        Pair<ModelRequest, ComputedColumnConflictResponse> pair = modelService.checkCCConflict(modelRequest);
+        EnvelopeResponse<BuildBaseIndexResponse> response = modelController.createModel(pair.getFirst());
+        response.getData().setCcConflict(pair.getSecond());
+        return response;
     }
 
     @ApiOperation(value = "getModels", tags = { "AI" })
@@ -306,6 +321,7 @@ public class OpenModelController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<String> updateMultiPartitionMapping(@PathVariable("model_name") String modelAlias,
             @RequestBody MultiPartitionMappingRequest mappingRequest) {
+        checkValidityOfMultiPartitionMappingRequest(mappingRequest);
         String projectName = checkProjectName(mappingRequest.getProject());
         checkProjectMLP(projectName);
         mappingRequest.setProject(projectName);
@@ -336,6 +352,16 @@ public class OpenModelController extends NBasicController {
         param.setProject(projectName);
         val modelId = getModel(modelAlias, param.getProject()).getId();
         return modelController.updatePartitionSemantic(modelId, param);
+    }
+
+    @ApiOperation(value = "validate tds export", tags = { "QE" })
+    @GetMapping(value = "/validate_export")
+    @ResponseBody
+    public EnvelopeResponse<Boolean> validateExport(@RequestParam(value = "model_name") String modelAlias,
+            @RequestParam(value = "project") String project) {
+        String projectName = checkProjectName(project);
+        String modelId = getModel(modelAlias, projectName).getId();
+        return modelController.validateExport(modelId, projectName);
     }
 
     @ApiOperation(value = "export model", tags = { "QE" }, notes = "Add URL: {model}")
@@ -374,6 +400,7 @@ public class OpenModelController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<String> updateModelName(@PathVariable("model_name") String modelAlias,
             @RequestBody ModelUpdateRequest modelRenameRequest) {
+        checkRequiredArg("new_model_name", modelRenameRequest.getNewModelName());
         String projectName = checkProjectName(modelRenameRequest.getProject());
         String modelId = getModel(modelAlias, projectName).getId();
         checkRequiredArg(NModelController.MODEL_ID, modelId);
@@ -390,6 +417,17 @@ public class OpenModelController extends NBasicController {
         return modelController.updateModelStatus(modelId, modelRenameRequest);
     }
 
+    private void checkValidityOfMultiPartitionMappingRequest(MultiPartitionMappingRequest mappingRequest) {
+        checkListRequiredArg("alias_columns", mappingRequest.getAliasCols());
+        checkListRequiredArg("multi_partition_columns", mappingRequest.getPartitionCols());
+        checkListRequiredArg("value_mapping", mappingRequest.getValueMapping());
+        for (MultiPartitionMappingRequest.MappingRequest<List<String>, List<String>> value_mapping : mappingRequest
+                .getValueMapping()) {
+            checkListRequiredArg("origin", value_mapping.getOrigin());
+            checkListRequiredArg("target", value_mapping.getTarget());
+        }
+    }
+
     private void checkProjectMLP(String project) {
         ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(project);
@@ -401,6 +439,37 @@ public class OpenModelController extends NBasicController {
     static void checkMLP(String fieldName, List<String[]> subPartitionValues) {
         if (subPartitionValues.isEmpty()) {
             throw new KylinException(INVALID_PARAMETER, String.format(Locale.ROOT, "'%s' cannot be empty.", fieldName));
+        }
+    }
+
+    @ApiOperation(value = "updateModelSemantic", tags = { "AI" })
+    @PutMapping(value = "/modification")
+    @ResponseBody
+    public EnvelopeResponse<BuildBaseIndexResponse> updateSemantic(@RequestBody OpenModelRequest request) {
+        String projectName = checkProjectName(request.getProject());
+        request.setProject(projectName);
+        NDataModel model = getModel(request.getModelName(), request.getProject());
+        request.setUuid(model.getId());
+        request.setOwner(model.getOwner());
+        request.setManagementType(model.getManagementType());
+        request.setCanvas(model.getCanvas());
+        String partitionColumnFormat = modelService.getPartitionColumnFormatById(request.getProject(), request.getId());
+        validateDataRange(request.getStart(), request.getEnd(), partitionColumnFormat);
+        modelService.validatePartitionDesc(request.getPartitionDesc());
+        checkRequiredArg(MODEL_ID, request.getUuid());
+        try {
+            BuildBaseIndexResponse response = BuildBaseIndexResponse.EMPTY;
+            if (request.getBrokenReason() == NDataModel.BrokenReason.SCHEMA) {
+                modelService.repairBrokenModel(request.getProject(), request);
+            } else {
+                response = fusionModelService.updateDataModelSemantic(request.getProject(), request);
+            }
+            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
+        } catch (LookupTableException e) {
+            throw new KylinException(FAILED_UPDATE_MODEL, e);
+        } catch (Exception e) {
+            Throwable root = ExceptionUtils.getRootCause(e) == null ? e : ExceptionUtils.getRootCause(e);
+            throw new KylinException(FAILED_UPDATE_MODEL, root);
         }
     }
 }

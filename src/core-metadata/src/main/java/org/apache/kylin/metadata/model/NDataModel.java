@@ -51,13 +51,14 @@ import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.MissingRootPersistentEntity;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.scheduler.SchedulerEventNotifier;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.common.scheduler.SchedulerEventNotifier;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -596,9 +597,8 @@ public class NDataModel extends RootPersistentEntity {
         TableRef tableRef = findTable(table);
         TblColRef result = tableRef.getColumn(column.toUpperCase(Locale.ROOT));
         if (result == null)
-            throw new KylinException(COLUMN_NOT_EXIST,
-                    String.format(Locale.ROOT, MsgPicker.getMsg().getBadSqlColumnNotFoundReason(),
-                            String.format(Locale.ROOT, "%s.%s", table, column)));
+            throw new KylinException(COLUMN_NOT_EXIST, String.format(Locale.ROOT,
+                    MsgPicker.getMsg().getBadSqlColumnNotFoundReason(), table + "." + column));
         return result;
     }
 
@@ -620,8 +620,11 @@ public class NDataModel extends RootPersistentEntity {
             }
         }
 
-        Preconditions.checkArgument(result != null,
-                String.format(Locale.ROOT, MsgPicker.getMsg().getBadSqlColumnNotFoundReason(), input));
+        // warning: cannot use Preconditions.checkArgument, at most case we don't need init the msg.
+        if (result == null) {
+            String msg = String.format(Locale.ROOT, MsgPicker.getMsg().getBadSqlColumnNotFoundReason(), input);
+            throw new IllegalArgumentException(msg);
+        }
         return result;
     }
 
@@ -1011,7 +1014,7 @@ public class NDataModel extends RootPersistentEntity {
         this.saveCheck = saveCheck;
 
         init(config);
-        initComputedColumns(ccRelatedModels);
+        initComputedColumnsFailFast(ccRelatedModels);
         this.effectiveCols = initAllNamedColumns(NamedColumn::isExist);
         this.effectiveDimensions = initAllNamedColumns(NamedColumn::isDimension);
         initAllMeasures();
@@ -1027,6 +1030,15 @@ public class NDataModel extends RootPersistentEntity {
             throw new KylinException(TABLE_JOIN_RELATIONSHIP_ERROR,
                     MsgPicker.getMsg().getDimensionTableUsedInThisModel());
         }
+    }
+
+    public ComputedColumnUtil.CCConflictInfo checkCCFailAtEnd(KylinConfig config, String project,
+            List<NDataModel> ccRelatedModels, boolean saveCheck) {
+        this.project = project;
+        this.saveCheck = saveCheck;
+
+        init(config);
+        return initComputedColumnsFailAtEnd(ccRelatedModels);
     }
 
     public void keepColumnOrder() {
@@ -1162,7 +1174,20 @@ public class NDataModel extends RootPersistentEntity {
         return getColRef(getColumnIdByColumnName(columnName));
     }
 
-    public void initComputedColumns(List<NDataModel> ccRelatedModels) {
+    public void initComputedColumnsFailFast(List<NDataModel> ccRelatedModels) {
+        initComputedColumns(ccRelatedModels);
+        checkCCConflict(ccRelatedModels, new ComputedColumnUtil.DefaultCCConflictHandler());
+    }
+
+    public ComputedColumnUtil.CCConflictInfo initComputedColumnsFailAtEnd(List<NDataModel> ccRelatedModels) {
+        initComputedColumns(ccRelatedModels);
+        val ccConflictInfo = new ComputedColumnUtil.CCConflictInfo();
+        val handler = new ComputedColumnUtil.AdjustCCConflictHandler(ccConflictInfo);
+        checkCCConflict(ccRelatedModels, handler);
+        return ccConflictInfo;
+    }
+
+    private void initComputedColumns(List<NDataModel> ccRelatedModels) {
         Preconditions.checkNotNull(ccRelatedModels);
 
         // init
@@ -1170,12 +1195,12 @@ public class NDataModel extends RootPersistentEntity {
             newCC.init(this, getRootFactTable().getAlias());
         }
 
-        if (!"true".equals(System.getProperty("needCheckCC"))) {
+        if (!StringUtils.equals("true", System.getProperty("needCheckCC"))) {
             return;
         }
 
         for (ComputedColumnDesc newCC : this.computedColumnDescs) {
-            Set<String> usedAliasSet = ComputedColumnUtil.getUsedAliasSet(newCC.getExpression());
+            Set<String> usedAliasSet = CalciteParser.getUsedAliasSet(newCC.getExpression());
 
             if (!this.isSeekingCCAdvice() //if is seeking for advice, expr will be null
                     && !usedAliasSet.contains(newCC.getTableAlias())
@@ -1187,9 +1212,15 @@ public class NDataModel extends RootPersistentEntity {
             }
         }
         checkCCExprHealth();
+    }
+
+    private void checkCCConflict(List<NDataModel> ccRelatedModels, ComputedColumnUtil.CCConflictHandler handler) {
+        if (!StringUtils.equals("true", System.getProperty("needCheckCC"))) {
+            return;
+        }
         if (config.validateComputedColumn()) {
-            selfCCConflictCheck();
-            crossCCConflictCheck(ccRelatedModels);
+            selfCCConflictCheck(handler);
+            crossCCConflictCheck(ccRelatedModels, handler);
         }
     }
 
@@ -1209,20 +1240,19 @@ public class NDataModel extends RootPersistentEntity {
         }
     }
 
-    private void selfCCConflictCheck() {
+    private void selfCCConflictCheck(ComputedColumnUtil.CCConflictHandler handler) {
         int ccCount = this.computedColumnDescs.size();
         for (int i = 1; i < ccCount; i++) {
             for (int j = 0; j < i; j++) {
                 ComputedColumnDesc a = this.computedColumnDescs.get(i);
                 ComputedColumnDesc b = this.computedColumnDescs.get(j);
-                val handler = new ComputedColumnUtil.DefaultCCConflictHandler();
                 ComputedColumnUtil.singleCCConflictCheck(this, this, b, a, handler);
             }
         }
     }
 
     // check duplication with other models:
-    private void crossCCConflictCheck(List<NDataModel> ccRelatedModels) {
+    private void crossCCConflictCheck(List<NDataModel> ccRelatedModels, ComputedColumnUtil.CCConflictHandler handler) {
 
         List<Pair<ComputedColumnDesc, NDataModel>> existingCCs = Lists.newArrayList();
         for (NDataModel otherModel : ccRelatedModels) {
@@ -1232,8 +1262,6 @@ public class NDataModel extends RootPersistentEntity {
                 }
             }
         }
-
-        val handler = new ComputedColumnUtil.DefaultCCConflictHandler();
 
         for (ComputedColumnDesc newCC : this.computedColumnDescs) {
             for (Pair<ComputedColumnDesc, NDataModel> pair : existingCCs) {
@@ -1461,6 +1489,10 @@ public class NDataModel extends RootPersistentEntity {
 
     public boolean isStreaming() {
         return getModelType() == ModelType.STREAMING || getModelType() == ModelType.HYBRID;
+    }
+
+    public boolean isAccessible(boolean turnOnStreaming) {
+        return turnOnStreaming || !isStreaming();
     }
 
     public Set<Integer> getEffectiveInternalMeasureIds() {

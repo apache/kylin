@@ -105,7 +105,7 @@ public class EpochManager {
         MAINTAIN_OWNER = AddressUtil.getMockPortAddress() + "|" + Long.MAX_VALUE;
     }
 
-    private EpochManager() throws Exception {
+    public EpochManager() throws Exception {
         this.config = KylinConfig.readSystemKylinConfig();
         this.identity = EpochOrchestrator.getOwnerIdentity();
         this.eventBusFactory = EventBusFactory.getInstance();
@@ -174,7 +174,7 @@ public class EpochManager {
         }
 
         @Synchronized("renewLock")
-        void tryRenewOwnedEpochs() {
+        public void tryRenewOwnedEpochs() {
             logger.debug("Start renew owned epoch.........");
             long startTime = System.currentTimeMillis();
 
@@ -270,7 +270,7 @@ public class EpochManager {
         }
 
         @Synchronized("updateLock")
-        void tryUpdateAllEpochs() {
+        public void tryUpdateAllEpochs() {
             logger.debug("Start update Epochs.........");
             long startTime = System.currentTimeMillis();
 
@@ -313,7 +313,7 @@ public class EpochManager {
             Collections.shuffle(projects);
 
             projects.forEach(project -> {
-                executeEpochWithLock(project, () -> {
+                EpochUpdateLockManager.executeEpochWithLock(project, () -> {
                     if (updateEpochByProject(project)) {
                         newEpochs.add(project);
                     }
@@ -325,7 +325,7 @@ public class EpochManager {
         }
 
         private boolean updateEpochByProject(String project) {
-            return executeEpochWithLock(project, () -> {
+            return EpochUpdateLockManager.executeEpochWithLock(project, () -> {
                 boolean success = tryUpdateEpoch(project, false);
                 return success && checkEpochOwner(project);
             });
@@ -525,7 +525,7 @@ public class EpochManager {
         if (!force && checkInMaintenanceMode()) {
             return false;
         }
-        return executeEpochWithLock(epochTarget, () -> {
+        return EpochUpdateLockManager.executeEpochWithLock(epochTarget, () -> {
             try {
                 Epoch epoch = epochStore.getEpoch(epochTarget);
                 Pair<Epoch, Epoch> oldNewEpochPair = oldEpoch2NewEpoch(epoch, epochTarget, force, null);
@@ -638,7 +638,7 @@ public class EpochManager {
      * @param epoch
      * @return
      */
-    boolean checkEpochOwnerOnly(@Nonnull Epoch epoch) {
+    public boolean checkEpochOwnerOnly(@Nonnull Epoch epoch) {
         Preconditions.checkNotNull(epoch, "epoch is null");
 
         return epoch.getCurrentEpochOwner().equals(identity);
@@ -649,7 +649,7 @@ public class EpochManager {
     }
 
     public void updateEpochWithNotifier(String epochTarget, boolean force) {
-        executeEpochWithLock(epochTarget, () -> {
+        EpochUpdateLockManager.executeEpochWithLock(epochTarget, () -> {
             if (tryUpdateEpoch(epochTarget, force)) {
                 eventBusFactory.postAsync(new ProjectControlledNotifier(epochTarget));
             }
@@ -755,7 +755,7 @@ public class EpochManager {
     }
 
     public void deleteEpoch(String epochTarget) {
-        executeEpochWithLock(epochTarget, () -> {
+        EpochUpdateLockManager.executeEpochWithLock(epochTarget, () -> {
             epochStore.delete(epochTarget);
             logger.debug("delete epoch:{}", epochTarget);
             return null;

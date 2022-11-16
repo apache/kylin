@@ -3,7 +3,7 @@
   <connection class="federated">
     <named-connections>
       <named-connection caption='' name='kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf'>
-        <connection class='kyligence_odbc' dbname='' port='80' schema='DEFAULT' server='localhost' username='ADMIN' />
+        <connection class='kyligence_odbc' dbname='' port='80' schema='DEFAULT' server='localhost' username='ADMIN' vendor1='project' vendor2='model'/>
       </named-connection>
     </named-connections>
   </connection>

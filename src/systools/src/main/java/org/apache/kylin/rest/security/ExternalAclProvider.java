@@ -16,23 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
 package org.apache.kylin.rest.security;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
@@ -54,14 +37,6 @@ import org.springframework.security.acls.model.Permission;
  */
 abstract public class ExternalAclProvider {
 
-    public final static String ADMINISTRATION = "ADMIN";
-
-    // ============================================================================
-    public final static String MANAGEMENT = "MANAGEMENT";
-    public final static String OPERATION = "OPERATION";
-    public final static String READ = "QUERY";
-    public final static String EMPTY = "EMPTY";
-
     public static ExternalAclProvider getInstance() {
         return Singletons.getInstance(ExternalAclProvider.class, clz -> {
             ExternalAclProvider singleton = null;
@@ -74,9 +49,18 @@ abstract public class ExternalAclProvider {
         });
     }
 
+    // ============================================================================
+
+    public final static String ADMINISTRATION = "ADMIN";
+    public final static String MANAGEMENT = "MANAGEMENT";
+    public final static String OPERATION = "OPERATION";
+    public final static String READ = "QUERY";
+    public final static String EMPTY = "EMPTY";
+    public static final String DATA_QUERY = "DATA_QUERY";
+
     // used by ranger ExternalAclProvider
     public static String convertToExternalPermission(Permission p) {
-        String permString = null;
+        String permString;
         if (BasePermission.ADMINISTRATION.equals(p)) {
             permString = ADMINISTRATION;
         } else if (AclPermission.MANAGEMENT.equals(p)) {
@@ -85,6 +69,8 @@ abstract public class ExternalAclProvider {
             permString = OPERATION;
         } else if (BasePermission.READ.equals(p)) {
             permString = READ;
+        } else if (AclPermission.DATA_QUERY.equals(p)) {
+            permString = DATA_QUERY;
         } else {
             permString = p.getPattern();
         }
@@ -117,6 +103,9 @@ abstract public class ExternalAclProvider {
         case 1:
             permission = READ;
             break;
+        case 128:
+            permission = DATA_QUERY;
+            break;
         case 0:
             return EMPTY;
         default:
@@ -131,13 +120,13 @@ abstract public class ExternalAclProvider {
 
     /**
      * Checks if a user has permission on an entity.
-     *
+     * 
      * @param user
      * @param userRoles
-     * @param entityType String constants defined in AclEntityType
+     * @param entityType String constants defined in AclEntityType 
      * @param entityUuid
      * @param permission
-     *
+     * 
      * @return true if has permission
      */
     abstract public boolean checkPermission(String user, List<String> userRoles, //
@@ -145,7 +134,7 @@ abstract public class ExternalAclProvider {
 
     /**
      * Returns all granted permissions on specified entity.
-     *
+     * 
      * @param entityType String constants defined in AclEntityType
      * @param entityUuid
      * @return a list of (user/role, permission)

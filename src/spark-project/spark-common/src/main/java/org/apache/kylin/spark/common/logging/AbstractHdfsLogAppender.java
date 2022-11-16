@@ -56,6 +56,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+import org.apache.spark.utils.SparkHadoopUtils;
 
 public abstract class AbstractHdfsLogAppender
         extends AbstractOutputStreamAppender<AbstractHdfsLogAppender.HdfsManager> {
@@ -109,7 +110,7 @@ public abstract class AbstractHdfsLogAppender
 
     public FileSystem getFileSystem() {
         if (null == fileSystem) {
-            return getFileSystem(new Configuration());
+            return getFileSystem(SparkHadoopUtils.newConfigurationWithSparkConf());
         }
         return fileSystem;
     }

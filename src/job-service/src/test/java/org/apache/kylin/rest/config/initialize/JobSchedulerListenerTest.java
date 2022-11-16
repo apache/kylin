@@ -19,6 +19,8 @@
 package org.apache.kylin.rest.config.initialize;
 
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_NOT_EXIST;
+import static org.apache.kylin.rest.constant.SnapshotStatus.OFFLINE;
+import static org.apache.kylin.rest.constant.SnapshotStatus.ONLINE;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,12 +41,12 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.common.metrics.prometheus.PrometheusMetrics;
 import org.apache.kylin.common.scheduler.JobFinishedNotifier;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.assertj.core.util.Lists;
 import org.awaitility.Awaitility;
 import org.junit.After;
@@ -68,8 +70,14 @@ public class JobSchedulerListenerTest extends NLocalFileMetadataTestCase {
     static JobSyncListener.JobInfo modelInfo = new JobSyncListener.JobInfo("f26641d7-2094-473b-972a-4e1cebe55091",
             "test_project", "9f85e8a0-3971-4012-b0e7-70763c471a01",
             Sets.newHashSet("061e2862-7a41-4516-977b-28045fcc57fe"), Sets.newHashSet(1L), 1000L, "SUCCEED",
-            "INDEX_BUILD", new ArrayList<>(), new ArrayList<>(), 1626135824000L, 1626144908000L, null, null, null, null,
+            "INDEX_BUILD", new ArrayList<>(), new ArrayList<>(), null, 1626135824000L, 1626144908000L, null, null, null,
+            null, null, null);
+
+    static JobSyncListener.JobInfo tableInfo = new JobSyncListener.JobInfo("f26641d7-2094-473b-972a-4e1cebe55092",
+            "test_project", null, null, null, 1000L, "READY", "SNAPSHOT_BUILD", new ArrayList<>(), new ArrayList<>(),
+            JobSyncListener.SnapshotJobInfo.builder().build(), 1626135824000L, 1626144908000L, null, null, null, null,
             null, null);
+
     static boolean assertMeet = false;
 
     @Before
@@ -166,9 +174,41 @@ public class JobSchedulerListenerTest extends NLocalFileMetadataTestCase {
                     HttpServer server = HttpServer.create(new InetSocketAddress("localhost", port), 0);
                     server.createContext("/test", new TimeoutHandler());
                     server.start();
-                    JobSyncListener.JobInfo jobInfo = modelInfo;
-                    jobInfo.setState("READY");
-                    JobSyncListener.postJobInfo(modelInfo);
+                    JobSyncListener.postJobInfo(tableInfo);
+
+                    latch.await(10, TimeUnit.SECONDS);
+                    server.stop(0);
+                    break;
+                } catch (InterruptedException e) {
+                    Assert.fail();
+                } catch (IOException e) {
+                    continue;
+                }
+            }
+            assertMeet = true;
+            return true;
+        });
+        if (!assertMeet) {
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void testNotPostJobInfoBecauseOfNonUrlAndReadyState() {
+        List<Integer> ports = Lists.newArrayList(10000, 20000, 30000);
+
+        Awaitility.await().atMost(20, TimeUnit.SECONDS).until(() -> {
+            for (int port : ports) {
+                try {
+                    latch = new CountDownLatch(1);
+                    KylinConfig config = Mockito.mock(KylinConfig.class);
+                    KylinConfig.setKylinConfigThreadLocal(config);
+
+                    HttpServer server = HttpServer.create(new InetSocketAddress("localhost", port), 0);
+                    server.createContext("/test", new TimeoutHandler());
+                    server.start();
+
+                    JobSyncListener.postJobInfo(tableInfo);
 
                     latch.await(10, TimeUnit.SECONDS);
                     server.stop(0);
@@ -233,6 +273,8 @@ public class JobSchedulerListenerTest extends NLocalFileMetadataTestCase {
         String jobType = "INDEX_BUILD";
         Set<String> segIds = new HashSet<>();
         segIds.add("11124840-b3e3-43db-bcab-2b78da666d00");
+        // test do not exist segment
+        segIds.add("11124840-b3e3-43db-bcab-2b78da666d11");
         Set<Long> layoutIds = new HashSet<>();
         layoutIds.add(1L);
         Set<Long> partitionIds = null;
@@ -255,6 +297,113 @@ public class JobSchedulerListenerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(1509891513770L, segRange.getEnd());
         Assert.assertTrue(jobInfo.getIndexIds().containsAll(layoutIds));
         Assert.assertEquals(layoutIds.size(), jobInfo.getIndexIds().size());
+    }
+
+    @Test
+    public void testExtractInfoNonDataflowOrSegmentId() {
+        String jobId = "test_job_id";
+        String project = "default";
+        String subject = "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96";
+        long duration = 1000L;
+        long waitTime = 0L;
+        String jobState = "SUCCEED";
+        String jobType = "INDEX_BUILD";
+
+        // test segment ids is empty
+        Set<String> segIds = new HashSet<>();
+        Set<Long> layoutIds = new HashSet<>();
+        long startTime = 1626135824000L;
+        long endTime = 1626144908000L;
+
+        JobFinishedNotifier notifier = new JobFinishedNotifier(jobId, project, subject, duration, jobState, jobType,
+                segIds, layoutIds, Collections.emptySet(), waitTime, "", "", true, startTime, endTime, null, null);
+        JobSyncListener.JobInfo jobInfo = JobSyncListener.extractJobInfo(notifier);
+        Assert.assertTrue(jobInfo.getSegmentPartitionInfoList().isEmpty());
+
+        // test dataflow is null
+        subject = null;
+        segIds.add("11124840-b3e3-43db-bcab-2b78da666d00");
+        layoutIds.add(1L);
+        notifier = new JobFinishedNotifier(jobId, project, subject, duration, jobState, jobType, segIds, layoutIds,
+                Collections.emptySet(), waitTime, "", "", true, startTime, endTime, null, null);
+        jobInfo = JobSyncListener.extractJobInfo(notifier);
+        Assert.assertTrue(jobInfo.getSegmentPartitionInfoList().isEmpty());
+    }
+
+    @Test
+    public void testExtractTableJobInfo() {
+        String jobId = "test_job_id";
+        String project = "default";
+        String subject = "DEFAULT.TEST_SNAPSHOT_TABLE";
+        long duration = 1000L;
+        long waitTime = 0L;
+        String jobState = "SUCCEED";
+        String jobType = "SNAPSHOT_BUILD";
+        long startTime = 1626135824000L;
+        long endTime = 1626144908000L;
+        JobFinishedNotifier notifier = new JobFinishedNotifier(jobId, project, subject, duration, jobState, jobType,
+                null, null, Collections.emptySet(), waitTime, "", "", true, startTime, endTime, null, null);
+        JobSyncListener.JobInfo jobInfo = JobSyncListener.extractJobInfo(notifier);
+
+        Assert.assertEquals(jobId, jobInfo.getJobId());
+        Assert.assertEquals(project, jobInfo.getProject());
+        Assert.assertNull(jobInfo.getModelId());
+        Assert.assertEquals(duration, jobInfo.getDuration());
+        Assert.assertEquals(jobState, jobInfo.getState());
+        Assert.assertEquals(jobType, jobInfo.getJobType());
+        Assert.assertNull(jobInfo.getSegmentIds());
+        Assert.assertNull(jobInfo.getIndexIds());
+        Assert.assertNull(jobInfo.getIndexIds());
+        Assert.assertEquals(0, jobInfo.getSegRanges().size());
+
+        JobSyncListener.SnapshotJobInfo snapshotJobInfo = jobInfo.getSnapshotJobInfo();
+        Assert.assertEquals("TEST_SNAPSHOT_TABLE", snapshotJobInfo.getTable());
+        Assert.assertEquals("DEFAULT", snapshotJobInfo.getDatabase());
+        Assert.assertEquals(100, snapshotJobInfo.getTotalRows());
+        Assert.assertEquals(1000, snapshotJobInfo.getStorage());
+        Assert.assertEquals(ONLINE, snapshotJobInfo.getStatus());
+        Assert.assertEquals("PROVINCE", snapshotJobInfo.getSelectPartitionCol());
+
+        jobType = "SNAPSHOT_REFRESH";
+        notifier = new JobFinishedNotifier(jobId, project, subject, duration, jobState, jobType, null, null,
+                Collections.emptySet(), waitTime, "", "", true, startTime, endTime, null, null);
+        jobInfo = JobSyncListener.extractJobInfo(notifier);
+        Assert.assertNotNull(jobInfo.getSnapshotJobInfo());
+    }
+
+    @Test
+    public void testExtractTableJobInfoNonSnapshot() {
+        String jobId = "test_job_id";
+        String project = "default";
+        String subject = "DEFAULT.TEST_COUNTRY";
+        long duration = 1000L;
+        long waitTime = 0L;
+        String jobState = "SUCCEED";
+        String jobType = "SNAPSHOT_BUILD";
+        long startTime = 1626135824000L;
+        long endTime = 1626144908000L;
+        JobFinishedNotifier notifier = new JobFinishedNotifier(jobId, project, subject, duration, jobState, jobType,
+                null, null, Collections.emptySet(), waitTime, "", "", true, startTime, endTime, null, null);
+        JobSyncListener.JobInfo jobInfo = JobSyncListener.extractJobInfo(notifier);
+
+        Assert.assertEquals(jobId, jobInfo.getJobId());
+        Assert.assertEquals(project, jobInfo.getProject());
+        Assert.assertNull(jobInfo.getModelId());
+        Assert.assertEquals(duration, jobInfo.getDuration());
+        Assert.assertEquals(jobState, jobInfo.getState());
+        Assert.assertEquals(jobType, jobInfo.getJobType());
+        Assert.assertNull(jobInfo.getSegmentIds());
+        Assert.assertNull(jobInfo.getIndexIds());
+        Assert.assertNull(jobInfo.getIndexIds());
+        Assert.assertEquals(0, jobInfo.getSegRanges().size());
+
+        JobSyncListener.SnapshotJobInfo snapshotJobInfo = jobInfo.getSnapshotJobInfo();
+        Assert.assertEquals("TEST_COUNTRY", snapshotJobInfo.getTable());
+        Assert.assertEquals("DEFAULT", snapshotJobInfo.getDatabase());
+        Assert.assertEquals(0, snapshotJobInfo.getTotalRows());
+        Assert.assertEquals(0, snapshotJobInfo.getStorage());
+        Assert.assertEquals(OFFLINE, snapshotJobInfo.getStatus());
+        Assert.assertNull(snapshotJobInfo.getSelectPartitionCol());
     }
 
     @Test
@@ -346,6 +495,30 @@ public class JobSchedulerListenerTest extends NLocalFileMetadataTestCase {
 
         Assert.assertEquals("ff839b0b-2c23-4420-b332-0df70e36c343",
                 jobInfo.getSegmentPartitionInfoList().get(1).getSegmentId());
+
+        // test layout is null
+        JobFinishedNotifier notifier2 = new JobFinishedNotifier(jobId, project, subject, duration, jobState, jobType,
+                segIds, layoutIds, partitionIds, 0L, null, "", true, startTime, endTime, null, null);
+        notifier2.getSegmentPartitionsMap().put("0db919f3-1359-496c-aab5-b6f3951adc0e", null);
+        jobInfo = JobSyncListener.extractJobInfo(notifier2);
+        Assert.assertEquals(1, jobInfo.getSegmentPartitionInfoList().size());
+        Assert.assertEquals("ff839b0b-2c23-4420-b332-0df70e36c343",
+                jobInfo.getSegmentPartitionInfoList().get(0).getSegmentId());
+        partitionInfos = jobInfo.getSegmentPartitionInfoList().get(0).getPartitionInfo();
+        Assert.assertEquals(7, partitionInfos.get(0).getPartitionId());
+        Assert.assertEquals(8, partitionInfos.get(1).getPartitionId());
+
+        // test layout is empty
+        JobFinishedNotifier notifier3 = new JobFinishedNotifier(jobId, project, subject, duration, jobState, jobType,
+                segIds, layoutIds, partitionIds, 0L, null, "", true, startTime, endTime, null, null);
+        notifier3.getSegmentPartitionsMap().put("ff839b0b-2c23-4420-b332-0df70e36c343", new HashSet<>());
+        jobInfo = JobSyncListener.extractJobInfo(notifier3);
+        Assert.assertEquals(1, jobInfo.getSegmentPartitionInfoList().size());
+        Assert.assertEquals("0db919f3-1359-496c-aab5-b6f3951adc0e",
+                jobInfo.getSegmentPartitionInfoList().get(0).getSegmentId());
+        partitionInfos = jobInfo.getSegmentPartitionInfoList().get(0).getPartitionInfo();
+        Assert.assertEquals(7, partitionInfos.get(0).getPartitionId());
+        Assert.assertEquals(8, partitionInfos.get(1).getPartitionId());
     }
 
     @Test
@@ -374,6 +547,10 @@ public class JobSchedulerListenerTest extends NLocalFileMetadataTestCase {
 
         Mockito.when(notifier.getJobType()).thenReturn("TEST");
         jobSyncListener.recordPrometheusMetric(notifier, meterRegistry, "model", ExecutableState.SUCCEED);
+
+        Mockito.when(notifier.getJobType()).thenReturn("TEST2");
+        jobSyncListener.recordPrometheusMetric(notifier, meterRegistry, "model", ExecutableState.RUNNING);
+        Assert.assertEquals(7, meterRegistry.getMeters().size());
     }
 
     @Test

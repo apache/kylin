@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.COLUMN_NOT_EXIST;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_COMPUTED_COLUMN_EXPRESSION;
 
 import java.io.Serializable;
 import java.util.Locale;
@@ -48,6 +49,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -117,12 +119,13 @@ public class ComputedColumnDesc implements Serializable {
         if ("true".equals(System.getProperty("needCheckCC"))) {
             try {
                 simpleParserCheck(expression, aliasSet);
+                expression = CalciteParser.normalize(expression);
             } catch (Exception e) {
                 String legacyHandled = handleLegacyCC(expression, rootFactTableName, aliasSet);
                 if (legacyHandled != null) {
-                    expression = legacyHandled;
+                    expression = CalciteParser.normalize(legacyHandled);
                 } else {
-                    throw e;
+                    throw new KylinException(INVALID_COMPUTED_COLUMN_EXPRESSION, Throwables.getRootCause(e));
                 }
             }
         }
@@ -145,7 +148,6 @@ public class ComputedColumnDesc implements Serializable {
 
     private String handleLegacyCC(String expr, String rootFact, Set<String> aliasSet) {
         try {
-            CalciteParser.ensureNoAliasInExpr(expr);
             String ret = CalciteParser.insertAliasInExpr(expr, rootFact);
             simpleParserCheck(ret, aliasSet);
             return ret;

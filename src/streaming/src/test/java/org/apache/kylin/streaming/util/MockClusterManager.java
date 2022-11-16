@@ -72,4 +72,9 @@ public class MockClusterManager implements IClusterManager {
         return false;
     }
 
+    @Override
+    public String getApplicationNameById(int yarnAppId) {
+        return "";
+    }
+
 }

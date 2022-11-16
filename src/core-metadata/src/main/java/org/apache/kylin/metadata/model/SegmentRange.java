@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
@@ -127,15 +109,9 @@ abstract public class SegmentRange<T extends Comparable> implements Comparable<S
         }
 
         BasicSegmentRange(Long s, Long e) {
-            this(s, e, true);
-        }
-
-        BasicSegmentRange(Long s, Long e, Boolean needCheck) {
             this.start = (s == null || s <= 0) ? 0 : s;
             this.end = (e == null || e == Long.MAX_VALUE) ? Long.MAX_VALUE : e;
-            if (needCheck) {
-                Preconditions.checkState(this.start <= this.end);
-            }
+            Preconditions.checkState(this.start <= this.end);
         }
 
         private BasicSegmentRange convert(SegmentRange o) {
@@ -345,12 +321,12 @@ abstract public class SegmentRange<T extends Comparable> implements Comparable<S
         }
 
         public KafkaOffsetPartitionedSegmentRange(Long startOffset, Long endOffset) {
-            super(startOffset, endOffset, false);
+            super(startOffset, endOffset);
         }
 
         public KafkaOffsetPartitionedSegmentRange(Long startOffset, Long endOffset,
                 Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) {
-            super(startOffset, endOffset, false);
+            super(startOffset, endOffset);
             this.sourcePartitionOffsetStart = sourcePartitionOffsetStart == null ? Maps.<Integer, Long> newHashMap()
                     : sourcePartitionOffsetStart;
             this.sourcePartitionOffsetEnd = sourcePartitionOffsetEnd == null ? Maps.<Integer, Long> newHashMap()

@@ -76,12 +76,11 @@ public class AzureBlobClient {
     public String generateSasKey(String blobPath, int expireHours) {
         try {
             CloudBlobContainer container = this.cloudBlobClient.getContainerReference(blobUrl.getContainer());
-            CloudBlob cloudBlob = getBlob(container, URI.create(blobPath).getPath());
             SharedAccessBlobPolicy policy = new SharedAccessBlobPolicy();
             policy.setPermissionsFromString("r");
             policy.setSharedAccessStartTime(Date.from(OffsetDateTime.now(ZoneId.of("UTC")).minusHours(expireHours).toInstant()));
             policy.setSharedAccessExpiryTime(Date.from(OffsetDateTime.now(ZoneId.of("UTC")).plusHours(expireHours).toInstant()));
-            return cloudBlob.generateSharedAccessSignature(policy, null);
+            return container.generateSharedAccessSignature(policy, null);
         } catch (URISyntaxException | StorageException | InvalidKeyException e) {
             log.error("generate SAS key for {} failed", blobPath, e);
             return ExceptionUtils.rethrow(e);

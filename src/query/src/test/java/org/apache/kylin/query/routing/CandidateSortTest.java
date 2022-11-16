@@ -20,19 +20,19 @@ package org.apache.kylin.query.routing;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.model.NDataModel;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -127,13 +127,14 @@ public class CandidateSortTest {
     private IRealization mockRealization(String modelId, String modelName, int cost) {
         return new IRealization() {
             @Override
-            public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments) {
+            public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
+                    Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
                 return null;
             }
 
             @Override
             public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-                    List<NDataSegment> prunedStreamingSegments) {
+                    List<NDataSegment> prunedStreamingSegments, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
                 return null;
             }
 
@@ -157,11 +158,6 @@ public class CandidateSortTest {
 
             @Override
             public Set<TblColRef> getAllColumns() {
-                return null;
-            }
-
-            @Override
-            public Set<ColumnDesc> getAllColumnDescs() {
                 return null;
             }
 

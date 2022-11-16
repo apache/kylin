@@ -130,8 +130,8 @@ public class ModelBuildService extends BasicService implements ModelBuildSupport
             throws Exception {
         NDataModel modelDesc = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
         if (!modelDesc.isMultiPartitionModel() && !CollectionUtils.isEmpty(multiPartitionValues)) {
-            throw new KylinException(PARTITION_VALUE_NOT_SUPPORT, String.format(Locale.ROOT,
-                    MsgPicker.getMsg().getPartitionValueNotSupport(), modelDesc.getAlias()));
+            throw new KylinException(PARTITION_VALUE_NOT_SUPPORT,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getPartitionValueNotSupport(), modelDesc.getAlias()));
         }
         if (PartitionDesc.isEmptyPartitionDesc(modelDesc.getPartitionDesc())) {
             return fullBuildSegmentsManually(new FullBuildSegmentParams(project, modelId, needBuild)
@@ -287,7 +287,7 @@ public class ModelBuildService extends BasicService implements ModelBuildSupport
             }
         }
 
-        copyModel.init(modelManager.getConfig(), project, getCCRelatedModels(project));
+        copyModel.init(modelManager.getConfig(), project, modelManager.getCCRelatedModels(copyModel));
         String format = modelService.probeDateFormatIfNotExist(project, copyModel);
 
         List<JobInfoResponse.JobInfo> jobIds = EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
@@ -510,8 +510,7 @@ public class ModelBuildService extends BasicService implements ModelBuildSupport
         RefreshAffectedSegmentsResponse response = modelService.getRefreshAffectedSegmentsResponse(project, table,
                 refreshStart, refreshEnd);
         if (!response.getAffectedStart().equals(affectedStart) || !response.getAffectedEnd().equals(affectedEnd)) {
-            throw new KylinException(PERMISSION_DENIED,
-                    MsgPicker.getMsg().getSegmentCanNotRefreshBySegmentChange());
+            throw new KylinException(PERMISSION_DENIED, MsgPicker.getMsg().getSegmentCanNotRefreshBySegmentChange());
         }
         TableDesc tableDesc = getManager(NTableMetadataManager.class, project).getTableDesc(table);
         SegmentRange segmentRange = SourceFactory.getSource(tableDesc).getSegmentRange(refreshStart, refreshEnd);

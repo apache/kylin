@@ -89,9 +89,9 @@ public class FavoriteRule extends RootPersistentEntity {
         case MIN_HIT_COUNT:
         case UPDATE_FREQUENCY:
         case EFFECTIVE_DAYS:
+        case DURATION_RULE_NAME:
             return rule == null ? new FavoriteRule(Lists.newArrayList(getDefaultCondition(name)), name, true) : rule;
         case FREQUENCY_RULE_NAME:
-        case DURATION_RULE_NAME:
         case EXCLUDED_TABLES_RULE:
             return rule == null ? new FavoriteRule(Lists.newArrayList(getDefaultCondition(name)), name, false) : rule;
         default:
@@ -110,7 +110,7 @@ public class FavoriteRule extends RootPersistentEntity {
         case SUBMITTER_GROUP_RULE_NAME:
             return new Condition(null, "ROLE_ADMIN");
         case DURATION_RULE_NAME:
-            return new Condition("0", "180");
+            return new Condition("5", "3600");
         case REC_SELECT_RULE_NAME:
             return new Condition(null, "20");
         case EXCLUDED_TABLES_RULE:

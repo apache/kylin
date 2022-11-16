@@ -112,7 +112,7 @@ public class RenameProjectResourceToolTest extends NLocalFileMetadataTestCase {
             // table
             val tableMetadataManager = NTableMetadataManager.getInstance(config, "default1");
             val tableDescs = tableMetadataManager.listAllTables();
-            Assert.assertEquals(20, tableDescs.size());
+            Assert.assertEquals(21, tableDescs.size());
 
         } finally {
             System.setIn(stdin);

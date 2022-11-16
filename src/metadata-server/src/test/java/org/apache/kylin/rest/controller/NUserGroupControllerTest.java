@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.controller;
 
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
 import static org.apache.kylin.rest.constant.Constant.ROLE_ADMIN;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 
@@ -123,7 +124,7 @@ public class NUserGroupControllerTest {
                 .param("project", "").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
-        Mockito.verify(nUserGroupController).listUserAuthorities();
+        Mockito.verify(nUserGroupController).listUserAuthorities(null, false, 0, 10);
     }
 
     @Test
@@ -156,7 +157,7 @@ public class NUserGroupControllerTest {
     @Test
     public void testAddEmptyGroup() throws Exception {
         thrown.expect(KylinException.class);
-        thrown.expectMessage("User group name should not be empty.");
+        thrown.expectMessage(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY.getMsg("group_name"));
         UserGroupRequest request = new UserGroupRequest();
         request.setGroupName("");
         nUserGroupController.addUserGroup(request);

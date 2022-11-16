@@ -3,7 +3,7 @@
   <connection class="federated">
     <named-connections>
       <named-connection caption="localhost" name="kyligence_odbc.06xjot407mgsfe1bnnyt60p4vjuf">
-        <connection class="kyligence_odbc" dbname="default" odbc-connect-string-extras="PROJECT=default;CUBE=nmodel_basic_inner" port="7070" schema="DEFAULT" server="localhost" username="ADMIN"/>
+        <connection class="kyligence_odbc" dbname="" odbc-connect-string-extras="PROJECT=default;CUBE=nmodel_basic_inner" port="7070" schema="DEFAULT" server="localhost" username="ADMIN" vendor1="default" vendor2="nmodel_basic_inner"/>
       </named-connection>
     </named-connections>
     <relation join="inner" type="join">

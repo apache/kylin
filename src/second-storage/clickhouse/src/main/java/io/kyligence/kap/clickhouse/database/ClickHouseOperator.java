@@ -36,11 +36,7 @@ public class ClickHouseOperator implements DatabaseOperator {
     private final ClickHouseRender render = new ClickHouseRender();
 
     public ClickHouseOperator(final String jdbcUrl) {
-        try {
-            this.clickHouse = new ClickHouse(jdbcUrl);
-        } catch (SQLException e) {
-            ExceptionUtils.rethrow(e);
-        }
+        this.clickHouse = new ClickHouse(jdbcUrl);
     }
 
     public ClickHouseOperator(ClickHouse clickHouse) {

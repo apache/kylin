@@ -23,16 +23,16 @@ import static org.apache.commons.lang3.time.DateUtils.MILLIS_PER_DAY;
 import java.io.IOException;
 import java.util.Locale;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.annotation.Clarification;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.TimeUtil;
-import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.recommendation.entity.CCRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.DimensionRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.LayoutRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.MeasureRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.RecItemV2;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.annotation.Clarification;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.TimeUtil;
+import org.apache.kylin.metadata.project.NProjectManager;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;

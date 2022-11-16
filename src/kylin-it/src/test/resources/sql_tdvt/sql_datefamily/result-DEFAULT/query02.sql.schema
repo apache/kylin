@@ -1,1 +1,0 @@
-`count(weekofyear(DATE0))` BIGINT NOT NULL,`max(weekofyear(DATE1))` INT,`count(dayofyear(DATE0))` BIGINT NOT NULL,`max(dayofyear(DATE1))` INT,`count(dayofmonth(DATE0))` BIGINT NOT NULL,`max(dayofmonth(DATE1))` INT,`count(dayofweek(DATE0))` BIGINT NOT NULL,`max(dayofweek(DATE1))` INT

@@ -62,4 +62,5 @@ class K8sClusterManager extends IClusterManager with Logging {
     false
   }
 
+  override def getApplicationNameById(yarnAppId: Int): String = ""
 }

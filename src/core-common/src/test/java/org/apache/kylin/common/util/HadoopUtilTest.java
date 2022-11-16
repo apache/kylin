@@ -18,6 +18,7 @@
 package org.apache.kylin.common.util;
 
 import static org.apache.kylin.common.util.HadoopUtil.MAPR_FS_PREFIX;
+import static org.apache.kylin.common.util.HadoopUtil.readStringFromHdfs;
 
 import java.io.File;
 import java.io.IOException;
@@ -192,5 +193,19 @@ class HadoopUtilTest {
             val path = HadoopUtil.makeURI(pathStr);
             Assertions.assertEquals("file:///D:///asdasd", path.toString());
         }
+    }
+
+    @Test
+    void testWriteStringToHdfsAndRead() throws IOException {
+        String strWrite = "STA-1:start,event=cpu";
+        File profileFlagDir = new File(tempDir.toFile(), "profiler_flags");
+        org.apache.hadoop.fs.Path hdfsPath = new org.apache.hadoop.fs.Path(profileFlagDir.getAbsolutePath());
+        HadoopUtil.writeStringToHdfs(strWrite, hdfsPath);
+        Assertions.assertEquals(strWrite, readStringFromHdfs(hdfsPath));
+    }
+
+    @Test
+    void testGetWritingClusterFileSystem() {
+        Assertions.assertNotNull(HadoopUtil.getWritingClusterFileSystem());
     }
 }

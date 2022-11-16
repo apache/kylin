@@ -288,10 +288,10 @@ public class EscapeTransformerTest {
     @Test
     public void testBigQuery() throws Exception {
         //cpic query was caused StackOverFlow Error
-        String originSql = FileUtils.readFileToString(new File("src/test/resources/query_cognos/cpic/big_query1.sql"),
+        String originSql = FileUtils.readFileToString(new File("src/test/resources/query/cpic/big_query1.sql"),
                 Charset.defaultCharset());
         String expectedSql = FileUtils.readFileToString(
-                new File("src/test/resources/query_cognos/cpic/big_query1.sql.expected"), Charset.defaultCharset());
+                new File("src/test/resources/query/cpic/big_query1.sql.expected"), Charset.defaultCharset());
 
         String transformedSQL = transformer.transform(originSql).replaceAll("\n+", "");
         expectedSql = expectedSql.replaceAll("\n+", "");

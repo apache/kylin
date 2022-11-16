@@ -20,7 +20,6 @@ package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_DOWNLOAD_FILE;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_NAME;
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.common.exception.ServerErrorCode.REDIS_CLEAR_ERROR;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
@@ -239,6 +238,7 @@ public class NQueryController extends NBasicController {
     @PostMapping(value = "/saved_queries")
     public EnvelopeResponse<String> saveQuery(@RequestBody SaveSqlRequest sqlRequest) throws IOException {
         String queryName = sqlRequest.getName();
+        checkRequiredArg("name", queryName);
         checkQueryName(queryName);
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         Query newQuery = new Query(queryName, sqlRequest.getProject(), sqlRequest.getSql(),
@@ -381,9 +381,9 @@ public class NQueryController extends NBasicController {
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer size) {
         checkProjectName(project);
         QueryHistoryRequest request = new QueryHistoryRequest(project, startTimeFrom, startTimeTo);
-        checkGetQueryHistoriesParam(request);
-        Map<String, Object> queryHistories = QueryHisTransformStandardUtil
-                .transformQueryHistory(queryHistoryService.getQueryHistories(request, size, offset));
+        validateDataRange(startTimeFrom, startTimeTo, null);
+        Map<String, Object> queryHistories = QueryHisTransformStandardUtil.transformQueryHistory(
+                queryHistoryService.getQueryHistories(request, size, offset));
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, queryHistories, "");
     }
 
@@ -565,12 +565,8 @@ public class NQueryController extends NBasicController {
     }
 
     private void checkQueryName(String queryName) {
-        val msg = MsgPicker.getMsg();
-        if (StringUtils.isEmpty(queryName)) {
-            throw new KylinException(INVALID_PARAMETER, msg.getEmptyQueryName());
-        }
         if (!queryNamePattern.matcher(queryName).matches()) {
-            throw new KylinException(INVALID_NAME, msg.getInvalidQueryName());
+            throw new KylinException(INVALID_NAME, MsgPicker.getMsg().getInvalidQueryName());
         }
     }
 

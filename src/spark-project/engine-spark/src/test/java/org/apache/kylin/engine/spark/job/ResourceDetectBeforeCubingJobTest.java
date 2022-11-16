@@ -18,28 +18,27 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.util.Set;
-
+import lombok.val;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.IndexDataConstructor;
+import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.engine.spark.IndexDataConstructor;
-import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.sparkproject.guava.collect.Sets;
 
-import lombok.val;
+import java.util.Set;
 
 public class ResourceDetectBeforeCubingJobTest extends NLocalWithSparkSessionTest {
     private KylinConfig config;

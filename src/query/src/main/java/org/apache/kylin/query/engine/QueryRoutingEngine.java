@@ -38,23 +38,25 @@ import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.NewQueryRefuseException;
+import org.apache.kylin.common.exception.TargetSegmentNotFoundException;
+import org.apache.kylin.common.persistence.transaction.TransactionException;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.metadata.project.NProjectLoader;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.query.NativeQueryRealization;
+import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
+import org.apache.kylin.query.engine.data.QueryResult;
+import org.apache.kylin.query.mask.QueryResultMasks;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.util.KapQueryUtil;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.source.adhocquery.PushdownResult;
-import org.apache.kylin.common.persistence.transaction.TransactionException;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
-import org.apache.kylin.metadata.query.StructField;
-import org.apache.kylin.query.engine.data.QueryResult;
-import org.apache.kylin.query.mask.QueryResultMasks;
-import org.apache.kylin.query.util.KapQueryUtil;
 import org.apache.spark.SparkException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +88,7 @@ public class QueryRoutingEngine {
         try {
             return doTransactionEnabled(() -> {
 
-                if (KapConfig.getInstanceFromEnv().enableReplaceDynamicParams()
+                if (projectKylinConfig.enableReplaceDynamicParams()
                         && queryParams.isPrepareStatementWithParams()) {
                     queryParams.setSql(queryParams.getPrepareSql());
                 }
@@ -125,7 +127,7 @@ public class QueryRoutingEngine {
             }, queryParams.getProject());
         } catch (TransactionException e) {
             Throwable cause = e.getCause();
-            if (cause instanceof SQLException && cause.getCause() instanceof KylinException){
+            if (cause instanceof SQLException && cause.getCause() instanceof KylinException) {
                 throw (SQLException)cause;
             }
             if (shouldPushdown(cause, queryParams)) {
@@ -134,8 +136,13 @@ public class QueryRoutingEngine {
                 throw e;
             }
         } catch (SQLException e) {
-            if (e.getCause() instanceof KylinException){
-                throw e;
+            if (e.getCause() instanceof KylinException) {
+                if(checkIfRetryQuery(e.getCause())) {
+                    NProjectLoader.removeCache();
+                    return queryWithSqlMassage(queryParams);
+                } else {
+                    throw e;
+                }
             }
             if (shouldPushdown(e, queryParams)) {
                 return pushDownQuery(e, queryParams);
@@ -145,6 +152,17 @@ public class QueryRoutingEngine {
         } finally {
             QueryResultMasks.remove();
         }
+    }
+
+    public boolean checkIfRetryQuery(Throwable cause) {
+        if (TargetSegmentNotFoundException.causedBySegmentNotFound(cause)
+                && QueryContext.current().getMetrics().getRetryTimes() == 0) {
+            logger.info("Retry current query, retry times:{}, cause:{}",
+                    QueryContext.current().getMetrics().getRetryTimes(), cause.getMessage());
+            QueryContext.current().getMetrics().addRetryTimes();
+            return true;
+        }
+        return false;
     }
 
     private boolean shouldPushdown(Throwable e, QueryParams queryParams) {
@@ -238,9 +256,10 @@ public class QueryRoutingEngine {
     }
 
     private boolean isPrepareStatementWithParams(QueryParams queryParams) {
+        KylinConfig kylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(queryParams.getProject()).getConfig();
         return (KapConfig.getInstanceFromEnv().enablePushdownPrepareStatementWithParams()
-                || KapConfig.getInstanceFromEnv().enableReplaceDynamicParams())
-                && queryParams.isPrepareStatementWithParams();
+                || kylinConfig.enableReplaceDynamicParams()) && queryParams.isPrepareStatementWithParams();
     }
 
     private QueryResult prepareOnly(String correctedSql, QueryExec queryExec, List<List<String>> results,

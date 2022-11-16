@@ -59,22 +59,38 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinTimeoutException;
+import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.metadata.MetadataExtension;
+import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
+import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
+import org.apache.kylin.metadata.cube.realization.HybridRealization;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.JoinsGraph;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.NProjectLoader;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
@@ -84,21 +100,6 @@ import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPContextProp;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.common.logging.SetLogCategory;
-import org.apache.kylin.metadata.MetadataExtension;
-import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
-import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.cube.model.NDataflowManager;
-import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
-import org.apache.kylin.metadata.cube.realization.HybridRealization;
-import org.apache.kylin.metadata.model.FusionModelManager;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
-import org.apache.kylin.metadata.project.NProjectLoader;
-import org.apache.kylin.metadata.project.NProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,7 +138,6 @@ public class RealizationChooser {
             Preconditions.checkNotNull(ctx.realization);
         }
     }
-
 
     public static void multiThreadSelectLayoutCandidate(List<OLAPContext> contexts) {
         ArrayList<Future<?>> futureList = Lists.newArrayList();
@@ -422,8 +422,7 @@ public class RealizationChooser {
         if (kylinConfig.getSecondStorageQueryPushdownLimit() <= 0)
             return;
 
-        if (sqlDigest.isRawQuery
-                && sqlDigest.limit > kylinConfig.getSecondStorageQueryPushdownLimit()) {
+        if (sqlDigest.isRawQuery && sqlDigest.limit > kylinConfig.getSecondStorageQueryPushdownLimit()) {
             QueryContext.current().setRetrySecondStorage(false);
         }
     }
@@ -664,28 +663,22 @@ public class RealizationChooser {
     }
 
     private static Multimap<NDataModel, IRealization> makeOrderedModelMap(OLAPContext context) {
-        OLAPContext first = context;
-        KylinConfig kylinConfig = first.olapSchema.getConfig();
-        String projectName = first.olapSchema.getProjectName();
-        String factTableName = first.firstTableScan.getOlapTable().getTableName();
+        KylinConfig kylinConfig = context.olapSchema.getConfig();
+        String projectName = context.olapSchema.getProjectName();
+        String factTableName = context.firstTableScan.getOlapTable().getTableName();
         Set<IRealization> realizations = NProjectManager.getInstance(kylinConfig).getRealizationsByTable(projectName,
                 factTableName);
 
         final Multimap<NDataModel, IRealization> mapModelToRealizations = HashMultimap.create();
+        boolean streamingEnabled = kylinConfig.streamingEnabled();
         for (IRealization real : realizations) {
-            if (!real.isReady()) {
-                context.realizationCheck.addIncapableCube(real,
-                        RealizationCheck.IncapableReason.create(RealizationCheck.IncapableType.CUBE_NOT_READY));
-                logger.warn("Realization {} is not ready for project {} with fact table {}", real, projectName,
-                        factTableName);
-                continue;
-            }
-            // context is bound to a certain model (by model view)
-            if (context.getModelAlias() != null
-                    && !real.getModel().getAlias().equalsIgnoreCase(context.getModelAlias())) {
-                continue;
-            }
-            if (!kylinConfig.streamingEnabled() && real.getModel().isFusionModel()) {
+            if (!real.isReady() || isModelViewBounded(context, real) || omitFusionModel(streamingEnabled, real)) {
+                if (!real.isReady()) {
+                    context.realizationCheck.addIncapableCube(real,
+                            RealizationCheck.IncapableReason.create(RealizationCheck.IncapableType.CUBE_NOT_READY));
+                    logger.warn("Realization {} is not ready for project {} with fact table {}", real, projectName,
+                            factTableName);
+                }
                 continue;
             }
             mapModelToRealizations.put(real.getModel(), real);
@@ -696,6 +689,18 @@ public class RealizationChooser {
         }
 
         return mapModelToRealizations;
+    }
+
+    /**
+     * context is bound to a certain model (by model view)
+     */
+    private static boolean isModelViewBounded(OLAPContext context, IRealization realization) {
+        return context.getModelAlias() != null
+                && !StringUtils.equalsIgnoreCase(realization.getModel().getAlias(), context.getModelAlias());
+    }
+
+    private static boolean omitFusionModel(boolean turnOnStreaming, IRealization real) {
+        return !turnOnStreaming && real.getModel().isFusionModel();
     }
 
     private static boolean partialMatchInnerJoin() {

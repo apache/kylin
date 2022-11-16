@@ -20,6 +20,7 @@ package org.apache.kylin.rest.request;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
@@ -30,6 +31,9 @@ public class BatchAccessRequest {
     @JsonProperty("access_entry_id")
     private int accessEntryId;
     private String permission;
+    @JsonProperty("ext_permissions")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<String> extPermissions;
     private List<String> sids;
     private boolean principal;
 }

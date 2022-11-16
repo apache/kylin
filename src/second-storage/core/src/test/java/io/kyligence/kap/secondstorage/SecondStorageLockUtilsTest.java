@@ -20,41 +20,14 @@ package io.kyligence.kap.secondstorage;
 
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.model.SegmentRange;
-import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class SecondStorageLockUtilsTest {
 
-    @Test(expected = ExecutionException.class)
-    public void acquireLock() throws Exception {
-        String modelId = RandomUtil.randomUUIDStr();
-        SegmentRange<Long> range = SegmentRange.TimePartitionedSegmentRange.createInfinite();
-        SegmentRange<Long> range2 = new SegmentRange.TimePartitionedSegmentRange(1L, 2L);
-        SecondStorageLockUtils.acquireLock(modelId, range).lock();
-        ExecutorService executorService = Executors.newFixedThreadPool(1);
-        Future<Boolean> future = executorService.submit(() -> {
-            SecondStorageLockUtils.acquireLock(modelId, range2).lock();
-            return true;
-        });
-        future.get();
-    }
-
-    @Test
-    public void testDoubleAcquireLock() throws Exception {
-        String modelId = RandomUtil.randomUUIDStr();
-        SegmentRange<Long> range = SegmentRange.TimePartitionedSegmentRange.createInfinite();
-        SecondStorageLockUtils.acquireLock(modelId, range).lock();
-        SecondStorageLockUtils.acquireLock(modelId, range).lock();
-        Assert.assertTrue(SecondStorageLockUtils.containsKey(modelId, range));
-    }
-
     @Test(expected = IllegalStateException.class)
     public void testUnlockFailed() {
-        SecondStorageLockUtils.unlock(RandomUtil.randomUUIDStr(), SegmentRange.TimePartitionedSegmentRange.createInfinite());
+        SecondStorageLockUtils.unlock(RandomUtil.randomUUIDStr(),
+                SegmentRange.TimePartitionedSegmentRange.createInfinite());
     }
+
 }

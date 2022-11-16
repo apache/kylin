@@ -67,7 +67,7 @@ public class SparkSqlContextHealthIndicatorTest extends NLocalFileMetadataTestCa
     @AfterClass
     public static void afterClass() {
         ss.close();
-        FileUtils.deleteQuietly(new File("../kylin-it/metastore_db"));
+        FileUtils.deleteQuietly(new File("../kap-it/metastore_db"));
     }
 
     @Before

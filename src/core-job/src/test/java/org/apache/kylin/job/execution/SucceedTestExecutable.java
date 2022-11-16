@@ -34,7 +34,7 @@ public class SucceedTestExecutable extends BaseTestExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) {
+    public ExecuteResult doWork(ExecutableContext context) {
         Map<String, String> info = new HashMap<String, String>() {
             {
                 put("runningStatus", "inRunning");

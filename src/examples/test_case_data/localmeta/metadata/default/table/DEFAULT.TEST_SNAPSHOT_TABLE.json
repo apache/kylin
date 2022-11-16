@@ -1,0 +1,61 @@
+{
+  "uuid": "57d3fe3c-28c7-e75e-7a81-47c6670ce2c5",
+  "last_modified": 1658374722336,
+  "create_time": 1658307758627,
+  "version": "4.0.0.0",
+  "name": "TEST_SNAPSHOT_TABLE",
+  "columns": [
+    {
+      "id": "1",
+      "name": "NAME",
+      "datatype": "varchar(4096)",
+      "case_sensitive_name": "name"
+    },
+    {
+      "id": "2",
+      "name": "AGE",
+      "datatype": "integer",
+      "case_sensitive_name": "age"
+    },
+    {
+      "id": "3",
+      "name": "PROVINCE",
+      "datatype": "varchar(4096)",
+      "case_sensitive_name": "province",
+      "is_partitioned": true
+    },
+    {
+      "id": "4",
+      "name": "CITY",
+      "datatype": "varchar(4096)",
+      "case_sensitive_name": "city",
+      "is_partitioned": true
+    }
+  ],
+  "source_type": 9,
+  "table_type": "MANAGED",
+  "top": false,
+  "increment_loading": false,
+  "last_snapshot_path": "DEFAULT/table_snapshot/DEFAULT.TEST_SNAPSHOT_TABLE/5fc5acd3-cddf-384e-64d7-9ccbb3d09987",
+  "last_snapshot_size": 1000,
+  "snapshot_last_modified": 1658382779853,
+  "query_hit_count": 0,
+  "partition_column": "PROVINCE",
+  "snapshot_partitions": {
+    "jilin": 0
+  },
+  "snapshot_partitions_info": {
+    "jilin": {
+      "total_rows": 0
+    }
+  },
+  "snapshot_total_rows": 100,
+  "snapshot_partition_col": "PROVINCE",
+  "selected_snapshot_partition_col": "PROVINCE",
+  "temp_snapshot_path": null,
+  "snapshot_has_broken": false,
+  "database": "DEFAULT",
+  "transactional": false,
+  "rangePartition": false,
+  "partition_desc": null
+}

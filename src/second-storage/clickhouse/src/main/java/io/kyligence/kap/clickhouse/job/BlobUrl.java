@@ -93,12 +93,14 @@ public class BlobUrl {
         return schema;
     }
 
-    private static String blob2httpSchema(String blobSchema) {
+    public static String blob2httpSchema(String blobSchema) {
         String schema;
         switch (blobSchema) {
             case "wasb":
                 schema = "http";
                 break;
+            case "abfs":
+            case "abfss":
             case "wasbs":
                 schema = "https";
                 break;

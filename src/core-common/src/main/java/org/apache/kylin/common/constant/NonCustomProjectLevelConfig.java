@@ -49,6 +49,8 @@ public enum NonCustomProjectLevelConfig {
     MULTI_PARTITION_ENABLED("kylin.model.multi-partition-enabled"),
 
     SNAPSHOT_MANUAL_MANAGEMENT_ENABLED("kylin.snapshot.manual-management-enabled"),
+    SNAPSHOT_AUTO_REFRESH_ENABLED("kylin.snapshot.auto-refresh-enabled"),
+    SNAPSHOT_AUTO_REFRESH_CRON("kylin.snapshot.auto-refresh-cron"),
 
     EXPOSE_COMPUTED_COLUMN("kylin.query.metadata.expose-computed-column"), OLD_EXPOSE_COMPUTED_COLUMN(
             "kap.query.metadata.expose-computed-column"),

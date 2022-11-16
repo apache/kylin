@@ -18,35 +18,33 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.util.Set;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.engine.spark.ExecutableUtils;
+import org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.execution.DefaultChainedExecutableOnTable;
+import org.apache.kylin.job.execution.DefaultExecutableOnTable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableExtDesc;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.engine.spark.ExecutableUtils;
-import org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Set;
 
 @Slf4j
-public class NTableSamplingJob extends DefaultChainedExecutableOnTable {
+public class NTableSamplingJob extends DefaultExecutableOnTable {
     public NTableSamplingJob() {
         super();
     }
@@ -60,7 +58,7 @@ public class NTableSamplingJob extends DefaultChainedExecutableOnTable {
     }
 
     public static NTableSamplingJob create(TableDesc tableDesc, String project, String submitter, int rows,
-            int priority, String yarnQueue, Object tag) {
+                                           int priority, String yarnQueue, Object tag) {
         Preconditions.checkArgument(tableDesc != null, //
                 "Create table sampling job failed for table not exist!");
 
@@ -107,11 +105,11 @@ public class NTableSamplingJob extends DefaultChainedExecutableOnTable {
                 .getTableDesc(getTableIdentity());
     }
 
-    NResourceDetectStep getResourceDetectStep() {
+    public NResourceDetectStep getResourceDetectStep() {
         return getTask(NResourceDetectStep.class);
     }
 
-    SamplingStep getSamplingStep() {
+    public SamplingStep getSamplingStep() {
         return getTask(SamplingStep.class);
     }
 
@@ -125,7 +123,8 @@ public class NTableSamplingJob extends DefaultChainedExecutableOnTable {
             super(notSetId);
         }
 
-        SamplingStep(String sparkSubmitClassName) {
+        // Ensure metadata compatibility
+        public SamplingStep(String sparkSubmitClassName) {
             this.setSparkSubmitClassName(sparkSubmitClassName);
             this.setName(ExecutableConstants.STEP_NAME_TABLE_SAMPLING);
         }
@@ -135,7 +134,7 @@ public class NTableSamplingJob extends DefaultChainedExecutableOnTable {
         }
 
         @Override
-        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        public ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
             ExecuteResult result = super.doWork(context);
             if (!result.succeed()) {
                 return result;

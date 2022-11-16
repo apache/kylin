@@ -57,7 +57,7 @@ public class JobStatusChangedTest extends NLocalFileMetadataTestCase {
         epcMgr.tryUpdateEpoch(project, true);
 
         NExecutableManager execMgr = NExecutableManager.getInstance(config, project);
-        DefaultChainedExecutable job = new DefaultChainedExecutable();
+        DefaultExecutable job = new DefaultExecutable();
         job.setJobType(JobTypeEnum.TABLE_SAMPLING);
         job.setProject("default");
 

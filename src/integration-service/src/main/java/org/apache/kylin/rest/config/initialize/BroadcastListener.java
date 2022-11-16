@@ -20,24 +20,30 @@ package org.apache.kylin.rest.config.initialize;
 import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.service.AccessService;
-import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.common.persistence.transaction.AccessBatchGrantEventNotifier;
 import org.apache.kylin.common.persistence.transaction.AccessGrantEventNotifier;
 import org.apache.kylin.common.persistence.transaction.AccessRevokeEventNotifier;
 import org.apache.kylin.common.persistence.transaction.AclGrantEventNotifier;
 import org.apache.kylin.common.persistence.transaction.AclRevokeEventNotifier;
 import org.apache.kylin.common.persistence.transaction.AclTCRRevokeEventNotifier;
+import org.apache.kylin.common.persistence.transaction.AddS3CredentialToSparkBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.AuditLogBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.persistence.transaction.EpochCheckBroadcastNotifier;
 import org.apache.kylin.common.persistence.transaction.StopQueryBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.UpdateJobStatusEventNotifier;
 import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.broadcaster.Broadcaster;
+import org.apache.kylin.rest.security.AdminUserSyncEventNotifier;
+import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.AclTCRService;
 import org.apache.kylin.rest.service.AuditLogService;
 import org.apache.kylin.rest.service.JobService;
+import org.apache.kylin.rest.service.QueryService;
+import org.apache.kylin.rest.service.TableExtService;
+import org.apache.kylin.rest.service.UserAclService;
+import org.apache.spark.sql.SparderEnv;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -61,6 +67,12 @@ public class BroadcastListener {
 
     @Autowired
     private AccessService accessService;
+
+    @Autowired
+    private UserAclService userAclService;
+
+    @Autowired
+    private TableExtService tableExtService;
 
     @Autowired
     private JobService jobService;
@@ -97,6 +109,16 @@ public class BroadcastListener {
         } else if (notifier instanceof AclTCRRevokeEventNotifier) {
             AclTCRRevokeEventNotifier aclTCRRevokeEventNotifier = (AclTCRRevokeEventNotifier) notifier;
             aclTCRService.revokeAclTCR(aclTCRRevokeEventNotifier.getSid(), aclTCRRevokeEventNotifier.isPrinciple());
+        } else if (notifier instanceof AddS3CredentialToSparkBroadcastEventNotifier) {
+            AddS3CredentialToSparkBroadcastEventNotifier s3CredentialNotifier = (AddS3CredentialToSparkBroadcastEventNotifier) notifier;
+            SparderEnv.addS3Credential(
+                    new TableExtDesc.S3RoleCredentialInfo(s3CredentialNotifier.getBucket(),
+                            s3CredentialNotifier.getRole(), s3CredentialNotifier.getEndpoint()),
+                    SparderEnv.getSparkSession());
+        } else if (notifier instanceof AdminUserSyncEventNotifier) {
+            AdminUserSyncEventNotifier adminUserSyncEventNotifier = (AdminUserSyncEventNotifier) notifier;
+            userAclService.syncAdminUserAcl(adminUserSyncEventNotifier.getAdminUserList(),
+                    adminUserSyncEventNotifier.isUseEmptyPermission());
         }
     }
 }

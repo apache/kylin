@@ -18,12 +18,8 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import static org.awaitility.Awaitility.await;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
+import lombok.val;
+import lombok.var;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
@@ -40,8 +36,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import lombok.val;
-import lombok.var;
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import static org.awaitility.Awaitility.await;
 
 public class NTableSamplingJobTest extends NLocalWithSparkSessionTest {
     private static final String PROJECT = "default";
@@ -55,7 +54,7 @@ public class NTableSamplingJobTest extends NLocalWithSparkSessionTest {
     public void after() throws IOException {
         NDefaultScheduler.destroyInstance();
         super.cleanupTestMetadata();
-        FileUtils.deleteQuietly(new File("../kylin-it/metastore_db"));
+        FileUtils.deleteQuietly(new File("../kap-it/metastore_db"));
     }
 
     @Test

@@ -42,6 +42,16 @@ public class KylinConfigCheckCLITest extends NLocalFileMetadataTestCase {
         File kylin_properties_override = new File(kylinConfDir, "kylin.properties.override");
         IOUtils.copy(new ByteArrayInputStream("kylin.kerberos.platform=FI".getBytes(Charset.defaultCharset())),
                 new FileOutputStream(kylin_properties_override));
+        IOUtils.copy(new ByteArrayInputStream("spring.xxx.xxx=xx".getBytes(Charset.defaultCharset())),
+                new FileOutputStream(kylin_properties_override));
+        IOUtils.copy(new ByteArrayInputStream("arthas.xxx.xxx=xx".getBytes(Charset.defaultCharset())),
+                new FileOutputStream(kylin_properties_override));
+        IOUtils.copy(new ByteArrayInputStream("server.xxx=xx".getBytes(Charset.defaultCharset())),
+                new FileOutputStream(kylin_properties_override));
+
+        // `kap.xx.xx` is not recommended, but it still works for compatibility reasons
+        IOUtils.copy(new ByteArrayInputStream("kap.xxx.xxx=xx".getBytes(Charset.defaultCharset())),
+                new FileOutputStream(kylin_properties_override));
 
         PrintStream o = System.out;
         File f = File.createTempFile("check", ".tmp");

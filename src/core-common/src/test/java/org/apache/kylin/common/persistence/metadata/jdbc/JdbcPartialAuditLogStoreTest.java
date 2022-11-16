@@ -25,9 +25,9 @@ import java.util.Locale;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
-import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.metadata.JdbcPartialAuditLogStore;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.junit.JdbcInfo;
 import org.apache.kylin.junit.annotation.JdbcMetadataInfo;
 import org.apache.kylin.junit.annotation.MetadataInfo;
@@ -53,6 +53,7 @@ class JdbcPartialAuditLogStoreTest {
         workerStore.getMetadataStore().setAuditLogStore(auditLogStore);
         auditLogStore.restore(101);
         Assertions.assertEquals(101, auditLogStore.getLogOffset());
+        auditLogStore.close();
     }
 
     @Test
@@ -83,14 +84,16 @@ class JdbcPartialAuditLogStoreTest {
                                 unitId, null, LOCAL_INSTANCE },
                         new Object[] { "/_global/p1/abc/t1", null, null, null, unitId, null, LOCAL_INSTANCE }));
 
-        val auditLogs = auditLogStore.fetch(0, auditLogStore.getMaxId());
-        Assertions.assertEquals(2, auditLogs.size());
+        auditLogStore.catchupWithMaxTimeout();
+        val totalR = workerStore.listResourcesRecursively("/_global");
+        Assertions.assertEquals(2, totalR.size());
+        auditLogStore.close();
     }
 
     @Test
     void testPartialFetchAuditLogEmptyFilter(JdbcInfo jdbcInfo) throws Exception {
         val workerStore = ResourceStore.getKylinMetaStore(getTestConfig());
-        val auditLogStore = new JdbcPartialAuditLogStore(getTestConfig(), s -> true);
+        val auditLogStore = new JdbcPartialAuditLogStore(getTestConfig(), null);
         workerStore.getMetadataStore().setAuditLogStore(auditLogStore);
 
         workerStore.checkAndPutResource("/UUID", new StringEntity(RandomUtil.randomUUIDStr()), StringEntity.serializer);
@@ -111,10 +114,11 @@ class JdbcPartialAuditLogStoreTest {
                         new Object[] { "/_global/p2/abc3", "abc".getBytes(charset), System.currentTimeMillis(), 0,
                                 unitId, null, LOCAL_INSTANCE },
                         new Object[] { "/_global/p2/abc4", "abc".getBytes(charset), System.currentTimeMillis(), 1,
-                                unitId, null, LOCAL_INSTANCE },
-                        new Object[] { "/_global/p1/abc/t1", null, null, null, unitId, null, LOCAL_INSTANCE }));
+                                unitId, null, LOCAL_INSTANCE }));
 
-        val auditLogs = auditLogStore.fetch(0, auditLogStore.getMaxId());
-        Assertions.assertEquals(5, auditLogs.size());
+        auditLogStore.catchupWithMaxTimeout();
+        val totalR = workerStore.listResourcesRecursively("/_global");
+        Assertions.assertEquals(4, totalR.size());
+        auditLogStore.close();
     }
 }

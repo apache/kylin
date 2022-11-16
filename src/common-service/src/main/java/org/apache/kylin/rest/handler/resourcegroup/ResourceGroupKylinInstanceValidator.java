@@ -18,14 +18,15 @@
 
 package org.apache.kylin.rest.handler.resourcegroup;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.REPEATED_INSTANCE;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.RESOURCE_GROUP_ID_NOT_FOUND_IN_INSTANCE;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.resourcegroup.KylinInstance;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupEntity;
 import org.apache.kylin.rest.request.resourecegroup.ResourceGroupRequest;
@@ -49,20 +50,18 @@ public class ResourceGroupKylinInstanceValidator implements IResourceGroupReques
         List<KylinInstance> instances = request.getKylinInstances();
         for (KylinInstance instance : instances) {
             if (StringUtils.isBlank(instance.getInstance())) {
-                throw new KylinException(INVALID_PARAMETER, MsgPicker.getMsg().getEmptyKylinInstanceIdentity());
+                throw new KylinException(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, "instance");
             }
             if (StringUtils.isBlank(instance.getResourceGroupId())) {
-                throw new KylinException(INVALID_PARAMETER,
-                        MsgPicker.getMsg().getEmptyKylinInstanceResourceGroupId());
+                throw new KylinException(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, "resource_group_id");
             }
             if (!resourceGroups.contains(instance.getResourceGroupId())) {
-                throw new KylinException(INVALID_PARAMETER, MsgPicker.getMsg()
-                        .getResourceGroupIdNotExistInKylinInstance(instance.getResourceGroupId()));
+                throw new KylinException(RESOURCE_GROUP_ID_NOT_FOUND_IN_INSTANCE, instance.getResourceGroupId());
             }
         }
         val identities = instances.stream().map(KylinInstance::getInstance).collect(Collectors.toList());
         if (identities.size() != Sets.newHashSet(identities).size()) {
-            throw new KylinException(INVALID_PARAMETER, MsgPicker.getMsg().getDuplicatedKylinInstance());
+            throw new KylinException(REPEATED_INSTANCE);
         }
     }
 }

@@ -89,7 +89,7 @@ class SparkQueryMetricUtilsSuite extends QueryTest with SharedSparkSession {
 
     layoutFileSourceScanExec.metrics("numOutputRows").+=(3000)
     layoutFileSourceScanExec.metrics("readBytes").+=(6291)
-    val collectLimitExec = CollectLimitExec(1, 0, layoutFileSourceScanExec)
+    val collectLimitExec = CollectLimitExec(1, layoutFileSourceScanExec, 0)
     val collectScanMetrics3 = QueryMetricUtils.collectScanMetrics(collectLimitExec)
     assert(5000 == collectScanMetrics3._1.get(0))
     assert(22982 == collectScanMetrics3._2.get(0))
@@ -119,7 +119,7 @@ class SparkQueryMetricUtilsSuite extends QueryTest with SharedSparkSession {
 
     kylinFileSourceScanExec.metrics("numOutputRows").+=(700)
     kylinFileSourceScanExec.metrics("readBytes").+=(2295)
-    val collectLimitExec2 = CollectLimitExec(1, 0, kylinFileSourceScanExec)
+    val collectLimitExec2 = CollectLimitExec(1, kylinFileSourceScanExec, 0)
     val collectScanMetrics7 = QueryMetricUtils.collectScanMetrics(collectLimitExec2)
     assert(1600 == collectScanMetrics7._1.get(0))
     assert(9147 == collectScanMetrics7._2.get(0))
@@ -149,7 +149,7 @@ class SparkQueryMetricUtilsSuite extends QueryTest with SharedSparkSession {
 
     fileSourceScanExec.metrics("numOutputRows").+=(400)
     fileSourceScanExec.metrics("readBytes").+=(2210)
-    val collectLimitExec3 = CollectLimitExec(1, 0, fileSourceScanExec)
+    val collectLimitExec3 = CollectLimitExec(1, fileSourceScanExec, 0)
     val collectScanMetrics11 = QueryMetricUtils.collectScanMetrics(collectLimitExec3)
     assert(850 == collectScanMetrics11._1.get(0))
     assert(3960 == collectScanMetrics11._2.get(0))

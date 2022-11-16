@@ -27,6 +27,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.Lists;
+
+import lombok.val;
 
 public class NDataModelTest {
 
@@ -158,7 +161,7 @@ public class NDataModelTest {
     }
 
     @Test
-    public void tstModelRenameEvent() {
+    public void testModelRenameEvent() {
         NDataModel.ModelRenameEvent renameEvent = new NDataModel.ModelRenameEvent(DEFAULT_PROJECT,
                 "89af4ee2-2cdb-4b07-b39e-4c29856309aa", "new_model_name");
         Assert.assertEquals(DEFAULT_PROJECT, renameEvent.getProject());
@@ -174,6 +177,56 @@ public class NDataModelTest {
 
         NDataModel.ModelRenameEvent renameEvent1 = new NDataModel.ModelRenameEvent("name");
         Assert.assertEquals("name", renameEvent1.getNewName());
+    }
+
+    @Test
+    public void testCheckCCFailAtEnd() {
+        String modelId = "4a45dc4d-937e-43cc-8faa-34d59d4e11d3";
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "cc_test");
+        NDataModel originModelDesc = modelManager.getDataModelDesc(modelId);
+        System.setProperty("needCheckCC", "true");
+        originModelDesc.setProject("cc_test");
+
+        {
+            val ccList = Lists.newArrayList(getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
+                    getComputedColumnDesc("CC_2", "LINEORDER.LO_TAX +1 ", "DOUBLE"),
+                    getComputedColumnDesc("CC_3", "1+2", "INTEGER"));
+            originModelDesc.setComputedColumnDescs(ccList);
+            val ccRelatedModels = modelManager.getCCRelatedModels(originModelDesc);
+            originModelDesc.checkCCFailAtEnd(KylinConfig.getInstanceFromEnv(), originModelDesc.getProject(),
+                    ccRelatedModels, true);
+        }
+
+        {
+            val ccList = Lists.newArrayList(getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
+                    getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX *1 ", "DOUBLE"),
+                    getComputedColumnDesc("CC_3", "1+2", "INTEGER"));
+            originModelDesc.setComputedColumnDescs(ccList);
+            val ccRelatedModels = modelManager.getCCRelatedModels(originModelDesc);
+            originModelDesc.checkCCFailAtEnd(KylinConfig.getInstanceFromEnv(), originModelDesc.getProject(),
+                    ccRelatedModels, true);
+        }
+
+        {
+            val ccList = Lists.newArrayList(getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
+                    getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX *1 ", "DOUBLE"),
+                    getComputedColumnDesc("CC_3", "1+2", "INTEGER"));
+            originModelDesc.setComputedColumnDescs(ccList);
+            val ccRelatedModels = modelManager.getCCRelatedModels(originModelDesc);
+            originModelDesc.checkCCFailAtEnd(KylinConfig.getInstanceFromEnv(), originModelDesc.getProject(),
+                    ccRelatedModels, true);
+        }
+
+    }
+
+    public ComputedColumnDesc getComputedColumnDesc(String ccName, String ccExpression, String dataType) {
+        ComputedColumnDesc ccDesc = new ComputedColumnDesc();
+        ccDesc.setColumnName(ccName);
+        ccDesc.setExpression(ccExpression);
+        ccDesc.setDatatype(dataType);
+        ccDesc.setTableAlias("LINEORDER");
+        ccDesc.setTableIdentity("SSB.LINEORDER");
+        return ccDesc;
     }
 
 }

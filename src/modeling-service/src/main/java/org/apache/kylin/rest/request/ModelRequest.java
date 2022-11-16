@@ -22,12 +22,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.insensitive.ModelInsensitiveRequest;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinTableDesc;
 import org.apache.kylin.rest.response.LayoutRecDetailResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
@@ -86,6 +86,9 @@ public class ModelRequest extends NDataModel implements ModelInsensitiveRequest 
 
     @JsonProperty("with_second_storage")
     private boolean withSecondStorage = false;
+
+    @JsonProperty("computed_column_name_auto_adjust")
+    private boolean computedColumnNameAutoAdjust = false;
 
     private List<SimplifiedJoinTableDesc> simplifiedJoinTableDescs;
 

@@ -21,19 +21,21 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import io.kyligence.kap.secondstorage.metadata.annotation.DataDefinition;
 
 @DataDefinition
@@ -141,6 +143,31 @@ public class TableFlow extends RootPersistentEntity
 
         checkIsNotCachedAndShared();
         this.tableDataList.forEach(tableData -> tableData.removeNodes(nodeNames));
+    }
+
+    public Set<Long> getLayoutBySegment(String segmentId) {
+        return getTableDataList().stream()
+                .filter(tableData -> tableData.containSegments(Collections.singleton(segmentId)))
+                .map(TableData::getLayoutID)
+                .collect(Collectors.toSet());
+    }
+
+    public boolean containsLayout(long layoutId) {
+        return getTableDataList().stream()
+                .anyMatch(tableData -> tableData.getLayoutID() == layoutId);
+    }
+
+    public List<TableData> getTableData(long layoutId) {
+        return getTableDataList().stream().filter(tableData -> tableData.getLayoutID() == layoutId)
+                .collect(Collectors.toList());
+    }
+
+    public void updateSecondaryIndex(long layoutId, Set<Integer> addColumns, Set<Integer> removeColumns) {
+        this.tableDataList.forEach(tableData -> {
+            if (tableData.getLayoutID() == layoutId) {
+                tableData.updateSecondaryIndex(addColumns, removeColumns);
+            }
+        });
     }
 
     @Override

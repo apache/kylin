@@ -140,8 +140,7 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testBatchDeleteOldResultNoProjectPermission() throws Exception {
         Mockito.doThrow(new KylinException(ACCESS_DENIED, "Access is denied")).when(aclEvaluate)
-                .checkProjectReadPermission(PROJECT);
-
+                .checkProjectQueryPermission(PROJECT);
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query").param("project", PROJECT)
                 .param("older_than", "2011-11-11 11:11:11")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
@@ -167,7 +166,7 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testQueryStatusNoProjectPermission() throws Exception {
         Mockito.doThrow(new KylinException(ACCESS_DENIED, "Access is denied")).when(aclEvaluate)
-                .checkProjectReadPermission(PROJECT);
+                .checkProjectQueryPermission(PROJECT);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/async_query/{query_id:.+}/status", "123")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -181,7 +180,7 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testFileStatusNoProjectPermission() throws Exception {
         Mockito.doThrow(new KylinException(ACCESS_DENIED, "Access is denied")).when(aclEvaluate)
-                .checkProjectReadPermission(PROJECT);
+                .checkProjectQueryPermission(PROJECT);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/async_query/{query_id:.+}/file_status", "123")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -195,7 +194,7 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testMetadataNoProjectPermission() throws Exception {
         Mockito.doThrow(new KylinException(ACCESS_DENIED, "Access is denied")).when(aclEvaluate)
-                .checkProjectReadPermission(PROJECT);
+                .checkProjectQueryPermission(PROJECT);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/async_query/{query_id:.+}/metadata", "123")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -246,7 +245,7 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
     @Test
     public void testResultPathNoProjectPermission() throws Exception {
         Mockito.doThrow(new KylinException(ACCESS_DENIED, "Access is denied")).when(aclEvaluate)
-                .checkProjectReadPermission(PROJECT);
+                .checkProjectQueryPermission(PROJECT);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/async_query/{query_id}/result_path", "123")
                 .contentType(MediaType.APPLICATION_JSON)

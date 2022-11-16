@@ -27,6 +27,7 @@ import org.apache.kylin.engine.spark.job.stage.build.BuildStage
 import org.apache.kylin.engine.spark.job.stage.build.FlatTableAndDictBase.Statistics
 import org.apache.kylin.engine.spark.job.{KylinBuildEnv, PartitionExec, SanityChecker, SegmentJob}
 import org.apache.kylin.engine.spark.model.PartitionFlatTableDesc
+import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.TreeNode
 import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree.PartitionTreeNode
 import org.apache.kylin.metadata.cube.model._
@@ -35,88 +36,59 @@ import org.apache.spark.sql.datasource.storage.StorageStoreUtils
 import org.apache.spark.sql.{Dataset, Row}
 
 import java.util.Objects
-import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.collection.parallel.ForkJoinTaskSupport
-import scala.concurrent.forkjoin.ForkJoinPool
 
 abstract class PartitionBuildStage(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
   extends BuildStage(jobContext, dataSegment, buildParam) with PartitionExec {
   protected final val newBuckets = //
     jobContext.getReadOnlyBuckets.asScala.filter(_.getSegmentId.equals(segmentId)).toSeq
 
-  protected lazy val spanningTree: PartitionSpanningTree = buildParam.getPartitionSpanningTree
+  private lazy val spanningTree: PartitionSpanningTree = buildParam.getPartitionSpanningTree
 
-  protected lazy val flatTableDesc: PartitionFlatTableDesc = buildParam.getTableDesc
-  protected lazy val flatTable: PartitionFlatTableAndDictBase = buildParam.getPartitionFlatTable
+  private lazy val flatTableDesc: PartitionFlatTableDesc = buildParam.getTableDesc
+  private lazy val flatTable: PartitionFlatTableAndDictBase = buildParam.getPartitionFlatTable
 
-  // Thread unsafe, read only.
-  private lazy val cachedPartitionFlatTableDS: Map[java.lang.Long, Dataset[Row]] = buildParam.getCachedPartitionFlatTableDS
+  private lazy val sanityResultQueue = Queues.newLinkedBlockingQueue[PartitionSanityResult]()
 
-  // Thread unsafe, read only
-  private lazy val cachedPartitionFlatTableStats: Map[java.lang.Long, Statistics] = buildParam.getCachedPartitionFlatTableStats
+  // Thread unsafe, read only. Partition flat table.
+  private lazy val cachedPartitionDS = buildParam.getCachedPartitionDS
+
+  // Thread unsafe, read only. Partition flat table statistics.
+  private lazy val cachedPartitionStats = buildParam.getCachedPartitionStats
 
   // Thread unsafe
   // [layout, [partition, dataset]]
-  private val cachedPartitionDS = mutable.HashMap[Long, mutable.HashMap[Long, Dataset[Row]]]()
+  private lazy val cachedLayoutDS = buildParam.getCachedLayoutPartitionDS
 
   // Thread unsafe
   // [layout, [partition, sanity]]
-  private var cachedPartitionSanity: Option[mutable.HashMap[Long, mutable.HashMap[Long, Long]]] = None
+  private lazy val cachedLayoutSanity = buildParam.getCachedLayoutPartitionSanity
 
   override protected def columnIdFunc(colRef: TblColRef): String = flatTableDesc.getColumnIdAsString(colRef)
 
+
+  override protected def reportTaskProgress(): Unit = {
+    val layoutCount = KylinBuildEnv.get().buildJobInfos.getSeg2cuboidsNumPerLayer.get(segmentId).asScala.sum
+    onBuildLayoutSuccess(layoutCount / partitions.size())
+  }
+
   override protected def buildLayouts(): Unit = {
-    // Flat table? Sanity cache?
-    //    beforeBuildLayouts()
 
-    // Maintain this variable carefully.
-    var remainingTaskCount = 0
+    val taskIter = new BuildTaskIterator[PartitionBuildTask] {
 
-    // Share failed task 'throwable' with main thread.
-    val failQueue = Queues.newLinkedBlockingQueue[Option[Throwable]]()
+      override def canSpan: Boolean = spanningTree.canSpan
 
-    // Main loop: build layouts.
-    while (spanningTree.nonSpanned()) {
-      if (resourceContext.isAvailable) {
-        // Drain immediately.
-        drain()
-        // Use the latest data segment.
-        val segment = jobContext.getSegment(segmentId)
-        val nodes = spanningTree.span(segment).asScala
-        val tasks = nodes.flatMap(node => getPartitionTasks(segment, node.asInstanceOf[PartitionTreeNode]))
-        remainingTaskCount += tasks.size
-        // Submit tasks, no task skip inside this foreach.
-        tasks.foreach { task =>
-          runtime.submit(() => try {
-            // If unset
-            setConfig4CurrentThread()
-            // Build layout.
-            buildPartition(task)
-            // Offer 'Node' if everything was well.
-            failQueue.offer(None)
-          } catch {
-            // Offer 'Throwable' if unexpected things happened.
-            case t: Throwable => failQueue.offer(Some(t))
-          })
-        }
-        if (0 != tasks.size) {
-          KylinBuildEnv.get().buildJobInfos.recordCuboidsNumPerLayer(segmentId, tasks.size)
-
-          val layoutCount = KylinBuildEnv.get().buildJobInfos.getSeg2cuboidsNumPerLayer.get(segmentId).asScala.sum
-          onBuildLayoutSuccess(layoutCount / partitions.size())
-        }
+      override def spanNodeSeq(segment: NDataSegment): Seq[TreeNode] = {
+        spanningTree.span(segment).asScala
       }
-      // Poll and fail fast.
-      remainingTaskCount -= failFastPoll(failQueue, 3L, TimeUnit.SECONDS)
+
+      override def genTask(segment: NDataSegment, node: TreeNode): Seq[PartitionBuildTask] = {
+        getPartitionTasks(segment, node.asInstanceOf[PartitionTreeNode])
+      }
     }
-    // Await or fail fast.
-    while (remainingTaskCount > 0) {
-      remainingTaskCount -= failFastPoll(failQueue)
-    }
-    // Drain immediately after all layouts built.
-    drain()
+
+    slowStartExec(taskIter, buildPartition)
   }
 
   protected def buildPartitionStatistics(partition: Long //
@@ -137,31 +109,35 @@ abstract class PartitionBuildStage(jobContext: SegmentJob, dataSegment: NDataSeg
     }
 
     logInfo(s"Segment $segmentId build sanity cache.")
-    val parallel = rootNodes.map { node =>
+
+    val taskIter = rootNodes.map { node =>
       val layout = node.getLayout
       val partition = node.getPartition
       val partitionDS = getCachedPartitionDS(dataSegment, layout, partition)
-      (layout, partition, partitionDS)
-    }.par
-    val processors = Runtime.getRuntime.availableProcessors
-    val forkJoinPool = new ForkJoinPool(Math.max(processors, rootNodes.size / 8))
-    try {
-      parallel.tasksupport = new ForkJoinTaskSupport(forkJoinPool)
-      val collected = parallel.map { case (layout, partition, partitionDS) =>
-        val sanityCount = SanityChecker.getCount(partitionDS, layout)
-        (layout.getId, partition, sanityCount)
-      }.seq
-      val sanityMap = mutable.HashMap[Long, mutable.HashMap[Long, Long]]()
-      collected.foreach { case (layout, partition, sanityCount) =>
-        sanityMap.getOrElseUpdate(layout, mutable.HashMap[Long, Long]()).put(partition, sanityCount)
-      }
-      assert(collected.size == rootNodes.size, //
-        s"Collect sanity for root nodes went wrong: ${collected.size} == ${rootNodes.size}")
-      cachedPartitionSanity = Some(sanityMap)
-      logInfo(s"Segment $segmentId finished build sanity cache $sanityMap.")
-    } finally {
-      forkJoinPool.shutdownNow()
+      new PartitionSanityTask(layout, partition, partitionDS)
+    }.iterator
+
+    slowStartExec(taskIter, (sanityTask: PartitionSanityTask) => {
+      val layout = sanityTask.layout
+      val partition = sanityTask.partition
+      val partitionDS = sanityTask.partitionDS
+      val sanityCount = SanityChecker.getCount(partitionDS, layout)
+      sanityResultQueue.offer(new PartitionSanityResult(layout.getId, partition, sanityCount))
+    })
+
+    val collected = polledResultSeq(sanityResultQueue)
+    val sanityMap = mutable.HashMap[Long, mutable.HashMap[Long, Long]]()
+    collected.foreach { r =>
+      val layout = r.layout
+      val partition = r.partition
+      val sanityCount = r.sanityCount
+      sanityMap.getOrElseUpdate(layout, mutable.HashMap[Long, Long]()).put(partition, sanityCount)
     }
+
+    assert(collected.size == rootNodes.size, //
+      s"Collect sanity for root nodes went wrong: ${collected.size} == ${rootNodes.size}")
+    buildParam.setCachedLayoutPartitionSanity(Some(sanityMap))
+    logInfo(s"Segment $segmentId finished build sanity cache $sanityMap.")
   }
 
   private def getPartitionTasks(segment: NDataSegment, node: PartitionTreeNode): Seq[PartitionBuildTask] = {
@@ -174,7 +150,7 @@ abstract class PartitionBuildStage(jobContext: SegmentJob, dataSegment: NDataSeg
     if (node.parentIsNull) {
       // Build from flat table
       layouts.map { layout =>
-        PartitionBuildTask(layout, node.getPartition, None, cachedPartitionFlatTableDS(node.getPartition), sanityCount, segment)
+        PartitionBuildTask(layout, node.getPartition, None, cachedPartitionDS(node.getPartition), sanityCount, segment)
       }
     } else {
       // Build from data layout
@@ -195,30 +171,28 @@ abstract class PartitionBuildStage(jobContext: SegmentJob, dataSegment: NDataSeg
 
     // From flat table.
     if (Objects.isNull(node.getRootNode)) {
-      assert(cachedPartitionFlatTableStats.contains(node.getPartition), //
+      assert(cachedPartitionStats.contains(node.getPartition), //
         s"Partition flat tale statistics should have been cached: ${node.getPartition}")
-      return cachedPartitionFlatTableStats(node.getPartition).totalCount
+      return cachedPartitionStats(node.getPartition).totalCount
     }
 
-    // From data partition.
-    if (cachedPartitionSanity.isEmpty) {
-      return SanityChecker.SKIP_FLAG
-    }
-    val rootNode = node.getRootNode.asInstanceOf[PartitionTreeNode]
-    val cachedLayout = cachedPartitionSanity.get
-    val layout = rootNode.getLayout
-    assert(cachedLayout.contains(layout.getId), //
-      s"Root node's layout sanity should have been cached: ${layout.getId}")
-    val cachedPartition = cachedLayout(layout.getId)
-    assert(cachedPartition.contains(rootNode.getPartition), //
-      s"Root node's layout partition sanity should have been cached: ${layout.getId} ${rootNode.getPartition}")
-    cachedPartition(rootNode.getPartition)
+    cachedLayoutSanity.map { cached =>
+      val rootNode = node.getRootNode.asInstanceOf[PartitionTreeNode]
+      val layout = rootNode.getLayout.getId
+      val partition = rootNode.getPartition
+      assert(cached.contains(layout), //
+        s"Root node's layout sanity should have been cached: $layout")
+      val cachedPartition = cached(layout)
+      assert(cachedPartition.contains(partition), //
+        s"Root node's layout partition sanity should have been cached: $layout $partition")
+      cachedPartition(partition)
+    }.getOrElse(SanityChecker.SKIP_FLAG)
   }
 
   private def getCachedPartitionDS(segment: NDataSegment, //
                                    layout: LayoutEntity, //
                                    partition: Long): Dataset[Row] = synchronized {
-    cachedPartitionDS.getOrElseUpdate(layout.getId, // or update
+    cachedLayoutDS.getOrElseUpdate(layout.getId, // or update
       mutable.HashMap[Long, Dataset[Row]]()).getOrElseUpdate(partition, // or update
       StorageStoreUtils.toDF(segment, layout, partition, sparkSession))
   }
@@ -228,7 +202,11 @@ abstract class PartitionBuildStage(jobContext: SegmentJob, dataSegment: NDataSeg
                                        , parentLayout: Option[LayoutEntity] //
                                        , parentDS: Dataset[Row] //
                                        , sanityCount: Long //
-                                       , segment: NDataSegment = dataSegment)
+                                       , segment: NDataSegment = dataSegment) extends Task {
+    override def getTaskDesc: String = {
+      s"layout ${layout.getId} partition $partition"
+    }
+  }
 
 
   private def buildPartition(task: PartitionBuildTask): Unit = {
@@ -266,12 +244,12 @@ abstract class PartitionBuildStage(jobContext: SegmentJob, dataSegment: NDataSeg
   }
 
   override protected def tryRefreshColumnBytes(): Unit = {
-    if (cachedPartitionFlatTableStats.isEmpty) {
+    if (cachedPartitionStats.isEmpty) {
       logInfo(s"Segment $segmentId skip refresh column bytes.")
       return
     }
     logInfo(s"Segment $segmentId refresh column bytes.")
-    val partitionStats = cachedPartitionFlatTableStats
+    val partitionStats = cachedPartitionStats
     UnitOfWork.doInTransactionWithRetry(new Callback[Unit] {
       override def process(): Unit = {
         val dataflowManager = NDataflowManager.getInstance(config, project);
@@ -315,4 +293,15 @@ abstract class PartitionBuildStage(jobContext: SegmentJob, dataSegment: NDataSeg
       fs.delete(ftPath, true)
     }
   }
+
+  sealed class PartitionSanityTask(val layout: LayoutEntity,
+                                   val partition: Long,
+                                   val partitionDS: Dataset[Row]) extends Task {
+    override def getTaskDesc: String = {
+      s"layout partition sanity ${layout.getId} $partition"
+    }
+  }
+
+  sealed class PartitionSanityResult(val layout: Long, val partition: Long, val sanityCount: Long)
+
 }

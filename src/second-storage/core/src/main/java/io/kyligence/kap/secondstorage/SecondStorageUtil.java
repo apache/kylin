@@ -22,6 +22,10 @@ import static org.apache.kylin.common.exception.ServerErrorCode.BASE_TABLE_INDEX
 import static org.apache.kylin.common.exception.ServerErrorCode.PARTITION_COLUMN_NOT_AVAILABLE;
 import static org.apache.kylin.common.exception.ServerErrorCode.SECOND_STORAGE_DATA_NOT_EXIST;
 import static org.apache.kylin.common.exception.ServerErrorCode.SECOND_STORAGE_PROJECT_STATUS_ERROR;
+import static org.apache.kylin.job.constant.ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE;
+import static org.apache.kylin.job.constant.ExecutableConstants.STEP_NAME_CLEANUP;
+import static org.apache.kylin.job.constant.ExecutableConstants.STEP_NAME_MERGER_SPARK_SEGMENT;
+import static org.apache.kylin.job.constant.ExecutableConstants.STEP_UPDATE_METADATA;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +35,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -39,18 +45,17 @@ import org.apache.kylin.common.exception.JobErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.ChainedExecutable;
+import org.apache.kylin.job.execution.ChainedStageExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
-import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
-import org.apache.kylin.metadata.model.SegmentRange;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.job.execution.StageBase;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
@@ -60,11 +65,22 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.query.NativeQueryRealization;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
+import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
+import io.kyligence.kap.guava20.shaded.common.collect.ImmutableSet;
 import io.kyligence.kap.secondstorage.config.Node;
 import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
 import io.kyligence.kap.secondstorage.metadata.Manager;
 import io.kyligence.kap.secondstorage.metadata.NodeGroup;
+import io.kyligence.kap.secondstorage.metadata.TableData;
 import io.kyligence.kap.secondstorage.metadata.TableFlow;
 import io.kyligence.kap.secondstorage.metadata.TablePartition;
 import io.kyligence.kap.secondstorage.metadata.TablePlan;
@@ -72,13 +88,22 @@ import io.kyligence.kap.secondstorage.response.SecondStorageInfo;
 import io.kyligence.kap.secondstorage.response.SecondStorageNode;
 
 public class SecondStorageUtil {
-    public static final Set<ExecutableState> RUNNING_STATE = Sets
-            .newHashSet(Arrays.asList(ExecutableState.RUNNING, ExecutableState.READY, ExecutableState.PAUSED));
-    public static final Set<JobTypeEnum> RELATED_JOBS = Sets
-            .newHashSet(Arrays.asList(JobTypeEnum.INDEX_BUILD, JobTypeEnum.INDEX_REFRESH, JobTypeEnum.INC_BUILD,
-                    JobTypeEnum.INDEX_MERGE, JobTypeEnum.EXPORT_TO_SECOND_STORAGE));
-    public static final Set<JobTypeEnum> BUILD_JOBS = Sets.newHashSet(JobTypeEnum.INDEX_BUILD,
+    public static final Set<ExecutableState> RUNNING_STATE = ImmutableSet.of(ExecutableState.RUNNING,
+            ExecutableState.READY, ExecutableState.PAUSED);
+    public static final Set<JobTypeEnum> RELATED_JOBS = ImmutableSet.of(JobTypeEnum.INDEX_BUILD,
+            JobTypeEnum.INDEX_REFRESH, JobTypeEnum.INC_BUILD, JobTypeEnum.INDEX_MERGE,
+            JobTypeEnum.EXPORT_TO_SECOND_STORAGE, JobTypeEnum.SECOND_STORAGE_REFRESH_SECONDARY_INDEXES);
+    public static final Set<JobTypeEnum> BUILD_JOBS = ImmutableSet.of(JobTypeEnum.INDEX_BUILD,
             JobTypeEnum.INDEX_REFRESH, JobTypeEnum.INC_BUILD, JobTypeEnum.INDEX_MERGE);
+    public static final Set<String> EXPORT_STEPS = ImmutableSet.of(SecondStorageConstants.STEP_EXPORT_TO_SECOND_STORAGE,
+            SecondStorageConstants.STEP_REFRESH_SECOND_STORAGE, SecondStorageConstants.STEP_MERGE_SECOND_STORAGE);
+
+    public static final Pattern PUSHED_AGGREGATES = Pattern.compile("PushedAggregates: \\[[^\\]]++\\]");
+    public static final Pattern PUSHED_GROUP_BY = Pattern.compile("PushedGroupByExpressions: \\[[^\\]]++\\]");
+    public static final Pattern PUSHED_FILTERS = Pattern.compile("PushedFilters: \\[[^\\]]++\\]");
+    public static final Pattern PUSHED_LIMIT = Pattern.compile("PushedLimit: LIMIT [0-9]+");
+    public static final Pattern PUSHED_OFFSET = Pattern.compile("PushedOffset: OFFSET [0-9]+");
+    public static final Pattern PUSHED_TOP_N = Pattern.compile("PushedTopN: ORDER BY \\[.+?\\] LIMIT [0-9]+");
 
     private SecondStorageUtil() {
     }
@@ -127,9 +152,8 @@ public class SecondStorageUtil {
                     MsgPicker.getMsg().getBaseTableIndexNotAvailable());
         }
         if (indexPlan.getModel().isIncrementBuildOnExpertMode()) {
-            boolean containPartitionCol = indexPlan.getBaseTableLayout().getColumns().stream().anyMatch(col -> {
-                return col.getTableDotName().equals(indexPlan.getModel().getPartitionDesc().getPartitionDateColumn());
-            });
+            boolean containPartitionCol = indexPlan.getBaseTableLayout().getColumns().stream().anyMatch(col -> col
+                    .getTableDotName().equals(indexPlan.getModel().getPartitionDesc().getPartitionDateColumn()));
             if (!containPartitionCol) {
                 throw new KylinException(PARTITION_COLUMN_NOT_AVAILABLE,
                         MsgPicker.getMsg().getPartitionColumnNotAvailable());
@@ -141,8 +165,9 @@ public class SecondStorageUtil {
         return index != null && IndexEntity.isTableIndex(index.getId()) && index.isBaseIndex();
     }
 
-    public static Optional<LayoutEntity> getBaseIndex(NDataflow df) {
-        return df.getIndexPlan().getAllLayouts().stream().filter(SecondStorageUtil::isBaseTableIndex).findFirst();
+    public static LayoutEntity getBaseIndex(NDataflow df) {
+        return df.getIndexPlan().getAllLayouts().stream().filter(SecondStorageUtil::isBaseTableIndex)
+                .collect(Collectors.toList()).get(0);
     }
 
     public static List<String> getProjectLocks(String project) {
@@ -316,15 +341,15 @@ public class SecondStorageUtil {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             Optional<Manager<TableFlow>> tableFlowManager = SecondStorageUtil.tableFlowManager(config, project);
             tableFlowManager.ifPresent(manager -> manager.listAll().stream()
-                    .filter(tableFlow -> tableFlow.getId().equals(model)).forEach(tableFlow -> {
-                        tableFlow.update(copy -> {
-                            copy.getTableDataList().stream().filter(
-                                    tableData -> tableData.getDatabase().equals(NameUtil.getDatabase(config, project))
-                                            && tableData.getTable().startsWith(NameUtil.tablePrefix(model)))
-                                    .forEach(tableData -> tableData.removePartitions(
-                                            tablePartition -> segments.contains(tablePartition.getSegmentId())));
-                        });
-                    }));
+                    .filter(tableFlow -> tableFlow.getId().equals(model)).forEach(tableFlow ->
+                            tableFlow.update(copy ->
+                                    copy.getTableDataList().stream().filter(
+                                            tableData -> tableData.getDatabase().equals(NameUtil.getDatabase(config, project))
+                                                    && tableData.getTable().startsWith(NameUtil.tablePrefix(model)))
+                                            .forEach(tableData -> tableData.removePartitions(
+                                                    tablePartition -> segments.contains(tablePartition.getSegmentId())))
+                            )
+                    ));
             return null;
         }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID);
     }
@@ -358,12 +383,28 @@ public class SecondStorageUtil {
         return Collections.emptyList();
     }
 
+    public static TableFlow getTableFlow(String project, String modelId) {
+        Optional<Manager<TableFlow>> tableFlowManager = tableFlowManager(KylinConfig.getInstanceFromEnv(), project);
+        Preconditions.checkState(tableFlowManager.isPresent());
+        Optional<TableFlow> tableFlow = tableFlowManager.get().get(modelId);
+        Preconditions.checkState(tableFlow.isPresent());
+        return tableFlow.get();
+    }
+
     public static Optional<Manager<TableFlow>> tableFlowManager(NDataflow dataflow) {
         return isGlobalEnable() ? tableFlowManager(dataflow.getConfig(), dataflow.getProject()) : Optional.empty();
     }
 
     public static Optional<Manager<TablePlan>> tablePlanManager(KylinConfig config, String project) {
         return isGlobalEnable() ? Optional.of(SecondStorage.tablePlanManager(config, project)) : Optional.empty();
+    }
+
+    public static TablePlan getTablePlan(String project, String modelId) {
+        Optional<Manager<TablePlan>> tablePlanManager = tablePlanManager(KylinConfig.getInstanceFromEnv(), project);
+        Preconditions.checkState(tablePlanManager.isPresent());
+        Optional<TablePlan> tablePlan = tablePlanManager.get().get(modelId);
+        Preconditions.checkState(tablePlan.isPresent());
+        return tablePlan.get();
     }
 
     public static Optional<Manager<NodeGroup>> nodeGroupManager(KylinConfig config, String project) {
@@ -387,19 +428,29 @@ public class SecondStorageUtil {
     public static void checkJobRestart(String project, String jobId) {
         if (!isProjectEnable(project))
             return;
-        NExecutableManager executableManager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(),
-                project);
-        AbstractExecutable abstractExecutable = executableManager.getJob(jobId);
-        JobTypeEnum type = abstractExecutable.getJobType();
-        boolean canRestart = type != JobTypeEnum.EXPORT_TO_SECOND_STORAGE;
+        checkJobRestart(NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).getJob(jobId));
+    }
 
-        ExecutablePO jobDetail = executableManager.getAllJobs().stream().filter(job -> job.getId().equals(jobId))
-                .findFirst().orElseThrow(() -> new IllegalStateException("Job not found"));
-        if (BUILD_JOBS.contains(jobDetail.getJobType())) {
-            long finishedCount = jobDetail.getTasks().stream()
-                    .filter(task -> "SUCCEED".equals(task.getOutput().getStatus())).count();
-            // build job can't restart when second storage step is running
-            canRestart = finishedCount < 3;
+    public static boolean checkStorageEmpty(String project, String modelId, long layoutId) {
+        List<TableData> tableDataList = getTableFlow(project, modelId).getTableData(layoutId);
+        return CollectionUtils.isEmpty(tableDataList)
+                || tableDataList.stream().allMatch(tableData -> CollectionUtils.isEmpty(tableData.getPartitions()));
+    }
+
+    @VisibleForTesting
+    public static void checkJobRestart(AbstractExecutable executable) {
+        boolean canRestart = executable.getJobType() != JobTypeEnum.EXPORT_TO_SECOND_STORAGE
+                && executable.getJobType() != JobTypeEnum.SECOND_STORAGE_REFRESH_SECONDARY_INDEXES;
+        if (BUILD_JOBS.contains(executable.getJobType()) && hasSecondStorageLoadJob(executable)) {
+            if (executable.getJobSchedulerMode() == JobSchedulerModeEnum.DAG) {
+                Optional<ChainedStageExecutable> detectResourceTask = getChainedStageExecutableByName(
+                        ExecutableConstants.STEP_NAME_DETECT_RESOURCE, executable);
+                canRestart = detectResourceTask.filter(task -> task.getStatus() != ExecutableState.SUCCEED).isPresent();
+            } else {
+                long finishedCount = ((DefaultExecutable) executable).getTasks().stream()
+                        .filter(task -> ExecutableState.SUCCEED == task.getStatus()).count();
+                canRestart = finishedCount < getExportStepPosition(executable) - 1;
+            }
         }
         if (!canRestart) {
             throw new KylinException(ServerErrorCode.JOB_RESTART_FAILED, MsgPicker.getMsg().getJobRestartFailed());
@@ -427,27 +478,189 @@ public class SecondStorageUtil {
     public static void checkJobResume(String project, String jobId) {
         if (!isProjectEnable(project))
             return;
-        NExecutableManager executableManager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(),
-                project);
-        AbstractExecutable abstractExecutable = executableManager.getJob(jobId);
-        JobTypeEnum type = abstractExecutable.getJobType();
-        boolean secondStorageLoading = type == JobTypeEnum.EXPORT_TO_SECOND_STORAGE;
-        ExecutablePO jobDetail = executableManager.getAllJobs().stream().filter(job -> job.getId().equals(jobId))
-                .findFirst().orElseThrow(() -> new IllegalStateException("Job not found"));
-        if (BUILD_JOBS.contains(jobDetail.getJobType())) {
-            secondStorageLoading = true;
-            long finishedCount = jobDetail.getTasks().stream()
-                    .filter(task -> "SUCCEED".equals(task.getOutput().getStatus())).count();
-            // build job can't restart when second storage step is running
-            if (finishedCount < 3) {
-                secondStorageLoading = false;
-            }
-        }
-        NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project);
-        long runningJobsCount = scheduler.getContext().getRunningJobs().keySet().stream()
-                .filter(id -> id.startsWith(jobId)).count();
-        if (secondStorageLoading && runningJobsCount > 0) {
+        checkJobResume(NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).getJob(jobId));
+    }
+
+    @VisibleForTesting
+    public static void checkJobResume(AbstractExecutable executable) {
+        long runningJobsCount = ((DefaultExecutable) executable).getTasks().stream()
+                .filter(task -> EXPORT_STEPS.contains(task.getName()))
+                .filter(task -> ExecutableState.RUNNING == task.getStatus()).count();
+        if (runningJobsCount != 0) {
             throw new KylinException(ServerErrorCode.JOB_RESUME_FAILED, MsgPicker.getMsg().getJobResumeFailed());
         }
+    }
+
+    public static void checkJobPause(String project, String jobId) {
+        if (!isProjectEnable(project)) {
+            return;
+        }
+        checkJobPause(NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project).getJob(jobId));
+    }
+
+    private static void checkJobPause(AbstractExecutable executable) {
+        if (executable.getJobType() == JobTypeEnum.SECOND_STORAGE_REFRESH_SECONDARY_INDEXES) {
+            throw new KylinException(ServerErrorCode.JOB_PAUSE_FAILED, MsgPicker.getMsg().getJobPauseFailed());
+        }
+    }
+
+    private static boolean hasSecondStorageLoadJob(AbstractExecutable executable) {
+        return ((DefaultExecutable) executable).getTasks().stream()
+                .anyMatch(task -> EXPORT_STEPS.contains(task.getName()));
+    }
+
+    private static int getExportStepPosition(AbstractExecutable executable) {
+        int exportStepPosition = 0;
+        for (AbstractExecutable task : ((DefaultExecutable) executable).getTasks()) {
+            exportStepPosition++;
+            if (EXPORT_STEPS.contains(task.getName())) {
+                break;
+            }
+        }
+        return exportStepPosition;
+    }
+
+    public static boolean checkBuildFlatTableIsSuccess(AbstractExecutable executable) {
+        if (executable.getJobSchedulerMode() != JobSchedulerModeEnum.DAG) {
+            return true;
+        }
+        Optional<ChainedStageExecutable> buildSparkCubeTask = getChainedStageExecutableByName(STEP_NAME_BUILD_SPARK_CUBE, executable);
+        if (!buildSparkCubeTask.isPresent()) {
+            return true;
+        }
+        Map<String, List<StageBase>> stages = buildSparkCubeTask.get().getStagesMap();
+        return stages.entrySet().stream()
+                .map(segmentStages -> {
+                    String segmentId = segmentStages.getKey();
+                    return segmentStages.getValue().stream()
+                            .filter(segmentStage -> ExecutableConstants.STAGE_NAME_GENERATE_FLAT_TABLE.equals(segmentStage.getName()))
+                            .map(segmentStage -> segmentStage.getOutput(segmentId).getState() == ExecutableState.SUCCEED)
+                            .findFirst()
+                            .orElse(true);
+                }).reduce((b1, b2) -> b1 && b2)
+                .orElse(true);
+    }
+
+    private static Optional<ChainedStageExecutable> getChainedStageExecutableByName(String name, AbstractExecutable executable) {
+        List<? extends AbstractExecutable> tasks = ((ChainedExecutable) executable).getTasks();
+        return tasks.stream()
+                .filter(task -> name.equals(task.getName()))
+                .map(ChainedStageExecutable.class::cast)
+                .findFirst();
+    }
+
+    public static boolean checkMergeFlatTableIsSuccess(AbstractExecutable executable) {
+        if (executable.getJobSchedulerMode() != JobSchedulerModeEnum.DAG) {
+            return true;
+        }
+        Optional<ChainedStageExecutable> mergeSparkCubeTask = getChainedStageExecutableByName(STEP_NAME_MERGER_SPARK_SEGMENT, executable);
+        if (!mergeSparkCubeTask.isPresent()) {
+            return true;
+        }
+        Map<String, List<StageBase>> stages = mergeSparkCubeTask.get().getStagesMap();
+        return stages.entrySet().stream()
+                .map(segmentStages -> {
+                    String segmentId = segmentStages.getKey();
+                    return segmentStages.getValue().stream()
+                            .filter(segmentStage -> ExecutableConstants.STAGE_NAME_MERGE_FLAT_TABLE.equals(segmentStage.getName()))
+                            .map(segmentStage -> segmentStage.getOutput(segmentId).getState() == ExecutableState.SUCCEED)
+                            .findFirst()
+                            .orElse(true);
+                }).reduce((b1, b2) -> b1 && b2)
+                .orElse(true);
+    }
+
+    public static boolean checkBuildDfsIsSuccess(AbstractExecutable executable) {
+        if (executable.getJobSchedulerMode() != JobSchedulerModeEnum.DAG) {
+            return true;
+        }
+        List<? extends AbstractExecutable> tasks = ((ChainedExecutable) executable).getTasks();
+
+        return tasks.stream()
+                .filter(task -> STEP_UPDATE_METADATA.equals(task.getName()))
+                .map(task -> task.getStatus() == ExecutableState.SUCCEED)
+                .findFirst()
+                .orElse(true);
+    }
+
+    public static boolean checkMergeDfsIsSuccess(AbstractExecutable executable) {
+        if (executable.getJobSchedulerMode() != JobSchedulerModeEnum.DAG) {
+            return true;
+        }
+
+        List<? extends AbstractExecutable> tasks = ((ChainedExecutable) executable).getTasks();
+
+        return tasks.stream()
+                .filter(task -> STEP_NAME_CLEANUP.equals(task.getName()))
+                .map(task -> task.getStatus() == ExecutableState.SUCCEED)
+                .findFirst()
+                .orElse(true);
+    }
+
+    public static Set<Long> listEnableLayoutBySegment(String project, String modelId, String segmentId) {
+        if (!isModelEnable(project, modelId)) {
+            return ImmutableSet.of();
+        }
+
+        Optional<Manager<TableFlow>> tableFlowManager = tableFlowManager(KylinConfig.getInstanceFromEnv(), project);
+
+        if (!tableFlowManager.isPresent()) {
+            return ImmutableSet.of();
+        }
+
+        Optional<TableFlow> tableFlow = tableFlowManager.get().get(modelId);
+
+        if (!tableFlow.isPresent()) {
+            return ImmutableSet.of();
+        }
+        NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        NDataflow dataflow = dataflowManager.getDataflow(modelId);
+        return tableFlow.get().getLayoutBySegment(segmentId).stream().filter(
+                layout -> dataflow.getIndexPlan() != null && dataflow.getIndexPlan().getLayoutEntity(layout) != null)
+                .collect(Collectors.toSet());
+    }
+
+    public static String collectExecutedPlan(String executedPlan) {
+        StringBuilder pushedExecutedPlan = new StringBuilder();
+        List<Pattern> pushedPattern = Lists.newArrayList(PUSHED_AGGREGATES, PUSHED_FILTERS, PUSHED_GROUP_BY, PUSHED_LIMIT, PUSHED_OFFSET, PUSHED_TOP_N);
+        for (Pattern pattern : pushedPattern) {
+            Matcher match = pattern.matcher(executedPlan);
+            if (match.find()) {
+                pushedExecutedPlan.append(",").append(match.group());
+            }
+        }
+        return pushedExecutedPlan.toString();
+    }
+
+    public static String convertExecutedPlan(String executedPlan, String project, List<NativeQueryRealization> realizations) {
+        Pattern columnName = Pattern.compile("c[0-9]+");
+        List<NativeQueryRealization> secondStorageLayout = realizations.stream().filter(NativeQueryRealization::isSecondStorage)
+                .collect(Collectors.toList());
+        if (secondStorageLayout.isEmpty() || project == null)
+            return null;
+
+        NativeQueryRealization realization = secondStorageLayout.get(0);
+        IndexPlan indexPlan = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getIndexPlan(realization.getModelId());
+        LayoutEntity layout = indexPlan.getLayoutEntity(realization.getLayoutId());
+
+        Matcher match = columnName.matcher(executedPlan);
+        while (match.find()) {
+            String name = match.group(0);
+            Integer colIndex = convertColumnName(name);
+            String alias = layout.getOrderedDimensions().get(colIndex).getAliasDotName();
+            executedPlan = executedPlan.replace(match.group(), alias);
+            match = columnName.matcher(executedPlan);
+        }
+        return executedPlan;
+    }
+
+    private static Integer convertColumnName(String name) {
+        Pattern columnName = Pattern.compile("[0-9]+");
+        Matcher match = columnName.matcher(name);
+        if (match.find()) {
+            return Integer.parseInt(match.group());
+        }
+        return null;
     }
 }

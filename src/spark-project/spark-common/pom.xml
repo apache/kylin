@@ -46,6 +46,10 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-job</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-soft-affinity-cache</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -70,10 +74,24 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
+            <classifier>core</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-common</artifactId>
         </dependency>
         <dependency>
             <groupId>it.unimi.dsi</groupId>
             <artifactId>fastutil</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.delta</groupId>
+            <artifactId>delta-core_2.12</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.hipjim</groupId>
+            <artifactId>scala-retry_2.12</artifactId>
         </dependency>
 
         <dependency>
@@ -124,6 +142,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-soft-affinity-cache</artifactId>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-common</artifactId>
             <type>test-jar</type>
         </dependency>
@@ -141,6 +164,12 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_2.12</artifactId>
             <type>test-jar</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.parquet</groupId>
+                    <artifactId>parquet-hadoop</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

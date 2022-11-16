@@ -98,9 +98,9 @@ import org.apache.spark.sql.SparderEnv;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -186,18 +186,18 @@ public class TableServiceTest extends CSVSourceTestCase {
     public void tearDown() {
         EventBusFactory.getInstance().unregister(eventListener);
         cleanupTestMetadata();
-        FileUtils.deleteQuietly(new File("../server-base/metastore_db"));
+        FileUtils.deleteQuietly(new File("../modeling-service/metastore_db"));
     }
 
     @Test
     public void testGetTableDesc() throws IOException {
 
         List<TableDesc> tableDesc = tableService.getTableDesc("default", true, "", "DEFAULT", true);
-        Assert.assertEquals(11, tableDesc.size());
+        Assert.assertEquals(12, tableDesc.size());
         List<TableDesc> tableDesc2 = tableService.getTableDesc("default", true, "TEST_COUNTRY", "DEFAULT", false);
         Assert.assertEquals(1, tableDesc2.size());
         List<TableDesc> tables3 = tableService.getTableDesc("default", true, "", "", true);
-        Assert.assertEquals(20, tables3.size());
+        Assert.assertEquals(21, tables3.size());
         List<TableDesc> tables = tableService.getTableDesc("default", true, "TEST_KYLIN_FACT", "DEFAULT", true);
         Assert.assertEquals("TEST_KYLIN_FACT", tables.get(0).getName());
         Assert.assertEquals(5633024, ((TableDescResponse) tables.get(0)).getStorageSize());
@@ -224,16 +224,16 @@ public class TableServiceTest extends CSVSourceTestCase {
         Assert.assertEquals(2, tableDesc.size());
         val tableMetadataManager = getInstance(getTestConfig(), "streaming_test");
         var tableDesc1 = tableMetadataManager.getTableDesc("DEFAULT.SSB_TOPIC");
-        Assert.assertTrue(NTableMetadataManager.isTableAccessible(tableDesc1));
+        Assert.assertTrue(tableDesc1.isAccessible(getTestConfig().streamingEnabled()));
         getTestConfig().setProperty("kylin.streaming.enabled", "false");
         tableDesc = tableService.getTableDesc("streaming_test", true, "", "DEFAULT", true);
         Assert.assertEquals(0, tableDesc.size());
         // check kafka table
-        Assert.assertFalse(NTableMetadataManager.isTableAccessible(tableDesc1));
+        Assert.assertFalse(tableDesc1.isAccessible(getTestConfig().streamingEnabled()));
 
         // check batch table
         tableDesc1 = tableMetadataManager.getTableDesc("SSB.CUSTOMER");
-        Assert.assertTrue(NTableMetadataManager.isTableAccessible(tableDesc1));
+        Assert.assertTrue(tableDesc1.isAccessible(getTestConfig().streamingEnabled()));
     }
 
     @Test
@@ -399,7 +399,8 @@ public class TableServiceTest extends CSVSourceTestCase {
         tableService.filterSamplingRows("newten", tableDescResponse, false, aclTCRs);
 
         Assert.assertEquals(1, tableDescResponse.getSamplingRows().size());
-        Assert.assertEquals("country_a,11.11,name_%a", String.join(",", tableDescResponse.getSamplingRows().get(0)));
+        Assert.assertEquals("country_a,10.10,11.11,name_%a",
+                String.join(",", tableDescResponse.getSamplingRows().get(0)));
     }
 
     @Test
@@ -452,6 +453,24 @@ public class TableServiceTest extends CSVSourceTestCase {
         assert SparderEnv.getSparkSession().conf().get(String.format(S3AUtil.S3_ENDPOINT_KEY_FORMAT, "testbucket"))
                 .equals("us-west-2.amazonaws.com");
         Assert.assertEquals(1, result.length);
+    }
+
+    @Test
+    public void testAddAndBroadcastSparkSession() {
+        getTestConfig().setProperty("kylin.env.use-dynamic-S3-role-credential-in-table", "true");
+        TableExtDesc.S3RoleCredentialInfo roleCredentialInfo = null;
+        tableService.addAndBroadcastSparkSession(roleCredentialInfo);
+        roleCredentialInfo = new TableExtDesc.S3RoleCredentialInfo("testbucket2", "", "");
+        tableService.addAndBroadcastSparkSession(roleCredentialInfo);
+        assert !SparderEnv.getSparkSession().conf().contains("fs.s3a.bucket2.testbucket.aws.credentials.provider");
+        roleCredentialInfo = new TableExtDesc.S3RoleCredentialInfo("testbucket2", "testRole", "");
+        tableService.addAndBroadcastSparkSession(roleCredentialInfo);
+        assert SparderEnv.getSparkSession().conf().get(String.format(S3AUtil.ROLE_ARN_KEY_FORMAT, "testbucket2"))
+                .equals("testRole");
+        getTestConfig().setProperty("kylin.env.use-dynamic-S3-role-credential-in-table", "false");
+        roleCredentialInfo = new TableExtDesc.S3RoleCredentialInfo("testbucket1", "testRole", "");
+        tableService.addAndBroadcastSparkSession(roleCredentialInfo);
+        assert !SparderEnv.getSparkSession().conf().contains("fs.s3a.bucket.testbucket1.aws.credentials.provider");
     }
 
     @Test
@@ -815,7 +834,7 @@ public class TableServiceTest extends CSVSourceTestCase {
     @Test
     public void testGetTableAndColumns() {
         List<TablesAndColumnsResponse> result = tableService.getTableAndColumns("default");
-        Assert.assertEquals(20, result.size());
+        Assert.assertEquals(21, result.size());
     }
 
     @Test
@@ -1128,7 +1147,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         NHiveSourceInfo sourceInfo = new NHiveSourceInfo();
         sourceInfo.setTables(testData);
         UserGroupInformation ugi = UserGroupInformation.getLoginUser();
-        DataSourceState.getInstance().putCache("ugi#" + ugi.getUserName(), sourceInfo);
+        DataSourceState.getInstance().putCache("ugi#" + ugi.getUserName(), sourceInfo, Arrays.asList("aa", "ab", "bc"));
         List<?> tables = tableService.getTableNameResponsesInCache("default", "t", "a");
         Assert.assertEquals(2, tables.size());
     }
@@ -1181,7 +1200,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         NHiveSourceInfo sourceInfo = new NHiveSourceInfo();
         sourceInfo.setTables(testData);
         UserGroupInformation ugi = UserGroupInformation.getLoginUser();
-        DataSourceState.getInstance().putCache("project#default", sourceInfo);
+        DataSourceState.getInstance().putCache("project#default", sourceInfo, Arrays.asList("aa", "ab", "bc"));
         List<?> tables = tableService.getTableNameResponsesInCache("default", "t", "a");
         Assert.assertEquals(2, tables.size());
     }
@@ -1231,7 +1250,6 @@ public class TableServiceTest extends CSVSourceTestCase {
         Assert.assertEquals(1, tableRefresh.getFailed().size());
     }
 
-    @Ignore("TODO: Class load conflict")
     @Test
     public void testRefreshSparkTable() throws Exception {
         CliCommandExecutor command = new CliCommandExecutor();
@@ -1437,7 +1455,8 @@ public class TableServiceTest extends CSVSourceTestCase {
 
     @Test
     public void testCheckMessageWithArgs() {
-        Assert.assertThrows(KylinException.class,
-                () -> ReflectionTestUtils.invokeMethod(tableService, "checkMessage", "table", new ArrayList<>()));
+        ThrowingRunnable func = () -> ReflectionTestUtils.invokeMethod(tableService, "checkMessage", "table",
+                new ArrayList<>());
+        Assert.assertThrows(KylinException.class, func);
     }
 }

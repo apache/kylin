@@ -18,14 +18,14 @@
 
 package org.apache.kylin.rest.handler.resourcegroup;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.RESOURCE_GROUP_ID_ALREADY_EXIST;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.RESOURCE_GROUP_ID_EMPTY;
 
 import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupEntity;
 import org.apache.kylin.rest.request.resourecegroup.ResourceGroupRequest;
 import org.springframework.core.annotation.Order;
@@ -44,7 +44,7 @@ public class ResourceGroupEntityValidator implements IResourceGroupRequestValida
         for (ResourceGroupEntity entity : entities) {
             String entityId = entity.getId();
             if (StringUtils.isBlank(entityId)) {
-                throw new KylinException(INVALID_PARAMETER, MsgPicker.getMsg().getEmptyResourceGroupId());
+                throw new KylinException(RESOURCE_GROUP_ID_EMPTY);
             } else {
                 if (!entityIds.containsKey(entityId)) {
                     entityIds.put(entityId, 1);
@@ -52,8 +52,7 @@ public class ResourceGroupEntityValidator implements IResourceGroupRequestValida
                     entityIds.put(entityId, entityIds.get(entityId) + 1);
                 }
                 if (entityIds.get(entityId) > 1) {
-                    throw new KylinException(INVALID_PARAMETER,
-                            MsgPicker.getMsg().getdDuplicatedResourceGroupId(entityId));
+                    throw new KylinException(RESOURCE_GROUP_ID_ALREADY_EXIST, entityId);
                 }
             }
         }

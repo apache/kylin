@@ -23,7 +23,6 @@ import org.apache.spark.sql.catalyst.expressions.aggregate.DeclarativeAggregate
 import org.apache.spark.sql.catalyst.expressions.codegen.Block._
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode, FalseLiteral}
 import org.apache.spark.sql.catalyst.util.{DateTimeUtils, GenericArrayData, KapDateTimeUtils}
-import org.apache.spark.sql.connector.read.sqlpushdown.NotSupportPushDown
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.udf._
@@ -47,8 +46,7 @@ import scala.collection.JavaConverters._
 // scalastyle:on line.size.limit
 case class KapAddMonths(startDate: Expression, numMonths: Expression)
   extends BinaryExpression
-    with ImplicitCastInputTypes
-    with NotSupportPushDown {
+    with ImplicitCastInputTypes {
 
   override def left: Expression = startDate
 
@@ -94,8 +92,7 @@ case class KapAddMonths(startDate: Expression, numMonths: Expression)
 // scalastyle:on line.size.limit
 case class KapSubtractMonths(a: Expression, b: Expression)
   extends BinaryExpression
-    with ImplicitCastInputTypes
-    with NotSupportPushDown {
+    with ImplicitCastInputTypes {
 
   override def left: Expression = a
 
@@ -198,35 +195,6 @@ case class Sum0(child: Expression)
     super.legacyWithNewChildren(newChildren)
 }
 
-case class KapDayOfWeek(a: Expression)
-  extends UnaryExpression
-    with ImplicitCastInputTypes
-    with NotSupportPushDown {
-
-  override def child: Expression = a
-
-  override def inputTypes: Seq[AbstractDataType] = Seq(DateType)
-
-  override protected def doGenCode(ctx: CodegenContext,
-                                   ev: ExprCode): ExprCode = {
-    val dtu = KapDateTimeUtils.getClass.getName.stripSuffix("$")
-    defineCodeGen(ctx, ev, (d) => {
-      s"""$dtu.dayOfWeek($d)"""
-    })
-  }
-
-  override def nullSafeEval(date: Any): Any = {
-    KapDateTimeUtils.dayOfWeek(date.asInstanceOf[Int])
-  }
-
-  override def dataType: DataType = IntegerType
-
-  override def prettyName: String = "kap_day_of_week"
-
-  override protected def withNewChildInternal(newChild: Expression): KapDayOfWeek =
-    copy(a = newChild)
-}
-
 case class TimestampAdd(left: Expression, mid: Expression, right: Expression) extends TernaryExpression with ExpectsInputTypes {
 
   override def dataType: DataType = getResultDataType
@@ -306,8 +274,7 @@ case class TimestampAdd(left: Expression, mid: Expression, right: Expression) ex
 }
 
 case class TimestampDiff(left: Expression, mid: Expression, right: Expression) extends TernaryExpression
-  with ExpectsInputTypes
-  with NotSupportPushDown {
+  with ExpectsInputTypes {
 
   override def inputTypes: Seq[AbstractDataType] =
     Seq(StringType, TypeCollection(DateType, TimestampType), TypeCollection(DateType, TimestampType))
@@ -380,6 +347,24 @@ case class Truncate(_left: Expression, _right: Expression) extends BinaryExpress
     val newChildren = Seq(newLeft, newRight)
     super.legacyWithNewChildren(newChildren)
   }
+}
+
+case class DictEncodeV3(child: Expression) extends UnaryExpression {
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = defineCodeGen(ctx, ev, c => c)
+
+  override def dataType: DataType = StringType
+
+  override protected def withNewChildInternal(newChild: Expression): DictEncodeV3 = copy(child = newChild)
+
+  override def eval(input: InternalRow): Any = {
+    if (input != null) {
+      super.eval(input)
+    } else {
+      0L
+    }
+  }
+
+  override protected def nullSafeEval(input: Any): Any = super.nullSafeEval(input)
 }
 
 case class DictEncode(left: Expression, mid: Expression, right: Expression) extends TernaryExpression with ExpectsInputTypes {

@@ -18,25 +18,21 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCleanUpTransactionalTableJob;
-
-import java.util.Set;
-
+import lombok.SneakyThrows;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.job.execution.DefaultChainedExecutableOnTable;
+import org.apache.kylin.job.execution.DefaultExecutableOnTable;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.sparkproject.guava.base.Preconditions;
 
-import lombok.SneakyThrows;
+import java.util.Set;
 
-/**
- *
- */
-public class NSparkSnapshotJob extends DefaultChainedExecutableOnTable {
+import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCleanUpTransactionalTableJob;
+
+public class NSparkSnapshotJob extends DefaultExecutableOnTable {
     public NSparkSnapshotJob() {
         super();
     }
@@ -46,7 +42,7 @@ public class NSparkSnapshotJob extends DefaultChainedExecutableOnTable {
     }
 
     public static NSparkSnapshotJob create(TableDesc tableDesc, String submitter, String partitionCol,
-            boolean incrementBuild, Set<String> partitionToBuild, boolean isRefresh, String yarnQueue, Object tag) {
+                                           boolean incrementBuild, Set<String> partitionToBuild, boolean isRefresh, String yarnQueue, Object tag) {
         JobTypeEnum jobType = isRefresh ? JobTypeEnum.SNAPSHOT_REFRESH : JobTypeEnum.SNAPSHOT_BUILD;
         return create(tableDesc, submitter, jobType, RandomUtil.randomUUIDStr(), partitionCol, incrementBuild,
                 partitionToBuild, yarnQueue, tag);
@@ -59,7 +55,7 @@ public class NSparkSnapshotJob extends DefaultChainedExecutableOnTable {
 
     @SneakyThrows
     public static NSparkSnapshotJob create(TableDesc tableDesc, String submitter, JobTypeEnum jobType, String jobId,
-            String partitionCol, boolean incrementalBuild, Set<String> partitionToBuild, String yarnQueue, Object tag) {
+                                           String partitionCol, boolean incrementalBuild, Set<String> partitionToBuild, String yarnQueue, Object tag) {
         Preconditions.checkArgument(submitter != null);
         NSparkSnapshotJob job = new NSparkSnapshotJob();
         String project = tableDesc.getProject();

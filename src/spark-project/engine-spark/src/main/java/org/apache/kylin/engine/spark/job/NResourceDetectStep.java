@@ -18,15 +18,14 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.util.Map;
-import java.util.Set;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 public class NResourceDetectStep extends NSparkExecutable {
@@ -45,7 +44,7 @@ public class NResourceDetectStep extends NSparkExecutable {
         sparkJobHandler = new DefaultSparkBuildJobHandler();
     }
 
-    public NResourceDetectStep(DefaultChainedExecutable parent) {
+    public NResourceDetectStep(DefaultExecutable parent) {
         if (parent instanceof NSparkCubingJob) {
             this.setSparkSubmitClassName(RDSegmentBuildJob.class.getName());
         } else if (parent instanceof NSparkMergingJob) {
@@ -61,8 +60,8 @@ public class NResourceDetectStep extends NSparkExecutable {
     @Override
     protected Set<String> getMetadataDumpList(KylinConfig config) {
         final AbstractExecutable parent = getParent();
-        if (parent instanceof DefaultChainedExecutable) {
-            return ((DefaultChainedExecutable) parent).getMetadataDumpList(config);
+        if (parent instanceof DefaultExecutable) {
+            return ((DefaultExecutable) parent).getMetadataDumpList(config);
         }
         throw new IllegalStateException("Unsupported resource detect for non chained executable!");
     }

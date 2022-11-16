@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -45,6 +44,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.spark.SparkEnv;
+import org.apache.spark.utils.SparkHadoopUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -173,14 +173,14 @@ public class SparkExecutorHdfsLogAppender extends AbstractHdfsLogAppender {
                 if (ugi != null) {
                     StatusLogger.getLogger().warn("Login user hashcode is " + ugi.hashCode());
                     ugi.doAs((PrivilegedExceptionAction<Void>) () -> {
-                        if (!initHdfsWriter(file, new Configuration())) {
+                        if (!initHdfsWriter(file, SparkHadoopUtils.newConfigurationWithSparkConf())) {
                             StatusLogger.getLogger().error("Failed to init the hdfs writer!");
                         }
                         doRollingClean(loggingEvent);
                         return null;
                     });
                 } else {
-                    if (!initHdfsWriter(file, new Configuration())) {
+                    if (!initHdfsWriter(file, SparkHadoopUtils.newConfigurationWithSparkConf())) {
                         StatusLogger.getLogger().error("Failed to init the hdfs writer!");
                     }
                     doRollingClean(loggingEvent);

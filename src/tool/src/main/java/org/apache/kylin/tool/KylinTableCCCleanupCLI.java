@@ -58,7 +58,7 @@ public class KylinTableCCCleanupCLI extends ExecutableApplication {
                 Runtime.getRuntime().addShutdownHook(new Thread(maintainModeTool::releaseEpochs));
             }
             new KylinTableCCCleanupCLI().execute(args);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             exit = 1;
             logger.warn("Fail to cleanup table cc.", e);
         }

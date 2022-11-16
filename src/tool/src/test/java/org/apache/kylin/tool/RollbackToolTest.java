@@ -18,16 +18,11 @@
 
 package org.apache.kylin.tool;
 
-import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.datasourceParameters;
-
-import java.io.File;
-import java.io.IOException;
-import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Locale;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
+import lombok.val;
+import lombok.var;
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -37,7 +32,6 @@ import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -58,11 +52,15 @@ import org.sparkproject.guava.collect.Sets;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.File;
+import java.io.IOException;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
 
-import lombok.val;
-import lombok.var;
+import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.datasourceParameters;
 
 public class RollbackToolTest extends NLocalFileMetadataTestCase {
 

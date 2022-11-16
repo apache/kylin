@@ -20,6 +20,8 @@ package org.apache.kylin.rest.config;
 import java.util.Date;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.jnet.Installer;
 import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.kylin.common.KapConfig;
@@ -49,14 +51,16 @@ import org.apache.kylin.rest.config.initialize.ProcessStatusListener;
 import org.apache.kylin.rest.config.initialize.QueryMetricsListener;
 import org.apache.kylin.rest.config.initialize.SparderStartEvent;
 import org.apache.kylin.rest.config.initialize.TableSchemaChangeListener;
+import org.apache.kylin.rest.config.initialize.UserAclListener;
 import org.apache.kylin.rest.service.CommonQueryCacheSupporter;
 import org.apache.kylin.rest.util.JStackDumpTask;
 import org.apache.kylin.streaming.jobs.StreamingJobListener;
 import org.apache.kylin.tool.daemon.KapGuardianHATask;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.TaskScheduler;
@@ -67,6 +71,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration
 @Order(1)
+@Profile("!test")
 public class AppInitializer {
 
     @Autowired
@@ -81,20 +86,21 @@ public class AppInitializer {
     @Autowired(required = false)
     HostInfoFetcher hostInfoFetcher;
 
+    @Autowired
+    ApplicationContext context;
+
     JdbcStreamingJobStatsStore streamingJobStatsStore;
 
-    @EventListener(ApplicationPreparedEvent.class)
-    public void init(ApplicationPreparedEvent event) throws Exception {
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
+    @PostConstruct
+    public void init() throws Exception {
 
+        val kylinConfig = KylinConfig.getInstanceFromEnv();
         NCircuitBreaker.start(KapConfig.wrap(kylinConfig));
 
-        boolean isJob = kylinConfig.isJobNode();
-
-        if (isJob) {
+        if (kylinConfig.isJobNode()) {
             // restore from metadata, should not delete
             val resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
-            resourceStore.setChecker((e) -> {
+            resourceStore.setChecker(e -> {
                 String instance = e.getInstance();
                 String localIdentify = EpochOrchestrator.getOwnerIdentity().split("\\|")[0];
                 return localIdentify.equalsIgnoreCase(instance);
@@ -105,7 +111,6 @@ public class AppInitializer {
             EventBusFactory.getInstance().register(new JobSchedulerListener(), false);
             EventBusFactory.getInstance().register(new ModelBrokenListener(), false);
             EventBusFactory.getInstance().register(epochChangedListener, false);
-            //            EventBusFactory.getInstance().registerBroadcast(broadcastListener);
             EventBusFactory.getInstance().register(new ProcessStatusListener(), true);
             EventBusFactory.getInstance().register(new StreamingJobListener(), true);
 
@@ -124,20 +129,15 @@ public class AppInitializer {
             resourceStore.getMetadataStore().setEpochStore(epochStore);
         }
 
-        // Don't need to initialize distributed lock when running in local mode
-        if (!kylinConfig.isUTEnv()) {
-            kylinConfig.getDistributedLockFactory().initialize();
-        }
+        kylinConfig.getDistributedLockFactory().initialize();
         warmUpSystemCache();
-        event.getApplicationContext().publishEvent(new AfterMetadataReadyEvent(event.getApplicationContext()));
+        context.publishEvent(new AfterMetadataReadyEvent(context));
 
         if (kylinConfig.isQueryNode()) {
             if (kylinConfig.isSparderAsync()) {
-                event.getApplicationContext()
-                        .publishEvent(new SparderStartEvent.AsyncEvent(event.getApplicationContext()));
+                context.publishEvent(new SparderStartEvent.AsyncEvent(context));
             } else {
-                event.getApplicationContext()
-                        .publishEvent(new SparderStartEvent.SyncEvent(event.getApplicationContext()));
+                context.publishEvent(new SparderStartEvent.SyncEvent(context));
             }
         }
         // register acl update listener
@@ -149,8 +149,10 @@ public class AppInitializer {
         EventListenerRegistry.getInstance(kylinConfig).register(new CacheCleanListener(), "cacheInManager");
 
         EventBusFactory.getInstance().register(new QueryMetricsListener(), false);
+        EventBusFactory.getInstance().register(new UserAclListener(), true);
 
         postInit();
+        log.info("Application metadata initialization is complete.");
     }
 
     private void warmUpSystemCache() {
@@ -160,6 +162,7 @@ public class AppInitializer {
             NProjectLoader.updateCache(prjInstance.getName());
             NProjectLoader.removeCache();
         });
+        log.info("The system cache is warmed up.");
     }
 
     @EventListener(ApplicationReadyEvent.class)

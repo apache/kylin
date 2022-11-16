@@ -1,3 +1,0 @@
---  select  lstg_format_name,count(distinct seller_id) as TRANS_CNT
---  from test_kylin_fact
---  group by test_kylin_fact.lstg_format_name

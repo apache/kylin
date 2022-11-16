@@ -124,13 +124,15 @@ public class AccelerateRuleUtil {
                         && queryHistory1.getDuration() <= Long
                                 .parseLong(((FavoriteRule.Condition) cond).getRightThreshold()) * 1000L)));
 
-        return submitterMatch || userGroupMatch || durationMatch;
+        return (submitterMatch || userGroupMatch) && durationMatch;
     }
 
     private boolean matchRule(QueryHistory history, FavoriteRule favoriteRule,
             BiPredicate<QueryHistory, List<?>> function) {
-        if (!favoriteRule.isEnabled()) {
-            return false;
+        if ((FavoriteRule.SUBMITTER_RULE_NAME.equals(favoriteRule.getName())
+                || FavoriteRule.SUBMITTER_GROUP_RULE_NAME.equals(favoriteRule.getName()))
+                && !favoriteRule.isEnabled()) {
+            return true;
         }
 
         return function.test(history, favoriteRule.getConds());

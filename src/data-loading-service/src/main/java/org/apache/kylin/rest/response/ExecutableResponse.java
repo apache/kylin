@@ -18,10 +18,20 @@
 
 package org.apache.kylin.rest.response;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
+import com.clearspring.analytics.util.Lists;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.google.common.collect.Maps;
+import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
+import org.apache.kylin.engine.spark.job.NTableSamplingJob;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.var;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
@@ -31,25 +41,17 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ChainedExecutable;
 import org.apache.kylin.job.execution.ChainedStageExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.job.execution.StageBase;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
-import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
+import org.apache.kylin.metadata.model.TableDesc;
 
-import com.clearspring.analytics.util.Lists;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.google.common.collect.Maps;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.var;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Setter
 @Getter
@@ -102,6 +104,10 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
     private Object tag;
     @JsonProperty("snapshot_data_range")
     private String snapshotDataRange;
+    @JsonProperty("job_scheduler_mode")
+    private JobSchedulerModeEnum jobSchedulerMode;
+    @JsonProperty("segments")
+    private List<SegmentResponse> segments;
     private static final String SNAPSHOT_FULL_RANGE = "FULL";
     private static final String SNAPSHOT_INC_RANGE = "INC";
 
@@ -124,6 +130,7 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
         executableResponse.setDiscardSafety(abstractExecutable.safetyIfDiscard());
         executableResponse.setTotalDuration(executableResponse.getWaitTime() + executableResponse.getDuration());
         executableResponse.setTag(abstractExecutable.getTag());
+        executableResponse.setJobSchedulerMode(abstractExecutable.getJobSchedulerMode());
         return executableResponse;
     }
 
@@ -317,5 +324,16 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
 
         @JsonProperty("mr_waiting")
         private long mrWaiting;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SegmentResponse {
+        @JsonProperty("id")
+        private String id; // Sequence ID within NDataflow
+        @JsonProperty("status_to_display")
+        private SegmentStatusEnumToDisplay statusToDisplay;
     }
 }

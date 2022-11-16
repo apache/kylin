@@ -18,51 +18,61 @@
 
 package org.apache.kylin.engine.spark.job.stage.build.partition
 
+import com.google.common.collect.Queues
 import org.apache.kylin.engine.spark.job.SegmentJob
 import org.apache.kylin.engine.spark.job.stage.BuildParam
+import org.apache.kylin.engine.spark.job.stage.build.FlatTableAndDictBase.Statistics
 import org.apache.kylin.metadata.cube.model.NDataSegment
+import org.apache.spark.sql.{Dataset, Row}
 
 import scala.collection.JavaConverters._
-import scala.collection.parallel.ForkJoinTaskSupport
-import scala.concurrent.forkjoin.ForkJoinPool
 
 class PartitionGatherFlatTableStats(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
   extends PartitionBuildStage(jobContext, dataSegment, buildParam) {
+
+  private lazy val statsResultQueue = Queues.newLinkedBlockingDeque[PartitionStatsResult]()
+
   override def execute(): Unit = {
+    val spanningTree = buildParam.getPartitionSpanningTree
+    val flatTable = buildParam.getPartitionFlatTable
     if (spanningTree.fromFlatTable()) {
       // Very very heavy step
       // Potentially global dictionary building & encoding within.
       // Materialize flat table.
-      //      flatTable.getFlatTableDS
+      // flatTable.getFlatTableDS
 
       // Collect partitions' flat table dataset and statistics.
       logInfo(s"Segment $segmentId collect partitions' flat table dataset and statistics.")
-      val fromFlatTablePartitions = spanningTree.getFlatTablePartitions.asScala
 
-      val parallel = fromFlatTablePartitions.par
-      val processors = Runtime.getRuntime.availableProcessors
-      val forkJoinPool = new ForkJoinPool(Math.max(processors, fromFlatTablePartitions.size / 8))
-      try {
-        parallel.tasksupport = new ForkJoinTaskSupport(forkJoinPool)
-        val collected = parallel.map { partition =>
-          val partitionFlatTableDS = flatTable.getPartitionDS(partition)
-          val stats = buildPartitionStatistics(partition, partitionFlatTableDS)
-          (partition, partitionFlatTableDS, stats)
-        }.seq
-        val cachedPartitionFlatTableDS = collected.map(tpl => (tpl._1, tpl._2)).toMap
-        buildParam.setCachedPartitionFlatTableDS(cachedPartitionFlatTableDS)
-        val cachedPartitionFlatTableStats = collected.map(tpl => (tpl._1, tpl._3)).toMap
-        buildParam.setCachedPartitionFlatTableStats(cachedPartitionFlatTableStats)
-      } finally {
-        forkJoinPool.shutdownNow()
-      }
+      val taskIter = spanningTree.getFlatTablePartitions.asScala.map(new PartitionStatsTask(_)).iterator
+
+      slowStartExec(taskIter, (statsTask: PartitionStatsTask) => {
+        val partition = statsTask.partition
+        val partitionDS = flatTable.getPartitionDS(partition)
+        val stats = buildPartitionStatistics(partition, partitionDS)
+        statsResultQueue.offer(new PartitionStatsResult(partition, partitionDS, stats))
+      })
+
+      val collected = polledResultSeq(statsResultQueue)
+      buildParam.setCachedPartitionDS(collected.map(r => (r.partition, r.partitionDS)).toMap)
+      buildParam.setCachedPartitionStats(collected.map(r => (r.partition, r.stats)).toMap)
+
       logInfo(s"Segment $segmentId finished collect partitions' " +
-        s"flat table dataset and statistics ${buildParam.getCachedPartitionFlatTableStats}.")
+        s"flat table dataset and statistics ${buildParam.getCachedPartitionStats}.")
     }
 
     // Build root node's layout partition sanity cache.
     buildSanityCache()
-
-    // TODO Cleanup potential temp data.
   }
+
+  sealed class PartitionStatsResult(val partition: Long,
+                                    val partitionDS: Dataset[Row],
+                                    val stats: Statistics)
+
+  sealed class PartitionStatsTask(val partition: Long) extends Task {
+    override def getTaskDesc: String = {
+      s"partition stats $partition"
+    }
+  }
+
 }

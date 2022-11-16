@@ -82,7 +82,7 @@ case class SparderDerivedUtil(gtInfoTableName: String,
     }
 
     val hostFkIdx = hostFkCols.map(hostCol => indexOnTheGTValues(hostCol))
-    // fix for test src/kylin-it/src/test/resources/query/sql_rawtable/query03.sql
+    // fix for test src/kap-it/src/test/resources/query/sql_rawtable/query03.sql
     if (!hostFkIdx.exists(_ >= 0)) {
       return
     }

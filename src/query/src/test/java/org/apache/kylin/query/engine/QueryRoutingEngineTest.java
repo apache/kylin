@@ -22,6 +22,7 @@ import static org.apache.kylin.query.engine.QueryRoutingEngine.SPARK_JOB_FAILED;
 import static org.apache.kylin.query.engine.QueryRoutingEngine.SPARK_MEM_LIMIT_EXCEEDED;
 
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 
@@ -29,6 +30,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.QueryErrorCode;
+import org.apache.kylin.common.exception.TargetSegmentNotFoundException;
 import org.apache.kylin.common.persistence.InMemResourceStore;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
@@ -215,6 +217,43 @@ public class QueryRoutingEngineTest extends NLocalFileMetadataTestCase {
                     || e.getCause().getCause() instanceof NoStreamingRealizationFoundException);
             Assert.assertFalse(QueryContext.current().getQueryTagInfo().isPushdown());
         }
+    }
+
+    @Test
+    public void testCheckIfRetryQuery() throws Exception {
+        //QueryRoutingEngine engine = new QueryRoutingEngine();
+        KylinException unrelatedException = new KylinException(QueryErrorCode.BUSY_QUERY,
+                "This is an unrelated exception for retry");
+        boolean checkResult;
+        checkResult = queryRoutingEngine.checkIfRetryQuery(unrelatedException);
+        Assert.assertFalse(checkResult);
+        TargetSegmentNotFoundException segNotFoundEx = new TargetSegmentNotFoundException("1;2;3");
+        checkResult = queryRoutingEngine.checkIfRetryQuery(segNotFoundEx);
+        Assert.assertTrue(checkResult);
+        // to ensure that query will be retried only once
+        checkResult = queryRoutingEngine.checkIfRetryQuery(segNotFoundEx);
+        Assert.assertFalse(checkResult);
+        QueryContext.current().getMetrics().setRetryTimes(0);
+
+        final String sql = "select * from success_table_2";
+        final String project = "default";
+        KylinConfig kylinconfig = KylinConfig.getInstanceFromEnv();
+
+        QueryParams queryParams = new QueryParams();
+        queryParams.setProject(project);
+        queryParams.setSql(sql);
+        queryParams.setKylinConfig(kylinconfig);
+        queryParams.setSelect(true);
+
+        Mockito.doThrow(new SQLException("ex", segNotFoundEx)).when(queryRoutingEngine).execute(Mockito.anyString(),
+                Mockito.any());
+        try {
+            queryRoutingEngine.queryWithSqlMassage(queryParams);
+        } catch (Exception e) {
+            Assert.assertTrue(e.getCause() instanceof TargetSegmentNotFoundException);
+            Assert.assertEquals(1, QueryContext.current().getMetrics().getRetryTimes());
+        }
+        QueryContext.current().getMetrics().setRetryTimes(0);
     }
 
 }

@@ -21,16 +21,15 @@ import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.rest.config.cloud.AlluxioExtension;
 import org.apache.kylin.rest.config.initialize.AfterMetadataReadyEvent;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.EventListener;
 
 @Configuration
 @ConditionalOnProperty(name = "kylin.env.channel", havingValue = "cloud")
-public class CloudConfig {
+public class CloudConfig implements ApplicationListener<AfterMetadataReadyEvent> {
 
-    @EventListener(AfterMetadataReadyEvent.class)
-    public void init() {
+    @Override
+    public void onApplicationEvent(AfterMetadataReadyEvent event) {
         EventBusFactory.getInstance().register(new AlluxioExtension(), true);
     }
-
 }

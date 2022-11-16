@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.response;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -34,4 +36,7 @@ public class ProjectPermissionResponse {
 
     @JsonProperty("permission")
     private String permission;
+
+    @JsonProperty("ext_permissions")
+    private List<String> extPermissions;
 }

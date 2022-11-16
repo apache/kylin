@@ -25,11 +25,11 @@ import java.util.List;
 
 import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.rest.request.JobFilter;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.service.JobService;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -108,6 +108,46 @@ public class JobControllerV2Test {
 
         Mockito.verify(jobControllerV2).getJobList(new Integer[] { 0 }, 1, "", "default", null, 0, 10, "last_modified",
                 true);
+    }
+
+    @Test
+    public void testGetJobsException_pageOffset_pageSize() throws Exception {
+        List<ExecutableResponse> jobs = new ArrayList<>();
+        List<String> jobNames = Lists.newArrayList();
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList("NEW"), jobNames, 4, "", "", "default", "job_name",
+                false);
+        Mockito.when(jobService.listJobs(jobFilter)).thenReturn(jobs);
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs").contentType(MediaType.APPLICATION_JSON)
+                .param("projectName", "default").param("pageOffset", "a").param("pageSize", "10")
+                .param("timeFilter", "1").param("jobName", "").param("status", "0")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs").contentType(MediaType.APPLICATION_JSON)
+                .param("projectName", "default").param("pageOffset", "-1").param("pageSize", "10")
+                .param("timeFilter", "1").param("jobName", "").param("status", "0")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs").contentType(MediaType.APPLICATION_JSON)
+                .param("projectName", "default").param("pageOffset", "1").param("pageSize", "-1")
+                .param("timeFilter", "1").param("jobName", "").param("status", "0")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs").contentType(MediaType.APPLICATION_JSON)
+                .param("projectName", "default").param("pageOffset", "1").param("pageSize", "a")
+                .param("timeFilter", "1").param("jobName", "").param("status", "0")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs").contentType(MediaType.APPLICATION_JSON)
+                .param("projectName", "default").param("pageOffset", "1").param("pageSize", "10")
+                .param("timeFilter", "1").param("jobName", "").param("status", "0")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+
     }
 
 }

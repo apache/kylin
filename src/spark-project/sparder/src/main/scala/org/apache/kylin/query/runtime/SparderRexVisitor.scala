@@ -112,12 +112,12 @@ class SparderRexVisitor(val inputFieldNames: Array[String],
     val op = call.getOperator
     op.getKind match {
       case AND =>
-        children.foreach(filter => assert(filter.isInstanceOf[Column]))
+        children.foreach(filter => if (filter != null) assert(filter.isInstanceOf[Column]))
         children.map(_.asInstanceOf[Column]).reduce {
           _.and(_)
         }
       case OR =>
-        children.foreach(filter => assert(filter.isInstanceOf[Column]))
+        children.foreach(filter => if (filter != null) assert(filter.isInstanceOf[Column]))
         children.map(_.asInstanceOf[Column]).reduce {
           _.or(_)
         }

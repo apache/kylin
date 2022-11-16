@@ -29,15 +29,15 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.model.SelectRule;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.TableRef;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.tool.bisync.model.ColumnDef;
 import org.apache.kylin.tool.bisync.model.JoinTreeNode;
@@ -67,6 +67,7 @@ public class SyncModelBuilder {
         markHasPermissionIndexedColumnsAndMeasures(columnDefMap, measureDefs, indexPlan, null, null,
                 syncContext.getModelElement());
         markComputedColumnVisibility(columnDefMap, measureDefs, syncContext.getKylinConfig().exposeComputedColumn());
+
         Set<String[]> hierarchies = getHierarchies(indexPlan);
         JoinTreeNode joinTree = generateJoinTree(dataModelDesc.getJoinTables(), dataModelDesc.getRootFactTableName());
 
@@ -357,7 +358,7 @@ public class SyncModelBuilder {
     }
 
     private Set<String> convertColNames(NDataModel model, ComputedColumnDesc computedColumnDesc,
-                                              Set<String> normalColumns) {
+            Set<String> normalColumns) {
         Set<String> normalCols = convertCCToNormalCols(model, computedColumnDesc, normalColumns);
         Set<String> newAuthColumns = Sets.newHashSet();
         model.getAllTables().forEach(tableRef -> {
@@ -368,6 +369,7 @@ public class SyncModelBuilder {
         return newAuthColumns;
 
     }
+
     private Set<String> convertCCToNormalCols(NDataModel model, ComputedColumnDesc computedColumnDesc,
             Set<String> normalColumns) {
         Set<String> ccUsedColsWithModel = ComputedColumnUtil.getCCUsedColsWithModel(model, computedColumnDesc);

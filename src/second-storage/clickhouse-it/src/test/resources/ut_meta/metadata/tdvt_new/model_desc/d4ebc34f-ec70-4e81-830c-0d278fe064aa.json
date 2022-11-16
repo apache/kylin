@@ -1,0 +1,860 @@
+{
+  "uuid" : "d4ebc34f-ec70-4e81-830c-0d278fe064aa",
+  "last_modified" : 1624448605021,
+  "create_time" : 1599187972614,
+  "version" : "4.0.0.0",
+  "alias" : "AUTO_MODEL_CALCS_1",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "TDVT.CALCS",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "CALCS_0_DOT_0_NUM1",
+    "column" : "CALCS.NUM1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "CALCS_0_DOT_0_STR2",
+    "column" : "CALCS.STR2",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "CALCS_0_DOT_0_NUM3",
+    "column" : "CALCS.NUM3",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "CALCS_0_DOT_0_INT0",
+    "column" : "CALCS.INT0",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "CALCS_0_DOT_0_INT2",
+    "column" : "CALCS.INT2",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "CALCS_0_DOT_0_DATE2",
+    "column" : "CALCS.DATE2",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "CALCS_0_DOT_0_DATE0",
+    "column" : "CALCS.DATE0",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "CALCS_0_DOT_0_BOOL3",
+    "column" : "CALCS.BOOL3",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "CALCS_0_DOT_0_BOOL1",
+    "column" : "CALCS.BOOL1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "CALCS_0_DOT_0_DATETIME1",
+    "column" : "CALCS.DATETIME1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "CALCS_0_DOT_0_TIME1",
+    "column" : "CALCS.TIME1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "CALCS_0_DOT_0_STR3",
+    "column" : "CALCS.STR3",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "NUM0",
+    "column" : "CALCS.NUM0",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "CALCS_0_DOT_0_STR1",
+    "column" : "CALCS.STR1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "CALCS_0_DOT_0_NUM2",
+    "column" : "CALCS.NUM2",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "CALCS_0_DOT_0_NUM4",
+    "column" : "CALCS.NUM4",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "KEY",
+    "column" : "CALCS.KEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "CALCS_0_DOT_0_ZZZ",
+    "column" : "CALCS.ZZZ",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 18,
+    "name" : "CALCS_0_DOT_0_INT1",
+    "column" : "CALCS.INT1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 19,
+    "name" : "CALCS_0_DOT_0_DATE3",
+    "column" : "CALCS.DATE3",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 20,
+    "name" : "CALCS_0_DOT_0_BOOL2",
+    "column" : "CALCS.BOOL2",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 21,
+    "name" : "CALCS_0_DOT_0_INT3",
+    "column" : "CALCS.INT3",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 22,
+    "name" : "CALCS_0_DOT_0_DATE1",
+    "column" : "CALCS.DATE1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 23,
+    "name" : "CALCS_0_DOT_0_TIME0",
+    "column" : "CALCS.TIME0",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 24,
+    "name" : "CALCS_0_DOT_0_BOOL0",
+    "column" : "CALCS.BOOL0",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 25,
+    "name" : "CALCS_0_DOT_0_STR0",
+    "column" : "CALCS.STR0",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 26,
+    "name" : "CALCS_0_DOT_0_DATETIME0",
+    "column" : "CALCS.DATETIME0",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 27,
+    "name" : "CALCS_0_DOT_0_CC_AUTO_1",
+    "column" : "CALCS.CC_AUTO_1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 28,
+    "name" : "CALCS_0_DOT_0_CC_AUTO_3",
+    "column" : "CALCS.CC_AUTO_3",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 29,
+    "name" : "CALCS_0_DOT_0_CC_AUTO_4",
+    "column" : "CALCS.CC_AUTO_4",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 30,
+    "name" : "CC_AUTO_2",
+    "column" : "CALCS.CC_AUTO_2",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 31,
+    "name" : "CALCS_0_DOT_0_CC_AUTO_6",
+    "column" : "CALCS.CC_AUTO_6",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 32,
+    "name" : "CALCS_0_DOT_0_CC_AUTO_5",
+    "column" : "CALCS.CC_AUTO_5",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 33,
+    "name" : "CALCS_0_DOT_0_CC_AUTO_7",
+    "column" : "CALCS.CC_AUTO_7",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 34,
+    "name" : "CC_AUTO_10",
+    "column" : "CALCS.CC_AUTO_10",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 35,
+    "name" : "CALCS_0_DOT_0_CC_AUTO_9",
+    "column" : "CALCS.CC_AUTO_9",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 36,
+    "name" : "DIMENSION_AUTO__1618306445903_2",
+    "column" : "CALCS.CC_AUTO__1618306445903_2",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 37,
+    "name" : "CALCS_CC_AUTO__1618306445903_6",
+    "column" : "CALCS.CC_AUTO__1618306445903_6"
+  }, {
+    "id" : 38,
+    "name" : "CALCS_CC_AUTO__1618306445903_4",
+    "column" : "CALCS.CC_AUTO__1618306445903_4"
+  }, {
+    "id" : 39,
+    "name" : "CALCS_CC_AUTO__1618306445903_5",
+    "column" : "CALCS.CC_AUTO__1618306445903_5"
+  }, {
+    "id" : 40,
+    "name" : "CALCS_CC_AUTO__1618306445903_8",
+    "column" : "CALCS.CC_AUTO__1618306445903_8"
+  }, {
+    "id" : 41,
+    "name" : "DIMENSION_AUTO__1618306445903_1",
+    "column" : "CALCS.CC_AUTO__1618306445903_1",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  }, {
+    "name" : "SUM_CALCS_INT2",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.INT2"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100001
+  }, {
+    "name" : "SUM_CALCS_INT1",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.INT1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100002
+  }, {
+    "name" : "SUM_CALCS_INT0",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.INT0"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100003
+  }, {
+    "name" : "SUM_CALCS_NUM2",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.NUM2"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100004
+  }, {
+    "name" : "SUM_CALCS_NUM1",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.NUM1"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100005
+  }, {
+    "name" : "COUNT_CALCS_NUM4",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.NUM4"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100006
+  }, {
+    "name" : "SUM_CALCS_CC_AUTO_2",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO_2"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100007
+  }, {
+    "name" : "SUM_CALCS_NUM4",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.NUM4"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100008
+  }, {
+    "name" : "MAX_CALCS_INT0",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.INT0"
+      } ],
+      "returntype" : "integer"
+    },
+    "id" : 100009
+  }, {
+    "name" : "COUNT_CALCS_INT0",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.INT0"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100010
+  }, {
+    "name" : "MIN_CALCS_DATETIME0",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.DATETIME0"
+      } ],
+      "returntype" : "timestamp"
+    },
+    "id" : 100011
+  }, {
+    "name" : "COUNT_DISTINCT_CALCS_INT0",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.INT0"
+      } ],
+      "returntype" : "bitmap"
+    },
+    "id" : 100012
+  }, {
+    "name" : "MIN_CALCS_DATE2",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.DATE2"
+      } ],
+      "returntype" : "date"
+    },
+    "id" : 100013
+  }, {
+    "name" : "MAX_CALCS_NUM4",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.NUM4"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100014
+  }, {
+    "name" : "SUM_CALCS_NUM3",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.NUM3"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100015
+  }, {
+    "name" : "COUNT_DISTINCT_CALCS_CC_AUTO_1",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO_1"
+      } ],
+      "returntype" : "bitmap"
+    },
+    "id" : 100016
+  }, {
+    "name" : "MAX_CALCS_DATE2",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.DATE2"
+      } ],
+      "returntype" : "date"
+    },
+    "id" : 100017
+  }, {
+    "name" : "COUNT_DISTINCT_CALCS_NUM2",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.NUM2"
+      } ],
+      "returntype" : "bitmap"
+    },
+    "id" : 100018
+  }, {
+    "name" : "MAX_CALCS_DATE3",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.DATE3"
+      } ],
+      "returntype" : "date"
+    },
+    "id" : 100019
+  }, {
+    "name" : "MIN_CALCS_INT0",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.INT0"
+      } ],
+      "returntype" : "integer"
+    },
+    "id" : 100020
+  }, {
+    "name" : "COUNT_CALCS_CC_AUTO_1",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO_1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100021
+  }, {
+    "name" : "SUM_CALCS_CC_AUTO_5",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO_5"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100022
+  }, {
+    "name" : "COUNT_CALCS_CC_AUTO_5",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO_5"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100023
+  }, {
+    "name" : "COUNT_DISTINCT_CALCS_DATE3",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.DATE3"
+      } ],
+      "returntype" : "bitmap"
+    },
+    "id" : 100024
+  }, {
+    "name" : "COUNT_DISTINCT_CALCS_STR2",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.STR2"
+      } ],
+      "returntype" : "bitmap"
+    },
+    "id" : 100025
+  }, {
+    "name" : "COUNT_CALCS_STR2",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.STR2"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100026
+  }, {
+    "name" : "MIN_CALCS_DATE3",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.DATE3"
+      } ],
+      "returntype" : "date"
+    },
+    "id" : 100027
+  }, {
+    "name" : "MAX_CALCS_STR2",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.STR2"
+      } ],
+      "returntype" : "varchar(255)"
+    },
+    "id" : 100028
+  }, {
+    "name" : "COUNT_CALCS_DATE3",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.DATE3"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100029
+  }, {
+    "name" : "MIN_CALCS_STR2",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.STR2"
+      } ],
+      "returntype" : "varchar(255)"
+    },
+    "id" : 100030
+  }, {
+    "name" : "COUNT_DISTINCT_CALCS_NUM4",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.NUM4"
+      } ],
+      "returntype" : "bitmap"
+    },
+    "id" : 100031
+  }, {
+    "name" : "MIN_CALCS_NUM4",
+    "function" : {
+      "expression" : "MIN",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.NUM4"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100032
+  }, {
+    "name" : "MAX_CALCS_DATETIME0",
+    "function" : {
+      "expression" : "MAX",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.DATETIME0"
+      } ],
+      "returntype" : "timestamp"
+    },
+    "id" : 100033
+  }, {
+    "name" : "SUM_CALCS_CC_AUTO_10",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO_10"
+      } ],
+      "returntype" : "double"
+    },
+    "id" : 100034
+  }, {
+    "name" : "COUNT_DISTINCT_CALCS_CC_AUTO_9",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO_9"
+      } ],
+      "returntype" : "bitmap"
+    },
+    "id" : 100035
+  }, {
+    "name" : "COUNT_CALCS_CC_AUTO_9",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO_9"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100036
+  }, {
+    "name" : "MEASURE_AUTO_1",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO__1618306445903_2"
+      } ],
+      "returntype" : "float"
+    },
+    "id" : 100037
+  }, {
+    "name" : "MEASURE_AUTO_6",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO__1618306445903_2"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100038
+  }, {
+    "name" : "MEASURE_AUTO_3",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO__1618306445903_6"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100039
+  }, {
+    "name" : "MEASURE_AUTO_4",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO__1618306445903_4"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100040
+  }, {
+    "name" : "MEASURE_AUTO_5",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO__1618306445903_5"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100041
+  }, {
+    "name" : "MEASURE_AUTO_2",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "CALCS.CC_AUTO__1618306445903_8"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100042
+  } ],
+  "recommendations_count" : 0,
+  "computed_columns" : [ {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO_1",
+    "expression" : "CASE WHEN CALCS.BOOL0 <> FALSE THEN 1 WHEN CALCS.BOOL0 = FALSE THEN 0 ELSE NULL END",
+    "innerExpression" : "CASE WHEN CALCS.BOOL0 <> FALSE THEN 1 WHEN CALCS.BOOL0 = FALSE THEN 0 ELSE NULL END",
+    "datatype" : "INTEGER",
+    "comment" : "Auto suggested from: CASE WHEN CALCS.BOOL0 <> FALSE THEN 1 WHEN CALCS.BOOL0 = FALSE THEN 0 ELSE NULL END",
+    "rec_uuid" : null
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO_3",
+    "expression" : "CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CALCS.DATE0 WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CALCS.DATE1 ELSE CALCS.DATE2 END",
+    "innerExpression" : "CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CALCS.DATE0 WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CALCS.DATE1 ELSE CALCS.DATE2 END",
+    "datatype" : "DATE",
+    "comment" : "Auto suggested from: CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CALCS.DATE0 WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CALCS.DATE1 ELSE CALCS.DATE2 END",
+    "rec_uuid" : null
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO_4",
+    "expression" : "CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CALCS.DATE0 WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CALCS.DATE1 ELSE NULL END",
+    "innerExpression" : "CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CALCS.DATE0 WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CALCS.DATE1 ELSE NULL END",
+    "datatype" : "DATE",
+    "comment" : "Auto suggested from: CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CALCS.DATE0 WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CALCS.DATE1 ELSE NULL END",
+    "rec_uuid" : null
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO_2",
+    "expression" : "POWER(CALCS.NUM4, 2)",
+    "innerExpression" : "POWER(CALCS.NUM4, 2)",
+    "datatype" : "DOUBLE",
+    "comment" : "Auto suggested from: POWER(CALCS.NUM4, 2)",
+    "rec_uuid" : null
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO_6",
+    "expression" : "CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CALCS.DATE0 ELSE CALCS.DATE1 END",
+    "innerExpression" : "CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CALCS.DATE0 ELSE CALCS.DATE1 END",
+    "datatype" : "DATE",
+    "comment" : "Auto suggested from: CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CALCS.DATE0 ELSE CALCS.DATE1 END",
+    "rec_uuid" : null
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO_5",
+    "expression" : "CAST(CALCS.INT0 AS DOUBLE)",
+    "innerExpression" : "CAST(CALCS.INT0 AS DOUBLE)",
+    "datatype" : "DOUBLE",
+    "comment" : "Auto suggested from: CAST(CALCS.INT0 AS DOUBLE)",
+    "rec_uuid" : null
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO_7",
+    "expression" : "CASE WHEN CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CAST(TRUE AS BOOLEAN) WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CAST(FALSE AS BOOLEAN) ELSE NULL END THEN CALCS.DATE0 WHEN CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CAST(FALSE AS BOOLEAN) WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CAST(TRUE AS BOOLEAN) ELSE NULL END THEN CALCS.DATE1 ELSE CALCS.DATE2 END",
+    "innerExpression" : "CASE WHEN CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CAST(TRUE AS BOOLEAN) WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CAST(FALSE AS BOOLEAN) ELSE NULL END THEN CALCS.DATE0 WHEN CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CAST(FALSE AS BOOLEAN) WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CAST(TRUE AS BOOLEAN) ELSE NULL END THEN CALCS.DATE1 ELSE CALCS.DATE2 END",
+    "datatype" : "DATE",
+    "comment" : "Auto suggested from: CASE WHEN CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CAST(TRUE AS BOOLEAN) WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CAST(FALSE AS BOOLEAN) ELSE NULL END THEN CALCS.DATE0 WHEN CASE WHEN CALCS.NUM0 > CALCS.NUM1 THEN CAST(FALSE AS BOOLEAN) WHEN CALCS.NUM0 <= CALCS.NUM1 THEN CAST(TRUE AS BOOLEAN) ELSE NULL END THEN CALCS.DATE1 ELSE CALCS.DATE2 END",
+    "rec_uuid" : null
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO_10",
+    "expression" : "CALCS.NUM4 * CALCS.NUM4",
+    "innerExpression" : "CALCS.NUM4 * CALCS.NUM4",
+    "datatype" : "DOUBLE",
+    "comment" : "Auto suggested from: CALCS.NUM4 * CALCS.NUM4",
+    "rec_uuid" : null
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO_9",
+    "expression" : "CALCS.BOOL0 <> FALSE",
+    "innerExpression" : "CALCS.BOOL0 <> FALSE",
+    "datatype" : "BOOLEAN",
+    "comment" : "Auto suggested from: CALCS.BOOL0 <> FALSE",
+    "rec_uuid" : null
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO__1618306445903_2",
+    "expression" : "CAST(\"CALCS\".\"INT0\" AS FLOAT)",
+    "innerExpression" : "CAST(`CALCS`.`INT0` AS FLOAT)",
+    "datatype" : "FLOAT",
+    "comment" : "Auto suggested from: CAST(\"CALCS\".\"INT0\" AS FLOAT)",
+    "rec_uuid" : "tmp_1618306445903_2"
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO__1618306445903_6",
+    "expression" : "TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE1\" AS TIMESTAMP), CAST(TIMESTAMPADD(DAY, -1, \"CALCS\".\"DATE0\") AS TIMESTAMP))",
+    "innerExpression" : "TIMESTAMPDIFF('DAY', CAST(`CALCS`.`DATE1` AS TIMESTAMP), CAST(TIMESTAMPADD('DAY', -1, `CALCS`.`DATE0`) AS TIMESTAMP))",
+    "datatype" : "BIGINT",
+    "comment" : "Auto suggested from: TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE1\" AS TIMESTAMP), CAST(TIMESTAMPADD(DAY, -1, \"CALCS\".\"DATE0\") AS TIMESTAMP))",
+    "rec_uuid" : "tmp_1618306445903_6"
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO__1618306445903_4",
+    "expression" : "TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE1\" AS TIMESTAMP), CAST(TIMESTAMPADD(DAY, 300, \"CALCS\".\"DATE0\") AS TIMESTAMP))",
+    "innerExpression" : "TIMESTAMPDIFF('DAY', CAST(`CALCS`.`DATE1` AS TIMESTAMP), CAST(TIMESTAMPADD('DAY', 300, `CALCS`.`DATE0`) AS TIMESTAMP))",
+    "datatype" : "BIGINT",
+    "comment" : "Auto suggested from: TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE1\" AS TIMESTAMP), CAST(TIMESTAMPADD(DAY, 300, \"CALCS\".\"DATE0\") AS TIMESTAMP))",
+    "rec_uuid" : "tmp_1618306445903_4"
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO__1618306445903_5",
+    "expression" : "TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE0\" AS TIMESTAMP), CAST(TIMESTAMPADD(DAY, -400, \"CALCS\".\"DATE3\") AS TIMESTAMP)) + TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE2\" AS TIMESTAMP), CAST(TIMESTAMPADD(DAY, 500, \"CALCS\".\"DATE3\") AS TIMESTAMP))",
+    "innerExpression" : "TIMESTAMPDIFF('DAY', CAST(`CALCS`.`DATE0` AS TIMESTAMP), CAST(TIMESTAMPADD('DAY', -400, `CALCS`.`DATE3`) AS TIMESTAMP)) + TIMESTAMPDIFF('DAY', CAST(`CALCS`.`DATE2` AS TIMESTAMP), CAST(TIMESTAMPADD('DAY', 500, `CALCS`.`DATE3`) AS TIMESTAMP))",
+    "datatype" : "BIGINT",
+    "comment" : "Auto suggested from: TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE0\" AS TIMESTAMP), CAST(TIMESTAMPADD(DAY, -400, \"CALCS\".\"DATE3\") AS TIMESTAMP)) + TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE2\" AS TIMESTAMP), CAST(TIMESTAMPADD(DAY, 500, \"CALCS\".\"DATE3\") AS TIMESTAMP))",
+    "rec_uuid" : "tmp_1618306445903_5"
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO__1618306445903_8",
+    "expression" : "TIMESTAMPDIFF(DAY, TIMESTAMP '2004-07-15 00:00:00', CAST(TIMESTAMPADD(DAY, -1, \"CALCS\".\"DATE3\") AS TIMESTAMP)) + 1",
+    "innerExpression" : "TIMESTAMPDIFF('DAY', TIMESTAMP '2004-07-15 00:00:00', CAST(TIMESTAMPADD('DAY', -1, `CALCS`.`DATE3`) AS TIMESTAMP)) + 1",
+    "datatype" : "BIGINT",
+    "comment" : "Auto suggested from: TIMESTAMPDIFF(DAY, TIMESTAMP '2004-07-15 00:00:00', CAST(TIMESTAMPADD(DAY, -1, \"CALCS\".\"DATE3\") AS TIMESTAMP)) + 1",
+    "rec_uuid" : "tmp_1618306445903_8"
+  }, {
+    "tableIdentity" : "TDVT.CALCS",
+    "tableAlias" : "CALCS",
+    "columnName" : "CC_AUTO__1618306445903_1",
+    "expression" : "TIMESTAMPADD(DAY, TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE0\" AS TIMESTAMP), CAST(\"CALCS\".\"DATE3\" AS TIMESTAMP)), TIMESTAMPADD(DAY, - TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE2\" AS TIMESTAMP), CAST(TIMESTAMPADD(DAY, 500, \"CALCS\".\"DATE3\") AS TIMESTAMP)), \"CALCS\".\"DATE1\"))",
+    "innerExpression" : "TIMESTAMPADD('DAY', TIMESTAMPDIFF('DAY', CAST(`CALCS`.`DATE0` AS TIMESTAMP), CAST(`CALCS`.`DATE3` AS TIMESTAMP)), TIMESTAMPADD('DAY', - TIMESTAMPDIFF('DAY', CAST(`CALCS`.`DATE2` AS TIMESTAMP), CAST(TIMESTAMPADD('DAY', 500, `CALCS`.`DATE3`) AS TIMESTAMP)), `CALCS`.`DATE1`))",
+    "datatype" : "DATE",
+    "comment" : "Auto suggested from: TIMESTAMPADD(DAY, TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE0\" AS TIMESTAMP), CAST(\"CALCS\".\"DATE3\" AS TIMESTAMP)), TIMESTAMPADD(DAY, - TIMESTAMPDIFF(DAY, CAST(\"CALCS\".\"DATE2\" AS TIMESTAMP), CAST(TIMESTAMPADD(DAY, 500, \"CALCS\".\"DATE3\") AS TIMESTAMP)), \"CALCS\".\"DATE1\"))",
+    "rec_uuid" : "tmp_1618306445903_1"
+  } ],
+  "canvas" : {
+    "coordinate" : {
+      "CALCS" : {
+        "x" : 756.5555487738716,
+        "y" : 348.1111145019531,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null
+}

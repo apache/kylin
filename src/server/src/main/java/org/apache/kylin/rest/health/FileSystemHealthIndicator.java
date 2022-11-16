@@ -32,20 +32,21 @@ import org.apache.kylin.rest.config.initialize.AfterMetadataReadyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import com.google.common.annotations.VisibleForTesting;
 
 @Component
-public class FileSystemHealthIndicator extends AbstractKylinHealthIndicator {
+public class FileSystemHealthIndicator extends AbstractKylinHealthIndicator
+        implements ApplicationListener<AfterMetadataReadyEvent> {
     public static final Logger logger = LoggerFactory.getLogger(FileSystemHealthIndicator.class);
     private static final ScheduledExecutorService FILE_SYSTEM_HEALTH_EXECUTOR = Executors.newScheduledThreadPool(1,
             new NamedThreadFactory("FileSystemHealthChecker"));
     private volatile boolean isHealth = false;
 
-    @EventListener(AfterMetadataReadyEvent.class)
-    public void init() {
+    @Override
+    public void onApplicationEvent(AfterMetadataReadyEvent event) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         FILE_SYSTEM_HEALTH_EXECUTOR.scheduleWithFixedDelay(this::healthCheck, 0, config.getMetadataCheckDuration(),
                 TimeUnit.MILLISECONDS);

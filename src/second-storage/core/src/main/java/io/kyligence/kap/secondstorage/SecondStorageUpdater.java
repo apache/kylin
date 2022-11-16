@@ -19,6 +19,7 @@
 package io.kyligence.kap.secondstorage;
 
 import java.util.Map;
+import java.util.Set;
 
 public interface SecondStorageUpdater {
     /**
@@ -54,4 +55,6 @@ public interface SecondStorageUpdater {
      * @return metrics
      */
     Map<String, Object> getQueryMetric(String project, String queryId);
+
+    String removeIndexByLayoutId(String project, String modelId, Set<Long> layoutIds);
 }

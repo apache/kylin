@@ -25,8 +25,11 @@ import io.kyligence.kap.secondstorage.ddl.visitor.Renderable;
 public class AlterTable extends DDL<AlterTable> {
     private final TableIdentifier table;
     private ManipulatePartition manipulatePartition = null;
+    private ManipulateIndex manipulateIndex = null;
     private boolean freeze = false;
     private String attachPart = null;
+
+    private ModifyColumn modifyColumn = null;
 
 
     public AlterTable(TableIdentifier table, ManipulatePartition manipulatePartition) {
@@ -44,12 +47,30 @@ public class AlterTable extends DDL<AlterTable> {
         this.attachPart = attachPart;
     }
 
+    public AlterTable(TableIdentifier table, ManipulateIndex manipulateIndex) {
+        this.table = table;
+        this.manipulateIndex = manipulateIndex;
+    }
+
+    public AlterTable(TableIdentifier table, ModifyColumn modifyColumn) {
+        this.table = table;
+        this.modifyColumn = modifyColumn;
+    }
+
     public TableIdentifier getTable() {
         return table;
     }
 
     public ManipulatePartition getManipulatePartition() {
         return manipulatePartition;
+    }
+
+    public ManipulateIndex getManipulateIndex() {
+        return manipulateIndex;
+    }
+
+    public ModifyColumn getModifyColumn() {
+        return modifyColumn;
     }
 
     public boolean isFreeze() {
@@ -82,6 +103,10 @@ public class AlterTable extends DDL<AlterTable> {
         public abstract String getOperation();
     }
 
+    public enum IndexOperation {
+        ADD, MATERIALIZE, DROP;
+    }
+
     public static class ManipulatePartition implements Renderable {
         private final String partition;
         private final TableIdentifier destTable;
@@ -111,6 +136,75 @@ public class AlterTable extends DDL<AlterTable> {
             return partitionOperation;
         }
 
+        @Override
+        public void accept(RenderVisitor visitor) {
+            visitor.visit(this);
+        }
+    }
+
+    public static class ManipulateIndex implements Renderable {
+        private final String name;
+        private String column;
+        private String expr;
+        private int granularity;
+        private final IndexOperation indexOperation;
+
+        public ManipulateIndex(String name, String column, String expr, int granularity) {
+            this.name = name;
+            this.column = column;
+            this.expr = expr;
+            this.granularity = granularity;
+            this.indexOperation = IndexOperation.ADD;
+        }
+
+        public ManipulateIndex(String name, IndexOperation indexOperation) {
+            this.name = name;
+            this.indexOperation = indexOperation;
+        }
+
+        public IndexOperation getIndexOperation() {
+            return indexOperation;
+        }
+
+        public int getGranularity() {
+            return granularity;
+        }
+
+        public String getExpr() {
+            return expr;
+        }
+
+        public String getColumn() {
+            return this.column;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public void accept(RenderVisitor visitor) {
+            visitor.visit(this);
+        }
+    }
+
+    public static class ModifyColumn implements Renderable {
+        private final String column;
+
+        private final String datatype;
+
+        public ModifyColumn(String column, String datatype) {
+            this.column = column;
+            this.datatype = datatype;
+        }
+
+        public String getColumn() {
+            return column;
+        }
+
+        public String getDatatype() {
+            return datatype;
+        }
         @Override
         public void accept(RenderVisitor visitor) {
             visitor.visit(this);

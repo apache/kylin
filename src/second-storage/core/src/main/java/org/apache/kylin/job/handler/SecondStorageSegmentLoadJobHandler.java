@@ -76,7 +76,8 @@ public class SecondStorageSegmentLoadJobHandler extends AbstractJobHandler {
                         null,
                         jobParam.getIgnoredSnapshotTables(),
                         null,
-                        null));
+                        null,
+                        jobParam.getExtParams()));
     }
 
     @Override

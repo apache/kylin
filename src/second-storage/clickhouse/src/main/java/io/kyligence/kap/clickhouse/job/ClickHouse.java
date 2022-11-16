@@ -60,7 +60,7 @@ public class ClickHouse implements Closeable {
     private final Properties properties;
 
 
-    public ClickHouse(String jdbcUrl) throws SQLException {
+    public ClickHouse(String jdbcUrl) {
         String user = null;
         String password = null;
         preprocessedUrl = jdbcUrl.contains("?") ? jdbcUrl.split("\\?")[0] : jdbcUrl;

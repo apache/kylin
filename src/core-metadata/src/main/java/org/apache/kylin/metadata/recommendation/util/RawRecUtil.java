@@ -25,6 +25,9 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import org.apache.kylin.metadata.recommendation.entity.CCRecItemV2;
+import org.apache.kylin.metadata.recommendation.entity.LayoutRecItemV2;
+import org.apache.kylin.metadata.recommendation.entity.MeasureRecItemV2;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -33,9 +36,6 @@ import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
-import org.apache.kylin.metadata.recommendation.entity.CCRecItemV2;
-import org.apache.kylin.metadata.recommendation.entity.LayoutRecItemV2;
-import org.apache.kylin.metadata.recommendation.entity.MeasureRecItemV2;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;

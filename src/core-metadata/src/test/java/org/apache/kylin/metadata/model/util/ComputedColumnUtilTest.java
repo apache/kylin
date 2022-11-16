@@ -22,18 +22,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.TableRef;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
+
+import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import lombok.val;
 
 public class ComputedColumnUtilTest extends NLocalFileMetadataTestCase {
 
@@ -56,7 +59,7 @@ public class ComputedColumnUtilTest extends NLocalFileMetadataTestCase {
         TableRef firstTable = model.findFirstTable("DEFAULT.TEST_KYLIN_FACT");
         ColumnDesc ccColDesc = firstTable.getColumn("DEAL_YEAR").getColumnDesc();
         Set<String> ccUsedColsInProject = ComputedColumnUtil.getCCUsedColsWithProject("default", ccColDesc);
-        Assert.assertTrue(ccUsedColsInProject.size() == 1);
+        Assert.assertEquals(1, ccUsedColsInProject.size());
         Assert.assertTrue(ccUsedColsInProject.contains("DEFAULT.TEST_KYLIN_FACT.CAL_DT"));
     }
 
@@ -67,7 +70,7 @@ public class ComputedColumnUtilTest extends NLocalFileMetadataTestCase {
         TableRef firstTable = model.findFirstTable("DEFAULT.TEST_KYLIN_FACT");
         ColumnDesc ccColDesc = firstTable.getColumn("DEAL_YEAR").getColumnDesc();
         Set<String> ccUsedColsInModel = ComputedColumnUtil.getCCUsedColsWithModel(model, ccColDesc);
-        Assert.assertTrue(ccUsedColsInModel.size() == 1);
+        Assert.assertEquals(1, ccUsedColsInModel.size());
         Assert.assertTrue(ccUsedColsInModel.contains("DEFAULT.TEST_KYLIN_FACT.CAL_DT"));
 
         //test param (model, ComputedColumnDesc)
@@ -75,13 +78,13 @@ public class ComputedColumnUtilTest extends NLocalFileMetadataTestCase {
         for (ComputedColumnDesc ccCol : computedColumnDescs) {
             if (ccCol.getColumnName().equals("DEAL_AMOUNT")) {
                 ccUsedColsInModel = ComputedColumnUtil.getCCUsedColsWithModel(model, ccCol);
-                Assert.assertTrue(ccUsedColsInModel.size() == 2);
+                Assert.assertEquals(2, ccUsedColsInModel.size());
                 Assert.assertTrue(ccUsedColsInModel.contains("DEFAULT.TEST_KYLIN_FACT.PRICE"));
                 Assert.assertTrue(ccUsedColsInModel.contains("DEFAULT.TEST_KYLIN_FACT.ITEM_COUNT"));
             }
             if (ccCol.getColumnName().equals("DEAL_YEAR")) {
                 ccUsedColsInModel = ComputedColumnUtil.getCCUsedColsWithModel(model, ccCol);
-                Assert.assertTrue(ccUsedColsInModel.size() == 1);
+                Assert.assertEquals(1, ccUsedColsInModel.size());
                 Assert.assertTrue(ccUsedColsInModel.contains("DEFAULT.TEST_KYLIN_FACT.CAL_DT"));
             }
         }
@@ -124,12 +127,52 @@ public class ComputedColumnUtilTest extends NLocalFileMetadataTestCase {
     public void testGetAllCCUsedColsInModel() {
         NDataModel model = modelManager.getDataModelDescByAlias("nmodel_basic_inner");
         Set<String> allCCUsedColsInModel = ComputedColumnUtil.getAllCCUsedColsInModel(model);
-        Assert.assertTrue(allCCUsedColsInModel.size() == 6);
+        Assert.assertEquals(6, allCCUsedColsInModel.size());
         Assert.assertTrue(allCCUsedColsInModel.contains("DEFAULT.TEST_KYLIN_FACT.PRICE")); //belong to cc "DEAL_AMOUNT"
         Assert.assertTrue(allCCUsedColsInModel.contains("DEFAULT.TEST_KYLIN_FACT.ITEM_COUNT")); //belong to cc "DEAL_AMOUNT"
         Assert.assertTrue(allCCUsedColsInModel.contains("DEFAULT.TEST_KYLIN_FACT.CAL_DT")); //belong to cc "DEAL_YEAR"
         Assert.assertTrue(allCCUsedColsInModel.contains("DEFAULT.TEST_KYLIN_FACT.NEST1"));
         Assert.assertTrue(allCCUsedColsInModel.contains("DEFAULT.TEST_KYLIN_FACT.NEST2"));
         Assert.assertTrue(allCCUsedColsInModel.contains("DEFAULT.TEST_KYLIN_FACT.NEST3"));
+    }
+
+    @Test
+    public void testCCConflict() {
+        val conflictInfo = new ComputedColumnUtil.CCConflictInfo();
+        val handler = new ComputedColumnUtil.AdjustCCConflictHandler(conflictInfo);
+        val originModelDesc = NDataModelManager.getInstance(getTestConfig(), "cc_test")
+                .getDataModelDesc("4a45dc4d-937e-43cc-8faa-34d59d4e11d3");
+        val ccList = Lists.newArrayList(//
+                getComputedColumnDesc("CC_1", "CUSTOMER.C_NAME +'USA'", "DOUBLE"),
+                getComputedColumnDesc("CC_LTAX", "LINEORDER.LO_TAX *1 ", "DOUBLE"),
+                getComputedColumnDesc("CC_3", "1+2", "INTEGER"));
+        for (ComputedColumnDesc cc : ccList) {
+            handler.handleOnSameNameDiffExpr(originModelDesc, originModelDesc, cc, cc);
+            handler.handleOnSameExprDiffName(originModelDesc, cc, cc);
+        }
+
+        Assert.assertTrue(conflictInfo.hasSameNameConflict());
+        Assert.assertTrue(conflictInfo.hasSameExprConflict());
+
+        val sameNameConflictException = conflictInfo.getSameNameConflictException();
+        val sameExprConflictException = conflictInfo.getSameExprConflictException();
+        val allConflictException = conflictInfo.getAllConflictException();
+        Assert.assertEquals(3, sameExprConflictException.size());
+        Assert.assertEquals(3, sameNameConflictException.size());
+        Assert.assertEquals(6, allConflictException.size());
+
+        val pair = conflictInfo.getAdjustedCCList(ccList);
+        Assert.assertEquals(3, pair.getFirst().size());
+        Assert.assertEquals(3, pair.getSecond().size());
+    }
+
+    public ComputedColumnDesc getComputedColumnDesc(String ccName, String ccExpression, String dataType) {
+        ComputedColumnDesc ccDesc = new ComputedColumnDesc();
+        ccDesc.setColumnName(ccName);
+        ccDesc.setExpression(ccExpression);
+        ccDesc.setDatatype(dataType);
+        ccDesc.setTableAlias("LINEORDER");
+        ccDesc.setTableIdentity("SSB.LINEORDER");
+        return ccDesc;
     }
 }

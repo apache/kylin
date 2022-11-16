@@ -120,6 +120,7 @@ class StandaloneClusterManager extends IClusterManager with Logging {
     }
   }
 
+  override def getApplicationNameById(yarnAppId: Int): String = ""
 }
 
 object StandaloneClusterManager extends Logging {

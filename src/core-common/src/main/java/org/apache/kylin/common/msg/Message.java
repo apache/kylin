@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.common.msg;
 
 import java.util.List;
@@ -48,15 +30,39 @@ public class Message {
     private static final String SECOND_STORAGE_MODEL_ENABLED = "The model %s does not have tiered storage enabled.";
     private static final String SECOND_STORAGE_SEGMENT_WITHOUT_BASE_INDEX = "The base table index is missing in the segments, please add and try again.";
     private static final String SECOND_STORAGE_DELETE_NODE_FAILED = "Node %s has data, size is %d bytes";
-    private static final String FORCED_TO_TIERED_STORAGE_AND_FORCE_TO_INDEX = "When force_to_index=ture, the query cannot pushdown when using tiered storage fails, forcedToTieredStorage=1 or conf=1 is invalid, please modify and try again";
-    private static final String FORCED_TO_TIERED_STORAGE_RETURN_ERROR = "Query failed. Tiered storage is unavailable, please fix and try again.";
-    private static final String FORCED_TO_TIERED_STORAGE_INVALID_PARAMETER = "invalid parameters, please fix and try again.";
-    private static final String PARAMETER_IS_REQUIRED = "'%s' is required.";
-    private static final String DISABLE_PUSH_DOWN_PROMPT = "You should turn on pushdown button if you want to pushdown.";
-    private static final String QUERY_NODE_INVALID = "Can’t execute this request on Query node. Please check and try again.";
-    private static final String NON_EXISTED_MODEL = "Model %s doesn't exist. Please confirm and try again later.";
+    private static final String SECOND_STORAGE_CARDINALITY_DATATYPE_INVALID = "The datatype is invalid. Only support LowCardinality(Nullable(String)) or Nullable(String) at the moment.";
+    private static final String FORCED_TO_TIEREDSTORAGE_AND_FORCETO_INDEX = "When force_to_index=ture, the query cannot pushdown when using tiered storage fails, forcedToTieredStorage=1 or conf=1 is invalid, please modify and try again";
+    private static final String FORCED_TO_TIEREDSTORAGE_RETURN_ERROR = "Query failed. Tiered storage is unavailable, please fix and try again.";
+    private static final String FORCED_TO_TIEREDSTORAGE_INVALID_PRARAMETER = "invalid parameters, please fix and try again.";
+    private static final String DISABLE_PUSHDOWN_PROMPT = "You should turn on pushdown button if you want to pushdown.";
+    private static final String NON_EXISTEN_MODEL = "Model %s doesn't exist. Please confirm and try again later.";
     private static final String LACK_PROJECT = "Please fill in the project parameters.";
     private static final String NON_EXIST_PROJECT = "Project %s doesn't exist. Please confirm and try again later.";
+    private static final String DUP_MODCOL_MEASURE_NAME = "There are duplicated names among model column %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
+    private static final String DUP_DIM_MEASURE_NAME = "There are duplicated names among dimension name %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
+    private static final String DUP_DIMCOL_MEASURE_NAME = "There are duplicated names among dimension column %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
+    private static final String MODIFY_PERMISSION_OF_SUPER_ADMIN = "Super Admin’s permission can’t be modified.";
+    private static final String ILLEGAL_AUTHORIZING_USER = "Unable to modify. Only Super Admin or System Admin with query permission can modify query permission.";
+    private static final String GRANT_TO_NON_SYSTEM_ADMIN = "Unable to modify. You can only modify the permission of the System Admin.";
+    private static final String MODIFY_OWN_PERMISSION_FAILED = "Can’t modify your own permission.";
+
+    private static final String PROFILING_NOT_ENABLED = "Async profiling is not enabled. check parameter '%s'";
+    private static final String PROFILING_STATUS_ERROR = "Async profiler status error, ";
+    private static final String PROFILING_COLLECT_TIMEOUT = "Async profiler timeout";
+
+    private static final String PARAMETER_EMPTY = "Please enter the value for the parameter '%s'.";
+
+    private static final String LICENSE_ERROR_PRE = "The license couldn’t be updated:\n";
+    private static final String LICENSE_ERROR_SUFF = "\nPlease upload a new license, or contact Kyligence.";
+    private static final String LICENSE_OVERDUE_TRIAL = "The license has expired and the validity period is [%s - %s]. Please upload a new license or contact Kyligence.";
+    private static final String LICENSE_NODES_EXCEED = "The number of nodes which you are using is higher than the allowable number. Please contact your Kyligence account manager.";
+    private static final String LICENSE_NODES_NOT_MATCH = "The cluster information dose not match the license. Please upload a new license or contact Kyligence.";
+    private static final String LICENSE_OVER_VOLUME = "The current used system capacity exceeds the license’s limit. Please upload a new license, or contact Kyligence.";
+    private static final String LICENSE_NO_LICENSE = "No license file. Please contact Kyligence.";
+    private static final String LICENSE_WRONG_CATEGORY = "The current version of Kyligence Enterprise does not match the license. Please upload a new license or contact Kyligence.";
+    private static final String LICENSE_MISMATCH_LICENSE = "The license doesn’t match the current cluster information. Please upload a new license, or contact Kyligence.";
+    private static final String LICENSE_NOT_EFFECTIVE = "License is not effective yet, please apply for a new license.";
+    private static final String LICENSE_EXPIRED = "The license has expired. Please upload a new license, or contact Kyligence.";
 
     protected Message() {
 
@@ -91,21 +97,8 @@ public class Message {
         return "Children exists for '%s'.";
     }
 
-    // Model
-    public String getInvalidModelDefinition() {
-        return "Can’t find model. Please check and try again.";
-    }
-
-    public String getEmptyModelName() {
-        return "The model name can’t be empty.";
-    }
-
     public String getInitMeasureFailed() {
         return "Can’t initialize metadata at the moment. Please try restarting first. If the problem still exist, please contact technical support.";
-    }
-
-    public String getInvalidModelName() {
-        return "The model name \"%s\" is invalid. Please use letters, numbers and underlines only.";
     }
 
     public String getInvalidDimensionName() {
@@ -142,10 +135,6 @@ public class Message {
 
     public String getBrokenModelOperationDenied() {
         return "BROKEN model \"%s\" cannot be operated.";
-    }
-
-    public String getModelNotFound() {
-        return "Can’t find model named \"%s\". Please check and try again.";
     }
 
     public String getModelModifyAbandon(String table) {
@@ -230,44 +219,17 @@ public class Message {
         return "This user can’t be set as the model’s owner. Please select system admin, project admin or management user.";
     }
 
-    // index
-    public String getIndexStatusTypeError() {
-        return "The parameter \"status\" only supports “NO_BUILD”, “ONLINE”, “LOCKED”, “BUILDING”.";
-    }
-
-    public String getIndexSourceTypeError() {
-        return "The parameter \"sources\" only supports “RECOMMENDED_AGG_INDEX”, “RECOMMENDED_TABLE_INDEX”, “CUSTOM_AGG_INDEX”, “CUSTOM_TABLE_INDEX”.";
-    }
-
-    public String getIndexSortByError() {
-        return "The parameter \"sort_by\" only supports “last_modified”, “usage”, “data_size”.";
-    }
-
     // Job
     public String getIllegalTimeFilter() {
         return "The selected time filter is invalid. Please select again.";
     }
 
+    public String getIllegalSortByFilter() {
+        return "The selected sort filter \"%s\" is invalid. Please select again.";
+    }
+
     public String getIllegalExecutableState() {
         return "The job status is invalid. Please select again.";
-    }
-
-    public String getIllegalJobState() {
-        return "The job status is invalid. The value must be “PENDING“, “RUNNING“, “FINISHED“, “ERROR” or “DISCARDED“. Please check and try again.";
-    }
-
-    public String getIllegalJobAction() {
-        return "Invalid value in parameter “action“ or “statuses“ or “job_ids“,  " //
-                + "The value of “statuses“ or the status of jobs specified by “job_ids“ contains “%s“, "
-                + "this status of jobs can only perform the following actions: “%s“ .";
-    }
-
-    public String getIllegalStateTransfer() {
-        return "An error occurred when updating the job status. Please refresh the job list and try again.";
-    }
-
-    public String getInvalidPriority() {
-        return "The selected priority is invalid. Please select a value within the range from 0 to 4.";
     }
 
     // Acl
@@ -283,17 +245,8 @@ public class Message {
         return "The user group \"%s\" already exists. Please check and try again.";
     }
 
-    // user group
-    public String getEmptyGroupName() {
-        return "User group name should not be empty.";
-    }
-
     public String getEmptySid() {
         return "User/Group name should not be empty.";
-    }
-
-    public String getEmptyQueryName() {
-        return "Query name should not be empty.";
     }
 
     public String getInvalidQueryName() {
@@ -351,10 +304,6 @@ public class Message {
 
     public String getNewPasswordSameAsOld() {
         return "New password should not be same as old one!";
-    }
-
-    public String getUserAuthFailed() {
-        return "Invalid username or password. Please check and try again.";
     }
 
     public String getInvalidExecuteAsUser() {
@@ -433,10 +382,6 @@ public class Message {
         return "The project name \"%s\" already exists. Please rename it.";
     }
 
-    public String getProjectNotFound() {
-        return "Can't find project \"%s\". Please check and try again.";
-    }
-
     public String getProjectDropFailedSecondStorageEnabled() {
         return "Can't delete project \"%s\", please disable tiered storage firstly.";
     }
@@ -461,10 +406,6 @@ public class Message {
         return "This user can’t be set as the project’s owner. Please select system admin, or the admin of this project.";
     }
 
-    public String getProjectDisableMlp() {
-        return "The multilevel partitioning is not enabled for this project. Please enable it in the project setting and try again.";
-    }
-
     public String getTableParamEmpty() {
         return "Can’t find the table. Please check and try again";
     }
@@ -472,14 +413,6 @@ public class Message {
     // Table
     public String getTableNotFound() {
         return "Can’t find table \"%s\". Please check and try again.";
-    }
-
-    public String getBeyondMixSamplingRowshint() {
-        return "The number of sampling rows should be greater than %d. Please modify it.";
-    }
-
-    public String getBeyondMaxSamplingRowsHint() {
-        return "The number of sampling rows should be smaller than %d. Please modify it.";
     }
 
     public String getSamplingFailedForIllegalTableName() {
@@ -494,16 +427,8 @@ public class Message {
         return "%1$s The data type of column %3$s in table %2$s has been changed. Please try deleting the computed column or changing the data type.";
     }
 
-    public String getReloadTableModelRetry() {
-        return "The data type of column %2$s from the source table %1$s has changed. Please remove the column from model %3$s, or modify the data type.";
-    }
-
     public String getSameTableNameExist() {
         return "Table %s already exists, please choose a different name.";
-    }
-
-    public String getQueryNotAllowed() {
-        return "Job node is unavailable for queries. Please select a query node.";
     }
 
     public String getnotSupportedSql() {
@@ -530,20 +455,12 @@ public class Message {
         return "SQL can’t be empty. Please check and try again.";
     }
 
-    public String getjobRepeatedStartFailure() {
-        return "Can’t start the streaming job repeatedly.";
-    }
-
     public String getJobStartFailure() {
         return "Can’t start the streaming job of model \"%s\", as it has an ongoing one at the moment. Please check and try again.";
     }
 
     public String getJobBrokenModelStartFailure() {
         return "Can’t start. Model \"%s\" is currently broken. ";
-    }
-
-    public String getJobStopFailure() {
-        return "Can’t stop the streaming job of model \"%s\" at the moment. Please check the log or try again later.";
     }
 
     // Access
@@ -565,10 +482,6 @@ public class Message {
 
     public String getInvalidPermission() {
         return "Invalid values in parameter \"permission\". The value should either be \"ADMIN\", \"MANAGEMENT\", \"OPERATION\" or \"QUERY\".";
-    }
-
-    public String getInvalidParameterType() {
-        return "Invalid value in parameter \"type\". The value should either be \"user\" or \"group\".";
     }
 
     public String getUnauthorizedSid() {
@@ -602,11 +515,6 @@ public class Message {
 
     public String getAsyncQueryProjectNameEmpty() {
         return "The project name can’t be empty. Please check and try again.";
-    }
-
-    // User
-    public String getAuthInfoNotFound() {
-        return "Cannot find authentication information.";
     }
 
     public String getUserNotFound() {
@@ -654,59 +562,43 @@ public class Message {
         return "Please enter the parameter “sqls“.";
     }
 
-    public String getSqlFileTypeMismatch() {
-        return "The suffix of sql files must be 'txt' or 'sql'.";
-    }
-
-    public String getConfigNotSupportDelete() {
-        return "Can’t delete this configuration. ";
-    }
-
-    public String getConfigNotSupportEdit() {
-        return "Can’t edit this configuration. ";
-    }
-
     public String getConfigMapEmpty() {
         return "The configuration list can’t be empty. Please check and try again.";
     }
 
     // Query statistics
 
-    public String getNotSetInfluxdb() {
-        return "Not set kap.metric.write-destination to 'INFLUX'";
-    }
-
     // License
     public String getLicenseErrorPre() {
-        return "The license couldn’t be updated:\n";
+        return LICENSE_ERROR_PRE;
     }
 
     public String getLicenseErrorSuff() {
-        return "\nPlease upload a new license, or contact Kyligence.";
+        return LICENSE_ERROR_SUFF;
     }
 
     public String getLicenseOverdueTrial() {
-        return "The license has expired and the validity period is [%s - %s]. Please upload a new license or contact Kyligence.";
+        return LICENSE_OVERDUE_TRIAL;
     }
 
     public String getLicenseNodesExceed() {
-        return "The number of nodes which you are using is higher than the allowable number. Please contact your Kyligence account manager.";
+        return LICENSE_NODES_EXCEED;
     }
 
     public String getLicenseNodesNotMatch() {
-        return "The cluster information dose not match the license. Please upload a new license or contact Kyligence.";
+        return LICENSE_NODES_NOT_MATCH;
     }
 
     public String getLicenseOverVolume() {
-        return "The current used system capacity exceeds the license’s limit. Please upload a new license, or contact Kyligence.";
+        return LICENSE_OVER_VOLUME;
     }
 
     public String getLicenseNoLicense() {
-        return "No license file. Please contact Kyligence.";
+        return LICENSE_NO_LICENSE;
     }
 
     public String getlicenseWrongCategory() {
-        return "The current version of Kyligence Enterprise does not match the license. Please upload a new license or contact Kyligence.";
+        return LICENSE_WRONG_CATEGORY;
     }
 
     public String getLicenseInvalidLicense() {
@@ -714,15 +606,15 @@ public class Message {
     }
 
     public String getLicenseMismatchLicense() {
-        return "The license doesn’t match the current cluster information. Please upload a new license, or contact Kyligence.";
+        return LICENSE_MISMATCH_LICENSE;
     }
 
     public String getLicenseNotEffective() {
-        return "License is not effective yet, please apply for a new license.";
+        return LICENSE_NOT_EFFECTIVE;
     }
 
     public String getLicenseExpired() {
-        return "The license has expired. Please upload a new license, or contact Kyligence.";
+        return LICENSE_EXPIRED;
     }
 
     public String getLicenseSourceOverCapacity() {
@@ -799,7 +691,7 @@ public class Message {
         return "You cannot add,modify or remove the system administrator’s rights";
     }
 
-    public String getChangeDegaultadmin() {
+    public String getChangeDefaultadmin() {
         return "Can’t modify the permission of user “ADMIN”, as this user is a built-in admin by default.";
     }
 
@@ -810,14 +702,6 @@ public class Message {
 
     public String getInvalidId() {
         return "Can’t find ID \"%s\". Please check and try again.";
-    }
-
-    public String getSegmentLocked() {
-        return "Can’t remove, refresh or merge segment \"%s\", as it’s LOCKED. Please try again later.";
-    }
-
-    public String getSegmentStatus(String status) {
-        return "Can’t refresh or merge segment \"%s\", as it’s in \"" + status + "\".Please try again later.";
     }
 
     //HA
@@ -874,8 +758,20 @@ public class Message {
         return "Operation failed, user:[%s] not exists, please add it first";
     }
 
-    public String getOperationFailedByGroupNotExist() {
-        return "Operation failed, group:[%s] not exists, please add it first";
+    public String getModifyPermissionOfSuperAdminFailed() {
+        return MODIFY_PERMISSION_OF_SUPER_ADMIN;
+    }
+
+    public String getGrantPermissionFailedByIllegalAuthorizingUser() {
+        return ILLEGAL_AUTHORIZING_USER;
+    }
+
+    public String getGrantPermissionFailedByNonSystemAdmin() {
+        return GRANT_TO_NON_SYSTEM_ADMIN;
+    }
+
+    public String getModifyOwnPermissionFailed() {
+        return MODIFY_OWN_PERMISSION_FAILED;
     }
 
     public String getColumuIsNotDimension() {
@@ -900,10 +796,6 @@ public class Message {
 
     public String getCanNotBuildSegment() {
         return "Can’t build segment(s). Please add some indexes first.";
-    }
-
-    public String getCanNotBuildSegmentManually() {
-        return "Can’t manually build segments in model \"%s\" under the current project settings.";
     }
 
     public String getCanNotBuildIndicesManually() {
@@ -942,40 +834,12 @@ public class Message {
         return "Access Denied, only system administrators can edit users' tables, columns, and rows permissions";
     }
 
-    public String getSegmentListIsEmpty() {
-        return "Can’t find the segment(s). Please check and try again.";
-    }
-
-    public String getSegmentIdNotExist() {
-        return "Can’t find the segment by ID \"%s\". Please check and try again.";
-    }
-
-    public String getSegmentNameNotExist() {
-        return "Can’t find the segment by name \"%s\". Please check and try again.";
-    }
-
-    public String getLayoutListIsEmpty() {
-        return "Can’t find the layout(s). Please check and try again.";
-    }
-
-    public String getLayoutNotExists() {
-        return "Can’t find layout \"%s\". Please check and try again.";
-    }
-
     public String getInvalidRefreshSegment() {
         return "Please select at least one segment to refresh.";
     }
 
     public String getEmptySegmentParameter() {
         return "Please enter segment ID or name.";
-    }
-
-    public String getConflictSegmentParameter() {
-        return "Can’t enter segment ID and name at the same time. Please re-enter.";
-    }
-
-    public String getInvalidMergeSegmentByTooLess() {
-        return "Please select at least two segments to merge.";
     }
 
     public String getContentIsEmpty() {
@@ -998,10 +862,6 @@ public class Message {
         return "Email, username, company length should be less or equal than 50";
     }
 
-    public String getUsernameCompanyIsIllegal() {
-        return "Username, company only supports Chinese, English, numbers, spaces";
-    }
-
     public String getInvalidComputerColumnNameWithKeyword() {
         return "The computed column name \"%s\" is a SQL keyword. Please choose another name.";
     }
@@ -1014,36 +874,12 @@ public class Message {
         return "Model \"%s\" already exists. Please rename it.";
     }
 
-    public String getInvalidRangeLessThanZero() {
-        return "The start and end time should be greater than 0. Please modify it.";
-    }
-
-    public String getInvalidRangeNotFormat() {
-        return "The format of start or end time is invalid. Only supports timestamp with time unit of millisecond (ms). Please modify it.";
-    }
-
-    public String getInvalidRangeEndLessthanStart() {
-        return "The end time must be greater than the start time. Please modify it.";
-    }
-
-    public String getInvalidRangeNotConsistent() {
-        return "The start and end time must exist or not exist at the same time. Please modify it.";
-    }
-
     public String getIdCannotEmpty() {
         return "ID can’t be empty. Please check and try again.";
     }
 
     public String getInvalidCreateModel() {
         return "Can’t add model manually under this project.";
-    }
-
-    public String getSegmentInvalidRange() {
-        return "Can’t refresh. The segment range \"%s\" exceeds the range of loaded data, which is \"%s\". Please modify and try again.";
-    }
-
-    public String getSegmentRangeOverlap() {
-        return "Can’t build segment. The specified data range overlaps with the built segments from \"%s\" to \"%s\". Please modify and try again.";
     }
 
     public String getPartitionColumnNotExist() {
@@ -1072,10 +908,6 @@ public class Message {
 
     public String getTableNameCannotEmpty() {
         return "Table name can’t be empty. Please check and try again.";
-    }
-
-    public String getTableSampleMaxRows() {
-        return "The sampling range should between 10,000 and 20,000,000 rows.";
     }
 
     public String getFileNotExist() {
@@ -1172,58 +1004,12 @@ public class Message {
         return "Failed to create a new model. The number of models exceeds the maximum: {%s}. Please delete other abandoned models before trying to create new ones or contact the administrator to adjust the maximum number of models.";
     }
 
-    public String getQueryRowNumOverThreshold() {
-        return "Can’t get query result. The rows of query result exceeds the maximum limit \"%s\". Please add filters, or contact admin to adjust the maximum limit.";
-    }
-
-    public String getCCExpressionConflict(String newCCExpression, String newCCName, String existedCCName) {
-        return String.format(Locale.ROOT,
-                "The expression \"%s\" of computed column \"%s\" is same as computed column \"%s\". Please modify it.",
-                newCCExpression, newCCName, existedCCName);
-    }
-
-    public String getCCNameConflict(String ccName) {
-        return String.format(Locale.ROOT, "Computed column \"%s\" already exists. Please modify it.", ccName);
-    }
-
     public String getAliasConflictOfApprovingRecommendation() {
         return "The name already exists. Please rename and try again.";
     }
 
-    public String getDimensionConflict(String dimensionName) {
-        return String.format(Locale.ROOT, "Dimension \"%s\" already exists. Please modify it.", dimensionName);
-    }
-
-    public String getMeasureConflict(String measureName) {
-        return String.format(Locale.ROOT, "Measure \"%s\" already exists. Please modify it.", measureName);
-    }
-
-    public String getJobNodeInvalid() {
-        return "Can’t execute this request on job node. Please check and try again.";
-    }
-
-    public String getQueryNodeInvalid() {
-        return QUERY_NODE_INVALID;
-    }
-
     public String getInvalidTimeFormat() {
         return "Can’t set the time partition column. The values of the selected column is not time formatted. Please select again.";
-    }
-
-    public String getInvalidCustomizeFormat() {
-        return "Unsupported format. Please check and re-enter.";
-    }
-
-    public String getSegmentContainsGaps() {
-        return "Can’t merge the selected segments, as there are gap(s) in between. Please check and try again.";
-    }
-
-    public String getSegmentMergeLayoutConflictError() {
-        return "The indexes included in the selected segments are not fully identical. Please build index first and try merging again.";
-    }
-
-    public String getSegmentMergePartitionConflictError() {
-        return "The subpartitions included in the selected segments are not fully aligned. Please build the subpartitions first and try merging again.";
     }
 
     public String getSegmentMergeStorageCheckError() {
@@ -1240,14 +1026,6 @@ public class Message {
 
     public String getEffectiveDimensionNotFind() {
         return "The following columns are not added as dimensions to the model. Please delete them before saving or add them to the model.\nColumn ID: %s";
-    }
-
-    public String getInvalidPasswordEncoder() {
-        return "Illegal PASSWORD ENCODER, please check configuration item kylin.security.user-password-encoder";
-    }
-
-    public String getFailedInitPasswordEncoder() {
-        return "PASSWORD ENCODER init failed, please check configuration item kylin.security.user-password-encoder";
     }
 
     public String getInvalidNullValue() {
@@ -1279,16 +1057,8 @@ public class Message {
                 + "unit of parameter must be the coarsest granularity unit in the unit selected for automatic merge.";
     }
 
-    public String getInsufficientAuthentication() {
-        return "Unable to authenticate. Please login again.";
-    }
-
     public String getDisabledUser() {
         return "This user is disabled. Please contact admin.";
-    }
-
-    public String getWriteInMaintenanceMode() {
-        return "System is currently undergoing maintenance. Metadata related operations are temporarily unavailable.";
     }
 
     public String getInvalidSidType() {
@@ -1373,45 +1143,8 @@ public class Message {
         return "Can’t submit the job at the moment. The segment “%s” doesn’t have base index. Please refresh this segment.";
     }
 
-    public String getAddJobException() {
-        return "Can’t find executable jobs at the moment. Please try again later.";
-    }
-
-    public String getAddJobAbandon() {
-        return "Can’t submit the job to this node, as it’s not a job node. Please check and try again.";
-    }
-
-    public String getStorageQuotaLimit() {
-        return "No storage quota available. The system failed to submit building job, while the query engine will still be available. "
-                + "Please clean up low-efficient storage in time, increase the low-efficient storage threshold, or notify the administrator to increase the storage quota for this project.";
-    }
-
-    public String getAddJobCheckSegmentFail() {
-        return "Can’t submit the job, as the indexes are not identical in the selected segments. Please check and try again.";
-    }
-
     public String getAddJobCheckSegmentReadyFail() {
         return "Can’t submit the job, as there are no segments in READY status. Please try again later.";
-    }
-
-    public String getAddJobCheckIndexFail() {
-        return "Can’t submit the job, as no index is included in the segment. Please check and try again.";
-    }
-
-    public String getRefreshJobCheckIndexFail() {
-        return "No index is available to be refreshed. Please check and try again.";
-    }
-
-    public String getAddJobCheckMultiPartitionAbandon() {
-        return "Can’t add the job. Please ensure that the operation is valid for the current object.";
-    }
-
-    public String getAddJobCheckMultiPartitionEmpty() {
-        return "Can’t add the job, as the subpartition value is empty. Please check and try again.";
-    }
-
-    public String getAddJobCheckMultiPartitionDuplicate() {
-        return "Can’t add the job. Please ensure that the subpartitions are unique.";
     }
 
     public String getTableReloadAddColumnExist(String table, String column) {
@@ -1420,16 +1153,8 @@ public class Message {
                 table, column);
     }
 
-    public String getTableReloadHavingNotFinalJob() {
-        return "The table metadata can’t be reloaded now. There are ongoing jobs with the following target subjects(s): %s. Please try reloading until all the jobs are completed, or manually discard the jobs.";
-    }
-
     public String getColumnUnrecognized() {
         return "Can’t recognize column \"%s\". Please use \"TABLE_ALIAS.COLUMN\" to reference a column.";
-    }
-
-    public String getInvalidJobStatusTransaction() {
-        return "Can’t %s job \"%s\", as it is in %s status.";
     }
 
     // Punctuations
@@ -1489,75 +1214,13 @@ public class Message {
         return "Snapshot management is not enabled in the settings. Please check and try again.";
     }
 
-    public String getInvalidDiagTimeParameter() {
-        return "The end time must be greater than the start time. Please modify it.";
-    }
-
     public String getPartitionsToBuildCannotBeEmpty(List<String> tableDescNames) {
         return "Please select at least one partition for the following snapshots when conducting custom partition value refresh: "
                 + tableDescNames.toString();
     }
 
-    // Resource Group
-    public String getResourceGroupFieldIsNull() {
-        return "Can’t execute this request. Please ensure that all the parameters for the resource group request are included.";
-    }
-
-    public String getResourceCanNotBeEmpty() {
-        return "Please ensure that at least one resource group exists once the resource group mode is enabled.";
-    }
-
-    public String getEmptyResourceGroupId() {
-        return "Resource group ID can’t be empty. Please check and try again.";
-    }
-
-    public String getdDuplicatedResourceGroupId(String entityId) {
-        return String.format(Locale.ROOT, "The resource group ID \"%s\" already exists. Please check and try again.",
-                entityId);
-    }
-
-    public String getResourceGroupDisabledWithInvliadParam() {
-        return "To disable the resource group mode, please remove all the instances and projects for the existing resource groups.";
-    }
-
     public String getProjectWithoutResourceGroup() {
         return "Can’t use this project properly as no resource group has been allocated yet. Please contact admin.";
-    }
-
-    public String getEmptyKylinInstanceIdentity() {
-        return "Please enter a value for the parameter \"instance\".";
-    }
-
-    public String getEmptyKylinInstanceResourceGroupId() {
-        return "Please enter a value for the parameter \"resource_group_id\".";
-    }
-
-    public String getResourceGroupIdNotExistInKylinInstance(String id) {
-        return String.format(Locale.ROOT,
-                "Can’t find the parameter \"resource_group_id\" in the instance, which value is \"%s\". Please check and try again.",
-                id);
-    }
-
-    public String getDuplicatedKylinInstance() {
-        return "The same instance already exists. Please check and try again.";
-    }
-
-    public String getEmptyProjectInMappingInfo() {
-        return "The project can’t be empty in the mapping_info. Please check and try again.";
-    }
-
-    public String getEmptyResourceGroupIdInMappingInfo() {
-        return "The parameter \"resource_group_id\" can’t be empty in the mapping_info. Please check and try again.";
-    }
-
-    public String getProjectBindingResourceGroupInvalid() {
-        return "Can’t allocate resource group for project \"%s\". Please ensure that the project is allocated to two resource groups at most. Meanwhile, each request (query or build) is allocated to one resource group.";
-    }
-
-    public String getResourceGroupIdNotExistInMappingInfo(String id) {
-        return String.format(Locale.ROOT,
-                "Can’t find the parameter \"resource_group_id\" (\"%s\") in the mapping_info. Please check and try again.",
-                id);
     }
 
     public String getModelOnlineForbidden() {
@@ -1567,10 +1230,6 @@ public class Message {
     // multi level partition mapping
     public String getMultiPartitionMappingReqeustNotValid() {
         return "Can’t update the mapping relationships of the partition column. The value for the parameter “multi_partition_columns“ doesn’t match the partition column defined in the model. Please check and try again.";
-    }
-
-    public String getConcurrentSubmitJobLimit() {
-        return "Can't submit building jobs, as it exceeds the concurrency limit (%s).  Please try submitting fewer jobs at a time.";
     }
 
     public String getModelIsNotMlp() {
@@ -1587,14 +1246,6 @@ public class Message {
 
     public String getAdminPermissionUpdateAbandon() {
         return "Admin is not supported to update permission.";
-    }
-
-    public String getModelIdNotExist() {
-        return "The model with ID “%s” is not found.";
-    }
-
-    public String getNotInEffectiveCollection() {
-        return "“%s“ is not a valid value. This parameter only supports “ONLINE”, “OFFLINE”, “WARNING”, “BROKEN“.";
     }
 
     public String getRowAclNotStringType() {
@@ -1649,6 +1300,9 @@ public class Message {
         return SECOND_STORAGE_DELETE_NODE_FAILED;
     }
 
+    public String getInvalidLowCardinalityDataType() {
+        return SECOND_STORAGE_CARDINALITY_DATATYPE_INVALID;
+    }
     public String getJobRestartFailed() {
         return "Tiered storage task doesn't support restart.\n";
     }
@@ -1659,6 +1313,10 @@ public class Message {
 
     public String getJobResumeFailed() {
         return "Tiered storage task can't resume. Please try again later.\n";
+    }
+
+    public String getJobPauseFailed() {
+        return "This type of task does not support pause operation.";
     }
 
     public String getInvalidBrokerDefinition() {
@@ -1718,15 +1376,19 @@ public class Message {
     }
 
     public String getForcedToTieredstorageAndForceToIndex() {
-        return FORCED_TO_TIERED_STORAGE_AND_FORCE_TO_INDEX;
+        return FORCED_TO_TIEREDSTORAGE_AND_FORCETO_INDEX;
     }
 
     public String getForcedToTieredstorageReturnError() {
-        return FORCED_TO_TIERED_STORAGE_RETURN_ERROR;
+        return FORCED_TO_TIEREDSTORAGE_RETURN_ERROR;
     }
 
     public String getForcedToTieredstorageInvalidParameter() {
-        return FORCED_TO_TIERED_STORAGE_INVALID_PARAMETER;
+        return FORCED_TO_TIEREDSTORAGE_INVALID_PRARAMETER;
+    }
+
+    public String getParameterEmpty() {
+        return PARAMETER_EMPTY;
     }
 
     public String getSecondStorageNodeNotAvailable() {
@@ -1783,7 +1445,7 @@ public class Message {
     }
 
     public String getParamTooLarge() {
-        return "The parameter '%s' is too large, maximum %s byte.";
+        return "The parameter '%s' is too large, maximum %s KB.";
     }
 
     // KAP query sql blacklist
@@ -1843,16 +1505,12 @@ public class Message {
         return "Please add permissions to columns in the table!";
     }
 
-    public String getParameterIsRequired() {
-        return PARAMETER_IS_REQUIRED;
-    }
-
     public String getDisablePushDownPrompt() {
-        return DISABLE_PUSH_DOWN_PROMPT;
+        return DISABLE_PUSHDOWN_PROMPT;
     }
 
     public String getNonExistedModel() {
-        return NON_EXISTED_MODEL;
+        return NON_EXISTEN_MODEL;
     }
 
     public String getLackProject() {
@@ -1861,5 +1519,81 @@ public class Message {
 
     public String getNonExistProject() {
         return NON_EXIST_PROJECT;
+    }
+
+    public String getInvalidMergeSegmentWithoutDFS() {
+        return "The indexes included in the selected segments are not loaded to HDFS storage/object storage. Please ensure the indexes are loaded into HDFS storage and try merging again.";
+    }
+
+    public String getDuplicateModelColumnAndMeasureName() {
+        return DUP_MODCOL_MEASURE_NAME;
+    }
+
+    public String getDuplicateDimensionNameAndMeasureName() {
+        return DUP_DIM_MEASURE_NAME;
+    }
+
+    public String getDuplicateDimensionColAndMeasureName() {
+        return DUP_DIMCOL_MEASURE_NAME;
+    }
+
+    public String getProfilingNotEnabled() {
+        return PROFILING_NOT_ENABLED;
+    }
+
+    public String getProfilingNotStartError() {
+        return PROFILING_STATUS_ERROR + "profiler is not start yet.";
+    }
+
+    public String getProfilingStartedError() {
+        return PROFILING_STATUS_ERROR + "profiler is started already.";
+    }
+
+    public String getProfilingJobNotStartError() {
+        return PROFILING_STATUS_ERROR + "job does not start yet.";
+    }
+
+    public String getProfilingJobFinishedError() {
+        return PROFILING_STATUS_ERROR + "job is finished already.";
+    }
+
+    public String getProfilingYarnAppIdError() {
+        return PROFILING_STATUS_ERROR + "yarnAppId entered incorrectly, please try again.";
+    }
+
+    public String getProfilingCollectTimeout() {
+        return PROFILING_COLLECT_TIMEOUT;
+    }
+
+    public String getTargetSegmentNotFoundError(String missingSegIds) {
+        return String.format(Locale.ROOT, "Cannot find target segment, and missing segment id: %s", missingSegIds);
+    }
+
+    public String getSecondStorageIndexNotSupport() {
+        return "Partitioning columns are not supported for Order by and Skipping Index columns";
+    }
+
+    public String getSecondStorageIndexNotAllowNullable() {
+        return "Order by / Skipping Index doesn't support nullable column type.";
+    }
+
+    public String getSecondStorageOrderByHasData() {
+        return "The index has already loaded the tiered storage data, and does not support modifying the Order by column. If the change is necessary ,please clear the tiered storage data first.";
+    }
+
+    public String getSecondStorageLayoutNotExist() {
+        return "Layout id %s is not exist";
+    }
+
+    public String getSecondStorageLayoutNotBaseTableIndex() {
+        return "Layout id %s is not base table index which is equal to tiered storage.";
+    }
+
+    public String getSecondStorageNotSupportType(String dataType) {
+        return String.format(Locale.ROOT, "Skipping Index doesn‘t support column type '%s'.", dataType);
+    }
+
+    public String getSecondStorageNodeNotAvailable(String nodeName) {
+        return String.format(Locale.ROOT, "Tiered storage node '%s' not available.", nodeName);
     }
 }

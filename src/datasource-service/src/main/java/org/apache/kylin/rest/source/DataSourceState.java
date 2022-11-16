@@ -20,7 +20,7 @@ package org.apache.kylin.rest.source;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CHECK_KERBEROS;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
-import static org.apache.kylin.common.exception.SystemErrorCode.JOBNODE_API_INVALID;
+import static org.apache.kylin.common.exception.code.ErrorCodeSystem.QUERY_NODE_API_INVALID;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,6 +98,7 @@ public class DataSourceState implements Runnable {
                     log.warn("Skip wait sparder start, wait seconds :{}", waitSeconds);
                     return;
                 }
+                startSparder();
                 log.info("Wait sparder start");
                 Integer intervals = KylinConfig.getInstanceFromEnv().getLoadHiveTableWaitSparderIntervals();
                 TimeUnit.SECONDS.sleep(intervals);
@@ -114,6 +115,11 @@ public class DataSourceState implements Runnable {
         }
     }
 
+    private void startSparder() {
+        if (!KylinConfig.getInstanceFromEnv().isUTEnv()) {
+            SparderEnv.init();
+        }
+    }
     /**
      * load all source info to cache
      */
@@ -144,8 +150,9 @@ public class DataSourceState implements Runnable {
             ProjectInstance projectInstance = pair.getFirst();
             UserGroupInformation projectUgi = pair.getSecond();
             runningStateMap.put(cacheKey, true);
-            NHiveSourceInfo sourceInfo = fetchUgiSourceInfo(projectUgi, getHiveFilterList(projectInstance));
-            putCache(cacheKey, sourceInfo);
+            List<String> tableFilterList = getHiveFilterList(projectInstance);
+            NHiveSourceInfo sourceInfo = fetchUgiSourceInfo(projectUgi, tableFilterList);
+            putCache(cacheKey, sourceInfo, tableFilterList);
             runningStateMap.put(cacheKey, false);
             lastLoadTimeMap.put(cacheKey, System.currentTimeMillis());
         });
@@ -176,8 +183,9 @@ public class DataSourceState implements Runnable {
         KerberosLoginManager kerberosManager = KerberosLoginManager.getInstance();
         UserGroupInformation projectUGI = kerberosManager.getProjectUGI(project);
         runningStateMap.put(cacheKey, true);
-        NHiveSourceInfo sourceInfo = fetchUgiSourceInfo(projectUGI, getHiveFilterList(projectInstance));
-        putCache(cacheKey, sourceInfo);
+        List<String> tableFilterList = getHiveFilterList(projectInstance);
+        NHiveSourceInfo sourceInfo = fetchUgiSourceInfo(projectUGI, tableFilterList);
+        putCache(cacheKey, sourceInfo, tableFilterList);
         runningStateMap.put(cacheKey, false);
         response.setIsRunning(runningStateMap.get(cacheKey));
         response.setTime(0L);
@@ -196,8 +204,25 @@ public class DataSourceState implements Runnable {
         return result;
     }
 
-    public synchronized void putCache(String cacheKey, NHiveSourceInfo sourceInfo) {
+    public synchronized void putCache(String cacheKey, NHiveSourceInfo sourceInfo, List<String> tableFilterList) {
+        if (CollectionUtils.isNotEmpty(tableFilterList)) {
+            NHiveSourceInfo info = cache.get(cacheKey);
+            if (!checkSourceInfoEmpty(sourceInfo) && !checkSourceInfoEmpty(info)) {
+                info.getTables().keySet().stream().forEach(db -> {
+                    if (CollectionUtils.isEmpty(sourceInfo.getDatabaseInfo(db))) {
+                        if (tableFilterList.contains(db)) {
+                            return;
+                        }
+                        sourceInfo.putDatabaseInfo(db, info.getDatabaseInfo(db));
+                    }
+                });
+            }
+        }
         cache.put(cacheKey, sourceInfo);
+    }
+
+    private boolean checkSourceInfoEmpty(NHiveSourceInfo sourceInfo) {
+        return sourceInfo == null || sourceInfo.getTables().isEmpty();
     }
 
     private String getCacheKeyByProject(ProjectInstance projectInstance) {
@@ -283,7 +308,7 @@ public class DataSourceState implements Runnable {
     /**
      * get filter list from kylin.source.hive.databases
      */
-    private List<String> getHiveFilterList(ProjectInstance projectInstance) {
+    public List<String> getHiveFilterList(ProjectInstance projectInstance) {
         if (Objects.isNull(projectInstance)) {
             return Collections.emptyList();
         }
@@ -297,7 +322,7 @@ public class DataSourceState implements Runnable {
 
     private void checkIsAllNode() {
         if (!KylinConfig.getInstanceFromEnv().isJobNode()) {
-            throw new KylinException(JOBNODE_API_INVALID, "Only job/all node can load hive table name");
+            throw new KylinException(QUERY_NODE_API_INVALID);
         }
         if (!KylinConfig.getInstanceFromEnv().getLoadHiveTablenameEnabled()) {
             throw new KylinException(PERMISSION_DENIED, MsgPicker.getMsg().getInvalidLoadHiveTableName());

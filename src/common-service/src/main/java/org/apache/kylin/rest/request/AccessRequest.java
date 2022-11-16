@@ -18,6 +18,9 @@
 
 package org.apache.kylin.rest.request;
 
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
@@ -26,8 +29,11 @@ import lombok.Data;
 public class AccessRequest {
 
     @JsonProperty("access_entry_id")
-    private int accessEntryId;
+    private Integer accessEntryId;
     private String permission;
+    @JsonProperty("permissions")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<String> extPermissions;
     private String sid;
     private boolean principal;
 

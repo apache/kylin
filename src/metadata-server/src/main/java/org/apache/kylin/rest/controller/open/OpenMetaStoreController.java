@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -55,6 +56,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
+import org.apache.kylin.rest.service.MetaStoreService;
+
 import io.swagger.annotations.ApiOperation;
 import lombok.val;
 
@@ -68,6 +72,9 @@ public class OpenMetaStoreController extends NBasicController {
     @Autowired
     private NMetaStoreController metaStoreController;
 
+    @Autowired
+    private MetaStoreService metaStoreService;
+
     @ApiOperation(value = "previewModels", tags = { "MID" })
     @GetMapping(value = "/previews/models")
     @ResponseBody
@@ -76,14 +83,25 @@ public class OpenMetaStoreController extends NBasicController {
         String projectName = checkProjectName(project);
         NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         List<String> modelIds = new ArrayList<>();
+        List<String> notExistModelNames = new ArrayList<>();
         for (String modelName : modelNames) {
             val modelDesc = modelManager.getDataModelDescByAlias(modelName);
             if (Objects.isNull(modelDesc)) {
-                throw new KylinException(MODEL_NAME_NOT_EXIST, modelName);
+                notExistModelNames.add(modelName);
+                continue;
             }
             modelIds.add(modelDesc.getId());
         }
-        return metaStoreController.previewModels(projectName, modelIds);
+        if (!notExistModelNames.isEmpty()) {
+            String joinedModelNames = StringUtils.join(notExistModelNames, ",");
+            throw new KylinException(MODEL_NAME_NOT_EXIST, joinedModelNames);
+        }
+
+        List<ModelPreviewResponse> simplifiedModels = metaStoreService.getPreviewModels(projectName, modelIds);
+        List<ModelPreviewResponse> nonBrokenModels = simplifiedModels.stream()
+                .filter(modelPreviewResponse -> modelPreviewResponse.getStatus() != ModelStatusToDisplayEnum.BROKEN)
+                .collect(Collectors.toList());
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, nonBrokenModels, "");
     }
 
     @ApiOperation(value = "exportModelMetadata", tags = { "MID" })

@@ -18,12 +18,11 @@
 
 package org.apache.kylin.rest.handler.resourcegroup;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.RESOURCE_GROUP_INCOMPLETE_PARAMETER_LIST;
 
 import java.util.Objects;
 
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.rest.request.resourecegroup.ResourceGroupRequest;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -33,10 +32,9 @@ import org.springframework.stereotype.Component;
 public class ResourceGroupFieldValidator implements IResourceGroupRequestValidator {
     @Override
     public void validate(ResourceGroupRequest request) {
-        if (Objects.isNull(request.getResourceGroupEntities())
-                || Objects.isNull(request.getKylinInstances())
+        if (Objects.isNull(request.getResourceGroupEntities()) || Objects.isNull(request.getKylinInstances())
                 || Objects.isNull(request.getResourceGroupMappingInfoList())) {
-            throw new KylinException(INVALID_PARAMETER, MsgPicker.getMsg().getResourceGroupFieldIsNull());
+            throw new KylinException(RESOURCE_GROUP_INCOMPLETE_PARAMETER_LIST);
         }
     }
 }

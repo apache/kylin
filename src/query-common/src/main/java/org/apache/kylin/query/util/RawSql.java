@@ -100,7 +100,7 @@ public class RawSql {
 
         //Split keywords and variables from sql by punctuation and whitespace character
         List<String> sqlElements = Lists
-                .newArrayList(getStatementString().toLowerCase(Locale.ROOT).split("(?![\\._])\\p{P}|\\s+"));
+                .newArrayList(getStatementString().toLowerCase(Locale.ROOT).split("(?![\\._\'\"`])\\p{P}|\\s+"));
         boolean limitAppended = false;
 
         Integer maxRows = kylinConfig.getMaxResultRows();

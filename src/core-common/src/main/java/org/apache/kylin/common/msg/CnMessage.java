@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.common.msg;
 
 import java.util.List;
@@ -44,6 +26,12 @@ import org.apache.kylin.common.annotation.Clarification;
 
 @Clarification(priority = Clarification.Priority.MAJOR, msg = "Part message is for enterprise.")
 public class CnMessage extends Message {
+
+    private static final String PARAMETER_NOT_ENABLED = "功能参数未启用，请检查参数 '%s'。";
+    private static final String PROFILING_STATUS_ERROR = "构建火焰图任务状态异常，";
+    private static final String TASK_TIMEOUT = "执行超时";
+
+    private static final String PARAMETER_EMPTY = "请输入参数 “%s” 的值。";
 
     protected CnMessage() {
 
@@ -84,25 +72,9 @@ public class CnMessage extends Message {
         return "'%s' 存在下级授权";
     }
 
-    // Model
-    @Override
-    public String getInvalidModelDefinition() {
-        return "无法找到模型。请检查后重试。";
-    }
-
-    @Override
-    public String getEmptyModelName() {
-        return "模型名称不可为空";
-    }
-
     @Override
     public String getInitMeasureFailed() {
         return "无法初始化元数据。请尝试重新启动。若问题依然存在，请联系技术支持。";
-    }
-
-    @Override
-    public String getInvalidModelName() {
-        return "无效的模型名称 “%s”。请使用字母、数字或下划线命名。";
     }
 
     @Override
@@ -123,11 +95,6 @@ public class CnMessage extends Message {
     @Override
     public String getBrokenModelOperationDenied() {
         return "无法操作 BROKEN 模型 “%s”。";
-    }
-
-    @Override
-    public String getModelNotFound() {
-        return "无法找到模型 “%s”。 请检查后重试。";
     }
 
     @Override
@@ -264,22 +231,6 @@ public class CnMessage extends Message {
         return "该用户无法被设置成模型所有者。请选择系统管理员、项目管理员、或模型管理员。";
     }
 
-    // index
-    @Override
-    public String getIndexStatusTypeError() {
-        return "参数 “status” 仅支持 “NO_BUILD”, “ONLINE”, “LOCKED”, “BUILDING”";
-    }
-
-    @Override
-    public String getIndexSourceTypeError() {
-        return "参数 “sources” 仅支持 “RECOMMENDED_AGG_INDEX”, “RECOMMENDED_TABLE_INDEX”, “CUSTOM_AGG_INDEX”, “CUSTOM_TABLE_INDEX”.";
-    }
-
-    @Override
-    public String getIndexSortByError() {
-        return "参数 “sort_by” 仅支持 “last_modified”, “usage”, “data_size”.";
-    }
-
     // Job
     @Override
     public String getIllegalTimeFilter() {
@@ -287,18 +238,13 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getIllegalSortByFilter() {
+        return "选择的排序条件\"%s\"无效。请重新选择";
+    }
+
+    @Override
     public String getIllegalExecutableState() {
         return "选择的任务状态无效。请重新选择";
-    }
-
-    @Override
-    public String getIllegalStateTransfer() {
-        return "任务状态更新时遇到错误，无法执行当前操作。请刷新任务列表后重试。";
-    }
-
-    @Override
-    public String getInvalidPriority() {
-        return "选择的优先级无效。请选择在 0 到 4 范围内的数值。";
     }
 
     // Acl
@@ -329,11 +275,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getProjectNotFound() {
-        return "无法找到项目 \"%s\"，请检查后重试。";
-    }
-
-    @Override
     public String getProjectDropFailedSecondStorageEnabled() {
         return "无法删除项目 \"%s\"，请先关闭分层存储。";
     }
@@ -359,22 +300,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getProjectDisableMlp() {
-        return "此项目未开启多级分区，多级分区无法使用。请开启后重试。";
-    }
-
-    // table sampling
-    @Override
-    public String getBeyondMixSamplingRowshint() {
-        return "采样的行数应大于 %d。 请修改。";
-    }
-
-    @Override
-    public String getBeyondMaxSamplingRowsHint() {
-        return "采样的行数应小于 %d。请修改。";
-    }
-
-    @Override
     public String getSamplingFailedForIllegalTableName() {
         return "无效的采样表名称。请以 “database.table” 为格式命名。";
     }
@@ -390,18 +315,8 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getReloadTableModelRetry() {
-        return "源表 %1$s 中列 %2$s 的数据类型发生变更。请从模型 %3$s 中删除该列，或修改该列的数据类型。";
-    }
-
-    @Override
     public String getSameTableNameExist() {
         return "表 %s 已经存在，请选择其他名称。";
-    }
-
-    @Override
-    public String getQueryNotAllowed() {
-        return "任务节点不支持查询。请选择查询节点。";
     }
 
     @Override
@@ -420,11 +335,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getjobRepeatedStartFailure() {
-        return "不能重复启动流数据任务。";
-    }
-
-    @Override
     public String getJobStartFailure() {
         return "模型 \"%s\" 当前已有运行中的流数据任务，无法重复启动。请检查后重试。";
     }
@@ -432,11 +342,6 @@ public class CnMessage extends Message {
     @Override
     public String getJobBrokenModelStartFailure() {
         return "无法启动，模型 \"%s\" 当前为 Broken 状态。";
-    }
-
-    @Override
-    public String getJobStopFailure() {
-        return "当前无法停止模型 \"%s\" 的流数据任务。请查看日志，或稍后重试。";
     }
 
     // Access
@@ -461,11 +366,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getInvalidParameterType() {
-        return "参数 \"type\" 的值无效，请使用 \"user\" 或 \"group\"";
-    }
-
-    @Override
     public String getUnauthorizedSid() {
         return "用户/组没有当前项目访问权限";
     }
@@ -478,18 +378,8 @@ public class CnMessage extends Message {
     // user group
 
     @Override
-    public String getEmptyGroupName() {
-        return "用户组名不能为空.";
-    }
-
-    @Override
     public String getEmptySid() {
         return "用户名/用户组名不能为空";
-    }
-
-    @Override
-    public String getEmptyQueryName() {
-        return "查询名称不能为空";
     }
 
     @Override
@@ -543,12 +433,6 @@ public class CnMessage extends Message {
         return "项目名称不能为空。请检查后重试。";
     }
 
-    // User
-    @Override
-    public String getAuthInfoNotFound() {
-        return "找不到权限信息";
-    }
-
     @Override
     public String getUserNotFound() {
         return "找不到用户 '%s'";
@@ -593,11 +477,6 @@ public class CnMessage extends Message {
     @Override
     public String getUserInPermanentlyLockedStatus() {
         return "用户 %s 已被永久锁定，请联系您的系统管理员进行重置。";
-    }
-
-    @Override
-    public String getUserAuthFailed() {
-        return "用户名或密码错误。请检查后重试。";
     }
 
     @Override
@@ -667,31 +546,11 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getSqlFileTypeMismatch() {
-        return "sql文件的后缀必须是 'txt' 或 'sql'";
-    }
-
-    @Override
-    public String getConfigNotSupportDelete() {
-        return "无法删除该配置。";
-    }
-
-    @Override
-    public String getConfigNotSupportEdit() {
-        return "无法编辑该配置。";
-    }
-
-    @Override
     public String getConfigMapEmpty() {
         return "配置列表不能为空。请检查后重试。";
     }
 
     // Query statistics
-
-    @Override
-    public String getNotSetInfluxdb() {
-        return "未设置参数 kap.metric.write-destination 为 INFLUX";
-    }
 
     //license
     @Override
@@ -730,11 +589,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getLicenseInvalidLicense() {
-        return "无效许可证。请上传新的许可证或联系 Kyligence 销售人员。";
-    }
-
-    @Override
     public String getLicenseMismatchLicense() {
         return "该许可证适用的集群信息与当前不符。请上传新的许可证或联系 Kyligence 销售人员。";
     }
@@ -747,6 +601,16 @@ public class CnMessage extends Message {
     @Override
     public String getLicenseExpired() {
         return "该许可证已过期。请上传新的许可证或联系 Kyligence 销售人员。";
+    }
+
+    @Override
+    public String getLicenseOverVolume() {
+        return "当前系统已使用容量超过该许可证允许的容量。请上传新的许可证或联系 Kyligence 销售人员。";
+    }
+
+    @Override
+    public String getLicenseInvalidLicense() {
+        return "无效许可证。请上传新的许可证或联系 Kyligence 销售人员。";
     }
 
     @Override
@@ -834,7 +698,7 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getChangeDegaultadmin() {
+    public String getChangeDefaultadmin() {
         return "无法修改系统默认内置管理员 ADMIN 用户的权限。";
     }
 
@@ -847,16 +711,6 @@ public class CnMessage extends Message {
     @Override
     public String getInvalidId() {
         return "无法找到 ID \"%s\"。请检查后重试。";
-    }
-
-    @Override
-    public String getSegmentLocked() {
-        return "Segment “%s” 被锁定，无法删除、刷新或合并。请稍后重试。";
-    }
-
-    @Override
-    public String getSegmentStatus(String status) {
-        return "Segment “%s” 处于 “" + status + "” 状态，无法刷新或合并。请稍后重试。";
     }
 
     //Kerberos
@@ -927,13 +781,28 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getOperationFailedByGroupNotExist() {
-        return "操作失败，用户组[%s]不存在，请先添加";
+    public String getPermissionDenied() {
+        return "拒绝访问";
     }
 
     @Override
-    public String getPermissionDenied() {
-        return "拒绝访问";
+    public String getModifyPermissionOfSuperAdminFailed() {
+        return "超级管理员的权限不能被编辑。";
+    }
+
+    @Override
+    public String getGrantPermissionFailedByIllegalAuthorizingUser() {
+        return "编辑失败，只有超级管理员或有查询权限的系统管理员可以编辑用户的查询权限。";
+    }
+
+    @Override
+    public String getGrantPermissionFailedByNonSystemAdmin() {
+        return "编辑失败，你只能更改系统管理员的权限。";
+    }
+
+    @Override
+    public String getModifyOwnPermissionFailed() {
+        return "不能编辑自己的权限。";
     }
 
     @Override
@@ -964,11 +833,6 @@ public class CnMessage extends Message {
     @Override
     public String getCanNotBuildSegment() {
         return "无法构建 Segment。请先添加索引。";
-    }
-
-    @Override
-    public String getCanNotBuildSegmentManually() {
-        return "当前项目设置下，无法手动构建模型 “%s” 的 Segment。";
     }
 
     @Override
@@ -1052,31 +916,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getSegmentListIsEmpty() {
-        return "找不到 Segment。请检查后重试。";
-    }
-
-    @Override
-    public String getSegmentIdNotExist() {
-        return "找不到 ID 为 “%s” 的 Segment。请检查后重试。";
-    }
-
-    @Override
-    public String getSegmentNameNotExist() {
-        return "找不到名为 “%s” 的 Segment。请检查后重试。”。";
-    }
-
-    @Override
-    public String getLayoutListIsEmpty() {
-        return "找不到 Layout。请检查后重试。";
-    }
-
-    @Override
-    public String getLayoutNotExists() {
-        return "找不到 Layout “%s”。请检查后重试。";
-    }
-
-    @Override
     public String getInvalidRefreshSegment() {
         return "请至少选一个 Segment 刷新。";
     }
@@ -1084,16 +923,6 @@ public class CnMessage extends Message {
     @Override
     public String getEmptySegmentParameter() {
         return "请输入 Segment ID 或名称。";
-    }
-
-    @Override
-    public String getConflictSegmentParameter() {
-        return "不能同时输入 Segment ID 和名称。请重新输入。";
-    }
-
-    @Override
-    public String getInvalidMergeSegmentByTooLess() {
-        return "请至少选择两个 Segment 合并。";
     }
 
     @Override
@@ -1122,11 +951,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getUsernameCompanyIsIllegal() {
-        return "用户名, 公司只支持中英文、数字、空格";
-    }
-
-    @Override
     public String getInvalidComputerColumnNameWithKeyword() {
         return "可计算列 \"%s\" 的名称是 SQL 关键字。请使用其他名称。";
     }
@@ -1142,26 +966,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getInvalidRangeLessThanZero() {
-        return "起始时间和终止时间必须大于 0。请修改。";
-    }
-
-    @Override
-    public String getInvalidRangeNotFormat() {
-        return "起始或终止时间格式无效。仅支持时间戳，单位毫秒（ms）。请修改。";
-    }
-
-    @Override
-    public String getInvalidRangeEndLessthanStart() {
-        return "终止时间必须大于起始时间。请修改。";
-    }
-
-    @Override
-    public String getInvalidRangeNotConsistent() {
-        return "起始时间和终止时间必须同时存在或者同时不存在。请修改。";
-    }
-
-    @Override
     public String getIdCannotEmpty() {
         return "ID 不能为空。请检查后重试。";
     }
@@ -1169,16 +973,6 @@ public class CnMessage extends Message {
     @Override
     public String getInvalidCreateModel() {
         return "无法在此项目中手动添加模型。";
-    }
-
-    @Override
-    public String getSegmentInvalidRange() {
-        return "无法刷新，Segment 范围 “%s” 超出了加载数据的范围 “%s”。请修改后重试。";
-    }
-
-    @Override
-    public String getSegmentRangeOverlap() {
-        return "无法构建，待构建的范围和已构建的范围在 “%s” 到 “%s” 之间存在重合。请修改后重试。";
     }
 
     @Override
@@ -1217,11 +1011,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getTableSampleMaxRows() {
-        return "表抽样取值范围应在 10,000 至 20,000,000 行之间。";
-    }
-
-    @Override
     public String getTableNotFound() {
         return "无法找到表 \"%s\" 。请检查后重试。";
     }
@@ -1229,17 +1018,6 @@ public class CnMessage extends Message {
     @Override
     public String getTableParamEmpty() {
         return "无法找到该表，请检查后重试。";
-    }
-
-    @Override
-    public String getIllegalJobState() {
-        return "选择的任务状态无效，状态必须是 “PENDING“, “RUNNING“, “FINISHED“, “ERROR” 或 “DISCARDED“。请检查后重试。";
-    }
-
-    @Override
-    public String getIllegalJobAction() {
-        return "无效的参数值 “action“ 或 “statuses“ 或 “job_ids“。"
-                + "“statuses“值或“job_ids“指定任务的状态 值包含 “%s“，此状态的任务只能执行以下操作 “%s“";
     }
 
     @Override
@@ -1343,59 +1121,13 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getQueryRowNumOverThreshold() {
-        return "查询失败，查询结果行数超过最大值 \"%s\"。请添加过滤条件或联系管理员调整最大查询结果行数。";
-    }
-
-    @Override
-    public String getCCExpressionConflict(String newCCExpression, String newCCName, String existedCCName) {
-        return String.format(Locale.ROOT, "可计算列 \"%s\" 的表达式 \"%s\" 与可计算列 \"%s\" 相同。请修改。", newCCName, newCCExpression,
-                existedCCName);
-    }
-
-    @Override
-    public String getCCNameConflict(String ccName) {
-        return String.format(Locale.ROOT, "可计算列 \"%s\" 已存在。请修改。", ccName);
-    }
-
-    @Override
     public String getAliasConflictOfApprovingRecommendation() {
         return "该名称已存在，请重新命名。";
     }
 
     @Override
-    public String getDimensionConflict(String dimensionName) {
-        return String.format(Locale.ROOT, "维度 \"%s\" 已存在。请修改。", dimensionName);
-    }
-
-    @Override
-    public String getMeasureConflict(String measureName) {
-        return String.format(Locale.ROOT, "度量 \"%s\" 已存在。请修改。", measureName);
-    }
-
-    @Override
     public String getInvalidTimeFormat() {
         return "无法设置时间分区列，选取的时间分区列不符合时间格式。请重新选择。";
-    }
-
-    @Override
-    public String getInvalidCustomizeFormat() {
-        return "格式不支持，请检查后重新输入。";
-    }
-
-    @Override
-    public String getSegmentContainsGaps() {
-        return "无法合并所选 Segment，因为时间范围不连续。请检查后重试。";
-    }
-
-    @Override
-    public String getSegmentMergeLayoutConflictError() {
-        return "当前 Segments 所包含的索引不一致，请先构建索引并确保其一致后再合并。";
-    }
-
-    @Override
-    public String getSegmentMergePartitionConflictError() {
-        return "当前 Segments 所包含的分区不一致，请先构建分区并确保其一致后再合并。";
     }
 
     @Override
@@ -1416,17 +1148,6 @@ public class CnMessage extends Message {
     @Override
     public String getEffectiveDimensionNotFind() {
         return "以下列未作为维度添加到模型中，请删除后再保存或添加到模型中。\nColumn ID: %s";
-    }
-
-    @Override
-    public String getInvalidPasswordEncoder() {
-        return "非法的PASSWORD ENCODER，请检查配置项kylin.security.user-password-encoder";
-    }
-
-    @Override
-    public String getFailedInitPasswordEncoder() {
-        return "PASSWORD ENCODER 初始化失败，请检查配置项kylin.security.user-password-encoder";
-
     }
 
     @Override
@@ -1470,33 +1191,8 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getInsufficientAuthentication() {
-        return "无法认证用户信息，请重新登录。";
-    }
-
-    @Override
     public String getDisabledUser() {
         return "该用户已被禁用，请联系管理员。";
-    }
-
-    @Override
-    public String getJobNodeInvalid() {
-        return "该请求无法在任务节点执行。请检查后重试。";
-    }
-
-    @Override
-    public String getQueryNodeInvalid() {
-        return "该请求无法在查询节点执行。请检查后重试。";
-    }
-
-    @Override
-    public String getWriteInMaintenanceMode() {
-        return "系统已进入维护模式，元数据相关操作暂不可用。请稍后再试。";
-    }
-
-    @Override
-    public String getLicenseOverVolume() {
-        return "当前系统已使用容量超过该许可证允许的容量。请上传新的许可证或联系 Kyligence 销售人员。";
     }
 
     @Override
@@ -1515,26 +1211,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getAddJobException() {
-        return "当前没有可执行的任务。请稍后重试。";
-    }
-
-    @Override
-    public String getAddJobAbandon() {
-        return "无法添加任务，该节点不是构建节点。请检查后重试。";
-    }
-
-    @Override
-    public String getStorageQuotaLimit() {
-        return "已无可用的存储配额。系统提交构建任务失败，查询引擎依然正常服务。请及时清理低效存储，提高低效存储阈值，或者通知管理员提高本项目的存储配额。";
-    }
-
-    @Override
-    public String getAddJobCheckSegmentFail() {
-        return "无法添加任务，Segment 索引不一致。请检查后重试。";
-    }
-
-    @Override
     public String getEmptyDatabase() {
         return "请输入参数 “Database” 的值。";
     }
@@ -1550,48 +1226,13 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getAddJobCheckIndexFail() {
-        return "无法添加任务，Segment 索引为空。请稍后重试。";
-    }
-
-    @Override
-    public String getRefreshJobCheckIndexFail() {
-        return "当前没有可刷新索引。请检查后重试。";
-    }
-
-    @Override
-    public String getAddJobCheckMultiPartitionAbandon() {
-        return "无法添加任务。请确保该操作对当前对象有效。";
-    }
-
-    @Override
-    public String getAddJobCheckMultiPartitionEmpty() {
-        return "无法添加任务，子分区值为空。请检查后重试。";
-    }
-
-    @Override
-    public String getAddJobCheckMultiPartitionDuplicate() {
-        return "无法添加任务。请确保不存在重复的子分区值。";
-    }
-
-    @Override
     public String getTableReloadAddColumnExist(String table, String column) {
         return String.format(Locale.ROOT, "当前无法重载表。列 “%s” 在表 “%s” 中已存在。请修改后重试。", column, table);
     }
 
     @Override
-    public String getTableReloadHavingNotFinalJob() {
-        return "当前暂不可重载表。存在运行中的任务，任务对象为： %s。请等任务完成后再重载，或手动终止任务。";
-    }
-
-    @Override
     public String getColumnUnrecognized() {
         return "无法识别表达式中的列名 “%s”。 请使用 “TABLE_ALIAS.COLUMN“ 来命名。";
-    }
-
-    @Override
-    public String getInvalidJobStatusTransaction() {
-        return "无法 %s 状态为 %s 的任务 \"%s\"。";
     }
 
     // Punctuations
@@ -1674,79 +1315,13 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getInvalidDiagTimeParameter() {
-        return "终止时间必须大于起始时间。请修改。";
-    }
-
-    @Override
     public String getPartitionsToBuildCannotBeEmpty(List<String> tableDescNames) {
         return "在执行自定义分区刷新时，请为以下快照选取至少一个分区值： " + tableDescNames.toString();
-    }
-
-    // Resource Group
-    @Override
-    public String getResourceGroupFieldIsNull() {
-        return "无法完成该请求。请确保资源组请求需要的所有参数都已填写完整。";
-    }
-
-    @Override
-    public String getResourceCanNotBeEmpty() {
-        return "当资源组模式开启后，请确保至少存在一个资源组。";
-    }
-
-    @Override
-    public String getEmptyResourceGroupId() {
-        return "资源组 ID 不能为空。请检查后重试。";
-    }
-
-    @Override
-    public String getdDuplicatedResourceGroupId(String entityId) {
-        return String.format(Locale.ROOT, "资源组 ID “%s“ 已存在。请检查后重试。", entityId);
-    }
-
-    @Override
-    public String getResourceGroupDisabledWithInvliadParam() {
-        return "如需关闭资源组模式，请先移除资源组关联的实例和项目。";
     }
 
     @Override
     public String getProjectWithoutResourceGroup() {
         return "当前项目未绑定资源组，无法正常使用。请联系管理员进行绑定。";
-    }
-
-    @Override
-    public String getEmptyKylinInstanceIdentity() {
-        return "请填写参数 ”Instance” 的值。";
-    }
-
-    @Override
-    public String getEmptyKylinInstanceResourceGroupId() {
-        return "请填写参数 “resource_group_id” 的值。";
-    }
-
-    @Override
-    public String getResourceGroupIdNotExistInKylinInstance(String id) {
-        return String.format(Locale.ROOT, "无法在实例中找到值为 “%s” 的 “resource_group_id“。请检查后重试。", id);
-    }
-
-    @Override
-    public String getDuplicatedKylinInstance() {
-        return "存在重复的实例。请检查后重试。";
-    }
-
-    @Override
-    public String getEmptyProjectInMappingInfo() {
-        return "在 mapping_info 中，项目不可为空。请检查后重试。";
-    }
-
-    @Override
-    public String getEmptyResourceGroupIdInMappingInfo() {
-        return "在 mapping_info 中，参数 “resource_group_id” 不能为空。请检查后重试。";
-    }
-
-    @Override
-    public String getProjectBindingResourceGroupInvalid() {
-        return "无法绑定项目 “%s” 的资源请求。请确保一个项目最多绑定两个资源组，且构建和查询请求各绑定一个资源组。";
     }
 
     @Override
@@ -1765,23 +1340,8 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getConcurrentSubmitJobLimit() {
-        return "无法提交构建任务，单次最多可提交 %s 个构建任务。请尝试分批提交。";
-    }
-
-    @Override
     public String getAdminPermissionUpdateAbandon() {
-        return "管理员不支持被更新权限。";
-    }
-
-    @Override
-    public String getModelIdNotExist() {
-        return "模型 ID “%s“ 不存在。";
-    }
-
-    @Override
-    public String getNotInEffectiveCollection() {
-        return "“%s“ 不是有效的值。该参数仅支持 “ONLINE”, “OFFLINE”, “WARNING”, “BROKEN”。";
+        return "项目管理员不支持被更新权限。";
     }
 
     @Override
@@ -1835,6 +1395,21 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getSecondStorageLayoutNotExist() {
+        return "不存在 Layout id %s。";
+    }
+
+    @Override
+    public String getSecondStorageLayoutNotBaseTableIndex() {
+        return "Layout id %s 不是和分层存储一致的基础明细索引。";
+    }
+
+    @Override
+    public String getSecondStorageNotSupportType(String dataType) {
+        return String.format(Locale.ROOT, "Skipping Index不支持'%s'列类型。", dataType);
+    }
+
+    @Override
     public String getSecondStorageSegmentWithoutBaseIndex() {
         return "Segment 中缺少基础明细索引，请添加后重试。";
     }
@@ -1845,6 +1420,11 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getInvalidLowCardinalityDataType() {
+        return "无效的数据类型，当前仅支持 LowCardinality(Nullable(String)) 或 Nullable(String) 的数据类型。";
+    }
+
+    @Override
     public String getJobRestartFailed() {
         return "分层存储任务不支持重启操作。\n";
     }
@@ -1852,6 +1432,11 @@ public class CnMessage extends Message {
     @Override
     public String getJobResumeFailed() {
         return "分层存储任务暂时不能恢复，请稍后再试。\n";
+    }
+
+    @Override
+    public String getJobPauseFailed() {
+        return "该类型任务不支持暂停操作";
     }
 
     @Override
@@ -1940,6 +1525,11 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getParameterEmpty() {
+        return PARAMETER_EMPTY;
+    }
+
+    @Override
     public String getCannotForceToBothPushdodwnAndIndex() {
         return "不能同时强制下推和击中模型，参数 “forcedToPushDown” 和 “forced_to_index” 不能同时使用。请检查后重试。";
     }
@@ -2011,7 +1601,7 @@ public class CnMessage extends Message {
 
     @Override
     public String getParamTooLarge() {
-        return "参数 '%s' 太长， 最大 %s 字节。";
+        return "参数 '%s' 太长， 最大 %s KB。";
     }
 
     @Override
@@ -2086,11 +1676,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getParameterIsRequired() {
-        return "找不到 '%s'。";
-    }
-
-    @Override
     public String getDisablePushDownPrompt() {
         return "当您需要查询下压时，需要开启下压开关。";
     }
@@ -2108,5 +1693,81 @@ public class CnMessage extends Message {
     @Override
     public String getNonExistProject() {
         return "项目 %s 不存在，请检查后再重试.";
+    }
+
+    @Override
+    public String getInvalidMergeSegmentWithoutDFS() {
+        return "当前 Segments 所包含的索引未加载至 HDFS 存储/对象存储，请确保索引加载至 HDFS 存储后再合并。";
+    }
+
+    @Override
+    public String getDuplicateModelColumnAndMeasureName() {
+        return "模型中的列名 %s 与度量名 %s 重复，无法导出 TDS。请去除重名后再重试。";
+    }
+
+    @Override
+    public String getDuplicateDimensionNameAndMeasureName() {
+        return "维度名 %s 与度量名 %s 重复，无法导出 TDS。请去除重名后再重试。";
+    }
+
+    @Override
+    public String getDuplicateDimensionColAndMeasureName() {
+        return "维度的列名 %s 与度量名 %s 重复，无法导出 TDS。请去除重名后再重试。";
+    }
+
+    @Override
+    public String getProfilingNotEnabled() {
+        return "构建火焰图" + PARAMETER_NOT_ENABLED;
+    }
+
+    @Override
+    public String getProfilingNotStartError() {
+        return PROFILING_STATUS_ERROR + "收集任务未开始。";
+    }
+
+    @Override
+    public String getProfilingStartedError() {
+        return PROFILING_STATUS_ERROR + "收集任务正在执行。";
+    }
+
+    @Override
+    public String getProfilingJobNotStartError() {
+        return PROFILING_STATUS_ERROR + "Spark job 构建任务未开始。";
+    }
+
+    @Override
+    public String getProfilingJobFinishedError() {
+        return PROFILING_STATUS_ERROR + "Spark job 构建任务已结束。";
+    }
+
+    @Override
+    public String getProfilingYarnAppIdError() {
+        return PROFILING_STATUS_ERROR + "yarnAppId 输入有误, 请重试。";
+    }
+
+    @Override
+    public String getProfilingCollectTimeout() {
+        return "构建火焰图任务" + TASK_TIMEOUT;
+    }
+
+
+    @Override
+    public String getSecondStorageIndexNotSupport() {
+        return "Order by列和Skipping Index列不支持使用分区列";
+    }
+
+    @Override
+    public String getSecondStorageIndexNotAllowNullable() {
+        return "Order by和Skipping Index不允许列类型为Nullable。";
+    }
+
+    @Override
+    public String getSecondStorageOrderByHasData() {
+        return "在线索引已加载分层存储数据，不支持修改Order by列。如必须修改，请先清空分层存储数据";
+    }
+
+    @Override
+    public String getSecondStorageNodeNotAvailable(String nodeName) {
+        return String.format(Locale.ROOT, "分层存储节点'%s'不可用。", nodeName);
     }
 }

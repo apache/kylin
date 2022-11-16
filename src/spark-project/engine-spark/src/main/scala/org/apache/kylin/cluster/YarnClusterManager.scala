@@ -18,11 +18,6 @@
 
 package org.apache.kylin.cluster
 
-import java.io.IOException
-import java.util
-import java.util.stream.Collectors
-import java.util.{ArrayList, EnumSet, List, Set}
-
 import com.google.common.collect.{Lists, Sets}
 import org.apache.kylin.cluster.parser.SchedulerParserFactory
 import org.apache.kylin.engine.spark.utils.StorageUtils
@@ -34,6 +29,9 @@ import org.apache.hadoop.yarn.exceptions.YarnException
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 
+import java.io.IOException
+import java.util
+import java.util.{ArrayList, EnumSet, List, Set}
 import scala.collection.JavaConverters._
 
 class YarnClusterManager extends IClusterManager with Logging {
@@ -86,7 +84,7 @@ class YarnClusterManager extends IClusterManager with Logging {
   }
 
   def killApplication(jobStepPrefix: String, jobStepId: String): Unit = {
-    withYarnClient(yarnClient => {
+    withYarnClientFromWriteCluster(yarnClient => {
       var orphanApplicationId: String = null
       try {
         val types: Set[String] = Sets.newHashSet("SPARK")
@@ -110,7 +108,7 @@ class YarnClusterManager extends IClusterManager with Logging {
   }
 
   def getRunningJobs(queues: Set[String]): List[String] = {
-    withYarnClient(yarnClient => {
+    withYarnClientFromWriteCluster(yarnClient => {
       if (queues.isEmpty) {
         val applications = yarnClient.getApplications(EnumSet.of(YarnApplicationState.RUNNING))
         if (null == applications) new ArrayList[String]()
@@ -181,9 +179,65 @@ class YarnClusterManager extends IClusterManager with Logging {
     })
   }
 
+  override def getApplicationNameById(yarnAppId: Int): String = {
+    newYarnClient(yarnClient => {
+      val types: Set[String] = Sets.newHashSet("SPARK")
+      val states: EnumSet[YarnApplicationState] = util.EnumSet.of(YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
+        YarnApplicationState.SUBMITTED, YarnApplicationState.ACCEPTED, YarnApplicationState.RUNNING)
+      val applicationReports: List[ApplicationReport] = yarnClient.getApplications(types, states)
+      if (!CollectionUtils.isEmpty(applicationReports)) {
+        for (report <- applicationReports.asScala) {
+          if (report.getApplicationId.getId == yarnAppId) {
+            return report.getName
+          }
+        }
+      }
+    })
+    ""
+  }
 }
 
 object YarnClusterManager {
+
+  // The following is used for testing, normal functions should not be called
+  // include setYarnClient、destroyYarnClient
+  private var yarnClient: YarnClient = _
+  private var yarnClusterManager: YarnClusterManager = _
+
+  def setYarnClient(yarnClient: YarnClient): YarnClusterManager = {
+    if (yarnClient != null) {
+      this.yarnClient = yarnClient
+    }
+    yarnClusterManager = new YarnClusterManager()
+    yarnClusterManager
+  }
+
+  def destroyYarnClient(): Unit = {
+    if (yarnClient != null) {
+      yarnClient.close()
+      yarnClient = null
+    }
+    yarnClusterManager = null
+  }
+
+  def newYarnClient[T](body: YarnClient => T): T = {
+    if (yarnClient != null) {
+      try {
+        body(yarnClient)
+      } finally {
+        yarnClient.close()
+      }
+    } else {
+      val newYarnClient: YarnClient = YarnClient.createYarnClient
+      newYarnClient.init(getSpecifiedConf)
+      newYarnClient.start()
+      try {
+        body(newYarnClient)
+      } finally {
+        newYarnClient.close()
+      }
+    }
+  }
 
   def withYarnClient[T](body: YarnClient => T): T = {
     val yarnClient = YarnClient.createYarnClient
@@ -199,6 +253,30 @@ object YarnClusterManager {
   private def getSpecifiedConf: YarnConfiguration = {
     // yarn cluster mode couldn't access local hadoop_conf_dir
     val yarnConf = StorageUtils.getCurrentYarnConfiguration
+    // https://issues.apache.org/jira/browse/SPARK-15343
+    yarnConf.set("yarn.timeline-service.enabled", "false")
+    yarnConf
+  }
+
+  /**
+   * if write_hadoop_dir exists, Yarn Client Hadoop conf dir is write_hadoop_dir
+   * if not exists, use system env: HADOOP_CONF_DIR
+   * if HADOOP_CONF_DIR not exists. use system properties: kylin.hadoop.conf.dir
+   */
+  def withYarnClientFromWriteCluster[T](body: YarnClient => T): T = {
+    val yarnClient = YarnClient.createYarnClient
+    yarnClient.init(getSpecifiedConfFromWriteCluster)
+    yarnClient.start()
+    try {
+      body(yarnClient)
+    } finally {
+      yarnClient.close()
+    }
+  }
+
+  def getSpecifiedConfFromWriteCluster: YarnConfiguration = {
+    // yarn cluster mode couldn't access local hadoop_conf_dir
+    val yarnConf = StorageUtils.getCurrentYarnConfigurationFromWriteCluster
     // https://issues.apache.org/jira/browse/SPARK-15343
     yarnConf.set("yarn.timeline-service.enabled", "false")
     yarnConf

@@ -1,0 +1,79 @@
+{
+  "uuid" : "8c08822f-296a-b097-c910-e38d8934b6f9",
+  "last_modified" : 1657009683451,
+  "create_time" : 1657009682916,
+  "version" : "4.0.0.0",
+  "alias" : "model_special_char",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.123TABLE",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "DAY2",
+    "column" : "123TABLE.DAY#",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "DAY",
+    "column" : "123TABLE.DAY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "中文列",
+    "column" : "123TABLE.中文列",
+    "status" : "DIMENSION"
+  }, {
+      "id": 3,
+      "name": "CC_CHINESE_AND_SPECIAL_CHAR",
+      "column": "123TABLE.CC_CHINESE_AND_SPECIAL_CHAR",
+      "status": "DIMENSION"
+    }],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "computed_columns" : [{
+    "tableIdentity": "DEFAULT.123TABLE",
+    "tableAlias": "123TABLE",
+    "columnName": "CC_CHINESE_AND_SPECIAL_CHAR",
+    "expression": "\"123TABLE\".\"中文列\" + \"123TABLE\".\"DAY\" + \"123TABLE\".\"DAY#\" + 1",
+    "innerExpression": "`123TABLE`.`中文列` + `123TABLE`.`DAY` + `123TABLE`.`DAY#` + 1",
+    "datatype": "INTEGER",
+    "comment": null
+  }],
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null
+}

@@ -22,6 +22,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -58,6 +59,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import lombok.val;
 
 public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
 
@@ -171,6 +175,12 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError());
         Mockito.verify(openTableController).loadTables(tableLoadRequest);
 
+        val mapRequest = mockStreamingTablesRequestMap();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/tables") //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .content(JsonUtil.writeValueAsString(mapRequest)) //
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
     }
 
     @Test
@@ -255,7 +265,7 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
                 .param("project", project).param("table", tableName)
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(openTableController).preReloadTable(project, tableName);
+        Mockito.verify(openTableController).preReloadTable(project, tableName, false);
 
         // call failed  when table is kafka table
         String project1 = "streaming_test";
@@ -266,7 +276,20 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
                 .param("project", project1).param("table", tableName1)
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError());
-        Mockito.verify(openTableController).preReloadTable(project1, tableName1);
+        Mockito.verify(openTableController).preReloadTable(project1, tableName1, false);
+    }
+
+    @Test
+    public void testPreReloadTableNeedDetail() throws Exception {
+        String project = "default";
+        String tableName = "TEST_KYLIN_FACT";
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/pre_reload") //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .param("project", project).param("table", tableName).param("need_details", "true")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(openTableController).preReloadTable(project, tableName, true);
     }
 
     @Test
@@ -377,6 +400,12 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/tables/{database}/{table}", "DEFAULT", "TABLE")
                 .param("project", "default").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)));
         Mockito.verify(openTableController).unloadTable("default", "DEFAULT", "TABLE", false);
+    }
+
+    private Map<String, Object> mockStreamingTablesRequestMap() {
+        Map<String, Object> map = Maps.newHashMap();
+        map.put("sampling_rows", "1");
+        return map;
     }
 
 }

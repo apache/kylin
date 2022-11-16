@@ -36,15 +36,8 @@ import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.optimization.FrequencyMap;
-import org.apache.kylin.metadata.epoch.EpochManager;
-import org.apache.kylin.metadata.favorite.AbstractAsyncTask;
-import org.apache.kylin.metadata.favorite.AccelerateRuleUtil;
-import org.apache.kylin.metadata.favorite.AsyncAccelerationTask;
-import org.apache.kylin.metadata.favorite.AsyncTaskManager;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffset;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
-import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -60,6 +53,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.favorite.AbstractAsyncTask;
+import org.apache.kylin.metadata.favorite.AccelerateRuleUtil;
+import org.apache.kylin.metadata.favorite.AsyncAccelerationTask;
+import org.apache.kylin.metadata.favorite.AsyncTaskManager;
+import org.apache.kylin.metadata.favorite.QueryHistoryIdOffset;
+import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
 import lombok.Data;
 import lombok.Getter;
 import lombok.val;
@@ -93,8 +93,7 @@ public class QueryHistoryTaskScheduler {
         }
         queryHistoryAccelerateRunner = new QueryHistoryAccelerateRunner(false);
         queryHistoryMetaUpdateRunner = new QueryHistoryMetaUpdateRunner();
-        if (querySmartSupporter == null && SpringContext.getApplicationContext() != null
-                && KylinConfig.vendor().equals("kyligence")) {
+        if (querySmartSupporter == null && SpringContext.getApplicationContext() != null) {
             querySmartSupporter = SpringContext.getBean(QuerySmartSupporter.class);
         }
         log.debug("New QueryHistoryAccelerateScheduler created by project {}", project);
@@ -201,7 +200,7 @@ public class QueryHistoryTaskScheduler {
         }
 
         private void updateMetadata(Map<String, DataflowHitCount> dfHitCountMap, Map<String, Long> modelsLastQueryTime,
-                Long maxId, Map<TableDesc, Integer> hitSnapshotCountMap) {
+                Long maxId, Map<TableExtDesc, Integer> hitSnapshotCountMap) {
             EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
                 KylinConfig config = KylinConfig.getInstanceFromEnv();
 
@@ -246,9 +245,9 @@ public class QueryHistoryTaskScheduler {
             return result;
         }
 
-        private Map<TableDesc, Integer> collectSnapshotHitCount(List<QueryHistory> queryHistories) {
+        private Map<TableExtDesc, Integer> collectSnapshotHitCount(List<QueryHistory> queryHistories) {
             val tableManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
-            val results = Maps.<TableDesc, Integer> newHashMap();
+            val results = Maps.<TableExtDesc, Integer> newHashMap();
             for (QueryHistory queryHistory : queryHistories) {
                 if (queryHistory.getQueryHistoryInfo() == null) {
                     continue;
@@ -256,7 +255,7 @@ public class QueryHistoryTaskScheduler {
                 val snapshotsInRealization = queryHistory.getQueryHistoryInfo().getQuerySnapshots();
                 for (val snapshots : snapshotsInRealization) {
                     snapshots.stream().forEach(tableIdentify -> {
-                        results.merge(tableManager.getTableDesc(tableIdentify), 1, Integer::sum);
+                        results.merge(tableManager.getOrCreateTableExt(tableIdentify), 1, Integer::sum);
                     });
                 }
             }
@@ -289,15 +288,15 @@ public class QueryHistoryTaskScheduler {
             }
         }
 
-        private void incQueryHitSnapshotCount(Map<TableDesc, Integer> hitSnapshotCountMap, String project) {
+        private void incQueryHitSnapshotCount(Map<TableExtDesc, Integer> hitSnapshotCountMap, String project) {
             val tableManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
             for (val entry : hitSnapshotCountMap.entrySet()) {
-                if (tableManager.getTableDesc(entry.getKey().getIdentity()) == null) {
+                if (tableManager.getOrCreateTableExt(entry.getKey().getIdentity()) == null) {
                     continue;
                 }
                 val tableCopy = tableManager.copyForWrite(entry.getKey());
                 tableCopy.setSnapshotHitCount(tableCopy.getSnapshotHitCount() + entry.getValue());
-                tableManager.updateTableDesc(tableCopy);
+                tableManager.saveTableExt(tableCopy);
             }
         }
 

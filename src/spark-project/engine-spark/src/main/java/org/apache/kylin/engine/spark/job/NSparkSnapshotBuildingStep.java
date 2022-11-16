@@ -18,38 +18,34 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Set;
-
+import com.google.common.collect.Sets;
+import lombok.NoArgsConstructor;
+import lombok.val;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.model.SnapshotBuildFinishedEvent;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableExtDesc;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.common.scheduler.EventBusFactory;
-import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Set;
 
-import lombok.NoArgsConstructor;
-import lombok.val;
-
-/**
- */
 @NoArgsConstructor
 public class NSparkSnapshotBuildingStep extends NSparkExecutable {
 
@@ -82,7 +78,7 @@ public class NSparkSnapshotBuildingStep extends NSparkExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    public ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         ExecuteResult result = super.doWork(context);
         if (!result.succeed()) {
             return result;
@@ -153,7 +149,7 @@ public class NSparkSnapshotBuildingStep extends NSparkExecutable {
 
     public static class Mockup {
         public static void main(String[] args) {
-            String msg = String.format(Locale.ROOT, "%s.main() invoked, args: %s", Mockup.class, Arrays.toString(args));
+            String msg = String.format(Locale.ROOT, "%s.main() invoked, args: %s", NSparkSnapshotBuildingStep.Mockup.class, Arrays.toString(args));
             logger.info(msg);
         }
     }

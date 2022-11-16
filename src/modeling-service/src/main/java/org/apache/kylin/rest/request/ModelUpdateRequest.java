@@ -34,6 +34,7 @@ public class ModelUpdateRequest implements ModelInsensitiveRequest {
     private String newModelName;
     private String project;
     private String status;
+    private String description;
 
     @Override
     public List<String> inSensitiveFields() {

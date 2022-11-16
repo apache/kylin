@@ -20,10 +20,12 @@ package org.apache.kylin.rest.request;
 
 import java.util.List;
 
+import org.apache.kylin.common.util.ArgsTypeJsonDeserializer;
+
+
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,11 +33,13 @@ import lombok.Setter;
 @Setter
 public class EpochRequest implements ProjectInsensitiveRequest {
 
+    @JsonDeserialize(using = ArgsTypeJsonDeserializer.ListJsonDeserializer.class)
     @JsonProperty("projects")
     private List<String> projects;
 
+    @JsonDeserialize(using = ArgsTypeJsonDeserializer.BooleanJsonDeserializer.class)
     @JsonProperty("force")
-    private boolean force;
+    private Boolean force;
 
     @JsonProperty("client")
     private boolean client = false;

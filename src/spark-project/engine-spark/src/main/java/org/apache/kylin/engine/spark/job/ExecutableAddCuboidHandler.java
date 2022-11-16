@@ -18,28 +18,26 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
-
+import com.google.common.base.Preconditions;
+import lombok.val;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.execution.DefaultChainedExecutableOnModel;
-import org.apache.kylin.job.execution.ExecutableHandler;
 import org.apache.kylin.engine.spark.merger.AfterBuildResourceMerger;
+import org.apache.kylin.job.execution.DefaultExecutableOnModel;
+import org.apache.kylin.job.execution.ExecutableHandler;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
-import lombok.val;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
 
 public class ExecutableAddCuboidHandler extends ExecutableHandler {
     private static final Logger logger = LoggerFactory.getLogger(ExecutableAddCuboidHandler.class);
 
-    public ExecutableAddCuboidHandler(DefaultChainedExecutableOnModel job) {
+    public ExecutableAddCuboidHandler(DefaultExecutableOnModel job) {
         this(job.getProject(), job.getTargetSubject(), job.getSubmitter(), null, job.getId());
     }
 

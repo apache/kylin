@@ -18,12 +18,11 @@
 
 package org.apache.spark.application
 
-import io.kyligence.kap.engine.spark.job.ParamsConstants
 import org.apache.commons.lang.StringUtils
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.kylin.common.util.{JsonUtil, Unsafe}
 import org.apache.kylin.engine.spark.application.SparkApplication
-import org.apache.kylin.engine.spark.job.KylinBuildEnv
+import org.apache.kylin.engine.spark.job.{KylinBuildEnv, ParamsConstants}
 import org.apache.kylin.engine.spark.scheduler._
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.KylinJobEventLoop

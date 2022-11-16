@@ -160,6 +160,7 @@ object SecondStorage extends LogEx {
           .option(ShardOptions.SHARD_URLS, shardJDBCURLs)
           .option(ShardOptions.PUSHDOWN_AGGREGATE, true)
           .option(ShardOptions.PUSHDOWN_LIMIT, true)
+          .option(ShardOptions.PUSHDOWN_OFFSET, true)
           .option(ShardOptions.PUSHDOWN_NUM_PARTITIONS, numPartition)
           .table(s"$catalog.$database.$table")
       }

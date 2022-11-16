@@ -17,13 +17,13 @@
  */
 package io.kyligence.kap.clickhouse.ddl;
 
-import io.kyligence.kap.secondstorage.ddl.CreateTable;
-
-import io.kyligence.kap.secondstorage.ddl.exp.TableIdentifier;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+
+import io.kyligence.kap.guava20.shaded.common.collect.Maps;
+import io.kyligence.kap.secondstorage.ddl.CreateTable;
+import io.kyligence.kap.secondstorage.ddl.exp.TableIdentifier;
 
 
 public class ClickHouseCreateTable extends CreateTable<ClickHouseCreateTable> {
@@ -33,7 +33,7 @@ public class ClickHouseCreateTable extends CreateTable<ClickHouseCreateTable> {
     private TableIdentifier likeTable;
     private String partitionBy;
     private final List<String> orderBy;
-    private int deduplicationWindow = 0;
+    private final Map<TableSetting, String> tableSettings = Maps.newHashMap();
 
     public ClickHouseCreateTable(TableIdentifier table, boolean ifNotExists) {
         super(table, ifNotExists);
@@ -50,13 +50,13 @@ public class ClickHouseCreateTable extends CreateTable<ClickHouseCreateTable> {
         return engine;
     }
 
-    public ClickHouseCreateTable deduplicationWindow(int window) {
-        this.deduplicationWindow = window;
+    public ClickHouseCreateTable tableSettings(TableSetting tableSetting, String value) {
+        tableSettings.put(tableSetting, value);
         return this;
     }
 
-    public int getDeduplicationWindow() {
-        return deduplicationWindow;
+    public Map<TableSetting, String> getTableSettings() {
+        return this.tableSettings;
     }
 
     public ClickHouseCreateTable partitionBy(String column) {
@@ -79,15 +79,14 @@ public class ClickHouseCreateTable extends CreateTable<ClickHouseCreateTable> {
         return likeTable == null;
     }
 
-    public final ClickHouseCreateTable orderBy(String... fields) {
-        orderBy.addAll(Arrays.asList(fields));
+    public final ClickHouseCreateTable orderBy(List<String> fields) {
+        orderBy.addAll(fields);
         return this;
     }
 
     public final List<String> orderBy() {
         return orderBy;
     }
-
 
     public static ClickHouseCreateTable createCKTable(String database, String table) {
         return new ClickHouseCreateTable(TableIdentifier.table(database, table), false);

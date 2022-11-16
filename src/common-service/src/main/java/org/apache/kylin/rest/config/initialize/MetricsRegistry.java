@@ -34,14 +34,6 @@ import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.dao.ExecutablePO;
-import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.NExecutableManager;
-import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.util.SpringContext;
 import org.apache.kylin.common.event.ModelAddEvent;
 import org.apache.kylin.common.metrics.MetricsCategory;
 import org.apache.kylin.common.metrics.MetricsGroup;
@@ -50,6 +42,11 @@ import org.apache.kylin.common.metrics.MetricsTag;
 import org.apache.kylin.common.metrics.prometheus.PrometheusMetrics;
 import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
 import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.job.execution.NExecutableManager;
+import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.storage.ProjectStorageInfoCollector;
 import org.apache.kylin.metadata.cube.storage.StorageInfoEnum;
@@ -57,12 +54,15 @@ import org.apache.kylin.metadata.cube.storage.StorageVolumeInfo;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.query.util.LoadCounter;
 import org.apache.kylin.query.util.LoadDesc;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.util.SpringContext;
 import org.apache.spark.sql.SparderEnv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,9 +81,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MetricsRegistry {
+    private MetricsRegistry() {
+        //do nothing
+    }
+
     private static final String GLOBAL = "global";
 
-    private static Map<String, Long> totalStorageSizeMap = Maps.newHashMap();
+    private static final Map<String, Long> totalStorageSizeMap = Maps.newHashMap();
 
     private static final Logger logger = LoggerFactory.getLogger(MetricsRegistry.class);
 
@@ -266,11 +270,12 @@ public class MetricsRegistry {
             return list == null ? 0 : list.size();
         });
 
+        boolean streamingEnabled = config.streamingEnabled();
         final NDataflowManager dataflowManager = NDataflowManager.getInstance(config, project);
         MetricsGroup.newGauge(MetricsName.HEALTHY_MODEL_GAUGE, MetricsCategory.PROJECT, project, () -> {
             List<NDataModel> list = dataflowManager.listUnderliningDataModels().stream()
-                    .filter(NDataModelManager::isModelAccessible).collect(Collectors.toList());
-            return list == null ? 0 : list.size();
+                    .filter(model -> model.isAccessible(streamingEnabled)).collect(Collectors.toList());
+            return list.size();
         });
 
         registerStorageMetrics(project);
@@ -279,13 +284,13 @@ public class MetricsRegistry {
         final NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(config, project);
         MetricsGroup.newGauge(MetricsName.TABLE_GAUGE, MetricsCategory.PROJECT, project, () -> {
             final List<TableDesc> list = tableMetadataManager.listAllTables().stream()
-                    .filter(NTableMetadataManager::isTableAccessible).collect(Collectors.toList());
-            return list == null ? 0 : list.size();
+                    .filter(table -> table.isAccessible(streamingEnabled)).collect(Collectors.toList());
+            return list.size();
         });
         MetricsGroup.newGauge(MetricsName.DB_GAUGE, MetricsCategory.PROJECT, project, () -> {
             final List<TableDesc> list = tableMetadataManager.listAllTables();
             return list == null ? 0
-                    : list.stream().filter(NTableMetadataManager::isTableAccessible)
+                    : list.stream().filter(table -> table.isAccessible(streamingEnabled))
                             .map(TableDesc::getCaseSensitiveDatabase).collect(toSet()).size();
         });
 
@@ -295,7 +300,8 @@ public class MetricsRegistry {
 
     static void registerModelMetrics(KylinConfig config, String project) {
         NDataModelManager modelManager = NDataModelManager.getInstance(config, project);
-        modelManager.listAllModels().stream().filter(NDataModelManager::isModelAccessible)
+        boolean streamingEnabled = config.streamingEnabled();
+        modelManager.listAllModels().stream().filter(model -> model.isAccessible(streamingEnabled))
                 .forEach(model -> registerModelMetrics(project, model.getId(), model.getAlias()));
     }
 

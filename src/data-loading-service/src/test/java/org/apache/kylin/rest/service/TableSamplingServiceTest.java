@@ -18,16 +18,14 @@
 
 package org.apache.kylin.rest.service;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.kylin.engine.spark.job.NResourceDetectStep;
+import org.apache.kylin.engine.spark.job.NTableSamplingJob;
+import lombok.val;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.job.NResourceDetectStep;
-import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -48,10 +46,10 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-import lombok.val;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class TableSamplingServiceTest extends NLocalFileMetadataTestCase {
 

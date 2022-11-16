@@ -21,10 +21,13 @@ package org.apache.kylin.rest.request;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.kylin.common.util.ArgsTypeJsonDeserializer;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
+import org.apache.kylin.rest.util.SegmentsTypeEnumJsonDeserializer;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import lombok.Data;
 
@@ -34,6 +37,8 @@ public class SegmentsRequest implements ProjectInsensitiveRequest {
     private String[] ids;
     private String[] names;
     private String project;
+
+    @JsonDeserialize(using = SegmentsTypeEnumJsonDeserializer.class)
     private SegmentsRequestType type = SegmentsRequestType.REFRESH;
 
     @JsonProperty("ignored_snapshot_tables")
@@ -42,6 +47,7 @@ public class SegmentsRequest implements ProjectInsensitiveRequest {
     @JsonProperty("refresh_all_indexes")
     private boolean refreshAllIndexes;
 
+    @JsonDeserialize(using = ArgsTypeJsonDeserializer.IntegerJsonDeserializer.class)
     private int priority = ExecutablePO.DEFAULT_PRIORITY;
 
     @JsonProperty("yarn_queue")

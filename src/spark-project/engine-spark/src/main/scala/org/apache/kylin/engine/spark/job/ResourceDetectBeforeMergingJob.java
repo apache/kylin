@@ -18,13 +18,11 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.collect.Maps;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.engine.spark.application.SparkApplication;
 import org.apache.kylin.engine.spark.builder.DFLayoutMergeAssist;
+import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -35,11 +33,12 @@ import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Maps;
-
 import scala.collection.JavaConversions;
 import scala.collection.JavaConverters;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class ResourceDetectBeforeMergingJob extends SparkApplication implements ResourceDetect {
     protected static final Logger logger = LoggerFactory.getLogger(ResourceDetectBeforeMergingJob.class);

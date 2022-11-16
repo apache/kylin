@@ -17,9 +17,18 @@
  */
 package io.kyligence.kap.secondstorage.ddl.visitor;
 
+import static org.apache.commons.lang.StringUtils.join;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections.map.ListOrderedMap;
+
 import io.kyligence.kap.secondstorage.ddl.AlterTable;
 import io.kyligence.kap.secondstorage.ddl.CreateDatabase;
 import io.kyligence.kap.secondstorage.ddl.CreateTable;
+import io.kyligence.kap.secondstorage.ddl.Desc;
 import io.kyligence.kap.secondstorage.ddl.DropDatabase;
 import io.kyligence.kap.secondstorage.ddl.DropTable;
 import io.kyligence.kap.secondstorage.ddl.ExistsDatabase;
@@ -35,13 +44,6 @@ import io.kyligence.kap.secondstorage.ddl.exp.ColumnWithAlias;
 import io.kyligence.kap.secondstorage.ddl.exp.ColumnWithType;
 import io.kyligence.kap.secondstorage.ddl.exp.GroupBy;
 import io.kyligence.kap.secondstorage.ddl.exp.TableIdentifier;
-import org.apache.commons.collections.map.ListOrderedMap;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.apache.commons.lang.StringUtils.join;
 
 public class DefaultSQLRender implements BaseRender {
 
@@ -285,11 +287,30 @@ public class DefaultSQLRender implements BaseRender {
 
         private static final String VALUES = "VALUES";
         private static final String NULLABLE = "Nullable";
+
+        private static final String DESC = "DESC";
     }
 
     @Override
     public void visit(AlterTable.ManipulatePartition movePartition) {
         throw new UnsupportedOperationException("Move Partition doesn't support by default render");
+    }
+
+    @Override
+    public void visit(AlterTable.ManipulateIndex manipulateIndex) {
+        throw new UnsupportedOperationException("ALTER INDEX doesn't support by default render");
+    }
+
+    @Override
+    public void visit(AlterTable.ModifyColumn modifyColumn) {
+        throw new UnsupportedOperationException("Modify Column doesn't support by default render");
+    }
+
+    @Override
+    public void visit(Desc desc) {
+        result.append(KeyWord.DESC)
+                .append(' ')
+                .append(desc.getTable().table());
     }
 
     @Override

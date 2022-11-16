@@ -1,1 +1,0 @@
-`CASE WHEN (INT0 > 0) THEN timestampdiff(second, TIME0, TIME1) ELSE 0 END` BIGINT

@@ -18,24 +18,24 @@
 
 package org.apache.kylin.engine.spark.job.stage.merge
 
-import java.io.IOException
-import java.lang
-import java.util.Objects
+import org.apache.hadoop.fs.Path
+import org.apache.kylin.common.persistence.transaction.UnitOfWork
+import org.apache.kylin.common.persistence.transaction.UnitOfWork.Callback
+import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.job.SegmentExec.SourceStats
 import org.apache.kylin.engine.spark.job.stage.StageExec
 import org.apache.kylin.engine.spark.job.{SegmentExec, SegmentJob}
 import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
 import org.apache.kylin.metadata.cube.model._
-import org.apache.kylin.metadata.sourceusage.SourceUsageManager
-import org.apache.hadoop.fs.Path
-import org.apache.kylin.common.persistence.transaction.UnitOfWork
-import org.apache.kylin.common.persistence.transaction.UnitOfWork.Callback
-import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.metadata.model.TblColRef
+import org.apache.kylin.metadata.sourceusage.SourceUsageManager
 import org.apache.spark.sql.datasource.storage.{StorageStoreUtils, WriteTaskStats}
 import org.apache.spark.sql.{Dataset, Row, SaveMode}
 
+import java.io.IOException
+import java.lang
+import java.util.Objects
 import scala.collection.JavaConverters
 import scala.collection.JavaConverters._
 
@@ -52,7 +52,8 @@ abstract class MergeStage(private val jobContext: SegmentJob,
   protected final val config = jobContext.getConfig
   protected final val dataflowId = jobContext.getDataflowId
   protected final val sparkSession = jobContext.getSparkSession
-  protected final val runtime = jobContext.runtime
+  protected final val resourceContext = jobContext.getBuildContext
+  protected final val runtime = jobContext.getRuntime
 
   protected final val project = dataSegment.getProject
   protected final val segmentId = dataSegment.getId
@@ -67,20 +68,27 @@ abstract class MergeStage(private val jobContext: SegmentJob,
     segments
   }
 
-  protected def mergeIndices(): Unit = {
+  protected case class LayoutMergeTask(grouped: Seq[NDataLayout]) extends Task {
+    override def getTaskDesc: String = {
+      s"${grouped.head.getLayoutId}"
+    }
+  }
 
+  protected def mergeIndices(): Unit = {
     // Cleanup previous potentially left temp layout data.
     cleanupLayoutTempData(dataSegment, jobContext.getReadOnlyLayouts.asScala.toSeq)
 
-    val sources = unmerged.flatMap(segment => segment.getSegDetails.getLayouts.asScala) //
-      .groupBy(_.getLayoutId).values.toSeq
-
-    sources.foreach(grouped => asyncExecute(mergeLayouts(grouped)))
-    awaitOrFailFast(sources.size)
+    val tasks = unmerged.flatMap(segment => segment.getSegDetails.getLayouts.asScala) //
+      .groupBy(_.getLayoutId).values.map(LayoutMergeTask)
+    slowStartExec(tasks.iterator, mergeLayout)
   }
 
-  private def mergeLayouts(grouped: Seq[NDataLayout]): Unit = {
-    val head = grouped.head
+  override protected def recordTaskInfo(t: Task): Unit = {
+    logInfo(s"Segment $segmentId submit task: ${t.getTaskDesc}")
+  }
+
+  private def mergeLayout(task: LayoutMergeTask): Unit = {
+    val head = task.grouped.head
     val layout = head.getLayout
     val layoutId = layout.getId
     val unitedDS: Dataset[Row] = newUnitedDS(layoutId)
@@ -193,7 +201,11 @@ abstract class MergeStage(private val jobContext: SegmentJob,
       return Seq.empty[Path]
     }
     // check flat table exists
-    val fs = HadoopUtil.getWorkingFileSystem
+    val fs = if (config.isBuildFilesSeparationEnabled) {
+      HadoopUtil.getWritingClusterFileSystem
+    } else {
+      HadoopUtil.getWorkingFileSystem
+    }
     val notExists = unmerged.filterNot { segment =>
       def exists(segment: NDataSegment) = try {
         val pathFT = config.getFlatTableDir(project, dataflowId, segment.getId)
@@ -227,9 +239,9 @@ abstract class MergeStage(private val jobContext: SegmentJob,
     } else {
       val dimCols = dataflow.getIndexPlan.getEffectiveDimCols
       val mergedDimRange = unmerged.map(seg => JavaConverters.mapAsScalaMap(seg.getDimensionRangeInfoMap).toSeq)
-        .reduce(_ ++ _).groupBy(_._1).mapValues(_.map(_._2).seq).map(dim => {
-        (dim._1, dim._2.reduce(_.merge(_, dimCols.get(Integer.parseInt(dim._1)).getType)))
-      })
+        .reduce(_ ++ _).groupBy(_._1).mapValues(_.map(_._2).seq)
+        .filter(dim => dimCols.containsKey(Integer.parseInt(dim._1)))
+        .map(dim => (dim._1, dim._2.reduce(_.merge(_, dimCols.get(Integer.parseInt(dim._1)).getType))))
       JavaConverters.mapAsJavaMap(mergedDimRange)
     }
   }

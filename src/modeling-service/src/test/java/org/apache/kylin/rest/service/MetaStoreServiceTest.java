@@ -49,6 +49,7 @@ import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.MetadataChecker;
 import org.apache.kylin.common.util.Pair;
@@ -70,8 +71,6 @@ import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
 import org.apache.kylin.metadata.model.schema.SchemaNodeType;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
-import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.ModelConfigRequest;
 import org.apache.kylin.rest.request.ModelImportRequest;
@@ -102,6 +101,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
+import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 import lombok.val;
 import lombok.var;
 
@@ -121,6 +122,8 @@ public class MetaStoreServiceTest extends ServiceTestBase {
     JdbcTemplate jdbcTemplate = null;
     JdbcRawRecStore jdbcRawRecStore = null;
     private final Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
+
+    private static final String PROJECT_DEFAULT = "default";
 
     @Before
     public void setup() {
@@ -182,7 +185,8 @@ public class MetaStoreServiceTest extends ServiceTestBase {
 
     @Test
     public void testGetCompressedModelMetadata() throws Exception {
-        List<NDataflow> dataflowList = modelService.getManager(NDataflowManager.class, getProject()).listAllDataflows();
+        List<NDataflow> dataflowList = modelService.getManager(NDataflowManager.class, PROJECT_DEFAULT)
+                .listAllDataflows();
         List<NDataModel> dataModelList = dataflowList.stream().filter(df -> !df.checkBrokenWithRelatedInfo())
                 .map(NDataflow::getModel).collect(Collectors.toList());
         List<String> modelIdList = dataModelList.stream().map(NDataModel::getId).collect(Collectors.toList());
@@ -196,9 +200,9 @@ public class MetaStoreServiceTest extends ServiceTestBase {
                 put(ruleSchedDataProp, "");
             }
         });
-        modelService.updateModelConfig(getProject(), modelId, modelConfigRequest);
+        modelService.updateModelConfig(PROJECT_DEFAULT, modelId, modelConfigRequest);
 
-        ByteArrayOutputStream byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(getProject(),
+        ByteArrayOutputStream byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(PROJECT_DEFAULT,
                 modelIdList, false, false, false);
         Assert.assertTrue(ArrayUtils.isNotEmpty(byteArrayOutputStream.toByteArray()));
         Map<String, RawResource> rawResourceMap = getRawResourceFromZipFile(
@@ -206,7 +210,7 @@ public class MetaStoreServiceTest extends ServiceTestBase {
         Assert.assertEquals(38, rawResourceMap.size());
 
         // export over props
-        byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(getProject(), modelIdList, false, true,
+        byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(PROJECT_DEFAULT, modelIdList, false, true,
                 false);
         Assert.assertTrue(ArrayUtils.isNotEmpty(byteArrayOutputStream.toByteArray()));
         rawResourceMap = getRawResourceFromZipFile(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
@@ -223,7 +227,7 @@ public class MetaStoreServiceTest extends ServiceTestBase {
             resourceStore.checkAndPutResource(rs.getResPath(), rs.getByteSource(), mvcc);
         });
 
-        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(kylinConfig, getProject());
+        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(kylinConfig, PROJECT_DEFAULT);
         Assert.assertTrue(indexPlanManager.listAllIndexPlans().stream()
                 .anyMatch(indexPlan -> !indexPlan.getOverrideProps().isEmpty()));
         Assert.assertEquals("false", indexPlanManager.getIndexPlan(modelId).getOverrideProps().get(affectProp));
@@ -233,7 +237,7 @@ public class MetaStoreServiceTest extends ServiceTestBase {
 
     @Test
     public void testGetCompressedModelMetadataWithIndentJson() throws Exception {
-        ByteArrayOutputStream byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(getProject(),
+        ByteArrayOutputStream byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(PROJECT_DEFAULT,
                 Collections.singletonList("1af229fb-bb2c-42c5-9663-2bd92b50a861"), true, false, false);
         Assert.assertTrue(ArrayUtils.isNotEmpty(byteArrayOutputStream.toByteArray()));
         Map<String, RawResource> rawResourceMap = getRawResourceFromZipFile(
@@ -277,20 +281,20 @@ public class MetaStoreServiceTest extends ServiceTestBase {
         List<RawRecItem> rawRecItems1 = jdbcRawRecStore.queryAll();
         Assert.assertEquals(4, rawRecItems1.size());
         // export recommendations
-        val byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(getProject(),
+        val byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(PROJECT_DEFAULT,
                 Lists.newArrayList("1af229fb-bb2c-42c5-9663-2bd92b50a861", "7212bf0c-0716-4cef-b623-69c161981262"),
                 true, false, false);
         Assert.assertTrue(ArrayUtils.isNotEmpty(byteArrayOutputStream.toByteArray()));
         val rawResourceMap = getRawResourceFromZipFile(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
 
-        String recPath = "/" + getProject() + "/rec/1af229fb-bb2c-42c5-9663-2bd92b50a861.json";
+        String recPath = "/" + PROJECT_DEFAULT + "/rec/1af229fb-bb2c-42c5-9663-2bd92b50a861.json";
         RawResource rawResource = rawResourceMap.get(recPath);
         Assert.assertNotNull(rawResource);
 
         val arrayNode = JsonUtil.readValue(rawResource.getByteSource().openStream(), ArrayNode.class);
         Assert.assertEquals(4, arrayNode.size());
 
-        recPath = "/" + getProject() + "/rec/7212bf0c-0716-4cef-b623-69c161981262.json";
+        recPath = "/" + PROJECT_DEFAULT + "/rec/7212bf0c-0716-4cef-b623-69c161981262.json";
         rawResource = rawResourceMap.get(recPath);
         Assert.assertNull(rawResource);
     }
@@ -347,11 +351,12 @@ public class MetaStoreServiceTest extends ServiceTestBase {
 
     @Test
     public void testGetCompressedModelMetadataWithVersionFile() throws Exception {
-        List<NDataflow> dataflowList = modelService.getManager(NDataflowManager.class, getProject()).listAllDataflows();
+        List<NDataflow> dataflowList = modelService.getManager(NDataflowManager.class, PROJECT_DEFAULT)
+                .listAllDataflows();
         List<NDataModel> dataModelList = dataflowList.stream().filter(df -> !df.checkBrokenWithRelatedInfo())
                 .map(NDataflow::getModel).collect(Collectors.toList());
         List<String> modelIdList = dataModelList.stream().map(NDataModel::getId).collect(Collectors.toList());
-        ByteArrayOutputStream byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(getProject(),
+        ByteArrayOutputStream byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(PROJECT_DEFAULT,
                 modelIdList, false, false, false);
         Assert.assertTrue(ArrayUtils.isNotEmpty(byteArrayOutputStream.toByteArray()));
         Map<String, RawResource> rawResourceMap = getRawResourceFromZipFile(
@@ -365,7 +370,7 @@ public class MetaStoreServiceTest extends ServiceTestBase {
 
         overwriteSystemProp(KE_VERSION, "4.3.x");
 
-        byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(getProject(), modelIdList, false, false,
+        byteArrayOutputStream = metaStoreService.getCompressedModelMetadata(PROJECT_DEFAULT, modelIdList, false, false,
                 false);
         Assert.assertTrue(ArrayUtils.isNotEmpty(byteArrayOutputStream.toByteArray()));
         rawResourceMap = getRawResourceFromZipFile(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
@@ -382,7 +387,7 @@ public class MetaStoreServiceTest extends ServiceTestBase {
         String notExistsUuid = RandomUtil.randomUUIDStr();
         thrown.expect(KylinException.class);
         thrown.expectMessage(MODEL_ID_NOT_EXIST.getMsg(notExistsUuid));
-        metaStoreService.getCompressedModelMetadata(getProject(), Lists.newArrayList(notExistsUuid), false, false,
+        metaStoreService.getCompressedModelMetadata(PROJECT_DEFAULT, Lists.newArrayList(notExistsUuid), false, false,
                 false);
     }
 
@@ -394,7 +399,7 @@ public class MetaStoreServiceTest extends ServiceTestBase {
         thrown.expectMessage(String.format(Locale.ROOT,
                 "Can’t export model \"%s\"  as it’s in \"BROKEN\" status. Please re-select and try again.",
                 brokenModelId));
-        metaStoreService.getCompressedModelMetadata(getProject(), Lists.newArrayList(brokenModelId), false, false,
+        metaStoreService.getCompressedModelMetadata(PROJECT_DEFAULT, Lists.newArrayList(brokenModelId), false, false,
                 false);
 
     }
@@ -404,7 +409,7 @@ public class MetaStoreServiceTest extends ServiceTestBase {
         // empty model list
         thrown.expect(KylinException.class);
         thrown.expectMessage("Please select at least one model to export.");
-        metaStoreService.getCompressedModelMetadata(getProject(), Lists.newArrayList(), false, false, false);
+        metaStoreService.getCompressedModelMetadata(PROJECT_DEFAULT, Lists.newArrayList(), false, false, false);
     }
 
     private Map<String, RawResource> getRawResourceFromZipFile(InputStream inputStream) throws IOException {
@@ -1405,7 +1410,9 @@ public class MetaStoreServiceTest extends ServiceTestBase {
         Assert.assertEquals(1, modelPreviewResponseList.size());
     }
 
-    private String getProject() {
-        return "default";
+    @Test
+    public void testCleanupMeta() {
+        metaStoreService.cleanupMeta(UnitOfWork.GLOBAL_UNIT);
+        metaStoreService.cleanupMeta(PROJECT_DEFAULT);
     }
 }

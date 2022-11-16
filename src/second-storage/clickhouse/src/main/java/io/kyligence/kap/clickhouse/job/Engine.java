@@ -24,15 +24,13 @@ import java.net.URI;
 public class Engine {
     public static final String DEFAULT = "MergeTree()";
 
-    final TableEngineType tableEngineType;
+    final AbstractTableSource tableSource;
     final URI rootPath;
     final String siteURL;
-    final TableSourceType tableSourceType;
 
-    public Engine(TableEngineType tableEngineType, String rootPath, String siteURL, TableSourceType tableSourceType) {
-        this.tableEngineType = tableEngineType;
-        this.tableSourceType = tableSourceType;
-        if (tableSourceType == TableSourceType.UT) {
+    public Engine(AbstractTableSource tableSource, String rootPath, String siteURL) {
+        this.tableSource = tableSource;
+        if (tableSource instanceof UtTableSource) {
             this.rootPath = new File(rootPath).toURI();
             this.siteURL = siteURL;
         } else {
@@ -42,6 +40,6 @@ public class Engine {
     }
 
     public String apply(String path) {
-        return tableSourceType.transformFileUrl(path, siteURL, rootPath);
+        return this.tableSource.transformFileUrl(path, siteURL, rootPath);
     }
 }

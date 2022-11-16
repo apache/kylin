@@ -21,73 +21,92 @@ package org.apache.kylin.tool.util;
 import static org.apache.kylin.engine.spark.utils.HiveTransactionTableHelper.generateDropTableStatement;
 import static org.apache.kylin.engine.spark.utils.HiveTransactionTableHelper.generateHiveInitStatements;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.source.ISourceMetadataExplorer;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.hive.HiveCmdBuilder;
-import org.apache.kylin.tool.garbage.StorageCleaner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import lombok.val;
+import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ProjectTemporaryTableCleanerHelper {
-    private final String TRANSACTIONAL_TABLE_NAME_SUFFIX = "_hive_tx_intermediate";
+    private static final String TRANSACTIONAL_TABLE_NAME_SUFFIX = "_hive_tx_intermediate";
 
-    public Map<String, List<String>> collectDropDBTemporaryTableNameMap(ISourceMetadataExplorer explr,
-            List<StorageCleaner.FileTreeNode> jobTmps, Set<String> discardJobs) throws Exception {
+    public Map<String, List<String>> getDropTmpTableMap(String project, Set<String> tempTables) {
         Map<String, List<String>> dropDbTableNameMap = Maps.newConcurrentMap();
-        explr.listDatabases().forEach(dbName -> {
-            try {
-                explr.listTables(dbName).stream()
-                        .filter(tableName -> tableName.contains(TRANSACTIONAL_TABLE_NAME_SUFFIX))
-                        .filter(tableName -> isMatchesTemporaryTables(jobTmps, discardJobs, tableName))
-                        .forEach(tableName -> putTableNameToDropDbTableNameMap(dropDbTableNameMap, dbName, tableName));
-            } catch (Exception exception) {
-                log.error("Failed to get the table name in the data, database: " + dbName, exception);
+        NTableMetadataManager manager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+
+        tempTables.forEach(tempTableName -> {
+            String tableIdentity = tempTableName.split(TRANSACTIONAL_TABLE_NAME_SUFFIX).length == 2
+                    ? tempTableName.split(TRANSACTIONAL_TABLE_NAME_SUFFIX)[0]
+                    : tempTableName;
+            TableDesc tableDesc = manager.getTableDesc(tableIdentity);
+            if (Objects.nonNull(tableDesc)) {
+                tempTableName = StringUtils.substringAfter(tempTableName, tableDesc.getDatabase() + ".");
+                putTableToMap(dropDbTableNameMap, tableDesc.getDatabase(), tempTableName);
+            } else {
+                String dbName = StringUtils.substringBefore(tempTableName, ".");
+                tempTableName = StringUtils.substringAfter(tempTableName, ".");
+                putTableToMap(dropDbTableNameMap, dbName, tempTableName);
             }
         });
         return dropDbTableNameMap;
     }
 
-    public boolean isMatchesTemporaryTables(List<StorageCleaner.FileTreeNode> jobTemps, Set<String> discardJobs,
-            String tableName) {
-        val suffixId = tableName.split(TRANSACTIONAL_TABLE_NAME_SUFFIX).length == 2
-                ? tableName.split(TRANSACTIONAL_TABLE_NAME_SUFFIX)[1]
-                : tableName;
-        val discardJobMatch = discardJobs.stream().anyMatch(jobId -> jobId.endsWith(suffixId));
-        val jobTempMatch = jobTemps.stream().anyMatch(node -> node.getRelativePath().endsWith(suffixId));
-        return discardJobMatch || jobTempMatch;
-    }
-
-    public void putTableNameToDropDbTableNameMap(Map<String, List<String>> dropTableDbNameMap, String dbName,
-            String tableName) {
-        List<String> tableNameList = dropTableDbNameMap.containsKey(dbName) ? dropTableDbNameMap.get(dbName)
-                : Lists.newArrayList();
+    public void putTableToMap(Map<String, List<String>> dbTableMap, String dbName, String tableName) {
+        List<String> tableNameList = dbTableMap.getOrDefault(dbName, Lists.newArrayList());
         tableNameList.add(tableName);
-        dropTableDbNameMap.put(dbName, tableNameList);
+        dbTableMap.put(dbName, tableNameList);
     }
 
-    public boolean isNeedClean(boolean isEmptyJobTmp, boolean isEmptyDiscardJob) {
-        return !isEmptyJobTmp || !isEmptyDiscardJob;
-    }
-
-    public String collectDropDBTemporaryTableCmd(KylinConfig kylinConfig, ISourceMetadataExplorer explr,
-            List<StorageCleaner.FileTreeNode> jobTemps, Set<String> discardJobs) throws Exception {
-        Map<String, List<String>> dropDbTableNameMap = collectDropDBTemporaryTableNameMap(explr, jobTemps, discardJobs);
-        log.info("List of tables that meet the conditions:{}", dropDbTableNameMap);
-        if (!dropDbTableNameMap.isEmpty()) {
-            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(kylinConfig);
-            dropDbTableNameMap.forEach((dbName, tableNameList) -> tableNameList.forEach(tableName -> hiveCmdBuilder
-                    .addStatement(generateHiveInitStatements(dbName) + generateDropTableStatement(tableName))));
-            return hiveCmdBuilder.toString();
+    public Set<String> getJobTransactionalTable(String project, String jobId) {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String dir = config.getJobTmpTransactionalTableDir(project, jobId);
+        Path path = new Path(dir);
+        Set<String> tmpTableSet = Sets.newHashSet();
+        try {
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
+            if (!fs.exists(path)) {
+                return tmpTableSet;
+            }
+            for (FileStatus fileStatus : fs.listStatus(path)) {
+                String tempTableName = fileStatus.getPath().getName();
+                if (StringUtils.containsIgnoreCase(tempTableName, TRANSACTIONAL_TABLE_NAME_SUFFIX)) {
+                    tmpTableSet.add(tempTableName);
+                }
+            }
+        } catch (IOException e) {
+            log.error("Get Job Transactional Table failed!", e);
         }
-        return "";
+        return tmpTableSet;
+    }
+
+    public String getDropTmpTableCmd(String project, Set<String> tempTables) {
+        Map<String, List<String>> dropDbTableNameMap = getDropTmpTableMap(project, tempTables);
+        if (dropDbTableNameMap.isEmpty()) {
+            log.info("The temporary transaction table that will be deleted is empty.");
+            return "";
+        }
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(KylinConfig.getInstanceFromEnv());
+        dropDbTableNameMap.forEach((dbName, tableNameList) -> tableNameList.forEach(tableName -> {
+            log.info("Temporary transaction table that will be deleted: {}.{}", dbName, tableName);
+            hiveCmdBuilder.addStatement(generateHiveInitStatements(dbName) + generateDropTableStatement(tableName));
+        }));
+        return hiveCmdBuilder.toString();
     }
 }

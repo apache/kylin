@@ -42,18 +42,19 @@ import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
-import org.apache.kylin.common.util.SetThreadName;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.common.logging.LogOutputStream;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
+import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.QueryHistoryDAO;
 import org.apache.kylin.metadata.query.QueryHistoryMapper;
 import org.apache.kylin.metadata.query.QueryHistoryRealizationMapper;
 import org.apache.kylin.metadata.query.QueryStatisticsMapper;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
 
+import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -94,7 +95,7 @@ public class QueryHisStoreUtil {
 
     private static void createQueryHistoryIfNotExist(BasicDataSource dataSource, String qhTableName)
             throws SQLException, IOException {
-        if(JdbcTableUtil.isTableExist(dataSource, qhTableName)) {
+        if (JdbcTableUtil.isTableExist(dataSource, qhTableName)) {
             return;
         }
         try (Connection connection = dataSource.getConnection()) {
@@ -159,6 +160,7 @@ public class QueryHisStoreUtil {
         }
     }
 
+    @SneakyThrows
     public static void cleanQueryHistory() {
         try (SetThreadName ignored = new SetThreadName("QueryHistoryCleanWorker")) {
             val config = KylinConfig.getInstanceFromEnv();
@@ -166,6 +168,9 @@ public class QueryHisStoreUtil {
             getQueryHistoryDao().deleteQueryHistoriesIfMaxSizeReached();
             getQueryHistoryDao().deleteQueryHistoriesIfRetainTimeReached();
             for (ProjectInstance project : projectManager.listAllProjects()) {
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new InterruptedException("Thread is interrupted: " + Thread.currentThread().getName());
+                }
                 if (!EpochManager.getInstance().checkEpochOwner(project.getName()))
                     continue;
                 try {

@@ -18,22 +18,9 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_LAYOUT_IDS;
-import static org.awaitility.Awaitility.await;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import lombok.val;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -97,13 +84,24 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.sparkproject.guava.collect.Sets;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
-import lombok.val;
 import scala.Option;
 import scala.runtime.AbstractFunction1;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_LAYOUT_IDS;
+import static org.awaitility.Awaitility.await;
 
 public class NSparkCubingJobTest extends NLocalWithSparkSessionTest {
 
@@ -892,7 +890,7 @@ public class NSparkCubingJobTest extends NLocalWithSparkSessionTest {
         // }, project, UnitOfWork.DEFAULT_MAX_RETRY, UnitOfWork.DEFAULT_EPOCH_ID, job.getId());
         // // job wouldn't be resumable after restart
         // Assert.assertFalse(execMgr.getJobOutput(cubeStep.getId()).isResumable());
-        // 
+        //
         // wait(job);
 
         // checkpoints should not cross building jobs

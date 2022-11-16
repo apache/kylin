@@ -17,7 +17,12 @@
  */
 package org.apache.kylin.rest.response;
 
+import java.util.Map;
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -59,6 +64,9 @@ public class PreReloadTableResponse {
     @JsonProperty("update_base_index_count")
     private int updateBaseIndexCount;
 
+    @JsonProperty("details")
+    private PreReloadTableDetails details = new PreReloadTableDetails();
+
     public PreReloadTableResponse() {
     }
 
@@ -73,5 +81,40 @@ public class PreReloadTableResponse {
         this.addLayoutsCount = otherResponse.addLayoutsCount;
         this.refreshLayoutsCount = otherResponse.refreshLayoutsCount;
         this.snapshotDeleted = otherResponse.snapshotDeleted;
+        this.details = otherResponse.details;
+    }
+
+    @Getter
+    @Setter
+    public class PreReloadTableDetails {
+        @JsonProperty("added_columns")
+        private Set<String> addedColumns = Sets.newHashSet();
+
+        @JsonProperty("removed_columns")
+        private Set<String> removedColumns = Sets.newHashSet();
+
+        @JsonProperty("data_type_changed_columns")
+        private Set<String> dataTypeChangedColumns = Sets.newHashSet();
+
+        @JsonProperty("broken_models")
+        private Set<String> brokenModels = Sets.newHashSet();
+
+        @JsonProperty("removed_measures")
+        private Set<String> removedMeasures = Sets.newHashSet();
+
+        @JsonProperty("removed_dimensions")
+        private Set<String> removedDimensions = Sets.newHashSet();
+
+        @JsonProperty("removed_layouts")
+        private Map<String, Set<Long>> removedLayouts = Maps.newHashMap();
+
+        @JsonProperty("added_layouts")
+        private Map<String, Set<Long>> addedLayouts = Maps.newHashMap();
+
+        @JsonProperty("refreshed_layouts")
+        private Map<String, Set<Long>> refreshedLayouts = Maps.newHashMap();
+
+        PreReloadTableDetails() {
+        }
     }
 }

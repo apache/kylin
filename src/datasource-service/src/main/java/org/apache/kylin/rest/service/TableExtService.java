@@ -18,12 +18,13 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.PROJECT_NOT_EXIST;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -112,7 +113,8 @@ public class TableExtService extends BasicService {
         return tableResponse;
     }
 
-    public LoadTableResponse loadAWSTablesCompatibleCrossAccount(List<S3TableExtInfo> s3TableExtInfoList, String project) throws Exception {
+    public LoadTableResponse loadAWSTablesCompatibleCrossAccount(List<S3TableExtInfo> s3TableExtInfoList,
+            String project) throws Exception {
         aclEvaluate.checkProjectWritePermission(project);
         List<String> dbTableList = new ArrayList<>();
         Map<String, S3TableExtInfo> map = new HashMap<>();
@@ -174,13 +176,13 @@ public class TableExtService extends BasicService {
         }
         NTableMetadataManager tableMetadataManager = getManager(NTableMetadataManager.class, request.getProject());
         List<TableDesc> projectTableDescList = tableMetadataManager.listAllTables();
-        List<String> identityList = projectTableDescList.stream()
-                .map(TableDesc::getIdentity)
-                .filter(identity -> map.get(identity) != null)
-                .collect(Collectors.toList());
+        List<String> identityList = projectTableDescList.stream().map(TableDesc::getIdentity)
+                .filter(identity -> map.get(identity) != null).collect(Collectors.toList());
 
         return EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-            NTableMetadataManager innerTableMetadataManager = getManager(NTableMetadataManager.class, request.getProject());
+            NTableMetadataManager innerTableMetadataManager = getManager(NTableMetadataManager.class,
+                    request.getProject());
+            Set<TableExtDesc.S3RoleCredentialInfo> broadcasttedS3Conf = new HashSet<>();
             for (String identity : identityList) {
                 TableDesc tableDesc = innerTableMetadataManager.getTableDesc(identity);
                 TableExtDesc extDesc = innerTableMetadataManager.getTableExtIfExists(tableDesc);
@@ -192,12 +194,18 @@ public class TableExtService extends BasicService {
                     copyExt.addDataSourceProp(TableExtDesc.S3_ROLE_PROPERTY_KEY, s3TableExtInfo.getRoleArn());
                     copyExt.addDataSourceProp(TableExtDesc.S3_ENDPOINT_KEY, s3TableExtInfo.getEndpoint());
                     innerTableMetadataManager.saveTableExt(copyExt);
-                    tableService.refreshSparkSessionIfNecessary(copyExt);
+                    if (!broadcasttedS3Conf.contains(copyExt.getS3RoleCredentialInfo())) {
+                        tableService.addAndBroadcastSparkSession(copyExt.getS3RoleCredentialInfo());
+                        broadcasttedS3Conf.add(copyExt.getS3RoleCredentialInfo());
+
+                    }
                     response.getSucceed().add(identity);
                 }
             }
             return response;
+
         }, request.getProject());
+
     }
 
     private LoadTableResponse innerLoadTables(String project, LoadTableResponse tableResponse,
@@ -309,7 +317,7 @@ public class TableExtService extends BasicService {
         TableDesc originTableDesc = tableMetadataManager.getTableDesc(tableDesc.getIdentity());
         if (originTableDesc != null && (originTableDesc.getSourceType() == ISourceAware.ID_STREAMING
                 || tableDesc.getSourceType() == ISourceAware.ID_STREAMING)) {
-            throw new KylinException(PROJECT_NOT_EXIST,
+            throw new KylinException(INVALID_TABLE_NAME,
                     String.format(Locale.ROOT, MsgPicker.getMsg().getSameTableNameExist(), tableDesc.getIdentity()));
         }
     }

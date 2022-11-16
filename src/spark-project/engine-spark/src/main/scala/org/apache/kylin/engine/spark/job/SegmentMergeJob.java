@@ -18,30 +18,24 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import static org.apache.kylin.engine.spark.job.StageType.MERGE_COLUMN_BYTES;
-import static org.apache.kylin.engine.spark.job.StageType.MERGE_FLAT_TABLE;
-import static org.apache.kylin.engine.spark.job.StageType.MERGE_INDICES;
-
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Stream;
-
+import com.google.common.base.Throwables;
+import lombok.val;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.job.exec.MergeExec;
 import org.apache.kylin.engine.spark.job.stage.BuildParam;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.spark.tracker.BuildContext;
 
-import com.google.common.base.Throwables;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
-import lombok.val;
+import static org.apache.kylin.engine.spark.job.StageType.MERGE_COLUMN_BYTES;
+import static org.apache.kylin.engine.spark.job.StageType.MERGE_FLAT_TABLE;
+import static org.apache.kylin.engine.spark.job.StageType.MERGE_INDICES;
 
 public class SegmentMergeJob extends SegmentJob {
-
-    public static void main(String[] args) {
-        SegmentMergeJob segmentMergeJob = new SegmentMergeJob();
-        segmentMergeJob.execute(args);
-    }
 
     @Override
     protected String generateInfo() {
@@ -50,6 +44,10 @@ public class SegmentMergeJob extends SegmentJob {
 
     @Override
     protected final void doExecute() throws Exception {
+
+        buildContext = new BuildContext(getSparkSession().sparkContext(), config);
+        buildContext.appStatusTracker().startMonitorBuildResourceState();
+
         merge();
     }
 
@@ -80,5 +78,10 @@ public class SegmentMergeJob extends SegmentJob {
                 Throwables.propagate(e);
             }
         });
+    }
+
+    public static void main(String[] args) {
+        SegmentMergeJob segmentMergeJob = new SegmentMergeJob();
+        segmentMergeJob.execute(args);
     }
 }

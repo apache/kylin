@@ -16,29 +16,12 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
 import java.util.Locale;
 
+import org.apache.calcite.avatica.util.Quoting;
 import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -52,9 +35,10 @@ import com.google.common.base.Preconditions;
  * Column Metadata from Source. All name should be uppercase.
  * <p/>
  */
-@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ColumnDesc implements Serializable {
+
+    private static final String BACK_TICK = Quoting.BACK_TICK.string;
 
     @JsonProperty("id")
     private String id;
@@ -96,8 +80,6 @@ public class ColumnDesc implements Serializable {
     private int zeroBasedIndex = -1;
     private boolean isNullable = true;
 
-    private TblColRef ref;
-
     public ColumnDesc() { // default constructor for Jackson
     }
 
@@ -105,13 +87,13 @@ public class ColumnDesc implements Serializable {
         this.id = other.id;
         this.name = other.name;
         this.datatype = other.datatype;
-        this.dataGen = other.datatype;
         this.comment = other.comment;
         this.dataGen = other.dataGen;
         this.index = other.index;
         this.computedColumnExpr = other.computedColumnExpr;
         this.caseSensitiveName = other.caseSensitiveName;
         this.isPartitioned = other.isPartitioned;
+        this.table = other.table;
     }
 
     public ColumnDesc(String id, String name, String datatype, String comment, String dataGen, String index,
@@ -123,15 +105,6 @@ public class ColumnDesc implements Serializable {
         this.dataGen = dataGen;
         this.index = index;
         this.computedColumnExpr = computedColumnExpr;
-    }
-
-    /** Use TableRef.getColumn() instead */
-    @Deprecated
-    public TblColRef getRef() {
-        if (ref == null) {
-            ref = new TblColRef(this);
-        }
-        return ref;
     }
 
     public void setComputedColumn(String exp) {
@@ -147,7 +120,6 @@ public class ColumnDesc implements Serializable {
     }
 
     public void setDatatype(String datatype) {
-        //logger.info("setting datatype to " + datatype);
         this.datatype = datatype;
         type = DataType.getType(datatype);
     }
@@ -185,6 +157,10 @@ public class ColumnDesc implements Serializable {
 
     public String getIdentity() {
         return table.getName() + "." + getName();
+    }
+
+    public String getBackTickIdentity() {
+        return BACK_TICK + table.getName() + BACK_TICK + "." + BACK_TICK + getName() + BACK_TICK;
     }
 
     @JsonSetter("name")
@@ -317,13 +293,7 @@ public class ColumnDesc implements Serializable {
         } else if (!name.equals(other.name))
             return false;
 
-        if (table == null) {
-            if (other.table != null)
-                return false;
-        } else if (!table.getIdentity().equals(other.table.getIdentity()))
-            return false;
-
-        return true;
+        return table == null ? other.table == null : table.getIdentity().equals(other.table.getIdentity());
     }
 
     @Override

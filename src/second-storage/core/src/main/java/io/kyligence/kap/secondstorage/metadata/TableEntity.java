@@ -18,12 +18,17 @@
 package io.kyligence.kap.secondstorage.metadata;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import io.kyligence.kap.secondstorage.metadata.annotation.TableDefinition;
 
 @JsonAutoDetect(
@@ -39,15 +44,33 @@ public class TableEntity implements Serializable, WithLayout {
     public static final class Builder {
 
         private LayoutEntity layoutEntity;
+        private List<Integer> primaryIndexColumns = Lists.newArrayList();
+        private Set<Integer> secondaryIndexColumns = Sets.newHashSet();
 
         public Builder setLayoutEntity(LayoutEntity layoutEntity) {
             this.layoutEntity = layoutEntity;
             return this;
         }
 
+        public Builder setPrimaryIndexColumns(List<Integer> primaryIndexColumns) {
+            this.primaryIndexColumns = primaryIndexColumns;
+            return this;
+        }
+
+        public Builder setSecondaryIndexColumns(Set<Integer> secondaryIndexColumns) {
+            this.secondaryIndexColumns = secondaryIndexColumns;
+            return this;
+        }
+
         public TableEntity build() {
             TableEntity table = new TableEntity();
             table.layoutID = layoutEntity.getId();
+            if (primaryIndexColumns != null) {
+                table.primaryIndexColumns = primaryIndexColumns;
+            }
+            if (secondaryIndexColumns != null) {
+                table.secondaryIndexColumns = secondaryIndexColumns;
+            }
             return table;
         }
     }
@@ -64,6 +87,18 @@ public class TableEntity implements Serializable, WithLayout {
     @JsonProperty("shard_numbers")
     private int shardNumbers = DEFAULT_SHARD;
 
+    @JsonProperty("primary_index_columns")
+    private List<Integer> primaryIndexColumns = Lists.newArrayList();
+
+    @JsonProperty("primary_index_last_modified")
+    private long primaryIndexLastModified;
+
+    @JsonProperty("secondary_index_columns")
+    private Set<Integer> secondaryIndexColumns = Sets.newHashSet();
+
+    @JsonProperty("secondary_index_last_modified")
+    private long secondaryIndexLastModified;
+
     public void checkIsNotCachedAndShared() {
         if (tablePlan != null)
             tablePlan.checkIsNotCachedAndShared();
@@ -72,6 +107,18 @@ public class TableEntity implements Serializable, WithLayout {
     public void setShardNumbers(int shardNumbers) {
         checkIsNotCachedAndShared();
         this.shardNumbers = shardNumbers;
+    }
+
+    public void setPrimaryIndexColumns(List<Integer> primaryIndexColumns) {
+        checkIsNotCachedAndShared();
+        this.primaryIndexColumns = primaryIndexColumns;
+        this.primaryIndexLastModified = System.currentTimeMillis();
+    }
+
+    public void setSecondaryIndexColumns(Set<Integer> secondaryIndexColumns) {
+        checkIsNotCachedAndShared();
+        this.secondaryIndexColumns = secondaryIndexColumns;
+        this.secondaryIndexLastModified = System.currentTimeMillis();
     }
 
     public TablePlan getTablePlan() {
@@ -84,5 +131,21 @@ public class TableEntity implements Serializable, WithLayout {
 
     public int getShardNumbers() {
         return shardNumbers;
+    }
+
+    public List<Integer> getPrimaryIndexColumns() {
+        return this.primaryIndexColumns;
+    }
+
+    public Set<Integer> getSecondaryIndexColumns() {
+        return this.secondaryIndexColumns;
+    }
+
+    public long getPrimaryIndexLastModified() {
+        return this.primaryIndexLastModified;
+    }
+
+    public long getSecondaryIndexLastModified() {
+        return this.secondaryIndexLastModified;
     }
 }

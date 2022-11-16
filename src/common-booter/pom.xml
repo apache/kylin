@@ -32,12 +32,6 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>org.apache.kylin</groupId>-->
-<!--            <artifactId>kap-license-service</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-common-server</artifactId>

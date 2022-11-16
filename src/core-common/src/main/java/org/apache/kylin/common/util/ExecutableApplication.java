@@ -30,14 +30,21 @@ public abstract class ExecutableApplication implements Application {
 
     protected abstract void execute(OptionsHelper optionsHelper) throws Exception;
 
-    public void execute(String[] args) {
+    public OptionsHelper convertToOptionsHelper(String[] args) {
         OptionsHelper optionsHelper = new OptionsHelper();
         try {
             optionsHelper.parseOptions(getOptions(), args);
-            execute(optionsHelper);
         } catch (ParseException e) {
             optionsHelper.printUsage("error parsing args ", getOptions());
             throw new KylinException(FAILED_PARSE_SHELL, "error parsing args", e);
+        }
+        return optionsHelper;
+    }
+
+    public void execute(String[] args) {
+        OptionsHelper optionsHelper = convertToOptionsHelper(args);
+        try {
+            execute(optionsHelper);
         } catch (Exception e) {
             throw new KylinException(FAILED_EXECUTE_SHELL, "error execute " + this.getClass().getName(), e);
         }

@@ -30,13 +30,13 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import io.kyligence.kap.secondstorage.SecondStorageQueryRouteUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.spark.sql.execution.datasources.jdbc.ShardOptions$;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -46,8 +46,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
+import io.kyligence.kap.secondstorage.SecondStorageQueryRouteUtil;
 import io.kyligence.kap.secondstorage.metadata.annotation.DataDefinition;
 import scala.collection.JavaConverters;
 
@@ -285,5 +285,16 @@ public class TableData implements Serializable, WithLayout {
         }).collect(Collectors.toList());
 
         newPartitionList.forEach(this::addPartition);
+    }
+
+    public void updateSecondaryIndex(Set<Integer> addColumns, Set<Integer> removeColumns) {
+        for (TablePartition partition : this.partitions) {
+            if (!CollectionUtils.isEmpty(addColumns)) {
+                partition.addSecondaryIndex(addColumns);
+            }
+            if (!CollectionUtils.isEmpty(removeColumns)) {
+                partition.removeSecondaryIndex(removeColumns);
+            }
+        }
     }
 }

@@ -28,7 +28,7 @@ import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_DOWNLOAD_
 import static org.apache.kylin.common.exception.ServerErrorCode.INCORRECT_PROJECT_MODE;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.exception.ServerErrorCode.UNSUPPORTED_STREAMING_OPERATION;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.BOOLEAN_TYPE_CHECK;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ARGS_TYPE_CHECK;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FORMAT_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FORMAT_PARSE_ERROR;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.INTEGER_NON_NEGATIVE_CHECK;
@@ -38,6 +38,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PAR
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_CONFLICT_PARAMETER;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_EMPTY_PARAMETER;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_END_LESS_THAN_EQUALS_START;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_IN_RANGE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_LESS_THAN_ZERO;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_NOT_CONSISTENT;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_NOT_FORMAT_MS;
@@ -52,12 +53,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -77,7 +80,9 @@ import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.ForbiddenException;
@@ -89,6 +94,8 @@ import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.PagingUtil;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
 import org.apache.kylin.rest.request.Validation;
@@ -129,6 +136,10 @@ import lombok.val;
 public class NBasicController {
     private static final Logger logger = LoggerFactory.getLogger(NBasicController.class);
     protected static final int MAX_NAME_LENGTH = 50;
+
+    protected static final long FIVE_MINUTE_MILLISECOND = TimeUnit.MINUTES.toMillis(5);
+
+    protected static final long THIRTY_DAYS_MILLISECOND = TimeUnit.DAYS.toMillis(30);
 
     @Autowired
     @Qualifier("normalRestTemplate")
@@ -268,6 +279,12 @@ public class NBasicController {
         }
     }
 
+    protected void checkListRequiredArg(String fieldName, Collection<?> fieldValue) {
+        if (CollectionUtils.isEmpty(fieldValue)) {
+            throw new KylinException(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, fieldName);
+        }
+    }
+
     public String makeUserNameCaseInSentive(String userName) {
         UserDetails userDetails = userService.loadUserByUsername(userName);
         if (userDetails == null) {
@@ -301,7 +318,7 @@ public class NBasicController {
         checkRequiredArg(fieldName, fieldValue);
         String booleanString = String.valueOf(fieldValue);
         if (!"true".equalsIgnoreCase(booleanString) && !"false".equalsIgnoreCase(booleanString)) {
-            throw new KylinException(BOOLEAN_TYPE_CHECK, booleanString, "Boolean");
+            throw new KylinException(ARGS_TYPE_CHECK, booleanString, "Boolean");
         }
     }
 
@@ -368,13 +385,7 @@ public class NBasicController {
         if (StringUtils.isEmpty(project)) {
             throw new KylinException(EMPTY_PROJECT_NAME, MsgPicker.getMsg().getEmptyProjectName());
         }
-
-        NProjectManager projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
-        ProjectInstance prjInstance = projectManager.getProject(project);
-        if (prjInstance == null) {
-            throw new KylinException(PROJECT_NOT_EXIST, project);
-        }
-        return prjInstance.getName();
+        return getProjectNameFromEnv(project);
     }
 
     @SneakyThrows
@@ -436,8 +447,7 @@ public class NBasicController {
                 .collect(Collectors.toList());
 
         if (!illegalStatus.isEmpty()) {
-            throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "status",
-                    "ONLINE, OFFLINE, WARNING, BROKEN");
+            throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "status", "ONLINE, OFFLINE, WARNING, BROKEN");
         }
         return formattedStatus;
     }
@@ -469,13 +479,22 @@ public class NBasicController {
 
     public void validateDataRange(String start, String end) {
         validateDataRange(start, end, null);
+        if (StringUtils.isNotEmpty(start) && StringUtils.isNotEmpty(end)) {
+            long differenceMillisecond = Long.parseLong(end) - Long.parseLong(start);
+            if (differenceMillisecond < FIVE_MINUTE_MILLISECOND || differenceMillisecond > THIRTY_DAYS_MILLISECOND) {
+                throw new KylinException(TIME_INVALID_RANGE_IN_RANGE);
+            }
+        }
     }
 
     public void validateDataRange(String start, String end, String partitionColumnFormat) {
         if (StringUtils.isEmpty(start) && StringUtils.isEmpty(end)) {
             return;
         }
+        doValidateDataRange(start, end, partitionColumnFormat);
+    }
 
+    public void doValidateDataRange(String start, String end, String partitionColumnFormat) {
         if (StringUtils.isNotEmpty(start) && StringUtils.isNotEmpty(end)) {
             long startLong = 0;
             long endLong = 0;
@@ -581,10 +600,65 @@ public class NBasicController {
     }
 
     public void checkStreamingEnabled() {
-        val conf = KylinConfig.getInstanceFromEnv();
-        if (!conf.streamingEnabled()) {
+        if (!KylinConfig.getInstanceFromEnv().streamingEnabled()) {
             throw new KylinException(ServerErrorCode.UNSUPPORTED_STREAMING_OPERATION,
                     MsgPicker.getMsg().getStreamingDisabled());
+        }
+    }
+
+    public String getInsensitiveProject(String project) {
+        if (StringUtils.isEmpty(project)) {
+            return "";
+        }
+        return getProjectNameFromEnv(project);
+    }
+
+    public String getProjectNameFromEnv(String project) {
+        NProjectManager projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+        ProjectInstance projectInstance = projectManager.getProject(project);
+        if (projectInstance == null) {
+            throw new KylinException(PROJECT_NOT_EXIST, project);
+        }
+        return projectInstance.getName();
+    }
+
+    public String getInsensitiveProjectModelName(String project, String modelAlias) {
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        NDataModel dataModel = modelManager.getDataModelDescByAlias(modelAlias);
+        return dataModel != null ? dataModel.getAlias() : modelAlias;
+    }
+
+    public void checkStreamingJobsStatus(List<String> statuses) {
+        if (CollectionUtils.isEmpty(statuses)) {
+            return;
+        }
+        List<String> streamingJobsStatus = Arrays.asList(JobStatusEnum.STARTING.name(),
+                JobStatusEnum.RUNNING.name(), JobStatusEnum.STOPPING.name(), JobStatusEnum.ERROR.name(), JobStatusEnum.STOPPED.name());
+        for (String status : statuses) {
+            if (!streamingJobsStatus.contains(status)) {
+                throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "statuses",
+                        org.apache.commons.lang.StringUtils.join(streamingJobsStatus, ", "));
+            }
+        }
+    }
+
+    public void checkStreamingJobTypeStatus(List<String> statuses) {
+        if (CollectionUtils.isEmpty(statuses)) {
+            return;
+        }
+        List<String> streamingJobTypeStatus = Arrays.asList(JobTypeEnum.STREAMING_BUILD.name(),
+                JobTypeEnum.STREAMING_MERGE.name());
+        for (String status : statuses) {
+            if (!streamingJobTypeStatus.contains(status)) {
+                throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "job_types",
+                        org.apache.commons.lang.StringUtils.join(streamingJobTypeStatus, ", "));
+            }
+        }
+    }
+
+    protected void checkCollectionRequiredArg(String fieldName, Collection<?> fieldValue) {
+        if (CollectionUtils.isEmpty(fieldValue)) {
+            throw new KylinException(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, fieldName);
         }
     }
 }

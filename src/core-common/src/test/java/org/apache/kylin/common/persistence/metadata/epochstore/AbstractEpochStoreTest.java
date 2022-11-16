@@ -25,8 +25,10 @@ import java.util.Objects;
 import org.apache.kylin.common.persistence.metadata.Epoch;
 import org.apache.kylin.common.persistence.metadata.EpochStore;
 import org.apache.kylin.common.persistence.metadata.JdbcEpochStore;
+import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import lombok.val;
@@ -173,5 +175,33 @@ public abstract class AbstractEpochStoreTest {
             Assert.assertTrue(compareEpoch(epoch, epochStore.getEpoch(epoch.getEpochTarget())));
         });
 
+    }
+
+    @Test
+    public void testIsLeaderNodeWithCurrentEpochOwnerNull() {
+        Epoch epoch = new Epoch();
+        epoch.setEpochTarget("_global");
+        epoch.setCurrentEpochOwner(null);
+        epochStore.insert(epoch);
+        Assertions.assertFalse(EpochStore.isLeaderNode());
+    }
+
+    @Test
+    public void testIsLeaderNodeWithServiceInfoNotEqual() {
+        Epoch epoch = new Epoch();
+        epoch.setEpochTarget("_global");
+        epoch.setCurrentEpochOwner("owner1");
+        epochStore.insert(epoch);
+        Assertions.assertFalse(EpochStore.isLeaderNode());
+    }
+
+    @Test
+    public void testIsLeaderNodeWithServiceInfoEqual() {
+        Assertions.assertFalse(EpochStore.isLeaderNode());
+        Epoch epoch = new Epoch();
+        epoch.setEpochTarget("_global");
+        epoch.setCurrentEpochOwner(AddressUtil.getLocalInstance() + "|" + Long.MAX_VALUE);
+        epochStore.insert(epoch);
+        Assertions.assertTrue(EpochStore.isLeaderNode());
     }
 }

@@ -21,7 +21,9 @@ package org.apache.kylin.common.metrics;
 import org.apache.kylin.common.KapConfig;
 
 public interface MetricsReporter {
-    void init(KapConfig props) throws Exception;
+    void init(KapConfig props);
+
+    void start(KapConfig kapConfig);
 
     void startReporter(int pollingPeriodInSeconds);
 

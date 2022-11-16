@@ -21,16 +21,17 @@ import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.NExecutableManager;
-import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
-import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EpochStartedNotifier;
 import org.apache.kylin.common.scheduler.ProjectControlledNotifier;
 import org.apache.kylin.common.scheduler.ProjectEscapedNotifier;
+import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.execution.NExecutableManager;
+import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
 import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.rest.service.UserAclService;
+import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.service.task.QueryHistoryTaskScheduler;
 import org.apache.kylin.rest.service.task.RecommendationTopNUpdateScheduler;
 import org.apache.kylin.rest.util.CreateAdminUserUtils;
@@ -58,6 +59,10 @@ public class EpochChangedListener {
     @Autowired
     @Qualifier("userService")
     UserService userService;
+
+    @Autowired
+    @Qualifier("userAclService")
+    UserAclService userAclService;
 
     @Autowired
     @Qualifier("recommendationUpdateScheduler")
@@ -119,6 +124,7 @@ public class EpochChangedListener {
                 return null;
             }, "", 1);
             InitResourceGroupUtils.initResourceGroup();
+            userAclService.syncAdminUserAcl();
         }
     }
 

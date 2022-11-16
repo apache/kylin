@@ -18,17 +18,17 @@
 
 package org.apache.kylin.streaming
 
+import com.google.common.base.Preconditions
+import org.apache.commons.lang3.StringUtils
+import org.apache.kafka.common.config.SaslConfigs
+import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.NSparkCubingEngine
 import org.apache.kylin.engine.spark.builder.{CreateFlatTable, NBuildSourceInfo}
 import org.apache.kylin.engine.spark.job.{FlatTableHelper, NSparkCubingUtil}
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTree
 import org.apache.kylin.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataSegment}
 import org.apache.kylin.metadata.cube.utils.StreamingUtils
-import org.apache.kylin.metadata.model.NDataModel
-import org.apache.commons.lang3.StringUtils
-import org.apache.kafka.common.config.SaslConfigs
-import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.metadata.model._
+import org.apache.kylin.metadata.model.{NDataModel, _}
 import org.apache.kylin.source.SourceFactory
 import org.apache.kylin.streaming.jobs.StreamingJobUtils
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
@@ -101,14 +101,14 @@ class CreateStreamingFlatTable(flatTable: IJoinedFlatTableDesc,
         }
       )
     val rootFactTable = changeSchemaToAliasDotName(
-      CreateStreamingFlatTable.castDF(originFactTable, schema).alias(model.getRootFactTable.getAlias),
+      CreateStreamingFlatTable.castDF(originFactTable, schema, partitionColumn()).alias(model.getRootFactTable.getAlias),
       model.getRootFactTable.getAlias)
 
     factTableDataset =
       if (!StringUtils.isEmpty(watermark)) {
         import org.apache.spark.sql.functions._
         val cols = model.getRootFactTable.getColumns.asScala.map(item => {
-          col(NSparkCubingUtil.convertFromDot(item.getAliasDotName))
+          col(NSparkCubingUtil.convertFromDot(item.getBackTickIdentity))
         }).toList
         rootFactTable.withWatermark(partitionColumn, watermark).groupBy(cols: _*).count()
       } else {
@@ -134,6 +134,13 @@ class CreateStreamingFlatTable(flatTable: IJoinedFlatTableDesc,
 
   def model(): NDataModel = {
     flatTable.getDataModel
+  }
+
+  def partitionColumn(): String = {
+    val partitionDateTableDotColumn = model().getPartitionDesc.getPartitionDateColumn
+    val dotIdx = partitionDateTableDotColumn.lastIndexOf(".")
+    Preconditions.checkArgument(dotIdx != -1)
+    partitionDateTableDotColumn.substring(dotIdx + 1)
   }
 
   def encodeStreamingDataset(seg: NDataSegment, model: NDataModel, batchDataset: Dataset[Row]): Dataset[Row] = {
@@ -163,10 +170,10 @@ object CreateStreamingFlatTable {
     new CreateStreamingFlatTable(flatTable, seg, toBuildTree, ss, sourceInfo, partitionColumn, watermark)
   }
 
-  def castDF(df: DataFrame, parsedSchema: StructType): DataFrame = {
+  def castDF(df: DataFrame, parsedSchema: StructType, partitionColumn: String): DataFrame = {
     df.selectExpr("CAST(value AS STRING) as rawValue")
       .mapPartitions { rows =>
-        val newRows = new PartitionRowIterator(rows, parsedSchema)
+        val newRows = new PartitionRowIterator(rows, parsedSchema, partitionColumn)
         newRows.filter(row => row.size == parsedSchema.length)
       }(RowEncoder(parsedSchema))
   }

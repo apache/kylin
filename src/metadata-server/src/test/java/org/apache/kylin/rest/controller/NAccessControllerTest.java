@@ -23,26 +23,32 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import static org.hamcrest.CoreMatchers.containsString;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.security.AclEntityType;
-import org.apache.kylin.rest.service.AccessService;
-import org.apache.kylin.rest.service.UserService;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.request.BatchAccessRequest;
+import org.apache.kylin.rest.request.GlobalAccessRequest;
+import org.apache.kylin.rest.request.GlobalBatchAccessRequest;
+import org.apache.kylin.rest.security.AclEntityType;
+import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.AclTCRService;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.service.UserAclService;
+import org.apache.kylin.rest.service.UserService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -71,6 +77,9 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
 
     @Mock
     private AccessService accessService;
+
+    @Mock
+    private UserAclService userAclService;
 
     @Mock
     private UserService userService;
@@ -157,6 +166,7 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
         accessRequest.setSid(sid);
         accessRequest.setPrincipal(true);
         accessRequest.setPermission("OPERATION");
+        accessRequest.setAccessEntryId(0);
 
         Mockito.doReturn(true).when(userService).userExists(sid);
         Mockito.doNothing().when(aclTCRService).updateAclTCR(uuid, null);
@@ -213,6 +223,113 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         Mockito.verify(nAccessController).getAvailableUsers(type, "default", uuid, "", false, 0, 10);
+    }
+
+    @Test
+    public void testGetGlobalUserAccessEntities() throws Exception {
+        Mockito.doReturn(true).when(userAclService).hasUserAclPermission(sid, AclPermission.DATA_QUERY);
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/api/access/global/permission/{permissionType:.+}/{sid:.+}", type, sid)
+                        .contentType(MediaType.APPLICATION_JSON).param("permissionType", type).param("sid", sid)
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.verify(nAccessController).getGlobalUserAccessEntities(type, sid);
+    }
+
+    @Test
+    public void testGetAllGlobalUsersAccessEntities() throws Exception {
+        Mockito.doReturn(Collections.emptyList()).when(userAclService).listUserAcl();
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/access/global/permission/user_acls", type, sid)
+                .contentType(MediaType.APPLICATION_JSON).param("permissionType", type).param("sid", sid)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.verify(nAccessController).getAllGlobalUsersAccessEntities();
+    }
+
+    @Test
+    public void testAddGlobalUserAccessEntities() throws Exception {
+        GlobalAccessRequest accessRequest = new GlobalAccessRequest();
+        accessRequest.setEnabled(true);
+        accessRequest.setQueryPermission(true);
+        accessRequest.setUsername(sid);
+        {
+            Mockito.doNothing().when(userAclService).grantUserAclPermission(accessRequest, "DATA_QUERY");
+            mockMvc.perform(MockMvcRequestBuilders.put("/api/access/global/permission/{permissionType:.+}", type)
+                    .contentType(MediaType.APPLICATION_JSON).param("permissionType", type)
+                    .content(JsonUtil.writeValueAsString(accessRequest))
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(nAccessController).addGlobalUserAccessEntities(type, accessRequest);
+        }
+        {
+            accessRequest.setEnabled(false);
+            Mockito.doNothing().when(userAclService).revokeUserAclPermission(accessRequest, "DATA_QUERY");
+            mockMvc.perform(MockMvcRequestBuilders.put("/api/access/global/permission/{permissionType:.+}", type)
+                    .contentType(MediaType.APPLICATION_JSON).param("permissionType", type)
+                    .content(JsonUtil.writeValueAsString(accessRequest))
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(nAccessController).addGlobalUserAccessEntities(type, accessRequest);
+        }
+    }
+
+    @Test
+    public void testAddProjectToUserAcl() throws Exception {
+        GlobalAccessRequest accessRequest = new GlobalAccessRequest();
+        accessRequest.setUsername(sid);
+        accessRequest.setProject("default");
+        Mockito.doNothing().when(userAclService).addProjectToUserAcl(accessRequest, "data_query");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/access/global/permission/project/{permissionType:.+}", type)
+                .contentType(MediaType.APPLICATION_JSON).param("permissionType", type)
+                .content(JsonUtil.writeValueAsString(accessRequest))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.verify(nAccessController).addProjectToUserAcl(type, accessRequest);
+    }
+
+    @Test
+    public void testDeleteProjectToUserAcl() throws Exception {
+        GlobalAccessRequest accessRequest = new GlobalAccessRequest();
+        accessRequest.setUsername(sid);
+        accessRequest.setProject("default");
+        Mockito.doNothing().when(userAclService).deleteProjectFromUserAcl(accessRequest, "data_query");
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/access/global/permission/project/{permissionType:.+}", type)
+                .contentType(MediaType.APPLICATION_JSON).param("permissionType", type)
+                .content(JsonUtil.writeValueAsString(accessRequest))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.verify(nAccessController).deleteProjectFromUserAcl(type, accessRequest);
+    }
+
+    @Test
+    public void testBatchAddGlobalUserAccessEntities() throws Exception {
+        GlobalBatchAccessRequest batchAccessRequest = new GlobalBatchAccessRequest();
+        batchAccessRequest.setEnabled(true);
+        batchAccessRequest.setQueryPermission(true);
+        batchAccessRequest.setUsernameList(Arrays.asList(sid, "user_g2"));
+        {
+            Mockito.doNothing().when(userAclService).grantUserAclPermission(batchAccessRequest, "DATA_QUERY");
+            mockMvc.perform(MockMvcRequestBuilders.put("/api/access/global/batch/permission/{permissionType:.+}", type)
+                    .contentType(MediaType.APPLICATION_JSON).param("permissionType", type)
+                    .content(JsonUtil.writeValueAsString(batchAccessRequest))
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(nAccessController).batchAddGlobalUserAccessEntities(type, batchAccessRequest);
+        }
+        {
+            batchAccessRequest.setEnabled(false);
+            Mockito.doNothing().when(userAclService).revokeUserAclPermission(batchAccessRequest, "DATA_QUERY");
+            mockMvc.perform(MockMvcRequestBuilders.put("/api/access/global/batch/permission/{permissionType:.+}", type)
+                    .contentType(MediaType.APPLICATION_JSON).param("permissionType", type)
+                    .content(JsonUtil.writeValueAsString(batchAccessRequest))
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(nAccessController).batchAddGlobalUserAccessEntities(type, batchAccessRequest);
+        }
     }
 
     @Test
@@ -290,4 +407,21 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError());
         Mockito.verify(nAccessController).batchGrant(type, uuid, true, requests);
     }
+
+    @Test
+    public void testupdateExtensionAcl() throws Exception {
+        AccessRequest accessRequest = new AccessRequest();
+        accessRequest.setSid(sid);
+        accessRequest.setPrincipal(true);
+        accessRequest.setExtPermissions(Collections.singletonList("DATA_QUERY"));
+
+        Mockito.doReturn(true).when(userService).userExists(sid);
+        Mockito.doNothing().when(aclTCRService).updateAclTCR(uuid, null);
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/access/extension/{type}/{uuid}", type, uuid)
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(accessRequest))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nAccessController).updateExtensionAcl(type, uuid, accessRequest);
+    }
+
 }

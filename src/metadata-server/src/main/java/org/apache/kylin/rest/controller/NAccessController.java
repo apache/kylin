@@ -18,15 +18,17 @@
 
 package org.apache.kylin.rest.controller;
 
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_USER_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
 import static org.apache.kylin.rest.constant.Constant.ROLE_ADMIN;
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,23 +40,27 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.rest.request.AccessRequest;
+import org.apache.kylin.rest.request.BatchAccessRequest;
+import org.apache.kylin.rest.request.GlobalAccessRequest;
+import org.apache.kylin.rest.request.GlobalBatchAccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
+import org.apache.kylin.rest.response.CompositePermissionResponse;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.UserAccessEntryResponse;
 import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermissionEnum;
 import org.apache.kylin.rest.security.AclPermissionFactory;
 import org.apache.kylin.rest.service.AccessService;
+import org.apache.kylin.rest.service.AclTCRService;
 import org.apache.kylin.rest.service.IUserGroupService;
+import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.service.UserAclService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.PagingUtil;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.rest.request.AccessRequest;
-import org.apache.kylin.rest.request.BatchAccessRequest;
-import org.apache.kylin.rest.service.AclTCRService;
-import org.apache.kylin.rest.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.model.Permission;
@@ -94,6 +100,10 @@ public class NAccessController extends NBasicController {
     @Qualifier("aclTCRService")
     private AclTCRService aclTCRService;
 
+    @Autowired(required = false)
+    @Qualifier("userAclService")
+    private UserAclService userAclService;
+
     @Autowired
     @Qualifier("projectService")
     private ProjectService projectService;
@@ -113,6 +123,27 @@ public class NAccessController extends NBasicController {
                         .convertToAclPermission(accessService.getCurrentNormalUserPermissionInProject(project));
 
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, permission, "");
+    }
+
+    /**
+     * Get current user's permission in the project
+     */
+    @ApiOperation(value = "access control APIs", tags = { "MID" })
+    @GetMapping(value = "/permission/project_ext_permission", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<CompositePermissionResponse> getUserExtPermissionInPrj(
+            @RequestParam(value = "project") String project) {
+        checkProjectName(project);
+        List<String> groups = accessService.getGroupsOfCurrentUser();
+        CompositePermissionResponse permissionResponse = new CompositePermissionResponse();
+        String permission = groups.contains(ROLE_ADMIN) ? "GLOBAL_ADMIN"
+                : AclPermissionEnum
+                        .convertToAclPermission(accessService.getCurrentNormalUserPermissionInProject(project));
+        permissionResponse.setPermission(permission);
+        permissionResponse.setExtPermissions(accessService.getUserNormalExtPermissions(project));
+
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, permissionResponse, "");
     }
 
     @ApiOperation(value = "getAvailableSids", tags = { "MID" }, //
@@ -175,6 +206,88 @@ public class NAccessController extends NBasicController {
         List<String> matchedUsers = PagingUtil.getIdentifierAfterFuzzyMatching(nameSeg, isCaseSensitive, whole);
         List<String> subList = PagingUtil.cutPage(matchedUsers, pageOffset, pageSize);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(subList, matchedUsers), "");
+    }
+
+    @ApiOperation(value = "getGlobalUserAccessEntities", tags = { "MID" }, //
+            notes = "Update Param: sid")
+    @GetMapping(value = "/global/permission/{permissionType:.+}/{sid:.+}", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<Map<String, Boolean>> getGlobalUserAccessEntities(
+            @PathVariable(value = "permissionType") String permissionType, @PathVariable(value = "sid") String sid) {
+        Permission permission = AclPermissionFactory.getPermission(permissionType.toUpperCase(Locale.ROOT));
+        boolean hasAclPermission = userAclService.isSuperAdmin(sid)
+                || userAclService.hasUserAclPermission(sid, permission);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                Collections.singletonMap("enabled", hasAclPermission), "");
+    }
+
+    @ApiOperation(value = "addGlobalUserAccessEntities", tags = { "MID" }, //
+            notes = "Update Body: sid")
+    @PutMapping(value = "/global/permission/{permissionType:.+}", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<String> addGlobalUserAccessEntities(
+            @PathVariable(value = "permissionType") String permissionType,
+            @RequestBody GlobalAccessRequest accessRequest) {
+        checkRequiredArg("username", accessRequest.getUsername());
+        if (accessRequest.isEnabled()) {
+            userAclService.grantUserAclPermission(accessRequest, permissionType);
+        } else {
+            userAclService.revokeUserAclPermission(accessRequest, permissionType);
+        }
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    @PostMapping(value = "/global/permission/project/{permissionType:.+}", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<String> addProjectToUserAcl(
+            @PathVariable(value = "permissionType") String permissionType,
+            @RequestBody GlobalAccessRequest accessRequest) {
+        checkRequiredArg("username", accessRequest.getUsername());
+        checkProjectName(accessRequest.getProject());
+        userAclService.addProjectToUserAcl(accessRequest, permissionType);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    @DeleteMapping(value = "/global/permission/project/{permissionType:.+}", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<String> deleteProjectFromUserAcl(
+            @PathVariable(value = "permissionType") String permissionType,
+            @RequestBody GlobalAccessRequest accessRequest) {
+        checkRequiredArg("username", accessRequest.getUsername());
+        checkProjectName(accessRequest.getProject());
+        userAclService.deleteProjectFromUserAcl(accessRequest, permissionType);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    @ApiOperation(value = "batchAddGlobalUserAccessEntities", tags = { "MID" }, //
+            notes = "Update Body: sid")
+    @PutMapping(value = "/global/batch/permission/{permissionType:.+}", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<String> batchAddGlobalUserAccessEntities(
+            @PathVariable(value = "permissionType") String permissionType,
+            @RequestBody GlobalBatchAccessRequest accessRequest) {
+        checkRequiredArg("usernames", accessRequest.getUsernameList());
+        if (accessRequest.isEnabled()) {
+            userAclService.grantUserAclPermission(accessRequest, permissionType);
+        } else {
+            userAclService.revokeUserAclPermission(accessRequest, permissionType);
+        }
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+
+    @ApiOperation(value = "getAllGlobalUsersAccessEntities", tags = { "MID" }, //
+            notes = "Update Param: sid")
+    @GetMapping(value = "/global/permission/user_acls", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<List<UserAccessEntryResponse>> getAllGlobalUsersAccessEntities() {
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, userAclService.listUserAcl(), "");
     }
 
     @ApiOperation(value = "getAccessEntities", tags = { "MID" }, //
@@ -269,6 +382,7 @@ public class NAccessController extends NBasicController {
         if (accessRequest.isPrincipal()) {
             accessService.checkGlobalAdmin(accessRequest.getSid());
         }
+
         accessService.update(ae, accessRequest.getAccessEntryId(), permission);
         boolean hasAdminProject = CollectionUtils.isNotEmpty(projectService.getAdminProjects());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, hasAdminProject, "");
@@ -301,9 +415,7 @@ public class NAccessController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<Boolean> deleteAces(@PathVariable("entity_type") String entityType,
             @PathVariable("uuid") String uuid, @RequestBody List<AccessRequest> requests) throws IOException {
-        for (AccessRequest request : requests) {
-            checkSid(request);
-        }
+        accessService.checkSid(requests);
         List<String> users = requests.stream().filter(AccessRequest::isPrincipal).map(AccessRequest::getSid)
                 .collect(Collectors.toList());
         accessService.checkGlobalAdmin(users);
@@ -316,8 +428,20 @@ public class NAccessController extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, hasAdminProject, "");
     }
 
-    private List<String> getAllUserNames() throws IOException {
-        return userService.listUsers().stream().map(ManagedUser::getUsername).collect(Collectors.toList());
+    @ApiOperation(value = "updateExtensionAcl", tags = { "MID" }, notes = "Update Body: access_entry_id")
+    @PutMapping(value = "/extension/{type:.+}/{uuid:.+}", produces = { HTTP_VND_APACHE_KYLIN_JSON,
+            HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+    @ResponseBody
+    public EnvelopeResponse<Boolean> updateExtensionAcl(@PathVariable("type") String type,
+            @PathVariable("uuid") String uuid, @RequestBody AccessRequest accessRequest) throws IOException {
+        checkSid(accessRequest);
+        AclEntity ae = accessService.getAclEntity(type, uuid);
+        if (accessRequest.isPrincipal()) {
+            accessService.checkGlobalAdmin(accessRequest.getSid());
+        }
+        accessService.updateExtensionPermission(ae, accessRequest);
+        boolean hasAdminProject = CollectionUtils.isNotEmpty(projectService.getAdminProjects());
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, hasAdminProject, "");
     }
 
     private List<String> getAllUserGroups() throws IOException {
@@ -334,6 +458,7 @@ public class NAccessController extends NBasicController {
                     AccessRequest r = new AccessRequest();
                     r.setAccessEntryId(b.getAccessEntryId());
                     r.setPermission(b.getPermission());
+                    r.setExtPermissions(b.getExtPermissions());
                     r.setPrincipal(b.isPrincipal());
                     if (b.isPrincipal()) {
                         r.setSid(makeUserNameCaseInSentive(sid));

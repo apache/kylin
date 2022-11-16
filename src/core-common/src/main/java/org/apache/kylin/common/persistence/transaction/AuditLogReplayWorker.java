@@ -20,8 +20,18 @@ package org.apache.kylin.common.persistence.transaction;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.withTransaction;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.VersionConflictException;
@@ -31,12 +41,13 @@ import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.springframework.transaction.TransactionException;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.val;
-import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -45,8 +56,28 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
     @Getter
     private volatile long logOffset = 0L;
 
+    private final Queue<AuditLogReplayWorker.AuditIdTimeItem> delayIdQueue;
+
+    private final long idEarliestTimeoutMills;
+    private final long idTimeoutMills;
+    private final int replayDelayBatch;
+
+    public AuditLogReplayWorker(KylinConfig config, JdbcAuditLogStore restorer) {
+        super(config, restorer);
+        delayIdQueue = new ConcurrentLinkedQueue<>();
+        idTimeoutMills = config.getEventualReplayDelayItemTimeout();
+        replayDelayBatch = config.getEventualReplayDelayItemBatch();
+        idEarliestTimeoutMills = TimeUnit.HOURS.toMillis(3);
+    }
+
     public void startSchedule(long currentId, boolean syncImmediately) {
         updateOffset(currentId);
+        delayIdQueue.clear();
+
+        val minId = auditLogStore.getMinId();
+        if (logOffset + 1 < minId) {
+            log.warn("restore from currentId:{} + 1< minId:{} is irregular", currentId, minId);
+        }
         if (syncImmediately) {
             catchupInternal(1);
         }
@@ -54,16 +85,11 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
         consumeExecutor.scheduleWithFixedDelay(() -> catchupInternal(1), interval, interval, TimeUnit.SECONDS);
     }
 
-    public AuditLogReplayWorker(KylinConfig config, JdbcAuditLogStore restorer) {
-        super(config, restorer);
-    }
-
+    @Override
     public synchronized void updateOffset(long expected) {
-        logOffset = Math.max(logOffset, expected);
-    }
-
-    public void forceUpdateOffset(long expected) {
-        logOffset = expected;
+        if (expected > logOffset) {
+            logOffset = expected;
+        }
     }
 
     @Override
@@ -89,17 +115,67 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
             } else if (rootCause instanceof InterruptedException) {
                 log.info("may be canceled due to reload meta, skip this replay");
             } else {
+                delayIdQueue.clear();
                 handleReloadAll(e);
             }
         }
 
     }
 
-    private void threadWait(int millis) {
+    private List<Long> collectReplayDelayedId(int maxCount) {
+        if (delayIdQueue.isEmpty()) {
+            return Lists.newArrayList();
+        }
+
+        List<Long> needReplayedIdList = Lists.newArrayList();
+        val timeoutItemList = Lists.newArrayList();
+        Iterator<AuditLogReplayWorker.AuditIdTimeItem> retryQueueIterator = delayIdQueue.iterator();
+        long currentTime = System.currentTimeMillis();
+        while (retryQueueIterator.hasNext()) {
+            val idTimeItem = retryQueueIterator.next();
+            needReplayedIdList.add(idTimeItem.getAuditLogId());
+            if (idTimeItem.isTimeout(currentTime, idTimeoutMills)) {
+                timeoutItemList.add(idTimeItem);
+                retryQueueIterator.remove();
+            }
+            if (needReplayedIdList.size() >= maxCount) {
+                break;
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(timeoutItemList)) {
+            log.warn("delay timeout id->{}", collectionToJoinString(timeoutItemList));
+        }
+
+        if (CollectionUtils.isEmpty(needReplayedIdList)) {
+            log.debug("needReplayedIdList is empty");
+            return Lists.newArrayList();
+        }
+
+        return needReplayedIdList;
+    }
+
+    private void fetchAndReplayDelayId(MessageSynchronization replayer, List<Long> needReplayedIdList) {
+        if (CollectionUtils.isEmpty(needReplayedIdList)) {
+            return;
+        }
+
         try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
+            val fetchAuditLog = auditLogStore.fetch(needReplayedIdList);
+            if (CollectionUtils.isEmpty(fetchAuditLog)) {
+                return;
+            }
+            log.debug("try replay delay id:{}", collectionToJoinString(needReplayedIdList));
+            replayLogs(replayer, fetchAuditLog);
+
+            val replaySuccessIdSet = fetchAuditLog.stream().map(AuditLog::getId).collect(Collectors.toSet());
+            delayIdQueue.removeIf(winId -> replaySuccessIdSet.contains(winId.auditLogId));
+            log.warn("finished replay delay id:{},queue:{}", collectionToJoinString(replaySuccessIdSet),
+                    delayIdQueue.size());
+
+        } catch (Exception e) {
+            log.error("tryReplayDelayedId error", e);
+            delayIdQueue.clear();
         }
     }
 
@@ -108,33 +184,46 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
         val store = ResourceStore.getKylinMetaStore(config);
         replayer.setChecker(store.getChecker());
 
-        val maxId = waitMaxIdOk(currentId);
-        if (maxId == -1 || maxId == currentId) {
+        val needReplayedIdList = collectReplayDelayedId(replayDelayBatch);
+
+        val currentWindow = new FixedWindow(currentId, auditLogStore.getMaxId());
+        if (currentWindow.isEmpty() && CollectionUtils.isEmpty(needReplayedIdList)) {
             return;
         }
-        withTransaction(auditLogStore.getTransactionManager(), () -> {
-            log.debug("start restore from {}, current max_id is {}", currentId, maxId);
-            var start = currentId;
-            while (start < maxId) {
-                val logs = auditLogStore.fetch(start, Math.min(STEP, maxId - start));
-                replayLogs(replayer, logs);
-                start += STEP;
+
+        val allCommitOk = waitMaxIdOk(currentWindow.getStart(), currentWindow.getEnd());
+
+        val newOffset = withTransaction(auditLogStore.getTransactionManager(), () -> {
+            fetchAndReplayDelayId(replayer, needReplayedIdList);
+
+            if (currentWindow.isEmpty()) {
+                return -1L;
             }
-            return maxId;
+
+            log.debug("start restore from {}", currentWindow);
+            val stepWin = new SlideWindow(currentWindow);
+
+            while (stepWin.forwardRightStep(STEP)) {
+                val logs = auditLogStore.fetch(stepWin.getStart(), stepWin.length());
+                replayLogs(replayer, logs);
+                if (!allCommitOk) {
+                    recordStepAbsentIdList(stepWin, logs);
+                }
+                stepWin.syncRightStep();
+            }
+            log.debug("end restore from {}, delay queue:{}", currentWindow, delayIdQueue.size());
+            return currentWindow.getEnd();
         });
-        updateOffset(maxId);
+
+        updateOffset(newOffset);
     }
 
-    private long waitMaxIdOk(long currentId) {
+    private boolean waitMaxIdOk(long currentId, long maxId) {
         try {
-            val maxId = auditLogStore.getMaxId();
             if (maxId == currentId) {
-                return maxId;
+                return true;
             }
-            if (waitLogCommit(3, currentId, maxId)) {
-                return maxId;
-            }
-            return -1;
+            return waitLogCommit(replayWaitMaxRetryTimes, currentId, maxId);
         } catch (Exception e) {
             throw new DatabaseNotAvailableException(e);
         }
@@ -146,7 +235,7 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
         }
         int count = 0;
         while (!logAllCommit(currentId, maxId)) {
-            threadWait(100);
+            threadWait(replayWaitMaxTimeoutMills);
             count++;
             if (count >= maxTimes) {
                 return false;
@@ -181,6 +270,76 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
             log.warn("Reload metadata <{}> failed", conflictedPath);
         }
         catchupInternal(countDown - 1);
+    }
+
+    private void recordStepAbsentIdList(FixedWindow stepWin, List<AuditLog> logs) {
+        if (CollectionUtils.isEmpty(logs)) {
+            return;
+        }
+
+        if (logs.size() == stepWin.length()) {
+            return;
+        }
+
+        val replayedIdList = Lists.<Long> newArrayList();
+        try {
+            val curTime = System.currentTimeMillis();
+            val latestTime = logs.stream().map(AuditLog::getTimestamp).max(Long::compareTo).orElse(curTime);
+            if (curTime - latestTime > idEarliestTimeoutMills) {
+                log.warn("skip too earliest id,{}->{}", curTime, latestTime);
+                return;
+            }
+
+            replayedIdList.addAll(logs.stream().map(AuditLog::getId).collect(Collectors.toList()));
+            val absentIdList = findAbsentId(replayedIdList, stepWin);
+            log.warn("find absent id list:{},in {}", collectionToJoinString(absentIdList), stepWin);
+            absentIdList.forEach(id -> delayIdQueue.add(new AuditLogReplayWorker.AuditIdTimeItem(id, curTime)));
+        } catch (Exception e) {
+            log.error("recordStepAbsentIdList:{},{} error", stepWin, collectionToJoinString(replayedIdList), e);
+        }
+
+    }
+
+    /**
+     * {(startId,endId]} - {replayedIdList}
+     * @param replayedIdList
+     * @return
+     */
+    @NonNull
+    private List<Long> findAbsentId(List<Long> replayedIdList, FixedWindow fixedWindow) {
+        if (CollectionUtils.isEmpty(replayedIdList)) {
+            return Lists.newArrayList();
+        }
+        val replayedIdSet = new HashSet<>(replayedIdList);
+        return LongStream.rangeClosed(fixedWindow.start + 1, fixedWindow.end).boxed()
+                .filter(id -> !replayedIdSet.contains(id)).collect(Collectors.toList());
+    }
+
+    private static String collectionToJoinString(Collection<?> objects) {
+        if (CollectionUtils.isEmpty(objects)) {
+            return StringUtils.EMPTY;
+        }
+        return Joiner.on(",").join(objects);
+    }
+
+    @Getter
+    static class AuditIdTimeItem {
+        private final long auditLogId;
+        private final long logTimestamp;
+
+        public AuditIdTimeItem(long auditLogId, long logTimestamp) {
+            this.auditLogId = auditLogId;
+            this.logTimestamp = logTimestamp;
+        }
+
+        public boolean isTimeout(long currentTime, long timeout) {
+            return currentTime - logTimestamp > timeout;
+        }
+
+        @Override
+        public String toString() {
+            return "[" + auditLogId + "," + logTimestamp + "]";
+        }
     }
 
 }

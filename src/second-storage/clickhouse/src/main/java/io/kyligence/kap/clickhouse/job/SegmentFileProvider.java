@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.CommonErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -41,7 +42,12 @@ public class SegmentFileProvider implements FileProvider {
     @Override
     public List<FileStatus> getAllFilePaths() {
         List<FileStatus> paths = new ArrayList<>();
-        final FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        final FileSystem fs;
+        if (KylinConfig.getInstanceFromEnv().isBuildFilesSeparationEnabled()) {
+            fs = HadoopUtil.getWritingClusterFileSystem();
+        } else {
+            fs = HadoopUtil.getWorkingFileSystem();
+        }
         try {
             RemoteIterator<LocatedFileStatus> it = fs.listFiles(new Path(rootPath), true);
             while (it.hasNext()) {

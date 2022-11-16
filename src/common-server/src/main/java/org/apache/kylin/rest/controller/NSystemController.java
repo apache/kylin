@@ -21,20 +21,28 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 import static org.apache.kylin.common.exception.KylinException.CODE_SUCCESS;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_NOT_CONSISTENT;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.EpochCheckBroadcastNotifier;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.request.DiagPackageRequest;
 import org.apache.kylin.rest.request.DiagProgressRequest;
@@ -47,6 +55,7 @@ import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.apache.kylin.rest.response.ServersResponse;
 import org.apache.kylin.rest.service.MaintenanceModeService;
 import org.apache.kylin.rest.service.MetadataBackupService;
+import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.SystemService;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.tool.util.ToolUtil;
@@ -67,9 +76,11 @@ import com.google.common.annotations.VisibleForTesting;
 
 import io.swagger.annotations.ApiOperation;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping(value = "/api/system", produces = { HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
+@Slf4j
 public class NSystemController extends NBasicController {
 
     @Autowired
@@ -88,6 +99,10 @@ public class NSystemController extends NBasicController {
 
     @Autowired
     private MetadataBackupService metadataBackupService;
+
+    @Autowired
+    @Qualifier("projectService")
+    private ProjectService projectService;
 
     @VisibleForTesting
     public void setAclEvaluate(AclEvaluate aclEvaluate) {
@@ -114,10 +129,18 @@ public class NSystemController extends NBasicController {
     public EnvelopeResponse<String> getRemoteDumpDiagPackage(
             @RequestParam(value = "host", required = false) String host,
             @RequestBody DiagPackageRequest diagPackageRequest, final HttpServletRequest request) throws Exception {
+        if (StringUtils.isNotBlank(diagPackageRequest.getJobId())) {
+            diagPackageRequest.setStart("");
+            diagPackageRequest.setEnd("");
+        } else {
+            if (StringUtils.isBlank(diagPackageRequest.getStart()) || StringUtils.isBlank(diagPackageRequest.getEnd())) {
+                throw new KylinException(TIME_INVALID_RANGE_NOT_CONSISTENT);
+            }
+        }
         validateDataRange(diagPackageRequest.getStart(), diagPackageRequest.getEnd());
         if (StringUtils.isEmpty(host)) {
             String uuid = systemService.dumpLocalDiagPackage(diagPackageRequest.getStart(), diagPackageRequest.getEnd(),
-                    diagPackageRequest.getJobId());
+                    diagPackageRequest.getJobId(), diagPackageRequest.getProject());
             return new EnvelopeResponse<>(CODE_SUCCESS, uuid, "");
         } else {
             String url = host + "/kylin/api/system/diag";
@@ -164,11 +187,15 @@ public class NSystemController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<DiagStatusResponse> getRemotePackageStatus(
             @RequestParam(value = "host", required = false) String host, @RequestParam(value = "id") String id,
-            final HttpServletRequest request) throws Exception {
+            @RequestParam(value = "project", required = false) String project, final HttpServletRequest request)
+            throws Exception {
         if (StringUtils.isEmpty(host)) {
-            return systemService.getExtractorStatus(id);
+            return systemService.getExtractorStatus(id, project);
         } else {
             String url = host + "/kylin/api/system/diag/status?id=" + id;
+            if(StringUtils.isNotEmpty(project)){
+                url = url + "&project=" + project;
+            }
             return generateTaskForRemoteHost(request, url);
         }
     }
@@ -177,13 +204,16 @@ public class NSystemController extends NBasicController {
     @GetMapping(value = "/diag")
     @ResponseBody
     public void remoteDownloadPackage(@RequestParam(value = "host", required = false) String host,
-            @RequestParam(value = "id") String id, final HttpServletRequest request, final HttpServletResponse response)
-            throws Exception {
+            @RequestParam(value = "id") String id, @RequestParam(value = "project", required = false) String project,
+            final HttpServletRequest request, final HttpServletResponse response) throws Exception {
         if (StringUtils.isEmpty(host)) {
-            setDownloadResponse(systemService.getDiagPackagePath(id), MediaType.APPLICATION_OCTET_STREAM_VALUE,
+            setDownloadResponse(systemService.getDiagPackagePath(id, project), MediaType.APPLICATION_OCTET_STREAM_VALUE,
                     response);
         } else {
             String url = host + "/kylin/api/system/diag?id=" + id;
+            if(StringUtils.isNotEmpty(project)){
+                url = url + "&project=" + project;
+            }
             downloadFromRemoteHost(request, url, response);
         }
     }
@@ -271,6 +301,37 @@ public class NSystemController extends NBasicController {
                 }
                 return index;
             }, project);
+        }
+        return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
+    }
+
+    @PostMapping(value = "/transaction/simulation/insert_meta")
+    @ResponseBody
+    public EnvelopeResponse<String> simulateInsertMeta(
+            @RequestParam(value = "count", required = false, defaultValue = "5") int count,
+            @RequestParam(value = "sleepSec", required = false, defaultValue = "20") long sleepSec) {
+        if (KylinConfig.getInstanceFromEnv().isUnitOfWorkSimulationEnabled()) {
+
+            val projectList = IntStream.range(0, 5).mapToObj(i -> "simulation" + i).collect(Collectors.toList());
+
+            projectList.forEach(p -> {
+                if (CollectionUtils.isNotEmpty(projectService.getReadableProjects(p, true))) {
+                    EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+                        projectService.dropProject(p);
+                        return null;
+                    }, p);
+                }
+
+            });
+
+            log.debug("insert_meta begin to create project");
+
+            EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(UnitOfWorkParams.<Map> builder()
+                    .unitName(UnitOfWork.GLOBAL_UNIT).sleepMills(TimeUnit.SECONDS.toMillis(sleepSec)).processor(() -> {
+                        projectList.forEach(p -> projectService.createProject(p, new ProjectInstance()));
+                        return null;
+                    }).build());
+
         }
         return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
     }

@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.Executable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -183,8 +183,8 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
 
         // check special case, all sub task success, show make current job to success
         AbstractExecutable job = executableManager.getJob(id);
-        if (job instanceof DefaultChainedExecutable) {
-            return ((DefaultChainedExecutable) job).getTasks().stream()
+        if (job instanceof DefaultExecutable) {
+            return ((DefaultExecutable) job).getTasks().stream()
                     .allMatch(abstractExecutable -> abstractExecutable.getStatus() == ExecutableState.SUCCEED);
         }
 
@@ -212,8 +212,8 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
                 jobPool.execute(new JobRunner(nDefaultScheduler, executable, this));
                 logger.info("{} scheduled", jobDesc);
             } else {
-                logger.info("memory is not enough, remaining: {} MB",
-                        NDefaultScheduler.getMemoryRemaining().availablePermits());
+                logger.info("memory is not enough, remaining: {} MB , schedule job : {}",
+                        NDefaultScheduler.getMemoryRemaining().availablePermits(), executable.getDisplayName());
             }
         } catch (Exception ex) {
             if (executable != null) {

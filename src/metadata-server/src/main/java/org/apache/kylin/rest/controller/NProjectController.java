@@ -330,6 +330,8 @@ public class NProjectController extends NBasicController {
             @RequestBody SnapshotConfigRequest snapshotConfigRequest) {
         checkBooleanArg("snapshot_manual_management_enabled",
                 snapshotConfigRequest.getSnapshotManualManagementEnabled());
+        checkBooleanArg("snapshot_automatic_refresh_enabled",
+                snapshotConfigRequest.getSnapshotAutoRefreshEnabled());
         projectService.updateSnapshotConfig(project, snapshotConfigRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }

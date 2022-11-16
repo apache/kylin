@@ -19,6 +19,7 @@
 package io.kyligence.kap.secondstorage.management.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
 
 
@@ -28,6 +29,8 @@ public class ModelEnableRequest {
     private String project;
     @JsonProperty("model")
     private String model;
+    @JsonProperty("model_name")
+    private String modelName;
     @JsonProperty("enabled")
-    private boolean enabled;
+    private Boolean enabled;
 }

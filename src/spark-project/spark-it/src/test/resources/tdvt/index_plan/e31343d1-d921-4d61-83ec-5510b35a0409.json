@@ -1,0 +1,821 @@
+{
+  "uuid" : "e31343d1-d921-4d61-83ec-5510b35a0409",
+  "last_modified" : 1614319316395,
+  "create_time" : 1599187929273,
+  "version" : "4.0.0.0",
+  "description" : null,
+  "rule_based_index" : null,
+  "indexes" : [ {
+    "id" : 0,
+    "dimensions" : [ 44 ],
+    "measures" : [ 100000, 100001, 100006 ],
+    "layouts" : [ {
+      "id" : 1,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 44, 100000, 100001, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607638,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 10000,
+    "dimensions" : [ 39, 3, 45, 24, 48, 9 ],
+    "measures" : [ 100000, 100001, 100006 ],
+    "layouts" : [ {
+      "id" : 10001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 39, 3, 45, 24, 48, 9, 100000, 100001, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607640,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 20000,
+    "dimensions" : [ 49 ],
+    "measures" : [ 100000 ],
+    "layouts" : [ {
+      "id" : 20001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 49, 100000 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607633,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 30000,
+    "dimensions" : [ 1 ],
+    "measures" : [ 100000, 100011, 100012 ],
+    "layouts" : [ {
+      "id" : 30001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 1, 100000, 100011, 100012 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607638,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 40000,
+    "dimensions" : [ 15, 41 ],
+    "measures" : [ 100000, 100004 ],
+    "layouts" : [ {
+      "id" : 40001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 15, 41, 100000, 100004 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607638,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 50000,
+    "dimensions" : [ 48 ],
+    "measures" : [ 100000, 100006, 100007, 100010 ],
+    "layouts" : [ {
+      "id" : 50001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 48, 100000, 100006, 100007, 100010 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607723,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 60000,
+    "dimensions" : [ 18, 43, 15, 41 ],
+    "measures" : [ 100000, 100004, 100005 ],
+    "layouts" : [ {
+      "id" : 60001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 18, 43, 15, 41, 100000, 100004, 100005 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607634,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    }, {
+      "id" : 60002,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 43, 18, 15, 41, 100000, 100004, 100005 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607635,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    }, {
+      "id" : 60003,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 18, 15, 43, 41, 100000, 100004, 100005 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1612259715347,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 4
+  }, {
+    "id" : 90000,
+    "dimensions" : [ 18, 15, 41 ],
+    "measures" : [ 100000, 100004, 100005 ],
+    "layouts" : [ {
+      "id" : 90001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 18, 15, 41, 100000, 100004, 100005 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607638,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 110000,
+    "dimensions" : [ 41 ],
+    "measures" : [ 100000, 100002, 100003, 100004, 100005, 100008, 100009, 100013, 100014 ],
+    "layouts" : [ {
+      "id" : 110001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 41, 100000, 100002, 100003, 100004, 100005, 100008, 100009, 100013, 100014 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607720,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 120000,
+    "dimensions" : [ 21, 43, 15, 39 ],
+    "measures" : [ 100000, 100001 ],
+    "layouts" : [ {
+      "id" : 120001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 21, 43, 15, 39, 100000, 100001 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607639,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 130000,
+    "dimensions" : [ 9 ],
+    "measures" : [ 100000, 100006 ],
+    "layouts" : [ {
+      "id" : 130001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 9, 100000, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607634,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 140000,
+    "dimensions" : [ 9, 24 ],
+    "measures" : [ 100000, 100006 ],
+    "layouts" : [ {
+      "id" : 140001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 9, 24, 100000, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607637,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 150000,
+    "dimensions" : [ 48, 9 ],
+    "measures" : [ 100000, 100006 ],
+    "layouts" : [ {
+      "id" : 150001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 48, 9, 100000, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607721,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 160000,
+    "dimensions" : [ 24, 9, 15 ],
+    "measures" : [ 100000, 100001, 100002, 100003 ],
+    "layouts" : [ {
+      "id" : 160001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 24, 9, 15, 100000, 100001, 100002, 100003 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607633,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    }, {
+      "id" : 160002,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 15, 9, 24, 100000, 100001, 100002, 100003 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607634,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    }, {
+      "id" : 160003,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 9, 15, 24, 100000, 100001, 100002, 100003 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607639,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 4
+  }, {
+    "id" : 170000,
+    "dimensions" : [ ],
+    "measures" : [ 100000, 100006 ],
+    "layouts" : [ {
+      "id" : 170001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 100000, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607637,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 180000,
+    "dimensions" : [ 48, 24 ],
+    "measures" : [ 100000, 100006 ],
+    "layouts" : [ {
+      "id" : 180001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 48, 24, 100000, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625957,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 190000,
+    "dimensions" : [ 9, 24, 45 ],
+    "measures" : [ 100000, 100006 ],
+    "layouts" : [ {
+      "id" : 190001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 9, 24, 45, 100000, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625732,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 200000,
+    "dimensions" : [ 9, 12 ],
+    "measures" : [ 100000, 100006 ],
+    "layouts" : [ {
+      "id" : 200001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 9, 12, 100000, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625732,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 210000,
+    "dimensions" : [ 9, 24, 45, 12 ],
+    "measures" : [ 100000, 100006 ],
+    "layouts" : [ {
+      "id" : 210001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 9, 24, 45, 12, 100000, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625734,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 220000,
+    "dimensions" : [ 15, 39 ],
+    "measures" : [ 100000, 100006 ],
+    "layouts" : [ {
+      "id" : 220001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 15, 39, 100000, 100006 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625989,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 230000,
+    "dimensions" : [ 4, 15, 46, 18, 43 ],
+    "measures" : [ 100000, 100001, 100015, 100016 ],
+    "layouts" : [ {
+      "id" : 230001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 4, 15, 46, 18, 43, 100000, 100001, 100015, 100016 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625873,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 240000,
+    "dimensions" : [ 18 ],
+    "measures" : [ 100000 ],
+    "layouts" : [ {
+      "id" : 240001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 18, 100000 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625874,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 250000,
+    "dimensions" : [ 18, 41 ],
+    "measures" : [ 100000, 100004, 100005 ],
+    "layouts" : [ {
+      "id" : 250001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 18, 41, 100000, 100004, 100005 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625934,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 260000,
+    "dimensions" : [ 43 ],
+    "measures" : [ 100000, 100001, 100018 ],
+    "layouts" : [ {
+      "id" : 260001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 43, 100000, 100001, 100018 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625990,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 280000,
+    "dimensions" : [ 43, 24 ],
+    "measures" : [ 100000, 100001, 100016 ],
+    "layouts" : [ {
+      "id" : 280001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 43, 24, 100000, 100001, 100016 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625955,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 290000,
+    "dimensions" : [ 43, 12, 41 ],
+    "measures" : [ 100000, 100004 ],
+    "layouts" : [ {
+      "id" : 290001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 43, 12, 41, 100000, 100004 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625947,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 300000,
+    "dimensions" : [ 24 ],
+    "measures" : [ 100000, 100006, 100007 ],
+    "layouts" : [ {
+      "id" : 300001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 24, 100000, 100006, 100007 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625990,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 310000,
+    "dimensions" : [ 9, 24 ],
+    "measures" : [ 100000, 100001, 100002, 100003 ],
+    "layouts" : [ {
+      "id" : 310001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 9, 24, 100000, 100001, 100002, 100003 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625962,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 320000,
+    "dimensions" : [ 15, 1 ],
+    "measures" : [ 100000, 100011, 100012 ],
+    "layouts" : [ {
+      "id" : 320001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 15, 1, 100000, 100011, 100012 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625965,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 340000,
+    "dimensions" : [ ],
+    "measures" : [ 100000, 100008, 100017, 100019 ],
+    "layouts" : [ {
+      "id" : 340001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 100000, 100008, 100017, 100019 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599200958159,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 350000,
+    "dimensions" : [ 43 ],
+    "measures" : [ 100000, 100001, 100008, 100018 ],
+    "layouts" : [ {
+      "id" : 350001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 43, 100000, 100001, 100008, 100018 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1602234909774,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 20000010000,
+    "dimensions" : [ 41, 43, 14 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000010001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 41, 43, 14 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607634,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 20000020000,
+    "dimensions" : [ 41, 9, 14 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000020001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 41, 9, 14 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607637,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 20000030000,
+    "dimensions" : [ 15, 14, 43, 34, 32 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000030001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 15, 14, 43, 34, 32 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188607636,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 20000040000,
+    "dimensions" : [ 43, 9, 14 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000040001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 43, 9, 14 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625879,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 20000050000,
+    "dimensions" : [ 43, 35 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000050001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 43, 35 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625874,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  }, {
+    "id" : 20000060000,
+    "dimensions" : [ 18, 43, 15, 22, 10, 32 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000060001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 18, 43, 15, 22, 10, 32 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625939,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    }, {
+      "id" : 20000060002,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 43, 18, 15, 22, 10, 32 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625949,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    }, {
+      "id" : 20000060003,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 18, 15, 43, 22, 10, 32 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1612261522594,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 4
+  }, {
+    "id" : 20000070000,
+    "dimensions" : [ 48, 9, 14, 12 ],
+    "measures" : [ ],
+    "layouts" : [ {
+      "id" : 20000070001,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 48, 9, 14, 12 ],
+      "shard_by_columns" : [ ],
+      "partition_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1599188625732,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  } ],
+  "override_properties" : { },
+  "to_be_deleted_indexes" : [ ],
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 360000,
+  "next_table_index_id" : 20000080000,
+  "agg_shard_by_columns" : [ ],
+  "extend_partition_columns" : [ ],
+  "layout_bucket_num" : { },
+  "approved_additional_recs" : 3,
+  "approved_removal_recs" : 6
+}

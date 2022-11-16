@@ -1,0 +1,53 @@
+{
+  "uuid": "956faa84-2e05-6594-3d01-107239aea03b",
+  "last_modified": 0,
+  "create_time": 1658330822419,
+  "version": "4.0.0.0",
+  "name": "MULTI_PART_SEG_TEST",
+  "columns": [
+    {
+      "id": "1",
+      "name": "ID",
+      "datatype": "integer",
+      "case_sensitive_name": "id"
+    },
+    {
+      "id": "2",
+      "name": "USER",
+      "datatype": "varchar(4096)",
+      "case_sensitive_name": "user"
+    },
+    {
+      "id": "3",
+      "name": "DATE",
+      "datatype": "varchar(4096)",
+      "case_sensitive_name": "date"
+    },
+    {
+      "id": "4",
+      "name": "REGION",
+      "datatype": "varchar(4096)",
+      "case_sensitive_name": "region"
+    }
+  ],
+  "source_type": 9,
+  "table_type": "MANAGED",
+  "top": false,
+  "increment_loading": false,
+  "last_snapshot_path": null,
+  "last_snapshot_size": 0,
+  "snapshot_last_modified": 0,
+  "query_hit_count": 0,
+  "partition_column": null,
+  "snapshot_partitions": {},
+  "snapshot_partitions_info": {},
+  "snapshot_total_rows": 0,
+  "snapshot_partition_col": null,
+  "selected_snapshot_partition_col": null,
+  "temp_snapshot_path": null,
+  "snapshot_has_broken": false,
+  "database": "DEFAULT",
+  "transactional": false,
+  "rangePartition": false,
+  "partition_desc": null
+}

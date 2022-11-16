@@ -18,10 +18,8 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.io.IOException;
-import java.util.Set;
-import java.util.stream.Stream;
-
+import com.google.common.collect.ImmutableSet;
+import lombok.val;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,25 +29,25 @@ import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.engine.spark.ExecutableUtils;
+import org.apache.kylin.engine.spark.IndexDataConstructor;
+import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.engine.spark.ExecutableUtils;
-import org.apache.kylin.engine.spark.IndexDataConstructor;
-import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.parquet.Strings;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableSet;
-
-import lombok.val;
+import java.io.IOException;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public class NSparkSnapshotJobTest extends NLocalWithSparkSessionTest {
 

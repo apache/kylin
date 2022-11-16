@@ -84,7 +84,7 @@ public class DoubleQuotePushDownConverterTest extends NLocalFileMetadataTestCase
                 Arrays.asList("select a + b * c", "select \"A\" + \"B\" * \"C\""),
                 Arrays.asList("select 1 + b * c", "select 1 + \"B\" * \"C\""),
 
-                //for filter the function without parentheses
+                //for filter the function without parentheses,ref KE-13407
                 Arrays.asList(
                         "select CURRENT_CATALOG, CURRENT_DATE, CURRENT_PATH,CURRENT_ROLE, CURRENT_SCHEMA, CURRENT_TIME, CURRENT_TIMESTAMP, CURRENT_USER,LOCALTIME, LOCALTIMESTAMP, SESSION_USER, SYSTEM_USER, USER",
                         "select CURRENT_CATALOG, CURRENT_DATE, CURRENT_PATH,CURRENT_ROLE, CURRENT_SCHEMA, CURRENT_TIME, CURRENT_TIMESTAMP, CURRENT_USER,LOCALTIME, LOCALTIMESTAMP, SESSION_USER, SYSTEM_USER, USER"),
@@ -96,14 +96,19 @@ public class DoubleQuotePushDownConverterTest extends NLocalFileMetadataTestCase
     }
 
     @Test
-    public void testConvertDoubleQuoteFailure() {
-        List<String> convertFailureUTs = Arrays.asList(
-                //quoted by `
-                "select ACCOUNT_ID as 中文id, ACCOUNT_COUNTRY as `country` from  `DEFAULT`.TEST_ACCOUNT where ACCOUNT_COUNTRY='RU'",
-                //syntax error
-                "select ACCOUNT_ID as 中文id, ACCOUNT_COUNTRY as country from1  \"DEFAULT\".TEST_ACCOUNT where ACCOUNT_COUNTRY='RU'");
+    public void convertBackTickQuoteNormal() {
+        String sql = "select ACCOUNT_ID as 中文id, ACCOUNT_COUNTRY as `country` from  `DEFAULT`.TEST_ACCOUNT where ACCOUNT_COUNTRY='RU'";
+        String expected = "select \"ACCOUNT_ID\" as \"中文ID\", \"ACCOUNT_COUNTRY\" as \"country\" from  \"DEFAULT\".\"TEST_ACCOUNT\" where \"ACCOUNT_COUNTRY\"='RU'";
+        final String real = DoubleQuotePushDownConverter.convertDoubleQuote(sql);
+        Assert.assertEquals(expected, real);
 
-        convertFailureUTs.forEach(this::testConvertFailure);
+    }
+
+    @Test
+    public void testConvertDoubleQuoteFailure() {
+        // wrong grammar sql
+        String sql = "select ACCOUNT_ID as 中文id, ACCOUNT_COUNTRY as country from1  \"DEFAULT\".TEST_ACCOUNT where ACCOUNT_COUNTRY='RU'";
+        testConvertFailure(sql);
 
     }
 

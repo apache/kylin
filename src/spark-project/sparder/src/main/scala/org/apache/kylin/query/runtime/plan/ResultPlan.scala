@@ -19,8 +19,9 @@
 package org.apache.kylin.query.runtime.plan
 
 import com.google.common.cache.{Cache, CacheBuilder}
+import io.kyligence.kap.secondstorage.SecondStorageUtil
+
 import org.apache.calcite.rel.`type`.RelDataType
-import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.exception.{KylinTimeoutException, NewQueryRefuseException}
 import org.apache.kylin.common.util.{HadoopUtil, RandomUtil}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
@@ -32,8 +33,6 @@ import org.apache.kylin.query.engine.RelColumnMetaDataExtractor
 import org.apache.kylin.query.engine.exec.ExecuteResult
 import org.apache.kylin.query.exception.UserStopQueryException
 import org.apache.kylin.query.util.{AsyncQueryUtil, SparkJobTrace, SparkQueryJobManager}
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
-import org.apache.spark.SparkConf
 import org.apache.spark.sql.execution._
 import org.apache.spark.sql.hive.QueryMetricUtils
 import org.apache.spark.sql.util.SparderTypeUtil
@@ -41,6 +40,11 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparderEnv}
 
 import java.io.{File, FileOutputStream}
 import java.util
+import org.apache.hadoop.fs.Path
+import org.apache.kylin.query.relnode.OLAPContext
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.spark.SparkConf
+
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -125,6 +129,13 @@ object ResultPlan extends LogEx {
       QueryContext.current().getMetrics.setQueryStageCount(stageCount)
       QueryContext.current().getMetrics.setQueryTaskCount(taskCount)
 
+      if (!QueryContext.current().getSecondStorageUsageMap.isEmpty &&
+        KylinConfig.getInstanceFromEnv.getSecondStorageQueryMetricCollect) {
+        val executedPlan = SecondStorageUtil.collectExecutedPlan(getNormalizedExplain(df))
+        val pushedPlan = SecondStorageUtil.convertExecutedPlan(executedPlan, QueryContext.current.getProject, OLAPContext.getNativeRealizations)
+        QueryContext.current().getMetrics.setQueryExecutedPlan(pushedPlan)
+      }
+
       logInfo(s"Actual total scan count: $scanRows, " +
         s"file scan row count: ${QueryContext.current.getMetrics.getAccumSourceScanRows}, " +
         s"may apply limit row count: $sumOfSourceScanRows, Big query threshold: $bigQueryThreshold, Allocate pool: $pool, " +
@@ -161,6 +172,10 @@ object ResultPlan extends LogEx {
     } finally {
       QueryContext.current().setExecutionID(QueryToExecutionIDCache.getQueryExecutionID(queryId))
     }
+  }
+
+  private def getNormalizedExplain(df: DataFrame): String = {
+    df.queryExecution.executedPlan.toString.replaceAll("#\\d+", "#x")
   }
 
   def getQueryFairSchedulerPool(sparkConf: SparkConf, queryContext: QueryContext, bigQueryThreshold: Long,

@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutableOnModel;
+import org.apache.kylin.job.execution.DefaultExecutableOnModel;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -88,7 +88,7 @@ public class MigrateJobToolTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(1, executeJobs.size());
 
         for (AbstractExecutable executeJob : executeJobs) {
-            DefaultChainedExecutableOnModel job = (DefaultChainedExecutableOnModel) executeJob;
+            val job = (DefaultExecutableOnModel) executeJob;
             Assert.assertEquals(3, job.getTasks().size());
 
             switch (job.getJobType()) {

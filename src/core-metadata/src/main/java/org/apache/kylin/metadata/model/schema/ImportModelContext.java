@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -62,9 +63,10 @@ import org.apache.kylin.metadata.recommendation.entity.MeasureRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.RecItemV2;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
+import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import io.kyligence.kap.guava20.shaded.common.collect.Maps;
+import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
 import lombok.Getter;
 import lombok.val;
@@ -187,6 +189,8 @@ public class ImportModelContext implements AutoCloseable {
                 .mapToInt(Integer::intValue).max().orElse(1);
         int measureMaxId = originalDataModel.getAllMeasures().stream().map(NDataModel.Measure::getId)
                 .mapToInt(Integer::intValue).max().orElse(NDataModel.MEASURE_ID_BASE);
+        Set<Integer> existIds = Sets.newHashSet();
+
         for (NDataModel.NamedColumn namedColumn : newDataModel.getAllNamedColumns()) {
             val exists = originalDataModel.getAllNamedColumns().stream()
                     .anyMatch(original -> Objects.equals(original.getId(), namedColumn.getId())
@@ -197,13 +201,15 @@ public class ImportModelContext implements AutoCloseable {
                 int id = originalDataModel.getAllNamedColumns().stream()
                         .filter(original -> original.getAliasDotColumn().equals(namedColumn.getAliasDotColumn())
                                 && original.isExist() == namedColumn.isExist()
-                                && !idChangedMap.containsValue(original.getId()))
+                                && !idChangedMap.containsValue(original.getId())
+                                && !existIds.contains(original.getId()))
                         .mapToInt(NDataModel.NamedColumn::getId).findFirst().orElse(++columnMaxId);
                 if (!Objects.equals(id, namedColumn.getId())) {
                     idChangedMap.put(namedColumn.getId(), id);
                     namedColumn.setId(id);
                 }
             }
+            existIds.add(namedColumn.getId());
         }
 
         for (NDataModel.Measure measure : newDataModel.getAllMeasures()) {
@@ -216,7 +222,8 @@ public class ImportModelContext implements AutoCloseable {
                 val id = originalDataModel.getAllMeasures().stream()
                         .filter(original -> original.getName().equals(measure.getName())
                                 && original.isTomb() == measure.isTomb()
-                                && !idChangedMap.containsValue(original.getId()))
+                                && !idChangedMap.containsValue(original.getId())
+                                && !existIds.contains(original.getId()))
                         .map(NDataModel.Measure::getId).findFirst().orElse(++measureMaxId);
 
                 if (!Objects.equals(id, measure.getId())) {
@@ -224,6 +231,7 @@ public class ImportModelContext implements AutoCloseable {
                     measure.setId(id);
                 }
             }
+            existIds.add(measure.getId());
         }
 
         return idChangedMap;

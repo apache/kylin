@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.metadata.recommendation.ref.LayoutRef;
+import org.apache.kylin.metadata.recommendation.ref.OptRecV2;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.kylin.common.KylinConfig;
@@ -32,8 +34,6 @@ import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecItem.CostMethod;
-import org.apache.kylin.metadata.recommendation.ref.LayoutRef;
-import org.apache.kylin.metadata.recommendation.ref.OptRecV2;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

@@ -30,6 +30,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.service.SourceTestCase;
+import org.apache.spark.sql.SparderEnv;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Assert;
@@ -136,8 +137,31 @@ public class DataSourceStateTest extends SourceTestCase {
         Map<String, List<String>> testData = new HashMap<>();
         testData.put("t", Arrays.asList("aa", "ab", "bc"));
         sourceInfo.setTables(testData);
-        instance.putCache("project#default", sourceInfo);
+        instance.putCache("project#default", sourceInfo, Arrays.asList("aa", "ab", "bc"));
         Assert.assertFalse(instance.getTables(PROJECT, "t").isEmpty());
+
+        instance.putCache("project#default", sourceInfo, Arrays.asList("t", "d"));
+        List<String> tableList = instance.getTables(PROJECT, "t");
+        Assert.assertFalse(tableList.isEmpty());
+        Assert.assertEquals(3, tableList.size());
+
+        Map<String, List<String>> testData1 = new HashMap<>();
+        NHiveSourceInfo sourceInfo1 = new NHiveSourceInfo();
+        testData1.put("d", Arrays.asList("aa", "cd"));
+        sourceInfo1.setTables(testData1);
+        instance.putCache("project#default", sourceInfo1, Arrays.asList("d"));
+        List<String> tableList1 = instance.getTables(PROJECT, "t");
+        Assert.assertFalse(tableList1.isEmpty());
+        Assert.assertEquals(3, tableList1.size());
+
+        Map<String, List<String>> testData2 = new HashMap<>();
+        NHiveSourceInfo sourceInfo2 = new NHiveSourceInfo();
+        testData2.put("t", Arrays.asList("aa", "cd"));
+        sourceInfo2.setTables(testData2);
+        instance.putCache("project#default", sourceInfo2, Arrays.asList("t"));
+        List<String> tableList2 = instance.getTables(PROJECT, "t");
+        Assert.assertFalse(tableList2.isEmpty());
+        Assert.assertEquals(2, tableList2.size());
     }
 
     @Test
@@ -149,4 +173,14 @@ public class DataSourceStateTest extends SourceTestCase {
         config.setProperty("kylin.source.load-hive-tablename-enabled", "true");
     }
 
+    @Test
+    public void testStartSparder() {
+        ReflectionTestUtils.invokeMethod(DataSourceState.getInstance(), "startSparder");
+        Assert.assertFalse(SparderEnv.isSparkAvailable());
+        KylinConfig config = getTestConfig();
+        config.setProperty("kylin.env", "mock");
+        ReflectionTestUtils.invokeMethod(DataSourceState.getInstance(), "startSparder");
+        Assert.assertTrue(SparderEnv.isSparkAvailable());
+        SparderEnv.getSparkSession().stop();
+    }
 }

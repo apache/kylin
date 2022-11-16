@@ -21,8 +21,6 @@ package org.apache.kylin.engine.spark.utils;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
@@ -56,9 +54,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ComputedColumnEvalUtil {
     private static final int MAX_RENAME_CC_TIME = 99;
-
-    private static final Pattern PATTERN_COLUMN = Pattern
-            .compile("cannot resolve '(.*?)' given input columns: \\[(.*?),(.*?)];");
 
     private ComputedColumnEvalUtil() {
         throw new IllegalAccessError();
@@ -106,14 +101,6 @@ public class ComputedColumnEvalUtil {
             try {
                 evalDataTypeOfCC(computedColumns, SparderEnv.getSparkSession(), nDataModel, i, i + 1);
             } catch (AnalysisException e) {
-                Matcher matcher = PATTERN_COLUMN.matcher(e.getMessage());
-                if (matcher.find()) {
-                    String str = matcher.group(2).replace(NSparkCubingUtil.SEPARATOR, ".");
-                    throw new IllegalCCExpressionException(QueryErrorCode.CC_EXPRESSION_ILLEGAL,
-                            "Cannot find column " + str.substring(0, str.lastIndexOf('.')) + "." + matcher.group(1)
-                                    + ", please check whether schema of related table has changed.");
-                }
-
                 Preconditions.checkNotNull(computedColumns.get(i));
                 throw new IllegalCCExpressionException(QueryErrorCode.CC_EXPRESSION_ILLEGAL,
                         String.format(Locale.ROOT, MsgPicker.getMsg().getCheckCCExpression(),
@@ -127,9 +114,9 @@ public class ComputedColumnEvalUtil {
             NDataModel nDataModel, int start, int end) throws AnalysisException {
         val originDf = generateFullFlatTableDF(ss, nDataModel);
         originDf.persist();
-        Dataset<Row> ds = originDf.selectExpr(computedColumns.subList(start, end).stream() //
-                .map(ComputedColumnDesc::getInnerExpression) //
-                .map(NSparkCubingUtil::convertFromDot).toArray(String[]::new));
+        Dataset<Row> ds = originDf
+                .selectExpr(computedColumns.subList(start, end).stream().map(ComputedColumnDesc::getInnerExpression)
+                        .map(NSparkCubingUtil::convertFromDotWithBackTick).toArray(String[]::new));
         for (int i = start; i < end; i++) {
             String dataType = SparderTypeUtil.convertSparkTypeToSqlType(ds.schema().fields()[i - start].dataType());
             computedColumns.get(i).setDatatype(dataType);
@@ -165,7 +152,7 @@ public class ComputedColumnEvalUtil {
             retryCount++;
             try {
                 // Init ComputedColumn to check CC availability
-                dataModel.initComputedColumns(otherModels);
+                dataModel.initComputedColumnsFailFast(otherModels);
                 // No exception, check passed
                 return true;
             } catch (BadModelException e) {

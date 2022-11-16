@@ -25,7 +25,7 @@ import lombok.val;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.SecondStorageCleanJobBuildParams;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -34,7 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ClickHouseSegmentCleanJob extends DefaultChainedExecutable {
+public class ClickHouseSegmentCleanJob extends DefaultExecutable {
 
     public ClickHouseSegmentCleanJob() {}
 

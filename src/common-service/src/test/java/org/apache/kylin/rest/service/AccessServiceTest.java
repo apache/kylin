@@ -18,41 +18,58 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_GROUP_NOT_EXIST;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.request.AccessRequest;
+import org.apache.kylin.rest.request.GlobalAccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AclPermissionFactory;
+import org.apache.kylin.rest.security.AclRecord;
+import org.apache.kylin.rest.security.CompositeAclPermission;
 import org.apache.kylin.rest.security.MutableAclRecord;
+import org.apache.kylin.rest.security.UserAclManager;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.rest.util.SpringContext;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.rest.request.AccessRequest;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -81,8 +98,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import org.apache.kylin.metadata.user.ManagedUser;
+
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SpringContext.class, UserGroupInformation.class })
+@PrepareForTest({ SpringContext.class, UserGroupInformation.class, KylinConfig.class, NProjectManager.class })
 public class AccessServiceTest extends NLocalFileMetadataTestCase {
 
     @InjectMocks
@@ -99,6 +118,9 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
 
     @Mock
     UserService userService = Mockito.spy(UserService.class);
+
+    @Mock
+    UserAclService userAclService = Mockito.spy(UserAclService.class);
 
     @Mock
     AclEvaluate aclEvaluate = Mockito.spy(AclEvaluate.class);
@@ -123,6 +145,8 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
+        ReflectionTestUtils.setField(userAclService, "userService", userService);
+        getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "false");
 
         // Init users
         ManagedUser adminUser = new ManagedUser("ADMIN", "KYLIN", false, Arrays.asList(//
@@ -143,6 +167,7 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         Mockito.when(userService.userExists("MODELER")).thenReturn(true);
         Mockito.when(userService.userExists("ANALYST")).thenReturn(true);
         Mockito.when(userService.getGlobalAdmin()).thenReturn(Sets.newHashSet("ADMIN"));
+        Mockito.when(userService.listSuperAdminUsers()).thenReturn(Lists.newArrayList("ADMIN"));
 
         // for SpringContext.getBean() in AclManager
 
@@ -160,7 +185,7 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testBasics() {
+    public void testBasics() throws IOException {
         Sid adminSid = accessService.getSid("ADMIN", true);
         Assert.assertNotNull(adminSid);
         Assert.assertNotNull(AclPermissionFactory.getPermissions());
@@ -180,6 +205,7 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         assertEquals("ADMIN", ((PrincipalSid) acl.getOwner()).getPrincipal());
         assertEquals(1, accessService.generateAceResponses(acl).size());
         AccessEntryResponse aer = accessService.generateAceResponses(acl).get(0);
+        assertTrue(CollectionUtils.isEmpty(aer.getExtPermissions()));
         checkResult(ae, aer);
 
         // test grant
@@ -216,6 +242,17 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
             }
         }
 
+        acl = accessService.update(ae, modelerEntryId,
+                new CompositeAclPermission(AclPermission.READ, Arrays.asList(AclPermission.DATA_QUERY)));
+        for (AccessControlEntry ace : acl.getEntries()) {
+            PrincipalSid sid = (PrincipalSid) ace.getSid();
+
+            if (sid.getPrincipal().equals("MODELER")) {
+                modelerEntryId = (Integer) ace.getId();
+                assertTrue(AclPermissionUtil.hasQueryPermission(ace.getPermission()));
+            }
+        }
+
         accessService.clean(attachedEntity, true);
 
         Acl attachedEntityAcl = accessService.getAcl(attachedEntity);
@@ -245,6 +282,31 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertNull(attachedEntityAcl);
     }
 
+    @Test
+    public void testCompositeAclPermission() {
+        AclEntity ae = new AclServiceTest.MockAclEntity("test-domain-object");
+        Acl acl = accessService.getAcl(ae);
+        Assert.assertNull(acl);
+        getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "false");
+        Sid modeler = accessService.getSid("MODELER", true);
+        acl = accessService.grant(ae, AclPermission.MANAGEMENT, modeler);
+        Assert.assertEquals(32, acl.getEntries().get(0).getPermission().getMask());
+
+        getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "true");
+        acl = accessService.grant(ae, AclPermission.MANAGEMENT, modeler);
+        Assert.assertEquals(160, acl.getEntries().get(0).getPermission().getMask());
+    }
+
+    @Test
+    public void testUpdateExtensionPermissionException() {
+        Assert.assertThrows(MsgPicker.getMsg().getAclDomainNotFound(), KylinException.class,
+                () -> accessService.updateExtensionPermission(null, null));
+        UserAclManager.getInstance(getTestConfig()).deletePermission("admin", AclPermission.DATA_QUERY);
+        Mockito.when(userService.listSuperAdminUsers()).thenReturn(Collections.emptyList());
+        ThrowingRunnable func = () -> accessService.updateExtensionPermission(new AclRecord(), null);
+        Assert.assertThrows(MsgPicker.getMsg().getAclPermissionRequired(), KylinException.class, func);
+    }
+
     private void checkResult(AclEntity ae, AccessEntryResponse aer) {
         Assert.assertNotNull(aer.getId());
         Assert.assertSame(AclPermission.ADMINISTRATION, aer.getPermission());
@@ -265,32 +327,68 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testBatchGrantAndRevoke() {
         AclEntity ae = new AclServiceTest.MockAclEntity("batch-grant");
-        final Map<Sid, Permission> sidToPerm = new HashMap<>();
-        for (int i = 0; i < 10; i++) {
-            sidToPerm.put(new PrincipalSid("u" + i), AclPermission.ADMINISTRATION);
+        // data-permission-default-enabled:true
+        {
+            getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "true");
+            List<AccessRequest> requests = Lists.newArrayList();
+            for (int i = 0; i < 10; i++) {
+                requests.add(createAccessRequest("u" + i, "ADMINISTRATION"));
+            }
+
+            accessService.batchGrant(requests, ae);
+            MutableAclRecord acl = accessService.getAcl(ae);
+            List<AccessControlEntry> e = acl.getEntries();
+            assertEquals(10, e.size());
+            for (int i = 0; i < e.size(); i++) {
+                assertEquals(new PrincipalSid("u" + i), e.get(i).getSid());
+                assertTrue(AclPermissionUtil.hasQueryPermission(e.get(0).getPermission()));
+            }
+
+            //test batch revoke
+            accessService.batchRevoke(ae, requests);
+            acl = accessService.getAcl(ae);
+            e = acl.getEntries();
+            assertEquals(0, e.size());
         }
-        accessService.batchGrant(ae, sidToPerm);
-        MutableAclRecord acl = accessService.getAcl(ae);
-        List<AccessControlEntry> e = acl.getEntries();
-        assertEquals(10, e.size());
-        for (int i = 0; i < e.size(); i++) {
-            assertEquals(new PrincipalSid("u" + i), e.get(i).getSid());
+        // data-permission-default-enabled:false
+        {
+            getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "false");
+            List<AccessRequest> requests = Lists.newArrayList(createAccessRequest("u1", "ADMINISTRATION"));
+
+            accessService.batchGrant(requests, ae);
+            MutableAclRecord acl = accessService.getAcl(ae);
+            List<AccessControlEntry> e = acl.getEntries();
+            assertEquals(1, e.size());
+            assertEquals(new PrincipalSid("u1"), e.get(0).getSid());
+            assertFalse(AclPermissionUtil.hasQueryPermission(e.get(0).getPermission()));
+
+            accessService.batchRevoke(ae, requests);
         }
-        //test batch revoke
-        List<AccessRequest> requests = Lists.newArrayList();
-        for (int i = 0; i < 10; i++) {
-            AccessRequest request = new AccessRequest();
-            request.setSid("u" + i);
-            request.setPrincipal(true);
-            requests.add(request);
+        {
+            List<AccessRequest> requests = Lists.newArrayList(createAccessRequest("u1", ""));
+            accessService.batchGrant(requests, ae);
+            MutableAclRecord acl = accessService.getAcl(ae);
+            List<AccessControlEntry> e = acl.getEntries();
+            assertEquals(0, e.size());
         }
-        accessService.batchRevoke(ae, requests);
-        acl = accessService.getAcl(ae);
-        e = acl.getEntries();
-        assertEquals(0, e.size());
+
+        // for group ALL_USERS
+        Sid sid = new GrantedAuthoritySid("ALL_USERS");
+        accessService.batchGrant(ae, Collections.singletonMap(sid,
+                new CompositeAclPermission(AclPermission.MANAGEMENT, Arrays.asList(AclPermission.DATA_QUERY))));
+        Assert.assertTrue(AclPermissionUtil.isSpecificPermissionInProject("ALL_USERS", AclPermission.DATA_QUERY,
+                accessService.getAcl(ae)));
 
         thrown.expect(KylinException.class);
-        accessService.batchRevoke(null, requests);
+        accessService.batchRevoke(null, Collections.emptyList());
+    }
+
+    private AccessRequest createAccessRequest(String sid, String permission) {
+        AccessRequest request = new AccessRequest();
+        request.setSid(sid);
+        request.setPrincipal(true);
+        request.setPermission(permission);
+        return request;
     }
 
     @Ignore("just ignore")
@@ -363,6 +461,17 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testHasProjectAdminPermission() {
+        MutableAclRecord ace = AclPermissionUtil.getProjectAcl("default");
+        aclService.upsertAce(ace, new PrincipalSid("czw9976"), AclPermission.ADMINISTRATION);
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("czw9976", "czw9976", Constant.ROLE_MODELER));
+        Assert.assertTrue(AclPermissionUtil.hasProjectAdminPermission("default", accessService.getCurrentUserGroups()));
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+    }
+
+    @Test
     public void testRevokeWithSid() {
         AclEntity ae = new AclServiceTest.MockAclEntity("test-domain-object");
         accessService.init(ae, AclPermission.ADMINISTRATION);
@@ -384,16 +493,99 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testAdminUserExtPermissionInProject() {
+        assertTrue(accessService.getUserNormalExtPermissions("default").contains("DATA_QUERY"));
+        GlobalAccessRequest globalAccessRequest = new GlobalAccessRequest();
+        globalAccessRequest.setUsername("ADMIN");
+        globalAccessRequest.setProject("default");
+        Mockito.when(userService.listSuperAdminUsers()).thenReturn(Collections.emptyList());
+        userAclService.getManager(UserAclManager.class).addDataQueryProject("ADMIN", "default");
+        Mockito.when(userAclService.canAdminUserQuery(Mockito.anyString())).thenReturn(false);
+        assertTrue(accessService.getUserNormalExtPermissions("default").contains("DATA_QUERY"));
+    }
+
+    @Test
+    public void testExtPermissionInProject() {
+        AclEntity ae = new AclServiceTest.MockAclEntity("test-domain-object");
+        accessService.init(ae, AclPermission.ADMINISTRATION);
+
+        Sid modeler = accessService.getSid("MODELER", true);
+        Acl acl = accessService.grant(ae, AclPermission.ADMINISTRATION, modeler);
+
+        int modelerEntryId = 0;
+        for (AccessControlEntry ace : acl.getEntries()) {
+            PrincipalSid sid = (PrincipalSid) ace.getSid();
+
+            if (sid.getPrincipal().equals("MODELER")) {
+                modelerEntryId = (Integer) ace.getId();
+                Assert.assertSame(AclPermission.ADMINISTRATION, ace.getPermission());
+            }
+        }
+
+        // test update Extension Permission
+        AccessRequest accessRequest = new AccessRequest();
+        accessRequest.setSid("MODELER");
+        accessRequest.setPrincipal(true);
+        accessRequest.setAccessEntryId(modelerEntryId);
+        accessRequest.setExtPermissions(Collections.singletonList("DATA_QUERY"));
+        acl = accessService.updateExtensionPermission(ae, accessRequest);
+        assertEquals(2, accessService.generateAceResponses(acl).size());
+
+        for (AccessControlEntry ace : acl.getEntries()) {
+            PrincipalSid sid = (PrincipalSid) ace.getSid();
+
+            if (sid.getPrincipal().equals("MODELER")) {
+                modelerEntryId = (Integer) ace.getId();
+                assertInstanceOf(CompositeAclPermission.class, ace.getPermission());
+                Assert.assertTrue(((CompositeAclPermission) ace.getPermission()).getExtPermissions()
+                        .contains(AclPermission.DATA_QUERY));
+            }
+        }
+
+        // test delete DATA_QUERY permission
+        AccessRequest accessRequestd = new AccessRequest();
+        accessRequestd.setSid("MODELER");
+        accessRequestd.setPrincipal(true);
+        accessRequestd.setExtPermissions(Collections.emptyList());
+        acl = accessService.updateExtensionPermission(ae, accessRequestd);
+        assertEquals(2, accessService.generateAceResponses(acl).size());
+
+        for (AccessControlEntry ace : acl.getEntries()) {
+            PrincipalSid sid = (PrincipalSid) ace.getSid();
+
+            if (sid.getPrincipal().equals("MODELER")) {
+                assertNotEquals(CompositeAclPermission.class, ace.getPermission().getClass());
+            }
+        }
+
+        // test get User Ext Permissions
+        accessService.updateExtensionPermission(ae, accessRequest);
+        assertTrue(accessService.getUserNormalExtPermissions("test-domain-object", "MODELER").contains(128));
+
+        PowerMockito.mockStatic(KylinConfig.class);
+        PowerMockito.mockStatic(NProjectManager.class);
+        KylinConfig kylinConfig = mock(KylinConfig.class);
+        NProjectManager nProjectManager = mock(NProjectManager.class);
+        ProjectInstance projectInstance = mock(ProjectInstance.class);
+        PowerMockito.when(KylinConfig.getInstanceFromEnv()).thenReturn(kylinConfig);
+        PowerMockito.when(NProjectManager.getInstance(any())).thenReturn(nProjectManager);
+        when(nProjectManager.getProject(anyString())).thenReturn(projectInstance);
+        when(projectInstance.getUuid()).thenReturn("test-domain-object");
+        assertTrue(accessService.getUserNormalExtPermissions("test-domain-object").contains("DATA_QUERY"));
+
+    }
+
+    @Test
     public void testGetGrantedProjectsOfUser() throws IOException {
         List<String> result = accessService.getGrantedProjectsOfUser("ADMIN");
-        assertEquals(26, result.size());
+        assertEquals(27, result.size());
     }
 
     @Test
     public void testGetGrantedProjectsOfUserOrGroup() throws IOException {
         // admin user
         List<String> result = accessService.getGrantedProjectsOfUserOrGroup("ADMIN", true);
-        assertEquals(26, result.size());
+        assertEquals(27, result.size());
 
         // normal user
         result = accessService.getGrantedProjectsOfUserOrGroup("ANALYST", true);
@@ -424,7 +616,7 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetGrantedProjectsOfUserOrGroupWithNotExistGroup() throws IOException {
-        thrown.expectMessage("Operation failed, group:[nogroup] not exists, please add it first");
+        thrown.expectMessage(USER_GROUP_NOT_EXIST.getMsg("nogroup"));
         accessService.getGrantedProjectsOfUserOrGroup("nogroup", false);
     }
 
@@ -438,6 +630,8 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testCheckAccessRequestList() throws IOException {
+        Mockito.when(userGroupService.getAllUserGroups()).thenReturn(Arrays.asList("ALL_USERS", "MANAGEMENT"));
+
         List<AccessRequest> accessRequests = new ArrayList<>();
         AccessRequest accessRequest = new AccessRequest();
         accessRequest.setAccessEntryId(0);
@@ -461,6 +655,8 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
     public void testCheckSid() throws IOException {
         accessService.checkSid(new ArrayList<>());
 
+        thrown.expectMessage("User/Group name should not be empty.");
+
         List<AccessRequest> accessRequests = new ArrayList<>();
         AccessRequest accessRequest = new AccessRequest();
         accessRequest.setAccessEntryId(0);
@@ -469,6 +665,8 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         accessRequest.setPrincipal(true);
         accessRequests.add(accessRequest);
         accessService.checkSid(accessRequests);
+
+        Mockito.when(userGroupService.getAllUserGroups()).thenReturn(Arrays.asList("ALL_USERS", "MANAGEMENT"));
 
         accessService.checkSid("ADMIN", true);
 
@@ -498,7 +696,7 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testCheckSidWithNotExistGroup() throws IOException {
-        thrown.expectMessage("Operation failed, group:[nogroup] not exists, please add it first");
+        thrown.expectMessage(USER_GROUP_NOT_EXIST.getMsg("nogroup"));
         accessService.checkSid("nogroup", false);
     }
 
@@ -519,9 +717,12 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetProjectUsersAndGroups() throws IOException {
+        Mockito.when(userService.getGlobalAdmin()).thenReturn(Sets.newHashSet("ADMIN", "CCL6911"));
+        assertTrue(userService.getGlobalAdmin().contains("CCL6911"));
         AclEntity ae = accessService.getAclEntity(AclEntityType.PROJECT_INSTANCE,
                 "1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b");
         Map<String, List<String>> map = accessService.getProjectUsersAndGroups(ae);
+        assertEquals(4, map.get("user").size());
         assertTrue(map.get("user").contains("ADMIN"));
         assertTrue(map.get("group").contains("ROLE_ADMIN"));
     }
@@ -544,6 +745,8 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
 
         entries = acl.getEntries();
         assertEquals(7, entries.size());
+        assertEquals(BasePermission.ADMINISTRATION, entries.get(5).getPermission());
+        assertFalse(AclPermissionUtil.hasQueryPermission(entries.get(5).getPermission()));
 
         assertEquals("ADL6911", ((GrantedAuthoritySid) entries.get(0).getSid()).getGrantedAuthority());
         assertEquals("BDL6911", ((GrantedAuthoritySid) entries.get(1).getSid()).getGrantedAuthority());
@@ -560,6 +763,26 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         entries = acl.getEntries();
         checkAcl(entries);
 
+    }
+
+    @Test
+    public void testAclWithUnNaturalOrderUpdate() {
+        AclEntity ae = accessService.getAclEntity(AclEntityType.PROJECT_INSTANCE,
+                "1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b");
+
+        // read from metadata
+        MutableAclRecord acl = accessService.getAcl(ae);
+        // order by sid_order in aceImpl
+        // ADL6911(group), BDL6911(group), aCL6911(group), ACZ5815(user), ACZ5815(user), czw9976(user)
+        List<AccessControlEntry> entries = acl.getEntries();
+
+        checkEntries(entries);
+
+        // grant
+        acl = accessService.grant(ae, BasePermission.ADMINISTRATION, accessService.getSid("atest1", true));
+
+        entries = acl.getEntries();
+
         // update atest1
         assertEquals(BasePermission.ADMINISTRATION, entries.get(5).getPermission());
 
@@ -573,7 +796,20 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         assertEquals("atest1", ((PrincipalSid) entries.get(5).getSid()).getPrincipal());
         assertEquals(BasePermission.READ, entries.get(5).getPermission());
 
-        Assert.assertThrows(KylinException.class, () -> accessService.update(null, 5, BasePermission.READ));
+        acl = accessService.update(ae, 1,
+                new CompositeAclPermission(BasePermission.ADMINISTRATION, Arrays.asList(AclPermission.DATA_QUERY)));
+        entries = acl.getEntries();
+        assertTrue(AclPermissionUtil.hasQueryPermission(entries.get(1).getPermission()));
+        assertTrue(AclPermissionUtil.hasExtPermission(entries.get(1).getPermission()));
+        assertEquals(144, entries.get(1).getPermission().getMask());
+        assertEquals(BasePermission.ADMINISTRATION,
+                AclPermissionUtil.convertToBasePermission(entries.get(1).getPermission()));
+        assertTrue(AclPermissionUtil.convertToCompositePermission(entries.get(1).getPermission()).getExtPermissions()
+                .contains(AclPermission.DATA_QUERY));
+        AccessEntryResponse aer = accessService.generateAceResponses(acl).get(1);
+        assertEquals(AclPermission.DATA_QUERY, aer.getExtPermissions().get(0));
+
+        Assert.assertThrows(KylinException.class, () -> accessService.update(null, 5, AclPermission.DATA_QUERY));
         Assert.assertThrows(KylinException.class, () -> accessService.update(ae, 5, null));
 
     }
@@ -598,5 +834,50 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         assertEquals("ACZ5815", ((PrincipalSid) entries.get(3).getSid()).getPrincipal());
         assertEquals("CCL6911", ((PrincipalSid) entries.get(4).getSid()).getPrincipal());
         assertEquals("czw9976", ((PrincipalSid) entries.get(5).getSid()).getPrincipal());
+    }
+
+    @Test
+    public void testSetPermissions() {
+        Sid sid = new PrincipalSid("user1");
+        AccessEntryResponse accessEntryResponse = new AccessEntryResponse("1L", sid, BasePermission.ADMINISTRATION,
+                true);
+        CompositeAclPermission compositeAclPermission = new CompositeAclPermission(AclPermission.MANAGEMENT);
+        compositeAclPermission.addExtPermission(AclPermission.DATA_QUERY);
+        Assert.assertTrue(compositeAclPermission.getExtMasks().contains(AclPermission.DATA_QUERY.getMask()));
+        accessEntryResponse.setPermission(compositeAclPermission);
+        Assert.assertEquals(AclPermission.MANAGEMENT, accessEntryResponse.getPermission());
+        Assert.assertTrue(accessEntryResponse.getExtPermissions().contains(AclPermission.DATA_QUERY));
+
+    }
+
+    @Test
+    public void testBatchCheckSidWithEmptyGroup() throws IOException {
+        thrown.expectMessage("User/Group name should not be empty.");
+        accessService.batchCheckSid("", false, null);
+    }
+
+    @Test
+    public void testBatchCheckSidWithEmptyUser() throws IOException {
+        thrown.expectMessage("User/Group name should not be empty.");
+        accessService.batchCheckSid("", true, null);
+    }
+
+    @Test
+    public void testBatchCheckSidWithEmptyAllGroups() throws IOException {
+        thrown.expectMessage("User/Group name should not be empty.");
+        accessService.batchCheckSid("group1", false, null);
+    }
+
+    @Test
+    public void testBatchCheckSidWithNotExistUser() throws IOException {
+        thrown.expectMessage("Operation failed, user:[nouser] not exists, please add it first");
+        accessService.batchCheckSid("nouser", true, null);
+    }
+
+    @Test
+    public void testBatchCheckSidWithNotExistGroup() throws IOException {
+        thrown.expectMessage(USER_GROUP_NOT_EXIST.getMsg("nogroup"));
+        List<String> existed = Arrays.asList("group1", "group2");
+        accessService.batchCheckSid("nogroup", false, existed);
     }
 }

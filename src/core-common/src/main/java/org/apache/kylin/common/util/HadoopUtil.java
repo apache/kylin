@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.common.util;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.FILE_NOT_EXIST;
@@ -54,13 +36,15 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.Writable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.storage.IStorageProvider;
 import org.slf4j.Logger;
@@ -70,11 +54,16 @@ import lombok.val;
 import lombok.var;
 
 public class HadoopUtil {
+    private HadoopUtil() {
+        throw new IllegalStateException("Utility class");
+    }
 
     public static final String JOB_TMP_ROOT = "/job_tmp";
+    public static final String SOURCE_TABLE_STATS_ROOT = "/source_table_stats";
     public static final String PARQUET_STORAGE_ROOT = "/parquet";
     public static final String DICT_STORAGE_ROOT = "/dict";
     public static final String GLOBAL_DICT_STORAGE_ROOT = DICT_STORAGE_ROOT + "/global_dict";
+    public static final String GLOBAL_DICT_V3_STORAGE_ROOT = DICT_STORAGE_ROOT + "/global_dict_v3";
     public static final String SNAPSHOT_STORAGE_ROOT = "/table_snapshot";
     public static final String FLAT_TABLE_STORAGE_ROOT = "/flat_table";
     public static final String FAST_BITMAP_SUFFIX = "_fast_bitmap";
@@ -88,6 +77,7 @@ public class HadoopUtil {
         hadoopConfig.set(conf);
     }
 
+    public static final String LOCAL_FILE_PREFIX = "file:///";
     public static final String FILE_PREFIX = "file://";
     public static final String MAPR_FS_PREFIX = "maprfs://";
 
@@ -103,7 +93,7 @@ public class HadoopUtil {
 
     public static Configuration newLocalConfiguration() {
         Configuration conf = new Configuration(false);
-        conf.set("fs.default.name", "file:///");
+        conf.set("fs.default.name", LOCAL_FILE_PREFIX);
         return conf;
     }
 
@@ -156,7 +146,7 @@ public class HadoopUtil {
         }
 
         if (StringUtils.isEmpty(hadoopConf) && !config.isUTEnv()) {
-            throw new RuntimeException(
+            throw new KylinRuntimeException(
                     "kylin_hadoop_conf_dir is empty, check if there's error in the output of 'kylin.sh start'");
         }
         return hadoopConf;
@@ -165,6 +155,10 @@ public class HadoopUtil {
     //add sonar rule:  filesystem.get forbidden
     public static FileSystem getWorkingFileSystem() {
         return getFileSystem(KylinConfig.readSystemKylinConfig().getHdfsWorkingDirectory(null));
+    }
+
+    public static FileSystem getWritingClusterFileSystem() {
+        return getFileSystem(KylinConfig.readSystemKylinConfig().getWritingClusterWorkingDir());
     }
 
     public static FileSystem getWorkingFileSystem(Configuration conf) {
@@ -189,7 +183,7 @@ public class HadoopUtil {
         try {
             return path.getFileSystem(conf);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new KylinRuntimeException(e);
         }
     }
 
@@ -204,14 +198,14 @@ public class HadoopUtil {
     public static String fixWindowsPath(String path) {
         // fix windows path
         if (path.startsWith("C:\\") || path.startsWith("D:\\")) {
-            path = "file:///" + path;
+            path = LOCAL_FILE_PREFIX + path;
         } else if (path.startsWith("C:/") || path.startsWith("D:/")) {
-            path = "file:///" + path;
-        } else if (path.startsWith(FILE_PREFIX) && !path.startsWith("file:///") && path.contains(":\\")) {
-            path = path.replace(FILE_PREFIX, "file:///");
+            path = LOCAL_FILE_PREFIX + path;
+        } else if (path.startsWith(FILE_PREFIX) && !path.startsWith(LOCAL_FILE_PREFIX) && path.contains(":\\")) {
+            path = path.replace(FILE_PREFIX, LOCAL_FILE_PREFIX);
         }
 
-        if (path.startsWith("file:///")) {
+        if (path.startsWith(LOCAL_FILE_PREFIX)) {
             path = path.replace('\\', '/');
         }
         return path;
@@ -247,7 +241,7 @@ public class HadoopUtil {
             bout.close();
             return bout.toByteArray();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new KylinRuntimeException(e);
         }
     }
 
@@ -256,12 +250,7 @@ public class HadoopUtil {
             return null;
         }
 
-        FileStatus[] fileStatus = fs.listStatus(baseDir, new PathFilter() {
-            @Override
-            public boolean accept(Path path) {
-                return path.getName().startsWith(filter);
-            }
-        });
+        FileStatus[] fileStatus = fs.listStatus(baseDir, path -> path.getName().startsWith(filter));
 
         if (fileStatus.length == 1) {
             return fileStatus[0].getPath();
@@ -300,6 +289,13 @@ public class HadoopUtil {
         return provider.getContentSummary(fileSystem, path);
     }
 
+    public static ContentSummary getContentSummaryFromHdfsKylinConfig(FileSystem fileSystem, Path path,
+            KylinConfig kylinConfig) throws IOException {
+        IStorageProvider provider = (IStorageProvider) ClassUtil.newInstance(kylinConfig.getStorageProvider());
+        logger.trace("Use provider:{}", provider.getClass().getCanonicalName());
+        return provider.getContentSummary(fileSystem, path);
+    }
+
     public static List<FileStatus> getFileStatusPathsFromHDFSDir(String resPath, boolean isFile) {
         try {
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
@@ -327,5 +323,27 @@ public class HadoopUtil {
             ExceptionUtils.rethrow(new IOException(String.format(Locale.ROOT, "mkdir %s error", resPath), e));
         }
 
+    }
+
+    public static void writeStringToHdfs(String content, Path path) throws IOException {
+        FileSystem fileSystem = getWorkingFileSystem();
+        writeStringToHdfs(fileSystem, content, path);
+    }
+
+    public static void writeStringToHdfs(FileSystem fileSystem, String content, Path path) throws IOException {
+        try (FSDataOutputStream outputStream = fileSystem.create(path)) {
+            outputStream.writeUTF(content);
+        }
+    }
+
+    public static String readStringFromHdfs(FileSystem fileSystem, Path path) throws IOException {
+        try (FSDataInputStream inputStream = fileSystem.open(path)) {
+            return inputStream.readUTF();
+        }
+    }
+
+    public static String readStringFromHdfs(Path path) throws IOException {
+        FileSystem fileSystem = getWorkingFileSystem();
+        return readStringFromHdfs(fileSystem, path);
     }
 }

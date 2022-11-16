@@ -133,10 +133,6 @@ object KapDateTimeUtils {
     guess
   }
 
-  def dayOfWeek(date: Int): Int = {
-    (date + 4) % 7 + 1
-  }
-
   /**
    * Add date and year-month interval.
    * Returns a date value, expressed in days since 1.1.1970.

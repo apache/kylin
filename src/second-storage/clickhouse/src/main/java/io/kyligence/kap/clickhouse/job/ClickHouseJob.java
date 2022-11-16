@@ -24,7 +24,7 @@ import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.factory.JobFactory;
 
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 
-public class ClickHouseJob extends DefaultChainedExecutable {
+public class ClickHouseJob extends DefaultExecutable {
 
     private static void wrapWithKylinException(final Runnable lambda) {
         try {

@@ -18,23 +18,9 @@
 
 package io.kyligence.kap.clickhouse.job;
 
-import com.google.common.base.Preconditions;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.metadata.cube.model.NBatchConstants;
-import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
-import io.kyligence.kap.secondstorage.SecondStorage;
-import io.kyligence.kap.secondstorage.SecondStorageConstants;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.metadata.TableData;
-import io.kyligence.kap.secondstorage.metadata.TableFlow;
-import io.kyligence.kap.secondstorage.metadata.TablePlan;
-import lombok.val;
-import org.apache.kylin.job.SecondStorageJobParamUtil;
-import org.apache.kylin.job.handler.SecondStorageIndexCleanJobHandler;
-import org.apache.kylin.job.manager.JobManager;
-import org.apache.kylin.job.model.JobParam;
+import static io.kyligence.kap.secondstorage.SecondStorageConstants.P_OLD_SEGMENT_IDS;
 
-import javax.annotation.concurrent.NotThreadSafe;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,7 +30,29 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.kyligence.kap.secondstorage.SecondStorageConstants.P_OLD_SEGMENT_IDS;
+import javax.annotation.concurrent.NotThreadSafe;
+
+import org.apache.kylin.common.SegmentOnlineMode;
+import org.apache.kylin.job.SecondStorageJobParamUtil;
+import org.apache.kylin.job.handler.SecondStorageIndexCleanJobHandler;
+import org.apache.kylin.job.manager.JobManager;
+import org.apache.kylin.job.model.JobParam;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+
+import com.google.common.base.Preconditions;
+
+import io.kyligence.kap.secondstorage.SecondStorage;
+import io.kyligence.kap.secondstorage.SecondStorageConstants;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import io.kyligence.kap.secondstorage.metadata.TableData;
+import io.kyligence.kap.secondstorage.metadata.TableFlow;
+import io.kyligence.kap.secondstorage.metadata.TablePlan;
+import lombok.val;
 
 @NotThreadSafe
 public class ClickHouseRefresh extends ClickHouseLoad {
@@ -82,10 +90,20 @@ public class ClickHouseRefresh extends ClickHouseLoad {
     }
 
     @Override
-    protected void updateMeta() {
-        super.updateMeta();
-
+    protected void beforeDataCommit() {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            getTableFlow().update(copied -> copied.all().forEach(tableData ->
+                    tableData.removePartitions(p -> oldSegmentIds.contains(p.getSegmentId()))
+            ));
+            return null;
+        }, project, 1, getEpochId());
+    }
+
+    @Override
+    protected void updateMeta() {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            super.updateMeta();
+
             getTableFlow().update(copied -> copied.all().forEach(tableData ->
                     tableData.removePartitions(p -> oldSegmentIds.contains(p.getSegmentId()))
             ));
@@ -104,7 +122,7 @@ public class ClickHouseRefresh extends ClickHouseLoad {
             }
 
             return null;
-        }, project, 1, UnitOfWork.DEFAULT_EPOCH_ID);
+        }, project, 1, getEpochId());
     }
 
     private TableFlow getTableFlow() {
@@ -116,5 +134,50 @@ public class ClickHouseRefresh extends ClickHouseLoad {
         val tablePlanManager = SecondStorageUtil.tablePlanManager(getConfig(), project);
         Preconditions.checkState(tablePlanManager.isPresent());
         return tablePlanManager.get().get(getTargetSubject()).orElse(null);
+    }
+
+    @Override
+    protected void updateDFSSegmentIfNeeded(MethodContext mc) {
+        if (!isDAGJobScheduler()) {
+            return;
+        }
+
+        if (!SegmentOnlineMode.ANY.toString().equalsIgnoreCase(getProjectConfig().getKylinEngineSegmentOnlineMode())) {
+            return;
+        }
+
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            final NDataflowManager dfMgr = NDataflowManager.getInstance(getConfig(), getProject());
+            val dataFlow = dfMgr.getDataflow(mc.getDataflowId()).copy();
+            NDataflowUpdate update = new NDataflowUpdate(mc.getDf().getId());
+            List<NDataSegment> toUpdateSegments = new ArrayList<>(oldSegmentIds.size());
+            List<NDataSegment> toRemoveSegments = new ArrayList<>(oldSegmentIds.size());
+
+            for (Map.Entry<String, String> entry : newSegToOld.entrySet()) {
+                String newSegmentId = entry.getKey();
+                String oldSegmentId = entry.getValue();
+
+                NDataSegment newSegment = dataFlow.getSegment(newSegmentId);
+                NDataSegment oldSegment = dataFlow.getSegment(oldSegmentId);
+
+                if (newSegment == null || newSegment.getStatus() != SegmentStatusEnum.NEW) {
+                    continue;
+                }
+
+                newSegment.setStatus(SegmentStatusEnum.READY);
+                toUpdateSegments.add(newSegment);
+
+                if (oldSegment != null) {
+                    toRemoveSegments.add(oldSegment);
+                }
+            }
+
+            update.setToRemoveSegs(toRemoveSegments.toArray(new NDataSegment[0]));
+            update.setToUpdateSegs(toUpdateSegments.toArray(new NDataSegment[0]));
+            dfMgr.updateDataflowWithoutIndex(update);
+
+            markDFStatus(mc.getDataflowId());
+            return null;
+        }, project, 1, getEpochId());
     }
 }

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -48,6 +49,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -355,5 +357,69 @@ public class JobControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
         Mockito.verify(jobController).updateSparkJobTime(request);
+    }
+
+    @Test
+    public void testProfileStartByProject() throws Exception {
+        String project = "default";
+        String jobStepId = "0cb5ea2e-adfe-be86-a04a-e2d385fd27ad-c11baf56-a593-4c5f-d546-1fa86c2d54ad_01";
+        String params = "start,event=cpu";
+
+        Mockito.doNothing().when(jobService).startProfileByProject(project, jobStepId, params);
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs/profile/start_project")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("project", project)
+                        .param("step_id", jobStepId)
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+
+        Mockito.verify(jobController).profile(project, jobStepId, params, mvcResult.getRequest());
+    }
+
+    @Test
+    public void testProfileStopByProject() throws Exception {
+        String project = "default";
+        String jobStepId = "0cb5ea2e-adfe-be86-a04a-e2d385fd27ad-c11baf56-a593-4c5f-d546-1fa86c2d54ad_01";
+        String params = "flamegraph";
+
+        Mockito.doNothing().when(jobService).dumpProfileByProject(project, jobStepId, params, new Pair<>());
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs/profile/dump_project")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("project", project)
+                        .param("step_id", jobStepId)
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+
+        Mockito.verify(jobController).stopProfile(project, jobStepId, params, mvcResult.getRequest(), mvcResult.getResponse());
+    }
+
+    @Test
+    public void testProfileStartByYarnAppId() throws Exception {
+        String yarnAppId = "application_1554187389076_9296";
+        String params = "start,event=cpu";
+
+        Mockito.doNothing().when(jobService).startProfileByYarnAppId(yarnAppId, params);
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs/profile/start_appid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("app_id", yarnAppId)
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+
+        Mockito.verify(jobController).profileByYarnAppId(yarnAppId, params, mvcResult.getRequest());
+    }
+
+    @Test
+    public void testProfileStopByYarnAppId() throws Exception {
+        String yarnAppId = "application_1554187389076_9296";
+        String params = "flamegraph";
+
+        Mockito.doNothing().when(jobService).dumpProfileByYarnAppId(yarnAppId, params, new Pair<>());
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs/profile/dump_appid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("app_id", yarnAppId)
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+
+        Mockito.verify(jobController).stopProfileByYarnAppId(yarnAppId, params, mvcResult.getRequest(), mvcResult.getResponse());
     }
 }

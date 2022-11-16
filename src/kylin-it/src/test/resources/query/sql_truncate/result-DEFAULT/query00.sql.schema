@@ -1,1 +1,0 @@
-`TEST_KYLIN_FACT_TRANS_ID` BIGINT,`truncate(PRICE, 0)` DECIMAL(19,4),`truncate(sum(PRICE), -1)` DECIMAL(29,4),`truncate(sum(PRICE), 0)` DECIMAL(29,4),`truncate(sum(PRICE), 10)` DECIMAL(29,4),`truncate((sum(PRICE) * 1.00001), -1)` DECIMAL(36,9),`truncate((sum(PRICE) - 1.00001), 0)` DECIMAL(31,5),`truncate((sum(PRICE) / 3.3), 10)` DECIMAL(33,7)

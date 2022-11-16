@@ -18,9 +18,9 @@
 
 package org.apache.kylin.engine.spark.scheduler
 
-import java.util.concurrent.TimeUnit
-
 import org.apache.kylin.engine.spark.utils.ThreadUtils
+
+import java.util.concurrent.TimeUnit
 
 class JobRuntime(val maxThreadCount: Int) {
 
@@ -42,7 +42,7 @@ class JobRuntime(val maxThreadCount: Int) {
   }
 
   def scheduleCheckpoint(fun: () => Unit): Unit = {
-    scheduler.scheduleWithFixedDelay(() => fun.apply(), 30L, 30L, TimeUnit.SECONDS)
+    scheduler.scheduleWithFixedDelay(() => fun.apply(), 60L, 60L, TimeUnit.SECONDS)
   }
 
   def schedule(func: () => Unit, delay: Long, unit: TimeUnit): Unit = {

@@ -1,0 +1,77 @@
+{
+  "uuid" : "98d390ef-66ae-8acb-f57a-fe0bfb4fdf13",
+  "last_modified" : 1645772747688,
+  "create_time" : 1645772728854,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "segments" : [ {
+    "id" : "b1bb2fdf-23db-b16f-abde-707ee949913c",
+    "name" : "FULL_BUILD",
+    "create_time_utc" : 1645772734099,
+    "status" : "READY",
+    "segRange" : {
+      "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+      "date_range_start" : 0,
+      "date_range_end" : 9223372036854775807
+    },
+    "timeRange" : null,
+    "dimension_range_info_map" : {
+      "0" : {
+        "min" : "Clerk#000000001",
+        "max" : "Clerk#000002000"
+      },
+      "1" : {
+        "min" : "13",
+        "max" : "299999"
+      },
+      "2" : {
+        "min" : "0",
+        "max" : "0"
+      },
+      "3" : {
+        "min" : "1992-01-01",
+        "max" : "1998-07-27"
+      },
+      "4" : {
+        "min" : "! even theodolites against the furiously unusual instructions mai",
+        "max" : "zzle quickly around th"
+      },
+      "5" : {
+        "min" : "1025",
+        "max" : "11999873"
+      },
+      "6" : {
+        "min" : "1448.34",
+        "max" : "543948.47"
+      },
+      "7" : {
+        "min" : "1-URGENT",
+        "max" : "5-LOW"
+      },
+      "8" : {
+        "min" : "F",
+        "max" : "P"
+      }
+    },
+    "parameters" : null,
+    "dictionaries" : null,
+    "snapshots" : null,
+    "last_build_time" : 1645772747000,
+    "source_count" : 9615,
+    "source_bytes_size" : 1070720,
+    "column_source_bytes" : { },
+    "ori_snapshot_size" : { },
+    "additionalInfo" : { },
+    "is_realtime_segment" : false,
+    "is_snapshot_ready" : false,
+    "is_dict_ready" : true,
+    "is_flat_table_ready" : false,
+    "is_fact_view_ready" : false,
+    "multi_partitions" : [ ],
+    "max_bucket_id" : -1
+  } ]
+}

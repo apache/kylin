@@ -101,4 +101,22 @@ public class AclPermissionFactory extends DefaultPermissionFactory {
 
         return null;
     }
+
+    public static List<Permission> getExtPermissions(List<String> perNames) {
+        Field[] fields = AclPermission.class.getFields();
+        List<Permission> ps = new ArrayList<>();
+        for (Field field : fields) {
+            try {
+                Object fieldValue = field.get(null);
+
+                if (Permission.class.isAssignableFrom(fieldValue.getClass()) && perNames.contains(field.getName())) {
+                    // Found Permissions static field
+                    ps.add((Permission) fieldValue);
+                }
+            } catch (Exception ignore) {
+                //ignore on purpose
+            }
+        }
+        return ps;
+    }
 }

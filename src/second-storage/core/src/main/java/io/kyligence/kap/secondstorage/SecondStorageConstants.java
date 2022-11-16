@@ -18,9 +18,9 @@
 
 package io.kyligence.kap.secondstorage;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
+
+import io.kyligence.kap.guava20.shaded.common.collect.ImmutableSet;
 
 public class SecondStorageConstants {
     public static final String P_OLD_SEGMENT_IDS = "oldSegmentIds";
@@ -39,11 +39,13 @@ public class SecondStorageConstants {
     public static final String STEP_SECOND_STORAGE_MODEL_CLEAN = "STEP_SECOND_STORAGE_MODEL_CLEAN";
     public static final String STEP_SECOND_STORAGE_SEGMENT_CLEAN = "STEP_SECOND_STORAGE_SEGMENT_CLEAN";
     public static final String STEP_SECOND_STORAGE_INDEX_CLEAN = "STEP_SECOND_STORAGE_INDEX_CLEAN";
+    public static final String STEP_SECOND_STORAGE_REFRESH_SECONDARY_INDEX = "STEP_SECOND_STORAGE_REFRESH_SECONDARY_INDEX";
 
-    public static final Set<String> SKIP_STEP_RUNNING = new HashSet<>(Arrays.asList(STEP_EXPORT_TO_SECOND_STORAGE,
+    public static final Set<String> SKIP_STEP_RUNNING = ImmutableSet.of(STEP_EXPORT_TO_SECOND_STORAGE,
             STEP_REFRESH_SECOND_STORAGE, STEP_MERGE_SECOND_STORAGE, STEP_SECOND_STORAGE_NODE_CLEAN,
-            STEP_SECOND_STORAGE_MODEL_CLEAN, STEP_SECOND_STORAGE_INDEX_CLEAN));
-    public static final Set<String> SKIP_JOB_RUNNING = new HashSet<>(Arrays.asList(STEP_SECOND_STORAGE_SEGMENT_CLEAN));
+            STEP_SECOND_STORAGE_MODEL_CLEAN, STEP_SECOND_STORAGE_INDEX_CLEAN,
+            STEP_SECOND_STORAGE_REFRESH_SECONDARY_INDEX);
+    public static final Set<String> SKIP_JOB_RUNNING = ImmutableSet.of(STEP_SECOND_STORAGE_SEGMENT_CLEAN);
 
     // internal config
     public static final String PROJECT_MODEL_SEGMENT_PARAM = "projectModelSegmentParam";

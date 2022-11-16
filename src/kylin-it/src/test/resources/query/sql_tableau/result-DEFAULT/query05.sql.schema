@@ -1,1 +1,0 @@
-`sum_GMV_ok` DECIMAL(38,4),`sum_TRANS_CNT_ok` BIGINT

@@ -44,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AbstractClickHouseClean extends AbstractExecutable {
     public static final String CLICKHOUSE_SHARD_CLEAN_PARAM = "P_CLICKHOUSE_SHARD_CLEAN";
     public static final String CLICKHOUSE_NODE_COUNT_PARAM = "P_CLICKHOUSE_NODE_COUNT";
+    public static final String INDEX_CLEAN_READY = "P_CLICKHOUSE_INDEX_CLEAN_READY";
     public static final String THREAD_NAME = "CLICKHOUSE_CLEAN";
     protected List<ShardCleaner> shardCleaners = new ArrayList<>();
     private int nodeCount = 10;
@@ -65,6 +66,7 @@ public abstract class AbstractClickHouseClean extends AbstractExecutable {
     protected void saveState() {
         this.setParam(CLICKHOUSE_SHARD_CLEAN_PARAM, JsonUtil.writeValueAsStringQuietly(shardCleaners));
         this.setParam(CLICKHOUSE_NODE_COUNT_PARAM, String.valueOf(nodeCount));
+        this.setParam(INDEX_CLEAN_READY, INDEX_CLEAN_READY);
     }
 
     protected void loadState() {
@@ -106,7 +108,7 @@ public abstract class AbstractClickHouseClean extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    public ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         return wrapWithExecuteException(() -> {
             loadState();
             workImpl();
