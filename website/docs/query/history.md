@@ -109,7 +109,7 @@ When you click on the error details to the right of a query failure, the excepti
 
 > **Note**: When SQL does not wrap, only the first 100 lines of SQL can be seen in the query execution details. When SQL wraps, the details display the first 2000 characters. You can click the copy button in the upper right corner of the SQL statement box to copy the complete SQL statement.
 
-Kylin uses the built-in RDBMS to save information about queries. You can refer to all fields and meanings related to query history in the appendix [Query History Fields Table](../../installation/rdbms_metastore/query_history_fields.en.md).
+Kylin uses the built-in RDBMS to save information about queries. You can refer to all fields and meanings related to query history in the appendix [Query History Fields Table](../deployment/on-premises/rdbms_metastore/query_history_fields.md).
 
 
 
