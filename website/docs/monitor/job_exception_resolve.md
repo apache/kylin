@@ -62,7 +62,7 @@ Various problems may occur during the execution of building jobs which cause the
 - **Solution：**
 
     1. Please check Kylin and the cluster disk space used for building, clean up invalid files or expand capacity in time.
-    2. Try to clean up Kylin's inefficient storage, please refer to [Storage Quota](../operations/project-operation/toolbar.md#storage_quota) 。
+    2. Try to clean up Kylin's inefficient storage.
     3. For `shuffle no left space on device` problem, you can appropriately increase the number of executor instances to use more computing resources.
 
         - spark.executor.cores
