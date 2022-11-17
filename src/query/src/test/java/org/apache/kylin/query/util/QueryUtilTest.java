@@ -197,6 +197,17 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testMassagePushDownSqlWithDoubleQuote() {
+        KylinConfig config = KylinConfig.createKylinConfig(new Properties());
+        String sql = "select '''',trans_id from test_kylin_fact where LSTG_FORMAT_NAME like '%''%' group by trans_id limit 2;";
+        QueryParams queryParams = new QueryParams("", sql, "default", false);
+        queryParams.setKylinConfig(config);
+        String massagedSql = QueryUtil.massagePushDownSql(queryParams);
+        String expectedSql = "select '\\'', `TRANS_ID` from `TEST_KYLIN_FACT` where `LSTG_FORMAT_NAME` like '%\\'%' group by `TRANS_ID` limit 2";
+        Assert.assertEquals(expectedSql, massagedSql);
+    }
+
+    @Test
     public void testInit() {
         KylinConfig config = KylinConfig.createKylinConfig(new Properties());
         try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(config)) {
@@ -579,5 +590,12 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(
                 "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID",
                 targetSQL);
+    }
+
+    @Test
+    public void testReplaceDoubleQuoteToSingle() {
+        String sql = "select ab from table where aa = '' and bb = '''as''n'''";
+        String resSql = "select ab from table where aa = '' and bb = '\\'as\\'n\\''";
+        Assert.assertEquals(resSql, QueryUtil.replaceDoubleQuoteToSingle(sql));
     }
 }
