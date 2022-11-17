@@ -9,7 +9,7 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - data acl api
-draft: true
+draft: false
 last_update:
     date: 08/12/2022
 ---

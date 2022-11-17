@@ -9,7 +9,7 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - count distinct (precise)
-draft: true
+draft: false
 last_update:
     date: 08/19/2022
 ---

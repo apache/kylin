@@ -9,7 +9,7 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - system metadata backup and restore
-draft: true
+draft: false
 last_update:
     date: 08/16/2022
 ---
