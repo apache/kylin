@@ -20,6 +20,7 @@ package org.apache.kylin.cache.redis;
 import com.codahale.metrics.Gauge;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DataFormatException;
@@ -101,6 +103,8 @@ public abstract class AbstractRedisClient implements RedisClient {
     public abstract byte[] internalGet(String key);
     public abstract void internalPut(String hashedKey, byte[] encodedValue, int expiration);
     public abstract void internalDel(String key);
+    public abstract void internalDel(byte[][] key);
+    public abstract List<byte[]> internalScan(String pattern);
 
     @Override
     public void put(Object key, Object value) {
@@ -149,6 +153,15 @@ public abstract class AbstractRedisClient implements RedisClient {
     }
 
     @Override
+    public void clearAll() {
+        List<byte[]> keys = internalScan(redisPrefix + "*");
+        if (CollectionUtils.isNotEmpty(keys)) {
+            logger.info("clearAll, keys size:{}, keys:{}", keys.size(), keys);
+            internalDel(keys.toArray(new byte[keys.size()][]));
+        }
+    }
+
+    @Override
     public String getName(){
         return redisPrefix;
     }
@@ -186,8 +199,9 @@ public abstract class AbstractRedisClient implements RedisClient {
     }
 
     protected byte[] decodeValue(byte[] key, byte[] valueE) {
-        if (valueE == null)
+        if (valueE == null) {
             return null;
+        }
         ByteBuffer buf = ByteBuffer.wrap(valueE);
         short enableCompression = buf.getShort();
         byte[] uncompressed = null;

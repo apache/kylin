@@ -21,6 +21,7 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.cache.redis.RedisClient;
 import org.apache.kylin.cache.redis.RedisConfig;
 import org.apache.kylin.cache.redis.jedis.JedisPoolClient;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -42,6 +43,7 @@ public class RedisManager extends AbstractRemoteCacheManager {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisManager.class);
     private static final Long ONE_MINUTE = 60 * 1000L;
+    private static final int HEALTH_CHECK_PING_COUNT = 5;
 
     @Autowired
     private RedisConfig redisConfig;
@@ -53,14 +55,15 @@ public class RedisManager extends AbstractRemoteCacheManager {
     @Override
     protected Collection<? extends Cache> loadCaches() {
         Cache successCache = new RedisManager.RedisCacheAdaptor(createRedisClient(redisConfig), CacheConstants.QUERY_CACHE);
-
-        addCache(successCache);
+        Cache userCache = new RedisManager.RedisCacheAdaptor(createRedisClient(redisConfig), CacheConstants.USER_CACHE);
 
         Collection<String> names = getCacheNames();
         Collection<Cache> caches = Lists.newArrayList();
         for (String name : names) {
             caches.add(getCache(name));
         }
+        caches.add(successCache);
+        caches.add(userCache);
         timer.scheduleWithFixedDelay(new RedisManager.RedisClusterHealthChecker(), ONE_MINUTE, ONE_MINUTE,
                 TimeUnit.MILLISECONDS);
         return caches;
@@ -137,7 +140,7 @@ public class RedisManager extends AbstractRemoteCacheManager {
 
         @Override
         public void clear() {
-            throw new UnsupportedOperationException();
+            redisClient.clearAll();
         }
 
     }
@@ -156,6 +159,12 @@ public class RedisManager extends AbstractRemoteCacheManager {
         return !clusterHealth.get();
     }
 
+    @Override
+    public boolean isEnabled() {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        return kylinConfig.isRedisEnabled();
+    }
+
     @VisibleForTesting
     void setClusterHealth(boolean ifHealth) {
         clusterHealth.set(ifHealth);
@@ -171,8 +180,7 @@ public class RedisManager extends AbstractRemoteCacheManager {
 
         private boolean isConnected(RedisClient redisClient) {
             int success = 0;
-            int total = 5;
-            for (int i = 0; i < total; i++) {
+            for (int i = 0; i < HEALTH_CHECK_PING_COUNT; i++) {
                 if (redisClient.ping()) {
                     success++;
                 }
@@ -182,8 +190,8 @@ public class RedisManager extends AbstractRemoteCacheManager {
                     logger.warn("RedisClusterHealthChecker sleep is Interrupted");
                 }
             }
-            boolean connected = success * 2 + 1 > total;
-            logger.info("RedisClusterHealthChecker, connected:{}, success:{}, total:{}", connected, success, total);
+            boolean connected = success * 2 + 1 > HEALTH_CHECK_PING_COUNT;
+            logger.info("RedisClusterHealthChecker, connected:{}, success:{}, total:{}", connected, success, HEALTH_CHECK_PING_COUNT);
             return connected;
         }
     }

@@ -37,7 +37,6 @@ public class JedisPoolClientTest extends LocalFileMetadataTestCase {
 
     private RedisManager.RedisCacheAdaptor redisCacheAdaptor;
 
-
     @Before
     public void setUp() {
         this.createTestMetadata();

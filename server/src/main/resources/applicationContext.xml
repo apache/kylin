@@ -128,8 +128,8 @@
         <bean id="cacheManager" class="org.apache.kylin.cache.cachemanager.RemoteLocalFailOverCacheManager" />
 
         <bean id="redisConfig" class="org.apache.kylin.cache.redis.RedisConfig">
-            <property name="appName" value="kylin" />
-            <property name="timeout" value="500" />
+            <property name="appName" value="${kylin.cache.redis.appName}" />
+            <property name="timeout" value="${kylin.cache.redis.timeout}" />
             <property name="host" value="${kylin.cache.redis.host}" />
             <property name="port" value="${kylin.cache.redis.port}" />
             <property name="prefix" value="${kylin.cache.redis.prefix}"/>

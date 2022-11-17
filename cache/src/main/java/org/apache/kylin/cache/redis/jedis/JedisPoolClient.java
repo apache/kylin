@@ -17,19 +17,30 @@
  */
 package org.apache.kylin.cache.redis.jedis;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.kylin.cache.redis.AbstractRedisClient;
 import org.apache.kylin.cache.redis.RedisClient;
 import org.apache.kylin.cache.redis.RedisConfig;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.shaded.com.google.common.base.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JedisPoolClient extends AbstractRedisClient implements RedisClient {
 
     private static final Logger logger = LoggerFactory.getLogger(JedisPoolClient.class);
+
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
+    private static final String SCAN_POINTER_START_STR = new String(ScanParams.SCAN_POINTER_START_BINARY, CHARSET);
 
     private final JedisPool jedisPool;
 
@@ -80,13 +91,50 @@ public class JedisPoolClient extends AbstractRedisClient implements RedisClient 
     }
 
     @Override
+    public void internalDel(byte[][] key) {
+        logger.debug("JedisPoolClient internalDel, key:{}", key);
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.del(key);
+        } catch (Exception e) {
+            errorCount.incrementAndGet();
+            logger.error("JedisPoolClient del error, ", e);
+        }
+    }
+
+    @Override
+    public List<byte[]> internalScan(String pattern) {
+        logger.debug("JedisPoolClient internalScan, pattern:{}", pattern);
+        try (Jedis jedis = jedisPool.getResource()) {
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            byte[] cursor = ScanParams.SCAN_POINTER_START_BINARY;
+            ScanParams scanParams = new ScanParams();
+            scanParams.match(pattern.getBytes(Charsets.UTF_8));
+            scanParams.count(config.getRedisScanKeysBatchCount());
+            List<byte[]> keys = new ArrayList<>();
+            do {
+                ScanResult<byte[]> scanResult = jedis.scan(cursor, scanParams);
+                cursor = scanResult.getCursorAsBytes();
+                List<byte[]> list = scanResult.getResult();
+                if (CollectionUtils.isNotEmpty(list)) {
+                    keys.addAll(list);
+                }
+            } while (!SCAN_POINTER_START_STR.equals(new String(cursor, CHARSET)));
+            return keys;
+        } catch (Exception e) {
+            errorCount.incrementAndGet();
+            logger.error("JedisPoolClient internalScan error, ", e);
+        }
+        return null;
+    }
+
+    @Override
     public boolean ping() {
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.ping();
             return true;
         } catch (Exception e) {
             errorCount.incrementAndGet();
-            logger.error("JedisPoolClient isConnected error, ", e);
+            logger.error("JedisPoolClient ping error, ", e);
             return false;
         }
     }

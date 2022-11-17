@@ -25,25 +25,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.cache.memcached.MemcachedCache;
 import org.apache.kylin.cache.memcached.MemcachedCacheConfig;
 import org.apache.kylin.cache.memcached.MemcachedChunkingCache;
+import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
-import org.springframework.cache.support.AbstractCacheManager;
 import org.springframework.cache.support.SimpleValueWrapper;
-
 import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import net.spy.memcached.MemcachedClientIF;
 
-public class MemcachedCacheManager extends AbstractCacheManager {
+public class MemcachedCacheManager extends AbstractRemoteCacheManager {
 
     private static final Logger logger = LoggerFactory.getLogger(MemcachedCacheManager.class);
     private static final Long ONE_MINUTE = 60 * 1000L;
@@ -78,6 +75,12 @@ public class MemcachedCacheManager extends AbstractCacheManager {
 
     public boolean isClusterDown() {
         return !clusterHealth.get();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        return kylinConfig.isMemcachedEnabled();
     }
 
     @VisibleForTesting

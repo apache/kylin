@@ -1569,6 +1569,18 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.cache.memcached.hosts", null);
     }
 
+    public boolean isRedisEnabled() {
+        return !StringUtil.isEmpty(getRedisHosts());
+    }
+
+    public String getRedisHosts() {
+        return getOptional("kylin.cache.redis.host", null);
+    }
+
+    public int getRedisScanKeysBatchCount() {
+        return Integer.parseInt(getOptional("kylin.cache.redis.batch-count", "10000"));
+    }
+
     public String getQueryAccessController() {
         return getOptional("kylin.query.access-controller", null);
     }
@@ -1732,7 +1744,7 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isQueryCacheSignatureEnabled() {
         return Boolean.parseBoolean(
-                this.getOptional("kylin.query.cache-signature-enabled", String.valueOf(isMemcachedEnabled())));
+                this.getOptional("kylin.query.cache-signature-enabled", String.valueOf(isMemcachedEnabled() || isRedisEnabled())));
     }
 
     public int getFlatFilterMaxChildrenSize() {

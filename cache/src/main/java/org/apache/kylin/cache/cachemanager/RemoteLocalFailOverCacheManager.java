@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.support.AbstractCacheManager;
-
 import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
 import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
@@ -51,7 +50,7 @@ public class RemoteLocalFailOverCacheManager extends AbstractCacheManager {
 
     @Override
     public Cache getCache(String name) {
-        if (remoteCacheManager == null || remoteCacheManager.isClusterDown()) {
+        if (remoteCacheManager == null || !remoteCacheManager.isEnabled() || remoteCacheManager.isClusterDown()) {
             logger.info("use local cache, because remote cache is not configured or down");
             return localCacheManager.getCache(name);
         } else {

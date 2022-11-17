@@ -30,4 +30,6 @@ public interface RedisClient {
 
     String getName();
 
+    void clearAll();
+    
 }

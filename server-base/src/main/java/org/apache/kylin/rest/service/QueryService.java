@@ -64,6 +64,7 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.apache.kylin.cache.cachemanager.MemcachedCacheManager;
+import org.apache.kylin.cache.cachemanager.RedisManager;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContextFacade;
@@ -572,6 +573,7 @@ public class QueryService extends BasicService {
                             "query is executed with pushdown, but it is non-select, or the cache for pushdown is disabled") //
                     && checkCondition(
                             cacheManager.getCache(QUERY_CACHE) instanceof MemcachedCacheManager.MemCachedCacheAdaptor
+                                    || cacheManager.getCache(QUERY_CACHE) instanceof RedisManager.RedisCacheAdaptor
                                     || sqlResponse.getDuration() > durationThreshold
                                     || sqlResponse.getTotalScanCount() > scanCountThreshold
                                     || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //

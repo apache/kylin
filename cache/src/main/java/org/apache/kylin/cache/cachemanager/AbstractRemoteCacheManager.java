@@ -24,6 +24,8 @@ public abstract class AbstractRemoteCacheManager extends AbstractCacheManager {
 
     public abstract boolean isClusterDown();
 
+    public abstract boolean isEnabled();
+
     abstract void setClusterHealth(boolean health);
 
 }
