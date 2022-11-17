@@ -9,7 +9,7 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - maintenance mode
-draft: true
+draft: false
 last_update:
     date: 08/16/2022
 ---

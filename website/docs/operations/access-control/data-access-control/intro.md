@@ -9,7 +9,7 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - data access control
-draft: true
+draft: false
 last_update:
     date: Aug 16, 2022
 ---

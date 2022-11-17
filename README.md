@@ -51,7 +51,7 @@ website
 npm start
 
 ## Publishes the website to GitHub pages.
-npm deploy
+npm run deploy
 ```
 
 ### Website TODO List

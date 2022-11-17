@@ -9,7 +9,7 @@ pagination_prev: null
 pagination_next: null
 keywords:
     - snapshot management
-draft: true
+draft: false
 last_update:
     date: 08/17/2022
 ---
