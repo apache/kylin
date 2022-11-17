@@ -1349,6 +1349,10 @@
                 <version>${hive.version}</version>
                 <exclusions>
                     <exclusion>
+                        <groupId>org.apache.ivy</groupId>
+                        <artifactId>ivy</artifactId>
+                    </exclusion>
+                    <exclusion>
                         <groupId>org.apache.logging.log4j</groupId>
                         <artifactId>log4j-1.2-api</artifactId>
                     </exclusion>
