@@ -510,7 +510,36 @@ public class QueryUtil {
                     "Current step: Massage push-down sql. ");
             sql = converter.convert(sql, queryParams.getProject(), queryParams.getDefaultSchema());
         }
+
+        sql = replaceDoubleQuoteToSingle(sql);
         return sql;
+    }
+
+    // To keep the results of cube and pushDown are same, we need to replace here
+    public static String replaceDoubleQuoteToSingle(String originSql) {
+        boolean inStrVal = false;
+        boolean needTransfer = false;
+        char[] res = originSql.toCharArray();
+        for (int i = 0; i < res.length; i++) {
+            if (res[i] == '\'') {
+                if (inStrVal) {
+                    if (needTransfer) {
+                        res[i - 1] = '\\';
+                        needTransfer = false;
+                    } else {
+                        needTransfer = true;
+                    }
+                } else {
+                    inStrVal = true;
+                }
+            } else {
+                if (needTransfer) {
+                    inStrVal = false;
+                    needTransfer = false;
+                }
+            }
+        }
+        return new String(res);
     }
 
     static void initPushDownConvertersIfNeeded(KylinConfig kylinConfig) {
