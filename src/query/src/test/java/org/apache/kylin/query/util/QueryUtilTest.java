@@ -99,6 +99,25 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testAdaptCubePriority() {
+        {
+            String sql = "--CubePriority(m)\nselect price from test_kylin_fact";
+            QueryParams queryParams1 = new QueryParams(KylinConfig.getInstanceFromEnv(), sql, "default", 0, 0,
+                    "DEFAULT", true);
+            String transformed = QueryUtil.massageSql(queryParams1);
+            Assert.assertEquals(sql, transformed);
+        }
+
+        {
+            String sql = "-- CubePriority(m)\nselect price from test_kylin_fact";
+            QueryParams queryParams1 = new QueryParams(KylinConfig.getInstanceFromEnv(), sql, "default", 0, 0,
+                    "DEFAULT", true);
+            String transformed = QueryUtil.massageSql(queryParams1);
+            Assert.assertEquals(sql, transformed);
+        }
+    }
+
+    @Test
     public void testMassageWithoutConvertToComputedColumn() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
