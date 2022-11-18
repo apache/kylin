@@ -139,7 +139,12 @@ private void DoParse(List<RawSqlBlock> stmtBlockList, List<RawSqlBlock> allBlock
             }
         }
         block = Comment()
-        { allBlockList.add(block); }
+        {
+            if (block.getText().contains("CubePriority(")) {
+                stmtBlockList.add(block);
+            }
+            allBlockList.add(block);
+        }
         | block = Stmt()
         {
             stmtBlockList.add(block);

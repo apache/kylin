@@ -119,9 +119,8 @@ TOKEN :
     >
 | < DOUBLE_QUOTE : "\"">
 | < QUOTED_IDENTIFIER: <DOUBLE_QUOTE> ( (~["\"","\n","\r"]) | ("\"\"") )+ <DOUBLE_QUOTE> >
-| < HINT_BEG: "/*" >
-| < HINT_END: "*/" >
-| < HINT: <HINT_BEG> (~["\n", "\r"])* <HINT_END> >
+| < HINT: "/*" (~["\n", "\r"])* "*/" >
+| < CUBE_PRIORITY: "--" ([" "])* "CubePriority(" (~["\n", "\r", ")"])* ")" ([" "])* "\n" >
 | < UNSIGNED_INTEGER_LITERAL: (["0"-"9"])+ >
 | < APPROX_NUMERIC_LITERAL:(<UNSIGNED_INTEGER_LITERAL> | <DECIMAL_NUMERIC_LITERAL>) <EXPONENT> >
 | < DECIMAL_NUMERIC_LITERAL:(["0"-"9"])+(".")?(["0"-"9"])*| "."(["0"-"9"])+>
@@ -233,6 +232,7 @@ String Expression() :
     | innerString = GroupingSetsExpression()
     | innerString = TsDiffOrAddExpression()
     | innerString = Hint()
+    | innerString = CubePriority()
     | innerString = Numeric()
     | innerString = CastExpression()
     | innerString = ExtractExpression()
@@ -683,6 +683,16 @@ String Hint():
     }
 }
 
+String CubePriority():
+{}
+{
+    <CUBE_PRIORITY>
+    {
+        log.trace("meet token <CubePriority>");
+        return getToken(0).image;
+    }
+}
+
 String Numeric():
 {}
 {
@@ -758,6 +768,7 @@ String ParameterExpression() :
     | innerString = CeilFloorExpress()
     | innerString = Numeric()
     | innerString = Hint()
+    | innerString = CubePriority()
     | innerString = ParenExpress()
     | innerString = QuotedString()
     | innerString = DoubleQuotedString()
