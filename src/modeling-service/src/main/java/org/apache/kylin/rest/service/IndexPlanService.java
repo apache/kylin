@@ -262,13 +262,13 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
 
     private BuildIndexResponse createTableIndex(String project, String modelId, LayoutEntity newLayout,
             boolean loadData) {
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
-        if (kylinConfig.enableCostBasedIndexPlanner()) {
-            throw new RuntimeException("Can't create table index when enable cube planner");
-        }
         NIndexPlanManager indexPlanManager = getManager(NIndexPlanManager.class, project);
         val jobManager = getManager(JobManager.class, project);
         IndexPlan indexPlan = indexPlanManager.getIndexPlan(modelId);
+        val kylinConfig = indexPlan.getConfig();
+        if (kylinConfig.enableCostBasedIndexPlanner()) {
+            throw new RuntimeException("Can't create table index when enable cube planner");
+        }
         for (LayoutEntity cuboidLayout : indexPlan.getAllLayouts()) {
             if (cuboidLayout.equals(newLayout) && cuboidLayout.isManual()) {
                 throw new KylinException(INDEX_DUPLICATE);
@@ -1264,9 +1264,14 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
 
         if (request.needHandleBaseTableIndex() && !indexPlan.containBaseTableLayout()) {
             LayoutEntity baseTableLayout = indexPlan.createBaseTableIndex(model);
-            if (baseTableLayout != null) {
-                overrideLayout(baseTableLayout, request.getBaseTableIndexProperty(), model);
-                needCreateBaseLayouts.add(baseTableLayout);
+            // https://jirap.corp.ebay.com/browse/KYLIN-3639
+            // https://jirap.corp.ebay.com/browse/KYLIN-3688
+            // If the model has created the base table index, should not affect it after enable cube planner.
+            if (!indexPlan.getConfig().enableCostBasedIndexPlanner()) {
+                if (baseTableLayout != null) {
+                    overrideLayout(baseTableLayout, request.getBaseTableIndexProperty(), model);
+                    needCreateBaseLayouts.add(baseTableLayout);
+                }
             }
         }
         return needCreateBaseLayouts;

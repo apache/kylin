@@ -164,7 +164,8 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         if (CollectionUtils.isNotEmpty(buckets)) {
             job.setParam(NBatchConstants.P_BUCKETS, ExecutableParams.toBucketParam(buckets));
         }
-        enableCostBasedPlannerIfNeed(df, kylinConfig, segments, job);
+
+        enableCostBasedPlannerIfNeed(df, segments, job);
 
         job.setParam(NBatchConstants.P_JOB_ID, jobId);
         job.setParam(NBatchConstants.P_PROJECT_NAME, df.getProject());
@@ -430,13 +431,13 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         private final AbstractExecutable cleanUpTransactionalTable;
     }
 
-    private static void enableCostBasedPlannerIfNeed(NDataflow df, KylinConfig kylinConfig, Set<NDataSegment> segments,
-            NSparkCubingJob job) {
+    private static void enableCostBasedPlannerIfNeed(NDataflow df, Set<NDataSegment> segments, NSparkCubingJob job) {
         // need run the cost based planner:
         // 1. config enable the cube planner
         // 2. the model dose not have the `layout_cost_based_pruned_list`
         // 3. just only one segment to be built/refresh(other case will throw exception)
         IndexPlan indexPlan = df.getIndexPlan();
+        KylinConfig kylinConfig = indexPlan.getConfig();
         boolean needCostRecommendIndex = indexPlan.getRuleBasedIndex() != null
                 && indexPlan.getRuleBasedIndex().getLayoutsOfCostBasedList() == null;
         if (kylinConfig.enableCostBasedIndexPlanner() && needCostRecommendIndex

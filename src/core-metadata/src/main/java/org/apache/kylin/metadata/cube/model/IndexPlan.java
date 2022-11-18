@@ -965,10 +965,6 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
     }
 
     public LayoutEntity createBaseTableIndex(NDataModel model) {
-        // if enable the cube planner, we don't create the base table index
-        if (this.config.enableCostBasedIndexPlanner()) {
-            return null;
-        }
         List<Integer> dims = model.getEffectiveDimensions().keySet().asList();
         List<Integer> measureCols = model.getMeasureRelatedCols();
         List<Integer> colOrder = naturalOrderCombine(dims, measureCols);
