@@ -174,18 +174,15 @@ public class NUserController extends NBasicController implements ApplicationList
     //do not use aclEvaluate, if there's no users and will come into init() and will call save.
     public EnvelopeResponse<String> createUser(@RequestBody UserRequest user) throws IOException {
         checkRequiredArg("disabled", user.getDisabled());
+        checkUsername(user.getUsername());
+        checkRequiredArg("password", user.getPassword());
+        val decodedPassword = pwdBase64Decode(user.getPassword());
+        checkPasswordLength(decodedPassword);
+        checkPasswordCharacter(decodedPassword);
+        user.setPassword(decodedPassword);
         val simpleGrantedAuthorities = user.transformSimpleGrantedAuthorities();
-        val username = user.getUsername();
-        val password = pwdBase64Decode(user.getPassword());
-        user.setPassword(password);
-
-        checkUsername(username);
-        checkPasswordLength(password);
-        checkPasswordCharacter(password);
         checkUserGroupNotEmpty(simpleGrantedAuthorities);
-
-        List<String> allGroups = userGroupService.getAllUserGroups();
-        checkUserGroupExists(simpleGrantedAuthorities, allGroups);
+        checkUserGroupExists(simpleGrantedAuthorities, userGroupService.getAllUserGroups());
         checkUserGroupNotDuplicated(simpleGrantedAuthorities);
         return createAdminUser(user.updateManager(new ManagedUser()));
     }
