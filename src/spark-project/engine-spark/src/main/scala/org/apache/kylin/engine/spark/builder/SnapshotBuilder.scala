@@ -21,6 +21,7 @@ package org.apache.kylin.engine.spark.builder
 import com.google.common.collect.Maps
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}
+import org.apache.hadoop.security.AccessControlException
 import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.common.util.HadoopUtil
@@ -31,6 +32,7 @@ import org.apache.kylin.engine.spark.utils.{FileNames, LogUtils}
 import org.apache.kylin.metadata.model.{NDataModel, NTableMetadataManager, TableDesc, TableExtDesc}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.source.SourceFactory
+import org.apache.spark.SparkException
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 import org.apache.spark.sql._
@@ -203,6 +205,69 @@ class SnapshotBuilder(var jobId: String) extends Logging with Serializable {
     totalRows
   }
 
+  def executeParallelBuildSnapshot(ss: SparkSession, toBuildTableDesc: Set[TableDesc], baseDir: String,
+                           snapSizeMap: ConcurrentMap[String, Result], fs: FileSystem, snapshotParallelBuildTimeoutSeconds: Int): Unit = {
+
+    val kylinConf = KylinConfig.getInstanceFromEnv
+    val project = toBuildTableDesc.iterator.next.getProject
+    val stepCheckpoint = getStepCheckpoint(kylinConf.getJobTmpDir(project), fs)
+
+    val service = Executors.newCachedThreadPool()
+    implicit val executorContext = ExecutionContext.fromExecutorService(service)
+    val futures = toBuildTableDesc.map(tableDesc =>
+      Future {
+        var config: SetAndUnsetThreadLocalConfig = null
+        try {
+          if (stepCheckpoint.exists(_.canSkip(tableDesc))) {
+            logInfo(s"Skip snapshot ${tableDesc.getIdentity}")
+          } else {
+            config = KylinConfig.setAndUnsetThreadLocalConfig(kylinConf)
+            buildSingleSnapshotWithoutMd5(ss, tableDesc, baseDir, snapSizeMap)
+            // do step checkpoint
+            stepCheckpoint.map(_.checkpoint(tableDesc))
+          }
+        } catch {
+          case exception: Exception =>
+            logError(s"Error for build snapshot table with $tableDesc", exception)
+            throw exception
+        } finally {
+          if (config != null) {
+            config.close()
+          }
+        }
+      }
+    )
+    try {
+      val eventualTuples = Future.sequence(futures.toList)
+      // only throw the first exception
+      ProxyThreadUtils.awaitResult(eventualTuples, snapshotParallelBuildTimeoutSeconds seconds)
+    } catch {
+      case e: SparkException =>
+        ProxyThreadUtils.shutdown(service)
+        e.getCause match {
+          case pd: AccessControlException =>
+            logError(s"Error for await snapshot table result due to AccessControlException", pd)
+            throw pd
+          case _ => throw e
+        }
+      case e: Exception =>
+        ProxyThreadUtils.shutdown(service)
+        throw e
+    }
+  }
+
+  def executeSerialBuildSnapshot(ss: SparkSession, toBuildTableDesc: Set[TableDesc], baseDir: String,
+                                 snapSizeMap: ConcurrentMap[String, Result], fs: FileSystem, stepCheckpoint: Option[StepCheckpointSnapshot]): Unit = {
+    toBuildTableDesc.foreach(tableDesc => {
+      if (stepCheckpoint.exists(_.canSkip(tableDesc))) {
+        logInfo(s"Skip snapshot ${tableDesc.getIdentity}")
+      } else {
+        buildSingleSnapshot(ss, tableDesc, baseDir, fs, snapSizeMap)
+        // do step checkpoint
+        stepCheckpoint.map(_.checkpoint(tableDesc))
+      }
+    })
+  }
   // scalastyle:off
   def executeBuildSnapshot(ss: SparkSession, toBuildTableDesc: Set[TableDesc], baseDir: String,
                            isParallelBuild: Boolean, snapshotParallelBuildTimeoutSeconds: Int): util.Map[String, Result] = {
@@ -213,50 +278,9 @@ class SnapshotBuilder(var jobId: String) extends Logging with Serializable {
     val stepCheckpoint = getStepCheckpoint(kylinConf.getJobTmpDir(project), fs)
 
     if (isParallelBuild) {
-      val service = Executors.newCachedThreadPool()
-      implicit val executorContext = ExecutionContext.fromExecutorService(service)
-      val futures = toBuildTableDesc.map(tableDesc =>
-        Future {
-          var config: SetAndUnsetThreadLocalConfig = null
-          try {
-            if (stepCheckpoint.exists(_.canSkip(tableDesc))) {
-              logInfo(s"Skip snapshot ${tableDesc.getIdentity}")
-            } else {
-              config = KylinConfig.setAndUnsetThreadLocalConfig(kylinConf)
-              buildSingleSnapshotWithoutMd5(ss, tableDesc, baseDir, snapSizeMap)
-              // do step checkpoint
-              stepCheckpoint.map(_.checkpoint(tableDesc))
-            }
-          } catch {
-            case exception: Exception =>
-              logError(s"Error for build snapshot table with $tableDesc", exception)
-              throw exception
-          } finally {
-            if (config != null) {
-              config.close()
-            }
-          }
-        }
-      )
-      try {
-        val eventualTuples = Future.sequence(futures.toList)
-        // only throw the first exception
-        ProxyThreadUtils.awaitResult(eventualTuples, snapshotParallelBuildTimeoutSeconds seconds)
-      } catch {
-        case e: Exception =>
-          ProxyThreadUtils.shutdown(service)
-          throw e
-      }
+      executeParallelBuildSnapshot(ss, toBuildTableDesc, baseDir, snapSizeMap, fs, snapshotParallelBuildTimeoutSeconds)
     } else {
-      toBuildTableDesc.foreach(tableDesc => {
-        if (stepCheckpoint.exists(_.canSkip(tableDesc))) {
-          logInfo(s"Skip snapshot ${tableDesc.getIdentity}")
-        } else {
-          buildSingleSnapshot(ss, tableDesc, baseDir, fs, snapSizeMap)
-          // do step checkpoint
-          stepCheckpoint.map(_.checkpoint(tableDesc))
-        }
-      })
+      executeSerialBuildSnapshot(ss, toBuildTableDesc, baseDir, snapSizeMap, fs, stepCheckpoint)
     }
     snapSizeMap
   }
