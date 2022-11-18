@@ -129,6 +129,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.sourceusage.SourceUsageManager;
+import org.apache.kylin.metadata.streaming.DataParserManager;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
 import org.apache.kylin.query.util.PushDownUtil;
@@ -167,7 +168,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -424,6 +424,7 @@ public class TableService extends BasicService {
             tableDescResponse.setKafkaBootstrapServers(table.getKafkaConfig().getKafkaBootstrapServers());
             tableDescResponse.setSubscribe(table.getKafkaConfig().getSubscribe());
             tableDescResponse.setBatchTable(table.getKafkaConfig().getBatchTable());
+            tableDescResponse.setParserName(table.getKafkaConfig().getParserName());
         }
 
         if (tableExtDesc == null) {
@@ -720,12 +721,11 @@ public class TableService extends BasicService {
 
         try {
             if (tableDesc.isKafkaTable()) {
-                List<ByteBuffer> messages = kafkaService.getMessages(tableDesc.getKafkaConfig(), project, 0);
+                List<ByteBuffer> messages = kafkaService.getMessages(tableDesc.getKafkaConfig(), project);
                 checkMessage(table, messages);
-                Map<String, Object> resp = kafkaService.getMessageTypeAndDecodedMessages(messages);
-                String json = ((List<String>) resp.get("message")).get(0);
-                ObjectMapper mapper = new ObjectMapper();
-                Map<String, Object> mapping = mapper.readValue(json, Map.class);
+                Map<String, Object> resp = kafkaService.decodeMessage(messages);
+                String message = ((List<String>) resp.get("message")).get(0);
+                Map<String, Object> mapping = kafkaService.parserMessage(project, tableDesc.getKafkaConfig(), message);
                 Map<String, Object> mappingAllCaps = new HashMap<>();
                 mapping.forEach((key, value) -> mappingAllCaps.put(key.toUpperCase(Locale.ROOT), value));
                 String cell = (String) mappingAllCaps.get(partitionColumn);
@@ -866,7 +866,13 @@ public class TableService extends BasicService {
     public void unloadTable(String project, String tableIdentity) {
         getManager(NTableMetadataManager.class, project).removeTableExt(tableIdentity);
         getManager(NTableMetadataManager.class, project).removeSourceTable(tableIdentity);
-        getManager(KafkaConfigManager.class, project).removeKafkaConfig(tableIdentity);
+        KafkaConfigManager kafkaConfigManager = getManager(KafkaConfigManager.class, project);
+        KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(tableIdentity);
+        if (Objects.isNull(kafkaConfig)) {
+            return;
+        }
+        kafkaConfigManager.removeKafkaConfig(tableIdentity);
+        getManager(DataParserManager.class, project).removeUsingTable(tableIdentity, kafkaConfig.getParserName());
     }
 
     public PreUnloadTableResponse preUnloadTable(String project, String tableIdentity) throws IOException {

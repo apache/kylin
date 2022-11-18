@@ -23,11 +23,8 @@ import java.util.concurrent.RejectedExecutionException;
 
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.response.RestResponse;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.common.StreamingTestConstant;
+import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.engine.spark.job.BuildLayoutWithUpdate;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory;
@@ -38,6 +35,9 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.streaming.app.StreamingEntry;
 import org.apache.kylin.streaming.common.BuildJobEntry;
 import org.apache.kylin.streaming.rest.RestSupport;
@@ -58,8 +58,8 @@ import lombok.var;
 
 public class StreamingDFBuildJobTest extends StreamingTestCase {
 
-    private static String PROJECT = "streaming_test";
-    private static String DATAFLOW_ID = "4965c827-fbb4-4ea1-a744-3f341a3b030d";
+    private static final String PROJECT = "streaming_test";
+    private static final String DATAFLOW_ID = "4965c827-fbb4-4ea1-a744-3f341a3b030d";
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 

@@ -21,6 +21,7 @@ package org.apache.kylin.streaming.jobs.impl;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static org.apache.kylin.common.persistence.ResourceStore.STREAMING_RESOURCE_ROOT;
+import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PARSER_NAME;
 import static org.apache.kylin.streaming.constants.StreamingConstants.REST_SERVER_IP;
 import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_CORES_MAX;
 import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_DRIVER_MEM;
@@ -70,19 +71,24 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.job.constant.JobStatusEnum;
-import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.common.persistence.ImageDesc;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.metadata.HDFSMetadataStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.job.constant.JobStatusEnum;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.jar.JarInfoManager;
+import org.apache.kylin.metadata.jar.JarTypeEnum;
+import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.streaming.DataParserInfo;
+import org.apache.kylin.metadata.streaming.DataParserManager;
 import org.apache.kylin.streaming.app.StreamingEntry;
 import org.apache.kylin.streaming.app.StreamingMergeEntry;
 import org.apache.kylin.streaming.event.StreamingJobMetaCleanEvent;
@@ -147,6 +153,21 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
 
         }
         initialized = true;
+    }
+
+    private DataParserInfo getDataParser(String parserName) {
+        return DataParserManager.getInstance(config, project).getDataParserInfo(parserName);
+    }
+
+    private String getParserName() {
+        return NDataModelManager.getInstance(config, project)//
+                .getDataModelDesc(this.modelId).getRootFactTable().getTableDesc()//
+                .getKafkaConfig().getParserName();
+    }
+
+    private String getParserJarPath(DataParserInfo parserInfo) {
+        val manager = JarInfoManager.getInstance(config, project);
+        return manager.getJarInfo(JarTypeEnum.STREAMING_CUSTOM_PARSER, parserInfo.getJarName()).getJarPath();
     }
 
     private String getDriverHDFSLogPath() {
@@ -326,6 +347,16 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
         return yarnAmJavaOptionsSB.toString();
     }
 
+    private void addParserJar(SparkLauncher sparkLauncher) {
+        String parserName = getParserName();
+        if (jobType.equals(JobTypeEnum.STREAMING_BUILD) && !StringUtils.equals(DEFAULT_PARSER_NAME, parserName)) {
+            DataParserInfo parserInfo = getDataParser(parserName);
+            String jarPath = getParserJarPath(parserInfo);
+            sparkLauncher.addJar(jarPath);
+            log.info("streaming job {} use parser {} jar path {}", jobId, parserName, jarPath);
+        }
+    }
+
     public void startYarnJob() throws Exception {
         Map<String, String> sparkConf = getStreamingSparkConfig(config);
         sparkConf.forEach((key, value) -> launcher.setConf(key, value));
@@ -341,6 +372,7 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
         if (kapConfig.isKafkaJaasEnabled()) {
             sparkLauncher.addFile(kapConfig.getKafkaJaasConfPath());
         }
+        addParserJar(sparkLauncher);
         sparkLauncher.setMaster(sparkConf.getOrDefault(SPARK_MASTER, SPARK_MASTER_DEFAULT))
                 .setConf(SPARK_DRIVER_MEM, sparkConf.getOrDefault(SPARK_DRIVER_MEM, SPARK_DRIVER_MEM_DEFAULT))
                 .setConf(SPARK_EXECUTOR_INSTANCES, numberOfExecutor).setConf(SPARK_EXECUTOR_CORES, numberOfCore)

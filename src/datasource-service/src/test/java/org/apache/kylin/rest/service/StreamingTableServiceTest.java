@@ -17,7 +17,10 @@
  */
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PARSER_NAME;
+
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +48,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -57,8 +59,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import lombok.val;
 
 public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Mock
     private AclUtil aclUtil = Mockito.spy(AclUtil.class);
@@ -115,7 +115,7 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
         val prj = prjManager.getProject(PROJECT);
         val copy = prjManager.copyForWrite(prj);
         prjManager.updateProject(copy);
-        Mockito.when(userService.listSuperAdminUsers()).thenReturn(Arrays.asList("admin"));
+        Mockito.when(userService.listSuperAdminUsers()).thenReturn(Collections.singletonList("admin"));
         Mockito.when(userAclService.hasUserAclPermissionInProject(Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(false);
 
@@ -135,11 +135,8 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testInnerReloadTable() {
-        val database = "SSB";
-
-        val config = getTestConfig();
         try {
-            val tableDescList = tableService.getTableDesc(PROJECT, true, "P_LINEORDER_STR", database, false);
+            val tableDescList = tableService.getTableDesc(PROJECT, true, "P_LINEORDER_STR", "SSB", false);
             Assert.assertEquals(1, tableDescList.size());
             val tableDesc = tableDescList.get(0);
             val tableExtDesc = tableService.getOrCreateTableExt(PROJECT, tableDesc);
@@ -148,7 +145,6 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
         } catch (Exception e) {
             Assert.fail();
         }
-
     }
 
     @Test
@@ -174,6 +170,7 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
         kafkaConfig.setKafkaBootstrapServers("10.1.2.210:9092");
         kafkaConfig.setSubscribe("tpch_topic");
         kafkaConfig.setStartingOffsets("latest");
+        kafkaConfig.setParserName(DEFAULT_PARSER_NAME);
         streamingTableService.createKafkaConfig(PROJECT, kafkaConfig);
 
         val kafkaConf = KafkaConfigManager.getInstance(getTestConfig(), PROJECT).getKafkaConfig("DEFAULT.TPCH_TOPIC");

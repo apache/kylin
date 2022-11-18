@@ -105,6 +105,7 @@ public class StreamingJobService extends BasicService {
     public void launchStreamingJob(String project, String modelId, JobTypeEnum jobType) {
         checkModelStatus(project, modelId, jobType);
         ModelUtils.checkPartitionColumn(project, modelId, MsgPicker.getMsg().getPartitionColumnStartError());
+        initDefaultParser(project);
         StreamingScheduler scheduler = StreamingScheduler.getInstance(project);
         scheduler.submitJob(project, modelId, jobType);
     }

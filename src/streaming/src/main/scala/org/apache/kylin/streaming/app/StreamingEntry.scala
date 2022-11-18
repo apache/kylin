@@ -28,7 +28,7 @@ import org.apache.commons.collections.CollectionUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.streaming.CreateStreamingFlatTable
-import org.apache.kylin.streaming.common.{BuildJobEntry, MicroBatchEntry}
+import org.apache.kylin.streaming.common.{BuildJobEntry, CreateFlatTableEntry, MicroBatchEntry}
 import org.apache.kylin.streaming.jobs.{StreamingDFBuildJob, StreamingJobUtils, StreamingSegmentManager}
 import org.apache.kylin.streaming.jobs.StreamingDFBuildJob
 import org.apache.kylin.streaming.manager.StreamingJobManager
@@ -167,10 +167,12 @@ class StreamingEntry
   (Dataset[Row], String, CreateStreamingFlatTable) = {
     val originConfig = KylinConfig.getInstanceFromEnv
 
+    val parserName = dataflow.getModel.getRootFactTable.getTableDesc.getKafkaConfig.getParserName
     val flatTableDesc = new NCubeJoinedFlatTableDesc(dataflow.getIndexPlan)
     val nSpanningTree = createSpanningTree(dataflow)
     val partitionColumn = NSparkCubingUtil.convertFromDot(dataflow.getModel.getPartitionDesc.getBackTickPartitionDateColumn)
-    val flatTable = CreateStreamingFlatTable(flatTableDesc, null, nSpanningTree, ss, null, partitionColumn, watermark)
+    val flatTableEntry = new CreateFlatTableEntry(flatTableDesc, null, nSpanningTree, ss, null, partitionColumn, watermark, parserName)
+    val flatTable = CreateStreamingFlatTable(flatTableEntry)
 
     val streamingJobMgr = StreamingJobManager.getInstance(originConfig, project)
     val jobMeta: StreamingJobMeta = streamingJobMgr.getStreamingJobByUuid(jobId)

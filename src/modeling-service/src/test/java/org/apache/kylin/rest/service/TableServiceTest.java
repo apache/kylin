@@ -868,18 +868,22 @@ public class TableServiceTest extends CSVSourceTestCase {
         List<String> messages = new ArrayList<>();
         messages.add(msg);
         messages.add(msg);
-        when(kafkaServiceMock.getMessages(any(), any(String.class), any(Integer.class))).thenReturn(encodedMessages);
+        when(kafkaServiceMock.getMessages(any(), any(String.class))).thenReturn(encodedMessages);
 
         Map<String, Object> mockResp = new HashMap<>();
         mockResp.put("message_type", true);
         mockResp.put("message", messages);
-        when(kafkaServiceMock.getMessageTypeAndDecodedMessages(any())).thenReturn(mockResp);
 
+        Map<String, Object> parseMap = Maps.newHashMap();
+        parseMap.put("minute_start", "2000-01-01 05:06:12");
+        when(kafkaServiceMock.decodeMessage(any())).thenReturn(mockResp);
+
+        when(kafkaServiceMock.parserMessage(any(String.class), any(), any(String.class))).thenReturn(parseMap);
         String format2 = tableService.getPartitionColumnFormat("default", "DEFAULT.STREAMING_TABLE", "MINUTE_START");
         Assert.assertEquals("yyyy-MM-dd HH:mm:ss", format2);
 
-        when(kafkaServiceMock.getMessages(any(), any(String.class), any(Integer.class))).thenCallRealMethod();
-        when(kafkaServiceMock.getMessageTypeAndDecodedMessages(any())).thenCallRealMethod();
+        when(kafkaServiceMock.getMessages(any(), any(String.class))).thenCallRealMethod();
+        when(kafkaServiceMock.decodeMessage(any())).thenCallRealMethod();
         desc.setKafkaConfig(null);
     }
 

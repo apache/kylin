@@ -21,13 +21,9 @@ import static org.apache.kafka.common.config.SaslConfigs.SASL_JAAS_CONFIG;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.kafka.clients.Metadata;
-import org.apache.kafka.clients.MetadataCache;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.internals.AdminMetadataManager;
 import org.apache.kafka.common.Cluster;
@@ -48,7 +44,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class KafkaClientTest extends StreamingTestCase {
+public class KafkaUtilsTest extends StreamingTestCase {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -65,8 +61,8 @@ public class KafkaClientTest extends StreamingTestCase {
 
     @Test
     public void testConstructMethod() {
-        val constructors = KafkaClient.class.getDeclaredConstructors();
-        Assert.assertTrue(constructors.length == 1);
+        val constructors = KafkaUtils.class.getDeclaredConstructors();
+        Assert.assertEquals(1, constructors.length);
 
         try {
             constructors[0].setAccessible(true);
@@ -78,9 +74,9 @@ public class KafkaClientTest extends StreamingTestCase {
 
     @Test
     public void testConstructDefaultKafkaConsumerProperties() {
-        val prop = KafkaClient.constructDefaultKafkaConsumerProperties("localhost:9092", "client1", new Properties());
+        val prop = KafkaUtils.getConsumerProperties("localhost:9092", "client1", new Properties());
         Assert.assertNotNull(prop);
-        val propNull = KafkaClient.constructDefaultKafkaConsumerProperties("localhost:9092", "client1", null);
+        val propNull = KafkaUtils.getConsumerProperties("localhost:9092", "client1", null);
         Assert.assertNotNull(propNull);
         Assert.assertEquals("localhost:9092", prop.getProperty("bootstrap.servers"));
         Assert.assertEquals("client1", prop.getProperty("group.id"));
@@ -88,26 +84,8 @@ public class KafkaClientTest extends StreamingTestCase {
     }
 
     @Test
-    public void testGetKafkaConsumer() {
-        val prop = KafkaClient.constructDefaultKafkaConsumerProperties("localhost:9092", "client1", new Properties());
-        val consumer = KafkaClient.getKafkaConsumer("localhost:9092", "client2");
-        Optional<String> groupId = (Optional<String>) ReflectionUtils.getField(consumer, "groupId");
-        if (groupId.isPresent()) {
-            Assert.assertEquals("client2", groupId.get());
-        } else {
-            Assert.fail();
-        }
-
-        Metadata meta = (Metadata) ReflectionUtils.getField(consumer, "metadata");
-        MetadataCache cache = (MetadataCache) ReflectionUtils.getField(meta, "cache");
-        Map<Integer, Node> nodes = (Map<Integer, Node>) ReflectionUtils.getField(cache, "nodes");
-        Assert.assertEquals("localhost", nodes.get(-1).host());
-        Assert.assertEquals(9092, nodes.get(-1).port());
-    }
-
-    @Test
     public void testKafkaAdminClient() {
-        try (AdminClient client = KafkaClient.getKafkaAdminClient("localhost:9092", "group1")) {
+        try (AdminClient client = KafkaUtils.getKafkaAdminClient("localhost:9092", "group1")) {
             AdminMetadataManager metadataManager = (AdminMetadataManager) ReflectionUtils.getField(client,
                     "metadataManager");
             Cluster cluster = (Cluster) ReflectionUtils.getField(metadataManager, "cluster");
@@ -121,9 +99,9 @@ public class KafkaClientTest extends StreamingTestCase {
 
     @Test
     public void testConstructDefaultKafkaAdminClientProperties() throws Exception {
-        val prop = KafkaClient.constructDefaultKafkaAdminClientProperties("localhost:9092", "group1", new Properties());
+        val prop = KafkaUtils.getAdminClientProperties("localhost:9092", "group1", new Properties());
         Assert.assertNotNull(prop);
-        val prop1 = KafkaClient.constructDefaultKafkaAdminClientProperties("localhost:9092", "group1", null);
+        val prop1 = KafkaUtils.getAdminClientProperties("localhost:9092", "group1", null);
         Assert.assertNotNull(prop1);
         Assert.assertEquals("localhost:9092", prop.getProperty("bootstrap.servers"));
         Assert.assertEquals("group1", prop.getProperty("group.id"));
@@ -134,11 +112,11 @@ public class KafkaClientTest extends StreamingTestCase {
                 "KafkaClient{ org.apache.kafka.common.security.scram.ScramLoginModule required}");
         val text = StreamingJobUtils.extractKafkaSaslJaasConf();
         Assert.assertNull(text);
-        Pair<Boolean, String> kafkaJaasTextPair = (Pair<Boolean, String>) ReflectionUtils.getField(KafkaClient.class,
+        Pair<Boolean, String> kafkaJaasTextPair = (Pair<Boolean, String>) ReflectionUtils.getField(KafkaUtils.class,
                 "kafkaJaasTextPair");
         kafkaJaasTextPair.setFirst(false);
         getTestConfig().setProperty("kylin.kafka-jaas.enabled", "true");
-        val prop2 = KafkaClient.constructDefaultKafkaAdminClientProperties("localhost:9092", "group1", null);
+        val prop2 = KafkaUtils.getAdminClientProperties("localhost:9092", "group1", null);
         Assert.assertNotNull(prop2.get(SASL_JAAS_CONFIG));
         getTestConfig().setProperty("kylin.kafka-jaas.enabled", "false");
     }

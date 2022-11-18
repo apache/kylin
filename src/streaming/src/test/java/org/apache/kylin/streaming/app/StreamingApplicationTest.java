@@ -144,7 +144,6 @@ public class StreamingApplicationTest extends StreamingTestCase {
         entry.closeSparkSession();
 
         Awaitility.await().atMost(30, TimeUnit.SECONDS).until(() -> entry.getSparkSession().sparkContext().isStopped());
-
     }
 
     @Test
@@ -166,7 +165,7 @@ public class StreamingApplicationTest extends StreamingTestCase {
         Assert.assertTrue(entry.isRunning());
         entry.startJobExecutionIdCheckThread();
 
-        Awaitility.waitAtMost(3, TimeUnit.SECONDS).until(() -> entry.isRunning());
+        Awaitility.waitAtMost(3, TimeUnit.SECONDS).until(entry::isRunning);
     }
 
 }
