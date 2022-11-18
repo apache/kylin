@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -76,7 +77,7 @@ public class TopNCounterTest {
         ZipfDistribution zipf = new ZipfDistribution(KEY_SPACE, 0.5);
         int keyIndex;
 
-        File tempFile = File.createTempFile("ZipfDistribution", ".txt");
+        File tempFile = Files.createTempFile("ZipfDistribution", ".txt").toFile();
 
         if (tempFile.exists())
             FileUtils.forceDelete(tempFile);

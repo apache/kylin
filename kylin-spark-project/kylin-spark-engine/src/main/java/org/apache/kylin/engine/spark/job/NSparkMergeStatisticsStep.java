@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -94,7 +95,7 @@ public class NSparkMergeStatisticsStep extends NSparkExecutable {
                 File tempFile = null;
                 FileOutputStream tempFileStream = null;
                 try {
-                    tempFile = File.createTempFile(segmentId, ".seq");
+                    tempFile = Files.createTempFile(segmentId, ".seq").toFile();
                     tempFileStream = new FileOutputStream(tempFile);
                     org.apache.commons.io.IOUtils.copy(is, tempFileStream);
                 } finally {

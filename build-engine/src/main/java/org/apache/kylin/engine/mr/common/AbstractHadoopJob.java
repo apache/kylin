@@ -29,6 +29,7 @@ import static org.apache.kylin.engine.mr.common.JobRelatedMetaUtil.collectCubeMe
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -595,7 +596,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected void dumpKylinPropsAndMetadata(String prj, Set<String> dumpList, KylinConfig kylinConfig,
             Configuration conf) throws IOException {
-        File tmp = File.createTempFile("kylin_job_meta", "");
+        File tmp = Files.createTempFile("kylin_job_meta", "").toFile();
         FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 
         File metaDir = new File(tmp, "meta");
