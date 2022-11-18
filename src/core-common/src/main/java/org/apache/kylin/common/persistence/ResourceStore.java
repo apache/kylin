@@ -95,6 +95,8 @@ public abstract class ResourceStore implements AutoCloseable {
     public static final String EXECUTABLE_JOB = "/execute";
     public static final String HISTORY_SOURCE_USAGE = GLOBAL_PROJECT + "/history_source_usage";
     public static final String RESOURCE_GROUP = GLOBAL_PROJECT + "/resource_group";
+    public static final String DATA_PARSER_RESOURCE_ROOT = "/parser";
+    public static final String JAR_RESOURCE_ROOT = "/jar";
 
     public static final String METASTORE_IMAGE = "/_image";
     public static final String METASTORE_UUID_TAG = "/UUID";

@@ -25,12 +25,12 @@ import java.util.HashMap;
 
 import org.apache.kylin.common.SystemPropertiesCache;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.StreamingRequest;
 import org.apache.kylin.rest.service.KafkaService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -70,7 +70,8 @@ public class KafkaControllerTest extends NLocalFileMetadataTestCase {
 
     private final Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
 
-    private static String PROJECT = "streaming_test";
+    private static final String PROJECT = "streaming_test";
+    private static final String PARSER_NAME = "org.apache.kylin.parser.JsonDataParser1";
 
     @Before
     public void setup() {
@@ -126,9 +127,9 @@ public class KafkaControllerTest extends NLocalFileMetadataTestCase {
         request.setKafkaConfig(kafkaConfig);
         val messages = Arrays.asList(ByteBuffer.allocate(10));
         Mockito.when(
-                kafkaService.getMessages(request.getKafkaConfig(), request.getProject(), request.getClusterIndex()))
+                kafkaService.getMessages(request.getKafkaConfig(), request.getProject()))
                 .thenReturn(messages);
-        Mockito.when(kafkaService.getMessageTypeAndDecodedMessages(messages)).thenReturn(new HashMap<String, Object>());
+        Mockito.when(kafkaService.decodeMessage(messages)).thenReturn(new HashMap<String, Object>());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/kafka/messages").contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValueAsString(request))
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
@@ -145,7 +146,26 @@ public class KafkaControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(kafkaController).convertMessageToFlatMap(Mockito.any(StreamingRequest.class));
+        Mockito.verify(kafkaController).convertMessage(Mockito.any(StreamingRequest.class));
+    }
+
+    @Test
+    public void testGetParser() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/kafka/parsers").contentType(MediaType.APPLICATION_JSON)
+                .param("project", PROJECT).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.verify(kafkaController).getParser(Mockito.anyString());
+    }
+
+    @Test
+    public void testRemoveParser() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/kafka/parser").contentType(MediaType.APPLICATION_JSON)
+                .param("project", PROJECT).param("class_name", PARSER_NAME)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.verify(kafkaController).removeParser(Mockito.anyString(), Mockito.anyString());
     }
 
     private StreamingRequest mockStreamingRequest() {

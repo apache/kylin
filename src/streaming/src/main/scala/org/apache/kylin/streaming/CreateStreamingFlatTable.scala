@@ -23,30 +23,27 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.NSparkCubingEngine
-import org.apache.kylin.engine.spark.builder.{CreateFlatTable, NBuildSourceInfo}
+import org.apache.kylin.engine.spark.builder.CreateFlatTable
 import org.apache.kylin.engine.spark.job.{FlatTableHelper, NSparkCubingUtil}
-import org.apache.kylin.metadata.cube.cuboid.NSpanningTree
 import org.apache.kylin.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataSegment}
 import org.apache.kylin.metadata.cube.utils.StreamingUtils
-import org.apache.kylin.metadata.model.{NDataModel, _}
+import org.apache.kylin.metadata.model._
+import org.apache.kylin.parser.AbstractDataParser
 import org.apache.kylin.source.SourceFactory
+import org.apache.kylin.streaming.common.CreateFlatTableEntry
 import org.apache.kylin.streaming.jobs.StreamingJobUtils
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.util.SparderTypeUtil
-import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, Row}
 import org.apache.spark.storage.StorageLevel
 
+import java.nio.ByteBuffer
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class CreateStreamingFlatTable(flatTable: IJoinedFlatTableDesc,
-                               seg: NDataSegment,
-                               toBuildTree: NSpanningTree,
-                               ss: SparkSession,
-                               sourceInfo: NBuildSourceInfo,
-                               partitionColumn: String,
-                               watermark: String) extends CreateFlatTable(flatTable, seg, toBuildTree, ss, sourceInfo) {
+class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
+  CreateFlatTable(entry.flatTable, entry.seg, entry.toBuildTree, entry.ss, entry.sourceInfo) {
 
   import org.apache.kylin.engine.spark.builder.CreateFlatTable._
 
@@ -55,9 +52,9 @@ class CreateStreamingFlatTable(flatTable: IJoinedFlatTableDesc,
   private val SECURITY_PROTOCOL = "security.protocol"
   private val SASL_MECHANISM = "sasl.mechanism"
 
-  var lookupTablesGlobal: mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]] = null
-  var factTableDataset: Dataset[Row] = null
-  var tableRefreshInterval = -1L
+  var lookupTablesGlobal: mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]] = _
+  var factTableDataset: Dataset[Row] = _
+  var tableRefreshInterval: Long = -1L
 
   def generateStreamingDataset(config: KylinConfig): Dataset[Row] = {
     val model = flatTable.getDataModel
@@ -101,16 +98,16 @@ class CreateStreamingFlatTable(flatTable: IJoinedFlatTableDesc,
         }
       )
     val rootFactTable = changeSchemaToAliasDotName(
-      CreateStreamingFlatTable.castDF(originFactTable, schema, partitionColumn()).alias(model.getRootFactTable.getAlias),
+      CreateStreamingFlatTable.castDF(originFactTable, schema, partitionColumn(), entry.parserName).alias(model.getRootFactTable.getAlias),
       model.getRootFactTable.getAlias)
 
     factTableDataset =
-      if (!StringUtils.isEmpty(watermark)) {
+      if (!StringUtils.isEmpty(entry.watermark)) {
         import org.apache.spark.sql.functions._
         val cols = model.getRootFactTable.getColumns.asScala.map(item => {
           col(NSparkCubingUtil.convertFromDot(item.getBackTickIdentity))
         }).toList
-        rootFactTable.withWatermark(partitionColumn, watermark).groupBy(cols: _*).count()
+        rootFactTable.withWatermark(partitionColumn, entry.watermark).groupBy(cols: _*).count()
       } else {
         rootFactTable
       }
@@ -160,20 +157,17 @@ class CreateStreamingFlatTable(flatTable: IJoinedFlatTableDesc,
 }
 
 object CreateStreamingFlatTable {
-  def apply(flatTable: IJoinedFlatTableDesc,
-            seg: NDataSegment,
-            toBuildTree: NSpanningTree,
-            ss: SparkSession,
-            sourceInfo: NBuildSourceInfo,
-            partitionColumn: String,
-            watermark: String): CreateStreamingFlatTable = {
-    new CreateStreamingFlatTable(flatTable, seg, toBuildTree, ss, sourceInfo, partitionColumn, watermark)
+  def apply(createFlatTableEntry: CreateFlatTableEntry): CreateStreamingFlatTable = {
+    new CreateStreamingFlatTable(createFlatTableEntry)
   }
 
-  def castDF(df: DataFrame, parsedSchema: StructType, partitionColumn: String): DataFrame = {
+  def castDF(df: DataFrame, parsedSchema: StructType, partitionColumn: String, parserName: String): DataFrame = {
     df.selectExpr("CAST(value AS STRING) as rawValue")
       .mapPartitions { rows =>
-        val newRows = new PartitionRowIterator(rows, parsedSchema, partitionColumn)
+        val dataParser: AbstractDataParser[ByteBuffer] = AbstractDataParser
+          .getDataParser(parserName, Thread.currentThread.getContextClassLoader)
+
+        val newRows = new PartitionRowIterator(rows, parsedSchema, partitionColumn, dataParser)
         newRows.filter(row => row.size == parsedSchema.length)
       }(RowEncoder(parsedSchema))
   }

@@ -73,6 +73,8 @@ public class TableDescResponse extends TableDesc {
     private String subscribe;
     @JsonProperty("batch_table_identity")
     private String batchTable;
+    @JsonProperty("parser_name")
+    private String parserName;
 
     public TableDescResponse(TableDesc table) {
         super(table);
