@@ -357,6 +357,7 @@
         <module>src/data-loading-booter</module>
         <module>src/query-booter</module>
         <module>src/common-booter</module>
+        <module>src/jdbc</module>
     </modules>
 
     <dependencyManagement>
