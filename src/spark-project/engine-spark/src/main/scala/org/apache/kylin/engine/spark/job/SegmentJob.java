@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -49,6 +50,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import lombok.val;
 
@@ -61,7 +64,6 @@ public abstract class SegmentJob extends SparkApplication {
     protected IndexPlan indexPlan;
 
     protected String dataflowId;
-    // TODO change the `readOnlyLayouts`
     // In order to support the cube planner, `readOnlyLayouts` can be changed
     private Set<LayoutEntity> readOnlyLayouts;
     protected Set<NDataSegment> readOnlySegments;
@@ -103,7 +105,26 @@ public abstract class SegmentJob extends SparkApplication {
                 NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(config, project);
                 logger.debug("Update the index plan and add recommended agg index {}", recommendAggLayouts);
                 indexPlanManager.updateIndexPlan(dataflowId, copyForWrite -> {
-                    copyForWrite.createAndAddRecommendAggIndex(recommendAggLayouts);
+                    // construct the map: layout -> id
+                    val allRuleLayouts = copyForWrite.getRuleBasedIndex().genCuboidLayouts();
+                    Map<LayoutEntity, Long> layouts2Id = Maps.newHashMap();
+                    allRuleLayouts.forEach(layoutEntity -> {
+                        layouts2Id.put(layoutEntity, layoutEntity.getId());
+                    });
+                    logger.debug("All rule base layouts {}", allRuleLayouts);
+                    Set<Long> costBasedResult = Sets.newHashSet();
+                    for (LayoutEntity layoutEntity : recommendAggLayouts) {
+                        if (layouts2Id.containsKey(layoutEntity)) {
+                            costBasedResult.add(layouts2Id.get(layoutEntity));
+                        } else {
+                            logger.debug("Can't find the layout {} in the rule base index", layoutEntity);
+                        }
+                    }
+                    // reset the rule base layouts
+                    logger.debug("Set the rule pruning cost based list layouts {}", costBasedResult);
+                    val ruleBaseIndex = copyForWrite.getRuleBasedIndex();
+                    ruleBaseIndex.setLayoutsOfCostBasedList(costBasedResult);
+                    copyForWrite.setRuleBasedIndex(ruleBaseIndex);
                 });
                 return null;
             }, project);
@@ -122,7 +143,7 @@ public abstract class SegmentJob extends SparkApplication {
         indexPlan = dataflowManager.getDataflow(dataflowId).getIndexPlan();
         // get the new layout
         val newJobLayouts = indexPlan.getAllLayouts();
-        logger.debug("Update Job layouts from {} to {}", readOnlyLayouts, newJobLayouts);
+        logger.debug("Update Job layouts count from {} to {}", readOnlyLayouts.size(), newJobLayouts.size());
         readOnlyLayouts = new HashSet<>(newJobLayouts);
         // rewrite the `P_LAYOUT_IDS` parameters
         setParam(NBatchConstants.P_LAYOUT_IDS, NSparkCubingUtil.ids2Str(NSparkCubingUtil.toLayoutIds(readOnlyLayouts)));

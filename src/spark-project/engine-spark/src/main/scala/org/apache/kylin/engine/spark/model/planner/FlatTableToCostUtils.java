@@ -84,11 +84,21 @@ public class FlatTableToCostUtils {
         // step2: calculate the cost for each partition, and get the new RDD.
         // The key is cuboid, and the value is the data encoded from the hll for each partition.
         int rowKeyCount = indexPlan.getEffectiveDimCols().size();
-        Long[] inputCuboids = getCuboIdsFromLayouts(indexPlan.getAllLayoutsWithCubePlanner(),
+        // layouts from the rule index(agg group)
+        Set<LayoutEntity> inputLayouts = indexPlan.getRuleBasedIndex().genCuboidLayouts();
+        if (indexPlan.getBaseAggLayout() == null) {
+            throw new RuntimeException("Need the base agg index layout");
+        }
+        // base agg layout
+        inputLayouts.add(indexPlan.getBaseAggLayout());
+        Long[] inputCuboids = getCuboIdsFromLayouts(Lists.newArrayList(inputLayouts),
                 indexPlan.getEffectiveDimCols().size(), indexPlan.getColumnIdToRowKeyId());
+
         // rowkey id ->  column index in the flat table of the flat dataset.
         int[] rowkeyColumnIndexes = getRowkeyColumnIndexes(indexPlan, flatTableDesc);
+
         int hllPrecision = kylinConfig.getCubeStatsHLLPrecision();
+
         JavaPairRDD<Long, byte[]> costRddByPartition = flatTableRDD.mapPartitionsToPair(
                 new FlatOutputFunction(hllPrecision, rowKeyCount, inputCuboids, rowkeyColumnIndexes));
 

@@ -29,13 +29,13 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.metadata.model.IStorageAware;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.metadata.cube.cuboid.CuboidScheduler.ColOrder;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity.IndexIdentifier;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.springframework.beans.BeanUtils;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -100,6 +100,11 @@ public class RuleBasedIndex implements Serializable {
     @Getter
     @JsonProperty("layout_black_list")
     private Set<Long> layoutBlackList = new HashSet<>();
+
+    @Setter
+    @Getter
+    @JsonProperty("layout_cost_based_pruned_list")
+    private Set<Long> layoutsOfCostBasedList = null;
 
     @Setter
     @Getter
@@ -191,7 +196,11 @@ public class RuleBasedIndex implements Serializable {
     }
 
     public Set<LayoutEntity> genCuboidLayouts() {
-        return genCuboidLayouts(Sets.newHashSet(), Sets.newHashSet(), true);
+        return genCuboidLayouts(Sets.newHashSet(), Sets.newHashSet(), true, false);
+    }
+
+    public Set<LayoutEntity> genCuboidLayouts(boolean useCostBasedList) {
+        return genCuboidLayouts(Sets.newHashSet(), Sets.newHashSet(), true, useCostBasedList);
     }
 
     public boolean getIndexUpdateEnabled() {
@@ -251,18 +260,21 @@ public class RuleBasedIndex implements Serializable {
             Integer[] aggMeasures = aggregationGroup.getMeasures();
             Set<Integer> aggMeasureSet = Sets.newHashSet(aggMeasures);
             if (current.size() == 0 && aggMeasures.length > 0) {
-                throw new RuntimeException(String.format("The measure of agg group must be same with the measure in the model, please refer to %s."
+                throw new RuntimeException(String.format(
+                        "The measure of agg group must be same with the measure in the model, please refer to %s."
                                 + "\n please create base index first",
                         "https://jirap.corp.ebay.com/browse/KYLIN-3593"));
             }
             if (current.size() != aggMeasures.length) {
-                throw new RuntimeException(String.format("The measure of agg group must be same with the measure in the model, please refer to %s."
+                throw new RuntimeException(String.format(
+                        "The measure of agg group must be same with the measure in the model, please refer to %s."
                                 + "\n The measure [%s] in base index, and the measure [%s] in agg group",
                         "https://jirap.corp.ebay.com/browse/KYLIN-3593", current, aggMeasureSet));
             }
             for (Integer measure : current) {
                 if (!aggMeasureSet.contains(measure)) {
-                    throw new RuntimeException(String.format("The measure of agg group must be same with the measure in the model, please refer to %s."
+                    throw new RuntimeException(String.format(
+                            "The measure of agg group must be same with the measure in the model, please refer to %s."
                                     + "\n The measure [%s] in base index, and the measure [%s] in agg group",
                             "https://jirap.corp.ebay.com/browse/KYLIN-3593", current, aggMeasureSet));
                 }
@@ -292,15 +304,24 @@ public class RuleBasedIndex implements Serializable {
     }
 
     Set<LayoutEntity> genCuboidLayouts(Set<LayoutEntity> previousLayouts) {
-        return genCuboidLayouts(previousLayouts, Sets.newHashSet(), true);
+        return genCuboidLayouts(previousLayouts, Sets.newHashSet(), true, false);
     }
 
     Set<LayoutEntity> genCuboidLayouts(Set<LayoutEntity> previousLayouts, Set<LayoutEntity> needDelLayouts) {
-        return genCuboidLayouts(previousLayouts, needDelLayouts, true);
+        return genCuboidLayouts(previousLayouts, needDelLayouts, true, false);
     }
 
-    Set<LayoutEntity> genCuboidLayouts(Set<LayoutEntity> previousLayouts, Set<LayoutEntity> needDelLayouts,
-            boolean excludeDel) {
+    /**
+     *
+     * @param previousLayouts
+     * @param needDelLayouts In order to make no changes for the same layout,
+     *                       we can get the layout id from the previous `RuleBasedIndex` for `previousLayouts` and `needDelLayouts`
+     * @param excludeDel Whether to include the result of deleted layouts
+     * @param useCostBasedList Whether to use the the list of `layoutsOfCostBasedList`
+     * @return
+     */
+    private Set<LayoutEntity> genCuboidLayouts(Set<LayoutEntity> previousLayouts, Set<LayoutEntity> needDelLayouts,
+            boolean excludeDel, boolean useCostBasedList) {
 
         Set<LayoutEntity> genLayouts = Sets.newHashSet();
 
@@ -384,6 +405,18 @@ public class RuleBasedIndex implements Serializable {
         if (excludeDel) {
             genLayouts.removeIf(layout -> layoutBlackList.contains(layout.getId()));
         }
+
+        // If contains the `layout_cost_based_pruned_list`, will use layouts in the cost based planner list
+        if (useCostBasedList && layoutsOfCostBasedList != null) {
+            // use the recommend white list id
+            Set<LayoutEntity> result = Sets.newHashSet();
+            genLayouts.stream().forEach(layout -> {
+                if (layoutsOfCostBasedList.contains(layout.getId())) {
+                    result.add(layout);
+                }
+            });
+            genLayouts = result;
+        }
         return genLayouts;
     }
 
@@ -431,7 +464,7 @@ public class RuleBasedIndex implements Serializable {
     }
 
     public Set<LayoutEntity> getBlacklistLayouts() {
-        val allLayouts = genCuboidLayouts(Sets.newHashSet(), Sets.newHashSet(), false);
+        val allLayouts = genCuboidLayouts(Sets.newHashSet(), Sets.newHashSet(), false, false);
         val existLayouts = genCuboidLayouts();
         return allLayouts.stream().filter(layout -> !existLayouts.contains(layout)).collect(Collectors.toSet());
     }

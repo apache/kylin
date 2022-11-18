@@ -240,7 +240,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         if (ruleBasedIndex.getBaseLayoutEnabled() == null) {
             ruleBasedIndex.setBaseLayoutEnabled(getConfig().isBaseCuboidAlwaysValid());
         }
-        ruleBasedLayouts.addAll(ruleBasedIndex.genCuboidLayouts());
+        ruleBasedLayouts.addAll(ruleBasedIndex.genCuboidLayouts(true));
         if (config.base().isSystemConfig() && isCachedAndShared) {
             ruleBasedIndex.getCuboidScheduler().validateOrder();
         }
@@ -436,52 +436,6 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         return getAllIndexes(true);
     }
 
-    private List<IndexEntity> getAllIndexesForCubePlanner() {
-        Map<Long, Integer> retSubscriptMap = Maps.newHashMap();
-        List<IndexEntity> mergedIndexes = Lists.newArrayList();
-        int retSubscript = 0;
-        for (IndexEntity indexEntity : indexes) {
-            val copy = JsonUtil.deepCopyQuietly(indexEntity, IndexEntity.class);
-            retSubscriptMap.put(indexEntity.getId(), retSubscript);
-            mergedIndexes.add(copy);
-            Map<Long, LayoutEntity> layouts = Maps.newHashMap();
-            indexEntity.getLayouts().forEach(layout -> layouts.putIfAbsent(layout.getId(), layout));
-            copy.getLayouts().forEach(layout -> layout.setInProposing(layouts.get(layout.getId()).isInProposing()));
-            retSubscript++;
-        }
-        for (LayoutEntity ruleBasedLayout : getRuleBaseLayoutsWithoutPlannerCheck()) {
-            val ruleRelatedIndex = ruleBasedLayout.getIndex();
-            if (!retSubscriptMap.containsKey(ruleRelatedIndex.getId())) {
-                val copy = JsonUtil.deepCopyQuietly(ruleRelatedIndex, IndexEntity.class);
-                retSubscriptMap.put(ruleRelatedIndex.getId(), retSubscript);
-                mergedIndexes.add(copy);
-                retSubscript++;
-            }
-            val subscript = retSubscriptMap.get(ruleRelatedIndex.getId());
-            val targetIndex = mergedIndexes.get(subscript);
-            addLayout2TargetIndex(ruleBasedLayout, targetIndex);
-        }
-
-        for (IndexEntity indexEntity : toBeDeletedIndexes) {
-            if (!retSubscriptMap.containsKey(indexEntity.getId())) {
-                IndexEntity copy = JsonUtil.deepCopyQuietly(indexEntity, IndexEntity.class);
-                retSubscriptMap.put(indexEntity.getId(), retSubscript);
-                mergedIndexes.add(copy);
-                copy.getLayouts().forEach(layoutEntity -> layoutEntity.setToBeDeleted(true));
-                retSubscript++;
-            } else {
-                val subscript = retSubscriptMap.get(indexEntity.getId());
-                val targetIndex = mergedIndexes.get(subscript);
-                for (LayoutEntity layoutEntity : indexEntity.getLayouts()) {
-                    addLayout2TargetIndex(layoutEntity, targetIndex, true);
-                }
-            }
-        }
-
-        mergedIndexes.forEach(value -> value.setIndexPlan(this));
-        return mergedIndexes;
-    }
-
     /*
         Get a copy of all IndexEntity List, which is a time cost operation
      */
@@ -542,19 +496,6 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         return r;
     }
 
-    /**
-     * It's used to get all layouts for cube planner
-     * @return all layouts with the rule based index
-     */
-    public List<LayoutEntity> getAllLayoutsWithCubePlanner() {
-        List<LayoutEntity> r = Lists.newArrayList();
-
-        for (IndexEntity cd : getAllIndexesForCubePlanner()) {
-            r.addAll(cd.getLayouts());
-        }
-        return r;
-    }
-
     public List<ImmutablePair<LayoutEntity, Boolean>> getAllLayoutsReadOnly() {
         Map<Long, Map<LayoutEntity, Boolean>> resultMap = Maps.newHashMap();
         for (IndexEntity indexEntity : indexes) {
@@ -598,17 +539,6 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
     }
 
     public List<LayoutEntity> getRuleBaseLayouts() {
-        // If use the cost based planner, there is no rule base layout to return
-        // TODO: remove this checker with the config later
-        if (config.enableCostBasedIndexPlanner()) {
-            return Lists.newArrayList();
-        } else {
-            return isCachedAndShared ? ImmutableList.copyOf(ruleBasedLayouts) : ruleBasedLayouts;
-        }
-    }
-
-    private List<LayoutEntity> getRuleBaseLayoutsWithoutPlannerCheck() {
-        // Return the rule base layout without the checker for planner
         return isCachedAndShared ? ImmutableList.copyOf(ruleBasedLayouts) : ruleBasedLayouts;
     }
 
@@ -685,7 +615,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         this.ruleBasedIndex = ruleBasedIndex;
 
         Set<LayoutEntity> targetSet = this.ruleBasedIndex.genCuboidLayouts();
-        this.ruleBasedLayouts = Lists.newArrayList(targetSet);
+        this.ruleBasedLayouts = Lists.newArrayList(this.ruleBasedIndex.genCuboidLayouts(true));
         if (markToBeDeleted && CollectionUtils.isNotEmpty(layoutsNotIn(targetSet, originSet))) {
             Set<LayoutEntity> toBeDeletedSet = layoutsNotIn(originSet, targetSet);
             if (CollectionUtils.isNotEmpty(toBeDeletedSet)) {
@@ -711,7 +641,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
             ruleBasedIndex.setIndexStartId(nextAggregationIndexId);
             ruleBasedIndex.setLayoutIdMapping(Lists.newArrayList());
             ruleBasedIndex.genCuboidLayouts(ruleLayouts);
-            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts());
+            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts(true));
         }
         this.aggShardByColumns = aggShardByColumns;
         updateNextId();
@@ -724,7 +654,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
             this.extendPartitionColumns = extendPartitionColumns;
             ruleBasedIndex.setLayoutIdMapping(Lists.newArrayList());
             ruleBasedIndex.genCuboidLayouts(ruleLayouts);
-            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts());
+            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts(true));
         }
         this.extendPartitionColumns = extendPartitionColumns;
         updateNextId();
@@ -831,7 +761,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
             val newBlacklist = Sets.newHashSet(originBlacklist);
             newBlacklist.addAll(blacklist);
             ruleBasedIndex.setLayoutBlackList(newBlacklist);
-            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts());
+            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts(true));
         }
         updateNextId();
     }
@@ -1131,39 +1061,6 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
 
         }
 
-    }
-
-    public void createAndAddRecommendAggIndex(List<LayoutEntity> recommendAggLayout) {
-        for (LayoutEntity layoutEntity : recommendAggLayout) {
-            createAndAddRecommendAggIndex(layoutEntity);
-        }
-    }
-
-    private void createAndAddRecommendAggIndex(LayoutEntity recommendAggLayout) {
-        // add the new recommended agg layout for the index plan
-        checkIsNotCachedAndShared();
-        val allIndexMapping = getAllIndexesMap();
-        Optional<LayoutEntity> oldLayout = removeLayoutSameWith(recommendAggLayout);
-        if (oldLayout.isPresent()) {
-            recommendAggLayout.setId(oldLayout.get().getId());
-        }
-        val newIndexEntity = IndexEntity.from(recommendAggLayout);
-        IndexEntity indexInAll = allIndexMapping.get(newIndexEntity.createIndexIdentifier());
-        if (indexInAll == null) {
-            // create new index entity
-            addIndex(newIndexEntity, recommendAggLayout.notAssignId());
-        } else {
-            // update the layout to the index entity
-            IndexEntity indexInWhiteList = getWhiteListIndexesMap().get(newIndexEntity.createIndexIdentifier());
-            if (indexInWhiteList != null) {
-                IndexEntity realIndex = getIndexes().get(getIndexes().indexOf(indexInWhiteList));
-                realIndex.addLayout(recommendAggLayout);
-            } else {
-                newIndexEntity.setLayouts(Lists.newArrayList());
-                newIndexEntity.addLayout(recommendAggLayout);
-                getIndexes().add(newIndexEntity);
-            }
-        }
     }
 
     /**

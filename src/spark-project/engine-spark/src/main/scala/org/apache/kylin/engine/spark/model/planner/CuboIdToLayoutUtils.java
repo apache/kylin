@@ -58,15 +58,6 @@ public class CuboIdToLayoutUtils {
         return result;
     }
 
-    public static Set<LayoutEntity> tryRemoveExistLayouts(Set<LayoutEntity> input, IndexPlan indexPlan) {
-        for (LayoutEntity existLayout : indexPlan.getAllLayouts()) {
-            if (input.contains(existLayout)) {
-                input.remove(existLayout);
-            }
-        }
-        return input;
-    }
-
     /**
      * convert the cuboids to column order set which contain dimension ids and measure ids
      * @param cuboids

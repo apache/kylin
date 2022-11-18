@@ -57,7 +57,7 @@ public class CostBasePlannerUtils {
         // if not recommend any cuboid and just apply all layouts with the rule base index
         if (result == null || result.isEmpty()) {
             result = new HashMap<>();
-            List<LayoutEntity> allLayouts = indexPlan.getAllLayoutsWithCubePlanner();
+            Set<LayoutEntity> allLayouts = indexPlan.getRuleBasedIndex().genCuboidLayouts();
             for (LayoutEntity layoutEntity : allLayouts) {
                 long cuboid = convertDimensionsToCuboId(layoutEntity.getDimsIds(),
                         indexPlan.getEffectiveDimCols().size(), indexPlan.getColumnIdToRowKeyId());

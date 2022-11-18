@@ -737,7 +737,7 @@ public class NDataSegment implements ISegment, Serializable {
 
     @Override
     public String toString() {
-        return "NDataSegment [" + dataflow.getUuid() + "," + id + "," + segmentRange + "]";
+        return "NDataSegment [" + dataflow.getUuid() + "," + id + "," + segmentRange + "," + status + "]";
     }
 
     public String displayIdName() {

@@ -172,9 +172,8 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     val cuboids = CostBasePlannerUtils.getRecommendCuboidList(indexPlan, config, dataModel.getAlias, cuboIdToRowCount, cuboIdToSize)
     logDebug(s"Segment $segmentId get the recommended cuboid ${cuboids.keySet()}")
     val allRecommendedLayouts = CuboIdToLayoutUtils.convertCuboIdsToLayoutEntity(cuboids, indexPlan)
-    val removeDuplicatedLayouts = CuboIdToLayoutUtils.tryRemoveExistLayouts(allRecommendedLayouts, indexPlan)
-    logInfo(s"Segment $segmentId get ${removeDuplicatedLayouts.size()} recommended layouts with duplicate layouts removed.")
-    jobContext.setRecommendAggLayouts(removeDuplicatedLayouts)
+    logInfo(s"Segment $segmentId get ${allRecommendedLayouts.size()} recommended layouts with duplicate layouts removed.")
+    jobContext.setRecommendAggLayouts(allRecommendedLayouts)
   }
 
   protected def generateFlatTable(): Dataset[Row] = {
