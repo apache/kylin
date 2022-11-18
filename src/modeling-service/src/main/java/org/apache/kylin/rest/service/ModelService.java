@@ -929,7 +929,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         NExecutableManager execManager = NExecutableManager.getInstance(kylinConfig, project);
         return execManager.listPartialExec(path -> StringUtils.endsWith(path, modelId), ExecutableState::isRunning,
-                INDEX_BUILD, INC_BUILD, JobTypeEnum.SUB_PARTITION_BUILD);
+                INDEX_BUILD, JobTypeEnum.SUB_PARTITION_BUILD);
     }
 
     public List<NDataSegmentResponse> getSegmentsResponse(String modelId, String project, String start, String end,

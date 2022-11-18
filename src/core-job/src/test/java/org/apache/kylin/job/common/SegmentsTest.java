@@ -19,9 +19,7 @@
 package org.apache.kylin.job.common;
 
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.junit.TimeZoneTestRunner;
-import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -33,8 +31,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-
-import com.google.common.collect.Lists;
 
 import lombok.val;
 
@@ -64,38 +60,46 @@ public class SegmentsTest {
     }
 
     @Test
-    public void testGetSegmentStatusToDisplay_Loading() {
-        Segments segments = new Segments();
+    public void testGetSegmentStatusToDisplay_Loading_Merging() {
+        Segments<NDataSegment> segments = new Segments<>();
         val seg = NDataSegment.empty();
-        seg.setId("1");
-        seg.setSegmentRange(new SegmentRange.TimePartitionedSegmentRange(0L, 10L));
+        seg.setId("0");
+        seg.setSegmentRange(new SegmentRange.TimePartitionedSegmentRange(0L, 5L));
         seg.setStatus(SegmentStatusEnum.READY);
         segments.add(seg);
+
+        val seg1 = NDataSegment.empty();
+        seg.setId("1");
+        seg1.setSegmentRange(new SegmentRange.TimePartitionedSegmentRange(5L, 10L));
+        seg1.setStatus(SegmentStatusEnum.READY);
+        segments.add(seg1);
 
         val seg2 = NDataSegment.empty();
         seg2.setId("2");
         seg2.setSegmentRange(new SegmentRange.TimePartitionedSegmentRange(0L, 15L));
         seg2.setStatus(SegmentStatusEnum.NEW);
+        segments.add(seg2);
 
-        val job = new DefaultExecutable();
-        job.setParam(NBatchConstants.P_SEGMENT_IDS, "2");
+        Mockito.mockStatic(SegmentUtil.class);
+        Mockito.when(SegmentUtil.getSegmentStatusToDisplay(segments, seg2, null)).thenCallRealMethod();
+        Mockito.when(SegmentUtil.anyIncSegmentJobRunning(seg2)).thenReturn(true);
+        Mockito.when(SegmentUtil.anyIndexJobRunning(seg2)).thenReturn(false);
 
-        SegmentStatusEnumToDisplay status = SegmentUtil.getSegmentStatusToDisplay(segments, seg2,
-                Lists.newArrayList(job));
+        SegmentStatusEnumToDisplay status = SegmentUtil.getSegmentStatusToDisplay(segments, seg2, null);
         Assert.assertEquals(SegmentStatusEnumToDisplay.LOADING, status);
 
         val seg3 = NDataSegment.empty();
         seg3.setId("3");
-        seg3.setSegmentRange(new SegmentRange.TimePartitionedSegmentRange(11L, 12L));
+        seg3.setSegmentRange(new SegmentRange.TimePartitionedSegmentRange(0L, 10L));
         seg3.setStatus(SegmentStatusEnum.NEW);
         segments.add(seg3);
 
-        val job2 = new DefaultExecutable();
-        job2.setParam(NBatchConstants.P_SEGMENT_IDS, "3");
+        Mockito.when(SegmentUtil.getSegmentStatusToDisplay(segments, seg3, null)).thenCallRealMethod();
+        Mockito.when(SegmentUtil.anyIncSegmentJobRunning(seg3)).thenReturn(false);
+        Mockito.when(SegmentUtil.anyIndexJobRunning(seg3)).thenReturn(false);
 
-        SegmentStatusEnumToDisplay status2 = SegmentUtil.getSegmentStatusToDisplay(segments, seg3,
-                Lists.newArrayList(job2));
-        Assert.assertEquals(SegmentStatusEnumToDisplay.LOADING, status2);
+        SegmentStatusEnumToDisplay status2 = SegmentUtil.getSegmentStatusToDisplay(segments, seg3, null);
+        Assert.assertEquals(SegmentStatusEnumToDisplay.MERGING, status2);
     }
 
     @Test
