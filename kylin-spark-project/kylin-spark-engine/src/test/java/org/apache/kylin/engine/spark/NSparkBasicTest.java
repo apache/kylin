@@ -31,6 +31,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.List;
 
 @Ignore("convenient trial tool for dev")
@@ -39,7 +40,7 @@ public class NSparkBasicTest extends LocalWithSparkSessionTest {
     @Test
     public void testToRdd() throws IOException {
         final String dataJson = "0,1,2,1000\n0,1,2,1\n3,4,5,2";
-        File dataFile = File.createTempFile("tmp", ".csv");
+        File dataFile = Files.createTempFile("tmp", ".csv").toFile();
         dataFile.deleteOnExit();
         FileUtils.writeStringToFile(dataFile, dataJson, Charset.defaultCharset());
 

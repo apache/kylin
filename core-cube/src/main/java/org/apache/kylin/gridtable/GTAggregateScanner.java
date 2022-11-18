@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -666,7 +667,7 @@ public class GTAggregateScanner implements IGTScanner, IGTBypassChecker {
             DataInputStream dis;
 
             public Dump(SortedMap<byte[], MeasureAggregator[]> buffMap, long estMemSize) throws IOException {
-                this.dumpedFile = File.createTempFile("KYLIN_SPILL_", ".tmp");
+                this.dumpedFile = Files.createTempFile("KYLIN_SPILL_", ".tmp").toFile();
                 this.buffMap = buffMap;
                 this.estMemSize = estMemSize;
             }

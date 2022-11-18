@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -156,7 +157,7 @@ public class CubeStatsReader {
     }
 
     private File writeTmpSeqFile(InputStream inputStream) throws IOException {
-        File tempFile = File.createTempFile("kylin_stats_tmp", ".seq");
+        File tempFile = Files.createTempFile("kylin_stats_tmp", ".seq").toFile();
         FileOutputStream out = null;
         try {
             out = new FileOutputStream(tempFile);

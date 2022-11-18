@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -36,7 +37,7 @@ public class KylinConfigCLITest extends LocalFileMetadataTestCase {
     @Test
     public void testGetProperty() throws IOException {
         PrintStream o = System.out;
-        File f = File.createTempFile("cfg", ".tmp");
+        File f = Files.createTempFile("cfg", ".tmp").toFile();
         PrintStream tmpOut = new PrintStream(new FileOutputStream(f), false, "UTF-8");
         System.setOut(tmpOut);
         KylinConfigCLI.main(new String[] { "kylin.storage.url" });
@@ -51,7 +52,7 @@ public class KylinConfigCLITest extends LocalFileMetadataTestCase {
     @Test
     public void testGetPrefix() throws IOException {
         PrintStream o = System.out;
-        File f = File.createTempFile("cfg", ".tmp");
+        File f = Files.createTempFile("cfg", ".tmp").toFile();
         PrintStream tmpOut = new PrintStream(new FileOutputStream(f), false, "UTF-8");
         System.setOut(tmpOut);
         KylinConfigCLI.main(new String[] { "kylin.cube.engine." });

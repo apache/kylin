@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -81,7 +82,7 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
             return;
 
         SSHClient ssh = new SSHClient(this.hostname, this.port, this.username, this.password);
-        File tmpFile = File.createTempFile("test_scp", "", new File("/tmp"));
+        File tmpFile = Files.createTempFile(new File("/tmp").toPath(), "test_scp", "").toFile();
         tmpFile.deleteOnExit();
         FileUtils.write(tmpFile, "test_scp", Charset.defaultCharset());
         ssh.scpFileToRemote(tmpFile.getAbsolutePath(), "/tmp");

@@ -22,6 +22,7 @@ package org.apache.kylin.tool.extractor;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -122,7 +123,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
 
         // compress to zip package
         if (shouldCompress) {
-            File tempZipFile = File.createTempFile(packageType + "_", ".zip");
+            File tempZipFile = Files.createTempFile(packageType + "_", ".zip").toFile();
             File tempZipDir = new File(exportDest + packageName + "/");
             FileUtils.forceMkdir(tempZipDir);
             for (File file : exportDir.listFiles()) {
