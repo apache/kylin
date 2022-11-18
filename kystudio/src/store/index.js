@@ -12,6 +12,7 @@ import system from './system'
 import monitor from './monitor'
 import capacity from './capacity'
 import * as actionTypes from './types'
+import dashboard from './dashboard'
 
 export default new Vuex.Store({
   modules: {
@@ -24,6 +25,7 @@ export default new Vuex.Store({
     system: system,
     monitor: monitor,
     capacity: capacity,
+    dashboard: dashboard,
     modals: {}
   }
 })

@@ -4,7 +4,6 @@ import Scrollbar from 'smooth-scrollbar'
 import store from '../store'
 import { stopPropagation, on } from 'util/event'
 import { closestElm } from 'util'
-// import commonTip from 'components/common/common_tip'
 import ElementUI from 'kyligence-kylin-ui'
 const nodeList = []
 const ctx = '@@clickoutsideContext'
@@ -769,6 +768,7 @@ Vue.directive('custom-tooltip', {
     delete parentList[id]
   }
 })
+
 
 // MutationObserver 方式监听 dom attrs 的改变
 function licenseDom (id) {

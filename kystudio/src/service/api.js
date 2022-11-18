@@ -8,6 +8,7 @@ import userApi from './user'
 import systemApi from './system'
 import datasourceApi from './datasource'
 import monitorApi from './monitor'
+import dashboardApi from './dashboard'
 // console.log(base64)
 Vue.use(VueResource)
 export default {
@@ -18,5 +19,6 @@ export default {
   user: userApi,
   system: systemApi,
   datasource: datasourceApi,
-  monitor: monitorApi
+  monitor: monitorApi,
+  dashboard: dashboardApi
 }

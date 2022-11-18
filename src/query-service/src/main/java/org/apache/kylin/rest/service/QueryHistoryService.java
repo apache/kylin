@@ -300,6 +300,16 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
         return new QueryStatisticsResponse(queryStatistics.getCount(), queryStatistics.getMeanDuration());
     }
 
+    public QueryStatisticsResponse getQueryStatisticsByRealization(String project, long startTime, long endTime) {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(project));
+        aclEvaluate.checkProjectReadPermission(project);
+
+        QueryHistoryDAO queryHistoryDao = getQueryHistoryDao();
+        QueryStatistics queryStatistics = queryHistoryDao.getQueryCountAndAvgDurationRealization(startTime, endTime,
+                project);
+        return new QueryStatisticsResponse(queryStatistics.getCount(), queryStatistics.getMeanDuration());
+    }
+
     public long getLastWeekQueryCount(String project) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(project));
         aclEvaluate.checkProjectReadPermission(project);
@@ -350,6 +360,40 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
         queryStatistics = queryHistoryDAO.getAvgDurationByTime(startTime, endTime, dimension, project);
         fillZeroForQueryStatistics(queryStatistics, startTime, endTime, dimension);
         return transformQueryStatisticsByTime(queryStatistics, "meanDuration", dimension);
+    }
+
+    public Map<String, Object> getAvgDurationByRealization(String project, long startTime, long endTime,
+            String dimension) {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(project));
+        aclEvaluate.checkProjectReadPermission(project);
+        QueryHistoryDAO queryHistoryDAO = getQueryHistoryDao();
+        List<QueryStatistics> queryStatistics;
+
+        if (dimension.equals("model")) {
+            queryStatistics = queryHistoryDAO.getAvgDurationByModel(startTime, endTime, project);
+            return transformQueryStatisticsByModel(project, queryStatistics, "meanDuration");
+        }
+
+        queryStatistics = queryHistoryDAO.getAvgDurationRealizationByTime(startTime, endTime, dimension, project);
+        fillZeroForQueryStatistics(queryStatistics, startTime, endTime, dimension);
+        return transformQueryStatisticsByTime(queryStatistics, "meanDuration", dimension);
+    }
+
+    public Map<String, Object> getQueryCountByRealization(String project, long startTime, long endTime,
+            String dimension) {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(project));
+        aclEvaluate.checkProjectReadPermission(project);
+        QueryHistoryDAO queryHistoryDAO = getQueryHistoryDao();
+        List<QueryStatistics> queryStatistics;
+
+        if (dimension.equals("model")) {
+            queryStatistics = queryHistoryDAO.getQueryCountByModel(startTime, endTime, project);
+            return transformQueryStatisticsByModel(project, queryStatistics, "count");
+        }
+
+        queryStatistics = queryHistoryDAO.getQueryCountRealizationByTime(startTime, endTime, dimension, project);
+        fillZeroForQueryStatistics(queryStatistics, startTime, endTime, dimension);
+        return transformQueryStatisticsByTime(queryStatistics, "count", dimension);
     }
 
     private Map<String, Object> transformQueryStatisticsByModel(String project, List<QueryStatistics> statistics,

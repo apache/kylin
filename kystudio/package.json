@@ -18,8 +18,9 @@
     "@tweenjs/tween.js": "17.1.1",
     "brace": "0.10.0",
     "d3": "3.5.17",
+    "daterangepicker": "^3.1.0",
     "dayjs": "1.7.7",
-    "echarts": "4.2.0-rc.1",
+    "echarts": "^4.9.0",
     "express-http-proxy": "0.11.0",
     "jquery": "3.5.0",
     "js-base64": "2.1.9",
@@ -43,6 +44,7 @@
     "vue-resource": "1.5.1",
     "vue-router": "2.8.1",
     "vue2-ace-editor": "0.0.3",
+    "vue2-daterange-picker": "^0.6.8",
     "vuex": "2.5.0"
   },
   "devDependencies": {

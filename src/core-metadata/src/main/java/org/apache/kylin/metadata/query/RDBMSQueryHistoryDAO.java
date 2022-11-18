@@ -195,6 +195,14 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
         return result.get(0);
     }
 
+    public QueryStatistics getQueryCountAndAvgDurationRealization(long startTime, long endTime, String project) {
+        List<QueryStatistics> result = jdbcQueryHisStore.queryCountAndAvgDurationRealization(startTime, endTime,
+                project);
+        if (CollectionUtils.isEmpty(result))
+            return new QueryStatistics();
+        return result.get(0);
+    }
+
     public List<QueryStatistics> getQueryCountByModel(long startTime, long endTime, String project) {
         return jdbcQueryHisStore.queryCountByModel(startTime, endTime, project);
     }
@@ -216,6 +224,11 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
         return jdbcQueryHisStore.queryCountByTime(startTime, endTime, timeDimension, project);
     }
 
+    public List<QueryStatistics> getQueryCountRealizationByTime(long startTime, long endTime, String timeDimension,
+            String project) {
+        return jdbcQueryHisStore.queryCountRealizationByTime(startTime, endTime, timeDimension, project);
+    }
+
     public List<QueryStatistics> getAvgDurationByModel(long startTime, long endTime, String project) {
         return jdbcQueryHisStore.queryAvgDurationByModel(startTime, endTime, project);
     }
@@ -223,6 +236,11 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
     public List<QueryStatistics> getAvgDurationByTime(long startTime, long endTime, String timeDimension,
             String project) {
         return jdbcQueryHisStore.queryAvgDurationByTime(startTime, endTime, timeDimension, project);
+    }
+
+    public List<QueryStatistics> getAvgDurationRealizationByTime(long startTime, long endTime, String timeDimension,
+                                                                 String project) {
+        return jdbcQueryHisStore.queryAvgDurationRealizationByTime(startTime, endTime, timeDimension, project);
     }
 
     @Override
