@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.AccessControlException;
 import org.apache.kylin.cluster.IClusterManager;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
@@ -322,9 +323,20 @@ public abstract class SparkApplication implements Application {
             executeFinish();
         }
     }
-
     protected void handleException(Exception e) throws Exception {
+        if (e instanceof AccessControlException) {
+            interceptAccessControlException(e);
+        }
+        if (e instanceof RuntimeException && e.getCause() instanceof AccessControlException) {
+            interceptAccessControlException(e.getCause());
+        }
         throw e;
+    }
+
+    // Permission exception will not be retried. Simply let the job fail.
+    protected void interceptAccessControlException(Throwable e) throws NoRetryException{
+        logger.error("Permission denied.", e);
+        throw new NoRetryException("Permission denied.");
     }
 
     private SparkSession createSpark(SparkConf sparkConf) {
