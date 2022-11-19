@@ -20,29 +20,43 @@ package org.apache.kylin.query.pushdown;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.kylin.common.KylinConfig;
 
+import com.google.common.collect.Maps;
+
 public class JdbcPushDownConnectionManager {
 
-    private volatile static JdbcPushDownConnectionManager manager = null;
+    private static final Map<String, JdbcPushDownConnectionManager> managerMap = Maps.newConcurrentMap();
 
-    static JdbcPushDownConnectionManager getConnectionManager(KylinConfig config) throws ClassNotFoundException {
-        if (manager == null) {
+    static JdbcPushDownConnectionManager getConnectionManager(KylinConfig config, String project)
+            throws ClassNotFoundException {
+        JdbcPushDownConnectionManager manager = managerMap.get(project);
+        DataSourceConfig newDataSourceConfig = new DataSourceConfig(config);
+        if (needUpdateProjectConnectionManager(manager, newDataSourceConfig)) {
             synchronized (JdbcPushDownConnectionManager.class) {
-                if (manager == null) {
-                    manager = new JdbcPushDownConnectionManager(config);
+                if (needUpdateProjectConnectionManager(manager, newDataSourceConfig)) {
+                    manager = new JdbcPushDownConnectionManager(config, newDataSourceConfig);
+                    managerMap.put(project, manager);
                 }
             }
         }
         return manager;
     }
 
-    private final BasicDataSource dataSource;
+    static boolean needUpdateProjectConnectionManager(JdbcPushDownConnectionManager manager, DataSourceConfig config) {
+        return manager == null || !manager.dataSourceConfig.equals(config);
+    }
 
-    private JdbcPushDownConnectionManager(KylinConfig config) throws ClassNotFoundException {
+    private final BasicDataSource dataSource;
+    private final DataSourceConfig dataSourceConfig;
+
+    private JdbcPushDownConnectionManager(KylinConfig config, DataSourceConfig newDataSourceConfig)
+            throws ClassNotFoundException {
         dataSource = new BasicDataSource();
+        dataSourceConfig = newDataSourceConfig;
 
         Class.forName(config.getJdbcDriverClass());
         dataSource.setDriverClassName(config.getJdbcDriverClass());

@@ -107,7 +107,7 @@ public class PushDownUtil {
         }
 
         IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
-        runner.init(kylinConfig);
+        runner.init(kylinConfig, project);
         logger.debug("Query Pushdown runner {}", runner);
 
         // set pushdown engine in query context
@@ -213,7 +213,7 @@ public class PushDownUtil {
         // pushdown
         IPushDownRunner runner = (IPushDownRunner) ClassUtil
                 .newInstance(kylinConfig.getPartitionCheckRunnerClassNameWithDefaultValue());
-        runner.init(kylinConfig);
+        runner.init(kylinConfig, project);
         runner.executeQuery(sql, returnRows, returnColumnMeta, project);
 
         return Pair.newPair(returnRows, returnColumnMeta);
@@ -222,7 +222,7 @@ public class PushDownUtil {
     public static void trySimplePushDownExecute(String sql, String project) throws Exception {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
-        runner.init(kylinConfig);
+        runner.init(kylinConfig, project);
         runner.executeUpdate(sql, project);
     }
 

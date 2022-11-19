@@ -18,26 +18,28 @@
 
 package org.apache.kylin.query.pushdown;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import lombok.val;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConfigExt;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.common.util.TempMetadataBuilder;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.LinkedHashMap;
 import java.util.List;
+
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.TempMetadataBuilder;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import lombok.val;
 
 public class PushDownRunnerJdbcImplTest extends NLocalFileMetadataTestCase {
 
@@ -122,11 +124,48 @@ public class PushDownRunnerJdbcImplTest extends NLocalFileMetadataTestCase {
         npr.updateProject(projectInstance);
         KylinConfigExt config = projectInstance.getConfig();
         PushDownRunnerJdbcImpl pushDownRunnerJdbc = new PushDownRunnerJdbcImpl();
-        pushDownRunnerJdbc.init(config);
+        pushDownRunnerJdbc.init(config, projectInstance.getName());
         String sql = "select 1";
         List<List<String>> returnRows = Lists.newArrayList();
         List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
         pushDownRunnerJdbc.executeQuery(sql, returnRows, returnColumnMeta, "default");
+        Assert.assertEquals("1", returnRows.get(0).get(0));
+    }
+
+    @Test
+    public void testProjectPushDownJdbc() throws Exception {
+        NProjectManager npr = NProjectManager.getInstance(getTestConfig());
+        ProjectInstance projectInstance = npr.getProject("default");
+        projectInstance.setDefaultDatabase("SSB");
+        LinkedHashMap<String, String> overrideKylinProps = Maps.newLinkedHashMap();
+        overrideKylinProps.put("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:db_default");
+        overrideKylinProps.put("kylin.query.pushdown.jdbc.driver", "org.h2.Driver");
+        overrideKylinProps.put("kylin.query.pushdown.jdbc.username", "sa");
+        overrideKylinProps.put("kylin.query.pushdown.jdbc.password", "");
+        projectInstance.setOverrideKylinProps(overrideKylinProps);
+        npr.updateProject(projectInstance);
+        KylinConfigExt config = projectInstance.getConfig();
+        PushDownRunnerJdbcImpl pushDownRunnerJdbc = new PushDownRunnerJdbcImpl();
+        pushDownRunnerJdbc.init(config, projectInstance.getName());
+        String sql = "select 1";
+        List<List<String>> returnRows = Lists.newArrayList();
+        List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
+        pushDownRunnerJdbc.executeQuery(sql, returnRows, returnColumnMeta, "default");
+        Assert.assertEquals("1", returnRows.get(0).get(0));
+
+        ProjectInstance projectInstance2 = npr.getProject("demo");
+        projectInstance2.setDefaultDatabase("SSB");
+        overrideKylinProps = Maps.newLinkedHashMap();
+        overrideKylinProps.put("kylin.query.pushdown.jdbc.url", "jdbc:h2:mem:db_default");
+        overrideKylinProps.put("kylin.query.pushdown.jdbc.driver", "org.h2.Driver");
+        overrideKylinProps.put("kylin.query.pushdown.jdbc.username", "sa");
+        overrideKylinProps.put("kylin.query.pushdown.jdbc.password", "");
+        projectInstance2.setOverrideKylinProps(overrideKylinProps);
+        npr.updateProject(projectInstance2);
+        config = projectInstance2.getConfig();
+        pushDownRunnerJdbc = new PushDownRunnerJdbcImpl();
+        pushDownRunnerJdbc.init(config, projectInstance2.getName());
+        pushDownRunnerJdbc.executeQuery(sql, returnRows, returnColumnMeta, "demo");
         Assert.assertEquals("1", returnRows.get(0).get(0));
     }
 }

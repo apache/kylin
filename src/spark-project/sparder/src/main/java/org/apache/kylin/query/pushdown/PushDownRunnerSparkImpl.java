@@ -23,10 +23,10 @@ import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.source.adhocquery.IPushDownRunner;
 import org.apache.kylin.source.adhocquery.PushdownResult;
-import org.apache.kylin.metadata.query.StructField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +36,11 @@ public class PushDownRunnerSparkImpl implements IPushDownRunner {
     @Override
     public void init(KylinConfig config) {
         // SparkSession has been initialized
+    }
+
+    @Override
+    public void init(KylinConfig config, String project) {
+        init(config);
     }
 
     @Override
