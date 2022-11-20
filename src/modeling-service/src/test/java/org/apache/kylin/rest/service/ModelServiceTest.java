@@ -71,6 +71,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
@@ -148,6 +149,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.VolatileRange;
 import org.apache.kylin.metadata.model.util.ExpandableMeasureUtil;
@@ -185,6 +187,7 @@ import org.apache.kylin.rest.response.SegmentPartitionResponse;
 import org.apache.kylin.rest.response.SimplifiedColumnResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
 import org.apache.kylin.rest.response.SimplifiedTableResponse;
+import org.apache.kylin.rest.response.SynchronizedCommentsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.AclUtil;
@@ -5587,5 +5590,97 @@ public class ModelServiceTest extends SourceTestCase {
         measure.setExpression(expr);
         measure.setParameterValue(Lists.newArrayList(parameterResponse));
         return measure;
+    }
+
+    @Test
+    public void testCreateModelSyncDimensionOrMeasure() {
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
+        ModelRequest modelRequest = createModelRequest(modelManager);
+        SynchronizedCommentsResponse response = new SynchronizedCommentsResponse();
+        response.syncComment(modelRequest);
+        ModelRequest newModelRequest = response.getModelRequest();
+        long measureCount = newModelRequest.getSimplifiedMeasures().stream()
+                .filter(simplifiedMeasure -> simplifiedMeasure.getComment() != null
+                        && simplifiedMeasure.getComment().contains("____"))
+                .count();
+        long dimensionCount = newModelRequest.getSimplifiedDimensions().stream()
+                .filter(namedColumn -> namedColumn.getName().contains("____")).count();
+        Assert.assertEquals(11, measureCount);
+        Assert.assertEquals(10, dimensionCount);
+        SynchronizedCommentsResponse.ConflictInfo conflictInfo = response.getConflictInfo();
+        Assert.assertEquals(2, conflictInfo.getColsWithSameComment().size());
+        Assert.assertEquals(20, conflictInfo.getDimsOriginFromSameCol().size());
+    }
+
+    private ModelRequest createModelRequest(NDataModelManager modelManager) {
+        NDataModel model = modelManager.getDataModelDesc("82fa7671-a935-45f5-8779-85703601f49a");
+        ModelRequest modelRequest = new ModelRequest(model);
+        modelRequest.setProject("default");
+        modelRequest.setAlias("test_model");
+        modelRequest.setRootFactTableName(model.getRootFactTableName());
+        modelRequest.setLastModified(0L);
+        modelRequest.setStart("0");
+        modelRequest.setEnd("100");
+        modelRequest.setUuid(null);
+
+        List<NamedColumn> oriAllNamedColumns = model.getAllNamedColumns();
+
+        List<SimplifiedMeasure> simplified_measures = model.getAllMeasures().stream().map(oldSimplifiedMeasure -> {
+            SimplifiedMeasure simplifiedMeasure = new SimplifiedMeasure();
+            simplifiedMeasure.setName(oldSimplifiedMeasure.getName());
+            simplifiedMeasure.setExpression(oldSimplifiedMeasure.getFunction().getExpression());
+            simplifiedMeasure.setReturnType(oldSimplifiedMeasure.getFunction().getReturnType());
+            List<ParameterResponse> parameterResponses = oldSimplifiedMeasure.getFunction().getParameters().stream()
+                    .map(parameterDesc -> {
+                        String value = parameterDesc.getValue();
+                        String type = parameterDesc.getType();
+                        ParameterResponse response = new ParameterResponse();
+                        response.setType(type);
+                        response.setValue(value);
+                        return response;
+                    }).collect(Collectors.toList());
+            simplifiedMeasure.setParameterValue(parameterResponses);
+            return simplifiedMeasure;
+        }).collect(Collectors.toList());
+
+        modelRequest.setSimplifiedMeasures(simplified_measures);
+        modelRequest.setSimplifiedDimensions(oriAllNamedColumns);
+
+        NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                "default");
+        TableDesc tableDesc = tableMetadataManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
+        int length = tableDesc.getColumns().length;
+        ColumnDesc[] columns = new ColumnDesc[length];
+        for (int i = 0; i < length; i++) {
+            ColumnDesc column = tableDesc.getColumns()[i];
+            column.setComment(
+                    column.getComment() == null ? column.getName() + "____" + i : column.getComment() + "____" + i);
+            columns[i] = column;
+        }
+        String comment = columns[2].getComment();
+        columns[3].setComment(comment);
+        tableDesc.setColumns(columns);
+        tableMetadataManager.updateTableDesc(tableDesc);
+        return modelRequest;
+    }
+
+    @Test
+    public void testGetCanonicalName() {
+        TblColRef colRef = TblColRef.newDynamicColumn("test");
+        Assert.assertEquals("NULL.TEST", colRef.getCanonicalName());
+        TblColRef innerColumn = TblColRef.newInnerColumn("test", TblColRef.InnerDataTypeEnum.AGGREGATION_TYPE);
+        Assert.assertEquals("DEFAULT._KYLIN_TABLE.TEST", innerColumn.getCanonicalName());
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
+        NDataModel model = modelManager.getDataModelDesc("82fa7671-a935-45f5-8779-85703601f49a");
+        List<JoinTableDesc> joinTables = model.getJoinTables();
+        if (joinTables.size() == 0) {
+            return;
+        }
+        TableRef tableRef = joinTables.get(0).getTableRef();
+        Optional<TblColRef> first = tableRef.getColumns().stream().findFirst();
+        if (first.isPresent()) {
+            TblColRef colRef1 = first.get();
+            Assert.assertEquals("DEFAULT.TEST_ORDER.ORDER_ID", colRef1.getCanonicalName());
+        }
     }
 }

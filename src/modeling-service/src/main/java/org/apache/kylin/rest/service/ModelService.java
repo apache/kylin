@@ -298,9 +298,9 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     private static final String LAST_MODIFY = "last_modify";
     public static final String REC_COUNT = "recommendations_count";
 
-    public static final String VALID_NAME_FOR_DIMENSION = "^[\\u4E00-\\u9FA5a-zA-Z0-9 _\\-()%?（）]+$";
+    public static final Pattern VALID_NAME_FOR_DIMENSION = Pattern.compile("^[\\u4E00-\\u9FA5a-zA-Z0-9 _\\-()%?（）]+$");
 
-    public static final String VALID_NAME_FOR_MEASURE = "^[\\u4E00-\\u9FA5a-zA-Z0-9 _\\-()%?（）.]+$";
+    public static final Pattern VALID_NAME_FOR_MEASURE = Pattern.compile("^[\\u4E00-\\u9FA5a-zA-Z0-9 _\\-()%?（）.]+$");
 
     private static final List<String> MODEL_CONFIG_BLOCK_LIST = Lists.newArrayList("kylin.index.rule-scheduler-data");
 
@@ -2149,7 +2149,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             dimension.setName(StringUtils.trim(dimension.getName()));
             // check if the dimension name is valid
             if (StringUtils.length(dimension.getName()) > maxModelDimensionMeasureNameLength
-                    || !Pattern.compile(VALID_NAME_FOR_DIMENSION).matcher(dimension.getName()).matches())
+                    || !VALID_NAME_FOR_DIMENSION.matcher(dimension.getName()).matches())
                 throw new KylinException(INVALID_NAME,
                         String.format(Locale.ROOT, MsgPicker.getMsg().getInvalidDimensionName(), dimension.getName(),
                                 maxModelDimensionMeasureNameLength));
@@ -2216,7 +2216,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         if (!KylinConfig.getInstanceFromEnv().isMeasureNameCheckEnabled()) {
             return true;
         }
-        return Pattern.compile(VALID_NAME_FOR_MEASURE).matcher(measureName).matches();
+        return VALID_NAME_FOR_MEASURE.matcher(measureName).matches();
     }
 
     private boolean isDupMeasure(SimplifiedMeasure measure, SimplifiedMeasure measure1) {
