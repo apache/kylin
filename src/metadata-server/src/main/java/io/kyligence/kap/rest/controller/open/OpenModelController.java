@@ -68,6 +68,7 @@ import org.apache.kylin.rest.response.IndexResponse;
 import org.apache.kylin.rest.response.NModelDescResponse;
 import org.apache.kylin.rest.response.OpenGetIndexResponse;
 import org.apache.kylin.rest.response.OpenGetIndexResponse.IndexDetail;
+import org.apache.kylin.rest.response.SynchronizedCommentsResponse;
 import org.apache.kylin.rest.service.FusionIndexService;
 import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.ModelService;
@@ -110,6 +111,8 @@ public class OpenModelController extends NBasicController {
     private static final Set<String> INDEX_STATUS_SET = Arrays.stream(IndexEntity.Status.values()).map(Enum::name)
             .collect(Collectors.toSet());
     public static final String MODEL_ID = "modelId";
+
+    public static final String FACT_TABLE = "fact_table";
 
     @Autowired
     private NModelController modelController;
@@ -492,5 +495,19 @@ public class OpenModelController extends NBasicController {
             Throwable root = ExceptionUtils.getRootCause(e) == null ? e : ExceptionUtils.getRootCause(e);
             throw new KylinException(FAILED_UPDATE_MODEL, root);
         }
+    }
+
+    @ApiOperation(value = "comments synchronization", tags = { "AI" })
+    @PostMapping(value = "/comments_synchronization")
+    @ResponseBody
+    public EnvelopeResponse<SynchronizedCommentsResponse> commentsSynchronization(
+            @RequestBody ModelRequest modelRequest) {
+        modelRequest.setProject(checkProjectName(modelRequest.getProject()));
+        checkRequiredArg(ALIAS, modelRequest.getRawAlias());
+        checkRequiredArg(FACT_TABLE, modelRequest.getRootFactTableName());
+        SynchronizedCommentsResponse synchronizedCommentsResponse = new SynchronizedCommentsResponse();
+        synchronizedCommentsResponse.syncComment(modelRequest);
+        modelService.checkBeforeModelSave(synchronizedCommentsResponse.getModelRequest());
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, synchronizedCommentsResponse, "");
     }
 }

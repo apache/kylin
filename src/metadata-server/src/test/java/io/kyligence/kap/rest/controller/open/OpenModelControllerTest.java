@@ -641,4 +641,20 @@ public class OpenModelControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openModelController).updateSemantic(Mockito.any(OpenModelRequest.class));
     }
+
+    @Test
+    public void testCommentsSynchronization() throws Exception {
+        String project = "default";
+        String modelName = "model1";
+        ModelRequest modelRequest = new ModelRequest();
+        modelRequest.setProject(project);
+        modelRequest.setAlias(modelName);
+        modelRequest.setRootFactTableName("test_fact_table");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/models/comments_synchronization")
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(modelRequest))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(openModelController).commentsSynchronization(modelRequest);
+    }
 }
