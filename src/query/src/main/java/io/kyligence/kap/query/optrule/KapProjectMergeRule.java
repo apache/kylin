@@ -36,6 +36,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Permutation;
+import org.apache.kylin.common.KylinConfig;
 
 import com.google.common.collect.Sets;
 
@@ -54,7 +55,6 @@ import com.google.common.collect.Sets;
  *
  */
 public class KapProjectMergeRule extends RelOptRule {
-
     public static final KapProjectMergeRule INSTANCE = new KapProjectMergeRule(true, RelFactories.LOGICAL_BUILDER);
 
     //~ Instance fields --------------------------------------------------------
@@ -120,7 +120,17 @@ public class KapProjectMergeRule extends RelOptRule {
             return;
         }
 
-        final List<RexNode> pushedProjects = RelOptUtil.pushPastProject(topProject.getProjects(), bottomProject);
+        final List<RexNode> pushedProjects;
+        if (KylinConfig.getInstanceFromEnv().isProjectMergeWithBloatEnabled()) {
+            pushedProjects = RelOptUtil.pushPastProjectUnlessBloat(topProject.getProjects(),
+                    bottomProject, KylinConfig.getInstanceFromEnv().getKapProjectMergeRuleBloatThreshold());
+            if (pushedProjects == null) {
+                // Merged projects are significantly more complex. Do not merge.
+                return;
+            }
+        } else {
+            pushedProjects = RelOptUtil.pushPastProject(topProject.getProjects(), bottomProject);
+        }
         final List<RexNode> newProjects = simplify(pushedProjects);
         final RelNode input = bottomProject.getInput();
         if (RexUtil.isIdentity(newProjects, input.getRowType())
