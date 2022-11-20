@@ -3712,11 +3712,19 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.second-storage.wait-lock-timeout", "180"));
     }
 
+    public boolean getDDLEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.source.ddl.enabled", FALSE));
+    }
+
     public boolean isBuildSegmentOverlapEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.build.segment-overlap-enabled", FALSE));
     }
 
-    public boolean getDDLEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.source.ddl.enabled", FALSE));
+    public boolean isProjectMergeWithBloatEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.kap-project-merge-with-bloat-enabled", "true"));
+    }
+
+    public int getKapProjectMergeRuleBloatThreshold() {
+        return Integer.parseInt(getOptional("kylin.query.kap-project-merge-bloat-threshold", "0"));
     }
 }
