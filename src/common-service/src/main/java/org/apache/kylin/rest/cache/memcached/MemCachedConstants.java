@@ -19,6 +19,11 @@
 package org.apache.kylin.rest.cache.memcached;
 
 public class MemCachedConstants {
+
+    private MemCachedConstants() {
+        throw new IllegalStateException("Utility class for memcached cache type define");
+    }
+
     public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";
     public static final String QUERY_CACHE = "StorageCache";
     public static final String SCHEMA_CACHE = "SchemaCache";

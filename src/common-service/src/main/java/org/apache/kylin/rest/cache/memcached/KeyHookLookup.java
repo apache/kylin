@@ -82,9 +82,7 @@ public interface KeyHookLookup {
             KeyHook other = (KeyHook) obj;
             if (!Arrays.equals(chunkskey, other.chunkskey))
                 return false;
-            if (!Arrays.equals(values, other.values))
-                return false;
-            return true;
+            return Arrays.equals(values, other.values);
         }
 
         @Override

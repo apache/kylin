@@ -45,7 +45,7 @@ import net.spy.memcached.protocol.binary.TapAckOperationImpl;
  * Represents a node with the net.spy.memcached cluster, along with buffering and
  * operation queues.
  *
- * This is a modified version of the net.spy.net.spy.memcached.protocol.TCPMemcachedNodeImpl
+ * This is a modified version of the net.spy.memcached.protocol.TCPMemcachedNodeImpl
  * Override the final method getSocketAddress() to refresh SocketAddress to achieve same hostname with ip changing
  */
 public abstract class TCPMemcachedNodeImpl extends SpyObject implements MemcachedNode {
@@ -65,7 +65,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject implements Memcache
     private AtomicInteger reconnectAttempt = new AtomicInteger(1);
     private SocketChannel channel;
     private int toWrite = 0;
-    private volatile SelectionKey sk = null;
+    private SelectionKey sk = null;
     private boolean shouldAuth = false;
     private CountDownLatch authLatch;
     private ArrayList<Operation> reconnectBlocked;
@@ -73,16 +73,30 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject implements Memcache
     private volatile long lastReadTimestamp = System.nanoTime();
     private MemcachedConnection connection;
 
+    @SuppressWarnings({"squid:S107", "squid:S5993"})
     public TCPMemcachedNodeImpl(SocketAddress sa, SocketChannel c, int bufSize, BlockingQueue<Operation> rq,
-                                BlockingQueue<Operation> wq, BlockingQueue<Operation> iq, long opQueueMaxBlockTime, boolean waitForAuth,
-                                long dt, long authWaitTime, ConnectionFactory fact) {
+                                   BlockingQueue<Operation> wq, BlockingQueue<Operation> iq, long opQueueMaxBlockTime,
+                                   boolean waitForAuth, long dt, long authWaitTime, ConnectionFactory fact) {
         super();
-        assert sa != null : "No SocketAddress";
-        assert c != null : "No SocketChannel";
-        assert bufSize > 0 : "Invalid buffer size: " + bufSize;
-        assert rq != null : "No operation read queue";
-        assert wq != null : "No operation write queue";
-        assert iq != null : "No input queue";
+        if (sa == null) {
+            throw new IllegalArgumentException("No SocketAddress");
+        }
+        if (c == null) {
+            throw new IllegalArgumentException("No SocketChannel");
+        }
+        if (bufSize <= 0) {
+            String msg = String.format("Invalid buffer size: %d", bufSize);
+            throw new IllegalArgumentException(msg);
+        }
+        if (rq == null) {
+            throw new IllegalArgumentException("No operation read queue");
+        }
+        if (wq == null) {
+            throw new IllegalArgumentException("No operation write queue");
+        }
+        if (iq == null) {
+            throw new IllegalArgumentException("No input queue");
+        }
         socketAddress = sa;
         connectionFactory = fact;
         this.authWaitTime = authWaitTime;
@@ -109,7 +123,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject implements Memcache
      * @see net.spy.net.spy.memcached.MemcachedNode#copyInputQueue()
      */
     public final void copyInputQueue() {
-        Collection<Operation> tmp = new ArrayList<Operation>();
+        Collection<Operation> tmp = new ArrayList<>();
 
         // don't drain more than we have space to place
         inputQueue.drainTo(tmp, writeQ.remainingCapacity());
@@ -122,7 +136,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject implements Memcache
      * @see net.spy.net.spy.memcached.MemcachedNode#destroyInputQueue()
      */
     public Collection<Operation> destroyInputQueue() {
-        Collection<Operation> rv = new ArrayList<Operation>();
+        Collection<Operation> rv = new ArrayList<>();
         inputQueue.drainTo(rv);
         return rv;
     }
@@ -369,7 +383,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject implements Memcache
      * net.spy.net.spy.memcached.MemcachedNode#insertOp(net.spy.net.spy.memcached.ops.Operation)
      */
     public final void insertOp(Operation op) {
-        ArrayList<Operation> tmp = new ArrayList<Operation>(inputQueue.size() + 1);
+        ArrayList<Operation> tmp = new ArrayList<>(inputQueue.size() + 1);
         tmp.add(op);
         inputQueue.drainTo(tmp);
         inputQueue.addAll(tmp);
@@ -601,7 +615,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject implements Memcache
     }
 
     public final void authComplete() {
-        if (reconnectBlocked != null && reconnectBlocked.size() > 0) {
+        if (reconnectBlocked != null && reconnectBlocked.isEmpty()) {
             inputQueue.addAll(reconnectBlocked);
         }
         authLatch.countDown();
@@ -610,11 +624,11 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject implements Memcache
     public final void setupForAuth() {
         if (shouldAuth) {
             authLatch = new CountDownLatch(1);
-            if (inputQueue.size() > 0) {
-                reconnectBlocked = new ArrayList<Operation>(inputQueue.size() + 1);
+            if (inputQueue.isEmpty()) {
+                reconnectBlocked = new ArrayList<>(inputQueue.size() + 1);
                 inputQueue.drainTo(reconnectBlocked);
             }
-            assert (inputQueue.size() == 0);
+            assert (inputQueue.isEmpty());
             setupResend();
         } else {
             authLatch = new CountDownLatch(0);

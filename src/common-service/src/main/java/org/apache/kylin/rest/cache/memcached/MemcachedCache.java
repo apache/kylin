@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -40,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -136,7 +136,6 @@ public class MemcachedCache {
             return new MemcachedCache(new MemcachedClient(new MemcachedConnectionFactory(connectionFactory),
                     getResolvedAddrList(hostsStr)), config, memcachedPrefix, timeToLive);
         } catch (IOException e) {
-            logger.error("Unable to create MemcachedCache instance.", e);
             throw Throwables.propagate(e);
         }
     }
@@ -167,9 +166,9 @@ public class MemcachedCache {
     @VisibleForTesting
     byte[] encodeValue(String keyS, Object value) {
         if (keyS == null) {
-            return null;
+            return new byte[0];
         }
-        return encodeValue(keyS.getBytes(Charsets.UTF_8), serializeValue(value));
+        return encodeValue(keyS.getBytes(StandardCharsets.UTF_8), serializeValue(value));
     }
 
     /**
@@ -224,6 +223,7 @@ public class MemcachedCache {
 
     //currently memcached not support fuzzy matching. this method will clear remote cache of all project.
     public void clearByType(String pattern) {
+        logger.debug("clear by pattern: {} will caused clear all method here", pattern);
         this.clear();
     }
 
@@ -232,15 +232,18 @@ public class MemcachedCache {
         Future<Boolean> resultFuture = client.flush();
         try {
             boolean result = resultFuture.get();
-            logger.warn("Clear Remote Cache returned with result: " + result);
-        } catch (Exception e) {
+            logger.warn("Clear Remote Cache returned with result: {}", result);
+        } catch (ExecutionException | InterruptedException e) {
             logger.warn("Can't clear Remote Cache.", e);
+            // Restore interrupted state...
+            Thread.currentThread().interrupt();
         }
     }
 
     public CacheStats getStats() {
-        return new CacheStats(readBytes.get(), cacheGetTime.get(), putCount.get(), putBytes.get(), hitCount.get(),
-                missCount.get(), 0, timeoutCount.get(), errorCount.get());
+        return new CacheStats(readBytes.get(), cacheGetTime.get(), putBytes.get(),
+                new CacheStats.CacheStatsCounter(putCount.get(), hitCount.get(),
+                missCount.get(), 0, timeoutCount.get(), errorCount.get()));
     }
 
     /**
@@ -249,10 +252,10 @@ public class MemcachedCache {
      */
     protected byte[] getBinary(String keyS) {
         if (Strings.isNullOrEmpty(keyS)) {
-            return null;
+            return new byte[0];
         }
         byte[] bytes = internalGet(computeKeyHash(keyS));
-        return decodeValue(keyS.getBytes(Charsets.UTF_8), bytes);
+        return decodeValue(keyS.getBytes(StandardCharsets.UTF_8), bytes);
     }
 
     /**
@@ -263,7 +266,7 @@ public class MemcachedCache {
         if (Strings.isNullOrEmpty(keyS)) {
             return;
         }
-        internalPut(computeKeyHash(keyS), encodeValue(keyS.getBytes(Charsets.UTF_8), valueB), expiration);
+        internalPut(computeKeyHash(keyS), encodeValue(keyS.getBytes(StandardCharsets.UTF_8), valueB), expiration);
     }
 
     protected byte[] internalGet(String hashedKey) {
@@ -275,11 +278,11 @@ public class MemcachedCache {
             // operation did not get queued in time (queue is full)
             errorCount.incrementAndGet();
             logger.error(UNABLE_TO_QUEUE_CACHE_OPERATION, e);
-            return null;
+            return new byte[0];
         } catch (Throwable t) {
             errorCount.incrementAndGet();
             logger.error(UNABLE_TO_QUEUE_CACHE_OPERATION, t);
-            return null;
+            return new byte[0];
         }
 
         try {
@@ -295,14 +298,14 @@ public class MemcachedCache {
         } catch (TimeoutException e) {
             timeoutCount.incrementAndGet();
             future.cancel(false);
-            return null;
+            return new byte[0];
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw Throwables.propagate(e);
         } catch (ExecutionException e) {
             errorCount.incrementAndGet();
             logger.error("ExecutionException when pulling key meta from cache.", e);
-            return null;
+            return new byte[0];
         }
     }
 
@@ -341,8 +344,8 @@ public class MemcachedCache {
     }
 
     protected byte[] decodeValue(byte[] key, byte[] valueE) {
-        if (valueE == null)
-            return null;
+        if (valueE == null || valueE.length == 0)
+            return new byte[0];
         ByteBuffer buf = ByteBuffer.wrap(valueE);
         short enableCompression = buf.getShort();
         byte[] uncompressed = null;
@@ -353,7 +356,7 @@ public class MemcachedCache {
                 uncompressed = CompressionUtils.decompress(value);
             } catch (IOException | DataFormatException e) {
                 logger.error("Decompressing value bytes error.", e);
-                return null;
+                return new byte[0];
             }
         }
         if (uncompressed != null) {
@@ -364,7 +367,7 @@ public class MemcachedCache {
         buf.get(keyBytes);
         if (!Arrays.equals(keyBytes, key)) {
             logger.error("Keys do not match, possible hash collision!");
-            return null;
+            return new byte[0];
         }
         byte[] value = new byte[buf.remaining()];
         buf.get(value);
@@ -374,7 +377,7 @@ public class MemcachedCache {
     protected String computeKeyHash(String key) {
         // hash keys to keep things under 250 characters for net.spy.memcached
         return Joiner.on(":").skipNulls().join(KylinConfig.getInstanceFromEnv().getDeployEnv(), this.memcachedPrefix,
-                DigestUtils.shaHex(key));
+                DigestUtils.sha1Hex(key));
 
     }
 

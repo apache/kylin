@@ -19,39 +19,47 @@
 package org.apache.kylin.rest.cache.memcached;
 
 public class CacheStats {
-    private final long numHits;
-    private final long numMisses;
     private final long getBytes;
     private final long getTime;
-    private final long numPut;
     private final long putBytes;
-    private final long numEvictions;
-    private final long numTimeouts;
-    private final long numErrors;
+    private final CacheStatsCounter cacheStatsCounter;
 
-    public CacheStats(long getBytes, long getTime, long numPut, long putBytes, long numHits, long numMisses,
-                      long numEvictions, long numTimeouts, long numErrors) {
+    public CacheStats(long getBytes, long getTime, long putBytes, CacheStatsCounter cacheStatsCounter) {
         this.getBytes = getBytes;
         this.getTime = getTime;
-        this.numPut = numPut;
         this.putBytes = putBytes;
-        this.numHits = numHits;
-        this.numMisses = numMisses;
-        this.numEvictions = numEvictions;
-        this.numTimeouts = numTimeouts;
-        this.numErrors = numErrors;
+        this.cacheStatsCounter = cacheStatsCounter;
+    }
+
+    static class CacheStatsCounter {
+        final long numHits;
+        final long numMisses;
+        final long numPut;
+        final long numEvictions;
+        final long numTimeouts;
+        final long numErrors;
+
+        CacheStatsCounter(long numPut, long numHits, long numMisses,
+                          long numEvictions, long numTimeouts, long numErrors) {
+            this.numPut = numPut;
+            this.numHits = numHits;
+            this.numMisses = numMisses;
+            this.numEvictions = numEvictions;
+            this.numTimeouts = numTimeouts;
+            this.numErrors = numErrors;
+        }
     }
 
     public long getNumHits() {
-        return numHits;
+        return cacheStatsCounter.numHits;
     }
 
     public long getNumMisses() {
-        return numMisses;
+        return cacheStatsCounter.numMisses;
     }
 
     public long getNumGet() {
-        return numHits + numMisses;
+        return cacheStatsCounter.numHits + cacheStatsCounter.numMisses;
     }
 
     public long getNumGetBytes() {
@@ -63,28 +71,28 @@ public class CacheStats {
     }
 
     public long getNumPut() {
-        return numPut;
+        return cacheStatsCounter.numPut;
     }
 
     public long getNumEvictions() {
-        return numEvictions;
+        return cacheStatsCounter.numEvictions;
     }
 
     public long getNumTimeouts() {
-        return numTimeouts;
+        return cacheStatsCounter.numTimeouts;
     }
 
     public long getNumErrors() {
-        return numErrors;
+        return cacheStatsCounter.numErrors;
     }
 
     public long numLookups() {
-        return numHits + numMisses;
+        return cacheStatsCounter.numHits + cacheStatsCounter.numMisses;
     }
 
     public double hitRate() {
         long lookups = numLookups();
-        return lookups == 0 ? 0 : numHits / (double) lookups;
+        return lookups == 0 ? 0 : cacheStatsCounter.numHits / (double) lookups;
     }
 
     public long avgGetBytes() {

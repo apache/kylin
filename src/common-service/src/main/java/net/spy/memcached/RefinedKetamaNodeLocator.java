@@ -68,7 +68,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
      *          consistent hash continuum
      */
     public RefinedKetamaNodeLocator(List<MemcachedNode> nodes, HashAlgorithm alg) {
-        this(nodes, alg, KetamaNodeKeyFormatter.Format.SPYMEMCACHED, new HashMap<InetSocketAddress, Integer>());
+        this(nodes, alg, KetamaNodeKeyFormatter.Format.SPYMEMCACHED, new HashMap<>());
     }
 
     /**
@@ -100,7 +100,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
      * @param conf
      */
     public RefinedKetamaNodeLocator(List<MemcachedNode> nodes, HashAlgorithm alg, KetamaNodeLocatorConfiguration conf) {
-        this(nodes, alg, new HashMap<InetSocketAddress, Integer>(), conf);
+        this(nodes, alg, new HashMap<>(), conf);
     }
 
     /**
@@ -143,7 +143,9 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
 
     public MemcachedNode getPrimary(final String k) {
         MemcachedNode rv = getNodeForKey(hashAlg.hash(k));
-        assert rv != null : "Found no node for key " + k;
+        if (null == rv) {
+            throw new IllegalArgumentException("Found no node for key" + k);
+        }
         return rv;
     }
 
@@ -183,8 +185,8 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
     }
 
     public NodeLocator getReadonlyCopy() {
-        TreeMap<Long, MemcachedNode> smn = new TreeMap<Long, MemcachedNode>(getKetamaNodes());
-        Collection<MemcachedNode> an = new ArrayList<MemcachedNode>(allNodes.get().size());
+        TreeMap<Long, MemcachedNode> smn = new TreeMap<>(getKetamaNodes());
+        Collection<MemcachedNode> an = new ArrayList<>(allNodes.get().size());
 
         // Rewrite the values a copy of the map.
         for (Map.Entry<Long, MemcachedNode> me : smn.entrySet()) {
@@ -219,7 +221,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
      *          its continuum
      */
     protected void setKetamaNodes(List<MemcachedNode> nodes) {
-        TreeMap<Long, MemcachedNode> newNodeMap = new TreeMap<Long, MemcachedNode>();
+        TreeMap<Long, MemcachedNode> newNodeMap = new TreeMap<>();
         int numReps = config.getNodeRepetitions();
         int nodeCount = nodes.size();
         int totalWeight = 0;
@@ -236,7 +238,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
                 int thisWeight = weights.get(node.getSocketAddress());
                 float percent = (totalWeight == 0 ? 0f : (float) thisWeight / (float) totalWeight);
                 int pointerPerServer = (int) ((Math.floor(
-                        (float) (percent * (float) config.getNodeRepetitions() / 4 * (float) nodeCount + 0.0000000001)))
+                        (float) (percent * config.getNodeRepetitions() / 4 * nodeCount + 0.0000000001)))
                         * 4);
                 for (int i = 0; i < pointerPerServer / 4; i++) {
                     for (long position : ketamaNodePositionsAtIteration(node, i)) {
@@ -268,7 +270,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
     }
 
     private List<Long> ketamaNodePositionsAtIteration(MemcachedNode node, int iteration) {
-        List<Long> positions = new ArrayList<Long>();
+        List<Long> positions = new ArrayList<>();
         byte[] digest = DefaultHashAlgorithm.computeMd5(config.getKeyForNode(node, iteration));
         for (int h = 0; h < 4; h++) {
             long k = ((long) (digest[3 + h * 4] & 0xFF) << 24) | ((long) (digest[2 + h * 4] & 0xFF) << 16);

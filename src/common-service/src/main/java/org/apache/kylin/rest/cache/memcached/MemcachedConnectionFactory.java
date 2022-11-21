@@ -53,14 +53,12 @@ public class MemcachedConnectionFactory extends SpyObject implements ConnectionF
 
     @Override
     public MetricType enableMetrics() {
-        //TODO: enable memcachedMetrics
         //Turn off metric collection by default.
         return DefaultConnectionFactory.DEFAULT_METRIC_TYPE;
     }
 
     @Override
     public MetricCollector getMetricCollector() {
-        //TODO: enable memcachedMetrics
         return new NoopMetricCollector();
     }
 

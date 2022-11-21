@@ -44,6 +44,7 @@ public class MemcachedConnectionFactoryBuilder extends ConnectionFactoryBuilder 
     /**
      * Get the ConnectionFactory set up with the provided parameters.
      */
+    @Override
     public ConnectionFactory build() {
         return new DefaultConnectionFactory() {
 
@@ -89,6 +90,7 @@ public class MemcachedConnectionFactoryBuilder extends ConnectionFactoryBuilder 
                 return hashAlg == null ? super.getHashAlg() : hashAlg;
             }
 
+            @Override
             public Collection<ConnectionObserver> getInitialObservers() {
                 return initialObservers;
             }

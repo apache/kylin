@@ -19,7 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.util.CheckUtil.checkCondition;
-import static org.apache.kylin.rest.cache.redis.RedisCache.checkRedisClient;
+import static org.apache.kylin.rest.cache.RedisCache.checkRedisClient;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.cache.KylinCache;
 import org.apache.kylin.rest.cache.KylinEhCache;
 import org.apache.kylin.rest.cache.memcached.CompositeMemcachedCache;
-import org.apache.kylin.rest.cache.redis.RedisCache;
+import org.apache.kylin.rest.cache.RedisCache;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.response.TableMetaCacheResult;

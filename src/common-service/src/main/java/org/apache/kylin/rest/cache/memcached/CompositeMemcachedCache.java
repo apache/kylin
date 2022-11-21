@@ -44,20 +44,20 @@ public class CompositeMemcachedCache implements KylinCache {
 
     private static final String PREFIX = "Kylin";
 
-    private static final ConcurrentMap<String, Cache> cacheMap = new ConcurrentHashMap(16);
+    private static final ConcurrentMap<String, Cache> cacheMap = new ConcurrentHashMap<>(16);
 
-    private MemcachedCacheConfig memcachedCacheConfig = Singletons.getInstance(MemcachedCacheConfig.class);
+    private static final MemcachedCacheConfig memcachedCacheConfig = Singletons.getInstance(MemcachedCacheConfig.class);
 
-    private Cache exceptionCache = new MemCachedCacheAdaptor(
+    private static final Cache exceptionCache = new MemCachedCacheAdaptor(
             new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, MemCachedConstants.EXCEPTION_QUERY_CACHE, 86400)));
 
-    private Cache schemaCache = new MemCachedCacheAdaptor(
+    private static final Cache schemaCache = new MemCachedCacheAdaptor(
             new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, MemCachedConstants.SCHEMA_CACHE, 86400)));
 
-    private Cache successCache = new MemCachedCacheAdaptor(
+    private static final Cache successCache = new MemCachedCacheAdaptor(
             new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, MemCachedConstants.QUERY_CACHE)));
 
-     {
+    static {
          cacheMap.put(MemCachedConstants.EXCEPTION_QUERY_CACHE, exceptionCache);
          cacheMap.put(MemCachedConstants.SCHEMA_CACHE, schemaCache);
          cacheMap.put(MemCachedConstants.QUERY_CACHE, successCache);
@@ -78,7 +78,7 @@ public class CompositeMemcachedCache implements KylinCache {
         }
 
         if (!cacheMap.containsKey(type)) {
-            throw new RuntimeException("unsupported rootCacheName: " + type);
+            throw new IllegalArgumentException("unsupported rootCacheName: " + type);
         }
     }
 
@@ -192,7 +192,7 @@ public class CompositeMemcachedCache implements KylinCache {
         @Override
         public ValueWrapper get(Object key) {
             byte[] value = memcachedCache.get(key);
-            if (value == null) {
+            if (value == null || value.length == 0) {
                 return null;
             }
             return new SimpleValueWrapper(SerializationUtils.deserialize(value));
@@ -221,7 +221,7 @@ public class CompositeMemcachedCache implements KylinCache {
         @SuppressWarnings("unchecked")
         public <T> T get(Object key, Class<T> type) {
             byte[] value = memcachedCache.get(key);
-            if (value == null) {
+            if (value == null || value.length == 0) {
                 return null;
             }
             Object obj = SerializationUtils.deserialize(value);
@@ -233,17 +233,16 @@ public class CompositeMemcachedCache implements KylinCache {
         }
 
         @Override
-        //TODO
         public <T> T get(Object key, Callable<T> valueLoader) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        //TODO implementation here doesn't guarantee the atomicity.
         //Without atomicity, this method should not be invoked
         public ValueWrapper putIfAbsent(Object key, Object value) {
+            //implementation here doesn't guarantee the atomicity.
             byte[] existing = memcachedCache.get(key);
-            if (existing == null) {
+            if (existing == null || existing.length == 0) {
                 memcachedCache.put(key, value);
                 return null;
             } else {

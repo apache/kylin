@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.cache.memcached;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,6 @@ import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -73,7 +72,7 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
     protected static int getValueSplit(MemcachedCacheConfig config, String keyS, int valueBLen) {
         // the number 6 means the chunk number size never exceeds 6 bytes
         final int valueSize = config.getMaxObjectSize() - Shorts.BYTES - Ints.BYTES
-                - keyS.getBytes(Charsets.UTF_8).length - 6;
+                - keyS.getBytes(StandardCharsets.UTF_8).length - 6;
         final int maxValueSize = config.getMaxChunkSize() * valueSize;
         Preconditions.checkArgument(valueBLen <= maxValueSize,
                 "the value bytes length [%d] exceeds maximum value size [%d]", valueBLen, maxValueSize);
@@ -85,8 +84,8 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
         byte[][] splitValueB = null;
         if (nSplit > 1) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Enable chunking for putting large cached object values, chunk size = " + nSplit
-                        + ", original value bytes size = " + valueB.length);
+                logger.debug("Enable chunking for putting large cached object values, chunk size = {0}"
+                        + " original value bytes size = {1}", nSplit, valueB.length);
             }
             String[] chunkKeySs = new String[nSplit];
             for (int i = 0; i < nSplit; i++) {
@@ -97,8 +96,8 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
         } else {
             if (logger.isDebugEnabled()) {
                 logger.debug(
-                        "Chunking not enabled, put the original value bytes to keyhook directly, original value bytes size = "
-                                + valueB.length);
+                        "Chunking not enabled, put the original value bytes to keyhook directly,"
+                                + " original value bytes size = {}", valueB.length);
             }
             keyHook = new KeyHook(null, valueB);
         }
@@ -112,17 +111,17 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
     @Override
     public byte[] getBinary(String keyS) {
         if (Strings.isNullOrEmpty(keyS)) {
-            return null;
+            return new byte[0];
         }
         KeyHook keyHook = lookupKeyHook(keyS);
         if (keyHook == null) {
-            return null;
+            return new byte[0];
         }
 
         if (keyHook.getChunkskey() == null || keyHook.getChunkskey().length == 0) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Chunking not enabled, return the value bytes in the keyhook directly, value bytes size = "
-                        + keyHook.getValues().length);
+                logger.debug("Chunking not enabled, return the value bytes in the keyhook directly, value bytes size = {}", 
+                        keyHook.getValues().length);
             }
             return keyHook.getValues();
         }
@@ -131,7 +130,7 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
         long start = System.currentTimeMillis();
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Chunking enabled, chunk size = " + keyHook.getChunkskey().length);
+            logger.debug("Chunking enabled, chunk size = {}", keyHook.getChunkskey().length);
         }
 
         Map<String, String> keyLookup = computeKeyHash(Arrays.asList(keyHook.getChunkskey()));
@@ -141,11 +140,11 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
             // operation did not get queued in time (queue is full)
             errorCount.incrementAndGet();
             logger.error("Unable to queue cache operation.", e);
-            return null;
+            return new byte[0];
         } catch (Throwable t) {
             errorCount.incrementAndGet();
             logger.error("Unable to queue cache operation.", t);
-            return null;
+            return new byte[0];
         }
 
         try {
@@ -153,13 +152,13 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
             cacheGetTime.addAndGet(System.currentTimeMillis() - start);
             if (bulkResult.size() != keyHook.getChunkskey().length) {
                 missCount.incrementAndGet();
-                logger.warn("Some paritial chunks missing for query key:" + keyS);
+                logger.warn("Some paritial chunks missing for query key: {}", keyS);
                 //remove all the partital chunks here.
                 for (String partitalKey : bulkResult.keySet()) {
                     client.delete(partitalKey);
                 }
                 deleteKeyHook(keyS);
-                return null;
+                return new byte[0];
             }
             hitCount.getAndAdd(keyHook.getChunkskey().length);
             byte[][] bytesArray = new byte[keyHook.getChunkskey().length][];
@@ -168,20 +167,20 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
                 readBytes.addAndGet(bytes.length);
                 String originalKeyS = keyLookup.get(entry.getKey());
                 int idx = Integer.parseInt(originalKeyS.substring(keyS.length()));
-                bytesArray[idx] = decodeValue(originalKeyS.getBytes(Charsets.UTF_8), bytes);
+                bytesArray[idx] = decodeValue(originalKeyS.getBytes(StandardCharsets.UTF_8), bytes);
             }
             return concatBytes(bytesArray);
         } catch (TimeoutException e) {
             timeoutCount.incrementAndGet();
             bulkFuture.cancel(false);
-            return null;
+            return new byte[0];
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw Throwables.propagate(e);
         } catch (ExecutionException e) {
             errorCount.incrementAndGet();
             logger.error("ExecutionException when pulling item from cache.", e);
-            return null;
+            return new byte[0];
         }
     }
 
@@ -206,7 +205,7 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
         if (nSplit > 1) {
             for (int i = 0; i < nSplit; i++) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Chunk[" + i + "] bytes size before encoding  = " + splitValueB[i].length);
+                    logger.debug(String.format("Chunk[ %d ] bytes size before encoding  = %d", i, splitValueB[i].length));
                 }
                 super.putBinary(keyHook.getChunkskey()[i], splitValueB[i], expiration);
             }
@@ -233,12 +232,7 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
     }
 
     protected Map<String, String> computeKeyHash(List<String> keySList) {
-        return Maps.uniqueIndex(keySList, new Function<String, String>() {
-            @Override
-            public String apply(String keyS) {
-                return computeKeyHash(keyS);
-            }
-        });
+        return Maps.uniqueIndex(keySList, this::computeKeyHash);
     }
 
     private void deleteKeyHook(String keyS) {
@@ -263,7 +257,7 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
             destPos += bytes.length;
         }
         if (logger.isDebugEnabled()) {
-            logger.debug("Original value bytes size for all chunks  = " + result.length);
+            logger.debug("Original value bytes size for all chunks  = {}", result.length);
         }
 
         return result;
@@ -272,7 +266,7 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
     @Override
     public KeyHook lookupKeyHook(String keyS) {
         byte[] bytes = super.getBinary(keyS);
-        if (bytes == null) {
+        if (bytes == null || bytes.length == 0) {
             return null;
         }
         return (KeyHook) SerializationUtils.deserialize(bytes);
