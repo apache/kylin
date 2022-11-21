@@ -20,9 +20,9 @@ Kylin provides JDBC driver, which enables BI or other applications with JDBC int
 
 There are two methods to get JDBC Driver:
 
-1. **(Recommended)** You can get Kylin JDBC driver by executing the scripts from `${KYLIN CODES HOME}/build/release/jdbc_package.sh` to generate a full JDBC driver tar package and unzip it to get driver.
+1. **(Recommended)** You can get Kylin JDBC driver from Kylin's installation directory's subdirectory `./lib` , and placed in the BI or other third party applications specified path.
 
-2. You can get Kylin JDBC driver from Kylin's installation directory's subdirectory `./lib` , and placed in the BI or other third party applications specified path.
+2. You can get Kylin JDBC driver by executing the scripts from `${KYLIN CODES HOME}/build/release/jdbc_package.sh` to generate a full JDBC driver tar package and unzip it to get driver.
 
 > **Note：**
 >
