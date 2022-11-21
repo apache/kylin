@@ -73,9 +73,9 @@ import org.apache.kylin.jdbc.json.PreparedQueryRequest;
 import org.apache.kylin.jdbc.json.SQLResponseStub;
 import org.apache.kylin.jdbc.json.StatementParameter;
 import org.apache.kylin.jdbc.json.TableMetaStub;
+import org.apache.kylin.jdbc.json.TableMetaStub.ColumnMetaStub;
 import org.apache.kylin.jdbc.json.TableWithComment;
 import org.apache.kylin.jdbc.json.TablesWithCommentResponse;
-import org.apache.kylin.jdbc.json.TableMetaStub.ColumnMetaStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,12 +93,13 @@ public class KylinClient implements IRemoteClient {
     private final Properties connProps;
     private final CloseableHttpClient httpClient;
     private final ObjectMapper jsonMapper;
-    private final static int POOL_MAX = 10;
-    private final static int POOL_MIN = 0;
-    private final static int RESPONSE_CODE_200 = 200;
-    private final static int RESPONSE_CODE_201 = 201;
+    private static final int POOL_MAX = 10;
+    private static final int POOL_MIN = 0;
+    private static final int RESPONSE_CODE_200 = 200;
+    private static final int RESPONSE_CODE_201 = 201;
     private static final String APPLICATION = "application/json";
     private static final String TIME_ZONE = "UTC";
+    private static final String AUTH_METHOD = "Basic ";
 
     public KylinClient(KylinConnection conn) {
         entry(logger);
@@ -126,7 +127,7 @@ public class KylinClient implements IRemoteClient {
                 SSLContext sslContext = SSLContexts.custom()
                         .loadTrustMaterial((TrustStrategy) (x509Certificates, s) -> true).build();
                 SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, (s, sslSession) -> true);
-                Registry<ConnectionSocketFactory> r = RegistryBuilder.<ConnectionSocketFactory>create()
+                Registry<ConnectionSocketFactory> r = RegistryBuilder.<ConnectionSocketFactory> create()
                         .register("https", sslsf).build();
                 cm = new PoolingHttpClientConnectionManager(r);
             } catch (Exception e) {
@@ -279,9 +280,9 @@ public class KylinClient implements IRemoteClient {
     }
 
     private Timestamp timestampConverter(String value) {
-        String[] formats = new String[] {"yyyy-MM-dd HH:mm:ss.SSS", "yyyy-MM-dd HH:mm:ss"};
+        String[] formats = new String[] { "yyyy-MM-dd HH:mm:ss.SSS", "yyyy-MM-dd HH:mm:ss" };
         ParseException ex = null;
-        for (String format:formats) {
+        for (String format : formats) {
             try {
                 return new Timestamp(parseDateTime(value, format));
             } catch (ParseException e) {
@@ -321,7 +322,7 @@ public class KylinClient implements IRemoteClient {
             String password = connProps.getProperty("password");
             authToken = DatatypeConverter.printBase64Binary((username + ":" + password).getBytes());
         }
-        method.addHeader("Authorization", "Basic " + authToken);
+        method.addHeader("Authorization", AUTH_METHOD + authToken);
         method.addHeader("Auto", "true");
     }
 
@@ -338,7 +339,8 @@ public class KylinClient implements IRemoteClient {
         try {
             HttpResponse response = httpClient.execute(post);
 
-            if (response.getStatusLine().getStatusCode() != RESPONSE_CODE_200 && response.getStatusLine().getStatusCode() != RESPONSE_CODE_201) {
+            if (response.getStatusLine().getStatusCode() != RESPONSE_CODE_200
+                    && response.getStatusLine().getStatusCode() != RESPONSE_CODE_201) {
                 throw asIOException(post, response);
             }
         } finally {
@@ -351,7 +353,8 @@ public class KylinClient implements IRemoteClient {
     public KMetaProject retrieveMetaData(String project) throws IOException {
         entry(logger);
         if (!conn.getProject().equals(project)) {
-            throw new IllegalArgumentException("Project name [" + project + "] not fit current connection[" + conn.getProject() + "]");
+            throw new IllegalArgumentException(
+                    "Project name [" + project + "] not fit current connection[" + conn.getProject() + "]");
         }
         String url = baseUrl() + "/kylin/api/query/tables_and_columns?project=" + project;
         HttpGet get = new HttpGet(url);
@@ -361,12 +364,14 @@ public class KylinClient implements IRemoteClient {
         try {
             HttpResponse response = httpClient.execute(get);
 
-            if (response.getStatusLine().getStatusCode() != RESPONSE_CODE_200 && response.getStatusLine().getStatusCode() != RESPONSE_CODE_201) {
+            if (response.getStatusLine().getStatusCode() != RESPONSE_CODE_200
+                    && response.getStatusLine().getStatusCode() != RESPONSE_CODE_201) {
                 throw asIOException(get, response);
             }
 
-            GenericResponse<List<TableMetaStub>> tableMetaStubVPlus = jsonMapper.readValue(response.getEntity().getContent(),
-                    new TypeReference<GenericResponse<List<TableMetaStub>>>() {});
+            GenericResponse<List<TableMetaStub>> tableMetaStubVPlus = jsonMapper.readValue(
+                    response.getEntity().getContent(), new TypeReference<GenericResponse<List<TableMetaStub>>>() {
+                    });
 
             if (tableMetaStubVPlus == null || tableMetaStubVPlus.getData() == null) {
                 throw new IOException("Response abnormal without data");
@@ -382,20 +387,24 @@ public class KylinClient implements IRemoteClient {
         addHttpHeadersV2(getWithComment);
         try {
             HttpResponse responseWithComment = httpClient.execute(getWithComment);
-            GenericResponse<TablesWithCommentResponse> tablesWithCommentResponseVPlus = jsonMapper.readValue(responseWithComment.getEntity().getContent(),
-                    new TypeReference<GenericResponse<TablesWithCommentResponse>>() {});
+            GenericResponse<TablesWithCommentResponse> tablesWithCommentResponseVPlus = jsonMapper.readValue(
+                    responseWithComment.getEntity().getContent(),
+                    new TypeReference<GenericResponse<TablesWithCommentResponse>>() {
+                    });
             TablesWithCommentResponse tablesWithCommentResponse = tablesWithCommentResponseVPlus.getData();
             List<TableWithComment> tableWithComments = tablesWithCommentResponse.getValue();
             Map<String, String> columnWithCommentMap = new HashMap<>();
             for (TableWithComment tableWithComment : tableWithComments) {
                 for (TableWithComment.ColumnWithComment columnWithComment : tableWithComment.getColumns()) {
-                    String keyWithComment = tableWithComment.getDatabase() + "." + tableWithComment.getName() + "." + columnWithComment.getName();
+                    String keyWithComment = tableWithComment.getDatabase() + "." + tableWithComment.getName() + "."
+                            + columnWithComment.getName();
                     columnWithCommentMap.put(keyWithComment, columnWithComment.getComment());
                 }
             }
             for (TableMetaStub tableMetaStub : tableMetaStubs) {
                 for (ColumnMetaStub columnMetaStub : tableMetaStub.getColumns()) {
-                    String keyMetaStub = tableMetaStub.getTABLE_SCHEM() + "." + tableMetaStub.getTABLE_NAME() + "." + columnMetaStub.getCOLUMN_NAME();
+                    String keyMetaStub = tableMetaStub.getTABLE_SCHEM() + "." + tableMetaStub.getTABLE_NAME() + "."
+                            + columnMetaStub.getCOLUMN_NAME();
                     if (columnWithCommentMap.containsKey(keyMetaStub)) {
                         columnMetaStub.setREMARKS(columnWithCommentMap.get(keyMetaStub));
                     }
@@ -473,10 +482,10 @@ public class KylinClient implements IRemoteClient {
 
     @Override
     public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues,
-                                    Map<String, String> queryToggles, String queryId) throws IOException {
+            Map<String, String> queryToggles, String queryId) throws IOException {
         entry(logger);
-        GenericResponse<SQLResponseStub> queryResp = executeKylinQuery(
-                sql, convertParameters(params, paramValues), queryToggles, queryId);
+        GenericResponse<SQLResponseStub> queryResp = executeKylinQuery(sql, convertParameters(params, paramValues),
+                queryToggles, queryId);
         if (logger.isDebugEnabled()) {
             logger.debug("Response:\n {} ", jsonMapper.writeValueAsString(queryResp));
         }
@@ -490,7 +499,8 @@ public class KylinClient implements IRemoteClient {
 
         List<ColumnMetaData> metas = convertColumnMeta(resp);
         List<Object> data = convertResultData(resp, metas);
-        QueryResult result = new QueryResult(metas, data, resp.getQueryId(), resp.getDuration(), resp.getResultRowCount());
+        QueryResult result = new QueryResult(metas, data, resp.getQueryId(), resp.getDuration(),
+                resp.getResultRowCount());
         exit(logger);
         return result;
     }
@@ -502,7 +512,8 @@ public class KylinClient implements IRemoteClient {
         }
 
         if (params.size() != paramValues.size()) {
-            throw new IllegalArgumentException("Param count:" + params.size() + "mismatch values count:" + paramValues.size());
+            throw new IllegalArgumentException(
+                    "Param count:" + params.size() + "mismatch values count:" + paramValues.size());
         }
 
         for (Object v : paramValues) {
@@ -516,7 +527,7 @@ public class KylinClient implements IRemoteClient {
     }
 
     public GenericResponse<SQLResponseStub> executeKylinQuery(String sql, List<StatementParameter> params,
-                                                   Map<String, String> queryToggles, String queryId) throws IOException {
+            Map<String, String> queryToggles, String queryId) throws IOException {
         long start = System.currentTimeMillis();
 
         String url = baseUrl() + "/kylin/api/query";
@@ -554,7 +565,8 @@ public class KylinClient implements IRemoteClient {
 
         try (CloseableHttpResponse response = httpClient.execute(post)) {
 
-            if (response.getStatusLine().getStatusCode() != RESPONSE_CODE_200 && response.getStatusLine().getStatusCode() != RESPONSE_CODE_201) {
+            if (response.getStatusLine().getStatusCode() != RESPONSE_CODE_200
+                    && response.getStatusLine().getStatusCode() != RESPONSE_CODE_201) {
                 throw asIOException(post, response);
             }
 
@@ -623,7 +635,8 @@ public class KylinClient implements IRemoteClient {
             return new IOException("FAILED!\n"
                     + "[Kyligence][JDBCDriver]  Unsupported Apache Kylin instance, please contact Apache Kylin Community.");
         } else {
-            return new IOException(request.getMethod() + " failed, error code " + statusCode + " and response: " + responseStr);
+            return new IOException(
+                    request.getMethod() + " failed, error code " + statusCode + " and response: " + responseStr);
         }
     }
 

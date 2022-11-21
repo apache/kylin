@@ -19,6 +19,7 @@
 package org.apache.kylin.jdbc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
@@ -59,7 +60,7 @@ public class DriverTest {
                 assertEquals("dummy", tables.getString(i + 1));
             }
             for (int i = 4; i < 10; i++) {
-                assertEquals(null, tables.getString(i + 1));
+                assertNull(tables.getString(i + 1));
             }
         }
 

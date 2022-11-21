@@ -94,19 +94,21 @@ public class Driver extends UnregisteredDriver {
         try {
             DriverManager.registerDriver(new Driver());
         } catch (SQLException e) {
-            throw new RuntimeException("Error occurred while registering JDBC driver " + Driver.class.getName() + ": " + e.toString());
+            throw new RuntimeException("Error occurred while registering JDBC driver "
+                    + Driver.class.getName() + ": " + e);
         }
         exit(logger);
     }
 
     private static InputStream preprocessPropertiesFile(String myFile) throws IOException {
-        Scanner in = new Scanner(new FileReader(myFile));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        while(in.hasNext()) {
-            out.write(in.nextLine().replace("\\", "\\\\").getBytes());
-            out.write("\n".getBytes());
+        try (Scanner in = new Scanner(new FileReader(myFile))){
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            while(in.hasNext()) {
+                out.write(in.nextLine().replace("\\", "\\\\").getBytes());
+                out.write("\n".getBytes());
+            }
+            return new ByteArrayInputStream(out.toByteArray());
         }
-        return new ByteArrayInputStream(out.toByteArray());
     }
 
     @Override
@@ -121,7 +123,9 @@ public class Driver extends UnregisteredDriver {
         } else {
             String prefix = this.getConnectStringPrefix();
 
-            assert url.startsWith(prefix);
+            if (!url.startsWith(prefix)) {
+                throw new AssertionError();
+            }
 
             Properties info2 = connectStringParseProperties(url, info);
             AvaticaConnection connection = this.factory.newConnection(this, this.factory, url, info2);

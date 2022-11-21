@@ -33,8 +33,9 @@ import java.util.regex.Matcher;
 
 public class LogInitializer {
 
-    public static void init() {
+    public static final String SLASH_SEPARATOR = "/";
 
+    public static void init() {
 
         File tmp = null;
         try {
@@ -49,8 +50,8 @@ public class LogInitializer {
                 properties.load(preprocessPropertiesFile(configFileName));
                 String level = properties.getProperty("LogLevel");
                 String file = properties.getProperty("LogPath");
-                if (!"/".equals(separator)) {
-                    file.replaceAll(Matcher.quoteReplacement(File.separator), "/");
+                if (!SLASH_SEPARATOR.equals(separator)) {
+                    file = file.replaceAll(Matcher.quoteReplacement(File.separator), "/");
                 }
                 String maxBackupIndex = properties.getProperty("MaxBackupIndex");
                 String maxFileSize = properties.getProperty("MaxFileSize");
@@ -88,20 +89,22 @@ public class LogInitializer {
             System.err.println("Failed to init logger");
             e.printStackTrace(System.err);
         } finally {
-            if (tmp != null && tmp.exists())
-                tmp.delete();
+            if (tmp != null && tmp.exists()) {
+                if (tmp.delete()) {
+                    System.err.println("Failed to delete temp KylinJDBCDRiver.xml file.");
+                }
+            }
         }
     }
 
     private static InputStream preprocessPropertiesFile(String myFile) throws IOException {
-        Scanner in = new Scanner(new FileReader(myFile));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        while(in.hasNext()) {
-            out.write(in.nextLine().replace("\\", "\\\\").getBytes());
-            out.write("\n".getBytes());
+        try(Scanner in = new Scanner(new FileReader(myFile))) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            while(in.hasNext()) {
+                out.write(in.nextLine().replace("\\", "\\\\").getBytes());
+                out.write("\n".getBytes());
+            }
+            return new ByteArrayInputStream(out.toByteArray());
         }
-        return new ByteArrayInputStream(out.toByteArray());
     }
-
-
 }

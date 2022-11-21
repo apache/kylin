@@ -32,11 +32,11 @@ public class KylinChecekSQLTest {
         String sql4 = "select SELLER_ID from KYLIN_SALES  where SELLER_ID = ? and name = '?name' ";
         String sql5 = "select SELLER_ID from KYLIN_SALES  where SELLER_ID = ? and name = `?name` ";
         String sql6 = "select SELLER_ID from KYLIN_SALES  where SELLER_ID = ? and name = \"?name\" ";
-        assertEquals(0, KylinCheckSQL.countDynamicPlaceholder(sql1));
-        assertEquals(1, KylinCheckSQL.countDynamicPlaceholder(sql2));
-        assertEquals(2, KylinCheckSQL.countDynamicPlaceholder(sql3));
-        assertEquals(1, KylinCheckSQL.countDynamicPlaceholder(sql4));
-        assertEquals(1, KylinCheckSQL.countDynamicPlaceholder(sql5));
-        assertEquals(1, KylinCheckSQL.countDynamicPlaceholder(sql6));
+        assertEquals(0, KylinCheckSql.countDynamicPlaceholder(sql1));
+        assertEquals(1, KylinCheckSql.countDynamicPlaceholder(sql2));
+        assertEquals(2, KylinCheckSql.countDynamicPlaceholder(sql3));
+        assertEquals(1, KylinCheckSql.countDynamicPlaceholder(sql4));
+        assertEquals(1, KylinCheckSql.countDynamicPlaceholder(sql5));
+        assertEquals(1, KylinCheckSql.countDynamicPlaceholder(sql6));
     }
 }

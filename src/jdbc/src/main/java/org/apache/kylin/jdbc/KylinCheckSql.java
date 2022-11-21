@@ -18,7 +18,10 @@
 
 package org.apache.kylin.jdbc;
 
-class KylinCheckSQL {
+class KylinCheckSql {
+
+    private KylinCheckSql() {}
+
     public static int countDynamicPlaceholder(String sql) {
         int placeholderCount = 0;
         boolean singleQuotes = true;
@@ -31,10 +34,8 @@ class KylinCheckSQL {
                 doubleQuotes = !doubleQuotes;
             } else if (sql.charAt(i) == '`') {
                 backticks = !backticks;
-            } else if (sql.charAt(i) == '?') {
-                if (singleQuotes && doubleQuotes && backticks) {
-                    placeholderCount++;
-                }
+            } else if (sql.charAt(i) == '?' && singleQuotes && doubleQuotes && backticks) {
+                placeholderCount++;
             }
         }
         return placeholderCount;

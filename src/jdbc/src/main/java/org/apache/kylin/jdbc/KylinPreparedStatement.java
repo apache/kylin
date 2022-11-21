@@ -47,15 +47,16 @@ public class KylinPreparedStatement extends AvaticaPreparedStatement {
     protected KylinPreparedStatement(AvaticaConnection connection, StatementHandle h, Signature signature, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
         super(connection, h, signature, resultSetType, resultSetConcurrency, resultSetHoldability);
         entry(logger);
-        if (this.handle.signature == null)
+        if (this.handle.signature == null) {
             this.handle.signature = signature;
+        }
         exit(logger);
     }
 
     protected List<Object> getParameterJDBCValues() {
         entry(logger);
         List<TypedValue> typeValues = getParameterValues();
-        List<Object> jdbcValues = new ArrayList<Object>(typeValues.size());
+        List<Object> jdbcValues = new ArrayList<>(typeValues.size());
         for (TypedValue typeValue : typeValues) {
             Object jdbcValue = typeValue == null ? null : typeValue.toJdbc(getCalendar());
             jdbcValues.add(jdbcValue);
@@ -66,74 +67,92 @@ public class KylinPreparedStatement extends AvaticaPreparedStatement {
 
     // ============================================================================
 
+    @Override
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
         getSite(parameterIndex).setRowId(x);
     }
 
+    @Override
     public void setNString(int parameterIndex, String value) throws SQLException {
         getSite(parameterIndex).setNString(value);
     }
 
+    @Override
     public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
         getSite(parameterIndex).setNCharacterStream(value, length);
     }
 
+    @Override
     public void setNClob(int parameterIndex, NClob value) throws SQLException {
         getSite(parameterIndex).setNClob(value);
     }
 
+    @Override
     public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
         getSite(parameterIndex).setClob(reader, length);
     }
 
+    @Override
     public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
         getSite(parameterIndex).setBlob(inputStream, length);
     }
 
+    @Override
     public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
         getSite(parameterIndex).setNClob(reader, length);
     }
 
+    @Override
     public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
         getSite(parameterIndex).setSQLXML(xmlObject);
     }
 
+    @Override
     public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
         getSite(parameterIndex).setAsciiStream(x, length);
     }
 
+    @Override
     public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
         getSite(parameterIndex).setBinaryStream(x, length);
     }
 
+    @Override
     public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
         getSite(parameterIndex).setCharacterStream(reader, length);
     }
 
+    @Override
     public void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
         getSite(parameterIndex).setAsciiStream(x);
     }
 
+    @Override
     public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
         getSite(parameterIndex).setBinaryStream(x);
     }
 
+    @Override
     public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
         getSite(parameterIndex).setCharacterStream(reader);
     }
 
+    @Override
     public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
         getSite(parameterIndex).setNCharacterStream(value);
     }
 
+    @Override
     public void setClob(int parameterIndex, Reader reader) throws SQLException {
         getSite(parameterIndex).setClob(reader);
     }
 
+    @Override
     public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
         getSite(parameterIndex).setBlob(inputStream);
     }
 
+    @Override
     public void setNClob(int parameterIndex, Reader reader) throws SQLException {
         getSite(parameterIndex).setNClob(reader);
     }

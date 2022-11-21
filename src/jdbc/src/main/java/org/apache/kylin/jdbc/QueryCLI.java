@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -46,13 +46,15 @@ import org.apache.commons.io.FileUtils;
 
 public class QueryCLI {
 
+    private static final String PROJECT_ARG_NAME = "project";
+
     @SuppressWarnings("static-access")
     private static final Option OPT_SERVICE = OptionBuilder.withArgName("host:port").hasArg().isRequired()
             .withDescription("Service endpoint, e.g. -s localhost:7070").create("s");
 
     @SuppressWarnings("static-access")
-    private static final Option OPT_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired()
-            .withDescription("Project name, e.g. -project learn_kylin").create("project");
+    private static final Option OPT_PROJECT = OptionBuilder.withArgName(PROJECT_ARG_NAME).hasArg().isRequired()
+            .withDescription("Project name, e.g. -project learn_kylin").create(PROJECT_ARG_NAME);
 
     @SuppressWarnings("static-access")
     private static final Option OPT_USER = OptionBuilder.withArgName("username").hasArg().isRequired(false)
@@ -63,7 +65,7 @@ public class QueryCLI {
             .withDescription("Login password, by default -p KYLIN").create("p");
 
     private static final Options OPTIONS = new Options();
-    {
+    static {
         OPTIONS.addOption(OPT_SERVICE);
         OPTIONS.addOption(OPT_PROJECT);
         OPTIONS.addOption(OPT_USER);
@@ -89,18 +91,14 @@ public class QueryCLI {
     String[] inpSqls;
 
     public QueryCLI(String[] args, InputStream in, OutputStream out) {
-        try {
-            this.out = new PrintWriter(out, true);
-            this.in = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e); // never happens
-        }
+        this.out = new PrintWriter(out, true);
+        this.in = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
 
         try {
             GnuParser parser = new GnuParser();
             CommandLine line = parser.parse(OPTIONS, args);
             this.inpService = line.getOptionValue("s");
-            this.inpProject = line.getOptionValue("project");
+            this.inpProject = line.getOptionValue(PROJECT_ARG_NAME);
             this.inpUser = line.getOptionValue("u", "ADMIN");
             this.inpPwd = line.getOptionValue("p", "KYLIN");
             this.inpSqls = line.getArgs();
@@ -157,131 +155,46 @@ public class QueryCLI {
         Properties props = new Properties();
         props.put("user", inpUser);
         props.put("password", inpPwd);
-        Connection conn = DriverManager.getConnection("jdbc:kylin://" + inpService + "/" + inpProject, props);
-        Statement stat = null;
+        int placeholderCount = KylinCheckSql.countDynamicPlaceholder(sql);
+        boolean isPreparedStatement = placeholderCount > 0;
         ResultSet rs = null;
-
-        try {
-            stat = conn.createStatement();
-
+        try (Connection conn = DriverManager.getConnection("jdbc:kylin://" + inpService + "/" + inpProject, props)) {
             long start;
-            int placeholderCount = 0;
-            if ((placeholderCount = KylinCheckSQL.countDynamicPlaceholder(sql)) > 0) {
-                // prepared statement
-                PreparedStatement prep = conn.prepareStatement(sql);
-                stat = prep; // to be closed finally
-                inputParams(prep, placeholderCount);
-                start = System.currentTimeMillis();
-                rs = prep.executeQuery();
+            if (isPreparedStatement) {
+                try (PreparedStatement prep = conn.prepareStatement(sql)) {
+                    start = System.currentTimeMillis();
+                    rs = prep.executeQuery();
+                }
             } else {
-                // normal statement
-                start = System.currentTimeMillis();
-                rs = stat.executeQuery(sql);
+                try (Statement stat = conn.createStatement()) {
+                    // normal statement
+                    start = System.currentTimeMillis();
+                    rs = stat.executeQuery(sql);
+                }
             }
-
             int rows = printResultSet(rs);
 
             double seconds = (System.currentTimeMillis() - start) / (double) 1000;
             out.println("----");
             out.println(rows + " rows, " + seconds + " seconds");
-
         } finally {
-            close(rs, stat, conn);
-        }
-    }
-
-    private void inputParams(PreparedStatement prep, int placeholderCount) throws IOException, SQLException {
-        if (placeholderCount > 0) {
-            out.println("Input parameters E.g.:\n" + "\tb\'56\' for tinyint\n" + "\ts\'389\'for smallint\n"
-                    + "\ti\'355\' for int\n" + "\tL\'260\' for long\n" + "\tf\'2.56\' for float\n"
-                    + "\tdo\'2.556\'for double\n " + "\tda\'2018-01-01\' for date\n"
-                    + "\tts\'2018-01-01 00:00:00\' for timestamp");
-        }
-        for (int i = 1; i <= placeholderCount; i++) {
-            out.println("Input parameter no." + i + ": ");
-            String input = in.readLine();
-            Object obj = convertObject(input);
-            prep.setObject(i, obj);
-
-            out.println("Got parameter no." + i + ": " + obj + " (" + obj.getClass().getName() + ")");
-        }
-    }
-
-    private Object convertObject(String input) {
-        input = input.trim();
-
-        String type;
-        int cut1 = input.indexOf('\'');
-        int cut2 = input.lastIndexOf('\'');
-        if (cut1 < cut2) {
-            type = input.substring(0, cut1).trim();
-            input = input.substring(cut1 + 1, cut2);
-        } else {
-            type = guessType(input);
-        }
-
-        return convertToType(input, type);
-    }
-
-    private String guessType(String input) {
-        try {
-            Integer.parseInt(input);
-            return "i";
-        } catch (NumberFormatException e) {
-            // ignore
-        }
-        try {
-            Float.parseFloat(input);
-            return "f";
-        } catch (NumberFormatException e) {
-            // ignore
-        }
-        try {
-            java.sql.Date.valueOf(input);
-            return "da";
-        } catch (IllegalArgumentException e) {
-            // ignore
-        }
-        try {
-            java.sql.Timestamp.valueOf(input);
-            return "ts";
-        } catch (IllegalArgumentException e) {
-            // ignore
-        }
-        return null;
-    }
-
-    private Object convertToType(String input, String type) {
-        if (type == null || type.isEmpty())
-            return input;
-        switch (type) {
-            case "b":
-                return Byte.parseByte(input);
-            case "s":
-                return Short.parseShort(input);
-            case "i":
-                return Integer.parseInt(input);
-            case "L":
-                return Long.parseLong(input);
-            case "f":
-                return Float.parseFloat(input);
-            case "do":
-                return Double.parseDouble(input);
-            case "da":
-                return java.sql.Date.valueOf(input);
-            case "ts":
-                return java.sql.Timestamp.valueOf(input);
-            default:
-                return input;
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    // ignore
+                }
+            }
         }
     }
 
     private String getSql(String sqlOrFile) throws IOException {
         File f = new File(sqlOrFile);
-        if (f.exists())
-            return FileUtils.readFileToString(f, "UTF-8");
-        else
+        if (f.exists()) {
+            return FileUtils.readFileToString(f, StandardCharsets.UTF_8);
+        } else {
             return sqlOrFile;
+        }
     }
 
     private int printResultSet(ResultSet rs) throws SQLException {
@@ -290,8 +203,9 @@ public class QueryCLI {
         int nRows = 0;
 
         for (int i = 1; i <= nCols; i++) {
-            if (i > 1)
+            if (i > 1) {
                 out.print("\t");
+            }
             out.print(meta.getColumnName(i));
         }
         out.println();
@@ -307,30 +221,6 @@ public class QueryCLI {
         }
 
         return nRows;
-    }
-
-    private void close(ResultSet rs, Statement stat, Connection conn) {
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                // ignore
-            }
-        }
-        if (stat != null) {
-            try {
-                stat.close();
-            } catch (SQLException e) {
-                // ignore
-            }
-        }
-        if (conn != null) {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                // ignore
-            }
-        }
     }
 
     private void printHelp() {

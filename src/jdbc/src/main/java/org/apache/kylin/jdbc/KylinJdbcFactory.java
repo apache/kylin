@@ -99,7 +99,7 @@ public class KylinJdbcFactory implements AvaticaFactory {
     @Override
     public AvaticaStatement newStatement(AvaticaConnection connection, StatementHandle h, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
         entry(logger);
-        KylinStatement statement = new KylinStatement((KylinConnection) connection, h, resultSetType, resultSetConcurrency, resultSetHoldability);
+        KylinStatement statement = new KylinStatement(connection, h, resultSetType, resultSetConcurrency, resultSetHoldability);
         exit(logger);
         return statement;
     }
@@ -107,7 +107,7 @@ public class KylinJdbcFactory implements AvaticaFactory {
     @Override
     public AvaticaPreparedStatement newPreparedStatement(AvaticaConnection connection, StatementHandle h, Signature signature, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
         entry(logger);
-        KylinPreparedStatement preparedStatement = new KylinPreparedStatement((KylinConnection) connection, h, signature, resultSetType, resultSetConcurrency, resultSetHoldability);
+        KylinPreparedStatement preparedStatement = new KylinPreparedStatement(connection, h, signature, resultSetType, resultSetConcurrency, resultSetHoldability);
         exit(logger);
         return preparedStatement;
     }

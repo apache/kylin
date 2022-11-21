@@ -71,12 +71,8 @@ public class KylinConnection extends AvaticaConnection {
         logger.info("Kylin Connection Info:");
         logger.info("base url: {}", this.baseUrl);
         logger.info("project name: {}", this.project);
-        for (Map.Entry infoEntry : info.entrySet()) {
-            if (String.valueOf(infoEntry.getKey()).equalsIgnoreCase("password")) {
-                continue;
-            }
-            logger.info("{}: {}", infoEntry.getKey(), infoEntry.getValue());
-        }
+        info.entrySet().stream().filter(infoEntry -> !String.valueOf(infoEntry.getKey()).equalsIgnoreCase("password"))
+                .forEach(infoEntry -> logger.info("{}: {}", infoEntry.getKey(), infoEntry.getValue()));
         logger.info("------------------------");
 
         this.remoteClient = factory.newRemoteClient(this);
@@ -89,7 +85,7 @@ public class KylinConnection extends AvaticaConnection {
             } catch (Exception eClose) {
                 // close quietly
             }
-            logger.error("Connect KE failed: ", e);
+            logger.error("Connect Kylin failed: ", e);
             throw new SQLException(e);
         }
         exit(logger);
@@ -160,7 +156,7 @@ public class KylinConnection extends AvaticaConnection {
     // TODO add restful API to prepare SQL, get back expected ResultSetMetaData
     Signature mockPreparedSignature(String sql) {
         List<AvaticaParameter> params = new ArrayList<>();
-        int placeholderCount = KylinCheckSQL.countDynamicPlaceholder(sql);
+        int placeholderCount = KylinCheckSql.countDynamicPlaceholder(sql);
         for (int i = 1; i <= placeholderCount; i++) {
             AvaticaParameter param = new AvaticaParameter(false, 0, 0, 0, null, null, null);
             params.add(param);

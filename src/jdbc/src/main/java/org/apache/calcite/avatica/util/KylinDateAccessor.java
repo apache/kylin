@@ -24,8 +24,6 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 
 import org.apache.calcite.avatica.AvaticaUtils;
-import org.apache.calcite.avatica.util.AbstractCursor;
-import org.apache.calcite.avatica.util.DateTimeUtils;
 
 /**
  * a mirror of org.apache.calcite.avatica.util.AbstractCursor.DateAccessor with the getTimestamp method impl

@@ -33,7 +33,6 @@ import java.util.regex.Pattern;
 import org.apache.calcite.avatica.AvaticaUtils;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.MetaImpl;
-import org.apache.calcite.avatica.MissingResultsException;
 import org.apache.calcite.avatica.NoSuchStatementException;
 import org.apache.calcite.avatica.QueryState;
 import org.apache.calcite.avatica.remote.TypedValue;
@@ -71,23 +70,27 @@ public class KylinMeta extends MetaImpl {
     @Override
     public ExecuteBatchResult prepareAndExecuteBatch(StatementHandle sh, List<String> sqlCommands) throws NoSuchStatementException {
         entry(logger);
-        ExecuteBatchResult result = new ExecuteBatchResult(new long[]{});
+        ExecuteBatchResult result = new ExecuteBatchResult(new long[] {});
         exit(logger);
         return result;
     }
 
     @Override
-    public ExecuteBatchResult executeBatch(StatementHandle sh, List<List<TypedValue>> parameterValues) throws NoSuchStatementException {
+    public ExecuteBatchResult executeBatch(StatementHandle sh, List<List<TypedValue>> parameterValues)
+            throws NoSuchStatementException {
         entry(logger);
-        ExecuteBatchResult result = new ExecuteBatchResult(new long[]{});
+        ExecuteBatchResult result = new ExecuteBatchResult(new long[] {});
         exit(logger);
         return result;
     }
 
-    // real execution happens in KylinResultSet.execute()
+    /**
+     * @deprecated (2022-11-20, real execution happens in KylinResultSet.execute())
+     */
     @Override
     @Deprecated
-    public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, long maxRowCount) throws NoSuchStatementException {
+    public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, long maxRowCount)
+            throws NoSuchStatementException {
         entry(logger);
         final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
         ExecuteResult result = new ExecuteResult(Collections.singletonList(metaResultSet));
@@ -96,7 +99,8 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, int maxRowsInFirstFrame) throws NoSuchStatementException {
+    public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, int maxRowsInFirstFrame)
+            throws NoSuchStatementException {
         entry(logger);
         final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
         ExecuteResult result = new ExecuteResult(Collections.singletonList(metaResultSet));
@@ -104,7 +108,9 @@ public class KylinMeta extends MetaImpl {
         return result;
     }
 
-    // mimic from CalciteMetaImpl, real execution happens via callback in KylinResultSet.execute()
+    /**
+     * @deprecated (2022-11-20, mimic from CalciteMetaImpl, real execution happens via callback in KylinResultSet.execute())
+     */
     @Override
     @Deprecated
     public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, PrepareCallback callback) {
@@ -126,7 +132,8 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) throws NoSuchStatementException {
+    public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, int maxRowsInFirstFrame,
+            PrepareCallback callback) throws NoSuchStatementException {
         entry(logger);
         try {
             synchronized (callback.getMonitor()) {
@@ -193,7 +200,8 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public MetaResultSet getTables(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern, List<String> typeList) {
+    public MetaResultSet getTables(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern,
+            List<String> typeList) {
         entry(logger);
         List<KMetaTable> tables = getMetaProject().getTables(catalog, schemaPattern, tableNamePattern, typeList);
         MetaResultSet resultSet = createResultSet(tables, KMetaTable.class, //
@@ -212,9 +220,11 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public MetaResultSet getColumns(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
+    public MetaResultSet getColumns(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern,
+            Pat columnNamePattern) {
         entry(logger);
-        List<KMetaColumn> columns = getMetaProject().getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
+        List<KMetaColumn> columns = getMetaProject().getColumns(catalog, schemaPattern, tableNamePattern,
+                columnNamePattern);
         MetaResultSet resultSet = createResultSet(columns, KMetaColumn.class, //
                 "TABLE_CAT", //
                 "TABLE_SCHEM", //
@@ -246,9 +256,9 @@ public class KylinMeta extends MetaImpl {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private MetaResultSet createResultSet(List iterable, Class clazz, String... names) {
         entry(logger);
-        final List<ColumnMetaData> columns = new ArrayList<ColumnMetaData>();
-        final List<Field> fields = new ArrayList<Field>();
-        final List<String> fieldNames = new ArrayList<String>();
+        final List<ColumnMetaData> columns = new ArrayList<>();
+        final List<Field> fields = new ArrayList<>();
+        final List<String> fieldNames = new ArrayList<>();
         for (String name : names) {
             final int index = fields.size();
             final String fieldName = AvaticaUtils.toCamelCase(name);
@@ -265,7 +275,8 @@ public class KylinMeta extends MetaImpl {
         }
 
         CursorFactory cursorFactory = CursorFactory.record(clazz, fields, fieldNames);
-        Signature signature = new Signature(columns, "", null, Collections.<String, Object> emptyMap(), cursorFactory, StatementType.SELECT);
+        Signature signature = new Signature(columns, "", null, Collections.<String, Object> emptyMap(), cursorFactory,
+                StatementType.SELECT);
         StatementHandle sh = this.createStatement(connection().handle);
         Frame frame = new Frame(0, true, iterable);
         MetaResultSet resultSet = MetaResultSet.create(connection().id, sh.id, true, signature, frame);
@@ -280,13 +291,15 @@ public class KylinMeta extends MetaImpl {
     }
 
     public static List<? extends NamedWithChildren> searchByPatterns(NamedWithChildren parent, Pat... patterns) {
-        assert patterns != null && patterns.length > 0;
+        if (patterns == null || patterns.length <= 0) {
+            throw new AssertionError();
+        }
 
         List<? extends NamedWithChildren> children = findChildren(parent, patterns[0]);
         if (patterns.length == 1) {
             return children;
         } else {
-            List<NamedWithChildren> result = new ArrayList<NamedWithChildren>();
+            List<NamedWithChildren> result = new ArrayList<>();
             Pat[] subPatterns = Arrays.copyOfRange(patterns, 1, patterns.length);
             for (NamedWithChildren c : children) {
                 result.addAll(searchByPatterns(c, subPatterns));
@@ -300,7 +313,7 @@ public class KylinMeta extends MetaImpl {
             return parent.getChildren();
         }
 
-        List<NamedWithChildren> result = new ArrayList<NamedWithChildren>();
+        List<NamedWithChildren> result = new ArrayList<>();
         Pattern regex = likeToRegex(pattern);
 
         for (NamedWithChildren c : parent.getChildren()) {
@@ -369,13 +382,16 @@ public class KylinMeta extends MetaImpl {
         }
 
         @SuppressWarnings("unchecked")
-        public List<KMetaTable> getTables(String catalog, Pat schemaPattern, Pat tableNamePattern, List<String> typeList) {
+        public List<KMetaTable> getTables(String catalog, Pat schemaPattern, Pat tableNamePattern,
+                List<String> typeList) {
             return (List<KMetaTable>) searchByPatterns(this, Pat.of(catalog), schemaPattern, tableNamePattern);
         }
 
         @SuppressWarnings("unchecked")
-        public List<KMetaColumn> getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
-            return (List<KMetaColumn>) searchByPatterns(this, Pat.of(catalog), schemaPattern, tableNamePattern, columnNamePattern);
+        public List<KMetaColumn> getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern,
+                Pat columnNamePattern) {
+            return (List<KMetaColumn>) searchByPatterns(this, Pat.of(catalog), schemaPattern, tableNamePattern,
+                    columnNamePattern);
         }
 
         @Override
@@ -426,7 +442,8 @@ public class KylinMeta extends MetaImpl {
     public static class KMetaTable extends MetaTable implements NamedWithChildren {
         public final List<KMetaColumn> columns;
 
-        public KMetaTable(String tableCat, String tableSchem, String tableName, String tableType, List<KMetaColumn> columns) {
+        public KMetaTable(String tableCat, String tableSchem, String tableName, String tableType,
+                List<KMetaColumn> columns) {
             super(tableCat, tableSchem, tableName, tableType);
             this.columns = columns;
         }
@@ -472,7 +489,9 @@ public class KylinMeta extends MetaImpl {
         @MetaImpl.ColumnNoNulls
         public final String isGeneratedcolumn = "";
 
-        public KMetaColumn(String tableCat, String tableSchem, String tableName, String columnName, int dataType, String typeName, int columnSize, Integer decimalDigits, int numPrecRadix, int nullable, int charOctetLength, int ordinalPosition, String isNullable, String remarks) {
+        public KMetaColumn(String tableCat, String tableSchem, String tableName, String columnName, int dataType,
+                String typeName, int columnSize, Integer decimalDigits, int numPrecRadix, int nullable,
+                int charOctetLength, int ordinalPosition, String isNullable, String remarks) {
             this.tableCat = tableCat;
             this.tableSchem = tableSchem;
             this.tableName = tableName;
@@ -488,23 +507,26 @@ public class KylinMeta extends MetaImpl {
             this.isNullable = isNullable;
             this.remarks = remarks;
         }
+
+        @Override
         public String getName() {
             return this.columnName;
         }
+
         @Override
         public List<NamedWithChildren> getChildren() {
-            return Collections.<NamedWithChildren> emptyList();
+            return Collections.emptyList();
         }
     }
 
     @Override
-    public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) throws NoSuchStatementException, MissingResultsException {
+    public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public boolean syncResults(StatementHandle sh, QueryState state, long offset) throws NoSuchStatementException {
+    public boolean syncResults(StatementHandle sh, QueryState state, long offset) {
         // TODO Auto-generated method stub
         return false;
     }
