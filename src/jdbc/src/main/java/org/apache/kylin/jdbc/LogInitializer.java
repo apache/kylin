@@ -57,28 +57,28 @@ public class LogInitializer {
                 String maxFileSize = properties.getProperty("MaxFileSize");
 
                 tmp = File.createTempFile("KylinJDBCDRiver", "xml");
-                PrintStream out = new PrintStream(tmp);
-                out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-                out.println("<Configuration>");
-                out.println("  <Appenders>");
-                out.println("    <RollingFile name=\"RollingFile\" fileName=\"" + file + "\" filePattern=\"" + file + ".%i\">");
-                out.println("      <PatternLayout>");
-                out.println("        <pattern>%d{ISO8601} %-5p [%t] : %m%n</pattern>");
-                out.println("      </PatternLayout>");
-                out.println("      <Policies>");
-                out.println("        <SizeBasedTriggeringPolicy size=\"" + maxFileSize + "\"/>");
-                out.println("      </Policies>");
-                out.println("      <DefaultRolloverStrategy max=\"" + maxBackupIndex + "\"/>");
-                out.println("    </RollingFile>");
-                out.println("  </Appenders>");
-                out.println("  <Loggers>");
-                out.println("    <Logger name=\"org.apache.kylin.jdbc.shaded\" level=\"off\"/>");
-                out.println("    <Root level=\"" + level + "\">");
-                out.println("      <AppenderRef ref=\"RollingFile\"/>");
-                out.println("    </Root>");
-                out.println("  </Loggers>");
-                out.println("</Configuration>");
-                out.close();
+                try(PrintStream out = new PrintStream(tmp)) {
+                    out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+                    out.println("<Configuration>");
+                    out.println("  <Appenders>");
+                    out.println("    <RollingFile name=\"RollingFile\" fileName=\"" + file + "\" filePattern=\"" + file + ".%i\">");
+                    out.println("      <PatternLayout>");
+                    out.println("        <pattern>%d{ISO8601} %-5p [%t] : %m%n</pattern>");
+                    out.println("      </PatternLayout>");
+                    out.println("      <Policies>");
+                    out.println("        <SizeBasedTriggeringPolicy size=\"" + maxFileSize + "\"/>");
+                    out.println("      </Policies>");
+                    out.println("      <DefaultRolloverStrategy max=\"" + maxBackupIndex + "\"/>");
+                    out.println("    </RollingFile>");
+                    out.println("  </Appenders>");
+                    out.println("  <Loggers>");
+                    out.println("    <Logger name=\"org.apache.kylin.jdbc.shaded\" level=\"off\"/>");
+                    out.println("    <Root level=\"" + level + "\">");
+                    out.println("      <AppenderRef ref=\"RollingFile\"/>");
+                    out.println("    </Root>");
+                    out.println("  </Loggers>");
+                    out.println("</Configuration>");
+                }
 
                 Object context = logManagerClz.getMethod("getContext", boolean.class).invoke(null, false);
                 logContextClz.getMethod("setConfigLocation", java.net.URI.class).invoke(context, tmp.toURI());
