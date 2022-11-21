@@ -828,6 +828,30 @@ const sidebars = {
         },
         {
             type: 'category',
+            label: 'Integration',
+            link: {
+                type: 'doc',
+                id: 'integration/intro',
+            },
+            items: [
+                {
+                    type: 'category',
+                    label: 'Drivers',
+                    link: {
+                        type: 'doc',
+                        id: 'integration/driver/intro'
+                    },
+                    items: [
+                        {
+                          type: 'doc',
+                          id: 'integration/driver/jdbc',
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            type: 'category',
             label: 'Rest API',
             link: {
                 type: 'doc',
