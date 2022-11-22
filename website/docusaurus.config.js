@@ -6,8 +6,8 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Kylin 5.0 Alpha',
-  tagline: 'Kylin 5.0 is a unified and powerful OLAP platform for Hadoop and Cloud.',
+  title: 'Welcome to Kylin 5',
+  tagline: 'Apache Kylin 5.0 is a unified and powerful OLAP platform for Hadoop and Cloud.',
   url: 'https://kylin.apache.org',
   baseUrl: '/5.0/',
   onBrokenLinks: 'warn',
@@ -16,7 +16,7 @@ const config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'hit-lacus', // Usually your GitHub org/user name.
+  organizationName: 'apache', // Usually your GitHub org/user name.
   projectName: 'kylin', // Usually your repo name.
   deploymentBranch:'kylin5_doc',
 
@@ -134,15 +134,15 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'Apache Kylin 5.0 Alpha',
+        title: 'Apache Kylin 5.0',
         logo: {
           alt: 'Kylin Logo',
-          src: 'img/kylin_logo.png',
+          src: '../img/kylin_logo.png',
         },
         items: [
           {
             type: 'doc',
-            docId: 'intro',
+            docId: 'quickstart/intro',
             position: 'left',
             label: 'Document',
           },
@@ -155,7 +155,7 @@ const config = {
           {
             type: 'doc',
             docId: 'download',
-            position: 'left',
+            position: 'right',
             label: 'Download',
           },
           {
@@ -164,7 +164,7 @@ const config = {
             position: 'left',
             label: 'Community',
           },
-          {to: '/blog', label: 'Blog', position: 'left'},
+          {to: '/blog', label: 'Tech Blog', position: 'left'},
           {
             href: 'https://github.com/apache/kylin',
             label: 'GitHub',
@@ -180,16 +180,24 @@ const config = {
           width: 160,
           height: 51,
         },
-        style: 'light',
+        style: 'dark',
         links: [
           {
             title: 'Docs',
             items: [
               {
-                label: 'Tutorial',
-                to: '/docs/intro',
+                label: 'Quick Start',
+                to: '/docs/quickstart/quick_start',
               },
-            ],
+              {
+                label: 'How to write this doc',
+                to: '/docs/development/how_to_write_doc',
+              },
+              {
+                label: 'Roadmap',
+                to: 'docs/development/roadmap',
+              }
+            ]
           },
           {
             title: 'Community',

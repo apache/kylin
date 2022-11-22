@@ -14,4 +14,4 @@ last_update:
     date: 08/17/2022
 ---
 
-Kylin 5.0 support deploy on Hadoop or K8S.
+Kylin 5.0 support deploy on Hadoop or K8S(WIP).

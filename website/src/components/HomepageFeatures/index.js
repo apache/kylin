@@ -3,50 +3,55 @@ import clsx from 'clsx';
 import styles from './styles.module.css';
 
 const FeatureList = [
-    {
-        title: 'Brand New Frontend',
-        Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
-        description: (
-            <>
-                Kylin has a brand new frontend now. Everything in Kylin becomes easier and quicker. Such as building models, query data, load data sources, checking job status, configuration, etc.
-            </>
-        ),
-    },
+
     {
         title: 'Unified Data Analytics Platform',
-        Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+        Svg: require('@site/static/img/main_page_01.svg').default,
         description: (
             <>
-               Support data acquisition from different platforms including streaming data, databases, data lakes, and clouds, all while providing a unified interface for downstream applications.
+				Support data analytics from different platform including Hadoop/Cloud/RDBMS,
+				while providing a unified interface for downstream applications.
             </>
         ),
     },
     {
         title: 'Native Compute Engine',
-        Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+        Svg: require('@site/static/img/main_page_02.svg').default,
         description: (
             <>
-                Kylin provides a native compute engine offering sub-second response times for standard SQL queries on petabyte-scale datasets.
+                Use Native Engine to enable vector acceleration and cpu instruction level optimization.
+                <br></br> Gluten and Datafusion will be integrated into Kylin. (This task is working in process.)
             </>
         ),
     },
     {
         title: 'Cloud Native Architecture',
-        Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+        Svg: require('@site/static/img/main_page_03.svg').default,
         description: (
             <>
-                Support on-premise, public, and private cloud deployments. Use a separate storage and computing architecture and allow the elastic scaling of computing resources.
+                Support deployment on K8S and use a separate storage and
+                computing architecture and allow the elastic scaling of resources.
             </>
         ),
     },
     {
-        title: 'Support MDX',
-        Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+        title: 'Support BI/Excel',
+        Svg: require('@site/static/img/main_page_04.svg').default,
         description: (
             <>
-                Map complex data into business terms. Run as a service for every consumer with universal data definitions and industry-standard interfaces at the petabyte scale.
+                Support connecting to different BI tools, like Tableau/Power BI/Excel.
             </>
         ),
+    },
+    {
+		title: 'Brand New Frontend',
+		Svg: require('@site/static/img/main_page_05.svg').default,
+		description: (
+			<>
+				New modeling process are concise by letting user define table
+				relationship/dimensions/measures in a single canvas.
+			</>
+		),
     },
 ];
 
