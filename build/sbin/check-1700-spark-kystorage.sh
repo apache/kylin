@@ -25,6 +25,9 @@ source ${KYLIN_HOME}/sbin/init-kerberos.sh
 ## init Kerberos if needed
 initKerberosIfNeeded
 
+status=0
+log_str=""
+
 columnarEnabled=`${dir}/get-properties.sh kylin.storage.columnar.start-own-spark`
 if [[ -z "$columnarEnabled" ]]; then
     columnarEnabled="true"
@@ -53,6 +56,31 @@ override_file="${KYLIN_HOME}/conf/kylin.properties"
 if [ ! -f ${override_file} ]; then
     echo "${override_file} not exist. Please check"
     exit 1
+fi
+
+# check zstd native library loadable when using zstd codec (default in spark)
+engine_config_compression_codec=`$KYLIN_HOME/bin/get-properties.sh kylin.engine.spark-conf.spark.shuffle.mapStatus.compression.codec`
+sparder_config_compression_codec=`$KYLIN_HOME/bin/get-properties.sh kylin.storage.columnar.spark-conf.spark.shuffle.mapStatus.compression.codec`
+
+need_check_zstd="false"
+if [[ ${engine_config_compression_codec} == "zstd" || -z ${engine_config_compression_codec} ]]; then
+    need_check_zstd="true"
+fi
+if [[ ${sparder_config_compression_codec} == "zstd" || -z ${sparder_config_compression_codec} ]]; then
+    need_check_zstd="true"
+fi
+
+if [[ ${need_check_zstd} == "true" ]]; then
+    echo "Checking zstd native library loading..."
+
+    ${KYLIN_HOME}/sbin/bootstrap.sh org.apache.kylin.tool.setup.ZstdLibLoadableTestTool
+
+    if [[ $? == 1 ]]; then
+        log_str="${log_str}WARN: Failed to load zstd native library, it may cause problems.\nPlease check system tmp directory for [noexec] flag.\n"
+        status=4
+    fi
+else
+    echo "Skip checking zstd native library loading"
 fi
 
 key_executor_cores="kylin.storage.columnar.spark-conf.spark.executor.cores"
@@ -130,3 +158,6 @@ fi
 echo "Testing spark task..."
 ${KYLIN_HOME}/sbin/spark-test.sh test
 [[ $? == 0 ]] || quit "Test of spark failed, please check the logs/check-env.out for the details."
+
+echo -e $log_str
+exit $status
