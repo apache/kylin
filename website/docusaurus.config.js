@@ -137,7 +137,7 @@ const config = {
         title: 'Apache Kylin 5.0',
         logo: {
           alt: 'Kylin Logo',
-          src: '../img/kylin_logo.png',
+          src: 'img/kylin_logo.png',
         },
         items: [
           {
