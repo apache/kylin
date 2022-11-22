@@ -9,7 +9,7 @@ const config = {
   title: 'Kylin 5.0 Alpha',
   tagline: 'Kylin 5.0 is a unified and powerful OLAP platform for Hadoop and Cloud.',
   url: 'https://kylin.apache.org',
-  baseUrl: '/',
+  baseUrl: '/5.0/',
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
@@ -234,8 +234,9 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Apache Software Foundation under the terms of the Apache License v2.  Apache Kylin and its logo are trademarks of the Apache Software Foundation. 
-        Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Apache Software Foundation under the terms of the Apache License v2.
+        <br>Apache Kylin and its logo are trademarks of the Apache Software Foundation. 
+        <br>Built with Docusaurus.`,
       },
       prism: {
         additionalLanguages: ['java'],

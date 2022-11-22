@@ -8,8 +8,7 @@ const FeatureList = [
         Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
         description: (
             <>
-                Docusaurus was designed from the ground up to be easily installed and
-                used to get your website up and running quickly.
+                Kylin has a brand new frontend now. Everything in Kylin becomes easier and quicker. Such as building models, query data, load data sources, checking job status, configuration, etc.
             </>
         ),
     },
@@ -18,8 +17,7 @@ const FeatureList = [
         Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
         description: (
             <>
-                Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-                ahead and move your docs into the <code>docs</code> directory.
+               Support data acquisition from different platforms including streaming data, databases, data lakes, and clouds, all while providing a unified interface for downstream applications.
             </>
         ),
     },
@@ -28,8 +26,7 @@ const FeatureList = [
         Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
         description: (
             <>
-                Extend or customize your website layout by reusing React. Docusaurus can
-                be extended while reusing the same header and footer.
+                Kylin provides a native compute engine offering sub-second response times for standard SQL queries on petabyte-scale datasets.
             </>
         ),
     },
@@ -38,18 +35,16 @@ const FeatureList = [
         Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
         description: (
             <>
-                Extend or customize your website layout by reusing React. Docusaurus can
-                be extended while reusing the same header and footer.
+                Support on-premise, public, and private cloud deployments. Use a separate storage and computing architecture and allow the elastic scaling of computing resources.
             </>
         ),
     },
     {
-        title: 'Support MDX/DAX',
+        title: 'Support MDX',
         Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
         description: (
             <>
-                Extend or customize your website layout by reusing React. Docusaurus can
-                be extended while reusing the same header and footer.
+                Map complex data into business terms. Run as a service for every consumer with universal data definitions and industry-standard interfaces at the petabyte scale.
             </>
         ),
     },
