@@ -424,16 +424,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getAsyncQueryTimeFormatError() {
-        return "无效的时间格式。请按 “yyyy-MM-dd HH:mm:ss” 格式填写。";
-    }
-
-    @Override
-    public String getAsyncQueryProjectNameEmpty() {
-        return "项目名称不能为空。请检查后重试。";
-    }
-
-    @Override
     public String getUserNotFound() {
         return "找不到用户 '%s'";
     }

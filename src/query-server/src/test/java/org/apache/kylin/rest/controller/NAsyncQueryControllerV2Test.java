@@ -19,22 +19,27 @@
 package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_INCLUDE_HEADER_NOT_EMPTY;
 import static org.apache.kylin.rest.service.AsyncQueryService.QueryStatus.FAILED;
 import static org.apache.kylin.rest.service.AsyncQueryService.QueryStatus.MISS;
 import static org.apache.kylin.rest.service.AsyncQueryService.QueryStatus.RUNNING;
 import static org.apache.kylin.rest.service.AsyncQueryService.QueryStatus.SUCCESS;
 
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.rest.request.AsyncQuerySQLRequestV2;
-import org.apache.kylin.rest.service.AsyncQueryService;
+import java.io.IOException;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.request.AsyncQuerySQLRequestV2;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.service.AsyncQueryService;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -49,9 +54,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-
-import java.io.IOException;
 
 public class NAsyncQueryControllerV2Test extends NLocalFileMetadataTestCase {
 
@@ -80,8 +82,8 @@ public class NAsyncQueryControllerV2Test extends NLocalFileMetadataTestCase {
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
 
-        mockMvc = MockMvcBuilders.standaloneSetup(nAsyncQueryControllerV2).defaultRequest(MockMvcRequestBuilders.get("/"))
-                .build();
+        mockMvc = MockMvcBuilders.standaloneSetup(nAsyncQueryControllerV2)
+                .defaultRequest(MockMvcRequestBuilders.get("/")).build();
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         createTestMetadata();
@@ -237,7 +239,27 @@ public class NAsyncQueryControllerV2Test extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(nAsyncQueryControllerV2).downloadQueryResult(Mockito.anyString(), Mockito.anyBoolean(), Mockito.any());
+        Mockito.verify(nAsyncQueryControllerV2).downloadQueryResult(Mockito.anyString(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    public void testDownloadQueryResultNotIncludeHeader() throws Exception {
+        Mockito.doReturn(true).when(asyncQueryService).hasPermission(Mockito.anyString(), Mockito.anyString());
+        AsyncQueryService.FileInfo fileInfo = new AsyncQueryService.FileInfo("csv", "gbk", "result");
+        Mockito.doReturn(fileInfo).when(asyncQueryService).getFileInfo(Mockito.anyString(), Mockito.anyString());
+        Mockito.doReturn(KylinConfig.getInstanceFromEnv()).when(kapQueryService).getConfig();
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/async_query/{query_id:.+}/result_download", "123")
+                .param("includeHeader", "false").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andExpect(result -> {
+                    Assert.assertTrue(result.getResolvedException() instanceof KylinException);
+                    Assert.assertEquals(ASYNC_QUERY_INCLUDE_HEADER_NOT_EMPTY.getMsg(),
+                            result.getResolvedException().getMessage());
+                });
+
+        Mockito.verify(nAsyncQueryControllerV2).downloadQueryResult(Mockito.anyString(), Mockito.any(), Mockito.any());
     }
 
 }

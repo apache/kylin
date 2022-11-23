@@ -17,9 +17,12 @@
  */
 package org.apache.kylin.rest.controller;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_INCLUDE_HEADER_NOT_EMPTY;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_PROJECT_NAME_EMPTY;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_TIME_FORMAT_ERROR;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -40,16 +43,15 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.query.exception.NAsyncQueryIllegalParamException;
 import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.rest.exception.ForbiddenException;
-import org.apache.kylin.rest.response.EnvelopeResponse;
-import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.rest.service.QueryService;
-import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.request.AsyncQuerySQLRequest;
 import org.apache.kylin.rest.response.AsyncQueryResponse;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.AsyncQueryService;
+import org.apache.kylin.rest.service.QueryService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.spark.sql.SparderEnv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,6 +138,7 @@ public class NAsyncQueryController extends NBasicController {
             queryContext.getQueryTagInfo().setFileEncode(encode);
             queryContext.getQueryTagInfo().setFileName(sqlRequest.getFileName());
             queryContext.getQueryTagInfo().setSeparator(sqlRequest.getSeparator());
+            queryContext.getQueryTagInfo().setIncludeHeader(sqlRequest.isIncludeHeader());
             queryContext.setProject(sqlRequest.getProject());
             logger.info("Start a new async query with queryId: {}", queryContext.getQueryId());
             String queryId = queryContext.getQueryId();
@@ -203,8 +206,8 @@ public class NAsyncQueryController extends NBasicController {
                         MsgPicker.getMsg().getCleanFolderFail());
             }
         } catch (ParseException e) {
-            logger.error(MsgPicker.getMsg().getAsyncQueryTimeFormatError(), e);
-            throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getAsyncQueryTimeFormatError());
+            logger.error(ASYNC_QUERY_TIME_FORMAT_ERROR.getMsg(), e);
+            throw new KylinException(ASYNC_QUERY_TIME_FORMAT_ERROR);
         }
     }
 
@@ -216,7 +219,7 @@ public class NAsyncQueryController extends NBasicController {
             @RequestParam(value = "project", required = false) String project) throws IOException {
         if (project == null) {
             if (sqlRequest == null) {
-                throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getAsyncQueryProjectNameEmpty());
+                throw new KylinException(ASYNC_QUERY_PROJECT_NAME_EMPTY);
             }
             project = sqlRequest.getProject();
         }
@@ -242,7 +245,7 @@ public class NAsyncQueryController extends NBasicController {
             throws IOException {
         if (project == null) {
             if (sqlRequest == null) {
-                throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getAsyncQueryProjectNameEmpty());
+                throw new KylinException(ASYNC_QUERY_PROJECT_NAME_EMPTY);
             }
             project = sqlRequest.getProject();
         }
@@ -283,7 +286,7 @@ public class NAsyncQueryController extends NBasicController {
             @RequestParam(value = "project", required = false) String project) throws IOException {
         if (project == null) {
             if (sqlRequest == null) {
-                throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getAsyncQueryProjectNameEmpty());
+                throw new KylinException(ASYNC_QUERY_PROJECT_NAME_EMPTY);
             }
             project = sqlRequest.getProject();
         }
@@ -306,7 +309,7 @@ public class NAsyncQueryController extends NBasicController {
             throws IOException {
         if (project == null) {
             if (sqlRequest == null) {
-                throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getAsyncQueryProjectNameEmpty());
+                throw new KylinException(ASYNC_QUERY_PROJECT_NAME_EMPTY);
             }
             project = sqlRequest.getProject();
         }
@@ -323,15 +326,18 @@ public class NAsyncQueryController extends NBasicController {
     @GetMapping(value = "/async_query/{query_id:.+}/result_download")
     @ResponseBody
     public void downloadQueryResult(@PathVariable("query_id") String queryId,
-            @RequestParam(value = "include_header", required = false, defaultValue = "false") boolean include_header,
-            @RequestParam(value = "includeHeader", required = false, defaultValue = "false") boolean includeHeader,
+            @RequestParam(value = "oldIncludeHeader", required = false) Boolean oldIncludeHeader,
+            @RequestParam(value = "includeHeader", required = false) Boolean includeHeader,
             @Valid @RequestBody(required = false) final AsyncQuerySQLRequest sqlRequest, HttpServletResponse response,
             @RequestParam(value = "project", required = false) String project) throws IOException {
         if (project == null) {
             if (sqlRequest == null) {
-                throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getAsyncQueryProjectNameEmpty());
+                throw new KylinException(ASYNC_QUERY_PROJECT_NAME_EMPTY);
             }
             project = sqlRequest.getProject();
+        }
+        if (oldIncludeHeader != null || includeHeader != null) {
+            throw new KylinException(ASYNC_QUERY_INCLUDE_HEADER_NOT_EMPTY);
         }
         aclEvaluate.checkProjectQueryPermission(project);
         checkProjectName(project);
@@ -356,8 +362,7 @@ public class NAsyncQueryController extends NBasicController {
             response.setContentType("application/" + format + ";charset=" + encode);
         }
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "." + format + "\"");
-        asyncQueryService.retrieveSavedQueryResult(project, queryId, includeHeader || include_header, response, format,
-                encode, fileInfo.getSeparator());
+        asyncQueryService.retrieveSavedQueryResult(project, queryId, response, format, encode);
     }
 
     @ApiOperation(value = "async query result path", tags = { "QE" })
@@ -368,7 +373,7 @@ public class NAsyncQueryController extends NBasicController {
             @RequestParam(value = "project", required = false) String project) throws IOException {
         if (project == null) {
             if (sqlRequest == null) {
-                throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getAsyncQueryProjectNameEmpty());
+                throw new KylinException(ASYNC_QUERY_PROJECT_NAME_EMPTY);
             }
             project = sqlRequest.getProject();
         }

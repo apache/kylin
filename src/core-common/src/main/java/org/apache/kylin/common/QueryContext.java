@@ -360,6 +360,7 @@ public class QueryContext implements Closeable {
         private String fileName;
         private String separator;
         private boolean isRefused;
+        private boolean includeHeader;
     }
 
     @Getter
