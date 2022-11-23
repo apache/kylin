@@ -60,8 +60,7 @@ public class Message {
     private static final String LICENSE_MISMATCH_LICENSE = "The license doesn’t match the current cluster information. Please upload a new license, or contact Kyligence.";
     private static final String LICENSE_NOT_EFFECTIVE = "License is not effective yet, please apply for a new license.";
     private static final String LICENSE_EXPIRED = "The license has expired. Please upload a new license, or contact Kyligence.";
-    private static final String DDL_UNSUPPORTED = "Unsupported DDL syntax, only support single `create view`, `drop "
-        + "view`,  `alter view`, `show create table`";
+    private static final String DDL_UNSUPPORTED = "Unsupported DDL syntax, only support single `create view`, `drop view`,  `alter view`, `show create table`";
     private static final String DDL_VIEW_NAME_ERROR = "View names need to start with KE_";
     private static final String DDL_VIEW_NAME_DUPLICATE_ERROR = "Logical View names is duplicate";
     private static final String DDL_DROP_ERROR = "Only support drop view";
@@ -520,14 +519,6 @@ public class Message {
 
     public String getCleanFolderFail() {
         return "Can’t clean file folder at the moment. Please ensure that the related file on HDFS could be accessed.";
-    }
-
-    public String getAsyncQueryTimeFormatError() {
-        return "The time format is invalid. Please enter the date in the format “yyyy-MM-dd HH:mm:ss”.";
-    }
-
-    public String getAsyncQueryProjectNameEmpty() {
-        return "The project name can’t be empty. Please check and try again.";
     }
 
     public String getUserNotFound() {
