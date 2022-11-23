@@ -308,7 +308,7 @@ public class QueryRoutingEngineTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testQueryPushDownWithSumLC() {
-        final String sql = "select sum_lc(column, dateColumn) from success_table_2";
+        final String sql = "select sUm_Lc \r\n (  \r\n \"success_table_2\".\"column\", \r\n dateColumn) from success_table_2";
         final String project = "default";
         KylinConfig kylinconfig = KylinConfig.getInstanceFromEnv();
         QueryParams queryParams = new QueryParams();
@@ -319,5 +319,21 @@ public class QueryRoutingEngineTest extends NLocalFileMetadataTestCase {
         queryParams.setForcedToPushDown(true);
 
         Assert.assertThrows(NotSupportedSQLException.class, () -> queryRoutingEngine.queryWithSqlMassage(queryParams));
+    }
+
+    @Test
+    public void testShouldPushDown() {
+        final String sql = "select sUm_Lc \r\n (  \r\n \"success_table_2\".\"column\", \r\n dateColumn) from success_table_2";
+        final String project = "default";
+        KylinConfig kylinconfig = KylinConfig.getInstanceFromEnv();
+        QueryParams queryParams = new QueryParams();
+        queryParams.setProject(project);
+        queryParams.setSql(sql);
+        queryParams.setKylinConfig(kylinconfig);
+        queryParams.setSelect(true);
+        queryParams.setForcedToPushDown(true);
+
+        boolean shouldPushDown = queryRoutingEngine.shouldPushdown(new RuntimeException(), queryParams);
+        Assert.assertEquals(false, shouldPushDown);
     }
 }

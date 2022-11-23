@@ -1,0 +1,58 @@
+{
+  "uuid" : "ff1e6d9d-fb31-0269-2547-a6b79cfbe798",
+  "last_modified" : 0,
+  "create_time" : 1667543492928,
+  "version" : "4.0.0.0",
+  "name" : "SUMLC_CC_TEST",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "DATE_DATA",
+    "datatype" : "integer",
+    "case_sensitive_name" : "date_data"
+  }, {
+    "id" : "2",
+    "name" : "YEAR_DATA",
+    "datatype" : "integer",
+    "case_sensitive_name" : "year_data"
+  }, {
+    "id" : "3",
+    "name" : "MONTH_DATA",
+    "datatype" : "integer",
+    "case_sensitive_name" : "month_data"
+  }, {
+    "id" : "4",
+    "name" : "DAY_DATA",
+    "datatype" : "integer",
+    "case_sensitive_name" : "day_data"
+  }, {
+    "id" : "5",
+    "name" : "ACCOUNT",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "account"
+  }, {
+    "id" : "6",
+    "name" : "INT_DATA",
+    "datatype" : "integer",
+    "case_sensitive_name" : "int_data"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "SSB",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null
+}
