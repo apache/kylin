@@ -139,7 +139,11 @@ object ExpressionUtils {
     val arrayBytes = bytes.asInstanceOf[Array[Byte]]
     val codec = SumLCUtil.getNumericNullSafeSerializerByDataType(DataType.fromJson(wrapDataType.toString))
     val counter = SumLCUtil.decodeToSumLCCounter(arrayBytes, codec)
-    counter.getSumLC
+    if (counter == null) {
+      null
+    } else {
+      counter.getSumLC
+    }
   }
 
 }

@@ -1,0 +1,53 @@
+{
+  "uuid" : "6c979409-290a-2deb-dc53-c100ac070ab9",
+  "last_modified" : 0,
+  "create_time" : 1667828032179,
+  "version" : "4.0.0.0",
+  "name" : "SUM_LC_TB",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ACCOUNT",
+    "datatype" : "char(1)",
+    "case_sensitive_name" : "account"
+  }, {
+    "id" : "2",
+    "name" : "BANK_NAME",
+    "datatype" : "varchar(52)",
+    "case_sensitive_name" : "bank_name"
+  }, {
+    "id" : "3",
+    "name" : "PART_COL",
+    "datatype" : "date",
+    "case_sensitive_name" : "part_col"
+  }, {
+    "id" : "4",
+    "name" : "BALANCE",
+    "datatype" : "integer",
+    "case_sensitive_name" : "balance"
+  }, {
+    "id" : "5",
+    "name" : "SUM_DATE",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : "sum_date"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "SSB",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null
+}

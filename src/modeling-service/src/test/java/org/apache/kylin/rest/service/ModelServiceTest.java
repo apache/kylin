@@ -5688,4 +5688,21 @@ public class ModelServiceTest extends SourceTestCase {
             Assert.assertEquals("DEFAULT.TEST_ORDER.ORDER_ID", colRef1.getCanonicalName());
         }
     }
+
+    @Test
+    public void testInitModel() throws IOException {
+        String modelRequest =
+                "{\"uuid\":null,\"name\":\"sum_lc_null_val_test_clone\",\"owner\":\"ADMIN\",\"project\":\"sum_lc\",\"description\":null,"
+                        + "\"alias\":\"sum_lc_null_val_test_clone\",\"fact_table\":\"SSB.SUM_LC_NULL_TBL\",\"join_tables\":[],"
+                        + "\"simplified_dimensions\":[{\"id\":0,\"name\":\"PART_COL\",\"column\":\"SUM_LC_NULL_TBL.PART_COL\",\"status\":\"DIMENSION\",\"excluded\":false,\"cardinality\":null,\"min_value\":null,\"max_value\":null,\"max_length_value\":null,\"min_length_value\":null,\"null_count\":null,\"comment\":null,\"type\":\"date\",\"simple\":null,\"datatype\":\"date\"},"
+                        + "{\"id\":1,\"name\":\"SUM_DATE1\",\"column\":\"SUM_LC_NULL_TBL.SUM_DATE1\",\"status\":\"DIMENSION\",\"excluded\":false,\"cardinality\":null,\"min_value\":null,\"max_value\":null,\"max_length_value\":null,\"min_length_value\":null,\"null_count\":null,\"comment\":null,\"type\":\"varchar(1024)\",\"simple\":null,\"datatype\":\"varchar(1024)\"},{\"id\":2,\"name\":\"ACCOUNT1\",\"column\":\"SUM_LC_NULL_TBL.ACCOUNT1\",\"status\":\"DIMENSION\",\"excluded\":false,\"cardinality\":null,\"min_value\":null,\"max_value\":null,\"max_length_value\":null,\"min_length_value\":null,\"null_count\":null,\"comment\":null,\"type\":\"char(1)\",\"simple\":null,\"datatype\":\"char(1)\"},"
+                        + "{\"id\":6,\"name\":\"ACCOUNT2\",\"column\":\"SUM_LC_NULL_TBL.ACCOUNT2\",\"status\":\"DIMENSION\",\"excluded\":false,\"cardinality\":null,\"min_value\":null,\"max_value\":null,\"max_length_value\":null,\"min_length_value\":null,\"null_count\":null,\"comment\":null,\"type\":\"varchar(52)\",\"simple\":null,\"datatype\":\"varchar(52)\"}],"
+                        + "\"simplified_measures\":[{\"id\":100000,\"expression\":\"COUNT\",\"name\":\"COUNT_ALL\",\"return_type\":\"bigint\",\"parameter_value\":[{\"type\":\"constant\",\"value\":\"1\"}],\"converted_columns\":[],\"column\":null,\"comment\":null},{\"id\":100001,\"expression\":\"SUM_LC\",\"name\":\"sumlc_double_null\",\"return_type\":\"double\",\"parameter_value\":[{\"type\":\"column\",\"value\":\"SUM_LC_NULL_TBL.DATA_NULL\"},{\"type\":\"column\",\"value\":\"SUM_LC_NULL_TBL.SUM_DATE1\"}],"
+                        + "\"converted_columns\":[],\"column\":null,\"comment\":\"\"},{\"id\":100002,\"expression\":\"SUM_LC\",\"name\":\"sumlc_decimal_null\",\"return_type\":\"decimal(20,6)\",\"parameter_value\":[{\"type\":\"column\",\"value\":\"SUM_LC_NULL_TBL.DATA_DECIMAL\"},{\"type\":\"column\",\"value\":\"SUM_LC_NULL_TBL.SUM_DATE1\"}],\"converted_columns\":[],\"column\":null,\"comment\":\"\"},{\"name\":\"abc\",\"expression\":\"SUM_LC\",\"return_type\":\"\",\"comment\":\"\",\"parameter_value\":[{\"type\":\"column\",\"value\":\"SUM_LC_NULL_TBL.BALANCE1\"},{\"type\":\"column\",\"value\":\"SUM_LC_NULL_TBL.BALANCE1\",\"table_guid\":null}]}],"
+                        + "\"computed_columns\":[],\"last_modified\":1668402813791,\"filter_condition\":\"\",\"partition_desc\":null,\"multi_partition_desc\":null,\"management_type\":\"MODEL_BASED\",\"with_second_storage\":false,\"second_storage_size\":0,\"canvas\":{\"coordinate\":{\"SUM_LC_NULL_TBL\":{\"x\":462.44444105360253,\"y\":108.66667005750864,\"width\":200,\"height\":486.66666666666663,\"isSpread\":true}},\"zoom\":9,\"marginClient\":{\"left\":0,\"top\":0}},\"available_indexes_count\":0,\"other_columns\":[{\"column\":\"SUM_LC_NULL_TBL.BALANCE1\",\"name\":\"BALANCE1\",\"datatype\":\"double\"},"
+                        + "{\"column\":\"SUM_LC_NULL_TBL.DATA_NULL\",\"name\":\"DATA_NULL\",\"datatype\":\"double\"},{\"column\":\"SUM_LC_NULL_TBL.DATA_DECIMAL\",\"name\":\"DATA_DECIMAL\",\"datatype\":\"decimal(10,6)\"}]}";
+        ModelRequest request = JsonUtil.readValue(modelRequest, ModelRequest.class);
+        Assert.assertThrows(KylinException.class, () -> modelService.checkBeforeModelSave(request));
+    }
+
 }
