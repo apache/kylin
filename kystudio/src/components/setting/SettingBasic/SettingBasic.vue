@@ -303,7 +303,7 @@ export default class SettingBasic extends Vue {
   @Watch('project', { deep: true })
   @Watch('rulesObj', { deep: true })
   onFormChange () {
-    const basicSetting = this.isFormEdited(this.form, 'basic-info') || this.isFormEdited(this.form, 'datasource-info') || this.isFormEdited(this.form, 'segment-settings') || this.isFormEdited(this.form, 'storage-quota')
+    const basicSetting = this.isFormEdited(this.form, 'basic-info') || this.isFormEdited(this.form, 'datasource-info') || this.isFormEdited(this.form, 'segment-settings')
     this.$emit('form-changed', { basicSetting })
   }
   initForm () {
@@ -358,35 +358,8 @@ export default class SettingBasic extends Vue {
       switch (type) {
         case 'basic-info': {
           const submitData = _getProjectGeneralInfo(this.form)
-          if (!submitData.semi_automatic_mode) {
-            await this.callGlobalDetailDialog({
-              msg: this.$t('turnOffTips'),
-              title: this.$t('turnOff') + this.$t('enableSemiAutomatic'),
-              dialogType: 'warning',
-              isBeta: false,
-              wid: '600px',
-              showDetailBtn: false,
-              dangerouslyUseHTMLString: true,
-              needConcelReject: true,
-              submitText: this.$t('confirmClose')
-            })
-            await this.updateProjectGeneralInfo(submitData); break
-          } else {
-            await this.callGlobalDetailDialog({
-              msg: this.$t('turnOnTips'),
-              title: this.$t('turnOn') + this.$t('enableSemiAutomatic'),
-              dialogType: 'warning',
-              isBeta: false,
-              wid: '400px',
-              isCenterBtn: true,
-              showDetailBtn: false,
-              dangerouslyUseHTMLString: true,
-              needConcelReject: true,
-              submitText: this.$t('confirmOpen')
-            })
-            await this.updateProjectGeneralInfo(submitData)
-            break
-          }
+          await this.updateProjectGeneralInfo(submitData)
+          break
         }
         case 'datasource-info': {
           if (!this.form.JDBCConnectSetting.length) return errorCallback()
