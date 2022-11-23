@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query.util;
 
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_RESULT_NOT_FOUND;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
@@ -30,10 +32,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.query.exception.NAsyncQueryIllegalParamException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +80,7 @@ public class AsyncQueryUtil {
                 osw.write(metaString);
             }
         } else {
-            throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getQueryResultNotFound());
+            throw new KylinException(ASYNC_QUERY_RESULT_NOT_FOUND);
         }
     }
 
@@ -96,7 +97,7 @@ public class AsyncQueryUtil {
                 osw.write(separator);
             }
         } else {
-            throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getQueryResultNotFound());
+            throw new KylinException(ASYNC_QUERY_RESULT_NOT_FOUND);
         }
     }
 

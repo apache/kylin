@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_RESULT_NOT_FOUND;
 import static org.apache.kylin.query.util.AsyncQueryUtil.getUserFileName;
 import static org.apache.kylin.rest.util.AclPermissionUtil.isAdmin;
 
@@ -47,6 +48,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.project.NProjectManager;
@@ -54,10 +56,6 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.exception.NAsyncQueryIllegalParamException;
 import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.rest.exception.NotFoundException;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.spark.sql.SparderEnv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -114,8 +112,8 @@ public class AsyncQueryService extends BasicService {
         }
     }
 
-    public void retrieveSavedQueryResult(String project, String queryId, boolean includeHeader,
-            HttpServletResponse response, String fileFormat, String encode, String separator) throws IOException {
+    public void retrieveSavedQueryResult(String project, String queryId, HttpServletResponse response,
+            String fileFormat, String encode) throws IOException {
         checkStatus(queryId, QueryStatus.SUCCESS, project, MsgPicker.getMsg().getQueryResultNotFound());
 
         FileSystem fileSystem = AsyncQueryUtil.getFileSystem();
@@ -126,36 +124,14 @@ public class AsyncQueryService extends BasicService {
         }
 
         try (ServletOutputStream outputStream = response.getOutputStream()) {
-            String columnNames = null;
-            if (includeHeader) {
-                columnNames = processHeader(fileSystem, dataPath);
-                if (columnNames != null) {
-                    logger.debug("Query:{}, columnMeta:{}", columnNames, columnNames);
-                    if (!columnNames.endsWith(IOUtils.LINE_SEPARATOR_UNIX)) {
-                        columnNames = columnNames + IOUtils.LINE_SEPARATOR_UNIX;
-                    }
-                } else {
-                    logger.error("Query:{}, no columnMeta found", queryId);
-                }
-            }
             switch (fileFormat) {
             case "csv":
-                CSVWriter csvWriter = new CSVWriter();
-                processCSV(outputStream, dataPath, includeHeader, columnNames, csvWriter, separator);
+            case "xlsx":
+            case "parquet":
+                processFile(outputStream, dataPath);
                 break;
             case "json":
                 processJSON(outputStream, dataPath, encode);
-                break;
-            case "xlsx":
-                if (!includeHeader) {
-                    processFile(outputStream, dataPath);
-                } else {
-                    XLSXExcelWriter xlsxExcelWriter = new XLSXExcelWriter();
-                    processXLSX(outputStream, dataPath, includeHeader, columnNames, xlsxExcelWriter);
-                }
-                break;
-            case "parquet":
-                processFile(outputStream, dataPath);
                 break;
             default:
                 logger.info("Query:{}, processed", queryId);
@@ -281,7 +257,7 @@ public class AsyncQueryService extends BasicService {
     public boolean deleteByQueryId(String project, String queryId) throws IOException {
         Path resultDir = getAsyncQueryResultDir(project, queryId);
         if (queryStatus(project, queryId) == QueryStatus.MISS) {
-            throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getQueryResultNotFound());
+            throw new KylinException(ASYNC_QUERY_RESULT_NOT_FOUND);
         }
         logger.info("clean async query result for query id [{}]", queryId);
         return AsyncQueryUtil.getFileSystem().delete(resultDir, true);
@@ -324,7 +300,7 @@ public class AsyncQueryService extends BasicService {
 
     public String asyncQueryResultPath(String project, String queryId) throws IOException {
         if (queryStatus(project, queryId) == QueryStatus.MISS) {
-            throw new NAsyncQueryIllegalParamException(MsgPicker.getMsg().getQueryResultNotFound());
+            throw new KylinException(ASYNC_QUERY_RESULT_NOT_FOUND);
         }
         return getAsyncQueryResultDir(project, queryId).toString();
     }
@@ -342,28 +318,6 @@ public class AsyncQueryService extends BasicService {
 
     public Path getAsyncQueryResultDir(String project, String queryId) {
         return new Path(KapConfig.getInstanceFromEnv().getAsyncResultBaseDir(project), queryId);
-    }
-
-    private String processHeader(FileSystem fileSystem, Path dataPath) throws IOException {
-
-        FileStatus[] fileStatuses = fileSystem.listStatus(dataPath);
-        for (FileStatus header : fileStatuses) {
-            if (header.getPath().getName().equals(AsyncQueryUtil.getMetaDataFileName())) {
-                try (FSDataInputStream inputStream = fileSystem.open(header.getPath());
-                        BufferedReader bufferedReader = new BufferedReader(
-                                new InputStreamReader(inputStream, Charset.defaultCharset()))) {
-                    return bufferedReader.readLine();
-                }
-            }
-        }
-        return null;
-    }
-
-    private void processCSV(OutputStream outputStream, Path dataPath, boolean includeHeader, String columnNames,
-            CSVWriter excelWriter, String separator) throws IOException {
-        FileSystem fileSystem = AsyncQueryUtil.getFileSystem();
-        FileStatus[] fileStatuses = fileSystem.listStatus(dataPath);
-        excelWriter.writeData(fileStatuses, outputStream, columnNames, separator, includeHeader);
     }
 
     private void processJSON(OutputStream outputStream, Path dataPath, String encode) throws IOException {
@@ -392,25 +346,6 @@ public class AsyncQueryService extends BasicService {
                     IOUtils.copy(inputStream, outputStream);
                 }
             }
-        }
-    }
-
-    private void processXLSX(OutputStream outputStream, Path dataPath, boolean includeHeader, String columnNames, XLSXExcelWriter excelWriter)
-            throws IOException {
-        FileSystem fileSystem = AsyncQueryUtil.getFileSystem();
-        FileStatus[] fileStatuses = fileSystem.listStatus(dataPath);
-        try (Workbook wb = new XSSFWorkbook()) {
-            Sheet sheet = wb.createSheet("query_result");
-            // Apply column names
-            if (includeHeader && columnNames != null) {
-                org.apache.poi.ss.usermodel.Row excelRow = sheet.createRow(0);
-                String[] columnNameArray = columnNames.split(SparderEnv.getSeparator());
-                for (int i = 0; i < columnNameArray.length; i++) {
-                    excelRow.createCell(i).setCellValue(columnNameArray[i]);
-                }
-            }
-            excelWriter.writeData(fileStatuses, sheet);
-            wb.write(outputStream);
         }
     }
 

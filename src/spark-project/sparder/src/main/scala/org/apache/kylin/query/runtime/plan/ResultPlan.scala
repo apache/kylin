@@ -20,7 +20,8 @@ package org.apache.kylin.query.runtime.plan
 
 import com.google.common.cache.{Cache, CacheBuilder}
 import io.kyligence.kap.secondstorage.SecondStorageUtil
-import org.apache.calcite.rel.`type`.RelDataType
+import org.apache.calcite.rel.`type`.{RelDataType, RelDataTypeField}
+import org.apache.commons.io.IOUtils
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.exception.NewQueryRefuseException
 import org.apache.kylin.common.util.{HadoopUtil, RandomUtil}
@@ -30,19 +31,22 @@ import org.apache.kylin.metadata.query.{BigQueryThresholdUpdater, StructField}
 import org.apache.kylin.metadata.state.QueryShareStateManager
 import org.apache.kylin.query.engine.RelColumnMetaDataExtractor
 import org.apache.kylin.query.engine.exec.ExecuteResult
+import org.apache.kylin.query.pushdown.SparkSqlClient.readPushDownResultRow
 import org.apache.kylin.query.relnode.OLAPContext
 import org.apache.kylin.query.util.{AsyncQueryUtil, QueryUtil, SparkJobTrace, SparkQueryJobManager}
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.xssf.usermodel.{XSSFSheet, XSSFWorkbook}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.execution._
 import org.apache.spark.sql.hive.QueryMetricUtils
 import org.apache.spark.sql.util.SparderTypeUtil
-import org.apache.spark.sql.{DataFrame, SaveMode, SparderEnv}
+import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparderEnv}
 
-import java.io.{File, FileOutputStream}
-import java.util
+import java.io.{File, FileOutputStream, OutputStreamWriter}
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicLong
+import java.{lang, util}
 import scala.collection.JavaConverters._
+import scala.collection.convert.ImplicitConversions.`iterator asScala`
 import scala.collection.mutable
 
 // scalastyle:off
@@ -54,6 +58,10 @@ object ResultType extends Enumeration {
 object ResultPlan extends LogEx {
   val PARTITION_SPLIT_BYTES: Long = KylinConfig.getInstanceFromEnv.getQueryPartitionSplitSizeMB * 1024 * 1024 // 64MB
   val SPARK_SCHEDULER_POOL: String = "spark.scheduler.pool"
+
+  val QUOTE_CHAR = "\""
+  val END_OF_LINE_SYMBOLS = IOUtils.LINE_SEPARATOR_UNIX
+  val CHECK_WRITE_SIZE = 1000
 
   private def collectInternal(df: DataFrame, rowType: RelDataType): (java.lang.Iterable[util.List[String]], Int) = logTime("collectInternal", debug = true) {
     val jobGroup = Thread.currentThread().getName
@@ -139,20 +147,7 @@ object ResultPlan extends LogEx {
         s"Is TableIndex: ${QueryContext.current().getQueryTagInfo.isTableIndex}")
 
       val resultTypes = rowType.getFieldList.asScala
-      (() => new util.Iterator[util.List[String]] {
-
-        override def hasNext: Boolean = resultRows.hasNext
-
-        override def next(): util.List[String] = {
-          val row = resultRows.next()
-          if (Thread.interrupted()) {
-            throw new InterruptedException
-          }
-          row.toSeq.zip(resultTypes).map {
-            case (value, relField) => SparderTypeUtil.convertToStringWithCalciteType(value, relField.getType)
-          }.asJava
-        }
-      }, resultSize)
+      (readResultRow(resultRows, resultTypes), resultSize)
     } catch {
       case e: Throwable =>
         if (e.isInstanceOf[InterruptedException]) {
@@ -165,6 +160,25 @@ object ResultPlan extends LogEx {
     } finally {
       QueryContext.current().setExecutionID(QueryToExecutionIDCache.getQueryExecutionID(queryId))
     }
+  }
+
+
+  def readResultRow(resultRows: util.Iterator[Row], resultTypes: mutable.Buffer[RelDataTypeField]): lang.Iterable[util.List[String]] = {
+    () =>
+      new util.Iterator[util.List[String]] {
+
+        override def hasNext: Boolean = resultRows.hasNext
+
+        override def next(): util.List[String] = {
+          val row = resultRows.next()
+          if (Thread.interrupted()) {
+            throw new InterruptedException
+          }
+          row.toSeq.zip(resultTypes).map {
+            case (value, relField) => SparderTypeUtil.convertToStringWithCalciteType(value, relField.getType)
+          }.asJava
+        }
+      }
   }
 
   private def getNormalizedExplain(df: DataFrame): String = {
@@ -282,6 +296,8 @@ object ResultPlan extends LogEx {
     QueryContext.currentTrace().endLastSpan()
     val jobTrace = new SparkJobTrace(jobGroup, QueryContext.currentTrace(), QueryContext.current().getQueryId, sparkContext)
     val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+    val queryId = QueryContext.current().getQueryId
+    val includeHeader = QueryContext.current().getQueryTagInfo.isIncludeHeader
     format match {
       case "json" =>
         val oldColumnNames = df.columns
@@ -302,31 +318,8 @@ object ResultPlan extends LogEx {
           normalizeSchema(df).write.mode(SaveMode.Overwrite).option("encoding", encode).option("charset", "utf-8").parquet(path)
         }
         sqlContext.setConf("spark.sql.parquet.writeLegacyFormat", "false")
-      case "csv" =>
-        df.write
-          .option("timestampFormat", dateTimeFormat)
-          .option("encoding", encode)
-          .option("dateFormat", "yyyy-MM-dd")
-          .option("charset", "utf-8").mode(SaveMode.Append).csv(path)
-      case "xlsx" => {
-        val queryId = QueryContext.current().getQueryId
-        val file = new File(queryId + ".xlsx")
-        file.createNewFile();
-        val outputStream = new FileOutputStream(file)
-        val workbook = new XSSFWorkbook
-        val sheet = workbook.createSheet("query_result");
-        var num = 0
-        df.collect().foreach(row => {
-          val row1 = sheet.createRow(num)
-          for (i <- 0 until row.length) {
-            row1.createCell(i).setCellValue(row.apply(i).toString)
-          }
-          num = num + 1
-        })
-        workbook.write(outputStream)
-        HadoopUtil.getWorkingFileSystem
-          .copyFromLocalFile(true, true, new Path(file.getPath), new Path(path + "/" + queryId + ".xlsx"))
-      }
+      case "csv" => processCsv(df, format, rowType, path, queryId, includeHeader)
+      case "xlsx" => processXlsx(df, format, rowType, path, queryId, includeHeader)
       case _ =>
         normalizeSchema(df).write.option("timestampFormat", dateTimeFormat).option("encoding", encode)
           .option("charset", "utf-8").mode(SaveMode.Append).parquet(path)
@@ -345,9 +338,140 @@ object ResultPlan extends LogEx {
       QueryContext.current().getMetrics.setQueryJobCount(jobCount)
       QueryContext.current().getMetrics.setQueryStageCount(stageCount)
       QueryContext.current().getMetrics.setQueryTaskCount(taskCount)
-      QueryContext.current().getMetrics.setResultRowCount(newExecution.executedPlan.metrics.get("numOutputRows")
+      setResultRowCount(newExecution.executedPlan)
+    }
+  }
+
+  def setResultRowCount(plan: SparkPlan): Unit = {
+    if (QueryContext.current().getMetrics.getResultRowCount == 0) {
+      QueryContext.current().getMetrics.setResultRowCount(plan.metrics.get("numOutputRows")
         .map(_.value).getOrElse(0))
     }
+  }
+
+  def processCsv(df: DataFrame, format: String, rowType: RelDataType, path: String, queryId: String, includeHeader: Boolean) = {
+    val file = createTmpFile(queryId, format)
+    val writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)
+    if (includeHeader) processCsvHeader(writer, rowType)
+    val (iterator, resultRowSize) = df.toIterator()
+    asyncQueryIteratorWriteCsv(iterator, writer, rowType)
+    uploadAsyncQueryResult(file, path, queryId, format)
+    setResultRowCount(resultRowSize)
+  }
+
+  def processXlsx(df: DataFrame, format: String, rowType: RelDataType, path: String, queryId: String, includeHeader: Boolean) = {
+    val file = createTmpFile(queryId, format)
+    val outputStream = new FileOutputStream(file)
+    val workbook = new XSSFWorkbook
+    val sheet = workbook.createSheet("query_result")
+    var num = 0
+    if (includeHeader) {
+      processXlsxHeader(sheet, rowType)
+      num += 1
+    }
+    val (iterator, resultRowSize) = df.toIterator()
+    iterator.foreach(row => {
+      val row1 = sheet.createRow(num)
+      row.toSeq.zipWithIndex.foreach(it => row1.createCell(it._2).setCellValue(it._1.toString))
+      num += 1
+    })
+    workbook.write(outputStream)
+    uploadAsyncQueryResult(file, path, queryId, format)
+    setResultRowCount(resultRowSize)
+  }
+
+  private def setResultRowCount(resultRowSize: Int) = {
+    if (!KylinConfig.getInstanceFromEnv.isUTEnv) {
+      QueryContext.current().getMetrics.setResultRowCount(resultRowSize)
+    }
+  }
+
+  def processCsvHeader(writer: OutputStreamWriter, rowType: RelDataType): Unit = {
+    val separator = QueryContext.current().getQueryTagInfo.getSeparator
+    rowType match {
+      case null =>
+        val columnNames = QueryContext.current().getColumnNames.asScala.mkString(separator)
+        writer.write(columnNames + END_OF_LINE_SYMBOLS)
+      case _ =>
+        val builder = new StringBuilder
+        rowType.getFieldList.asScala.map(t => t.getName).foreach(column => builder.append(separator + column))
+        builder.deleteCharAt(0)
+        writer.write(builder.toString() + END_OF_LINE_SYMBOLS)
+    }
+    writer.flush()
+  }
+
+  def processXlsxHeader(sheet: XSSFSheet, rowType: RelDataType): Unit = {
+    val excelRow = sheet.createRow(0)
+
+    rowType match {
+      case null =>
+        val columnNameArray = QueryContext.current().getColumnNames
+        columnNameArray.asScala.zipWithIndex
+          .foreach(it => excelRow.createCell(it._2).setCellValue(it._1))
+      case _ =>
+        val columnArray = rowType.getFieldList.asScala.map(t => t.getName)
+        columnArray.zipWithIndex.foreach(it => excelRow.createCell(it._2).setCellValue(it._1))
+    }
+  }
+
+  def createTmpFile(queryId: String, format: String): File = {
+    val file = new File(queryId + format)
+    file.createNewFile()
+    file
+  }
+
+  def uploadAsyncQueryResult(file: File, path: String, queryId: String, format: String): Unit = {
+    HadoopUtil.getWorkingFileSystem
+      .copyFromLocalFile(true, true, new Path(file.getPath), new Path(path + "/" + queryId + "." + format))
+    if (file.exists()) file.delete()
+  }
+
+  def asyncQueryIteratorWriteCsv(resultRows: util.Iterator[Row], outputStream: OutputStreamWriter, rowType: RelDataType): Unit = {
+    var asyncQueryRowSize = 0
+    val separator = QueryContext.current().getQueryTagInfo.getSeparator
+    val asyncQueryResult = if (rowType != null) {
+      val resultTypes = rowType.getFieldList.asScala
+      readResultRow(resultRows, resultTypes)
+    } else {
+      readPushDownResultRow(resultRows, false)
+    }
+
+    asyncQueryResult.forEach(row => {
+
+      asyncQueryRowSize += 1
+      val builder = new StringBuilder
+
+      for (i <- 0 until row.size()) {
+        val column = if (row.get(i) == null) "" else row.get(i)
+
+        if (i > 0) builder.append(separator)
+
+        val escapedCsv = encodeCell(column, separator)
+        builder.append(escapedCsv)
+      }
+      builder.append(END_OF_LINE_SYMBOLS)
+      outputStream.write(builder.toString())
+      if (asyncQueryRowSize % CHECK_WRITE_SIZE == 0) {
+        outputStream.flush()
+      }
+    })
+    outputStream.flush()
+  }
+
+  // the encode logic is copied from org.supercsv.encoder.DefaultCsvEncoder.encode
+  def encodeCell(column1: String, separator: String): String = {
+
+    var column = column1
+    var needQuote = column.contains(separator) || column.contains("\r") || column.contains("\n")
+
+    if (column.contains(QUOTE_CHAR)) {
+      needQuote = true
+      column = column.replace(QUOTE_CHAR, QUOTE_CHAR + QUOTE_CHAR)
+    }
+
+    if (needQuote) QUOTE_CHAR + column + QUOTE_CHAR
+    else column
   }
 
   /**
