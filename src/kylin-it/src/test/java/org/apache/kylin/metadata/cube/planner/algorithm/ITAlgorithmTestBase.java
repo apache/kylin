@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -47,22 +49,22 @@ import com.google.common.collect.Sets;
 
 public class ITAlgorithmTestBase {
 
-    public final static Comparator<Long> CuboidSelectComparator = new Comparator<Long>() {
+    public final static Comparator<BigInteger> CuboidSelectComparator = new Comparator<BigInteger>() {
         @Override
-        public int compare(Long o1, Long o2) {
-            return ComparisonChain.start().compare(Long.bitCount(o1), Long.bitCount(o2)).compare(o1, o2).result();
+        public int compare(BigInteger o1, BigInteger o2) {
+            return ComparisonChain.start().compare(o1.bitCount(), o2.bitCount()).compare(o1, o2).result();
         }
     };
 
     private static class TreeNode implements Serializable {
         @JsonProperty("cuboid_id")
-        long cuboidId;
+        BigInteger cuboidId;
         @JsonIgnore
         int level;
         @JsonProperty("children")
         List<TreeNode> children = Lists.newArrayList();
 
-        public long getCuboidId() {
+        public BigInteger getCuboidId() {
             return cuboidId;
         }
 
@@ -74,22 +76,18 @@ public class ITAlgorithmTestBase {
             return children;
         }
 
-        TreeNode(long cuboidId, int level) {
+        TreeNode(BigInteger cuboidId, int level) {
             this.cuboidId = cuboidId;
             this.level = level;
         }
 
-        void addChild(long childId, int parentlevel) {
+        void addChild(BigInteger childId, int parentlevel) {
             this.children.add(new TreeNode(childId, parentlevel + 1));
         }
 
         @Override
         public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + (int) (cuboidId ^ (cuboidId >>> 32));
-            result = prime * result + level;
-            return result;
+            return Objects.hash(cuboidId, level);
         }
 
         @Override
@@ -114,56 +112,57 @@ public class ITAlgorithmTestBase {
 
         private TreeNode root;
 
-        private Comparator<Long> cuboidComparator;
+        private Comparator<BigInteger> cuboidComparator;
 
-        private Map<Long, TreeNode> index = new HashMap<>();
+        private Map<BigInteger, TreeNode> index = new HashMap<>();
 
-        static CuboidTree createFromCuboids(List<Long> allCuboidIds) {
+        static CuboidTree createFromCuboids(List<BigInteger> allCuboidIds) {
             return createFromCuboids(allCuboidIds, CuboidSelectComparator);
         }
 
-        public static CuboidTree createFromCuboids(List<Long> allCuboidIds, Comparator<Long> cuboidComparator) {
+        public static CuboidTree createFromCuboids(List<BigInteger> allCuboidIds,
+                Comparator<BigInteger> cuboidComparator) {
             // sort the cuboid ids in descending order, so that don't need to adjust
             // the cuboid tree when adding cuboid id to the tree.
-            Collections.sort(allCuboidIds, new Comparator<Long>() {
+            Collections.sort(allCuboidIds, new Comparator<BigInteger>() {
                 @Override
-                public int compare(Long o1, Long o2) {
-                    return Long.compare(o2, o1);
+                public int compare(BigInteger o1, BigInteger o2) {
+                    return o2.compareTo(o1);
                 }
             });
-            long basicCuboidId = allCuboidIds.get(0);
+            BigInteger basicCuboidId = allCuboidIds.get(0);
             CuboidTree cuboidTree = new CuboidTree(cuboidComparator);
             cuboidTree.setRoot(basicCuboidId);
 
-            for (long cuboidId : allCuboidIds) {
+            for (BigInteger cuboidId : allCuboidIds) {
                 cuboidTree.addCuboid(cuboidId);
             }
             cuboidTree.buildIndex();
             return cuboidTree;
         }
 
-        private CuboidTree(Comparator<Long> cuboidComparator) {
+        private CuboidTree(Comparator<BigInteger> cuboidComparator) {
             this.cuboidComparator = cuboidComparator;
         }
 
-        public Set<Long> getAllCuboidIds() {
+        public Set<BigInteger> getAllCuboidIds() {
             return index.keySet();
         }
 
-        public List<Long> getSpanningCuboid(long cuboidId) {
+        public List<BigInteger> getSpanningCuboid(BigInteger cuboidId) {
             TreeNode node = index.get(cuboidId);
             if (node == null) {
                 throw new IllegalArgumentException("the cuboid:" + cuboidId + " is not exist in the tree");
             }
 
-            List<Long> result = Lists.newArrayList();
+            List<BigInteger> result = Lists.newArrayList();
             for (TreeNode child : node.children) {
                 result.add(child.cuboidId);
             }
             return result;
         }
 
-        public long findBestMatchCuboid(long cuboidId) {
+        public BigInteger findBestMatchCuboid(BigInteger cuboidId) {
             // exactly match
             if (isValid(cuboidId)) {
                 return cuboidId;
@@ -172,20 +171,20 @@ public class ITAlgorithmTestBase {
             return findBestParent(cuboidId).cuboidId;
         }
 
-        public boolean isValid(long cuboidId) {
+        public boolean isValid(BigInteger cuboidId) {
             return index.containsKey(cuboidId);
         }
 
-        private int getCuboidCount(long cuboidId) {
+        private int getCuboidCount(BigInteger cuboidId) {
             int r = 1;
-            for (Long child : getSpanningCuboid(cuboidId)) {
+            for (BigInteger child : getSpanningCuboid(cuboidId)) {
                 r += getCuboidCount(child);
             }
             return r;
         }
 
         public void print(PrintWriter out) {
-            int dimensionCnt = Long.bitCount(root.cuboidId);
+            int dimensionCnt = root.cuboidId.bitCount();
             doPrint(root, dimensionCnt, 0, out);
         }
 
@@ -197,7 +196,7 @@ public class ITAlgorithmTestBase {
             }
         }
 
-        private void printCuboid(long cuboidID, int dimensionCount, int depth, PrintWriter out) {
+        private void printCuboid(BigInteger cuboidID, int dimensionCount, int depth, PrintWriter out) {
             StringBuffer sb = new StringBuffer();
             for (int i = 0; i < depth; i++) {
                 sb.append("    ");
@@ -207,10 +206,11 @@ public class ITAlgorithmTestBase {
             out.println(sb.toString());
         }
 
-        private String getDisplayName(long cuboidID, int dimensionCount) {
+        private String getDisplayName(BigInteger cuboidID, int dimensionCount) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < dimensionCount; ++i) {
-                if ((cuboidID & (1L << i)) == 0) {
+
+                if ((cuboidID.and((BigInteger.valueOf(1L << i))).equals(BigInteger.ZERO))) {
                     sb.append('0');
                 } else {
                     sb.append('1');
@@ -219,7 +219,7 @@ public class ITAlgorithmTestBase {
             return StringUtils.reverse(sb.toString());
         }
 
-        private void setRoot(long basicCuboidId) {
+        private void setRoot(BigInteger basicCuboidId) {
             this.root = new TreeNode(basicCuboidId, 0);
             this.treeLevels = 0;
         }
@@ -236,15 +236,15 @@ public class ITAlgorithmTestBase {
             }
         }
 
-        private void addCuboid(long cuboidId) {
+        private void addCuboid(BigInteger cuboidId) {
             TreeNode parent = findBestParent(cuboidId);
-            if (parent != null && parent.cuboidId != cuboidId) {
+            if (parent != null && !parent.cuboidId.equals(cuboidId)) {
                 parent.addChild(cuboidId, parent.level);
                 this.treeLevels = Math.max(this.treeLevels, parent.level + 1);
             }
         }
 
-        private TreeNode findBestParent(long cuboidId) {
+        private TreeNode findBestParent(BigInteger cuboidId) {
             TreeNode bestParent = doFindBestParent(cuboidId, root);
             if (bestParent == null) {
                 throw new IllegalStateException("Cannot find the parent of the cuboid:" + cuboidId);
@@ -252,7 +252,7 @@ public class ITAlgorithmTestBase {
             return bestParent;
         }
 
-        private TreeNode doFindBestParent(long cuboidId, TreeNode parentCuboid) {
+        private TreeNode doFindBestParent(BigInteger cuboidId, TreeNode parentCuboid) {
             if (!canDerive(cuboidId, parentCuboid.cuboidId)) {
                 return null;
             }
@@ -276,22 +276,22 @@ public class ITAlgorithmTestBase {
             });
         }
 
-        private boolean canDerive(long cuboidId, long parentCuboid) {
-            return (cuboidId & ~parentCuboid) == 0;
+        private boolean canDerive(BigInteger cuboidId, BigInteger parentCuboid) {
+            return (cuboidId.and(parentCuboid.not())).equals(BigInteger.ZERO);
         }
     }
 
-    private static class CuboidCostComparator implements Comparator<Long>, Serializable {
-        private Map<Long, Long> cuboidStatistics;
+    private static class CuboidCostComparator implements Comparator<BigInteger>, Serializable {
+        private Map<BigInteger, Long> cuboidStatistics;
 
-        public CuboidCostComparator(Map<Long, Long> cuboidStatistics) {
+        public CuboidCostComparator(Map<BigInteger, Long> cuboidStatistics) {
             Preconditions.checkArgument(cuboidStatistics != null,
                     "the input " + cuboidStatistics + " should not be null!!!");
             this.cuboidStatistics = cuboidStatistics;
         }
 
         @Override
-        public int compare(Long cuboid1, Long cuboid2) {
+        public int compare(BigInteger cuboid1, BigInteger cuboid2) {
             Long rowCnt1 = cuboidStatistics.get(cuboid1);
             Long rowCnt2 = cuboidStatistics.get(cuboid2);
             if (rowCnt2 == null || rowCnt1 == null) {
@@ -303,18 +303,18 @@ public class ITAlgorithmTestBase {
 
     public CuboidStats cuboidStats;
 
-    private Set<Long> mandatoryCuboids;
+    private Set<BigInteger> mandatoryCuboids;
 
     @Before
     public void setUp() throws Exception {
 
         mandatoryCuboids = Sets.newHashSet();
-        mandatoryCuboids.add(3000L);
-        mandatoryCuboids.add(1888L);
-        mandatoryCuboids.add(88L);
-        cuboidStats = new CuboidStats.Builder("test", 4095L, simulateCount(), simulateSpaceSize())
-                .setMandatoryCuboids(mandatoryCuboids).setHitFrequencyMap(simulateHitFrequency())
-                .setScanCountSourceMap(simulateScanCount()).build();
+        mandatoryCuboids.add(BigInteger.valueOf(3000L));
+        mandatoryCuboids.add(BigInteger.valueOf(1888L));
+        mandatoryCuboids.add(BigInteger.valueOf(88L));
+        cuboidStats = new CuboidStats.Builder("test", BigInteger.valueOf(4095L), BigInteger.valueOf(4095L),
+                simulateCount(), simulateSpaceSize()).setMandatoryCuboids(mandatoryCuboids)
+                        .setHitFrequencyMap(simulateHitFrequency()).setScanCountSourceMap(simulateScanCount()).build();
     }
 
     @After
@@ -322,11 +322,11 @@ public class ITAlgorithmTestBase {
     }
 
     /** better if closer to 1, worse if closer to 0*/
-    public double getQueryCostRatio(CuboidStats cuboidStats, List<Long> recommendList) {
+    public double getQueryCostRatio(CuboidStats cuboidStats, List<BigInteger> recommendList) {
         CuboidTree cuboidTree = CuboidTree.createFromCuboids(recommendList,
                 new CuboidCostComparator(cuboidStats.getStatistics()));
         double queryCostBest = 0;
-        for (Long cuboidId : cuboidStats.getAllCuboidsForSelection()) {
+        for (BigInteger cuboidId : cuboidStats.getAllCuboidsForSelection()) {
             if (cuboidStats.getCuboidQueryCost(cuboidId) != null) {
                 queryCostBest += cuboidStats.getCuboidHitProbability(cuboidId) * cuboidStats.getCuboidCount(cuboidId);
                 //                queryCostBest += cuboidStats.getCuboidHitProbability(cuboidId) * cuboidStats.getCuboidQueryCost(cuboidId);
@@ -334,8 +334,8 @@ public class ITAlgorithmTestBase {
         }
 
         double queryCost = 0;
-        for (Long cuboidId : cuboidStats.getAllCuboidsForSelection()) {
-            long matchCuboidId = cuboidTree.findBestMatchCuboid(cuboidId);
+        for (BigInteger cuboidId : cuboidStats.getAllCuboidsForSelection()) {
+            BigInteger matchCuboidId = cuboidTree.findBestMatchCuboid(cuboidId);
             if (cuboidStats.getCuboidQueryCost(matchCuboidId) != null) {
                 queryCost += cuboidStats.getCuboidHitProbability(cuboidId) * cuboidStats.getCuboidCount(matchCuboidId);
                 //                queryCost += cuboidStats.getCuboidHitProbability(cuboidId) * cuboidStats.getCuboidQueryCost(matchCuboidId);
@@ -345,8 +345,8 @@ public class ITAlgorithmTestBase {
         return queryCostBest / queryCost;
     }
 
-    protected Map<Long, Long> simulateCount() {
-        Map<Long, Long> countMap = Maps.newHashMap();
+    protected Map<BigInteger, Long> simulateCount() {
+        Map<BigInteger, Long> countMap = Maps.newHashMap();
         BufferedReader br = null;
 
         try {
@@ -358,7 +358,7 @@ public class ITAlgorithmTestBase {
 
             while ((sCurrentLine = br.readLine()) != null) {
                 String[] statPair = StringUtil.split(sCurrentLine, " ");
-                countMap.put(Long.valueOf(statPair[0]), Long.valueOf(statPair[1]));
+                countMap.put(BigInteger.valueOf(Long.valueOf(statPair[0])), Long.valueOf(statPair[1]));
             }
 
         } catch (IOException e) {
@@ -375,190 +375,190 @@ public class ITAlgorithmTestBase {
         return countMap;
     }
 
-    protected Map<Long, Double> simulateSpaceSize() {
-        Map<Long, Double> sizeMap = Maps.newHashMap();
-        Map<Long, Long> countMap = simulateCount();
-        for (Map.Entry<Long, Long> entry : countMap.entrySet()) {
+    protected Map<BigInteger, Double> simulateSpaceSize() {
+        Map<BigInteger, Double> sizeMap = Maps.newHashMap();
+        Map<BigInteger, Long> countMap = simulateCount();
+        for (Map.Entry<BigInteger, Long> entry : countMap.entrySet()) {
             sizeMap.put(entry.getKey(), entry.getValue() * 1.0);
         }
         return sizeMap;
     }
 
-    protected Map<Long, Long> simulateHitFrequency() {
-        Map<Long, Long> hitFrequencyMap = Maps.newHashMap();
+    protected Map<BigInteger, Long> simulateHitFrequency() {
+        Map<BigInteger, Long> hitFrequencyMap = Maps.newHashMap();
 
-        hitFrequencyMap.put(4095L, 10L);
-        hitFrequencyMap.put(3849L, 15L);
-        hitFrequencyMap.put(3780L, 31L);
+        hitFrequencyMap.put(BigInteger.valueOf(4095L), 10L);
+        hitFrequencyMap.put(BigInteger.valueOf(3849L), 15L);
+        hitFrequencyMap.put(BigInteger.valueOf(3780L), 31L);
 
-        hitFrequencyMap.put(3459L, 16L);
-        hitFrequencyMap.put(3145L, 29L);
+        hitFrequencyMap.put(BigInteger.valueOf(3459L), 16L);
+        hitFrequencyMap.put(BigInteger.valueOf(3145L), 29L);
 
-        hitFrequencyMap.put(2861L, 21L);
-        hitFrequencyMap.put(2768L, 40L);
+        hitFrequencyMap.put(BigInteger.valueOf(2861L), 21L);
+        hitFrequencyMap.put(BigInteger.valueOf(2768L), 40L);
 
-        hitFrequencyMap.put(1528L, 10L);
-        hitFrequencyMap.put(1440L, 9L);
-        hitFrequencyMap.put(1152L, 21L);
+        hitFrequencyMap.put(BigInteger.valueOf(1528L), 10L);
+        hitFrequencyMap.put(BigInteger.valueOf(1440L), 9L);
+        hitFrequencyMap.put(BigInteger.valueOf(1152L), 21L);
 
-        hitFrequencyMap.put(256L, 23L);
+        hitFrequencyMap.put(BigInteger.valueOf(256L), 23L);
 
-        hitFrequencyMap.put(128L, 7L);
-        hitFrequencyMap.put(272L, 8L);
-        hitFrequencyMap.put(288L, 10L);
-        hitFrequencyMap.put(384L, 2L);
-        hitFrequencyMap.put(320L, 3L);
-        hitFrequencyMap.put(432L, 5L);
-        hitFrequencyMap.put(258L, 8L);
-        hitFrequencyMap.put(336L, 10L);
-        hitFrequencyMap.put(274L, 22L);
-        hitFrequencyMap.put(488L, 41L);
-        hitFrequencyMap.put(352L, 10L);
+        hitFrequencyMap.put(BigInteger.valueOf(128L), 7L);
+        hitFrequencyMap.put(BigInteger.valueOf(272L), 8L);
+        hitFrequencyMap.put(BigInteger.valueOf(288L), 10L);
+        hitFrequencyMap.put(BigInteger.valueOf(384L), 2L);
+        hitFrequencyMap.put(BigInteger.valueOf(320L), 3L);
+        hitFrequencyMap.put(BigInteger.valueOf(432L), 5L);
+        hitFrequencyMap.put(BigInteger.valueOf(258L), 8L);
+        hitFrequencyMap.put(BigInteger.valueOf(336L), 10L);
+        hitFrequencyMap.put(BigInteger.valueOf(274L), 22L);
+        hitFrequencyMap.put(BigInteger.valueOf(488L), 41L);
+        hitFrequencyMap.put(BigInteger.valueOf(352L), 10L);
 
-        hitFrequencyMap.put(16L, 1L);
-        hitFrequencyMap.put(32L, 5L);
-        hitFrequencyMap.put(34L, 1L);
+        hitFrequencyMap.put(BigInteger.valueOf(16L), 1L);
+        hitFrequencyMap.put(BigInteger.valueOf(32L), 5L);
+        hitFrequencyMap.put(BigInteger.valueOf(34L), 1L);
 
-        hitFrequencyMap.put(2L, 21L);
+        hitFrequencyMap.put(BigInteger.valueOf(2L), 21L);
 
         return hitFrequencyMap;
     }
 
-    protected Map<Long, Map<Long, Long>> simulateScanCount() {
-        Map<Long, Map<Long, Long>> scanCountMap = Maps.newLinkedHashMap();
-        scanCountMap.put(4094L, new HashMap<Long, Long>() {
+    protected Map<BigInteger, Map<BigInteger, Long>> simulateScanCount() {
+        Map<BigInteger, Map<BigInteger, Long>> scanCountMap = Maps.newLinkedHashMap();
+        scanCountMap.put(BigInteger.valueOf(4094L), new HashMap<BigInteger, Long>() {
             {
-                put(4095L, 1833041L);
+                put(BigInteger.valueOf(4095L), 1833041L);
             }
         });
-        scanCountMap.put(3849L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(3849L), new HashMap<BigInteger, Long>() {
             {
-                put(3849L, 276711L);
+                put(BigInteger.valueOf(3849L), 276711L);
             }
         });
-        scanCountMap.put(3780L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(3780L), new HashMap<BigInteger, Long>() {
             {
-                put(3780L, 129199L);
+                put(BigInteger.valueOf(3780L), 129199L);
             }
         });
-        scanCountMap.put(3459L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(3459L), new HashMap<BigInteger, Long>() {
             {
-                put(3459L, 168109L);
+                put(BigInteger.valueOf(3459L), 168109L);
             }
         });
-        scanCountMap.put(3145L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(3145L), new HashMap<BigInteger, Long>() {
             {
-                put(3145L, 299991L);
+                put(BigInteger.valueOf(3145L), 299991L);
             }
         });
-        scanCountMap.put(2861L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(2861L), new HashMap<BigInteger, Long>() {
             {
-                put(2861L, 2121L);
+                put(BigInteger.valueOf(2861L), 2121L);
             }
         });
-        scanCountMap.put(2768L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(2768L), new HashMap<BigInteger, Long>() {
             {
-                put(2768L, 40231L);
+                put(BigInteger.valueOf(2768L), 40231L);
             }
         });
-        scanCountMap.put(256L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(256L), new HashMap<BigInteger, Long>() {
             {
-                put(256L, 1L);
+                put(BigInteger.valueOf(256L), 1L);
             }
         });
-        scanCountMap.put(16L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(16L), new HashMap<BigInteger, Long>() {
             {
-                put(16L, 1L);
+                put(BigInteger.valueOf(16L), 1L);
             }
         });
-        scanCountMap.put(32L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(32L), new HashMap<BigInteger, Long>() {
             {
-                put(32L, 2L);
+                put(BigInteger.valueOf(32L), 2L);
             }
         });
-        scanCountMap.put(128L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(128L), new HashMap<BigInteger, Long>() {
             {
-                put(128L, 3L);
+                put(BigInteger.valueOf(128L), 3L);
             }
         });
-        scanCountMap.put(272L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(272L), new HashMap<BigInteger, Long>() {
             {
-                put(272L, 2L);
+                put(BigInteger.valueOf(272L), 2L);
             }
         });
-        scanCountMap.put(288L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(288L), new HashMap<BigInteger, Long>() {
             {
-                put(288L, 3L);
+                put(BigInteger.valueOf(288L), 3L);
             }
         });
-        scanCountMap.put(2L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(2L), new HashMap<BigInteger, Long>() {
             {
-                put(2L, 1L);
+                put(BigInteger.valueOf(2L), 1L);
             }
         });
-        scanCountMap.put(384L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(384L), new HashMap<BigInteger, Long>() {
             {
-                put(384L, 2L);
+                put(BigInteger.valueOf(384L), 2L);
             }
         });
-        scanCountMap.put(320L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(320L), new HashMap<BigInteger, Long>() {
             {
-                put(320L, 3L);
+                put(BigInteger.valueOf(320L), 3L);
             }
         });
-        scanCountMap.put(432L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(432L), new HashMap<BigInteger, Long>() {
             {
-                put(432L, 5L);
+                put(BigInteger.valueOf(432L), 5L);
             }
         });
-        scanCountMap.put(1152L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(1152L), new HashMap<BigInteger, Long>() {
             {
-                put(1152L, 21L);
+                put(BigInteger.valueOf(1152L), 21L);
             }
         });
-        scanCountMap.put(258L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(258L), new HashMap<BigInteger, Long>() {
             {
-                put(258L, 2L);
+                put(BigInteger.valueOf(258L), 2L);
             }
         });
-        scanCountMap.put(1440L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(1440L), new HashMap<BigInteger, Long>() {
             {
-                put(1440L, 9L);
+                put(BigInteger.valueOf(1440L), 9L);
             }
         });
-        scanCountMap.put(336L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(336L), new HashMap<BigInteger, Long>() {
             {
-                put(336L, 2L);
+                put(BigInteger.valueOf(336L), 2L);
             }
         });
-        scanCountMap.put(336L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(336L), new HashMap<BigInteger, Long>() {
             {
-                put(336L, 2L);
+                put(BigInteger.valueOf(336L), 2L);
             }
         });
-        scanCountMap.put(274L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(274L), new HashMap<BigInteger, Long>() {
             {
-                put(274L, 1L);
+                put(BigInteger.valueOf(274L), 1L);
             }
         });
-        scanCountMap.put(488L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(488L), new HashMap<BigInteger, Long>() {
             {
-                put(488L, 16L);
+                put(BigInteger.valueOf(488L), 16L);
             }
         });
-        scanCountMap.put(352L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(352L), new HashMap<BigInteger, Long>() {
             {
-                put(352L, 3L);
+                put(BigInteger.valueOf(352L), 3L);
             }
         });
-        scanCountMap.put(1528L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(1528L), new HashMap<BigInteger, Long>() {
             {
-                put(1528L, 21L);
+                put(BigInteger.valueOf(1528L), 21L);
             }
         });
-        scanCountMap.put(34L, new HashMap<Long, Long>() {
+        scanCountMap.put(BigInteger.valueOf(34L), new HashMap<BigInteger, Long>() {
             {
-                put(34L, 1L);
+                put(BigInteger.valueOf(34L), 1L);
             }
         });
 

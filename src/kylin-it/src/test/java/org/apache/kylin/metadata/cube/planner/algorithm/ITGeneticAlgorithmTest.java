@@ -19,6 +19,7 @@ package org.apache.kylin.metadata.cube.planner.algorithm;
 
 import static org.junit.Assert.assertEquals;
 
+import java.math.BigInteger;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Set;
@@ -69,7 +70,7 @@ public class ITGeneticAlgorithmTest extends ITAlgorithmTestBase {
         BenefitPolicy benefitPolicy = new BPUSCalculator(cuboidStats);
         GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
 
-        List<Long> recommendList = algorithm.recommend(10);
+        List<BigInteger> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by BPUSCalculator: " + recommendList);
         System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
     }
@@ -79,7 +80,7 @@ public class ITGeneticAlgorithmTest extends ITAlgorithmTestBase {
         BenefitPolicy benefitPolicy = new PBPUSCalculator(cuboidStats);
         GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
 
-        List<Long> recommendList = algorithm.recommend(10);
+        List<BigInteger> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by PBPUSCalculator:" + recommendList);
         System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
     }
@@ -89,7 +90,7 @@ public class ITGeneticAlgorithmTest extends ITAlgorithmTestBase {
         BenefitPolicy benefitPolicy = new SPBPUSCalculator(cuboidStats);
         GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
 
-        List<Long> recommendList = algorithm.recommend(10);
+        List<BigInteger> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by SPBPUSCalculator:" + recommendList);
         System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
     }

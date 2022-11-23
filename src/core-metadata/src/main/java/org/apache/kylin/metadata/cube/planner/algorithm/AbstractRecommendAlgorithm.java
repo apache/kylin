@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -46,7 +47,7 @@ public abstract class AbstractRecommendAlgorithm implements CuboidRecommendAlgor
     }
 
     @Override
-    public List<Long> recommend(double expansionRate) {
+    public List<BigInteger> recommend(double expansionRate) {
         double spaceLimit = cuboidStats.getBaseCuboidSize() * expansionRate;
         logger.info("space limit for the algorithm is {} with expansion rate {}", spaceLimit, expansionRate);
         return start(spaceLimit);

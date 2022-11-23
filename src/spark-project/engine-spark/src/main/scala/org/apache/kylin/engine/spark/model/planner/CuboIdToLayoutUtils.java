@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.spark.model.planner;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -39,7 +40,7 @@ public class CuboIdToLayoutUtils {
      * @param indexPlan
      * @return
      */
-    public static Set<LayoutEntity> convertCuboIdsToLayoutEntity(Map<Long, Long> cuboids, IndexPlan indexPlan) {
+    public static Set<LayoutEntity> convertCuboIdsToLayoutEntity(Map<BigInteger, Long> cuboids, IndexPlan indexPlan) {
         Set<Integer> measuresIds = indexPlan.getEffectiveMeasures().keySet();
         Set<LayoutEntity> result = new HashSet<>();
         List<NAggregationGroup> aggregationGroups = indexPlan.getRuleBasedIndex() != null
@@ -65,10 +66,10 @@ public class CuboIdToLayoutUtils {
      * @param measuresIds
      * @return
      */
-    protected static Set<List<Integer>> convertCuboIdsToColOrders(Map<Long, Long> cuboids, int dimensionCount,
+    protected static Set<List<Integer>> convertCuboIdsToColOrders(Map<BigInteger, Long> cuboids, int dimensionCount,
             Set<Integer> measuresIds, Map<Integer, Integer> rowkeyIdToColumnId, List<Integer> sortOfDims) {
         Set<List<Integer>> result = new HashSet<>();
-        for (Long cuboid : cuboids.keySet()) {
+        for (BigInteger cuboid : cuboids.keySet()) {
             List<Integer> colOrder = convertLongToDimensionColOrder(cuboid, dimensionCount, rowkeyIdToColumnId,
                     sortOfDims);
             if (colOrder.isEmpty()) {
@@ -88,14 +89,14 @@ public class CuboIdToLayoutUtils {
      * @param maxDimensionCount
      * @return
      */
-    public static List<Integer> convertLongToDimensionColOrder(long cuboid, int maxDimensionCount,
+    public static List<Integer> convertLongToDimensionColOrder(BigInteger cuboid, int maxDimensionCount,
             Map<Integer, Integer> rowkeyIdToColumnId, List<Integer> sortOfDims) {
         // If cuboid is 00000000,00000000,00000000,10001001, and the max dimension count is 12
         // It will be converted to [4,8,11]
         List<Integer> colOrder = new ArrayList<>();
         for (int rowkeyId = 0; rowkeyId < maxDimensionCount; rowkeyId++) {
             int rightShift = maxDimensionCount - rowkeyId - 1;
-            boolean exist = ((cuboid >> rightShift) & 1L) != 0;
+            boolean exist = cuboid.testBit(rightShift);
             if (exist) {
                 if (!rowkeyIdToColumnId.containsKey(rowkeyId)) {
                     throw new RuntimeException("Can't find the column id from the rowkey id");

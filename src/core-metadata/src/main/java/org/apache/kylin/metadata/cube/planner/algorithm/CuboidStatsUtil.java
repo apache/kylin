@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -48,21 +50,24 @@ public class CuboidStatsUtil {
      * @param selectionCuboidSet subset of cuboid domain which needs probability
      * @param nTotalCuboids number of cuboids needs to be considered, mainly for each cuboid's uncertainty weight
      * */
-    public static Map<Long, Double> calculateCuboidHitProbability(Set<Long> selectionCuboidSet,
-            Map<Long, Long> hitFrequencyMap, long nTotalCuboids, double queryUncertaintyRatio) {
-        Map<Long, Double> cuboidHitProbabilityMap = Maps.newHashMapWithExpectedSize(selectionCuboidSet.size());
+    public static Map<BigInteger, Double> calculateCuboidHitProbability(Set<BigInteger> selectionCuboidSet,
+            Map<BigInteger, Long> hitFrequencyMap, BigInteger nTotalCuboids, double queryUncertaintyRatio) {
+        Map<BigInteger, Double> cuboidHitProbabilityMap = Maps.newHashMapWithExpectedSize(selectionCuboidSet.size());
         if (hitFrequencyMap == null || hitFrequencyMap.isEmpty()) {
-            for (Long cuboid : selectionCuboidSet) {
-                cuboidHitProbabilityMap.put(cuboid, 1.0 / nTotalCuboids);
+            double value = BigDecimal.valueOf(1.0).divide(new BigDecimal(nTotalCuboids), 15, BigDecimal.ROUND_HALF_EVEN)
+                    .doubleValue();
+            for (BigInteger cuboid : selectionCuboidSet) {
+                cuboidHitProbabilityMap.put(cuboid, value);
             }
         } else {
             long totalHitFrequency = 0L;
-            for (Map.Entry<Long, Long> hitFrequency : hitFrequencyMap.entrySet()) {
+            for (Map.Entry<BigInteger, Long> hitFrequency : hitFrequencyMap.entrySet()) {
                 totalHitFrequency += hitFrequency.getValue();
             }
 
-            final double unitUncertainProb = queryUncertaintyRatio / nTotalCuboids;
-            for (Long cuboid : selectionCuboidSet) {
+            final double unitUncertainProb = BigDecimal.valueOf(queryUncertaintyRatio)
+                    .divide(new BigDecimal(nTotalCuboids), 15, BigDecimal.ROUND_HALF_EVEN).doubleValue();
+            for (BigInteger cuboid : selectionCuboidSet) {
                 //Calculate hit probability for each cuboid
                 if (hitFrequencyMap.get(cuboid) != null) {
                     if (totalHitFrequency != 0)
@@ -88,19 +93,20 @@ public class CuboidStatsUtil {
      *                           the second element of the pair is the return row count
      * @return source cuboids with estimated row count
      */
-    public static Map<Long, Long> generateSourceCuboidStats(Map<Long, Long> statistics,
-            Map<Long, Double> cuboidHitProbabilityMap, Map<Long, Map<Long, Pair<Long, Long>>> rollingUpSourceMap) {
-        Map<Long, Long> srcCuboidsStats = Maps.newHashMap();
+    public static Map<BigInteger, Long> generateSourceCuboidStats(Map<BigInteger, Long> statistics,
+            Map<BigInteger, Double> cuboidHitProbabilityMap,
+            Map<BigInteger, Map<BigInteger, Pair<Long, Long>>> rollingUpSourceMap) {
+        Map<BigInteger, Long> srcCuboidsStats = Maps.newHashMap();
         if (cuboidHitProbabilityMap == null || cuboidHitProbabilityMap.isEmpty() || rollingUpSourceMap == null
                 || rollingUpSourceMap.isEmpty()) {
             return srcCuboidsStats;
         }
 
-        for (Long cuboid : cuboidHitProbabilityMap.keySet()) {
+        for (BigInteger cuboid : cuboidHitProbabilityMap.keySet()) {
             if (statistics.get(cuboid) != null) {
                 continue;
             }
-            Map<Long, Pair<Long, Long>> innerRollingUpTargetMap = rollingUpSourceMap.get(cuboid);
+            Map<BigInteger, Pair<Long, Long>> innerRollingUpTargetMap = rollingUpSourceMap.get(cuboid);
             if (innerRollingUpTargetMap == null || innerRollingUpTargetMap.isEmpty()) {
                 continue;
             }
@@ -110,7 +116,7 @@ public class CuboidStatsUtil {
             boolean ifHasStats = false;
             // if ifHasStats equals true, then source cuboid row count = (1 - rollup ratio) * target cuboid row count
             //                            else source cuboid row count = returned row count collected directly
-            for (Long tgtCuboid : innerRollingUpTargetMap.keySet()) {
+            for (BigInteger tgtCuboid : innerRollingUpTargetMap.keySet()) {
                 Pair<Long, Long> rollingupStats = innerRollingUpTargetMap.get(tgtCuboid);
                 if (statistics.get(tgtCuboid) != null) {
                     if (!ifHasStats) {
@@ -135,7 +141,7 @@ public class CuboidStatsUtil {
             else
                 throw new ArithmeticException("/ by zero");
         }
-        srcCuboidsStats.remove(0L);
+        srcCuboidsStats.remove(BigInteger.ZERO);
         adjustCuboidStats(srcCuboidsStats, statistics);
         return srcCuboidsStats;
     }
@@ -144,24 +150,26 @@ public class CuboidStatsUtil {
      * Complement row count for mandatory cuboids
      * with its best parent's row count
      * */
-    public static Map<Long, Long> complementRowCountForCuboids(final Map<Long, Long> statistics, Set<Long> cuboids) {
-        Map<Long, Long> result = Maps.newHashMapWithExpectedSize(cuboids.size());
+    public static Map<BigInteger, Long> complementRowCountForCuboids(final Map<BigInteger, Long> statistics,
+            Set<BigInteger> cuboids) {
+        Map<BigInteger, Long> result = Maps.newHashMapWithExpectedSize(cuboids.size());
 
         // Sort entries order by row count asc
-        SortedSet<Map.Entry<Long, Long>> sortedStatsSet = new TreeSet<>(new Comparator<Map.Entry<Long, Long>>() {
-            public int compare(Map.Entry<Long, Long> o1, Map.Entry<Long, Long> o2) {
-                int ret = o1.getValue().compareTo(o2.getValue());
-                return ret == 0 ? o1.getKey().compareTo(o2.getKey()) : ret;
-            }
-        });
+        SortedSet<Map.Entry<BigInteger, Long>> sortedStatsSet = new TreeSet<>(
+                new Comparator<Map.Entry<BigInteger, Long>>() {
+                    public int compare(Map.Entry<BigInteger, Long> o1, Map.Entry<BigInteger, Long> o2) {
+                        int ret = o1.getValue().compareTo(o2.getValue());
+                        return ret == 0 ? o1.getKey().compareTo(o2.getKey()) : ret;
+                    }
+                });
         //sortedStatsSet.addAll(statistics.entrySet()); KYLIN-3580
-        for (Map.Entry<Long, Long> entry : statistics.entrySet()) {
+        for (Map.Entry<BigInteger, Long> entry : statistics.entrySet()) {
             sortedStatsSet.add(entry);
         }
-        for (Long cuboid : cuboids) {
+        for (BigInteger cuboid : cuboids) {
             if (statistics.get(cuboid) == null) {
                 // Get estimate row count for mandatory cuboid
-                for (Map.Entry<Long, Long> entry : sortedStatsSet) {
+                for (Map.Entry<BigInteger, Long> entry : sortedStatsSet) {
                     if (isDescendant(cuboid, entry.getKey())) {
                         result.put(cuboid, entry.getValue());
                         break;
@@ -178,15 +186,15 @@ public class CuboidStatsUtil {
     /**
      * adjust cuboid row count, make sure parent not less than child
      */
-    public static Map<Long, Long> adjustCuboidStats(Map<Long, Long> statistics) {
-        Map<Long, Long> ret = Maps.newHashMapWithExpectedSize(statistics.size());
+    public static Map<BigInteger, Long> adjustCuboidStats(Map<BigInteger, Long> statistics) {
+        Map<BigInteger, Long> ret = Maps.newHashMapWithExpectedSize(statistics.size());
 
-        List<Long> cuboids = Lists.newArrayList(statistics.keySet());
+        List<BigInteger> cuboids = Lists.newArrayList(statistics.keySet());
         Collections.sort(cuboids);
 
-        for (Long cuboid : cuboids) {
+        for (BigInteger cuboid : cuboids) {
             Long rowCount = statistics.get(cuboid);
-            for (Long childCuboid : ret.keySet()) {
+            for (BigInteger childCuboid : ret.keySet()) {
                 if (isDescendant(childCuboid, cuboid)) {
                     Long childRowCount = ret.get(childCuboid);
                     if (rowCount < childRowCount) {
@@ -200,15 +208,16 @@ public class CuboidStatsUtil {
         return ret;
     }
 
-    public static void adjustCuboidStats(Map<Long, Long> mandatoryCuboidsWithStats, Map<Long, Long> statistics) {
-        List<Long> mandatoryCuboids = Lists.newArrayList(mandatoryCuboidsWithStats.keySet());
+    public static void adjustCuboidStats(Map<BigInteger, Long> mandatoryCuboidsWithStats,
+            Map<BigInteger, Long> statistics) {
+        List<BigInteger> mandatoryCuboids = Lists.newArrayList(mandatoryCuboidsWithStats.keySet());
         Collections.sort(mandatoryCuboids);
 
-        List<Long> selectedCuboids = Lists.newArrayList(statistics.keySet());
+        List<BigInteger> selectedCuboids = Lists.newArrayList(statistics.keySet());
         Collections.sort(selectedCuboids);
 
         for (int i = 0; i < mandatoryCuboids.size(); i++) {
-            Long mCuboid = mandatoryCuboids.get(i);
+            BigInteger mCuboid = mandatoryCuboids.get(i);
             if (statistics.get(mCuboid) != null) {
                 mandatoryCuboidsWithStats.put(mCuboid, statistics.get(mCuboid));
                 continue;
@@ -216,8 +225,9 @@ public class CuboidStatsUtil {
             int k = 0;
             // Make sure mCuboid's row count larger than its children's row count in statistics
             for (; k < selectedCuboids.size(); k++) {
-                Long sCuboid = selectedCuboids.get(k);
-                if (sCuboid > mCuboid) {
+                BigInteger sCuboid = selectedCuboids.get(k);
+                if (sCuboid.compareTo(mCuboid) > 0) {
+                    // sCuboid > mCuboid
                     break;
                 }
                 if (isDescendant(sCuboid, mCuboid)) {
@@ -229,7 +239,7 @@ public class CuboidStatsUtil {
             }
             // Make sure mCuboid's row count larger than its children's row count in mandatoryCuboids
             for (int j = 0; j < i; j++) {
-                Long cCuboid = mandatoryCuboids.get(j);
+                BigInteger cCuboid = mandatoryCuboids.get(j);
                 if (isDescendant(cCuboid, mCuboid)) {
                     Long childRowCount = mandatoryCuboidsWithStats.get(cCuboid);
                     if (childRowCount > mandatoryCuboidsWithStats.get(mCuboid)) {
@@ -239,7 +249,7 @@ public class CuboidStatsUtil {
             }
             // Make sure mCuboid's row count lower than its parents' row count in statistics
             for (; k < selectedCuboids.size(); k++) {
-                Long sCuboid = selectedCuboids.get(k);
+                BigInteger sCuboid = selectedCuboids.get(k);
                 if (isDescendant(mCuboid, sCuboid)) {
                     Long parentRowCount = statistics.get(sCuboid);
                     if (parentRowCount < mandatoryCuboidsWithStats.get(mCuboid)) {
@@ -250,11 +260,11 @@ public class CuboidStatsUtil {
         }
     }
 
-    public static Map<Long, List<Long>> createDirectChildrenCache(final Set<Long> cuboidSet) {
+    public static Map<BigInteger, List<BigInteger>> createDirectChildrenCache(final Set<BigInteger> cuboidSet) {
         /**
          * Sort the list by ascending order:
          * */
-        final List<Long> cuboidList = Lists.newArrayList(cuboidSet);
+        final List<BigInteger> cuboidList = Lists.newArrayList(cuboidSet);
         Collections.sort(cuboidList);
         /**
          * Sort the list by ascending order:
@@ -268,13 +278,13 @@ public class CuboidStatsUtil {
         Collections.sort(layerIdxList, new Comparator<Integer>() {
             @Override
             public int compare(Integer i1, Integer i2) {
-                Long o1 = cuboidList.get(i1);
-                Long o2 = cuboidList.get(i2);
-                int nBitDiff = Long.bitCount(o1) - Long.bitCount(o2);
+                BigInteger o1 = cuboidList.get(i1);
+                BigInteger o2 = cuboidList.get(i2);
+                int nBitDiff = o1.bitCount() - o2.bitCount();
                 if (nBitDiff != 0) {
                     return nBitDiff;
                 }
-                return Long.compare(o1, o2);
+                return o1.compareTo(o2);
             }
         });
         /**
@@ -282,7 +292,7 @@ public class CuboidStatsUtil {
          * (layerCuboidList is for speeding up continuous iteration)
          * */
         int[] toLayerIdxArray = new int[layerIdxList.size()];
-        final List<Long> layerCuboidList = Lists.newArrayListWithExpectedSize(cuboidList.size());
+        final List<BigInteger> layerCuboidList = Lists.newArrayListWithExpectedSize(cuboidList.size());
         for (int i = 0; i < layerIdxList.size(); i++) {
             int cuboidIdx = layerIdxList.get(i);
             toLayerIdxArray[cuboidIdx] = i;
@@ -294,7 +304,8 @@ public class CuboidStatsUtil {
         int previousLayerLastIdx = -1;
         for (int i = 0; i < layerIdxList.size(); i++) {
             int cuboidIdx = layerIdxList.get(i);
-            int nBits = Long.bitCount(cuboidList.get(cuboidIdx));
+            // get bit count from the biginteger api
+            int nBits = cuboidList.get(cuboidIdx).bitCount();
             if (nBits > currentBitCount) {
                 currentBitCount = nBits;
                 previousLayerLastIdx = i - 1;
@@ -302,10 +313,10 @@ public class CuboidStatsUtil {
             previousLayerLastIdxArray[i] = previousLayerLastIdx;
         }
 
-        Map<Long, List<Long>> directChildrenCache = Maps.newHashMap();
+        Map<BigInteger, List<BigInteger>> directChildrenCache = Maps.newHashMap();
         for (int i = 0; i < cuboidList.size(); i++) {
-            Long currentCuboid = cuboidList.get(i);
-            LinkedList<Long> directChildren = Lists.newLinkedList();
+            BigInteger currentCuboid = cuboidList.get(i);
+            LinkedList<BigInteger> directChildren = Lists.newLinkedList();
             int lastLayerIdx = previousLayerLastIdxArray[toLayerIdxArray[i]];
             /**
              * Choose one of the two scan strategies
@@ -333,10 +344,11 @@ public class CuboidStatsUtil {
         return directChildrenCache;
     }
 
-    private static void checkAndAddDirectChild(List<Long> directChildren, Long currentCuboid, Long checkedCuboid) {
+    private static void checkAndAddDirectChild(List<BigInteger> directChildren, BigInteger currentCuboid,
+            BigInteger checkedCuboid) {
         if (isDescendant(checkedCuboid, currentCuboid)) {
             boolean ifDirectChild = true;
-            for (long directChild : directChildren) {
+            for (BigInteger directChild : directChildren) {
                 if (isDescendant(checkedCuboid, directChild)) {
                     ifDirectChild = false;
                     break;
@@ -348,8 +360,8 @@ public class CuboidStatsUtil {
         }
     }
 
-    public static boolean isDescendant(long cuboidToCheck, long parentCuboid) {
-        return (cuboidToCheck & parentCuboid) == cuboidToCheck;
+    private static boolean isDescendant(BigInteger cuboidToCheck, BigInteger parentCuboid) {
+        return (cuboidToCheck.and(parentCuboid)).equals(cuboidToCheck);
     }
 
     // TODO: this is used for cube planner2

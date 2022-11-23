@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm.genetic;
 
+import java.math.BigInteger;
 import java.util.BitSet;
 
 import org.apache.commons.math3.genetics.Chromosome;
@@ -38,7 +39,7 @@ public class BitsChromosome extends Chromosome {
      * BitSet representing the chromosome
      */
     private final BitSet representation;
-    private final ImmutableSet<Long> cuboids;
+    private final ImmutableSet<BigInteger> cuboids;
 
     private final BenefitPolicy benefitPolicy;
 
@@ -72,7 +73,7 @@ public class BitsChromosome extends Chromosome {
         return helper.getLength();
     }
 
-    public ImmutableSet<Long> getCuboids() {
+    public ImmutableSet<BigInteger> getCuboids() {
         return cuboids;
     }
 

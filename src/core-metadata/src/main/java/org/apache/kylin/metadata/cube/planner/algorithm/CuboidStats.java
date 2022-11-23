@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,27 +45,23 @@ public class CuboidStats {
 
         // Required parameters
         private String key;
-        private Long nTotalCuboids;
-        private Long baseCuboid;
+        private BigInteger nTotalCuboids;
+        private BigInteger baseCuboid;
         private double queryUncertaintyRatio = WEIGHT_FOR_UN_QUERY;
         private double bpusMinBenefitRatio = BPUS_MIN_BENEFIT_RATIO;
-        private Map<Long, Long> statistics;
-        private Map<Long, Double> size;
+        private Map<BigInteger, Long> statistics;
+        private Map<BigInteger, Double> size;
 
         // Optional parameters - initialized to default values
-        private Set<Long> mandatoryCuboids = null;
+        private Set<BigInteger> mandatoryCuboids = null;
         //// These two properties are for generating mandatory cuboids
-        private Map<Long, Map<Long, Pair<Long, Long>>> rollingUpCountSourceMap = null;
+        private Map<BigInteger, Map<BigInteger, Pair<Long, Long>>> rollingUpCountSourceMap = null;
 
-        private Map<Long, Long> hitFrequencyMap = null;
-        private Map<Long, Map<Long, Long>> scanCountSourceMap = null;
+        private Map<BigInteger, Long> hitFrequencyMap = null;
+        private Map<BigInteger, Map<BigInteger, Long>> scanCountSourceMap = null;
 
-        public Builder(String key, Long baseCuboid, Map<Long, Long> statistics, Map<Long, Double> size) {
-            this(key, baseCuboid, baseCuboid, statistics, size);
-        }
-
-        public Builder(String key, Long nTotalCuboids, Long baseCuboid, Map<Long, Long> statistics,
-                Map<Long, Double> size) {
+        public Builder(String key, BigInteger nTotalCuboids, BigInteger baseCuboid, Map<BigInteger, Long> statistics,
+                Map<BigInteger, Double> size) {
             this.key = key;
             this.nTotalCuboids = nTotalCuboids;
             this.baseCuboid = baseCuboid;
@@ -82,27 +79,28 @@ public class CuboidStats {
             return this;
         }
 
-        public Builder setRollingUpCountSourceMap(Map<Long, Map<Long, Pair<Long, Long>>> rollingUpCountSourceMap) {
+        public Builder setRollingUpCountSourceMap(
+                Map<BigInteger, Map<BigInteger, Pair<Long, Long>>> rollingUpCountSourceMap) {
             this.rollingUpCountSourceMap = rollingUpCountSourceMap;
             return this;
         }
 
-        public Builder setMandatoryCuboids(Set<Long> mandatoryCuboids) {
+        public Builder setMandatoryCuboids(Set<BigInteger> mandatoryCuboids) {
             this.mandatoryCuboids = mandatoryCuboids;
             return this;
         }
 
-        public Builder setHitFrequencyMap(Map<Long, Long> hitFrequencyMap) {
+        public Builder setHitFrequencyMap(Map<BigInteger, Long> hitFrequencyMap) {
             this.hitFrequencyMap = hitFrequencyMap;
             return this;
         }
 
-        public Builder setScanCountSourceMap(Map<Long, Map<Long, Long>> scanCountSourceMap) {
+        public Builder setScanCountSourceMap(Map<BigInteger, Map<BigInteger, Long>> scanCountSourceMap) {
             this.scanCountSourceMap = scanCountSourceMap;
             return this;
         }
 
-        public Map<Long, Double> estimateCuboidsSize(Map<Long, Long> statistics) {
+        public Map<BigInteger, Double> estimateCuboidsSize(Map<BigInteger, Long> statistics) {
             return null;
         }
 
@@ -118,14 +116,14 @@ public class CuboidStats {
             statistics = CuboidStatsUtil.adjustCuboidStats(statistics);
 
             if (hitFrequencyMap != null && rollingUpCountSourceMap != null) {
-                Map<Long, Double> cuboidHitProbabilityMap = CuboidStatsUtil.calculateCuboidHitProbability(
+                Map<BigInteger, Double> cuboidHitProbabilityMap = CuboidStatsUtil.calculateCuboidHitProbability(
                         hitFrequencyMap.keySet(), hitFrequencyMap, nTotalCuboids, queryUncertaintyRatio);
-                Map<Long, Long> srcCuboidsStats = CuboidStatsUtil.generateSourceCuboidStats(statistics,
+                Map<BigInteger, Long> srcCuboidsStats = CuboidStatsUtil.generateSourceCuboidStats(statistics,
                         cuboidHitProbabilityMap, rollingUpCountSourceMap);
 
                 statistics.putAll(srcCuboidsStats);
 
-                Map<Long, Double> estimatedSize = estimateCuboidsSize(statistics);
+                Map<BigInteger, Double> estimatedSize = estimateCuboidsSize(statistics);
                 if (estimatedSize != null && !estimatedSize.isEmpty()) {
                     size = Maps.newHashMap(estimatedSize);
                 }
@@ -143,27 +141,27 @@ public class CuboidStats {
     }
 
     private String key;
-    private long baseCuboid;
+    private BigInteger baseCuboid;
     private double bpusMinBenefitRatio;
-    private ImmutableSet<Long> mandatoryCuboidSet;
-    private ImmutableSet<Long> selectionCuboidSet;
-    private ImmutableMap<Long, Long> cuboidCountMap;
-    private ImmutableMap<Long, Double> cuboidSizeMap;
-    private ImmutableMap<Long, Double> cuboidHitProbabilityMap;
-    private ImmutableMap<Long, Long> cuboidScanCountMap;
+    private ImmutableSet<BigInteger> mandatoryCuboidSet;
+    private ImmutableSet<BigInteger> selectionCuboidSet;
+    private ImmutableMap<BigInteger, Long> cuboidCountMap;
+    private ImmutableMap<BigInteger, Double> cuboidSizeMap;
+    private ImmutableMap<BigInteger, Double> cuboidHitProbabilityMap;
+    private ImmutableMap<BigInteger, Long> cuboidScanCountMap;
 
-    private ImmutableMap<Long, List<Long>> directChildrenCache;
-    private Map<Long, Set<Long>> allDescendantsCache;
+    private ImmutableMap<BigInteger, List<BigInteger>> directChildrenCache;
+    private Map<BigInteger, Set<BigInteger>> allDescendantsCache;
 
-    private CuboidStats(String key, long baseCuboidId, double queryUncertaintyRatio, double bpusMinBenefitRatio,
-            Set<Long> mandatoryCuboids, Map<Long, Long> statistics, Map<Long, Double> size,
-            Map<Long, Long> hitFrequencyMap, Map<Long, Map<Long, Long>> scanCountSourceMap) {
+    private CuboidStats(String key, BigInteger baseCuboidId, double queryUncertaintyRatio, double bpusMinBenefitRatio,
+            Set<BigInteger> mandatoryCuboids, Map<BigInteger, Long> statistics, Map<BigInteger, Double> size,
+            Map<BigInteger, Long> hitFrequencyMap, Map<BigInteger, Map<BigInteger, Long>> scanCountSourceMap) {
 
         this.key = key;
         this.baseCuboid = baseCuboidId;
         this.bpusMinBenefitRatio = bpusMinBenefitRatio;
         /** Initial mandatory cuboids */
-        Set<Long> cuboidsForMandatory = Sets.newHashSet(mandatoryCuboids);
+        Set<BigInteger> cuboidsForMandatory = Sets.newHashSet(mandatoryCuboids);
         //Always add base cuboid.
         if (!cuboidsForMandatory.contains(baseCuboid)) {
             cuboidsForMandatory.add(baseCuboid);
@@ -171,40 +169,42 @@ public class CuboidStats {
         logger.info("Mandatory cuboids: " + cuboidsForMandatory);
 
         /** Initial selection cuboids */
-        Set<Long> cuboidsForSelection = Sets.newHashSet(statistics.keySet());
+        Set<BigInteger> cuboidsForSelection = Sets.newHashSet(statistics.keySet());
         cuboidsForSelection.removeAll(cuboidsForMandatory);
 
         //There's no overlap between mandatoryCuboidSet and selectionCuboidSet
-        this.mandatoryCuboidSet = ImmutableSet.<Long> builder().addAll(cuboidsForMandatory).build();
-        this.selectionCuboidSet = ImmutableSet.<Long> builder().addAll(cuboidsForSelection).build();
+        this.mandatoryCuboidSet = ImmutableSet.<BigInteger> builder().addAll(cuboidsForMandatory).build();
+        this.selectionCuboidSet = ImmutableSet.<BigInteger> builder().addAll(cuboidsForSelection).build();
         if (selectionCuboidSet.isEmpty()) {
             logger.warn("The selection set should not be empty!!!");
         }
 
-        this.cuboidCountMap = ImmutableMap.<Long, Long> builder().putAll(statistics).build();
-        this.cuboidSizeMap = ImmutableMap.<Long, Double> builder().putAll(size).build();
+        this.cuboidCountMap = ImmutableMap.<BigInteger, Long> builder().putAll(statistics).build();
+        this.cuboidSizeMap = ImmutableMap.<BigInteger, Double> builder().putAll(size).build();
 
         /** Initialize the hit probability for each selection cuboid */
-        Map<Long, Double> tmpCuboidHitProbabilityMap = CuboidStatsUtil.calculateCuboidHitProbability(selectionCuboidSet,
-                hitFrequencyMap, selectionCuboidSet.size(), queryUncertaintyRatio);
-        this.cuboidHitProbabilityMap = ImmutableMap.<Long, Double> builder().putAll(tmpCuboidHitProbabilityMap).build();
+        Map<BigInteger, Double> tmpCuboidHitProbabilityMap = CuboidStatsUtil.calculateCuboidHitProbability(
+                selectionCuboidSet, hitFrequencyMap, BigInteger.valueOf(selectionCuboidSet.size()),
+                queryUncertaintyRatio);
+        this.cuboidHitProbabilityMap = ImmutableMap.<BigInteger, Double> builder().putAll(tmpCuboidHitProbabilityMap)
+                .build();
 
         /** Initialize the scan count when query for each selection cuboid + one base cuboid */
-        Map<Long, Long> tmpCuboidScanCountMap = Maps.newHashMapWithExpectedSize(1 + selectionCuboidSet.size());
+        Map<BigInteger, Long> tmpCuboidScanCountMap = Maps.newHashMapWithExpectedSize(1 + selectionCuboidSet.size());
         tmpCuboidScanCountMap.put(baseCuboid, getExpScanCount(baseCuboid, statistics, scanCountSourceMap));
-        for (Long cuboid : selectionCuboidSet) {
+        for (BigInteger cuboid : selectionCuboidSet) {
             tmpCuboidScanCountMap.put(cuboid, getExpScanCount(cuboid, statistics, scanCountSourceMap));
         }
-        this.cuboidScanCountMap = ImmutableMap.<Long, Long> builder().putAll(tmpCuboidScanCountMap).build();
+        this.cuboidScanCountMap = ImmutableMap.<BigInteger, Long> builder().putAll(tmpCuboidScanCountMap).build();
 
-        this.directChildrenCache = ImmutableMap.<Long, List<Long>> builder()
+        this.directChildrenCache = ImmutableMap.<BigInteger, List<BigInteger>> builder()
                 .putAll(CuboidStatsUtil.createDirectChildrenCache(statistics.keySet())).build();
 
         this.allDescendantsCache = Maps.newConcurrentMap();
     }
 
-    private long getExpScanCount(long sourceCuboid, Map<Long, Long> statistics,
-            Map<Long, Map<Long, Long>> scanCountSourceMap) {
+    private long getExpScanCount(BigInteger sourceCuboid, Map<BigInteger, Long> statistics,
+            Map<BigInteger, Map<BigInteger, Long>> scanCountSourceMap) {
         Preconditions.checkNotNull(statistics.get(sourceCuboid),
                 "The statistics for source cuboid " + sourceCuboid + " does not exist!!!");
         if (scanCountSourceMap == null || scanCountSourceMap.get(sourceCuboid) == null
@@ -212,10 +212,10 @@ public class CuboidStats {
             return statistics.get(sourceCuboid);
         } else {
             //TODO some improvement can be done by assigning weights based on distance between source cuboid and target cuboid
-            Map<Long, Long> scanCountTargetMap = scanCountSourceMap.get(sourceCuboid);
+            Map<BigInteger, Long> scanCountTargetMap = scanCountSourceMap.get(sourceCuboid);
             long totalEstScanCount = 0L;
-            for (Map.Entry<Long, Long> subEntry : scanCountTargetMap.entrySet()) {
-                long targetCuboid = subEntry.getKey();
+            for (Map.Entry<BigInteger, Long> subEntry : scanCountTargetMap.entrySet()) {
+                BigInteger targetCuboid = subEntry.getKey();
                 Preconditions.checkNotNull(statistics.get(targetCuboid),
                         "The statistics for target cuboid " + targetCuboid + " does not exist!!!");
                 // Consider the ratio of row count between source cuboid and target cuboid
@@ -229,8 +229,8 @@ public class CuboidStats {
         return bpusMinBenefitRatio;
     }
 
-    public Set<Long> getAllDescendants(long cuboid) {
-        Set<Long> allDescendants = Sets.newLinkedHashSet();
+    public Set<BigInteger> getAllDescendants(BigInteger cuboid) {
+        Set<BigInteger> allDescendants = Sets.newLinkedHashSet();
         if (selectionCuboidSet.contains(cuboid)) {
             if (allDescendantsCache.get(cuboid) != null) {
                 return allDescendantsCache.get(cuboid);
@@ -242,37 +242,37 @@ public class CuboidStats {
         return allDescendants;
     }
 
-    private void getAllDescendants(long cuboid, Set<Long> allDescendants) {
+    private void getAllDescendants(BigInteger cuboid, Set<BigInteger> allDescendants) {
         if (allDescendants.contains(cuboid)) {
             return;
         }
         allDescendants.add(cuboid);
-        for (Long directChild : directChildrenCache.get(cuboid)) {
+        for (BigInteger directChild : directChildrenCache.get(cuboid)) {
             getAllDescendants(directChild, allDescendants);
         }
     }
 
-    public ImmutableSet<Long> getAllCuboidsForSelection() {
+    public ImmutableSet<BigInteger> getAllCuboidsForSelection() {
         return selectionCuboidSet;
     }
 
-    public ImmutableSet<Long> getAllCuboidsForMandatory() {
+    public ImmutableSet<BigInteger> getAllCuboidsForMandatory() {
         return mandatoryCuboidSet;
     }
 
-    public Long getCuboidQueryCost(long cuboid) {
+    public Long getCuboidQueryCost(BigInteger cuboid) {
         return cuboidScanCountMap.get(cuboid);
     }
 
-    public Long getCuboidCount(long cuboid) {
+    public Long getCuboidCount(BigInteger cuboid) {
         return cuboidCountMap.get(cuboid);
     }
 
-    public Double getCuboidSize(long cuboid) {
+    public Double getCuboidSize(BigInteger cuboid) {
         return cuboidSizeMap.get(cuboid);
     }
 
-    public double getCuboidHitProbability(long cuboid) {
+    public double getCuboidHitProbability(BigInteger cuboid) {
         if (mandatoryCuboidSet.contains(cuboid)) {
             return 1;
         } else {
@@ -280,7 +280,7 @@ public class CuboidStats {
         }
     }
 
-    public Map<Long, Long> getStatistics() {
+    public Map<BigInteger, Long> getStatistics() {
         return cuboidCountMap;
     }
 
@@ -288,7 +288,7 @@ public class CuboidStats {
         return getCuboidSize(baseCuboid);
     }
 
-    public long getBaseCuboid() {
+    public BigInteger getBaseCuboid() {
         return baseCuboid;
     }
 
@@ -296,7 +296,7 @@ public class CuboidStats {
         return key;
     }
 
-    public CuboidBenefitModel.CuboidModel getCuboidModel(long cuboid) {
+    public CuboidBenefitModel.CuboidModel getCuboidModel(BigInteger cuboid) {
         return new CuboidBenefitModel.CuboidModel(cuboid, getCuboidCount(cuboid), getCuboidSize(cuboid),
                 getCuboidHitProbability(cuboid), getCuboidQueryCost(cuboid));
     }

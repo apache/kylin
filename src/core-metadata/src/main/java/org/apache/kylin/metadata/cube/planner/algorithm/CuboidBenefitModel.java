@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm;
 
+import java.math.BigInteger;
+
 public class CuboidBenefitModel {
     private CuboidModel cuboidModel;
     private BenefitModel benefitModel;
@@ -32,7 +34,7 @@ public class CuboidBenefitModel {
         this.benefitModel = benefitModel;
     }
 
-    public Long getCuboidId() {
+    public BigInteger getCuboidId() {
         return cuboidModel == null ? null : cuboidModel.cuboidId;
     }
 
@@ -46,7 +48,7 @@ public class CuboidBenefitModel {
     }
 
     public static class CuboidModel {
-        public final long cuboidId;
+        public final BigInteger cuboidId;
 
         public final long recordCount;
         public final double spaceSize;
@@ -54,7 +56,8 @@ public class CuboidBenefitModel {
         public final double hitProbability;
         public final long scanCount;
 
-        public CuboidModel(long cuboId, long recordCount, double spaceSize, double hitProbability, long scanCount) {
+        public CuboidModel(BigInteger cuboId, long recordCount, double spaceSize, double hitProbability,
+                long scanCount) {
             this.cuboidId = cuboId;
             this.recordCount = recordCount;
             this.spaceSize = spaceSize;

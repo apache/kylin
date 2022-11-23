@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm.genetic;
 
+import java.math.BigInteger;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Locale;
@@ -65,12 +66,12 @@ public class GeneticAlgorithm extends AbstractRecommendAlgorithm {
     }
 
     @Override
-    public List<Long> start(double maxSpaceLimit) {
+    public List<BigInteger> start(double maxSpaceLimit) {
         logger.debug("Genetic Algorithm started.");
 
         //Initial mandatory cuboids
         double remainingSpace = maxSpaceLimit;
-        for (Long mandatoryOne : cuboidStats.getAllCuboidsForMandatory()) {
+        for (BigInteger mandatoryOne : cuboidStats.getAllCuboidsForMandatory()) {
             if (cuboidStats.getCuboidSize(mandatoryOne) != null) {
                 remainingSpace -= cuboidStats.getCuboidSize(mandatoryOne);
             }
@@ -90,13 +91,13 @@ public class GeneticAlgorithm extends AbstractRecommendAlgorithm {
         Population current = geneticAlgorithm.evolve(initial, stopCondition);
         BitsChromosome chromosome = (BitsChromosome) current.getFittestChromosome();
         logger.debug("Genetic Algorithm finished.");
-        List<Long> finalList = Lists.newArrayList();
+        List<BigInteger> finalList = Lists.newArrayList();
         finalList.addAll(helper.getMandatoryCuboids());
         finalList.addAll(chromosome.getCuboids());
 
         double totalSpace = 0;
         if (logger.isTraceEnabled()) {
-            for (Long cuboid : finalList) {
+            for (BigInteger cuboid : finalList) {
                 Double unitSpace = cuboidStats.getCuboidSize(cuboid);
                 if (unitSpace != null) {
                     logger.trace(String.format(Locale.ROOT, "cuboidId %d and Space: %f", cuboid, unitSpace));

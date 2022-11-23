@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.spark.model.planner;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,7 +52,6 @@ import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.sql.Row;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.hash.HashFunction;
@@ -63,8 +63,8 @@ import scala.Tuple2;
 
 @Slf4j
 public class FlatTableToCostUtils {
-    public static Map<Long, HLLCounter> generateCost(JavaRDD<Row> input, KylinConfig kylinConfig, IndexPlan indexPlan,
-            SegmentFlatTableDesc flatTableDesc) throws IOException {
+    public static Map<BigInteger, HLLCounter> generateCost(JavaRDD<Row> input, KylinConfig kylinConfig,
+            IndexPlan indexPlan, SegmentFlatTableDesc flatTableDesc) throws IOException {
         // step1: convert each cell to string data type, and get RDD[String[]]
         JavaRDD<String[]> flatTableRDD = input.map(new Function<Row, String[]>() {
             @Override
@@ -84,30 +84,35 @@ public class FlatTableToCostUtils {
         // step2: calculate the cost for each partition, and get the new RDD.
         // The key is cuboid, and the value is the data encoded from the hll for each partition.
         int rowKeyCount = indexPlan.getEffectiveDimCols().size();
+
         // layouts from the rule index(agg group)
         Set<LayoutEntity> inputLayouts = indexPlan.getRuleBasedIndex().genCuboidLayouts();
+        // TODO remove this checker for cube planner
+        // https://jirap.corp.ebay.com/browse/KYLIN-3709
         if (indexPlan.getBaseAggLayout() == null) {
             throw new RuntimeException("Need the base agg index layout");
         }
         // base agg layout
         inputLayouts.add(indexPlan.getBaseAggLayout());
-        Long[] inputCuboids = getCuboIdsFromLayouts(Lists.newArrayList(inputLayouts),
+        BigInteger[] inputCuboids = getCuboIdsFromLayouts(Lists.newArrayList(inputLayouts),
                 indexPlan.getEffectiveDimCols().size(), indexPlan.getColumnIdToRowKeyId());
 
         // rowkey id ->  column index in the flat table of the flat dataset.
         int[] rowkeyColumnIndexes = getRowkeyColumnIndexes(indexPlan, flatTableDesc);
 
         int hllPrecision = kylinConfig.getCubeStatsHLLPrecision();
-
-        JavaPairRDD<Long, byte[]> costRddByPartition = flatTableRDD.mapPartitionsToPair(
+        log.info("The row key count is {}, and the index/column map is {}", rowKeyCount,
+                Lists.newArrayList(rowkeyColumnIndexes));
+        JavaPairRDD<BigInteger, byte[]> costRddByPartition = flatTableRDD.mapPartitionsToPair(
                 new FlatOutputFunction(hllPrecision, rowKeyCount, inputCuboids, rowkeyColumnIndexes));
 
         // step3: reduce by cuboid, and merge hll data
         // The key is the cuboid, the value is data encoded from the hll
         int partitionNum = getCuboidHLLCounterReducerNum(inputCuboids.length, kylinConfig);
         log.info("Get the partition count for the HLL reducer: {}", partitionNum);
-        JavaPairRDD<Long, byte[]> costRDD = costRddByPartition.reduceByKey(new Partitioner() {
+        JavaPairRDD<BigInteger, byte[]> costRDD = costRddByPartition.reduceByKey(new Partitioner() {
             private int num = partitionNum;
+            private BigInteger bigIntegerMod = BigInteger.valueOf(num);
 
             @Override
             public int numPartitions() {
@@ -116,7 +121,9 @@ public class FlatTableToCostUtils {
 
             @Override
             public int getPartition(Object key) {
-                return (int) ((Math.abs((Long) key) % num));
+                // key is the biginteger
+                BigInteger value = (BigInteger) key;
+                return value.mod(bigIntegerMod).intValue();
             }
         }, new Function2<byte[], byte[], byte[]>() {
             private int precision = hllPrecision;
@@ -143,8 +150,8 @@ public class FlatTableToCostUtils {
         });
         // step4: collect the final result, and convert value(text) to hll
         // The key is the cuboid, and the value is the estimated statistics
-        Map<Long, HLLCounter> resultCost = Maps.newHashMap();
-        for (Tuple2<Long, byte[]> pair : costRDD.collect()) {
+        Map<BigInteger, HLLCounter> resultCost = Maps.newHashMap();
+        for (Tuple2<BigInteger, byte[]> pair : costRDD.collect()) {
             HLLCounter hll = new HLLCounter(kylinConfig.getCubeStatsHLLPrecision());
             // value
             ByteArray byteArray = new ByteArray(pair._2);
@@ -171,15 +178,15 @@ public class FlatTableToCostUtils {
         return Math.max(shardBase, 1);
     }
 
-    private static Long[] getCuboIdsFromLayouts(List<LayoutEntity> allLayouts, int dimensionCount,
+    private static BigInteger[] getCuboIdsFromLayouts(List<LayoutEntity> allLayouts, int dimensionCount,
             Map<Integer, Integer> columnIdToRowkeyId) {
-        Set<Long> set = new HashSet<>();
+        Set<BigInteger> set = new HashSet<>();
         for (LayoutEntity layoutEntity : allLayouts) {
-            long cuboId = CostBasePlannerUtils.convertDimensionsToCuboId(layoutEntity.getDimsIds(), dimensionCount,
-                    columnIdToRowkeyId);
+            BigInteger cuboId = CostBasePlannerUtils.convertDimensionsToCuboId(layoutEntity.getDimsIds(),
+                    dimensionCount, columnIdToRowkeyId);
             set.add(cuboId);
         }
-        return set.toArray(new Long[set.size()]);
+        return set.toArray(new BigInteger[set.size()]);
     }
 
     private static int[] getRowkeyColumnIndexes(IndexPlan indexPlan, SegmentFlatTableDesc flatTableDesc) {
@@ -205,41 +212,37 @@ public class FlatTableToCostUtils {
         return rowkeyColumnIndexes;
     }
 
-    private static class FlatOutputFunction implements PairFlatMapFunction<Iterator<String[]>, Long, byte[]> {
+    private static class FlatOutputFunction implements PairFlatMapFunction<Iterator<String[]>, BigInteger, byte[]> {
         private transient volatile boolean initialized = false;
         private transient CuboidStatCalculator cuboidStatCalculator;
         private final int samplingPercent = 100;
         private final int hllPrecision;
         private final int rowKeyCount;
-        private final Long[] cuboidIds;
+        private final BigInteger[] cuboidIds;
         private final int[] rowkeyColumnIndexes;
 
-        public FlatOutputFunction(int hllPrecision, int rowKeyCount, Long[] cuboidIds, int[] rowkeyColumnIndexes) {
+        public FlatOutputFunction(int hllPrecision, int rowKeyCount, BigInteger[] cuboidIds,
+                int[] rowkeyColumnIndexes) {
             this.hllPrecision = hllPrecision;
             this.rowKeyCount = rowKeyCount;
             this.cuboidIds = cuboidIds;
             this.rowkeyColumnIndexes = rowkeyColumnIndexes;
         }
 
-        private Integer[][] getCuboidBitSet(Long[] cuboidIds, int nRowKey) {
-            Preconditions.checkArgument(nRowKey < Long.SIZE,
-                    String.format("the size of row key %d could not be large than %d", nRowKey, Long.SIZE - 1));
-
+        private Integer[][] getCuboidBitSet(BigInteger[] cuboidIds, int nRowKey) {
             Integer[][] allCuboidsBitSet = new Integer[cuboidIds.length][];
-
             for (int j = 0; j < cuboidIds.length; j++) {
-                Long cuboidId = cuboidIds[j];
+                BigInteger cuboidId = cuboidIds[j];
 
-                allCuboidsBitSet[j] = new Integer[Long.bitCount(cuboidId)];
-
-                long mask = 1L << (nRowKey - 1);
+                allCuboidsBitSet[j] = new Integer[cuboidId.bitCount()];
                 int position = 0;
                 for (int i = 0; i < nRowKey; i++) {
-                    if ((mask & cuboidId) > 0) {
+                    BigInteger bigMask = BigInteger.ZERO.setBit(nRowKey - 1 - i);
+                    if ((bigMask.and(cuboidId).compareTo(BigInteger.ZERO)) > 0) {
+                        // bigMask & cuboid > 0
                         allCuboidsBitSet[j][position] = i;
                         position++;
                     }
-                    mask = mask >> 1;
                 }
             }
             return allCuboidsBitSet;
@@ -262,7 +265,7 @@ public class FlatTableToCostUtils {
         }
 
         @Override
-        public Iterator<Tuple2<Long, byte[]>> call(Iterator<String[]> iterator) throws Exception {
+        public Iterator<Tuple2<BigInteger, byte[]>> call(Iterator<String[]> iterator) throws Exception {
             if (initialized == false) {
                 // just sync this object
                 synchronized (this) {
@@ -282,21 +285,21 @@ public class FlatTableToCostUtils {
                 rowCount++;
             }
 
-            List<Tuple2<Long, byte[]>> result = Lists.newArrayList();
+            List<Tuple2<BigInteger, byte[]>> result = Lists.newArrayList();
             ByteBuffer hllBuf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
-            Long[] cuboidIds = cuboidStatCalculator.getCuboidIds();
+            BigInteger[] cuboidIds = cuboidStatCalculator.getCuboidIds();
             HLLCounter[] cuboidsHLL = cuboidStatCalculator.getHLLCounters();
             HLLCounter hll;
             for (int i = 0; i < cuboidIds.length; i++) {
                 // key
-                Long outputKey = cuboidIds[i];
+                BigInteger outputKey = cuboidIds[i];
                 // value
                 hll = cuboidsHLL[i];
                 hllBuf.clear();
                 hll.writeRegisters(hllBuf);
                 byte[] value = new byte[hllBuf.position()];
                 System.arraycopy(hllBuf.array(), 0, value, 0, hllBuf.position());
-                result.add(new Tuple2<Long, byte[]>(outputKey, value));
+                result.add(new Tuple2<BigInteger, byte[]>(outputKey, value));
             }
             return result.iterator();
         }
@@ -305,7 +308,7 @@ public class FlatTableToCostUtils {
     static class CuboidStatCalculator {
         private final int nRowKey;
         private final int[] rowkeyColIndex;
-        private final Long[] cuboidIds;
+        private final BigInteger[] cuboidIds;
         private final Integer[][] cuboidsBitSet;
         private HLLCounter[] cuboidsHLL;
 
@@ -314,7 +317,7 @@ public class FlatTableToCostUtils {
         private final HashFunction hf;
         private long[] rowHashCodesLong;
 
-        public CuboidStatCalculator(int[] rowkeyColIndex, Long[] cuboidIds, Integer[][] cuboidsBitSet,
+        public CuboidStatCalculator(int[] rowkeyColIndex, BigInteger[] cuboidIds, Integer[][] cuboidsBitSet,
                 boolean isUsePutRowKeyToHllNewAlgorithm, HLLCounter[] cuboidsHLL) {
             this.nRowKey = rowkeyColIndex.length;
             this.rowkeyColIndex = rowkeyColIndex;
@@ -390,26 +393,26 @@ public class FlatTableToCostUtils {
             return cuboidsHLL;
         }
 
-        public Long[] getCuboidIds() {
+        public BigInteger[] getCuboidIds() {
             return cuboidIds;
         }
     }
 
-    private static void logMapperAndCuboidStatistics(Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage) {
+    private static void logMapperAndCuboidStatistics(Map<BigInteger, HLLCounter> cuboidHLLMap, int samplingPercentage) {
         log.debug("Total cuboid number: \t" + cuboidHLLMap.size());
         log.debug("Sampling percentage: \t" + samplingPercentage);
         log.debug("The following statistics are collected based on sampling data.");
 
-        List<Long> allCuboids = Lists.newArrayList(cuboidHLLMap.keySet());
+        List<BigInteger> allCuboids = Lists.newArrayList(cuboidHLLMap.keySet());
         Collections.sort(allCuboids);
-        for (long i : allCuboids) {
+        for (BigInteger i : allCuboids) {
             log.debug("Cuboid " + i + " row count is: \t " + cuboidHLLMap.get(i).getCountEstimate());
         }
     }
 
-    public static Map<Long, Long> getCuboidRowCountMapFromSampling(Map<Long, HLLCounter> hllcMap) {
-        Map<Long, Long> cuboidRowCountMap = Maps.newHashMap();
-        for (Map.Entry<Long, HLLCounter> entry : hllcMap.entrySet()) {
+    public static Map<BigInteger, Long> getCuboidRowCountMapFromSampling(Map<BigInteger, HLLCounter> hllcMap) {
+        Map<BigInteger, Long> cuboidRowCountMap = Maps.newHashMap();
+        for (Map.Entry<BigInteger, HLLCounter> entry : hllcMap.entrySet()) {
             // No need to adjust according sampling percentage. Assumption is that data set is far
             // more than cardinality. Even a percentage of the data should already see all cardinalities.
             cuboidRowCountMap.put(entry.getKey(), entry.getValue().getCountEstimate());
@@ -417,19 +420,19 @@ public class FlatTableToCostUtils {
         return cuboidRowCountMap;
     }
 
-    private static Map<Long, Double> getCuboidSizeMapFromSamplingByCount(Map<Long, Long> rowCountMap, long sourceCount,
-            IndexPlan indexPlan, KylinConfig kylinConfig, SegmentFlatTableDesc segmentFlatTableDesc) {
+    private static Map<BigInteger, Double> getCuboidSizeMapFromSamplingByCount(Map<BigInteger, Long> rowCountMap,
+            long sourceCount, IndexPlan indexPlan, KylinConfig kylinConfig, SegmentFlatTableDesc segmentFlatTableDesc) {
         // use the row count to replace the size
-        Map<Long, Double> cuboidSizeMap = Maps.newHashMap();
-        for (Map.Entry<Long, Long> entry : rowCountMap.entrySet()) {
+        Map<BigInteger, Double> cuboidSizeMap = Maps.newHashMap();
+        for (Map.Entry<BigInteger, Long> entry : rowCountMap.entrySet()) {
             double value = entry.getValue();
             cuboidSizeMap.put(entry.getKey(), value);
         }
         return cuboidSizeMap;
     }
 
-    public static Map<Long, Double> getCuboidSizeMapFromSampling(Map<Long, Long> rowCountMap, long sourceCount,
-            IndexPlan indexPlan, KylinConfig kylinConfig, SegmentFlatTableDesc segmentFlatTableDesc) {
+    public static Map<BigInteger, Double> getCuboidSizeMapFromSampling(Map<BigInteger, Long> rowCountMap,
+            long sourceCount, IndexPlan indexPlan, KylinConfig kylinConfig, SegmentFlatTableDesc segmentFlatTableDesc) {
         // TODO: https://jirap.corp.ebay.com/browse/KYLIN-3630
         // replace the size with the row count
         return getCuboidSizeMapFromSamplingByCount(rowCountMap, sourceCount, indexPlan, kylinConfig,

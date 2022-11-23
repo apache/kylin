@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm;
 
+import java.math.BigInteger;
 import java.util.Set;
 
 public interface BenefitPolicy {
@@ -31,14 +32,14 @@ public interface BenefitPolicy {
      * @param selected should not be changed
      *                 Will not change the inner instance status
      */
-    public CuboidBenefitModel.BenefitModel calculateBenefit(long cuboid, Set<Long> selected);
+    public CuboidBenefitModel.BenefitModel calculateBenefit(BigInteger cuboid, Set<BigInteger> selected);
 
     /**
      * @param cuboidsToAdd should not be changed
      * @param selected     should not be changed
      *                     Will not change the inner instance status
      */
-    public CuboidBenefitModel.BenefitModel calculateBenefitTotal(Set<Long> cuboidsToAdd, Set<Long> selected);
+    public CuboidBenefitModel.BenefitModel calculateBenefitTotal(Set<BigInteger> cuboidsToAdd, Set<BigInteger> selected);
 
     public boolean ifEfficient(CuboidBenefitModel best);
 
@@ -46,5 +47,5 @@ public interface BenefitPolicy {
      * @param selected should not be changed
      * Will update the inner instance status
      */
-    public void propagateAggregationCost(long cuboid, Set<Long> selected);
+    public void propagateAggregationCost(BigInteger cuboid, Set<BigInteger> selected);
 }

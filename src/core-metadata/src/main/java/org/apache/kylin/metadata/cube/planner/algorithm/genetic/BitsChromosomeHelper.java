@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm.genetic;
 
+import java.math.BigInteger;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
@@ -41,17 +42,17 @@ public class BitsChromosomeHelper {
         this.cuboidEncoder = new CuboidEncoder(cuboidStats.getAllCuboidsForSelection());
     }
 
-    public ImmutableSet<Long> getMandatoryCuboids() {
+    public ImmutableSet<BigInteger> getMandatoryCuboids() {
         return cuboidStats.getAllCuboidsForMandatory();
     }
 
-    public List<Long> toCuboidList(BitSet bits) {
+    public List<BigInteger> toCuboidList(BitSet bits) {
         return cuboidEncoder.toCuboidList(bits);
     }
 
-    public double getCuboidSize(Set<Long> cuboids) {
+    public double getCuboidSize(Set<BigInteger> cuboids) {
         double ret = 0;
-        for (Long cuboid : cuboids) {
+        for (BigInteger cuboid : cuboids) {
             ret += cuboidStats.getCuboidSize(cuboid);
         }
         return ret;
@@ -84,16 +85,16 @@ public class BitsChromosomeHelper {
     }
 
     private static class CuboidEncoder {
-        public final ImmutableList<Long> cuboidDomain;
+        public final ImmutableList<BigInteger> cuboidDomain;
 
-        public CuboidEncoder(Set<Long> cuboidSet) {
-            List<Long> cuboidList = Lists.newArrayList(cuboidSet);
+        public CuboidEncoder(Set<BigInteger> cuboidSet) {
+            List<BigInteger> cuboidList = Lists.newArrayList(cuboidSet);
             Collections.sort(cuboidList, Collections.reverseOrder());
             this.cuboidDomain = ImmutableList.copyOf(cuboidList);
         }
 
-        public List<Long> toCuboidList(BitSet bits) {
-            List<Long> cuboids = Lists.newArrayListWithExpectedSize(bits.cardinality());
+        public List<BigInteger> toCuboidList(BitSet bits) {
+            List<BigInteger> cuboids = Lists.newArrayListWithExpectedSize(bits.cardinality());
             for (int i = bits.nextSetBit(0); i >= 0; i = bits.nextSetBit(i + 1)) {
                 cuboids.add(cuboidDomain.get(i));
             }

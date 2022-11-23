@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm;
 
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ public interface CuboidRecommendAlgorithm {
      * Return a list of recommended cuboids for the building segment based on expansionRate
      *
      */
-    List<Long> recommend(double expansionRate);
+    List<BigInteger> recommend(double expansionRate);
 
     /**
      * Start the Algorithm running
@@ -37,7 +38,7 @@ public interface CuboidRecommendAlgorithm {
      * @param maxSpaceLimit
      * @return
      */
-    List<Long> start(double maxSpaceLimit);
+    List<BigInteger> start(double maxSpaceLimit);
 
     /**
      * Cancel the Algorithm running

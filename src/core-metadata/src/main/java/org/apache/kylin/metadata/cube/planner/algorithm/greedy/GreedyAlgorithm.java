@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm.greedy;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -48,15 +49,15 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
     private static final int THREAD_NUM = 8;
     private ExecutorService executor;
 
-    private Set<Long> selected = Sets.newLinkedHashSet();
-    private List<Long> remaining = Lists.newLinkedList();
+    private Set<BigInteger> selected = Sets.newLinkedHashSet();
+    private List<BigInteger> remaining = Lists.newLinkedList();
 
     public GreedyAlgorithm(final long timeout, BenefitPolicy benefitPolicy, CuboidStats cuboidStats) {
         super(timeout, benefitPolicy, cuboidStats);
     }
 
     @Override
-    public List<Long> start(double spaceLimit) {
+    public List<BigInteger> start(double spaceLimit) {
         logger.info("Greedy Algorithm started.");
         executor = Executors.newFixedThreadPool(THREAD_NUM,
                 new ThreadFactoryBuilder().setNameFormat("greedy-algorithm-benefit-calculator-pool-%d").build());
@@ -64,7 +65,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
         //Initial mandatory cuboids
         selected.clear();
         double remainingSpace = spaceLimit;
-        for (Long mandatoryOne : cuboidStats.getAllCuboidsForMandatory()) {
+        for (BigInteger mandatoryOne : cuboidStats.getAllCuboidsForMandatory()) {
             selected.add(mandatoryOne);
             if (cuboidStats.getCuboidSize(mandatoryOne) != null) {
                 remainingSpace -= cuboidStats.getCuboidSize(mandatoryOne);
@@ -109,7 +110,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
 
         executor.shutdown();
 
-        List<Long> excluded = Lists.newArrayList(remaining);
+        List<BigInteger> excluded = Lists.newArrayList(remaining);
         remaining.retainAll(selected);
         Preconditions.checkArgument(remaining.isEmpty(),
                 "There should be no intersection between excluded list and selected list.");
@@ -118,7 +119,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
         if (logger.isTraceEnabled()) {
             logger.trace("Excluded cuboidId size: {}", excluded.size());
             logger.trace("Excluded cuboidId detail:");
-            for (Long cuboid : excluded) {
+            for (BigInteger cuboid : excluded) {
                 logger.trace("cuboidId {} and Cost: {} and Space: {}", cuboid, cuboidStats.getCuboidQueryCost(cuboid),
                         cuboidStats.getCuboidSize(cuboid));
             }
@@ -133,7 +134,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
         final AtomicReference<CuboidBenefitModel> best = new AtomicReference<>();
 
         final CountDownLatch counter = new CountDownLatch(remaining.size());
-        for (final Long cuboid : remaining) {
+        for (final BigInteger cuboid : remaining) {
             executor.submit(() -> {
                 CuboidBenefitModel currentBest = best.get();
                 assert (selected.size() == selectedSize);

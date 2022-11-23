@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.cube.planner;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,22 +45,22 @@ import com.google.common.collect.Maps;
 public class CostBasePlannerUtils {
     private static final Logger logger = LoggerFactory.getLogger(CostBasePlannerUtils.class);
 
-    public static Map<Long, Long> getRecommendCuboidList(IndexPlan indexPlan, KylinConfig kylinConf, String modelName,
-            Map<Long, Long> cuboidRowCountMap, Map<Long, Double> cuboidSizeMap) {
-        long baseCuboid = generateBaseCuboId(indexPlan);
-        Set<Long> mandatoryCuboids = generateMandatoryCuboIds(indexPlan);
+    public static Map<BigInteger, Long> getRecommendCuboidList(IndexPlan indexPlan, KylinConfig kylinConf,
+            String modelName, Map<BigInteger, Long> cuboidRowCountMap, Map<BigInteger, Double> cuboidSizeMap) {
+        BigInteger baseCuboid = generateBaseCuboId(indexPlan);
+        Set<BigInteger> mandatoryCuboids = generateMandatoryCuboIds(indexPlan);
         logger.info("Build cuboid stats model name {}, baseCuboid {}, mandatory cuboid {}, statistic cuboid {}",
                 modelName, baseCuboid, mandatoryCuboids, cuboidRowCountMap.keySet());
-        CuboidStats cuboidStats = new CuboidStats.Builder(modelName, baseCuboid, cuboidRowCountMap, cuboidSizeMap)
-                .setMandatoryCuboids(mandatoryCuboids)
-                .setBPUSMinBenefitRatio(kylinConf.getCubePlannerBPUSMinBenefitRatio()).build();
-        Map<Long, Long> result = getRecommendCuboidList(cuboidStats, kylinConf, !mandatoryCuboids.isEmpty());
+        CuboidStats cuboidStats = new CuboidStats.Builder(modelName, baseCuboid, baseCuboid, cuboidRowCountMap,
+                cuboidSizeMap).setMandatoryCuboids(mandatoryCuboids)
+                        .setBPUSMinBenefitRatio(kylinConf.getCubePlannerBPUSMinBenefitRatio()).build();
+        Map<BigInteger, Long> result = getRecommendCuboidList(cuboidStats, kylinConf, !mandatoryCuboids.isEmpty());
         // if not recommend any cuboid and just apply all layouts with the rule base index
         if (result == null || result.isEmpty()) {
             result = new HashMap<>();
             Set<LayoutEntity> allLayouts = indexPlan.getRuleBasedIndex().genCuboidLayouts();
             for (LayoutEntity layoutEntity : allLayouts) {
-                long cuboid = convertDimensionsToCuboId(layoutEntity.getDimsIds(),
+                BigInteger cuboid = convertDimensionsToCuboId(layoutEntity.getDimsIds(),
                         indexPlan.getEffectiveDimCols().size(), indexPlan.getColumnIdToRowKeyId());
                 result.put(cuboid, 0L);
             }
@@ -69,22 +70,22 @@ public class CostBasePlannerUtils {
         return result;
     }
 
-    private static long generateBaseCuboId(IndexPlan indexPlan) {
+    private static BigInteger generateBaseCuboId(IndexPlan indexPlan) {
         int dimensionCount = indexPlan.getEffectiveDimCols().size();
         List<Integer> dimensionIds = new ArrayList<>(indexPlan.getEffectiveDimCols().keySet());
-        long cuboid = convertDimensionsToCuboId(dimensionIds, dimensionCount, indexPlan.getColumnIdToRowKeyId());
+        BigInteger cuboid = convertDimensionsToCuboId(dimensionIds, dimensionCount, indexPlan.getColumnIdToRowKeyId());
         return cuboid;
     }
 
-    private static Set<Long> generateMandatoryCuboIds(IndexPlan indexPlan) {
-        Set<Long> result = new HashSet<>();
+    private static Set<BigInteger> generateMandatoryCuboIds(IndexPlan indexPlan) {
+        Set<BigInteger> result = new HashSet<>();
         int dimensionCount = indexPlan.getEffectiveDimCols().size();
         if (indexPlan.getRuleBasedIndex() != null) {
             for (NAggregationGroup aggregationGroup : indexPlan.getRuleBasedIndex().getAggregationGroups()) {
                 Integer[] mandatoryDimensionIds = aggregationGroup.getSelectRule().getMandatoryDims();
                 // If there is no mandatory for the agg group, should not add the cuboid
                 if (mandatoryDimensionIds != null && mandatoryDimensionIds.length != 0) {
-                    long cuboid = convertDimensionsToCuboId(mandatoryDimensionIds, dimensionCount,
+                    BigInteger cuboid = convertDimensionsToCuboId(mandatoryDimensionIds, dimensionCount,
                             indexPlan.getColumnIdToRowKeyId());
                     result.add(cuboid);
                 }
@@ -93,7 +94,7 @@ public class CostBasePlannerUtils {
         return result;
     }
 
-    private static Map<Long, Long> getRecommendCuboidList(CuboidStats cuboidStats, KylinConfig kylinConf,
+    private static Map<BigInteger, Long> getRecommendCuboidList(CuboidStats cuboidStats, KylinConfig kylinConf,
             boolean ifForceRecommend) {
         // default is 1<<7 = 128
         long threshold1 = 1L << kylinConf.getCubePlannerGreedyAlgorithmAutoThreshold() - 1;
@@ -122,7 +123,7 @@ public class CostBasePlannerUtils {
         }
         long startTime = System.currentTimeMillis();
         logger.info("Cube Planner Algorithm started at {}", startTime);
-        List<Long> recommendCuboidList = algorithm.recommend(kylinConf.getCubePlannerExpansionRateThreshold());
+        List<BigInteger> recommendCuboidList = algorithm.recommend(kylinConf.getCubePlannerExpansionRateThreshold());
         logger.info("Cube Planner Algorithm ended at {}, cost time {}", System.currentTimeMillis(),
                 System.currentTimeMillis() - startTime);
 
@@ -130,9 +131,9 @@ public class CostBasePlannerUtils {
             logger.info("Cube Planner Algorithm chooses {} most effective cuboids to build among of all {} cuboids.",
                     recommendCuboidList.size(), allCuboidCount);
         }
-        Map<Long, Long> recommendCuboidsWithStats = Maps.newLinkedHashMap();
-        for (Long cuboid : recommendCuboidList) {
-            if (cuboid == 0L) {
+        Map<BigInteger, Long> recommendCuboidsWithStats = Maps.newLinkedHashMap();
+        for (BigInteger cuboid : recommendCuboidList) {
+            if (cuboid.equals(BigInteger.ZERO)) {
                 // for zero cuboid, just simply recommend the cheapest cuboid.
                 handleCuboidZeroRecommend(cuboidStats, recommendCuboidsWithStats);
             } else {
@@ -142,11 +143,12 @@ public class CostBasePlannerUtils {
         return recommendCuboidsWithStats;
     }
 
-    private static void handleCuboidZeroRecommend(CuboidStats cuboidStats, Map<Long, Long> recommendCuboidsWithStats) {
-        Map<Long, Long> statistics = cuboidStats.getStatistics();
-        Long cheapestCuboid = null;
+    private static void handleCuboidZeroRecommend(CuboidStats cuboidStats,
+            Map<BigInteger, Long> recommendCuboidsWithStats) {
+        Map<BigInteger, Long> statistics = cuboidStats.getStatistics();
+        BigInteger cheapestCuboid = null;
         Long cheapestCuboidCount = Long.MAX_VALUE;
-        for (Map.Entry<Long, Long> cuboidStatsEntry : statistics.entrySet()) {
+        for (Map.Entry<BigInteger, Long> cuboidStatsEntry : statistics.entrySet()) {
             if (cuboidStatsEntry.getValue() < cheapestCuboidCount) {
                 cheapestCuboid = cuboidStatsEntry.getKey();
                 cheapestCuboidCount = cuboidStatsEntry.getValue();
@@ -165,11 +167,11 @@ public class CostBasePlannerUtils {
      * @param dimensionCount
      * @return
      */
-    private static long convertDimensionsToCuboId(Integer[] dimensionIds, int dimensionCount,
+    private static BigInteger convertDimensionsToCuboId(Integer[] dimensionIds, int dimensionCount,
             Map<Integer, Integer> columnIdToRowkeyId) {
         Preconditions.checkNotNull(dimensionIds);
         Preconditions.checkArgument(dimensionIds.length != 0, "The length of dimensionIds must be greater than 0");
-        long cuboid = 0;
+        BigInteger cuboid = BigInteger.ZERO;
         // If the dimension count is 12, the ids is [4,8,11]
         // and the result is 00000000,00000000,00000000,10001001
         for (Integer dimensionId : dimensionIds) {
@@ -180,12 +182,13 @@ public class CostBasePlannerUtils {
             if (rowkeyId >= dimensionCount) {
                 throw new RuntimeException("The rowkey id must less than the count of dimension");
             }
-            cuboid |= (1L << (dimensionCount - 1 - rowkeyId));
+            // set `dimensionCount - 1 - rowkeyId`th bit to 1
+            cuboid = cuboid.setBit(dimensionCount - 1 - rowkeyId);
         }
         return cuboid;
     }
 
-    public static long convertDimensionsToCuboId(List<Integer> dimensionIds, int dimensionCount,
+    public static BigInteger convertDimensionsToCuboId(List<Integer> dimensionIds, int dimensionCount,
             Map<Integer, Integer> columnIdToRowkeyId) {
         return convertDimensionsToCuboId(dimensionIds.toArray(new Integer[0]), dimensionCount, columnIdToRowkeyId);
     }

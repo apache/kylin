@@ -19,6 +19,7 @@ package org.apache.kylin.engine.spark.model.planner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,15 +56,19 @@ public class CuboIdToLayoutUtilsTest {
     public void testConvertCuboIdsToColOrders() {
         int maxCountDimension = 12;
         Map<Long, Long> cuboids = new HashMap<>();
+        Map<BigInteger, Long> bigIntegerCuboIds = new HashMap<>();
         long cuboid = 1 << 0 | 1 << 3 | 1 << 7;
         cuboids.put(cuboid, (long) 0);
+        bigIntegerCuboIds.put(BigInteger.valueOf(cuboid), (long) 0);
         cuboid = 1 << 4 | 1 << 10 | 1 << 5;
         cuboids.put(cuboid, (long) 0);
+        bigIntegerCuboIds.put(BigInteger.valueOf(cuboid), (long) 0);
         Set<Integer> measureIds = new LinkedHashSet<>();
         measureIds.add(1001);
         measureIds.add(1002);
         measureIds.add(1003);
-        Set<List<Integer>> result = CuboIdToLayoutUtils.convertCuboIdsToColOrders(cuboids, maxCountDimension,
+
+        Set<List<Integer>> result = CuboIdToLayoutUtils.convertCuboIdsToColOrders(bigIntegerCuboIds, maxCountDimension,
                 measureIds, getMap(maxCountDimension), getSortList(maxCountDimension));
         Set<List<Integer>> expected = new LinkedHashSet<>();
         expected.add(Lists.newArrayList(11 - 7, 11 - 3, 11 - 0, 1001, 1002, 1003));
@@ -74,11 +79,13 @@ public class CuboIdToLayoutUtilsTest {
     @Test
     public void testConvertCuboIdsToColOrdersWithReverseOrder() {
         int maxCountDimension = 12;
-        Map<Long, Long> cuboids = new HashMap<>();
+        Map<BigInteger, Long> cuboids = new HashMap<>();
         long cuboid = 1 << 0 | 1 << 3 | 1 << 7;
-        cuboids.put(cuboid, (long) 0);
+        BigInteger bigIntegerCuboId = BigInteger.valueOf(cuboid);
+        cuboids.put(bigIntegerCuboId, (long) 0);
         cuboid = 1 << 4 | 1 << 10 | 1 << 5;
-        cuboids.put(cuboid, (long) 0);
+        bigIntegerCuboId = BigInteger.valueOf(cuboid);
+        cuboids.put(bigIntegerCuboId, (long) 0);
         Set<Integer> measureIds = new LinkedHashSet<>();
         measureIds.add(1001);
         measureIds.add(1002);
@@ -96,11 +103,13 @@ public class CuboIdToLayoutUtilsTest {
     @Test
     public void testConvertCuboIdsToColOrdersWithEmptyOrder() {
         int maxCountDimension = 12;
-        Map<Long, Long> cuboids = new HashMap<>();
+        Map<BigInteger, Long> cuboids = new HashMap<>();
         long cuboid = 1 << 0 | 1 << 3 | 1 << 7;
-        cuboids.put(cuboid, (long) 0);
+        BigInteger bigIntegerCuboId = BigInteger.valueOf(cuboid);
+        cuboids.put(bigIntegerCuboId, (long) 0);
         cuboid = 1 << 4 | 1 << 10 | 1 << 5;
-        cuboids.put(cuboid, (long) 0);
+        bigIntegerCuboId = BigInteger.valueOf(cuboid);
+        cuboids.put(bigIntegerCuboId, (long) 0);
         Set<Integer> measureIds = new LinkedHashSet<>();
         measureIds.add(1001);
         measureIds.add(1002);
@@ -116,11 +125,13 @@ public class CuboIdToLayoutUtilsTest {
     @Test
     public void testConvertCuboIdsToColOrdersWithMultiOrder() {
         int maxCountDimension = 12;
-        Map<Long, Long> cuboids = new HashMap<>();
+        Map<BigInteger, Long> cuboids = new HashMap<>();
         long cuboid = 1 << 0 | 1 << 3 | 1 << 7;
-        cuboids.put(cuboid, (long) 0);
+        BigInteger bigIntegerCuboId = BigInteger.valueOf(cuboid);
+        cuboids.put(bigIntegerCuboId, (long) 0);
         cuboid = 1 << 4 | 1 << 10 | 1 << 5;
-        cuboids.put(cuboid, (long) 0);
+        bigIntegerCuboId = BigInteger.valueOf(cuboid);
+        cuboids.put(bigIntegerCuboId, (long) 0);
         Set<Integer> measureIds = new LinkedHashSet<>();
         measureIds.add(1001);
         measureIds.add(1002);
@@ -150,11 +161,12 @@ public class CuboIdToLayoutUtilsTest {
             if (cuboId < 0) {
                 cuboId = Math.abs(cuboId);
             }
-            List<Integer> dimensionIds = CuboIdToLayoutUtils.convertLongToDimensionColOrder(cuboId, maxCountDimension,
-                    getMap(maxCountDimension), getSortList(maxCountDimension));
-            long expected = CostBasePlannerUtils.convertDimensionsToCuboId(dimensionIds, maxCountDimension,
+            BigInteger bigIntegerCuboId = BigInteger.valueOf(cuboId);
+            List<Integer> dimensionIds = CuboIdToLayoutUtils.convertLongToDimensionColOrder(bigIntegerCuboId,
+                    maxCountDimension, getMap(maxCountDimension), getSortList(maxCountDimension));
+            BigInteger expected = CostBasePlannerUtils.convertDimensionsToCuboId(dimensionIds, maxCountDimension,
                     getMap(maxCountDimension));
-            assertEquals(expected, cuboId);
+            assertEquals(expected, BigInteger.valueOf(cuboId));
         }
     }
 
@@ -163,15 +175,41 @@ public class CuboIdToLayoutUtilsTest {
         // max id = 11
         int maxCountDimension = 12;
         long cuboid = 1 << 0 | 1 << 3 | 1 << 7;
-        List<Integer> result = CuboIdToLayoutUtils.convertLongToDimensionColOrder(cuboid, maxCountDimension,
+        BigInteger bigIntegerCuboId = BigInteger.valueOf(cuboid);
+        List<Integer> result = CuboIdToLayoutUtils.convertLongToDimensionColOrder(bigIntegerCuboId, maxCountDimension,
                 getMap(maxCountDimension), getSortList(maxCountDimension));
         List<Integer> expected = Lists.newArrayList(11 - 7, 11 - 3, 11 - 0);
         assertEquals(expected, result);
 
         cuboid = 1 << 4 | 1 << 10 | 1 << 5;
-        result = CuboIdToLayoutUtils.convertLongToDimensionColOrder(cuboid, maxCountDimension,
+        bigIntegerCuboId = BigInteger.valueOf(cuboid);
+        result = CuboIdToLayoutUtils.convertLongToDimensionColOrder(bigIntegerCuboId, maxCountDimension,
                 getMap(maxCountDimension), getSortList(maxCountDimension));
         expected = Lists.newArrayList(11 - 10, 11 - 5, 11 - 4);
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testMore64DimensionCase() {
+        int maxCountDimension = 100;
+        BigInteger cuboid = BigInteger.ZERO;
+        cuboid = cuboid.setBit(0);
+        cuboid = cuboid.setBit(3);
+        cuboid = cuboid.setBit(7);
+        cuboid = cuboid.setBit(77);
+        List<Integer> result = CuboIdToLayoutUtils.convertLongToDimensionColOrder(cuboid, maxCountDimension,
+                getMap(maxCountDimension), getSortList(maxCountDimension));
+        List<Integer> expected = Lists.newArrayList(99 - 77, 99 - 7, 99 - 3, 99 - 0);
+        assertEquals(expected, result);
+
+        cuboid = BigInteger.ZERO;
+        cuboid = cuboid.setBit(4);
+        cuboid = cuboid.setBit(10);
+        cuboid = cuboid.setBit(5);
+        cuboid = cuboid.setBit(88);
+        result = CuboIdToLayoutUtils.convertLongToDimensionColOrder(cuboid, maxCountDimension,
+                getMap(maxCountDimension), getSortList(maxCountDimension));
+        expected = Lists.newArrayList(99 - 88, 99 - 10, 99 - 5, 99 - 4);
         assertEquals(expected, result);
     }
 }

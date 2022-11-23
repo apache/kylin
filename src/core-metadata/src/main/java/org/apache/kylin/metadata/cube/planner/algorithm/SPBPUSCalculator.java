@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.cube.planner.algorithm;
 
+import java.math.BigInteger;
+
 import com.google.common.collect.ImmutableMap;
 
 public class SPBPUSCalculator extends PBPUSCalculator {
@@ -26,12 +28,12 @@ public class SPBPUSCalculator extends PBPUSCalculator {
         super(cuboidStats);
     }
 
-    protected SPBPUSCalculator(CuboidStats cuboidStats, ImmutableMap<Long, Long> initCuboidAggCostMap) {
+    protected SPBPUSCalculator(CuboidStats cuboidStats, ImmutableMap<BigInteger, Long> initCuboidAggCostMap) {
         super(cuboidStats, initCuboidAggCostMap);
     }
 
     @Override
-    protected Long getCuboidCost(long cuboid) {
+    protected Long getCuboidCost(BigInteger cuboid) {
         return cuboidStats.getCuboidQueryCost(cuboid);
     }
 

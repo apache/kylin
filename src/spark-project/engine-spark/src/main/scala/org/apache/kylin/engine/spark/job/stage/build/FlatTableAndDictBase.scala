@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import java.lang
+import java.math.BigInteger
 import java.util.{Locale, Objects}
 
 import com.google.common.collect.Sets
@@ -146,9 +146,10 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     changeSchemeToColumnId(flatTableDS, tableDesc)
   }
 
-  protected def generateCostTable(): (java.util.Map[lang.Long, lang.Long], Long) = {
+  protected def generateCostTable(): (java.util.Map[BigInteger, java.lang.Long], Long) = {
     val rowkeyCount = indexPlan.getEffectiveDimCols.keySet().size()
-    val stepDesc = s"Segment $segmentId generate the cost for the planner from the flat table, rowkey count is $rowkeyCount"
+    val stepDesc = s"Segment $segmentId generate the cost for the planner from the flat table, " +
+      s"rowkey count is $rowkeyCount"
     logInfo(stepDesc)
     sparkSession.sparkContext.setJobDescription(stepDesc)
     // get the cost from the flat table
@@ -165,11 +166,14 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     (cuboIdToRowCount, sourceCount)
   }
 
-  protected def getRecommendedLayoutAndUpdateMetadata(cuboIdToRowCount: java.util.Map[lang.Long, lang.Long], sourceCount: Long): Unit = {
+  protected def getRecommendedLayoutAndUpdateMetadata(cuboIdToRowCount: java.util.Map[BigInteger, java.lang.Long],
+                                                      sourceCount: Long): Unit = {
     logDebug(s"Segment $segmentId get the row count cost $cuboIdToRowCount")
-    val cuboIdToSize = FlatTableToCostUtils.getCuboidSizeMapFromSampling(cuboIdToRowCount, sourceCount, indexPlan, config, tableDesc)
+    val cuboIdToSize = FlatTableToCostUtils.
+      getCuboidSizeMapFromSampling(cuboIdToRowCount, sourceCount, indexPlan, config, tableDesc)
     logDebug(s"Segment $segmentId get the size cost $cuboIdToSize")
-    val cuboids = CostBasePlannerUtils.getRecommendCuboidList(indexPlan, config, dataModel.getAlias, cuboIdToRowCount, cuboIdToSize)
+    val cuboids = CostBasePlannerUtils.
+      getRecommendCuboidList(indexPlan, config, dataModel.getAlias, cuboIdToRowCount, cuboIdToSize)
     logDebug(s"Segment $segmentId get the recommended cuboid ${cuboids.keySet()}")
     val allRecommendedLayouts = CuboIdToLayoutUtils.convertCuboIdsToLayoutEntity(cuboids, indexPlan)
     logInfo(s"Segment $segmentId get ${allRecommendedLayouts.size()} recommended layouts with duplicate layouts removed.")
