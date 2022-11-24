@@ -1059,29 +1059,6 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
 
     }
 
-    /**
-     * create recommend agg layout base on the colOrder.
-     * @param colOrder
-     * @return LayoutEntity or null
-     *  null: if the measures in the colOrder can't match the measures in this Index Plan
-     */
-    public LayoutEntity createRecommendAggIndexLayout(List<Integer> colOrder) {
-        LayoutEntity newAddIndexLayout = new LayoutEntity();
-        // The layout is not the manual
-        newAddIndexLayout.setManual(false);
-        newAddIndexLayout.setColOrder(colOrder);
-        // For recommend index in the cube planner
-        // all of the measure must be in the layout
-        val measureSize = this.effectiveMeasures.size();
-        if (measureSize != newAddIndexLayout.getMeasureIds().size()) {
-            return null;
-        }
-        newAddIndexLayout.setUpdateTime(System.currentTimeMillis());
-        newAddIndexLayout.setBase(false);
-        newAddIndexLayout.initalId(true);
-        return newAddIndexLayout;
-    }
-
     public Long getBaseAggLayoutId() {
         return baseAggLayout != null ? baseAggLayout.getId() : null;
     }

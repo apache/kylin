@@ -28,8 +28,8 @@ import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
-import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 import org.apache.kylin.metadata.cube.planner.algorithm.BenefitPolicy;
 import org.apache.kylin.metadata.cube.planner.algorithm.CuboidRecommendAlgorithm;
 import org.apache.kylin.metadata.cube.planner.algorithm.CuboidStats;
@@ -45,10 +45,10 @@ import com.google.common.collect.Maps;
 public class CostBasePlannerUtils {
     private static final Logger logger = LoggerFactory.getLogger(CostBasePlannerUtils.class);
 
-    public static Map<BigInteger, Long> getRecommendCuboidList(IndexPlan indexPlan, KylinConfig kylinConf,
+    public static Map<BigInteger, Long> getRecommendCuboidList(RuleBasedIndex ruleBasedIndex, KylinConfig kylinConf,
             String modelName, Map<BigInteger, Long> cuboidRowCountMap, Map<BigInteger, Double> cuboidSizeMap) {
-        BigInteger baseCuboid = generateBaseCuboId(indexPlan);
-        Set<BigInteger> mandatoryCuboids = generateMandatoryCuboIds(indexPlan);
+        BigInteger baseCuboid = generateBaseCuboId(ruleBasedIndex);
+        Set<BigInteger> mandatoryCuboids = generateMandatoryCuboIds(ruleBasedIndex);
         logger.info("Build cuboid stats model name {}, baseCuboid {}, mandatory cuboid {}, statistic cuboid {}",
                 modelName, baseCuboid, mandatoryCuboids, cuboidRowCountMap.keySet());
         CuboidStats cuboidStats = new CuboidStats.Builder(modelName, baseCuboid, baseCuboid, cuboidRowCountMap,
@@ -58,10 +58,10 @@ public class CostBasePlannerUtils {
         // if not recommend any cuboid and just apply all layouts with the rule base index
         if (result == null || result.isEmpty()) {
             result = new HashMap<>();
-            Set<LayoutEntity> allLayouts = indexPlan.getRuleBasedIndex().genCuboidLayouts();
+            Set<LayoutEntity> allLayouts = ruleBasedIndex.genCuboidLayouts();
             for (LayoutEntity layoutEntity : allLayouts) {
                 BigInteger cuboid = convertDimensionsToCuboId(layoutEntity.getDimsIds(),
-                        indexPlan.getEffectiveDimCols().size(), indexPlan.getColumnIdToRowKeyId());
+                        ruleBasedIndex.countOfIncludeDimension(), ruleBasedIndex.getColumnIdToRowKeyId());
                 result.put(cuboid, 0L);
             }
             logger.info("Not recommend any cuboid with the cost based method, and use the rule based cuboid {}",
@@ -70,23 +70,24 @@ public class CostBasePlannerUtils {
         return result;
     }
 
-    private static BigInteger generateBaseCuboId(IndexPlan indexPlan) {
-        int dimensionCount = indexPlan.getEffectiveDimCols().size();
-        List<Integer> dimensionIds = new ArrayList<>(indexPlan.getEffectiveDimCols().keySet());
-        BigInteger cuboid = convertDimensionsToCuboId(dimensionIds, dimensionCount, indexPlan.getColumnIdToRowKeyId());
+    private static BigInteger generateBaseCuboId(RuleBasedIndex ruleBasedIndex) {
+        int dimensionCount = ruleBasedIndex.countOfIncludeDimension();
+        List<Integer> dimensionIds = new ArrayList<>(ruleBasedIndex.getDimensions());
+        BigInteger cuboid = convertDimensionsToCuboId(dimensionIds, dimensionCount,
+                ruleBasedIndex.getColumnIdToRowKeyId());
         return cuboid;
     }
 
-    private static Set<BigInteger> generateMandatoryCuboIds(IndexPlan indexPlan) {
+    private static Set<BigInteger> generateMandatoryCuboIds(RuleBasedIndex ruleBasedIndex) {
         Set<BigInteger> result = new HashSet<>();
-        int dimensionCount = indexPlan.getEffectiveDimCols().size();
-        if (indexPlan.getRuleBasedIndex() != null) {
-            for (NAggregationGroup aggregationGroup : indexPlan.getRuleBasedIndex().getAggregationGroups()) {
+        if (ruleBasedIndex != null) {
+            int dimensionCount = ruleBasedIndex.countOfIncludeDimension();
+            for (NAggregationGroup aggregationGroup : ruleBasedIndex.getAggregationGroups()) {
                 Integer[] mandatoryDimensionIds = aggregationGroup.getSelectRule().getMandatoryDims();
                 // If there is no mandatory for the agg group, should not add the cuboid
                 if (mandatoryDimensionIds != null && mandatoryDimensionIds.length != 0) {
                     BigInteger cuboid = convertDimensionsToCuboId(mandatoryDimensionIds, dimensionCount,
-                            indexPlan.getColumnIdToRowKeyId());
+                            ruleBasedIndex.getColumnIdToRowKeyId());
                     result.add(cuboid);
                 }
             }

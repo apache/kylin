@@ -265,10 +265,6 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         NIndexPlanManager indexPlanManager = getManager(NIndexPlanManager.class, project);
         val jobManager = getManager(JobManager.class, project);
         IndexPlan indexPlan = indexPlanManager.getIndexPlan(modelId);
-        val kylinConfig = indexPlan.getConfig();
-        if (kylinConfig.enableCostBasedIndexPlanner()) {
-            throw new RuntimeException("Can't create table index when enable cube planner");
-        }
         for (LayoutEntity cuboidLayout : indexPlan.getAllLayouts()) {
             if (cuboidLayout.equals(newLayout) && cuboidLayout.isManual()) {
                 throw new KylinException(INDEX_DUPLICATE);
@@ -493,22 +489,6 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
                                     StringUtils.join(notExistCols.iterator(), ",")));
                 }
             }
-            // In order to implement the cost based index planner, we need to make sure the measures is align with the kylin3.1.
-            // step1: check the rule base index contains all measures
-            Set<Integer> allMeasure = indexPlan.getEffectiveMeasures().keySet();
-            if (allMeasure.size() == 0 && ruleBasedIndex.getAggregationGroups().size() != 0) {
-                // need add base index for this model
-                throw new RuntimeException("Please add base index first for the model");
-            }
-            if (ruleBasedIndex.getAggregationGroups().size() != 0
-                    && allMeasure.size() != ruleBasedIndex.getMeasures().size()) {
-                throw new RuntimeException(String.format(
-                        "The rule base index must contain all of the measures [%s], but it just contains measures [%s]."
-                                + "\nPlease refer to %s",
-                        allMeasure, ruleBasedIndex.getMeasures(), "https://jirap.corp.ebay.com/browse/KYLIN-3593"));
-            }
-            // step2: check each agg group has all of the measures
-            ruleBasedIndex.validAggregationGroups();
             indexPlan.setRuleBasedIndex(ruleBasedIndex);
         } catch (OutOfMaxCombinationException oe) {
             invalid = true;
@@ -1264,14 +1244,9 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
 
         if (request.needHandleBaseTableIndex() && !indexPlan.containBaseTableLayout()) {
             LayoutEntity baseTableLayout = indexPlan.createBaseTableIndex(model);
-            // https://jirap.corp.ebay.com/browse/KYLIN-3639
-            // https://jirap.corp.ebay.com/browse/KYLIN-3688
-            // If the model has created the base table index, should not affect it after enable cube planner.
-            if (!indexPlan.getConfig().enableCostBasedIndexPlanner()) {
-                if (baseTableLayout != null) {
-                    overrideLayout(baseTableLayout, request.getBaseTableIndexProperty(), model);
-                    needCreateBaseLayouts.add(baseTableLayout);
-                }
+            if (baseTableLayout != null) {
+                overrideLayout(baseTableLayout, request.getBaseTableIndexProperty(), model);
+                needCreateBaseLayouts.add(baseTableLayout);
             }
         }
         return needCreateBaseLayouts;

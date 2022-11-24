@@ -447,10 +447,10 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
                 if (noBuildingSegmentExist(df.getProject(), job.getTargetSubject(), kylinConfig)) {
                     // check the count of rowkey:
                     // if the count of row key exceed the 63, throw exception
-                    if (indexPlan.getEffectiveDimCols().size() > (Long.SIZE - 1)) {
+                    if (indexPlan.getRuleBasedIndex().countOfIncludeDimension() > (Long.SIZE - 1)) {
                         throw new RuntimeException(String.format(
                                 "The count of row key %d can't be larger than 63, when use the cube planner",
-                                indexPlan.getEffectiveDimCols().size()));
+                                indexPlan.getRuleBasedIndex().countOfIncludeDimension()));
                     }
                     // Add the parameter `P_JOB_ENABLE_PLANNER` which is used to decide whether to use the  cube planner
                     job.setParam(NBatchConstants.P_JOB_ENABLE_PLANNER, Boolean.TRUE.toString());

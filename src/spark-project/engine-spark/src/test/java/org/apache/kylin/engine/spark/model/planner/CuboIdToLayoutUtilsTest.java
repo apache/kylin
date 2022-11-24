@@ -63,7 +63,7 @@ public class CuboIdToLayoutUtilsTest {
         cuboid = 1 << 4 | 1 << 10 | 1 << 5;
         cuboids.put(cuboid, (long) 0);
         bigIntegerCuboIds.put(BigInteger.valueOf(cuboid), (long) 0);
-        Set<Integer> measureIds = new LinkedHashSet<>();
+        List<Integer> measureIds = new ArrayList<>();
         measureIds.add(1001);
         measureIds.add(1002);
         measureIds.add(1003);
@@ -86,7 +86,7 @@ public class CuboIdToLayoutUtilsTest {
         cuboid = 1 << 4 | 1 << 10 | 1 << 5;
         bigIntegerCuboId = BigInteger.valueOf(cuboid);
         cuboids.put(bigIntegerCuboId, (long) 0);
-        Set<Integer> measureIds = new LinkedHashSet<>();
+        List<Integer> measureIds = new ArrayList<>();
         measureIds.add(1001);
         measureIds.add(1002);
         measureIds.add(1003);
@@ -110,7 +110,7 @@ public class CuboIdToLayoutUtilsTest {
         cuboid = 1 << 4 | 1 << 10 | 1 << 5;
         bigIntegerCuboId = BigInteger.valueOf(cuboid);
         cuboids.put(bigIntegerCuboId, (long) 0);
-        Set<Integer> measureIds = new LinkedHashSet<>();
+        List<Integer> measureIds = new ArrayList<>();
         measureIds.add(1001);
         measureIds.add(1002);
         measureIds.add(1003);
@@ -132,7 +132,7 @@ public class CuboIdToLayoutUtilsTest {
         cuboid = 1 << 4 | 1 << 10 | 1 << 5;
         bigIntegerCuboId = BigInteger.valueOf(cuboid);
         cuboids.put(bigIntegerCuboId, (long) 0);
-        Set<Integer> measureIds = new LinkedHashSet<>();
+        List<Integer> measureIds = new ArrayList<>();
         measureIds.add(1001);
         measureIds.add(1002);
         measureIds.add(1003);

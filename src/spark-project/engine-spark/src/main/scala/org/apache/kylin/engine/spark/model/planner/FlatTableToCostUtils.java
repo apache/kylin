@@ -38,6 +38,7 @@ import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.measure.hllc.RegisterType;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 import org.apache.kylin.metadata.cube.planner.CostBasePlannerUtils;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -63,8 +64,16 @@ import scala.Tuple2;
 
 @Slf4j
 public class FlatTableToCostUtils {
+
+    private static LayoutEntity createMockRuleBaseLayout(RuleBasedIndex ruleBasedIndex) {
+        // create a mock base layout which include all dimensions in the rule index without order
+        LayoutEntity baseLayouts = new LayoutEntity();
+        baseLayouts.setColOrder(ruleBasedIndex.getDimensions());
+        return baseLayouts;
+    }
+
     public static Map<BigInteger, HLLCounter> generateCost(JavaRDD<Row> input, KylinConfig kylinConfig,
-            IndexPlan indexPlan, SegmentFlatTableDesc flatTableDesc) throws IOException {
+            RuleBasedIndex ruleBasedIndex, SegmentFlatTableDesc flatTableDesc) throws IOException {
         // step1: convert each cell to string data type, and get RDD[String[]]
         JavaRDD<String[]> flatTableRDD = input.map(new Function<Row, String[]>() {
             @Override
@@ -83,22 +92,15 @@ public class FlatTableToCostUtils {
         });
         // step2: calculate the cost for each partition, and get the new RDD.
         // The key is cuboid, and the value is the data encoded from the hll for each partition.
-        int rowKeyCount = indexPlan.getEffectiveDimCols().size();
-
+        int rowKeyCount = ruleBasedIndex.countOfIncludeDimension();
         // layouts from the rule index(agg group)
-        Set<LayoutEntity> inputLayouts = indexPlan.getRuleBasedIndex().genCuboidLayouts();
-        // TODO remove this checker for cube planner
-        // https://jirap.corp.ebay.com/browse/KYLIN-3709
-        if (indexPlan.getBaseAggLayout() == null) {
-            throw new RuntimeException("Need the base agg index layout");
-        }
-        // base agg layout
-        inputLayouts.add(indexPlan.getBaseAggLayout());
-        BigInteger[] inputCuboids = getCuboIdsFromLayouts(Lists.newArrayList(inputLayouts),
-                indexPlan.getEffectiveDimCols().size(), indexPlan.getColumnIdToRowKeyId());
-
+        Set<LayoutEntity> inputLayouts = ruleBasedIndex.genCuboidLayouts();
+        // add the mock layout which include all of the dimensions in the rule index
+        inputLayouts.add(createMockRuleBaseLayout(ruleBasedIndex));
+        BigInteger[] inputCuboids = getCuboIdsFromLayouts(Lists.newArrayList(inputLayouts), rowKeyCount,
+                ruleBasedIndex.getColumnIdToRowKeyId());
         // rowkey id ->  column index in the flat table of the flat dataset.
-        int[] rowkeyColumnIndexes = getRowkeyColumnIndexes(indexPlan, flatTableDesc);
+        int[] rowkeyColumnIndexes = getRowkeyColumnIndexes(ruleBasedIndex, flatTableDesc);
 
         int hllPrecision = kylinConfig.getCubeStatsHLLPrecision();
         log.info("The row key count is {}, and the index/column map is {}", rowKeyCount,
@@ -189,11 +191,11 @@ public class FlatTableToCostUtils {
         return set.toArray(new BigInteger[set.size()]);
     }
 
-    private static int[] getRowkeyColumnIndexes(IndexPlan indexPlan, SegmentFlatTableDesc flatTableDesc) {
-        int rowKeyCount = indexPlan.getEffectiveDimCols().size();
+    private static int[] getRowkeyColumnIndexes(RuleBasedIndex ruleBasedIndex, SegmentFlatTableDesc flatTableDesc) {
+        int rowKeyCount = ruleBasedIndex.countOfIncludeDimension();
         List<Integer> columnIds = flatTableDesc.getColumnIds();
         int[] rowkeyColumnIndexes = new int[rowKeyCount];
-        Map<Integer, Integer> rowkeyIdToColumnId = indexPlan.getRowKeyIdToColumnId();
+        Map<Integer, Integer> rowkeyIdToColumnId = ruleBasedIndex.getRowKeyIdToColumnId();
         for (int rowkeyId = 0; rowkeyId < rowKeyCount; rowkeyId++) {
             if (!rowkeyIdToColumnId.containsKey(rowkeyId)) {
                 throw new RuntimeException("Can't find the column id from the rowkey id");
@@ -421,7 +423,8 @@ public class FlatTableToCostUtils {
     }
 
     private static Map<BigInteger, Double> getCuboidSizeMapFromSamplingByCount(Map<BigInteger, Long> rowCountMap,
-            long sourceCount, IndexPlan indexPlan, KylinConfig kylinConfig, SegmentFlatTableDesc segmentFlatTableDesc) {
+            long sourceCount, RuleBasedIndex ruleBasedIndex, KylinConfig kylinConfig,
+            SegmentFlatTableDesc segmentFlatTableDesc) {
         // use the row count to replace the size
         Map<BigInteger, Double> cuboidSizeMap = Maps.newHashMap();
         for (Map.Entry<BigInteger, Long> entry : rowCountMap.entrySet()) {
@@ -432,10 +435,11 @@ public class FlatTableToCostUtils {
     }
 
     public static Map<BigInteger, Double> getCuboidSizeMapFromSampling(Map<BigInteger, Long> rowCountMap,
-            long sourceCount, IndexPlan indexPlan, KylinConfig kylinConfig, SegmentFlatTableDesc segmentFlatTableDesc) {
+            long sourceCount, RuleBasedIndex ruleBasedIndex, KylinConfig kylinConfig,
+            SegmentFlatTableDesc segmentFlatTableDesc) {
         // TODO: https://jirap.corp.ebay.com/browse/KYLIN-3630
         // replace the size with the row count
-        return getCuboidSizeMapFromSamplingByCount(rowCountMap, sourceCount, indexPlan, kylinConfig,
+        return getCuboidSizeMapFromSamplingByCount(rowCountMap, sourceCount, ruleBasedIndex, kylinConfig,
                 segmentFlatTableDesc);
         //        final List<Integer> rowkeyColumnSize = getRowkeyColumnSize(indexPlan, segmentFlatTableDesc);
         //        // base id and base size
@@ -457,7 +461,7 @@ public class FlatTableToCostUtils {
     }
 
     private static List<Integer> getRowkeyColumnSize(IndexPlan indexPlan, SegmentFlatTableDesc flatTableDesc) {
-        int rowKeyCount = indexPlan.getEffectiveDimCols().size();
+        int rowKeyCount = indexPlan.getRuleBasedIndex().countOfIncludeDimension();
         List<Integer> columnIds = flatTableDesc.getColumnIds();
         List<TblColRef> tblColRefs = flatTableDesc.getColumns();
         List<Integer> rowkeyColumnSize = Lists.newArrayList();

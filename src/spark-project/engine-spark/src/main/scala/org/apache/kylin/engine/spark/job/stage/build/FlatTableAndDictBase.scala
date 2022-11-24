@@ -147,7 +147,7 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
   }
 
   protected def generateCostTable(): (java.util.Map[BigInteger, java.lang.Long], Long) = {
-    val rowkeyCount = indexPlan.getEffectiveDimCols.keySet().size()
+    val rowkeyCount = indexPlan.getRuleBasedIndex.countOfIncludeDimension()
     val stepDesc = s"Segment $segmentId generate the cost for the planner from the flat table, " +
       s"rowkey count is $rowkeyCount"
     logInfo(stepDesc)
@@ -155,9 +155,10 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     // get the cost from the flat table
     val javaRddFlatTable = FLAT_TABLE.javaRDD
     // log dimension and table desc
-    logInfo(s"Segment $segmentId calculate the cost, the dimension in index is: " +
-      s"${indexPlan.getEffectiveDimCols.keySet}, the column in flat table is: ${tableDesc.getColumnIds}")
-    val cuboIdsCost = FlatTableToCostUtils.generateCost(javaRddFlatTable, config, indexPlan, tableDesc)
+    logInfo(s"Segment $segmentId calculate the cost, the dimension in rule index is: " +
+      s"${indexPlan.getRuleBasedIndex.getDimensions}, " +
+      s"the column in flat table is: ${tableDesc.getColumnIds}")
+    val cuboIdsCost = FlatTableToCostUtils.generateCost(javaRddFlatTable, config, indexPlan.getRuleBasedIndex, tableDesc)
     // get the count for the flat table
     val sourceCount = FLAT_TABLE.count()
     logInfo(s"The total source count is $sourceCount")
@@ -170,12 +171,12 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
                                                       sourceCount: Long): Unit = {
     logDebug(s"Segment $segmentId get the row count cost $cuboIdToRowCount")
     val cuboIdToSize = FlatTableToCostUtils.
-      getCuboidSizeMapFromSampling(cuboIdToRowCount, sourceCount, indexPlan, config, tableDesc)
+      getCuboidSizeMapFromSampling(cuboIdToRowCount, sourceCount, indexPlan.getRuleBasedIndex, config, tableDesc)
     logDebug(s"Segment $segmentId get the size cost $cuboIdToSize")
     val cuboids = CostBasePlannerUtils.
-      getRecommendCuboidList(indexPlan, config, dataModel.getAlias, cuboIdToRowCount, cuboIdToSize)
+      getRecommendCuboidList(indexPlan.getRuleBasedIndex, config, dataModel.getAlias, cuboIdToRowCount, cuboIdToSize)
     logDebug(s"Segment $segmentId get the recommended cuboid ${cuboids.keySet()}")
-    val allRecommendedLayouts = CuboIdToLayoutUtils.convertCuboIdsToLayoutEntity(cuboids, indexPlan)
+    val allRecommendedLayouts = CuboIdToLayoutUtils.convertCuboIdsToLayoutEntity(cuboids, indexPlan.getRuleBasedIndex)
     logInfo(s"Segment $segmentId get ${allRecommendedLayouts.size()} recommended layouts with duplicate layouts removed.")
     jobContext.setRecommendAggLayouts(allRecommendedLayouts)
   }

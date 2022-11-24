@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.cube.model;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -243,43 +244,28 @@ public class RuleBasedIndex implements Serializable {
         this.aggregationGroups = aggregationGroups;
     }
 
-    public void validAggregationGroups() {
-        // https://jirap.corp.ebay.com/browse/KYLIN-3593
-        // add checker when setting the agg group
-        // in order to make align with kylin3.1 in the planner, we must make sure
-        // all group has the same layout of the measure and the layout of the measure must
-        // be same with the rule base index
-        checkTheAggGroup(this.aggregationGroups);
+    public Map<Integer, Integer> getColumnIdToRowKeyId() {
+        int rowKeyId = 0;
+        Map<Integer, Integer> result = new HashMap<>();
+        for (Integer columnId : dimensions) {
+            result.put(columnId, rowKeyId);
+            rowKeyId++;
+        }
+        return result;
     }
 
-    private void checkTheAggGroup(List<NAggregationGroup> aggregationGroups) {
-        List<Integer> current = this.measures;
-        // https://jirap.corp.ebay.com/browse/KYLIN-3593
-        for (NAggregationGroup aggregationGroup : aggregationGroups) {
-            // each group should has all of the same measure regardless of the order
-            Integer[] aggMeasures = aggregationGroup.getMeasures();
-            Set<Integer> aggMeasureSet = Sets.newHashSet(aggMeasures);
-            if (current.size() == 0 && aggMeasures.length > 0) {
-                throw new RuntimeException(String.format(
-                        "The measure of agg group must be same with the measure in the model, please refer to %s."
-                                + "\n please create base index first",
-                        "https://jirap.corp.ebay.com/browse/KYLIN-3593"));
-            }
-            if (current.size() != aggMeasures.length) {
-                throw new RuntimeException(String.format(
-                        "The measure of agg group must be same with the measure in the model, please refer to %s."
-                                + "\n The measure [%s] in base index, and the measure [%s] in agg group",
-                        "https://jirap.corp.ebay.com/browse/KYLIN-3593", current, aggMeasureSet));
-            }
-            for (Integer measure : current) {
-                if (!aggMeasureSet.contains(measure)) {
-                    throw new RuntimeException(String.format(
-                            "The measure of agg group must be same with the measure in the model, please refer to %s."
-                                    + "\n The measure [%s] in base index, and the measure [%s] in agg group",
-                            "https://jirap.corp.ebay.com/browse/KYLIN-3593", current, aggMeasureSet));
-                }
-            }
+    public Map<Integer, Integer> getRowKeyIdToColumnId() {
+        int rowKeyId = 0;
+        Map<Integer, Integer> result = new HashMap<>();
+        for (Integer columnId : dimensions) {
+            result.put(rowKeyId, columnId);
+            rowKeyId++;
         }
+        return result;
+    }
+
+    public int countOfIncludeDimension() {
+        return dimensions.size();
     }
 
     public boolean isCachedAndShared() {

@@ -87,7 +87,7 @@ public abstract class SegmentJob extends SparkApplication {
 
     private Set<LayoutEntity> recommendAggLayouts = new HashSet<>();
 
-    public Set<LayoutEntity> getRecommendAggLayouts() {
+    private Set<LayoutEntity> getRecommendAggLayouts() {
         return recommendAggLayouts;
     }
 
