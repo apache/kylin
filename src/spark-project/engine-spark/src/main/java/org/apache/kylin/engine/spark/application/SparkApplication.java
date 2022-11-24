@@ -60,6 +60,7 @@ import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.query.pushdown.SparkSubmitter;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkException;
 import org.apache.spark.application.NoRetryException;
 import org.apache.spark.launcher.SparkLauncher;
 import org.apache.spark.sql.KylinSession;
@@ -323,14 +324,30 @@ public abstract class SparkApplication implements Application {
             executeFinish();
         }
     }
+
     protected void handleException(Exception e) throws Exception {
         if (e instanceof AccessControlException) {
             interceptAccessControlException(e);
         }
         if (e instanceof RuntimeException && e.getCause() instanceof AccessControlException) {
             interceptAccessControlException(e.getCause());
+        } else if (e instanceof RuntimeException && e.getCause() instanceof SparkException) {
+            Throwable rootCause = extractRealRootCauseFromSparkException(e);
+            if (rootCause instanceof AccessControlException) {
+                interceptAccessControlException(e);
+            }
         }
         throw e;
+    }
+
+    // Extract the real root exception that caused the spark job to fail.
+    // For example. Intercepts Spark Job that fail due to  permissions exception to prevent unnecessary retry from wasting resources
+    protected Throwable extractRealRootCauseFromSparkException(Exception e) {
+        Throwable rootCause = e.getCause();
+        while (rootCause instanceof SparkException) {
+            rootCause = rootCause.getCause();
+        }
+        return rootCause;
     }
 
     // Permission exception will not be retried. Simply let the job fail.
