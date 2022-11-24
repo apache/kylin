@@ -24,6 +24,7 @@ import java.util.concurrent.{CountDownLatch, TimeUnit}
 import java.util.concurrent.atomic.AtomicBoolean
 import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.scheduler._
+import org.apache.spark.SparkException
 import org.apache.spark.scheduler.KylinJobEventLoop
 import org.apache.spark.sql.common.SparderBaseFunSuite
 import org.scalatest.BeforeAndAfter
@@ -222,10 +223,82 @@ class TestJobWorker extends SparderBaseFunSuite with BeforeAndAfter {
     eventLoop.stop()
   }
 
+  test("post Permission denied event when PermissionDenied occurred with Spark Exception wraped") {
+    val eventLoop = new KylinJobEventLoop
+    eventLoop.start()
+    val worker = new JobWorker(new HandlePermissionDeniedJobWithSparkExceptionWraped(), Array.empty, eventLoop)
+    val latch = new CountDownLatch(2)
+    val receivePermissionDenied = new AtomicBoolean(false)
+    val listener = new KylinJobListener {
+      override def onReceive(event: KylinJobEvent): Unit = {
+        if (event.isInstanceOf[UnknownThrowable]) {
+          receivePermissionDenied.getAndSet(true)
+        }
+        latch.countDown()
+      }
+    }
+    eventLoop.registerListener(listener)
+    eventLoop.post(RunJob())
+    // receive RunJob and PermissionDenied
+    latch.await(30, TimeUnit.SECONDS)
+    assert(receivePermissionDenied.get())
+    eventLoop.unregisterListener(listener)
+    worker.stop()
+    eventLoop.stop()
+  }
+
+  test("post Permission denied event when PermissionDenied occurred with multiple Spark Exception wraped") {
+    val eventLoop = new KylinJobEventLoop
+    eventLoop.start()
+    val worker = new JobWorker(new HandlePermissionDeniedJobWithMultipleSparkExceptionWraped(), Array.empty, eventLoop)
+    val latch = new CountDownLatch(2)
+    val receivePermissionDenied = new AtomicBoolean(false)
+    val listener = new KylinJobListener {
+      override def onReceive(event: KylinJobEvent): Unit = {
+        if (event.isInstanceOf[UnknownThrowable]) {
+          receivePermissionDenied.getAndSet(true)
+        }
+        latch.countDown()
+      }
+    }
+    eventLoop.registerListener(listener)
+    eventLoop.post(RunJob())
+    // receive RunJob and PermissionDenied
+    latch.await(30, TimeUnit.SECONDS)
+    assert(receivePermissionDenied.get())
+    eventLoop.unregisterListener(listener)
+    worker.stop()
+    eventLoop.stop()
+  }
+
   test("post ResourceLack event when job failed for lack of resource with RuntimeException wraped") {
     val eventLoop = new KylinJobEventLoop
     eventLoop.start()
     val worker = new JobWorker(new HandleResourceLackJobWithRuntimeExceptionWraped(), Array.empty, eventLoop)
+    val latch = new CountDownLatch(2)
+    val receivePermissionDenied = new AtomicBoolean(false)
+    val listener = new KylinJobListener {
+      override def onReceive(event: KylinJobEvent): Unit = {
+        if (event.isInstanceOf[ResourceLack]) {
+          receivePermissionDenied.getAndSet(true)
+        }
+        latch.countDown()
+      }
+    }
+    eventLoop.registerListener(listener)
+    eventLoop.post(RunJob())
+    // receive RunJob and PermissionDenied
+    latch.await(30, TimeUnit.SECONDS)
+    assert(receivePermissionDenied.get())
+    eventLoop.unregisterListener(listener)
+    worker.stop()
+    eventLoop.stop()
+  }
+
+  test("post ResourceLack event when job failed for lack of resource with Spark Exception wraped") {
+    val eventLoop = new KylinJobEventLoop
+    eventLoop.start()
+    val worker = new JobWorker(new HandleResourceLackJobWithSparkExceptionWraped(), Array.empty, eventLoop)
     val latch = new CountDownLatch(2)
     val receivePermissionDenied = new AtomicBoolean(false)
     val listener = new KylinJobListener {
@@ -338,12 +411,49 @@ class ResourceLackJobWithNonAccessControlException extends SparkApplication {
   override protected def doExecute(): Unit = {}
 }
 
+
 class HandlePermissionDeniedJobWithRuntimeExceptionWraped extends SparkApplication {
   override def execute(args: Array[String]): Unit = {
     try {
       throw new AccessControlException()
     } catch {
       case e: Exception => handleException(new RuntimeException("PermissionDenied", e))
+    }
+  }
+  override protected def doExecute(): Unit = {}
+}
+
+class HandlePermissionDeniedJobWithSparkExceptionWraped extends SparkApplication {
+  override def execute(args: Array[String]): Unit = {
+    try {
+      throw new AccessControlException()
+    } catch {
+      case e: Exception => handleException(new RuntimeException(new SparkException("PermissionDenied", e)))
+    }
+  }
+  override protected def doExecute(): Unit = {}
+}
+
+class HandlePermissionDeniedJobWithMultipleSparkExceptionWraped extends SparkApplication {
+  override def execute(args: Array[String]): Unit = {
+    try {
+      throw new AccessControlException()
+    } catch {
+      case e: Exception => handleException(new RuntimeException(
+        new SparkException("Exception thrown in awaitResult", new SparkException("Job aborted", e))
+      ))
+    }
+  }
+
+  override protected def doExecute(): Unit = {}
+}
+
+class HandleResourceLackJobWithSparkExceptionWraped extends SparkApplication {
+  override def execute(args: Array[String]): Unit = {
+    try {
+      throw new Exception()
+    } catch {
+      case e: Exception => handleException(new RuntimeException(new SparkException("Exception", e)))
     }
   }
   override protected def doExecute(): Unit = {}
