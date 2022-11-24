@@ -123,7 +123,7 @@ public class KapProjectMergeRule extends RelOptRule {
         final List<RexNode> pushedProjects;
         if (KylinConfig.getInstanceFromEnv().isProjectMergeWithBloatEnabled()) {
             pushedProjects = RelOptUtil.pushPastProjectUnlessBloat(topProject.getProjects(),
-                    bottomProject, KylinConfig.getInstanceFromEnv().getKapProjectMergeRuleBloatThreshold());
+                    bottomProject, KylinConfig.getInstanceFromEnv().getProjectMergeRuleBloatThreshold());
             if (pushedProjects == null) {
                 // Merged projects are significantly more complex. Do not merge.
                 return;

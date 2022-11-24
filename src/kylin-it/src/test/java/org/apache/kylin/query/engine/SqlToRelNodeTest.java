@@ -33,6 +33,7 @@ import org.apache.calcite.util.Litmus;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.query.rules.CalciteRuleTestBase;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,6 +56,11 @@ public class SqlToRelNodeTest extends CalciteRuleTestBase {
         diff = DiffRepository.lookup(SqlToRelNodeTest.class);
         config = KylinConfig.getInstanceFromEnv();
         queryExec = new QueryExec(PROJECT, config);
+    }
+
+    @After
+    public void destroy() {
+        cleanupTestMetadata();
     }
 
     @Override
@@ -89,36 +95,41 @@ public class SqlToRelNodeTest extends CalciteRuleTestBase {
         String sql = "select q.x + q.x from( select (p.v + p.v) as x from (select (case when TRANS_ID > 60 then 1 else 0 end) v from test_kylin_fact) p)q";
 
         try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(config)) {
-            config.setProperty("kylin.query.kap-project-merge-with-bloat-enabled", "false");
+            config.setProperty("kylin.query.project-merge-with-bloat-enabled", "false");
             QueryExec exec1 = new QueryExec(PROJECT, config);
             RelRoot relRoot = exec1.sqlToRelRoot(sql);
             RelNode rel = exec1.optimize(relRoot).rel;
             String realPlan = NL + RelOptUtil.toString(rel);
             diff.assertEquals("bloat_merge_sql.bloat_disabled", "${bloat_merge_sql.bloat_disabled}", realPlan);
-
-            config.setProperty("kylin.query.kap-project-merge-with-bloat-enabled", "true");
-            QueryExec exec2 = new QueryExec(PROJECT, config);
-            relRoot = exec2.sqlToRelRoot(sql);
-            rel = exec2.optimize(relRoot).rel;
-            realPlan = NL + RelOptUtil.toString(rel);
-            diff.assertEquals("bloat_merge_sql.bloat_enabled", "${bloat_merge_sql.bloat_enabled}", realPlan);
-
-            config.setProperty("kylin.query.kap-project-merge-with-bloat-enabled", "true");
-            config.setProperty("kylin.query.kap-project-merge-bloat-threshold", "5");
-            QueryExec exec3 = new QueryExec(PROJECT, config);
-            relRoot = exec3.sqlToRelRoot(sql);
-            rel = exec3.optimize(relRoot).rel;
-            realPlan = NL + RelOptUtil.toString(rel);
-            diff.assertEquals("bloat_merge_sql.bloat_enabled_bloat_5", "${bloat_merge_sql.bloat_enabled_bloat_5}", realPlan);
-
-            config.setProperty("kylin.query.kap-project-merge-bloat-threshold", "100");
-            QueryExec exec4 = new QueryExec(PROJECT, config);
-            relRoot = exec4.sqlToRelRoot(sql);
-            rel = exec4.optimize(relRoot).rel;
-            realPlan = NL + RelOptUtil.toString(rel);
-            diff.assertEquals("bloat_merge_sql.bloat_disabled", "${bloat_merge_sql.bloat_disabled}", realPlan);
         }
 
+        try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(config)) {
+            config.setProperty("kylin.query.project-merge-with-bloat-enabled", "true");
+            QueryExec exec2 = new QueryExec(PROJECT, config);
+            RelRoot relRoot = exec2.sqlToRelRoot(sql);
+            RelNode rel = exec2.optimize(relRoot).rel;
+            String realPlan = NL + RelOptUtil.toString(rel);
+            diff.assertEquals("bloat_merge_sql.bloat_enabled", "${bloat_merge_sql.bloat_enabled}", realPlan);
+        }
+
+        try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(config)) {
+            config.setProperty("kylin.query.project-merge-with-bloat-enabled", "true");
+            config.setProperty("kylin.query.project-merge-bloat-threshold", "5");
+            QueryExec exec3 = new QueryExec(PROJECT, config);
+            RelRoot relRoot = exec3.sqlToRelRoot(sql);
+            RelNode rel = exec3.optimize(relRoot).rel;
+            String realPlan = NL + RelOptUtil.toString(rel);
+            diff.assertEquals("bloat_merge_sql.bloat_enabled_bloat_5", "${bloat_merge_sql.bloat_enabled_bloat_5}", realPlan);
+        }
+
+        try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(config)) {
+            config.setProperty("kylin.query.project-merge-bloat-threshold", "100");
+            QueryExec exec4 = new QueryExec(PROJECT, config);
+            RelRoot relRoot = exec4.sqlToRelRoot(sql);
+            RelNode rel = exec4.optimize(relRoot).rel;
+            String realPlan = NL + RelOptUtil.toString(rel);
+            diff.assertEquals("bloat_merge_sql.bloat_disabled", "${bloat_merge_sql.bloat_disabled}", realPlan);
+        }
     }
 
     /**

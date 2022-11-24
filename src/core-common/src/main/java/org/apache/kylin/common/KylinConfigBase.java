@@ -3721,10 +3721,10 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isProjectMergeWithBloatEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.kap-project-merge-with-bloat-enabled", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.query.project-merge-with-bloat-enabled", "true"));
     }
 
-    public int getKapProjectMergeRuleBloatThreshold() {
-        return Integer.parseInt(getOptional("kylin.query.kap-project-merge-bloat-threshold", "0"));
+    public int getProjectMergeRuleBloatThreshold() {
+        return Integer.parseInt(getOptional("kylin.query.project-merge-bloat-threshold", "0"));
     }
 }
