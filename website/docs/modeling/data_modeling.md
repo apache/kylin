@@ -24,10 +24,7 @@ If it takes 1 minute to query 100 million entries of data records, querying 10 b
 
 ### Accelerate query with Kylin pre-computation
 
-Kylin leverages pre-computation to avoid the computing pressure brought by the growing data volume. That is, Kylin will precompute the combinations of defined model dimensions and then store the aggregated results as indexes to shorten query latency. In addition, Kylin uses parallel computing and columnar storage techniques to improve computing and storage speed.  
-
-![Reduce IO](images/reduceio.png)
-
+Kylin leverages pre-computation to avoid the computing pressure brought by the growing data volume. That is, Kylin will precompute the combinations of defined model dimensions and then store the aggregated results as indexes to shorten query latency. In addition, Kylin uses parallel computing and columnar storage techniques to improve computing and storage speed.
 
 With pre-computation, the number of indexes will be determined by the dimension cardinality only, and will no longer undergo exponential growth as data volume increases. Taking the data analysis of online transactions as an example, with Kylin pre-computation, even if the volume of transaction data increases by 10 times, the query speed against the same analytical dimensions changes little. The computing time complexity can be kept at O(1), helping enterprises to analyze data more efficiently. 
 
