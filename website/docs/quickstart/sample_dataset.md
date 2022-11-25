@@ -5,7 +5,7 @@ sidebar_label: Sample dataset
 pagination_label: Sample dataset
 toc_min_heading_level: 2
 toc_max_heading_level: 6
-pagination_prev: null
+pagination_prev: quickstart/tutorial
 pagination_next: null
 keywords:
     - sample dataset

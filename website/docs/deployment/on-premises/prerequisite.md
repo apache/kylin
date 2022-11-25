@@ -5,7 +5,7 @@ sidebar_label: Prerequisite
 pagination_label: Prerequisite
 toc_min_heading_level: 2
 toc_max_heading_level: 6
-pagination_prev: intro
+pagination_prev: null
 pagination_next: null
 keywords: 
   - prerequisite

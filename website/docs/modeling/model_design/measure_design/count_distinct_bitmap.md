@@ -29,7 +29,7 @@ Before using the Count Distinct query, you need to clarify if the target column 
 
 ### Count Distinct Precision Setting 
 
-Let’s use the project created in the chapter [Tutorial](../../../quickstart/expert_mode_tutorial.md) as an example to introduce count distinct precision measure settings. This project uses the SSB Dataset and needs to complete the model design and index build (including data load). A model won't be able to serve any queries if it has no index and data. You can read [Model Design Basics](../../data_modeling.md) to understand more about the methods used in model design. 
+Let’s use the project created in the chapter [Tutorial](../../../quickstart/tutorial.md) as an example to introduce count distinct precision measure settings. This project uses the SSB Dataset and needs to complete the model design and index build (including data load). A model won't be able to serve any queries if it has no index and data. You can read [Model Design Basics](../../data_modeling.md) to understand more about the methods used in model design. 
 
 Please add a measure in the model editing page as follows. Please fill in the measure **Name**, such as `DISTINCT_CUSTOMER`, select **Function** as **COUNT_DISTINCT**, select accuracy requirement from **Function Parameter**, and finally select the target column from the drop-down list.
 

@@ -1,25 +1,25 @@
 ---
-title: Expert Mode Tutorial
+title: Kylin 5 Tutorial
 language: en
-sidebar_label: Expert Mode Tutorial
-pagination_label: Expert Mode Tutorial
+sidebar_label: Tutorial
+pagination_label: Tutorial
 toc_min_heading_level: 2
 toc_max_heading_level: 6
-pagination_prev: null
-pagination_next: null
+pagination_prev: quickstart/deploy_kylin
+pagination_next: quickstart/sample_dataset
 keywords:
-      - expert mode tutorial
+      - tutorial
 draft: false
 last_update:
       date: 09/13/2022
 ---
 
 
-Kylin 5.0 provides which the modeling process dominated by user. In this section, we will show you how to create and optimize model.
+In this section, we will show you how to create and optimize model.
 
 ### <span id="preparation">Preparation</span>
 
-1. Kylin 5.0 provides one mode:  You are able to design your own models to fulfill your analysis demands and load data for your models. You can design the index manually and let the system continue to improve the index according your query habits and data characteristics.
+1. You are able to design your own models to fulfill your analysis demands and load data for your models. You can design the index manually and let the system continue to improve the index according your query habits and data characteristics.
 	
 2. We will use the SSB (Star Schema Benchmark) sample data to introduce the project. You can find out how to import the sample data in the [Import Data from Hive](../datasource/import_hive.md) section.
 

@@ -22,25 +22,20 @@ const sidebars = {
     ],
     DocumentSideBar: [
         {
-            type: 'doc',
-            id: 'intro',
-            label: 'Introduction to Kylin 5'
-        },
-        {
             type: 'category',
             label: 'Quick Start',
             link: {
                 type: 'doc',
-                id: 'quickstart/intro',
+                id: 'quickstart/overview',
             },
             items: [
                 {
                     type: 'doc',
-                    id: 'quickstart/quick_start',
+                    id: 'quickstart/deploy_kylin',
                 },
                 {
                     type: 'doc',
-                    id: 'quickstart/expert_mode_tutorial',
+                    id: 'quickstart/tutorial',
                 },
                 {
                     type: 'doc',

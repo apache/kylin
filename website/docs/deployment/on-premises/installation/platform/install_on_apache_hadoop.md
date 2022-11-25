@@ -49,4 +49,4 @@ Here is a download link for the jar file package of the MySQL 8.0 JDBC driver：
 
 ### Install Kylin
 
-After setting up the environment, please refer to [Quick Start](docs/quickstart/quick_start.md) to continue.
+After setting up the environment, please refer to [Quick Start](docs/quickstart/deploy_kylin.md) to continue.

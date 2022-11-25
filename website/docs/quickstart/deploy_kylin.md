@@ -1,14 +1,14 @@
 ---
-title: Quick Start
+title: Deploy and Start
 language: en
-sidebar_label: Quick Start
-pagination_label: Quick Start
+sidebar_label: Deploy and Start
+pagination_label: Deploy and Start
 toc_min_heading_level: 2
 toc_max_heading_level: 6
-pagination_prev: null
-pagination_next: null
+pagination_prev: quickstart/overview
+pagination_next: quickstart/tutorial
 keywords:
-    - quick start
+    - Deploy
 draft: false
 last_update:
     date: 09/13/2022
@@ -18,12 +18,22 @@ In this guide, we will explain how to quickly install and start Kylin 5.
 
 Before proceeding, please make sure the [Prerequisite](../deployment/on-premises/prerequisite.md) is met.
 
+### Pull docker for learning
+
+If we want to learn what new features did Kylin 5 provided, and you only have a laptop,
+we recommend you to pulling the docker image and check the [standalone image in dockerhub](https://hub.docker.com/r/apachekylin/apache-kylin-standalone) .
+
+```shell
+docker pull apachekylin/apache-kylin-standalone:5.0.0
+```
+
 
 ### <span id="install">Download and Install</span>
 
 1. Get Kylin installation package.
 
-   Please refer to [How To Package](../development/how_to_package.md).
+   Please download official release binary from [Download Page](../download.md) . <br></br>
+   For developer who want to package from source code, please refer to [How To Package](../development/how_to_package.md).
 
 2. Decide the installation location and the Linux account to run Kylin. All the examples below are based on the following assumptions:
 
@@ -35,7 +45,7 @@ Before proceeding, please make sure the [Prerequisite](../deployment/on-premises
 
    ```shell
    cd /usr/local
-   tar -zxvf Kylin5.0-Beta-[Version].tar.gz
+   tar -zxvf apache-kylin-[Version].tar.gz
    ```
    The decompressed directory is referred to as **$KYLIN_HOME** or **root directory**.
 
@@ -45,8 +55,7 @@ Before proceeding, please make sure the [Prerequisite](../deployment/on-premises
    
    **Note**: 
    
-   + For the production environment, we recommend to setup a dedicated metastore. You can use PostgreSQL which is shipped with Kylin 5.x. 
-   + The database name of metastore **must start with an English character**.
+   + For the production environment, we recommend to set up a dedicated metastore. You can use PostgreSQL or MySQL. 
    
    Please refer to the below links for complete steps to install and configure:
    
@@ -206,7 +215,7 @@ We will be using SSB dataset as the data sample to introduce Kylin in several se
 
 **Validate Product Functions**
 
-You can create a sample project and model according to [Expert Mode Tutorial](expert_mode_tutorial.md). The project should validate basic features such as source table loading, model creation, index build etc. 
+You can create a sample project and model according to [Kylin 5 Tutorial](tutorial.md). The project should validate basic features such as source table loading, model creation, index build etc. 
 
 On the **Data Asset -> Model** page, you should see an example model with some storage over 0.00 KB, this indicates the data has been loaded for this model.
 

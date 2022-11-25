@@ -142,7 +142,7 @@ const config = {
         items: [
           {
             type: 'doc',
-            docId: 'quickstart/intro',
+            docId: 'quickstart/overview',
             position: 'left',
             label: 'Document',
           },
@@ -187,7 +187,7 @@ const config = {
             items: [
               {
                 label: 'Quick Start',
-                to: '/docs/quickstart/quick_start',
+                to: '/docs/quickstart/tutorial',
               },
               {
                 label: 'How to write this doc',
