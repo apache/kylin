@@ -455,8 +455,14 @@ class FilePruner(val session: SparkSession,
 
     def getShardSetFromIterable(attr: Attribute, iter: Iterable[Any]): BitSet = {
       val matchedShards = new BitSet(numShards)
-      iter.map(v => getShardNumber(attr, v))
-        .foreach(shardNum => matchedShards.set(shardNum))
+      val prj = options.getOrElse("project", sys.error("project option is required"))
+      val skipShardPruning = NProjectManager.getProjectConfig(prj).skipShardPruningForInExpr && iter.size > 256
+      if (skipShardPruning) {
+        matchedShards.setUntil(matchedShards.capacity)
+      } else {
+        iter.map(v => getShardNumber(attr, v))
+          .foreach(shardNum => matchedShards.set(shardNum))
+      }
       matchedShards
     }
 
@@ -738,7 +744,9 @@ case class SegDimFilters(dimRange: java.util.Map[String, DimensionRangeInfo], di
    * blocks are always non-empty.
    */
 
-  def escapeQuote(colName: String): String = {s"${colName.replace("`", "")}"}
+  def escapeQuote(colName: String): String = {
+    s"${colName.replace("`", "")}"
+  }
 
   def foldFilter(filter: Filter): Filter = {
     filter match {

@@ -3741,4 +3741,8 @@ public abstract class KylinConfigBase implements Serializable {
     public int getProjectMergeRuleBloatThreshold() {
         return Integer.parseInt(getOptional("kylin.query.project-merge-bloat-threshold", "0"));
     }
+
+    public boolean skipShardPruningForInExpr() {
+        return Boolean.parseBoolean(getOptional("kylin.query.skip-shard-pruning-for-in", FALSE));
+    }
 }
