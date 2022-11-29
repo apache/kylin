@@ -47,14 +47,15 @@ public class KylinEhCacheTest extends NLocalFileMetadataTestCase {
         overwriteSystemProp("kylin.cache.config", "file://" + url + "not-exists-ehcache.xml");
         KylinCache cache = KylinEhCache.getInstance();
         CacheManager cacheManager = (CacheManager) FieldUtils.getFieldValue(cache, "cacheManager");
-        Assert.assertEquals("DefaultCacheName", cacheManager.getName());
+        Assert.assertEquals("DEFAULT_CACHE", cacheManager.getName());
         cacheManager.shutdown();
     }
 
     @Test
     public void testRightCacheConfig() throws IllegalAccessException {
         String url = Thread.currentThread().getContextClassLoader().getResource("").getPath();
-        overwriteSystemProp("kylin.cache.config", "file://" + url + "user-defined-ehcache.xml");
+        String location = "file://" + url + "user-defined-ehcache.xml";
+        overwriteSystemProp("kylin.cache.config", location);
         KylinCache cache = KylinEhCache.getInstance();
         CacheManager cacheManager = (CacheManager) FieldUtils.getFieldValue(cache, "cacheManager");
         Assert.assertEquals("UserDefinedCache", cacheManager.getName());

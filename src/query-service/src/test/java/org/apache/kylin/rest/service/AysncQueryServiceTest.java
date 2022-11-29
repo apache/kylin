@@ -64,7 +64,6 @@ import org.apache.kylin.query.exception.NAsyncQueryIllegalParamException;
 import org.apache.kylin.query.pushdown.SparkSqlClient;
 import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.parquet.Strings;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -984,7 +983,7 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         try (FSDataOutputStream os = fileSystem
                 .create(new Path(asyncQueryResultDir, AsyncQueryUtil.getMetaDataFileName())); //
              OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8)) { //
-            String metaString = Strings.join(columnNames, ",") + "\n" + Strings.join(dataTypes, ",");
+            String metaString = String.join(",", columnNames) + "\n" + String.join(",", dataTypes);
             osw.write(metaString);
             if (needMeta) {
                 fileSystem.createNewFile(new Path(asyncQueryResultDir, AsyncQueryUtil.getMetaDataFileName()));
