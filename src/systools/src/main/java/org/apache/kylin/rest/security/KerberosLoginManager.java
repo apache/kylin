@@ -25,6 +25,7 @@ import java.security.PrivilegedAction;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KapConfig;
@@ -117,7 +118,8 @@ public class KerberosLoginManager {
         }
     }
 
-    private boolean checkExistsTablesAccess(UserGroupInformation ugi, String project) {
+    @VisibleForTesting
+    boolean checkExistsTablesAccess(UserGroupInformation ugi, String project) {
         val kapConfig = KapConfig.getInstanceFromEnv();
         val projectManager = NProjectManager.getInstance(kapConfig.getKylinConfig());
         return ugi.doAs((PrivilegedAction<Boolean>) () -> {

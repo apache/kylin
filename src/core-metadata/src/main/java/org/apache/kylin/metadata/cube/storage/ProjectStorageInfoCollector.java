@@ -31,14 +31,14 @@ public class ProjectStorageInfoCollector {
 
     private List<StorageInfoCollector> collectors = Lists.newArrayList();
 
-    private static final ImmutableMap<Class, StorageInfoEnum> collectorType = ImmutableMap
-            .<Class, StorageInfoEnum> builder().put(GarbageStorageCollector.class, StorageInfoEnum.GARBAGE_STORAGE)
+    private static final ImmutableMap<Class<?>, StorageInfoEnum> collectorType = ImmutableMap
+            .<Class<?>, StorageInfoEnum> builder().put(GarbageStorageCollector.class, StorageInfoEnum.GARBAGE_STORAGE)
             .put(TotalStorageCollector.class, StorageInfoEnum.TOTAL_STORAGE)
             .put(StorageQuotaCollector.class, StorageInfoEnum.STORAGE_QUOTA).build();
 
     public ProjectStorageInfoCollector(List<StorageInfoEnum> storageInfoList) {
         if (CollectionUtils.isNotEmpty(storageInfoList)) {
-            storageInfoList.forEach(si -> addCollectors(si));
+            storageInfoList.forEach(this::addCollectors);
         }
     }
 

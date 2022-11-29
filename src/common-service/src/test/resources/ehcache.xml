@@ -15,7 +15,7 @@
   limitations under the License.
 -->
 
-<ehcache maxBytesLocalHeap="512M">
+<ehcache maxBytesLocalHeap="512M" name="DEFAULT_CACHE">
     <cache name="StorageCache"
            eternal="false"
            timeToIdleSeconds="86400"

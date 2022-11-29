@@ -26,23 +26,23 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
-import org.apache.kylin.common.util.NamedThreadFactory;
-import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
+import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.rest.config.initialize.AfterMetadataReadyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import com.google.common.annotations.VisibleForTesting;
 
 @Component
-public class MetaStoreHealthIndicator extends AbstractKylinHealthIndicator
-        implements ApplicationListener<AfterMetadataReadyEvent> {
-    public static final Logger logger = LoggerFactory.getLogger(MetaStoreHealthIndicator.class);
+public class MetaStoreHealthIndicator implements HealthIndicator, ApplicationListener<AfterMetadataReadyEvent> {
+    private static final Logger logger = LoggerFactory.getLogger(MetaStoreHealthIndicator.class);
 
     private static final String UNIT_NAME = "_health";
     private static final String HEALTH_ROOT_PATH = "/" + UNIT_NAME;
@@ -52,10 +52,28 @@ public class MetaStoreHealthIndicator extends AbstractKylinHealthIndicator
             new NamedThreadFactory("MetaStoreHealthChecker"));
     private volatile boolean isHealth = false;
 
+    private final int warningResponseMs;
+    private final int errorResponseMs;
+
     public MetaStoreHealthIndicator() {
-        this.config = KylinConfig.getInstanceFromEnv();
-        this.warningResponseMs = KapConfig.wrap(config).getMetaStoreHealthWarningResponseMs();
-        this.errorResponseMs = KapConfig.wrap(config).getMetaStoreHealthErrorResponseMs();
+        KapConfig wrappedConfig = KapConfig.wrap(KylinConfig.getInstanceFromEnv());
+        this.warningResponseMs = wrappedConfig.getMetaStoreHealthWarningResponseMs();
+        this.errorResponseMs = wrappedConfig.getMetaStoreHealthErrorResponseMs();
+    }
+
+    private void checkTime(long start, String operation) throws InterruptedException {
+        // in case canary was timeout
+        if (Thread.interrupted())
+            throw new InterruptedException();
+
+        long response = System.currentTimeMillis() - start;
+        logger.trace("{} took {} ms", operation, response);
+
+        if (response > errorResponseMs) {
+            throw new IllegalStateException("check time is time out");
+        } else if (response > warningResponseMs) {
+            logger.warn("found warning, {} took {} ms", operation, response);
+        }
     }
 
     @Override

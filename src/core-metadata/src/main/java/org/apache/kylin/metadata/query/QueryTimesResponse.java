@@ -18,15 +18,12 @@
 
 package org.apache.kylin.metadata.query;
 
-import io.kyligence.kap.shaded.influxdb.org.influxdb.annotation.Column;
 import lombok.Data;
 
 @Data
 public class QueryTimesResponse {
 
-    @Column(name = "model")
     private String model;
-    @Column(name = "query_times")
     private int queryTimes;
 
 }

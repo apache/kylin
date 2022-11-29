@@ -24,7 +24,6 @@ import org.apache.kylin.common.KylinConfig;
 import lombok.val;
 import oshi.SystemInfo;
 import oshi.hardware.HardwareAbstractionLayer;
-import oshi.software.os.OperatingSystem;
 
 public final class SystemInfoCollector {
 
@@ -37,16 +36,13 @@ public final class SystemInfoCollector {
 
     private static HardwareAbstractionLayer hal = null;
 
-    private static OperatingSystem os = null;
-
     static {
         init();
     }
 
-    public static void init() {
+    private static void init() {
         SystemInfo si = new SystemInfo();
         hal = si.getHardware();
-        os = si.getOperatingSystem();
     }
 
     public static Integer getAvailableMemoryInfo() {
