@@ -206,7 +206,7 @@
         <spring.cloud.version>2021.0.0</spring.cloud.version>
         <spring.boot.version>2.6.8</spring.boot.version>
         <spring-boot-admin.version>2.6.6</spring-boot-admin.version>
-        <spring-session.version>2.6.1-kylin-r3</spring-session.version>
+        <spring-session.version>2.6.1-kylin-r4</spring-session.version>
         <spring.framework.security.extensions.version>1.0.10.RELEASE</spring.framework.security.extensions.version>
         <spring-security-web.version>5.6.9</spring-security-web.version>
         <opensaml.version>2.6.6</opensaml.version>
