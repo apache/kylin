@@ -19,8 +19,6 @@
 package org.apache.kylin.metadata.model;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_MEASURE_DATA_TYPE;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_SUM_LC_INVALID_DATA_TYPE;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_SUM_LC_INVALID_TIMESTAMP_TYPE;
 import static org.apache.kylin.metadata.datatype.DataType.ANY;
 import static org.apache.kylin.metadata.datatype.DataType.BIGINT;
 import static org.apache.kylin.metadata.datatype.DataType.DECIMAL;
@@ -104,14 +102,15 @@ public class FunctionDesc implements Serializable {
                 }
                 break;
             }
+            case FunctionDesc.FUNC_SUM_LC: {
+                Preconditions.checkArgument(StringUtils.isNotEmpty(colDataType),
+                        "SUM_LC Measure's input type shouldn't be null or empty");
+                checkSumLCDataType(colDataType);
+                break;
+            }
             default:
                 break;
             }
-        }
-        if (FunctionDesc.FUNC_SUM_LC.equals(expression)) {
-            Preconditions.checkArgument(StringUtils.isNotEmpty(colDataType),
-                    "SUM_LC Measure's input type shouldn't be null or empty");
-            checkSumLCDataType(colDataType);
         }
 
         String returnType = override.getOrDefault(expression,
@@ -138,14 +137,9 @@ public class FunctionDesc implements Serializable {
     private static void checkSumLCDataType(String dataTypeName) {
         DataType dataType = DataType.getType(dataTypeName);
         if (!dataType.isNumberFamily()) {
-            throw new KylinException(MODEL_SUM_LC_INVALID_DATA_TYPE, dataType, DataType.NUMBER_FAMILY);
-        }
-    }
-
-    private static void checkSumLCTimeColDataType(String dataTypeName) {
-        DataType dataType = DataType.getType(dataTypeName);
-        if (dataType.isTinyInt() || dataType.isFloat() || dataType.isDouble() || dataType.isDecimal() || dataType.isBoolean()) {
-            throw new KylinException(MODEL_SUM_LC_INVALID_TIMESTAMP_TYPE, dataType);
+            throw new KylinException(INVALID_MEASURE_DATA_TYPE,
+                    String.format(Locale.ROOT, "SUM_LC Measure's return type '%s' is illegal. It must be one of %s",
+                            dataType, DataType.NUMBER_FAMILY));
         }
     }
 
@@ -216,22 +210,17 @@ public class FunctionDesc implements Serializable {
             expression = PercentileMeasureType.FUNC_PERCENTILE_APPROX; // for backward compatibility
         }
 
-        List<ParameterDesc> paramList = getParameters();
-        for (int i = 0; i < paramList.size(); i++) {
-            ParameterDesc p = paramList.get(i);
+        for (ParameterDesc p : getParameters()) {
             if (p.isColumnType()) {
                 TblColRef colRef = model.findColumn(p.getValue());
                 p.setValue(colRef.getIdentity());
                 p.setColRef(colRef);
                 if (expression.equals(FUNC_SUM_LC)) {
-                    if (i == 0) {
+                    if (Objects.isNull(returnDataType)) {
                         // use the first column to init returnType and returnDataType, ignore the second timestamp column
                         returnType = proposeReturnType(expression, colRef.getDatatype(), Maps.newHashMap(),
                                 model.isSaveCheck());
                         returnDataType = DataType.getType(returnType);
-                    } else {
-                        // check sum_lc time column type
-                        checkSumLCTimeColDataType(colRef.getDatatype());
                     }
                 } else {
                     returnDataType = DataType.getType(proposeReturnType(expression, colRef.getDatatype(),

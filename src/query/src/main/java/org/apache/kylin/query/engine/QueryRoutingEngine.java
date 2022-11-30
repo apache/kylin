@@ -19,7 +19,6 @@
 package org.apache.kylin.query.engine;
 
 import static org.apache.kylin.query.relnode.OLAPContext.clearThreadLocalContexts;
-import static org.apache.kylin.query.util.DefaultQueryTransformer.S0;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -29,7 +28,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.prepare.CalcitePrepareImpl;
@@ -76,10 +74,6 @@ public class QueryRoutingEngine {
     public static final String SPARK_MEM_LIMIT_EXCEEDED = "Container killed by YARN for exceeding memory limits";
     public static final String SPARK_JOB_FAILED = "Job aborted due to stage failure";
 
-    private static final Pattern PTN_SUM_LC = Pattern.compile(
-            S0 + "\\bSUM_LC" + S0 + "[(]" + S0 + ".*\\.?.*" + S0 + "[,]" + S0 + ".*\\.?.*" + S0 + "[)]" + S0,
-            Pattern.CASE_INSENSITIVE);
-
     public QueryResult queryWithSqlMassage(QueryParams queryParams) throws Exception {
         QueryContext.current().setAclInfo(queryParams.getAclInfo());
         KylinConfig projectKylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
@@ -88,7 +82,7 @@ public class QueryRoutingEngine {
         queryParams.setDefaultSchema(queryExec.getDefaultSchemaName());
 
         if (queryParams.isForcedToPushDown()) {
-            checkContainsSumLC(queryParams);
+            checkContainsSumLC(queryParams, null);
             return pushDownQuery(null, queryParams);
         }
 
@@ -136,6 +130,7 @@ public class QueryRoutingEngine {
             if (cause instanceof SQLException && cause.getCause() instanceof KylinException) {
                 throw (SQLException) cause;
             }
+            checkContainsSumLC(queryParams, e);
             if (shouldPushdown(cause, queryParams)) {
                 return pushDownQuery((SQLException) cause, queryParams);
             } else {
@@ -154,6 +149,7 @@ public class QueryRoutingEngine {
                     }
                 }
             }
+            checkContainsSumLC(queryParams, e);
             if (shouldPushdown(e, queryParams)) {
                 return pushDownQuery(e, queryParams);
             } else {
@@ -175,14 +171,18 @@ public class QueryRoutingEngine {
         return false;
     }
 
-    private void checkContainsSumLC(QueryParams queryParams) {
-        if (PTN_SUM_LC.matcher(queryParams.getSql()).find()) {
-            String message = "sum_lc() function now is not supported by other query engine";
-            throw new NotSupportedSQLException(message);
+    private void checkContainsSumLC(QueryParams queryParams, Throwable t) {
+        if (queryParams.getSql().contains("sum_lc")) {
+            String message = "There is no aggregate index to answer this query, sum_lc() function now is not supported by other query engine";
+            if (t != null) {
+                throw new NotSupportedSQLException(message, t);
+            } else {
+                throw new NotSupportedSQLException(message);
+            }
         }
     }
 
-    protected boolean shouldPushdown(Throwable e, QueryParams queryParams) {
+    private boolean shouldPushdown(Throwable e, QueryParams queryParams) {
         if (queryParams.isForcedToIndex()) {
             return false;
         }
@@ -197,10 +197,6 @@ public class QueryRoutingEngine {
 
         if (e.getCause() instanceof NewQueryRefuseException) {
             return checkBigQueryPushDown(queryParams);
-        }
-
-        if (PTN_SUM_LC.matcher(queryParams.getSql()).find()) {
-            return false;
         }
 
         return e instanceof SQLException && !e.getMessage().contains(SPARK_MEM_LIMIT_EXCEEDED);

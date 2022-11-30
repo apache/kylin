@@ -828,8 +828,6 @@ case class SumLCDecode(bytes: Expression, wrapDataTypeExpr: Expression) extends 
 
   override def prettyName: String = "sum_lc_decode"
 
-  override def nullable: Boolean = true
-
   override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = {
     val newChildren = Seq(newLeft, newRight)
     super.legacyWithNewChildren(newChildren)
