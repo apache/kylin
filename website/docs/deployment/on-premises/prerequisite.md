@@ -168,22 +168,21 @@ If you need to run Kylin in a sandbox or other virtual machine environment, plea
 
 We recommend the following hardware configuration to install Kylin:
 
-- 32 vCore, 128 GB memory
-- At least one 1TB SAS HDD (3.5 inches), 7200RPM, RAID1
-- At least two 1GbE Ethernet ports. For network port requirements, please refer to the [Network Port Requirements](./network_port_requirements.md) chapter.
+- 16 vCore, 64 GB memory
+- At least 500GB disk
+- For network port requirements, please refer to the [Network Port Requirements](./network_port_requirements.md) chapter.
 
 ### <span id="linux">Recommended Linux Distribution</span>
 
 We recommend using the following version of the Linux operating system:
 
-- Ubuntu 18.04 + (recommend LTS version)
-- Red Hat Enterprise Linux 6.4+ or 7.x 
-- CentOS 6.4+ or 7.x
+- Ubuntu 18.04 and above (recommend LTS version)
+- Red Hat Enterprise Linux 6.4+ and above
+- CentOS 6.4+ and above
 
 ### <span id="client">Recommended Client Configuration</span>
 
-- CPU: 2.5 GHz Intel Core i7
-- Operating System: macOS / Windows 7 / Windows 10
+- Operating System: macOS / Windows 7 and above
 - RAM: 8G or above
 - Browser version:
     + Chrome 45 or above
