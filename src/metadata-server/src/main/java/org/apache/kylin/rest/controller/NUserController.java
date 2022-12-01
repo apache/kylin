@@ -105,6 +105,10 @@ import com.google.common.collect.Sets;
 import io.swagger.annotations.ApiOperation;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping(value = "/api/user", produces = { HTTP_VND_APACHE_KYLIN_JSON })
@@ -475,6 +479,7 @@ public class NUserController extends NBasicController implements ApplicationList
     @ResponseBody
     public EnvelopeResponse<UserDetails> authenticate() {
         EnvelopeResponse<UserDetails> response = authenticatedUser();
+        checkSessionStoreType(KylinConfig.getInstanceFromEnv());
         logger.debug("User login: {}", response.getData());
         return response;
     }
@@ -631,6 +636,17 @@ public class NUserController extends NBasicController implements ApplicationList
                 .collect(Collectors.toList());
         if (authorities.size() != Sets.newHashSet(authorities).size()) {
             throw new KylinException(REPEATED_PARAMETER, "authorities");
+        }
+    }
+
+    private void checkSessionStoreType(KylinConfig env) {
+        String type = env.getSpringStoreType();
+        HttpServletRequest request =
+                ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
+                        .getRequest();
+        //todo other session store-type
+        if (type.equals("jbdc")) {
+            request.getSession().setMaxInactiveInterval(env.getJdbcSessionMaxInactiveInterval());
         }
     }
 }

@@ -2931,6 +2931,11 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("spring.session.store-type", "");
     }
 
+
+    public int getJdbcSessionMaxInactiveInterval() {
+        return Integer.parseInt(getOptional("spring.session.timeout", "3600"));
+    }
+
     public int getCapacitySampleRows() {
         return Integer.parseInt(getOptional("kylin.capacity.sample-rows", "1000"));
     }
