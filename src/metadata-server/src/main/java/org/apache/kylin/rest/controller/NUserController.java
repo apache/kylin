@@ -645,7 +645,7 @@ public class NUserController extends NBasicController implements ApplicationList
                 ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
                         .getRequest();
         //todo other session store-type
-        if (type.equals("jbdc")) {
+        if ("jbdc".equals(type)) {
             request.getSession().setMaxInactiveInterval(env.getJdbcSessionMaxInactiveInterval());
         }
     }
