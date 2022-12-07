@@ -80,6 +80,7 @@ import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.dao.NExecutableDao;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.BaseTestExecutable;
 import org.apache.kylin.job.execution.ChainedExecutable;
@@ -95,6 +96,7 @@ import org.apache.kylin.job.execution.StageBase;
 import org.apache.kylin.job.execution.SucceedChainedTestExecutable;
 import org.apache.kylin.job.execution.SucceedDagTestExecutable;
 import org.apache.kylin.job.execution.SucceedTestExecutable;
+import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
@@ -110,6 +112,7 @@ import org.apache.kylin.plugin.asyncprofiler.ProfilerStatus;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.JobFilter;
 import org.apache.kylin.rest.request.JobUpdateRequest;
+import org.apache.kylin.rest.request.StageRequest;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.response.ExecutableStepResponse;
@@ -128,6 +131,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEvent;
@@ -392,16 +396,16 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         Mockito.when(executableDao.getJobs(Mockito.anyLong(), Mockito.anyLong())).thenReturn(mockJobs);
         {
             List<String> jobNames = Lists.newArrayList();
-            JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "", "default", "duration",
+            JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 0, "", "", "default", "total_duration",
                     true);
             List<ExecutableResponse> jobs = jobService.listJobs(jobFilter);
 
-            val durationArrays = jobs.stream().map(ExecutableResponse::getTotalDuration)
+            val totalDurationArrays = jobs.stream().map(ExecutableResponse::getTotalDuration)
                     .collect(Collectors.toList());
-            List<Long> copyDurationList = new ArrayList<>(durationArrays);
+            List<Long> copyDurationList = new ArrayList<>(totalDurationArrays);
             copyDurationList.sort(Collections.reverseOrder());
             Assert.assertEquals(3, copyDurationList.size());
-            Assert.assertEquals(durationArrays, copyDurationList);
+            Assert.assertEquals(totalDurationArrays, copyDurationList);
         }
 
         for (int i = 0; i < 3; i++) {
@@ -1440,6 +1444,29 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testRestartJob_AddAndRemoveFrozenJob() {
+        NExecutableManager manager = NExecutableManager.getInstance(getTestConfig(), project);
+
+        val job = new DefaultExecutable();
+        job.setProject(project);
+        manager.addJob(job);
+
+        NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project);
+        scheduler.init(new JobEngineConfig(getTestConfig()));
+
+        try (MockedStatic<NDefaultScheduler> mockScheduler = Mockito.mockStatic(NDefaultScheduler.class)) {
+            mockScheduler.when(() -> NDefaultScheduler.getInstance(project)).thenReturn(scheduler);
+            UnitOfWork.doInTransactionWithRetry(() -> {
+                jobService.updateJobStatus(job.getId(), project, "RESTART");
+                Assert.assertTrue(manager.isFrozenJob(job.getId()));
+                return null;
+            }, project);
+
+            Assert.assertFalse(manager.isFrozenJob(job.getId()));
+        }
+    }
+
+    @Test
     public void testCheckJobStatus() {
         jobService.checkJobStatus(Lists.newArrayList("RUNNING"));
         thrown.expect(KylinException.class);
@@ -1963,4 +1990,48 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         jobService.onApplicationEvent(applicationEvent);
     }
 
+    @Test
+    public void testUpdateStageStatusFrozenJob() {
+        final String project = "default";
+        final String jobStatus = "ERROR";
+        final String jobId = "f6384d3e-d46d-5cea-b2d9-28510a2191f3-50b0f62d-e9c1-810b-e499-95aa549c701c";
+
+        StageRequest request = new StageRequest();
+        request.setProject(project);
+        request.setSegmentId("b");
+        request.setStatus(jobStatus);
+        request.setTaskId(jobId + "_00_00");
+
+        SucceedChainedTestExecutable job = new SucceedChainedTestExecutable();
+        job.setId(jobId);
+        NSparkExecutable sparkExecutable = new NSparkExecutable();
+        job.addTask(sparkExecutable);
+        NStageForBuild buildStage = new NStageForBuild();
+        sparkExecutable.addStage(buildStage);
+        sparkExecutable.setStageMap();
+
+        NExecutableManager executableManager = NExecutableManager.getInstance(getTestConfig(), project);
+        executableManager.addJob(job);
+
+        NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project);
+        scheduler.init(new JobEngineConfig(getTestConfig()));
+
+        try (MockedStatic<NDefaultScheduler> nDefaultSchedulerMockedStatic = Mockito
+                .mockStatic(NDefaultScheduler.class)) {
+            nDefaultSchedulerMockedStatic.when(() -> NDefaultScheduler.getInstance(project)).thenReturn(scheduler);
+            Mockito.when(jobService.getManager(NExecutableManager.class, "default")).thenReturn(executableManager);
+
+            executableManager.addFrozenJob(job.getId());
+            jobService.updateStageStatus(request.getProject(), request.getTaskId(), request.getSegmentId(),
+                    request.getStatus(), request.getUpdateInfo(), request.getErrMsg());
+            executableManager.removeFrozenJob(job.getId());
+            assertNotEquals(executableManager.getAllJobs().get(0).getTasks().get(0).getStagesMap().get(jobId + "_00")
+                    .get(0).getOutput().getStatus(), jobStatus);
+
+            jobService.updateStageStatus(request.getProject(), request.getTaskId(), request.getSegmentId(),
+                    request.getStatus(), request.getUpdateInfo(), request.getErrMsg());
+            assertEquals(executableManager.getAllJobs().get(0).getTasks().get(0).getStagesMap().get(jobId + "_00")
+                    .get(0).getOutput().getStatus(), jobStatus);
+        }
+    }
 }

@@ -215,6 +215,21 @@ public class NExecutableManager {
         }
     }
 
+    public void addFrozenJob(String jobId) {
+        val scheduler = NDefaultScheduler.getInstance(project);
+        scheduler.getContext().addFrozenJob(jobId);
+    }
+
+    public void removeFrozenJob(String jobId) {
+        val scheduler = NDefaultScheduler.getInstance(project);
+        scheduler.getContext().removeFrozenJob(jobId);
+    }
+
+    public boolean isFrozenJob(String jobId) {
+        val scheduler = NDefaultScheduler.getInstance(project);
+        return scheduler.getContext().isFrozenJob(jobId);
+    }
+
     private void addJobOutput(ExecutablePO executable) {
         ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();
         executable.setOutput(executableOutputPO);

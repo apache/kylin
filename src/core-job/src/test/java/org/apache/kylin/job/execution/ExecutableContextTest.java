@@ -18,8 +18,10 @@
 
 package org.apache.kylin.job.execution;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.junit.annotation.MetadataInfo;
@@ -42,5 +44,17 @@ class ExecutableContextTest {
 
         context.removeRunningJob(job);
         assertNull(context.getRunningJobThread(job));
+    }
+
+    @Test
+    void testGetFrozenJob() {
+        String jobId = "f6384d3e-d46d-5cea-b2d9-28510a2191f3-50b0f62d-e9c1-810b-e499-95aa549c701c";
+        val context = new ExecutableContext(Maps.newConcurrentMap(), Maps.newConcurrentMap(),
+                KylinConfig.getInstanceFromEnv(), 0);
+        context.addFrozenJob(jobId);
+        assertTrue(context.isFrozenJob(jobId));
+
+        context.removeFrozenJob(jobId);
+        assertFalse(context.isFrozenJob(jobId));
     }
 }

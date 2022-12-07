@@ -508,8 +508,11 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
         case RESTART:
             SecondStorageUtil.checkJobRestart(project, jobId);
             executableManager.updateJobError(jobId, null, null, null, null);
+            executableManager.addFrozenJob(jobId);
             executableManager.restartJob(jobId);
-            UnitOfWork.get().doAfterUnit(afterUnitTask);
+            UnitOfWorkContext unitOfWorkContext = UnitOfWork.get();
+            unitOfWorkContext.doAfterUnit(afterUnitTask);
+            unitOfWorkContext.doAfterUnit(() -> executableManager.removeFrozenJob(jobId));
             break;
         case DISCARD:
             discardJob(project, jobId);
@@ -989,6 +992,11 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
             Map<String, String> updateInfo, String errMsg) {
         final ExecutableState newStatus = convertToExecutableState(status);
         val jobId = NExecutableManager.extractJobId(taskId);
+        val jobManager = getManager(NExecutableManager.class, project);
+        boolean isFrozenJob = jobManager.isFrozenJob(jobId);
+        if (isFrozenJob) {
+            return;
+        }
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             val executableManager = getManager(NExecutableManager.class, project);
             executableManager.updateStageStatus(taskId, segmentId, newStatus, updateInfo, errMsg);
