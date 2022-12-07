@@ -111,7 +111,7 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
     public void setup() throws Exception {
         overwriteSystemProp("kylin.job.auto-set-concurrent-jobs", "true");
         overwriteSystemProp("kylin.env", "UT");
-        overwriteSystemProp("kylin.job.check-quota-storage-enabled", "true");
+        overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
         super.setup();
     }
 

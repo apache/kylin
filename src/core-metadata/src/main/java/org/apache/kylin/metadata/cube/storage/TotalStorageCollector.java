@@ -31,7 +31,7 @@ import org.apache.kylin.metrics.HdfsCapacityMetrics;
 public class TotalStorageCollector implements StorageInfoCollector {
 
     @Override
-    public void collect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) throws IOException {
+    public void doCollect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) throws IOException {
         long totalStorageSize = HdfsCapacityMetrics.getHdfsCapacityByProject(project);
         if (totalStorageSize != -1L) {
             log.info("Reuse workingDirCapacity by project {}, storageSize: {}", project, totalStorageSize);

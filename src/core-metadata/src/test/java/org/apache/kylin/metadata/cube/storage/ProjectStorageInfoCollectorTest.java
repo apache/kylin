@@ -90,6 +90,7 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
 
     @Test
     public void testGetStorageVolumeInfo() {
+        overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "true");
         initTestData();
 
@@ -163,6 +164,7 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
 
     @Test
     public void testLowFreqStrategyOfFreqTimeWindow() {
+        overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "true");
         initTestData();
         val collector = new ProjectStorageInfoCollector(Lists.newArrayList(StorageInfoEnum.GARBAGE_STORAGE));
@@ -174,6 +176,7 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
 
     @Test
     public void testLowFreqStrategyOfLowFreqStrategyThreshold() {
+        overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "true");
         initTestData();
         val collector = new ProjectStorageInfoCollector(Lists.newArrayList(StorageInfoEnum.GARBAGE_STORAGE));
@@ -459,6 +462,7 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
 
     @Test
     public void testGetStorageVolumeWithOutHdfsCapacityMetrics() throws IOException {
+        overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
         KylinConfig testConfig = getTestConfig();
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "false");
         StorageVolumeInfo storageVolumeInfo = Mockito.spy(StorageVolumeInfo.class);
@@ -469,6 +473,7 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
 
     @Test
     public void testGetStorageVolumeWithHdfsCapacityMetrics() throws IOException {
+        overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
         KylinConfig testConfig = getTestConfig();
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
         HdfsCapacityMetrics.registerHdfsMetrics();
@@ -476,6 +481,17 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
         TotalStorageCollector totalStorageCollector = new TotalStorageCollector();
         totalStorageCollector.collect(testConfig, DEFAULT_PROJECT, storageVolumeInfo);
         Assert.assertEquals(0, storageVolumeInfo.getTotalStorageSize());
+    }
+
+    @Test
+    public void testGetStorageVolumeQuotaStorageEnabledFalse() throws IOException {
+        overwriteSystemProp("kylin.storage.check-quota-enabled", "false");
+        KylinConfig testConfig = getTestConfig();
+        HdfsCapacityMetrics.registerHdfsMetrics();
+        StorageVolumeInfo storageVolumeInfo = Mockito.spy(StorageVolumeInfo.class);
+        TotalStorageCollector totalStorageCollector = new TotalStorageCollector();
+        totalStorageCollector.collect(testConfig, DEFAULT_PROJECT, storageVolumeInfo);
+        Assert.assertEquals(-1, storageVolumeInfo.getTotalStorageSize());
     }
 
 }

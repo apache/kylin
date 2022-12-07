@@ -24,6 +24,12 @@ import org.apache.kylin.common.KylinConfig;
 
 public interface StorageInfoCollector {
 
-    void collect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) throws IOException;
+    default void collect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) throws IOException {
+        if (!config.isStorageQuotaEnabled()) {
+            return;
+        }
+        doCollect(config, project, storageVolumeInfo);
+    }
 
+    void doCollect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) throws IOException;
 }
