@@ -219,7 +219,6 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
             if (memoryLock) {
                 jobDesc = executable.toString();
                 logger.info("{} prepare to schedule", jobDesc);
-                context.addRunningJob(executable);
                 jobPool.execute(new JobRunner(nDefaultScheduler, executable, this));
                 logger.info("{} scheduled", jobDesc);
             } else {
@@ -227,12 +226,9 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
                         NDefaultScheduler.getMemoryRemaining().availablePermits(), executable.getDisplayName());
             }
         } catch (Exception ex) {
-            if (executable != null) {
-                context.removeRunningJob(executable);
-                if (memoryLock) {
-                    // may release twice when exception raise after jobPool execute executable
-                    NDefaultScheduler.getMemoryRemaining().release(useMemoryCapacity);
-                }
+            if (executable != null && memoryLock) {
+                // may release twice when exception raise after jobPool execute executable
+                NDefaultScheduler.getMemoryRemaining().release(useMemoryCapacity);
             }
             logger.warn("{} fail to schedule", jobDesc, ex);
         }

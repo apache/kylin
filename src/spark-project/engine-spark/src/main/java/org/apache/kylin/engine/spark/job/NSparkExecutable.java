@@ -405,7 +405,8 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         return desc;
     }
 
-    protected ExecuteResult runSparkSubmit(String hadoopConfDir, String kylinJobJar, String appArgs) {
+    protected ExecuteResult runSparkSubmit(String hadoopConfDir, String kylinJobJar, String appArgs)
+            throws JobStoppedException {
         sparkJobHandler.killOrphanApplicationIfExists(project, getId(), getConfig(), true, getSparkConf());
         try {
             Object cmd;
@@ -432,6 +433,7 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
             }
             return ExecuteResult.createSucceed(output);
         } catch (Exception e) {
+            checkNeedQuit(true);
             logger.warn("failed to execute spark submit command.");
             wrapWithExecuteExceptionUpdateJobError(e);
             return ExecuteResult.createError(e);

@@ -1401,7 +1401,6 @@ public class NExecutableManager {
         if (thread != null) {
             logger.info("Interrupt Job [{}] thread and remove in ExecutableContext", executable.getDisplayName());
             thread.interrupt();
-            scheduler.getContext().removeRunningJob(executable);
         }
     }
 
