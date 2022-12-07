@@ -26,7 +26,7 @@ import org.apache.kylin.metadata.project.NProjectManager;
 public class StorageQuotaCollector implements StorageInfoCollector {
 
     @Override
-    public void collect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) {
+    public void doCollect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) {
         config = NProjectManager.getInstance(config).getProject(project).getConfig();
         long quotaSize = config.getStorageQuotaSize();
         storageVolumeInfo.setStorageQuotaSize(quotaSize);

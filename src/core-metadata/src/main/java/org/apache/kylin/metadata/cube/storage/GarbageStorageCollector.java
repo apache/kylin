@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GarbageStorageCollector implements StorageInfoCollector {
 
     @Override
-    public void collect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) {
+    public void doCollect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) {
         Map<String, Set<Long>> garbageIndexMap = Maps.newHashMap();
         long storageSize = 0L;
 
