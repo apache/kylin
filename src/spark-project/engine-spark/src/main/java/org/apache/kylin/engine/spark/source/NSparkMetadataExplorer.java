@@ -172,10 +172,10 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
         val spark = SparderEnv.getSparkSession();
         try {
             String databaseLocation = spark.catalog().getDatabase(database).locationUri();
-            RemoteIterator<FileStatus> tablesIterator = getFilesIterator(databaseLocation);
+            RemoteIterator<FileStatus> tablesIterator = getFilesIterator(databaseLocation, false);
             if (tablesIterator.hasNext()) {
                 Path tablePath = tablesIterator.next().getPath();
-                getFilesIterator(tablePath.toString());
+                getFilesIterator(tablePath.toString(), true);
             }
         } catch (Exception e) {
             isAccess = false;
@@ -189,17 +189,21 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
         return isAccess;
     }
 
-    private RemoteIterator<FileStatus> getFilesIterator(String location) throws IOException {
-        String hiveSpecFsLocation = SparderEnv.getSparkSession().sessionState().conf()
-            .getConf(SQLConf.HIVE_SPECIFIC_FS_LOCATION());
-        FileSystem fs = null == hiveSpecFsLocation ? HadoopUtil.getWorkingFileSystem()
-            : HadoopUtil.getFileSystem(hiveSpecFsLocation);
-        if (location.startsWith(fs.getScheme()) || location.startsWith("/")) {
-            fs.listStatus(new Path(location));
-            return fs.listStatusIterator(new Path(location));
+    private RemoteIterator<FileStatus> getFilesIterator(String location, boolean checkList) throws IOException {
+        val sparkConf = SparderEnv.getSparkSession().sessionState().conf();
+        String hiveSpecFsLocation;
+        FileSystem fs;
+        if (sparkConf.contains("spark.sql.hive.specific.fs.location")) {
+            hiveSpecFsLocation = sparkConf.getConf(SQLConf.HIVE_SPECIFIC_FS_LOCATION());
+            location = location.replace("hdfs://hacluster", hiveSpecFsLocation);
+            fs = HadoopUtil.getFileSystem(hiveSpecFsLocation);
         } else {
-            return HadoopUtil.getFileSystem(location).listStatusIterator(new Path(location));
+            fs = HadoopUtil.getFileSystem(location);
         }
+        if (checkList) {
+            fs.listStatus(new Path(location));
+        }
+        return fs.listStatusIterator(new Path(location));
     }
 
     @Override
