@@ -113,9 +113,12 @@
             <property name="groupSearchFilter" value="${kylin.security.ldap.user-group-search-filter}"/>
         </bean>
 
+        <bean id="ldapCaseIgnoreUserDetailsContextMapper" class="org.apache.kylin.rest.security.LdapCaseIgnoreUserDetailsContextMapper"/>
+
         <bean id="ldapUserDetailsService" class="org.springframework.security.ldap.userdetails.LdapUserDetailsService">
             <constructor-arg ref="ldapUserSearch"/>
             <constructor-arg ref="ldapUserPopulator"/>
+            <property name="userDetailsMapper" ref="ldapCaseIgnoreUserDetailsContextMapper"/>
         </bean>
 
         <bean id="userAuthProvider"
@@ -130,6 +133,7 @@
                         </bean>
                     </constructor-arg>
                     <constructor-arg ref="ldapUserPopulator"/>
+                    <property name="userDetailsContextMapper" ref="ldapCaseIgnoreUserDetailsContextMapper"/>
                 </bean>
             </constructor-arg>
         </bean>
