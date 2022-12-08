@@ -385,6 +385,12 @@ public class StageTest extends NLocalFileMetadataTestCase {
         Assert.assertFalse(flag);
         Assert.assertEquals("SKIP", jobOutput.getStatus());
 
+        jobOutput.setStatus(ExecutableState.DISCARDED.toString());
+        newStatus = ExecutableState.RUNNING;
+        flag = manager.setStageOutput(jobOutput, taskOrJobId, newStatus, updateInfo, failedMsg, isRestart);
+        Assert.assertFalse(flag);
+        Assert.assertEquals("DISCARDED", jobOutput.getStatus());
+
         jobOutput.setStatus(ExecutableState.READY.toString());
         newStatus = ExecutableState.SUCCEED;
         flag = manager.setStageOutput(jobOutput, taskOrJobId, newStatus, updateInfo, failedMsg, isRestart);

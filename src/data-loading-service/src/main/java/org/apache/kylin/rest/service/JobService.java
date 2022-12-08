@@ -902,7 +902,7 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
         result.setExecEndTime(AbstractExecutable.getEndTime(stageOutput));
         result.setCreateTime(AbstractExecutable.getCreateTime(stageOutput));
 
-        result.setDuration(AbstractExecutable.getDuration(stageOutput));
+        result.setDuration(AbstractExecutable.getStageDuration(stageOutput, task.getParent()));
 
         val indexCount = Optional.ofNullable(task.getParam(NBatchConstants.P_INDEX_COUNT)).orElse("0");
         result.setIndexCount(Long.parseLong(indexCount));

@@ -1237,8 +1237,10 @@ public class NExecutableManager {
                         "[UNEXPECTED_THINGS_HAPPENED] wrong job state transfer! There is no valid state transfer from: {} to: {}, job id: {}",
                         oldStatus, newStatus, taskOrJobId);
             }
+            // DISCARDED must not be transferred to any others status
             if ((oldStatus == ExecutableState.PAUSED && newStatus == ExecutableState.ERROR)
-                    || (oldStatus == ExecutableState.SKIP && newStatus == ExecutableState.SUCCEED)) {
+                    || (oldStatus == ExecutableState.SKIP && newStatus == ExecutableState.SUCCEED)
+                    || oldStatus == ExecutableState.DISCARDED) {
                 return false;
             }
             if (isRestart || (oldStatus != ExecutableState.SUCCEED && oldStatus != ExecutableState.SKIP)) {
