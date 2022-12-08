@@ -21,11 +21,14 @@ import java.util.List;
 
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.engine.spark.source.NSparkMetadataExplorer;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.common.SparkDDLTestUtils;
+import org.apache.spark.sql.internal.SQLConf;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -79,7 +82,7 @@ public class SparkDDLTest extends NLocalFileMetadataTestCase {
   }
 
   @Test
-  public void testDDL() {
+  public void testDDL() throws Exception {
     try {
       assertKylinExeption(
           () ->
@@ -127,6 +130,12 @@ public class SparkDDLTest extends NLocalFileMetadataTestCase {
       // ddl description
       List<List<String>> description = ddlService.pluginsDescription("ssb");
       Assert.assertTrue(description.size() > 0);
+
+
+      // read/write cluster
+      SparderEnv.getSparkSession().sessionState().conf()
+          .setConf(SQLConf.HIVE_SPECIFIC_FS_LOCATION(), "hdfs://read");
+      new NSparkMetadataExplorer().checkDatabaseHadoopAccessFast("SSB");
     } finally {
       SparkSession spark = SparderEnv.getSparkSession();
       if (spark != null && !spark.sparkContext().isStopped()) {
