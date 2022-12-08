@@ -400,7 +400,6 @@
         <module>src/common-service</module>
         <module>src/job-service</module>
         <module>src/streaming-service</module>
-        <module>src/integration-service</module>
         <module>src/kylin-it</module>
 
         <!-- controller  -->
@@ -578,11 +577,6 @@
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-systools</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-integration-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

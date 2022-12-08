@@ -162,7 +162,6 @@ import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
-import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.request.ModelConfigRequest;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.MultiPartitionMappingRequest;
@@ -3006,16 +3005,15 @@ public class ModelServiceTest extends SourceTestCase {
     }
 
     @Test
-    @Ignore("Metadata changed! Model nmodel_basic is not existed")
     public void testSetIncrementing_LimitedFactTable_exception() {
         val modelManager = NDataModelManager.getInstance(getTestConfig(), "default");
         val model = modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         val joinTableDesc = new JoinTableDesc();
         joinTableDesc.setTable("DEFAULT.TEST_KYLIN_FACT");
         model.setJoinTables(Lists.newArrayList(joinTableDesc));
-        thrown.expect(BadRequestException.class);
+        thrown.expect(KylinException.class);
         thrown.expectMessage(
-                "Can not set table 'DEFAULT.TEST_KYLIN_FACT' incremental loading, due to another incremental loading table existed in model 'nmodel_basic'!");
+                "Can‘t set table \"DEFAULT.TEST_KYLIN_FACT\" as incremental loading. It’s been used as a dimension table in model \"nmodel_basic\".");
         modelService.checkSingleIncrementingLoadingTable("default", "DEFAULT.TEST_KYLIN_FACT");
     }
 

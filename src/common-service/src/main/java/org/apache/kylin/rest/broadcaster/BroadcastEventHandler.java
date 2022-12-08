@@ -15,19 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.common.persistence.transaction;
+package org.apache.kylin.rest.broadcaster;
 
-public class TransactionException extends RuntimeException {
+import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 
-    public TransactionException(String message, Throwable cause) {
-        super(message, cause);
-    }
+import java.io.IOException;
 
-    public TransactionException(String message) {
-        super(message);
-    }
+public interface BroadcastEventHandler {
 
-    public TransactionException(Throwable throwable) {
-        super(throwable);
-    }
+    void handleLocally(BroadcastEventReadyNotifier notifier) throws IOException;
+
 }

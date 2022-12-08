@@ -15,19 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.common.persistence.transaction;
+package org.apache.kylin.rest.config;
 
-public class TransactionException extends RuntimeException {
+import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.rest.config.initialize.BroadcastListener;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-    public TransactionException(String message, Throwable cause) {
-        super(message, cause);
+@Component
+public class IntegrationAppInitializer implements InitializingBean {
+
+    @Autowired
+    public IntegrationAppInitializer(BroadcastListener broadcasterListener) {
+        this.broadcasterListener = broadcasterListener;
     }
 
-    public TransactionException(String message) {
-        super(message);
-    }
+    private final BroadcastListener broadcasterListener;
 
-    public TransactionException(Throwable throwable) {
-        super(throwable);
+    @Override
+    public void afterPropertiesSet() {
+        if (broadcasterListener != null) {
+            EventBusFactory.getInstance().registerBroadcast(broadcasterListener);
+        }
     }
 }

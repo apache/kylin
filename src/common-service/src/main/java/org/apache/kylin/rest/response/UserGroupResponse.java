@@ -15,19 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.common.persistence.transaction;
+package org.apache.kylin.rest.response;
 
-public class TransactionException extends RuntimeException {
+import java.util.Set;
 
-    public TransactionException(String message, Throwable cause) {
-        super(message, cause);
-    }
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    public TransactionException(String message) {
-        super(message);
-    }
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-    public TransactionException(Throwable throwable) {
-        super(throwable);
+@Data
+@NoArgsConstructor
+public class UserGroupResponse {
+    @JsonProperty("uuid")
+    protected String uuid;
+    @JsonProperty("group_name")
+    protected String groupName;
+    @JsonProperty("users")
+    protected Set<String> users;
+
+    public UserGroupResponse(String uuid, String groupName, Set<String> users) {
+        this.uuid = uuid;
+        this.groupName = groupName;
+        this.users = users;
     }
 }
