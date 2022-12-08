@@ -70,11 +70,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-integration-service</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-boot-starter</artifactId>
         </dependency>

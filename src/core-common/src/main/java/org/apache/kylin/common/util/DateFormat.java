@@ -163,7 +163,6 @@ public class DateFormat {
         return getDateFormat(pattern, timeZone).format(new Date(millis));
     }
 
-    @VisibleForTesting
     public static String formatToTimeWithoutMilliStr(long millis) {
         return formatToTimeStr(millis, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
     }

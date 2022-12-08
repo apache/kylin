@@ -40,7 +40,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
-import org.apache.kylin.common.util.Unsafe;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
@@ -49,6 +48,7 @@ import org.apache.logging.log4j.core.appender.AppenderLoggingException;
 import org.apache.logging.log4j.core.appender.OutputStreamManager;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.status.StatusLogger;
+import org.apache.spark.utils.SparkHadoopUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -56,7 +56,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
-import org.apache.spark.utils.SparkHadoopUtils;
 
 public abstract class AbstractHdfsLogAppender
         extends AbstractOutputStreamAppender<AbstractHdfsLogAppender.HdfsManager> {
@@ -294,7 +293,7 @@ public abstract class AbstractHdfsLogAppender
                 }
 
                 try {
-                    Unsafe.wait(initWriterLock, 1000); //waiting for acl to turn to current user
+                    initWriterLock.wait(1000);
                 } catch (InterruptedException e) {
                     StatusLogger.getLogger().warn("Init writer interrupted!", e);
                     // Restore interrupted state...
