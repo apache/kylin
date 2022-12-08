@@ -32,6 +32,7 @@ import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.rest.controller.BaseController;
 import org.apache.kylin.rest.request.JobFilter;
+import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.service.JobService;
@@ -120,7 +121,7 @@ public class JobControllerV2 extends BaseController {
         Map<String, Object> result = getDataResponse("jobs", executables, pageOffset, pageSize);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
     }
-    
+
     @ApiOperation(value = "getJob", tags = { "DW" })
     @GetMapping(value = "/{jobId}")
     @ResponseBody
