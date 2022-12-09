@@ -79,6 +79,9 @@ public class QueryContext implements Closeable {
     private int shufflePartitions;
     @Getter
     @Setter
+    private int shufflePartitionsReset;
+    @Getter
+    @Setter
     // Spark execution ID
     private String executionID = "";
     @Getter
