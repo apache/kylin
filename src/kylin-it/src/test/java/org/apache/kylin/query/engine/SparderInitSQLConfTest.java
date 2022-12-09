@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.engine;
 
-
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
@@ -34,14 +33,18 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import net.jcip.annotations.NotThreadSafe;
+
+@NotThreadSafe
 public class SparderInitSQLConfTest extends NLocalFileMetadataTestCase {
 
     @BeforeClass
-    public static void beforeClass() throws Exception {
-
-        try (SparkSession sparkSession = SparderEnv.getSparkSession()) {
-            // do nothing
+    public static void beforeClass() {
+        if (SparderEnv.isSparkAvailable()) {
+            SparderEnv.getSparkSession().close();
         }
+        SparkSession.clearActiveSession();
+        SparkSession.clearDefaultSession();
     }
 
     @Before
