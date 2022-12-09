@@ -117,7 +117,13 @@ const config = {
           showLastUpdateTime: true,
         },
         blog: {
+          blogSidebarTitle: 'Technical Blogs',
+          blogDescription: 'Technical blogs for Kylin 5.0',
+          postsPerPage: 'ALL',
+          blogSidebarCount: 20,
           showReadingTime: true,
+          readingTime: ({content, frontMatter, defaultReadingTime}) =>
+                      defaultReadingTime({content, options: {wordsPerMinute: 100}}),
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
@@ -195,7 +201,7 @@ const config = {
               },
               {
                 label: 'Roadmap',
-                to: 'docs/development/roadmap',
+                to: 'blog/roadmap_of_kylin_50_cn',
               }
             ]
           },
