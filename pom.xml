@@ -185,7 +185,7 @@
 
     <!-- JVM Args for Testing -->
     <argLine>-Xms1G -Xmx2G -XX:MaxPermSize=512M -Duser.timezone=UTC</argLine>
-
+    <surefireArgLine>-javaagent:/Users/ruiningtao/.m2/repository/org/jacoco/org.jacoco.agent/0.8.2/org.jacoco.agent-0.8.2-runtime.jar=destfile=/Users/ruiningtao/workspace/workspace527/new-kylin/core-common/../target/jacoco.exec,append=true</surefireArgLine>
     <!-- Whether to run IT -->
     <skipRunIt>true</skipRunIt>
   </properties>
