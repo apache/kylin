@@ -71,9 +71,6 @@ class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
       kafkaJobParams.remove(SASL_MECHANISM);
       kafkaJobParams.put("kafka." + SASL_MECHANISM, saslMechanism.get)
     }
-    val text = StreamingJobUtils.extractKafkaSaslJaasConf
-    if (StringUtils.isNotEmpty(text)) kafkaJobParams.put(SaslConfigs.SASL_JAAS_CONFIG, text)
-
     kafkaJobParams.foreach { param =>
       param._1 match {
         case MAX_OFFSETS_PER_TRIGGER => if (param._2.toInt > 0) {

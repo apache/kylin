@@ -27,10 +27,10 @@ import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
 import org.apache.kylin.streaming.event.StreamingJobDropEvent;
 import org.apache.kylin.streaming.event.StreamingJobKillEvent;
@@ -52,15 +52,15 @@ import lombok.var;
 
 public class StreamingJobListenerTest extends StreamingTestCase {
 
-    private static String PROJECT = "streaming_test";
-    private static String MODEL_ID = "e78a89dd-847f-4574-8afa-8768b4228b72";
+    private static final String PROJECT = "streaming_test";
+    private static final String MODEL_ID = "e78a89dd-847f-4574-8afa-8768b4228b72";
     @Rule
     public ExpectedException thrown = ExpectedException.none();
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public TestName testName = new TestName();
-    private StreamingJobListener eventListener = new StreamingJobListener();
+    private final StreamingJobListener eventListener = new StreamingJobListener();
 
     @Before
     public void setUp() throws Exception {
@@ -81,9 +81,7 @@ public class StreamingJobListenerTest extends StreamingTestCase {
         val listener = new StreamingJobListener(PROJECT, jobId);
         val testConfig = getTestConfig();
         var mgr = StreamingJobManager.getInstance(testConfig, PROJECT);
-        mgr.updateStreamingJob(jobId, copyForWrite -> {
-            copyForWrite.setSkipListener(true);
-        });
+        mgr.updateStreamingJob(jobId, copyForWrite -> copyForWrite.setSkipListener(true));
         listener.stateChanged(mockRunningState());
         var jobMeta = mgr.getStreamingJobByUuid(jobId);
         Assert.assertEquals(JobStatusEnum.RUNNING, jobMeta.getCurrentStatus());
@@ -95,9 +93,7 @@ public class StreamingJobListenerTest extends StreamingTestCase {
         val jobId = StreamingUtils.getJobId(MODEL_ID, JobTypeEnum.STREAMING_BUILD.toString());
         val testConfig = getTestConfig();
         var mgr = StreamingJobManager.getInstance(testConfig, PROJECT);
-        mgr.updateStreamingJob(jobId, copyForWrite -> {
-            copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING);
-        });
+        mgr.updateStreamingJob(jobId, copyForWrite -> copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING));
         val listener = new StreamingJobListener(PROJECT, jobId);
         listener.stateChanged(mockFailedState());
         var jobMeta = mgr.getStreamingJobByUuid(jobId);
@@ -128,9 +124,7 @@ public class StreamingJobListenerTest extends StreamingTestCase {
         val jobId = StreamingUtils.getJobId(MODEL_ID, JobTypeEnum.STREAMING_BUILD.toString());
         val testConfig = getTestConfig();
         var mgr = StreamingJobManager.getInstance(testConfig, PROJECT);
-        mgr.updateStreamingJob(jobId, copyForWrite -> {
-            copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING);
-        });
+        mgr.updateStreamingJob(jobId, copyForWrite -> copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING));
         val listener = new StreamingJobListener(PROJECT, jobId);
         listener.stateChanged(mockKilledState());
         var jobMeta = mgr.getStreamingJobByUuid(jobId);
@@ -172,12 +166,8 @@ public class StreamingJobListenerTest extends StreamingTestCase {
         var mgr = StreamingJobManager.getInstance(config, project);
         val buildJobId = "e78a89dd-847f-4574-8afa-8768b4228b72_build";
         val mergeJobId = "e78a89dd-847f-4574-8afa-8768b4228b72_merge";
-        mgr.updateStreamingJob(buildJobId, copyForWrite -> {
-            copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING);
-        });
-        mgr.updateStreamingJob(mergeJobId, copyForWrite -> {
-            copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING);
-        });
+        mgr.updateStreamingJob(buildJobId, copyForWrite -> copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING));
+        mgr.updateStreamingJob(mergeJobId, copyForWrite -> copyForWrite.setCurrentStatus(JobStatusEnum.RUNNING));
         var buildJobMeta = mgr.getStreamingJobByUuid(buildJobId);
         var mergeJobMeta = mgr.getStreamingJobByUuid(mergeJobId);
         Assert.assertEquals(JobStatusEnum.RUNNING, buildJobMeta.getCurrentStatus());
@@ -308,7 +298,7 @@ public class StreamingJobListenerTest extends StreamingTestCase {
 
         @Override
         public Optional<Throwable> getError() {
-            return null;
+            return Optional.empty();
         }
-    };
+    }
 }

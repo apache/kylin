@@ -34,6 +34,8 @@ import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_EXEC
 import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_EXECUTOR_MEM;
 import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_EXECUTOR_MEM_DEFAULT;
 import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_EXECUTOR_OPTS;
+import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_KERBEROS_KEYTAB;
+import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_KERBEROS_PRINCIPAL;
 import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_MASTER;
 import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_MASTER_DEFAULT;
 import static org.apache.kylin.streaming.constants.StreamingConstants.SPARK_SHUFFLE_PARTITIONS;
@@ -64,7 +66,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
@@ -108,6 +110,7 @@ import lombok.extern.slf4j.Slf4j;
 public class StreamingJobLauncher extends AbstractSparkJobLauncher {
     private static final String KRB5CONF_PROPS = "java.security.krb5.conf";
     private static final String JAASCONF_PROPS = "java.security.auth.login.config";
+    private static final String HADOOP_CONF_PATH = "./__spark_conf__/__hadoop_conf__/";
     private Map<String, String> jobParams;
     private String mainClazz;
     private String[] appArgs;
@@ -138,6 +141,8 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
                     jobParams.getOrDefault(STREAMING_DURATION, STREAMING_DURATION_DEFAULT),
                     jobParams.getOrDefault(STREAMING_WATERMARK, STREAMING_WATERMARK_DEFAULT),
                     distMetaStorageUrl.toString() };
+            // build job extract and create kafka jaas file
+            StreamingJobUtils.createExecutorJaas();
             break;
         }
         case STREAMING_MERGE: {
@@ -267,32 +272,6 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
         }
     }
 
-    private String wrapDriverJavaOptions(Map<String, String> sparkConf) {
-        val driverJavaOptsConfigStr = sparkConf.get(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS);
-
-        Preconditions.checkNotNull(driverJavaOptsConfigStr, SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS + " is empty");
-        StringBuilder driverJavaOptionsSB = new StringBuilder(driverJavaOptsConfigStr);
-        val kapConfig = KapConfig.getInstanceFromEnv();
-        if (kapConfig.isKerberosEnabled() && !driverJavaOptsConfigStr.contains(KRB5CONF_PROPS)) {
-            val krb5conf = " -Djava.security.krb5.conf=" + kapConfig.getKerberosKrb5ConfPath();
-            driverJavaOptionsSB.append(krb5conf);
-        }
-        if (kapConfig.isKafkaJaasEnabled() && !driverJavaOptsConfigStr.contains(JAASCONF_PROPS)) {
-            val jaasConf = " -Djava.security.auth.login.config=" + kapConfig.getKafkaJaasConfPath();
-            driverJavaOptionsSB.append(jaasConf);
-        }
-        driverJavaOptionsSB.append(javaPropertyFormatter(REST_SERVER_IP, AddressUtil.getLocalHostExactAddress()));
-        driverJavaOptionsSB.append(javaPropertyFormatter("kylin.hdfs.working.dir", config.getHdfsWorkingDirectory()));
-        driverJavaOptionsSB
-                .append(javaPropertyFormatter("spark.driver.log4j.appender.hdfs.File", getDriverHDFSLogPath()));
-        driverJavaOptionsSB.append(javaPropertyFormatter("user.timezone", config.getTimeZone()));
-
-        final String driverLog4jXmlFile = config.getLogSparkStreamingDriverPropertiesFile();
-        generateLog4jConfiguration(false, driverJavaOptionsSB, driverLog4jXmlFile);
-
-        return driverJavaOptionsSB.toString();
-    }
-
     private void generateLog4jConfiguration(boolean isExecutor, StringBuilder log4jJavaOptionsSB, String log4jXmlFile) {
         String log4jConfigStr = "file:" + log4jXmlFile;
 
@@ -304,47 +283,74 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
         log4jJavaOptionsSB.append(javaPropertyFormatter("log4j.configurationFile", log4jConfigStr));
     }
 
-    private String wrapExecutorJavaOptions(Map<String, String> sparkConf) {
-        val executorJavaOptsConfigStr = sparkConf.get(SparkLauncher.EXECUTOR_EXTRA_JAVA_OPTIONS);
+    private String wrapDriverJavaOptions(Map<String, String> sparkConf) {
+        val existOptStr = sparkConf.get(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS);
+        Preconditions.checkNotNull(existOptStr, SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS + " is empty");
 
-        Preconditions.checkNotNull(executorJavaOptsConfigStr, SparkLauncher.EXECUTOR_EXTRA_JAVA_OPTIONS + " is empty");
-
-        StringBuilder executorJavaOptionsSB = new StringBuilder(executorJavaOptsConfigStr);
+        StringBuilder driverJavaOptSB = new StringBuilder(existOptStr);
         val kapConfig = KapConfig.getInstanceFromEnv();
-        if (kapConfig.isKerberosEnabled() && !executorJavaOptsConfigStr.contains(KRB5CONF_PROPS)) {
-            val krb5Conf = " -Djava.security.krb5.conf=./__spark_conf__/__hadoop_conf__/"
-                    + kapConfig.getKerberosKrb5Conf();
-            executorJavaOptionsSB.append(krb5Conf);
-        }
-        if (kapConfig.isKafkaJaasEnabled() && !executorJavaOptsConfigStr.contains(JAASCONF_PROPS)) {
-            val jaasConf = " -Djava.security.auth.login.config=./" + kapConfig.getKafkaJaasConf();
-            executorJavaOptionsSB.append(jaasConf);
-        }
-        executorJavaOptionsSB.append(javaPropertyFormatter("kap.spark.identifier", jobId));
-        executorJavaOptionsSB.append(javaPropertyFormatter("kap.spark.jobTimeStamp", currentTimestamp.toString()));
-        executorJavaOptionsSB.append(javaPropertyFormatter("kap.spark.project", project));
-        executorJavaOptionsSB.append(javaPropertyFormatter("user.timezone", config.getTimeZone()));
+        rewriteKrb5Conf(driverJavaOptSB, existOptStr, kapConfig.getKerberosKrb5ConfPath());
+        // client driver kafka_jaas use local file
+        // cluster driver use remote kafka_jaas file
+        rewriteKafkaJaasConf(driverJavaOptSB, existOptStr, kapConfig.getKafkaJaasConfPath());
+        driverJavaOptSB.append(javaPropertyFormatter(REST_SERVER_IP, AddressUtil.getLocalHostExactAddress()));
+        driverJavaOptSB.append(javaPropertyFormatter("kylin.hdfs.working.dir", config.getHdfsWorkingDirectory()));
+        driverJavaOptSB.append(javaPropertyFormatter("spark.driver.log4j.appender.hdfs.File", getDriverHDFSLogPath()));
+        driverJavaOptSB.append(javaPropertyFormatter("user.timezone", config.getTimeZone()));
+
+        final String driverLog4jXmlFile = config.getLogSparkStreamingDriverPropertiesFile();
+        generateLog4jConfiguration(false, driverJavaOptSB, driverLog4jXmlFile);
+        return driverJavaOptSB.toString();
+    }
+
+    private String wrapExecutorJavaOptions(Map<String, String> sparkConf) {
+        val existOptionsStr = sparkConf.get(SparkLauncher.EXECUTOR_EXTRA_JAVA_OPTIONS);
+        Preconditions.checkNotNull(existOptionsStr, SparkLauncher.EXECUTOR_EXTRA_JAVA_OPTIONS + " is empty");
+
+        val kapConfig = KapConfig.getInstanceFromEnv();
+        StringBuilder executorJavaOptSB = new StringBuilder(existOptionsStr);
+        rewriteKrb5Conf(executorJavaOptSB, existOptionsStr, HADOOP_CONF_PATH + kapConfig.getKerberosKrb5Conf());
+        // executor always use remote kafka_jaas file
+        rewriteKafkaJaasConf(executorJavaOptSB, existOptionsStr,
+                HADOOP_CONF_PATH + StreamingJobUtils.getExecutorJaasName());
+        executorJavaOptSB.append(javaPropertyFormatter("kap.spark.identifier", jobId));
+        executorJavaOptSB.append(javaPropertyFormatter("kap.spark.jobTimeStamp", currentTimestamp.toString()));
+        executorJavaOptSB.append(javaPropertyFormatter("kap.spark.project", project));
+        executorJavaOptSB.append(javaPropertyFormatter("user.timezone", config.getTimeZone()));
         if (StringUtils.isNotBlank(config.getMountSparkLogDir())) {
-            executorJavaOptionsSB.append(javaPropertyFormatter("job.mountDir", config.getMountSparkLogDir()));
+            executorJavaOptSB.append(javaPropertyFormatter("job.mountDir", config.getMountSparkLogDir()));
         }
 
         final String executorLog4jXmlFile = config.getLogSparkStreamingExecutorPropertiesFile();
-        generateLog4jConfiguration(true, executorJavaOptionsSB, executorLog4jXmlFile);
-
-        return executorJavaOptionsSB.toString();
+        generateLog4jConfiguration(true, executorJavaOptSB, executorLog4jXmlFile);
+        return executorJavaOptSB.toString();
     }
 
     private String wrapYarnAmJavaOptions(Map<String, String> sparkConf) {
-        val yarnAmJavaOptsConfigStr = sparkConf.getOrDefault(SPARK_YARN_AM_OPTS, "");
-
-        StringBuilder yarnAmJavaOptionsSB = new StringBuilder(yarnAmJavaOptsConfigStr);
+        val existOptStr = sparkConf.getOrDefault(SPARK_YARN_AM_OPTS, "");
         val kapConfig = KapConfig.getInstanceFromEnv();
-        if (kapConfig.isKerberosEnabled() && !yarnAmJavaOptsConfigStr.contains(KRB5CONF_PROPS)) {
-            val krb5Conf = " -Djava.security.krb5.conf=./__spark_conf__/__hadoop_conf__/"
-                    + kapConfig.getKerberosKrb5Conf();
-            yarnAmJavaOptionsSB.append(krb5Conf);
+        StringBuilder yarnAmJavaOptSB = new StringBuilder(existOptStr);
+        rewriteKrb5Conf(yarnAmJavaOptSB, existOptStr, HADOOP_CONF_PATH + kapConfig.getKerberosKrb5Conf());
+        return yarnAmJavaOptSB.toString();
+    }
+
+    private void rewriteKafkaJaasConf(StringBuilder sb, String existOptStr, String value) {
+        KapConfig kapConfig = KapConfig.getInstanceFromEnv();
+        if (!kapConfig.isKafkaJaasEnabled() || !jobType.equals(JobTypeEnum.STREAMING_BUILD)
+                || existOptStr.contains(JAASCONF_PROPS)) {
+            return;
         }
-        return yarnAmJavaOptionsSB.toString();
+        String jaasConf = javaPropertyFormatter(JAASCONF_PROPS, value);
+        sb.append(jaasConf);
+    }
+
+    private void rewriteKrb5Conf(StringBuilder sb, String existConfStr, String value) {
+        val kapConfig = KapConfig.getInstanceFromEnv();
+        if (!kapConfig.isKerberosEnabled() || existConfStr.contains(KRB5CONF_PROPS)) {
+            return;
+        }
+        val krb5Conf = javaPropertyFormatter(KRB5CONF_PROPS, value);
+        sb.append(krb5Conf);
     }
 
     private void addParserJar(SparkLauncher sparkLauncher) {
@@ -361,18 +367,22 @@ public class StreamingJobLauncher extends AbstractSparkJobLauncher {
         Map<String, String> sparkConf = getStreamingSparkConfig(config);
         sparkConf.forEach((key, value) -> launcher.setConf(key, value));
 
-        val numberOfExecutor = sparkConf.getOrDefault(SPARK_EXECUTOR_INSTANCES, SPARK_EXECUTOR_INSTANCES_DEFAULT);
-        val numberOfCore = sparkConf.getOrDefault(SPARK_EXECUTOR_CORES, SPARK_EXECUTOR_CORES_DEFAULT);
         val sparkLauncher = launcher.setAppName(jobId).setSparkHome(KylinConfig.getSparkHome());
         val kapConfig = KapConfig.getInstanceFromEnv();
         if (kapConfig.isKerberosEnabled()) {
-            sparkLauncher.setConf("spark.kerberos.keytab", kapConfig.getKerberosKeytabPath());
-            sparkLauncher.setConf("spark.kerberos.principal", kapConfig.getKerberosPrincipal());
+            sparkLauncher.setConf(SPARK_KERBEROS_KEYTAB, kapConfig.getKerberosKeytabPath());
+            sparkLauncher.setConf(SPARK_KERBEROS_PRINCIPAL, kapConfig.getKerberosPrincipal());
         }
-        if (kapConfig.isKafkaJaasEnabled()) {
-            sparkLauncher.addFile(kapConfig.getKafkaJaasConfPath());
+        if (kapConfig.isKafkaJaasEnabled() && jobType.equals(JobTypeEnum.STREAMING_BUILD)) {
+            String keyTabAbsPath = StreamingJobUtils.getJaasKeyTabAbsPath();
+            if (StringUtils.isNotEmpty(keyTabAbsPath)) {
+                // upload keytab in kafka jaas 
+                sparkLauncher.addFile(keyTabAbsPath);
+            }
         }
         addParserJar(sparkLauncher);
+        val numberOfExecutor = sparkConf.getOrDefault(SPARK_EXECUTOR_INSTANCES, SPARK_EXECUTOR_INSTANCES_DEFAULT);
+        val numberOfCore = sparkConf.getOrDefault(SPARK_EXECUTOR_CORES, SPARK_EXECUTOR_CORES_DEFAULT);
         sparkLauncher.setMaster(sparkConf.getOrDefault(SPARK_MASTER, SPARK_MASTER_DEFAULT))
                 .setConf(SPARK_DRIVER_MEM, sparkConf.getOrDefault(SPARK_DRIVER_MEM, SPARK_DRIVER_MEM_DEFAULT))
                 .setConf(SPARK_EXECUTOR_INSTANCES, numberOfExecutor).setConf(SPARK_EXECUTOR_CORES, numberOfCore)

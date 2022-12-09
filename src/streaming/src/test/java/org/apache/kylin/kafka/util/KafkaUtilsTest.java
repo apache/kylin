@@ -20,6 +20,7 @@ package org.apache.kylin.kafka.util;
 import static org.apache.kafka.common.config.SaslConfigs.SASL_JAAS_CONFIG;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
 
@@ -109,8 +110,9 @@ public class KafkaUtilsTest extends StreamingTestCase {
         val kapConfig = KapConfig.getInstanceFromEnv();
 
         FileUtils.write(new File(kapConfig.getKafkaJaasConfPath()),
-                "KafkaClient{ org.apache.kafka.common.security.scram.ScramLoginModule required}");
-        val text = StreamingJobUtils.extractKafkaSaslJaasConf();
+                "KafkaClient{ org.apache.kafka.common.security.scram.ScramLoginModule required;};",
+                StandardCharsets.UTF_8);
+        val text = StreamingJobUtils.extractKafkaJaasConf(true);
         Assert.assertNull(text);
         Pair<Boolean, String> kafkaJaasTextPair = (Pair<Boolean, String>) ReflectionUtils.getField(KafkaUtils.class,
                 "kafkaJaasTextPair");
