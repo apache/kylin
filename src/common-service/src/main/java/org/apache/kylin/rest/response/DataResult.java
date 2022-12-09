@@ -21,6 +21,7 @@ package org.apache.kylin.rest.response;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.util.PagingUtil;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -64,5 +65,11 @@ public class DataResult<T extends Collection> {
 
     public static <E> DataResult<List<E>> get(List<E> data, int offset, int limit) {
         return get(PagingUtil.cutPage(data, offset, limit), data, offset, limit);
+    }
+
+    public static <E> DataResult<List<E>> getCustom(Pair<List<E>, Integer> objWithActualSize, int offset, int limit) {
+        // objWithActualSize's data cannot be null
+        return new DataResult<>(PagingUtil.cutPage(objWithActualSize.getFirst(), offset, limit),
+                objWithActualSize.getSecond(), offset, limit);
     }
 }

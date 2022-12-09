@@ -42,4 +42,21 @@ public class TableUtils {
         }
     }
 
+    /**
+     * <p>
+     * Calculate the number of valid tables to be returned based on pageOffset and pageSize
+     * Note: Tables will be filtered under certain conditions, but the final result must still be the number of valid tables,
+     *       unless all tables have been processed.
+     * For example:
+     *      the first page:  pageOffset 0, pageSize 7, return 0 * 7 + 7 = 7
+     *      The second page: pageOffset 1, pageSize 7, return 1 * 7 + 7 = 14
+     * </p>
+     *
+     * @param pageOffset page offset
+     * @param pageSize page size
+     * @return Number of valid tables
+     */
+    public static int calculateTableSize(int pageOffset, int pageSize) {
+        return pageOffset * pageSize + pageSize;
+    }
 }

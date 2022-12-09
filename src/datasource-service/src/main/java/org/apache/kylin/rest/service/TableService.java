@@ -34,6 +34,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.TABLE_RELOA
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.TABLE_RELOAD_MODEL_RETRY;
 import static org.apache.kylin.job.execution.JobTypeEnum.SNAPSHOT_BUILD;
 import static org.apache.kylin.job.execution.JobTypeEnum.SNAPSHOT_REFRESH;
+import static org.apache.kylin.rest.util.TableUtils.calculateTableSize;
 
 import java.io.File;
 import java.io.IOException;
@@ -139,6 +140,7 @@ import org.apache.kylin.rest.constant.JobInfoEnum;
 import org.apache.kylin.rest.request.AutoMergeRequest;
 import org.apache.kylin.rest.request.DateRangeRequest;
 import org.apache.kylin.rest.request.S3TableExtInfo;
+import org.apache.kylin.rest.request.TableDescRequest;
 import org.apache.kylin.rest.response.AutoMergeConfigResponse;
 import org.apache.kylin.rest.response.BatchLoadTableResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -226,44 +228,43 @@ public class TableService extends BasicService {
     @Autowired
     private ClusterManager clusterManager;
 
-    public List<TableDesc> getTableDescByType(String project, boolean withExt, final String tableName,
-            final String database, boolean isFuzzy, int sourceType) throws IOException {
-        return getTableDesc(project, withExt, tableName, database, isFuzzy).stream()
-                .filter(tableDesc -> sourceType == tableDesc.getSourceType()).collect(Collectors.toList());
+    public Pair<List<TableDesc>, Integer> getTableDesc(String project, boolean withExt, final String table, final String database,
+                                        boolean isFuzzy, List<Integer> sourceType, int returnTableSize) throws IOException {
+        TableDescRequest internalTableDescRequest = new TableDescRequest(project, withExt, table, database, isFuzzy, sourceType);
+        return getTableDesc(internalTableDescRequest, returnTableSize);
     }
 
-    public List<TableDesc> getTableDescByTypes(String project, boolean withExt, final String tableName,
-            final String database, boolean isFuzzy, List<Integer> sourceType) throws IOException {
-        return getTableDesc(project, withExt, tableName, database, isFuzzy).stream()
-                .filter(tableDesc -> sourceType.contains(tableDesc.getSourceType())).collect(Collectors.toList());
-    }
-
-    public List<TableDesc> getTableDesc(String project, boolean withExt, final String tableName, final String database,
-            boolean isFuzzy) throws IOException {
-        aclEvaluate.checkProjectReadPermission(project);
+    public Pair<List<TableDesc>, Integer> getTableDesc(TableDescRequest tableDescRequest, int returnTableSize) throws IOException {
+        aclEvaluate.checkProjectReadPermission(tableDescRequest.getProject());
         boolean streamingEnabled = getConfig().streamingEnabled();
-        NTableMetadataManager nTableMetadataManager = getManager(NTableMetadataManager.class, project);
+        NTableMetadataManager nTableMetadataManager = getManager(NTableMetadataManager.class, tableDescRequest.getProject());
         List<TableDesc> tables = Lists.newArrayList();
         //get table not fuzzy,can use getTableDesc(tableName)
-        if (StringUtils.isNotEmpty(tableName) && !isFuzzy) {
-            val tableDesc = nTableMetadataManager.getTableDesc(database + "." + tableName);
+        if (StringUtils.isNotEmpty(tableDescRequest.getTable()) && !tableDescRequest.isFuzzy()) {
+            val tableDesc = nTableMetadataManager.getTableDesc(tableDescRequest.getDatabase() + "." + tableDescRequest.getTable());
             if (tableDesc != null && tableDesc.isAccessible(streamingEnabled))
                 tables.add(tableDesc);
         } else {
             tables.addAll(nTableMetadataManager.listAllTables().stream().filter(tableDesc -> {
-                if (StringUtils.isEmpty(database)) {
+                if (StringUtils.isEmpty(tableDescRequest.getDatabase())) {
                     return true;
                 }
-                return tableDesc.getDatabase().equalsIgnoreCase(database);
+                return tableDesc.getDatabase().equalsIgnoreCase(tableDescRequest.getDatabase());
             }).filter(tableDesc -> {
-                if (StringUtils.isEmpty(tableName)) {
+                if (StringUtils.isEmpty(tableDescRequest.getTable())) {
                     return true;
                 }
-                return tableDesc.getName().toLowerCase(Locale.ROOT).contains(tableName.toLowerCase(Locale.ROOT));
+                return tableDesc.getName().toLowerCase(Locale.ROOT).contains(tableDescRequest.getTable().toLowerCase(Locale.ROOT));
+            }).filter(tableDesc -> {
+                // Advance the logic of filtering the table by sourceType to here
+                if (!tableDescRequest.getSourceType().isEmpty()) {
+                    return tableDescRequest.getSourceType().contains(tableDesc.getSourceType());
+                }
+                return true;
             }).filter(table -> table.isAccessible(streamingEnabled)).sorted(this::compareTableDesc)
                     .collect(Collectors.toList()));
         }
-        return getTablesResponse(tables, project, withExt);
+        return getTablesResponse(tables, tableDescRequest.getProject(), tableDescRequest.isWithExt(), returnTableSize);
     }
 
     public int compareTableDesc(TableDesc table1, TableDesc table2) {
@@ -417,7 +418,10 @@ public class TableService extends BasicService {
         return tableNameResponses;
     }
 
-    private TableDescResponse getTableResponse(TableDesc table, String project) {
+    private TableDescResponse getTableResponse(TableDesc table, String project, boolean withExt) {
+        if (!withExt) {
+            return new TableDescResponse(table);
+        }
         TableDescResponse tableDescResponse = new TableDescResponse(table);
         TableExtDesc tableExtDesc = getManager(NTableMetadataManager.class, project).getTableExtIfExists(table);
         if (table.isKafkaTable()) {
@@ -447,7 +451,7 @@ public class TableService extends BasicService {
         return tableDescResponse;
     }
 
-    private List<TableDesc> getTablesResponse(List<TableDesc> tables, String project, boolean withExt) {
+    private Pair<List<TableDesc>, Integer> getTablesResponse(List<TableDesc> tables, String project, boolean withExt, int returnTableSize) {
         List<TableDesc> descs = new ArrayList<>();
         val projectManager = getManager(NProjectManager.class);
         val groups = getCurrentUserGroups();
@@ -458,22 +462,22 @@ public class TableService extends BasicService {
         List<NDataModel> healthyModels = projectManager.listHealthyModels(project);
         Set<String> extPermissionSet = accessService.getUserNormalExtPermissions(project);
         boolean hasDataQueryPermission = extPermissionSet.contains(ExternalAclProvider.DATA_QUERY);
+        int satisfiedTableSize = 0;
         for (val originTable : tables) {
+            // New judgment logic, when the total size of tables meet the current size of paging directly after the exit
+            // Also, if the processing is not finished, the total size of tables is returned
+            if (satisfiedTableSize == returnTableSize) {
+                return Pair.newPair(descs, tables.size());
+            }
             TableDesc table = getAuthorizedTableDesc(project, isAclGreen, originTable, aclTCRS);
             if (Objects.isNull(table)) {
                 continue;
             }
-            TableDescResponse tableDescResponse;
+            TableDescResponse tableDescResponse = getTableResponse(table, project, withExt);
             List<NDataModel> modelsUsingTable = healthyModels.stream() //
                     .filter(model -> model.containsTable(table)).collect(Collectors.toList());
             List<NDataModel> modelsUsingRootTable = healthyModels.stream() //
                     .filter(model -> model.isRootFactTable(table)).collect(Collectors.toList());
-
-            if (withExt) {
-                tableDescResponse = getTableResponse(table, project);
-            } else {
-                tableDescResponse = new TableDescResponse(table);
-            }
 
             TableExtDesc tableExtDesc = getManager(NTableMetadataManager.class, project).getTableExtIfExists(table);
             if (tableExtDesc != null) {
@@ -496,9 +500,9 @@ public class TableService extends BasicService {
             tableDescResponse.setForeignKey(tableColumnType.getSecond());
             tableDescResponse.setPrimaryKey(tableColumnType.getFirst());
             descs.add(tableDescResponse);
+            satisfiedTableSize++;
         }
-
-        return descs;
+        return Pair.newPair(descs, descs.size());
     }
 
     @VisibleForTesting
@@ -1780,22 +1784,23 @@ public class TableService extends BasicService {
         return loadedDatabases;
     }
 
-    public interface ProjectTablesFilter {
-        List process(String database, String table) throws Exception;
+    public NInitTablesResponse getProjectTables(String project, String table, int offset, int limit,
+                                                boolean withExcluded, boolean useHiveDatabase, List<Integer> sourceType) throws Exception {
+        TableDescRequest internalTableDescRequest = new TableDescRequest(project, table, offset, limit, withExcluded, sourceType);
+        return getProjectTables(internalTableDescRequest, useHiveDatabase);
     }
 
-    public NInitTablesResponse getProjectTables(String project, String table, int offset, int limit,
-            boolean withExcluded, boolean useHiveDatabase, ProjectTablesFilter projectTablesFilter) throws Exception {
+    public NInitTablesResponse getProjectTables(TableDescRequest tableDescRequest, boolean useHiveDatabase) throws Exception {
+        String project = tableDescRequest.getProject();
         aclEvaluate.checkProjectReadPermission(project);
         NInitTablesResponse response = new NInitTablesResponse();
-        logger.debug("only get project tables of excluded: {}", withExcluded);
-        if (table == null)
-            table = "";
-        String exceptDatabase = null;
-        if (table.contains(".")) {
-            exceptDatabase = table.split("\\.", 2)[0].trim();
-            table = table.split("\\.", 2)[1].trim();
-        }
+        logger.debug("only get project tables of excluded: {}", tableDescRequest.isWithExcluded());
+
+        Pair<String, String> databaseAndTable = checkDatabaseAndTable(tableDescRequest.getTable());
+        String exceptDatabase = databaseAndTable.getFirst();
+        String table = databaseAndTable.getSecond();
+        String notAllowedModifyTableName = table;
+
         Collection<String> databases = useHiveDatabase ? getSourceDbNames(project) : getLoadedDatabases(project);
         val projectInstance = getManager(NProjectManager.class).getProject(project);
         List<String> tableFilterList = DataSourceState.getInstance().getHiveFilterList(projectInstance);
@@ -1804,15 +1809,29 @@ public class TableService extends BasicService {
                     || (!tableFilterList.isEmpty() && !tableFilterList.contains(database))) {
                 continue;
             }
-            List<?> tables;
+            // we may temporarily change the table name, but later to change back
+            // Avoid affecting the next loop and causing logic errors
             if (exceptDatabase == null && database.toLowerCase(Locale.ROOT).contains(table.toLowerCase(Locale.ROOT))) {
-                tables = projectTablesFilter.process(database, "");
-            } else {
-                tables = projectTablesFilter.process(database, table);
+                table = "";
             }
-            List<?> tablePage = PagingUtil.cutPage(tables, offset, limit);
+            tableDescRequest.setDatabase(database);
+            tableDescRequest.setTable(table);
+            Pair<List<?>, Integer> objWithActualSize = new Pair<>();
+            if (tableDescRequest.getSourceType().isEmpty()) {
+                // This means request api for showProjectTableNames
+                List<TableNameResponse> hiveTableNameResponses = getHiveTableNameResponses(project, database, table);
+                objWithActualSize.setFirst(hiveTableNameResponses);
+                objWithActualSize.setSecond(hiveTableNameResponses.size());
+            } else {
+                int returnTableSize = calculateTableSize(tableDescRequest.getOffset(), tableDescRequest.getLimit());
+                Pair<List<TableDesc>, Integer> tableDescWithActualSize = getTableDesc(tableDescRequest, returnTableSize);
+                objWithActualSize.setFirst(tableDescWithActualSize.getFirst());
+                objWithActualSize.setSecond(tableDescWithActualSize.getSecond());
+            }
+            table = notAllowedModifyTableName;
+            List<?> tablePage = PagingUtil.cutPage(objWithActualSize.getFirst(), tableDescRequest.getOffset(), tableDescRequest.getLimit());
             if (!tablePage.isEmpty()) {
-                response.putDatabase(database, tables.size(), tablePage);
+                response.putDatabase(database, objWithActualSize.getSecond(), tablePage);
             }
         }
         return response;

@@ -24,6 +24,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_SAMPLIN
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.constant.Constant;
@@ -41,6 +43,7 @@ import org.apache.kylin.rest.request.PartitionKeyRequest;
 import org.apache.kylin.rest.request.PushDownModeRequest;
 import org.apache.kylin.rest.request.ReloadTableRequest;
 import org.apache.kylin.rest.request.S3TableExtInfo;
+import org.apache.kylin.rest.request.TableDescRequest;
 import org.apache.kylin.rest.request.TableExclusionRequest;
 import org.apache.kylin.rest.request.TableLoadRequest;
 import org.apache.kylin.rest.request.TopTableRequest;
@@ -149,8 +152,11 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetTableDesc() throws Exception {
-        Mockito.when(tableService.getTableDesc("default", false, "", "DEFAULT", true)) //
-                .thenReturn(mockTables());
+        TableDescRequest mockTableDescRequest = new TableDescRequest("default", "", "DEFAULT", false,
+                true, Pair.newPair(0, 10), Collections.singletonList(9));
+
+        Mockito.when(tableService.getTableDesc(mockTableDescRequest, 10)).thenReturn(Pair.newPair(mockTables(), 10));
+
         mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
                 .contentType(MediaType.APPLICATION_JSON) //
                 .param("ext", "false") //
@@ -181,8 +187,11 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetTableDescWithName() throws Exception {
-        Mockito.when(tableService.getTableDesc("default", true, "TEST_KYLIN_FACT", "DEFAULT", false))
-                .thenReturn(mockTables());
+        TableDescRequest mockTableDescRequest = new TableDescRequest("default", "TEST_KYLIN_FACT", "DEFAULT", false,
+                false, Pair.newPair(0, 10), Collections.singletonList(9));
+
+        Mockito.when(tableService.getTableDesc(mockTableDescRequest, 10)).thenReturn(Pair.newPair(mockTables(), 10));
+
         mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
                 .contentType(MediaType.APPLICATION_JSON) //
                 .param("withExt", "false") //

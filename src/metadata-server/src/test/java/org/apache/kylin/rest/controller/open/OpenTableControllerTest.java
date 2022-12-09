@@ -21,6 +21,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -122,6 +123,9 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
             String tableName = "TEST_KYLIN_FACT";
             String database = "DEFAULT";
 
+            Mockito.when(tableService.getTableDesc(project, true, tableName, database, false, Collections.singletonList(9), 10))
+                    .thenReturn(Pair.newPair(Collections.singletonList(new TableDesc()), 10));
+
             mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
                     .contentType(MediaType.APPLICATION_JSON) //
                     .param("project", project).param("table", tableName).param("database", database)
@@ -135,6 +139,9 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
             String project = "streaming_test";
             String tableName = "P_LINEORDER_STR";
             String database = "SSB";
+
+            Mockito.when(tableService.getTableDesc(project, true, tableName, database, false, Collections.singletonList(1), 10))
+                    .thenReturn(Pair.newPair(Collections.singletonList(new TableDesc()), 10));
 
             mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
                     .contentType(MediaType.APPLICATION_JSON) //
@@ -154,29 +161,33 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
             String databaseLowercase = "ssb";
             String databaseUppercase = "SSB";
 
+            Mockito.when(tableService.getTableDesc(project, true, tableNameUppercase, databaseUppercase, false,
+                            Collections.singletonList(9), 10))
+                    .thenReturn(Pair.newPair(Collections.singletonList(new TableDesc()), 10));
+
             mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
                     .contentType(MediaType.APPLICATION_JSON) //
                     .param("project", project).param("table", tableNameMixture).param("database", databaseMixture)
                     .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                     .andExpect(MockMvcResultMatchers.status().isOk());
-            Mockito.verify(tableService, Mockito.times(1)).getTableDescByType(project, true, tableNameUppercase,
-                    databaseUppercase, false, 9);
+            Mockito.verify(tableService, Mockito.times(1)).getTableDesc(project, true, tableNameUppercase,
+                    databaseUppercase, false, Collections.singletonList(9), 10);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
                     .contentType(MediaType.APPLICATION_JSON) //
                     .param("project", project).param("table", tableNameLowerCase).param("database", databaseLowercase)
                     .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                     .andExpect(MockMvcResultMatchers.status().isOk());
-            Mockito.verify(tableService, Mockito.times(2)).getTableDescByType(project, true, tableNameUppercase,
-                    databaseUppercase, false, 9);
+            Mockito.verify(tableService, Mockito.times(2)).getTableDesc(project, true, tableNameUppercase,
+                    databaseUppercase, false, Collections.singletonList(9), 10);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
                     .contentType(MediaType.APPLICATION_JSON) //
                     .param("project", project).param("table", tableNameUppercase).param("database", databaseUppercase)
                     .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                     .andExpect(MockMvcResultMatchers.status().isOk());
-            Mockito.verify(tableService, Mockito.times(3)).getTableDescByType(project, true, tableNameUppercase,
-                    databaseUppercase, false, 9);
+            Mockito.verify(tableService, Mockito.times(3)).getTableDesc(project, true, tableNameUppercase,
+                    databaseUppercase, false, Collections.singletonList(9), 10);
         }
     }
 

@@ -79,6 +79,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -94,6 +95,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PAR
 import static org.apache.kylin.job.execution.JobTypeEnum.SNAPSHOT_BUILD;
 import static org.apache.kylin.job.execution.JobTypeEnum.SNAPSHOT_REFRESH;
 import static org.apache.kylin.rest.constant.SnapshotStatus.BROKEN;
+import static org.apache.kylin.rest.util.TableUtils.calculateTableSize;
 
 @Component("snapshotService")
 public class SnapshotService extends BasicService implements SnapshotSupporter {
@@ -437,34 +439,72 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
     }
 
     @Override
-    public List<SnapshotInfoResponse> getProjectSnapshots(String project, String table,
-            Set<SnapshotStatus> statusFilter, Set<Boolean> partitionFilter, String sortBy, boolean isReversed) {
+    public Pair<List<SnapshotInfoResponse>, Integer> getProjectSnapshots(String project, String table,
+             Set<SnapshotStatus> statusFilter, Set<Boolean> partitionFilter, String sortBy, boolean isReversed,
+             Pair<Integer, Integer> offsetAndLimit) {
         checkSnapshotManualManagement(project);
         aclEvaluate.checkProjectReadPermission(project);
         NTableMetadataManager nTableMetadataManager = getManager(NTableMetadataManager.class, project);
         val execManager = NExecutableManager.getInstance(getConfig(), project);
         List<AbstractExecutable> executables = execManager.listExecByJobTypeAndStatus(ExecutableState::isRunning,
                 SNAPSHOT_BUILD, SNAPSHOT_REFRESH);
-        if (table == null)
-            table = "";
 
-        String database = null;
-        if (table.contains(".")) {
-            database = table.split("\\.", 2)[0].trim();
-            table = table.split("\\.", 2)[1].trim();
-        }
-
-        final String finalTable = table;
-        final String finalDatabase = database;
+        Pair<String, String> databaseAndTable = checkDatabaseAndTable(table);
 
         Set<String> groups = getCurrentUserGroups();
         boolean canUseACLGreenChannel = AclPermissionUtil.canUseACLGreenChannel(project, groups);
+        Set<String> finalAuthorizedTables = getAclAuthorizedTables(project, canUseACLGreenChannel);
+
+        // Adjust the operation of adding SnapshotInfoResponse and then removing it to
+        // first remove the tableDesc that does not meet the conditions, and then add SnapshotInfoResponse
+        List<TableDesc> tables = getFilteredTables(nTableMetadataManager, databaseAndTable, canUseACLGreenChannel,
+                finalAuthorizedTables, executables, statusFilter, partitionFilter);
+
+        List<SnapshotInfoResponse> response = new ArrayList<>();
+        // Here we keep the actual size of tableSnapshots and process only a portion of the data based on paging
+        final int returnTableSize = calculateTableSize(offsetAndLimit.getFirst(), offsetAndLimit.getSecond());
+        final int actualTableSize = tables.size();
+        AtomicInteger satisfiedTableSize = new AtomicInteger();
+
+        tables.forEach(tableDesc -> {
+            if (satisfiedTableSize.get() == returnTableSize) {
+                return;
+            }
+            TableExtDesc tableExtDesc = nTableMetadataManager.getOrCreateTableExt(tableDesc);
+            Pair<Integer, Integer> countPair = getModelCount(tableDesc);
+            response.add(new SnapshotInfoResponse(tableDesc, tableExtDesc, tableDesc.getSnapshotTotalRows(), countPair.getFirst(),
+                    countPair.getSecond(), getSnapshotJobStatus(tableDesc, executables),
+                    getForbiddenColumns(tableDesc)));
+            satisfiedTableSize.getAndIncrement();
+        });
+
+        sortBy = StringUtils.isEmpty(sortBy) ? "last_modified_time" : sortBy;
+        if ("last_modified_time".equalsIgnoreCase(sortBy) && isReversed) {
+            // The reverse order here needs to be cut from the beginning to the end, otherwise the initial data is always returned
+            response.sort(SnapshotInfoResponse::compareTo);
+            return Pair.newPair(PagingUtil.cutPage(response, 0, offsetAndLimit.getSecond()), actualTableSize);
+        } else {
+            // Here the positive order needs to be cut from the offset position backwards
+            Comparator<SnapshotInfoResponse> comparator = BasicService.propertyComparator(sortBy, !isReversed);
+            response.sort(comparator);
+            return Pair.newPair(PagingUtil.cutPage(response, offsetAndLimit.getFirst(), offsetAndLimit.getSecond()), actualTableSize);
+        }
+    }
+
+    public Set<String> getAclAuthorizedTables(String project, boolean canUseACLGreenChannel) {
         Set<String> authorizedTables = new HashSet<>();
         if (!canUseACLGreenChannel) {
             authorizedTables = getAuthorizedTables(project, getManager(AclTCRManager.class, project));
         }
-        Set<String> finalAuthorizedTables = authorizedTables;
-        List<TableDesc> tables = nTableMetadataManager.listAllTables().stream().filter(tableDesc -> {
+        return authorizedTables;
+    }
+
+    public List<TableDesc> getFilteredTables(NTableMetadataManager nTableMetadataManager,
+             Pair<String, String> databaseAndTable, boolean canUseACLGreenChannel, Set<String> finalAuthorizedTables,
+             List<AbstractExecutable> executables, Set<SnapshotStatus> statusFilter, Set<Boolean> partitionFilter) {
+        String finalDatabase = databaseAndTable.getFirst();
+        String finalTable = databaseAndTable.getSecond();
+        return nTableMetadataManager.listAllTables().stream().filter(tableDesc -> {
             if (StringUtils.isEmpty(finalDatabase)) {
                 return true;
             }
@@ -482,36 +522,16 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
             if (canUseACLGreenChannel) {
                 return true;
             }
-
             return finalAuthorizedTables.contains(tableDesc.getIdentity());
-        }).filter(tableDesc -> hasLoadedSnapshot(tableDesc, executables)).collect(Collectors.toList());
-
-        List<SnapshotInfoResponse> response = new ArrayList<>();
-        tables.forEach(tableDesc -> {
-            TableExtDesc tableExtDesc = nTableMetadataManager.getOrCreateTableExt(tableDesc);
-            Pair<Integer, Integer> countPair = getModelCount(tableDesc);
-            response.add(new SnapshotInfoResponse(tableDesc, tableExtDesc, tableDesc.getSnapshotTotalRows(), countPair.getFirst(),
-                    countPair.getSecond(), getSnapshotJobStatus(tableDesc, executables),
-                    getForbiddenColumns(tableDesc)));
-        });
-
-        if (!statusFilter.isEmpty()) {
-            response.removeIf(res -> !statusFilter.contains(res.getStatus()));
-        }
-        if (partitionFilter.size() == 1) {
+        }).filter(tableDesc -> hasLoadedSnapshot(tableDesc, executables)
+        ).filter(tableDesc -> statusFilter.isEmpty() || statusFilter.contains(getSnapshotJobStatus(tableDesc, executables))
+        ).filter(tableDesc -> {
+            if (partitionFilter.size() != 1) {
+                return true;
+            }
             boolean isPartition = partitionFilter.iterator().next();
-            response.removeIf(res -> isPartition == (res.getSelectPartitionCol() == null));
-        }
-
-        sortBy = StringUtils.isEmpty(sortBy) ? "last_modified_time" : sortBy;
-        if ("last_modified_time".equalsIgnoreCase(sortBy) && isReversed) {
-            response.sort(SnapshotInfoResponse::compareTo);
-        } else {
-            Comparator<SnapshotInfoResponse> comparator = BasicService.propertyComparator(sortBy, !isReversed);
-            response.sort(comparator);
-        }
-
-        return response;
+            return isPartition != (tableDesc.getSelectedSnapshotPartitionCol() == null);
+        }).collect(Collectors.toList());
     }
 
     private Pair<Integer, Integer> getModelCount(TableDesc tableDesc) {
