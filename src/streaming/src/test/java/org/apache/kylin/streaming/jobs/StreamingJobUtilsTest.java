@@ -17,27 +17,29 @@
  */
 package org.apache.kylin.streaming.jobs;
 
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.KAFKA_JAAS_FILE_KEYTAB_NOT_EXISTS;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.READ_KAFKA_JAAS_FILE_ERROR;
+
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KapConfig;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.streaming.util.StreamingTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import lombok.val;
 
 public class StreamingJobUtilsTest extends StreamingTestCase {
     private static final String PROJECT = "streaming_test";
     private static final String DATAFLOW_ID = "e78a89dd-847f-4574-8afa-8768b4228b73";
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setUp() throws Exception {
@@ -88,24 +90,100 @@ public class StreamingJobUtilsTest extends StreamingTestCase {
     @Test
     public void testExtractKafkaSaslJaasConf() throws Exception {
         val kapConfig = KapConfig.getInstanceFromEnv();
-        Assert.assertNull(StreamingJobUtils.extractKafkaSaslJaasConf());
+        Assert.assertNull(StreamingJobUtils.extractKafkaJaasConf(true));
         getTestConfig().setProperty("kylin.kafka-jaas.enabled", "true");
         FileUtils.write(new File(kapConfig.getKafkaJaasConfPath()),
-                "KafkaClient{ org.apache.kafka.common.security.scram.ScramLoginModule required}");
-        val text = StreamingJobUtils.extractKafkaSaslJaasConf();
+                "KafkaClient{ org.apache.kafka.common.security.scram.ScramLoginModule required;}",
+                StandardCharsets.UTF_8);
+        val text = StreamingJobUtils.extractKafkaJaasConf(true);
         Assert.assertNotNull(text);
 
         getTestConfig().setProperty("kylin.kafka-jaas-conf", "kafka_err_jaas.conf");
         File file = new File(kapConfig.getKafkaJaasConfPath());
 
-        FileUtils.write(file, "}4{");
+        FileUtils.write(file, "}4{", StandardCharsets.UTF_8);
         try {
-            StreamingJobUtils.extractKafkaSaslJaasConf();
+            StreamingJobUtils.extractKafkaJaasConf(true);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof KylinException);
-            Assert.assertEquals("KE-010035015", ((KylinException) e).getErrorCode().getCodeString());
+            Assert.assertEquals("KE-010035217", ((KylinException) e).getErrorCode().getCodeString());
         } finally {
             FileUtils.deleteQuietly(new File(KapConfig.getInstanceFromEnv().getKafkaJaasConfPath()));
         }
+    }
+
+    @Test
+    public void testCheckKeyTabFileUnderJaas() throws Exception {
+        val kapConfig = KapConfig.getInstanceFromEnv();
+        Assert.assertNull(StreamingJobUtils.extractKafkaJaasConf(true));
+        Assert.assertNull(StreamingJobUtils.getJaasKeyTabAbsPath());
+        KylinConfig kylinConfig = getTestConfig();
+        kylinConfig.setProperty("kylin.kafka-jaas.enabled", "true");
+        File testKeyTab = new File(KylinConfig.getKylinConfDir() + File.separator + "test.keytab");
+
+        // jaas not exist
+        Assert.assertThrows(READ_KAFKA_JAAS_FILE_ERROR.getMsg(), KylinException.class,
+                () -> StreamingJobUtils.extractKafkaJaasConf(true));
+
+        // jaas keytab key not exist
+        FileUtils.write(new File(kapConfig.getKafkaJaasConfPath()),
+                "KafkaClient { " + "com.sun.security.auth.module.Krb5LoginModule required " + "useKeyTab=true "
+                        + "storeKey=true " + "principal=\"kylin@DEV.COM\" " + "serviceName=\"kafka\";" + " };",
+                StandardCharsets.UTF_8);
+        Assert.assertNull(StreamingJobUtils.getJaasKeyTabAbsPath());
+
+        // jaas exist but keytab not exist
+        FileUtils.write(new File(kapConfig.getKafkaJaasConfPath()),
+                "KafkaClient { " + "com.sun.security.auth.module.Krb5LoginModule required " + "useKeyTab=true "
+                        + "storeKey=true " + "keyTab=\"" + testKeyTab + "\" " + "principal=\"kylin@DEV.COM\" "
+                        + "serviceName=\"kafka\";" + " };",
+                StandardCharsets.UTF_8);
+        Assert.assertThrows(KAFKA_JAAS_FILE_KEYTAB_NOT_EXISTS.getMsg(), KylinException.class,
+                () -> StreamingJobUtils.extractKafkaJaasConf(true));
+
+        // all exist
+        FileUtils.write(testKeyTab, "test", StandardCharsets.UTF_8);
+        val text = StreamingJobUtils.extractKafkaJaasConf(true);
+        Assert.assertNotNull(text);
+        String keyTabAbsPath = StreamingJobUtils.getJaasKeyTabAbsPath();
+        Assert.assertEquals(testKeyTab.getAbsolutePath(), keyTabAbsPath);
+        String executorJaasName = StreamingJobUtils.getExecutorJaasName();
+        Assert.assertEquals(kapConfig.getKafkaJaasConf(), executorJaasName);
+        String executorJaasPath = StreamingJobUtils.getExecutorJaasPath();
+        Assert.assertEquals(HadoopUtil.getHadoopConfDir() + File.separator + executorJaasName, executorJaasPath);
+        kylinConfig.setProperty("kylin.kafka-jaas-conf", "kafka_err_jaas.conf");
+    }
+
+    @Test
+    public void testCreateExecutorJaas() throws Exception {
+        KapConfig kapConfig = KapConfig.getInstanceFromEnv();
+        String executorJaasPath = HadoopUtil.getHadoopConfDir() + File.separator + kapConfig.getKafkaJaasConf();
+        File executorJaasFile = new File(executorJaasPath);
+        executorJaasFile.deleteOnExit();
+        StreamingJobUtils.createExecutorJaas();
+        Assert.assertFalse(executorJaasFile.exists());
+        getTestConfig().setProperty("kylin.kafka-jaas.enabled", "true");
+
+        {
+            String jaasContext = "KafkaClient { org.apache.kafka.common.security.scram.ScramLoginModule required; };";
+            FileUtils.write(new File(kapConfig.getKafkaJaasConfPath()), jaasContext, StandardCharsets.UTF_8);
+            StreamingJobUtils.createExecutorJaas();
+            Assert.assertTrue(executorJaasFile.exists());
+            Assert.assertEquals(jaasContext, FileUtils.readFileToString(executorJaasFile, StandardCharsets.UTF_8));
+        }
+
+        {
+            File testKeyTab = new File(KylinConfig.getKylinConfDir() + File.separator + "test.keytab");
+            FileUtils.write(testKeyTab, "test", StandardCharsets.UTF_8);
+            String jaasContext = "KafkaClient { " + "com.sun.security.auth.module.Krb5LoginModule required "
+                    + "useKeyTab=true " + "storeKey=true " + "keyTab=\"" + testKeyTab.getAbsolutePath() + "\" "
+                    + "principal=\"kylin@DEV.COM\" " + "serviceName=\"kafka\";" + " };";
+            FileUtils.write(new File(kapConfig.getKafkaJaasConfPath()), jaasContext, StandardCharsets.UTF_8);
+            StreamingJobUtils.createExecutorJaas();
+            Assert.assertTrue(executorJaasFile.exists());
+            Assert.assertEquals(jaasContext.replace(testKeyTab.getAbsolutePath(), testKeyTab.getName()),
+                    FileUtils.readFileToString(executorJaasFile, StandardCharsets.UTF_8));
+        }
+        executorJaasFile.deleteOnExit();
     }
 }
