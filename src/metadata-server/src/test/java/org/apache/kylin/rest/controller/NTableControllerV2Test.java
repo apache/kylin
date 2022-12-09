@@ -21,9 +21,11 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.v2.NTableControllerV2;
@@ -81,8 +83,9 @@ public class NTableControllerV2Test extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetTableDesc() throws Exception {
-        Mockito.when(tableService.getTableDesc("default", false, "", "DEFAULT", true)) //
-                .thenReturn(mockTables());
+        Mockito.when(tableService.getTableDesc("default", false, "", "DEFAULT", true, Collections.singletonList(9), 10)) //
+                .thenReturn(Pair.newPair(mockTables(), 10));
+
         mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
                 .contentType(MediaType.APPLICATION_JSON) //
                 .param("ext", "false") //

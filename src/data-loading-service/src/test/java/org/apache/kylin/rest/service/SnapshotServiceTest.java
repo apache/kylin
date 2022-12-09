@@ -485,17 +485,113 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("testuser", "testuser", Constant.ROLE_MODELER));
         List<SnapshotInfoResponse> responses = snapshotService.getProjectSnapshots(PROJECT, tablePattern, statusFilter,
-                Sets.newHashSet(), sortBy, true);
+                Sets.newHashSet(), sortBy, true, Pair.newPair(0, 10)).getFirst();
         Assert.assertEquals(0, responses.size());
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
         responses = snapshotService.getProjectSnapshots(PROJECT, tablePattern, statusFilter, Sets.newHashSet(), sortBy,
-                true);
+                true, Pair.newPair(0, 2)).getFirst();
         SnapshotInfoResponse response = responses.get(0);
         Assert.assertEquals(2, responses.size());
         Assert.assertEquals("SSB", response.getDatabase());
         Assert.assertEquals(Sets.newHashSet("LINEORDER", "P_LINEORDER"),
                 responses.stream().map(SnapshotInfoResponse::getTable).collect(Collectors.toSet()));
+    }
+
+    @Test
+    public void testGetProjectSnapshotsReturn() {
+        enableSnapshotManualManagement();
+        setSnapshotPath("SSB.LINEORDER", "some_path");
+        setSnapshotPath("SSB.P_LINEORDER", "some_path");
+        getTestConfig().setProperty("kylin.query.security.acl-tcr-enabled", "true");
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+
+        // default sort
+        Pair<List<SnapshotInfoResponse>, Integer> projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
+                Sets.newHashSet(SnapshotStatus.ONLINE), Sets.newHashSet(), "", true,
+                Pair.newPair(0, 1));
+        Assert.assertEquals(1, projectSnapshots.getFirst().size());
+        Assert.assertEquals(2, projectSnapshots.getSecond().intValue());
+
+        // default sort but reverse
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
+                Sets.newHashSet(SnapshotStatus.ONLINE), Sets.newHashSet(), "", false,
+                Pair.newPair(0, 1));
+        Assert.assertEquals(1, projectSnapshots.getFirst().size());
+        Assert.assertEquals(2, projectSnapshots.getSecond().intValue());
+
+        // sort by table
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
+                Sets.newHashSet(SnapshotStatus.ONLINE), Sets.newHashSet(), "table", true,
+                Pair.newPair(0, 1));
+        Assert.assertEquals(1, projectSnapshots.getFirst().size());
+        Assert.assertEquals(2, projectSnapshots.getSecond().intValue());
+
+        // sort by table not reverse
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
+                Sets.newHashSet(SnapshotStatus.ONLINE), Sets.newHashSet(), "table", false,
+                Pair.newPair(0, 1));
+        Assert.assertEquals(1, projectSnapshots.getFirst().size());
+        Assert.assertEquals(2, projectSnapshots.getSecond().intValue());
+    }
+
+    @Test
+    public void testGetProjectSnapshotsFilter() {
+        enableSnapshotManualManagement();
+        setSnapshotPath("SSB.LINEORDER", "some_path");
+        setSnapshotPath("SSB.P_LINEORDER", "some_path");
+        getTestConfig().setProperty("kylin.query.security.acl-tcr-enabled", "true");
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+
+        // status empty
+        Pair<List<SnapshotInfoResponse>, Integer> projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
+                Sets.newHashSet(), Sets.newHashSet(), "", true,
+                Pair.newPair(0, 1));
+        Assert.assertEquals(1, projectSnapshots.getFirst().size());
+
+        // sort by table and status broken
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
+                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), "table", true,
+                Pair.newPair(0, 1));
+        Assert.assertEquals(0, projectSnapshots.getFirst().size());
+
+        // partitionFilter false and tableSelectedSnapshotPartitionCol is null
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
+                Sets.newHashSet(), Sets.newHashSet(false), "table", true,
+                Pair.newPair(0, 1));
+        Assert.assertEquals(1, projectSnapshots.getFirst().size());
+
+        // partitionFilter false and tableSelectedSnapshotPartitionCol is not null
+        String partColName = "LO_ORDERKEY";
+        String tableName = "SSB.LINEORDER";
+        snapshotService.configSnapshotPartitionCol(PROJECT,
+                ImmutableMap.<String, String> builder().put(tableName, partColName).build());
+        TableDesc tableDesc = NTableMetadataManager.getInstance(getTestConfig(), PROJECT).getTableDesc(tableName);
+        Assert.assertEquals(partColName, tableDesc.getSelectedSnapshotPartitionCol());
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
+                Sets.newHashSet(), Sets.newHashSet(false), "table", true,
+                Pair.newPair(0, 1));
+        Assert.assertEquals(1, projectSnapshots.getFirst().size());
+
+        // partitionFilter true and tableSelectedSnapshotPartitionCol is null
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
+                Sets.newHashSet(), Sets.newHashSet(true), "table", true,
+                Pair.newPair(0, 1));
+        Assert.assertEquals(1, projectSnapshots.getFirst().size());
+
+        // partitionFilter true and tableSelectedSnapshotPartitionCol is not null
+        projectSnapshots = snapshotService.getProjectSnapshots(PROJECT, "SSB",
+                Sets.newHashSet(), Sets.newHashSet(true), "table", true,
+                Pair.newPair(0, 1));
+        Assert.assertEquals(1, projectSnapshots.getFirst().size());
+    }
+
+    @Test
+    public void testCheckDatabaseAndTable() {
+        Pair<String, String> tableAndDatabase = Pair.newPair("SSB", "CUSTOM");
+        Assert.assertEquals(tableAndDatabase, snapshotService.checkDatabaseAndTable("SSB.CUSTOM"));
     }
 
     @Test
@@ -669,7 +765,8 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
             return null;
         }, PROJECT);
         List<SnapshotInfoResponse> responses = snapshotService.getProjectSnapshots(PROJECT, null,
-                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), null, true);
+                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), null, true,
+                Pair.newPair(0, 10)).getFirst();
         Assert.assertEquals(1, responses.size());
     }
 
@@ -729,7 +826,8 @@ public class SnapshotServiceTest extends NLocalFileMetadataTestCase {
             return null;
         }, PROJECT);
         List<SnapshotInfoResponse> responses = snapshotService.getProjectSnapshots(PROJECT, tableName,
-                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), null, true);
+                Sets.newHashSet(SnapshotStatus.BROKEN), Sets.newHashSet(), null, true,
+                Pair.newPair(0, 10)).getFirst();
         Assert.assertEquals(1, responses.size());
         Assert.assertEquals(10, responses.get(0).getUsage());
     }

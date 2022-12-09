@@ -36,13 +36,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.controller.fixture.FixtureController;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.NotFoundException;
@@ -290,6 +293,22 @@ public class NBasicControllerTest extends NLocalFileMetadataTestCase {
     public void testCheckNonNegativeIntegerArg() {
         Assert.assertThrows(INTEGER_NON_NEGATIVE_CHECK.getMsg(), KylinException.class,
                 () -> nBasicController.checkNonNegativeIntegerArg("id", -1));
+    }
+
+    @Test
+    public void testSetCustomDataResponse() {
+        TableDesc tableDesc = new TableDesc();
+        tableDesc.setName("table1");
+        Map<String, Object> mockDataResponse = nBasicController.setCustomDataResponse("table",
+                Pair.newPair(Collections.singletonList(tableDesc), 3), 0, 10);
+        Assert.assertNotNull(mockDataResponse);
+        Object tableData = mockDataResponse.get("table");
+        if (tableData instanceof List<?>) {
+            for (Object tableDatum : (List<?>) tableData) {
+                Assert.assertEquals("table1", ((TableDesc)tableDatum).getName().toLowerCase(Locale.ROOT));
+            }
+        }
+        Assert.assertEquals(3, mockDataResponse.get("size"));
     }
 
 }
