@@ -44,7 +44,9 @@ public class ColumnDef {
 
     private boolean isComputedColumn;
 
-    public boolean isDimension() {
-        return columnType.equalsIgnoreCase("nominal");
+    private boolean isDimension;
+
+    public String getAliasDotColumn() {
+        return this.getTableAlias() + "." + this.getColumnName();
     }
 }
