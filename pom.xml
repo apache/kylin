@@ -93,7 +93,7 @@
         <maven-model.version>3.3.9</maven-model.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <arthas.version>3.6.7-kyarthas-r1</arthas.version>
+        <arthas.version>3.6.7-kyarthas-r2</arthas.version>
 
         <!-- Keep same order with dependencyManagement -->
 
