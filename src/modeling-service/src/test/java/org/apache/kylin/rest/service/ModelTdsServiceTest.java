@@ -192,7 +192,7 @@ public class ModelTdsServiceTest extends SourceTestCase {
     }
 
     @Test
-    public void testExportTDSWithDupMeasureColumnNames() throws IOException {
+    public void testExportTDSWithDupMeasureColumnNamesOutOfScope() throws IOException {
         String projectName = "default";
         String modelId = "2ed3bf12-ad40-e8a0-73da-8dc3b4c798bb";
         val modelRequest = JsonUtil.readValue(
@@ -213,9 +213,7 @@ public class ModelTdsServiceTest extends SourceTestCase {
         syncContext.setKylinConfig(getTestConfig());
         syncContext.setAdmin(true);
         SyncModel syncModel = tdsService.exportModel(syncContext);
-        Assert.assertThrows(
-                "There are duplicated names among model column LO_LINENUMBER and measure name LO_LINENUMBER. Cannot export a valid TDS file. Please correct the duplicated names and try again.",
-                KylinException.class, () -> tdsService.preCheckNameConflict(syncModel));
+        Assert.assertTrue(tdsService.preCheckNameConflict(syncModel));
     }
 
     @Test
