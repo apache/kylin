@@ -209,7 +209,9 @@ public class SyncModelBuilder {
         default:
             break;
         }
-        showDimsAndMeasures(columnDefMap, measureDefs, colsToShow, measuresToShow);
+        Set<String> dimensionSet = indexPlan.getModel().getEffectiveDimensions().values().stream()
+                .map(TblColRef::getAliasDotName).collect(Collectors.toSet());
+        showDimsAndMeasures(columnDefMap, measureDefs, colsToShow, measuresToShow, dimensionSet);
     }
 
     private boolean testAuthorizedCols(Set<String> authorizedCols, TblColRef colRef) {
@@ -227,9 +229,13 @@ public class SyncModelBuilder {
     }
 
     private void showDimsAndMeasures(Map<String, ColumnDef> columnDefMap, List<MeasureDef> measureDefs,
-            Set<String> colsToShow, Set<String> measuresToShow) {
+            Set<String> colsToShow, Set<String> measuresToShow, Set<String> dimensionSet) {
         for (String colToShow : colsToShow) {
-            columnDefMap.get(colToShow).setHidden(false);
+            ColumnDef colToShowDef = columnDefMap.get(colToShow);
+            colToShowDef.setHidden(false);
+            if (dimensionSet.contains(colToShow)) {
+                colToShowDef.setDimension(true);
+            }
         }
         for (MeasureDef measureDef : measureDefs) {
             if (measuresToShow.contains(measureDef.getMeasure().getName())) {

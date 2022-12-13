@@ -57,7 +57,6 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.security.MutableAclRecord;
 import org.apache.kylin.rest.util.AclPermissionUtil;
@@ -106,24 +105,27 @@ public class ModelTdsService extends AbstractModelService {
     }
 
     public boolean preCheckNameConflict(SyncModel syncModel) {
-        ProjectInstance prjInstance = getManager(NProjectManager.class).getProject(syncModel.getProject());
-        boolean skipCheckTds = prjInstance.getConfig().skipCheckTds();
-        Set<String> measureNames = syncModel.getMetrics().stream().filter(measureDef -> !measureDef.isHidden())
-                .map(measureDef -> measureDef.getMeasure().getName()).collect(Collectors.toSet());
-        Map<String, ColumnDef> nameOfColDefMap = syncModel.getColumnDefMap().values().stream()
-                .collect(Collectors.toMap(ColumnDef::getColumnName, Function.identity()));
-        Sets.SetView<String> intersection = Sets.intersection(nameOfColDefMap.keySet(), measureNames);
-        if (skipCheckTds || CollectionUtils.isEmpty(intersection)) {
-            return true;
-        }
+        boolean skipCheckTds = NProjectManager.getProjectConfig(syncModel.getProject()).skipCheckTds();
 
-        String name = intersection.iterator().next();
-        ColumnDef columnDef = nameOfColDefMap.get(name);
-        if (columnDef.isDimension()) {
-            throw new KylinException(MODEL_TDS_EXPORT_DIM_COL_AND_MEASURE_NAME_CONFLICT, name, name);
-        } else {
-            throw new KylinException(MODEL_TDS_EXPORT_COLUMN_AND_MEASURE_NAME_CONFLICT, name, name);
+        if (!skipCheckTds) {
+            Set<String> measureNames = syncModel.getMetrics().stream().filter(measureDef -> !measureDef.isHidden())
+                    .map(measureDef -> measureDef.getMeasure().getName()).collect(Collectors.toSet());
+            Map<String, ColumnDef> nameOfColDefMap = syncModel.getColumnDefMap().values().stream()
+                    .filter(columnDef -> !columnDef.isHidden())
+                    .collect(Collectors.toMap(ColumnDef::getAliasDotColumn, Function.identity()));
+
+            nameOfColDefMap.forEach((aliasColName, columnDef) -> {
+                String name = aliasColName.split("\\.").length > 1 ? aliasColName.split("\\.")[1] : "";
+                if (measureNames.contains(name)) {
+                    if (columnDef.isDimension()) {
+                        throw new KylinException(MODEL_TDS_EXPORT_DIM_COL_AND_MEASURE_NAME_CONFLICT, name, name);
+                    } else {
+                        throw new KylinException(MODEL_TDS_EXPORT_COLUMN_AND_MEASURE_NAME_CONFLICT, name, name);
+                    }
+                }
+            });
         }
+        return true;
     }
 
     public SyncModel exportModel(SyncContext syncContext) {
