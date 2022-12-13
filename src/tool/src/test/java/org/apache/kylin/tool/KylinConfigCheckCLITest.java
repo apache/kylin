@@ -40,19 +40,11 @@ public class KylinConfigCheckCLITest extends NLocalFileMetadataTestCase {
     public void testCorrectConfig() throws IOException {
         final File kylinConfDir = KylinConfig.getKylinConfDir();
         File kylin_properties_override = new File(kylinConfDir, "kylin.properties.override");
-        IOUtils.copy(new ByteArrayInputStream("kylin.kerberos.platform=FI".getBytes(Charset.defaultCharset())),
-                new FileOutputStream(kylin_properties_override));
-        IOUtils.copy(new ByteArrayInputStream("spring.xxx.xxx=xx".getBytes(Charset.defaultCharset())),
-                new FileOutputStream(kylin_properties_override));
-        IOUtils.copy(new ByteArrayInputStream("arthas.xxx.xxx=xx".getBytes(Charset.defaultCharset())),
-                new FileOutputStream(kylin_properties_override));
-        IOUtils.copy(new ByteArrayInputStream("server.xxx=xx".getBytes(Charset.defaultCharset())),
-                new FileOutputStream(kylin_properties_override));
-
         // `kap.xx.xx` is not recommended, but it still works for compatibility reasons
-        IOUtils.copy(new ByteArrayInputStream("kap.xxx.xxx=xx".getBytes(Charset.defaultCharset())),
+        String overrideProps = "kylin.kerberos.platform=FI\n" + "spring.xxx.xxx=xx\n" + "arthas.xxx.xxx=xx\n"
+                + "server.xxx=xx\n" + "management.xxx=xx\n" + "kap.xxx.xxx=xx\n";
+        IOUtils.copy(new ByteArrayInputStream(overrideProps.getBytes(Charset.defaultCharset())),
                 new FileOutputStream(kylin_properties_override));
-
         PrintStream o = System.out;
         File f = File.createTempFile("check", ".tmp");
         PrintStream tmpOut = new PrintStream(new FileOutputStream(f), false, Charset.defaultCharset().name());
