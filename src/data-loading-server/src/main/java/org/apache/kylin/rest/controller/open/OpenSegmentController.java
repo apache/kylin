@@ -55,6 +55,7 @@ import org.apache.kylin.rest.response.SegmentPartitionResponse;
 import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.util.DataRangeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -241,7 +242,7 @@ public class OpenSegmentController extends BaseController {
         aclEvaluate.checkProjectOperationPermission(request.getProject());
         checkRequiredArg("start", request.getStart());
         checkRequiredArg("end", request.getEnd());
-        validateDataRange(request.getStart(), request.getEnd());
+        DataRangeUtils.validateDataRange(request.getStart(), request.getEnd());
         NDataModel model = getModel(modelAlias, projectName);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, modelService.checkSegments(request.getProject(),
                 model.getAlias(), request.getStart(), request.getEnd()), "");

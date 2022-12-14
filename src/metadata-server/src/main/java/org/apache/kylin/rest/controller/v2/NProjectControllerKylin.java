@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.controller.NBasicController;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.util.PagingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -51,7 +52,7 @@ public class NProjectControllerKylin extends NBasicController {
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer size,
             @RequestParam(value = "exact", required = false, defaultValue = "true") boolean exactMatch) {
         List<ProjectInstance> readableProjects = projectService.getReadableProjects(project, exactMatch);
-        return (List<ProjectInstance>) getDataNoEnvelopeResponse(readableProjects, offset, size);
+        return PagingUtil.cutPage(readableProjects, offset, size);
     }
 
 }

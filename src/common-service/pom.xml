@@ -91,6 +91,10 @@
             <groupId>org.springframework.session</groupId>
             <artifactId>spring-session-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
         <!-- hadoop -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>

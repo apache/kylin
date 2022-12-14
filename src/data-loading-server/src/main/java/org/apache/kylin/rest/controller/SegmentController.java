@@ -57,6 +57,7 @@ import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.params.IncrementBuildSegmentParams;
 import org.apache.kylin.rest.service.params.MergeSegmentParams;
 import org.apache.kylin.rest.service.params.RefreshSegmentParams;
+import org.apache.kylin.util.DataRangeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -133,7 +134,7 @@ public class SegmentController extends BaseController {
             @RequestParam(value = "statuses", required = false, defaultValue = "") List<String> statuses,
             @RequestParam(value = "statuses_second_storage", required = false, defaultValue = "") List<String> statusesSecondStorage) {
         checkProjectName(project);
-        validateRange(start, end);
+        DataRangeUtils.validateRange(start, end);
         modelService.checkSegmentStatus(statuses);
         modelService.checkSegmentSecondStorageStatus(statusesSecondStorage);
         List<NDataSegmentResponse> segments = modelService.getSegmentsResponse(dataflowId, project, start, end, status,
@@ -150,7 +151,7 @@ public class SegmentController extends BaseController {
         checkRequiredArg("segment_holes", segmentsRequest.getSegmentHoles());
         String partitionColumnFormat = modelService.getPartitionColumnFormatById(segmentsRequest.getProject(), modelId);
         segmentsRequest.getSegmentHoles()
-                .forEach(seg -> validateDataRange(seg.getStart(), seg.getEnd(), partitionColumnFormat));
+                .forEach(seg -> DataRangeUtils.validateDataRange(seg.getStart(), seg.getEnd(), partitionColumnFormat));
         JobInfoResponse response = modelService.fixSegmentHoles(segmentsRequest.getProject(), modelId,
                 segmentsRequest.getSegmentHoles(), segmentsRequest.getIgnoredSnapshotTables());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
@@ -164,7 +165,7 @@ public class SegmentController extends BaseController {
         checkProjectName(buildSegmentsRequest.getProject());
         String partitionColumnFormat = modelService.getPartitionColumnFormatById(buildSegmentsRequest.getProject(),
                 modelId);
-        validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
+        DataRangeUtils.validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
         val res = modelService.checkSegHoleExistIfNewRangeBuild(buildSegmentsRequest.getProject(), modelId,
                 buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),
                 buildSegmentsRequest.isBuildAllIndexes(), buildSegmentsRequest.getBatchIndexIds());
@@ -274,7 +275,7 @@ public class SegmentController extends BaseController {
         checkParamLength("tag", buildSegmentsRequest.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         String partitionColumnFormat = modelService.getPartitionColumnFormatById(buildSegmentsRequest.getProject(),
                 modelId);
-        validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
+        DataRangeUtils.validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
         modelService.validateCCType(modelId, buildSegmentsRequest.getProject());
         JobInfoResponse response = modelBuildService.buildSegmentsManually(buildSegmentsRequest.getProject(), modelId,
                 buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(),
@@ -296,7 +297,7 @@ public class SegmentController extends BaseController {
                 .getProject(buildSegmentsRequest.getProject());
         checkParamLength("tag", buildSegmentsRequest.getTag(), prjInstance.getConfig().getJobTagMaxSize());
         String partitionColumnFormat = buildSegmentsRequest.getPartitionDesc().getPartitionDateFormat();
-        validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
+        DataRangeUtils.validateDataRange(buildSegmentsRequest.getStart(), buildSegmentsRequest.getEnd(), partitionColumnFormat);
         modelService.validateCCType(modelId, buildSegmentsRequest.getProject());
 
         IncrementBuildSegmentParams incrParams = new IncrementBuildSegmentParams(buildSegmentsRequest.getProject(),
