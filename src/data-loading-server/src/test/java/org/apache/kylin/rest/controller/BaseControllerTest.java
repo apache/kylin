@@ -48,6 +48,7 @@ import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.exception.UnauthorizedException;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.util.DataRangeUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -159,50 +160,50 @@ public class BaseControllerTest extends NLocalFileMetadataTestCase {
     public void testCheckStartAndEndException() {
         thrown.expect(KylinException.class);
         thrown.expectMessage(TIME_INVALID_RANGE_NOT_CONSISTENT.getMsg());
-        baseController.validateDataRange("10", "");
+        DataRangeUtils.validateDataRange("10", "");
     }
 
     @Test
     public void testTimeRangeEndGreaterThanStart() {
         thrown.expect(KylinException.class);
         thrown.expectMessage("The end time must be greater than the start time");
-        baseController.validateDataRange("10", "1");
+        DataRangeUtils.validateDataRange("10", "1");
     }
 
     @Test
     public void testTimeRangeEndEqualToStart() {
         thrown.expect(KylinException.class);
         thrown.expectMessage("The end time must be greater than the start time");
-        baseController.validateDataRange("1", "1");
+        DataRangeUtils.validateDataRange("1", "1");
     }
 
     @Test
     public void testTimeRangeInvalidStart() {
         thrown.expect(KylinException.class);
         thrown.expectMessage(TIME_INVALID_RANGE_LESS_THAN_ZERO.getMsg());
-        baseController.validateDataRange("-1", "1");
+        DataRangeUtils.validateDataRange("-1", "1");
     }
 
     @Test
     public void testTimeRangeInvalidEnd() {
         thrown.expect(KylinException.class);
         thrown.expectMessage(TIME_INVALID_RANGE_LESS_THAN_ZERO.getMsg());
-        baseController.validateDataRange("2", "-1");
+        DataRangeUtils.validateDataRange("2", "-1");
     }
 
     @Test
     public void testTimeRangeInvalidFormat() {
         thrown.expect(KylinException.class);
         thrown.expectMessage(TIME_INVALID_RANGE_NOT_FORMAT_MS.getMsg());
-        baseController.validateDataRange("start", "end");
+        DataRangeUtils.validateDataRange("start", "end");
     }
 
     @Test
     public void testTimeRangeValid() {
-        baseController.validateDataRange("0", "86400000", "yyyy-MM-dd");
-        baseController.validateDataRange("1000000000000", "2200000000000", "yyyy-MM-dd");
-        baseController.validateDataRange("0", "86400000", PartitionDesc.TimestampType.MILLISECOND.name);
-        baseController.validateDataRange("1000000000000", "2200000000000", PartitionDesc.TimestampType.SECOND.name);
+        DataRangeUtils.validateDataRange("0", "86400000", "yyyy-MM-dd");
+        DataRangeUtils.validateDataRange("1000000000000", "2200000000000", "yyyy-MM-dd");
+        DataRangeUtils.validateDataRange("0", "86400000", PartitionDesc.TimestampType.MILLISECOND.name);
+        DataRangeUtils.validateDataRange("1000000000000", "2200000000000", PartitionDesc.TimestampType.SECOND.name);
     }
 
     @Test
@@ -218,7 +219,7 @@ public class BaseControllerTest extends NLocalFileMetadataTestCase {
         }
         thrown.expect(KylinException.class);
         thrown.expectMessage("The end time must be greater than the start time");
-        baseController.validateDataRange(start, end, "yyyy-MM-dd");
+        DataRangeUtils.validateDataRange(start, end, "yyyy-MM-dd");
     }
 
     @Test

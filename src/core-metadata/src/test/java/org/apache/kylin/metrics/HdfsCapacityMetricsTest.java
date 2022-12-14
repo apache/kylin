@@ -49,86 +49,68 @@ public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testRegisterHdfsMetricsFailed() {
-        overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
-        HdfsCapacityMetrics.registerHdfsMetrics();
-        // scheduledExecutor may like this
-        // java.util.concurrent.ScheduledThreadPoolExecutor@5bf61e67[Running, pool size = 1, active threads = 1, queued tasks = 1, completed tasks = 0]
-        String scheduledExecutor = HdfsCapacityMetrics.HDFS_METRICS_SCHEDULED_EXECUTOR.toString();
-        String poolSizeStr = "pool size = ";
-        int activePoolSizeIdx = scheduledExecutor.indexOf(poolSizeStr);
-        String poolSize = scheduledExecutor.substring(activePoolSizeIdx + poolSizeStr.length(),
-                activePoolSizeIdx + poolSizeStr.length() + 1);
-        Assert.assertEquals(1, Integer.parseInt(poolSize));
-    }
-
-    @Test
-    @Ignore("KE-40537")
-    public void testRegisterHdfsMetrics() {
+    @Ignore("unstable")
+    public void testRegisterHdfsMetrics() throws InterruptedException {
         overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
-        HdfsCapacityMetrics.registerHdfsMetrics();
         // scheduledExecutor may like this
         // java.util.concurrent.ScheduledThreadPoolExecutor@4b5189ac[Running, pool size = 1, active threads = 1, queued tasks = 1, completed tasks = 0]
-        String scheduledExecutor = HdfsCapacityMetrics.HDFS_METRICS_SCHEDULED_EXECUTOR.toString();
-        String activeThreadStr = "active threads = ";
-        int activeThreadIdx = scheduledExecutor.indexOf(activeThreadStr);
-        String thread = scheduledExecutor.substring(activeThreadIdx + activeThreadStr.length(),
-                activeThreadIdx + activeThreadStr.length() + 1);
-        Assert.assertEquals(1, Integer.parseInt(thread));
+        overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
+        HdfsCapacityMetrics hdfsCapacityMetrics = new HdfsCapacityMetrics(getTestConfig());
+        Assert.assertEquals(1, hdfsCapacityMetrics.getPoolSize());
+        Assert.assertTrue(hdfsCapacityMetrics.getActiveCount() <= 1);
     }
 
     @Test
     public void testRegisterHdfsMetricsQuotaStorageEnabledFalse() {
         overwriteSystemProp("kylin.storage.check-quota-enabled", "false");
-        HdfsCapacityMetrics.registerHdfsMetrics();
-        String scheduledExecutor = HdfsCapacityMetrics.HDFS_METRICS_SCHEDULED_EXECUTOR.toString();
-        String activeThreadStr = "active threads = ";
-        int activeThreadIdx = scheduledExecutor.indexOf(activeThreadStr);
-        String thread = scheduledExecutor.substring(activeThreadIdx + activeThreadStr.length(),
-                activeThreadIdx + activeThreadStr.length() + 1);
-        Assert.assertEquals(0, Integer.parseInt(thread));
+        HdfsCapacityMetrics hdfsCapacityMetrics = new HdfsCapacityMetrics(getTestConfig());
+        Assert.assertEquals(0, hdfsCapacityMetrics.getActiveCount());
     }
 
     @Test
     public void testHandleNodeHdfsMetrics() {
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
+        HdfsCapacityMetrics hdfsCapacityMetrics = new HdfsCapacityMetrics(getTestConfig());
         EpochManager.getInstance().tryUpdateEpoch(EpochManager.GLOBAL, true);
-        HdfsCapacityMetrics.handleNodeHdfsMetrics();
-        Assert.assertTrue(HdfsCapacityMetrics.workingDirCapacity.size() > 0);
+        hdfsCapacityMetrics.handleNodeHdfsMetrics();
+        Assert.assertTrue(hdfsCapacityMetrics.getWorkingDirCapacity().size() > 0);
     }
 
     @Test
     public void testWriteHdfsMetrics() throws IOException {
-        KylinConfig testConfig = getTestConfig();
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
+        KylinConfig testConfig = getTestConfig();
+        HdfsCapacityMetrics hdfsCapacityMetrics = new HdfsCapacityMetrics(testConfig);
         Path projectPath = new Path(testConfig.getWorkingDirectoryWithConfiguredFs("newten"));
         FileSystem fs = projectPath.getFileSystem(HadoopUtil.getCurrentConfiguration());
         if (!fs.exists(projectPath)) {
             fs.mkdirs(projectPath);
             fs.createNewFile(projectPath);
         }
-        HdfsCapacityMetrics.writeHdfsMetrics();
+        hdfsCapacityMetrics.writeHdfsMetrics();
     }
 
     @Test
     public void testReadHdfsMetrics() throws IOException {
-        KylinConfig testConfig = getTestConfig();
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
+        KylinConfig testConfig = getTestConfig();
+        HdfsCapacityMetrics hdfsCapacityMetrics = new HdfsCapacityMetrics(testConfig);
         Path projectPath = new Path(testConfig.getWorkingDirectoryWithConfiguredFs("newten"));
         FileSystem fs = projectPath.getFileSystem(HadoopUtil.getCurrentConfiguration());
         if (!fs.exists(projectPath)) {
             fs.mkdirs(projectPath);
             fs.createNewFile(projectPath);
         }
-        HdfsCapacityMetrics.writeHdfsMetrics();
-        HdfsCapacityMetrics.readHdfsMetrics();
+        hdfsCapacityMetrics.writeHdfsMetrics();
+        Assert.assertEquals(hdfsCapacityMetrics.getWorkingDirCapacity().size(), hdfsCapacityMetrics.readHdfsMetrics().size());
     }
 
     @Test
     public void testWriteAndReadHdfsMetrics() throws IOException {
-        KylinConfig testConfig = getTestConfig();
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
+        KylinConfig testConfig = getTestConfig();
+        HdfsCapacityMetrics hdfsCapacityMetrics = new HdfsCapacityMetrics(testConfig);
         EpochManager.getInstance().tryUpdateEpoch(EpochManager.GLOBAL, true);
         Path projectPath = new Path(testConfig.getWorkingDirectoryWithConfiguredFs("newten"));
         FileSystem fs = projectPath.getFileSystem(HadoopUtil.getCurrentConfiguration());
@@ -136,21 +118,22 @@ public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
             fs.mkdirs(projectPath);
             fs.createNewFile(projectPath);
         }
-        HdfsCapacityMetrics.registerHdfsMetrics();
-
         Thread t1 = new Thread(() -> {
             await().pollDelay(new Duration(1, TimeUnit.SECONDS)).until(() -> true);
-            HdfsCapacityMetrics.readHdfsMetrics();
-            Assert.assertTrue(HdfsCapacityMetrics.workingDirCapacity.size() > 0);
+            hdfsCapacityMetrics.readHdfsMetrics();
+            Assert.assertTrue(hdfsCapacityMetrics.getWorkingDirCapacity().size() > 0);
         });
         t1.start();
         fs.deleteOnExit(projectPath);
-        fs.deleteOnExit(HdfsCapacityMetrics.HDFS_CAPACITY_METRICS_PATH);
+        fs.deleteOnExit(hdfsCapacityMetrics.getHdfsCapacityMetricsPath());
     }
 
     @Test
     public void testGetHdfsCapacityByProject() {
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
-        Assert.assertEquals(0L, (long) HdfsCapacityMetrics.getHdfsCapacityByProject("kylin"));
+        overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
+        overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
+        HdfsCapacityMetrics hdfsCapacityMetrics = new HdfsCapacityMetrics(getTestConfig());
+        Assert.assertEquals(0L, (long) hdfsCapacityMetrics.getHdfsCapacityByProject("kylin"));
     }
 }

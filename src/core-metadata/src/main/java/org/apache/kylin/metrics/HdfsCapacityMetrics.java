@@ -18,28 +18,30 @@
 
 package org.apache.kylin.metrics;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.metadata.EpochStore;
-import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 
-import java.io.IOException;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import com.google.common.collect.Maps;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 1. Unify the entry point for all calculation calls to obtain the capacity of the WorkingDir through scheduled threads
@@ -50,49 +52,56 @@ import java.util.stream.Collectors;
 @Slf4j
 public class HdfsCapacityMetrics {
 
-    protected static final KylinConfig KYLIN_CONFIG;
-    protected static final String SERVICE_INFO;
-    protected static final Path HDFS_CAPACITY_METRICS_PATH;
-    protected static final FileSystem WORKING_FS;
-    protected static final ScheduledExecutorService HDFS_METRICS_SCHEDULED_EXECUTOR;
-    protected static boolean hdfsMetricsPeriodicCalculationEnabled;
-    protected static boolean quotaStorageEnabled;
+    private final Path hdfsCapacityMetricsPath;
+    private final FileSystem workingFs;
+    private final ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
+    private final KylinConfig config;
+    private final boolean quotaStorageEnabled;
+    private final boolean hdfsMetricsPeriodicCalculationEnabled;
     // For all places that need to query WorkingDir capacity for retrieval, initialize to avoid NPE
-    protected static ConcurrentMap<String, Long> workingDirCapacity = new ConcurrentHashMap<>();
-    // Used to clear the existing workingDirCapacity in memory, you cannot use the clear method for workingDirCapacity
-    // to avoid other calls to raise NPE, When the data in memory is ready, it is first put into readyWorkingDirCapacity,
-    // and then a data exchange operation is performed.
-    protected static ConcurrentMap<String, Long> prepareForWorkingDirCapacity = new ConcurrentHashMap<>();
-
-    static {
-        KYLIN_CONFIG = KylinConfig.getInstanceFromEnv();
-        SERVICE_INFO = AddressUtil.getLocalInstance();
-        WORKING_FS = HadoopUtil.getWorkingFileSystem();
-        HDFS_CAPACITY_METRICS_PATH = new Path(KYLIN_CONFIG.getHdfsMetricsDir("hdfsCapacity.json"));
-        HDFS_METRICS_SCHEDULED_EXECUTOR = Executors.newScheduledThreadPool(1, new NamedThreadFactory("HdfsMetricsChecker"));
-        registerHdfsMetrics();
-    }
+    private volatile Map<String, Long> workingDirCapacity = Collections.emptyMap();
 
     // Utility classes should not have public constructors
-    private HdfsCapacityMetrics() {
+    public HdfsCapacityMetrics(KylinConfig config) {
+        this.config = config;
+        workingFs = HadoopUtil.getWorkingFileSystem();
+        hdfsCapacityMetricsPath = new Path(config.getHdfsMetricsDir("hdfsCapacity.json"));
+        scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("HdfsMetricsChecker"));
+        hdfsMetricsPeriodicCalculationEnabled = config.isHdfsMetricsPeriodicCalculationEnabled();
+        quotaStorageEnabled = config.isStorageQuotaEnabled();
+        if (hdfsMetricsPeriodicCalculationEnabled && quotaStorageEnabled) {
+            registerHdfsMetrics(config.getHdfsMetricsPeriodicCalculationInterval());
+        }
     }
 
-    public static void registerHdfsMetrics() {
+    public int getPoolSize() {
+        return scheduledThreadPoolExecutor.getPoolSize();
+    }
+
+    public int getActiveCount() {
+        return scheduledThreadPoolExecutor.getActiveCount();
+    }
+
+    Map<String, Long> getWorkingDirCapacity() {
+        return Collections.unmodifiableMap(workingDirCapacity);
+    }
+
+    public Path getHdfsCapacityMetricsPath() {
+        return hdfsCapacityMetricsPath;
+    }
+
+    private void registerHdfsMetrics(long hdfsMetricsPeriodicCalculationInterval) {
         // 1. Call a scheduled thread to maintain the data in memory
         //    - Read data from HDFS and load it into memory, only the leader node writes to HDFS, other nodes read only
         // 2. When the data in memory reaches the time of the update interval, it is stored on HDFS
         // 3. Junk cleanup: theoretically the file will not be very large, do not need to consider cleaning up for the time
         // being, cleaning will affect the recalculation of the directory involved
-        hdfsMetricsPeriodicCalculationEnabled = KYLIN_CONFIG.isHdfsMetricsPeriodicCalculationEnabled();
-        quotaStorageEnabled = KYLIN_CONFIG.isStorageQuotaEnabled();
-        if (quotaStorageEnabled && hdfsMetricsPeriodicCalculationEnabled) {
-            log.info("Quota storage and HDFS metrics periodic calculation are enabled, path: {}", HDFS_CAPACITY_METRICS_PATH);
-            HDFS_METRICS_SCHEDULED_EXECUTOR.scheduleAtFixedRate(HdfsCapacityMetrics::handleNodeHdfsMetrics,
-                    0, KYLIN_CONFIG.getHdfsMetricsPeriodicCalculationInterval(), TimeUnit.MILLISECONDS);
-        }
+        log.info("Quota storage and HDFS metrics periodic calculation are enabled, path: {}", hdfsCapacityMetricsPath);
+        scheduledThreadPoolExecutor.scheduleAtFixedRate(this::handleNodeHdfsMetrics, 0,
+                hdfsMetricsPeriodicCalculationInterval, TimeUnit.MILLISECONDS);
     }
 
-    public static void handleNodeHdfsMetrics() {
+    public void handleNodeHdfsMetrics() {
         // Check whether the current KE node is the leader node, which requires repeated and continuous monitoring
         // because the leader node may change. Update first and then overwrite, only leader nodes need to be overwritten,
         // other nodes are read only
@@ -103,17 +112,17 @@ public class HdfsCapacityMetrics {
         }
     }
 
-    public static void writeHdfsMetrics() {
-        prepareForWorkingDirCapacity.clear();
+    public void writeHdfsMetrics() {
         // All WorkingDir capacities involved are calculated here
-        Set<String> allProjects = NProjectManager.getInstance(KYLIN_CONFIG).listAllProjects()
-                .stream().map(ProjectInstance::getName).collect(Collectors.toSet());
+        Set<String> allProjects = NProjectManager.getInstance(config).listAllProjects().stream()
+                .map(ProjectInstance::getName).collect(Collectors.toSet());
+        HashMap<String, Long> prepareForWorkingDirCapacity = Maps.newHashMapWithExpectedSize(allProjects.size());
         try {
             for (String project : allProjects) {
                 // Should not initialize projectTotalStorageSize outside the loop, otherwise it may affect the next calculation
                 // if a project calculation throws an exception.
                 long projectTotalStorageSize = 0L;
-                Path projectPath = new Path(KYLIN_CONFIG.getWorkingDirectoryWithConfiguredFs(project));
+                Path projectPath = new Path(config.getWorkingDirectoryWithConfiguredFs(project));
                 FileSystem fs = projectPath.getFileSystem(HadoopUtil.getCurrentConfiguration());
                 if (fs.exists(projectPath)) {
                     projectTotalStorageSize = HadoopUtil.getContentSummary(fs, projectPath).getLength();
@@ -126,7 +135,7 @@ public class HdfsCapacityMetrics {
         // If the project is deleted, it will be updated here
         workingDirCapacity = prepareForWorkingDirCapacity;
         try {
-            FSDataOutputStream fsDataOutputStream = WORKING_FS.create(HDFS_CAPACITY_METRICS_PATH, true);
+            FSDataOutputStream fsDataOutputStream = workingFs.create(hdfsCapacityMetricsPath, true);
             JsonUtil.writeValue(fsDataOutputStream, workingDirCapacity);
         } catch (IOException e) {
             log.warn("Write HdfsCapacityMetrics failed.", e);
@@ -134,17 +143,16 @@ public class HdfsCapacityMetrics {
     }
 
     @SuppressWarnings("unchecked")
-    public static ConcurrentMap<String, Long> readHdfsMetrics() {
-        ConcurrentHashMap<String, Long> workingCapacity = new ConcurrentHashMap<>();
+    public Map<String, Long> readHdfsMetrics() {
         try {
-            if (WORKING_FS.exists(HDFS_CAPACITY_METRICS_PATH)) {
-                FSDataInputStream fsDataInputStream = WORKING_FS.open(HDFS_CAPACITY_METRICS_PATH);
-                workingCapacity = JsonUtil.readValue(fsDataInputStream, ConcurrentHashMap.class);
+            if (workingFs.exists(hdfsCapacityMetricsPath)) {
+                FSDataInputStream fsDataInputStream = workingFs.open(hdfsCapacityMetricsPath);
+                return JsonUtil.readValue(fsDataInputStream, HashMap.class);
             }
         } catch (IOException e) {
             log.warn("Read HdfsCapacityMetrics failed.", e);
         }
-        return workingCapacity;
+        return Collections.emptyMap();
     }
 
     /**
@@ -153,8 +161,8 @@ public class HdfsCapacityMetrics {
      *
      * @return HDFS Capacity by each project
      */
-    public static Long getHdfsCapacityByProject(String project) {
-        if (hdfsMetricsPeriodicCalculationEnabled) {
+    public Long getHdfsCapacityByProject(String project) {
+        if (hdfsMetricsPeriodicCalculationEnabled && quotaStorageEnabled) {
             // Writing numbers in JSON may be read as integer
             Object orDefault = workingDirCapacity.getOrDefault(project, 0L);
             return Long.parseLong(orDefault.toString());

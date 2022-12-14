@@ -33,11 +33,6 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_CONFLICT_PARAMETER;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_EMPTY_PARAMETER;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_END_LESS_THAN_EQUALS_START;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_LESS_THAN_ZERO;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_NOT_CONSISTENT;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.TIME_INVALID_RANGE_NOT_FORMAT_MS;
-import static org.apache.kylin.metadata.model.PartitionDesc.transformTimestamp2Format;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -66,7 +61,6 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
-import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.metadata.project.NProjectManager;
@@ -380,57 +374,6 @@ public class BaseController {
     public void validatePriority(int priority) {
         if (!ExecutablePO.isPriorityValid(priority)) {
             throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "priority", "0, 1, 2, 3, 4");
-        }
-    }
-
-    public void validateRange(String start, String end) {
-        validateRange(Long.parseLong(start), Long.parseLong(end));
-    }
-
-    private void validateRange(long start, long end) {
-        if (start < 0 || end < 0) {
-            throw new KylinException(TIME_INVALID_RANGE_LESS_THAN_ZERO);
-        }
-        if (start >= end) {
-            throw new KylinException(TIME_INVALID_RANGE_END_LESS_THAN_EQUALS_START);
-        }
-    }
-
-    public void validateDataRange(String start, String end) {
-        validateDataRange(start, end, null);
-    }
-
-    public void validateDataRange(String start, String end, String partitionColumnFormat) {
-        if (StringUtils.isEmpty(start) && StringUtils.isEmpty(end)) {
-            return;
-        }
-
-        if (StringUtils.isNotEmpty(start) && StringUtils.isNotEmpty(end)) {
-            long startLong = 0;
-            long endLong = 0;
-
-            try {
-                startLong = Long.parseLong(start);
-                endLong = Long.parseLong(end);
-            } catch (Exception e) {
-                throw new KylinException(TIME_INVALID_RANGE_NOT_FORMAT_MS);
-            }
-
-            if (startLong < 0 || endLong < 0)
-                throw new KylinException(TIME_INVALID_RANGE_LESS_THAN_ZERO);
-
-            try {
-                startLong = DateFormat.getFormatTimeStamp(start, transformTimestamp2Format(partitionColumnFormat));
-                endLong = DateFormat.getFormatTimeStamp(end, transformTimestamp2Format(partitionColumnFormat));
-            } catch (Exception e) {
-                throw new KylinException(TIME_INVALID_RANGE_NOT_FORMAT_MS);
-            }
-
-            if (startLong >= endLong)
-                throw new KylinException(TIME_INVALID_RANGE_END_LESS_THAN_EQUALS_START);
-
-        } else {
-            throw new KylinException(TIME_INVALID_RANGE_NOT_CONSISTENT);
         }
     }
 

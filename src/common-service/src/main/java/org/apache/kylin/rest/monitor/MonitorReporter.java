@@ -44,6 +44,8 @@ import com.google.common.base.Preconditions;
 
 public class MonitorReporter {
     private static final Logger logger = LoggerFactory.getLogger(MonitorReporter.class);
+    private final String nodeType;
+    private final String serverPort;
 
     private ScheduledExecutorService dataCollectorExecutor;
     private static final int MAX_SCHEDULED_TASKS = 5;
@@ -54,8 +56,7 @@ public class MonitorReporter {
 
     private static final long REPORT_MONITOR_METRICS_SECONDS = 1;
 
-    private KapConfig kapConfig;
-    private Long periodInMilliseconds;
+    private final Long periodInMilliseconds;
 
     @VisibleForTesting
     public int reportInitialDelaySeconds = 0;
@@ -70,8 +71,10 @@ public class MonitorReporter {
         reportMonitorMetricsExecutor = Executors
                 .newSingleThreadScheduledExecutor(new NamedThreadFactory("report_monitor_metrics"));
 
-        this.kapConfig = KapConfig.getInstanceFromEnv();
-        periodInMilliseconds = kapConfig.getMonitorInterval();
+        KapConfig kapConfig = KapConfig.getInstanceFromEnv();
+        this.periodInMilliseconds = kapConfig.getMonitorInterval();
+        this.nodeType = kapConfig.getKylinConfig().getServerMode();
+        this.serverPort = kapConfig.getKylinConfig().getServerPort();
     }
 
     public static MonitorReporter getInstance() {
@@ -93,7 +96,7 @@ public class MonitorReporter {
     }
 
     private String getLocalPort() {
-        return kapConfig.getKylinConfig().getServerPort();
+        return serverPort;
     }
 
     private static String getLocalPid() {
@@ -102,7 +105,7 @@ public class MonitorReporter {
     }
 
     private String getNodeType() {
-        return kapConfig.getKylinConfig().getServerMode();
+        return this.nodeType;
     }
 
     private <T extends MonitorMetric> T createMonitorMetric(T monitorMetric) {
@@ -166,11 +169,6 @@ public class MonitorReporter {
     }
 
     public void submit(AbstractMonitorCollectTask collectTask) {
-        if (!kapConfig.isMonitorEnabled()) {
-            logger.warn("Monitor reporter is not enabled!");
-            return;
-        }
-
         // for UT
         if (!started) {
             logger.warn("MonitorReporter is not started!");

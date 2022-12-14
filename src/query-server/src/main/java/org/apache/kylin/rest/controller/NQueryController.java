@@ -77,6 +77,7 @@ import org.apache.kylin.rest.response.QueryStatisticsResponse;
 import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.apache.kylin.rest.service.QueryCacheManager;
 import org.apache.kylin.rest.service.QueryHistoryService;
+import org.apache.kylin.util.DataRangeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -381,7 +382,7 @@ public class NQueryController extends NBasicController {
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer size) {
         checkProjectName(project);
         QueryHistoryRequest request = new QueryHistoryRequest(project, startTimeFrom, startTimeTo);
-        validateDataRange(startTimeFrom, startTimeTo, null);
+        DataRangeUtils.validateDataRange(startTimeFrom, startTimeTo, null);
         Map<String, Object> queryHistories = QueryHisTransformStandardUtil.transformQueryHistory(
                 queryHistoryService.getQueryHistories(request, size, offset));
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, queryHistories, "");

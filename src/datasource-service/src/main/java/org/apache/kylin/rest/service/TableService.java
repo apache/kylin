@@ -83,6 +83,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.ShellException;
+import org.apache.kylin.constants.AclConstants;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -155,7 +156,6 @@ import org.apache.kylin.rest.response.TableNameResponse;
 import org.apache.kylin.rest.response.TableRefresh;
 import org.apache.kylin.rest.response.TableRefreshAll;
 import org.apache.kylin.rest.response.TablesAndColumnsResponse;
-import org.apache.kylin.rest.security.ExternalAclProvider;
 import org.apache.kylin.rest.security.KerberosLoginManager;
 import org.apache.kylin.rest.source.DataSourceState;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -461,8 +461,8 @@ public class TableService extends BasicService {
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         List<NDataModel> healthyModels = projectManager.listHealthyModels(project);
         Set<String> extPermissionSet = accessService.getUserNormalExtPermissions(project);
-        boolean hasDataQueryPermission = extPermissionSet.contains(ExternalAclProvider.DATA_QUERY);
         int satisfiedTableSize = 0;
+        boolean hasDataQueryPermission = extPermissionSet.contains(AclConstants.DATA_QUERY);
         for (val originTable : tables) {
             // New judgment logic, when the total size of tables meet the current size of paging directly after the exit
             // Also, if the processing is not finished, the total size of tables is returned
@@ -512,9 +512,10 @@ public class TableService extends BasicService {
         }
         List<String[]> result = Lists.newArrayList();
         final String dbTblName = rtableDesc.getIdentity();
+        AclTCRManager manager = getManager(AclTCRManager.class, project);
         Map<Integer, AclTCR.ColumnRealRows> columnRows = Arrays.stream(rtableDesc.getExtColumns()).map(cdr -> {
             int id = Integer.parseInt(cdr.getId());
-            val columnRealRows = getManager(AclTCRManager.class, project).getAuthorizedRows(dbTblName, cdr.getName(),
+            val columnRealRows = manager.getAuthorizedRows(dbTblName, cdr.getName(),
                     aclTCRS);
             return new AbstractMap.SimpleEntry<>(id, columnRealRows);
         }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

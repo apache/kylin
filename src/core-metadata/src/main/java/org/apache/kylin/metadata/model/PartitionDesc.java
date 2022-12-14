@@ -143,15 +143,6 @@ public class PartitionDesc implements Serializable {
         return null;
     }
 
-    public static String transformTimestamp2Format(String columnFormat) {
-        for (TimestampType timestampType : TimestampType.values()) {
-            if (timestampType.name.equals(columnFormat)) {
-                return timestampType.format;
-            }
-        }
-        return columnFormat;
-    }
-
     public boolean partitionColumnIsDate() {
         if (partitionDateColumnRef == null)
             return false;

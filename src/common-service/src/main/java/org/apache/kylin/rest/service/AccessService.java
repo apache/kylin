@@ -77,6 +77,7 @@ import org.apache.kylin.common.persistence.transaction.AccessRevokeEventNotifier
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.constants.AclConstants;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -602,11 +603,11 @@ public class AccessService extends BasicService {
     private Pair<String, Pair<Boolean, String>> getUserMaximumPermissionWithSourceInProject(String project,
             String username) throws IOException {
         if (isGlobalAdmin(username)) {
-            return Pair.newPair(ExternalAclProvider.ADMINISTRATION, Pair.newPair(Boolean.FALSE, null));
+            return Pair.newPair(AclConstants.ADMINISTRATION, Pair.newPair(Boolean.FALSE, null));
         }
 
         if (hasGlobalAdminGroup(username)) {
-            return Pair.newPair(ExternalAclProvider.ADMINISTRATION, Pair.newPair(Boolean.TRUE, ROLE_ADMIN));
+            return Pair.newPair(AclConstants.ADMINISTRATION, Pair.newPair(Boolean.TRUE, ROLE_ADMIN));
         }
 
         // get user's greater permission between user and groups
@@ -692,12 +693,11 @@ public class AccessService extends BasicService {
         if (Objects.nonNull(authentication)) {
             val userName = authentication.getName();
             if (userAclService.canAdminUserQuery(userName)) {
-                return Collections.singleton(ExternalAclProvider.DATA_QUERY);
+                return Collections.singleton(AclConstants.DATA_QUERY);
             }
             if (userService.isGlobalAdmin(userName)) {
                 val hasDataQueryPermission = userAclService.hasUserAclPermissionInProject(userName, project);
-                return hasDataQueryPermission ? Collections.singleton(ExternalAclProvider.DATA_QUERY)
-                        : Collections.emptySet();
+                return hasDataQueryPermission ? Collections.singleton(AclConstants.DATA_QUERY) : Collections.emptySet();
             }
             return getUserNormalExtPermissions(projectUuid, userName).stream()
                     .map(ExternalAclProvider::convertToExternalPermission).collect(Collectors.toSet());
@@ -730,7 +730,7 @@ public class AccessService extends BasicService {
     private String getGroupPermissionInProject(String project, String groupName) throws IOException {
         checkSid(groupName, false);
         if (ROLE_ADMIN.equals(groupName)) {
-            return ExternalAclProvider.ADMINISTRATION;
+            return AclConstants.ADMINISTRATION;
         }
         Map<Sid, Integer> projectPermissions = getProjectPermission(project);
         int mask = projectPermissions.get(getSid(groupName, false));
@@ -777,10 +777,7 @@ public class AccessService extends BasicService {
             return projects.stream().map(ProjectInstance::getName).collect(Collectors.toList());
         }
 
-        List<String> groupsOfUser = new ArrayList<>();
-        if (principal) {
-            groupsOfUser = getGroupsOfUser(name);
-        }
+        List<String> groupsOfUser = principal ? getGroupsOfUser(name) : Collections.emptyList();
 
         Set<String> grantedProjects = new HashSet<>();
 
@@ -797,7 +794,7 @@ public class AccessService extends BasicService {
                 grantedProjects.add(project.getName());
             }
         }
-        return new ArrayList<>(grantedProjects);
+        return Lists.newArrayList(grantedProjects);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)

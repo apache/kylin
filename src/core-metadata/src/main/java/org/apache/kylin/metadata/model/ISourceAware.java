@@ -22,14 +22,14 @@ import org.apache.kylin.common.KylinConfig;
 
 public interface ISourceAware {
 
-    public static final int ID_HIVE = 0;
-    public static final int ID_STREAMING = 1;
-    public static final int ID_SPARKSQL = 5;
-    public static final int ID_EXTERNAL = 7;
-    public static final int ID_JDBC = 8;
-    public static final int ID_SPARK = 9;
-    public static final int ID_CSV = 11;
-    public static final int ID_FILE = 13;
+    int ID_HIVE = 0;
+    int ID_STREAMING = 1;
+    int ID_SPARKSQL = 5;
+    int ID_EXTERNAL = 7;
+    int ID_JDBC = 8;
+    int ID_SPARK = 9;
+    int ID_CSV = 11;
+    int ID_FILE = 13;
 
     int getSourceType();
 
