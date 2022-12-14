@@ -17,19 +17,18 @@
  */
 package org.apache.spark.sql
 
+import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DDLDesc.DDLType
 import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.catalog.{CatalogTable, CatalogTableType, SessionCatalog}
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.util.{escapeSingleQuotedString, quoteIdentifier}
+import org.apache.spark.sql.execution.command._
 import org.apache.spark.sql.execution.{CommandExecutionMode, CommandResultExec, QueryExecution, SparkPlan}
-import org.apache.spark.sql.execution.command.{AlterTableAddPartitionCommand, CreateDatabaseCommand, CreateTableCommand, CreateViewCommand, DropDatabaseCommand, DropTableCommand, ExecutedCommandExec, ShowCreateTableAsSerdeCommand, ShowPartitionsCommand}
 import org.apache.spark.sql.types.StructField
+
 import java.lang.{String => JString}
 import java.util.{List => JList}
-
-import org.apache.spark.internal.Logging
-
 import scala.collection.JavaConverters._
 
 
@@ -108,30 +107,40 @@ object DdlOperation extends Logging {
   }
 
   def getTableDesc(database: String, table: String): String = {
-    val sql = s"show create table ${database}.${table} as serde"
-    var ddl = ""
-    val logicalPlan: LogicalPlan = SparderEnv.getSparkSession.sessionState.sqlParser.parsePlan(sql)
+    var sql = s"SHOW CREATE TABLE $database.$table"
+    sql = if (isHiveTable(database, table)) sql + " AS SERDE" else sql
+    val logicalPlan = SparderEnv.getSparkSession.sessionState.sqlParser.parsePlan(sql)
     val queryExecution: QueryExecution = SparderEnv.getSparkSession.sessionState.executePlan(logicalPlan,
       CommandExecutionMode.SKIP)
     stripRootCommandResult(queryExecution.executedPlan) match {
-      case ExecutedCommandExec(show: ShowCreateTableAsSerdeCommand) =>
-        val catalog: SessionCatalog = SparderEnv.getSparkSession.sessionState.catalog
-        val metadata: CatalogTable = catalog.getTableMetadata(show.table)
-        metadata.tableType match {
-          case CatalogTableType.VIEW =>
-            val builder = new StringBuilder
-            builder ++= s"CREATE VIEW ${show.table.quotedString}"
-            if (metadata.schema.nonEmpty) {
-              builder ++= metadata.schema.map(_.toViewDDL).mkString("(", ", ", ")")
-            }
-            builder ++= metadata.viewText.mkString(" AS\n", "", "\n")
-            ddl = builder.toString()
-          case CatalogTableType.MANAGED => ddl = ""
-          case CatalogTableType.EXTERNAL => ddl = SparderEnv.getSparkSession.sql(sql).takeAsList(1).get(0).getString(0)
-        }
+      case ExecutedCommandExec(show: ShowCreateTableCommand) => collectDDL(show.table, sql)
+      case ExecutedCommandExec(show: ShowCreateTableAsSerdeCommand) => collectDDL(show.table, sql)
     }
-    ddl
   }
+
+  def isHiveTable(database: String, table: String): Boolean = {
+    val tableMetadata = SparderEnv.getSparkSession.sessionState.catalog
+      .getTableRawMetadata(TableIdentifier(table, Some(database)))
+    !DDLUtils.isDatasourceTable(tableMetadata)
+  }
+
+  def collectDDL(tableIdentifier: TableIdentifier, sql: String): String = {
+    val catalog: SessionCatalog = SparderEnv.getSparkSession.sessionState.catalog
+    val metadata: CatalogTable = catalog.getTableMetadata(tableIdentifier)
+    metadata.tableType match {
+      case CatalogTableType.VIEW =>
+        val builder = new StringBuilder
+        builder ++= s"CREATE VIEW ${tableIdentifier.quotedString}"
+        if (metadata.schema.nonEmpty) {
+          builder ++= metadata.schema.map(_.toViewDDL).mkString("(", ", ", ")")
+        }
+        builder ++= metadata.viewText.mkString(" AS\n", "", "\n")
+        builder.toString()
+      case CatalogTableType.MANAGED => ""
+      case CatalogTableType.EXTERNAL => SparderEnv.getSparkSession.sql(sql).takeAsList(1).get(0).getString(0)
+    }
+  }
+
 
   def calculatePartition(database: String, table: String): Seq[Row] = {
     val logicalPlan: LogicalPlan = SparderEnv.getSparkSession.sessionState.sqlParser.parsePlan(s"show partitions ${database}.${table}")
