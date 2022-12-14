@@ -435,11 +435,13 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         // need run the cost based planner:
         // 1. config enable the cube planner
         // 2. the model dose not have the `layout_cost_based_pruned_list`
-        // 3. just only one segment to be built/refresh(other case will throw exception)
+        // 3. rule index has agg group
+        // 4. just only one segment to be built/refresh(other case will throw exception)
         IndexPlan indexPlan = df.getIndexPlan();
         KylinConfig kylinConfig = indexPlan.getConfig();
         boolean needCostRecommendIndex = indexPlan.getRuleBasedIndex() != null
-                && indexPlan.getRuleBasedIndex().getLayoutsOfCostBasedList() == null;
+                && indexPlan.getRuleBasedIndex().getLayoutsOfCostBasedList() == null
+                && !indexPlan.getRuleBasedIndex().getAggregationGroups().isEmpty();
         if (kylinConfig.enableCostBasedIndexPlanner() && needCostRecommendIndex
                 && canEnablePlannerJob(job.getJobType())) {
             // must run the cost based planner
