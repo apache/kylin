@@ -26,7 +26,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <name>Kylin - System Tools</name>
-    <groupId>org.apache.kylin</groupId>
     <artifactId>kylin-systools</artifactId>
 
     <dependencies>
@@ -58,9 +57,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-core</artifactId>
-            <scope>provided</scope>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
         </dependency>
 
         <dependency>

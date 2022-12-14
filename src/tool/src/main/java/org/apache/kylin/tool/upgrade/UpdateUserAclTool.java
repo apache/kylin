@@ -305,7 +305,7 @@ public class UpdateUserAclTool extends ExecutableApplication {
                                 AclPermissionUtil.convertToBasePermission(ace.getPermission()));
                     }
                 });
-                val mutableAclRecord = aclManager.readAcl(aclRecord.getDomainObjectInfo());
+                val mutableAclRecord = aclManager.readAcl(aclRecord.getObjectIdentity());
                 aclManager.batchUpsertAce(mutableAclRecord, sidPermissionMap);
                 log.info("{} query permission for _global/acl/{} successfully.", StringUtils.capitalize(operation),
                         aclRecord.getUuid());

@@ -56,7 +56,7 @@ public class CreateTableFromJson {
 
         map.forEach((k, v) -> {
             logger.info(k);
-            v.forEach(item -> logger.info(item));
+            v.forEach(logger::info);
         });
 
         logger.info("\n\n\n\n\n");

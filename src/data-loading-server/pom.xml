@@ -40,7 +40,7 @@
 
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-common-service</artifactId>
+            <artifactId>kylin-common-server</artifactId>
         </dependency>
 
         <dependency>

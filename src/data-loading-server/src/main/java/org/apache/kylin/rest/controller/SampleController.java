@@ -32,6 +32,7 @@ import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.service.ModelBuildSupporter;
 import org.apache.kylin.rest.service.TableSamplingService;
 import org.apache.kylin.rest.service.TableService;
+import org.apache.kylin.util.DataRangeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -76,7 +77,7 @@ public class SampleController extends BaseController {
         checkRequiredArg("refresh end", request.getRefreshEnd());
         checkRequiredArg("affected start", request.getAffectedStart());
         checkRequiredArg("affected end", request.getAffectedEnd());
-        validateRange(request.getRefreshStart(), request.getRefreshEnd());
+        DataRangeUtils.validateRange(request.getRefreshStart(), request.getRefreshEnd());
         modelBuildService.refreshSegments(request.getProject(), request.getTable(), request.getRefreshStart(),
                 request.getRefreshEnd(), request.getAffectedStart(), request.getAffectedEnd());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");

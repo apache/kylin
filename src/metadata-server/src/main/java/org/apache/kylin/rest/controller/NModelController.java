@@ -77,6 +77,7 @@ import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ModelTdsService;
 import org.apache.kylin.tool.bisync.SyncContext;
 import org.apache.kylin.tool.bisync.model.SyncModel;
+import org.apache.kylin.util.DataRangeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -191,7 +192,7 @@ public class NModelController extends NBasicController {
         modelService.validatePartitionDesc(modelRequest.getPartitionDesc());
         String partitionDateFormat = modelRequest.getPartitionDesc() == null ? null
                 : modelRequest.getPartitionDesc().getPartitionDateFormat();
-        validateDataRange(modelRequest.getStart(), modelRequest.getEnd(), partitionDateFormat);
+        DataRangeUtils.validateDataRange(modelRequest.getStart(), modelRequest.getEnd(), partitionDateFormat);
         try {
             NDataModel model = modelService.createModel(modelRequest.getProject(), modelRequest);
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
@@ -437,7 +438,7 @@ public class NModelController extends NBasicController {
     public EnvelopeResponse<BuildBaseIndexResponse> updateSemantic(@RequestBody ModelRequest request) {
         checkProjectName(request.getProject());
         String partitionColumnFormat = modelService.getPartitionColumnFormatById(request.getProject(), request.getId());
-        validateDataRange(request.getStart(), request.getEnd(), partitionColumnFormat);
+        DataRangeUtils.validateDataRange(request.getStart(), request.getEnd(), partitionColumnFormat);
         modelService.validatePartitionDesc(request.getPartitionDesc());
         checkRequiredArg(MODEL_ID, request.getUuid());
         try {

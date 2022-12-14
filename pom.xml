@@ -391,7 +391,6 @@
         <module>src/second-storage/core-ui</module>
         <module>src/second-storage/clickhouse</module>
         <module>src/second-storage/clickhouse-it</module>
-        <module>src/systools</module>
         <module>src/modeling-service</module>
         <module>src/query-service</module>
         <module>src/datasource-service</module>
@@ -571,11 +570,6 @@
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-streaming-service</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-systools</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -839,12 +833,6 @@
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-common-service</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-systools</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
@@ -2302,6 +2290,12 @@
                         <artifactId>tomcat-embed-core</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+                <scope>provided</scope>
+                <version>2.5</version>
             </dependency>
 
             <!-- Tomcat -->

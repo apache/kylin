@@ -39,6 +39,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.CaseInsensitiveStringSet;
+import org.apache.kylin.constants.AclConstants;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.Constant;
@@ -97,7 +98,7 @@ public class UserAclService extends BasicService implements UserAclServiceSuppor
     }
 
     private void checkAclPermission(String sid, String permissionType) {
-        Preconditions.checkArgument(ExternalAclProvider.DATA_QUERY.equalsIgnoreCase(permissionType),
+        Preconditions.checkArgument(AclConstants.DATA_QUERY.equalsIgnoreCase(permissionType),
                 "unknown PermissionType " + permissionType);
         if (isSuperAdmin(sid)) {
             throw new KylinException(PERMISSION_DENIED, MsgPicker.getMsg().getModifyPermissionOfSuperAdminFailed());
