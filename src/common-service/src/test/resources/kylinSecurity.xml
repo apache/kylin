@@ -303,10 +303,11 @@
             <scr:intercept-url pattern="/api/admin/public_config" access="permitAll"/>
             <scr:intercept-url pattern="/api/admin/instance_info" access="permitAll"/>
             <scr:intercept-url pattern="/api/projects" access="permitAll"/>
-            <scr:intercept-url pattern="/api/system/license/info" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/license/info" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/error" access="permitAll"/>
             <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/sparder/**" access="isAuthenticated()"/>
 
             <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/api/j_spring_security_logout"
                         success-handler-ref="logoutSuccessHandler"/>
@@ -358,10 +359,11 @@
             <scr:intercept-url pattern="/api/models*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/job*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/admin/config" access="permitAll"/>
-            <scr:intercept-url pattern="/api/system/license/info" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/license/info" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/projects*/*" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/sparder/**" access="isAuthenticated()"/>
 
             <scr:form-login login-page="/login"/>
             <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout"
