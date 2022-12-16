@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>4.0.3-SNAPSHOT</version>
+        <version>4.0.3</version>
     </parent>
 
     <dependencies>
@@ -157,7 +157,7 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-metastore-hbase</artifactId>
-            <version>4.0.3-SNAPSHOT</version>
+            <version>4.0.3</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
