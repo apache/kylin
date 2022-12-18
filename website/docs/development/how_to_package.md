@@ -22,11 +22,11 @@ last_update:
 | Software      | Comment                                      |    Version     |   Download Link    |
 |---------------| ---------------------------------------------|----------------|--------------------|
 | Git           |  Fetch branch name and hash of latest commit | latest         | https://git-scm.com/book/en/v2/Getting-Started-Installing-Git |
-| Apache Maven  |  Build Java and Scala source code            | 3.8.2 or latest| https://maven.apache.org/download.cgi |  
+| Apache Maven  |  Build Java and Scala source code            | 3.8.2 or latest| https://maven.apache.org/download.cgi |
 | Node.js       |  Build front end                             | 12.14.0 is recommended ( or 12.x ~ 14.x) | [How to switch to older node.js](development/how_to_package.md#install_older_node)|
 | JDK           |  Java Compiler and Development Tools         | JDK 1.8.x      | https://www.oracle.com/java/technologies/javase/javase8u211-later-archive-downloads.html |
 
-After installed above software, please do verify **software requirement** by following commands:
+After installing the above software, please verify **software requirements** by following commands:
 
 ```shell
 $ java -version
@@ -49,14 +49,14 @@ git version 2.30.1 (Apple Git-130)
 ```
 ### Options for Packaging Script
 
-|         Option       |     Comment                                        | 
-|--------------------  | ---------------------------------------------------|
-| -official            | If add this option, package name won't contain timestamp| 
-| -noThirdParty        | If add this option, third party binary won't be packaging into binary, current they are influxdb,grafana and postgresql |
-| -noSpark             | If add this option, spark won't packaging into Kylin binary |
-| -noHive1             | By default kylin 5.0 will support Hive 1.2, if add this option, this binary will support Hive 2.3+ |
-| -skipFront           | If add this option, front-end won't be build and packaging |
-| -skipCompile         | Add this option will assume java source code no need be compiled again |
+| Option        | Comment                                                      |
+| ------------- | ------------------------------------------------------------ |
+| -official     | If adding this option, the package name won't contain the timestamp |
+| -noThirdParty | If adding this option, third-party binary won't be packaged into binary, current they are influxdb,grafana and PostgreSQL |
+| -noSpark      | If adding this option, spark won't be packaged into the Kylin binary |
+| -noHive1      | By default Kylin 5.0 will support Hive 1.2, if add this option, this binary will support Hive 2.3+ |
+| -skipFront    | If add this option, the front-end won't be built and packaged |
+| -skipCompile  | Add this option will assume java source code no need to be compiled again |
 
 ### Other Options for Packaging Script
 |         Option       |     Comment                                        | 
@@ -79,11 +79,11 @@ For example, an unofficial package could be `apache-kylin-5.0.0-SNAPSHOT.2022081
 
 ```shell
 
-## Case 1: For developer who want to package for testing purpose
+## Case 1: For the developer who wants to package for testing purposes
 ./build/release/release.sh 
 
-## Case 2: Official apache release,  kylin binary for deploy on Hadoop3+ and Hive2.3+, 
-# and third party cannot be distributed because of apache distribution policy(size and license)
+## Case 2: Official apache release,  Kylin binary for deployment on Hadoop3+ and Hive2.3+, 
+# and the third party cannot be distributed because of apache distribution policy(size and license)
 ./build/release/release.sh -noSpark -official 
 
 ## Case 3: A package for Apache Hadoop 3 platform
@@ -92,31 +92,31 @@ For example, an unofficial package could be `apache-kylin-5.0.0-SNAPSHOT.2022081
 
 ### <span id="install_older_node">How to install older node.js</span>
 
-1. Please visit https://nodejs.org/en/download/ to download and install the latest node.js . After installed, you may use follow command to verify if the latest node.js is in use:
+1. Please visit https://nodejs.org/en/download/ to download and install the latest node.js. After installed, you may use the following command to verify if the latest node.js is in use:
 ```shell
 $ node -v
 v16.17.0
 ```
 
-2. Use some tools like https://github.com/nvm-sh/nvm to install specific version of node.js 
+2. Use some tools like https://github.com/nvm-sh/nvm to install a specific version of node.js 
 
 ```shell
 ## Switch to specific version using nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 nvm install 12.14.0
 
-## Before packaging, please switch to specific version
+## Before packaging, please switch to a specific version
 nvm use 12.14.0
 ```
 
-You may use follow command to verify if older node.js is in use:
+You may use the following command to verify if older node.js is in use:
 ```shell
 $ node -v
 v12.14.0
 ```
 
-3. Switch to latest node.js
+3. Switch to the latest node.js
 ```shell
-## switch to original version
+## switch to the original version
 nvm use system
 ```

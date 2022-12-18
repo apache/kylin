@@ -20,8 +20,8 @@ last_update:
 ### Kylin 5.0.0
 
 - More flexible and enhanced data model
-  - Allow adding new dimensions and measures to exiting data model
-  - Model adapts to table schema changes while retaining existing index at best effort
+  - Allow adding new dimensions and measures to the existing data model
+  - The model adapts to table schema changes while retaining the existing index at the best effort
   - Support last-mile data transformation using Computed Column
   - Support raw query (non-aggregation query) using Table Index
   - Support changing dimension table (SCD2)
@@ -32,9 +32,9 @@ last_update:
 - More flexible index management (was cuboid)
   - Add IndexPlan to support flexible index management
   - Add IndexEntity to support different index type
-  - Add LayoutEntity to support different storage layout of same Index
-- Towards a native and vectorized query engine
-  - Experiment: Integrate with native execution engine, leveraging Gluten
+  - Add LayoutEntity to support different storage layouts of the same Index
+- Toward a native and vectorized query engine
+  - Experiment: Integrate with a native execution engine, leveraging Gluten
   - Support async query
   - Enhance cost-based index optimizer
 - More
@@ -44,4 +44,4 @@ last_update:
 
 ### Kylin 5.1.0
 
-- Support deploy Kylin on K8S with micro-service architecture
+- Support deploying Kylin on K8S with micro-service architecture

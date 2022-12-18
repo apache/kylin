@@ -21,14 +21,14 @@ last_update:
 Unless more comments, all source code analysis are based on [this code snapshot](https://github.com/apache/kylin/tree/edab8698b6a9770ddc4cd00d9788d718d032b5e8) .
 :::
 
-### About Design of Kylin 5.0
+### About the Design of Kylin 5.0
 1. Metadata Store
    - [x] Metadata Store
    - [ ] Metadata Cache
    - [x] Transaction(CRUD of Metadata)
-   - [ ] Epoch, AuditLog etc.
+   - [ ] Epoch, AuditLog, etc.
 2. Metadata Format/Schema
-   - [ ] DataModel, IndexPlan and Dataflow
+   - [ ] DataModel, IndexPlan, and Dataflow
    - [ ] Index and Layout
    - [ ] Computed Column
 3. Query Engine
