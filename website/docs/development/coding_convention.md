@@ -16,15 +16,15 @@ last_update:
     author: Tengting Xu
 ---
 
-Coding convention is very important for teamwork. Not only it keeps code neat and tidy, it saves a lot of work too. Different coding convention (and auto formatter) will cause unnecessary code changes that requires more effort at code review and code merge.
+Coding convention is very important for teamwork. Not only it keeps code neat and tidy, but it also saves a lot of work too. Different coding convention (and auto formatter) will cause unnecessary code changes that require more effort at code review and code merge.
 
 ## Setup IDE code formatter
 
-For Java code, we use Eclipse default formatter setting, with one change that to allow long lines.
+For Java code, we use Eclipse's default formatter setting, with one change that allows long lines.
 
-- For Eclipse developers, no manual setting is required. Code formatter configurations `src/core-common/.settings/org.eclipse.jdt.core.prefs` is on git repo. Your IDE should be auto configured when the projects are imported.
+- For Eclipse developers, no manual setting is required. Code formatter configurations `src/core-common/.settings/org.eclipse.jdt.core.prefs` are on the git repo. Your IDE should be auto-configured when the projects are imported.
 
-- For intellij IDEA developers, you need to install `Eclipse Code Formatter` and load the Eclipse formatter settings into your IDE manually.
+- For IntelliJ IDEA developers, you need to install `Eclipse Code Formatter` and load the Eclipse formatter settings into your IDE manually.
 
   you have to do a few more steps:
 
@@ -36,7 +36,7 @@ For Java code, we use Eclipse default formatter setting, with one change that to
 
   ![](images/coding_convention/coding_convention_2.png)
 
-  3. Disable intellij IDEA’s `Optimize imports on the fly`
+  3. Disable IntelliJ IDEA’s `Optimize imports on the fly`
   
   ![](images/coding_convention/coding_convention_3.png)
 
@@ -64,7 +64,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-The checkstyle plugin will check the header rule when packaging also. The license file locates under `dev-support/checkstyle-apache-header.txt`. To make it easy for developers, please add the header as Copyright Profile and set it as default for Kylin project.
+The checkstyle plugin will check the header rule when packaging also. The license file locates under `dev-support/checkstyle-apache-header.txt`. To make it easy for developers, please add the header as Copyright Profile and set it as default for the Kylin project.
 
 ![](images/coding_convention/coding_convention_4.png)
 
@@ -80,8 +80,8 @@ The checkstyle plugin will check the header rule when packaging also. The licens
 
 5. Add a new test or modified a test.
 
-    1) Please using the `junit5` instead of `junit4`. Example, Using the annotation of `org.junit.jupiter.api.Test` instead of `org.junit.Test`.
+    1) Please use the `junit5` instead of `junit4`. For example, Using the annotation of `org.junit.jupiter.api.Test` instead of `org.junit.Test`.
 
-    2) A test case which extends from `NLocalFileMetadataTestCase` need to change with annotation `@MetadataInfo` and remove the `extend`. 
+    2) A test case that extends from `NLocalFileMetadataTestCase` needs to change with annotation `@MetadataInfo` and remove the `extend`. 
     
     > Example: org.apache.kylin.junit.MetadataExtension, org.apache.kylin.metadata.epoch.EpochManagerTest
