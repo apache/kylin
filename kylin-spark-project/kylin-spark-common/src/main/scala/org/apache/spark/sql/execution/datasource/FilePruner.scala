@@ -366,7 +366,9 @@ class FilePruner(cubeInstance: CubeInstance,
         val pruned = segDirs.filter {
           e => {
             val tsRange = cubeInstance.getSegment(e.segmentName, SegmentStatusEnum.READY).getTSRange
-            SegFilters(tsRange.startValue, tsRange.endValue, pattern)
+            // tsRange: 20221219000000_20221219010000、20221219010000_20221219020000, pattern: yyyy-MM-dd
+            val start = DateFormat.getFormatTimeStamp(tsRange.startValue, pattern)
+            SegFilters(start, tsRange.endValue, pattern)
               .foldFilter(reducedFilter) match {
               case AlwaysTrue => true
               case AlwaysFalse => false
