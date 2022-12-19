@@ -96,7 +96,13 @@ public class NTableSamplingJob extends DefaultExecutableOnTable {
         final String table = getParam(NBatchConstants.P_TABLE_NAME);
         final TableDesc tableDesc = NTableMetadataManager.getInstance(config, getProject()).getTableDesc(table);
         final ProjectInstance projectInstance = NProjectManager.getInstance(config).getProject(this.getProject());
-        return Sets.newHashSet(tableDesc.getResourcePath(), projectInstance.getResourcePath());
+        Set<String> dumpList = Sets.newHashSet(tableDesc.getResourcePath(), projectInstance.getResourcePath());
+        final TableExtDesc tableExtDesc = NTableMetadataManager.getInstance(config, getProject())
+                .getTableExtIfExists(tableDesc);
+        if (tableExtDesc != null) {
+            dumpList.add(tableExtDesc.getResourcePath());
+        }
+        return dumpList;
     }
 
     @Override
