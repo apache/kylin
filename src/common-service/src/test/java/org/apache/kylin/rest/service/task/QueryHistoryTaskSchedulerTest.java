@@ -631,8 +631,8 @@ public class QueryHistoryTaskSchedulerTest extends NLocalFileMetadataTestCase {
         queryHistory2.setQueryTime(QUERY_TIME);
         queryHistory2.setEngineType("NATIVE");
         QueryHistoryInfo queryHistoryInfo2 = new QueryHistoryInfo();
-        QueryMetrics.RealizationMetrics realizationMetric = new QueryMetrics.RealizationMetrics(LAYOUT3,
-                "Agg Index", "error", Lists.newArrayList());
+        QueryMetrics.RealizationMetrics realizationMetric = new QueryMetrics.RealizationMetrics(LAYOUT3, "Agg Index",
+                "error", Lists.newArrayList());
         queryHistoryInfo2.setRealizationMetrics(Lists.newArrayList(realizationMetric));
         queryHistory2.setQueryHistoryInfo(queryHistoryInfo2);
         queryHistory2.setId(11);

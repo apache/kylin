@@ -240,25 +240,21 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
     @Test
     public void testRemoveCommentInSql() {
         //test remove comment when last comment is --
-        Assert.assertEquals(
-                "select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
+        Assert.assertEquals("select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
                 QueryUtil.removeCommentInSql(
                         "select sum(ITEM_COUNT) --1 /* 7 */\nfrom TEST_KYLIN_FACT  --2 /* 7 */\ngroup by CAL_DT  --3 /* 7 */\n"
                                 + "order by SELLER_ID;  --4 /* 7 */\n--5\n/* 7 */\n--6"));
-        Assert.assertEquals(
-                "select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
+        Assert.assertEquals("select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
                 QueryUtil.removeCommentInSql(
                         "select sum(ITEM_COUNT) --1 /* 7 */\nfrom TEST_KYLIN_FACT  --2 /* 7 */\ngroup by CAL_DT  --3 /* 7 */\n"
                                 + "order by SELLER_ID  --4 /* 7 */\n--5\n/* 7 */\n--6"));
 
         //test remove comment when last comment is /* */
-        Assert.assertEquals(
-                "select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
+        Assert.assertEquals("select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
                 QueryUtil.removeCommentInSql(
                         "select sum(ITEM_COUNT) --1 /* 7 */\nfrom TEST_KYLIN_FACT  --2 /* 7 */\ngroup by CAL_DT  --3 /* 7 */\n"
                                 + "order by SELLER_ID;  --4 /* 7 */\n--5\n/* 7 */"));
-        Assert.assertEquals(
-                "select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
+        Assert.assertEquals("select sum(ITEM_COUNT)\nfrom TEST_KYLIN_FACT\ngroup by CAL_DT\n" + "order by SELLER_ID",
                 QueryUtil.removeCommentInSql(
                         "select sum(ITEM_COUNT) --1 /* 7 */\nfrom TEST_KYLIN_FACT  --2 /* 7 */\ngroup by CAL_DT  --3 /* 7 */\n"
                                 + "order by SELLER_ID  --4 /* 7 */\n--5\n/* 7 */"));
