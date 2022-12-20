@@ -1,0 +1,149 @@
+{
+  "uuid" : "451e127a-b684-1474-744b-c9afc14378af",
+  "last_modified" : 1670312998311,
+  "create_time" : 1670235128486,
+  "version" : "4.0.0.0",
+  "alias" : "logical_view",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "KYLIN_LOGICAL_VIEW.LOGICAL_VIEW_TABLE",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ {
+    "table" : "SSB.CUSTOMER",
+    "kind" : "LOOKUP",
+    "alias" : "CUSTOMER",
+    "join" : {
+      "type" : "INNER",
+      "primary_key" : [ "CUSTOMER.C_CUSTKEY" ],
+      "foreign_key" : [ "LOGICAL_VIEW_TABLE.C_CUSTKEY" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : null,
+      "foreign_table" : null
+    },
+    "flattenable" : "flatten",
+    "join_relation_type" : "MANY_TO_ONE"
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 1,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "C_REGION_LOGICAL_VIEW_TABLE",
+    "column" : "LOGICAL_VIEW_TABLE.C_REGION"
+  }, {
+    "id" : 1,
+    "name" : "C_NAME",
+    "column" : "LOGICAL_VIEW_TABLE.C_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "C_NATION_LOGICAL_VIEW_TABLE",
+    "column" : "LOGICAL_VIEW_TABLE.C_NATION"
+  }, {
+    "id" : 3,
+    "name" : "C_CUSTKEY",
+    "column" : "LOGICAL_VIEW_TABLE.C_CUSTKEY",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "C_CITY_LOGICAL_VIEW_TABLE",
+    "column" : "LOGICAL_VIEW_TABLE.C_CITY"
+  }, {
+    "id" : 5,
+    "name" : "C_MKTSEGMENT_LOGICAL_VIEW_TABLE",
+    "column" : "LOGICAL_VIEW_TABLE.C_MKTSEGMENT"
+  }, {
+    "id" : 6,
+    "name" : "C_ADDRESS",
+    "column" : "LOGICAL_VIEW_TABLE.C_ADDRESS",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "C_PHONE_LOGICAL_VIEW_TABLE",
+    "column" : "LOGICAL_VIEW_TABLE.C_PHONE"
+  }, {
+    "id" : 8,
+    "name" : "C_ADDRESS",
+    "column" : "CUSTOMER.C_ADDRESS"
+  }, {
+    "id" : 9,
+    "name" : "C_NATION_CUSTOMER",
+    "column" : "CUSTOMER.C_NATION"
+  }, {
+    "id" : 10,
+    "name" : "C_CUSTKEY",
+    "column" : "CUSTOMER.C_CUSTKEY"
+  }, {
+    "id" : 11,
+    "name" : "C_MKTSEGMENT_CUSTOMER",
+    "column" : "CUSTOMER.C_MKTSEGMENT"
+  }, {
+    "id" : 12,
+    "name" : "C_NAME",
+    "column" : "CUSTOMER.C_NAME"
+  }, {
+    "id" : 13,
+    "name" : "C_CITY_CUSTOMER",
+    "column" : "CUSTOMER.C_CITY"
+  }, {
+    "id" : 14,
+    "name" : "C_REGION_CUSTOMER",
+    "column" : "CUSTOMER.C_REGION"
+  }, {
+    "id" : 15,
+    "name" : "C_PHONE_CUSTOMER",
+    "column" : "CUSTOMER.C_PHONE"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "computed_columns" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "LOGICAL_VIEW_TABLE" : {
+        "x" : 472.88889567057294,
+        "y" : 203.50000169542102,
+        "width" : 220.0,
+        "height" : 200.0
+      },
+      "CUSTOMER" : {
+        "x" : 871.7777845594618,
+        "y" : 222.1111043294271,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null
+}

@@ -133,14 +133,17 @@ public class AclPermissionUtil {
     }
 
     public static boolean isAdminInProject(String project, Set<String> usergroups) {
+        return isSpecificPermissionInProject(project, usergroups, BasePermission.ADMINISTRATION);
+    }
+
+    public static boolean isSpecificPermissionInProject(String project, Set<String> userGroups, Permission permission) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (Objects.isNull(auth)) {
             return false;
         }
-
         MutableAclRecord acl = getProjectAcl(project);
-        Set<String> groups = filterGroupsInProject(usergroups, acl);
-        return isSpecificPermissionInProject(auth.getName(), groups, BasePermission.ADMINISTRATION, acl);
+        Set<String> groups = filterGroupsInProject(userGroups, acl);
+        return isSpecificPermissionInProject(auth.getName(), groups, permission, acl);
     }
 
     public static boolean isSpecificPermissionInProject(String username, Set<String> userGroupsInProject,

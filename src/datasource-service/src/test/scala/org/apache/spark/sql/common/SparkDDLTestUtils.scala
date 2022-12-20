@@ -23,7 +23,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 import org.apache.kylin.common.util.RandomUtil
 
-import org.apache.spark.sql.{SparderEnv, SparkSession}
+import org.apache.spark.sql.{KylinSession, SparderEnv, SparkSession}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.internal.StaticSQLConf
 import org.apache.spark.util.Utils
@@ -49,6 +49,7 @@ object SparkDDLTestUtils {
     }
     conf.set(ConfVars.SCRATCHDIR.varname, scratchDir.toString)
     conf.set("spark.hadoop.javax.jdo.option.ConnectionURL", "jdbc:derby:memory:db;create=true")
+    KylinSession.initLogicalViewConfig(conf)
     val sparkSession = SparkSession.builder
       .master("local[2]")
       .appName(getClass.getSimpleName)

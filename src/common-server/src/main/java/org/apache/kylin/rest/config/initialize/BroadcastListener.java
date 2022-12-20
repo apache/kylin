@@ -32,6 +32,7 @@ import org.apache.kylin.common.persistence.transaction.AddS3CredentialToSparkBro
 import org.apache.kylin.common.persistence.transaction.AuditLogBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.persistence.transaction.EpochCheckBroadcastNotifier;
+import org.apache.kylin.common.persistence.transaction.LogicalViewBroadcastNotifier;
 import org.apache.kylin.common.persistence.transaction.StopQueryBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.UpdateJobStatusEventNotifier;
 import org.apache.kylin.metadata.epoch.EpochManager;
@@ -45,6 +46,8 @@ import org.apache.kylin.rest.service.AuditLogService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.service.UserAclService;
+
+import org.apache.spark.sql.LogicalViewLoader;
 import org.apache.spark.sql.SparderEnv;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -130,6 +133,8 @@ public class BroadcastListener implements BroadcastEventHandler {
             AdminUserSyncEventNotifier adminUserSyncEventNotifier = (AdminUserSyncEventNotifier) notifier;
             userAclService.syncAdminUserAcl(adminUserSyncEventNotifier.getAdminUserList(),
                     adminUserSyncEventNotifier.isUseEmptyPermission());
+        } else if(notifier instanceof LogicalViewBroadcastNotifier) {
+            LogicalViewLoader.syncViewAsync();
         }
     }
 

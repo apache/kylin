@@ -16,16 +16,17 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.rest.request;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
+package org.apache.kylin.common.persistence.transaction;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class ViewDDLRequest {
-  @JsonProperty("sql")
-  private String sql;
-  @JsonProperty("project")
-  private String project;
+@EqualsAndHashCode
+public class LogicalViewBroadcastNotifier extends BroadcastEventReadyNotifier {
+
+    @Override
+    public boolean needBroadcastSelf() {
+        return false;
+    }
 }

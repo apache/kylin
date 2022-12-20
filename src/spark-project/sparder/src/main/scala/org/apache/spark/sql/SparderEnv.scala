@@ -18,15 +18,23 @@
 
 package org.apache.spark.sql
 
+import java.lang.{Boolean => JBoolean, String => JString}
+import java.security.PrivilegedAction
+import java.util.Map
+import java.util.concurrent.{Callable, ExecutorService}
+import java.util.concurrent.locks.ReentrantLock
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.security.UserGroupInformation
+import org.apache.kylin.common.{KylinConfig, QueryContext}
 import org.apache.kylin.common.exception.{KylinException, KylinTimeoutException, ServerErrorCode}
 import org.apache.kylin.common.msg.MsgPicker
 import org.apache.kylin.common.util.{DefaultHostInfoFetcher, HadoopUtil, S3AUtil}
-import org.apache.kylin.common.{KylinConfig, QueryContext}
 import org.apache.kylin.metadata.model.{NTableMetadataManager, TableExtDesc}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.query.runtime.plan.QueryToExecutionIDCache
+
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent, SparkListenerLogRollUp}
 import org.apache.spark.sql.KylinSession._
@@ -38,13 +46,6 @@ import org.apache.spark.sql.execution.ui.PostQueryExecutionForKylin
 import org.apache.spark.sql.hive.ReplaceLocationRule
 import org.apache.spark.sql.udf.UdfManager
 import org.apache.spark.util.{ThreadUtils, Utils}
-import org.apache.spark.{SparkConf, SparkContext}
-
-import java.lang.{Boolean => JBoolean, String => JString}
-import java.security.PrivilegedAction
-import java.util.Map
-import java.util.concurrent.locks.ReentrantLock
-import java.util.concurrent.{Callable, ExecutorService}
 
 // scalastyle:off
 object SparderEnv extends Logging {
@@ -264,6 +265,9 @@ object SparderEnv extends Logging {
           val tableMetadataManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv, project.getName)
           tableMetadataManager.listAllTables().forEach(tableDesc => SparderEnv.addS3Credential(tableMetadataManager.getOrCreateTableExt(tableDesc).getS3RoleCredentialInfo, spark))
         })
+      }
+      if (KylinConfig.getInstanceFromEnv.isDDLLogicalViewEnabled) {
+        LogicalViewLoader.initScheduler()
       }
     } catch {
       case throwable: Throwable =>
