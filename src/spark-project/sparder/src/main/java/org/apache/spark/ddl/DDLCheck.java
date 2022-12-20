@@ -15,36 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.spark.ddl;
+package org.apache.spark.ddl;
 
-import java.util.Set;
+import static org.apache.kylin.common.exception.ServerErrorCode.DDL_CHECK_ERROR;
 
-public class DDLCheckContext {
-  private String sql;
-  private String project;
-  private String userName;
-  private Set<String> groups;
+import org.apache.kylin.common.exception.KylinException;
 
-  public DDLCheckContext(String sql, String project, String userName, Set<String> groups) {
-    this.sql = sql;
-    this.project = project;
-    this.userName = userName;
-    this.groups = groups;
+public interface DDLCheck extends Comparable<DDLCheck> {
+
+  default String[] description(String project, String pageType) {
+    return new String[] {"", ""};
   }
 
-  public String getSql() {
-    return sql;
+  void check(DDLCheckContext context);
+
+  default void throwException(String msg) {
+    throw new KylinException(DDL_CHECK_ERROR, msg);
   }
 
-  public String getProject() {
-    return project;
+  default int priority() {
+    return Integer.MAX_VALUE;
   }
 
-  public String getUserName() {
-    return userName;
-  }
-
-  public Set<String> getGroups() {
-    return groups;
+  @Override
+  default int compareTo(DDLCheck other) {
+    return this.priority() - other.priority();
   }
 }

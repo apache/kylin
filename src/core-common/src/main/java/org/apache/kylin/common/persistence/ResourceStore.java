@@ -77,6 +77,7 @@ public abstract class ResourceStore implements AutoCloseable {
     public static final String PROJECT_ROOT = GLOBAL_PROJECT + "/project";
     public static final String ACL_GLOBAL_ROOT = GLOBAL_PROJECT + "/sys_acl/user";
     public static final String UPGRADE = GLOBAL_PROJECT + "/upgrade";
+    public static final String VIEW_ROOT = GLOBAL_PROJECT + "/logical_view";
 
     public static final String DATA_MODEL_DESC_RESOURCE_ROOT = "/model_desc";
     public static final String FUSION_MODEL_RESOURCE_ROOT = "/fusion_model";

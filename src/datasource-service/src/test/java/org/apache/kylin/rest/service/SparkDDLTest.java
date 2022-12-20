@@ -17,17 +17,34 @@
  */
 package org.apache.kylin.rest.service;
 
-import java.util.List;
+import static org.apache.spark.ddl.DDLConstant.HIVE_VIEW;
+import static org.apache.spark.ddl.DDLConstant.LOGICAL_VIEW;
+import static org.apache.spark.ddl.DDLConstant.REPLACE_LOGICAL_VIEW;
+import static org.apache.spark.sql.LogicalViewLoader.LOADED_LOGICAL_VIEWS;
+import static org.awaitility.Awaitility.await;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.source.NSparkMetadataExplorer;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.kylin.metadata.view.LogicalView;
+import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.request.ViewRequest;
+import org.apache.kylin.rest.response.LoadTableResponse;
+
+import org.apache.spark.sql.LogicalViewLoader;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.common.SparkDDLTestUtils;
-import org.apache.spark.sql.internal.SQLConf;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -41,27 +58,60 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.google.common.collect.Lists;
+
 public class SparkDDLTest extends NLocalFileMetadataTestCase {
   @Autowired
   private final SparkDDLService ddlService = Mockito.spy(new SparkDDLService());
   @Autowired
+  private final TableExtService tableExtService = Mockito.spy(new TableExtService());
+  @Autowired
+  private final TableService tableService = Mockito.spy(new TableService());
+  @Autowired
   private final IUserGroupService userGroupService = Mockito.spy(NUserGroupService.class);
+  private final Integer LOGICAL_VIEW_CATCHUP_INTERVAL = 3;
 
+  // Hive View
   private static final String CREATEVIEW_SQL1 =
       "CREATE VIEW `ssb`.`ke_order_view` as select LO_ORDERKEY, C_NAME from SSB.p_lineorder t1 left join "
           + "SSB. CUSTOMER t2 on t1. LO_CUSTKEY = t2. C_CUSTKEY";
   private static final String CREATEVIEW_SQL2 = "CREATE VIEW `ssb`.`order_view2` as select * from SSB.P_LINEORDER";
   private static final String CREATEVIEW_SQL3 = "CREATE VIEW `ssb`.`order_view2` as abc";
-  private static final String CREATEVIEW_SQL4 = "CREATE VIEW `ssb`.`order_view2` as select * from SSB.unload_table";
+  private static final String CREATEVIEW_SQL4 = "CREATE VIEW `ssb`.`ke_order_view2` as select * from SSB.unload_table";
   private static final String CREATEVIEW_SQL5 = "CREATE VIEW `ke_order_view2` as select * from SSB.P_LINEORDER";
   private static final String CREATEVIEW_SQL6 = "abc";
+  private static final String CREATEVIEW_SQL7 = "CREATE VIEW `ssb`.`ke_order_view3` as select * from SSB.P_LINEORDER";
   private static final String ALTERVIEW_SQL =
       "alter view `ssb`.`ke_order_view` as select lo_orderkey from SSB.P_LINEORDER";
   private static final String DROPVIEW_SQL1 = "drop view `ssb`.`ke_order_view`";
   private static final String DROPVIEW_SQL2 = "drop table `ssb`.`ke_table1`";
   private static final String DROPVIEW_SQL3 = "drop table `ssb`.`ke_order_view`";
   private static final String DROPVIEW_SQL4 = "drop table `ke_table2`";
+
   private static final String SHOWVIEW_SQL = "show create table ssb.ke_order_view";
+
+  // Logical View
+  private static final String CREATE_LOGICAL_VIEW_SQL1 = "CREATE LOGICAL VIEW  "
+      + "logical_view_table1  AS select * from SSB.P_LINEORDER";
+  private static final String CREATE_LOGICAL_VIEW_SQL2 = "CREATE LOGICAL VIEW  "
+      + "logical_view_table2  AS select * from SSB.P_LINEORDER";
+  private static final String CREATE_LOGICAL_VIEW_SQL3 = "CREATE LOGICAL VIEW  "
+      + "logical_view_table3  AS select * from SSB.P_LINEORDER";
+  private static final String CREATE_LOGICAL_VIEW_SQL4 = "CREATE LOGICAL VIEW  "
+      + "logical_view_table4  AS select * from SSB.P_LINEORDER";
+  private static final String CREATE_LOGICAL_VIEW_SQL5 = "CREATE LOGICAL VIEW  "
+      + "logical_view_table5  AS select * from SSB.P_LINEORDER";
+  private static final String REPLACE_LOGICAL_VIEW_SQL1 = "REPLACE LOGICAL VIEW  "
+      + "logical_view_no_exist  AS select * from SSB.Customer";
+  private static final String REPLACE_LOGICAL_VIEW_SQL2 = "REPLACE LOGICAL VIEW  "
+      + "logical_view_table2  AS select * from SSB.Customer";
+  private static final String DROP_LOGICAL_VIEW_SQL1 = "drop LOGICAL VIEW KYLIN_LOGICAL_VIEW.logical_view_table1";
+  private static final String DROP_LOGICAL_VIEW_SQL2 = "drop LOGICAL VIEW KYLIN_LOGICAL_VIEW.logical_view_table3";
+  private static final String SELECT_LOGICAL_VIEW_SQL = "select * from KYLIN_LOGICAL_VIEW.logical_view_table3";
+
+  // DDL Config
+  private static final String DDL_HIVE_CONFIG = "kylin.source.ddl.hive.enabled";
+  private static final String DDL_LOGICAL_VIEW_CONFIG = "kylin.source.ddl.logical-view.enabled";
 
   @AfterClass
   public static void tearDownResource() {
@@ -71,9 +121,12 @@ public class SparkDDLTest extends NLocalFileMetadataTestCase {
   @Before
   public void setup() {
     createTestMetadata();
-    Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
+    Authentication authentication = new TestingAuthenticationToken("ADMIN",
+        "ADMIN", Constant.ROLE_ADMIN);
     SecurityContextHolder.getContext().setAuthentication(authentication);
     ReflectionTestUtils.setField(ddlService, "userGroupService", userGroupService);
+    ReflectionTestUtils.setField(tableExtService, "tableService", tableService);
+    getTestConfig().setProperty(DDL_LOGICAL_VIEW_CONFIG, "true");
   }
 
   @After
@@ -84,63 +137,178 @@ public class SparkDDLTest extends NLocalFileMetadataTestCase {
   @Test
   public void testDDL() throws Exception {
     try {
-      assertKylinExeption(
-          () ->
-              ddlService.executeDDLSql("ssb", CREATEVIEW_SQL5),
-          "DDL function has not been turned on.");
-
-      getTestConfig().setProperty("kylin.source.ddl.enabled", "true");
-      NTableMetadataManager tableManager = NTableMetadataManager.getInstance(getTestConfig(), "ssb");
       SparkDDLTestUtils.prepare();
-      ddlService.executeDDLSql("ssb", CREATEVIEW_SQL5);
       assertKylinExeption(
           () ->
-              ddlService.executeDDLSql("ssb", CREATEVIEW_SQL2),
-          MsgPicker.getMsg().getDDLViewNameError());
-      assertKylinExeption(() ->
-          ddlService.executeDDLSql("ssb", CREATEVIEW_SQL3), "");
-      assertKylinExeption(() ->
-          ddlService.executeDDLSql("ssb", CREATEVIEW_SQL6), "");
-      assertKylinExeption(
-          () ->
-              ddlService.executeDDLSql("ssb", CREATEVIEW_SQL4),
-          MsgPicker.getMsg().getDDLTableNotLoad("SSB.unload_table"));
-      assertKylinExeption(
-          () ->
-              ddlService.executeDDLSql("ssb", DROPVIEW_SQL2),
-          MsgPicker.getMsg().getDDLDropError());
-      assertKylinExeption(
-          () ->
-              ddlService.executeDDLSql("ssb", DROPVIEW_SQL3), "");
+              ddlService.executeSQL(new ViewRequest("ssb", CREATEVIEW_SQL1, HIVE_VIEW)),
+          "Hive operation is not supported, please turn on config.");
+      getTestConfig().setProperty(DDL_HIVE_CONFIG, "true");
 
-      ddlService.executeDDLSql("ssb", CREATEVIEW_SQL1);
-      ddlService.executeDDLSql("ssb", ALTERVIEW_SQL);
-      String createViewSQL = ddlService.executeDDLSql("ssb", SHOWVIEW_SQL);
-      Assert.assertTrue(createViewSQL.contains("ke_order_view"));
-      ddlService.executeDDLSql("ssb", DROPVIEW_SQL1);
+      getTestConfig().setProperty(DDL_LOGICAL_VIEW_CONFIG, "false");
+      assertKylinExeption(
+          () ->
+              ddlService.executeSQL(new ViewRequest("ssb", CREATE_LOGICAL_VIEW_SQL1, LOGICAL_VIEW)),
+          "Logical View operation is not supported, please turn on config.");
+      getTestConfig().setProperty(DDL_LOGICAL_VIEW_CONFIG, "true");
+      getTestConfig().setProperty(
+          "kylin.source.ddl.logical-view-catchup-interval", LOGICAL_VIEW_CATCHUP_INTERVAL.toString());
 
+      testHiveDDL();
+
+      testLogicalView();
+
+      // User authentication
       Authentication authentication = new TestingAuthenticationToken("USER1",
           "", Constant.GROUP_ALL_USERS);
       SecurityContextHolder.getContext().setAuthentication(authentication);
       assertKylinExeption(
           () ->
-              ddlService.executeDDLSql("ssb", CREATEVIEW_SQL1),
-          MsgPicker.getMsg().getDDLPermissionDenied());
-
-      // ddl description
-      List<List<String>> description = ddlService.pluginsDescription("ssb");
-      Assert.assertTrue(description.size() > 0);
-
-
-      // read/write cluster
-      SparderEnv.getSparkSession().sessionState().conf()
-          .setConf(SQLConf.HIVE_SPECIFIC_FS_LOCATION(), "hdfs://read");
-      new NSparkMetadataExplorer().checkDatabaseHadoopAccessFast("SSB");
+              ddlService.executeSQL(new ViewRequest("ssb", CREATEVIEW_SQL1)),
+          "");
     } finally {
+      LogicalViewLoader.stopScheduler();
+      LOADED_LOGICAL_VIEWS.clear();
       SparkSession spark = SparderEnv.getSparkSession();
       if (spark != null && !spark.sparkContext().isStopped()) {
         spark.stop();
       }
     }
+  }
+
+  private void testHiveDDL() throws Exception {
+    // Hive View DDL
+    ddlService.executeSQL(new ViewRequest("ssb", CREATEVIEW_SQL5, HIVE_VIEW));
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("ssb", CREATEVIEW_SQL2, HIVE_VIEW)),
+        MsgPicker.getMsg().getDDLViewNameError());
+    assertKylinExeption(() ->
+        ddlService.executeSQL(new ViewRequest("ssb", CREATEVIEW_SQL3)), "");
+    assertKylinExeption(() ->
+        ddlService.executeSQL(new ViewRequest("ssb", CREATEVIEW_SQL6)), "");
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("ssb", CREATEVIEW_SQL4)),
+        MsgPicker.getMsg().getDDLTableNotLoad("SSB.unload_table"));
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("ssb", DROPVIEW_SQL2)),
+        MsgPicker.getMsg().getDDLDropError());
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("ssb", DROPVIEW_SQL3)), "");
+    ddlService.executeSQL(new ViewRequest("ssb", CREATEVIEW_SQL1, HIVE_VIEW));
+    ddlService.executeSQL(new ViewRequest("ssb", ALTERVIEW_SQL, HIVE_VIEW));
+    String createViewSQL = ddlService.executeSQL(new ViewRequest("ssb", SHOWVIEW_SQL, HIVE_VIEW));
+    Assert.assertTrue(createViewSQL.contains("ke_order_view"));
+    ddlService.executeSQL(new ViewRequest("ssb", DROPVIEW_SQL1, HIVE_VIEW));
+  }
+
+  private void testLogicalView() throws Exception {
+    SparkSession spark = SparderEnv.getSparkSession();
+    // Logical View DDL
+    assertRuntimeExeption(() -> spark.sql(SELECT_LOGICAL_VIEW_SQL), "");
+    ddlService.executeSQL(new ViewRequest("ssb", CREATE_LOGICAL_VIEW_SQL1, LOGICAL_VIEW));
+    ddlService.executeSQL(new ViewRequest("ssb", CREATE_LOGICAL_VIEW_SQL2, LOGICAL_VIEW));
+    ddlService.executeSQL(new ViewRequest("demo", CREATE_LOGICAL_VIEW_SQL4, LOGICAL_VIEW));
+    ddlService.executeSQL(new ViewRequest("demo", CREATE_LOGICAL_VIEW_SQL5, LOGICAL_VIEW));
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("ssb", CREATE_LOGICAL_VIEW_SQL2, LOGICAL_VIEW)),
+        MsgPicker.getMsg().getDDLViewNameDuplicateError());
+    ddlService.executeSQL(new ViewRequest("ssb", DROP_LOGICAL_VIEW_SQL1, LOGICAL_VIEW));
+    NTableMetadataManager tableMgr = NTableMetadataManager.getInstance(getTestConfig(), "ssb");
+    TableDesc tableDesc = tableMgr.getTableDesc("SSB.P_LINEORDER");
+    String s = JsonUtil.writeValueAsIndentString(tableDesc);
+    TableDesc newTable = JsonUtil.readValue(s, TableDesc.class);
+    newTable.setName("KYLIN_LOGICAL_VIEW.logical_view_table3");
+    newTable.setMvcc(-1);
+    tableMgr.saveSourceTable(newTable);
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("ssb", DROP_LOGICAL_VIEW_SQL2, LOGICAL_VIEW)), "");
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("ssb", REPLACE_LOGICAL_VIEW_SQL1)),
+        "View name is not found.");
+    ddlService.executeSQL(new ViewRequest("ssb", REPLACE_LOGICAL_VIEW_SQL2));
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("demo", REPLACE_LOGICAL_VIEW_SQL2)),
+        "View can only modified in Project");
+
+    // Request Restrict
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("ssb", CREATE_LOGICAL_VIEW_SQL3, HIVE_VIEW)),
+        "Only support");
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("ssb", CREATEVIEW_SQL7, LOGICAL_VIEW)),
+        "Only support");
+    assertKylinExeption(
+        () ->
+            ddlService.executeSQL(new ViewRequest("ssb", CREATE_LOGICAL_VIEW_SQL3, REPLACE_LOGICAL_VIEW)),
+        "Only support");
+
+    // Logical View Loader
+    LogicalViewLoader.initScheduler();
+    LogicalViewManager manager = LogicalViewManager.getInstance(KylinConfig.getInstanceFromEnv());
+    LogicalView logicalView = new LogicalView("logical_view_table3", CREATE_LOGICAL_VIEW_SQL3,
+        "ADMIN", "SSB");
+    manager.update(logicalView);
+    await().atMost(LOGICAL_VIEW_CATCHUP_INTERVAL * 10, TimeUnit.SECONDS).until(() -> {
+      try {
+        if (!LOADED_LOGICAL_VIEWS.containsKey("LOGICAL_VIEW_TABLE5")) {
+          return false;
+        }
+        spark.sql(SELECT_LOGICAL_VIEW_SQL);
+      } catch (Exception e) {
+        return false;
+      }
+      return true;
+    });
+    manager.delete("logical_view_table5");
+    await().atMost(LOGICAL_VIEW_CATCHUP_INTERVAL * 5, TimeUnit.SECONDS).until(() -> {
+      if (LOADED_LOGICAL_VIEWS.containsKey("LOGICAL_VIEW_TABLE5")) {
+        return false;
+      }
+      return true;
+    });
+    // DDL description
+    List<List<String>> description = ddlService.pluginsDescription("ssb", "hive");
+    Assert.assertEquals(4, description.get(0).size());
+
+    description = ddlService.pluginsDescription("ssb", "logic");
+    Assert.assertEquals(3, description.get(0).size());
+
+    // view list in project
+    List<LogicalView> logicalViewsInProject = ddlService.listAll("ssb", "");
+    List<LogicalView> logicalViewsInProject2 = ddlService.listAll("ssb", "table2");
+    Assert.assertEquals(3, logicalViewsInProject.size());
+    Assert.assertEquals(1, logicalViewsInProject2.size());
+    LogicalView confidentialTable =
+        logicalViewsInProject.stream().filter(table -> table.getCreatedProject().equals("demo")).collect(
+            Collectors.toList()).get(0);
+    LogicalView noConfidentialTable =
+        logicalViewsInProject.stream().filter(table -> table.getCreatedProject().equals("ssb")).collect(
+            Collectors.toList()).get(0);
+    Assert.assertEquals("***", confidentialTable.getCreatedSql());
+    Assert.assertNotEquals("***", noConfidentialTable.getCreatedSql());
+
+    // load table list
+    String[] failedLoadTables = {"KYLIN_LOGICAL_VIEW.logical_view_table2",
+                                 "KYLIN_LOGICAL_VIEW.logical_view_table3",
+                                 "KYLIN_LOGICAL_VIEW.logical_view_table4"};
+    String[] successLoadTables = {"KYLIN_LOGICAL_VIEW.logical_view_table2",
+                                  "KYLIN_LOGICAL_VIEW.logical_view_table3"};
+    List<Pair<TableDesc, TableExtDesc>> canLoadTables = Lists.newArrayList();
+    LoadTableResponse tableResponse = new LoadTableResponse();
+    tableExtService.filterAccessTables(successLoadTables, canLoadTables, tableResponse, "ssb");
+    Assert.assertEquals(2, canLoadTables.size());
+    assertKylinExeption(
+        () ->
+            tableExtService.filterAccessTables(failedLoadTables, canLoadTables, tableResponse, "ssb"),
+        "Can't load table");
   }
 }

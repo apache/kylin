@@ -266,6 +266,17 @@ public class NLocalFileMetadataTestCase extends AbstractTestCase {
         }
     }
 
+    public void assertRuntimeExeption(UserFunction f, String msg) {
+        try {
+            f.process();
+            Assert.fail();
+        } catch (Exception e) {
+            if (StringUtils.isNotEmpty(msg)) {
+                Assert.assertTrue(e.getMessage().contains(msg));
+            }
+        }
+    }
+
     public interface UserFunction {
         void process() throws Exception;
     }

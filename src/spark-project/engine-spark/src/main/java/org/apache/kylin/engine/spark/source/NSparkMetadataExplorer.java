@@ -35,6 +35,7 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
@@ -60,6 +61,7 @@ import com.clearspring.analytics.util.Lists;
 import com.google.common.collect.Sets;
 
 import lombok.val;
+import static org.apache.kylin.common.exception.ServerErrorCode.DDL_CHECK_ERROR;
 
 public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleDataDeployer, Serializable {
 
@@ -97,7 +99,19 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
     @Override
     public List<String> listDatabases() throws Exception {
         Dataset<Row> dataset = SparderEnv.getSparkSession().sql("show databases").select("namespace");
-        return dataset.collectAsList().stream().map(row -> row.getString(0)).collect(Collectors.toList());
+        List<String> databases =
+            dataset.collectAsList().stream().map(row -> row.getString(0)).collect(Collectors.toList());
+        if (KylinConfig.getInstanceFromEnv().isDDLLogicalViewEnabled()) {
+            String logicalViewDB = KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB();
+            databases.forEach(db -> {
+                if(db.equalsIgnoreCase(logicalViewDB)){
+                    throw new KylinException(DDL_CHECK_ERROR, "Logical view database should not be duplicated "
+                        + "with normal hive database!!!");
+                }
+            });
+            databases.add(logicalViewDB);
+        }
+        return databases;
     }
 
     @Override
@@ -297,6 +311,10 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
     @Override
     public boolean checkDatabaseAccess(String database) throws Exception {
         boolean hiveDBAccessFilterEnable = KapConfig.getInstanceFromEnv().getDBAccessFilterEnable();
+        String viewDB = KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB();
+        if(viewDB.equalsIgnoreCase(database)){
+            return true;
+        }
         if (hiveDBAccessFilterEnable) {
             logger.info("Check database {} access start.", database);
             try {

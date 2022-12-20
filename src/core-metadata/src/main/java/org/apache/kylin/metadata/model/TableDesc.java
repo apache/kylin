@@ -631,4 +631,8 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         }
         return getIdentity();
     }
+
+    public boolean isLogicalView() {
+        return KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB().equalsIgnoreCase(this.getDatabase());
+    }
 }

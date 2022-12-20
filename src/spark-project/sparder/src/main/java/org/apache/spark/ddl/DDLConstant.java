@@ -15,21 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.spark.ddl;
+package org.apache.spark.ddl;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.DDL_CHECK_ERROR;
+public class DDLConstant {
+  public static final String LOGICAL_VIEW = "logic";
+  public static final String REPLACE_LOGICAL_VIEW = "replaceLogicalView";
+  public static final String CREATE_LOGICAL_VIEW = "createLogicalView";
+  public static final String DROP_LOGICAL_VIEW = "dropLogicalView";
+  public static final String HIVE_VIEW = "hive";
+  public static final String NO_RESTRICT = "noRestrict";
+  public static final Integer VIEW_RULE_PRIORITY = 1;
+  public static final Integer SOURCE_TABLE_RULE_PRIORITY = 2;
 
-import org.apache.kylin.common.exception.KylinException;
+  private DDLConstant() {
 
-public interface DDLCheck {
-
-  default String[] description(String project) {
-    return new String[] {"", ""};
-  }
-
-  void check(DDLCheckContext context);
-
-  default void throwException(String msg) {
-    throw new KylinException(DDL_CHECK_ERROR, msg);
   }
 }

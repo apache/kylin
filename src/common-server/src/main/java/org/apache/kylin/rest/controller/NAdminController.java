@@ -74,7 +74,9 @@ public class NAdminController extends NBasicController {
         propertyKeys.add("kylin.streaming.enabled");
         propertyKeys.add("kylin.model.measure-name-check-enabled");
         propertyKeys.add("kylin.security.remove-ldap-custom-security-limit-enabled");
-        propertyKeys.add("kylin.source.ddl.enabled");
+        propertyKeys.add("kylin.source.ddl.logical-view.enabled");
+        propertyKeys.add("kylin.source.ddl.hive.enabled");
+        propertyKeys.add("kylin.source.ddl.logical-view-database");
         propertyKeys.add("kylin.storage.check-quota-enabled");
 
         // add second storage

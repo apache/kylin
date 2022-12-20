@@ -149,6 +149,7 @@ public abstract class SegmentJob extends SparkApplication {
 
     @Override
     protected void extraInit() {
+        super.extraInit();
         partialBuild = Boolean.parseBoolean(getParam(NBatchConstants.P_PARTIAL_BUILD));
         Set<String> segmentIDs = Arrays.stream(getParam(NBatchConstants.P_SEGMENT_IDS).split(COMMA))
                 .collect(Collectors.toCollection(LinkedHashSet::new));

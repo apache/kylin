@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @NoArgsConstructor
@@ -52,8 +53,11 @@ public class NSparkMergingStep extends NSparkExecutable {
 
     @Override
     protected Set<String> getMetadataDumpList(KylinConfig config) {
+        Set<String> dumpList = new LinkedHashSet<>();
         NDataflow df = NDataflowManager.getInstance(config, getProject()).getDataflow(getDataflowId());
-        return df.collectPrecalculationResource();
+        dumpList.addAll(df.collectPrecalculationResource());
+        dumpList.addAll(getLogicalViewMetaDumpList(config));
+        return dumpList;
     }
 
     @Override

@@ -1,0 +1,9 @@
+{
+  "uuid" : "087dc284-caae-c99c-12f4-b7bfb562746d",
+  "last_modified" : 0,
+  "create_time" : 1670222960426,
+  "version" : "4.0.0.0",
+  "table_name" : "LOGICAL_VIEW_TABLE",
+  "created_sql" : "CREATE OR REPLACE GLOBAL TEMPORARY VIEW  logical_view_table  AS select * from CUSTOMER",
+  "created_user" : "ADMIN"
+}
