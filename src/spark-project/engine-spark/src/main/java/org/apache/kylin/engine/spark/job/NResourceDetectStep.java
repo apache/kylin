@@ -61,7 +61,9 @@ public class NResourceDetectStep extends NSparkExecutable {
     protected Set<String> getMetadataDumpList(KylinConfig config) {
         final AbstractExecutable parent = getParent();
         if (parent instanceof DefaultExecutable) {
-            return ((DefaultExecutable) parent).getMetadataDumpList(config);
+            Set<String> dumpList = ((DefaultExecutable) parent).getMetadataDumpList(config);
+            dumpList.addAll(getLogicalViewMetaDumpList(config));
+            return dumpList;
         }
         throw new IllegalStateException("Unsupported resource detect for non chained executable!");
     }

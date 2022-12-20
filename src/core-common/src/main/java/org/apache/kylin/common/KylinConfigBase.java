@@ -3726,10 +3726,6 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.second-storage.wait-lock-timeout", "180"));
     }
 
-    public boolean getDDLEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.source.ddl.enabled", FALSE));
-    }
-
     public boolean isBuildSegmentOverlapEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.build.segment-overlap-enabled", FALSE));
     }
@@ -3745,8 +3741,28 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isStorageQuotaEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.storage.check-quota-enabled", FALSE));
     }
-    
+
     public boolean skipShardPruningForInExpr() {
         return Boolean.parseBoolean(getOptional("kylin.query.skip-shard-pruning-for-in", FALSE));
+    }
+
+    public boolean isDDLEnabled() {
+        return isDDLLogicalViewEnabled() || isDDLHiveEnabled();
+    }
+
+    public boolean isDDLLogicalViewEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.source.ddl.logical-view.enabled", FALSE));
+    }
+
+    public boolean isDDLHiveEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.source.ddl.hive.enabled", FALSE));
+    }
+
+    public String getDDLLogicalViewDB() {
+        return getOptional("kylin.source.ddl.logical-view.database", "KYLIN_LOGICAL_VIEW");
+    }
+
+    public int getDDLLogicalViewCatchupInterval() {
+        return Integer.parseInt(getOptional("kylin.source.ddl.logical-view-catchup-interval", "60"));
     }
 }

@@ -19,7 +19,6 @@
 package org.apache.kylin.engine.spark.mockup;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +31,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.engine.spark.NSparkCubingEngine.NSparkCubingSource;
+import org.apache.kylin.engine.spark.source.NSparkCubingSourceInput;
+import org.apache.kylin.engine.spark.source.NSparkMetadataExplorer;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -41,7 +43,7 @@ import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.engine.spark.NSparkCubingEngine.NSparkCubingSource;
+
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -71,7 +73,10 @@ public class CsvSource implements ISource {
 
                 @Override
                 public Dataset<Row> getSourceData(TableDesc table, SparkSession ss, Map<String, String> parameters) {
-
+                    if (KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB()
+                        .equalsIgnoreCase(table.getDatabase())) {
+                      return new NSparkCubingSourceInput().getSourceData(table, ss, parameters);
+                    }
                     String path = new File(getUtMetaDir(), "data/" + table.getIdentity() + ".csv").getAbsolutePath();
                     ColumnDesc[] columnDescs = table.getColumns();
                     List<ColumnDesc> tblColDescs = Lists.newArrayListWithCapacity(columnDescs.length);
@@ -165,8 +170,12 @@ public class CsvSource implements ISource {
 
         @Override
         public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table, String prj)
-                throws IOException {
-            String resPath = KylinConfig.getInstanceFromEnv().getMetadataUrl().getIdentifier();
+            throws Exception {
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            if (config.getDDLLogicalViewDB().equalsIgnoreCase(database)) {
+                return new NSparkMetadataExplorer().loadTableMetadata(database, table, prj);
+            }
+            String resPath = config.getMetadataUrl().getIdentifier();
             String path = resPath + "/../data/tableDesc/" + database + "." + table + ".json";
             TableDesc tableDesc = JsonUtil.readValue(new File(path), TableDesc.class);
             for (ColumnDesc column : tableDesc.getColumns()) {

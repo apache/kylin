@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_LOGICAL_VIEW;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.EXCLUDED_TABLE_REQUEST_NOT_ALLOWED;
 
@@ -49,6 +50,8 @@ import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.view.LogicalView;
+import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.S3TableExtInfo;
 import org.apache.kylin.rest.request.TableExclusionRequest;
@@ -69,6 +72,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -91,7 +95,7 @@ public class TableExtService extends BasicService {
         Map<String, Set<String>> dbTableMap = classifyDbTables(dbTables, isDb);
         Set<String> existDbs = Sets.newHashSet(tableService.getSourceDbNames(project));
         LoadTableResponse tableResponse = new LoadTableResponse();
-        List<Pair<TableDesc, TableExtDesc>> loadTables = Lists.newArrayList();
+        List<Pair<TableDesc, TableExtDesc>> canLoadTables = Lists.newArrayList();
         for (Map.Entry<String, Set<String>> entry : dbTableMap.entrySet()) {
             String db = entry.getKey();
             Set<String> tableSet = entry.getValue();
@@ -114,14 +118,44 @@ public class TableExtService extends BasicService {
             }
 
             String[] tables = existTables.stream().map(table -> db + "." + table).toArray(String[]::new);
-            if (tables.length > 0)
-                loadTables.addAll(extractTableMeta(tables, project, tableResponse));
+            if (tables.length > 0){
+                filterAccessTables(tables, canLoadTables, tableResponse, project);
+            }
         }
-        if (!loadTables.isEmpty()) {
-            return innerLoadTables(project, tableResponse, loadTables);
+        if (!canLoadTables.isEmpty()) {
+            return innerLoadTables(project, tableResponse, canLoadTables);
         }
 
         return tableResponse;
+    }
+
+    @VisibleForTesting
+    public void filterAccessTables(
+        String[] tables, List<Pair<TableDesc, TableExtDesc>> canLoadTables,
+        LoadTableResponse tableResponse, String project) throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        List<Pair<TableDesc, TableExtDesc>> toLoadTables = extractTableMeta(tables, project, tableResponse);
+        if (!config.isDDLLogicalViewEnabled()) {
+            canLoadTables.addAll(toLoadTables);
+            return;
+        }
+        LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
+        toLoadTables.stream()
+            .filter(table -> !table.getFirst().isLogicalView())
+            .forEach(canLoadTables::add);
+        toLoadTables.stream()
+            .filter(table -> table.getFirst().isLogicalView())
+            .forEach(table -> {
+                String tableName = table.getFirst().getName();
+                LogicalView logicalTable = viewManager.get(tableName);
+                String viewProject = logicalTable != null ? logicalTable.getCreatedProject() : "unknown";
+                if (logicalTable != null && viewProject.equalsIgnoreCase(project)) {
+                    canLoadTables.add(table);
+                } else {
+                    throw new KylinException(INVALID_LOGICAL_VIEW, MsgPicker.getMsg()
+                        .getLoadLogicalViewError(tableName, viewProject));
+                }
+            });
     }
 
     public LoadTableResponse loadAWSTablesCompatibleCrossAccount(List<S3TableExtInfo> s3TableExtInfoList,
