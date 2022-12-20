@@ -88,8 +88,7 @@ public class QueryRoutingEngine {
         try {
             return doTransactionEnabled(() -> {
 
-                if (projectKylinConfig.enableReplaceDynamicParams()
-                        && queryParams.isPrepareStatementWithParams()) {
+                if (projectKylinConfig.enableReplaceDynamicParams() && queryParams.isPrepareStatementWithParams()) {
                     queryParams.setSql(queryParams.getPrepareSql());
                 }
 
@@ -128,7 +127,7 @@ public class QueryRoutingEngine {
         } catch (TransactionException e) {
             Throwable cause = e.getCause();
             if (cause instanceof SQLException && cause.getCause() instanceof KylinException) {
-                throw (SQLException)cause;
+                throw (SQLException) cause;
             }
             if (shouldPushdown(cause, queryParams)) {
                 return pushDownQuery((SQLException) cause, queryParams);
@@ -137,7 +136,7 @@ public class QueryRoutingEngine {
             }
         } catch (SQLException e) {
             if (e.getCause() instanceof KylinException) {
-                if(checkIfRetryQuery(e.getCause())) {
+                if (checkIfRetryQuery(e.getCause())) {
                     NProjectLoader.removeCache();
                     return queryWithSqlMassage(queryParams);
                 } else {
