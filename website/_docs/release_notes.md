@@ -15,6 +15,26 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v4.0.3 - 2022-12-22
+
+__New Feature__
+
+* [KYLIN-5181] - Support postgresql to store kylin metadata
+
+__Bug Fix__
+
+* [KYLIN-5008] - When backend spark was failed, but corresponding job status is shown as finished in WebUI
+* [KYLIN-5245] - When a job is submitted with deployMode=cluster and the application driver is abnormal, Kylin displays the job status as success
+* [KYLIN-5271] - Query memory leaks
+* [KYLIN-5285] - Performance optimization for sharby column
+
+__Improvement__
+
+* [KYLIN-5246] - Long running job's log staying in mem, may cause job server oom
+* [KYLIN-5250] - Add a switch for no hack aggregation group
+* [KYLIN-5251] - On hadoop 3 platform and start with class not found: org/apache/commons/Configuration
+
+
 
 ## v4.0.2 - 2022-10-10
 

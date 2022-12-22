@@ -6,14 +6,14 @@ title: 下载
 您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](https://www.apache.org/dist/kylin/KEYS)来验证下载文件的有效性.
 
 #### v4.0.2
-- 这是 Kylin 4.0.1 版本之后的一个 bug-fix 版本，包含 12 个新功能和改进，以及 9 个问题的修复。关于具体内容请查看发布说明。
+- 这是 Kylin 4.0.1 版本之后的一个 bug-fix 版本，包含 4 个新功能和改进，以及 4 个问题的修复。关于具体内容请查看发布说明。
 - [发布说明](/docs/release_notes.html), [安装指南](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [升级指南](/docs/howto/howto_upgrade.html)
-- 源码下载: [apache-kylin-4.0.2-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.2/apache-kylin-4.0.2-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.2/apache-kylin-4.0.2-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.2/apache-kylin-4.0.2-source-release.zip.sha256)\]
+- 源码下载: [apache-kylin-4.0.3-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.3/apache-kylin-4.0.3-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.3/apache-kylin-4.0.3-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.3/apache-kylin-4.0.3-source-release.zip.sha256)\]
 - 二进制包 (选择二进制包前请检查文档 [Hadoop 支持矩阵](https://cwiki.apache.org/confluence/display/KYLIN/Support+Hadoop+Version+Matrix+of+Kylin+4)):
-  - for Apache Spark 3.1.x [apache-kylin-4.0.2-bin.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.2/apache-kylin-4.0.2-bin.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.2/apache-kylin-4.0.2-bin.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.2/apache-kylin-4.0.2-bin.tar.gz.sha256)\]
+  - for Apache Spark 3.1.x [apache-kylin-4.0.3-bin-spark3.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.3/apache-kylin-4.0.3-bin-spark3.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.3/apache-kylin-4.0.3-bin-spark3.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.3/apache-kylin-4.0.3-bin-spark3.tar.gz.sha256)\]
 
 #### v3.1.3
-- 这是 Kylin 3.1.1 版本后的一个 bug-fix 版本，包含 10 个新功能和改进，以及 14 个问题的修复。关于具体内容请查看发布说明。
+- 这是 Kylin 3.1.2 版本后的一个 bug-fix 版本，包含 10 个新功能和改进，以及 14 个问题的修复。关于具体内容请查看发布说明。
 - [发布说明](/docs31/release_notes.html), [安装指南](/docs31/install/index.html) and [升级指南](/docs31/howto/howto_upgrade.html)
 - 源码下载: [apache-kylin-3.1.3-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.3/apache-kylin-3.1.3-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.3/apache-kylin-3.1.3-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.3/apache-kylin-3.1.3-source-release.zip.sha256)\]
 - Hadoop 2 二进制包:
