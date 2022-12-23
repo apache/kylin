@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AWSTableLoadRequest;
@@ -292,6 +293,8 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
     }
 
     private void initMockito(LoadTableResponse loadTableResponse, TableLoadRequest tableLoadRequest) throws Exception {
+        StringUtil.toUpperCaseArray(tableLoadRequest.getTables(), tableLoadRequest.getTables());
+        StringUtil.toUpperCaseArray(tableLoadRequest.getDatabases(), tableLoadRequest.getDatabases());
         Mockito.when(tableExtService.loadDbTables(tableLoadRequest.getTables(), "default", false))
                 .thenReturn(loadTableResponse);
         Mockito.when(tableExtService.loadDbTables(tableLoadRequest.getDatabases(), "default", true))
@@ -302,17 +305,67 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
     public void testLoadTables() throws Exception {
         Set<String> loaded = Sets.newHashSet("table1");
         Set<String> failed = Sets.newHashSet("table2");
-        Set<String> loading = Sets.newHashSet("table3");
         LoadTableResponse loadTableResponse = new LoadTableResponse();
         loadTableResponse.setLoaded(loaded);
         loadTableResponse.setFailed(failed);
-        final TableLoadRequest tableLoadRequest = mockLoadTableRequest();
-        initMockito(loadTableResponse, tableLoadRequest);
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/tables") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .content(JsonUtil.writeValueAsString(tableLoadRequest)) //
-                .accept(MediaType.parseMediaType(APPLICATION_JSON))).andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nTableController).loadTables(Mockito.any(TableLoadRequest.class));
+
+        {
+            final TableLoadRequest tableLoadRequest = mockLoadTableRequest();
+            initMockito(loadTableResponse, tableLoadRequest);
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/tables") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .content(JsonUtil.writeValueAsString(tableLoadRequest)) //
+                    .accept(MediaType.parseMediaType(APPLICATION_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(nTableController).loadTables(Mockito.any(TableLoadRequest.class));
+        }
+
+        {
+            // test case-insensitive
+            String[] databasesMixTure = new String[] { "SSb", "DeFauLT" };
+            String[] databasesLowercase = new String[] { "ssb", "default" };
+            String[] databasesUppercase = new String[] { "SSB", "DEFAULT" };
+            String[] tablesMixTure = new String[] { "PERson", "Order" };
+            String[] tablesLowercase = new String[] { "person", "order" };
+            String[] tablesUppercase = new String[] { "PERSON", "ORDER" };
+            String project = "default";
+            TableLoadRequest request = new TableLoadRequest();
+            request.setDatabases(databasesUppercase);
+            request.setTables(tablesUppercase);
+            request.setNeedSampling(false);
+            request.setProject(project);
+            initMockito(loadTableResponse, request);
+
+            request.setDatabases(databasesMixTure);
+            request.setTables(tablesMixTure);
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/tables") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .content(JsonUtil.writeValueAsString(request)) //
+                    .accept(MediaType.parseMediaType(APPLICATION_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableExtService, Mockito.times(1)).loadDbTables(tablesUppercase, project, false);
+            Mockito.verify(tableExtService, Mockito.times(1)).loadDbTables(databasesUppercase, project, true);
+
+            request.setDatabases(databasesLowercase);
+            request.setTables(tablesLowercase);
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/tables") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .content(JsonUtil.writeValueAsString(request)) //
+                    .accept(MediaType.parseMediaType(APPLICATION_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableExtService, Mockito.times(2)).loadDbTables(tablesUppercase, project, false);
+            Mockito.verify(tableExtService, Mockito.times(2)).loadDbTables(databasesUppercase, project, true);
+
+            request.setDatabases(databasesUppercase);
+            request.setTables(tablesUppercase);
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/tables") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .content(JsonUtil.writeValueAsString(request)) //
+                    .accept(MediaType.parseMediaType(APPLICATION_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableExtService, Mockito.times(3)).loadDbTables(tablesUppercase, project, false);
+            Mockito.verify(tableExtService, Mockito.times(3)).loadDbTables(databasesUppercase, project, true);
+        }
     }
 
     @Test

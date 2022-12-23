@@ -382,9 +382,13 @@ class SnapshotBuilder(var jobId: String) extends Logging with Serializable {
     val tablePath = FileNames.snapshotFile(tableDesc)
     val snapshotTablePath = tablePath + "/" + UUID.randomUUID
     val resourcePath = baseDir + "/" + snapshotTablePath
+    var hadoopConf = SparderEnv.getHadoopConfiguration()
+    if (kylinConfig.getClusterManagerClassName.contains("AWSServerless")) {
+        hadoopConf = ss.sparkContext.hadoopConfiguration
+    }
     val (repartitionNum, sizeMB) = try {
       val sizeInMB = ResourceDetectUtils.getPaths(sourceData.queryExecution.sparkPlan)
-        .map(path => HadoopUtil.getContentSummary(path.getFileSystem(SparderEnv.getHadoopConfiguration()), path).getLength)
+        .map(path => HadoopUtil.getContentSummary(path.getFileSystem(hadoopConf), path).getLength)
         .sum * 1.0 / MB
       val num = Math.ceil(sizeInMB / KylinBuildEnv.get().kylinConfig.getSnapshotShardSizeMB).intValue()
       (num, sizeInMB)

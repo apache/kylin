@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
@@ -119,7 +119,8 @@ public class OpenTableController extends NBasicController {
             throw new KylinException(UNSUPPORTED_STREAMING_OPERATION,
                     MsgPicker.getMsg().getStreamingOperationNotSupport());
         }
-        List<TableDesc> result = tableService.getTableDescByType(project, withExt, table, database, isFuzzy,
+        List<TableDesc> result = tableService.getTableDescByType(project, withExt,
+                StringUtils.upperCase(table, Locale.ROOT), StringUtils.upperCase(database, Locale.ROOT), isFuzzy,
                 sourceType);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(result, offset, limit), "");
     }
@@ -183,6 +184,7 @@ public class OpenTableController extends NBasicController {
             @RequestParam(value = "need_details", required = false, defaultValue = "false") boolean needDetails)
             throws Exception {
         String projectName = checkProjectName(project);
+        table = StringUtils.upperCase(table, Locale.ROOT);
         checkStreamingOperation(project, table);
         OpenPreReloadTableResponse result = tableService.preProcessBeforeReloadWithoutFailFast(projectName, table,
                 needDetails);
@@ -194,21 +196,22 @@ public class OpenTableController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<OpenReloadTableResponse> reloadTable(@RequestBody OpenReloadTableRequest request) {
         String projectName = checkProjectName(request.getProject());
-        checkStreamingOperation(request.getProject(), request.getTable());
         request.setProject(projectName);
         checkRequiredArg("need_sampling", request.getNeedSampling());
-        validatePriority(request.getPriority());
         if (StringUtils.isEmpty(request.getTable())) {
             throw new KylinException(INVALID_TABLE_NAME, MsgPicker.getMsg().getTableNameCannotEmpty());
         }
+        request.setTable(StringUtils.upperCase(request.getTable(), Locale.ROOT));
+        checkStreamingOperation(request.getProject(), request.getTable());
+        validatePriority(request.getPriority());
 
         if (request.getNeedSampling()) {
             TableSamplingService.checkSamplingRows(request.getSamplingRows());
         }
 
-        Pair<String, List<String>> pair = tableService.reloadTable(request.getProject(),
-                request.getTable().toUpperCase(Locale.ROOT), request.getNeedSampling(), request.getSamplingRows(),
-                request.getNeedBuilding(), request.getPriority(), request.getYarnQueue());
+        Pair<String, List<String>> pair = tableService.reloadTable(request.getProject(), request.getTable(),
+                request.getNeedSampling(), request.getSamplingRows(), request.getNeedBuilding(), request.getPriority(),
+                request.getYarnQueue());
 
         OpenReloadTableResponse response = new OpenReloadTableResponse();
         response.setSamplingId(pair.getFirst());
@@ -253,7 +256,8 @@ public class OpenTableController extends NBasicController {
             throws IOException {
 
         String projectName = checkProjectName(project);
-        String dbTblName = String.format(Locale.ROOT, "%s.%s", database, table);
+        String dbTblName = String.format(Locale.ROOT, "%s.%s", StringUtils.upperCase(database, Locale.ROOT),
+                StringUtils.upperCase(table, Locale.ROOT));
         val response = tableService.preUnloadTable(projectName, dbTblName);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
     }
@@ -266,7 +270,8 @@ public class OpenTableController extends NBasicController {
             @RequestParam(value = "cascade", defaultValue = "false") Boolean cascade) {
 
         String projectName = checkProjectName(project);
-        String dbTblName = String.format(Locale.ROOT, "%s.%s", database, table);
+        String dbTblName = String.format(Locale.ROOT, "%s.%s", StringUtils.upperCase(database, Locale.ROOT),
+                StringUtils.upperCase(table, Locale.ROOT));
         tableService.unloadTable(projectName, dbTblName, cascade);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, dbTblName, "");
     }
