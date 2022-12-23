@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.Lists;
 
@@ -87,16 +87,6 @@ public class StringUtil {
             for (int i = 0; i < source.length; i++) {
                 if (source[i] != null) {
                     target[i] = source[i].toUpperCase(Locale.ROOT);
-                }
-            }
-        }
-    }
-
-    public static void toUpperCaseArray(List<String> source, List<String> target) {
-        if (source != null) {
-            for (int i = 0; i < source.size(); i++) {
-                if (source.get(i) != null) {
-                    target.set(i, source.get(i).toUpperCase(Locale.ROOT));
                 }
             }
         }
