@@ -24,8 +24,8 @@ import java.util.Objects;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.metadata.upgrade.GlobalAclVersionManager;
 import org.apache.kylin.rest.service.UserAclService;
-import org.apache.kylin.tool.upgrade.UpdateUserAclTool;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,13 +41,21 @@ import lombok.extern.slf4j.Slf4j;
 public class AdminUserAspect {
     private List<String> adminUserList;
 
-    private UpdateUserAclTool tool = new UpdateUserAclTool();
-
     @Autowired
     @Qualifier("userAclService")
     private UserAclService userAclService;
 
     private boolean superAdminInitialized = false;
+
+    private boolean isUpgraded() {
+        val versionManager = GlobalAclVersionManager.getInstance(KylinConfig.getInstanceFromEnv());
+        return versionManager.exists();
+    }
+
+    private boolean isAdminUserUpgraded() {
+        val userAclManager = UserAclManager.getInstance(KylinConfig.getInstanceFromEnv());
+        return userAclManager.listAclUsernames().size() > 0;
+    }
 
     @AfterReturning(value = "execution(* org.apache.kylin.rest.service.OpenUserService.listAdminUsers(..))", returning = "adminUserList")
     public void doAfterListAdminUsers(List<String> adminUserList) {
@@ -56,7 +64,7 @@ public class AdminUserAspect {
             return;
         }
         // upgrade admin user acl from job node
-        if (kylinConfig.isJobNode() && tool.isUpgraded() && !tool.isAdminUserUpgraded()) {
+        if (kylinConfig.isJobNode() && isUpgraded() && !isAdminUserUpgraded()) {
             userAclService.syncAdminUserAcl(adminUserList, false);
         }
 

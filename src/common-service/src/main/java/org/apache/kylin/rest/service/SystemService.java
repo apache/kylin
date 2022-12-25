@@ -29,7 +29,6 @@ import static org.apache.kylin.tool.constant.StageEnum.DONE;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -53,6 +52,7 @@ import org.apache.kylin.common.persistence.transaction.MessageSynchronization;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
@@ -66,7 +66,6 @@ import org.apache.kylin.rest.request.DiagProgressRequest;
 import org.apache.kylin.rest.response.DiagStatusResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.tool.MetadataTool;
 import org.apache.kylin.tool.constant.DiagTypeEnum;
 import org.apache.kylin.tool.constant.StageEnum;
 import org.slf4j.Logger;
@@ -78,7 +77,6 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Lists;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -89,6 +87,7 @@ public class SystemService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(SystemService.class);
 
+    private final MetadataToolHelper helper = new MetadataToolHelper();
     @Autowired
     private AclEvaluate aclEvaluate;
 
@@ -112,34 +111,17 @@ public class SystemService extends BasicService {
         }
     }
 
-    private Cache<String, DiagInfo> diagMap = CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.DAYS).build();
-    private Cache<String, DiagStatusResponse> exceptionMap = CacheBuilder.newBuilder()
+    private final Cache<String, DiagInfo> diagMap = CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.DAYS).build();
+    private final Cache<String, DiagStatusResponse> exceptionMap = CacheBuilder.newBuilder()
             .expireAfterAccess(1, TimeUnit.DAYS).build();
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#backupRequest.getProject(), 'ADMINISTRATION')")
     public void backup(BackupRequest backupRequest) throws Exception {
-        String[] args = createBackupArgs(backupRequest);
-        val metadataTool = new MetadataTool(getConfig());
-        metadataTool.execute(args);
-    }
-
-    private String[] createBackupArgs(BackupRequest backupRequest) {
-        List<String> args = Lists.newArrayList("-backup");
-        if (backupRequest.isCompress()) {
-            args.add("-compress");
-        }
-        if (StringUtils.isNotBlank(backupRequest.getBackupPath())) {
-            args.add("-dir");
-            args.add(backupRequest.getBackupPath());
-        }
-        if (StringUtils.isNotBlank(backupRequest.getProject())) {
-            args.add("-project");
-            args.add(backupRequest.getProject());
-        }
-
-        logger.info("SystemService {}", args);
-        return args.toArray(new String[0]);
+        String project = StringUtils.isNotBlank(backupRequest.getProject()) ? backupRequest.getProject() : null;
+        String path = StringUtils.isNotBlank(backupRequest.getBackupPath()) ? backupRequest.getBackupPath(): null;
+        boolean compress = backupRequest.isCompress();
+        helper.backup(getConfig(), project, path, null, compress, false);
     }
 
     //    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)

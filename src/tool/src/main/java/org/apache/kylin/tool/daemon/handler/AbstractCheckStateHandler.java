@@ -48,10 +48,10 @@ public abstract class AbstractCheckStateHandler extends Worker implements CheckS
             }
             Preconditions.checkNotNull(getKgSecretKey(), "kg secret key is null!");
 
-            if (null == getKE_PID()) {
+            if (null == getKePid()) {
                 setKEPid(ToolUtil.getKylinPid());
             }
-            byte[] encryptedToken = SecretKeyUtil.generateEncryptedTokenWithPid(getKgSecretKey(), getKE_PID());
+            byte[] encryptedToken = SecretKeyUtil.generateEncryptedTokenWithPid(getKgSecretKey(), getKePid());
             getRestClient().downOrUpGradeKE(opLevelEnum.getOpType(), encryptedToken);
         } catch (Exception e) {
             logger.error("Failed to operate service {}", opLevelEnum.getOpType(), e);

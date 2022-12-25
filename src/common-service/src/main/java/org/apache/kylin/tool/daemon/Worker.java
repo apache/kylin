@@ -40,7 +40,7 @@ public class Worker {
     private static SecretKey kgSecretKey;
 
     @Getter
-    private static String KE_PID;
+    private static String kePid;
 
     static {
         int serverPort = Integer.parseInt(getKylinConfig().getServerPort());
@@ -58,7 +58,7 @@ public class Worker {
     }
 
     public synchronized void setKEPid(String pid) {
-        KE_PID = pid;
+        kePid = pid;
     }
 
     public synchronized void setKgSecretKey(SecretKey secretKey) {

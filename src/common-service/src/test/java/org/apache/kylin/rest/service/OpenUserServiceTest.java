@@ -28,13 +28,13 @@ import java.util.Properties;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.helper.UpdateUserAclToolHelper;
 import org.apache.kylin.rest.config.initialize.UserAclListener;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AdminUserAspect;
 import org.apache.kylin.rest.security.UserAclManager;
 import org.apache.kylin.rest.util.SpringContext;
-import org.apache.kylin.tool.upgrade.UpdateUserAclTool;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -143,9 +143,8 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
         //test list admin
         getTestConfig().setProperty("kylin.security.profile", "custom");
         val adminUserAspect = SpringContext.getBean(AdminUserAspect.class);
-        ReflectionTestUtils.setField(adminUserAspect, "tool", Mockito.spy(new UpdateUserAclTool()));
-        val tool = (UpdateUserAclTool) ReflectionTestUtils.getField(adminUserAspect, "tool");
-        Mockito.when(tool.isUpgraded()).thenReturn(true);
+        UpdateUserAclToolHelper helper = Mockito.spy(UpdateUserAclToolHelper.getInstance());
+        Mockito.when(helper.isUpgraded()).thenReturn(true);
         adminUserAspect.doAfterListAdminUsers(Collections.emptyList());
         Assert.assertFalse((Boolean) ReflectionTestUtils.getField(adminUserAspect, "superAdminInitialized"));
         List<String> admins = userService.listAdminUsers();

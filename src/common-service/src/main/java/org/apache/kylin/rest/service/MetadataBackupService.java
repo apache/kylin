@@ -17,17 +17,15 @@
  */
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.tool.HDFSMetadataTool;
-import org.apache.kylin.tool.MetadataTool;
 import org.springframework.stereotype.Service;
 
 import lombok.SneakyThrows;
@@ -36,42 +34,35 @@ import lombok.val;
 @Service
 public class MetadataBackupService {
 
-    @SneakyThrows(IOException.class)
-    public void backupAll(){
+    private final MetadataToolHelper helper = new MetadataToolHelper();
+
+    @SneakyThrows(Exception.class)
+    public void backupAll() {
 
         try (SetThreadName ignored = new SetThreadName("MetadataBackupWorker")) {
-            String[] args = new String[] { "-backup", "-compress", "-dir", getBackupDir() };
-            backup(args);
-            rotateAuditLog();
+            val kylinConfig = KylinConfig.getInstanceFromEnv();
+            HDFSMetadataTool.cleanBeforeBackup(kylinConfig);
+            val backupConfig = kylinConfig.getMetadataBackupFromSystem() ? kylinConfig
+                    : KylinConfig.createKylinConfig(kylinConfig);
+            helper.backup(backupConfig, null, getBackupDir(kylinConfig), null, true, false);
+            helper.rotateAuditLog();
         }
     }
 
-    public void backup(String[] args) throws IOException {
+    public String backupProject(String project) throws Exception {
+        val folder = LocalDateTime.now(Clock.systemDefaultZone()).format(MetadataToolHelper.DATE_TIME_FORMATTER)
+                + "_backup";
         val kylinConfig = KylinConfig.getInstanceFromEnv();
-        HDFSMetadataTool.cleanBeforeBackup(KylinConfig.getInstanceFromEnv());
+        HDFSMetadataTool.cleanBeforeBackup(kylinConfig);
         val backupConfig = kylinConfig.getMetadataBackupFromSystem() ? kylinConfig
                 : KylinConfig.createKylinConfig(kylinConfig);
-        val metadataTool = new MetadataTool(backupConfig);
-        metadataTool.execute(args);
+        String backupDir = getBackupDir(kylinConfig);
+        helper.backup(backupConfig, project, backupDir, folder, true, false);
+        return StringUtils.appendIfMissing(backupDir, "/") + folder;
     }
 
-    public void rotateAuditLog() {
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
-        val resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
-        val auditLogStore = resourceStore.getAuditLogStore();
-        auditLogStore.rotate();
-    }
-
-    public String backupProject(String project) throws IOException {
-        val folder = LocalDateTime.now(Clock.systemDefaultZone()).format(MetadataTool.DATE_TIME_FORMATTER) + "_backup";
-        String[] args = new String[] { "-backup", "-compress", "-project", project, "-folder", folder, "-dir",
-                getBackupDir() };
-        backup(args);
-        return StringUtils.appendIfMissing(getBackupDir(), "/") + folder;
-    }
-
-    private String getBackupDir() {
-        return HadoopUtil.getBackupFolder(KylinConfig.getInstanceFromEnv());
+    private String getBackupDir(KylinConfig kylinConfig) {
+        return HadoopUtil.getBackupFolder(kylinConfig);
 
     }
 

@@ -17,7 +17,6 @@
  */
 package org.apache.kylin.tool.routine;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,27 +24,18 @@ import java.util.stream.Collectors;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.ExecutableApplication;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.helper.MetadataToolHelper;
+import org.apache.kylin.helper.RoutineToolHelper;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.query.util.QueryHisStoreUtil;
-import org.apache.kylin.metadata.streaming.util.StreamingJobRecordStoreUtil;
-import org.apache.kylin.metadata.streaming.util.StreamingJobStatsStoreUtil;
 import org.apache.kylin.tool.MaintainModeTool;
-import org.apache.kylin.tool.garbage.GarbageCleaner;
-import org.apache.kylin.tool.garbage.SourceUsageCleaner;
-import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.apache.kylin.tool.util.ToolMainWrapper;
-
 import org.apache.kylin.metadata.epoch.EpochManager;
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
+
 import lombok.Getter;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Getter
@@ -64,6 +54,8 @@ public class RoutineTool extends ExecutableApplication {
     private int retryTimes;
     private double requestFSRate;
 
+    private MetadataToolHelper helper = new MetadataToolHelper();
+
     public static void main(String[] args) {
         ToolMainWrapper.wrap(args, () -> {
             RoutineTool tool = new RoutineTool();
@@ -73,27 +65,15 @@ public class RoutineTool extends ExecutableApplication {
     }
 
     public static void deleteRawRecItems() {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        List<ProjectInstance> projectInstances = NProjectManager.getInstance(config).listAllProjects().stream()
-                .filter(projectInstance -> !projectInstance.isExpertMode()).collect(Collectors.toList());
-        if (projectInstances.isEmpty()) {
-            return;
-        }
-        try (SetThreadName ignored = new SetThreadName("DeleteRawRecItemsInDB")) {
-            val jdbcRawRecStore = new JdbcRawRecStore(KylinConfig.getInstanceFromEnv());
-            jdbcRawRecStore.deleteOutdated();
-        } catch (Exception e) {
-            log.error("delete outdated advice fail: ", e);
-        }
+        RoutineToolHelper.deleteRawRecItems();
     }
 
     public static void cleanQueryHistories() {
-        QueryHisStoreUtil.cleanQueryHistory();
+        RoutineToolHelper.cleanQueryHistories();
     }
 
     public static void cleanStreamingStats() {
-        StreamingJobStatsStoreUtil.cleanStreamingJobStats();
-        StreamingJobRecordStoreUtil.cleanStreamingJobRecord();
+        RoutineToolHelper.cleanStreamingStats();
     }
 
     @Override
@@ -108,19 +88,25 @@ public class RoutineTool extends ExecutableApplication {
         return options;
     }
 
+    protected final List<String> getProjectsToCleanup() {
+        if (getProjects().length != 0) {
+            return Arrays.asList(getProjects());
+        } else {
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            List<ProjectInstance> instances = NProjectManager.getInstance(kylinConfig).listAllProjects();
+            return instances.stream().map(ProjectInstance::getName).collect(Collectors.toList());
+        }
+    }
+
+
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         if (printUsage(optionsHelper)) {
             return;
         }
         initOptionValues(optionsHelper);
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        List<ProjectInstance> instances = NProjectManager.getInstance(kylinConfig).listAllProjects();
         System.out.println("Start to cleanup metadata");
-        List<String> projectsToCleanup = Arrays.asList(projects);
-        if (projectsToCleanup.isEmpty()) {
-            projectsToCleanup = instances.stream().map(ProjectInstance::getName).collect(Collectors.toList());
-        }
+        List<String> projectsToCleanup = getProjectsToCleanup();
         MaintainModeTool maintainModeTool = new MaintainModeTool("routine tool");
         maintainModeTool.init();
         maintainModeTool.markEpochs();
@@ -133,7 +119,7 @@ public class RoutineTool extends ExecutableApplication {
     private void doCleanup(List<String> projectsToCleanup) {
         try {
             if (metadataCleanup) {
-                cleanMeta(projectsToCleanup);
+                RoutineToolHelper.cleanMeta(projectsToCleanup);
             }
             cleanStorage();
         } catch (Exception e) {
@@ -141,62 +127,8 @@ public class RoutineTool extends ExecutableApplication {
         }
     }
 
-    protected void cleanMeta(List<String> projectsToCleanup) throws IOException {
-        try {
-            cleanGlobalSourceUsage();
-            for (String projName : projectsToCleanup) {
-                cleanMetaByProject(projName);
-            }
-            cleanQueryHistories();
-            cleanStreamingStats();
-            deleteRawRecItems();
-            System.out.println("Metadata cleanup finished");
-        } catch (Exception e) {
-            log.error("Metadata cleanup failed", e);
-            System.out.println(StorageCleaner.ANSI_RED
-                    + "Metadata cleanup failed. Detailed Message is at ${KYLIN_HOME}/logs/shell.stderr"
-                    + StorageCleaner.ANSI_RESET);
-        }
-
-    }
-
-    public static void cleanGlobalSourceUsage() {
-        log.info("Start to clean up global meta");
-        try {
-            EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-                new SourceUsageCleaner().cleanup();
-                return null;
-            }, UnitOfWork.GLOBAL_UNIT);
-        } catch (Exception e) {
-            log.error("Failed to clean global meta", e);
-        }
-        log.info("Clean up global meta finished");
-
-    }
-
-    public static void cleanMetaByProject(String projectName) {
-        log.info("Start to clean up {} meta", projectName);
-        try {
-            GarbageCleaner.cleanMetadata(projectName);
-        } catch (Exception e) {
-            log.error("Project[{}] cleanup Metadata failed", projectName, e);
-        }
-        log.info("Clean up {} meta finished", projectName);
-    }
-
     public void cleanStorage() {
-        try {
-            StorageCleaner storageCleaner = new StorageCleaner(storageCleanup, Arrays.asList(projects), requestFSRate,
-                    retryTimes);
-            System.out.println("Start to cleanup HDFS");
-            storageCleaner.execute();
-            System.out.println("cleanup HDFS finished");
-        } catch (Exception e) {
-            log.error("cleanup HDFS failed", e);
-            System.out.println(StorageCleaner.ANSI_RED
-                    + "cleanup HDFS failed. Detailed Message is at ${KYLIN_HOME}/logs/shell.stderr"
-                    + StorageCleaner.ANSI_RESET);
-        }
+        helper.cleanStorage(storageCleanup, Arrays.asList(projects), requestFSRate, retryTimes);
     }
 
     protected boolean printUsage(OptionsHelper optionsHelper) {
@@ -230,11 +162,5 @@ public class RoutineTool extends ExecutableApplication {
                         + " Request FileSystem rate: " + requestFSRate + " Retry Times: " + retryTimes);
     }
 
-    public void setProjects(String[] projects) {
-        this.projects = projects;
-    }
 
-    public void setStorageCleanup(boolean storageCleanup) {
-        this.storageCleanup = storageCleanup;
-    }
 }
