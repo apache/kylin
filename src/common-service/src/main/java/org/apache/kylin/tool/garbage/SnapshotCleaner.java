@@ -19,6 +19,7 @@
 package org.apache.kylin.tool.garbage;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,9 +28,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +60,7 @@ public class SnapshotCleaner extends MetadataCleaner {
         }
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         String baseDir = config.getMetadataWorkingDirectory();
-        String resourcePath = baseDir + "/" + snapshotPath;
+        String resourcePath = baseDir + FileSystems.getDefault().getSeparator() + snapshotPath;
         try {
             return fs.exists(new Path(resourcePath));
         } catch (IOException e) {

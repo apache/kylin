@@ -41,6 +41,7 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.cluster.ClusterManager;
@@ -58,6 +59,7 @@ import org.apache.kylin.rest.service.MetadataBackupService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.SystemService;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.tool.HDFSMetadataTool;
 import org.apache.kylin.tool.util.ToolUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -103,6 +105,7 @@ public class NSystemController extends NBasicController {
     @Autowired
     @Qualifier("projectService")
     private ProjectService projectService;
+    private MetadataToolHelper metadataToolHelper = new MetadataToolHelper();
 
     @VisibleForTesting
     public void setAclEvaluate(AclEvaluate aclEvaluate) {
@@ -118,8 +121,11 @@ public class NSystemController extends NBasicController {
     @GetMapping(value = "/metadata/dump")
     @ResponseBody
     public EnvelopeResponse<String> dumpMetadata(@RequestParam(value = "dump_path") String dumpPath) throws Exception {
-        String[] args = new String[] { "-backup", "-compress", "-dir", dumpPath };
-        metadataBackupService.backup(args);
+        val kylinConfig = KylinConfig.getInstanceFromEnv();
+        HDFSMetadataTool.cleanBeforeBackup(kylinConfig);
+        val backupConfig = kylinConfig.getMetadataBackupFromSystem() ? kylinConfig
+                : KylinConfig.createKylinConfig(kylinConfig);
+        metadataToolHelper.backup(backupConfig, null, dumpPath, null, true, false);
         return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
     }
 

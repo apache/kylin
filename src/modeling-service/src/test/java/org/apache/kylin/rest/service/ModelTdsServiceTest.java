@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -449,7 +450,7 @@ public class ModelTdsServiceTest extends SourceTestCase {
         val modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
         prepareBasic(project);
         SyncContext syncContext = tdsService.prepareSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
-                SyncContext.ModelElement.AGG_INDEX_AND_TABLE_INDEX_COL, "localhost", 8080);
+                SyncContext.ModelElement.AGG_INDEX_AND_TABLE_INDEX_COL, "localhost", 7070);
         SyncModel syncModel = tdsService.exportModel(syncContext);
         TableauDatasourceModel datasource1 = (TableauDatasourceModel) BISyncTool.getBISyncModel(syncContext, syncModel);
         ByteArrayOutputStream outStream4 = new ByteArrayOutputStream();
@@ -459,7 +460,8 @@ public class ModelTdsServiceTest extends SourceTestCase {
     }
 
     private String getExpectedTds(String path) throws IOException {
-        return CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(path), Charsets.UTF_8));
+        return CharStreams.toString(
+                new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(path)), Charsets.UTF_8));
     }
 
     private void prepareBasic(String project) {

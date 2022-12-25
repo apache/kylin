@@ -948,7 +948,7 @@ public class ProjectService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
-    public String backupProject(String project) throws IOException {
+    public String backupProject(String project) throws Exception {
         return metadataBackupService.backupProject(project);
     }
 

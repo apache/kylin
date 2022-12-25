@@ -52,7 +52,6 @@ import org.apache.kylin.rest.security.AdminUserSyncEventNotifier;
 import org.apache.kylin.rest.security.ExternalAclProvider;
 import org.apache.kylin.rest.security.UserAcl;
 import org.apache.kylin.rest.security.UserAclManager;
-import org.apache.kylin.tool.upgrade.UpdateUserAclTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
@@ -291,10 +290,15 @@ public class UserAclService extends BasicService implements UserAclServiceSuppor
         remoteRequest(eventNotifier, StringUtils.EMPTY);
     }
 
+    private static boolean isCustomProfile() {
+        val kylinConfig = KylinConfig.getInstanceFromEnv();
+        return "custom".equals(kylinConfig.getSecurityProfile());
+    }
+
     @SneakyThrows(IOException.class)
     public void syncAdminUserAcl() {
         val config = KylinConfig.getInstanceFromEnv();
-        if (UpdateUserAclTool.isCustomProfile()) {
+        if (isCustomProfile()) {
             // invoke the AdminUserAspect
             userService.listAdminUsers();
         } else if ("ldap".equals(config.getSecurityProfile())) {

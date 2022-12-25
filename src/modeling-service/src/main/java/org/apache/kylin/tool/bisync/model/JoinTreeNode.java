@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.tool.bisync.model;
 
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,7 +51,7 @@ public class JoinTreeNode {
      */
     public List<JoinTableDesc> iteratorAsList() {
         if (this.value == null) {
-            return null;
+            return Collections.emptyList();
         }
 
         Deque<JoinTreeNode> nodeDeque = new LinkedList<>();

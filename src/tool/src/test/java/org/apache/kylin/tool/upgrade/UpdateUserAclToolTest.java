@@ -20,6 +20,7 @@ package org.apache.kylin.tool.upgrade;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.helper.UpdateUserAclToolHelper;
 import org.apache.kylin.rest.security.AclManager;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.UserAclManager;
@@ -56,7 +57,7 @@ public class UpdateUserAclToolTest extends NLocalFileMetadataTestCase {
         Mockito.when(tool.matchUpgradeCondition(args)).thenReturn(true);
         tool.execute(args);
         Assert.assertTrue(tool.isAdminUserUpgraded());
-        Assert.assertTrue(tool.isUpgraded());
+        Assert.assertTrue(UpdateUserAclToolHelper.getInstance().isUpgraded());
         val userAclManager = UserAclManager.getInstance(getTestConfig());
         Assert.assertTrue(userAclManager.get("admin_user").hasPermission(AclPermission.DATA_QUERY.getMask()));
         val aclManager = createAclManager(tool);
@@ -96,7 +97,7 @@ public class UpdateUserAclToolTest extends NLocalFileMetadataTestCase {
     public void testUpdateUserAcl() {
         getTestConfig().setProperty("kylin.security.profile", "custom");
         tool.execute(new String[] { "-f", "-s=migrate", "-v=4.5.10", "-h=." });
-        Assert.assertTrue(tool.isUpgraded());
+        Assert.assertTrue(UpdateUserAclToolHelper.getInstance().isUpgraded());
     }
 
     @Test

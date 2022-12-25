@@ -29,14 +29,10 @@ import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.scheduler.SourceUsageUpdateNotifier;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import lombok.val;
 
 public class GarbageCleaner {
-
-    private static final Logger logger = LoggerFactory.getLogger(GarbageCleaner.class);
 
     private GarbageCleaner() {
     }

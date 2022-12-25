@@ -40,6 +40,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.helper.UpdateUserAclToolHelper;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.response.UserGroupResponseKI;
 import org.apache.kylin.rest.security.AclPermission;
@@ -47,7 +48,6 @@ import org.apache.kylin.rest.security.UserAclManager;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.rest.util.SpringContext;
-import org.apache.kylin.tool.upgrade.UpdateUserAclTool;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -255,6 +255,9 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     public void testCompleteUserInfoWithNotExistUser() {
         ManagedUser user = new ManagedUser("NotExist", "", false);
         ldapUserService.completeUserInfo(user);
+        Assert.assertEquals("NotExist", user.getUsername());
+        Assert.assertEquals("", user.getPassword());
+        Assert.assertFalse(user.isDefaultPassword());
     }
 
     @Test
@@ -395,11 +398,11 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetLdapAdminUsers() {
-        UpdateUserAclTool tool = Mockito.spy(new UpdateUserAclTool());
         val properties = getTestConfig().exportToProperties();
         val password = properties.getProperty("kylin.security.ldap.connection-password");
-        Mockito.when(tool.getPassword(properties)).thenReturn(EncryptUtil.decrypt(password));
-        Assert.assertNotNull(tool.getLdapAdminUsers());
+        UpdateUserAclToolHelper helper = Mockito.spy(UpdateUserAclToolHelper.getInstance());
+        Mockito.when(helper.getPassword(properties)).thenReturn(EncryptUtil.decrypt(password));
+        Assert.assertNotNull(helper.getLdapAdminUsers());
     }
 
     @Test

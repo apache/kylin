@@ -29,6 +29,10 @@ import org.apache.kylin.common.util.HadoopUtil;
 import lombok.val;
 
 public class HDFSMetadataTool {
+
+    private HDFSMetadataTool() {
+    }
+
     public static void cleanBeforeBackup(KylinConfig kylinConfig) throws IOException {
         val rootMetadataBackupPath = new Path(HadoopUtil.getBackupFolder(KylinConfig.getInstanceFromEnv()));
         val fs = HadoopUtil.getWorkingFileSystem();

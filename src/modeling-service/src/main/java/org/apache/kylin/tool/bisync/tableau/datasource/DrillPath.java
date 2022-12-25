@@ -66,17 +66,4 @@ public class DrillPath {
         return Objects.hash(getName(), getFields());
     }
 
-    private boolean fieldsEquals(List<String> thatFields) {
-        if (getFields() == thatFields) {
-            return true;
-        }
-        if (getFields() != null && thatFields != null && getFields().size() == thatFields.size()) {
-            boolean flag = true;
-            for (int i = 0; i < getFields().size() && flag; i++) {
-                flag = Objects.equals(getFields().get(i), thatFields.get(i));
-            }
-            return flag;
-        }
-        return false;
-    }
 }
