@@ -42,7 +42,7 @@ public class TableauDatasourceModel implements BISyncModel {
         this.tableauDatasource = tableauDatasource;
     }
 
-    public static void dumpModelAsXML(TableauDatasource BISyncModel, OutputStream outputStream)
+    public static void dumpModelAsXML(TableauDatasource biSyncModel, OutputStream outputStream)
             throws XMLStreamException, IOException {
         XmlMapper xmlMapper = new XmlMapper();
         XMLStreamWriter writer = xmlMapper.getFactory().getXMLOutputFactory().createXMLStreamWriter(outputStream);
@@ -50,7 +50,7 @@ public class TableauDatasourceModel implements BISyncModel {
         xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
         xmlMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         xmlMapper.getFactory().getXMLOutputFactory().setProperty("javax.xml.stream.isRepairingNamespaces", false);
-        xmlMapper.writeValue(writer, BISyncModel);
+        xmlMapper.writeValue(writer, biSyncModel);
     }
 
     @Override

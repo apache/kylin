@@ -19,11 +19,12 @@ package org.apache.kylin.tool.kerberos;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,7 +73,7 @@ public class KerberosLoginUtil {
     private static final String LOGIN_FAILED_CAUSE_TIME_OUT = "(time out) can not connect to kdc server or there is fire wall in the network";
     private static final boolean IS_IBM_JDK = System.getProperty("java.vendor").contains("IBM");
 
-    public synchronized static void login(String userPrincipal, String userKeytabPath, String krb5ConfPath,
+    public static synchronized void login(String userPrincipal, String userKeytabPath, String krb5ConfPath,
             Configuration conf) throws IOException {
         // 1.check input parameters
         if ((userPrincipal == null) || (userPrincipal.length() <= 0)) {
@@ -97,23 +98,29 @@ public class KerberosLoginUtil {
 
         // 2.check file exsits
         File userKeytabFile = new File(userKeytabPath);
+        String userKeytabFilename = "userKeytabFile(" + userKeytabFile.getAbsolutePath() + ")";
         if (!userKeytabFile.exists()) {
-            LOG.error("userKeytabFile(" + userKeytabFile.getAbsolutePath() + ") does not exsit.");
-            throw new IOException("userKeytabFile(" + userKeytabFile.getAbsolutePath() + ") does not exsit.");
+            String message = userKeytabFilename + " does not exist.";
+            LOG.error(message);
+            throw new IOException(message);
         }
         if (!userKeytabFile.isFile()) {
-            LOG.error("userKeytabFile(" + userKeytabFile.getAbsolutePath() + ") is not a file.");
-            throw new IOException("userKeytabFile(" + userKeytabFile.getAbsolutePath() + ") is not a file.");
+            String message = userKeytabFilename + " is not a file.";
+            LOG.error(message);
+            throw new IOException(message);
         }
 
         File krb5ConfFile = new File(krb5ConfPath);
+        String krb5ConfFilename = "krb5ConfFile(" + krb5ConfFile.getAbsolutePath() + ")";
         if (!krb5ConfFile.exists()) {
-            LOG.error("krb5ConfFile(" + krb5ConfFile.getAbsolutePath() + ") does not exsit.");
-            throw new IOException("krb5ConfFile(" + krb5ConfFile.getAbsolutePath() + ") does not exsit.");
+            String message = krb5ConfFilename + " does not exist.";
+            LOG.error(message);
+            throw new IOException(message);
         }
         if (!krb5ConfFile.isFile()) {
-            LOG.error("krb5ConfFile(" + krb5ConfFile.getAbsolutePath() + ") is not a file.");
-            throw new IOException("krb5ConfFile(" + krb5ConfFile.getAbsolutePath() + ") is not a file.");
+            String message = krb5ConfFilename + " is not a file.";
+            LOG.error(message);
+            throw new IOException(message);
         }
 
         // 3.set and check krb5config
@@ -125,48 +132,8 @@ public class KerberosLoginUtil {
         LOG.info("Login fi success!!!!!!!!!!!!!!");
     }
 
-    private static void setConfiguration(Configuration conf) throws IOException {
+    private static void setConfiguration(Configuration conf) {
         UserGroupInformation.setConfiguration(conf);
-    }
-
-    private static boolean checkNeedLogin(String principal) throws IOException {
-        if (!UserGroupInformation.isSecurityEnabled()) {
-            LOG.error(
-                    "UserGroupInformation is not SecurityEnabled, please check if core-site.xml exists in classpath.");
-            throw new IOException(
-                    "UserGroupInformation is not SecurityEnabled, please check if core-site.xml exists in classpath.");
-        }
-        UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
-        if ((currentUser != null) && (currentUser.hasKerberosCredentials())) {
-            if (checkCurrentUserCorrect(principal)) {
-                LOG.info("current user is " + currentUser + "has logined.");
-                if (!currentUser.isFromKeytab()) {
-                    LOG.error("current user is not from keytab.");
-                    throw new IOException("current user is not from keytab.");
-                }
-                return false;
-            } else {
-                LOG.error("current user is " + currentUser
-                        + "has logined. please check your enviroment , especially when it used IBM JDK or kerberos for OS count login!!");
-                throw new IOException(
-                        "current user is " + currentUser + " has logined. And please check your enviroment!!");
-            }
-        }
-
-        return true;
-    }
-
-    public static void setKrb5Config(String krb5ConfFile) throws IOException {
-        Unsafe.setProperty(JAVA_SECURITY_KRB5_CONF_KEY, krb5ConfFile);
-        String ret = System.getProperty(JAVA_SECURITY_KRB5_CONF_KEY);
-        if (ret == null) {
-            LOG.error(JAVA_SECURITY_KRB5_CONF_KEY + " is null.");
-            throw new IOException(JAVA_SECURITY_KRB5_CONF_KEY + " is null.");
-        }
-        if (!ret.equals(krb5ConfFile)) {
-            LOG.error(JAVA_SECURITY_KRB5_CONF_KEY + " is " + ret + " is not " + krb5ConfFile + ".");
-            throw new IOException(JAVA_SECURITY_KRB5_CONF_KEY + " is " + ret + " is not " + krb5ConfFile + ".");
-        }
     }
 
     public static void setJaasFile(String principal, String keytabPath) throws IOException {
@@ -183,8 +150,8 @@ public class KerberosLoginUtil {
     }
 
     private static void writeJaasFile(String jaasPath, String principal, String keytabPath) throws IOException {
-        try (OutputStream os = new FileOutputStream(jaasPath);
-                BufferedWriter writer = new BufferedWriter(
+        try (OutputStream os = Files.newOutputStream(Paths.get(jaasPath));
+             BufferedWriter writer = new BufferedWriter(
                         new OutputStreamWriter(os, Charset.defaultCharset().name()))) {
             writer.write(getJaasConfContext(principal, keytabPath));
             writer.flush();
@@ -196,9 +163,7 @@ public class KerberosLoginUtil {
     private static void deleteJaasFile(String jaasPath) throws IOException {
         File jaasFile = new File(jaasPath);
         if (jaasFile.exists()) {
-            if (!jaasFile.delete()) {
-                throw new IOException("Failed to delete exists jaas file.");
-            }
+            Files.delete(jaasFile.toPath());
         }
     }
 
@@ -311,30 +276,26 @@ public class KerberosLoginUtil {
     }
 
     public static void setZookeeperServerPrincipal(String zkServerPrincipal) throws IOException {
-        Unsafe.setProperty(ZOOKEEPER_SERVER_PRINCIPAL_KEY, zkServerPrincipal);
-        String ret = System.getProperty(ZOOKEEPER_SERVER_PRINCIPAL_KEY);
-        if (ret == null) {
-            LOG.error(ZOOKEEPER_SERVER_PRINCIPAL_KEY + " is null.");
-            throw new IOException(ZOOKEEPER_SERVER_PRINCIPAL_KEY + " is null.");
-        }
-        if (!ret.equals(zkServerPrincipal)) {
-            LOG.error(ZOOKEEPER_SERVER_PRINCIPAL_KEY + " is " + ret + " is not " + zkServerPrincipal + ".");
-            throw new IOException(ZOOKEEPER_SERVER_PRINCIPAL_KEY + " is " + ret + " is not " + zkServerPrincipal + ".");
-        }
+        setZookeeperServerPrincipal(ZOOKEEPER_SERVER_PRINCIPAL_KEY, zkServerPrincipal);
+    }
+    public static void setKrb5Config(String krb5ConfFile) throws IOException {
+        setZookeeperServerPrincipal(JAVA_SECURITY_KRB5_CONF_KEY, krb5ConfFile);
     }
 
-    @Deprecated
+
     public static void setZookeeperServerPrincipal(String zkServerPrincipalKey, String zkServerPrincipal)
             throws IOException {
         Unsafe.setProperty(zkServerPrincipalKey, zkServerPrincipal);
         String ret = System.getProperty(zkServerPrincipalKey);
         if (ret == null) {
-            LOG.error(zkServerPrincipalKey + " is null.");
-            throw new IOException(zkServerPrincipalKey + " is null.");
+            String message = zkServerPrincipalKey + " is null.";
+            LOG.error(message);
+            throw new IOException(message);
         }
         if (!ret.equals(zkServerPrincipal)) {
-            LOG.error(zkServerPrincipalKey + " is " + ret + " is not " + zkServerPrincipal + ".");
-            throw new IOException(zkServerPrincipalKey + " is " + ret + " is not " + zkServerPrincipal + ".");
+            String message = zkServerPrincipalKey + " is " + ret + " is not " + zkServerPrincipal + ".";
+            LOG.error(message);
+            throw new IOException(message);
         }
     }
 
@@ -351,55 +312,6 @@ public class KerberosLoginUtil {
 
             throw e;
         }
-    }
-
-    private static void checkAuthenticateOverKrb() throws IOException {
-        UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
-        UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
-        if (loginUser == null) {
-            LOG.error("current user is " + currentUser + ", but loginUser is null.");
-            throw new IOException("current user is " + currentUser + ", but loginUser is null.");
-        }
-        if (!loginUser.equals(currentUser)) {
-            LOG.error("current user is " + currentUser + ", but loginUser is " + loginUser + ".");
-            throw new IOException("current user is " + currentUser + ", but loginUser is " + loginUser + ".");
-        }
-        if (!loginUser.hasKerberosCredentials()) {
-            LOG.error("current user is " + currentUser + " has no Kerberos Credentials.");
-            throw new IOException("current user is " + currentUser + " has no Kerberos Credentials.");
-        }
-        if (!UserGroupInformation.isLoginKeytabBased()) {
-            LOG.error("current user is " + currentUser + " is not Login Keytab Based.");
-            throw new IOException("current user is " + currentUser + " is not Login Keytab Based.");
-        }
-    }
-
-    private static boolean checkCurrentUserCorrect(String principal) throws IOException {
-        UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-        if (ugi == null) {
-            LOG.error("current user still null.");
-            throw new IOException("current user still null.");
-        }
-
-        String defaultRealm = null;
-        try {
-            defaultRealm = KerberosUtil.getDefaultRealm();
-        } catch (Exception e) {
-            LOG.warn("getDefaultRealm failed.");
-            throw new IOException(e);
-        }
-
-        if ((defaultRealm != null) && (defaultRealm.length() > 0)) {
-            StringBuilder realm = new StringBuilder();
-            StringBuilder principalWithRealm = new StringBuilder();
-            realm.append("@").append(defaultRealm);
-            if (!principal.endsWith(realm.toString())) {
-                principalWithRealm.append(principal).append(realm);
-                principal = principalWithRealm.toString();
-            }
-        }
-
-        return principal.equals(ugi.getUserName());
     }
 
     public static boolean checkKeyTabIsValid(String path) {
@@ -429,8 +341,8 @@ public class KerberosLoginUtil {
      * login.
      */
     private static class JaasConfiguration extends javax.security.auth.login.Configuration {
-        private static final Map<String, String> BASIC_JAAS_OPTIONS = new HashMap<String, String>();
-        private static final Map<String, String> KEYTAB_KERBEROS_OPTIONS = new HashMap<String, String>();
+        private static final Map<String, String> BASIC_JAAS_OPTIONS = new HashMap<>();
+        private static final Map<String, String> KEYTAB_KERBEROS_OPTIONS = new HashMap<>();
         private static final AppConfigurationEntry KEYTAB_KERBEROS_LOGIN = new AppConfigurationEntry(
                 KerberosUtil.getKrb5LoginModuleName(), AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
                 KEYTAB_KERBEROS_OPTIONS);
@@ -463,12 +375,12 @@ public class KerberosLoginUtil {
         private final String principal;
         private javax.security.auth.login.Configuration baseConfig;
 
-        public JaasConfiguration(String loginContextName, String principal, String keytabFile) throws IOException {
+        public JaasConfiguration(String loginContextName, String principal, String keytabFile) {
             this(loginContextName, principal, keytabFile, keytabFile == null || keytabFile.length() == 0);
         }
 
-        private JaasConfiguration(String loginContextName, String principal, String keytabFile, boolean useTicketCache)
-                throws IOException {
+        private JaasConfiguration(String loginContextName, String principal, String keytabFile,
+                boolean useTicketCache) {
             try {
                 this.baseConfig = javax.security.auth.login.Configuration.getConfiguration();
             } catch (SecurityException e) {
@@ -484,7 +396,7 @@ public class KerberosLoginUtil {
                     + " useTicketCache=" + useTicketCache + " keytabFile=" + keytabFile);
         }
 
-        private void initKerberosOption() throws IOException {
+        private void initKerberosOption() {
             if (!useTicketCache) {
                 if (IS_IBM_JDK) {
                     KEYTAB_KERBEROS_OPTIONS.put("useKeytab", keytabFile);

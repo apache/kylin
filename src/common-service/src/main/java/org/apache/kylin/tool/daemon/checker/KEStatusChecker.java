@@ -40,7 +40,7 @@ import lombok.Setter;
 
 public class KEStatusChecker extends AbstractHealthChecker {
     public static final String PERMISSION_DENIED = "Check permission failed!";
-    private static final Logger logger = LoggerFactory.getLogger(AbstractHealthChecker.class);
+    private static final Logger logger = LoggerFactory.getLogger(KEStatusChecker.class);
     private int failCount = 0;
 
     public KEStatusChecker() {
@@ -57,12 +57,12 @@ public class KEStatusChecker extends AbstractHealthChecker {
                 setKgSecretKey(SecretKeyUtil.readKGSecretKeyFromFile());
             }
 
-            if (null == getKE_PID()) {
+            if (null == getKePid()) {
                 setKEPid(ToolUtil.getKylinPid());
             }
-            return SecretKeyUtil.generateEncryptedTokenWithPid(getKgSecretKey(), getKE_PID());
+            return SecretKeyUtil.generateEncryptedTokenWithPid(getKgSecretKey(), getKePid());
         } catch (Exception e) {
-            logger.error("Read KG secret key from file failed.", e);
+            logger.error("Read KG secret key from file failed.");
             throw e;
         }
     }
@@ -84,7 +84,7 @@ public class KEStatusChecker extends AbstractHealthChecker {
                     setKgSecretKey(null);
                 }
 
-                throw new RuntimeException("Get KE health status failed: " + response.msg);
+                throw new IllegalStateException("Get KE health status failed: " + response.msg);
             }
 
             Status status = response.getData();

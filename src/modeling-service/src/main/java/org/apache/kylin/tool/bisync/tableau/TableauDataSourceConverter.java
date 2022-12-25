@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
-public class TableauDataSourceConverter implements BISyncModelConverter {
+public class TableauDataSourceConverter implements BISyncModelConverter<TableauDatasourceModel> {
 
     private static final String ODBC_CONNECTION_PROJECT_PREFIX = "PROJECT=";
     private static final String ODBC_CONNECTION_MODEL_PREFIX = "CUBE=";

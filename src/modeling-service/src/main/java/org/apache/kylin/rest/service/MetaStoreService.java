@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -72,6 +73,8 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.MetadataChecker;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.helper.MetadataToolHelper;
+import org.apache.kylin.helper.RoutineToolHelper;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -106,7 +109,6 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceFactory;
-import org.apache.kylin.tool.routine.RoutineTool;
 import org.apache.kylin.tool.util.HashFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,6 +153,8 @@ public class MetaStoreService extends BasicService {
     @Setter
     @Autowired(required = false)
     private List<ModelChangeSupporter> modelChangeSupporters = Lists.newArrayList();
+
+    MetadataToolHelper metadataToolHelper = new MetadataToolHelper();
 
     public List<ModelPreviewResponse> getPreviewModels(String project, List<String> ids) {
         aclEvaluate.checkProjectWritePermission(project);
@@ -706,8 +710,7 @@ public class MetaStoreService extends BasicService {
                     updateIndexPlan(project, nDataModel, targetIndexPlan, hasModelOverrideProps);
                     addWhiteListIndex(project, modelSchemaChange, targetIndexPlan);
 
-                    importRecommendations(project, nDataModel.getUuid(), importDataModel.getUuid(),
-                            targetKylinConfig);
+                    importRecommendations(project, nDataModel.getUuid(), importDataModel.getUuid(), targetKylinConfig);
                 }
             } catch (Exception e) {
                 logger.warn("Import model {} exception", modelImport.getOriginalName(), e);
@@ -787,17 +790,14 @@ public class MetaStoreService extends BasicService {
 
     public void cleanupMeta(String project) {
         if (project.equals(UnitOfWork.GLOBAL_UNIT)) {
-            RoutineTool.cleanGlobalSourceUsage();
+            RoutineToolHelper.cleanGlobalSourceUsage();
             QueryHisStoreUtil.cleanQueryHistory();
         } else {
-            RoutineTool.cleanMetaByProject(project);
+            RoutineToolHelper.cleanMetaByProject(project);
         }
     }
 
     public void cleanupStorage(String[] projectsToClean, boolean cleanupStorage) {
-        RoutineTool routineTool = new RoutineTool();
-        routineTool.setProjects(projectsToClean);
-        routineTool.setStorageCleanup(cleanupStorage);
-        routineTool.cleanStorage();
+        metadataToolHelper.cleanStorage(cleanupStorage, Arrays.asList(projectsToClean), 0D, 0);
     }
 }

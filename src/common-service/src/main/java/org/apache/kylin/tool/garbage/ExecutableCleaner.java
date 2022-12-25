@@ -53,10 +53,7 @@ public class ExecutableCleaner extends MetadataCleaner {
                 return false;
             }
             ExecutableState state = job.getStatus();
-            if (!state.isFinalState()) {
-                return false;
-            }
-            return true;
+            return state.isFinalState();
         }).collect(Collectors.toList());
 
         for (AbstractExecutable executable : filteredExecutables) {

@@ -64,6 +64,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.OptionBuilder;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
@@ -76,7 +77,6 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -118,11 +118,13 @@ public class MetadataToolTest extends NLocalFileMetadataTestCase {
     }
 
     private MetadataTool tool(String path) {
-        val originTool = new MetadataTool(getTestConfig());
-        val tool = Mockito.spy(originTool);
-        Mockito.when(tool.getMetadataUrl(Mockito.anyString(), Mockito.anyBoolean()))
-                .thenReturn("kylin_metadata@hdfs,zip=1,path=file://" + path);
-        return tool;
+        KylinConfig kylinConfig = getTestConfig();
+        return new MetadataTool(kylinConfig, new MetadataToolHelper() {
+            @Override
+            public String getMetadataUrl(String rootPath, boolean compressed, KylinConfig kylinConfig) {
+                return "kylin_metadata@hdfs,zip=1,path=file://" + path;
+            }
+        });
     }
 
     @Test
@@ -235,7 +237,6 @@ public class MetadataToolTest extends NLocalFileMetadataTestCase {
         val archiveFolder = junitFolder.listFiles()[0];
         Assertions.assertThat(archiveFolder).exists();
         Assertions.assertThat(archiveFolder.list()).isNotEmpty().contains(COMPRESSED_FILE);
-        Assert.assertNotNull(tool.getBackupPath());
     }
 
     private boolean assertProjectFolder(File projectFolder, File archiveFolder) {
@@ -463,15 +464,12 @@ public class MetadataToolTest extends NLocalFileMetadataTestCase {
         Assertions.assertThat(NProjectManager.getInstance(getTestConfig()).getProject("demo")).isNotNull();
         Assertions.assertThat(NProjectManager.getInstance(getTestConfig()).getProject("ssb")).isNotNull();
         Assertions.assertThat(NProjectManager.getInstance(getTestConfig()).getProject("default")).isNotNull();
-        val tool = tool(emptyFolder.getAbsolutePath());
+        MetadataTool tool = tool(emptyFolder.getAbsolutePath());
         tool.execute(new String[] { "-restore", "-compress", "-dir", "ignored", "--after-truncate" });
         Assertions.assertThat(NProjectManager.getInstance(getTestConfig()).listAllProjects()).isEmpty();
 
-        Mockito.when(tool.getMetadataUrl(Mockito.anyString(), Mockito.anyBoolean()))
-                .thenReturn("kylin_metadata@hdfs,zip=1,path=file://" + restoreFolder.getAbsolutePath());
-
+        tool = tool(restoreFolder.getAbsolutePath());
         Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-
         tool.execute(new String[] { "-restore", "-compress", "-dir", "ignored", "--after-truncate" });
         Assertions.assertThat(NProjectManager.getInstance(getTestConfig()).getProject("demo")).isNotNull();
         Assertions.assertThat(NProjectManager.getInstance(getTestConfig()).getProject("ssb")).isNotNull();
@@ -702,48 +700,49 @@ public class MetadataToolTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetMetadataUrl() {
-        val tool = new MetadataTool();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        MetadataToolHelper metadataToolHelper = new MetadataToolHelper();
 
         var hdfsPath = "hdfs://host/path/to/hdfs/dir";
-        var hdfsMetadataUrl = tool.getMetadataUrl(hdfsPath, true);
+        var hdfsMetadataUrl = metadataToolHelper.getMetadataUrl(hdfsPath, true, kylinConfig);
         Assert.assertEquals("kylin_metadata@hdfs,path=/path/to/hdfs/dir/,zip=1", hdfsMetadataUrl);
-        hdfsMetadataUrl = tool.getMetadataUrl(hdfsPath, false);
+        hdfsMetadataUrl = metadataToolHelper.getMetadataUrl(hdfsPath, false, kylinConfig);
         Assert.assertEquals("kylin_metadata@hdfs,path=/path/to/hdfs/dir/", hdfsMetadataUrl);
 
         var maprfsPath = "maprfs://host/path/to/maprfs/dir";
-        var maprfsMetadataUrl = tool.getMetadataUrl(maprfsPath, true);
+        var maprfsMetadataUrl = metadataToolHelper.getMetadataUrl(maprfsPath, true, kylinConfig);
         Assert.assertEquals("kylin_metadata@hdfs,path=/path/to/maprfs/dir/,zip=1", maprfsMetadataUrl);
-        maprfsMetadataUrl = tool.getMetadataUrl(maprfsPath, false);
+        maprfsMetadataUrl = metadataToolHelper.getMetadataUrl(maprfsPath, false, kylinConfig);
         Assert.assertEquals("kylin_metadata@hdfs,path=/path/to/maprfs/dir/", maprfsMetadataUrl);
 
         var s3Path = "s3://host/path/to/s3/dir";
-        var s3MetadataUrl = tool.getMetadataUrl(s3Path, true);
+        var s3MetadataUrl = metadataToolHelper.getMetadataUrl(s3Path, true, kylinConfig);
         Assert.assertEquals("kylin_metadata@hdfs,path=/path/to/s3/dir/,zip=1", s3MetadataUrl);
-        s3MetadataUrl = tool.getMetadataUrl(s3Path, false);
+        s3MetadataUrl = metadataToolHelper.getMetadataUrl(s3Path, false, kylinConfig);
         Assert.assertEquals("kylin_metadata@hdfs,path=/path/to/s3/dir/", s3MetadataUrl);
 
         var s3aPath = "s3a://host/path/to/s3a/dir";
-        var s3aMetadataUrl = tool.getMetadataUrl(s3aPath, true);
+        var s3aMetadataUrl = metadataToolHelper.getMetadataUrl(s3aPath, true, kylinConfig);
         Assert.assertEquals("kylin_metadata@hdfs,path=/path/to/s3a/dir/,zip=1", s3aMetadataUrl);
-        s3aMetadataUrl = tool.getMetadataUrl(s3aPath, false);
+        s3aMetadataUrl = metadataToolHelper.getMetadataUrl(s3aPath, false, kylinConfig);
         Assert.assertEquals("kylin_metadata@hdfs,path=/path/to/s3a/dir/", s3aMetadataUrl);
 
         var wasbPath = "wasb://host/path/to/wasb/dir";
-        var wasbMetadataUrl = tool.getMetadataUrl(wasbPath, true);
+        var wasbMetadataUrl = metadataToolHelper.getMetadataUrl(wasbPath, true, kylinConfig);
         Assert.assertEquals("kylin_metadata@hdfs,path=/path/to/wasb/dir/,zip=1", wasbMetadataUrl);
-        wasbMetadataUrl = tool.getMetadataUrl(wasbPath, false);
+        wasbMetadataUrl = metadataToolHelper.getMetadataUrl(wasbPath, false, kylinConfig);
         Assert.assertEquals("kylin_metadata@hdfs,path=/path/to/wasb/dir/", wasbMetadataUrl);
 
         var filePath = "file:///path/to/file/dir";
-        var fileMetadataUrl = tool.getMetadataUrl(filePath, true);
+        var fileMetadataUrl = metadataToolHelper.getMetadataUrl(filePath, true, kylinConfig);
         Assert.assertEquals("/path/to/file/dir/", fileMetadataUrl);
-        fileMetadataUrl = tool.getMetadataUrl(filePath, false);
+        fileMetadataUrl = metadataToolHelper.getMetadataUrl(filePath, false, kylinConfig);
         Assert.assertEquals("/path/to/file/dir/", fileMetadataUrl);
 
         var simplePath = "/just/a/path";
-        var simpleMetadataUrl = tool.getMetadataUrl(simplePath, true);
+        var simpleMetadataUrl = metadataToolHelper.getMetadataUrl(simplePath, true, kylinConfig);
         Assert.assertEquals("/just/a/path/", simpleMetadataUrl);
-        simpleMetadataUrl = tool.getMetadataUrl(simplePath, false);
+        simpleMetadataUrl = metadataToolHelper.getMetadataUrl(simplePath, false, kylinConfig);
         Assert.assertEquals("/just/a/path/", simpleMetadataUrl);
     }
 

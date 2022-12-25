@@ -161,8 +161,7 @@ public class NMetaStoreController extends NBasicController {
     @ApiOperation(value = "cleanupStorage", tags = { "SM" })
     @PostMapping(value = "/cleanup_storage")
     @ResponseBody
-    public EnvelopeResponse<String> cleanupStorage(@RequestBody StorageCleanupRequest request) throws Exception {
-
+    public EnvelopeResponse<String> cleanupStorage(@RequestBody StorageCleanupRequest request) {
         metaStoreService.cleanupStorage(request.getProjectsToClean(), request.isCleanupStorage());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }

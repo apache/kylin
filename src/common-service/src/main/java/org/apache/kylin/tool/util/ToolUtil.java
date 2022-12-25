@@ -23,6 +23,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,10 +36,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.ShellException;
-import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.query.util.ExtractFactory;
 import org.apache.spark.sql.SparderEnv;
 
@@ -56,19 +57,19 @@ public class ToolUtil {
     public static void dumpKylinJStack(File outputFile) throws IOException, ShellException {
         String jstackDumpCmd = String.format(Locale.ROOT, "jstack -l %s", getKylinPid());
         val result = new CliCommandExecutor().execute(jstackDumpCmd, null);
-        FileUtils.writeStringToFile(outputFile, result.getCmd());
+        FileUtils.writeStringToFile(outputFile, result.getCmd(), Charset.defaultCharset());
     }
 
     public static String getKylinPid() {
         File pidFile = new File(getKylinHome(), "pid");
         if (pidFile.exists()) {
             try {
-                return FileUtils.readFileToString(pidFile);
+                return FileUtils.readFileToString(pidFile, Charset.defaultCharset());
             } catch (IOException e) {
-                throw new RuntimeException("Error reading KYLIN PID file.", e);
+                throw new IllegalStateException("Error reading KYLIN PID file.", e);
             }
         }
-        throw new RuntimeException("Cannot find KYLIN PID file.");
+        throw new IllegalStateException("Cannot find KYLIN PID file.");
     }
 
     public static String getKylinHome() {
@@ -80,7 +81,7 @@ public class ToolUtil {
         if (StringUtils.isNotEmpty(path)) {
             return path;
         }
-        throw new RuntimeException("Cannot find KYLIN_HOME.");
+        throw new IllegalStateException("Cannot find KYLIN_HOME.");
     }
 
     public static String getBinFolder() {
@@ -157,12 +158,11 @@ public class ToolUtil {
     }
 
     public static boolean waitForSparderRollUp() {
-        boolean isRollUp = false;
         val extractor = ExtractFactory.create();
         String check = SparderEnv.rollUpEventLog();
         if (StringUtils.isBlank(check)) {
             log.info("Failed to roll up eventLog because the spader is closed.");
-            return isRollUp;
+            return false;
         }
         String logDir = extractor.getSparderEvenLogDir();
         ExecutorService es = Executors.newSingleThreadExecutor();
@@ -176,16 +176,19 @@ public class ToolUtil {
                     Thread.sleep(1000);
                 }
             });
-            if (task.get(10, TimeUnit.SECONDS)) {
+            if (Boolean.TRUE.equals(task.get(10, TimeUnit.SECONDS))) {
                 fs.delete(new Path(logDir, check), false);
-                isRollUp = true;
+                return true;
             }
+        } catch (InterruptedException e) {
+            log.warn("Sparder eventLog rollUp failed.", e);
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.warn("Sparder eventLog rollUp failed.", e);
         } finally {
             es.shutdown();
         }
-        return isRollUp;
+        return false;
     }
 
     public static boolean isPortAvailable(String ip, int port) {

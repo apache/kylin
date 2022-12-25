@@ -19,9 +19,9 @@
 package org.apache.kylin.tool.garbage;
 
 public abstract class MetadataCleaner {
-    protected String project;
+    protected final String project;
 
-    public MetadataCleaner(String project) {
+    protected MetadataCleaner(String project) {
         this.project = project;
     }
 

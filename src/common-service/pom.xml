@@ -26,13 +26,16 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <name>Kylin - Common Service</name>
-    <groupId>org.apache.kylin</groupId>
     <artifactId>kylin-common-service</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-tool</artifactId>
+            <artifactId>kylin-core-metadata</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-streaming</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -41,6 +44,10 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-ldap</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>

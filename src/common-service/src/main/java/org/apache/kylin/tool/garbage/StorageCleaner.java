@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -82,6 +81,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -97,17 +97,16 @@ public class StorageCleaner {
     public static final String ANSI_RESET = "\u001B[0m";
 
     private final boolean cleanup;
-    private boolean timeMachineEnabled;
+    private final boolean timeMachineEnabled;
     private final Collection<String> projectNames;
-    private long duration;
-    private KylinConfig kylinConfig;
+    private final KylinConfig kylinConfig;
 
     // for s3 https://olapio.atlassian.net/browse/AL-3154
-    private static RateLimiter rateLimiter = RateLimiter.create(Integer.MAX_VALUE);
+    private static final RateLimiter rateLimiter = RateLimiter.create(Integer.MAX_VALUE);
 
     @Getter
-    private Map<String, String> trashRecord;
-    private ResourceStore resourceStore;
+    private final Map<String, String> trashRecord;
+    private final ResourceStore resourceStore;
 
     public StorageCleaner() throws Exception {
         this(true);
@@ -154,10 +153,8 @@ public class StorageCleaner {
                 .collect(Collectors.toList());
 
         projects.stream().map(project -> NDataflowManager.getInstance(config, project.getName()).listAllDataflows())
-                .flatMap(Collection::stream)
-                .map(dataflow -> KapConfig.wrap(dataflow.getConfig()))
-                .map(KapConfig::getMetadataWorkingDirectory)
-                .forEach(hdfsWorkingDir -> {
+                .flatMap(Collection::stream).map(dataflow -> KapConfig.wrap(dataflow.getConfig()))
+                .map(KapConfig::getMetadataWorkingDirectory).forEach(hdfsWorkingDir -> {
                     val fs = HadoopUtil.getWorkingFileSystem();
                     allFileSystems.add(new StorageItem(FileSystemDecorator.getInstance(fs), hdfsWorkingDir));
                 });
@@ -167,8 +164,9 @@ public class StorageCleaner {
         // For build tasks it is a project-level parameter(Higher project-level priority), but for cleaning up storage garbage,
         // WRITING_CLUSTER_WORKING_DIR is a system-level parameter
         if (kylinConfig.isBuildFilesSeparationEnabled()) {
-            allFileSystems.add(new StorageItem(FileSystemDecorator.getInstance(HadoopUtil.getWritingClusterFileSystem()),
-                    config.getWritingClusterWorkingDir("")));
+            allFileSystems
+                    .add(new StorageItem(FileSystemDecorator.getInstance(HadoopUtil.getWritingClusterFileSystem()),
+                            config.getWritingClusterWorkingDir("")));
         }
         log.info("all file systems are {}", allFileSystems);
         for (StorageItem allFileSystem : allFileSystems) {
@@ -203,11 +201,10 @@ public class StorageCleaner {
             }
         }
         boolean allSuccess = cleanup();
-        duration = System.currentTimeMillis() - start;
-        printConsole(allSuccess);
+        printConsole(allSuccess, System.currentTimeMillis() - start);
     }
 
-    public void printConsole(boolean success) {
+    public void printConsole(boolean success, long duration) {
         System.out.println(ANSI_BLUE + "Kyligence Enterprise garbage report: (cleanup=" + cleanup + ")" + ANSI_RESET);
         for (StorageItem item : outdatedItems) {
             System.out.println("  Storage File: " + item.getPath());
@@ -227,7 +224,7 @@ public class StorageCleaner {
 
     }
 
-    public void collectDeletedProject() throws IOException {
+    public void collectDeletedProject() {
         val config = KylinConfig.getInstanceFromEnv();
         val projects = NProjectManager.getInstance(config).listAllProjects().stream().map(ProjectInstance::getName)
                 .collect(Collectors.toSet());
@@ -369,7 +366,7 @@ public class StorageCleaner {
                     .forEach(layout -> {
                         activeIndexDataPath.add(getDataLayoutDir(layout));
                         layout.getMultiPartition().forEach(partition -> //
-                                activeBucketDataPath.add(getDataPartitionDir(layout, partition)));
+                        activeBucketDataPath.add(getDataPartitionDir(layout, partition)));
                     }));
             activeIndexDataPath
                     .forEach(path -> activeFastBitmapIndexDataPath.add(path + HadoopUtil.FAST_BITMAP_SUFFIX));
@@ -513,8 +510,9 @@ public class StorageCleaner {
     }
 
     private void collectFromHDFS(StorageItem item) throws Exception {
-        val projectFolders = item.getFileSystemDecorator().listStatus(new Path(item.getPath()), path -> !path.getName().startsWith("_")
-                && (this.projectNames.isEmpty() || this.projectNames.contains(path.getName())));
+        val projectFolders = item.getFileSystemDecorator().listStatus(new Path(item.getPath()),
+                path -> !path.getName().startsWith("_")
+                        && (this.projectNames.isEmpty() || this.projectNames.contains(path.getName())));
         for (FileStatus projectFolder : projectFolders) {
             List<FileTreeNode> tableSnapshotParents = Lists.newArrayList();
             val projectNode = new ProjectFileTreeNode(projectFolder.getPath().getName());
@@ -528,7 +526,8 @@ public class StorageCleaner {
                 val treeNode = new FileTreeNode(pair.getFirst(), projectNode);
                 try {
                     log.debug("collect files from {}", pair.getFirst());
-                    Stream.of(item.getFileSystemDecorator().listStatus(new Path(item.getPath(), treeNode.getRelativePath())))
+                    Stream.of(item.getFileSystemDecorator()
+                            .listStatus(new Path(item.getPath(), treeNode.getRelativePath())))
                             .forEach(x -> pair.getSecond().add(new FileTreeNode(x.getPath().getName(), treeNode)));
                 } catch (FileNotFoundException e) {
                     log.info("folder {} not found", new Path(item.getPath(), treeNode.getRelativePath()));
@@ -545,42 +544,43 @@ public class StorageCleaner {
                 val slot = pair.getSecond();
                 for (FileTreeNode node : pair.getFirst()) {
                     log.debug("collect from {} -> {}", node.getName(), node);
-                    Stream.of(item.getFileSystemDecorator().listStatus(new Path(item.getPath(), node.getRelativePath())))
+                    Stream.of(
+                            item.getFileSystemDecorator().listStatus(new Path(item.getPath(), node.getRelativePath())))
                             .forEach(x -> slot.add(new FileTreeNode(x.getPath().getName(), node)));
                 }
             }
-            collectMultiPartitions(item, projectNode);
+            projectNode.getBuckets().addAll(collectMultiPartitions(item, projectNode.getName(), projectNode.getLayouts()));
         }
 
     }
 
-    private void collectMultiPartitions(StorageItem item, ProjectFileTreeNode projectNode) throws IOException {
-        String project = projectNode.getName();
+    private List<FileTreeNode> collectMultiPartitions(StorageItem item, String project, List<FileTreeNode> layouts)
+            throws IOException {
         NDataflowManager manager = NDataflowManager.getInstance(kylinConfig, project);
-        Map<String, Boolean> cached = new HashMap<>();
+        FileSystemDecorator fileSystemDecorator = item.getFileSystemDecorator();
+        String itemPath = item.getPath();
+        List<FileTreeNode> result = Lists.newArrayList();
+        HashSet<String> cached = Sets.newHashSet();
         // Buckets do not certainly exist.
         // Only multi level partition model should do this.
-        val buckets = projectNode.getBuckets();
-        for (FileTreeNode node : projectNode.getLayouts()) {
-            String dataflowId = node.getParent() // segment
-                    .getParent().getName(); // dataflow
-            if (!cached.containsKey(dataflowId)) {
-                NDataflow dataflow = manager.getDataflow(dataflowId);
-                if (Objects.nonNull(dataflow) //
-                        && Objects.nonNull(dataflow.getModel()) //
-                        && dataflow.getModel().isMultiPartitionModel()) {
-                    cached.put(dataflowId, true);
-                } else {
-                    cached.put(dataflowId, false);
-                }
+        for (FileTreeNode node : layouts) {
+            String dataflowId = node.getParent().getParent().getName(); // dataflow
+            if (cached.contains(dataflowId)) {
+                continue;
             }
-
-            if (Boolean.TRUE.equals(cached.get(dataflowId))) {
-                Stream.of(item.getFileSystemDecorator().listStatus(new Path(item.getPath(), node.getRelativePath())))
+            NDataflow dataflow = manager.getDataflow(dataflowId);
+            if (Objects.nonNull(dataflow) //
+                    && Objects.nonNull(dataflow.getModel()) //
+                    && dataflow.getModel().isMultiPartitionModel()) {
+                cached.add(dataflowId);
+                result.addAll(Stream.of(fileSystemDecorator.listStatus(new Path(itemPath, node.getRelativePath())))
                         .filter(FileStatus::isDirectory) // Essential check in case of bad design.
-                        .forEach(x -> buckets.add(new FileTreeNode(x.getPath().getName(), node)));
+                        .map(x -> new FileTreeNode(x.getPath().getName(), node)).collect(Collectors.toList()));
+            } else {
+                cached.add(dataflowId);
             }
         }
+        return result;
     }
 
     @AllArgsConstructor
@@ -610,7 +610,6 @@ public class StorageCleaner {
                     Thread.sleep(1000);
                 } catch (InterruptedException ie) {
                     log.error("Failed to sleep!", ie);
-                    ie.printStackTrace();
                     Thread.currentThread().interrupt();
                 }
             }
@@ -711,6 +710,7 @@ public class StorageCleaner {
     }
 
     @Data
+    @NoArgsConstructor
     @AllArgsConstructor
     @RequiredArgsConstructor
     public static class FileTreeNode {

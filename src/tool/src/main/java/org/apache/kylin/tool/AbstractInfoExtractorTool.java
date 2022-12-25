@@ -667,7 +667,7 @@ public abstract class AbstractInfoExtractorTool extends ExecutableApplication {
     }
 
     protected void exportJstack(File recordTime) {
-        Future jstackTask = executorService.submit(() -> {
+        Future<?> jstackTask = executorService.submit(() -> {
             recordTaskStartTime(JSTACK);
             JStackTool.extractJstack(exportDir);
             recordTaskExecutorTimeToFile(JSTACK, recordTime);

@@ -18,15 +18,11 @@
 
 package org.apache.kylin.tool.routine;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.helper.RoutineToolHelper;
 import org.apache.kylin.tool.MaintainModeTool;
 import org.apache.kylin.tool.util.ToolMainWrapper;
 
@@ -42,12 +38,7 @@ public class FastRoutineTool extends RoutineTool {
             return;
         }
         initOptionValues(optionsHelper);
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        List<ProjectInstance> instances = NProjectManager.getInstance(kylinConfig).listAllProjects();
-        List<String> projectsToCleanup = Arrays.asList(getProjects());
-        if (projectsToCleanup.isEmpty()) {
-            projectsToCleanup = instances.stream().map(ProjectInstance::getName).collect(Collectors.toList());
-        }
+        List<String> projectsToCleanup = getProjectsToCleanup();
         try {
             if (isMetadataCleanup()) {
                 System.out.println("Start to fast cleanup metadata");
@@ -57,7 +48,7 @@ public class FastRoutineTool extends RoutineTool {
                 if (EpochManager.getInstance().isMaintenanceMode()) {
                     Runtime.getRuntime().addShutdownHook(new Thread(maintainModeTool::releaseEpochs));
                 }
-                cleanMeta(projectsToCleanup);
+                RoutineToolHelper.cleanMeta(projectsToCleanup);
             }
             System.out.println("Start to fast cleanup hdfs");
             cleanStorage();

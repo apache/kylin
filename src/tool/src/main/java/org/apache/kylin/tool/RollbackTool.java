@@ -42,21 +42,21 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.ExecutableApplication;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.job.execution.NExecutableManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.common.persistence.AuditLog;
 import org.apache.kylin.common.persistence.ImageDesc;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
 import org.apache.kylin.common.persistence.event.ResourceDeleteEvent;
+import org.apache.kylin.common.util.ExecutableApplication;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.MetadataChecker;
 import org.apache.kylin.common.util.OptionBuilder;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.helper.MetadataToolHelper;
+import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegDetails;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -67,6 +67,7 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.user.NKylinUserManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.general.RollbackStatusEnum;
 import org.joda.time.format.DateTimeFormat;
 
@@ -81,6 +82,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RollbackTool extends ExecutableApplication {
 
+    private MetadataToolHelper helper = new MetadataToolHelper();
     @SuppressWarnings("static-access")
     private static final String HDFS_METADATA_URL_FORMATTER = "kylin_metadata@hdfs,path=%s";
 
@@ -133,7 +135,6 @@ public class RollbackTool extends ExecutableApplication {
         return options;
     }
 
-    @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         log.info("start roll back");
         log.info("start to init ResourceStore");
@@ -227,7 +228,7 @@ public class RollbackTool extends ExecutableApplication {
         long userTargetTimeMillis = formatter.parseDateTime(userTargetTime).getMillis();
         long protectionTime = System.currentTimeMillis() - kylinConfig.getStorageResourceSurvivalTimeThreshold();
         if (userTargetTimeMillis < protectionTime) {
-            log.error("user specified time is less than protection time");
+            log.error("user specified time  is less than protection time");
             return false;
         }
 
@@ -443,10 +444,9 @@ public class RollbackTool extends ExecutableApplication {
             if (!verifyResult.isQualified()) {
                 log.error("{} \n the metadata dir is not qualified", verifyResult.getResultMessage());
             }
-
-            MetadataTool.restore(currentResourceStore, restoreResourceStore, project, true);
+            helper.restore(currentResourceStore, restoreResourceStore, project, true);
         } catch (Exception e) {
-            log.error("restore mirror resource store failed: {} ", e);
+            log.error("restore mirror resource store failed", e);
         }
         return true;
     }
@@ -552,9 +552,9 @@ public class RollbackTool extends ExecutableApplication {
     }
 
     private String backupCurrentMetadata(KylinConfig kylinConfig) throws Exception {
-        val currentBackupFolder = LocalDateTime.now(Clock.systemDefaultZone()).format(MetadataTool.DATE_TIME_FORMATTER)
+        val currentBackupFolder = LocalDateTime.now(Clock.systemDefaultZone()).format(MetadataToolHelper.DATE_TIME_FORMATTER)
                 + "_backup";
-        MetadataTool.backup(kylinConfig, kylinConfig.getHdfsWorkingDirectory() + "_current_backup",
+        helper.backup(kylinConfig, kylinConfig.getHdfsWorkingDirectory() + "_current_backup",
                 currentBackupFolder);
         return currentBackupFolder;
     }
