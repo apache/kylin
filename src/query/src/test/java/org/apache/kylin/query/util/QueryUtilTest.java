@@ -34,8 +34,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.kyligence.kap.query.util.KapQueryUtil;
-
 public class QueryUtilTest extends NLocalFileMetadataTestCase {
 
     @Before
