@@ -9,6 +9,9 @@
         <relativePath>../../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
+    <name>Kylin - Spark DDL</name>
+    <url>http://kylin.apache.org</url>
+    <description>Kylin DDL - SPARK</description>
 
     <artifactId>kylin-spark-ddl</artifactId>
     <dependencies>
