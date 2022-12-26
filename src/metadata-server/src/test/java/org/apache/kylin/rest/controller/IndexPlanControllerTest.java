@@ -18,21 +18,25 @@
 package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SHARD_BY_COLUMN_NOT_IN_INDEX;
 
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.response.DiffRuleBasedIndexResponse;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.CreateBaseIndexRequest;
+import org.apache.kylin.rest.request.CreateTableIndexRequest;
 import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
 import org.apache.kylin.rest.response.BuildIndexResponse;
+import org.apache.kylin.rest.response.DiffRuleBasedIndexResponse;
 import org.apache.kylin.rest.service.FusionIndexService;
 import org.apache.kylin.rest.service.IndexPlanService;
 import org.apache.kylin.rest.service.ModelService;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -155,5 +159,16 @@ public class IndexPlanControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).param("project", "default").param("model_id", "abc")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testUpdateTableIndex() {
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project("default")
+                .modelId("89af4ee2-2cdb-4b07-b39e-4c29856309aa").id(20000010000L)
+                .colOrder(Lists.newArrayList("1", "0", "2")).shardByColumns(Lists.newArrayList("4"))
+                .sortByColumns(Lists.newArrayList("0", "2")).build();
+        Assert.assertThrows(SHARD_BY_COLUMN_NOT_IN_INDEX.getMsg(), KylinException.class, () -> {
+            indexPlanController.updateTableIndex(tableIndexRequest);
+        });
     }
 }
