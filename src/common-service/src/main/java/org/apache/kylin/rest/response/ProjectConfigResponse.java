@@ -88,8 +88,12 @@ public class ProjectConfigResponse {
     @JsonProperty("retention_range")
     private RetentionRange retentionRange;
 
-    @JsonProperty("job_error_notification_enabled")
-    private boolean jobErrorNotificationEnabled;
+    @JsonProperty("job_notification_states")
+    private List<String> jobNotificationStates;
+
+    @JsonProperty("metadata_persist_notification_enabled")
+    private boolean metadataPersistNotificationEnabled;
+
     @JsonProperty("data_load_empty_notification_enabled")
     private boolean dataLoadEmptyNotificationEnabled;
     @JsonProperty("job_notification_emails")

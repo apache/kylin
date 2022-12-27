@@ -36,9 +36,10 @@ export function _getJobAlertSettings (data, isArrayDefaultValue, isSort) {
 
   return {
     project: data.project,
-    job_error_notification_enabled: data.job_error_notification_enabled,
+    metadata_persist_notification_enabled: data.metadata_persist_notification_enabled,
     data_load_empty_notification_enabled: data.data_load_empty_notification_enabled,
-    job_notification_emails: jobEmails
+    job_notification_emails: jobEmails,
+    job_notification_states: data.job_notification_states
   }
 }
 
@@ -84,3 +85,9 @@ export function _getKerberosSettings (data) {
     principal: data.principal
   }
 }
+
+export const jobNotificationStateTypes = [
+  'Succeed',
+  'Error',
+  'Discard'
+]

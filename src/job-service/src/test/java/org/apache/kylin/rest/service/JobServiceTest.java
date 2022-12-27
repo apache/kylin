@@ -76,6 +76,7 @@ import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.dao.NExecutableDao;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.BaseTestExecutable;
 import org.apache.kylin.job.execution.ChainedExecutable;
@@ -1323,7 +1324,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetJobOutput() {
+    public void testGetJobOutput() throws PersistentException {
         NExecutableManager manager = NExecutableManager.getInstance(jobService.getConfig(), "default");
         ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();
         executableOutputPO.setStatus("SUCCEED");
@@ -1336,7 +1337,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetAllJobOutput() throws IOException {
+    public void testGetAllJobOutput() throws IOException, PersistentException {
         File file = temporaryFolder.newFile("execute_output.json." + System.currentTimeMillis() + ".log");
         for (int i = 0; i < 200; i++) {
             Files.write(file.toPath(), String.format(Locale.ROOT, "lines: %s\n", i).getBytes(Charset.defaultCharset()),
@@ -1830,7 +1831,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetStepOutput() {
+    public void testGetStepOutput() throws PersistentException {
         String jobId = "e1ad7bb0-522e-456a-859d-2eab1df448de";
         NExecutableManager manager = NExecutableManager.getInstance(jobService.getConfig(), "default");
         ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();

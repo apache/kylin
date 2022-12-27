@@ -49,6 +49,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.MailHelper;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobIssueEnum;
 import org.apache.kylin.job.dao.NExecutableDao;
@@ -599,18 +601,31 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
         job.setParam(NBatchConstants.P_DATA_RANGE_START, SegmentRange.dateToLong(start) + "");
         job.setParam(NBatchConstants.P_DATA_RANGE_END, SegmentRange.dateToLong(end) + "");
         job.setTargetSubject("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
-        EmailNotificationContent content = EmailNotificationContent.createContent(JobIssueEnum.JOB_ERROR, job);
-        Assert.assertTrue(content.getEmailTitle().contains(JobIssueEnum.JOB_ERROR.getDisplayName()));
-        Assert.assertTrue(!content.getEmailBody().contains("$"));
-        Assert.assertTrue(content.getEmailBody().contains(project));
-        Assert.assertTrue(content.getEmailBody().contains(job.getName()));
+        Pair<String, String> mail = EmailNotificationContent.createContent(ExecutableState.ERROR, job, job.getTasks());
+        assert mail != null;
+        Assert.assertTrue(mail.getFirst().contains(ExecutableState.ERROR.toString()));
+        Assert.assertTrue(mail.getSecond().contains("Job Error Details"));
+        Assert.assertTrue(mail.getSecond().contains(project));
+        Assert.assertTrue(mail.getSecond().contains(job.getName()));
 
-        content = EmailNotificationContent.createContent(JobIssueEnum.LOAD_EMPTY_DATA, job);
-        Assert.assertTrue(content.getEmailBody().contains(job.getTargetModelAlias()));
+        mail = EmailNotificationContent.createContent(JobIssueEnum.LOAD_EMPTY_DATA, job);
+        assert mail != null;
+        Assert.assertTrue(mail.getSecond().contains(job.getTargetModelAlias()));
         Assert.assertEquals("89af4ee2-2cdb-4b07-b39e-4c29856309aa", job.getTargetModelId());
-        content = EmailNotificationContent.createContent(JobIssueEnum.SOURCE_RECORDS_CHANGE, job);
-        Assert.assertTrue(content.getEmailBody().contains(start));
-        Assert.assertTrue(content.getEmailBody().contains(end));
+
+        mail = EmailNotificationContent.createContent(JobIssueEnum.SOURCE_RECORDS_CHANGE, job);
+        assert mail != null;
+        Assert.assertTrue(mail.getSecond().contains(start));
+        Assert.assertTrue(mail.getSecond().contains(end));
+
+        Throwable exception = new Throwable("metadata persist failed!");
+        mail = EmailNotificationContent.createMetadataPersistExceptionContent(exception, job);
+        Assert.assertTrue(mail.getSecond().contains("Hadoop Service"));
+        Assert.assertTrue(mail.getSecond().contains(job.getName()));
+
+        mail = MailHelper.creatContentForCapacityUsage(1000000L, 10000L, project);
+        Assert.assertTrue(mail.getSecond().contains("capacity_threshold"));
+        Assert.assertTrue(mail.getSecond().contains("deleting some segments"));
 
     }
 

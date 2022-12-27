@@ -49,6 +49,7 @@ import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobStoppedException;
 import org.apache.kylin.job.exception.JobStoppedNonVoluntarilyException;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.BaseTestExecutable;
 import org.apache.kylin.job.execution.DefaultExecutable;
@@ -156,7 +157,7 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
     }
 
     @Test
-    public void testGetOutputFromHDFSByJobId() throws IOException {
+    public void testGetOutputFromHDFSByJobId() throws IOException, PersistentException {
         File file = temporaryFolder.newFile("execute_output.json." + System.currentTimeMillis() + ".log");
         for (int i = 0; i < 200; i++) {
             Files.write(file.toPath(), String.format(Locale.ROOT, "lines: %s\n", i).getBytes(Charset.defaultCharset()),

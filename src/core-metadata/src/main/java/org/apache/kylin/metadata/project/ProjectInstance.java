@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.project;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.TreeSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringUtil;
@@ -362,6 +364,14 @@ public class ProjectInstance extends RootPersistentEntity implements ISourceAwar
 
     ResourceStore getStore() {
         return ResourceStore.getKylinMetaStore(this.config);
+    }
+
+    public List<String> getEmailUsers() {
+        String users = this.getOverrideKylinProps().get(NonCustomProjectLevelConfig.NOTIFICATION_USER_EMAILS.getValue());
+        if(users != null) {
+            return Arrays.asList(StringUtil.split(users, ","));
+        }
+        return new ArrayList<>();
     }
 
 }
