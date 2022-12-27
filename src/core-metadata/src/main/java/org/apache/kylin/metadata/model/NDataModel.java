@@ -43,6 +43,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -402,6 +403,7 @@ public class NDataModel extends RootPersistentEntity {
         this.owner = other.owner;
         this.description = other.description;
         this.rootFactTableName = other.rootFactTableName;
+        this.rootFactTableAlias = other.rootFactTableAlias;
         this.joinTables = other.joinTables;
         this.filterCondition = other.filterCondition;
         this.partitionDesc = other.partitionDesc;
@@ -609,8 +611,9 @@ public class NDataModel extends RootPersistentEntity {
         column = column.toUpperCase(Locale.ROOT);
         int cut = column.lastIndexOf('.');
         if (cut > 0) {
+            String table = this.findTable(column.substring(0, cut)).getAlias();
             // table specified
-            result = findColumn(column.substring(0, cut), column.substring(cut + 1));
+            result = findColumn(table, column.substring(cut + 1));
         } else {
             // table not specified, try each table
             for (TableRef tableRef : allTableRefs) {
@@ -730,7 +733,10 @@ public class NDataModel extends RootPersistentEntity {
             throw new IllegalStateException("Root fact table does not exist:" + rootFactTableName);
 
         TableDesc rootDesc = tables.get(rootFactTableName);
-        rootFactTableRef = new TableRef(this, rootDesc.getName(), rootDesc, false);
+        if (Strings.isNullOrEmpty(rootFactTableAlias)) {
+            rootFactTableAlias = rootDesc.getName();
+        }
+        rootFactTableRef = new TableRef(this, rootFactTableAlias, rootDesc, false);
 
         addAlias(rootFactTableRef);
         factTableRefs.add(rootFactTableRef);
@@ -953,8 +959,7 @@ public class NDataModel extends RootPersistentEntity {
         int orderedIndex = 0;
 
         Queue<JoinTableDesc> joinTableBuff = new ArrayDeque<>();
-        TableDesc rootDesc = tables.get(rootFactTableName);
-        joinTableBuff.addAll(fkMap.get(rootDesc.getName()));
+        joinTableBuff.addAll(fkMap.get(rootFactTableAlias));
         while (!joinTableBuff.isEmpty()) {
             JoinTableDesc head = joinTableBuff.poll();
             orderedJoinTables.set(orderedIndex++, head);
