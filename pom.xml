@@ -223,7 +223,7 @@
 
         <groovy-all.version>2.4.21</groovy-all.version>
         <slf4j-ext.version>1.7.26</slf4j-ext.version>
-        <protobuf-java.version>3.16.1</protobuf-java.version>
+        <protobuf-java.version>3.16.3</protobuf-java.version>
 
         <!-- Sonar -->
         <sonar.scala.version>${scala.version}</sonar.scala.version>
