@@ -65,7 +65,7 @@ public class MailServiceTest extends AbstractTestCase {
     public void testMailHelper() {
         overwriteSystemProp("kylin.capacity.notification-enabled", "true");
         overwriteSystemProp("kylin.capacity.notification-emails", "foobar@foobar.com");
-        boolean sent = MailHelper.notifyUserForOverCapacity(100L, 81L);
+        boolean sent = MailTemplateProvider.notifyUserForOverCapacity(100L, 81L, "abc");
         assert sent;
     }
 

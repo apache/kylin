@@ -35,10 +35,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.scheduler.JobFinishedNotifier;
-import org.apache.kylin.job.constant.JobIssueEnum;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.ExecuteRuntimeException;
 import org.apache.kylin.job.exception.JobStoppedException;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 
 import io.kyligence.kap.guava20.shaded.common.collect.Lists;
@@ -276,12 +276,15 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
             switch (state) {
             case SUCCEED:
                 updateToFinalState(ExecutableState.SUCCEED, this::afterUpdateOutput, result.getShortErrMsg());
+                onStatusChange(ExecutableState.SUCCEED);
                 break;
             case DISCARDED:
                 updateToFinalState(ExecutableState.DISCARDED, this::onExecuteDiscardHook, result.getShortErrMsg());
+                onStatusChange(ExecutableState.DISCARDED);
                 break;
             case SUICIDAL:
                 updateToFinalState(ExecutableState.SUICIDAL, this::onExecuteSuicidalHook, result.getShortErrMsg());
+                onStatusChange(ExecutableState.SUICIDAL);
                 break;
             case ERROR:
             case PAUSED:
@@ -297,13 +300,15 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
                 String shortErrMsg = null;
                 if (state == ExecutableState.ERROR) {
                     logger.warn("[UNEXPECTED_THINGS_HAPPENED] Unexpected ERROR state discovered here!!!");
-                    notifyUserJobIssue(JobIssueEnum.JOB_ERROR);
                     info = result.getExtraInfo();
                     output = result.getErrorMsg();
                     hook = this::onExecuteErrorHook;
                     shortErrMsg = result.getShortErrMsg();
                 }
                 updateJobOutput(getProject(), getId(), state, info, output, shortErrMsg, hook);
+                if (state == ExecutableState.ERROR) {
+                    onStatusChange(ExecutableState.ERROR);
+                }
                 break;
             default:
                 throw new IllegalArgumentException("Illegal state when job finished: " + state);
@@ -355,7 +360,8 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         // Hook method, default action is doing nothing
     }
 
-    private void updateToFinalState(ExecutableState finalState, Consumer<String> hook, String failedMsg) {
+    private void updateToFinalState(ExecutableState finalState, Consumer<String> hook, String failedMsg)
+            throws PersistentException, ExecuteException {
         //to final state, regardless of isStoppedNonVoluntarily, otherwise a paused job might fail to suicide
         if (!getOutput().getState().isFinalState()) {
             updateJobOutput(getProject(), getId(), finalState, null, null, failedMsg, hook);
@@ -397,4 +403,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         // just implement it
     }
 
+    protected void onStatusChange(ExecutableState state) {
+        super.notifyUserStatusChange(state);
+    }
 }

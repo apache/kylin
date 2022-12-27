@@ -451,10 +451,12 @@ public class ProjectService extends BasicService {
         Map<String, String> overrideKylinProps = Maps.newHashMap();
         overrideKylinProps.put("kylin.job.notification-on-empty-data-load",
                 String.valueOf(jobNotificationConfigRequest.getDataLoadEmptyNotificationEnabled()));
-        overrideKylinProps.put("kylin.job.notification-on-job-error",
-                String.valueOf(jobNotificationConfigRequest.getJobErrorNotificationEnabled()));
-        overrideKylinProps.put("kylin.job.notification-admin-emails",
+        overrideKylinProps.put("kylin.job.notification-enable-states",
+                String.join(",", Sets.newHashSet(jobNotificationConfigRequest.getJobNotificationStates())));
+        overrideKylinProps.put("kylin.job.notification-user-emails",
                 convertToString(jobNotificationConfigRequest.getJobNotificationEmails()));
+        overrideKylinProps.put("kylin.job.notification-on-metadata-persist",
+                String.valueOf(jobNotificationConfigRequest.getMetadataPersistNotificationEnabled()));
         updateProjectOverrideKylinProps(project, overrideKylinProps);
     }
 
@@ -571,8 +573,9 @@ public class ProjectService extends BasicService {
         response.setFavoriteQueryTipsEnabled(config.getFavoriteQueryAccelerateTipsEnabled());
 
         response.setDataLoadEmptyNotificationEnabled(config.getJobDataLoadEmptyNotificationEnabled());
-        response.setJobErrorNotificationEnabled(config.getJobErrorNotificationEnabled());
-        response.setJobNotificationEmails(Lists.newArrayList(config.getAdminDls()));
+        response.setJobNotificationEmails(projectInstance.getEmailUsers());
+        response.setJobNotificationStates(Lists.newArrayList(config.getJobNotificationStates()));
+        response.setMetadataPersistNotificationEnabled(config.getJobMetadataPersistNotificationEnabled());
 
         response.setFrequencyTimeWindow(config.getFrequencyTimeWindowInDays());
 
@@ -1045,8 +1048,9 @@ public class ProjectService extends BasicService {
     private void resetJobNotificationConfig(String project) {
         Set<String> toBeRemovedProps = Sets.newHashSet();
         toBeRemovedProps.add("kylin.job.notification-on-empty-data-load");
-        toBeRemovedProps.add("kylin.job.notification-on-job-error");
-        toBeRemovedProps.add("kylin.job.notification-admin-emails");
+        toBeRemovedProps.add("kylin.job.notification-enable-states");
+        toBeRemovedProps.add("kylin.job.notification-user-emails");
+        toBeRemovedProps.add("kylin.job.notification-on-metadata-persist");
         removeProjectOveridedProps(project, toBeRemovedProps);
     }
 

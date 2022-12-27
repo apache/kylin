@@ -1146,6 +1146,17 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptionalStringArray("kylin.job.notification-admin-emails", new String[0]);
     }
 
+    public String[] getJobNotificationStates() {
+        return getOptionalStringArray("kylin.job.notification-enable-states", new String[0]);
+    }
+
+    public int getJobMetadataPersistRetry() {
+        return Integer.parseInt(this.getOptional("kylin.job.metadata-persist-retry", "5"));
+    }
+
+    public Boolean getJobMetadataPersistNotificationEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.job.notification-on-metadata-persist", FALSE));
+    }
     public int getJobRetry() {
         return Integer.parseInt(getOptional("kylin.job.retry", "0"));
     }
@@ -2480,10 +2491,6 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean getJobDataLoadEmptyNotificationEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.job.notification-on-empty-data-load", FALSE));
-    }
-
-    public boolean getJobErrorNotificationEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.job.notification-on-job-error", FALSE));
     }
 
     public Long getStorageResourceSurvivalTimeThreshold() {

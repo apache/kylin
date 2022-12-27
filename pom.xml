@@ -523,6 +523,11 @@
                 <artifactId>kylin-integration-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.freemarker</groupId>
+                <artifactId>freemarker</artifactId>
+                <version>2.3.31</version>
+            </dependency>
 
             <!-- arthas -->
             <dependency>

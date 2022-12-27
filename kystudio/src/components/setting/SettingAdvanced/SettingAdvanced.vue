@@ -46,13 +46,28 @@
         </span>
         <div class="setting-desc">{{$t('emptyDataLoadDesc')}}</div>
         <div class="split"></div>
-        <span class="setting-label font-medium">{{$t('errorJob')}}</span><span class="setting-value fixed">
+        <span class="setting-label font-medium">{{$t('metaDataPersist')}}</span><span class="setting-value fixed">
           <el-switch
-            v-model="form.job_error_notification_enabled"
+            v-model="form.metadata_persist_notification_enabled"
             :active-text="$t('kylinLang.common.OFF')"
             :inactive-text="$t('kylinLang.common.ON')">
           </el-switch>
         </span>
+        <div class="setting-desc">{{$t('metaDataPersistDesc')}}</div>
+        <div class="split"></div>
+        <span class="setting-label font-medium">{{$t('jobState')}} :</span><span class="setting-value fixed">
+        </span>
+         <span class="setting-value">
+              {{form.job_notification_states.map(states => $t(states)).join(', ')}}
+            </span>
+            <el-checkbox-group class="setting-input" :value="form.job_notification_states" @input="handleInputJobState">
+              <el-checkbox
+                v-for="jobState in jobNotificationStateTypes"
+                :key="jobState"
+                :label="jobState">
+                {{$t(jobState)}}
+              </el-checkbox>
+            </el-checkbox-group>
         <div class="setting-desc">{{$t('errorJobDesc')}}</div>
       </div>
       <div class="setting-item">
@@ -308,7 +323,17 @@ import { Component, Watch } from 'vue-property-decorator'
 import { handleError, handleSuccessAsync, objectArraySort } from '../../../util'
 import { kylinConfirm } from 'util/business'
 import { apiUrl } from '../../../config'
-import { validate, _getJobAlertSettings, _getDefaultDBSettings, _getYarnNameSetting, _getSecStorageSetting, _getExposeCCSetting, _getSnapshotSetting, _getKerberosSettings } from './handler'
+import {
+  validate,
+  _getJobAlertSettings,
+  _getDefaultDBSettings,
+  _getYarnNameSetting,
+  _getSecStorageSetting,
+  _getExposeCCSetting,
+  _getSnapshotSetting,
+  _getKerberosSettings,
+  jobNotificationStateTypes
+} from './handler'
 import EditableBlock from '../../common/EditableBlock/EditableBlock.vue'
 import { pageRefTags, pageCount } from 'config'
 
@@ -377,6 +402,7 @@ export default class SettingAdvanced extends Vue {
   pageSize = pageCount
   convertedProperties = []
   pageRefTags = pageRefTags
+  jobNotificationStateTypes=jobNotificationStateTypes
 
   dbList = []
   nodes = []
@@ -385,8 +411,9 @@ export default class SettingAdvanced extends Vue {
     project: '',
     // tips_enabled: true,
     // threshold: 20,
-    job_error_notification_enabled: true,
+    job_notification_states: [],
     data_load_empty_notification_enabled: true,
+    metadata_persist_notification_enabled: false,
     job_notification_emails: [],
     default_database: this.$store.state.project.projectDefaultDB || '',
     yarn_queue: this.$store.state.project.yarn_queue || '',
@@ -1128,6 +1155,11 @@ export default class SettingAdvanced extends Vue {
     this.currentPage = currentPage
     this.pageSize = pageSize
     this.convertedProperties = this.configList.slice(this.pageSize * currentPage, this.pageSize * (currentPage + 1))
+  }
+  handleInputJobState (value) {
+    if (value.length >= 0) {
+      this.form.job_notification_states = value
+    }
   }
 }
 </script>

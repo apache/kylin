@@ -243,7 +243,7 @@ public class NProjectControllerTest extends NLocalFileMetadataTestCase {
     public void testUpdateJobNotificationConfig() throws Exception {
         val request = new JobNotificationConfigRequest();
 
-        request.setJobErrorNotificationEnabled(true);
+        request.setJobNotificationStates(Arrays.asList("Succeed", "Error", "Discard"));
         request.setDataLoadEmptyNotificationEnabled(true);
         request.setJobNotificationEmails(Arrays.asList("fff@g.com"));
 

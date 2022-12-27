@@ -119,4 +119,19 @@ public enum ExecutableState {
             throw new RuntimeException("invalid state:" + this);
         }
     }
+
+    public String toStringState() {
+        switch (this) {
+            case SUCCEED:
+                return "Succeed";
+            case ERROR:
+                return "Error";
+            case DISCARDED:
+                return "Discard";
+            case SUICIDAL:
+                return "Suicidal";
+            default:
+                throw new RuntimeException("invalid Executable state:" + this);
+        }
+    }
 }
