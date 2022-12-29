@@ -943,6 +943,10 @@ class KylinConfigBaseTest {
                 new PropertiesEntity("kylin.metrics.hdfs-periodic-calculation-interval", "5m", 300000L));
         map.put("isSkipResourceCheck",
                 new PropertiesEntity("kylin.build.resource.skip-resource-check", "false", false));
+        map.put("getCalciteBindableCacheSize",
+                new PropertiesEntity("kylin.query.calcite.bindable.cache.maxSize", "10", 10));
+        map.put("getCalciteBindableCacheConcurrencyLevel",
+                new PropertiesEntity("kylin.query.calcite.bindable.cache.concurrencyLevel", "5", 5));
     }
 
     @Test
@@ -1399,6 +1403,20 @@ class KylinConfigBaseTest {
         assertFalse(config.isStorageQuotaEnabled());
         config.setProperty("kylin.storage.check-quota-enabled", "true");
         assertTrue(config.isStorageQuotaEnabled());
+    }
+    @Test
+    void testCalciteBindableCacheSize() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals(10, config.getCalciteBindableCacheSize());
+        config.setProperty("kylin.query.calcite.bindable.cache.maxSize", "7");
+        assertEquals(7, config.getCalciteBindableCacheSize());
+    }
+    @Test
+    void testCalciteBindableCacheConcurrencyLevel() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals(5, config.getCalciteBindableCacheConcurrencyLevel());
+        config.setProperty("kylin.query.calcite.bindable.cache.concurrencyLevel", "3");
+        assertEquals(3, config.getCalciteBindableCacheConcurrencyLevel());
     }
 }
 
