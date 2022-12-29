@@ -81,6 +81,9 @@ public class KylinPrepareEnvListener implements EnvironmentPostProcessor, Ordere
         } else {
             Unsafe.setProperty("calcite.convert-multiple-columns-in-to-or", "false");
         }
+        Unsafe.setProperty("calcite.bindable.cache.maxSize", Integer.toString(config.getCalciteBindableCacheSize()));
+        Unsafe.setProperty("calcite.bindable.cache.concurrencyLevel",
+                Integer.toString(config.getCalciteBindableCacheConcurrencyLevel()));
 
         TimeZoneUtils.setDefaultTimeZone(config);
         DelegationTokenManager delegationTokenManager = new DelegationTokenManager();
