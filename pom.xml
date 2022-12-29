@@ -352,6 +352,7 @@
         <ant.version>1.9.16</ant.version>
         <netty-all.version>4.1.73.Final</netty-all.version>
         <netty.version>3.10.6.Final</netty.version>
+        <netty-codec.version>4.1.86.Final</netty-codec.version>
         <servo-core.version>0.13.2</servo-core.version>
         <apache-api.version>1.0.3</apache-api.version>
         <saas.nacos.discovery.starter.version>2.6.2</saas.nacos.discovery.starter.version>
@@ -714,7 +715,11 @@
                 <artifactId>kylin-soft-affinity-cache</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-haproxy</artifactId>
+                <version>${netty-codec.version}</version>
+            </dependency>
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>
                 <artifactId>metrics-core</artifactId>
@@ -889,6 +894,10 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-hdfs</artifactId>
                 <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-codec-haproxy</artifactId>
+                    </exclusion>
                     <exclusion>
                         <groupId>com.sun.jersey</groupId>
                         <artifactId>*</artifactId>
@@ -2489,6 +2498,10 @@
                 <artifactId>spark-core_2.12</artifactId>
                 <exclusions>
                     <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-codec-haproxy</artifactId>
+                    </exclusion>
+                    <exclusion>
                         <artifactId>jetty-plus</artifactId>
                         <groupId>org.eclipse.jetty</groupId>
                     </exclusion>
@@ -2565,6 +2578,10 @@
                 <type>test-jar</type>
                 <scope>test</scope>
                 <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-codec-haproxy</artifactId>
+                    </exclusion>
                     <exclusion>
                         <artifactId>jetty-plus</artifactId>
                         <groupId>org.eclipse.jetty</groupId>
