@@ -32,10 +32,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AddressUtil {
 
+    public static String MAINTAIN_MODE_MOCK_PORT = "0000";
+    private static String localIpAddressCache;
     @Setter
     private static HostInfoFetcher hostInfoFetcher = new DefaultHostInfoFetcher();
-
-    public static String MAINTAIN_MODE_MOCK_PORT = "0000";
 
     public static String getLocalInstance() {
         String serverIp = getLocalHostExactAddress();
@@ -79,13 +79,17 @@ public class AddressUtil {
     }
 
     public static String getLocalHostExactAddress() {
-        val localIpAddress = KylinConfig.getInstanceFromEnv().getServerIpAddress();
-        if (StringUtils.isNotBlank(localIpAddress)) {
-            return localIpAddress;
+        if (StringUtils.isEmpty(localIpAddressCache)) {
+            val localIpAddress = KylinConfig.getInstanceFromEnv().getServerIpAddress();
+            if (StringUtils.isNotBlank(localIpAddress)) {
+                localIpAddressCache = localIpAddress;
+            } else {
+                try (InetUtils inetUtils = new InetUtils(new InetUtilsProperties())) {
+                    localIpAddressCache = inetUtils.findFirstNonLoopbackHostInfo().getIpAddress();
+                }
+            }
         }
-        try (InetUtils inetUtils = new InetUtils(new InetUtilsProperties())) {
-            return inetUtils.findFirstNonLoopbackHostInfo().getIpAddress();
-        }
+        return localIpAddressCache;
     }
 
     public static boolean isSameHost(String driverHost) {
