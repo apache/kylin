@@ -1455,7 +1455,9 @@ public class NDataModel extends RootPersistentEntity {
     }
 
     public boolean isMultiPartitionModel() {
-        return multiPartitionDesc != null && CollectionUtils.isNotEmpty(multiPartitionDesc.getColumns());
+        // a multi-partition model can be determined only if neither partitionDesc nor multiPartitionDesc is null
+        return partitionDesc != null && multiPartitionDesc != null
+                && CollectionUtils.isNotEmpty(multiPartitionDesc.getColumns());
     }
 
     public List<Integer> getMeasureRelatedCols() {
