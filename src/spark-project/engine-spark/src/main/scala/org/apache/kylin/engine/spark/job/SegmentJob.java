@@ -147,7 +147,8 @@ public abstract class SegmentJob extends SparkApplication {
     }
 
     protected boolean isPartitioned() {
-        return Objects.nonNull(indexPlan.getModel().getMultiPartitionDesc());
+        return Objects.nonNull(indexPlan.getModel().getPartitionDesc())
+                && Objects.nonNull(indexPlan.getModel().getMultiPartitionDesc());
     }
 
     private boolean needSkipSegment(NDataSegment dataSegment) {
