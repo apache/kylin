@@ -24,10 +24,11 @@ import static org.apache.kylin.rest.constant.Constant.ROLE_ADMIN;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
@@ -62,7 +63,6 @@ public class NUserGroupServiceTest extends ServiceTestBase {
             userGroupService.deleteGroup(group);
         }
         //test group add and get
-        //        userGroupService.addGroup(GROUP_ALL_USERS);
         userGroupService.addGroup("g1");
         userGroupService.addGroup("g2");
         userGroupService.addGroup("g3");
@@ -72,6 +72,7 @@ public class NUserGroupServiceTest extends ServiceTestBase {
         Assert.assertEquals(Lists.newArrayList("g1"), userGroupService.getAuthoritiesFilterByGroupName("g1"));
         val groups = userGroupService.getUserGroupsFilterByGroupName("G");
         Assert.assertEquals(3, groups.size());
+        Assert.assertThrows(KylinException.class, () -> userGroupService.getUuidByGroupName("noexist_group"));
         for (val group : groups) {
             Assert.assertNotNull(group.getUuid());
             Assert.assertTrue(group.getGroupName().contains("g"));
@@ -144,9 +145,9 @@ public class NUserGroupServiceTest extends ServiceTestBase {
     }
 
     @Test
-    public void testAddUserToNotExistGroup() throws Exception {
+    public void testAddUserToNotExistGroup() {
         try {
-            userGroupService.modifyGroupUsers("UNKNOWN", Arrays.asList("ADMIN"));
+            userGroupService.modifyGroupUsers("UNKNOWN", Collections.singletonList("ADMIN"));
         } catch (TransactionException e) {
             Assert.assertTrue(e.getCause().getCause() instanceof KylinException);
             Assert.assertTrue(StringUtils.equals(e.getCause().getCause().getMessage(),
@@ -160,19 +161,21 @@ public class NUserGroupServiceTest extends ServiceTestBase {
     public void testListUserGroups() throws IOException {
         userGroupService.addGroup("t1");
         userGroupService.addGroup("t2");
-        userGroupService.modifyGroupUsers("t1", Arrays.asList("MODELER"));
-        userGroupService.modifyGroupUsers("t2", Arrays.asList("MODELER"));
+        userGroupService.modifyGroupUsers("t1", Collections.singletonList("MODELER"));
+        userGroupService.modifyGroupUsers("t2", Collections.singletonList("MODELER"));
 
+        var emptyGroups = userGroupService.listUserGroups("notexist");
+        Assert.assertTrue(emptyGroups.isEmpty());
         var groups = userGroupService.listUserGroups("MODELER");
         Assert.assertEquals(2, groups.size());
         Assert.assertTrue(groups.contains("t1"));
         Assert.assertTrue(groups.contains("t2"));
         userGroupService.addGroup("t3");
-        userGroupService.modifyGroupUsers("t3", Arrays.asList("MODELER"));
+        userGroupService.modifyGroupUsers("t3", Collections.singletonList("MODELER"));
         groups = userGroupService.listUserGroups("MODELER");
         Assert.assertEquals(3, groups.size());
         Assert.assertTrue(groups.contains("t3"));
-        List<String> userList = Arrays.asList("ADMIN");
+        List<String> userList = Collections.singletonList("ADMIN");
         Assert.assertThrows(RuntimeException.class, () -> userGroupService.modifyGroupUsers("t1", userList));
     }
 

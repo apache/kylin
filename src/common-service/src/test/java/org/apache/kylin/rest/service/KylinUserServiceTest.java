@@ -18,9 +18,9 @@
 
 package org.apache.kylin.rest.service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.constant.Constant;
@@ -35,6 +35,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.user.NKylinUserManager;
@@ -98,18 +101,55 @@ public class KylinUserServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testUserExists() {
-        ManagedUser user = new ManagedUser();
-        user.setUsername("tTtUser");
-        List<SimpleGrantedAuthority> roles = new ArrayList<>();
-        roles.add(new SimpleGrantedAuthority("ALL_USERS"));
-        user.setGrantedAuthorities(roles);
-        Mockito.doNothing().when(userAclService).updateUserAclPermission(Mockito.any(UserDetails.class),
-                Mockito.any(Permission.class));
-        kylinUserService.createUser(user);
+        createNormalUser("tTtUser");
         Assert.assertTrue(kylinUserService.userExists("tTtUser"));
         Assert.assertTrue(kylinUserService.userExists("tttuser"));
         Assert.assertTrue(kylinUserService.userExists("TTTUSER"));
         Assert.assertFalse(kylinUserService.userExists("NOTEXIST"));
     }
 
+    @Test
+    public void testIsGlobalAdmin() {
+        Assert.assertFalse(kylinUserService.isGlobalAdmin((UserDetails) null));
+
+        UserDetails adminUser = kylinUserService.loadUserByUsername("ADMIN");
+        Assert.assertTrue(kylinUserService.isGlobalAdmin(adminUser));
+        Assert.assertFalse(kylinUserService.isGlobalAdmin("notexist"));
+    }
+
+    @Test
+    public void testContainsGlobalAdmin() {
+        Assert.assertTrue(kylinUserService.containsGlobalAdmin(Sets.newHashSet("ADMIN")));
+        createNormalUser("normalUser1");
+        Assert.assertFalse(kylinUserService.containsGlobalAdmin(Sets.newHashSet("normalUser1")));
+        Assert.assertTrue(kylinUserService.containsGlobalAdmin(Sets.newHashSet("normalUser1", "ADMIN")));
+    }
+
+    @Test
+    public void testRetainsNormalUser() {
+        createNormalUser("normalUser2");
+        createNormalUser("normalUser3");
+
+        Set<String> normalUserSet = kylinUserService
+                .retainsNormalUser(Sets.newHashSet("normalUser2", "normalUser3", "ADMIN"));
+        Assert.assertFalse(normalUserSet.isEmpty());
+        Assert.assertEquals(2, normalUserSet.size());
+    }
+
+    @Test
+    public void testListNormalUsers() {
+        createNormalUser("normalUser4");
+        List<String> normalUsers = kylinUserService.listNormalUsers();
+        Assert.assertFalse(normalUsers.isEmpty());
+        Assert.assertTrue(normalUsers.contains("normalUser4"));
+    }
+
+    private void createNormalUser(String userName) {
+        ManagedUser user = new ManagedUser();
+        user.setUsername(userName);
+        user.setGrantedAuthorities(Lists.newArrayList(new SimpleGrantedAuthority("ALL_USERS")));
+        Mockito.doNothing().when(userAclService).updateUserAclPermission(Mockito.any(UserDetails.class),
+                Mockito.any(Permission.class));
+        kylinUserService.createUser(user);
+    }
 }
