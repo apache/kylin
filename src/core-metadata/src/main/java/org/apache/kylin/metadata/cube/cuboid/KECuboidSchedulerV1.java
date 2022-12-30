@@ -24,7 +24,6 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -34,8 +33,8 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.OutOfMaxCombinationException;
+import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.common.util.ThreadUtil;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
@@ -163,19 +162,16 @@ public class KECuboidSchedulerV1 extends CuboidScheduler {
      * @return Cuboid collection
      */
     private Set<CuboidBigInteger> buildTreeBottomUp(SetCreator setCreatorFunc) {
-        KylinConfig config = indexPlan.getConfig();
-        long maxCombination = config.getCubeAggrGroupMaxCombination() * 10;
-        maxCombination = maxCombination < 0 ? Long.MAX_VALUE : maxCombination;
-
         Set<CuboidBigInteger> cuboidHolder = setCreatorFunc.create();
 
         // build tree structure
+        long maxCombination = getAggGroupCombinationSize() * 10;
+        maxCombination = maxCombination < 0 ? Integer.MAX_VALUE : maxCombination;
         Set<CuboidBigInteger> children = getOnTreeParentsByLayer(Sets.newHashSet(new CuboidBigInteger(BigInteger.ZERO)),
                 setCreatorFunc, maxCombination); // lowest level cuboids
         while (!children.isEmpty()) {
             if (cuboidHolder.size() + children.size() > maxCombination) {
-                throw new OutOfMaxCombinationException(String.format(Locale.ROOT, OUT_OF_MAX_COMBINATION_MSG_FORMAT,
-                        cuboidHolder.size() + children.size(), maxCombination));
+                throw new OutOfMaxCombinationException(ErrorCodeServer.OUT_OF_MAX_DIM_COMBINATION, maxCombination);
             }
             cuboidHolder.addAll(children);
             children = getOnTreeParentsByLayer(children, setCreatorFunc, maxCombination);
@@ -210,19 +206,20 @@ public class KECuboidSchedulerV1 extends CuboidScheduler {
                 if (cuboidId == null) {
                     return false;
                 }
-                if (++cuboidCount > maxCombination) {
-                    throw new OutOfMaxCombinationException(
-                            String.format(Locale.ROOT, OUT_OF_MAX_COMBINATION_MSG_FORMAT, cuboidCount, maxCombination));
+                if (cuboidCount > maxCombination) {
+                    throw new OutOfMaxCombinationException(ErrorCodeServer.OUT_OF_MAX_DIM_COMBINATION, maxCombination);
                 }
 
                 BigInteger cuboidBits = cuboidId.getDimMeas();
 
                 if (cuboidBits.equals(ruleBasedAggIndex.getFullMask()) && isBaseCuboidValid) {
+                    cuboidCount++;
                     return true;
                 }
 
                 for (NAggregationGroup agg : ruleBasedAggIndex.getAggregationGroups()) {
                     if (agg.isOnTree(cuboidBits) && agg.checkDimCap(cuboidBits)) {
+                        cuboidCount++;
                         return true;
                     }
                 }
@@ -253,8 +250,9 @@ public class KECuboidSchedulerV1 extends CuboidScheduler {
         Set<CuboidBigInteger> children = getOnTreeParentsByLayer(Sets.newHashSet(new CuboidBigInteger(BigInteger.ZERO)),
                 agg, newHashSet); // lowest level cuboids
         while (!children.isEmpty()) {
-            if (cuboidHolder.size() + children.size() > indexPlan.getConfig().getCubeAggrGroupMaxCombination()) {
-                throw new OutOfMaxCombinationException("Holder size larger than kylin.cube.aggrgroup.max-combination");
+            if (cuboidHolder.size() + children.size() > getAggGroupCombinationSize()) {
+                throw new OutOfMaxCombinationException(ErrorCodeServer.OUT_OF_MAX_DIM_COMBINATION,
+                        getAggGroupCombinationSize());
             }
             cuboidHolder.addAll(children);
             children = getOnTreeParentsByLayer(children, agg, newHashSet);

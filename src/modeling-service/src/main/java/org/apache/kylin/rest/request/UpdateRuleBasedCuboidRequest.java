@@ -51,7 +51,7 @@ public class UpdateRuleBasedCuboidRequest implements ProjectInsensitiveRequest {
 
     @Builder.Default
     @JsonProperty("scheduler_version")
-    private int schedulerVersion = 1;
+    private int schedulerVersion = 2;
 
     @Builder.Default
     @JsonProperty("load_data")
