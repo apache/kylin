@@ -17,19 +17,33 @@
  */
 package org.apache.kylin.rest.service;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import lombok.var;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.INDEX_DUPLICATE;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_NOT_EXISTS;
+import static org.apache.kylin.metadata.cube.model.IndexEntity.Source.CUSTOM_TABLE_INDEX;
+import static org.apache.kylin.metadata.cube.model.IndexEntity.Source.RECOMMENDED_TABLE_INDEX;
+import static org.apache.kylin.metadata.model.SegmentStatusEnum.READY;
+import static org.apache.kylin.metadata.model.SegmentStatusEnum.WARNING;
+import static org.hamcrest.Matchers.is;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections.ListUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
@@ -69,24 +83,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.INDEX_DUPLICATE;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_NOT_EXISTS;
-import static org.apache.kylin.metadata.cube.model.IndexEntity.Source.CUSTOM_TABLE_INDEX;
-import static org.apache.kylin.metadata.cube.model.IndexEntity.Source.RECOMMENDED_TABLE_INDEX;
-import static org.apache.kylin.metadata.model.SegmentStatusEnum.READY;
-import static org.apache.kylin.metadata.model.SegmentStatusEnum.WARNING;
-import static org.hamcrest.Matchers.is;
+import lombok.val;
+import lombok.var;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class IndexPlanServiceTest extends SourceTestCase {
@@ -1258,8 +1260,8 @@ public class IndexPlanServiceTest extends SourceTestCase {
                 indexPlanService.getIndexGraph(getProject(), modelId, 100).getSegmentToComplementCount());
 
         // mark a layout tobedelete
-        indexManager.updateIndexPlan(modelId,
-                copyForWrite -> copyForWrite.markWhiteIndexToBeDelete(modelId, Sets.newHashSet(tobeDeleteLayoutId), Collections.emptyMap()));
+        indexManager.updateIndexPlan(modelId, copyForWrite -> copyForWrite.markWhiteIndexToBeDelete(modelId,
+                Sets.newHashSet(tobeDeleteLayoutId), Collections.emptyMap()));
 
         //remove tobedelete layout from seg1
         val newDf = dfManager.getDataflow(modelId);
@@ -1323,12 +1325,12 @@ public class IndexPlanServiceTest extends SourceTestCase {
     }
 
     @Test
-    public void testCalculateAggIndexCountWhenTotalCuboidsOutOfMaxComb() throws Exception {
+    public void testCalculateAggIndexCountWhenTotalCuboidsOutOfMaxComb() {
         testOutOfCombination(1);
     }
 
     @Test
-    public void testCalculateAggIndexCountWhenTotalCuboidsOutOfMaxComb_WithSchedulerV2() throws Exception {
+    public void testCalculateAggIndexCountWhenTotalCuboidsOutOfMaxComb_WithSchedulerV2() {
         testOutOfCombination(2);
     }
 
