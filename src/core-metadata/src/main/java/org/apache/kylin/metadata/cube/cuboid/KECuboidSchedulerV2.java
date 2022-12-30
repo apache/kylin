@@ -22,12 +22,12 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.exception.OutOfMaxCombinationException;
+import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 
@@ -40,14 +40,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class KECuboidSchedulerV2 extends CuboidScheduler {
 
-    private final BigInteger max;
     private final int measureSize;
     private transient final OrderedSet<ColOrder> allColOrders;
 
     KECuboidSchedulerV2(IndexPlan indexPlan, RuleBasedIndex ruleBasedAggIndex, boolean skipAll) {
         super(indexPlan, ruleBasedAggIndex);
 
-        this.max = ruleBasedAggIndex.getFullMask();
+        BigInteger max = ruleBasedAggIndex.getFullMask();
         this.measureSize = ruleBasedAggIndex.getMeasures().size();
 
         // handle nRuleBasedCuboidDesc has 0 dimensions
@@ -55,19 +54,20 @@ public class KECuboidSchedulerV2 extends CuboidScheduler {
         if (max.bitCount() == 0 || skipAll) {
             return;
         }
-        long maxCombination = indexPlan.getConfig().getCubeAggrGroupMaxCombination() * 10;
-        maxCombination = maxCombination < 0 ? Long.MAX_VALUE : maxCombination;
+
         if (ruleBasedAggIndex.getBaseLayoutEnabled() == null) {
             ruleBasedAggIndex.setBaseLayoutEnabled(true);
         }
         if (Boolean.TRUE.equals(ruleBasedAggIndex.getBaseLayoutEnabled())) {
             allColOrders.add(new ColOrder(ruleBasedAggIndex.getDimensions(), ruleBasedAggIndex.getMeasures()));
         }
+
+        long maxCombinationSize = getAggGroupCombinationSize() * 10;
+        maxCombinationSize = maxCombinationSize < 0 ? Integer.MAX_VALUE : maxCombinationSize;
         for (NAggregationGroup agg : ruleBasedAggIndex.getAggregationGroups()) {
             allColOrders.addAll(calculateCuboidsForAggGroup(agg));
-            if (allColOrders.size() > maxCombination) {
-                throw new OutOfMaxCombinationException(String.format(Locale.ROOT, OUT_OF_MAX_COMBINATION_MSG_FORMAT,
-                        allColOrders.size(), maxCombination));
+            if (allColOrders.size() > maxCombinationSize) {
+                throw new OutOfMaxCombinationException(ErrorCodeServer.OUT_OF_MAX_DIM_COMBINATION, maxCombinationSize);
             }
         }
     }
@@ -106,8 +106,9 @@ public class KECuboidSchedulerV2 extends CuboidScheduler {
         Set<CuboidBigInteger> children = getOnTreeParentsByLayer(Sets.newHashSet(new CuboidBigInteger(BigInteger.ZERO)),
                 agg); // lowest level cuboids
         while (!children.isEmpty()) {
-            if (cuboidHolder.size() + children.size() > indexPlan.getConfig().getCubeAggrGroupMaxCombination()) {
-                throw new OutOfMaxCombinationException("Holder size larger than kylin.cube.aggrgroup.max-combination");
+            if (cuboidHolder.size() + children.size() > getAggGroupCombinationSize()) {
+                throw new OutOfMaxCombinationException(ErrorCodeServer.OUT_OF_MAX_DIM_COMBINATION,
+                        getAggGroupCombinationSize());
             }
             cuboidHolder.addAll(children);
             children = getOnTreeParentsByLayer(children, agg);

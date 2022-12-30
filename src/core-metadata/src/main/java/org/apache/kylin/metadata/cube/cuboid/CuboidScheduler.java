@@ -39,8 +39,6 @@ import lombok.val;
  */
 public abstract class CuboidScheduler implements Serializable {
 
-    protected static final String OUT_OF_MAX_COMBINATION_MSG_FORMAT = "Too many cuboids for the cube. Cuboid combination reached %s and limit is %s. Abort calculation.";
-
     public static CuboidScheduler getInstance(IndexPlan indexPlan, RuleBasedIndex ruleBasedIndex, boolean skipAll) {
         if (ruleBasedIndex.getSchedulerVersion() == 1) {
             return new KECuboidSchedulerV1(indexPlan, ruleBasedIndex, skipAll);
@@ -87,6 +85,10 @@ public abstract class CuboidScheduler implements Serializable {
 
     public IndexPlan getIndexPlan() {
         return indexPlan;
+    }
+
+    public long getAggGroupCombinationSize() {
+        return indexPlan.getConfig().getCubeAggrGroupMaxCombination();
     }
 
     protected ColOrder extractDimAndMeaFromBigInt(BigInteger bigInteger) {

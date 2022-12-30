@@ -17,10 +17,11 @@
  */
 package org.apache.kylin.common.exception;
 
-public class OutOfMaxCombinationException extends RuntimeException {
+import org.apache.kylin.common.exception.code.ErrorCodeProducer;
 
-    public OutOfMaxCombinationException(String message) {
-        super(message);
+public class OutOfMaxCombinationException extends KylinException {
+
+    public OutOfMaxCombinationException(ErrorCodeProducer errorCodeProducer, Object... args) {
+        super(errorCodeProducer, args);
     }
-
 }
