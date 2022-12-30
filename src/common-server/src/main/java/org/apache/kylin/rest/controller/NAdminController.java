@@ -76,7 +76,7 @@ public class NAdminController extends NBasicController {
         propertyKeys.add("kylin.security.remove-ldap-custom-security-limit-enabled");
         propertyKeys.add("kylin.source.ddl.logical-view.enabled");
         propertyKeys.add("kylin.source.ddl.hive.enabled");
-        propertyKeys.add("kylin.source.ddl.logical-view-database");
+        propertyKeys.add("kylin.source.ddl.logical-view.database");
         propertyKeys.add("kylin.storage.check-quota-enabled");
 
         // add second storage

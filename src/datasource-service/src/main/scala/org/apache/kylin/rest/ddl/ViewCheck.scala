@@ -65,7 +65,7 @@ class ViewCheck extends DDLCheck {
       cnDescription.append(s"创建不要加 database 名称，系统自动创建到 ${config.getDDLLogicalViewDB} 库中，"
         + s"删除要加 ${config.getDDLLogicalViewDB} 库名称 \n")
       enDescription.append(s"Creating does not require adding database, it is automatically created in"
-        + s" ${config.getDDLLogicalViewDB} ,\n deleting should add ${config.getDDLLogicalViewDB} database")
+        + s" ${config.getDDLLogicalViewDB} , deleting should add ${config.getDDLLogicalViewDB} database\n")
       syntaxSupport.append(" `create logical view`, `drop logical view` ")
       cnDescription
         .append(s"仅支持 ${syntaxSupport} 语法\n")

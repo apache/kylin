@@ -41,6 +41,7 @@ import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.ddl.SourceTableCheck;
 import org.apache.kylin.rest.ddl.ViewCheck;
 import org.apache.kylin.rest.request.ViewRequest;
+import org.apache.kylin.rest.response.LogicalViewResponse;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 
 import org.apache.spark.ddl.DDLCheck;
@@ -135,18 +136,20 @@ public class SparkDDLService extends BasicService {
     LogicalViewLoader.unloadView(context.getLogicalViewName(), SparderEnv.getSparkSession());
   }
 
-  public List<LogicalView> listAll(String project, String tableName) {
+  public List<LogicalViewResponse> listAll(String project, String tableName) {
     List<LogicalView> logicalViews = LogicalViewManager.getInstance(KylinConfig.getInstanceFromEnv()).list();
     if (StringUtils.isNotBlank(tableName)) {
       logicalViews = logicalViews.stream()
           .filter(table -> table.getTableName().toLowerCase().contains(tableName.toLowerCase()))
           .collect(Collectors.toList());
     }
-    logicalViews.forEach(table -> {
+    List<LogicalViewResponse> viewResponses =
+        logicalViews.stream().map(LogicalViewResponse::new).collect(Collectors.toList());
+    viewResponses.forEach(table -> {
       if (!table.getCreatedProject().equalsIgnoreCase(project)) {
         table.setCreatedSql("***");
       }
     });
-    return logicalViews;
+    return viewResponses;
   }
 }
