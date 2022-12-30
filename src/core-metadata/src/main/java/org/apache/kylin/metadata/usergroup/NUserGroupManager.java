@@ -22,17 +22,21 @@ import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_USERGR
 import static org.apache.kylin.common.exception.ServerErrorCode.USERGROUP_NOT_EXIST;
 import static org.apache.kylin.common.persistence.ResourceStore.USER_GROUP_ROOT;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.NavigableSet;
+import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,15 +77,29 @@ public class NUserGroupManager {
     }
 
     public List<String> getAllGroupNames() {
-        return ImmutableList.copyOf(crud.listAll().stream().map(UserGroup::getGroupName).collect(Collectors.toList()));
+        NavigableSet<String> userGroups = getStore().listResources(USER_GROUP_ROOT);
+        if (Objects.isNull(userGroups)) {
+            return Collections.emptyList();
+        }
+        return userGroups.stream().map(path -> {
+            String[] pathArray = StringUtils.split(path, "/");
+            return pathArray[pathArray.length - 1];
+        }).collect(Collectors.toList());
     }
 
     public List<UserGroup> getAllGroups() {
         return ImmutableList.copyOf(crud.listAll());
     }
 
+    public List<UserGroup> getAllUsers(Predicate<String> predicate) {
+        return ImmutableList.copyOf(crud.listPartial(predicate));
+    }
+
     public boolean exists(String name) {
-        return getAllGroupNames().contains(name);
+        if (StringUtils.isEmpty(name)) {
+            return false;
+        }
+        return Objects.nonNull(crud.get(name));
     }
 
     public UserGroup copyForWrite(UserGroup userGroup) {

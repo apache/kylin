@@ -18,7 +18,10 @@
 
 package org.apache.kylin.metadata.usergroup;
 
+import java.util.Locale;
+
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
@@ -45,27 +48,18 @@ public class NUserGroupManagerTest extends NLocalFileMetadataTestCase {
         group.add("g1");
         group.add("g2");
         group.add("g3");
+        Assert.assertFalse(group.exists(null));
         Assert.assertTrue(group.exists("g1"));
         Assert.assertFalse(group.exists("g4"));
         Assert.assertEquals(Lists.newArrayList("g1", "g2", "g3"), group.getAllGroupNames());
-        try {
-            group.add("g1");
-            Assert.fail("expecting some AlreadyExistsException here");
-        } catch (KylinException e) {
-            Assert.assertEquals("The user group \"g1\" already exists. Please check and try again.", e.getMessage());
-        }
+        Assert.assertEquals("g1", group.getAllUsers(path -> path.endsWith("g1")).get(0).getGroupName());
 
+        Assert.assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupExist(), "g1"),
+                KylinException.class, () -> group.add("g1"));
         group.delete("g1");
         Assert.assertFalse(group.exists("g1"));
-
-        try {
-            group.delete("g1");
-            Assert.fail("expecting some AlreadyExistsException here");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof KylinException);
-            Assert.assertEquals("Invalid values in parameter “group_name“. The value g1 doesn’t exist.",
-                    e.getMessage());
-        }
+        Assert.assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupNotExist(), "g1"),
+                KylinException.class, () -> group.delete("g1"));
     }
 
     @Test
@@ -74,23 +68,11 @@ public class NUserGroupManagerTest extends NLocalFileMetadataTestCase {
         group.add("test1");
         group.add("test2");
         group.add("test3");
-        try {
-            group.add("TEST1");
-            Assert.fail("expecting some AlreadyExistsException here");
-        } catch (KylinException e) {
-            Assert.assertEquals("The user group \"test1\" already exists. Please check and try again.", e.getMessage());
-        }
-
+        Assert.assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupExist(), "TEST1"),
+                KylinException.class, () -> group.add("TEST1"));
         group.delete("Test1");
         Assert.assertFalse(group.exists("test1"));
-
-        try {
-            group.delete("test1");
-            Assert.fail("expecting some AlreadyExistsException here");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof KylinException);
-            Assert.assertEquals("Invalid values in parameter “group_name“. The value test1 doesn’t exist.",
-                    e.getMessage());
-        }
+        Assert.assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupNotExist(), "test1"),
+                KylinException.class, () -> group.delete("test1"));
     }
 }

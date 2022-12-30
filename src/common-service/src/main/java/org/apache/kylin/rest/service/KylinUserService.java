@@ -21,15 +21,15 @@ package org.apache.kylin.rest.service;
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATE_USER_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_LOGIN_FAILED;
+import static org.apache.kylin.rest.constant.Constant.ROLE_ADMIN;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
@@ -40,8 +40,6 @@ import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.security.AclPermission;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -55,10 +53,10 @@ import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.user.NKylinUserManager;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class KylinUserService implements UserService {
-
-    private Logger logger = LoggerFactory.getLogger(KylinUserService.class);
 
     public static final String DIR_PREFIX = "/user/";
 
@@ -91,7 +89,7 @@ public class KylinUserService implements UserService {
         }
         getKylinUserManager().update(managedUser);
         userAclService.updateUserAclPermission(user, AclPermission.DATA_QUERY);
-        logger.trace("update user : {}", user.getUsername());
+        log.trace("update user : {}", user.getUsername());
     }
 
     @SneakyThrows
@@ -106,7 +104,7 @@ public class KylinUserService implements UserService {
 
         userAclService.deleteUserAcl(userName);
         getKylinUserManager().delete(userName);
-        logger.trace("delete user : {}", userName);
+        log.trace("delete user : {}", userName);
     }
 
     @Override
@@ -116,14 +114,8 @@ public class KylinUserService implements UserService {
 
     @Override
     public boolean userExists(String userName) {
-        logger.trace("judge user exist: {}", userName);
-        val users = listUsers();
-        for (val user : users) {
-            if (StringUtils.equalsIgnoreCase(userName, user.getUsername())) {
-                return true;
-            }
-        }
-        return false;
+        log.trace("judge user exist: {}", userName);
+        return getKylinUserManager().exists(userName);
     }
 
     /**
@@ -133,17 +125,17 @@ public class KylinUserService implements UserService {
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         Message msg = MsgPicker.getMsg();
-        ManagedUser managedUser = null;
+        ManagedUser managedUser;
         try {
             managedUser = getKylinUserManager().get(userName);
         } catch (IllegalArgumentException e) {
-            logger.error("exception: ", e);
+            log.error("exception: ", e);
             throw new UsernameNotFoundException(USER_LOGIN_FAILED.getMsg());
         }
         if (managedUser == null) {
             throw new UsernameNotFoundException(String.format(Locale.ROOT, msg.getUserNotFound(), userName));
         }
-        logger.trace("load user : {}", userName);
+        log.trace("load user : {}", userName);
         return managedUser;
     }
 
@@ -158,14 +150,47 @@ public class KylinUserService implements UserService {
     }
 
     @Override
-    public List<String> listAdminUsers() throws IOException {
-        List<String> adminUsers = new ArrayList<>();
-        for (ManagedUser managedUser : listUsers()) {
-            if (managedUser.getAuthorities().contains(new SimpleGrantedAuthority(Constant.ROLE_ADMIN))) {
-                adminUsers.add(managedUser.getUsername());
-            }
+    public List<String> listAdminUsers() {
+        SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(Constant.ROLE_ADMIN);
+        return listUsers().stream().filter(user -> user.getAuthorities().contains(adminAuthority))
+                .map(ManagedUser::getUsername).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean isGlobalAdmin(String username) {
+        try {
+            UserDetails userDetails = loadUserByUsername(username);
+            return isGlobalAdmin(userDetails);
+        } catch (Exception e) {
+            logger.debug("Cat not load user by username {}", username, e);
         }
-        return adminUsers;
+        return false;
+    }
+
+    @Override
+    public boolean isGlobalAdmin(UserDetails userDetails) {
+        if (Objects.isNull(userDetails)) {
+            return false;
+        }
+        return userDetails.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(ROLE_ADMIN));
+    }
+
+    @Override
+    public boolean containsGlobalAdmin(Set<String> usernames) {
+        return usernames.stream().anyMatch(this::isGlobalAdmin);
+    }
+
+    @Override
+    public Set<String> retainsNormalUser(Set<String> usernames) {
+        return usernames.stream().filter(username -> !isGlobalAdmin(username)).collect(Collectors.toSet());
+    }
+
+    @Override
+    public List<String> listNormalUsers() {
+        SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(Constant.ROLE_ADMIN);
+        return listUsers().stream().filter(user -> !user.getAuthorities().contains(adminAuthority))
+                .map(ManagedUser::getUsername).collect(Collectors.toList());
     }
 
     @Override
@@ -184,5 +209,4 @@ public class KylinUserService implements UserService {
     protected NKylinUserManager getKylinUserManager() {
         return NKylinUserManager.getInstance(KylinConfig.getInstanceFromEnv());
     }
-
 }
