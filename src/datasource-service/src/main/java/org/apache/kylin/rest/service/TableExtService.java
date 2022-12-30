@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_LOGICAL_VIEW;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.EXCLUDED_TABLE_REQUEST_NOT_ALLOWED;
 
@@ -152,8 +151,7 @@ public class TableExtService extends BasicService {
                 if (logicalTable != null && viewProject.equalsIgnoreCase(project)) {
                     canLoadTables.add(table);
                 } else {
-                    throw new KylinException(INVALID_LOGICAL_VIEW, MsgPicker.getMsg()
-                        .getLoadLogicalViewError(tableName, viewProject));
+                    tableResponse.getFailed().add(tableName);
                 }
             });
     }

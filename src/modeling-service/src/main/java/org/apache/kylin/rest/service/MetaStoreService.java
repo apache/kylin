@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.constant.Constants.KE_VERSION;
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CREATE_MODEL;
 import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_EXPORT_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_IMPORT_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_METADATA_FILE_ERROR;
@@ -97,6 +98,8 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.util.QueryHisStoreUtil;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.view.LogicalView;
+import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.request.ModelImportRequest;
@@ -440,7 +443,7 @@ public class MetaStoreService extends BasicService {
         ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(targetProject);
         ISourceMetadataExplorer explorer = SourceFactory.getSource(projectInstance).getSourceMetadataExplorer();
-
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
         List<TableDesc> existTableSet = Lists.newArrayList();
         for (TableDesc missTableDesc : missTableList) {
             try {
@@ -453,6 +456,14 @@ public class MetaStoreService extends BasicService {
                 existTableSet.add(newTableDesc);
             } catch (Exception e) {
                 logger.warn("try load table: {} failed.", missTableDesc.getIdentity(), e);
+            }
+            if (config.isDDLLogicalViewEnabled() && missTableDesc.isLogicalView()) {
+                LogicalView logicalView = LogicalViewManager.getInstance(config).get(missTableDesc.getName());
+                if (logicalView != null && !targetProject.equalsIgnoreCase(logicalView.getCreatedProject())) {
+                    throw new KylinException(FAILED_CREATE_MODEL, String.format(Locale.ROOT,
+                        " Logical View %s can only add in project %s",
+                        missTableDesc.getName(), logicalView.getCreatedProject()));
+                }
             }
         }
         return existTableSet;

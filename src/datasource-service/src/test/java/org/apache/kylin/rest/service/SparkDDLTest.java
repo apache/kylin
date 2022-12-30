@@ -40,6 +40,7 @@ import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.ViewRequest;
 import org.apache.kylin.rest.response.LoadTableResponse;
+import org.apache.kylin.rest.response.LogicalViewResponse;
 
 import org.apache.spark.sql.LogicalViewLoader;
 import org.apache.spark.sql.SparderEnv;
@@ -283,18 +284,23 @@ public class SparkDDLTest extends NLocalFileMetadataTestCase {
     Assert.assertEquals(3, description.get(0).size());
 
     // view list in project
-    List<LogicalView> logicalViewsInProject = ddlService.listAll("ssb", "");
-    List<LogicalView> logicalViewsInProject2 = ddlService.listAll("ssb", "table2");
+    List<LogicalViewResponse> logicalViewsInProject = ddlService.listAll("ssb", "");
+    List<LogicalViewResponse> logicalViewsInProject2 = ddlService.listAll("ssb", "table2");
+    List<LogicalViewResponse> logicalViewsInProject3 = ddlService.listAll("demo", "");
     Assert.assertEquals(3, logicalViewsInProject.size());
     Assert.assertEquals(1, logicalViewsInProject2.size());
-    LogicalView confidentialTable =
+    LogicalViewResponse confidentialTable =
         logicalViewsInProject.stream().filter(table -> table.getCreatedProject().equals("demo")).collect(
             Collectors.toList()).get(0);
-    LogicalView noConfidentialTable =
+    LogicalViewResponse noConfidentialTable =
         logicalViewsInProject.stream().filter(table -> table.getCreatedProject().equals("ssb")).collect(
+            Collectors.toList()).get(0);
+    LogicalViewResponse noConfidentialTable2 =
+        logicalViewsInProject3.stream().filter(table -> table.getCreatedProject().equals("demo")).collect(
             Collectors.toList()).get(0);
     Assert.assertEquals("***", confidentialTable.getCreatedSql());
     Assert.assertNotEquals("***", noConfidentialTable.getCreatedSql());
+    Assert.assertNotEquals("***", noConfidentialTable2.getCreatedSql());
 
     // load table list
     String[] failedLoadTables = {"KYLIN_LOGICAL_VIEW.logical_view_table2",
@@ -306,9 +312,8 @@ public class SparkDDLTest extends NLocalFileMetadataTestCase {
     LoadTableResponse tableResponse = new LoadTableResponse();
     tableExtService.filterAccessTables(successLoadTables, canLoadTables, tableResponse, "ssb");
     Assert.assertEquals(2, canLoadTables.size());
-    assertKylinExeption(
-        () ->
-            tableExtService.filterAccessTables(failedLoadTables, canLoadTables, tableResponse, "ssb"),
-        "Can't load table");
+    canLoadTables.clear();
+    tableExtService.filterAccessTables(failedLoadTables, canLoadTables, tableResponse, "ssb");
+    Assert.assertEquals(2, canLoadTables.size());
   }
 }
