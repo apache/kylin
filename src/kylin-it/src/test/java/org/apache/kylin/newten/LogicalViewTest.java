@@ -26,6 +26,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -34,6 +35,7 @@ import org.apache.kylin.util.ExecAndComp;
 import org.apache.spark.sql.SparderEnv;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -71,6 +73,8 @@ public class LogicalViewTest extends NLocalWithSparkSessionTest {
   public void testLogicalView() throws Exception {
     String dfID = "451e127a-b684-1474-744b-c9afc14378af";
     NDataflow dataflow = dfMgr.getDataflow(dfID);
+    LayoutEntity layout = dataflow.getIndexPlan().getLayoutEntity(20000000001L);
+    Assert.assertNotNull(layout);
     populateSSWithCSVData(getTestConfig(), getProject(), SparderEnv.getSparkSession());
     indexDataConstructor.buildIndex(dfID, SegmentRange.TimePartitionedSegmentRange.createInfinite(),
         Sets.newHashSet(

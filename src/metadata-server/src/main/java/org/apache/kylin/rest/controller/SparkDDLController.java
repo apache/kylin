@@ -23,9 +23,9 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import java.util.List;
 
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.metadata.view.LogicalView;
 import org.apache.kylin.rest.request.ViewRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.LogicalViewResponse;
 import org.apache.kylin.rest.service.SparkDDLService;
 
 import org.apache.spark.sql.LogicalViewLoader;
@@ -83,11 +83,11 @@ public class SparkDDLController extends NBasicController {
   @ApiOperation(value = "ddl_desc")
   @GetMapping(value = "/ddl/view_list")
   @ResponseBody
-  public EnvelopeResponse<List<LogicalView>> list(
+  public EnvelopeResponse<List<LogicalViewResponse>> list(
       @RequestParam("project") String project,
       @RequestParam(value = "table", required = false, defaultValue = "") String tableName) {
     project = checkProjectName(project);
-    List<LogicalView> logicalViews = sparkDDLService.listAll(project, tableName);
+    List<LogicalViewResponse> logicalViews = sparkDDLService.listAll(project, tableName);
     return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, logicalViews, "");
   }
 }
