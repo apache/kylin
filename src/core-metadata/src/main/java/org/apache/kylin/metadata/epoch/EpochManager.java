@@ -716,8 +716,9 @@ public class EpochManager {
                 return false;
             }
 
+            ResourceGroupManager rgManager = ResourceGroupManager.getInstance(config);
             String epochServer = getHostAndPort(epoch.getCurrentEpochOwner());
-            if (!currentInstanceHasPermissionToOwn(epoch.getEpochTarget(), epochServer)) {
+            if (!rgManager.instanceHasPermissionToOwnEpochTarget(epoch.getEpochTarget(), epochServer)) {
                 logger.debug("Epoch {}'s owner is not in build request type resource group.", epoch);
                 return false;
             }
