@@ -105,7 +105,6 @@ public class StreamingJobRecordManagerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    @Ignore
     public void testDropTable() {
         try {
             val jdbcRawRecStore = (JdbcStreamingJobRecordStore) ReflectionUtils.getField(streamingJobRecordManager,
