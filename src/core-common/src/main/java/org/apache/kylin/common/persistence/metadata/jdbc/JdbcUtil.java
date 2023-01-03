@@ -118,6 +118,30 @@ public class JdbcUtil {
         return false;
     }
 
+    public static boolean isPrimaryKeyExists(Connection conn, String table) throws SQLException {
+        return isPrimaryKeyExists(conn, table, table.toUpperCase(Locale.ROOT), table.toLowerCase(Locale.ROOT));
+    }
+
+    private static boolean isPrimaryKeyExists(Connection conn, String... tables) throws SQLException {
+        try {
+            for (String table : tables) {
+                val resultSet = conn.getMetaData().getPrimaryKeys(conn.getCatalog(), conn.getSchema(), table);
+                if (resultSet.next()) {
+                    return true;
+                }
+            }
+            
+            return false;
+        } catch (Exception e) {
+            logger.error("Fail to know if table {} primary key exists", tables, e);
+        } finally {
+            if (!conn.isClosed()) {
+                conn.close();
+            }
+        }
+        return true;
+    }
+
     public static boolean isIndexExists(Connection conn, String table, String index) throws SQLException {
         return isIndexExists(conn, index, table, table.toUpperCase(Locale.ROOT), table.toLowerCase(Locale.ROOT));
     }

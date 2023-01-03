@@ -19,11 +19,13 @@ package org.apache.kylin.common.persistence.metadata;
 
 import static org.apache.kylin.common.exception.CommonErrorCode.FAILED_UPDATE_METADATA;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.datasourceParameters;
+import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.isPrimaryKeyExists;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.isTableExists;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.withTransaction;
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.withTransactionTimeout;
 
 import java.io.InputStream;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -31,6 +33,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -61,6 +65,8 @@ public class JdbcEpochStore extends EpochStore {
     static final String SERVER_MODE = "server_mode";
     static final String MAINTENANCE_MODE_REASON = "maintenance_mode_reason";
     static final String MVCC = "mvcc";
+
+    static final String ADD_PRIMARY_KEY_SQL = "alter table %s ADD PRIMARY KEY(" + EPOCH_TARGET + ")";
 
     static final String INSERT_SQL = "insert into %s (" + Joiner.on(",").join(EPOCH_ID, EPOCH_TARGET,
             CURRENT_EPOCH_OWNER, LAST_EPOCH_RENEW_TIME, SERVER_MODE, MAINTENANCE_MODE_REASON, MVCC)
@@ -101,12 +107,32 @@ public class JdbcEpochStore extends EpochStore {
 
     public static String getEpochSql(String sql, String tableName) {
         return String.format(Locale.ROOT, sql, tableName, EPOCH_ID, EPOCH_TARGET, CURRENT_EPOCH_OWNER,
-                LAST_EPOCH_RENEW_TIME, SERVER_MODE, MAINTENANCE_MODE_REASON, MVCC, tableName, EPOCH_TARGET,
-                EPOCH_TARGET);
+                LAST_EPOCH_RENEW_TIME, SERVER_MODE, MAINTENANCE_MODE_REASON, MVCC, EPOCH_TARGET);
     }
 
+    public static String getAddPrimarykeySql(String tableName) {
+        return String.format(Locale.ROOT, ADD_PRIMARY_KEY_SQL, tableName);
+
+    }
+
+    private Connection getConnection(JdbcTemplate jdbcTemplate) throws SQLException {
+        DataSource dataSource = jdbcTemplate.getDataSource();
+        if (dataSource == null) {
+            return null;
+        }
+        return dataSource.getConnection();
+    }
+
+    @Override
     public void createIfNotExist() throws Exception {
-        if (isTableExists(jdbcTemplate.getDataSource().getConnection(), table)) {
+        if (isTableExists(getConnection(jdbcTemplate), table)) {
+            if (!isPrimaryKeyExists(getConnection(jdbcTemplate), table)) {
+                withTransaction(transactionManager, () -> {
+                    jdbcTemplate.execute(getAddPrimarykeySql(table));
+                    return 1;
+                });
+                log.info("Succeed to add table primary key: {}", table);
+            }
             return;
         }
         String fileName = "metadata-jdbc-default.properties";
