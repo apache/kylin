@@ -20,7 +20,7 @@ package org.apache.kylin.rest.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kylin.common.scheduler.EventBusFactory;
-import org.apache.kylin.engine.spark.ExecutableUtils;
+import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
@@ -78,7 +78,7 @@ public class ModelTdsServiceColumnNameTest extends SourceTestCase {
 
     @Before
     public void setup() {
-        ExecutableUtils.initJobFactory();
+        SparkJobFactoryUtils.initJobFactory();
         String localMetaDir = "src/test/resources/ut_meta/tds_export_test";
         createTestMetadata(localMetaDir);
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
