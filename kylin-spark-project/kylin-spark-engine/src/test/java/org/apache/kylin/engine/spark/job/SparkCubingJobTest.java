@@ -91,7 +91,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         long date3 = dateToLong("2013-07-01");
 
         CubeSegment segment = cubeMgr.appendSegment(cubeInstance, new SegmentRange.TSRange(date1, date2));
-        NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(segment), "ADMIN");
+        NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(segment), "ADMIN", 0);
         jobService.addJob(job);
         // wait job done
         ExecutableState state = wait(job);
@@ -103,7 +103,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
 
         // Test build 2nd segment
         CubeSegment segment2 = cubeMgr.appendSegment(cubeInstance, new SegmentRange.TSRange(date2, date3));
-        NSparkCubingJob job2 = NSparkCubingJob.create(Sets.newHashSet(segment2), "ADMIN");
+        NSparkCubingJob job2 = NSparkCubingJob.create(Sets.newHashSet(segment2), "ADMIN", 0);
         jobService.addJob(job2);
         // wait job done
         ExecutableState state2 = wait(job2);
@@ -128,14 +128,14 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         long date3 = dateToLong("2014-01-01");
 
         CubeSegment segment = cubeMgr.appendSegment(cubeInstance, new SegmentRange.TSRange(date1, date2));
-        NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(segment), "ADMIN");
+        NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(segment), "ADMIN", 0);
         jobService.addJob(job);
         // wait job done
         ExecutableState state = wait(job);
         Assert.assertEquals(ExecutableState.SUCCEED, state);
 
         CubeSegment segment2 = cubeMgr.appendSegment(cubeInstance, new SegmentRange.TSRange(date2, date3));
-        NSparkCubingJob job2 = NSparkCubingJob.create(Sets.newHashSet(segment2), "ADMIN");
+        NSparkCubingJob job2 = NSparkCubingJob.create(Sets.newHashSet(segment2), "ADMIN", 0);
         jobService.addJob(job2);
         // wait job done
         ExecutableState state2 = wait(job2);
@@ -148,7 +148,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
          */
         CubeSegment firstMergeSeg = cubeMgr.mergeSegments(cubeInstance, new SegmentRange.TSRange(date1, date3),
                 null, true);
-        NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN");
+        NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN", 0);
         jobService.addJob(firstMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, wait(firstMergeJob));

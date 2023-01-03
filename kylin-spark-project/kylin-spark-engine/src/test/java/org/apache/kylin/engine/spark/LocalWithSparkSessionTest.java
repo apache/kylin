@@ -177,7 +177,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         DataModelManager.getInstance(config).getModels();
         // ready cube, segment, cuboid layout
         CubeSegment oneSeg = cubeMgr.appendSegment(cube, tsRange);
-        NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), "ADMIN");
+        NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), "ADMIN", 0);
         NSparkCubingStep sparkStep = job.getSparkCubingStep();
         StorageURL distMetaUrl = StorageURL.valueOf(sparkStep.getDistMetaUrl());
         Assert.assertEquals("hdfs", distMetaUrl.getScheme());
@@ -199,7 +199,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         ExecutableManager execMgr = ExecutableManager.getInstance(config);
         CubeInstance cube = cubeMgr.reloadCube(cubeName);
         CubeSegment mergeSegment = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(start, end), null, force);
-        NSparkMergingJob mergeJob = NSparkMergingJob.merge(mergeSegment,  "ADMIN");
+        NSparkMergingJob mergeJob = NSparkMergingJob.merge(mergeSegment,  "ADMIN", 0);
         execMgr.addJob(mergeJob);
         ExecutableState result = wait(mergeJob);
         if (config.cleanStorageAfterDelOperation()) {

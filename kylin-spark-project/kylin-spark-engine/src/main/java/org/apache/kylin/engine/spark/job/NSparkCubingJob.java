@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -54,12 +53,12 @@ public class NSparkCubingJob extends CubingJob {
     private CubeInstance cube;
 
     // for test use only
-    public static NSparkCubingJob create(Set<CubeSegment> segments, String submitter) {
-        return create(segments, submitter, CubingJobTypeEnum.BUILD, UUID.randomUUID().toString());
+    public static NSparkCubingJob create(Set<CubeSegment> segments, String submitter, Integer priorityOffset) {
+        return create(segments, submitter, CubingJobTypeEnum.BUILD, UUID.randomUUID().toString(), priorityOffset);
     }
 
     public static NSparkCubingJob create(Set<CubeSegment> segments, String submitter, CubingJobTypeEnum jobType,
-            String jobId) {
+            String jobId, Integer priorityOffset) {
         Preconditions.checkArgument(!segments.isEmpty());
         Preconditions.checkArgument(submitter != null);
         NSparkCubingJob job = new NSparkCubingJob();
@@ -79,6 +78,7 @@ public class NSparkCubingJob extends CubingJob {
         }
         builder.append(format.format(new Date(System.currentTimeMillis())));
         job.setId(jobId);
+        job.setPriority(priorityOffset);
         job.setName(builder.toString());
         job.setProjectName(job.cube.getProject());
         job.setTargetSubject(job.cube.getModel().getId());

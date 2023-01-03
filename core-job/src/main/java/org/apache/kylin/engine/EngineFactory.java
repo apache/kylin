@@ -74,7 +74,11 @@ public class EngineFactory {
 
     /** Merge multiple small segments into a big one. */
     public static DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
-        return batchEngine(mergeSegment).createBatchMergeJob(mergeSegment, submitter);
+        return batchEngine(mergeSegment).createBatchMergeJob(mergeSegment, submitter, 0);
+    }
+
+    public static DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter, Integer priorityOffset) {
+        return batchEngine(mergeSegment).createBatchMergeJob(mergeSegment, submitter, priorityOffset);
     }
 
     /** Optimize a segment based on the cuboid recommend list produced by the cube planner. */

@@ -43,12 +43,12 @@ public class SparkBatchCubingEngineParquet implements IBatchCubingEngine {
 
     @Override
     public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter, Integer priorityOffset) {
-        return NSparkCubingJob.create(Sets.newHashSet(newSegment), submitter);
+        return NSparkCubingJob.create(Sets.newHashSet(newSegment), submitter, priorityOffset);
     }
 
     @Override
-    public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
-        return NSparkMergingJob.merge(mergeSegment, submitter);
+    public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter, Integer priorityOffset) {
+        return NSparkMergingJob.merge(mergeSegment, submitter, priorityOffset);
     }
 
     @Override

@@ -266,7 +266,7 @@ public class JobService extends BasicService implements InitializingBean {
 
             } else if (buildType == JobTypeEnum.MERGE) {
                 newSeg = getCubeManager().mergeSegments(cube, tsRange, segRange, force);
-                job = EngineFactory.createBatchMergeJob(newSeg, submitter);
+                job = EngineFactory.createBatchMergeJob(newSeg, submitter, priorityOffset);
             } else if (buildType == JobTypeEnum.REFRESH) {
                 newSeg = getCubeManager().refreshSegment(cube, tsRange, segRange);
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter, priorityOffset);

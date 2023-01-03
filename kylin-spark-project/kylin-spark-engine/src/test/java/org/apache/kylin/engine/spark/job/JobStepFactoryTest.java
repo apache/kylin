@@ -62,7 +62,7 @@ public class JobStepFactoryTest extends LocalWithSparkSessionTest {
         cleanupSegments(CUBE_NAME);
         CubeSegment oneSeg = cubeMgr.appendSegment(cube, new SegmentRange.TSRange(0L, Long.MAX_VALUE));
         Set<CubeSegment> segments = Sets.newHashSet(oneSeg);
-        NSparkCubingJob job = NSparkCubingJob.create(segments, "ADMIN");
+        NSparkCubingJob job = NSparkCubingJob.create(segments, "ADMIN", 0);
         Assert.assertEquals(CUBE_NAME, job.getParam(MetadataConstants.P_CUBE_NAME));
 
         NSparkExecutable resourceDetectStep = job.getResourceDetectStep();
@@ -110,7 +110,7 @@ public class JobStepFactoryTest extends LocalWithSparkSessionTest {
         reloadCube = cubeMgr.reloadCube(CUBE_NAME);
         CubeSegment mergedSegment = cubeMgr.mergeSegments(reloadCube, new SegmentRange.TSRange(dateToLong("2010-01-01"), dateToLong("2015-01-01"))
                 , null, true);
-        NSparkMergingJob job = NSparkMergingJob.merge(mergedSegment, "ADMIN");
+        NSparkMergingJob job = NSparkMergingJob.merge(mergedSegment, "ADMIN", 0);
         Assert.assertEquals(CUBE_NAME, job.getParam(MetadataConstants.P_CUBE_NAME));
 
         NSparkExecutable resourceDetectStep = job.getResourceDetectStep();
