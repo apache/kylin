@@ -27,8 +27,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.kylin.common.scheduler.EventBusFactory;
-import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.apache.kylin.engine.spark.utils.ComputedColumnEvalUtil;
+import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -139,7 +139,7 @@ public class ModelServiceQueryTest extends SourceTestCase {
         EventBusFactory.getInstance().register(eventListener, true);
         EventBusFactory.getInstance().register(modelBrokenListener, false);
 
-        ExecutableUtils.initJobFactory();
+        SparkJobFactoryUtils.initJobFactory();
     }
 
     @After

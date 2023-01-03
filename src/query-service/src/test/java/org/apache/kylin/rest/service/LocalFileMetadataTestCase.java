@@ -20,11 +20,11 @@ package org.apache.kylin.rest.service;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.junit.Before;
 
 import lombok.val;
@@ -36,7 +36,7 @@ public class LocalFileMetadataTestCase extends NLocalFileMetadataTestCase {
 
     @Before
     public void setup() {
-        ExecutableUtils.initJobFactory();
+        SparkJobFactoryUtils.initJobFactory();
     }
 
     protected List<AbstractExecutable> getRunningExecutables(String project, String model) {

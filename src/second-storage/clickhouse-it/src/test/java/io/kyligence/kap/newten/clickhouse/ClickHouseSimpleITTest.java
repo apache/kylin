@@ -42,9 +42,9 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.apache.kylin.engine.spark.IndexDataConstructor;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.job.SecondStorageJobParamUtil;
 import org.apache.kylin.job.common.ExecutableUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -202,7 +202,7 @@ public class ClickHouseSimpleITTest extends NLocalWithSparkSessionTest implement
         secondStorageEndpoint.setModelService(modelService);
         openSecondStorageEndpoint.setSecondStorageEndpoint(secondStorageEndpoint);
         prepareMeta();
-        ExecutableUtils.initJobFactory();
+        SparkJobFactoryUtils.initJobFactory();
 
         doSetup();
 

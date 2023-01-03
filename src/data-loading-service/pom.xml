@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-datasource-service</artifactId>
+            <artifactId>kylin-common-service</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

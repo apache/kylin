@@ -35,6 +35,7 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
+import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -148,7 +149,7 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
         overwriteSystemProp("kylin.engine.spark.build-job-progress-reporter", //
                 "org.apache.kylin.engine.spark.job.MockJobProgressReport");
         this.createTestMetadata();
-        ExecutableUtils.initJobFactory();
+        SparkJobFactoryUtils.initJobFactory();
         Random r = new Random(10000);
         zkTestServer = new TestingServer(r.nextInt(), true);
         overwriteSystemProp("kylin.env.zookeeper-connect-string", zkTestServer.getConnectString());
