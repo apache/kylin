@@ -56,6 +56,12 @@ class TestResourceUtils extends SparderBaseFunSuite with BeforeAndAfterEach {
 
   // test case: available(10, 10)  executor(20, 10) driver(1, 1)
   test("checkResource return false when available memory does not meet acquirement") {
+    // Without this may cause NPE
+    KylinBuildEnv.clean()
+    val config: KylinConfig = Mockito.mock(classOf[KylinConfig])
+    Mockito.when(config.getMaxAllocationResourceProportion).thenReturn(0.9)
+    KylinBuildEnv.getOrCreate(config)
+    Mockito.when(fetcher.fetchMaximumResourceAllocation).thenReturn(ResourceInfo(Integer.MAX_VALUE, Integer.MAX_VALUE))
     val conf = new SparkConf()
     conf.set(EXECUTOR_INSTANCES, "5")
     conf.set(EXECUTOR_MEMORY, "2MB")

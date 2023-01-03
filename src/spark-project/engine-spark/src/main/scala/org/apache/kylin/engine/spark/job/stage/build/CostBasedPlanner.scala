@@ -50,4 +50,6 @@ class CostBasedPlanner(jobContext: SegmentJob, dataSegment: NDataSegment, buildP
       buildParam.setFlatTableDesc(flatTableDesc)
     }
   }
+
+  override def getStageName: String = "CostBasedPlanner"
 }

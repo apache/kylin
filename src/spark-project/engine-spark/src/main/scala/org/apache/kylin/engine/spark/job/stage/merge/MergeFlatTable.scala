@@ -29,4 +29,6 @@ class MergeFlatTable(jobContext: SegmentJob, dataSegment: NDataSegment)
 
     mergeFlatTable()
   }
+
+  override def getStageName: String = "MergeFlatTable"
 }

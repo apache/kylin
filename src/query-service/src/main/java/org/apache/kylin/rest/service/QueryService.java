@@ -62,6 +62,7 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
+import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinTimeoutException;
@@ -183,7 +184,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
     public static final String QUERY_STORE_PATH_PREFIX = "/query/";
     private static final String JDBC_METADATA_SCHEMA = "metadata";
-    private static final Logger logger = LoggerFactory.getLogger("query");
+    private static final Logger logger = LoggerFactory.getLogger(LogConstant.QUERY_CATEGORY);
     final SlowQueryDetector slowQueryDetector = new SlowQueryDetector();
 
     @Autowired
@@ -298,6 +299,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
             if (QueryContext.current().getQueryTagInfo().isAsyncQuery()
                     && NProjectManager.getProjectConfig(sqlRequest.getProject()).isUniqueAsyncQueryYarnQueue()) {
+                logger.info("This query is an async query in project: {}", sqlRequest.getProject());
                 if (StringUtils.isNotEmpty(sqlRequest.getSparkQueue())) {
                     queryParams.setSparkQueue(sqlRequest.getSparkQueue());
                 }
@@ -479,7 +481,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             queryContext.setQueryId(UUID.fromString(sqlRequest.getQueryId()).toString());
         }
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId());
-                SetLogCategory ignored2 = new SetLogCategory("query")) {
+                SetLogCategory ignored2 = new SetLogCategory(LogConstant.QUERY_CATEGORY)) {
+            logger.info("Start query in project: {}", sqlRequest.getProject());
             if (sqlRequest.getExecuteAs() != null)
                 sqlRequest.setUsername(sqlRequest.getExecuteAs());
             else
@@ -606,6 +609,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             QueryUtils.updateQueryContextSQLMetrics(rawSql.getStatementString());
             QueryContext.currentTrace().amendLast(QueryTrace.PREPARE_AND_SUBMIT_JOB, System.currentTimeMillis());
             QueryContext.currentTrace().endLastSpan();
+            QueryContext.current().record("update_metrics_time");
             QueryContext.currentMetrics().setQueryEndTime(System.currentTimeMillis());
 
             sqlResponse.setServer(clusterManager.getLocalServer());

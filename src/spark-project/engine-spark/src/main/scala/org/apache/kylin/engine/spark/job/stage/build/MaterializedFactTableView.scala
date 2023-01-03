@@ -54,4 +54,6 @@ class MaterializedFactTableView(jobContext: SegmentJob, dataSegment: NDataSegmen
       onStageSkipped()
     }
   }
+
+  override def getStageName: String = "MaterializedFactTableView"
 }

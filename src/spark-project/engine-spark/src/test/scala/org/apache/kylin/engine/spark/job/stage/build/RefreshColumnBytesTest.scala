@@ -21,20 +21,26 @@ package org.apache.kylin.engine.spark.job.stage.build
 import org.apache.kylin.engine.spark.job.SegmentJob
 import org.apache.kylin.engine.spark.job.stage.BuildParam
 import org.apache.kylin.metadata.cube.model.NDataSegment
+import org.apache.kylin.metadata.model.NDataModel
+import org.junit.Assert
+import org.mockito.Mockito
+import org.scalatest.funsuite.AnyFunSuite
 
-class RefreshColumnBytes(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
-  extends BuildStage(jobContext, dataSegment, buildParam) {
+import com.google.common.collect.ImmutableBiMap
 
-  override def execute(): Unit = {
-    // Refresh column bytes.
-    tryRefreshColumnBytes()
-    // By design, refresh layout bucket-num mapping.
-    // Bucket here is none business of multi-level partition.
-    tryRefreshBucketMapping()
-    // Drain results, shutdown pool, cleanup extra immediate outputs.
-    cleanup()
-    logInfo(s"Finished SEGMENT $segmentId")
+class RefreshColumnBytesTest extends AnyFunSuite {
+
+  test("test RefreshColumnBytes getStageName") {
+    val segmentJob = Mockito.mock(classOf[SegmentJob])
+    val dataSegment = Mockito.mock(classOf[NDataSegment])
+    val buildParam = Mockito.mock(classOf[BuildParam])
+
+    val dataModel = Mockito.mock(classOf[NDataModel])
+    Mockito.when(dataSegment.getModel).thenReturn(dataModel)
+    val builder: ImmutableBiMap.Builder[Integer, NDataModel.Measure] = ImmutableBiMap.builder();
+    Mockito.when(dataSegment.getModel.getEffectiveMeasures).thenReturn(builder.build())
+
+    val mergeColumnBytes = new RefreshColumnBytes(segmentJob, dataSegment, buildParam)
+    Assert.assertEquals("RefreshColumnBytes", mergeColumnBytes.getStageName)
   }
-
-  override def getStageName: String = "RefreshColumnBytes"
 }

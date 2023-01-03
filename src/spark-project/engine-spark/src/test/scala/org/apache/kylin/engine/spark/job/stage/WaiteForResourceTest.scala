@@ -16,19 +16,19 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.engine.spark.job.stage.merge
+package org.apache.kylin.engine.spark.job.stage
 
-import org.apache.kylin.engine.spark.job.SegmentJob
-import org.apache.kylin.metadata.cube.model.NDataSegment
+import org.apache.kylin.engine.spark.application.SparkApplication
+import org.junit.Assert
+import org.mockito.Mockito
+import org.scalatest.funsuite.AnyFunSuite
 
-class MergeColumnBytes(jobContext: SegmentJob, dataSegment: NDataSegment)
-  extends MergeStage(jobContext, dataSegment) {
+class WaiteForResourceTest extends AnyFunSuite{
 
-  override def execute(): Unit = {
-    mergeColumnBytes()
+  test("test WaiteForResource getStageName") {
+    val sparkApplication = Mockito.mock(classOf[SparkApplication])
 
-    cleanup()
+    val waiteForResource = new WaiteForResource(sparkApplication)
+    Assert.assertEquals("WaiteForResource", waiteForResource.getStageName)
   }
-
-  override def getStageName: String = "MergeColumnBytes"
 }

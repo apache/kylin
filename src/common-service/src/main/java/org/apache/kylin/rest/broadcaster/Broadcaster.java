@@ -39,6 +39,8 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.kylin.common.constant.LogConstant;
+import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.DaemonThreadFactory;
@@ -91,7 +93,9 @@ public class Broadcaster implements Closeable {
 
     public void announce(BroadcastEventReadyNotifier event) {
         if (eventQueue.contains(event)) {
-            logger.debug("broadcast event queue has contain this event: {}", event);
+            try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
+                logger.debug("broadcast event queue has contain this event: {}", event);
+            }
             return;
         }
         if (!eventQueue.offer(event)) {
@@ -100,7 +104,7 @@ public class Broadcaster implements Closeable {
     }
 
     public void consumeEvent() {
-        try {
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
             while (isRunning) {
                 BroadcastEventReadyNotifier notifier = eventQueue.take();
                 handleEvent(notifier);

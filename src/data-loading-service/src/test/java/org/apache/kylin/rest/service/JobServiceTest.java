@@ -21,6 +21,7 @@ package org.apache.kylin.rest.service;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_ACTION_ILLEGAL;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_STATUS_ILLEGAL;
+import static org.apache.kylin.job.constant.JobStatusEnum.PENDING;
 import static org.apache.kylin.job.constant.JobStatusEnum.SKIP;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
@@ -917,7 +918,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
         List<ExecutableStepResponse> stages2 = subStages.get(segmentId2).getStage();
         assertEquals(1, stages2.size());
         ExecutableStepResponse logicStepResponse2 = stages2.get(0);
-        checkResponse(logicStepResponse2, logicStep.getId(), JobStatusEnum.PENDING);
+        checkResponse(logicStepResponse2, logicStep.getId(), PENDING);
         assertEquals(0, logicStepResponse2.getExecStartTime());
         assertTrue(logicStepResponse2.getExecStartTime() < System.currentTimeMillis());
 
@@ -2033,5 +2034,14 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
             assertEquals(executableManager.getAllJobs().get(0).getTasks().get(0).getStagesMap().get(jobId + "_00")
                     .get(0).getOutput().getStatus(), jobStatus);
         }
+    }
+
+    @Test
+    public void testParseToExecutableStepWithStepOutputNull() {
+        AbstractExecutable task = new FiveSecondSucceedTestExecutable();
+        task.setProject("default");
+        ExecutableState jobState = ExecutableState.RUNNING;
+        ExecutableStepResponse result = jobService.parseToExecutableStep(task, null, new HashMap<>(), jobState);
+        Assert.assertSame(PENDING, result.getStatus());
     }
 }

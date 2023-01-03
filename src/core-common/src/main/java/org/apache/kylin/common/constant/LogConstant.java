@@ -16,19 +16,15 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.engine.spark.job.stage.merge
+package org.apache.kylin.common.constant;
 
-import org.apache.kylin.engine.spark.job.SegmentJob
-import org.apache.kylin.metadata.cube.model.NDataSegment
+public class LogConstant {
 
-class MergeColumnBytes(jobContext: SegmentJob, dataSegment: NDataSegment)
-  extends MergeStage(jobContext, dataSegment) {
+    private LogConstant() {
+    }
 
-  override def execute(): Unit = {
-    mergeColumnBytes()
-
-    cleanup()
-  }
-
-  override def getStageName: String = "MergeColumnBytes"
+    public static final String SCHEDULE_CATEGORY = "schedule";
+    public static final String METADATA_CATEGORY = "metadata";
+    public static final String QUERY_CATEGORY = "query";
+    public static final String BUILD_CATEGORY = "build";
 }

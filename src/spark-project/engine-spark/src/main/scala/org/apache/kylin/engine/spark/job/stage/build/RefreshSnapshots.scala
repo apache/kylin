@@ -44,4 +44,6 @@ class RefreshSnapshots(jobContext: SegmentJob) extends StageExec {
       case _ =>
     }
   }
+
+  override def getStageName: String = "RefreshSnapshots"
 }
