@@ -542,7 +542,7 @@ public class NBasicController {
     public void downloadFromRemoteHost(final HttpServletRequest request, String url,
             HttpServletResponse servletResponse) throws IOException {
         File temporaryZipFile = KylinConfigBase.getDiagFileName();
-        Preconditions.checkState(temporaryZipFile.getParentFile().mkdirs(), "create temporary zip file folder failed");
+        temporaryZipFile.getParentFile().mkdirs();
         Preconditions.checkState(temporaryZipFile.createNewFile(), "create temporary zip file failed");
         RequestCallback requestCallback = x -> {
             Collections.list(request.getHeaderNames())
