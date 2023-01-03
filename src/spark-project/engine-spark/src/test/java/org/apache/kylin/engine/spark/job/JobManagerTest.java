@@ -37,7 +37,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.ExecutableUtils;
+import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableParams;
@@ -88,7 +88,7 @@ public class JobManagerTest extends NLocalFileMetadataTestCase {
     public void setup() throws Exception {
         this.createTestMetadata();
         jobManager = JobManager.getInstance(KylinConfig.getInstanceFromEnv(), PROJECT);
-        ExecutableUtils.initJobFactory();
+        SparkJobFactoryUtils.initJobFactory();
     }
 
     private void assertExeption(Functions f, String msg) {

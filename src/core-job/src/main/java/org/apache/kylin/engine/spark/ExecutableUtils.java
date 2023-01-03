@@ -17,11 +17,11 @@
  */
 package org.apache.kylin.engine.spark;
 
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
-import org.apache.kylin.engine.spark.job.NSparkCubingStep;
-import org.apache.kylin.engine.spark.job.NSparkMergingJob;
-import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
-import lombok.val;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -29,17 +29,14 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 public class ExecutableUtils {
 
-    public static ResourceStore getRemoteStore(KylinConfig config, AbstractExecutable buildTask) {
-        val buildStepUrl = buildTask.getParam(NBatchConstants.P_OUTPUT_META_URL);
+    private ExecutableUtils() {}
 
-        val buildConfig = KylinConfig.createKylinConfig(config);
+    public static ResourceStore getRemoteStore(KylinConfig config, AbstractExecutable buildTask) {
+        String buildStepUrl = buildTask.getParam(NBatchConstants.P_OUTPUT_META_URL);
+
+        KylinConfig buildConfig = KylinConfig.createKylinConfig(config);
         buildConfig.setMetadataUrl(buildStepUrl);
         return ResourceStore.getKylinMetaStore(buildConfig);
     }
@@ -66,19 +63,4 @@ public class ExecutableUtils {
         return buildTask.getTargetPartitions();
     }
 
-    public static boolean needBuildSnapshots(AbstractExecutable buildTask) {
-        if (buildTask instanceof NSparkCubingStep) {
-            String p = buildTask.getParam(NBatchConstants.P_NEED_BUILD_SNAPSHOTS);
-            return StringUtils.isBlank(p) || Boolean.parseBoolean(p);
-        } else {
-            return false;
-        }
-    }
-
-    public static void initJobFactory() {
-        // register jobFactory in static function
-        new NSparkCubingJob();
-        new NSparkMergingJob();
-        new NSparkSnapshotJob();
-    }
 }

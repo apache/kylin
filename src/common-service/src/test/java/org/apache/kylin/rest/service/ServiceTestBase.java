@@ -21,10 +21,9 @@ package org.apache.kylin.rest.service;
 import java.util.Arrays;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.ExecutableUtils;
-import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
+import org.apache.kylin.rest.constant.Constant;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -49,6 +48,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
+import io.kyligence.kap.metadata.user.ManagedUser;
 import io.kyligence.kap.secondstorage.SecondStorageUpdater;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -77,7 +77,7 @@ public class ServiceTestBase extends NLocalFileMetadataTestCase {
     @Before
     public void setup() {
         // init job factory
-        ExecutableUtils.initJobFactory();
+        SparkJobFactoryUtils.initJobFactory();
         createTestMetadata();
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
