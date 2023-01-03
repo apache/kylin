@@ -18,9 +18,12 @@
 package org.apache.kylin.common.persistence.metadata.epochstore;
 
 import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.datasourceParameters;
+import static org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil.isPrimaryKeyExists;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 import static org.awaitility.Awaitility.await;
 
+import java.sql.Connection;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
@@ -57,6 +60,18 @@ public final class JdbcEpochStoreTest extends AbstractEpochStoreTest {
         val props = datasourceParameters(url);
         val dataSource = BasicDataSourceFactory.createDataSource(props);
         return new JdbcTemplate(dataSource);
+    }
+
+    @Test
+    void testAddPrimaryKey() throws Exception {
+        val jdbcTemplate = getJdbcTemplate();
+        String table = getTestConfig().getMetadataUrl().getIdentifier() + "_epoch";
+        jdbcTemplate.execute(String.format(Locale.ROOT, "alter table %s  drop primary key", table));
+        Connection conn = jdbcTemplate.getDataSource().getConnection();
+        assert !isPrimaryKeyExists(conn, table);
+        epochStore = getEpochStore();
+        conn = getJdbcTemplate().getDataSource().getConnection();
+        assert isPrimaryKeyExists(conn, table);
     }
 
     @Test
