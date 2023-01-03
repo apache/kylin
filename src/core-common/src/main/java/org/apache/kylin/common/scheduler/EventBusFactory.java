@@ -27,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
+import org.apache.kylin.common.constant.LogConstant;
+import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
@@ -126,7 +128,9 @@ public class EventBusFactory {
     }
 
     public void postAsync(SchedulerEventNotifier event) {
-        log.debug("Post event {} async", event);
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
+            log.debug("Post event {} async", event);
+        }
         if (event instanceof BroadcastEventReadyNotifier) {
             broadcastEventBus.post(event);
         } else {
@@ -135,12 +139,16 @@ public class EventBusFactory {
     }
 
     public void postSync(Object event) {
-        log.debug("Post event {} sync", event);
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
+            log.debug("Post event {} sync", event);
+        }
         syncEventBus.post(event);
     }
 
     public void callService(Object event) {
-        log.debug("Post Service event {} sync", event);
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
+            log.debug("Post Service event {} sync", event);
+        }
         serviceEventBus.post(event);
     }
 
@@ -153,7 +161,7 @@ public class EventBusFactory {
 
     private void stopThreadPool(ExecutorService executor) {
         executor.shutdown();
-        try {
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
             if (!executor.awaitTermination(6000, TimeUnit.SECONDS)) {
                 ExecutorServiceUtil.forceShutdown(executor);
             }

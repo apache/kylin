@@ -33,4 +33,6 @@ class SnapshotsBuild(jobContext: SnapshotBuildJob) extends StageExec {
   override def execute(): Unit = {
     jobContext.buildSnapshot()
   }
+
+  override def getStageName: String = "SnapshotsBuild"
 }

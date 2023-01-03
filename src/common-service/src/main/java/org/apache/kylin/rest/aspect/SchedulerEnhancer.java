@@ -35,7 +35,7 @@ public class SchedulerEnhancer {
     public void aroundScheduled(ProceedingJoinPoint pjp) throws Throwable {
         val config = KylinConfig.getInstanceFromEnv();
         if (!"query".equals(config.getServerMode())) {
-            log.info("schedule at job leader");
+            log.debug("schedule at job leader");
             pjp.proceed();
         }
     }

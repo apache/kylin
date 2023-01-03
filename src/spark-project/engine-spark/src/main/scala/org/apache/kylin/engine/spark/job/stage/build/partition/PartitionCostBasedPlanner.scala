@@ -55,4 +55,6 @@ class PartitionCostBasedPlanner(jobContext: SegmentJob, dataSegment: NDataSegmen
       buildParam.setTableDesc(tableDesc)
     }
   }
+
+  override def getStageName: String = "PartitionCostBasedPlanner"
 }

@@ -33,6 +33,8 @@ import java.util.stream.LongStream;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.constant.LogConstant;
+import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.VersionConflictException;
 import org.apache.kylin.common.persistence.AuditLog;
@@ -103,7 +105,7 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
             log.info("Catchup Already stopped");
             return;
         }
-        try {
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
             catchupToMaxId(logOffset);
         } catch (TransactionException | DatabaseNotAvailableException e) {
             log.warn("cannot create transaction or auditlog database connect error, ignore it", e);
@@ -148,7 +150,9 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
         }
 
         if (CollectionUtils.isEmpty(needReplayedIdList)) {
-            log.debug("needReplayedIdList is empty");
+            try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+                log.debug("needReplayedIdList is empty");
+            }
             return Lists.newArrayList();
         }
 
@@ -160,7 +164,7 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
             return;
         }
 
-        try {
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
             val fetchAuditLog = auditLogStore.fetch(needReplayedIdList);
             if (CollectionUtils.isEmpty(fetchAuditLog)) {
                 return;
@@ -200,7 +204,9 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
                 return -1L;
             }
 
-            log.debug("start restore from {}", currentWindow);
+            try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+                log.debug("start restore from {}", currentWindow);
+            }
             val stepWin = new SlideWindow(currentWindow);
 
             while (stepWin.forwardRightStep(STEP)) {
@@ -211,7 +217,9 @@ public class AuditLogReplayWorker extends AbstractAuditLogReplayWorker {
                 }
                 stepWin.syncRightStep();
             }
-            log.debug("end restore from {}, delay queue:{}", currentWindow, delayIdQueue.size());
+            try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+                log.debug("end restore from {}, delay queue:{}", currentWindow, delayIdQueue.size());
+            }
             return currentWindow.getEnd();
         });
 

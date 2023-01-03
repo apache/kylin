@@ -95,7 +95,9 @@ public class SegmentBuildJob extends SegmentJob {
     @Override
     protected final void doExecute() throws Exception {
 
+        log.info("Start sub stage {}" + REFRESH_SNAPSHOTS.name());
         REFRESH_SNAPSHOTS.create(this, null, null).toWork();
+        log.info("End sub stage {}" + REFRESH_SNAPSHOTS.name());
 
         buildContext = new BuildContext(getSparkSession().sparkContext(), config);
         buildContext.appStatusTracker().startMonitorBuildResourceState();

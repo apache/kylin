@@ -38,4 +38,6 @@ class GenerateFlatTable(jobContext: SegmentJob, dataSegment: NDataSegment, build
       onStageSkipped()
     }
   }
+
+  override def getStageName: String = "GenerateFlatTable"
 }

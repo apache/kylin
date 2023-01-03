@@ -31,4 +31,6 @@ class BuildLayer(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: 
     // Drain results immediately after building.
     drain()
   }
+
+  override def getStageName: String = "BuildLayer"
 }

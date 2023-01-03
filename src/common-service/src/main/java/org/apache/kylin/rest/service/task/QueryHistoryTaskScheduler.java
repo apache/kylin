@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.constant.LogConstant;
+import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.Pair;
@@ -98,7 +100,9 @@ public class QueryHistoryTaskScheduler {
         if (querySmartSupporter == null && SpringContext.getApplicationContext() != null) {
             querySmartSupporter = SpringContext.getBean(QuerySmartSupporter.class);
         }
-        log.debug("New QueryHistoryAccelerateScheduler created by project {}", project);
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
+            log.debug("New QueryHistoryAccelerateScheduler created by project {}", project);
+        }
     }
 
     public static QueryHistoryTaskScheduler getInstance(String project) {
@@ -484,7 +488,7 @@ public class QueryHistoryTaskScheduler {
 
         @Override
         public void run() {
-            try {
+            try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
                 work();
             } catch (Exception e) {
                 log.warn("QueryHistory {}  process failed of project({})", name(), project, e);

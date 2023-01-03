@@ -114,7 +114,7 @@ public class MetricsInfluxdbReporter implements MetricsReporter {
         dailyInstance.init();
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
             try {
-                logger.info("Start to aggregate daily metrics ...");
+                logger.debug("Start to aggregate daily metrics ...");
                 long now = System.currentTimeMillis();
                 long todayStart = TimeUtil.getDayStart(now);
 
@@ -141,7 +141,7 @@ public class MetricsInfluxdbReporter implements MetricsReporter {
                 updateDailyMetrics(todayStart, config);
 
                 retry.set(0);
-                logger.info("Aggregate daily metrics success ...");
+                logger.debug("Aggregate daily metrics success ...");
             } catch (Exception e) {
                 retry.incrementAndGet();
                 logger.error("Failed to aggregate daily metrics, retry: {}", retry.get(), e);

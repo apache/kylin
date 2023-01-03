@@ -33,4 +33,6 @@ class AnalyzerTable(jobContext: TableAnalyzerJob) extends StageExec {
   override def execute(): Unit = {
     jobContext.analyzerTable()
   }
+
+  override def getStageName: String = "AnalyzerTable"
 }

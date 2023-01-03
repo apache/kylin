@@ -321,7 +321,7 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
                 Database db = SparderEnv.getSparkSession().catalog().getDatabase(database);
             } catch (AnalysisException e) {
                 UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-                logger.info("The current user: {} does not have permission to access database {}", ugi.getUserName(),
+                logger.error("The current user: {} does not have permission to access database {}", ugi.getUserName(),
                         database);
                 return false;
             }

@@ -75,4 +75,5 @@ class PartitionGatherFlatTableStats(jobContext: SegmentJob, dataSegment: NDataSe
     }
   }
 
+  override def getStageName: String = "PartitionGatherFlatTableStats"
 }
