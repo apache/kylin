@@ -80,4 +80,6 @@ class WaiteForResource(jobContext: SparkApplication) extends StageExec {
       KylinBuildEnv.get().buildJobInfos.endWait()
     }
   }
+
+  override def getStageName: String = "WaiteForResource"
 }

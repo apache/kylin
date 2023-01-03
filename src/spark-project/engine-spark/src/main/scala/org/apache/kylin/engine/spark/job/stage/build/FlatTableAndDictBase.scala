@@ -42,9 +42,12 @@ import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils
-
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 import java.util.{Locale, Objects, Timer, TimerTask}
+
+import org.apache.kylin.common.constant.LogConstant
+import org.apache.kylin.common.logging.SetLogCategory
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -566,6 +569,7 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
 
   private def buildDict(ds: Dataset[Row], dictCols: Set[TblColRef]): Unit = {
     if (config.isV2DictEnable) {
+      logInfo("Build v2 dict default.")
       var matchedCols = selectColumnsInTable(ds, dictCols)
       if (dataSegment.getIndexPlan.isSkipEncodeIntegerFamilyEnabled) {
         matchedCols = matchedCols.filterNot(_.getType.isIntegerFamily)

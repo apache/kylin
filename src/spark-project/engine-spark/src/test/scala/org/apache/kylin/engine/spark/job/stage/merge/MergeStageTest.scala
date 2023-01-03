@@ -51,6 +51,8 @@ class MergeStageTest extends AnyFunSuite with LocalMetadata {
     override def execute(): Unit = {}
 
     override def getUnmergedFTPaths: Seq[Path] = super.getUnmergedFTPaths
+
+    override def getStageName: String = "MergeStageMock"
   }
 
   def testGetUnmergedFTPaths(config: KylinConfig): Unit = {

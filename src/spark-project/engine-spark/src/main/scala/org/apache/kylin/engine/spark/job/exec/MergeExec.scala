@@ -29,7 +29,9 @@ class MergeExec(id: String) extends BuildExec(id) {
   @throws(classOf[IOException])
   def mergeSegment(): Unit = {
     for (stage <- subStages.asScala) {
+      logInfo(s"Start sub stage ${stage.getStageName}")
       stage.toWork()
+      logInfo(s"End sub stage ${stage.getStageName}")
     }
   }
 

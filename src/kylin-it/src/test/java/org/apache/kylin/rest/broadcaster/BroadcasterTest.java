@@ -18,10 +18,12 @@
 
 package org.apache.kylin.rest.broadcaster;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.AddS3CredentialToSparkBroadcastEventNotifier;
+import org.apache.kylin.common.persistence.transaction.AuditLogBroadcastEventNotifier;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.rest.cluster.ClusterManager;
@@ -30,6 +32,7 @@ import org.apache.kylin.rest.config.initialize.BroadcastListener;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AdminUserSyncEventNotifier;
 import org.apache.kylin.rest.security.UserAclManager;
+import org.apache.kylin.rest.service.AuditLogService;
 import org.apache.kylin.rest.service.UserAclService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.SpringContext;
@@ -50,6 +53,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+
+import static org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier.BroadcastScopeEnum.WHOLE_NODES;
 
 @Slf4j
 @MetadataInfo(onlyProps = true)
@@ -78,6 +83,22 @@ class BroadcasterTest {
     }
 
     @Test
+    void testBroadcastWithAnnounceContains() {
+        try (ConfigurableApplicationContext context = this.application.run("--kylin.server.mode=all")) {
+            SpringContext springContext = context.getBean(SpringContext.class);
+            ReflectionTestUtils.setField(springContext, "applicationContext", context);
+            Broadcaster broadcaster = context.getBean(Broadcaster.class);
+
+            BroadcastEventReadyNotifier eventReadyNotifier = new BroadcastEventReadyNotifier();
+            broadcaster.announce(eventReadyNotifier);
+            // announce twice
+            broadcaster.announce(eventReadyNotifier);
+
+            Assertions.assertSame(WHOLE_NODES, eventReadyNotifier.getBroadcastScope());
+        }
+    }
+
+    @Test
     void testBroadcastSyncAdminUserAcl() throws Exception {
         EpochManager epochManager = EpochManager.getInstance();
         epochManager.tryUpdateEpoch(EpochManager.GLOBAL, true);
@@ -95,6 +116,20 @@ class BroadcasterTest {
         BroadcastListener broadcastListener = new BroadcastListener();
         broadcastListener.handle(new AddS3CredentialToSparkBroadcastEventNotifier("aa", "bb", "cc"));
         assert SparderEnv.getSparkSession().conf().contains(String.format("fs.s3a.bucket.%s.assumed.role.arn", "aa"));
+    }
+
+    @Test
+    void testBroadcastWithAuditLog() {
+        BroadcastListener broadcastListener = new BroadcastListener();
+        val auditLogService = Mockito.spy(AuditLogService.class);
+        ReflectionTestUtils.setField(broadcastListener, "auditLogService", auditLogService);
+        String errorMsg = "";
+        try {
+            broadcastListener.handle(new AuditLogBroadcastEventNotifier());
+        } catch (IOException e) {
+            errorMsg = e.getMessage();
+        }
+        Assertions.assertTrue(errorMsg.isEmpty());
     }
 
     @Configuration

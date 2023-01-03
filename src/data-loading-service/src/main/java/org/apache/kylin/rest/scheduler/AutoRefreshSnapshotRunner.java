@@ -42,6 +42,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.http.HttpStatus;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.logging.SetLogCategory;
@@ -73,7 +74,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AutoRefreshSnapshotRunner implements Runnable {
     private static final String SNAPSHOT_VIEW_MAPPING_ERROR_MESSAGE = "Project[%s] Save View Mapping Failed";
-    private static final String SCHEDULE_LOG_CATEGORY = "schedule";
 
     private static final Map<String, AutoRefreshSnapshotRunner> INSTANCE_MAP = Maps.newConcurrentMap();
     @Setter
@@ -131,7 +131,7 @@ public class AutoRefreshSnapshotRunner implements Runnable {
     }
 
     public void doRun() {
-        try (SetLogCategory ignored = new SetLogCategory(SCHEDULE_LOG_CATEGORY)) {
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
             log.info("Project[{}] start check and refresh snapshot", project);
             if (log.isDebugEnabled()) {
                 val poolExecutor = (ThreadPoolExecutor) jobPool;
@@ -346,7 +346,7 @@ public class AutoRefreshSnapshotRunner implements Runnable {
 
     @Override
     public void run() {
-        try (SetLogCategory ignored = new SetLogCategory(SCHEDULE_LOG_CATEGORY)) {
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
             saveMarkFile();
             doRun();
         } catch (Exception e) {
@@ -357,7 +357,7 @@ public class AutoRefreshSnapshotRunner implements Runnable {
     }
 
     public void runWhenSchedulerInit() {
-        try (SetLogCategory ignored = new SetLogCategory(SCHEDULE_LOG_CATEGORY)) {
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.SCHEDULE_CATEGORY)) {
             doRun();
         } catch (Exception e) {
             log.error(e.getMessage(), e);

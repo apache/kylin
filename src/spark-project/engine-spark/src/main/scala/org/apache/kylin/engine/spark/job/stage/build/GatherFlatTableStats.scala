@@ -48,4 +48,6 @@ class GatherFlatTableStats(jobContext: SegmentJob, dataSegment: NDataSegment, bu
     // Cleanup previous potentially left temp layout data.
     cleanupLayoutTempData(dataSegment, readOnlyLayouts.asScala.toSeq)
   }
+
+  override def getStageName: String = "GatherFlatTableStats"
 }

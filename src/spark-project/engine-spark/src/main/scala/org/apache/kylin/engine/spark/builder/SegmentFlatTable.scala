@@ -18,12 +18,10 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.{Locale, Objects, Timer, TimerTask}
-
+import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.util.HadoopUtil
-import org.apache.kylin.common.{KapConfig, KylinConfig}
+import org.apache.kylin.common.{CustomUtils, KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
 import org.apache.kylin.engine.spark.job.{FiltersUtil, TableMetaManager}
@@ -38,6 +36,12 @@ import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+import java.util.{Locale, Objects, Timer, TimerTask}
+
+import org.apache.kylin.common.constant.LogConstant
+import org.apache.kylin.common.logging.SetLogCategory
+import org.apache.spark.util.Utils
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -45,8 +49,6 @@ import scala.collection.parallel.ForkJoinTaskSupport
 import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.util.{Failure, Success, Try}
-
-import com.google.common.collect.Sets
 
 class SegmentFlatTable(private val sparkSession: SparkSession, //
                        private val tableDesc: SegmentFlatTableDesc) extends LogEx {
@@ -524,7 +526,9 @@ object SegmentFlatTable extends LogEx {
     val newFields = originDS.schema.fields.map(f =>
       convertFromDot("`" + alias + "`" + "." + "`" + f.name + "`")).toSeq
     val newDS = originDS.toDF(newFields: _*)
-    logInfo(s"Wrap ALIAS ${originDS.schema.treeString} TO ${newDS.schema.treeString}")
+    CustomUtils.tryWithResourceIgnore(new SetLogCategory(LogConstant.BUILD_CATEGORY)) {
+      _ => logInfo(s"Wrap ALIAS ${originDS.schema.treeString} TO ${newDS.schema.treeString}")
+    }
     newDS
   }
 
@@ -557,7 +561,9 @@ object SegmentFlatTable extends LogEx {
       val equiConditionColPairs = fk.zip(pk).map(joinKey =>
         col(convertFromDot(joinKey._1.getBackTickIdentity))
           .equalTo(col(convertFromDot(joinKey._2.getBackTickIdentity))))
-      logInfo(s"Lookup table schema ${lookupDataset.schema.treeString}")
+      CustomUtils.tryWithResourceIgnore(new SetLogCategory(LogConstant.BUILD_CATEGORY)) {
+        _ => logInfo(s"Lookup table schema ${lookupDataset.schema.treeString}")
+      }
 
       if (join.getNonEquiJoinCondition != null) {
         var condition = NonEquiJoinConditionBuilder.convert(join.getNonEquiJoinCondition)

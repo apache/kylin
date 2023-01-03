@@ -21,15 +21,26 @@ package org.apache.kylin.engine.spark.job.stage.build.partition
 import org.apache.kylin.engine.spark.job.SegmentJob
 import org.apache.kylin.engine.spark.job.stage.BuildParam
 import org.apache.kylin.metadata.cube.model.NDataSegment
-import org.apache.spark.sql.{Dataset, Row}
+import org.apache.kylin.metadata.model.NDataModel
+import org.junit.Assert
+import org.mockito.Mockito
+import org.scalatest.funsuite.AnyFunSuite
 
-class PartitionBuildDict(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
-  extends PartitionFlatTableAndDictBase(jobContext, dataSegment, buildParam) {
+import com.google.common.collect.ImmutableBiMap
 
-  override def execute(): Unit = {
-    val dict: Dataset[Row] = buildDictIfNeed()
-    buildParam.setDict(dict)
+class PartitionRefreshColumnBytesTest extends AnyFunSuite {
+
+  test("test PartitionRefreshColumnBytes getStageName") {
+    val segmentJob = Mockito.mock(classOf[SegmentJob])
+    val dataSegment = Mockito.mock(classOf[NDataSegment])
+    val buildParam = Mockito.mock(classOf[BuildParam])
+
+    val dataModel = Mockito.mock(classOf[NDataModel])
+    Mockito.when(dataSegment.getModel).thenReturn(dataModel)
+    val builder: ImmutableBiMap.Builder[Integer, NDataModel.Measure] = ImmutableBiMap.builder();
+    Mockito.when(dataSegment.getModel.getEffectiveMeasures).thenReturn(builder.build())
+
+    val partitionRefreshColumnBytes = new PartitionRefreshColumnBytes(segmentJob, dataSegment, buildParam)
+    Assert.assertEquals("PartitionRefreshColumnBytes", partitionRefreshColumnBytes.getStageName)
   }
-
-  override def getStageName: String = "PartitionBuildDict"
 }

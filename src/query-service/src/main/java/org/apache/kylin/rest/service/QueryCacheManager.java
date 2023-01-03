@@ -162,7 +162,7 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
 
     public SQLResponse doSearchQuery(QueryCacheManager.Type type, SQLRequest sqlRequest) {
         Object response = kylinCache.get(type.rootCacheName, sqlRequest.getProject(), sqlRequest.getCacheKey());
-        logger.info("[query cache log] The cache key is: {}", sqlRequest.getCacheKey());
+        logger.debug("[query cache log] The cache key is: {}", sqlRequest.getCacheKey());
         if (response == null) {
             return null;
         }
@@ -178,7 +178,7 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
 
         // check signature for success query resp in case the datasource is changed
         if (QueryCacheSignatureUtil.checkCacheExpired(cached, sqlRequest.getProject())) {
-            logger.info("[query cache log] cache has expired, cache key is {}", sqlRequest.getCacheKey());
+            logger.debug("[query cache log] cache has expired, cache key is {}", sqlRequest.getCacheKey());
             clearQueryCache(sqlRequest);
             return null;
         }
@@ -315,10 +315,10 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
 
     public void clearProjectCache(String project) {
         if (project == null) {
-            logger.debug("[query cache log] clear query cache for all projects.");
+            logger.info("[query cache log] clear query cache for all projects.");
             kylinCache.clearAll();
         } else {
-            logger.debug("[query cache log] clear query cache for {}", project);
+            logger.info("[query cache log] clear query cache for {}", project);
             kylinCache.clearByType(Type.SUCCESS_QUERY_CACHE.rootCacheName, project);
             kylinCache.clearByType(Type.EXCEPTION_QUERY_CACHE.rootCacheName, project);
             kylinCache.clearByType(Type.SCHEMA_CACHE.rootCacheName, project);

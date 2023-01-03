@@ -16,19 +16,16 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.engine.spark.job.stage.merge
+package org.apache.kylin.common
 
-import org.apache.kylin.engine.spark.job.SegmentJob
-import org.apache.kylin.metadata.cube.model.NDataSegment
+object CustomUtils {
 
-class MergeColumnBytes(jobContext: SegmentJob, dataSegment: NDataSegment)
-  extends MergeStage(jobContext, dataSegment) {
-
-  override def execute(): Unit = {
-    mergeColumnBytes()
-
-    cleanup()
+  // Somehow equivalent to Java's try with resource, handle cannot be null
+  def tryWithResourceIgnore[T <: AutoCloseable](handle: T)(func: T => Any): Unit = {
+    try {
+      func(handle)
+    } finally {
+      handle.close()
+    }
   }
-
-  override def getStageName: String = "MergeColumnBytes"
 }

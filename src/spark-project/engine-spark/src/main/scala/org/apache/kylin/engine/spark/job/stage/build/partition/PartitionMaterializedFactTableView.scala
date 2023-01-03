@@ -61,4 +61,6 @@ class PartitionMaterializedFactTableView(jobContext: SegmentJob, dataSegment: ND
       onStageSkipped()
     }
   }
+
+  override def getStageName: String = "PartitionMaterializedFactTableView"
 }

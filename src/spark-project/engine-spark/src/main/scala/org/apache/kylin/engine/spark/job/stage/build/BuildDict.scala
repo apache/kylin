@@ -31,4 +31,6 @@ class BuildDict(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: B
     val dict: Dataset[Row] = buildDictIfNeed()
     buildParam.setDict(dict)
   }
+
+  override def getStageName: String = "BuildDict"
 }

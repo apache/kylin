@@ -37,4 +37,6 @@ class PartitionGenerateFlatTable(jobContext: SegmentJob, dataSegment: NDataSegme
       onStageSkipped()
     }
   }
+
+  override def getStageName: String = "PartitionGenerateFlatTable"
 }
