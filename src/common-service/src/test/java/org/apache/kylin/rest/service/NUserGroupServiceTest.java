@@ -32,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
+import org.apache.kylin.metadata.usergroup.NUserGroupManager;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.response.UserGroupResponseKI;
@@ -215,6 +216,26 @@ public class NUserGroupServiceTest extends ServiceTestBase {
     public void testAddGroups() throws IOException {
         userGroupService.addGroups(Arrays.asList("g1", "g2", "g3"));
         Assert.assertEquals(Lists.newArrayList("g1", "g2", "g3"), userGroupService.getAllUserGroups());
+    }
+
+    @Test
+    public void testDeleteAdminNameGroup() throws IOException {
+        String adminGroupName = "admin";
+        NUserGroupManager manager = NUserGroupManager.getInstance(getTestConfig());
+        Assert.assertFalse(userGroupService.exists(adminGroupName));
+        Assert.assertFalse(manager.exists(adminGroupName));
+        // add 'admin' group
+        userGroupService.addGroup(adminGroupName);
+        Assert.assertTrue(userGroupService.exists(adminGroupName));
+        Assert.assertTrue(manager.exists(adminGroupName));
+        // check 'admin' group uuid
+        String adminUUID = userGroupService.getUuidByGroupName(adminGroupName);
+        manager.getAllGroups().stream().filter(group -> group.getGroupName().equalsIgnoreCase(adminGroupName))
+                .findFirst().ifPresent(userGroup -> Assert.assertEquals(userGroup.getUuid(), adminUUID));
+        // delete 'admin' group
+        userGroupService.deleteGroup(adminGroupName);
+        Assert.assertFalse(userGroupService.exists(adminGroupName));
+        Assert.assertFalse(manager.exists(adminGroupName));
     }
 
     private void checkDelUserGroupWithException(String groupName) {

@@ -52,7 +52,7 @@ public class NUserGroupManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(group.exists("g1"));
         Assert.assertFalse(group.exists("g4"));
         Assert.assertEquals(Lists.newArrayList("g1", "g2", "g3"), group.getAllGroupNames());
-        Assert.assertEquals("g1", group.getAllUsers(path -> path.endsWith("g1")).get(0).getGroupName());
+        Assert.assertEquals("g1", group.getAllGroups(path -> path.endsWith("g1")).get(0).getGroupName());
 
         Assert.assertThrows(String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupExist(), "g1"),
                 KylinException.class, () -> group.add("g1"));
