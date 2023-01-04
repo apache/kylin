@@ -243,6 +243,8 @@ object AggregatePlan extends LogEx {
     if (olapContext == null || olapContext.realization == null) return false
     if (!olapContext.realization.getConfig.needReplaceAggWhenExactlyMatched) return false
 
+    if (olapContext.skipReplaceAggWhenExactlyMatched) return false;
+
     val cuboid = olapContext.storageContext.getCuboid
     if (cuboid == null) return false
     if (olapContext.hasJoin) return false

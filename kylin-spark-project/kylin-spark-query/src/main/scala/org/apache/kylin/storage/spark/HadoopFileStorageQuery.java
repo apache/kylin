@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.spark;
 
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OLAPFilterRel;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -36,6 +37,7 @@ import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryBase;
 import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Tuple2;
 
 public class HadoopFileStorageQuery extends GTCubeStorageQueryBase {
     private static final Logger log = LoggerFactory.getLogger(HadoopFileStorageQuery.class);
@@ -49,8 +51,8 @@ public class HadoopFileStorageQuery extends GTCubeStorageQueryBase {
         throw new UnsupportedOperationException("Unsupported getGTStorage.");
     }
 
-    public GTCubeStorageQueryRequest getStorageQueryRequest(OLAPContext olapContext,
-                                                            TupleInfo returnTupleInfo) {
+    public Tuple2<GTCubeStorageQueryRequest, OLAPFilterRel> getStorageQueryRequest(OLAPContext olapContext,
+                                                                                   TupleInfo returnTupleInfo) {
         StorageContext context = olapContext.storageContext;
         SQLDigest sqlDigest = olapContext.getSQLDigest();
         context.setStorageQuery(this);
@@ -62,12 +64,25 @@ public class HadoopFileStorageQuery extends GTCubeStorageQueryBase {
         notifyBeforeStorageQuery(sqlDigest);
 
         Collection<TblColRef> groups = sqlDigest.groupbyColumns;
-        TupleFilter filter = sqlDigest.filter;
+
+
+        Set<TblColRef> filterCols = sqlDigest.filterColumns;
+        olapContext.skipReplaceAggWhenExactlyMatched = false;
+        OLAPFilterRel rel = null;
+        if (null != olapContext.splitFilters && olapContext.splitFilters.size() >= 1) {
+            rel = olapContext.splitFilters.get(0);
+            olapContext.splitFilters.remove(0);
+            if (!rel.preCalculatedSegment.isEmpty()) {
+                filterCols = rel.filterColRefs;
+                olapContext.skipReplaceAggWhenExactlyMatched = true;
+            }
+        }
 
         // build dimension & metrics
         Set<TblColRef> dimensions = new LinkedHashSet<>();
         Set<FunctionDesc> metrics = new LinkedHashSet<>();
-        buildDimensionsAndMetrics(sqlDigest, dimensions, metrics);
+
+        buildDimensionsAndMetrics(sqlDigest, dimensions, metrics, filterCols);
 
         // all dimensions = groups + other(like filter) dimensions
         Set<TblColRef> otherDims = Sets.newHashSet(dimensions);
@@ -86,7 +101,7 @@ public class HadoopFileStorageQuery extends GTCubeStorageQueryBase {
         Cuboid cuboid = findCuboid(cubeInstance, dimensionsD, metrics);
         log.info("For OLAPContext {}, need cuboid {}, hit cuboid {}, level diff is {}.", olapContext.id, cuboid.getInputID() , cuboid.getId(), Long.bitCount(cuboid.getInputID() ^ cuboid.getId()));
         context.setCuboid(cuboid);
-        return new GTCubeStorageQueryRequest(cuboid, dimensionsD, groupsD, null, null, null,
-                metrics, null, null, null, context);
+        return new Tuple2(new GTCubeStorageQueryRequest(cuboid, dimensionsD, groupsD, null, null, null,
+                metrics, null, null, null, context), rel);
     }
 }

@@ -322,12 +322,14 @@ public class QueryService extends BasicService {
 
         if (!response.isHitExceptionCache() && null != OLAPContext.getThreadLocalContexts()) {
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
-                Cuboid cuboid = ctx.storageContext.getCuboid();
-                if (cuboid != null) {
+                List<Cuboid> cuboids = ctx.storageContext.getCuboidList();
+                if (!cuboids.isEmpty()) {
                     //Some queries do not involve cuboid, e.g. lookup table query
-                    cuboidIds.add(cuboid.getId());
+                    cuboids.forEach(cuboid -> {
+                        cuboidIds.add(cuboid.getId());
+                        isExactlyMatchSet.add(ctx.isExactlyAggregate);
+                    });
                 }
-                isExactlyMatchSet.add(ctx.isExactlyAggregate);
 
                 if (ctx.realization != null) {
                     realizationNames.add(ctx.realization.getCanonicalName());

@@ -187,7 +187,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     }
 
     protected void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions,
-            Collection<FunctionDesc> metrics) {
+            Collection<FunctionDesc> metrics, Set<TblColRef> filterCols) {
         for (FunctionDesc func : sqlDigest.aggregations) {
             if (!func.isDimensionAsMetric() && !FunctionDesc.FUNC_GROUPING.equalsIgnoreCase(func.getExpression())) {
                 // use the FunctionDesc from cube desc as much as possible, that has more info such as HLLC precision
@@ -198,13 +198,23 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         for (TblColRef column : sqlDigest.allColumns) {
             // skip measure columns
             if ((sqlDigest.metricColumns.contains(column) || sqlDigest.rtMetricColumns.contains(column))
-                    && !(sqlDigest.groupbyColumns.contains(column) || sqlDigest.filterColumns.contains(column)
+                    && !(sqlDigest.groupbyColumns.contains(column) || filterCols.contains(column)
                             || sqlDigest.rtDimensionColumns.contains(column))) {
+                continue;
+            }
+
+            //skip partition columns if possible
+            if (!sqlDigest.groupbyColumns.contains(column) && !filterCols.contains(column)) {
                 continue;
             }
 
             dimensions.add(column);
         }
+    }
+
+    protected void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions,
+                                             Collection<FunctionDesc> metrics) {
+        buildDimensionsAndMetrics(sqlDigest, dimensions, metrics, sqlDigest.filterColumns);
     }
 
     private FunctionDesc findAggrFuncFromCubeDesc(FunctionDesc aggrFunc) {

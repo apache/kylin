@@ -71,6 +71,8 @@ public class OLAPContext {
 
     static final InternalThreadLocal<Map<Integer, OLAPContext>> _localContexts = new InternalThreadLocal<>();
 
+    public boolean removePartitionFilter = false;
+
     public static void setParameters(Map<String, String> parameters) {
         _localPrarameters.set(parameters);
     }
@@ -161,6 +163,10 @@ public class OLAPContext {
     public boolean isBorrowedContext = false; // Whether preparedContext is borrowed from cache
     List<TblColRef> sortColumns;
     List<SQLDigest.OrderEnum> sortOrders;
+
+    public List<OLAPFilterRel> splitFilters = new ArrayList<>();
+    public boolean skipReplaceAggWhenExactlyMatched = false;
+
 
     // rewrite info
     public Map<String, RelDataType> rewriteFields = new HashMap<>();

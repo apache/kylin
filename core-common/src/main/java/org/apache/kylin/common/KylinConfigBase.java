@@ -2818,4 +2818,17 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isEnabledNoAggQuery() {
         return Boolean.parseBoolean(getOptional("kylin.query.enable-no-aggregate-query", FALSE));
     }
+
+    /***
+     * For queries that contain partition column in filter, but don't contain partition column in aggregation groups.
+     * Take the following query as an example (part_dt is partition column):
+     *     select ops_user_id, sum(price) from kylin_sales where ops_user_id = 'ADMIN' and part_dt > '2012-01-03'
+     * KYLIN will choose cuboid: [ops_user_id, part_dt], we can change this query into tow parts:
+     *   1. for segments whose data's part_dt column is all greater than 2012-01-03, we can choose cuboid: [ops_user_id]
+     *   2. for segments whose data's part_dt column is only partly greater than 2012-01-03, we can choose cuboid: [ops_user_id, part_dt]
+     * With this optimization on, large queries(long time span) can reduce the amount of data reading and computing
+     ***/
+    public boolean removePartitionDimensionDynamically() {
+        return Boolean.valueOf(getOptional("kylin.query.remove.partition.dimension.dynamically", "false"));
+    };
 }

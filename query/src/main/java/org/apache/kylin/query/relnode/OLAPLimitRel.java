@@ -108,7 +108,7 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
     }
 
     @Override
-    public void implementRewrite(RewriteImplementor implementor) {
+    public void implementRewrite(RelNode parent, RewriteImplementor implementor) {
         implementor.visitChild(this, getInput());
 
         this.rowType = this.deriveRowType();

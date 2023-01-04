@@ -92,7 +92,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
     }
 
     @Override
-    public void implementRewrite(RewriteImplementor implementor) {
+    public void implementRewrite(RelNode parent, RewriteImplementor implementor) {
         implementor.visitChild(this, getInput());
 
         // No need to rewrite "order by" applied on non-olap context.

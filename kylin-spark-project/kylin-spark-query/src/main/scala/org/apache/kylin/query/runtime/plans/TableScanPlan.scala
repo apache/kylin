@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import org.apache.calcite.DataContext
 import org.apache.kylin.common.QueryContextFacade
-import org.apache.kylin.cube.CubeInstance
+import org.apache.kylin.cube.{CubeInstance, CubeSegment}
 import org.apache.kylin.metadata.model._
 import org.apache.kylin.metadata.tuple.TupleInfo
 import org.apache.kylin.query.SchemaProcessor
@@ -64,9 +64,10 @@ object TableScanPlan extends LogEx {
     olapContext.resetSQLDigest()
     val query = new HadoopFileStorageQuery(cubeInstance)
     val returnTupleInfo = olapContext.returnTupleInfo
-    val request = query.getStorageQueryRequest(
+    val requestAndFilter = query.getStorageQueryRequest(
       olapContext,
       returnTupleInfo)
+    val request = requestAndFilter._1
     val cuboid = request.getCuboid
     val gridTableMapping = cuboid.getCuboidToGridTableMapping
 
@@ -77,7 +78,11 @@ object TableScanPlan extends LogEx {
     import org.apache.kylin.query.implicits.implicits._
     var df = SparderContext.getSparkSession.kylin
       .format("parquet")
-      .cuboidTable(cubeInstance, cuboid)
+      .cuboidTable(cubeInstance, cuboid,
+        if(requestAndFilter._2 == null) {
+          List[CubeSegment]()
+        } else
+          requestAndFilter._2.preCalculatedSegment.asScala.toList)
       .toDF(schemaNames: _*)
     // may have multi TopN measures.
     val topNMeasureIndexes = df.schema.fields.map(_.dataType).zipWithIndex.filter(_._1.isInstanceOf[ArrayType]).map(_._2)

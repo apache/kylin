@@ -132,7 +132,7 @@ public class OLAPNonEquiJoinRel extends EnumerableThetaJoin implements OLAPRel {
     }
 
     @Override
-    public void implementRewrite(RewriteImplementor implementor) {
+    public void implementRewrite(RelNode parent, RewriteImplementor implementor) {
         implementor.visitChild(this, this.left);
         implementor.visitChild(this, this.right);
 

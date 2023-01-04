@@ -175,7 +175,7 @@ public interface OLAPRel extends RelNode {
                 this.parentContext = olapRel.getContext();
             }
             OLAPRel olapChild = (OLAPRel) child;
-            olapChild.implementRewrite(this);
+            olapChild.implementRewrite(parent, this);
         }
 
         public OLAPContext getParentContext() {
@@ -198,7 +198,7 @@ public interface OLAPRel extends RelNode {
         }
     }
 
-    public void implementRewrite(RewriteImplementor rewriter);
+    public void implementRewrite(RelNode parent, RewriteImplementor rewriter);
 
     /**
      * implementor for java generation
