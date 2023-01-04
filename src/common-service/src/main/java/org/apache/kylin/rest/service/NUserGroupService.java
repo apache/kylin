@@ -106,16 +106,15 @@ public class NUserGroupService implements IUserGroupService {
         aclEvaluate.checkIsGlobalAdmin();
         checkGroupCanBeDeleted(name);
         // remove retained user group in all users
-        List<ManagedUser> managedUsers = userService.listUsers();
-        for (ManagedUser managedUser : managedUsers) {
-            if (managedUser.getAuthorities().contains(new SimpleGrantedAuthority(name))) {
-                managedUser.removeAuthorities(name);
-                userService.updateUser(managedUser);
-            }
-        }
+        SimpleGrantedAuthority simpleAuthority = new SimpleGrantedAuthority(name);
+        userService.listUsers(false).stream().filter(
+                user -> user.getAuthorities().parallelStream().anyMatch(authority -> authority.equals(simpleAuthority)))
+                .forEach(user -> {
+                    user.removeAuthorities(name);
+                    userService.updateUser(user);
+                });
         //delete group's project ACL
         accessService.revokeProjectPermission(name, MetadataConstants.TYPE_GROUP);
-
         getUserGroupManager().delete(name);
     }
 
@@ -126,10 +125,8 @@ public class NUserGroupService implements IUserGroupService {
         aclEvaluate.checkIsGlobalAdmin();
         checkGroupNameExist(groupName);
 
-        List<String> groupUsers = new ArrayList<>();
-        for (ManagedUser user : getGroupMembersByName(groupName)) {
-            groupUsers.add(user.getUsername());
-        }
+        List<String> groupUsers = getGroupMembersByName(groupName).stream().map(ManagedUser::getUsername)
+                .collect(Collectors.toList());
         List<String> moveInUsers = Lists.newArrayList(users);
         List<String> moveOutUsers = Lists.newArrayList(groupUsers);
         moveInUsers.removeAll(groupUsers);
@@ -139,7 +136,7 @@ public class NUserGroupService implements IUserGroupService {
 
         String currentUser = aclEvaluate.getCurrentUserName();
 
-        List<String> moveList = new ArrayList<String>();
+        List<String> moveList = Lists.newArrayList();
         moveList.addAll(moveInUsers);
         moveList.addAll(moveOutUsers);
         val superAdminList = userService.listSuperAdminUsers();
@@ -193,7 +190,7 @@ public class NUserGroupService implements IUserGroupService {
         if (StringUtils.isEmpty(userGroupName)) {
             return listUserGroups();
         }
-        return getUserGroupManager().getAllUsers(path -> {
+        return getUserGroupManager().getAllGroups(path -> {
             val pathPair = StringUtils.split(path, "/");
             String groupName = pathPair[pathPair.length - 1];
             return StringUtils.containsIgnoreCase(groupName, userGroupName);
@@ -218,13 +215,13 @@ public class NUserGroupService implements IUserGroupService {
             throw new KylinException(USERGROUP_NOT_EXIST,
                     String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupNotExist(), groupName));
         }
-        List<UserGroup> userGroups = getUserGroupManager()
-                .getAllUsers(path -> StringUtils.endsWithIgnoreCase(path, groupName));
-        if (userGroups.isEmpty()) {
+        val optional = getUserGroupManager().getAllGroups(path -> StringUtils.endsWithIgnoreCase(path, groupName))
+                .stream().filter(group -> StringUtils.equalsIgnoreCase(group.getGroupName(), groupName)).findFirst();
+        if (!optional.isPresent()) {
             throw new KylinException(USERGROUP_NOT_EXIST,
                     String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupNotExist(), groupName));
         }
-        return userGroups.get(0).getUuid();
+        return optional.get().getUuid();
     }
 
     public boolean exists(String name) {

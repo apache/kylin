@@ -91,7 +91,7 @@ public class NUserGroupManager {
         return ImmutableList.copyOf(crud.listAll());
     }
 
-    public List<UserGroup> getAllUsers(Predicate<String> predicate) {
+    public List<UserGroup> getAllGroups(Predicate<String> predicate) {
         return ImmutableList.copyOf(crud.listPartial(predicate));
     }
 
