@@ -125,12 +125,16 @@ public class JdbcUtil {
     private static boolean isPrimaryKeyExists(Connection conn, String... tables) throws SQLException {
         try {
             for (String table : tables) {
-                val resultSet = conn.getMetaData().getPrimaryKeys(conn.getCatalog(), conn.getSchema(), table);
-                if (resultSet.next()) {
-                    return true;
+                try {
+                    val resultSet = conn.getMetaData().getPrimaryKeys(conn.getCatalog(), conn.getSchema(), table);
+                    if (resultSet.next()) {
+                        return true;
+                    }
+                } catch (Exception e) {
+                    log.warn("get primary key from table {} failed", table, e);
                 }
             }
-            
+
             return false;
         } catch (Exception e) {
             logger.error("Fail to know if table {} primary key exists", tables, e);
@@ -157,7 +161,7 @@ public class JdbcUtil {
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             logger.error("Fail to know if table {} index {} exists", tables, index, e);
         } finally {
             if (!conn.isClosed())
