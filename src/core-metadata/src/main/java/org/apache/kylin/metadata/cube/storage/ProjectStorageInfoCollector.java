@@ -24,17 +24,15 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 public class ProjectStorageInfoCollector {
 
     private List<StorageInfoCollector> collectors = Lists.newArrayList();
 
-    private static final ImmutableMap<Class<?>, StorageInfoEnum> collectorType = ImmutableMap
-            .<Class<?>, StorageInfoEnum> builder().put(GarbageStorageCollector.class, StorageInfoEnum.GARBAGE_STORAGE)
-            .put(TotalStorageCollector.class, StorageInfoEnum.TOTAL_STORAGE)
-            .put(StorageQuotaCollector.class, StorageInfoEnum.STORAGE_QUOTA).build();
+    private static GarbageStorageCollector garbageStorageCollector = new GarbageStorageCollector();
+    private static TotalStorageCollector totalStorageCollector = new TotalStorageCollector();
+    private static StorageQuotaCollector storageQuotaCollector = new StorageQuotaCollector();
 
     public ProjectStorageInfoCollector(List<StorageInfoEnum> storageInfoList) {
         if (CollectionUtils.isNotEmpty(storageInfoList)) {
@@ -47,7 +45,7 @@ public class ProjectStorageInfoCollector {
             try {
                 collector.collect(config, project, storageVolumeInfo);
             } catch (Exception e) {
-                storageVolumeInfo.getThrowableMap().put(collectorType.get(collector.getClass()), e);
+                storageVolumeInfo.getThrowableMap().put(collector.getType(), e);
             }
         }
     }
@@ -55,13 +53,13 @@ public class ProjectStorageInfoCollector {
     private void addCollectors(StorageInfoEnum storageInfoEnum) {
         switch (storageInfoEnum) {
         case GARBAGE_STORAGE:
-            collectors.add(new GarbageStorageCollector());
+            collectors.add(garbageStorageCollector);
             break;
         case TOTAL_STORAGE:
-            collectors.add(new TotalStorageCollector());
+            collectors.add(totalStorageCollector);
             break;
         case STORAGE_QUOTA:
-            collectors.add(new StorageQuotaCollector());
+            collectors.add(storageQuotaCollector);
             break;
         default:
             break;
