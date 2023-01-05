@@ -490,4 +490,91 @@ class EpochManagerTest {
         Assertions.assertFalse(epochManager.getOwnedEpochs().isEmpty());
     }
 
+    @Test
+    void testIsEpochLegal() {
+        EpochManager epochManager = EpochManager.getInstance();
+        {
+            Epoch epoch = null;
+            Boolean isEpochLegal = ReflectionTestUtils.invokeMethod(epochManager, "isEpochLegal", epoch);
+            Assertions.assertNotNull(isEpochLegal);
+            Assertions.assertFalse(isEpochLegal);
+        }
+
+        {
+            Epoch epoch = new Epoch();
+            epoch.setEpochTarget("test1");
+            epoch.setCurrentEpochOwner(null);
+            epoch.setEpochId(1);
+            epoch.setLastEpochRenewTime(System.currentTimeMillis());
+            Boolean isEpochLegal = ReflectionTestUtils.invokeMethod(epochManager, "isEpochLegal", epoch);
+            Assertions.assertNotNull(isEpochLegal);
+            Assertions.assertFalse(isEpochLegal);
+        }
+
+        {
+            Epoch epoch = new Epoch();
+            epoch.setEpochTarget("test1");
+            epoch.setCurrentEpochOwner("abc");
+            epoch.setEpochId(1);
+            epoch.setLastEpochRenewTime(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1));
+            Boolean isEpochLegal = ReflectionTestUtils.invokeMethod(epochManager, "isEpochLegal", epoch);
+            Assertions.assertNotNull(isEpochLegal);
+            Assertions.assertFalse(isEpochLegal);
+        }
+
+        {
+            Epoch epoch = new Epoch();
+            epoch.setEpochTarget("test1");
+            epoch.setCurrentEpochOwner("abc");
+            epoch.setEpochId(1);
+            epoch.setLastEpochRenewTime(System.currentTimeMillis());
+            Boolean isEpochLegal = ReflectionTestUtils.invokeMethod(epochManager, "isEpochLegal", epoch);
+            Assertions.assertNotNull(isEpochLegal);
+            Assertions.assertTrue(isEpochLegal);
+        }
+    }
+
+    @Test
+    @MetadataInfo
+    void testIsEpochLegal_WithResourceGroup() {
+        val manager = ResourceGroupManager.getInstance(getTestConfig());
+        manager.getResourceGroup();
+        manager.updateResourceGroup(copyForWrite -> copyForWrite.setResourceGroupEnabled(true));
+        val epochManager = EpochManager.getInstance();
+        Epoch epoch = new Epoch();
+        epoch.setEpochTarget("test1");
+        epoch.setCurrentEpochOwner("abc");
+        epoch.setEpochId(1);
+        epoch.setLastEpochRenewTime(System.currentTimeMillis());
+        Boolean isEpochLegal = ReflectionTestUtils.invokeMethod(epochManager, "isEpochLegal", epoch);
+        Assertions.assertNotNull(isEpochLegal);
+        Assertions.assertFalse(isEpochLegal);
+    }
+
+    @Test
+    @MetadataInfo
+    void testIsEpochLegal_WithResourceGroupInMaintMode() {
+        val manager = ResourceGroupManager.getInstance(getTestConfig());
+        manager.getResourceGroup();
+        manager.updateResourceGroup(copyForWrite -> copyForWrite.setResourceGroupEnabled(true));
+
+        val epochManager = EpochManager.getInstance();
+
+        Epoch epoch = new Epoch();
+        epoch.setEpochTarget(UnitOfWork.GLOBAL_UNIT);
+        epoch.setCurrentEpochOwner("testOwner");
+        epoch.setEpochId(1);
+        epoch.setLastEpochRenewTime(System.currentTimeMillis());
+        getEpochStore().insertBatch(Lists.newArrayList(epoch));
+
+        epochManager.setMaintenanceMode("test");
+
+        //test another target
+        epoch.setEpochTarget("test");
+
+        Boolean isEpochLegal = ReflectionTestUtils.invokeMethod(epochManager, "isEpochLegal", epoch);
+        Assertions.assertNotNull(isEpochLegal);
+        Assertions.assertTrue(isEpochLegal);
+    }
+
 }
