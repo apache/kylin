@@ -38,9 +38,7 @@ public class QuotaStorageCheckRunner extends AbstractDefaultSchedulerRunner {
 
     public QuotaStorageCheckRunner(NDefaultScheduler nDefaultScheduler) {
         super(nDefaultScheduler);
-
-        val storageInfoEnumList = Lists.newArrayList(StorageInfoEnum.STORAGE_QUOTA, StorageInfoEnum.TOTAL_STORAGE);
-        collector = new ProjectStorageInfoCollector(storageInfoEnumList);
+        collector = new ProjectStorageInfoCollector(Lists.newArrayList(StorageInfoEnum.STORAGE_QUOTA, StorageInfoEnum.TOTAL_STORAGE));
     }
 
     @Override

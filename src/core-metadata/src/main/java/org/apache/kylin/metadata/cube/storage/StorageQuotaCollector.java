@@ -32,4 +32,9 @@ public class StorageQuotaCollector implements StorageInfoCollector {
         storageVolumeInfo.setStorageQuotaSize(quotaSize);
     }
 
+    @Override
+    public StorageInfoEnum getType() {
+        return StorageInfoEnum.STORAGE_QUOTA;
+    }
+
 }

@@ -61,6 +61,11 @@ public class GarbageStorageCollector implements StorageInfoCollector {
         storageVolumeInfo.setGarbageStorageSize(storageSize);
     }
 
+    @Override
+    public StorageInfoEnum getType() {
+        return StorageInfoEnum.GARBAGE_STORAGE;
+    }
+
     private List<NDataModel> getModels(String project) {
         val dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         return dataflowManager.listUnderliningDataModels();
