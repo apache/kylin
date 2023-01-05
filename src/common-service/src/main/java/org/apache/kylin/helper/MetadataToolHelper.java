@@ -135,7 +135,8 @@ public class MetadataToolHelper {
                     + "_backup";
         }
         String backupPath = StringUtils.appendIfMissing(path, "/") + folder;
-        logger.info("The metadata backup path is {}}", backupPath);
+        //FIXME should replace printf with Logger while Logger MUST print this message to console, because test depends on it
+        System.out.printf(Locale.ROOT, "The metadata backup path is %s.%n", backupPath);
         val backupMetadataUrl = getMetadataUrl(backupPath, compress, kylinConfig);
         val backupConfig = KylinConfig.createKylinConfig(kylinConfig);
         backupConfig.setMetadataUrl(backupMetadataUrl);
