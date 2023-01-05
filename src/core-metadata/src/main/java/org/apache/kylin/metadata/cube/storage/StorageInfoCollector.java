@@ -32,4 +32,6 @@ public interface StorageInfoCollector {
     }
 
     void doCollect(KylinConfig config, String project, StorageVolumeInfo storageVolumeInfo) throws IOException;
+
+    StorageInfoEnum getType();
 }

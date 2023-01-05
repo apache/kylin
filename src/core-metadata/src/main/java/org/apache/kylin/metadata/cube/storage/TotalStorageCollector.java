@@ -50,4 +50,9 @@ public class TotalStorageCollector implements StorageInfoCollector {
         storageVolumeInfo.setTotalStorageSize(totalStorageSize);
     }
 
+    @Override
+    public StorageInfoEnum getType() {
+        return StorageInfoEnum.TOTAL_STORAGE;
+    }
+
 }

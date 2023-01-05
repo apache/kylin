@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.cube.storage;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,9 +88,8 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "true");
         initTestData();
 
-        val storageInfoEnumList = Lists.newArrayList(StorageInfoEnum.GARBAGE_STORAGE, StorageInfoEnum.STORAGE_QUOTA,
-                StorageInfoEnum.TOTAL_STORAGE);
-        val collector = new ProjectStorageInfoCollector(storageInfoEnumList);
+        val collector = new ProjectStorageInfoCollector(Lists.newArrayList(StorageInfoEnum.GARBAGE_STORAGE, StorageInfoEnum.STORAGE_QUOTA,
+                StorageInfoEnum.TOTAL_STORAGE));
         val volumeInfo = collector.getStorageVolumeInfo(getTestConfig(), DEFAULT_PROJECT);
 
         Assert.assertEquals(10240L * 1024 * 1024 * 1024, volumeInfo.getStorageQuotaSize());
@@ -421,8 +421,7 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
 
     @Test
     public void testGetStorageVolumeInfoEmpty() {
-        List<StorageInfoEnum> storageInfoEnumList = Lists.newArrayList();
-        val collector = new ProjectStorageInfoCollector(storageInfoEnumList);
+        val collector = new ProjectStorageInfoCollector(Collections.emptyList());
         val storageVolumeInfo = collector.getStorageVolumeInfo(getTestConfig(), DEFAULT_PROJECT);
 
         Assert.assertEquals(-1L, storageVolumeInfo.getStorageQuotaSize());
@@ -433,9 +432,8 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
 
     @Test
     public void testGetStorageVolumeException() throws NoSuchFieldException, IllegalAccessException, IOException {
-        List<StorageInfoEnum> storageInfoEnumList = Lists.newArrayList();
         TotalStorageCollector totalStorageCollector = Mockito.spy(TotalStorageCollector.class);
-        ProjectStorageInfoCollector collector = new ProjectStorageInfoCollector(storageInfoEnumList);
+        ProjectStorageInfoCollector collector = new ProjectStorageInfoCollector(Collections.emptyList());
         Field field = collector.getClass().getDeclaredField("collectors");
         Unsafe.changeAccessibleObject(field, true);
         List<StorageInfoCollector> collectors = (List<StorageInfoCollector>) field.get(collector);
