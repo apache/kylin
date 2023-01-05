@@ -102,7 +102,7 @@ public class FlatTableToCostUtils {
         // rowkey id ->  column index in the flat table of the flat dataset.
         int[] rowkeyColumnIndexes = getRowkeyColumnIndexes(ruleBasedIndex, flatTableDesc);
 
-        int hllPrecision = kylinConfig.getCubeStatsHLLPrecision();
+        int hllPrecision = kylinConfig.getStatsHLLPrecision();
         log.info("The row key count is {}, and the index/column map is {}", rowKeyCount,
                 Lists.newArrayList(rowkeyColumnIndexes));
         JavaPairRDD<BigInteger, byte[]> costRddByPartition = flatTableRDD.mapPartitionsToPair(
@@ -154,7 +154,7 @@ public class FlatTableToCostUtils {
         // The key is the cuboid, and the value is the estimated statistics
         Map<BigInteger, HLLCounter> resultCost = Maps.newHashMap();
         for (Tuple2<BigInteger, byte[]> pair : costRDD.collect()) {
-            HLLCounter hll = new HLLCounter(kylinConfig.getCubeStatsHLLPrecision());
+            HLLCounter hll = new HLLCounter(kylinConfig.getStatsHLLPrecision());
             // value
             ByteArray byteArray = new ByteArray(pair._2);
             hll.readRegisters(byteArray.asBuffer());
@@ -172,8 +172,8 @@ public class FlatTableToCostUtils {
      * @return reducer number for calculating hll
      */
     private static int getCuboidHLLCounterReducerNum(int nCuboids, KylinConfig kylinConfig) {
-        int shardBase = (nCuboids - 1) / kylinConfig.getHadoopJobPerReducerHLLCuboidNumber() + 1;
-        int hllMaxReducerNumber = kylinConfig.getHadoopJobHLLMaxReducerNumber();
+        int shardBase = (nCuboids - 1) / kylinConfig.getJobPerReducerHLLCuboidNumber() + 1;
+        int hllMaxReducerNumber = kylinConfig.getJobHLLMaxReducerNumber();
         if (shardBase > hllMaxReducerNumber) {
             shardBase = hllMaxReducerNumber;
         }

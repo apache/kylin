@@ -3685,52 +3685,39 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public boolean enableCostBasedIndexPlanner() {
-        // If we enable the cost base cuboid planner, we need to disable some function in the rule index recommended
-        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", FALSE));
+        // If we enable the cost base cuboid planner, we will recommend subset of layouts from the rule.
+        return Boolean.parseBoolean(getOptional("kylin.index.costbased.enabled", FALSE));
     }
 
-    public int getCubePlannerGreedyAlgorithmAutoThreshold() {
-        return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-greedy", "8"));
+    public int getCostBasedPlannerGreedyAlgorithmAutoThreshold() {
+        return Integer.parseInt(getOptional("kylin.index.costbased.algorithm-threshold-greedy", "8"));
     }
 
-    public int getCubePlannerGeneticAlgorithmAutoThreshold() {
-        return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-genetic", "23"));
+    public int getCostBasedPlannerGeneticAlgorithmAutoThreshold() {
+        return Integer.parseInt(getOptional("kylin.index.costbased.algorithm-threshold-genetic", "23"));
     }
 
-    public double getCubePlannerExpansionRateThreshold() {
-        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.expansion-threshold", "15.0"));
+    public double getCostBasedPlannerExpansionRateThreshold() {
+        return Double.parseDouble(getOptional("kylin.index.costbased.expansion-threshold", "15.0"));
     }
 
-    public double getCubePlannerBPUSMinBenefitRatio() {
-        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.bpus-min-benefit-ratio", "0.01"));
+    public double getCostBasedPlannerBPUSMinBenefitRatio() {
+        return Double.parseDouble(getOptional("kylin.index.costbased.bpus-min-benefit-ratio", "0.01"));
     }
 
-    public int getCubeStatsHLLPrecision() {
-        return Integer.parseInt(getOptional("kylin.job.sampling-hll-precision", "14"));
+    public int getStatsHLLPrecision() {
+        return Integer.parseInt(getOptional("kylin.index.costbased.sampling-hll-precision", "14"));
     }
 
     public double getJobCuboidSizeRatio() {
-        return Double.parseDouble(getOptional("kylin.cube.size-estimate-ratio", "0.25"));
+        return Double.parseDouble(getOptional("kylin.index.costbased.model-size-estimate-ratio", "0.25"));
     }
 
     public double getJobCuboidSizeCountDistinctRatio() {
-        return Double.parseDouble(getOptional("kylin.cube.size-estimate-countdistinct-ratio", "0.5"));
+        return Double.parseDouble(getOptional("kylin.index.costbased.model-size-estimate-countdistinct-ratio", "0.5"));
     }
 
     public double getJobCuboidSizeTopNRatio() {
-        return Double.parseDouble(getOptional("kylin.cube.size-estimate-topn-ratio", "0.5"));
-    }
-
-    public boolean enableJobCuboidSizeOptimize() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.size-estimate-enable-optimize", FALSE));
-    }
-
-    public int getHadoopJobPerReducerHLLCuboidNumber() {
-        return Integer.parseInt(getOptional("kylin.engine.mr.per-reducer-hll-cuboid-number", "100"));
-    }
-
-    public int getHadoopJobHLLMaxReducerNumber() {
-        // by default multi-reducer hll calculation is disabled
-        return Integer.parseInt(getOptional("kylin.engine.mr.hll-max-reducer-number", "1"));
+        return Double.parseDouble(getOptional("kylin.index.costbased.model-size-estimate-topn-ratio", "0.5"));
     }
 }

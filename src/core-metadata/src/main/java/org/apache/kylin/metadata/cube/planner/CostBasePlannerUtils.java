@@ -53,7 +53,7 @@ public class CostBasePlannerUtils {
                 modelName, baseCuboid, mandatoryCuboids, cuboidRowCountMap.keySet());
         CuboidStats cuboidStats = new CuboidStats.Builder(modelName, baseCuboid, baseCuboid, cuboidRowCountMap,
                 cuboidSizeMap).setMandatoryCuboids(mandatoryCuboids)
-                        .setBPUSMinBenefitRatio(kylinConf.getCubePlannerBPUSMinBenefitRatio()).build();
+                        .setBPUSMinBenefitRatio(kylinConf.getCostBasedPlannerBPUSMinBenefitRatio()).build();
         Map<BigInteger, Long> result = getRecommendCuboidList(cuboidStats, kylinConf, !mandatoryCuboids.isEmpty());
         // if not recommend any cuboid and just apply all layouts with the rule base index
         if (result == null || result.isEmpty()) {
@@ -98,9 +98,9 @@ public class CostBasePlannerUtils {
     private static Map<BigInteger, Long> getRecommendCuboidList(CuboidStats cuboidStats, KylinConfig kylinConf,
             boolean ifForceRecommend) {
         // default is 1<<7 = 128
-        long threshold1 = 1L << kylinConf.getCubePlannerGreedyAlgorithmAutoThreshold() - 1;
+        long threshold1 = 1L << kylinConf.getCostBasedPlannerGreedyAlgorithmAutoThreshold() - 1;
         // default is 1<<22 = 1024*1024*4
-        long threshold2 = 1L << kylinConf.getCubePlannerGeneticAlgorithmAutoThreshold() - 1;
+        long threshold2 = 1L << kylinConf.getCostBasedPlannerGeneticAlgorithmAutoThreshold() - 1;
         if (threshold1 >= threshold2) {
             logger.error("Invalid Cube Planner Algorithm configuration");
             return null;
@@ -124,7 +124,8 @@ public class CostBasePlannerUtils {
         }
         long startTime = System.currentTimeMillis();
         logger.info("Cube Planner Algorithm started at {}", startTime);
-        List<BigInteger> recommendCuboidList = algorithm.recommend(kylinConf.getCubePlannerExpansionRateThreshold());
+        List<BigInteger> recommendCuboidList = algorithm
+                .recommend(kylinConf.getCostBasedPlannerExpansionRateThreshold());
         logger.info("Cube Planner Algorithm ended at {}, cost time {}", System.currentTimeMillis(),
                 System.currentTimeMillis() - startTime);
 
