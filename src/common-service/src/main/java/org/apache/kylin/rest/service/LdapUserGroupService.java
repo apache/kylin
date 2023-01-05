@@ -233,4 +233,17 @@ public class LdapUserGroupService extends NUserGroupService {
     public String getUuidByGroupName(String groupName) {
         return groupName;
     }
+
+    @Override
+    public boolean exists(String name) {
+        return getAllUserGroups().contains(name);
+    }
+
+    @Override
+    public Set<String> listUserGroups(String username) {
+        return getAllUserGroups().stream()
+                .filter(group -> getGroupMembersByName(group).stream()
+                        .anyMatch(user -> StringUtils.equalsIgnoreCase(username, user.getUsername())))
+                .collect(Collectors.toSet());
+    }
 }

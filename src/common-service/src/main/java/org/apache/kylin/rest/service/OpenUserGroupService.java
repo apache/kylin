@@ -20,11 +20,12 @@ package org.apache.kylin.rest.service;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.annotation.ThirdPartyDependencies;
+import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 
@@ -80,4 +81,16 @@ public abstract class OpenUserGroupService extends NUserGroupService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public boolean exists(String name) {
+        return getAllUserGroups().contains(name);
+    }
+
+    @Override
+    public Set<String> listUserGroups(String username) {
+        return getAllUserGroups().stream()
+                .filter(group -> getGroupMembersByName(group).stream()
+                        .anyMatch(user -> StringUtils.equalsIgnoreCase(username, user.getUsername())))
+                .collect(Collectors.toSet());
+    }
 }

@@ -18,12 +18,13 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.FileInputStream;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.scheduler.EventBusFactory;
@@ -96,7 +97,8 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
     public static void setupResource() throws Exception {
         staticCreateTestMetadata();
         Properties ldapConfig = new Properties();
-        ldapConfig.load(new FileInputStream(new ClassPathResource("ut_custom/custom-config.properties").getFile()));
+        ldapConfig.load(
+                Files.newInputStream(new ClassPathResource("ut_custom/custom-config.properties").getFile().toPath()));
         final KylinConfig kylinConfig = getTestConfig();
         ldapConfig.forEach((k, v) -> kylinConfig.setProperty(k.toString(), v.toString()));
 
@@ -247,7 +249,7 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testDoAfterListAdminUsers() {
-        List adminUserList = Arrays.asList("admin", "sunny");
+        List<String> adminUserList = Arrays.asList("admin", "sunny");
         val adminUserAspect = SpringContext.getBean(AdminUserAspect.class);
         adminUserAspect.doAfterListAdminUsers(adminUserList);
         Assert.assertTrue(((List) ReflectionTestUtils.getField(adminUserAspect, "adminUserList")).contains("sunny"));
@@ -275,5 +277,22 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
         epochManager.tryUpdateEpoch(EpochManager.GLOBAL, true);
         userAclService.syncAdminUserAcl();
         Assert.assertTrue(userAclService.hasUserAclPermission("admin", AclPermission.DATA_QUERY));
+    }
+
+    @Test
+    public void testUserGroupExists() {
+        Assert.assertTrue(userGroupService.exists("ROLE_ADMIN"));
+        Assert.assertFalse(userGroupService.exists("not_exist_group"));
+    }
+
+    @Test
+    public void testListUserGroupsByUsername() {
+        Assert.assertTrue(userService.userExists("test"));
+        Set<String> testGroups = userGroupService.listUserGroups("test");
+        Assert.assertFalse(testGroups.isEmpty());
+
+        Assert.assertFalse(userService.userExists("not_exist_user"));
+        Set<String> notExistUser = userGroupService.listUserGroups("not_exist_user");
+        Assert.assertTrue(notExistUser.isEmpty());
     }
 }
