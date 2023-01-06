@@ -46,9 +46,7 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockMultipartFile;
@@ -57,9 +55,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import lombok.val;
 
 public class KafkaServiceTest extends NLocalFileMetadataTestCase {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Mock
     private final KafkaService kafkaService = Mockito.spy(KafkaService.class);
