@@ -17,6 +17,8 @@
  */
 package org.apache.kylin.engine.spark.source;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.DDL_CHECK_ERROR;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -41,11 +43,12 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
+
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -54,6 +57,7 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalog.Database;
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType;
 import org.apache.spark.sql.internal.SQLConf;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +65,6 @@ import com.clearspring.analytics.util.Lists;
 import com.google.common.collect.Sets;
 
 import lombok.val;
-import static org.apache.kylin.common.exception.ServerErrorCode.DDL_CHECK_ERROR;
 
 public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleDataDeployer, Serializable {
 
@@ -104,12 +107,15 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
         if (KylinConfig.getInstanceFromEnv().isDDLLogicalViewEnabled()) {
             String logicalViewDB = KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB();
             databases.forEach(db -> {
-                if(db.equalsIgnoreCase(logicalViewDB)){
+                if (db.equalsIgnoreCase(logicalViewDB)) {
                     throw new KylinException(DDL_CHECK_ERROR, "Logical view database should not be duplicated "
                         + "with normal hive database!!!");
                 }
             });
-            databases.add(logicalViewDB);
+            List<String> databasesWithLogicalDB = Lists.newArrayList();
+            databasesWithLogicalDB.add(logicalViewDB);
+            databasesWithLogicalDB.addAll(databases);
+            databases = databasesWithLogicalDB;
         }
         return databases;
     }
