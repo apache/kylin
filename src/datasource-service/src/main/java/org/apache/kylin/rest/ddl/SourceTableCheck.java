@@ -17,6 +17,8 @@
  */
 package org.apache.kylin.rest.ddl;
 
+import static org.apache.spark.ddl.DDLConstant.SOURCE_TABLE_RULE_PRIORITY;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,16 +40,22 @@ import lombok.val;
 
 import scala.collection.Seq;
 
-import static org.apache.spark.ddl.DDLConstant.SOURCE_TABLE_RULE_PRIORITY;
-
 public class SourceTableCheck implements DDLCheck {
 
   @Override
   public String[] description(String project, String pageType) {
-    return new String[] {
-        "The source table used to define the view needs to be loaded into the data source already",
-        "定义 view 用到的来源表需要已经加载到数据源"
-    };
+    if ("hive".equalsIgnoreCase(pageType)) {
+      return new String[] {
+          "The source table used to define the view needs to be loaded into the data source already",
+          "定义 view 用到的来源表需要已经加载到数据源"
+      };
+    } else {
+      return new String[] {
+          "The source tables in Logical View  should already be loaded into the project data source."
+              + "Users can only load Logical View created in the same project into the data source",
+          "定义 Logical View 用到的来源表需要已经加载到数据源,且用户仅能加载同一项目下创建的Logical View"
+      };
+    }
   }
 
   @Override

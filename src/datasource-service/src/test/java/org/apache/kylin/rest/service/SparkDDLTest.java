@@ -281,7 +281,7 @@ public class SparkDDLTest extends NLocalFileMetadataTestCase {
     Assert.assertEquals(4, description.get(0).size());
 
     description = ddlService.pluginsDescription("ssb", "logic");
-    Assert.assertEquals(3, description.get(0).size());
+    Assert.assertEquals(4, description.get(0).size());
 
     // view list in project
     List<LogicalViewResponse> logicalViewsInProject = ddlService.listAll("ssb", "");

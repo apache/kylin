@@ -110,8 +110,8 @@ public class SparkDDLService extends BasicService {
     List<String> descriptionCN = Lists.newArrayList();
     for (DDLCheck checker : ddlChecks) {
       String[] description = checker.description(project, pageType);
-      descriptionEN.addAll(Arrays.asList(description[0].split("\n")));
-      descriptionCN.addAll(Arrays.asList(description[1].split("\n")));
+      descriptionEN.addAll(Arrays.asList(description[0].split("\t")));
+      descriptionCN.addAll(Arrays.asList(description[1].split("\t")));
     }
     return Lists.newArrayList(descriptionEN, descriptionCN);
   }
@@ -143,13 +143,22 @@ public class SparkDDLService extends BasicService {
           .filter(table -> table.getTableName().toLowerCase().contains(tableName.toLowerCase()))
           .collect(Collectors.toList());
     }
-    List<LogicalViewResponse> viewResponses =
-        logicalViews.stream().map(LogicalViewResponse::new).collect(Collectors.toList());
-    viewResponses.forEach(table -> {
-      if (!table.getCreatedProject().equalsIgnoreCase(project)) {
-        table.setCreatedSql("***");
-      }
-    });
+    List<LogicalViewResponse> viewResponses = Lists.newArrayList();
+    List<LogicalViewResponse> viewResponsesInProject =
+        logicalViews.stream()
+            .filter(table -> table.getCreatedProject().equalsIgnoreCase(project))
+            .map(LogicalViewResponse::new)
+            .collect(Collectors.toList());
+    List<LogicalViewResponse> viewResponsesNotInProject =
+        logicalViews.stream()
+            .filter(table -> !table.getCreatedProject().equalsIgnoreCase(project))
+            .map(LogicalViewResponse::new)
+            .collect(Collectors.toList());
+    viewResponsesNotInProject.forEach(table -> table.setCreatedSql("***"));
+    Collections.sort(viewResponsesInProject);
+    Collections.sort(viewResponsesNotInProject);
+    viewResponses.addAll(viewResponsesInProject);
+    viewResponses.addAll(viewResponsesNotInProject);
     return viewResponses;
   }
 }
