@@ -53,24 +53,31 @@ class ViewCheck extends DDLCheck {
     if ("hive".equalsIgnoreCase(pageType)) {
       databasesHasAccess.append(listAllDatabasesHasAccess(project))
       syntaxSupport.append("`create view`,`alter view`,`drop view`,`show create table`")
-      cnDescription.append("Hive View 名称需要以 `KE_` 开头\n")
-      enDescription.append("Hive View name should start with `KE_`\n")
+      cnDescription.append("Hive View 名称需要以 `KE_` 开头\t")
+      enDescription.append("Hive View name should start with `KE_`\t")
       cnDescription
-        .append(s"仅支持 ${syntaxSupport} 语法\n")
+        .append(s"仅支持 ${syntaxSupport} 语法\t")
       enDescription
-        .append(s"Only supports ${syntaxSupport} syntax\n")
-      cnDescription.append(s"仅支持创建 Hive View 在如下数据库: ${databasesHasAccess}\n")
-      enDescription.append(s"Only supports creating Hive Views in ${databasesHasAccess}\n")
+        .append(s"Only supports ${syntaxSupport} syntax\t")
+      cnDescription.append(s"仅支持创建 Hive View 在如下数据库: ${databasesHasAccess}\t")
+      enDescription.append(s"Only supports creating Hive Views in ${databasesHasAccess}\t")
     } else {
       cnDescription.append(s"创建不要加 database 名称，系统自动创建到 ${config.getDDLLogicalViewDB} 库中，"
-        + s"删除要加 ${config.getDDLLogicalViewDB} 库名称 \n")
-      enDescription.append(s"Creating does not require adding database, it is automatically created in"
-        + s" ${config.getDDLLogicalViewDB} , deleting should add ${config.getDDLLogicalViewDB} database\n")
+        + s"删除要加 ${config.getDDLLogicalViewDB} 库名称 \t")
+      enDescription.append(s"When creating a new Logical View,please do not use database name,it will be automatically"
+        + s" created in ${config.getDDLLogicalViewDB} database. When dropping a Logical View,"
+        + s"please add ${config.getDDLLogicalViewDB} database name in SQL.\t")
       syntaxSupport.append(" `create logical view`, `drop logical view` ")
       cnDescription
-        .append(s"仅支持 ${syntaxSupport} 语法\n")
+        .append(s"仅支持 ${syntaxSupport} 语法\t")
       enDescription
-        .append(s"Only supports ${syntaxSupport} syntax\n")
+        .append(s"Only ${syntaxSupport} SQL sentences are allowed to execute\t")
+      cnDescription
+        .append(s"操作举例：\n创建视图：CREATE LOGICAL VIEW your_logical_view AS select * from your_loaded_table\n"
+          + s"删除视图：DROP LOGICAL VIEW ${config.getDDLLogicalViewDB}.your_logical_view")
+      enDescription
+        .append(s"Operation Examples:\nCreate:CREATE LOGICAL VIEW your_logical_view AS select * from your_loaded_table"
+          + s";\nDrop:DROP LOGICAL VIEW ${config.getDDLLogicalViewDB}.your_logical_view;")
     }
 
 

@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.response;
 
 import org.apache.kylin.metadata.view.LogicalView;
+import org.jetbrains.annotations.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,7 +33,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE,
     isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class LogicalViewResponse {
+public class LogicalViewResponse implements Comparable<LogicalViewResponse> {
   @JsonProperty("table_name")
   private String tableName;
 
@@ -50,5 +51,10 @@ public class LogicalViewResponse {
     this.createdSql = view.getCreatedSql();
     this.modifiedUser = view.getModifiedUser();
     this.createdProject = view.getCreatedProject();
+  }
+
+  @Override
+  public int compareTo(@NotNull LogicalViewResponse o) {
+    return this.getTableName().compareTo(o.getTableName());
   }
 }

@@ -138,6 +138,7 @@ public class TableExtService extends BasicService {
             canLoadTables.addAll(toLoadTables);
             return;
         }
+        String viewDB = config.getDDLLogicalViewDB();
         LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
         toLoadTables.stream()
             .filter(table -> !table.getFirst().isLogicalView())
@@ -151,7 +152,7 @@ public class TableExtService extends BasicService {
                 if (logicalTable != null && viewProject.equalsIgnoreCase(project)) {
                     canLoadTables.add(table);
                 } else {
-                    tableResponse.getFailed().add(tableName);
+                    tableResponse.getFailed().add(viewDB + "." + tableName);
                 }
             });
     }
