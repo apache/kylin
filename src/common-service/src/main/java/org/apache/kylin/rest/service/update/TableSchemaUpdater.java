@@ -27,6 +27,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
@@ -62,10 +63,9 @@ public class TableSchemaUpdater {
             throw new UnsupportedOperationException("Cannot deal with filter condition " + other.getFilterCondition());
         }
 
-        // Currently, model with computed columns is not supported
-        if (other.getComputedColumnDescs().size() != 0) {
+        if ((!config.isSupportUpdateComputedColumnMapping()) && (other.getComputedColumnDescs().size() != 0)) {
             throw new UnsupportedOperationException(
-                    "Cannot deal with filter condition " + other.getComputedColumnDescs());
+                    "Do not support deal with computed column " + other.getComputedColumnDescs());
         }
         NDataModel copy = NDataModelManager.getInstance(config, project).copyForWrite(other);
 
@@ -90,6 +90,20 @@ public class TableSchemaUpdater {
             }
         }
         copy.setJoinTables(joinTablesCopy);
+
+        //mapping for computed columns
+        List<ComputedColumnDesc> computedColumns = other.getComputedColumnDescs();
+        List<ComputedColumnDesc> computedColumnsCopy = new ArrayList<>(computedColumns.size());
+        for (int i = 0; i < computedColumns.size(); i++) {
+            ComputedColumnDesc columnDesc = computedColumns.get(i);
+            computedColumnsCopy.add(ComputedColumnDesc.getCopyOf(columnDesc));
+            String tableIdentity = columnDesc.getTableIdentity();
+            TableSchemaUpdateMapping mapping = getTableSchemaUpdateMapping(mappings, tableIdentity);
+            if (mapping != null && mapping.isTableIdentityChanged()) {
+                computedColumnsCopy.get(i).setTableIdentity(mapping.getTableIdentity(tableIdentity));
+            }
+        }
+        copy.setComputedColumnDescs(computedColumnsCopy);
 
         return copy;
     }

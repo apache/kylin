@@ -200,6 +200,18 @@ public class ComputedColumnDesc implements Serializable {
         return tableIdentity + "." + columnName;
     }
 
+    public static ComputedColumnDesc getCopyOf(ComputedColumnDesc other) {
+        ComputedColumnDesc copy = new ComputedColumnDesc();
+        copy.tableIdentity = other.tableIdentity;
+        copy.columnName = other.columnName;
+        copy.expression = other.expression;
+        copy.innerExpression = other.innerExpression;
+        copy.datatype = other.datatype;
+        copy.comment = other.comment;
+        copy.uuid = other.uuid;
+        return copy;
+    }
+
     public void setInnerExpression(String innerExpression) {
         this.innerExpression = innerExpression;
     }
