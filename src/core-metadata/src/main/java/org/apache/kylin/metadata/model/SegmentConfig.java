@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -56,5 +57,25 @@ public class SegmentConfig implements Serializable {
     public boolean canSkipHandleRetentionSegment() {
         return !retentionRange.isRetentionRangeEnabled() || retentionRange.getRetentionRangeNumber() <= 0
                 || retentionRange.getRetentionRangeType() == null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        SegmentConfig that = (SegmentConfig) o;
+
+        if (!Objects.equals(autoMergeEnabled, that.autoMergeEnabled))
+            return false;
+        if (!Objects.equals(autoMergeTimeRanges, that.autoMergeTimeRanges))
+            return false;
+        if (!Objects.equals(volatileRange, that.volatileRange))
+            return false;
+        if (!Objects.equals(retentionRange, that.retentionRange))
+            return false;
+        return Objects.equals(createEmptySegmentEnabled, that.createEmptySegmentEnabled);
     }
 }
