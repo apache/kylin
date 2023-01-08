@@ -43,12 +43,15 @@ import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.AWSTableLoadRequest;
 import org.apache.kylin.rest.request.AutoMergeRequest;
 import org.apache.kylin.rest.request.PartitionKeyRequest;
 import org.apache.kylin.rest.request.PushDownModeRequest;
 import org.apache.kylin.rest.request.ReloadTableRequest;
 import org.apache.kylin.rest.request.TableLoadRequest;
+import org.apache.kylin.rest.request.TableUpdateRequest;
 import org.apache.kylin.rest.request.TopTableRequest;
 import org.apache.kylin.rest.request.UpdateAWSTableExtDescRequest;
 import org.apache.kylin.rest.response.AutoMergeConfigResponse;
@@ -80,6 +83,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -459,6 +463,21 @@ public class NTableController extends NBasicController {
         checkProjectName(project);
         val result = tableService.preProcessBeforeReloadWithFailFast(project, table);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
+    }
+
+    @RequestMapping(value = "/{project}/update", method = {RequestMethod.POST}, produces = {"application/json"})
+    @ResponseBody
+    public void updateHiveTables(@PathVariable String project, @RequestBody TableUpdateRequest request)
+            throws IOException {
+        try {
+            tableService.updateHiveTable(project, request.getMapping(), request.getCubeSetToAffect(), request.isUseExisting());
+        } catch (BadRequestException e) {
+            log.error("Failed to update Hive Table", e);
+            throw e;
+        } catch (Throwable e) {
+            log.error("Failed to update Hive Table", e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
     }
 
     @ApiOperation(value = "reload", tags = { "AI" })
