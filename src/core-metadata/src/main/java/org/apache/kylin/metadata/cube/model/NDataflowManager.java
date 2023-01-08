@@ -48,6 +48,7 @@ import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -580,6 +581,11 @@ public class NDataflowManager implements IRealizationProvider {
                 toRemoveSegs);
 
         return toRemoveSegs;
+    }
+
+    // for test mostly
+    public Serializer<NDataflow> getDataflowSerializer() {
+        return crud.getSerializer();
     }
 
     public NDataflow copy(NDataflow df) {
