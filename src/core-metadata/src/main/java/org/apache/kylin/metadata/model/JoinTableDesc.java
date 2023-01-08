@@ -80,6 +80,17 @@ public class JoinTableDesc implements Serializable {
         return this.isFlattenable() ^ other.isFlattenable();
     }
 
+    public static JoinTableDesc getCopyOf(JoinTableDesc other) {
+        JoinTableDesc copy = new JoinTableDesc();
+        copy.table = other.table;
+        copy.kind = other.kind;
+        copy.alias = other.alias;
+        copy.join = other.join;
+        copy.flattenable = other.flattenable;
+        copy.joinRelationTypeEnum = other.joinRelationTypeEnum;
+        return copy;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
