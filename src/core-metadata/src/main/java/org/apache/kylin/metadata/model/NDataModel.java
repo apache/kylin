@@ -43,7 +43,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Strings;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -611,9 +610,8 @@ public class NDataModel extends RootPersistentEntity {
         column = column.toUpperCase(Locale.ROOT);
         int cut = column.lastIndexOf('.');
         if (cut > 0) {
-            String table = this.findTable(column.substring(0, cut)).getAlias();
             // table specified
-            result = findColumn(table, column.substring(cut + 1));
+            result = findColumn(column.substring(0, cut), column.substring(cut + 1));
         } else {
             // table not specified, try each table
             for (TableRef tableRef : allTableRefs) {
@@ -698,7 +696,7 @@ public class NDataModel extends RootPersistentEntity {
         initJoinTablesForUpgrade();
         initTableAlias(tables);
         initJoinColumns();
-        reorderJoins(tables);
+        reorderJoins();
         initJoinsGraph();
         initPartitionDesc();
         initMultiPartition();
@@ -733,7 +731,7 @@ public class NDataModel extends RootPersistentEntity {
             throw new IllegalStateException("Root fact table does not exist:" + rootFactTableName);
 
         TableDesc rootDesc = tables.get(rootFactTableName);
-        if (Strings.isNullOrEmpty(rootFactTableAlias)) {
+        if (StringUtils.isEmpty(rootFactTableAlias)) {
             rootFactTableAlias = rootDesc.getName();
         }
         rootFactTableRef = new TableRef(this, rootFactTableAlias, rootDesc, false);
@@ -937,7 +935,7 @@ public class NDataModel extends RootPersistentEntity {
         joinsGraph = new JoinsGraph(rootFactTableRef, joins);
     }
 
-    private void reorderJoins(Map<String, TableDesc> tables) {
+    private void reorderJoins() {
         if (CollectionUtils.isEmpty(joinTables)) {
             return;
         }
