@@ -970,12 +970,12 @@ public abstract class AbstractExecutable implements Executable {
                 logger.error("update Job Output failed due to : {}", e.getMessage());
                 if (isMetaDataPersistException(e, 5)) {
                     exception = e;
-                    Thread.sleep(1000L * (long) Math.pow(4, retry));
+                    Thread.sleep(1000L * (long) Math.pow(4, retryCnt));
                 } else {
                     throw e;
                 }
             }
-        } while (exception != null && retry <= context.getConfig().getJobMetadataPersistRetry());
+        } while (exception != null && retryCnt <= context.getConfig().getJobMetadataPersistRetry());
 
         if (exception != null) {
             checkMetadataPersistConfig(exception);
