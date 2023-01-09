@@ -161,4 +161,8 @@ public abstract class BasicService {
             return null;
         }, project);
     }
+
+    public NProjectManager getProjectManager(){
+        return NProjectManager.getInstance(getConfig());
+    }
 }
