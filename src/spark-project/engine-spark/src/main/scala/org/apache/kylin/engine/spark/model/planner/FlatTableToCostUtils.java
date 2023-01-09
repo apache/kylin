@@ -437,7 +437,6 @@ public class FlatTableToCostUtils {
     public static Map<BigInteger, Double> getCuboidSizeMapFromSampling(Map<BigInteger, Long> rowCountMap,
             long sourceCount, RuleBasedIndex ruleBasedIndex, KylinConfig kylinConfig,
             SegmentFlatTableDesc segmentFlatTableDesc) {
-        // TODO: https://jirap.corp.ebay.com/browse/KYLIN-3630
         // replace the size with the row count
         return getCuboidSizeMapFromSamplingByCount(rowCountMap, sourceCount, ruleBasedIndex, kylinConfig,
                 segmentFlatTableDesc);
@@ -473,7 +472,7 @@ public class FlatTableToCostUtils {
                 TblColRef tblColRef = tblColRefs.get(index);
                 // get DimensionEncoding for this table column ref.
                 // TODO: how estimate dimension size (string type)
-                // https://jirap.corp.ebay.com/browse/KYLIN-3630
+                // Noe we just use the row count as the weight
                 int length = 0;
                 rowkeyColumnSize.add(length);
             } else {
@@ -534,10 +533,4 @@ public class FlatTableToCostUtils {
                 + 1.0 * topNSpace * rowCount * cuboidSizeTopNRatio) / (1024L * 1024L);
         return ret;
     }
-
-    private static void optimizeSizeMap(Map<Long, Double> sizeMap) {
-        // TODO: implement this
-        // https://jirap.corp.ebay.com/browse/KYLIN-3626
-    }
-
 }
