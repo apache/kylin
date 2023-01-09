@@ -3720,4 +3720,12 @@ public abstract class KylinConfigBase implements Serializable {
     public double getJobCuboidSizeTopNRatio() {
         return Double.parseDouble(getOptional("kylin.index.costbased.model-size-estimate-topn-ratio", "0.5"));
     }
+
+    public int getJobPerReducerHLLCuboidNumber() {
+        return Integer.parseInt(getOptional("kylin.index.costbased.per-reducer-hll-cuboid-number", "100"));
+    }
+
+    public int getJobHLLMaxReducerNumber() {
+        return Integer.parseInt(getOptional("kylin.index.costbased.hll-max-reducer-number", "1"));
+    }
 }
