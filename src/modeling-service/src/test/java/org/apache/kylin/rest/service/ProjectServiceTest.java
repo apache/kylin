@@ -367,10 +367,11 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         var response = projectService.getProjectConfig(project);
         val jobNotificationConfigRequest = new JobNotificationConfigRequest();
         jobNotificationConfigRequest.setDataLoadEmptyNotificationEnabled(false);
-        jobNotificationConfigRequest.setJobNotificationEmails(
+        jobNotificationConfigRequest.setJobNotificationStates(
                 Lists.newArrayList("Succeed", "Error", "Discard"));
         jobNotificationConfigRequest.setJobNotificationEmails(
                 Lists.newArrayList("user1@kyligence.io", "user2@kyligence.io", "user2@kyligence.io"));
+        jobNotificationConfigRequest.setMetadataPersistNotificationEnabled(false);
         projectService.updateJobNotificationConfig(project, jobNotificationConfigRequest);
         response = projectService.getProjectConfig(project);
         Assert.assertEquals(2, response.getJobNotificationEmails().size());
@@ -771,10 +772,11 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
 
         val jobNotificationConfigRequest = new JobNotificationConfigRequest();
         jobNotificationConfigRequest.setDataLoadEmptyNotificationEnabled(true);
-        jobNotificationConfigRequest.setJobNotificationEmails(
+        jobNotificationConfigRequest.setJobNotificationStates(
                 Lists.newArrayList("Succeed", "Error", "Discard"));
         jobNotificationConfigRequest.setJobNotificationEmails(
                 Lists.newArrayList("user1@kyligence.io", "user2@kyligence.io", "user2@kyligence.io"));
+        jobNotificationConfigRequest.setMetadataPersistNotificationEnabled(false);
         projectService.updateJobNotificationConfig(PROJECT, jobNotificationConfigRequest);
 
         projectService.updateQueryAccelerateThresholdConfig(PROJECT, 30, false);
@@ -795,7 +797,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
 
         response = projectService.resetProjectConfig(PROJECT, "job_notification_config");
         Assert.assertEquals(0, response.getJobNotificationEmails().size());
-        Assert.assertEquals(0, response.getJobNotificationStates().size());
+        Assert.assertEquals(3, response.getJobNotificationStates().size());
         Assert.assertFalse(response.isDataLoadEmptyNotificationEnabled());
 
         Assert.assertFalse(response.isFavoriteQueryTipsEnabled());

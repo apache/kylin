@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.execution;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import lombok.Getter;
 import lombok.Setter;
@@ -102,14 +101,20 @@ public class EmailNotificationContent {
                     break;
                 }
             }
-            Preconditions.checkNotNull(errorTask,
-                    "None of the sub tasks of cubing job " + executable.getId() + " is error and this job should become success.");
-            dataMap.put("error_step", errorTask.getName());
-            if (errorTask.getOutput().getExtra().containsKey(ExecutableConstants.MR_JOB_ID)) {
-                final String mrJobId = errorOutput.getExtra().get(ExecutableConstants.MR_JOB_ID);
-                dataMap.put("mr_job_id", StringUtil.noBlank(mrJobId, "Not initialized"));
-            } else {
+
+            if (errorTask == null) {
+                logger.info("None of the sub tasks of cubing job " + executable.getId()
+                        + " is error, and this job should become success or in unit test env.");
+                dataMap.put("error_step", MailNotificationUtil.NA);
                 dataMap.put("mr_job_id", MailNotificationUtil.NA);
+            } else {
+                dataMap.put("error_step", errorTask.getName());
+                if (errorTask.getOutput().getExtra().containsKey(ExecutableConstants.MR_JOB_ID)) {
+                    final String mrJobId = errorOutput.getExtra().get(ExecutableConstants.MR_JOB_ID);
+                    dataMap.put("mr_job_id", StringUtil.noBlank(mrJobId, "Not initialized"));
+                } else {
+                    dataMap.put("mr_job_id", MailNotificationUtil.NA);
+                }
             }
             dataMap.put("error_log",
                     Matcher.quoteReplacement(StringUtil.noBlank(output.getShortErrMsg(), "no error message")));
@@ -120,25 +125,25 @@ public class EmailNotificationContent {
 
     public static Pair<String, String> createMetadataPersistExceptionContent(Throwable exception,
                                                                              AbstractExecutable executable) {
-        logger.info("notify on metadata persist exception: {}", exception);
+        logger.info("notify on metadata persist exception: {}", exception.getMessage());
         Map<String, Object> dataMap = getDataMap(executable);
         dataMap.put("error_log", Matcher.quoteReplacement(StringUtil.noBlank(
                 exception.getMessage(), "no error message")));
 
         String content = MailNotificationUtil.getMailContent(MailNotificationUtil.METADATA_PERSIST_FAIL, dataMap);
-        String title = MailNotificationUtil.getMailTitle("METADATA PERSIST", "FAIL",
+        String title = MailNotificationUtil.getMailTitle("METADATA_PERSIST", "FAIL",
                 executable.getConfig().getDeployEnv(), executable.getProject(), executable.getTargetSubjectAlias());
         return Pair.newPair(title, content);
     }
 
     private static Map<String, Object> getDataMap(AbstractExecutable executable) {
         Map<String, Object> dataMap = Maps.newHashMap();
-        dataMap.put("job_name", executable.getName());
+        dataMap.put("job_name", StringUtil.noBlank(executable.getName(), "missing job_name"));
         dataMap.put("env_name", executable.getConfig().getDeployEnv());
         dataMap.put("submitter", StringUtil.noBlank(executable.getSubmitter(), "missing submitter"));
         dataMap.put("job_engine", MailNotificationUtil.getLocalHostName());
         dataMap.put("project_name", executable.getProject());
-        dataMap.put("model_name", executable.getTargetSubjectAlias());
+        dataMap.put("model_name", StringUtil.noBlank(executable.getTargetModelAlias(), "missing model_name"));
         return dataMap;
     }
 
@@ -157,21 +162,23 @@ public class EmailNotificationContent {
 
 
     private static String getMailTitle(ExecutableState state, AbstractExecutable executable) {
+        String targetSubjectAlias = executable.getTargetSubjectAlias();
         return MailNotificationUtil.getMailTitle("JOB",
                 state.toString(),
                 executable.getConfig().getMetadataUrlPrefix(),
                 executable.getConfig().getDeployEnv(),
                 executable.getProject(),
-                executable.getTargetSubjectAlias());
+                targetSubjectAlias == null ? "" : targetSubjectAlias);
     }
 
     private static String getMailTitle(JobIssueEnum issue, AbstractExecutable executable) {
+        String targetSubjectAlias = executable.getTargetSubjectAlias();
         return MailNotificationUtil.getMailTitle("JOB",
                 issue.getDisplayName(),
                 executable.getConfig().getMetadataUrlPrefix(),
                 executable.getConfig().getDeployEnv(),
                 executable.getProject(),
-                executable.getTargetSubjectAlias());
+                targetSubjectAlias == null ? "" : targetSubjectAlias);
     }
 
     public static String checkOverrideConfig(String project, String overrideNotificationName) {

@@ -52,7 +52,7 @@
     <p style="text-align:left;">Dear Kylin5 user,</p>
     <p>We found some source records updated in your Kylin system. You can reload updated records by following instructions.</p>
     <p>Ignore this issue may cause query result inconsistency over different indexes.</p>
-    <#if key = ${start_time} == 0>
+    <#if start_time == "1970-01-01 08:00:00">
         <p>You may refresh the full build segment to apply source records change.</p>
     <#else>
         <p>You may refresh the segment from ${start_time} to ${end_time} to apply source records change.</p>

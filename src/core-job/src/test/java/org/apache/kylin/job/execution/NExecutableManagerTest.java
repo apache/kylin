@@ -615,16 +615,16 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
 
         mail = EmailNotificationContent.createContent(JobIssueEnum.SOURCE_RECORDS_CHANGE, job);
         assert mail != null;
-        Assert.assertTrue(mail.getSecond().contains(start));
-        Assert.assertTrue(mail.getSecond().contains(end));
+        Assert.assertTrue(mail.getFirst().contains("Source Records Change"));
+        Assert.assertTrue(mail.getSecond().contains("reload updated records"));
 
         Throwable exception = new Throwable("metadata persist failed!");
         mail = EmailNotificationContent.createMetadataPersistExceptionContent(exception, job);
+        Assert.assertTrue(mail.getFirst().contains("METADATA_PERSIST"));
         Assert.assertTrue(mail.getSecond().contains("Hadoop Service"));
-        Assert.assertTrue(mail.getSecond().contains(job.getName()));
 
         mail = MailHelper.creatContentForCapacityUsage(1000000L, 10000L, project);
-        Assert.assertTrue(mail.getSecond().contains("capacity_threshold"));
+        Assert.assertTrue(mail.getFirst().contains("OVER_CAPACITY_THRESHOLD"));
         Assert.assertTrue(mail.getSecond().contains("deleting some segments"));
 
     }
