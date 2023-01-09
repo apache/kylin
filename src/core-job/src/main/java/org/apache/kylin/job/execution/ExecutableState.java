@@ -131,7 +131,7 @@ public enum ExecutableState {
             case SUICIDAL:
                 return "Suicidal";
             default:
-                throw new RuntimeException("invalid Executable state:" + this);
+                throw new IllegalStateException("invalid Executable state:" + this);
         }
     }
 }

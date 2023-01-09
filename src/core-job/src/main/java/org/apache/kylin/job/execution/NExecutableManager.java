@@ -1517,7 +1517,6 @@ public class NExecutableManager {
             JsonUtil.writeValue(dout, obj);
         } catch (Exception e) {
             // the operation to update output to hdfs failed, next task should not be interrupted.
-            logger.error("update job output [{}] to HDFS failed.", resPath, e);
             throw new PersistentException("update job output: " + resPath + " to HDFS failed", e);
         } finally {
             IOUtils.closeQuietly(dout);

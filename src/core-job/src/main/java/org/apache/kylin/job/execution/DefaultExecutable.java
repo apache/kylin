@@ -220,56 +220,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
 
     @Override
     protected void onExecuteFinished(ExecuteResult result) throws JobStoppedException {
-        List<? extends Executable> jobs = getTasks();
-        boolean allSucceed = true;
-        boolean hasError = false;
-        boolean hasDiscarded = false;
-        boolean hasSuicidal = false;
-        boolean hasPaused = false;
-        for (Executable task : jobs) {
-            logger.info("Sub-task finished {}, state: {}", task.getDisplayName(), task.getStatus());
-            boolean taskSucceed = false;
-            switch (task.getStatus()) {
-            case RUNNING:
-                hasError = true;
-                break;
-            case ERROR:
-                hasError = true;
-                break;
-            case DISCARDED:
-                hasDiscarded = true;
-                break;
-            case SUICIDAL:
-                hasSuicidal = true;
-                break;
-            case PAUSED:
-                hasPaused = true;
-                break;
-            case SKIP:
-            case SUCCEED:
-                taskSucceed = true;
-                break;
-            default:
-                break;
-            }
-            allSucceed &= taskSucceed;
-        }
-
-        ExecutableState state;
-        if (allSucceed) {
-            state = ExecutableState.SUCCEED;
-        } else if (hasDiscarded) {
-            state = ExecutableState.DISCARDED;
-        } else if (hasSuicidal) {
-            state = ExecutableState.SUICIDAL;
-        } else if (hasError) {
-            state = ExecutableState.ERROR;
-        } else if (hasPaused) {
-            state = ExecutableState.PAUSED;
-        } else {
-            state = ExecutableState.READY;
-        }
-
+        ExecutableState state = checkState();
         logger.info("Job finished {}, state:{}", this.getDisplayName(), state);
 
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
@@ -325,6 +276,60 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
                         result.succeed(), getJobStartTime(), getJobEndTime(), getTag(), result.getThrowable()));
     }
 
+    private ExecutableState checkState() {
+        List<? extends Executable> jobs = getTasks();
+        boolean allSucceed = true;
+        boolean hasError = false;
+        boolean hasDiscarded = false;
+        boolean hasSuicidal = false;
+        boolean hasPaused = false;
+        for (Executable task : jobs) {
+            logger.info("Sub-task finished {}, state: {}", task.getDisplayName(), task.getStatus());
+            boolean taskSucceed = false;
+            switch (task.getStatus()) {
+                case RUNNING:
+                    hasError = true;
+                    break;
+                case ERROR:
+                    hasError = true;
+                    break;
+                case DISCARDED:
+                    hasDiscarded = true;
+                    break;
+                case SUICIDAL:
+                    hasSuicidal = true;
+                    break;
+                case PAUSED:
+                    hasPaused = true;
+                    break;
+                case SKIP:
+                case SUCCEED:
+                    taskSucceed = true;
+                    break;
+                default:
+                    break;
+            }
+            allSucceed &= taskSucceed;
+        }
+
+        ExecutableState state;
+        if (allSucceed) {
+            state = ExecutableState.SUCCEED;
+        } else if (hasDiscarded) {
+            state = ExecutableState.DISCARDED;
+        } else if (hasSuicidal) {
+            state = ExecutableState.SUICIDAL;
+        } else if (hasError) {
+            state = ExecutableState.ERROR;
+        } else if (hasPaused) {
+            state = ExecutableState.PAUSED;
+        } else {
+            state = ExecutableState.READY;
+        }
+
+        return state;
+    }
+
     private long getJobStartTime() {
         return subTasks.stream().map(AbstractExecutable::getStartTime).filter(t -> t != 0)
                 .min(Comparator.comparingLong(t -> t)).orElse(0L);
@@ -361,7 +366,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
     }
 
     private void updateToFinalState(ExecutableState finalState, Consumer<String> hook, String failedMsg)
-            throws PersistentException, ExecuteException {
+            throws PersistentException, ExecuteException, InterruptedException {
         //to final state, regardless of isStoppedNonVoluntarily, otherwise a paused job might fail to suicide
         if (!getOutput().getState().isFinalState()) {
             updateJobOutput(getProject(), getId(), finalState, null, null, failedMsg, hook);

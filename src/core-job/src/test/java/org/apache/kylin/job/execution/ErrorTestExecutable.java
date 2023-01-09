@@ -37,7 +37,7 @@ public class ErrorTestExecutable extends BaseTestExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException {
+    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException, InterruptedException {
         Map<String, String> info = new HashMap<String, String>() {
             {
                 put("runningStatus", "inRunning");

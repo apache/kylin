@@ -49,7 +49,7 @@ public class EmailNotificationContent {
 
     public static Pair<String, String> createContent(JobIssueEnum jobIssue, AbstractExecutable executable) {
         if (!checkState(jobIssue)) {
-            logger.info("issue state: " + jobIssue.getDisplayName() + "not need to notify users");
+            logger.info("issue state: {} not need to notify users", jobIssue.getDisplayName());
             return null;
         }
         logger.info("notify on jobIssue change : {}", jobIssue);
@@ -67,21 +67,17 @@ public class EmailNotificationContent {
                                                      List<AbstractExecutable> tasks) {
         final Output output = executable.getManager().getOutput(executable.getId());
         if (!state.isFinalState() && state != ExecutableState.ERROR) {
-            logger.info("state: " + state + "is not right,not need to notify users");
+            logger.info("state: {} is not right,not need to notify users", state);
             return null;
         }
         logger.info("notify on execute change state: {}", state);
         String states = checkOverrideConfig(executable.getProject(),
                 NonCustomProjectLevelConfig.JOB_NOTIFICATION_ENABLED_STATES.getValue());
-        String[] notificationStates;
-        if(states != null) {
-            notificationStates = StringUtils.split(states, ",");
-        } else {
-            notificationStates = executable.getConfig().getJobNotificationStates();
-        }
+        String[] notificationStates = states == null ? executable.getConfig().getJobNotificationStates()
+                : StringUtils.split(states, ",");
 
         if(notificationStates.length < 1 || !Arrays.asList(notificationStates).contains(state.toStringState())) {
-            logger.info("state: " + state + " is not set,not need to notify users");
+            logger.info("state: {} is not set,not need to notify users", state);
             return null;
         }
 
@@ -92,35 +88,40 @@ public class EmailNotificationContent {
         dataMap.put("last_update_time", new Date(executable.getLastModified()).toString());
 
         if (state == ExecutableState.ERROR) {
-            AbstractExecutable errorTask = null;
-            Output errorOutput = null;
-            for (AbstractExecutable task : tasks) {
-                errorOutput = executable.getManager().getOutput(task.getId());
-                if (errorOutput.getState() == ExecutableState.ERROR) {
-                    errorTask = task;
-                    break;
-                }
-            }
-
-            if (errorTask == null) {
-                logger.info("None of the sub tasks of cubing job " + executable.getId()
-                        + " is error, and this job should become success or in unit test env.");
-                dataMap.put("error_step", MailNotificationUtil.NA);
-                dataMap.put("mr_job_id", MailNotificationUtil.NA);
-            } else {
-                dataMap.put("error_step", errorTask.getName());
-                if (errorTask.getOutput().getExtra().containsKey(ExecutableConstants.MR_JOB_ID)) {
-                    final String mrJobId = errorOutput.getExtra().get(ExecutableConstants.MR_JOB_ID);
-                    dataMap.put("mr_job_id", StringUtil.noBlank(mrJobId, "Not initialized"));
-                } else {
-                    dataMap.put("mr_job_id", MailNotificationUtil.NA);
-                }
-            }
+            checkErrorTask(executable, dataMap, tasks);
             dataMap.put("error_log",
                     Matcher.quoteReplacement(StringUtil.noBlank(output.getShortErrMsg(), "no error message")));
         }
 
         return Pair.newPair(getMailTitle(state, executable), getMailContent(state, dataMap));
+    }
+
+    private static void checkErrorTask(AbstractExecutable executable, Map<String, Object> dataMap,
+                                       List<AbstractExecutable> tasks) {
+        AbstractExecutable errorTask = null;
+        Output errorOutput = null;
+        for (AbstractExecutable task : tasks) {
+            errorOutput = executable.getManager().getOutput(task.getId());
+            if (errorOutput.getState() == ExecutableState.ERROR) {
+                errorTask = task;
+                break;
+            }
+        }
+
+        if (errorTask == null) {
+            logger.info("None of the sub tasks of cubing job {} is error,"
+                    + " and this job should become success or in unit test env", executable.getId());
+            dataMap.put("error_step", MailNotificationUtil.NA);
+            dataMap.put(ExecutableConstants.MR_JOB_ID, MailNotificationUtil.NA);
+        } else {
+            dataMap.put("error_step", errorTask.getName());
+            if (errorTask.getOutput().getExtra().containsKey(ExecutableConstants.MR_JOB_ID)) {
+                final String mrJobId = errorOutput.getExtra().get(ExecutableConstants.MR_JOB_ID);
+                dataMap.put(ExecutableConstants.MR_JOB_ID, StringUtil.noBlank(mrJobId, "Not initialized"));
+            } else {
+                dataMap.put(ExecutableConstants.MR_JOB_ID, MailNotificationUtil.NA);
+            }
+        }
     }
 
     public static Pair<String, String> createMetadataPersistExceptionContent(Throwable exception,

@@ -321,17 +321,17 @@ public abstract class AbstractExecutable implements Executable {
     }
 
     public void updateJobOutput(String project, String jobId, ExecutableState newStatus, Map<String, String> info,
-            String output, Consumer<String> hook) throws ExecuteException, PersistentException {
+            String output, Consumer<String> hook) throws ExecuteException, PersistentException, InterruptedException {
         updateJobOutput(project, jobId, newStatus, info, output, null, hook);
     }
 
     public void updateJobOutput(String project, String jobId, ExecutableState newStatus, Map<String, String> info,
-            String output, String failedMsg, Consumer<String> hook) throws ExecuteException, PersistentException {
+            String output, String failedMsg, Consumer<String> hook) throws ExecuteException, PersistentException, InterruptedException {
         updateJobOutput(project, jobId, newStatus, info, output, this.getLogPath(), failedMsg, hook);
     }
 
     public void updateJobOutput(String project, String jobId, ExecutableState newStatus, Map<String, String> info,
-            String output, String logPath, String failedMsg, Consumer<String> hook) throws ExecuteException, PersistentException {
+            String output, String logPath, String failedMsg, Consumer<String> hook) throws ExecuteException, PersistentException, InterruptedException {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             NExecutableManager executableManager = getExecutableManager(project);
             val existedInfo = executableManager.getOutput(jobId).getExtra();
@@ -547,7 +547,7 @@ public abstract class AbstractExecutable implements Executable {
     }
 
     // Ensure metadata compatibility
-    protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException;
+    protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException, InterruptedException;
 
     @Override
     public boolean isRunnable() {
@@ -958,23 +958,19 @@ public abstract class AbstractExecutable implements Executable {
     }
 
     private void updateJobOutputWithPersistCheck(String project, String jobId, String output, String logPath)
-            throws ExecuteException, PersistentException {
+            throws ExecuteException, PersistentException, InterruptedException {
         Throwable exception;
-        int retry = 0;
+        int retryCnt = 0;
         do {
             exception = null;
-            retry++;
+            retryCnt++;
             try {
                 updateJobOutputToHDFS(project, jobId, output, logPath);
             } catch (Exception e) {
-                logger.error("update Job Output failed due to {}", e);
+                logger.error("update Job Output failed due to : {}", e.getMessage());
                 if (isMetaDataPersistException(e, 5)) {
                     exception = e;
-                    try {
-                        Thread.sleep(1000L * (long) Math.pow(4, retry));
-                    } catch (InterruptedException e1) {
-                        throw new IllegalStateException(e1);
-                    }
+                    Thread.sleep(1000L * (long) Math.pow(4, retry));
                 } else {
                     throw e;
                 }
@@ -982,12 +978,16 @@ public abstract class AbstractExecutable implements Executable {
         } while (exception != null && retry <= context.getConfig().getJobMetadataPersistRetry());
 
         if (exception != null) {
-            String state = checkStateIfOverride(NonCustomProjectLevelConfig.NOTIFICATION_ON_METADATA_PERSIST.getValue());
-            if((state == null && context.getConfig().getJobMetadataPersistNotificationEnabled())
-                    || (Boolean.parseBoolean(state))) { //if override then check override prop
-                handleMetadataPersistException(exception);
-                throw new ExecuteException(exception);
-            }
+            checkMetadataPersistConfig(exception);
+        }
+    }
+
+    protected void checkMetadataPersistConfig(Throwable exception) throws ExecuteException {
+        String state = checkStateIfOverride(NonCustomProjectLevelConfig.NOTIFICATION_ON_METADATA_PERSIST.getValue());
+        if((state == null && context.getConfig().getJobMetadataPersistNotificationEnabled())
+                || (Boolean.parseBoolean(state))) { //if override then check override prop
+            handleMetadataPersistException(exception);
+            throw new ExecuteException(exception);
         }
     }
 
