@@ -56,7 +56,9 @@ import org.apache.kylin.job.constant.JobIssueEnum;
 import org.apache.kylin.job.dao.NExecutableDao;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
+import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
@@ -949,4 +951,58 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
         manager.updateJobOutput(job.getId(), ExecutableState.RUNNING);
         executable.checkParentJobStatus();
     }
+
+    @Test
+    public void testMetadataPersistConfig() throws ExecuteException, PersistentException {
+        DefaultExecutable job = new DefaultExecutable();
+        job.setProject("default");
+        val executable = new SucceedTestExecutable();
+        executable.setProject("default");
+        job.addTask(executable);
+        manager.addJob(job);
+
+        executable.checkMetadataPersistConfig(null);
+
+        executable.handleMetadataPersistException(new PersistentException("test email"));
+
+        PersistentException persistentException = new PersistentException("test");
+        boolean flag = executable.isMetaDataPersistException(persistentException, 1);
+        Assert.assertTrue(flag);
+        ExecuteException executeException = new ExecuteException("test1", new Throwable());
+        flag = executable.isMetaDataPersistException(executeException, 1);
+        Assert.assertFalse(flag);
+        //cover default
+        DefaultExecutable defaultExecutable = new DefaultExecutable();
+        defaultExecutable.setProject("default");
+        job = new DefaultExecutable();
+        job.setProject("default");
+        job.addTask(defaultExecutable);
+        manager.addJob(job);
+
+        defaultExecutable.handleMetadataPersistException(new PersistentException("test email1"));
+
+        persistentException = new PersistentException("test");
+        flag = defaultExecutable.isMetaDataPersistException(persistentException, 1);
+        Assert.assertTrue(flag);
+        executeException = new ExecuteException("test1", new Throwable());
+        flag = defaultExecutable.isMetaDataPersistException(executeException, 1);
+        Assert.assertFalse(flag);
+
+    }
+
+    @Test
+    public void testLoadEmptyData() {
+        NDataLayout dataLayout = new NDataLayout();
+        NDataLayout[] nDataLayouts = {dataLayout};
+        DefaultExecutable job = new DefaultExecutable();
+        job.setProject("default");
+        val executable = new SucceedTestExecutable();
+        executable.setProject("default");
+        job.addTask(executable);
+        manager.addJob(job);
+        executable.notifyUserIfNecessary(nDataLayouts);
+
+    }
+
+
 }

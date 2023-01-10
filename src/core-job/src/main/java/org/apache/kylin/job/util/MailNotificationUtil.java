@@ -101,9 +101,4 @@ public class MailNotificationUtil {
         return "[" + Joiner.on("]-[").join(titleParts) + "]";
     }
 
-    public static boolean hasMailNotification(ExecutableState state) {
-        return getMailTemplateKey(state) != null;
-    }
-
-
 }

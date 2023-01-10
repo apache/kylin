@@ -44,6 +44,8 @@ public class EmailNotificationContent {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailNotificationContent.class);
 
+    private EmailNotificationContent(){}
+
     public static Pair<String, String> createContent(JobIssueEnum jobIssue, AbstractExecutable executable) {
         if (!checkState(jobIssue)) {
             logger.info("issue state: {} not need to notify users", jobIssue.getDisplayName());
@@ -129,8 +131,11 @@ public class EmailNotificationContent {
                 exception.getMessage(), "no error message")));
 
         String content = MailNotificationUtil.getMailContent(MailNotificationUtil.METADATA_PERSIST_FAIL, dataMap);
-        String title = MailNotificationUtil.getMailTitle("METADATA_PERSIST", "FAIL",
-                executable.getConfig().getDeployEnv(), executable.getProject(), executable.getTargetSubjectAlias());
+        String title = MailNotificationUtil.getMailTitle("METADATA_PERSIST",
+                "FAIL",
+                StringUtil.noBlank(executable.getConfig().getDeployEnv(), MailNotificationUtil.NA),
+                executable.getProject(),
+                StringUtil.noBlank(executable.getTargetSubjectAlias(), MailNotificationUtil.NA));
         return Pair.newPair(title, content);
     }
 

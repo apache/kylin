@@ -609,11 +609,13 @@ public abstract class AbstractExecutable implements Executable {
         default:
             throw new IllegalArgumentException(String.format(Locale.ROOT, "no process for jobIssue: %s.", jobIssue));
         }
+        List<String> users;
+        users = getOverrideNotifyUsers();
+
         if (!needNotification) {
             return;
         }
-        List<String> users;
-        users = getOverrideNotifyUsers();
+
         if (this instanceof DefaultExecutable) {
             MailHelper.notifyUser(projectConfig, EmailNotificationContent.createContent(jobIssue, this), users);
         } else {
@@ -957,7 +959,7 @@ public abstract class AbstractExecutable implements Executable {
         return getParentId();
     }
 
-    private void updateJobOutputWithPersistCheck(String project, String jobId, String output, String logPath)
+    protected void updateJobOutputWithPersistCheck(String project, String jobId, String output, String logPath)
             throws ExecuteException, PersistentException, InterruptedException {
         Throwable exception;
         int retryCnt = 0;
@@ -984,7 +986,7 @@ public abstract class AbstractExecutable implements Executable {
 
     protected void checkMetadataPersistConfig(Throwable exception) throws ExecuteException {
         String state = checkStateIfOverride(NonCustomProjectLevelConfig.NOTIFICATION_ON_METADATA_PERSIST.getValue());
-        if((state == null && context.getConfig().getJobMetadataPersistNotificationEnabled())
+        if((state == null && this.getConfig().getJobMetadataPersistNotificationEnabled())
                 || (Boolean.parseBoolean(state))) { //if override then check override prop
             handleMetadataPersistException(exception);
             throw new ExecuteException(exception);
@@ -1007,7 +1009,7 @@ public abstract class AbstractExecutable implements Executable {
         }
     }
 
-    public static boolean isMetaDataPersistException(Exception e, final int maxDepth) {
+    protected boolean isMetaDataPersistException(Exception e, final int maxDepth) {
         if (e instanceof PersistentException) {
             return true;
         }
