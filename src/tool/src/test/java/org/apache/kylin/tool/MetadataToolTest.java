@@ -128,18 +128,24 @@ public class MetadataToolTest extends NLocalFileMetadataTestCase {
     public void testFetchTargetFile() throws IOException {
         val junitFolder = temporaryFolder.getRoot();
         val tool = new MetadataTool(getTestConfig());
+        // test case for fetching a specific file
         tool.execute(new String[] {
                 "-fetch", "-target", "default/table/DEFAULT.STREAMING_TABLE.json", "-dir", junitFolder.getAbsolutePath(), "-folder", "target_fetch"
         });
+        //test case for fetching a folder
+        tool.execute(new String[] {
+                "-fetch", "-target", "_global", "-dir", junitFolder.getAbsolutePath(), "-folder", "target_fetch_global"
+        });
 
-        Assertions.assertThat(junitFolder.listFiles()).hasSize(1);
-        val archiveFolder = junitFolder.listFiles()[0];
+        Assertions.assertThat(junitFolder.listFiles()).hasSize(2);
+        val archiveFolder = junitFolder.listFiles()[1];
+        val globleFolder = junitFolder.listFiles()[0];
         Assertions.assertThat(archiveFolder).exists();
 
         Assertions.assertThat(archiveFolder.list()).isNotEmpty().containsOnly("default", "UUID");
 
         val projectFolder = findFile(archiveFolder.listFiles(), f -> f.getName().equals("default"));
-        assertProjectFolder(projectFolder, archiveFolder);
+        assertProjectFolder(projectFolder, globleFolder);
     }
 
     @Test
