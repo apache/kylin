@@ -19,8 +19,6 @@
 package org.apache.kylin.job.execution;
 
 import com.google.common.collect.Maps;
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
@@ -41,11 +39,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
-@Getter
-@Setter
+
 public class EmailNotificationContent {
 
-    protected static final Logger logger = LoggerFactory.getLogger(EmailNotificationContent.class);
+    private static final Logger logger = LoggerFactory.getLogger(EmailNotificationContent.class);
 
     public static Pair<String, String> createContent(JobIssueEnum jobIssue, AbstractExecutable executable) {
         if (!checkState(jobIssue)) {

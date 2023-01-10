@@ -18,11 +18,13 @@
 
 package org.apache.kylin.common.util;
 
+import com.google.common.base.Joiner;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.apache.commons.lang.StringUtils;
-import com.google.common.base.Joiner;
 import org.apache.kylin.common.KylinConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -40,10 +42,13 @@ import static org.apache.kylin.common.util.MailHelper.notifyUser;
  * The template file is [KEY].ftl file under /mail_templates directory with classloader.
  */
 public class MailTemplateProvider {
-    private static MailTemplateProvider DEFAULT_INSTANCE = new MailTemplateProvider();
+
+    private static final Logger logger = LoggerFactory.getLogger(MailTemplateProvider.class);
+
+    private static MailTemplateProvider INSTANCE = new MailTemplateProvider();
 
     public static MailTemplateProvider getInstance() {
-        return DEFAULT_INSTANCE;
+        return INSTANCE;
     }
 
     public static String getMailTitle(String... titleParts) {
@@ -69,7 +74,8 @@ public class MailTemplateProvider {
                 template.process(data, out);
                 return out.toString();
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
+            logger.error("build mail content failed : {}", e.getLocalizedMessage());
             return e.getLocalizedMessage();
         }
     }

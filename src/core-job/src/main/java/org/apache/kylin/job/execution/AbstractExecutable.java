@@ -994,7 +994,7 @@ public abstract class AbstractExecutable implements Executable {
     protected void handleMetadataPersistException(Throwable exception) {
 
         List<String> notifyUsers = getOverrideNotifyUsers();
-        if (notifyUsers == null || notifyUsers.size() < 1) {
+        if (notifyUsers == null || notifyUsers.isEmpty()) {
             logger.warn("no need to send email, user list is empty.");
             return;
         }
