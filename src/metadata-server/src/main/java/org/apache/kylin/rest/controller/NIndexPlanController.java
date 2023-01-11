@@ -21,7 +21,6 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_LIST_EMPTY;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.SHARD_BY_COLUMN_NOT_IN_INDEX;
 
 import java.util.List;
 import java.util.Set;
@@ -144,17 +143,8 @@ public class NIndexPlanController extends NBasicController {
         checkRequiredArg(MODEL_ID, request.getModelId());
         checkRequiredArg("id", request.getId());
         modelService.validateCCType(request.getModelId(), request.getProject());
-        List<String> shardByColumns = request.getShardByColumns();
-        List<String> colOrder = request.getColOrder();
-        checkShardbyCol(shardByColumns, colOrder);
         val response = fusionIndexService.updateTableIndex(request.getProject(), request);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
-    }
-
-    private void checkShardbyCol(List<String> shardByColumns, List<String> colOrder) {
-        if (!colOrder.containsAll(shardByColumns)) {
-            throw new KylinException(SHARD_BY_COLUMN_NOT_IN_INDEX);
-        }
     }
 
     @Deprecated
