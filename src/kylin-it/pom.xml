@@ -31,7 +31,6 @@
 
     <properties>
         <beanutils.version>1.9.4</beanutils.version>
-        <kylin.module.version>5.0.0-alpha</kylin.module.version>
     </properties>
 
     <dependencies>
