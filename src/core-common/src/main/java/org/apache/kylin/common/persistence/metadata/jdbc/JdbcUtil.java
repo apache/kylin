@@ -103,6 +103,11 @@ public class JdbcUtil {
     private static boolean isAnyTableExists(Connection conn, String... tables) throws SQLException {
         try {
             for (String table : tables) {
+                val resultSetDebug = conn.getMetaData().getTables(conn.getCatalog(), null, null, null);
+                while (resultSetDebug.next()) {
+                    log.info("***>>> " + resultSetDebug.getObject(2) + " | " + resultSetDebug.getObject(3) + " | "
+                            + resultSetDebug.getObject(4));
+                }
                 val resultSet = conn.getMetaData().getTables(conn.getCatalog(), null, table, null);
                 if (resultSet.next()) {
                     return true;

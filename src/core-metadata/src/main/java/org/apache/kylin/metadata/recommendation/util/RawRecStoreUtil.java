@@ -84,14 +84,20 @@ public class RawRecStoreUtil {
         try (Connection connection = dataSource.getConnection()) {
             ScriptRunner sr = new ScriptRunner(connection);
             sr.setLogWriter(new PrintWriter(new OutputStreamWriter(new LogOutputStream(log), DEFAULT_CHARSET)));
-            log.debug("start to create table({})", tableName);
+            log.info("start to create table({})", tableName);
             sr.runScript(new InputStreamReader(new ByteArrayInputStream(createTableStmt.getBytes(DEFAULT_CHARSET)),
                     DEFAULT_CHARSET));
-            log.debug("create table finished");
+            log.info("create table finished");
             sr.runScript(new InputStreamReader(new ByteArrayInputStream(crateIndexStmt.getBytes(DEFAULT_CHARSET)),
                     DEFAULT_CHARSET));
         }
-
+        try {
+            log.info(">>" + JdbcUtil.isTableExists(dataSource.getConnection(), tableName));
+            Thread.sleep(1000 * 3);
+            log.info(">>" + JdbcUtil.isTableExists(dataSource.getConnection(), tableName));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         if (!JdbcUtil.isTableExists(dataSource.getConnection(), tableName)) {
             log.debug("failed to create table({})", tableName);
             throw new IllegalStateException(String.format(Locale.ROOT, "create table(%s) failed", tableName));
