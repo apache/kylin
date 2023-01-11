@@ -19,6 +19,7 @@ package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.INDEX_DUPLICATE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_NOT_EXISTS;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SHARD_BY_COLUMN_NOT_IN_INDEX;
 import static org.apache.kylin.metadata.cube.model.IndexEntity.Source.CUSTOM_TABLE_INDEX;
 import static org.apache.kylin.metadata.cube.model.IndexEntity.Source.RECOMMENDED_TABLE_INDEX;
 import static org.apache.kylin.metadata.model.SegmentStatusEnum.READY;
@@ -1446,5 +1447,94 @@ public class IndexPlanServiceTest extends SourceTestCase {
 
         val response2 = indexPlanService.getShardByColumns("default", modelId);
         Assert.assertFalse(response2.isShowLoadData());
+    }
+
+    @Test
+    public void testCheckShardByColumns() {
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project("default")
+                .modelId("89af4ee2-2cdb-4b07-b39e-4c29856309aa").id(20000010000L)
+                .colOrder(Lists.newArrayList("TEST_KYLIN_FACT.TRANS_ID", "TEST_SITES.SITE_NAME",
+                        "TEST_KYLIN_FACT.CAL_DT"))
+                .shardByColumns(Lists.newArrayList("TEST_KYLIN_FACT.LSTG_SITE_ID")).sortByColumns(Lists.newArrayList())
+                .build();
+
+        Assert.assertThrows(SHARD_BY_COLUMN_NOT_IN_INDEX.getMsg(), KylinException.class, () -> {
+            indexPlanService.updateTableIndex("default", tableIndexRequest);
+        });
+    }
+
+    @Test
+    public void testUpdateTableIndexWithNullColOrder() {
+        String project = "default";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        long layoutId = 20000010001L;
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project(project).modelId(modelId)
+                .id(layoutId).shardByColumns(Lists.newArrayList()).sortByColumns(Lists.newArrayList()).build();
+        BuildIndexResponse response = indexPlanService.updateTableIndex(project, tableIndexRequest);
+        Assert.assertEquals(BuildIndexResponse.BuildIndexType.NORM_BUILD, response.getType());
+        LayoutEntity layoutEntity = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getIndexPlan(modelId).getLayoutEntity(layoutId);
+        Assert.assertEquals(Lists.newArrayList(1, 0, 2), layoutEntity.getColOrder());
+    }
+
+    @Test
+    public void testUpdateTableIndexWithNullColOrderThrowsException() {
+        String project = "default";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        long layoutId = 20000010001L;
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project(project).modelId(modelId)
+                .id(layoutId).shardByColumns(Lists.newArrayList("TEST_KYLIN_FACT.TRANS_ID"))
+                .sortByColumns(Lists.newArrayList()).build();
+        Assert.assertThrows(SHARD_BY_COLUMN_NOT_IN_INDEX.getMsg(), KylinException.class, () -> {
+            indexPlanService.updateTableIndex("default", tableIndexRequest);
+        });
+    }
+
+    @Test
+    public void testUpdateTableIndexWithNullShardByCols() {
+        String project = "default";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        long layoutId = 20000010001L;
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest
+                .builder().project(project).modelId(modelId).id(layoutId).colOrder(Lists
+                        .newArrayList("TEST_KYLIN_FACT.TRANS_ID", "TEST_SITES.SITE_NAME", "TEST_KYLIN_FACT.CAL_DT"))
+                .sortByColumns(Lists.newArrayList()).build();
+        BuildIndexResponse response = indexPlanService.updateTableIndex(project, tableIndexRequest);
+        Assert.assertEquals(BuildIndexResponse.BuildIndexType.NORM_BUILD, response.getType());
+        LayoutEntity layoutEntity = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getIndexPlan(modelId).getLayoutEntity(layoutId);
+        Assert.assertEquals(Lists.newArrayList(1, 0, 2), layoutEntity.getColOrder());
+    }
+
+    @Test
+    public void testUpdateTableIndexWithCreateEmptyIndex() {
+        String project = "default";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        long layoutId = 20000180001L;
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project(project).modelId(modelId)
+                .id(layoutId).colOrder(Lists.newArrayList()).sortByColumns(Lists.newArrayList()).build();
+        BuildIndexResponse response = indexPlanService.updateTableIndex(project, tableIndexRequest);
+        Assert.assertEquals(BuildIndexResponse.BuildIndexType.NORM_BUILD, response.getType());
+        IndexPlan indexPlan = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getIndexPlan(modelId);
+        Assert.assertTrue(
+                indexPlan.getAllLayouts().stream().anyMatch(layoutEntity -> layoutEntity.getColOrder().size() == 0));
+    }
+
+    @Test
+    public void testUpdateTableIndexWithUpdateEmptyIndex() {
+        String project = "default";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        long layoutId = 20000010001L;
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project("default")
+                .modelId(modelId).id(layoutId).colOrder(Lists.newArrayList()).sortByColumns(Lists.newArrayList())
+                .build();
+        BuildIndexResponse response = indexPlanService.updateTableIndex("default", tableIndexRequest);
+        Assert.assertEquals(BuildIndexResponse.BuildIndexType.NORM_BUILD, response.getType());
+        IndexPlan indexPlan = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getIndexPlan(modelId);
+        Assert.assertTrue(indexPlan.getLayoutEntity(layoutId).isToBeDeleted());
+        Assert.assertTrue(
+                indexPlan.getAllLayouts().stream().anyMatch(layoutEntity -> layoutEntity.getColOrder().size() == 0));
     }
 }
