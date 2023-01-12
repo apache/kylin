@@ -41,6 +41,7 @@ public class ErrorTestExecutable extends BaseTestExecutable {
         Map<String, String> info = new HashMap<String, String>() {
             {
                 put("runningStatus", "inRunning");
+                put("mr_job_id", "38spvzt-981h-9831-vus8-9aklushnfbza");
             }
         };
         updateJobOutput(getProject(), getId(), ExecutableState.RUNNING, info, null, null);

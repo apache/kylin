@@ -36,14 +36,10 @@
 
 package org.apache.kylin.job.execution;
 
-import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
-import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
-import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -106,8 +102,8 @@ public abstract class AbstractExecutable implements Executable {
     public interface Callback {
         void process() throws Exception;
 
-        default void onProcessError(Throwable throwable) {
-        }
+//        default void onProcessError(Throwable throwable) {
+//        }
     }
 
     protected static final String SUBMITTER = "submitter";
@@ -676,32 +672,32 @@ public abstract class AbstractExecutable implements Executable {
     }
 
     //will modify input info
-    public Map<String, String> makeExtraInfo(Map<String, String> info) {
-        if (info == null) {
-            return Maps.newHashMap();
-        }
-
-        // post process
-        if (info.containsKey(MR_JOB_ID) && !info.containsKey(YARN_APP_ID)) {
-            String jobId = info.get(MR_JOB_ID);
-            if (jobId.startsWith("job_")) {
-                info.put(YARN_APP_ID, jobId.replace("job_", "application_"));
-            }
-        }
-
-        if (info.containsKey(YARN_APP_ID)
-                && !org.apache.commons.lang3.StringUtils.isEmpty(getConfig().getJobTrackingURLPattern())) {
-            String pattern = getConfig().getJobTrackingURLPattern();
-            try {
-                String newTrackingURL = String.format(Locale.ROOT, pattern, info.get(YARN_APP_ID));
-                info.put(YARN_APP_URL, newTrackingURL);
-            } catch (IllegalFormatException ife) {
-                logger.error("Illegal tracking url pattern: {}", getConfig().getJobTrackingURLPattern());
-            }
-        }
-
-        return info;
-    }
+//    public Map<String, String> makeExtraInfo(Map<String, String> info) {
+//        if (info == null) {
+//            return Maps.newHashMap();
+//        }
+//
+//        // post process
+//        if (info.containsKey(MR_JOB_ID) && !info.containsKey(YARN_APP_ID)) {
+//            String jobId = info.get(MR_JOB_ID);
+//            if (jobId.startsWith("job_")) {
+//                info.put(YARN_APP_ID, jobId.replace("job_", "application_"));
+//            }
+//        }
+//
+//        if (info.containsKey(YARN_APP_ID)
+//                && !org.apache.commons.lang3.StringUtils.isEmpty(getConfig().getJobTrackingURLPattern())) {
+//            String pattern = getConfig().getJobTrackingURLPattern();
+//            try {
+//                String newTrackingURL = String.format(Locale.ROOT, pattern, info.get(YARN_APP_ID));
+//                info.put(YARN_APP_URL, newTrackingURL);
+//            } catch (IllegalFormatException ife) {
+//                logger.error("Illegal tracking url pattern: {}", getConfig().getJobTrackingURLPattern());
+//            }
+//        }
+//
+//        return info;
+//    }
 
     public static long getStartTime(Output output) {
         return output.getStartTime();

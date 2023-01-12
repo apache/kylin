@@ -48,7 +48,7 @@ public class EmailNotificationContent {
 
     public static Pair<String, String> createContent(JobIssueEnum jobIssue, AbstractExecutable executable) {
         if (!checkState(jobIssue)) {
-            logger.info("issue state: {} not need to notify users", jobIssue.getDisplayName());
+            logger.info("issue state: {} not need to notify users", jobIssue);
             return null;
         }
         logger.info("notify on jobIssue change : {}", jobIssue);

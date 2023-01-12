@@ -128,8 +128,6 @@ public enum ExecutableState {
                 return "Error";
             case DISCARDED:
                 return "Discard";
-            case SUICIDAL:
-                return "Suicidal";
             default:
                 throw new IllegalStateException("invalid Executable state:" + this);
         }

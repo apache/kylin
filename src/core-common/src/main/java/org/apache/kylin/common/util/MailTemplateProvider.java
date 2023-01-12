@@ -18,10 +18,9 @@
 
 package org.apache.kylin.common.util;
 
-import com.google.common.base.Joiner;
+
 import freemarker.template.Configuration;
 import freemarker.template.Template;
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,10 +50,6 @@ public class MailTemplateProvider {
         return INSTANCE;
     }
 
-    public static String getMailTitle(String... titleParts) {
-        return "[" + Joiner.on("]-[").join(titleParts) + "]";
-    }
-
     private final Configuration configuration;
 
     private MailTemplateProvider() {
@@ -81,9 +76,6 @@ public class MailTemplateProvider {
     }
 
     private Template getTemplate(String tplKey) throws IOException {
-        if (StringUtils.isEmpty(tplKey)) {
-            return null;
-        }
         return configuration.getTemplate(tplKey + ".ftl");
     }
 

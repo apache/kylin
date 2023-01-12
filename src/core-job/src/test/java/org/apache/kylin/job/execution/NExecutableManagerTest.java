@@ -629,6 +629,12 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
         Assert.assertTrue(mail.getFirst().contains("OVER_CAPACITY_THRESHOLD"));
         Assert.assertTrue(mail.getSecond().contains("deleting some segments"));
 
+        mail = EmailNotificationContent.createContent(null, job);
+        Assert.assertNull(mail);
+
+        mail = EmailNotificationContent.createContent(ExecutableState.READY, job, job.getTasks());
+        Assert.assertNull(mail);
+
     }
 
     @Test
@@ -971,6 +977,8 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
         ExecuteException executeException = new ExecuteException("test1", new Throwable());
         flag = executable.isMetaDataPersistException(executeException, 1);
         Assert.assertFalse(flag);
+        executable.checkMetadataPersistConfig(persistentException);
+
         //cover default
         DefaultExecutable defaultExecutable = new DefaultExecutable();
         defaultExecutable.setProject("default");
