@@ -742,6 +742,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.metadata.semi-automatic-mode", FALSE));
     }
 
+    public boolean isSupportUpdateComputedColumnMapping() {
+        return Boolean.parseBoolean(getOptional("kylin.metadata.support-update-computed-column-mapping", FALSE));
+    }
+
     /**
      * expose computed column in the table metadata and select * queries
      *

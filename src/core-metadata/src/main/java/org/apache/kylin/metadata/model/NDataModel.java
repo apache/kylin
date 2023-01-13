@@ -402,6 +402,7 @@ public class NDataModel extends RootPersistentEntity {
         this.owner = other.owner;
         this.description = other.description;
         this.rootFactTableName = other.rootFactTableName;
+        this.rootFactTableAlias = other.rootFactTableAlias;
         this.joinTables = other.joinTables;
         this.filterCondition = other.filterCondition;
         this.partitionDesc = other.partitionDesc;
@@ -695,7 +696,7 @@ public class NDataModel extends RootPersistentEntity {
         initJoinTablesForUpgrade();
         initTableAlias(tables);
         initJoinColumns();
-        reorderJoins(tables);
+        reorderJoins();
         initJoinsGraph();
         initPartitionDesc();
         initMultiPartition();
@@ -730,7 +731,10 @@ public class NDataModel extends RootPersistentEntity {
             throw new IllegalStateException("Root fact table does not exist:" + rootFactTableName);
 
         TableDesc rootDesc = tables.get(rootFactTableName);
-        rootFactTableRef = new TableRef(this, rootDesc.getName(), rootDesc, false);
+        if (StringUtils.isEmpty(rootFactTableAlias)) {
+            rootFactTableAlias = rootDesc.getName();
+        }
+        rootFactTableRef = new TableRef(this, rootFactTableAlias, rootDesc, false);
 
         addAlias(rootFactTableRef);
         factTableRefs.add(rootFactTableRef);
@@ -931,7 +935,7 @@ public class NDataModel extends RootPersistentEntity {
         joinsGraph = new JoinsGraph(rootFactTableRef, joins);
     }
 
-    private void reorderJoins(Map<String, TableDesc> tables) {
+    private void reorderJoins() {
         if (CollectionUtils.isEmpty(joinTables)) {
             return;
         }
@@ -953,8 +957,7 @@ public class NDataModel extends RootPersistentEntity {
         int orderedIndex = 0;
 
         Queue<JoinTableDesc> joinTableBuff = new ArrayDeque<>();
-        TableDesc rootDesc = tables.get(rootFactTableName);
-        joinTableBuff.addAll(fkMap.get(rootDesc.getName()));
+        joinTableBuff.addAll(fkMap.get(rootFactTableAlias));
         while (!joinTableBuff.isEmpty()) {
             JoinTableDesc head = joinTableBuff.poll();
             orderedJoinTables.set(orderedIndex++, head);
@@ -1498,5 +1501,67 @@ public class NDataModel extends RootPersistentEntity {
     public Set<Integer> getEffectiveInternalMeasureIds() {
         return getEffectiveMeasures().values().stream().filter(m -> m.getType() == NDataModel.MeasureType.INTERNAL)
                 .map(NDataModel.Measure::getId).collect(Collectors.toSet());
+    }
+
+    public boolean equalsRaw(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        NDataModel that = (NDataModel) o;
+
+        if (!Objects.equals(uuid, that.uuid))
+            return false;
+        if (!Objects.equals(alias, that.alias))
+            return false;
+        if (!Objects.equals(owner, that.owner))
+            return false;
+        if (!Objects.equals(description, that.description))
+            return false;
+        if (!Objects.equals(rootFactTableName, that.rootFactTableName))
+            return false;
+        if (!Objects.equals(rootFactTableAlias, that.rootFactTableAlias))
+            return false;
+        if (!getJoinTableMap(joinTables).equals(getJoinTableMap(that.joinTables)))
+            return false;
+        if (!Objects.equals(filterCondition, that.filterCondition))
+            return false;
+        if (!Objects.equals(partitionDesc, that.partitionDesc))
+            return false;
+        if (!Objects.equals(capacity, that.capacity))
+            return false;
+        if (!Objects.equals(allNamedColumns, that.allNamedColumns))
+            return false;
+        if (!Objects.equals(allMeasures, that.allMeasures))
+            return false;
+        if (!Objects.equals(computedColumnDescs, that.computedColumnDescs))
+            return false;
+        if (!Objects.equals(managementType, that.managementType))
+            return false;
+        if (!Objects.equals(segmentConfig, that.segmentConfig))
+            return false;
+        if (!Objects.equals(dataCheckDesc, that.dataCheckDesc))
+            return false;
+        if (!Objects.equals(canvas, that.canvas))
+            return false;
+        if (!Objects.equals(semanticVersion, that.semanticVersion))
+            return false;
+        if (!Objects.equals(multiPartitionDesc, that.multiPartitionDesc))
+            return false;
+        if (!Objects.equals(multiPartitionKeyMapping, that.multiPartitionKeyMapping))
+            return false;
+        return Objects.equals(fusionId, that.fusionId);
+    }
+
+    private Map<String, JoinTableDesc> getJoinTableMap(List<JoinTableDesc> joinTables) {
+        if (joinTables == null) {
+            return Maps.newHashMap();
+        }
+        Map<String, JoinTableDesc> ret = Maps.newHashMapWithExpectedSize(joinTables.size());
+        for (JoinTableDesc joinTable : joinTables) {
+            ret.put(joinTable.getAlias(), joinTable);
+        }
+        return ret;
     }
 }

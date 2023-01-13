@@ -173,6 +173,19 @@ public class NTableMetadataManager {
         srcTableCrud.delete(t);
     }
 
+    public void saveNewTableExtFromOld(String oldTableId, String prj, String newTableId) throws IOException {
+            String path = TableExtDesc.concatRawResourcePath(oldTableId);
+            ResourceStore store = getStore();
+            TableExtDesc newTableExt = store.getResource(path, TABLE_EXT_SERIALIZER);
+            if (newTableExt != null) {
+                newTableExt.setIdentity(newTableId);
+                newTableExt.setLastModified(0L);
+
+                newTableExt.init(prj);
+                srcExtCrud.save(newTableExt);
+            }
+    }
+
     /**
      * the project-specific table desc will be expand by computed columns from the projects' models
      * when the projects' model list changed, project-specific table should be reset and get expanded
