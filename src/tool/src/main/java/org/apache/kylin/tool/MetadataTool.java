@@ -87,6 +87,12 @@ public class MetadataTool extends ExecutableApplication {
     private static final Option OPERATE_COMPRESS = OptionBuilder.getInstance()
             .withDescription("Backup compressed metadata to HDFS path").isRequired(false).create("compress");
 
+    private static final Option OPERATE_FETCH = OptionBuilder.getInstance()
+            .withDescription("Fetch part of metadata to local path").isRequired(false).create("fetch");
+
+    private static final Option OPERATE_LIST = OptionBuilder.getInstance()
+            .withDescription("List children of target folder").isRequired(false).create("list");
+
     private static final Option OPERATE_RESTORE = OptionBuilder.getInstance()
             .withDescription("Restore metadata from local path or HDFS path").isRequired(false).create("restore");
 
@@ -99,6 +105,9 @@ public class MetadataTool extends ExecutableApplication {
 
     private static final Option OPTION_PROJECT = OptionBuilder.getInstance().hasArg().withArgName("PROJECT_NAME")
             .withDescription("Specify project level backup and restore (optional)").isRequired(false).create("project");
+
+    private static final Option OPTION_TARGET = OptionBuilder.getInstance().hasArg().withArgName("TARGET_FILE")
+            .withDescription("Specify part of metadata for fetch to local path").isRequired(false).create("target");
 
     private static final Option FOLDER_NAME = OptionBuilder.getInstance().hasArg().withArgName("FOLDER_NAME")
             .withDescription("Specify the folder name for backup").isRequired(false).create("folder");
@@ -115,6 +124,9 @@ public class MetadataTool extends ExecutableApplication {
 
     @Getter
     private String backupPath;
+
+    @Getter
+    private String fetchPath;
 
     MetadataTool() {
         kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -154,7 +166,8 @@ public class MetadataTool extends ExecutableApplication {
             val optionsHelper = new OptionsHelper();
             optionsHelper.parseOptions(tool.getOptions(), args);
             boolean isBackup = optionsHelper.hasOption(OPERATE_BACKUP);
-            if (isBackup && ScreenPrintUtil.isMainThread()) {
+            boolean isFetch = optionsHelper.hasOption(OPERATE_FETCH);
+            if ((isBackup || isFetch) && ScreenPrintUtil.isMainThread()) {
                 config.setProperty("kylin.env.metadata.only-for-read", "true");
             }
             val resourceStore = ResourceStore.getKylinMetaStore(config);
@@ -258,12 +271,15 @@ public class MetadataTool extends ExecutableApplication {
         final OptionGroup optionGroup = new OptionGroup();
         optionGroup.setRequired(true);
         optionGroup.addOption(OPERATE_BACKUP);
+        optionGroup.addOption(OPERATE_FETCH);
+        optionGroup.addOption(OPERATE_LIST);
         optionGroup.addOption(OPERATE_RESTORE);
 
         options.addOptionGroup(optionGroup);
         options.addOption(OPTION_DIR);
         options.addOption(OPTION_PROJECT);
         options.addOption(FOLDER_NAME);
+        options.addOption(OPTION_TARGET);
         options.addOption(OPERATE_COMPRESS);
         options.addOption(OPTION_EXCLUDE_TABLE_EXD);
         options.addOption(OPTION_AFTER_TRUNCATE);
@@ -305,6 +321,10 @@ public class MetadataTool extends ExecutableApplication {
                 }
             }
 
+        } else if (optionsHelper.hasOption(OPERATE_FETCH)) {
+            fetch(optionsHelper);
+        } else if (optionsHelper.hasOption(OPERATE_LIST)) {
+            list(optionsHelper);
         } else if (optionsHelper.hasOption(OPERATE_RESTORE)) {
             restore(optionsHelper, optionsHelper.hasOption(OPTION_AFTER_TRUNCATE));
         } else {
@@ -328,6 +348,68 @@ public class MetadataTool extends ExecutableApplication {
             logger.error("[UNEXPECTED_THINGS_HAPPENED] specified file {} already exists ", path);
             throw new KylinException(FILE_ALREADY_EXISTS, path);
         }
+    }
+
+    private void fetch(OptionsHelper optionsHelper) throws Exception {
+        var path = optionsHelper.getOptionValue(OPTION_DIR);
+        var folder = optionsHelper.getOptionValue(FOLDER_NAME);
+        val excludeTableExd = optionsHelper.hasOption(OPTION_EXCLUDE_TABLE_EXD);
+        val target = optionsHelper.getOptionValue(OPTION_TARGET);
+        if (StringUtils.isBlank(path)) {
+            path = KylinConfigBase.getKylinHome() + File.separator + "meta_fetch";
+        }
+        if (StringUtils.isEmpty(folder)) {
+            folder = LocalDateTime.now(Clock.systemDefaultZone()).format(DATE_TIME_FORMATTER) + "_fetch";
+        }
+        if (target == null) {
+            System.out.println("target file must be set with fetch mode");
+        } else {
+            fetchPath = StringUtils.appendIfMissing(path, "/") + folder;
+            // currently do not support compress with fetch
+            val fetchMetadataUrl = getMetadataUrl(fetchPath, false);
+            val fetchConfig = KylinConfig.createKylinConfig(kylinConfig);
+            fetchConfig.setMetadataUrl(fetchMetadataUrl);
+            abortIfAlreadyExists(fetchPath);
+            logger.info("The fetch metadataUrl is {} and backup path is {}", fetchMetadataUrl, fetchPath);
+
+            try (val fetchResourceStore = ResourceStore.getKylinMetaStore(fetchConfig)) {
+
+                val fetchMetadataStore = fetchResourceStore.getMetadataStore();
+
+                String targetPath = target.startsWith("/") ? target.substring(1) : target;
+
+                logger.info("start to copy target file {} from ResourceStore.", target);
+                UnitOfWork.doInTransactionWithRetry(
+                        UnitOfWorkParams.builder().readonly(true).unitName(target).processor(() -> {
+                            copyResourceStore("/" + targetPath, resourceStore, fetchResourceStore, true, excludeTableExd);
+                            // uuid
+                            val uuid = resourceStore.getResource(ResourceStore.METASTORE_UUID_TAG);
+                            fetchResourceStore.putResourceWithoutCheck(uuid.getResPath(), uuid.getByteSource(),
+                                    uuid.getTimestamp(), -1);
+                            return null;
+                        }).build());
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new InterruptedException("metadata task is interrupt");
+                }
+                logger.info("start to fetch target file {}", target);
+
+                // fetchResourceStore is read-only, currently we don't do any write operation on it.
+                // fetchResourceStore.deleteResource(ResourceStore.METASTORE_TRASH_RECORD);
+                fetchMetadataStore.dump(fetchResourceStore);
+                logger.info("fetch successfully at {}", fetchPath);
+            }
+        }
+    }
+
+    private NavigableSet<String> list(OptionsHelper optionsHelper) throws Exception {
+        val target = optionsHelper.getOptionValue(OPTION_TARGET);
+        var res = resourceStore.listResources(target);
+        if (res == null) {
+            System.out.printf("%s is not exist%n", target);
+        } else {
+            System.out.println("" + res);
+        }
+        return res;
     }
 
     private void backup(OptionsHelper optionsHelper) throws Exception {
