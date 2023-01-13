@@ -104,7 +104,7 @@ public class StreamingDFMergeJobTest extends StreamingTestCase {
         val flatTable = new CreateStreamingFlatTable(flatTableDesc, null, nSpanningTree, ss, null, null, null);
 
         val dataset = flatTable.generateStreamingDataset(config);
-        val builder = new StreamingDFBuildJob(PROJECT);
+        StreamingDFBuildJob builder = new StreamingDFBuildJob(PROJECT);
 
         val streamingEntry = new StreamingEntry();
         streamingEntry.parseParams(new String[] { PROJECT, DATAFLOW_ID, "1000", "", "xx" });

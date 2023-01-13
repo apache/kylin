@@ -542,6 +542,12 @@
                 <type>test-jar</type>
             </dependency>
 
+            <dependency>
+                <groupId>org.freemarker</groupId>
+                <artifactId>freemarker</artifactId>
+                <version>2.3.31</version>
+            </dependency>
+
             <!-- arthas -->
             <dependency>
                 <groupId>com.taobao.arthas</groupId>

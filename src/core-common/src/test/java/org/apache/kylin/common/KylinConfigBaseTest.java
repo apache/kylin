@@ -627,9 +627,11 @@ class KylinConfigBaseTest {
 
         map.put("getJobDataLoadEmptyNotificationEnabled",
                 new PropertiesEntity("kylin.job.notification-on-empty-data-load", "false", false));
+        map.put("getJobNotificationStates",
+                new PropertiesEntity("kylin.job.notification-enable-states", "", new String[0]));
 
-        map.put("getJobErrorNotificationEnabled",
-                new PropertiesEntity("kylin.job.notification-on-job-error", "false", false));
+        map.put("getJobMetadataPersistNotificationEnabled",
+                new PropertiesEntity("kylin.job.notification-on-metadata-persist", "false", false));
 
         map.put("getStorageResourceSurvivalTimeThreshold",
                 new PropertiesEntity("kylin.storage.resource-survival-time-threshold", "7d", 7L * 24 * 60 * 60 * 1000));
@@ -899,7 +901,7 @@ class KylinConfigBaseTest {
         map.put("isSkipBasicAuthorization",
                 new PropertiesEntity("kap.authorization.skip-basic-authorization", "false", false));
         map.put("getMetricsQuerySlaSeconds",
-                new PropertiesEntity("kylin.metrics.query.sla.seconds", "1,3,a,15,60", new long[] { 3, 15, 60 }));
+                new PropertiesEntity("kylin.metrics.query.sla.seconds", "1,3,15,60", new long[] { 1, 3, 15, 60 }));
         map.put("getMetricsJobSlaMinutes",
                 new PropertiesEntity("kylin.metrics.job.sla.minutes", "1,30,60,300", new long[] { 1, 30, 60, 300 }));
         map.put("isMetadataKeyCaseInSensitiveEnabled",
@@ -982,9 +984,9 @@ class KylinConfigBaseTest {
     @Test
     void testGetNonCustomProjectConfigs() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        assertEquals(19, config.getNonCustomProjectConfigs().size());
-        config.setProperty("kylin.server.non-custom-project-configs", "kylin.job.retry");
         assertEquals(20, config.getNonCustomProjectConfigs().size());
+        config.setProperty("kylin.server.non-custom-project-configs", "kylin.job.retry");
+        assertEquals(21, config.getNonCustomProjectConfigs().size());
     }
 
     @Test

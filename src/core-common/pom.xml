@@ -36,6 +36,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.kyligence.ke</groupId>
             <artifactId>kap-external-guava20</artifactId>
         </dependency>

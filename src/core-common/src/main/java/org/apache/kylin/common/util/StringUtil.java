@@ -209,4 +209,8 @@ public class StringUtil {
         return "true".equals(s) || "false".equals(s);
     }
 
+    public static String[] split(String str, String splitBy) {
+        return str.split(splitBy);
+    }
+
 }

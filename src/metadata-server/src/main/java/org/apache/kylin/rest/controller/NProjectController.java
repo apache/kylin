@@ -285,9 +285,12 @@ public class NProjectController extends NBasicController {
             @RequestBody JobNotificationConfigRequest jobNotificationConfigRequest) {
         checkRequiredArg("data_load_empty_notification_enabled",
                 jobNotificationConfigRequest.getDataLoadEmptyNotificationEnabled());
-        checkRequiredArg("job_error_notification_enabled",
-                jobNotificationConfigRequest.getJobErrorNotificationEnabled());
-        checkRequiredArg("job_notification_emails", jobNotificationConfigRequest.getJobNotificationEmails());
+        checkRequiredArg("job_notification_states",
+                jobNotificationConfigRequest.getJobNotificationStates());
+        checkRequiredArg("job_notification_emails",
+                jobNotificationConfigRequest.getJobNotificationEmails());
+        checkRequiredArg("metadata_persist_notification_enabled",
+                jobNotificationConfigRequest.getMetadataPersistNotificationEnabled());
         projectService.updateJobNotificationConfig(project, jobNotificationConfigRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }

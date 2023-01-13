@@ -79,6 +79,7 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.dao.NExecutableDao;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -1507,7 +1508,7 @@ public class NExecutableManager {
                 || to == ExecutableState.ERROR || to == ExecutableState.SUICIDAL;
     }
 
-    public void updateJobOutputToHDFS(String resPath, ExecutableOutputPO obj) {
+    public void updateJobOutputToHDFS(String resPath, ExecutableOutputPO obj) throws PersistentException {
         DataOutputStream dout = null;
         try {
             Path path = new Path(resPath);
@@ -1516,7 +1517,7 @@ public class NExecutableManager {
             JsonUtil.writeValue(dout, obj);
         } catch (Exception e) {
             // the operation to update output to hdfs failed, next task should not be interrupted.
-            logger.error("update job output [{}] to HDFS failed.", resPath, e);
+            throw new PersistentException("update job output: " + resPath + " to HDFS failed", e);
         } finally {
             IOUtils.closeQuietly(dout);
         }

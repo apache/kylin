@@ -35,10 +35,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.scheduler.JobFinishedNotifier;
-import org.apache.kylin.job.constant.JobIssueEnum;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.ExecuteRuntimeException;
 import org.apache.kylin.job.exception.JobStoppedException;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 
 import io.kyligence.kap.guava20.shaded.common.collect.Lists;
@@ -220,6 +220,63 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
 
     @Override
     protected void onExecuteFinished(ExecuteResult result) throws JobStoppedException {
+        ExecutableState state = checkState();
+        logger.info("Job finished {}, state:{}", this.getDisplayName(), state);
+
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            switch (state) {
+            case SUCCEED:
+                updateToFinalState(ExecutableState.SUCCEED, this::afterUpdateOutput, result.getShortErrMsg());
+                onStatusChange(ExecutableState.SUCCEED);
+                break;
+            case DISCARDED:
+                updateToFinalState(ExecutableState.DISCARDED, this::onExecuteDiscardHook, result.getShortErrMsg());
+                onStatusChange(ExecutableState.DISCARDED);
+                break;
+            case SUICIDAL:
+                updateToFinalState(ExecutableState.SUICIDAL, this::onExecuteSuicidalHook, result.getShortErrMsg());
+                onStatusChange(ExecutableState.SUICIDAL);
+                break;
+            case ERROR:
+            case PAUSED:
+            case READY:
+                if (isStoppedNonVoluntarily()) {
+                    logger.info("Execute finished  {} which is stopped nonvoluntarily, state: {}",
+                            this.getDisplayName(), getOutput().getState());
+                    return null;
+                }
+                Consumer<String> hook = null;
+                Map<String, String> info = null;
+                String output = null;
+                String shortErrMsg = null;
+                if (state == ExecutableState.ERROR) {
+                    logger.warn("[UNEXPECTED_THINGS_HAPPENED] Unexpected ERROR state discovered here!!!");
+                    info = result.getExtraInfo();
+                    output = result.getErrorMsg();
+                    hook = this::onExecuteErrorHook;
+                    shortErrMsg = result.getShortErrMsg();
+                }
+                updateJobOutput(getProject(), getId(), state, info, output, shortErrMsg, hook);
+                if (state == ExecutableState.ERROR) {
+                    onStatusChange(ExecutableState.ERROR);
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Illegal state when job finished: " + state);
+            }
+            return null;
+
+        }, project, UnitOfWork.DEFAULT_MAX_RETRY, getEpochId(), getTempLockName());
+
+        // dispatch job-finished message out
+        EventBusFactory.getInstance()
+                .postSync(new JobFinishedNotifier(getId(), getProject(), getTargetSubject(), getDuration(),
+                        state.toString(), getJobType().toString(), this.getSegmentIds(), this.getLayoutIds(),
+                        getTargetPartitions(), getWaitTime(), this.getClass().getName(), this.getSubmitter(),
+                        result.succeed(), getJobStartTime(), getJobEndTime(), getTag(), result.getThrowable()));
+    }
+
+    private ExecutableState checkState() {
         List<? extends Executable> jobs = getTasks();
         boolean allSucceed = true;
         boolean hasError = false;
@@ -230,27 +287,27 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
             logger.info("Sub-task finished {}, state: {}", task.getDisplayName(), task.getStatus());
             boolean taskSucceed = false;
             switch (task.getStatus()) {
-            case RUNNING:
-                hasError = true;
-                break;
-            case ERROR:
-                hasError = true;
-                break;
-            case DISCARDED:
-                hasDiscarded = true;
-                break;
-            case SUICIDAL:
-                hasSuicidal = true;
-                break;
-            case PAUSED:
-                hasPaused = true;
-                break;
-            case SKIP:
-            case SUCCEED:
-                taskSucceed = true;
-                break;
-            default:
-                break;
+                case RUNNING:
+                    hasError = true;
+                    break;
+                case ERROR:
+                    hasError = true;
+                    break;
+                case DISCARDED:
+                    hasDiscarded = true;
+                    break;
+                case SUICIDAL:
+                    hasSuicidal = true;
+                    break;
+                case PAUSED:
+                    hasPaused = true;
+                    break;
+                case SKIP:
+                case SUCCEED:
+                    taskSucceed = true;
+                    break;
+                default:
+                    break;
             }
             allSucceed &= taskSucceed;
         }
@@ -270,54 +327,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
             state = ExecutableState.READY;
         }
 
-        logger.info("Job finished {}, state:{}", this.getDisplayName(), state);
-
-        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-            switch (state) {
-            case SUCCEED:
-                updateToFinalState(ExecutableState.SUCCEED, this::afterUpdateOutput, result.getShortErrMsg());
-                break;
-            case DISCARDED:
-                updateToFinalState(ExecutableState.DISCARDED, this::onExecuteDiscardHook, result.getShortErrMsg());
-                break;
-            case SUICIDAL:
-                updateToFinalState(ExecutableState.SUICIDAL, this::onExecuteSuicidalHook, result.getShortErrMsg());
-                break;
-            case ERROR:
-            case PAUSED:
-            case READY:
-                if (isStoppedNonVoluntarily()) {
-                    logger.info("Execute finished  {} which is stopped nonvoluntarily, state: {}",
-                            this.getDisplayName(), getOutput().getState());
-                    return null;
-                }
-                Consumer<String> hook = null;
-                Map<String, String> info = null;
-                String output = null;
-                String shortErrMsg = null;
-                if (state == ExecutableState.ERROR) {
-                    logger.warn("[UNEXPECTED_THINGS_HAPPENED] Unexpected ERROR state discovered here!!!");
-                    notifyUserJobIssue(JobIssueEnum.JOB_ERROR);
-                    info = result.getExtraInfo();
-                    output = result.getErrorMsg();
-                    hook = this::onExecuteErrorHook;
-                    shortErrMsg = result.getShortErrMsg();
-                }
-                updateJobOutput(getProject(), getId(), state, info, output, shortErrMsg, hook);
-                break;
-            default:
-                throw new IllegalArgumentException("Illegal state when job finished: " + state);
-            }
-            return null;
-
-        }, project, UnitOfWork.DEFAULT_MAX_RETRY, getEpochId(), getTempLockName());
-
-        // dispatch job-finished message out
-        EventBusFactory.getInstance()
-                .postSync(new JobFinishedNotifier(getId(), getProject(), getTargetSubject(), getDuration(),
-                        state.toString(), getJobType().toString(), this.getSegmentIds(), this.getLayoutIds(),
-                        getTargetPartitions(), getWaitTime(), this.getClass().getName(), this.getSubmitter(),
-                        result.succeed(), getJobStartTime(), getJobEndTime(), getTag(), result.getThrowable()));
+        return state;
     }
 
     private long getJobStartTime() {
@@ -355,7 +365,8 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         // Hook method, default action is doing nothing
     }
 
-    private void updateToFinalState(ExecutableState finalState, Consumer<String> hook, String failedMsg) {
+    private void updateToFinalState(ExecutableState finalState, Consumer<String> hook, String failedMsg)
+            throws PersistentException, ExecuteException, InterruptedException {
         //to final state, regardless of isStoppedNonVoluntarily, otherwise a paused job might fail to suicide
         if (!getOutput().getState().isFinalState()) {
             updateJobOutput(getProject(), getId(), finalState, null, null, failedMsg, hook);
@@ -397,4 +408,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         // just implement it
     }
 
+    protected void onStatusChange(ExecutableState state) {
+        super.notifyUserStatusChange(state);
+    }
 }
