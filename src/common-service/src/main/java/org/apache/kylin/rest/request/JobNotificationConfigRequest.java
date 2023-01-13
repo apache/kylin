@@ -26,11 +26,13 @@ import lombok.Data;
 
 @Data
 public class JobNotificationConfigRequest {
-    @JsonProperty("job_error_notification_enabled")
-    private Boolean jobErrorNotificationEnabled;
     @JsonProperty("data_load_empty_notification_enabled")
     private Boolean dataLoadEmptyNotificationEnabled;
+    @JsonProperty("job_notification_states")
+    private List<String> jobNotificationStates;
     @JsonProperty("job_notification_emails")
     private List<String> jobNotificationEmails;
+    @JsonProperty("metadata_persist_notification_enabled")
+    private Boolean metadataPersistNotificationEnabled;
 
 }
