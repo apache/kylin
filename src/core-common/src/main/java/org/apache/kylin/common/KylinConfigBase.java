@@ -3621,6 +3621,18 @@ public abstract class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.second-storage.wait-index-build-second", "10"));
     }
 
+    public String getSecondStorageJDBCKeepAliveTimeout() {
+        return getOptional("kylin.second-storage.jdbc-keep-alive-timeout", "600000");
+    }
+
+    public String getSecondStorageJDBCSocketTimeout() {
+        return getOptional("kylin.second-storage.jdbc-socket-timeout", "600000");
+    }
+
+    public String getSecondStorageJDBCExtConfig() {
+        return getOptional("kylin.second-storage.jdbc-ext-config", "connect_timeout=3");
+    }
+
     public long getRoutineOpsTaskTimeOut() {
         return TimeUtil.timeStringAs(getOptional("kylin.metadata.ops-cron-timeout", "4h"), TimeUnit.MILLISECONDS);
     }
