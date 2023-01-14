@@ -22,16 +22,16 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.MetadataConstants;
 
@@ -41,6 +41,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import io.kyligence.kap.guava20.shaded.common.base.Strings;
 import lombok.Data;
@@ -49,7 +50,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @Slf4j
 public class TableExtDesc extends RootPersistentEntity implements Serializable {
@@ -57,14 +57,10 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
     public static final String S3_ROLE_PROPERTY_KEY = "s3_role";
     public static final String LOCATION_PROPERTY_KEY = "location";
     public static final String S3_ENDPOINT_KEY = "s3_endpoint";
+    public static final String SEPARATOR = "/";
 
     public static String concatRawResourcePath(String nameOnPath) {
-        return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + nameOnPath + ".json";
-    }
-
-    // returns <table, project>
-    public static Pair<String, String> parseResourcePath(String path) {
-        return TableDesc.parseResourcePath(path);
+        return ResourceStore.TABLE_EXD_RESOURCE_ROOT + SEPARATOR + nameOnPath + ".json";
     }
 
     // ============================================================================
@@ -79,11 +75,6 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
     @JsonProperty("last_build_job_id")
     private String jodID;
 
-    @Getter
-    @Setter
-    @JsonProperty("frequency")
-    private int frequency;
-
     @Setter
     @JsonProperty("columns_stats")
     private List<ColumnStats> columnStats = new ArrayList<>(); // should not expose getter
@@ -95,17 +86,8 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
 
     @Getter
     @Setter
-    @JsonProperty("last_modified_time")
-    private long lastModifiedTime;
-
-    @Getter
-    @Setter
     @JsonProperty("total_rows")
     private long totalRows;
-
-    @Setter
-    @JsonProperty("mapper_rows")
-    private List<Long> mapRecords = new ArrayList<>();
 
     @Getter
     @JsonProperty("data_source_properties")
@@ -113,16 +95,6 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
 
     @Getter
     private String project;
-
-    @Getter
-    @Setter
-    @JsonProperty("loading_range")
-    private List<SegmentRange> loadingRange = new ArrayList<>();
-
-    @Setter
-    @Getter
-    @JsonProperty("col_stats_path")
-    private String colStatsPath;
 
     @Getter
     @Setter
@@ -139,6 +111,16 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
     @JsonProperty("query_hit_count")
     private int snapshotHitCount = 0;
 
+    @Getter
+    @Setter
+    @JsonProperty("excluded")
+    private boolean excluded;
+
+    @Getter
+    @Setter
+    @JsonProperty("excluded_columns")
+    private Set<String> excludedColumns = Sets.newLinkedHashSet();
+
     public TableExtDesc() {
     }
 
@@ -147,16 +129,20 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
         this.lastModified = other.lastModified;
         this.identity = other.identity;
         this.jodID = other.jodID;
-        this.frequency = other.frequency;
         this.columnStats = other.columnStats;
         this.sampleRows = other.sampleRows;
-        this.lastModifiedTime = other.lastModifiedTime;
         this.totalRows = other.totalRows;
-        this.mapRecords = other.mapRecords;
         this.dataSourceProps = other.dataSourceProps;
         this.project = other.project;
         this.originalSize = other.originalSize;
         this.snapshotHitCount = other.snapshotHitCount;
+        this.excluded = other.excluded;
+        this.excludedColumns = other.excludedColumns;
+        this.rowCountStatus = other.rowCountStatus; // no need any more, will be deleted later.
+    }
+
+    public boolean testExcluded(ColumnDesc column) {
+        return excluded || excludedColumns.contains(column.getName());
     }
 
     @Override
@@ -166,13 +152,8 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
 
     @Override
     public String getResourcePath() {
-        return new StringBuilder().append("/").append(getProject()).append(ResourceStore.TABLE_EXD_RESOURCE_ROOT)
-                .append("/").append(getIdentity()).append(MetadataConstants.FILE_SURFIX).toString();
-    }
-
-    public void updateLoadingRange(final SegmentRange segmentRange) {
-        loadingRange.add(segmentRange);
-        Collections.sort(loadingRange);
+        return SEPARATOR + getProject() + ResourceStore.TABLE_EXD_RESOURCE_ROOT + SEPARATOR + getIdentity()
+                + MetadataConstants.FILE_SURFIX;
     }
 
     public void addDataSourceProp(String key, String value) {
@@ -213,7 +194,7 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
     public enum RowCountStatus {
         OK("ok"), TENTATIVE("tentative");
 
-        private String status;
+        private final String status;
 
         RowCountStatus(String status) {
             this.status = status;
@@ -246,15 +227,26 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
         return columnStatsMap.getOrDefault(colName, null);
     }
 
+    public boolean isExcludedCol(String colName) {
+        return excluded || getExcludedColumns().contains(colName);
+    }
+
+    public int countExcludedColSize() {
+        if (!isExcluded()) {
+            return getExcludedColumns().size();
+        }
+        return getTableDesc().getColumns().length;
+    }
+
+    private TableDesc getTableDesc() {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        return NTableMetadataManager.getInstance(kylinConfig, project).getTableDesc(getIdentity());
+    }
+
     public void init(String project) {
         this.project = project;
         if (this.identity != null)
             this.identity = this.identity.toUpperCase(Locale.ROOT);
-    }
-
-    public boolean isPartitioned() {
-        return this.dataSourceProps.get("partition_column") != null
-                && !this.dataSourceProps.get("partition_column").isEmpty();
     }
 
     public S3RoleCredentialInfo getS3RoleCredentialInfo() {
@@ -386,15 +378,6 @@ public class TableExtDesc extends RootPersistentEntity implements Serializable {
             totalCardinality = totalHLLC.getCountEstimate();
 
             cardinality = totalCardinality;
-        }
-
-        public void addRangeHLLC(SegmentRange segRange, HLLCounter hllc) {
-            final String key = segRange.getStart() + "_" + segRange.getEnd();
-            rangeHLLC.put(key, hllc);
-        }
-
-        public void addRangeHLLC(String segRange, HLLCounter hllc) {
-            rangeHLLC.put(segRange, hllc);
         }
 
         public void updateBasicStats(double maxNumeral, double minNumeral, int maxLength, int minLength,

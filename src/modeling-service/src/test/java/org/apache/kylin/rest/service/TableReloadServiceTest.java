@@ -19,7 +19,6 @@ package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.TABLE_RELOAD_HAVING_NOT_FINAL_JOB;
 import static org.awaitility.Awaitility.await;
-import static org.hamcrest.CoreMatchers.is;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
@@ -81,6 +81,7 @@ import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.S3TableExtInfo;
 import org.apache.kylin.rest.response.OpenPreReloadTableResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
+import org.apache.kylin.util.MetadataTestUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -160,7 +161,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testPreProcess_AffectTwoTables() throws Exception {
+    public void testPreProcessAffectTwoTables() throws Exception {
         removeColumn("DEFAULT.TEST_COUNTRY", "NAME");
 
         val response = tableService.preProcessBeforeReloadWithFailFast(PROJECT, "DEFAULT.TEST_COUNTRY");
@@ -175,7 +176,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testPreProcess_AffectByCC() throws Exception {
+    public void testPreProcessAffectByCC() throws Exception {
         removeColumn("DEFAULT.TEST_KYLIN_FACT", "PRICE");
 
         val response = tableService.preProcessBeforeReloadWithFailFast(PROJECT, "DEFAULT.TEST_KYLIN_FACT");
@@ -200,7 +201,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testPreProcess_RefreshCount() throws Exception {
+    public void testPreProcessRefreshCount() throws Exception {
         changeTypeColumn("DEFAULT.TEST_KYLIN_FACT", new HashMap<String, String>() {
             {
                 put("PRICE", "bigint");
@@ -212,7 +213,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testPreProcess_ChangeCCType() throws Exception {
+    public void testPreProcessChangeCCType() throws Exception {
         val modelManager = NDataModelManager.getInstance(getTestConfig(), PROJECT);
         var model = modelManager.getDataModelDescByAlias("nmodel_basic");
         Assert.assertEquals("decimal(30,4)", model.getComputedColumnDescs().get(0).getDatatype());
@@ -227,7 +228,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testPreProcess_UseCaseSensitiveTableIdentity() throws Exception {
+    public void testPreProcessUseCaseSensitiveTableIdentity() throws Exception {
         NTableMetadataManager manager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
         TableDesc tableDesc = manager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
         Assert.assertNotNull(tableDesc);
@@ -246,7 +247,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_RemoveCC() throws Exception {
+    public void testReloadRemoveCC() throws Exception {
         val modelManager = NDataModelManager.getInstance(getTestConfig(), PROJECT);
         var originModel = modelManager.getDataModelDescByAlias("nmodel_basic");
         val originSize = originModel.getComputedColumnDescs().size();
@@ -279,7 +280,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_RemoveMeasureAffectedAggGroup() throws Exception {
+    public void testReloadRemoveMeasureAffectedAggGroup() throws Exception {
         val MODEL_ID = "741ca86a-1f13-46da-a59f-95fb68615e3a";
         val dfManager = NDataflowManager.getInstance(getTestConfig(), PROJECT);
         val modelManager = NDataModelManager.getInstance(getTestConfig(), PROJECT);
@@ -339,7 +340,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testCleanupToBeDeleted_afterChangeType() throws Exception {
+    public void testCleanupToBeDeletedAfterChangeType() throws Exception {
         val modelId = "741ca86a-1f13-46da-a59f-95fb68615e3a";
         val project = "default";
 
@@ -399,7 +400,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_AddIndexCount() throws Exception {
+    public void testReloadAddIndexCount() throws Exception {
 
         val newRule = new RuleBasedIndex();
         newRule.setDimensions(Arrays.asList(14, 15, 16));
@@ -427,7 +428,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_AddIndexCountHierarchy() throws Exception {
+    public void testReloadAddIndexCountHierarchy() throws Exception {
 
         val newRule = new RuleBasedIndex();
         newRule.setDimensions(Arrays.asList(14, 15, 16));
@@ -456,7 +457,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_AddIndexCountMandatory() throws Exception {
+    public void testReloadAddIndexCountMandatory() throws Exception {
 
         val newRule = new RuleBasedIndex();
         newRule.setDimensions(Arrays.asList(14, 15, 16, 17, 18, 19));
@@ -485,7 +486,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_AddIndexCountJoint() throws Exception {
+    public void testReloadAddIndexCountJoint() throws Exception {
 
         val newRule = new RuleBasedIndex();
         newRule.setDimensions(Arrays.asList(14, 15, 16, 17, 18, 19));
@@ -518,7 +519,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_BrokenModelInAutoProject() throws Exception {
+    public void testReloadBrokenModelInAutoProject() throws Exception {
         removeColumn("DEFAULT.TEST_KYLIN_FACT", "ORDER_ID");
         overwriteSystemProp("kylin.metadata.broken-model-deleted-on-smart-mode", "true");
         await().atMost(10000, TimeUnit.MILLISECONDS).untilAsserted(() -> {
@@ -535,7 +536,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_BrokenModelInManualProject() throws Exception {
+    public void testReloadBrokenModelInManualProject() throws Exception {
         removeColumn("DEFAULT.TEST_KYLIN_FACT", "ORDER_ID");
         tableService.innerReloadTable(PROJECT, "DEFAULT.TEST_KYLIN_FACT", true, null);
         val modelManager = NDataModelManager.getInstance(getTestConfig(), PROJECT);
@@ -549,7 +550,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReloadLookup_RemoveFact() throws Exception {
+    public void testReloadLookupRemoveFact() throws Exception {
         modelService.listAllModelIdsInProject(PROJECT).forEach(id -> {
             if (!id.equals("89af4ee2-2cdb-4b07-b39e-4c29856309aa")) {
                 modelService.dropModel(id, PROJECT);
@@ -607,7 +608,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_GetAndEditJoinBrokenModelInManualProject() throws Exception {
+    public void testReloadGetAndEditJoinBrokenModelInManualProject() throws Exception {
         prepareReload();
 
         changeColumnName("DEFAULT.TEST_KYLIN_FACT", "ORDER_ID", "ORDER_ID2");
@@ -666,7 +667,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_GetAndEditPartitionBrokenModelInManualProject() throws Exception {
+    public void testReloadGetAndEditPartitionBrokenModelInManualProject() throws Exception {
         prepareReload();
 
         changeColumnName("DEFAULT.TEST_KYLIN_FACT", "CAL_DT", "CAL_DT2");
@@ -819,17 +820,97 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_WhenProjectHasBrokenModel() throws Exception {
+    public void testReloadWhenProjectHasBrokenModel() throws Exception {
         val tableManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
         tableManager.removeSourceTable("DEFAULT.TEST_MEASURE");
         val dfManager = NDataflowManager.getInstance(getTestConfig(), PROJECT);
         Assert.assertEquals(7, dfManager.listUnderliningDataModels().size());
-
-        testPreProcess_AffectTwoTables();
+        testPreProcessAffectTwoTables();
     }
 
     @Test
-    public void testReload_RemoveDimensionsAndIndexes() throws Exception {
+    public void testTableReloadWithExcludedColumns() throws Exception {
+        NDataModelManager modelManager = NDataModelManager.getInstance(getTestConfig(), PROJECT);
+        modelManager.listAllModelIds().forEach(modelManager::dropModel);
+
+        String table = "DEFAULT.TEST_ORDER";
+        prepareTableExt(table);
+        MetadataTestUtils.mockExcludedTable(PROJECT, table);
+        Assert.assertEquals(5, MetadataTestUtils.getExcludedColumns(PROJECT, table).size());
+
+        // keep other excluded columns
+        removeColumn(table, "TEST_TIME_ENC");
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            tableService.innerReloadTable(PROJECT, table, false, null);
+            return null;
+        }, PROJECT);
+        Assert.assertEquals(4, MetadataTestUtils.getExcludedColumns(PROJECT, table).size());
+
+        // if the table is excluded, then new added column is excluded
+        addColumn(table, true, new ColumnDesc("", "DEAL_YEAR", "int", "", "", "", null));
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            tableService.innerReloadTable(PROJECT, table, false, null);
+            return null;
+        }, PROJECT);
+        Assert.assertEquals(5, MetadataTestUtils.getExcludedColumns(PROJECT, table).size());
+        Set<String> tables = MetadataTestUtils.getExcludedTables(PROJECT);
+        Assert.assertEquals(1, tables.size());
+        Assert.assertEquals(table, tables.iterator().next());
+    }
+
+    @Test
+    public void testTableReloadWithDropExcludedColumn() throws Exception {
+        NDataModelManager modelManager = NDataModelManager.getInstance(getTestConfig(), PROJECT);
+        modelManager.listAllModelIds().forEach(modelManager::dropModel);
+
+        String table = "DEFAULT.TEST_ORDER";
+        prepareTableExt(table);
+
+        MetadataTestUtils.mockExcludedCols(PROJECT, table, Sets.newHashSet("TEST_TIME_ENC"));
+        Set<String> excludedColumns = MetadataTestUtils.getExcludedColumns(PROJECT, table);
+        Assert.assertEquals(1, excludedColumns.size());
+        Assert.assertTrue(excludedColumns.contains("TEST_TIME_ENC"));
+
+        removeColumn(table, "TEST_TIME_ENC");
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            tableService.innerReloadTable(PROJECT, table, false, null);
+            return null;
+        }, PROJECT);
+
+        Assert.assertTrue(MetadataTestUtils.getExcludedColumns(PROJECT, table).isEmpty());
+        Assert.assertTrue(MetadataTestUtils.getExcludedTables(PROJECT).isEmpty());
+    }
+
+    @Test
+    public void testTableReloadWithDropTheLastUnExcludedColumn() throws IOException {
+        NDataModelManager modelManager = NDataModelManager.getInstance(getTestConfig(), PROJECT);
+        modelManager.listAllModelIds().forEach(modelManager::dropModel);
+
+        String table = "DEFAULT.TEST_ORDER";
+        prepareTableExt(table);
+
+        MetadataTestUtils.mockExcludedCols(PROJECT, table,
+                Sets.newHashSet("ORDER_ID", "BUYER_ID", "TEST_EXTENDED_COLUMN", "TEST_DATE_ENC"));
+        Set<String> excludedColumns = MetadataTestUtils.getExcludedColumns(PROJECT, table);
+        Assert.assertEquals(4, excludedColumns.size());
+        Assert.assertFalse(excludedColumns.contains("TEST_TIME_ENC"));
+
+        removeColumn(table, "TEST_TIME_ENC");
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            tableService.innerReloadTable(PROJECT, table, false, null);
+            return null;
+        }, PROJECT);
+
+        Set<String> excludedColumnsAfterTableReload = MetadataTestUtils.getExcludedColumns(PROJECT, table);
+        Assert.assertEquals(4, excludedColumnsAfterTableReload.size());
+        Assert.assertEquals(excludedColumns, excludedColumnsAfterTableReload);
+        Set<String> tables = MetadataTestUtils.getExcludedTables(PROJECT);
+        Assert.assertEquals(1, tables.size());
+        Assert.assertEquals(table, tables.iterator().next());
+    }
+
+    @Test
+    public void testReloadRemoveDimensionsAndIndexes() throws Exception {
         val indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);
         val originIndexPlan = indexManager.getIndexPlanByModelAlias("nmodel_basic");
         val originTable = NTableMetadataManager.getInstance(getTestConfig(), PROJECT)
@@ -860,8 +941,10 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
 
         // index_plan without rule
         val model2 = modelManager.getDataModelDescByAlias("nmodel_basic");
-        Assert.assertEquals(NDataModel.ColumnStatus.TOMB,
-                model2.getAllNamedColumns().stream().filter(n -> n.getId() == 15).findAny().get().getStatus());
+        Optional<NDataModel.NamedColumn> optionalNamedColumn = model2.getAllNamedColumns().stream()
+                .filter(n -> n.getId() == 15).findAny();
+        Assert.assertTrue(optionalNamedColumn.isPresent());
+        Assert.assertEquals(NDataModel.ColumnStatus.TOMB, optionalNamedColumn.get().getStatus());
         val indexPlan2 = indexManager.getIndexPlan(model2.getId());
         Assert.assertEquals(
                 originIndexPlan.getAllIndexes().stream().filter(index -> !index.getDimensions().contains(15)).count(),
@@ -898,30 +981,38 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_RemoveAggShardByColumns() throws Exception {
+    public void testReloadRemoveAggShardByColumns() throws Exception {
         val newRule = new RuleBasedIndex();
         newRule.setDimensions(Arrays.asList(14, 15, 16));
-        val group1 = JsonUtil.readValue("{\n" + "        \"includes\": [14,15,16],\n" + "        \"select_rule\": {\n"
-                + "          \"hierarchy_dims\": [],\n" + "          \"mandatory_dims\": [],\n"
-                + "          \"joint_dims\": []\n" + "        }\n" + "}", NAggregationGroup.class);
+        val group1 = JsonUtil.readValue("{\n" //
+                + "        \"includes\": [14,15,16],\n" //
+                + "        \"select_rule\": {\n" //
+                + "          \"hierarchy_dims\": [],\n" //
+                + "          \"mandatory_dims\": [],\n" //
+                + "          \"joint_dims\": []\n" //
+                + "        }\n" //
+                + "}", NAggregationGroup.class);
         newRule.setAggregationGroups(Lists.newArrayList(group1));
-        testReload_AggShardByColumns(newRule, Lists.newArrayList(14, 15), Lists.newArrayList());
-
+        testReloadAggShardByColumns(newRule, Lists.newArrayList(14, 15), Lists.newArrayList());
     }
 
     @Test
-    public void testReload_KeepAggShardByColumns() throws Exception {
+    public void testReloadKeepAggShardByColumns() throws Exception {
         val newRule = new RuleBasedIndex();
         newRule.setDimensions(Arrays.asList(13, 14, 15));
-        val group1 = JsonUtil.readValue("{\n" + "        \"includes\": [13,14,15],\n" + "        \"select_rule\": {\n"
-                + "          \"hierarchy_dims\": [],\n" + "          \"mandatory_dims\": [],\n"
-                + "          \"joint_dims\": []\n" + "        }\n" + "}", NAggregationGroup.class);
+        val group1 = JsonUtil.readValue("{\n" //
+                + "        \"includes\": [13,14,15],\n" //
+                + "        \"select_rule\": {\n" //
+                + "          \"hierarchy_dims\": [],\n" //
+                + "          \"mandatory_dims\": [],\n" //
+                + "          \"joint_dims\": []\n" //
+                + "        }\n" //
+                + "}", NAggregationGroup.class);
         newRule.setAggregationGroups(Lists.newArrayList(group1));
-        testReload_AggShardByColumns(newRule, Lists.newArrayList(13, 14), Lists.newArrayList(13, 14));
-
+        testReloadAggShardByColumns(newRule, Lists.newArrayList(13, 14), Lists.newArrayList(13, 14));
     }
 
-    private void testReload_AggShardByColumns(RuleBasedIndex ruleBasedIndex, List<Integer> beforeAggShardBy,
+    private void testReloadAggShardByColumns(RuleBasedIndex ruleBasedIndex, List<Integer> beforeAggShardBy,
             List<Integer> endAggShardBy) throws Exception {
         val indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);
         var originIndexPlan = indexManager.getIndexPlanByModelAlias("nmodel_basic");
@@ -953,7 +1044,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_addColumn_blacklistNotEmpty() throws Exception {
+    public void testReloadAddColumnBlacklistNotEmpty() throws Exception {
         val dataflowManager = NDataflowManager.getInstance(getTestConfig(), PROJECT);
         val dataflow1 = dataflowManager.getDataflowByModelAlias("nmodel_basic_inner");
         int layoutSize = dataflow1.getIndexPlan().getRuleBaseLayouts().size();
@@ -971,7 +1062,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_AddColumn() throws Exception {
+    public void testReloadAddColumn() throws Exception {
         String mockPath = "default/table_snapshot/mock";
         NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
         TableDesc tableDesc = tableMetadataManager.getTableDesc("DEFAULT.TEST_COUNTRY");
@@ -1034,7 +1125,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_AddLookupColumn() throws Exception {
+    public void testReloadAddLookupColumn() throws Exception {
         addColumn("EDW.TEST_CAL_DT", true, new ColumnDesc("", "DEAL_YEAR", "int", "", "", "", null));
 
         OpenPreReloadTableResponse response = tableService.preProcessBeforeReloadWithoutFailFast(PROJECT,
@@ -1116,7 +1207,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_ChangeColumn() throws Exception {
+    public void testReloadChangeColumn() throws Exception {
         removeColumn("EDW.TEST_CAL_DT", "CAL_DT_UPD_USER");
         tableService.innerReloadTable(PROJECT, "EDW.TEST_CAL_DT", true, null);
 
@@ -1179,7 +1270,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_ChangeTypeAndRemoveDimension() throws Exception {
+    public void testReloadChangeTypeAndRemoveDimension() throws Exception {
         removeColumn("EDW.TEST_CAL_DT", "CAL_DT_UPD_USER");
         tableService.innerReloadTable(PROJECT, "EDW.TEST_CAL_DT", true, null);
 
@@ -1214,7 +1305,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_ChangeColumnInAggManual() throws Exception {
+    public void testReloadChangeColumnInAggManual() throws Exception {
         val newRule = new RuleBasedIndex();
         newRule.setDimensions(Arrays.asList(14, 15, 16));
         val group1 = JsonUtil.readValue("{\n" //
@@ -1255,7 +1346,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_WithNoBlacklistLayoutRestore() throws Exception {
+    public void testReloadWithNoBlacklistLayoutRestore() throws Exception {
         val newRule = new RuleBasedIndex();
         newRule.setDimensions(Arrays.asList(14, 15, 16));
         val group1 = JsonUtil.readValue("{\n" //
@@ -1297,11 +1388,11 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         val layouts2 = originIndexPlan.getAllLayouts().stream().filter(LayoutEntity::isManual)
                 .filter(l -> l.getId() < IndexEntity.TABLE_INDEX_START_ID).filter(l -> l.getColOrder().contains(16))
                 .collect(Collectors.toList());
-        Assert.assertThat(layouts2.size(), is(0));
+        Assert.assertTrue(layouts2.isEmpty());
     }
 
     @Test
-    public void testReload_ChangeColumnInAggManualUnsuitable() throws Exception {
+    public void testReloadChangeColumnInAggManualUnsuitable() throws Exception {
         // add TEST_KYLIN_FACT.ITEM_COUNT as dimension
 
         var indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);
@@ -1330,9 +1421,14 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         val newRule = new RuleBasedIndex();
         // TEST_KYLIN_FACT.ITEM_COUNT， TEST_ORDER.TEST_TIME_ENC， TEST_KYLIN_FACT.SLR_SEGMENT_CD
         newRule.setDimensions(Arrays.asList(12, 15, 16));
-        val group1 = JsonUtil.readValue("{\n" + "        \"includes\": [12,15,16],\n" + "        \"select_rule\": {\n"
-                + "          \"hierarchy_dims\": [],\n" + "          \"mandatory_dims\": [],\n"
-                + "          \"joint_dims\": []\n" + "        }\n" + "}", NAggregationGroup.class);
+        val group1 = JsonUtil.readValue("{\n" //
+                + "        \"includes\": [12,15,16],\n" //
+                + "        \"select_rule\": {\n" //
+                + "          \"hierarchy_dims\": [],\n" //
+                + "          \"mandatory_dims\": [],\n" //
+                + "          \"joint_dims\": []\n" //
+                + "        }\n" //
+                + "}", NAggregationGroup.class);
         newRule.setAggregationGroups(Lists.newArrayList(group1));
         // 100000 count(1), 100004 sum(TEST_KYLIN_FACT.ITEM_COUNT)
         group1.setMeasures(new Integer[] { 100000, 100004 });
@@ -1366,7 +1462,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_ChangeColumnInAggManualSuitable() throws Exception {
+    public void testReloadChangeColumnInAggManualSuitable() throws Exception {
         // add TEST_KYLIN_FACT.ITEM_COUNT as dimension
 
         var indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);
@@ -1447,7 +1543,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_ChangeColumnInAggManualAndAuto() throws Exception {
+    public void testReloadChangeColumnInAggManualAndAuto() throws Exception {
         String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
         val indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);
         val index = new IndexEntity();
@@ -1467,13 +1563,13 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
             indexes.add(indexCopy);
             copyForWrite.setIndexes(indexes);
         });
-        testReload_ChangeColumnInAggManual();
+        testReloadChangeColumnInAggManual();
         Assert.assertTrue(indexManager.getIndexPlan(modelId).getAllLayouts().stream()
                 .anyMatch(l -> l.equals(layout) && l.isAuto() && l.isManual() && l.getId() > layout.getId()));
     }
 
     @Test
-    public void testReload_ChangeColumnInTableIndex() throws Exception {
+    public void testReloadChangeColumnInTableIndex() throws Exception {
         String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
         dropModelWhen(id -> !id.equals(modelId));
         val indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);
@@ -1505,7 +1601,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_ChangeColumnOrderAndDeleteColumn() throws Exception {
+    public void testReloadChangeColumnOrderAndDeleteColumn() throws Exception {
         val tableIdentity = "DEFAULT.TEST_COUNTRY";
         val originTable = NTableMetadataManager.getInstance(getTestConfig(), PROJECT).getTableDesc(tableIdentity);
         prepareTableExt(tableIdentity);
@@ -1559,7 +1655,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_IndexPlanHasDictionary() throws Exception {
+    public void testReloadIndexPlanHasDictionary() throws Exception {
         val indexManager = NIndexPlanManager.getInstance(getTestConfig(), PROJECT);
         val indexPlan = indexManager.getIndexPlanByModelAlias("nmodel_basic_inner");
         indexManager.updateIndexPlan(indexPlan.getId(), copyForWrite -> {
@@ -1604,7 +1700,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_NoChangeAndUpdateTableExtDesc() throws Exception {
+    public void testReloadNoChangeAndUpdateTableExtDesc() throws Exception {
         S3TableExtInfo tableExtInfo = prepareTableExtInfo("DEFAULT.TEST_ORDER", "endpoint", "role");
         prepareTableExt("DEFAULT.TEST_ORDER");
         KylinConfig.getInstanceFromEnv().setProperty("kylin.env.use-dynamic-S3-role-credential-in-table", "true");
@@ -1626,7 +1722,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
-    public void testReload_RemoveColumnAndUpdateTableExtDesc() throws Exception {
+    public void testReloadRemoveColumnAndUpdateTableExtDesc() throws Exception {
         removeColumn("DEFAULT.TEST_ORDER", "TEST_TIME_ENC");
         S3TableExtInfo tableExtInfo = prepareTableExtInfo("DEFAULT.TEST_ORDER", "endpoint", "role");
 
@@ -1819,7 +1915,7 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
         val newColumns = Stream.of(factTable.getColumns()).filter(col -> !columns.contains(col.getName()))
                 .toArray(ColumnDesc[]::new);
         tableMeta.setColumns(newColumns);
-        JsonUtil.writeValueIndent(new FileOutputStream(new File(tablePath)), tableMeta);
+        JsonUtil.writeValueIndent(new FileOutputStream(tablePath), tableMeta);
     }
 
     private void changeColumnName(String tableIdentity, String oldName, String newName) throws IOException {

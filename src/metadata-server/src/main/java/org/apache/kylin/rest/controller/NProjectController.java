@@ -58,6 +58,7 @@ import org.apache.kylin.rest.request.MultiPartitionConfigRequest;
 import org.apache.kylin.rest.request.OwnerChangeRequest;
 import org.apache.kylin.rest.request.ProjectConfigRequest;
 import org.apache.kylin.rest.request.ProjectConfigResetRequest;
+import org.apache.kylin.rest.request.ProjectExclusionRequest;
 import org.apache.kylin.rest.request.ProjectGeneralInfoRequest;
 import org.apache.kylin.rest.request.ProjectKerberosInfoRequest;
 import org.apache.kylin.rest.request.ProjectRequest;
@@ -285,10 +286,8 @@ public class NProjectController extends NBasicController {
             @RequestBody JobNotificationConfigRequest jobNotificationConfigRequest) {
         checkRequiredArg("data_load_empty_notification_enabled",
                 jobNotificationConfigRequest.getDataLoadEmptyNotificationEnabled());
-        checkRequiredArg("job_notification_states",
-                jobNotificationConfigRequest.getJobNotificationStates());
-        checkRequiredArg("job_notification_emails",
-                jobNotificationConfigRequest.getJobNotificationEmails());
+        checkRequiredArg("job_notification_states", jobNotificationConfigRequest.getJobNotificationStates());
+        checkRequiredArg("job_notification_emails", jobNotificationConfigRequest.getJobNotificationEmails());
         checkRequiredArg("metadata_persist_notification_enabled",
                 jobNotificationConfigRequest.getMetadataPersistNotificationEnabled());
         projectService.updateJobNotificationConfig(project, jobNotificationConfigRequest);
@@ -333,8 +332,7 @@ public class NProjectController extends NBasicController {
             @RequestBody SnapshotConfigRequest snapshotConfigRequest) {
         checkBooleanArg("snapshot_manual_management_enabled",
                 snapshotConfigRequest.getSnapshotManualManagementEnabled());
-        checkBooleanArg("snapshot_automatic_refresh_enabled",
-                snapshotConfigRequest.getSnapshotAutoRefreshEnabled());
+        checkBooleanArg("snapshot_automatic_refresh_enabled", snapshotConfigRequest.getSnapshotAutoRefreshEnabled());
         projectService.updateSnapshotConfig(project, snapshotConfigRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
@@ -496,6 +494,15 @@ public class NProjectController extends NBasicController {
             @RequestBody JdbcSourceInfoRequest request) {
         checkRequiredArg("jdbc_source_enabled", request.getJdbcSourceEnable());
         projectService.updateJdbcInfo(project, request);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    @ApiOperation(value = "updateProjectExclusionInfo", notes = "Add URL: {project}; ")
+    @PutMapping(value = "/{project:.+}/exclusion_enabled")
+    @ResponseBody
+    public EnvelopeResponse<String> updateTableExclusionConfig(@PathVariable("project") String project,
+            @RequestBody ProjectExclusionRequest request) {
+        projectService.updateTableExclusionRule(project, request);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 }

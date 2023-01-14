@@ -25,11 +25,13 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlCall;
@@ -47,6 +49,7 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.calcite.util.Litmus;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
@@ -57,6 +60,7 @@ import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.alias.ExpressionComparator;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.IQueryTransformer;
 
 import com.google.common.base.Function;
@@ -75,6 +79,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ConvertToComputedColumn implements IQueryTransformer {
 
     private static final String CONVERT_TO_CC_ERROR_MSG = "Something unexpected while ConvertToComputedColumn transforming the query, return original query.";
+    private static final String DOUBLE_QUOTE = Quoting.DOUBLE_QUOTE.string;
 
     private static final LoadingCache<String, String> transformExpressions = CacheBuilder.newBuilder()
             .maximumSize(10000).expireAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, String>() {
@@ -109,7 +114,7 @@ public class ConvertToComputedColumn implements IQueryTransformer {
         // if order list is not empty and query is a select
         // then collect order list with checking on group keys
         List<SqlNode> inputNodes = new LinkedList<>();
-        if (sqlOrderBy.orderList != null && sqlOrderBy.query != null && sqlOrderBy.query instanceof SqlSelect
+        if (sqlOrderBy.orderList != null && sqlOrderBy.query instanceof SqlSelect
                 && ((SqlSelect) sqlOrderBy.query).getGroup() != null) {
             inputNodes.addAll(
                     collectCandidateInputNodes(sqlOrderBy.orderList, ((SqlSelect) sqlOrderBy.query).getGroup()));
@@ -208,12 +213,7 @@ public class ConvertToComputedColumn implements IQueryTransformer {
             }
             return alias.toString();
         }
-        if (node instanceof SqlNodeList) {
-            return StringUtils.EMPTY;
-        }
-        if (node instanceof SqlLiteral) {
-            return StringUtils.EMPTY;
-        }
+        // SqlNodeList, SqlLiteral and other return empty string
         return StringUtils.EMPTY;
     }
 
@@ -229,9 +229,8 @@ public class ConvertToComputedColumn implements IQueryTransformer {
             return Lists.newArrayList();
         }
 
-        Ordering<ComputedColumnDesc> ordering = Ordering
-                .from((Comparator<String>) (o1, o2) -> Integer.compare(o1.length(), o2.length())).reverse().nullsLast()
-                .onResultOf(new Function<ComputedColumnDesc, String>() {
+        Ordering<ComputedColumnDesc> ordering = Ordering.from(Comparator.comparingInt(String::length)).reverse() //
+                .nullsLast().onResultOf(new Function<ComputedColumnDesc, String>() {
                     @Nullable
                     @Override
                     public String apply(@Nullable ComputedColumnDesc input) {
@@ -260,11 +259,6 @@ public class ConvertToComputedColumn implements IQueryTransformer {
             return originSql;
         }
         return transformImpl(originSql, project, defaultSchema, dataModelDescs);
-    }
-
-    public String transformImpl(String originSql, String project, NDataModel dataModelDesc, String defaultSchema)
-            throws SqlParseException {
-        return transformImpl(originSql, project, defaultSchema, Lists.newArrayList(dataModelDesc));
     }
 
     private String transformImpl(String originSql, String project, String defaultSchema,
@@ -334,7 +328,7 @@ public class ConvertToComputedColumn implements IQueryTransformer {
     private Pair<String, Integer> replaceComputedColumn(String inputSql, SqlCall selectOrOrderby,
             List<ComputedColumnDesc> computedColumns, QueryAliasMatchInfo queryAliasMatchInfo, boolean replaceCcName) {
 
-        if (computedColumns == null || computedColumns.isEmpty()) {
+        if (CollectionUtils.isEmpty(computedColumns)) {
             return Pair.newPair(inputSql, 0);
         }
 
@@ -361,9 +355,9 @@ public class ConvertToComputedColumn implements IQueryTransformer {
             if (queryAliasMatchInfo.isModelView()) {
                 // get alias with model alias
                 // as table of cc in model view is model view table itself
-                alias = queryAliasMatchInfo.getAliasMapping().inverse().get(queryAliasMatchInfo.getModel().getAlias());
+                alias = queryAliasMatchInfo.getAliasMap().inverse().get(queryAliasMatchInfo.getModel().getAlias());
             } else {
-                alias = queryAliasMatchInfo.getAliasMapping().inverse().get(cc.getTableAlias());
+                alias = queryAliasMatchInfo.getAliasMap().inverse().get(cc.getTableAlias());
             }
             if (alias == null) {
                 throw new IllegalStateException(cc.getExpression() + " expression of cc " + cc.getFullName()
@@ -374,8 +368,10 @@ public class ConvertToComputedColumn implements IQueryTransformer {
             String ccColumnName = replaceCcName ? cc.getInternalCcName() : cc.getColumnName();
             log.debug("Computed column: {} matching {} at [{},{}] using alias in query: {}", cc.getColumnName(), expr,
                     start, end, alias);
-            alias = Character.isAlphabetic(alias.charAt(0)) ? alias : "\"" + alias + "\"";
-            ccColumnName = Character.isAlphabetic(ccColumnName.charAt(0)) ? ccColumnName : "\"" + ccColumnName + "\"";
+
+            alias = Character.isAlphabetic(alias.charAt(0)) ? alias : DOUBLE_QUOTE + alias + DOUBLE_QUOTE;
+            ccColumnName = Character.isAlphabetic(ccColumnName.charAt(0)) ? ccColumnName
+                    : DOUBLE_QUOTE + ccColumnName + DOUBLE_QUOTE;
             result = result.substring(0, start) + alias + "." + ccColumnName + result.substring(end);
         }
         try {
@@ -415,6 +411,7 @@ public class ConvertToComputedColumn implements IQueryTransformer {
                     if (!(replaced.getFirst() >= end || replaced.getSecond() <= start)) {
                         // overlap with chosen areas
                         conflict = true;
+                        break;
                     }
                 }
                 if (conflict) {
@@ -461,13 +458,9 @@ public class ConvertToComputedColumn implements IQueryTransformer {
             }
         }
 
-        // find whether user input sql's tree node equals computed columns's define expression
-        for (SqlNode inputNode : inputNodes) {
-            if (isNodesEqual(matchInfo, ccExpressionNode, inputNode)) {
-                matchedNodes.add(inputNode);
-            }
-        }
-
+        // find whether user input tree node of sql equals defined expression of computed column
+        inputNodes.stream().filter(inputNode -> isNodesEqual(matchInfo, ccExpressionNode, inputNode))
+                .forEach(matchedNodes::add);
         return matchedNodes;
     }
 
@@ -583,24 +576,33 @@ public class ConvertToComputedColumn implements IQueryTransformer {
                     continue;
                 }
 
+                Set<String> cols = queryAliasMatcher.getChecker().filterRelatedExcludedColumn(model);
+                info.getExcludedColumns().addAll(cols);
                 List<ComputedColumnDesc> computedColumns = getSortedComputedColumnWithModel(model);
-                Pair<String, Integer> ret = replaceComputedColumn(sql, selectOrOrderby, computedColumns, info,
-                        replaceCcName);
+                if (CollectionUtils.isNotEmpty(computedColumns)) {
+                    Pair<String, Integer> ret = replaceComputedColumn(sql, selectOrOrderby, computedColumns, info,
+                            replaceCcName);
 
-                if (replaceCcName && !sql.equals(ret.getFirst())) {
-                    choiceForCurrentSubquery = ret;
-                } else if (ret.getSecond() != 0 //
-                        && (choiceForCurrentSubquery == null
-                                || ret.getSecond() > choiceForCurrentSubquery.getSecond())) {
-                    choiceForCurrentSubquery = ret;
-                    recursionCompleted = false;
+                    if (replaceCcName && !sql.equals(ret.getFirst())) {
+                        choiceForCurrentSubquery = ret;
+                    } else if (ret.getSecond() != 0 //
+                            && (choiceForCurrentSubquery == null
+                                    || ret.getSecond() > choiceForCurrentSubquery.getSecond())) {
+                        choiceForCurrentSubquery = ret;
+                        recursionCompleted = false;
+                    }
                 }
             }
         }
 
         //match longer expressions first
-        private List<ComputedColumnDesc> getSortedComputedColumnWithModel(NDataModel dataModelDesc) {
-            return getCCListSortByLength(dataModelDesc.getComputedColumnDescs());
+        private List<ComputedColumnDesc> getSortedComputedColumnWithModel(NDataModel model) {
+            List<ComputedColumnDesc> ccList = model.getComputedColumnDescs();
+            KylinConfig projectConfig = NProjectManager.getProjectConfig(model.getProject());
+            if (projectConfig.isTableExclusionEnabled() && projectConfig.onlyReuseUserDefinedCC()) {
+                ccList = ccList.stream().filter(cc -> !cc.isAutoCC()).collect(Collectors.toList());
+            }
+            return getCCListSortByLength(ccList);
         }
     }
 }

@@ -157,12 +157,11 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
-import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
+import org.apache.kylin.metadata.model.AntiFlatChecker;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.DataCheckDesc;
-import org.apache.kylin.metadata.model.ExcludedLookupChecker;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.FusionModelManager;
@@ -2642,8 +2641,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         ComputedColumnDesc checkedCC = null;
 
         QueryContext.AclInfo aclInfo = AclPermissionUtil.createAclInfo(project, getCurrentUserGroups());
-        Set<String> excludedTables = getManager(FavoriteRuleManager.class, project).getExcludedTables();
-        ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, model.getJoinTables(), model);
+        AntiFlatChecker checker = new AntiFlatChecker(model.getJoinTables(), model);
         for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
             checkCCName(cc.getColumnName());
 
@@ -3101,8 +3099,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         List<JoinTableDesc> joinTables = convertedModel.getJoinTables();
 
         IndexPlan indexPlan = indexPlanManager.getIndexPlan(uuid);
-        Set<String> excludedTables = getManager(FavoriteRuleManager.class, project).getExcludedTables();
-        ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, joinTables, convertedModel);
+        AntiFlatChecker checker = new AntiFlatChecker(joinTables, convertedModel);
         List<ComputedColumnDesc> invalidCCList = checker.getInvalidComputedColumns(convertedModel);
         Set<Integer> invalidDimensions = checker.getInvalidDimensions(convertedModel);
         Set<Integer> invalidMeasures = checker.getInvalidMeasures(convertedModel);
@@ -3643,14 +3640,12 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
         sqlNode.accept(sqlVisitor);
 
-        if (!KylinConfig.getInstanceFromEnv().isBuildExcludedTableEnabled()) {
-            Set<String> excludedTables = getManager(FavoriteRuleManager.class, model.getProject()).getExcludedTables();
-            ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, model.getJoinTables(), model);
-            String antiFlattenLookup = checker.detectFilterConditionDependsLookups(sqlNode.toString(),
-                    checker.getExcludedLookups());
-            if (antiFlattenLookup != null) {
+        if (!NProjectManager.getProjectConfig(model.getProject()).isBuildExcludedTableEnabled()) {
+            AntiFlatChecker checker = new AntiFlatChecker(model.getJoinTables(), model);
+            String antiFlatLookup = checker.detectFilterCondition(sqlNode.toString());
+            if (antiFlatLookup != null) {
                 throw new KylinException(FILTER_CONDITION_DEPENDS_ANTI_FLATTEN_LOOKUP, String.format(Locale.ROOT,
-                        MsgPicker.getMsg().getFilterConditionOnAntiFlattenLookup(), antiFlattenLookup));
+                        MsgPicker.getMsg().getFilterConditionOnAntiFlattenLookup(), antiFlatLookup));
             }
         }
         String exp = sqlNode
@@ -4075,8 +4070,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         String uuid = model.getUuid();
         List<JoinTableDesc> joinTables = model.getJoinTables();
         IndexPlan indexPlan = getManager(NIndexPlanManager.class, project).getIndexPlan(uuid);
-        Set<String> excludedTables = getManager(FavoriteRuleManager.class, project).getExcludedTables();
-        ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, joinTables, model);
+        AntiFlatChecker checker = new AntiFlatChecker(joinTables, model);
         List<ComputedColumnDesc> invalidCCList = checker.getInvalidComputedColumns(model);
         Set<Integer> invalidDimensions = checker.getInvalidDimensions(model);
         Set<Integer> invalidMeasures = checker.getInvalidMeasures(model);
@@ -4093,7 +4087,6 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                 aggIndexCount.getAndIncrement();
             }
         });
-        List<String> antiFlattenLookupTables = checker.getAntiFlattenLookups();
 
         List<String> invalidDimensionNames = model.getAllNamedColumns().stream()
                 .filter(col -> invalidDimensions.contains(col.getId())).map(NDataModel.NamedColumn::getAliasDotColumn)
@@ -4109,7 +4102,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         response.setIndexes(Lists.newArrayList(invalidIndexes));
         response.setInvalidAggIndexCount(aggIndexCount.get());
         response.setInvalidTableIndexCount(tableIndexCount.get());
-        response.setAntiFlattenLookups(antiFlattenLookupTables);
+        response.setAntiFlattenLookups(Lists.newArrayList(checker.getAntiFlattenLookups()));
         return response;
     }
 

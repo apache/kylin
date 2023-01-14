@@ -16,15 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.metadata.query;
+package org.apache.kylin.rest.request;
 
-import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.extension.KylinExtension;
+import lombok.Data;
 
-public interface QueryExcludedTablesExtension extends KylinExtension {
-    Set<String> getExcludedTables(KylinConfig kylinConfig, String projectName);
-
-    void addExcludedTables(KylinConfig config, String projectName, String tableName, boolean isEnabled);
+@Data
+public class ProjectExclusionRequest {
+    @JsonProperty("table_exclusion_enabled")
+    private boolean isTableExclusionEnabled;
 }

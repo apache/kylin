@@ -44,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 
 public abstract class SegmentJob extends SparkApplication {
 
@@ -92,16 +91,8 @@ public abstract class SegmentJob extends SparkApplication {
 
         final Predicate<NDataSegment> notSkip = (NDataSegment dataSegment) -> !needSkipSegment(dataSegment);
 
-        String excludeTableStr = getParam(NBatchConstants.P_EXCLUDED_TABLES);
-        ImmutableSet<String> tables = StringUtils.isBlank(excludeTableStr) //
-                ? ImmutableSet.of()
-                : ImmutableSet.copyOf(excludeTableStr.split(SegmentJob.COMMA));
         readOnlySegments = Collections.unmodifiableSet((Set<? extends NDataSegment>) segmentIDs.stream() //
-                .map(segmentId -> {
-                    NDataSegment dataSegment = getSegment(segmentId);
-                    dataSegment.setExcludedTables(tables);
-                    return dataSegment;
-                }).filter(notSkip) //
+                .map(this::getSegment).filter(notSkip) //
                 .collect(Collectors.toCollection(LinkedHashSet::new)));
         runtime = new JobRuntime(config.getSegmentExecMaxThreads());
     }

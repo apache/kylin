@@ -25,27 +25,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.HashCodeExclude;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.TableExtDesc;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.acl.NDataModelAclParams;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
-import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
-import org.apache.kylin.metadata.model.ExcludedLookupChecker;
+import org.apache.kylin.metadata.model.ColExcludedChecker;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.kylin.metadata.model.TableRef;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinTableDesc;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.util.ModelUtils;
@@ -57,7 +55,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import io.kyligence.kap.secondstorage.response.SecondStorageNode;
 import lombok.Data;
@@ -152,6 +149,11 @@ public class NDataModelResponse extends NDataModel {
         super();
     }
 
+    @Override
+    public KylinConfig getConfig() {
+        return super.getConfig() == null ? KylinConfig.getInstanceFromEnv() : super.getConfig();
+    }
+
     public NDataModelResponse(NDataModel dataModel) {
         super(dataModel);
         this.setConfig(dataModel.getConfig());
@@ -186,13 +188,11 @@ public class NDataModelResponse extends NDataModel {
             tableMetadata = NTableMetadataManager.getInstance(getConfig(), this.getProject());
         }
 
-        Set<String> excludedTables = loadExcludedTables();
-        List<JoinTableDesc> joinTables = getLazyModel().getJoinTables();
-        ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, joinTables, getLazyModel());
+        ColExcludedChecker excludedChecker = new ColExcludedChecker(getConfig(), getProject(), this);
         List<SimplifiedNamedColumn> dimList = Lists.newArrayList();
         for (NamedColumn col : getAllNamedColumns()) {
             if (col.isDimension()) {
-                dimList.add(transColumnToDim(checker, col, tableMetadata));
+                dimList.add(transColumnToDim(excludedChecker, col, tableMetadata));
             }
         }
         if (!onlyNormalDim) {
@@ -208,7 +208,7 @@ public class NDataModelResponse extends NDataModel {
                     for (TblColRef col : joinTable.getTableRef().getColumns()) {
                         NamedColumn namedColumn = columnMap.get(col.getAliasDotName());
                         if (!namedColumn.isDimension()) {
-                            dimList.add(transColumnToDim(checker, namedColumn, tableMetadata));
+                            dimList.add(transColumnToDim(excludedChecker, namedColumn, tableMetadata));
                             namedColumn.setStatus(DIMENSION);
                         }
                     }
@@ -237,7 +237,7 @@ public class NDataModelResponse extends NDataModel {
                 .getDataModelDesc(this.getUuid());
     }
 
-    public SimplifiedNamedColumn transColumnToDim(ExcludedLookupChecker checker, NamedColumn col,
+    public SimplifiedNamedColumn transColumnToDim(ColExcludedChecker excludedChecker, NamedColumn col,
             NTableMetadataManager tableMetadata) {
         SimplifiedNamedColumn simplifiedDimension = new SimplifiedNamedColumn(col);
         simplifiedDimension.setStatus(DIMENSION);
@@ -245,8 +245,9 @@ public class NDataModelResponse extends NDataModel {
         if (colRef == null || tableMetadata == null) {
             return simplifiedDimension;
         }
-        if (checker.isColRefDependsLookupTable(colRef)) {
-            simplifiedDimension.setDependLookupTable(true);
+        if (excludedChecker.isExcludedCol(colRef)
+                && !colRef.getTableRef().getTableIdentity().equals(getLazyModel().getRootFactTableName())) {
+            simplifiedDimension.setExcluded(true);
         }
         TableExtDesc tableExt = tableMetadata.getTableExtIfExists(colRef.getTableRef().getTableDesc());
         if (tableExt != null) {
@@ -344,8 +345,8 @@ public class NDataModelResponse extends NDataModel {
         }
 
         @HashCodeExclude
-        @JsonProperty("depend_lookup_table")
-        private boolean dependLookupTable;
+        @JsonProperty("excluded")
+        private boolean excluded;
 
         @JsonProperty("cardinality")
         private Long cardinality;
@@ -392,18 +393,18 @@ public class NDataModelResponse extends NDataModel {
     public List<SimplifiedNamedColumn> getSelectedColumns() {
         List<SimplifiedNamedColumn> selectedColumns = Lists.newArrayList();
         NTableMetadataManager tableMetadata = null;
+        KylinConfig config = getConfig();
         if (!isBroken()) {
-            tableMetadata = NTableMetadataManager.getInstance(getConfig(), this.getProject());
+            tableMetadata = NTableMetadataManager.getInstance(config, this.getProject());
         }
-        Set<String> excludedTables = loadExcludedTables();
-        List<JoinTableDesc> joinTables = getLazyModel().getJoinTables();
-        ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, joinTables, getLazyModel());
+        ColExcludedChecker excludedChecker = new ColExcludedChecker(config, getProject(), this);
         for (NamedColumn namedColumn : getAllSelectedColumns()) {
             SimplifiedNamedColumn simplifiedNamedColumn = new SimplifiedNamedColumn(namedColumn);
             TblColRef colRef = findColumnByAlias(simplifiedNamedColumn.getAliasDotColumn());
             if (simplifiedNamedColumn.getStatus() == DIMENSION && colRef != null && tableMetadata != null) {
-                if (checker.isColRefDependsLookupTable(colRef)) {
-                    simplifiedNamedColumn.setDependLookupTable(true);
+                if (excludedChecker.isExcludedCol(colRef)
+                        && !colRef.getTableRef().getTableIdentity().equals(getLazyModel().getRootFactTableName())) {
+                    simplifiedNamedColumn.setExcluded(true);
                 }
                 TableExtDesc tableExt = tableMetadata.getTableExtIfExists(colRef.getTableRef().getTableDesc());
                 TableExtDesc.ColumnStats columnStats = Objects.isNull(tableExt) ? null
@@ -417,18 +418,6 @@ public class NDataModelResponse extends NDataModel {
         }
 
         return selectedColumns;
-    }
-
-    private Set<String> loadExcludedTables() {
-        FavoriteRuleManager favoriteRuleManager = null;
-        if (!isBroken()) {
-            favoriteRuleManager = FavoriteRuleManager.getInstance(getConfig(), getProject());
-        }
-        Set<String> excludedTables = Sets.newHashSet();
-        if (favoriteRuleManager != null) {
-            excludedTables.addAll(favoriteRuleManager.getExcludedTables());
-        }
-        return excludedTables;
     }
 
     public void computedInfo(long inconsistentCount, ModelStatusToDisplayEnum status, boolean isScd2,

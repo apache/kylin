@@ -64,6 +64,8 @@ public class TableDescResponse extends TableDesc {
     private ColumnDescResponse[] extColumns;
     @JsonProperty("last_build_job_id")
     private String jodID;
+    @JsonProperty("excluded")
+    private boolean excluded;
 
     @JsonProperty("kafka_bootstrap_servers")
     private String kafkaBootstrapServers;
@@ -98,7 +100,7 @@ public class TableDescResponse extends TableDesc {
 
     @Getter
     @Setter
-    public class ColumnDescResponse extends ColumnDesc {
+    public static class ColumnDescResponse extends ColumnDesc {
         @JsonProperty("cardinality")
         private Long cardinality;
         @JsonProperty("min_value")
@@ -107,6 +109,8 @@ public class TableDescResponse extends TableDesc {
         private String maxValue;
         @JsonProperty("null_count")
         private Long nullCount;
+        @JsonProperty("excluded")
+        private boolean excluded;
 
         ColumnDescResponse(ColumnDesc col) {
             super(col);

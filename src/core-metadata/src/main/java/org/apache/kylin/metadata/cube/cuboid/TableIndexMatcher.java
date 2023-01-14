@@ -23,73 +23,61 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
-import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.model.AntiFlatChecker;
+import org.apache.kylin.metadata.model.ColExcludedChecker;
 import org.apache.kylin.metadata.model.DeriveInfo;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TableIndexMatcher extends IndexMatcher {
 
-    private final boolean isUseTableIndexAnswerNonRawQuery;
-    private Set<Integer> sqlColumns;
-    private final boolean valid;
     private int layoutUnmatchedColsSize;
 
-    public TableIndexMatcher(SQLDigest sqlDigest, ChooserContext chooserContext, Set<String> excludedTables,
-            boolean isUseTableIndexAnswerNonRawQuery) {
-        super(sqlDigest, chooserContext, excludedTables);
-        this.isUseTableIndexAnswerNonRawQuery = isUseTableIndexAnswerNonRawQuery;
-        valid = init();
+    public TableIndexMatcher(SQLDigest sqlDigest, ChooserContext chooserContext, NDataflow dataflow,
+            ColExcludedChecker excludedChecker, AntiFlatChecker antiFlatChecker) {
+        super(sqlDigest, chooserContext, dataflow, excludedChecker, antiFlatChecker);
         this.layoutUnmatchedColsSize = 0;
+        this.valid = fastValidCheckBeforeMatch();
     }
 
-    private boolean init() {
+    @Override
+    protected boolean fastValidCheckBeforeMatch() {
         // cols may have null values as the CC col in query may not present in the model
         sqlColumns = sqlDigest.allColumns.stream().map(tblColMap::get).collect(Collectors.toSet());
         return !sqlColumns.contains(null);
     }
 
-    public boolean valid() {
-        return valid;
-    }
-
+    @Override
     public MatchResult match(LayoutEntity layout) {
-        if (!needTableIndexMatch(layout.getIndex()) || !valid) {
-            return new MatchResult(false);
+        if (canSkipIndexMatch(layout.getIndex()) || !isValid()) {
+            return new MatchResult();
         }
 
         log.trace("Matching table index");
         final Map<Integer, DeriveInfo> needDerive = Maps.newHashMap();
-        Set<Integer> unmatchedCols = Sets.newHashSet();
-        unmatchedCols.addAll(sqlColumns);
-        if (isBatchFusionModel) {
-            unmatchedCols.removeAll(layout.getStreamingColumns().keySet());
-        }
-        unmatchedCols.removeAll(layout.getOrderedDimensions().keySet());
-        ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(model.getProject());
-        if (projectInstance.getConfig().useTableIndexAnswerSelectStarEnabled()) {
+        Set<Integer> unmatchedCols = initUnmatchedColumnIds(layout);
+        if (NProjectManager.getProjectConfig(project).useTableIndexAnswerSelectStarEnabled()) {
             layoutUnmatchedColsSize = unmatchedCols.size();
-            NDataflowManager dataflowManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(),
-                    model.getProject());
-            NDataflow dataflow = dataflowManager.getDataflow(layout.getModel().getId());
             unmatchedCols.removeAll(dataflow.getAllColumnsIndex());
         }
         goThruDerivedDims(layout.getIndex(), needDerive, unmatchedCols);
-        if (!unmatchedCols.isEmpty()) {
+        boolean isMatch = unmatchedCols.isEmpty();
+        if (!isMatch) {
+            unmatchedCols.removeAll(filterExcludedDims(layout));
+            log.debug("After rolling back to TableIndex to match, the unmatched columns are: {}", unmatchedCols);
+            isMatch = unmatchedCols.isEmpty();
+        }
+        if (!isMatch) {
             if (log.isDebugEnabled()) {
                 log.debug("Table index {} with unmatched columns {}", layout, unmatchedCols);
             }
@@ -100,9 +88,11 @@ public class TableIndexMatcher extends IndexMatcher {
         return new MatchResult(true, needDerive);
     }
 
-    private boolean needTableIndexMatch(IndexEntity index) {
-        boolean isUseTableIndex = isUseTableIndexAnswerNonRawQuery && !nonSupportFunTableIndex(sqlDigest.aggregations);
-        return index.isTableIndex() && (sqlDigest.isRawQuery || isUseTableIndex);
+    @Override
+    protected boolean canSkipIndexMatch(IndexEntity index) {
+        boolean isUseTableIndex = dataflow.getConfig().isUseTableIndexAnswerNonRawQuery()
+                && !nonSupportFunTableIndex(sqlDigest.aggregations);
+        return !index.isTableIndex() || (!sqlDigest.isRawQuery && !isUseTableIndex);
     }
 
     public int getLayoutUnmatchedColsSize() {

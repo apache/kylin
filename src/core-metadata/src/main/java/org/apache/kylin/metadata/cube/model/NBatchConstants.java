@@ -35,7 +35,6 @@ public interface NBatchConstants {
     String P_TARGET_MODEL = "targetModel";
     String P_DATA_RANGE_START = "dataRangeStart";
     String P_DATA_RANGE_END = "dataRangeEnd";
-    String P_EXCLUDED_TABLES = "excludedTables";
 
     String P_IGNORED_SNAPSHOT_TABLES = "ignoredSnapshotTables";
     String P_NEED_BUILD_SNAPSHOTS = "needBuildSnapshots";

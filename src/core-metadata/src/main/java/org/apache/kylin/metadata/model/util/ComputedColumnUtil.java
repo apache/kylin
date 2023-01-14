@@ -393,7 +393,7 @@ public class ComputedColumnUtil {
         }
         String existingAlias = existingCC.getTableAlias();
         String newAlias = newCC.getTableAlias();
-        return StringUtils.equals(newAlias, adviceAliasMapping.getAliasMapping().get(existingAlias));
+        return StringUtils.equals(newAlias, adviceAliasMapping.getAliasMap().get(existingAlias));
     }
 
     public interface CCConflictHandler {
@@ -471,7 +471,7 @@ public class ComputedColumnUtil {
             JoinsGraph ccJoinsGraph = getCCExprRelatedSubgraph(existingCC, existingModel);
             AliasMapping aliasMapping = getAliasMappingFromJoinsGraph(ccJoinsGraph, newModel.getJoinsGraph());
             String advisedExpr = aliasMapping == null ? null
-                    : CalciteParser.replaceAliasInExpr(existingCC.getExpression(), aliasMapping.getAliasMapping());
+                    : CalciteParser.replaceAliasInExpr(existingCC.getExpression(), aliasMapping.getAliasMap());
 
             String finalExpr = advisedExpr != null ? advisedExpr : existingCC.getExpression();
             String msg = String.format(Locale.ROOT, MsgPicker.getMsg().getComputedColumnNameDuplicated(),
@@ -485,7 +485,7 @@ public class ComputedColumnUtil {
         public void handleOnWrongPositionName(NDataModel existingModel, ComputedColumnDesc existingCC,
                 ComputedColumnDesc newCC, AliasMapping positionAliasMapping) {
             String advice = positionAliasMapping == null ? null
-                    : positionAliasMapping.getAliasMapping().get(existingCC.getTableAlias());
+                    : positionAliasMapping.getAliasMap().get(existingCC.getTableAlias());
 
             String msg = null;
 
@@ -507,7 +507,7 @@ public class ComputedColumnUtil {
         public void handleOnWrongPositionExpr(NDataModel existingModel, ComputedColumnDesc existingCC,
                 ComputedColumnDesc newCC, AliasMapping positionAliasMapping) {
             String advice = positionAliasMapping == null ? null
-                    : positionAliasMapping.getAliasMapping().get(existingCC.getTableAlias());
+                    : positionAliasMapping.getAliasMap().get(existingCC.getTableAlias());
 
             String msg = null;
 
