@@ -47,6 +47,7 @@ import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.model.ColExcludedChecker;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinsGraph;
@@ -69,20 +70,27 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import lombok.Getter;
+
 // match alias in query to alias in model
 // Not designed to reuse, re-new per query
 public class QueryAliasMatcher {
     static final ColumnRowType MODEL_VIEW_COLUMN_ROW_TYPE = new ColumnRowType(new ArrayList<>());
     private static final ColumnRowType SUBQUERY_TAG = new ColumnRowType(null);
     private static final String[] COLUMN_ARRAY_MARKER = new String[0];
+
     private final String project;
     private final String defaultSchema;
     private final Map<String, KapOLAPSchema> schemaMap = Maps.newHashMap();
     private final Map<String, Map<String, OLAPTable>> schemaTables = Maps.newHashMap();
 
+    @Getter
+    private final ColExcludedChecker checker;
+
     public QueryAliasMatcher(String project, String defaultSchema) {
         this.project = project;
         this.defaultSchema = defaultSchema;
+        checker = new ColExcludedChecker(KylinConfig.getInstanceFromEnv(), project, null);
     }
 
     /**

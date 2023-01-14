@@ -39,6 +39,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -209,4 +210,7 @@ public class ComputedColumnDesc implements Serializable {
         return innerExpression;
     }
 
+    public boolean isAutoCC() {
+        return getColumnName().startsWith(ComputedColumnUtil.CC_NAME_PREFIX);
+    }
 }

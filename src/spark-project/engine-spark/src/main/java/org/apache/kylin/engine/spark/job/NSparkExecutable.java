@@ -312,22 +312,10 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         if (Objects.isNull(dataFlow) || StringUtils.isBlank(originSegments)) {
             return copied;
         }
-        removeFactTableInExcludedTables(dataFlow, copied);
         String newSegments = Stream.of(StringUtils.split(originSegments, COMMA))
                 .filter(id -> Objects.nonNull(dataFlow.getSegment(id))).collect(Collectors.joining(COMMA));
         copied.put(NBatchConstants.P_SEGMENT_IDS, newSegments);
         return copied;
-    }
-
-    private void removeFactTableInExcludedTables(NDataflow dataFlow, final Map<String, String> originParams) {
-        val rootFactTableName = dataFlow.getModel().getRootFactTableName();
-        val excludedTablesString = originParams.getOrDefault(NBatchConstants.P_EXCLUDED_TABLES, "");
-        if (StringUtils.isBlank(excludedTablesString)) {
-            return;
-        }
-        val excludedTables = Sets.newHashSet(excludedTablesString.split(","));
-        excludedTables.remove(rootFactTableName);
-        originParams.put(NBatchConstants.P_EXCLUDED_TABLES, String.join(",", excludedTables));
     }
 
     /**

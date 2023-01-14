@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -50,11 +49,9 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.common.ReadFsSwitch;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.calcite.KylinRelDataTypeSystem;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.util.AsyncQueryUtil;
-import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.engine.exec.ExecuteResult;
 import org.apache.kylin.query.engine.exec.calcite.CalciteQueryPlanExec;
@@ -63,8 +60,11 @@ import org.apache.kylin.query.engine.meta.SimpleDataContext;
 import org.apache.kylin.query.engine.view.ViewAnalyzer;
 import org.apache.kylin.query.mask.QueryResultMasks;
 import org.apache.kylin.query.relnode.KapAggregateRel;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.query.util.CalcitePlanRouterVisitor;
 import org.apache.kylin.query.util.HepUtils;
+import org.apache.kylin.query.util.QueryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,8 +166,7 @@ public class QueryExec {
                 return new QueryResult();
             }
 
-            if (kylinConfig.getEmptyResultForSelectStar()
-                    && sql.toLowerCase(Locale.ROOT).matches("^select\\s+\\*\\p{all}*")
+            if (kylinConfig.getEmptyResultForSelectStar() && QueryUtil.isSelectStarStatement(sql)
                     && !QueryContext.current().getQueryTagInfo().isAsyncQuery()) {
                 return new QueryResult(Lists.newArrayList(), 0, resultFields);
             }

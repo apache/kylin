@@ -138,7 +138,7 @@ public class ExecAndComp {
             schemaFilePath = sqlPath.substring(0, index) + "/result-" + joinType + sqlPath.substring(index) + ".schema";
         }
         try {
-            if (Files.exists(Paths.get(resultFilePath)) && Files.exists(Paths.get(schemaFilePath))) {
+            if (index > 0 && Files.exists(Paths.get(resultFilePath)) && Files.exists(Paths.get(schemaFilePath))) {
                 StructType schema = StructType.fromDDL(new String(Files.readAllBytes(Paths.get(schemaFilePath))));
                 val structs = Arrays.stream(schema.fields()).map(SparderTypeUtil::convertSparkFieldToJavaField)
                         .collect(Collectors.toList());
@@ -360,8 +360,7 @@ public class ExecAndComp {
         // SQLS like "where 1<>1" will be optimized and run locally and no dataset will be returned
         String prevRunLocalConf = Unsafe.setProperty("kylin.query.engine.run-constant-query-locally", "FALSE");
         try {
-            QueryExec queryExec = new QueryExec(prj,
-                    NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(prj).getConfig(), true);
+            QueryExec queryExec = new QueryExec(prj, NProjectManager.getProjectConfig(prj), true);
             if (parameters != null) {
                 for (int i = 0; i < parameters.size(); i++) {
                     queryExec.setPrepareParam(i, parameters.get(i));

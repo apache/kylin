@@ -283,10 +283,30 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testIsSelectStatement() {
-        Assert.assertFalse(QueryUtil.isSelectStatement("INSERT INTO Person VALUES ('Li Si', 'Beijing');\n;\n"));
-        Assert.assertFalse(QueryUtil.isSelectStatement("UPDATE Person SET name = 'Fred' WHERE name = 'Li Si' "));
-        Assert.assertFalse(QueryUtil.isSelectStatement("DELETE FROM Person WHERE name = 'Wilson'"));
+        Assert.assertFalse(QueryUtil.isSelectStatement("insert into person values ('li si', 'beijing');\n;\n"));
+        Assert.assertFalse(QueryUtil.isSelectStatement("update t set name = 'fred' where name = 'lisi' "));
+        Assert.assertFalse(QueryUtil.isSelectStatement("delete from t where name = 'wilson'"));
         Assert.assertFalse(QueryUtil.isSelectStatement("drop table person"));
+        Assert.assertTrue(QueryUtil.isSelectStatement("with tempName as (select * from t) select * from tempName"));
+        Assert.assertFalse(QueryUtil.isSelectStatement("with tempName "));
+        Assert.assertTrue(QueryUtil.isSelectStatement("explain\n select * from tempName"));
+        Assert.assertFalse(QueryUtil.isSelectStatement("explain\n update t set name = 'fred' where name = 'lisi' "));
+    }
+
+    @Test
+    public void testIsSelectStarStatement() {
+        Assert.assertTrue(QueryUtil.isSelectStarStatement("select * from t"));
+        Assert.assertFalse(QueryUtil.isSelectStarStatement("select a from t"));
+        Assert.assertFalse(QueryUtil.isSelectStarStatement("update t set a = 1"));
+
+        // not support yet
+        String withClause = "with tempName as (select * from t) select * from tempName";
+        Assert.assertFalse(QueryUtil.isSelectStarStatement(withClause));
+    }
+
+    @Test
+    public void testRemoveCommentWithException() {
+        Assert.assertEquals("", QueryUtil.removeCommentInSql(""));
     }
 
     @Test

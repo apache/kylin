@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 @Slf4j
-abstract public class RootPersistentEntity implements AclEntity, Serializable {
+public abstract class RootPersistentEntity implements AclEntity, Serializable {
 
     // for spring session save serializable object(ManagerUser), do not modify
     private static final long serialVersionUID = 0L;

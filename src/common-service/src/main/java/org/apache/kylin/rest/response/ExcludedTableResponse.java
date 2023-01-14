@@ -15,27 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.metadata.model.alias;
 
-import java.util.Set;
+package org.apache.kylin.rest.response;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.Sets;
+import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public class AliasMapping {
-
-    private final BiMap<String, String> aliasMap;
-
-    @Getter
-    private final Set<String> excludedColumns = Sets.newHashSet();
-
-    public AliasMapping(BiMap<String, String> aliasMap) {
-        this.aliasMap = aliasMap;
-    }
-
-    public BiMap<String, String> getAliasMap() {
-        return aliasMap;
-    }
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ExcludedTableResponse {
+    @JsonProperty("table")
+    private String table;
+    @JsonProperty("excluded")
+    private boolean excluded;
+    @JsonProperty("excluded_col_size")
+    private int excludedColSize;
+    @JsonProperty("excluded_columns")
+    private List<String> excludedColumns = Lists.newArrayList();
 }

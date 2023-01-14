@@ -18,7 +18,8 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import com.google.common.collect.Sets
+import java.util.{Locale, Objects}
+
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.util.HadoopUtil
@@ -43,13 +44,14 @@ import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils
 
-import java.util.{Locale, Objects}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
 import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.util.{Failure, Success, Try}
+
+import com.google.common.collect.Sets
 
 abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
                                     private val dataSegment: NDataSegment,
@@ -220,7 +222,7 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
 
   def generateLookupTables(): mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]] = {
     val ret = mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]]()
-    val normalizedTableSet = mutable.Set[String]()
+    val antiFlattenTableSet = mutable.Set[String]()
     dataModel.getJoinTables.asScala
       .filter(isTableToBuild)
       .foreach { joinDesc =>
@@ -229,12 +231,10 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
           throw new IllegalArgumentException("FK table cannot be null")
         }
         val fkTable = fkTableRef.getTableDesc.getIdentity
-        if (!joinDesc.isFlattenable || normalizedTableSet.contains(fkTable)) {
-          normalizedTableSet.add(joinDesc.getTable)
+        if (!joinDesc.isFlattenable || antiFlattenTableSet.contains(fkTable)) {
+          antiFlattenTableSet.add(joinDesc.getTable)
         }
-        if (joinDesc.isFlattenable && !dataSegment.getExcludedTables.contains(joinDesc.getTable)
-          && !dataSegment.getExcludedTables.contains(fkTable)
-          && !normalizedTableSet.contains(joinDesc.getTable)) {
+        if (joinDesc.isFlattenable && !antiFlattenTableSet.contains(joinDesc.getTable)) {
           val tableRef = joinDesc.getTableRef
           val tableDS = newTableDS(tableRef)
           ret.put(joinDesc, fulfillDS(tableDS, Set.empty, tableRef))

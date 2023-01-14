@@ -27,36 +27,43 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.metadata.model.DeriveInfo;
-import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.metadata.model.ExcludedLookupChecker;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.model.AntiFlatChecker;
+import org.apache.kylin.metadata.model.ColExcludedChecker;
+import org.apache.kylin.metadata.model.DeriveInfo;
+import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.util.scd2.SCD2NonEquiCondSimplification;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.SQLDigest;
 
-import io.kyligence.kap.guava20.shaded.common.base.Preconditions;
-import io.kyligence.kap.guava20.shaded.common.collect.ImmutableCollection;
-import io.kyligence.kap.guava20.shaded.common.collect.ImmutableMultimap;
-import io.kyligence.kap.guava20.shaded.common.collect.Iterables;
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class IndexMatcher {
 
     final SQLDigest sqlDigest;
+    final String project;
+    final NDataflow dataflow;
     final NDataModel model;
-    final Set<String> excludedTables;
     final boolean isBatchFusionModel;
+    @Getter
+    boolean valid;
 
     final ChooserContext chooserContext;
 
@@ -64,14 +71,19 @@ public abstract class IndexMatcher {
     final Map<String, List<Integer>> primaryKeyColumnIds;
     final Map<String, List<Integer>> foreignKeyColumnIds;
     final ImmutableMultimap<Integer, Integer> fk2Pk;
+    Set<Integer> sqlColumns;
 
+    ColExcludedChecker excludedChecker;
+    AntiFlatChecker antiFlatChecker;
     final Map<Integer, DeriveInfo> toManyDerivedInfoMap = Maps.newHashMap();
 
-    IndexMatcher(SQLDigest sqlDigest, ChooserContext chooserContext, Set<String> excludedTables) {
+    IndexMatcher(SQLDigest sqlDigest, ChooserContext chooserContext, NDataflow dataflow,
+            ColExcludedChecker excludedChecker, AntiFlatChecker antiFlatChecker) {
         this.sqlDigest = sqlDigest;
+        this.dataflow = dataflow;
+        this.project = dataflow.getProject();
         this.model = chooserContext.getModel();
         this.chooserContext = chooserContext;
-        this.excludedTables = excludedTables;
         this.isBatchFusionModel = chooserContext.isBatchFusionModel();
 
         this.fk2Pk = chooserContext.getFk2Pk();
@@ -79,12 +91,14 @@ public abstract class IndexMatcher {
         this.primaryKeyColumnIds = chooserContext.getPrimaryKeyColumnIds();
         this.foreignKeyColumnIds = chooserContext.getForeignKeyColumnIds();
 
+        this.excludedChecker = excludedChecker;
+        this.antiFlatChecker = antiFlatChecker;
+
         // suppose: A join B && A join C, the relation of A->C is TO_MANY and C need to derive,
         // then the built index of this join relation only based on the flat table of A join B,
         // in order to get the correct result, the query result must join the snapshot of C.
-        ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, model.getJoinTables(), model);
         model.getJoinTables().forEach(joinTableDesc -> {
-            if (checker.getExcludedLookups().contains(joinTableDesc.getTable())) {
+            if (antiFlatChecker.getAntiFlattenLookups().contains(joinTableDesc.getTable())) {
                 JoinDesc join = joinTableDesc.getJoin();
                 if (!joinTableDesc.isToManyJoinRelation() || !needJoinSnapshot(join)) {
                     return;
@@ -97,7 +111,36 @@ public abstract class IndexMatcher {
         });
     }
 
+    //the integrity check is passed
+    protected abstract boolean fastValidCheckBeforeMatch();
+
     abstract MatchResult match(LayoutEntity layout);
+
+    protected abstract boolean canSkipIndexMatch(IndexEntity index);
+
+    Set<Integer> initUnmatchedColumnIds(LayoutEntity layout) {
+        Set<Integer> unmatchedCols = Sets.newHashSet();
+        unmatchedCols.addAll(sqlColumns);
+        if (isBatchFusionModel) {
+            unmatchedCols.removeAll(layout.getStreamingColumns().keySet());
+        }
+        unmatchedCols.removeAll(layout.getOrderedDimensions().keySet());
+        Set<Integer> excludedColSet = filterExcludedDims(layout);
+        if (!excludedColSet.isEmpty()) {
+            log.debug("Excluded columns of layout need to derive. The id set is: {}", excludedColSet);
+            unmatchedCols.addAll(excludedColSet);
+        }
+        return unmatchedCols;
+    }
+
+    Set<Integer> filterExcludedDims(LayoutEntity layout) {
+        if (!NProjectManager.getProjectConfig(project).isSnapshotPreferred()) {
+            return Sets.newHashSet();
+        }
+        return layout.getOrderedDimensions().entrySet().stream() //
+                .filter(entry -> excludedChecker.isExcludedCol(entry.getValue())) //
+                .map(Map.Entry::getKey).collect(Collectors.toSet());
+    }
 
     void goThruDerivedDims(final IndexEntity indexEntity, Map<Integer, DeriveInfo> needDeriveCollector,
             Set<Integer> unmatchedDims) {
@@ -158,11 +201,10 @@ public abstract class IndexMatcher {
             Map<Integer, DeriveInfo> needDeriveCollector, Iterator<Integer> unmatchedDimItr, Integer unmatchedDim) {
         JoinDesc joinByPKSide = model.getJoinByPKSide(unmatchedDim);
         Preconditions.checkNotNull(joinByPKSide);
-        val alias = joinByPKSide.getPKSide().getAlias();
+        String alias = joinByPKSide.getPKSide().getAlias();
         List<Integer> foreignKeyColumns = foreignKeyColumnIds.get(alias);
         List<Integer> primaryKeyColumns = primaryKeyColumnIds.get(alias);
 
-        val tables = model.getAliasMap();
         if (joinByPKSide.isInnerJoin() && primaryKeyColumns.contains(unmatchedDim)) {
             Integer relatedCol = foreignKeyColumns.get(primaryKeyColumns.indexOf(unmatchedDim));
             if (indexEntity.dimensionsDerive(relatedCol)) {
@@ -171,10 +213,11 @@ public abstract class IndexMatcher {
                 unmatchedDimItr.remove();
                 return true;
             }
-        } else if (indexEntity.dimensionsDerive(foreignKeyColumns) && model.getColRef(unmatchedDim) != null
-                && Optional.ofNullable(tables.get(alias))
-                        .map(ref -> StringUtils.isNotEmpty(ref.getTableDesc().getLastSnapshotPath())).orElse(false)) {
-
+        } else if (indexEntity.dimensionsDerive(foreignKeyColumns) //
+                && model.getColRef(unmatchedDim) != null //
+                && Optional.ofNullable(model.getAliasMap().get(alias))
+                        .map(ref -> ref.getTableDesc().getLastSnapshotPath()).filter(StringUtils::isNotBlank)
+                        .isPresent()) {
             DeriveInfo.DeriveType deriveType = matchNonEquiJoinFks(indexEntity, joinByPKSide)
                     ? DeriveInfo.DeriveType.LOOKUP_NON_EQUI
                     : DeriveInfo.DeriveType.LOOKUP;
@@ -196,7 +239,6 @@ public abstract class IndexMatcher {
     @RequiredArgsConstructor
     public static class MatchResult {
 
-        @NonNull
         boolean isMatched;
 
         Map<Integer, DeriveInfo> needDerive = Maps.newHashMap();

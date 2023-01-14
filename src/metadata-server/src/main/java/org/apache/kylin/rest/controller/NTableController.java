@@ -48,12 +48,15 @@ import org.apache.kylin.rest.request.AutoMergeRequest;
 import org.apache.kylin.rest.request.PartitionKeyRequest;
 import org.apache.kylin.rest.request.PushDownModeRequest;
 import org.apache.kylin.rest.request.ReloadTableRequest;
+import org.apache.kylin.rest.request.TableExclusionRequest;
 import org.apache.kylin.rest.request.TableLoadRequest;
 import org.apache.kylin.rest.request.TopTableRequest;
 import org.apache.kylin.rest.request.UpdateAWSTableExtDescRequest;
 import org.apache.kylin.rest.response.AutoMergeConfigResponse;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ExcludedTableDetailResponse;
+import org.apache.kylin.rest.response.ExcludedTableResponse;
 import org.apache.kylin.rest.response.LoadTableResponse;
 import org.apache.kylin.rest.response.NHiveTableNameResponse;
 import org.apache.kylin.rest.response.NInitTablesResponse;
@@ -65,7 +68,6 @@ import org.apache.kylin.rest.response.TableRefresh;
 import org.apache.kylin.rest.response.TableRefreshAll;
 import org.apache.kylin.rest.response.TablesAndColumnsResponse;
 import org.apache.kylin.rest.response.UpdateAWSTableExtDescResponse;
-import org.apache.kylin.rest.service.ModelBuildSupporter;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.TableExtService;
 import org.apache.kylin.rest.service.TableSamplingService;
@@ -105,10 +107,6 @@ public class NTableController extends NBasicController {
     private ModelService modelService;
 
     @Autowired
-    @Qualifier("modelBuildService")
-    private ModelBuildSupporter modelBuildService;
-
-    @Autowired
     @Qualifier("tableSamplingService")
     private TableSamplingService tableSamplingService;
 
@@ -145,15 +143,17 @@ public class NTableController extends NBasicController {
             @RequestParam(value = "is_fuzzy", required = false, defaultValue = "false") boolean isFuzzy,
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer offset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer limit,
+            @RequestParam(value = "with_excluded", required = false, defaultValue = "true") boolean withExcluded,
             @RequestParam(value = "source_type", required = false, defaultValue = "9") List<Integer> sourceType)
             throws Exception {
 
         String projectName = checkProjectName(project);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-                tableService.getProjectTables(projectName, table, offset, limit, false, (databaseName, tableName) -> {
+        NInitTablesResponse projectTables = tableService.getProjectTables(projectName, table, offset, limit,
+                withExcluded, false, (databaseName, tableName) -> {
                     return tableService.getTableDescByTypes(projectName, withExt, tableName, databaseName, isFuzzy,
                             sourceType);
-                }), "");
+                });
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, projectTables, "");
     }
 
     @ApiOperation(value = "unloadTable", tags = { "AI" }, notes = "Update URL: {project}; Update Param: project")
@@ -319,9 +319,6 @@ public class NTableController extends NBasicController {
 
     /**
      * Show all tablesNames
-     *
-     * @return String[]
-     * @throws IOException
      */
     @ApiOperation(value = "showTables", tags = {
             "AI" }, notes = "Update Param: data_source_type, page_offset, page_size; Update Response: total_size")
@@ -333,7 +330,7 @@ public class NTableController extends NBasicController {
             @RequestParam(value = "table", required = false) String table,
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer offset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer limit,
-            @RequestParam(value = "database", required = true) String database) throws Exception {
+            @RequestParam(value = "database") String database) throws Exception {
         checkProjectName(project);
         List<TableNameResponse> tables = tableService.getTableNameResponses(project, database, table);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(tables, offset, limit), "");
@@ -350,7 +347,7 @@ public class NTableController extends NBasicController {
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer limit) throws Exception {
         String projectName = checkProjectName(project);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-                tableService.getProjectTables(projectName, table, offset, limit, true, (databaseName,
+                tableService.getProjectTables(projectName, table, offset, limit, true, true, (databaseName,
                         tableName) -> tableService.getHiveTableNameResponses(projectName, databaseName, tableName)),
                 "");
     }
@@ -514,7 +511,7 @@ public class NTableController extends NBasicController {
     @ApiOperation(value = "catalogCache", tags = { "DW" })
     @PutMapping(value = "catalog_cache", produces = { HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
     @ResponseBody
-    public EnvelopeResponse refreshCatalogCache(final HttpServletRequest refreshRequest) {
+    public EnvelopeResponse<TableRefreshAll> refreshCatalogCache(final HttpServletRequest refreshRequest) {
         TableRefreshAll response = tableService.refreshAllCatalogCache(refreshRequest);
         return new EnvelopeResponse<>(response.getCode(), response, response.getMsg());
     }
@@ -522,7 +519,7 @@ public class NTableController extends NBasicController {
     @ApiOperation(value = "modelTables", tags = { "AI" })
     @GetMapping(value = "/model_tables")
     @ResponseBody
-    public EnvelopeResponse getModelTables(@RequestParam("project") String project,
+    public EnvelopeResponse<List<TableDesc>> getModelTables(@RequestParam("project") String project,
             @RequestParam("model_name") String modelName) {
         checkProjectName(project);
         val res = tableService.getTablesOfModel(project, modelName);
@@ -539,5 +536,64 @@ public class NTableController extends NBasicController {
         } else if (!(tables instanceof List)) {
             throw new KylinException(INVALID_TABLE_REFRESH_PARAMETER, message.getTableRefreshParamInvalid(), false);
         }
+    }
+
+    /**
+     * Get excluded tables.
+     * @param project project name
+     * @param pageOffset page offset of tables
+     * @param pageSize page size of tables
+     * @param viewPartialCols view partial columns of each excluded table
+     * @param searchKey fuzzy search related excluded tables
+     * @return Return excluded tables.
+     */
+    @ApiOperation(value = "getExcludedTables", notes = "Add URL: {project}; ")
+    @GetMapping(value = "/excluded_tables")
+    @ResponseBody
+    public EnvelopeResponse<DataResult<List<ExcludedTableResponse>>> getExcludedTables(
+            @RequestParam(value = "project") String project,
+            @RequestParam(value = "page_offset", required = false, defaultValue = "0") int pageOffset,
+            @RequestParam(value = "page_size", required = false, defaultValue = "10") int pageSize,
+            @RequestParam(value = "view_partial_cols", required = false, defaultValue = "true") boolean viewPartialCols,
+            @RequestParam(value = "key", required = false, defaultValue = "") String searchKey) {
+        List<ExcludedTableResponse> list = tableExtService.getExcludedTables(project, true, searchKey);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(list, pageOffset, pageSize), "");
+    }
+
+    /**
+     * Get info of specified excluded table.
+     * @param project project name
+     * @param table excluded table name
+     * @param pageOffset page offset of columns
+     * @param pageSize page size of columns
+     * @param searchKey fuzzy search columns
+     * @param colType column types: 0 - columns to be excluded, 1- excluded columns
+     */
+    @ApiOperation(value = "getExcludedTable", notes = "Add URL: {project}; ")
+    @GetMapping(value = "/excluded_table")
+    @ResponseBody
+    public EnvelopeResponse<ExcludedTableDetailResponse> getExcludedTable(
+            @RequestParam(value = "project") String project, @RequestParam(value = "table") String table,
+            @RequestParam(value = "page_offset", required = false, defaultValue = "0") int pageOffset,
+            @RequestParam(value = "page_size", required = false, defaultValue = "10") int pageSize,
+            @RequestParam(value = "key", required = false, defaultValue = "") String searchKey,
+            @RequestParam(value = "col_type", required = false, defaultValue = "0") int colType) {
+        String projectName = checkProjectName(project);
+        ExcludedTableDetailResponse response = tableExtService.getExcludedTable(projectName, table, pageOffset,
+                pageSize, searchKey, colType == 1);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
+    }
+
+    /**
+     * Update excluded table info.
+     */
+    @ApiOperation(value = "updateExcludedTables", tags = { "RR" }, notes = "Add URL: {project}; ")
+    @PutMapping(value = "/excluded_tables")
+    @ResponseBody
+    public EnvelopeResponse<String> updateExcludedTables(@RequestBody TableExclusionRequest request) {
+        String projectName = checkProjectName(request.getProject());
+        request.setProject(projectName);
+        tableExtService.updateExcludedTables(request.getProject(), request);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 }

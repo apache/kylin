@@ -31,15 +31,15 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.engine.spark.smarter.IndexDependencyParser;
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.model.JoinTableDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -77,7 +77,7 @@ public class SegmentFlatTableDesc {
     }
 
     public SegmentFlatTableDesc(KylinConfig config, NDataSegment dataSegment, AdaptiveSpanningTree spanningTree,
-                                List<String> relatedTables) {
+            List<String> relatedTables) {
         this.config = config;
         this.kapConfig = KapConfig.getInstanceFromEnv();
         this.dataSegment = dataSegment;
@@ -211,7 +211,7 @@ public class SegmentFlatTableDesc {
         return spanningTree.getLevel0thIndices().stream().anyMatch(index -> index.getEffectiveDimCols().values() //
                 .stream().anyMatch(col -> !col.getTableRef().getTableIdentity().equalsIgnoreCase(factTableId)) //
                 || index.getEffectiveMeasures().values().stream().anyMatch(m -> m.getFunction().getColRefs().stream() //
-                .anyMatch(col -> !col.getTableRef().getTableIdentity().equalsIgnoreCase(factTableId))));
+                        .anyMatch(col -> !col.getTableRef().getTableIdentity().equalsIgnoreCase(factTableId))));
     }
 
     public int getFlatTableCoalescePartitionNum() {
@@ -286,9 +286,6 @@ public class SegmentFlatTableDesc {
 
     protected final void addColumn(TblColRef colRef) {
         if (columnIdMap.containsKey(colRef.getIdentity())) {
-            return;
-        }
-        if (dataSegment.getExcludedTables().contains(colRef.getTable())) {
             return;
         }
 

@@ -236,7 +236,7 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
             // The computed column expression is defined based on alias in model, e.g. BUYER_COUNTRY.x + BUYER_ACCOUNT.y
             // however user query might use a different alias, say bc.x + ba.y
             String ccExpression = CalciteParser.replaceAliasInExpr(computedColumnDesc.getExpression(),
-                    matchInfo.getAliasMapping().inverse());
+                    matchInfo.getAliasMap().inverse());
             // intend to handle situation like KE-15939
             String replaceExpression = columnUsage.addAlias ? ccExpression + " AS " + computedColumnDesc.getColumnName()
                     : ccExpression;

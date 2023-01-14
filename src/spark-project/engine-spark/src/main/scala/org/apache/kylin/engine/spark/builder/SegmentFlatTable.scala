@@ -18,7 +18,9 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import com.google.common.collect.Sets
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+import java.util.{Locale, Objects, Timer, TimerTask}
+
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.common.{KapConfig, KylinConfig}
@@ -37,14 +39,14 @@ import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils
 
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.{Locale, Objects, Timer, TimerTask}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
 import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.util.{Failure, Success, Try}
+
+import com.google.common.collect.Sets
 
 class SegmentFlatTable(private val sparkSession: SparkSession, //
                        private val tableDesc: SegmentFlatTableDesc) extends LogEx {
@@ -207,7 +209,7 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
 
   protected def generateLookupTables(): mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]] = {
     val ret = mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]]()
-    val normalizedTableSet = mutable.Set[String]()
+    val antiFlattenTableSet = mutable.Set[String]()
     dataModel.getJoinTables.asScala
       .filter(isTableToBuild)
       .foreach { joinDesc =>
@@ -216,12 +218,10 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
           throw new IllegalArgumentException("FK table cannot be null")
         }
         val fkTable = fkTableRef.getTableDesc.getIdentity
-        if (!joinDesc.isFlattenable || normalizedTableSet.contains(fkTable)) {
-          normalizedTableSet.add(joinDesc.getTable)
+        if (!joinDesc.isFlattenable || antiFlattenTableSet.contains(fkTable)) {
+          antiFlattenTableSet.add(joinDesc.getTable)
         }
-        if (joinDesc.isFlattenable && !dataSegment.getExcludedTables.contains(joinDesc.getTable)
-          && !dataSegment.getExcludedTables.contains(fkTable)
-          && !normalizedTableSet.contains(joinDesc.getTable)) {
+        if (joinDesc.isFlattenable && !antiFlattenTableSet.contains(joinDesc.getTable)) {
           val tableRef = joinDesc.getTableRef
           val tableDS = newTableDS(tableRef)
           ret.put(joinDesc, fulfillDS(tableDS, Set.empty, tableRef))

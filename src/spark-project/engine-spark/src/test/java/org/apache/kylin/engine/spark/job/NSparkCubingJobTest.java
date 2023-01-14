@@ -18,9 +18,22 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import lombok.val;
+import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_LAYOUT_IDS;
+import static org.awaitility.Awaitility.await;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -58,8 +71,6 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
-import org.apache.kylin.metadata.favorite.FavoriteRule;
-import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
@@ -72,6 +83,7 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.storage.IStorage;
 import org.apache.kylin.storage.IStorageQuery;
+import org.apache.kylin.util.MetadataTestUtils;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -84,24 +96,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.sparkproject.guava.collect.Sets;
+
+import com.google.common.collect.Maps;
+
+import lombok.val;
 import scala.Option;
 import scala.runtime.AbstractFunction1;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_LAYOUT_IDS;
-import static org.awaitility.Awaitility.await;
 
 public class NSparkCubingJobTest extends NLocalWithSparkSessionTest {
 
@@ -332,12 +332,8 @@ public class NSparkCubingJobTest extends NLocalWithSparkSessionTest {
             Assert.assertNull(layout);
         }
 
-        // add ExcludedTables
-        FavoriteRuleManager ruleManager = FavoriteRuleManager.getInstance(config, df.getProject());
-        List<FavoriteRule.AbstractCondition> conds = Lists.newArrayList();
-        //        isEnabled = request.isExcludeTablesEnable();
-        conds.add(new FavoriteRule.Condition(null, df.getModel().getRootFactTableName()));
-        ruleManager.updateRule(conds, true, FavoriteRule.EXCLUDED_TABLES_RULE);
+        // add ExcludedTable
+        MetadataTestUtils.mockExcludedTable(getProject(), df.getModel().getRootFactTableName());
 
         // Round1. Build new segment
         NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), Sets.newLinkedHashSet(round1), "ADMIN",
@@ -768,8 +764,7 @@ public class NSparkCubingJobTest extends NLocalWithSparkSessionTest {
         final String project = getProject();
         final KylinConfig config = getTestConfig();
         final String dfId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
-        overwriteSystemProp("kylin.engine.spark.build-class-name",
-                "MockResumeBuildJob");
+        overwriteSystemProp("kylin.engine.spark.build-class-name", "MockResumeBuildJob");
         // prepare segment
         final NDataflowManager dfMgr = NDataflowManager.getInstance(config, project);
         final NExecutableManager execMgr = NExecutableManager.getInstance(config, project);
@@ -950,8 +945,7 @@ public class NSparkCubingJobTest extends NLocalWithSparkSessionTest {
                 throw new RuntimeException(e);
             }
             if (engineInterface == clz) {
-                return (I) ClassUtil
-                        .newInstance("NSparkCubingJobTest$MockParquetStorage");
+                return (I) ClassUtil.newInstance("NSparkCubingJobTest$MockParquetStorage");
             } else {
                 throw new RuntimeException("Cannot adapt to " + engineInterface);
             }

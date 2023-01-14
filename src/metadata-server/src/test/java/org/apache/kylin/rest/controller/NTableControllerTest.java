@@ -37,14 +37,15 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AWSTableLoadRequest;
 import org.apache.kylin.rest.request.AutoMergeRequest;
-import org.apache.kylin.rest.request.DateRangeRequest;
 import org.apache.kylin.rest.request.PartitionKeyRequest;
 import org.apache.kylin.rest.request.PushDownModeRequest;
 import org.apache.kylin.rest.request.ReloadTableRequest;
 import org.apache.kylin.rest.request.S3TableExtInfo;
+import org.apache.kylin.rest.request.TableExclusionRequest;
 import org.apache.kylin.rest.request.TableLoadRequest;
 import org.apache.kylin.rest.request.TopTableRequest;
 import org.apache.kylin.rest.request.UpdateAWSTableExtDescRequest;
+import org.apache.kylin.rest.response.ExcludedTableDetailResponse;
 import org.apache.kylin.rest.response.LoadTableResponse;
 import org.apache.kylin.rest.response.TableNameResponse;
 import org.apache.kylin.rest.response.TableRefresh;
@@ -283,15 +284,6 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
         return topTableRequest;
     }
 
-    private DateRangeRequest mockDateRangeRequest() {
-        DateRangeRequest request = new DateRangeRequest();
-        request.setStart("0");
-        request.setEnd("" + Long.MAX_VALUE);
-        request.setProject("default");
-        request.setTable("TEST_KYLIN_FACT");
-        return request;
-    }
-
     private void initMockito(LoadTableResponse loadTableResponse, TableLoadRequest tableLoadRequest) throws Exception {
         StringUtil.toUpperCaseArray(tableLoadRequest.getTables(), tableLoadRequest.getTables());
         StringUtil.toUpperCaseArray(tableLoadRequest.getDatabases(), tableLoadRequest.getDatabases());
@@ -420,8 +412,8 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
         loadTableResponse.setLoaded(loaded);
         loadTableResponse.setFailed(failed);
 
-        Mockito.when(tableExtService.loadAWSTablesCompatibleCrossAccount(tableLoadRequest.getTables(),
-                        "default")).thenReturn(loadTableResponse);
+        Mockito.when(tableExtService.loadAWSTablesCompatibleCrossAccount(tableLoadRequest.getTables(), "default"))
+                .thenReturn(loadTableResponse);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/compatibility/aws") //
                 .contentType(MediaType.APPLICATION_JSON) //
@@ -454,8 +446,7 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
         updateTableExeDescResponse.setSucceed(succeed);
         updateTableExeDescResponse.setFailed(failed);
 
-        Mockito.when(tableExtService.updateAWSLoadedTableExtProp(request))
-                .thenReturn(updateTableExeDescResponse);
+        Mockito.when(tableExtService.updateAWSLoadedTableExtProp(request)).thenReturn(updateTableExeDescResponse);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/api/tables/ext/prop/aws") //
                 .contentType(MediaType.APPLICATION_JSON) //
@@ -783,5 +774,57 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
         Mockito.verify(nTableController).reloadTable(Mockito.any());
+    }
+
+    @Test
+    public void updateExcludedTables() throws Exception {
+        TableExclusionRequest request = new TableExclusionRequest();
+        request.setProject("default");
+        TableExclusionRequest.ExcludedTable excludedTable = new TableExclusionRequest.ExcludedTable();
+        excludedTable.setExcluded(true);
+        excludedTable.setTable("default.test_order");
+        request.setExcludedTables(Lists.newArrayList(excludedTable));
+        List<String> cancelTables = Lists.newArrayList("default.test_account");
+        request.setCanceledTables(cancelTables);
+
+        Mockito.doNothing().when(tableExtService).updateExcludedTables("default", request);
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/tables/excluded_tables")
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        Mockito.verify(nTableController).updateExcludedTables(request);
+    }
+
+    @Test
+    public void testGetExcludedTable() throws Exception {
+        Mockito.when(tableExtService.getExcludedTable("default", "test_kylin_fact", 0, 10, "", true)) //
+                .thenReturn(Mockito.mock(ExcludedTableDetailResponse.class));
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/excluded_table") //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .param("project", "default") //
+                .param("table", "test_kylin_fact") //
+                .param("page_offset", "0") //
+                .param("page_size", "10") //
+                .param("key", "") //
+                .param("col_type", "0") //
+                .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        Mockito.verify(nTableController).getExcludedTable("default", "test_kylin_fact", 0, 10, "", 0);
+    }
+
+    @Test
+    public void testGetExcludedTables() throws Exception {
+        Mockito.when(tableExtService.getExcludedTables("default", true, "")) //
+                .thenReturn(Lists.newArrayList());
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/excluded_tables") //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .param("project", "default") //
+                .param("page_offset", "0") //
+                .param("page_size", "10") //
+                .param("view_partial_cols", "true") //
+                .param("search_key", "") //
+                .accept(MediaType.parseMediaType(APPLICATION_JSON))) //
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        Mockito.verify(nTableController).getExcludedTables("default", 0, 10, true, "");
     }
 }

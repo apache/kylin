@@ -25,17 +25,19 @@ import java.util.Map;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KapConfig;
-import org.apache.kylin.metadata.model.ParameterDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.TableColRefWithRel;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CollectionUtil;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.alias.ExpressionComparator;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.relnode.KapAggregateRel;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.TableColRefWithRel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,13 +54,17 @@ public class ComputedColumnRewriter {
     }
 
     public static void rewriteCcInnerCol(OLAPContext context, NDataModel model, QueryAliasMatchInfo matchInfo) {
-        rewriteAggInnerCol(context, model, matchInfo);
-        rewriteTopNInnerCol(context, model, matchInfo);
-        rewriteGroupByInnerCol(context, model, matchInfo);
-        rewriteFilterInnerCol(context, model, matchInfo);
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(model.getProject());
+        rewriteAggInnerCol(projectConfig, context, model, matchInfo);
+        rewriteTopNInnerCol(projectConfig, context, model, matchInfo);
+        rewriteGroupByInnerCol(projectConfig, context, model, matchInfo);
+
+        // rewrite inner column of filter is not support yet.
+        // rewriteFilterInnerCol(projectConfig, context, model, matchInfo)
     }
 
-    private static void rewriteAggInnerCol(OLAPContext context, NDataModel model, QueryAliasMatchInfo matchInfo) {
+    private static void rewriteAggInnerCol(KylinConfig kylinConfig, OLAPContext context, NDataModel model,
+            QueryAliasMatchInfo matchInfo) {
         if (!KapConfig.getInstanceFromEnv().isAggComputedColumnRewriteEnabled()
                 || CollectionUtils.isEmpty(model.getComputedColumnDescs())) {
             return;
@@ -72,7 +78,7 @@ public class ComputedColumnRewriter {
                     continue;
                 }
 
-                TblColRef translatedInnerCol = rewriteInnerColumnToTblColRef(
+                TblColRef translatedInnerCol = rewriteInnerColumnToTblColRef(kylinConfig,
                         parameter.getColRef().getParserDescription(), model, matchInfo);
                 if (translatedInnerCol != null) {
                     parameters.add(ParameterDesc.newInstance(translatedInnerCol));
@@ -86,8 +92,8 @@ public class ComputedColumnRewriter {
         });
     }
 
-    private static TblColRef rewriteInnerColumnToTblColRef(String innerExpression, NDataModel model,
-            QueryAliasMatchInfo matchInfo) {
+    private static TblColRef rewriteInnerColumnToTblColRef(KylinConfig kylinConfig, String innerExpression,
+            NDataModel model, QueryAliasMatchInfo matchInfo) {
         SqlNode innerColExpr;
         try {
             innerColExpr = CalciteParser.getExpNode(innerExpression);
@@ -97,6 +103,10 @@ public class ComputedColumnRewriter {
         }
 
         for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
+            if (kylinConfig.isTableExclusionEnabled() && kylinConfig.onlyReuseUserDefinedCC() && cc.isAutoCC()) {
+                continue;
+            }
+
             SqlNode ccExpressionNode = CalciteParser.getExpNode(cc.getExpression());
             if (ExpressionComparator.isNodeEqual(innerColExpr, ccExpressionNode, matchInfo,
                     new AliasDeduceImpl(matchInfo))) {
@@ -110,7 +120,8 @@ public class ComputedColumnRewriter {
         return null;
     }
 
-    private static void rewriteTopNInnerCol(OLAPContext context, NDataModel model, QueryAliasMatchInfo matchInfo) {
+    private static void rewriteTopNInnerCol(KylinConfig kylinConfig, OLAPContext context, NDataModel model,
+            QueryAliasMatchInfo matchInfo) {
         if (CollectionUtils.isEmpty(model.getComputedColumnDescs()))
             return;
 
@@ -124,7 +135,7 @@ public class ComputedColumnRewriter {
                 if (innerExpression == null)
                     continue;
 
-                val translatedInnerCol = rewriteInnerColumnToTblColRef(innerExpression, model, matchInfo);
+                val translatedInnerCol = rewriteInnerColumnToTblColRef(kylinConfig, innerExpression, model, matchInfo);
                 if (translatedInnerCol != null)
                     translatedOperands.add(translatedInnerCol);
             }
@@ -133,7 +144,8 @@ public class ComputedColumnRewriter {
         });
     }
 
-    private static void rewriteGroupByInnerCol(OLAPContext ctx, NDataModel model, QueryAliasMatchInfo matchInfo) {
+    private static void rewriteGroupByInnerCol(KylinConfig kylinConfig, OLAPContext ctx, NDataModel model,
+            QueryAliasMatchInfo matchInfo) {
         if (CollectionUtils.isEmpty(model.getComputedColumnDescs())) {
             return;
         }
@@ -150,6 +162,9 @@ public class ComputedColumnRewriter {
                 continue;
             }
             for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
+                if (kylinConfig.isTableExclusionEnabled() && kylinConfig.onlyReuseUserDefinedCC() && cc.isAutoCC()) {
+                    continue;
+                }
                 SqlNode ccExpressionNode = CalciteParser.getExpNode(cc.getExpression());
                 if (ExpressionComparator.isNodeEqual(innerColExpr, ccExpressionNode, matchInfo,
                         new AliasDeduceImpl(matchInfo))) {
@@ -176,9 +191,5 @@ public class ComputedColumnRewriter {
             Map<TblColRef, TblColRef> colReplacementMapping = kapAggregateRelMapEntry.getValue();
             aggRel.reBuildGroups(colReplacementMapping);
         }
-    }
-
-    private static void rewriteFilterInnerCol(OLAPContext ctx, NDataModel model, QueryAliasMatchInfo matchInfo) {
-        //empty
     }
 }

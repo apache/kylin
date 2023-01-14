@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 
@@ -31,32 +30,25 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-/**
- * There are two kinds of excluded lookup tables.
- * One kind is explicit excluded by project settings,
- * another is excluded by model join relations.
- */
-public class ExcludedLookupChecker {
-    private final String factTable;
-    private final Set<String> excludedLookups = Sets.newHashSet();
+import lombok.Getter;
+
+public class AntiFlatChecker {
+    @Getter
     private final Set<String> antiFlattenLookups = Sets.newHashSet();
-    private final Map<String, String> excludedLookupCCs = Maps.newHashMap();
     private final Map<String, String> antiFlattenLookupCCs = Maps.newHashMap();
     private final Map<String, Set<String>> joinTableAliasMap = Maps.newHashMap();
 
-    public ExcludedLookupChecker(Set<String> excludedTables, List<JoinTableDesc> joinTables, NDataModel model) {
-        if (KylinConfig.getInstanceFromEnv().isUTEnv() && model == null) {
-            factTable = null;
-            return;
-        }
-        factTable = model.getRootFactTableName();
-        excludedTables.forEach(table -> {
-            if (table.equalsIgnoreCase(factTable)) {
-                return;
-            }
-            excludedLookups.add(table);
-        });
-        if (model.isBroken() || CollectionUtils.isEmpty(model.getJoinTables())) {
+    /**
+     * Initialize a checker to handle lookup table which has not been built into index.
+     * 
+     * @param joinTables joinTables must get from a model which has been initialized.
+     *                   This parameter equals to {@link NDataModel#getJoinTables()} of the
+     *                   second parameter model at most case, however, if we add/update/remove
+     *                   some join tables by editing the model, they are different.
+     * @param model the model to check.
+     */
+    public AntiFlatChecker(List<JoinTableDesc> joinTables, NDataModel model) {
+        if (model == null || model.isBroken() || CollectionUtils.isEmpty(model.getJoinTables())) {
             return;
         }
 
@@ -65,112 +57,108 @@ public class ExcludedLookupChecker {
             joinTableAliasMap.get(join.getTable()).add(join.getAlias());
         });
 
-        Map<String, String> aliasToIdentityMap = Maps.newHashMap();
         if (joinTables == null) {
             return;
         }
+        Map<String, String> aliasToIdentityMap = Maps.newHashMap();
         joinTables.forEach(joinTable -> {
             aliasToIdentityMap.put(joinTable.getAlias(), joinTable.getTable());
             if (!joinTable.isFlattenable()) {
                 antiFlattenLookups.add(joinTable.getTable());
             }
         });
-        for (JoinTableDesc joinTable : joinTables) {
+        joinTables.forEach(joinTable -> {
             TblColRef[] fkColumns = joinTable.getJoin().getForeignKeyColumns();
             TableRef foreignTableRef = joinTable.getJoin().getForeignTableRef();
-            String fkTableAlias;
-            if (fkColumns.length > 0) {
+            if (fkColumns != null && fkColumns.length > 0) {
                 TblColRef firstFK = fkColumns[0];
-                fkTableAlias = firstFK.getTableAlias();
-                if (canTreatAsAntiFlattenableLookup(aliasToIdentityMap, joinTable, firstFK.getTableAlias(),
-                        firstFK.getTableWithSchema())) {
+                String tableAlias = firstFK.getTableAlias();
+                String tableWithSchema = firstFK.getTableWithSchema();
+                if (canTreatAsAntiLookup(aliasToIdentityMap, joinTable, tableAlias, tableWithSchema)) {
                     antiFlattenLookups.add(joinTable.getTable());
-                    excludedLookups.add(joinTable.getTable());
                 }
             } else if (foreignTableRef != null) {
-                fkTableAlias = foreignTableRef.getAlias();
-                if (canTreatAsAntiFlattenableLookup(aliasToIdentityMap, joinTable, foreignTableRef.getAlias(),
-                        foreignTableRef.getTableIdentity())) {
+                String tableIdentity = foreignTableRef.getTableIdentity();
+                String tableAlias = foreignTableRef.getAlias();
+                if (canTreatAsAntiLookup(aliasToIdentityMap, joinTable, tableAlias, tableIdentity)) {
                     antiFlattenLookups.add(joinTable.getTable());
-                    excludedLookups.add(joinTable.getTable());
-                }
-            } else {
-                fkTableAlias = null;
-            }
-
-            if (aliasToIdentityMap.containsKey(fkTableAlias)) {
-                String fkTable = aliasToIdentityMap.get(fkTableAlias);
-                if (excludedLookups.contains(fkTable)) {
-                    excludedLookups.add(joinTable.getTable());
                 }
             }
-        }
+        });
     }
 
-    private boolean canTreatAsAntiFlattenableLookup(Map<String, String> aliasToIdentityMap, JoinTableDesc joinTable,
+    private boolean canTreatAsAntiLookup(Map<String, String> aliasToIdentityMap, JoinTableDesc joinTable,
             String fkTableAlias, String fkTableIdentity) {
         return !joinTable.isFlattenable() //
                 || (aliasToIdentityMap.containsKey(fkTableAlias) && antiFlattenLookups.contains(fkTableIdentity));
     }
 
-    /**
-     * not very efficient for cc inner expression is a string
-     */
-    public boolean isColRefDependsLookupTable(TblColRef tblColRef) {
-        return isColDependsLookups(tblColRef, excludedLookups, excludedLookupCCs);
+    public boolean isColOfAntiLookup(TblColRef colRef) {
+        if (!colRef.getColumnDesc().isComputedColumn()) {
+            return antiFlattenLookups.contains(colRef.getTableWithSchema());
+        }
+        String innerExpression = colRef.getColumnDesc().getComputedColumnExpr();
+        return isCCOfAntiLookup(innerExpression);
     }
 
-    public boolean isCCDependsLookupTable(TblColRef tblColRef) {
+    public boolean isCCOfAntiLookup(TblColRef tblColRef) {
         List<TblColRef> operands = tblColRef.getOperands();
         if (operands == null) {
             if (tblColRef.getTable() == null) {
                 return false;
             } else {
-                return excludedLookups.contains(tblColRef.getTableWithSchema());
+                return antiFlattenLookups.contains(tblColRef.getTableWithSchema());
             }
         }
         for (TblColRef colRef : operands) {
-            if (isCCDependsLookupTable(colRef)) {
+            if (isCCOfAntiLookup(colRef)) {
                 return true;
             }
         }
         return false;
     }
 
-    public boolean isMeasureOnLookupTable(FunctionDesc functionDesc) {
+    public boolean isCCOfAntiLookup(String innerExp) {
+        if (antiFlattenLookupCCs.containsKey(innerExp)) {
+            return true;
+        }
+
+        for (String table : antiFlattenLookups) {
+            Set<String> aliasSet = joinTableAliasMap.get(table);
+            if (aliasSet == null) {
+                continue;
+            }
+            for (String alias : aliasSet) {
+                String aliasWithBacktick = String.format(Locale.ROOT, "`%s`", alias);
+                if (innerExp.contains(aliasWithBacktick)) {
+                    antiFlattenLookupCCs.putIfAbsent(innerExp, alias);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean isMeasureOfAntiLookup(FunctionDesc functionDesc) {
         List<TblColRef> colRefs = functionDesc.getColRefs();
         if (colRefs == null || colRefs.isEmpty()) {
             return false;
         }
         for (TblColRef colRef : colRefs) {
             if (colRef.isInnerColumn()) {
-                if (isCCDependsLookupTable(colRef)) {
+                if (isCCOfAntiLookup(colRef)) {
                     return true;
                 }
-            } else if (isColRefDependsLookupTable(colRef)) {
+            } else if (isColOfAntiLookup(colRef)) {
                 return true;
             }
         }
         return false;
     }
 
-    /**
-     * For computed column is very difficult to get the excluded lookup table, so handle
-     * it in the step of IndexSuggester#replaceDimOfLookupTableWithFK.
-     */
-    public Set<String> getUsedExcludedLookupTable(Set<TblColRef> colRefs) {
-        Set<String> usedExcludedLookupTables = Sets.newHashSet();
-        for (TblColRef column : colRefs) {
-            if (excludedLookups.contains(column.getTableWithSchema())) {
-                usedExcludedLookupTables.add(column.getTableWithSchema());
-            }
-        }
-        return usedExcludedLookupTables;
-    }
-
     public String detectAntiFlattenLookup(ComputedColumnDesc computedColumn) {
         String innerExp = computedColumn.getInnerExpression();
-        if (isInnerExpDependsLookups(innerExp, antiFlattenLookups, antiFlattenLookupCCs)) {
+        if (isCCOfAntiLookup(innerExp)) {
             return antiFlattenLookupCCs.get(innerExp);
         }
         return null;
@@ -183,7 +171,7 @@ public class ExcludedLookupChecker {
 
         List<ComputedColumnDesc> ccList = Lists.newArrayList();
         for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
-            if (isInnerExpDependsLookups(cc.getInnerExpression(), antiFlattenLookups, antiFlattenLookupCCs)) {
+            if (isCCOfAntiLookup(cc.getInnerExpression())) {
                 ccList.add(JsonUtil.deepCopyQuietly(cc, ComputedColumnDesc.class));
             }
         }
@@ -201,7 +189,7 @@ public class ExcludedLookupChecker {
                 continue;
             }
             TblColRef colRef = model.getEffectiveCols().get(column.getId());
-            if (isColDependsAntiFlattenLookup(colRef)) {
+            if (isColOfAntiLookup(colRef)) {
                 dimensions.add(column.getId());
             }
         }
@@ -220,10 +208,7 @@ public class ExcludedLookupChecker {
             }
             List<ParameterDesc> parameters = measure.getFunction().getParameters();
             for (ParameterDesc parameter : parameters) {
-                if (parameter.isConstant()) {
-                    continue;
-                }
-                if (isColDependsAntiFlattenLookup(parameter.getColRef())) {
+                if (!parameter.isConstant() && isColOfAntiLookup(parameter.getColRef())) {
                     measures.add(measure.getId());
                     break;
                 }
@@ -248,49 +233,8 @@ public class ExcludedLookupChecker {
         return indexes;
     }
 
-    public List<String> getAntiFlattenLookups() {
-        return Lists.newArrayList(antiFlattenLookups);
-    }
-
-    public Set<String> getExcludedLookups() {
-        return excludedLookups;
-    }
-
-    private boolean isColDependsAntiFlattenLookup(TblColRef colRef) {
-        return isColDependsLookups(colRef, antiFlattenLookups, antiFlattenLookupCCs);
-    }
-
-    private boolean isColDependsLookups(TblColRef colRef, Set<String> lookupTables, Map<String, String> cachedCC) {
-        if (!colRef.getColumnDesc().isComputedColumn()) {
-            return lookupTables.contains(colRef.getTableWithSchema());
-        }
-        String innerExpression = colRef.getColumnDesc().getComputedColumnExpr();
-        return isInnerExpDependsLookups(innerExpression, lookupTables, cachedCC);
-    }
-
-    private boolean isInnerExpDependsLookups(String innerExp, Set<String> lookupTables, Map<String, String> cachedCC) {
-        if (cachedCC.containsKey(innerExp)) {
-            return true;
-        }
-
-        for (String table : lookupTables) {
-            Set<String> aliasSet = joinTableAliasMap.get(table);
-            if (aliasSet == null) {
-                continue;
-            }
-            for (String alias : aliasSet) {
-                String aliasWithBacktick = String.format(Locale.ROOT, "`%s`", alias);
-                if (innerExp.contains(aliasWithBacktick)) {
-                    cachedCC.putIfAbsent(innerExp, alias);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public String detectFilterConditionDependsLookups(String exp, Set<String> lookupTables) {
-        for (String table : lookupTables) {
+    public String detectFilterCondition(String exp) {
+        for (String table : antiFlattenLookups) {
             Set<String> aliasSet = joinTableAliasMap.get(table);
             if (aliasSet == null) {
                 continue;

@@ -43,7 +43,8 @@ public class ProjectConfigResponse {
     private String defaultDatabase;
     @JsonProperty("semi_automatic_mode")
     private boolean semiAutomaticMode;
-
+    @JsonProperty("table_exclusion_enabled")
+    private boolean tableExclusionEnabled;
     @JsonProperty("storage_quota_size")
     private long storageQuotaSize;
 
@@ -145,17 +146,17 @@ public class ProjectConfigResponse {
 
     public void setFrequencyTimeWindow(int frequencyTimeWindow) {
         switch (frequencyTimeWindow) {
-            case 1:
-                this.frequencyTimeWindow = "DAY";
-                break;
-            case 7:
-                this.frequencyTimeWindow = "WEEK";
-                break;
-            case 30:
-                this.frequencyTimeWindow = "MONTH";
-                break;
-            default:
-                break;
+        case 1:
+            this.frequencyTimeWindow = "DAY";
+            break;
+        case 7:
+            this.frequencyTimeWindow = "WEEK";
+            break;
+        case 30:
+            this.frequencyTimeWindow = "MONTH";
+            break;
+        default:
+            break;
         }
 
     }

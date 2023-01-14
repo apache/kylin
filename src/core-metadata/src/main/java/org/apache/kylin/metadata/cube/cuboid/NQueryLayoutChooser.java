@@ -32,13 +32,16 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.SegmentOnlineMode;
 import org.apache.kylin.common.exception.KylinTimeoutException;
-import org.apache.kylin.metadata.MetadataExtension;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.model.AntiFlatChecker;
+import org.apache.kylin.metadata.model.ColExcludedChecker;
 import org.apache.kylin.metadata.model.DeriveInfo;
+import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
@@ -61,14 +64,14 @@ public class NQueryLayoutChooser {
     }
 
     public static NLayoutCandidate selectPartialLayoutCandidate(NDataflow dataflow, List<NDataSegment> prunedSegments,
-            SQLDigest sqlDigest, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
+            SQLDigest sqlDigest, Map<String, Set<Long>> chSegmentToLayoutsMap) {
 
         NLayoutCandidate candidate = null;
         List<NDataSegment> toRemovedSegments = Lists.newArrayList();
         for (NDataSegment segment : prunedSegments) {
             if (candidate == null) {
                 candidate = selectLayoutCandidate(dataflow, Lists.newArrayList(segment), sqlDigest,
-                        secondStorageSegmentLayoutMap);
+                        chSegmentToLayoutsMap);
                 if (candidate == null) {
                     toRemovedSegments.add(segment);
                 }
@@ -81,49 +84,58 @@ public class NQueryLayoutChooser {
     }
 
     public static NLayoutCandidate selectLayoutCandidate(NDataflow dataflow, List<NDataSegment> prunedSegments,
-            SQLDigest sqlDigest, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
+            SQLDigest sqlDigest, Map<String, Set<Long>> chSegmentToLayoutsMap) {
 
         if (CollectionUtils.isEmpty(prunedSegments)) {
             log.info("There is no segment to answer sql");
             return NLayoutCandidate.EMPTY;
         }
-        List<NLayoutCandidate> candidates = new ArrayList<>();
-        val commonLayouts = getLayoutsFromSegments(prunedSegments, dataflow, secondStorageSegmentLayoutMap);
-        val model = dataflow.getModel();
-        log.info("Matching dataflow with seg num: {} layout num: {}", prunedSegments.size(), commonLayouts.size());
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        Set<String> excludedTables = MetadataExtension.getFactory().getQueryExcludedTablesExtension()
-                .getExcludedTables(config, model.getProject());
-        boolean isReplaceCount = config.isReplaceColCountWithCountStar();
-        val indexPlan = dataflow.getIndexPlan();
-        val chooserContext = new ChooserContext(model);
-        val aggIndexMatcher = new AggIndexMatcher(sqlDigest, chooserContext, excludedTables, isReplaceCount);
-        val tableIndexMatcher = new TableIndexMatcher(sqlDigest, chooserContext, excludedTables,
-                dataflow.getConfig().isUseTableIndexAnswerNonRawQuery());
+
+        String project = dataflow.getProject();
+        NDataModel model = dataflow.getModel();
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(project);
+        ChooserContext chooserContext = new ChooserContext(model);
+        ColExcludedChecker excludedChecker = new ColExcludedChecker(projectConfig, project, model);
+        if (log.isDebugEnabled()) {
+            log.debug("When matching layouts, all deduced excluded columns are: {}",
+                    excludedChecker.getExcludedColNames());
+        }
+        AntiFlatChecker antiFlatChecker = new AntiFlatChecker(model.getJoinTables(), model);
+        if (log.isDebugEnabled()) {
+            log.debug("When matching layouts, all deduced anti-flatten lookup tables are: {}",
+                    antiFlatChecker.getAntiFlattenLookups());
+        }
+
+        AggIndexMatcher aggIndexMatcher = new AggIndexMatcher(sqlDigest, chooserContext, dataflow, excludedChecker,
+                antiFlatChecker);
+        TableIndexMatcher tableIndexMatcher = new TableIndexMatcher(sqlDigest, chooserContext, dataflow,
+                excludedChecker, antiFlatChecker);
+
         // bail out if both agg index are invalid
-        // invalid matcher may caused by
+        //  matcher may be caused by
         // 1. cc col is not present in the model
         // 2. dynamic params ? present in query like select sum(col/?) from ...,
         //    see org.apache.kylin.query.DynamicQueryTest.testDynamicParamOnAgg
-        if (!aggIndexMatcher.valid() && !tableIndexMatcher.valid()) {
+        if (!aggIndexMatcher.isValid() && !tableIndexMatcher.isValid()) {
             return null;
         }
-        val projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(dataflow.getProject());
+
+        IndexPlan indexPlan = dataflow.getIndexPlan();
+        List<NLayoutCandidate> candidates = new ArrayList<>();
+        Collection<NDataLayout> commonLayouts = getLayoutsFromSegments(prunedSegments, dataflow, chSegmentToLayoutsMap);
+        log.info("Matching dataflow with seg num: {} layout num: {}", prunedSegments.size(), commonLayouts.size());
         for (NDataLayout dataLayout : commonLayouts) {
             log.trace("Matching layout {}", dataLayout);
-            CapabilityResult tempResult = new CapabilityResult();
-            // check indexEntity
             IndexEntity indexEntity = indexPlan.getIndexEntity(dataLayout.getIndexId());
-            LayoutEntity layout = indexPlan.getLayoutEntity(dataLayout.getLayoutId());
             log.trace("Matching indexEntity {}", indexEntity);
 
+            LayoutEntity layout = indexPlan.getLayoutEntity(dataLayout.getLayoutId());
             NLayoutCandidate candidate = new NLayoutCandidate(layout);
-            var matchResult = tableIndexMatcher.match(layout);
+            IndexMatcher.MatchResult matchResult = tableIndexMatcher.match(layout);
             double influenceFactor = 1.0;
             if (!matchResult.isMatched()) {
                 matchResult = aggIndexMatcher.match(layout);
-            } else if (projectInstance.getConfig().useTableIndexAnswerSelectStarEnabled()) {
+            } else if (projectConfig.useTableIndexAnswerSelectStarEnabled()) {
                 influenceFactor += tableIndexMatcher.getLayoutUnmatchedColsSize();
                 candidate.setLayoutUnmatchedColsSize(tableIndexMatcher.getLayoutUnmatchedColsSize());
             }
@@ -132,6 +144,7 @@ public class NQueryLayoutChooser {
                 continue;
             }
 
+            CapabilityResult tempResult = new CapabilityResult();
             tempResult.influences = matchResult.getInfluences();
             candidate.setCost(dataLayout.getRows() * (tempResult.influences.size() + influenceFactor));
             if (!matchResult.getNeedDerive().isEmpty()) {
@@ -157,26 +170,24 @@ public class NQueryLayoutChooser {
     }
 
     private static Collection<NDataLayout> getLayoutsFromSegments(List<NDataSegment> segments, NDataflow dataflow,
-            Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        val projectInstance = NProjectManager.getInstance(config).getProject(dataflow.getProject());
-        if (!projectInstance.getConfig().isHeterogeneousSegmentEnabled()) {
+            Map<String, Set<Long>> chSegmentToLayoutsMap) {
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(dataflow.getProject());
+        if (!projectConfig.isHeterogeneousSegmentEnabled()) {
             return dataflow.getLatestReadySegment().getLayoutsMap().values();
         }
 
-        val commonLayouts = Maps.<Long, NDataLayout> newHashMap();
+        Map<Long, NDataLayout> commonLayouts = Maps.newHashMap();
         if (CollectionUtils.isEmpty(segments)) {
             return commonLayouts.values();
         }
 
+        String segmentOnlineMode = projectConfig.getKylinEngineSegmentOnlineMode();
         for (int i = 0; i < segments.size(); i++) {
             val dataSegment = segments.get(i);
             var layoutIdMapToDataLayout = dataSegment.getLayoutsMap();
-            if (SegmentOnlineMode.ANY.toString()
-                    .equalsIgnoreCase(projectInstance.getConfig().getKylinEngineSegmentOnlineMode())
-                    && MapUtils.isNotEmpty(secondStorageSegmentLayoutMap)) {
-                Set<Long> chLayouts = secondStorageSegmentLayoutMap.getOrDefault(dataSegment.getId(),
-                        Sets.newHashSet());
+            if (SegmentOnlineMode.ANY.toString().equalsIgnoreCase(segmentOnlineMode)
+                    && MapUtils.isNotEmpty(chSegmentToLayoutsMap)) {
+                Set<Long> chLayouts = chSegmentToLayoutsMap.getOrDefault(dataSegment.getId(), Sets.newHashSet());
                 Map<Long, NDataLayout> nDataLayoutMap = chLayouts.stream()
                         .map(id -> NDataLayout.newDataLayout(dataflow, dataSegment.getId(), id))
                         .collect(Collectors.toMap(NDataLayout::getLayoutId, nDataLayout -> nDataLayout));
@@ -211,8 +222,10 @@ public class NQueryLayoutChooser {
                 .collect(Collectors.toList());
 
         Ordering<NLayoutCandidate> ordering = Ordering //
-                .from(priorityLayoutComparator()).compound(derivedLayoutComparator()).compound(rowSizeComparator()) // L1 comparator, compare cuboid rows
-                .compound(filterColumnComparator(filterColIds, chooserContext)) // L2 comparator, order filter columns
+                .from(priorityLayoutComparator()) //
+                .compound(derivedLayoutComparator()) //
+                .compound(rowSizeComparator()) // L1 comparator, compare cuboid rows
+                .compound(filterColumnComparator(filterColIds)) // L2 comparator, order filter columns
                 .compound(dimensionSizeComparator()) // the lower dimension the best
                 .compound(measureSizeComparator()) // L3 comparator, order size of cuboid columns
                 .compound(nonFilterColumnComparator(nonFilterColIds)); // L4 comparator, order non-filter columns
@@ -236,15 +249,20 @@ public class NQueryLayoutChooser {
     }
 
     private static Comparator<NLayoutCandidate> derivedLayoutComparator() {
-        return (layoutCandidate1, layoutCandidate2) -> {
-            if (layoutCandidate1.getDerivedToHostMap().isEmpty() && !layoutCandidate2.getDerivedToHostMap().isEmpty()) {
-                return -1;
-            } else if (!layoutCandidate1.getDerivedToHostMap().isEmpty()
-                    && layoutCandidate2.getDerivedToHostMap().isEmpty()) {
-                return 1;
+        return (candidate1, candidate2) -> {
+            int result = 0;
+            if (candidate1.getDerivedToHostMap().isEmpty() && !candidate2.getDerivedToHostMap().isEmpty()) {
+                result = -1;
+            } else if (!candidate1.getDerivedToHostMap().isEmpty() && candidate2.getDerivedToHostMap().isEmpty()) {
+                result = 1;
             }
 
-            return 0;
+            IndexPlan indexPlan = candidate1.getLayoutEntity().getIndex().getIndexPlan();
+            KylinConfig config = indexPlan.getConfig();
+            if (config.isTableExclusionEnabled() && config.isSnapshotPreferred()) {
+                result = -1 * result;
+            }
+            return result;
         };
     }
 
@@ -263,10 +281,9 @@ public class NQueryLayoutChooser {
     /**
      * compare filters in SQL with layout dims
      * 1. choose the layout if its shardby column is found in filters
-     * 2. otherwise compare position of filter columns appear in the layout dims
+     * 2. otherwise, compare position of filter columns appear in the layout dims
      */
-    private static Comparator<NLayoutCandidate> filterColumnComparator(List<Integer> sortedFilters,
-            ChooserContext chooserContext) {
+    private static Comparator<NLayoutCandidate> filterColumnComparator(List<Integer> sortedFilters) {
         return Ordering.from(shardByComparator(sortedFilters)).compound(colComparator(sortedFilters));
     }
 
@@ -304,32 +321,25 @@ public class NQueryLayoutChooser {
      */
     private static Comparator<NLayoutCandidate> shardByComparator(List<Integer> columns) {
         return (candidate1, candidate2) -> {
-            int shardByCol1Idx = Integer.MAX_VALUE;
-            List<Integer> shardByCols1 = candidate1.getLayoutEntity().getShardByColumns();
-            if (CollectionUtils.isNotEmpty(shardByCols1)) {
-                int tmpCol = shardByCols1.get(0);
-                for (int i = 0; i < columns.size(); i++) {
-                    if (columns.get(i) == tmpCol) {
-                        shardByCol1Idx = i;
-                        break;
-                    }
-                }
-            }
-
-            int shardByCol2Idx = Integer.MAX_VALUE;
-            List<Integer> shardByCols2 = candidate2.getLayoutEntity().getShardByColumns();
-            if (CollectionUtils.isNotEmpty(shardByCols2)) {
-                int tmpCol = shardByCols2.get(0);
-                for (int i = 0; i < columns.size(); i++) {
-                    if (columns.get(i) == tmpCol) {
-                        shardByCol2Idx = i;
-                        break;
-                    }
-                }
-            }
-
+            int shardByCol1Idx = getShardByColIndex(candidate1, columns);
+            int shardByCol2Idx = getShardByColIndex(candidate2, columns);
             return shardByCol1Idx - shardByCol2Idx;
         };
+    }
+
+    private static int getShardByColIndex(NLayoutCandidate candidate1, List<Integer> columns) {
+        int shardByCol1Idx = Integer.MAX_VALUE;
+        List<Integer> shardByCols1 = candidate1.getLayoutEntity().getShardByColumns();
+        if (CollectionUtils.isNotEmpty(shardByCols1)) {
+            int tmpCol = shardByCols1.get(0);
+            for (int i = 0; i < columns.size(); i++) {
+                if (columns.get(i) == tmpCol) {
+                    shardByCol1Idx = i;
+                    break;
+                }
+            }
+        }
+        return shardByCol1Idx;
     }
 
     private static List<Integer> getColumnsPos(final NLayoutCandidate candidate, List<Integer> sortedColumns) {

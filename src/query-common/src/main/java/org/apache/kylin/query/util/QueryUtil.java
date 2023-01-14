@@ -109,6 +109,10 @@ public class QueryUtil {
                 || (sql1.startsWith("explain") && sql1.contains(SELECT));
     }
 
+    public static boolean isSelectStarStatement(String sql) {
+        return SELECT_STAR_PTN.matcher(sql).find();
+    }
+
     public static String removeCommentInSql(String sql) {
         // match two patterns, one is "-- comment", the other is "/* comment */"
         try {
@@ -428,7 +432,7 @@ public class QueryUtil {
 
         // https://issues.apache.org/jira/browse/KYLIN-2649
         if (kylinConfig.getForceLimit() > 0 && limit <= 0 && !sql.toLowerCase(Locale.ROOT).contains("limit")
-                && SELECT_STAR_PTN.matcher(sql).find()) {
+                && isSelectStarStatement(sql)) {
             limit = kylinConfig.getForceLimit();
         }
 
