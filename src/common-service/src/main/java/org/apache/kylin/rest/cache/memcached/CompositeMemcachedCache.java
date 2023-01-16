@@ -172,6 +172,22 @@ public class CompositeMemcachedCache implements KylinCache {
         }
     }
 
+    public String getName(String type) {
+        checkCacheType(type);
+        return cacheMap.get(type).getName();
+    }
+
+    public CacheStats getCacheStats(String type) {
+        checkCacheType(type);
+        Cache cache = cacheMap.get(type);
+        if (cache instanceof MemCachedCacheAdaptor) {
+            return ((MemCachedCacheAdaptor) cache).getCacheStats();
+        } else {
+            logger.warn("only support get cache stats with memcached adaptor, otherwise will return null");
+            return null;
+        }
+    }
+
     public static class MemCachedCacheAdaptor implements Cache {
         private MemcachedCache memcachedCache;
 
@@ -187,6 +203,10 @@ public class CompositeMemcachedCache implements KylinCache {
         @Override
         public Object getNativeCache() {
             return memcachedCache.getNativeCache();
+        }
+
+        public CacheStats getCacheStats() {
+            return memcachedCache.getStats();
         }
 
         @Override

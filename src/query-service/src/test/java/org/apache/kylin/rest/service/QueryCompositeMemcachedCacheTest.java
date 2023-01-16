@@ -25,6 +25,7 @@ import com.google.code.ssm.jmemcached.plugin.AbstractJmemcachedMojo;
 import com.google.code.ssm.jmemcached.plugin.JmemcachedStartMojo;
 import com.google.code.ssm.jmemcached.plugin.Server;
 import org.apache.kylin.rest.cache.KylinCache;
+import org.apache.kylin.rest.cache.memcached.CacheStats;
 import org.apache.kylin.rest.cache.memcached.CompositeMemcachedCache;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
@@ -102,6 +103,7 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
         //Single Node mode
         testHelper(req1, resp1, project);
         //TODO: Cluster mode
+        testCacheStatus();
     }
 
     private void testHelper(SQLRequest req1, SQLResponse resp1, String project) {
@@ -120,5 +122,28 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
         Assert.assertNull(queryCacheManager.searchQuery(req1));
 
         queryCacheManager.recoverCache();
+    }
+
+    private void testCacheStatus() {
+        CacheStats cacheStats = ((CompositeMemcachedCache)queryCacheManager.getCache()).getCacheStats("StorageCache");
+        String name = ((CompositeMemcachedCache)queryCacheManager.getCache()).getName("StorageCache");
+        System.out.println("Cache name is: " + name);
+        System.out.println("AvgGetTime is: " + cacheStats.getAvgGetTime());
+        System.out.println("HitRate is: " + cacheStats.hitRate());
+        System.out.println("AvgGetBytes is :" + cacheStats.avgGetBytes());
+        System.out.println("NumErrors is :" + cacheStats.getNumErrors());
+        System.out.println("Get number is :" + cacheStats.getNumGet());
+        System.out.println("NumEvictions is :" + cacheStats.getNumEvictions());
+        System.out.println("NumGetBytes is :" + cacheStats.getNumGetBytes());
+        System.out.println("Hit number is :" + cacheStats.getNumHits());
+        System.out.println("Miss number is :" + cacheStats.getNumMisses());
+        System.out.println("Put number is :" + cacheStats.getNumPut());
+        System.out.println("Put bytes is :" + cacheStats.getNumPutBytes());
+        System.out.println("Timeout number is :" + cacheStats.getNumTimeouts());
+        System.out.println("Lookup number is :" + cacheStats.numLookups());
+
+        Assert.assertEquals(0, cacheStats.getNumErrors());
+        Assert.assertEquals(0, cacheStats.getNumEvictions());
+        Assert.assertEquals(0, cacheStats.getNumTimeouts());
     }
 }
