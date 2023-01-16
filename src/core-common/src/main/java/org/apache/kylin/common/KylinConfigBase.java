@@ -1005,12 +1005,6 @@ public abstract class KylinConfigBase implements Serializable {
         return new Path(getWritingClusterWorkingDir(flatTableDirSuffix));
     }
 
-    public Path getPlannerCostTableDir(String project, String dataFlowId, String segmentId) {
-        String path = getHdfsWorkingDirectory() + project + "/planner_cost_table/" + dataFlowId + PATH_DELIMITER
-                + segmentId;
-        return new Path(path);
-    }
-
     public Path getFactTableViewDir(String project, String dataflowId, String segmentId) {
         String path = getHdfsWorkingDirectory() + project + "/fact_table_view/" + dataflowId //
                 + PATH_DELIMITER + segmentId;
@@ -3731,7 +3725,7 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public boolean enableCostBasedIndexPlanner() {
-        // If we enable the cost base cuboid planner, we will recommend subset of layouts from the rule.
+        // If enable the cost based planner, will recommend subset of index layouts from the index rule.
         return Boolean.parseBoolean(getOptional("kylin.index.costbased.enabled", FALSE));
     }
 

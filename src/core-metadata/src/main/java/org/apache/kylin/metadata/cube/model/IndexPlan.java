@@ -376,26 +376,6 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         return effectiveMeasures;
     }
 
-    public Map<Integer, Integer> getColumnIdToRowKeyId() {
-        int rowKeyId = 0;
-        Map<Integer, Integer> result = new HashMap<>();
-        for (Integer columnId : effectiveDimCols.keySet()) {
-            result.put(columnId, rowKeyId);
-            rowKeyId++;
-        }
-        return result;
-    }
-
-    public Map<Integer, Integer> getRowKeyIdToColumnId() {
-        int rowKeyId = 0;
-        Map<Integer, Integer> result = new HashMap<>();
-        for (Integer columnId : effectiveDimCols.keySet()) {
-            result.put(rowKeyId, columnId);
-            rowKeyId++;
-        }
-        return result;
-    }
-
     public Set<TblColRef> listAllTblColRefs() {
         return allColumns;
     }
@@ -436,8 +416,8 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         return getAllIndexes(true);
     }
 
-    /*
-        Get a copy of all IndexEntity List, which is a time cost operation
+    /**
+     * Get a copy of all IndexEntity List, which is a time cost operation
      */
     public List<IndexEntity> getAllIndexes(boolean withToBeDeletedIndexes) {
         Map<Long, Integer> retSubscriptMap = Maps.newHashMap();

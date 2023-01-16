@@ -138,10 +138,6 @@ public class SegmentFlatTableDesc {
         return config.getFlatTableDir(project, dataflowId, segmentId);
     }
 
-    public Path getPlannerCostTablePath() {
-        return config.getPlannerCostTableDir(project, dataflowId, segmentId);
-    }
-
     public Path getFactTableViewPath() {
         return config.getFactTableViewDir(project, dataflowId, segmentId);
     }
