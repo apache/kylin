@@ -40,11 +40,13 @@ import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryHistory;
 import org.apache.kylin.metadata.query.QueryHistoryInfo;
 import org.apache.kylin.metadata.query.QueryHistoryRequest;
+import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.request.SaveSqlRequest;
+import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.apache.kylin.rest.service.QueryCacheManager;
 import org.apache.kylin.rest.service.QueryHistoryService;
 import org.apache.kylin.rest.service.QueryService;
@@ -85,6 +87,8 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
     private QueryCacheManager queryCacheManager;
     @InjectMocks
     private NQueryController nQueryController = Mockito.spy(new NQueryController());
+    @Mock
+    private ClusterManager clusterManager;
 
     @Before
     public void setup() {
@@ -587,5 +591,17 @@ public class NQueryControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data[0]").value("MODEL1"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data[1]").value("MODEL2"));
         Mockito.verify(nQueryController).getQueryHistoryModels(PROJECT, request.getFilterModelName(), 3);
+    }
+
+    @Test
+    public void testGetServers() throws Exception {
+        ServerInfoResponse response = new ServerInfoResponse();
+        response.setHost("172.168.1.1");
+        response.setMode("ALL");
+        List<ServerInfoResponse> result = Lists.newArrayList(response);
+        Mockito.when(clusterManager.getServers()).thenReturn(result);
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/query/servers")
+            .param("ext", "true").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+            .andExpect(MockMvcResultMatchers.status().isOk());
     }
 }

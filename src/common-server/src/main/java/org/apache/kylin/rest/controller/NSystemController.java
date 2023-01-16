@@ -52,6 +52,7 @@ import org.apache.kylin.rest.request.QueryDiagPackageRequest;
 import org.apache.kylin.rest.response.DiagStatusResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.MaintenanceModeResponse;
+import org.apache.kylin.rest.response.ServerExtInfoResponse;
 import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.apache.kylin.rest.response.ServersResponse;
 import org.apache.kylin.rest.service.MaintenanceModeService;
@@ -135,6 +136,7 @@ public class NSystemController extends NBasicController {
     public EnvelopeResponse<String> getRemoteDumpDiagPackage(
             @RequestParam(value = "host", required = false) String host,
             @RequestBody DiagPackageRequest diagPackageRequest, final HttpServletRequest request) throws Exception {
+        host = decodeHost(host);
         if (StringUtils.isNotBlank(diagPackageRequest.getJobId())) {
             diagPackageRequest.setStart("");
             diagPackageRequest.setEnd("");
@@ -161,6 +163,7 @@ public class NSystemController extends NBasicController {
             @RequestParam(value = "host", required = false) String host,
             @RequestBody QueryDiagPackageRequest queryDiagPackageRequest, final HttpServletRequest request)
             throws Exception {
+        host = decodeHost(host);
         if (StringUtils.isEmpty(host)) {
             String uuid = systemService.dumpLocalQueryDiagPackage(queryDiagPackageRequest.getQueryId(),
                     queryDiagPackageRequest.getProject());
@@ -195,6 +198,7 @@ public class NSystemController extends NBasicController {
             @RequestParam(value = "host", required = false) String host, @RequestParam(value = "id") String id,
             @RequestParam(value = "project", required = false) String project, final HttpServletRequest request)
             throws Exception {
+        host = decodeHost(host);
         if (StringUtils.isEmpty(host)) {
             return systemService.getExtractorStatus(id, project);
         } else {
@@ -212,6 +216,7 @@ public class NSystemController extends NBasicController {
     public void remoteDownloadPackage(@RequestParam(value = "host", required = false) String host,
             @RequestParam(value = "id") String id, @RequestParam(value = "project", required = false) String project,
             final HttpServletRequest request, final HttpServletResponse response) throws Exception {
+        host = decodeHost(host);
         if (StringUtils.isEmpty(host)) {
             setDownloadResponse(systemService.getDiagPackagePath(id, project), MediaType.APPLICATION_OCTET_STREAM_VALUE,
                     response);
@@ -229,6 +234,7 @@ public class NSystemController extends NBasicController {
     @ResponseBody
     public EnvelopeResponse<String> remoteStopPackage(@RequestParam(value = "host", required = false) String host,
             @RequestParam(value = "id") String id, final HttpServletRequest request) throws Exception {
+        host = decodeHost(host);
         if (StringUtils.isEmpty(host)) {
             systemService.stopDiagTask(id);
             return new EnvelopeResponse<>(CODE_SUCCESS, "", "");
@@ -271,7 +277,11 @@ public class NSystemController extends NBasicController {
         val servers = clusterManager.getServers();
         response.setStatus(maintenanceModeService.getMaintenanceMode());
         if (ext) {
-            response.setServers(servers);
+            response.setServers(
+                servers.stream().map(server ->
+                    new ServerExtInfoResponse()
+                    .setServer(server)
+                    .setSecretName(encodeHost(server.getHost()))).collect(Collectors.toList()));
         } else {
             response.setServers(servers.stream().map(ServerInfoResponse::getHost).collect(Collectors.toList()));
         }
