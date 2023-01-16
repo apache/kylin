@@ -64,6 +64,7 @@ import org.apache.kylin.rest.request.SaveSqlRequest;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.response.ServerExtInfoResponse;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.common.persistence.transaction.StopQueryBroadcastEventNotifier;
@@ -437,7 +438,12 @@ public class NQueryController extends NBasicController {
     public EnvelopeResponse<List> getServers(
             @RequestParam(value = "ext", required = false, defaultValue = "false") boolean ext) {
         if (ext) {
-            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, clusterManager.getServers(), "");
+            List<ServerExtInfoResponse> serverInfo =
+                clusterManager.getServers().stream().map(server ->
+                    new ServerExtInfoResponse()
+                        .setServer(server)
+                        .setSecretName(encodeHost(server.getHost()))).collect(Collectors.toList());
+            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, serverInfo, "");
         } else {
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
                     clusterManager.getServers().stream().map(ServerInfoResponse::getHost).collect(Collectors.toList()),

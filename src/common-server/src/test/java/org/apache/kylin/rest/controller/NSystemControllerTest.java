@@ -22,17 +22,23 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
+import org.apache.kylin.rest.cluster.ClusterManager;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.DiagPackageRequest;
 import org.apache.kylin.rest.request.DiagProgressRequest;
+import org.apache.kylin.rest.response.MaintenanceModeResponse;
+import org.apache.kylin.rest.response.ServerInfoResponse;
+import org.apache.kylin.rest.service.MaintenanceModeService;
 import org.apache.kylin.rest.service.SystemService;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,6 +54,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import com.google.common.collect.Lists;
+
 public class NSystemControllerTest extends NLocalFileMetadataTestCase {
     private static final String APPLICATION_JSON = HTTP_VND_APACHE_KYLIN_JSON;
 
@@ -61,6 +69,12 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
 
     @Rule
     public TransactionExceptedException thrown = TransactionExceptedException.none();
+
+    @Mock
+    private ClusterManager clusterManager;
+
+    @Mock
+    private MaintenanceModeService maintenanceModeService;
 
     @Before
     public void setUp() {
@@ -173,6 +187,15 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(nSystemController).getRemotePackageStatus(Mockito.anyString(), Mockito.anyString(),
                 Mockito.anyString(), Mockito.any());
+        NBasicController controller = new NBasicController();
+        String encodeHost = controller.encodeHost("quickstart.cloudera:8088");
+        String decodeHost = controller.decodeHost(encodeHost);
+        controller.encodeHost("");
+        controller.decodeHost("");
+        Assert.assertTrue(decodeHost.equalsIgnoreCase("http://quickstart.cloudera:8088"));
+        Assert.assertEquals(
+            "http://quickstart.cloudera:8088",
+            controller.decodeHost("http://quickstart.cloudera:8088"));
     }
 
     @Test
@@ -271,5 +294,19 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(nSystemController).simulateInsertMeta(Mockito.anyInt(), Mockito.anyLong());
+    }
+
+    @Test
+    public void testGetServer() throws Exception {
+        ServerInfoResponse response = new ServerInfoResponse();
+        response.setHost("172.168.1.1");
+        response.setMode("ALL");
+        List<ServerInfoResponse> result = Lists.newArrayList(response);
+        Mockito.when(clusterManager.getServers()).thenReturn(result);
+        Mockito.when(maintenanceModeService.getMaintenanceMode())
+            .thenReturn(new MaintenanceModeResponse(false, ""));
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/system/servers")
+            .param("ext", "true").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+            .andExpect(MockMvcResultMatchers.status().isOk());
     }
 }

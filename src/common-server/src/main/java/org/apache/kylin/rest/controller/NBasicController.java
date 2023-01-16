@@ -48,6 +48,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -66,6 +67,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -634,5 +636,33 @@ public class NBasicController {
         if (CollectionUtils.isEmpty(fieldValue)) {
             throw new KylinException(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, fieldName);
         }
+    }
+
+    public String decodeHost(String host) {
+        try {
+            if (StringUtils.isBlank(host) || host.startsWith("http://")) {
+                return host;
+            }
+            return new String(Base64.decodeBase64(host), Charset.defaultCharset());
+        } catch (Exception e) {
+            logger.error("Failed to decode host, will use the original host name");
+        }
+        return host;
+    }
+
+    public String encodeHost(String host) {
+        try {
+            if (StringUtils.isBlank(host)) {
+                return host;
+            }
+            host = host.trim();
+            if (!host.toLowerCase().startsWith("http")) {
+                host = "http://" + host;
+            }
+            return Base64.encodeBase64String(host.getBytes(Charset.defaultCharset()));
+        } catch (Exception e) {
+            logger.error("Failed to encode host, will use the original host name");
+        }
+        return host;
     }
 }
