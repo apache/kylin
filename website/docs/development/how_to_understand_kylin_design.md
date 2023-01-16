@@ -6,7 +6,7 @@ pagination_label: Overall Design of Kylin 5
 toc_min_heading_level: 2
 toc_max_heading_level: 6
 pagination_prev: development/how_to_release
-pagination_next: development/dev_design/metastore_design
+pagination_next: null
 showLastUpdateAuthor: true
 showLastUpdateTime: true
 keywords:
@@ -28,9 +28,10 @@ Unless more comments, all source code analysis are based on [this code snapshot]
    - [x] Transaction(CRUD of Metadata)
    - [ ] Epoch, AuditLog, etc.
 2. Metadata Format/Schema
-   - [ ] DataModel, IndexPlan, and Dataflow
-   - [ ] Index and Layout
+   - [x] DataModel, IndexPlan, and Dataflow
+   - [x] Index and Layout
    - [ ] Computed Column
+   - [ ] Schema Change
 3. Query Engine
    - [ ] How a SQL query was executed in Kylin?
    - [ ] Query Cache

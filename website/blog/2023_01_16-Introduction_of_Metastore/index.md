@@ -1,21 +1,27 @@
 ---
-title: Metastore Design of Kylin 5
-language: en
-sidebar_label: Metastore Design of Kylin 5
-pagination_label: Metastore Design of Kylin 5
-toc_min_heading_level: 2
-toc_max_heading_level: 6
-pagination_prev: development/how_to_understand_kylin_design
-pagination_next: null
-showLastUpdateAuthor: true
-showLastUpdateTime: true
-keywords:
-  - dev-design
-draft: false
-last_update:
-  date: 09/16/2022
-  author: Xiaoxiang Yu
+title: Introduction of Metastore(CN)
+slug: introduction_of_metastore_cn
+authors: xxyu
+tags: [metastore, kylin5]
+hide_table_of_contents: false
+date: 2023-01-16T10:00
 ---
+
+:::tip Before your read
+**Target Audience**
+- 对 Kylin 5.0 元数据存储, 元数据缓存, 以及节点间元数据同步机制感兴趣的用户和开发者.
+- 在二次开发过程中, 想了解对 Kylin 5.0 进行元数据读写操作的最佳实践和注意事项的开发者.
+- 想对 Kylin 5.0 的元数据进行升级改造的开发者.
+
+
+**What will you learn**
+- 了解在 Kylin 5 如何进行读写元数据操作
+
+💬 Kylin 5 的开发者需要了解元数据读写的逻辑的实现和技术细节
+:::
+
+<!--truncate-->
+
 
 ### Target Audience
 

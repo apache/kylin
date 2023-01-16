@@ -7,6 +7,19 @@ hide_table_of_contents: false
 date: 2022-12-18T17:00
 ---
 
+:::tip Before your read
+**Target Audience**
+- Kylin 5.0 的开发者和用户
+
+**What will you learn**
+- 了解 Kylin 5.0 的元数据 Schema 设计和原理
+
+💬 Kylin5 对[元数据的设计](https://github.com/apache/kylin/blob/doc5.0/website/blog/2022-12-18-Introduction_of_Metadata/protocol-buffer/metadata.proto)
+做了比较大的调整，本文将针对这些调整做比较详细的介绍。
+:::
+
+<!--truncate-->
+
 # Introduction of Metadata
 
 Kylin5 对元数据的组织结构做了比较大的调整，本文将针对这些调整做比较详细的介绍。相比于 Kylin4，Kylin5 的元数据的一个显著特点是项目级隔离，也即每个项目彼此独立、互不干扰。本文会从项目开始，分别展开Table、Model、IndexPlan、Segment、Job 各个部分的内容。更宽泛地说，Kylin5 的元数据还包括元数据更新审计日志(AuditLog)、事务表(Epoch)、权限(ACL)、查询历史(Query History) 等内容。所有的这些内容都很重要，但作为入门级的介绍，本文不涉及更宽泛的内容，而是尽量把篇幅控制在元数据中最为基础的那部分，以帮助更多的开发者快速地了解和参与到 Kylin5 的研发。当然，作为一篇入门级介绍性文章，非研发人员阅读也能有所收获。接下来让我们切入主题。

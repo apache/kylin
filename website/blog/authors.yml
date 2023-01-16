@@ -1,10 +1,11 @@
 xxyu:
-  name: 敏丞
+  name: Xiaoxiang Yu
   title: PMC member and Release Manager of Apache Kylin
   url: https://github.com/hit-lacus
   image_url: https://github.com/hit-lacus.png
 
 pfzhan:
-  name: pfzhan
+  name: Pengfei Zhan
+  title: Dev of Kyligence Inc
   url: https://github.com/dethrive
   image_url: https://github.com/dethrive.png
