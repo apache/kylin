@@ -43,6 +43,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.request.AsyncQuerySQLRequest;
@@ -52,6 +53,7 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.AsyncQueryService;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AsyncQueryRequestLimits;
 import org.apache.spark.sql.SparderEnv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,6 +125,9 @@ public class NAsyncQueryController extends NBasicController {
         if (StringUtils.isEmpty(sqlRequest.getSeparator())) {
             sqlRequest.setSeparator(",");
         }
+        if (NProjectManager.getProjectConfig(sqlRequest.getProject()).isUniqueAsyncQueryYarnQueue()) {
+            AsyncQueryRequestLimits.checkCount();
+        }
 
         executorService.submit(Objects.requireNonNull(TtlRunnable.get(() -> {
             String format = sqlRequest.getFormat().toLowerCase(Locale.ROOT);
@@ -154,14 +159,14 @@ public class NAsyncQueryController extends NBasicController {
             } catch (Exception e) {
                 try {
                     logger.error("failed to run query {}", queryContext.getQueryId(), e);
-                    AsyncQueryUtil.createErrorFlag(sqlRequest.getProject(), queryContext.getQueryId(),
-                            e.getMessage());
+                    AsyncQueryUtil.createErrorFlag(sqlRequest.getProject(), queryContext.getQueryId(), e.getMessage());
                     exceptionHandle.set(e.getMessage());
                 } catch (Exception e1) {
                     exceptionHandle.set(exceptionHandle.get() + "\n" + e.getMessage());
                     throw new RuntimeException(e1);
                 }
             } finally {
+                logger.info("Async query with queryId: {} end", queryContext.getQueryId());
                 QueryContext.current().close();
             }
         })));
@@ -171,18 +176,18 @@ public class NAsyncQueryController extends NBasicController {
         }
 
         switch (asyncQueryService.queryStatus(sqlRequest.getProject(), sqlRequest.getQueryId())) {
-            case SUCCESS:
-                return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-                        new AsyncQueryResponse(queryIdRef.get(), AsyncQueryResponse.Status.SUCCESSFUL, "query success"),
-                        "");
-            case FAILED:
-                return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-                        new AsyncQueryResponse(queryIdRef.get(), AsyncQueryResponse.Status.FAILED, exceptionHandle.get()),
-                        "");
-            default:
-                return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-                        new AsyncQueryResponse(queryIdRef.get(), AsyncQueryResponse.Status.RUNNING, "query still running"),
-                        "");
+        case SUCCESS:
+            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                    new AsyncQueryResponse(queryIdRef.get(), AsyncQueryResponse.Status.SUCCESSFUL, "query success"),
+                    "");
+        case FAILED:
+            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                    new AsyncQueryResponse(queryIdRef.get(), AsyncQueryResponse.Status.FAILED, exceptionHandle.get()),
+                    "");
+        default:
+            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                    new AsyncQueryResponse(queryIdRef.get(), AsyncQueryResponse.Status.RUNNING, "query still running"),
+                    "");
         }
     }
 
@@ -258,21 +263,21 @@ public class NAsyncQueryController extends NBasicController {
         AsyncQueryService.QueryStatus queryStatus = asyncQueryService.queryStatus(project, queryId);
         AsyncQueryResponse asyncQueryResponse;
         switch (queryStatus) {
-            case SUCCESS:
-                asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.SUCCESSFUL,
-                        "await fetching results");
-                break;
-            case RUNNING:
-                asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.RUNNING, "still running");
-                break;
-            case FAILED:
-                asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.FAILED,
-                        asyncQueryService.retrieveSavedQueryException(project, queryId));
-                break;
-            default:
-                asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.MISSING,
-                        "query status is lost"); //
-                break;
+        case SUCCESS:
+            asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.SUCCESSFUL,
+                    "await fetching results");
+            break;
+        case RUNNING:
+            asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.RUNNING, "still running");
+            break;
+        case FAILED:
+            asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.FAILED,
+                    asyncQueryService.retrieveSavedQueryException(project, queryId));
+            break;
+        default:
+            asyncQueryResponse = new AsyncQueryResponse(queryId, AsyncQueryResponse.Status.MISSING,
+                    "query status is lost"); //
+            break;
         }
 
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, asyncQueryResponse, "");

@@ -786,6 +786,11 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getAsyncQueryTooManyRunning() {
+        return "查询失败，异步查询总数已达到管理员设置的上限，请等候并重试。";
+    }
+
+    @Override
     public String getSelfDisableForbidden() {
         return "您不可以禁用您自己";
     }
@@ -1692,7 +1697,6 @@ public class CnMessage extends Message {
 
     @Override
     public String getLoadLogicalViewError(String tableName, String project) {
-        return String.format(Locale.ROOT,
-            "无法加载表: %s , 仅支持在项目 %s 中加载此表", tableName, project);
+        return String.format(Locale.ROOT, "无法加载表: %s , 仅支持在项目 %s 中加载此表", tableName, project);
     }
 }

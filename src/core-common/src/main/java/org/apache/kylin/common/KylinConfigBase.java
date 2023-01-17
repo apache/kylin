@@ -501,6 +501,11 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.project-concurrent-running-threshold", "0"));
     }
 
+    public int getAsyncQueryMaxConcurrentJobs() {
+        // by default there's no limitation
+        return Integer.parseInt(getOptional("kylin.query.async-query.max-concurrent-jobs", "0"));
+    }
+
     public boolean isAdminUserExportAllowed() {
         return Boolean.parseBoolean(getOptional("kylin.web.export-allow-admin", TRUE));
     }

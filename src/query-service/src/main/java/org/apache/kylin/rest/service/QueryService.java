@@ -142,6 +142,7 @@ import org.apache.kylin.rest.response.TableMetaCacheResultV2;
 import org.apache.kylin.rest.security.MutableAclRecord;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
+import org.apache.kylin.rest.util.AsyncQueryRequestLimits;
 import org.apache.kylin.rest.util.PrepareSQLUtils;
 import org.apache.kylin.rest.util.QueryCacheSignatureUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
@@ -303,11 +304,13 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 if (StringUtils.isNotEmpty(sqlRequest.getSparkQueue())) {
                     queryParams.setSparkQueue(sqlRequest.getSparkQueue());
                 }
-                AsyncQueryJob asyncQueryJob = new AsyncQueryJob();
-                asyncQueryJob.setProject(queryParams.getProject());
-                asyncQueryJob.submit(queryParams);
-                return buildSqlResponse(false, Collections.emptyList(), 0, Lists.newArrayList(),
-                        sqlRequest.getProject());
+                try (AsyncQueryRequestLimits ignored = new AsyncQueryRequestLimits()) {
+                    AsyncQueryJob asyncQueryJob = new AsyncQueryJob();
+                    asyncQueryJob.setProject(queryParams.getProject());
+                    asyncQueryJob.submit(queryParams);
+                    return buildSqlResponse(false, Collections.emptyList(), 0, Lists.newArrayList(),
+                            sqlRequest.getProject());
+                }
             }
 
             SQLResponse fakeResponse = TableauInterceptor.tableauIntercept(queryParams.getSql());

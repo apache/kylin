@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
+import static org.apache.kylin.common.exception.QueryErrorCode.TOO_MANY_ASYNC_QUERY;
 import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_PROJECT_NAME_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_RESULT_NOT_FOUND;
@@ -29,6 +30,8 @@ import static org.apache.kylin.rest.service.AsyncQueryService.QueryStatus.RUNNIN
 import static org.apache.kylin.rest.service.AsyncQueryService.QueryStatus.SUCCESS;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.text.ParseException;
 
 import org.apache.kylin.common.KylinConfig;
@@ -45,6 +48,7 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.AsyncQueryService;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AsyncQueryRequestLimits;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -270,6 +274,76 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         Mockito.verify(nAsyncQueryController).query(Mockito.any());
+    }
+
+    @Test
+    public void testQueryReachLimit() throws Exception {
+        Mockito.doReturn(SUCCESS).when(asyncQueryService).queryStatus(Mockito.anyString(), Mockito.anyString());
+        SQLResponse response = new SQLResponse();
+        response.setException(false);
+        Mockito.doReturn(response).when(kapQueryService).queryWithCache(Mockito.any());
+        getTestConfig().setProperty("kylin.query.unique-async-query-yarn-queue-enabled", "true");
+        getTestConfig().setProperty("kylin.query.async-query.max-concurrent-jobs", "3");
+        reloadAsyncQueryRequestLimits();
+        AsyncQueryRequestLimits limit1 = new AsyncQueryRequestLimits();
+        AsyncQueryRequestLimits limit2 = new AsyncQueryRequestLimits();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/async_query").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.verify(nAsyncQueryController).query(Mockito.any());
+        AsyncQueryRequestLimits limits3 = new AsyncQueryRequestLimits();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/async_query").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError()).andExpect(result -> {
+                    Assert.assertTrue(result.getResolvedException() instanceof KylinException);
+                    Assert.assertEquals(TOO_MANY_ASYNC_QUERY.toErrorCode().getCodeString(),
+                            ((KylinException) result.getResolvedException()).getErrorCode().getCodeString());
+                    Assert.assertEquals(MsgPicker.getMsg().getAsyncQueryTooManyRunning(),
+                            result.getResolvedException().getMessage());
+                });
+        limits3.close();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/async_query").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        limit1.close();
+        limit2.close();
+
+    }
+
+    @Test
+    public void testQueryReachLimitCase2() throws Exception {
+
+        Mockito.doReturn(SUCCESS).when(asyncQueryService).queryStatus(Mockito.anyString(), Mockito.anyString());
+        SQLResponse response = new SQLResponse();
+        response.setException(false);
+        Mockito.doReturn(response).when(kapQueryService).queryWithCache(Mockito.any());
+        getTestConfig().setProperty("kylin.query.unique-async-query-yarn-queue-enabled", "true");
+        getTestConfig().setProperty("kylin.query.async-query.max-concurrent-jobs", "0");
+        reloadAsyncQueryRequestLimits();
+
+        AsyncQueryRequestLimits limit1 = new AsyncQueryRequestLimits();
+        AsyncQueryRequestLimits limit2 = new AsyncQueryRequestLimits();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/async_query").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        limit1.close();
+        limit2.close();
+
+    }
+
+    private void reloadAsyncQueryRequestLimits() throws Exception {
+        Field field = AsyncQueryRequestLimits.class.getDeclaredField("MAX_COUNT");
+        field.setAccessible(true);
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+        int count = KylinConfig.getInstanceFromEnv().getAsyncQueryMaxConcurrentJobs();
+        field.setInt(null, count);
     }
 
     @Test
