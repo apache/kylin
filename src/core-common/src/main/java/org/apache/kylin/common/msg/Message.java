@@ -451,6 +451,10 @@ public class Message {
         return "Can’t submit query at the moment as there are too many ongoing queries. Please try again later, or contact project admin to adjust configuration.";
     }
 
+    public String getAsyncQueryTooManyRunning() {
+        return "Query failed cause the total number of async queries hit the upper limit set by Admin.Please wait and try again.";
+    }
+
     public String getExportResultNotAllowed() {
         return "Don’t have permission to export the query result. Please contact admin if needed.";
     }

@@ -52,6 +52,7 @@ public enum QueryErrorCode implements ErrorCodeSupplier {
 
     // 20040XXX async query
     ASYNC_QUERY_ILLEGAL_PARAM("KE-020040001"),
+    TOO_MANY_ASYNC_QUERY("KE-020040002"),
 
     // 20050XXX invalid query params
     INVALID_QUERY_PARAMS("KE-020050001"),
