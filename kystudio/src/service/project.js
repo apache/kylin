@@ -148,5 +148,17 @@ export default {
   },
   getDefaultConfig () {
     return Vue.resource(apiUrl + 'projects/default_configs').get()
+  },
+  loadExcludeTables (params) {
+    return Vue.resource(apiUrl + `tables/excluded_tables`).get(params)
+  },
+  loadExcludeColumns (params) {
+    return Vue.resource(apiUrl + `tables/excluded_table`).get(params)
+  },
+  updateExcludeColumns (data) {
+    return Vue.resource(apiUrl + `tables/excluded_tables`).update(data)
+  },
+  updateExcludeColumnConfig (data) {
+    return Vue.resource(apiUrl + `projects/${data.project}/exclusion_enabled`).update(data)
   }
 }

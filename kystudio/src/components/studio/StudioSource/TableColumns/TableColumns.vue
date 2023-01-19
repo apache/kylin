@@ -36,6 +36,18 @@
         :label="$t('kylinLang.dataSource.dataType')">
       </el-table-column>
       <el-table-column
+        prop="excluded"
+        align="left"
+        header-align="left"
+        min-width="80"
+        v-if="$store.state.project.projectExcludeTableConfig"
+        show-overflow-tooltip
+        :label="$t('kylinLang.dataSource.excluded')">
+        <span slot-scope="scope">
+          {{scope.row.excluded?$t('yes'):$t('no')}}
+        </span>
+      </el-table-column>
+      <el-table-column
         prop="cardinality"
         sortable="custom"
         align="right"

@@ -23,7 +23,7 @@ export default {
     tableIndexShardByTips: 'Please select columns for detail query. To enhance the query performance, please move the frequently used dimensions to the top of the list, and set a column with relatively large cardinality as ShardBy.',
     filterByColumns: 'Search by column name',
     excludeTableCheckbox: 'Display columns excluded from recommendations',
-    excludeTableCheckboxTip: 'Exclude Rules can be modified in project setting',
+    excludeTableCheckboxTip: 'If an excluded column is added to indexes, this column will store "historical truth"(SCD Type2, As Was).<br/>If you want to use "latest status" (SCD Type 1, As Is) ,please don\'t add this column to any index and add foreign key instead.',
     excludedTableIconTip: 'Excluded from recommendations',
     manyToManyAntiTableTip: 'For the tables excluded from recommendations, if the join relationship of a table is One-to-Many or Many-to-Many, dimensions from this table can\'t be used in indexes. ',
     indexTimeRange: 'Index’s Time Range',
