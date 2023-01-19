@@ -440,6 +440,7 @@ exports.default = {
     sampleData: 'Sample Data',
     maximum: 'Max Value',
     minimal: 'Min Value',
+    excluded: 'Excluded',
     nullCount: 'Null Count',
     exceedPrecisionMaxLengthValue: 'Longest Value Over Precision',
     minLengthVal: 'Min Length Value',

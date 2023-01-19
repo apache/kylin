@@ -36,7 +36,10 @@
           </el-alert>
           <template v-if="modelInstance.model_type !== 'HYBRID' || modelInstance.model_type === 'HYBRID' && tableIndexMeta.index_range">
             <p class="anit-table-tips" v-if="hasManyToManyAndAntiTable">{{$t('manyToManyAntiTableTip')}}</p>
-            <el-tooltip :content="$t('excludeTableCheckboxTip')" effect="dark" placement="top"><el-checkbox class="ksd-mr-5" v-if="showExcludedTableCheckBox" v-model="displayExcludedTables">{{$t('excludeTableCheckbox')}}</el-checkbox></el-tooltip>
+            <!-- <el-tooltip effect="dark" placement="top">
+              <div slot="content" v-html="$t('excludeTableCheckboxTip')"></div>
+              <el-checkbox class="ksd-mr-5" v-if="showExcludedTableCheckBox" v-model="displayExcludedTables">{{$t('excludeTableCheckbox')}}</el-checkbox>
+            </el-tooltip> -->
             <el-input v-model="searchColumn" size="medium" prefix-icon="el-ksd-icon-search_22" style="width:200px" :placeholder="$t('filterByColumns')"></el-input>
           </template>
         </div>
@@ -171,9 +174,9 @@
       return (this.modelInstance.model_type === 'HYBRID' && this.tableIndexMeta.index_range !== 'STREAMING') || (this.modelInstance.model_type !== 'STREAMING' && this.modelInstance.model_type !== 'HYBRID')
     }
 
-    get showExcludedTableCheckBox () {
-      return this.allColumns.length ? this.allColumns.filter(it => typeof it.depend_lookup_table !== 'undefined' && it.depend_lookup_table).length > 0 : false
-    }
+    // get showExcludedTableCheckBox () {
+    //   return this.allColumns.length ? this.allColumns.filter(it => typeof it.excluded !== 'undefined' && it.excluded).length > 0 : false
+    // }
     topRow (col) {
       let index = this.getRowIndex(col, 'fullName')
       this.allColumns.splice(0, 0, col)
@@ -223,7 +226,7 @@
     }
     // 是否为屏蔽表的 column
     isExistExcludeTable (col) {
-      return typeof col.depend_lookup_table !== 'undefined' ? col.depend_lookup_table : false
+      return typeof col.excluded !== 'undefined' ? col.excluded : false
     }
     get filterResult () {
       if (!this.isShow) {
@@ -247,7 +250,7 @@
       this.allColumns = []
       // let result = []
       let result = this.modelInstance.selected_columns.map((c) => {
-        return { fullName: c.column, cardinality: c.cardinality, depend_lookup_table: typeof c.depend_lookup_table !== 'undefined' ? c.depend_lookup_table : true }
+        return { fullName: c.column, cardinality: c.cardinality, excluded: typeof c.excluded !== 'undefined' ? c.excluded : true }
       })
       // let modelUsedTables = this.modelInstance && this.modelInstance.getTableColumns() || []
       // modelUsedTables.forEach((col) => {
@@ -256,7 +259,7 @@
       if (this.tableIndexMeta.col_order.length) {
         const selected = this.tableIndexMeta.col_order.map(item => {
           const index = result.findIndex(it => it.fullName === item)
-          return {fullName: item, cardinality: result[index].cardinality, depend_lookup_table: result[index].depend_lookup_table}
+          return {fullName: item, cardinality: result[index].cardinality, excluded: result[index].excluded}
         })
         const unSort = result.filter(item => !this.tableIndexMeta.col_order.includes(item.fullName))
         result = [...selected, ...unSort]
@@ -267,7 +270,7 @@
       //   result.push(col.tableAlias + '.' + col.columnName)
       // })
       result.forEach((ctx, index) => {
-        let obj = {fullName: ctx.fullName, cardinality: ctx.cardinality, depend_lookup_table: ctx.depend_lookup_table, isUsed: false, isShared: false, colorful: false}
+        let obj = {fullName: ctx.fullName, cardinality: ctx.cardinality, excluded: ctx.excluded, isUsed: false, isShared: false, colorful: false}
         if (this.tableIndexMeta.col_order.indexOf(ctx.fullName) >= 0) {
           obj.isUsed = true
         }

@@ -108,7 +108,7 @@ export default {
     buildIndexTip: 'Successfully saved the aggregate index(es). The building job can\'t be submitted at the moment, as there exists an ongoing building job for this model. Please try submitting the building job until the current one is completed or manually stop it.',
     disabledConstantMeasureTip: 'Can\'t modify the default measure.',
     excludeTableCheckbox: 'Display columns excluded from recommendations',
-    excludeTableCheckboxTip: 'Exclude Rules can be modified in project setting',
+    excludeTableCheckboxTip: 'If an excluded column is added to indexes, this column will store "historical truth"(SCD Type2, As Was).',
     excludedTableIconTip: 'Excluded from recommendations',
     indexTimeRange: 'Index’s Data Range',
     manyToManyAntiTableTip: 'For the tables excluded from recommendations, if the join relationship of a table is One-to-Many or Many-to-Many, dimensions from this table can\'t be used in indexes. ',

@@ -110,6 +110,12 @@ export function _getPushdownConfig (data) {
     push_down_range_limited: data.push_down_range_limited
   }
 }
+export function _getExcludeColumnConfig (data) {
+  return {
+    project: data.project,
+    table_exclusion_enabled: data.table_exclusion_enabled
+  }
+}
 export function _getStorageQuota (data) {
   return {
     project: data.project,
