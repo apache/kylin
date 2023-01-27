@@ -26,6 +26,7 @@ import org.apache.kylin.common.util.{DateFormat, HadoopUtil}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
 import org.apache.kylin.engine.spark.utils.{LogEx, LogUtils}
 import org.apache.kylin.metadata.cube.model.{DimensionRangeInfo, LayoutEntity, NDataflow, NDataflowManager}
+import org.apache.kylin.metadata.datatype.DataType
 import org.apache.kylin.metadata.model.{PartitionDesc, TblColRef}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.spark.internal.Logging
@@ -731,9 +732,9 @@ abstract class PushableColumnBase {
 case class SegDimFilters(dimRange: java.util.Map[String, DimensionRangeInfo], dimCols: java.util.Map[Integer, TblColRef]) extends Logging {
 
   private def insurance(id: String, value: Any)
-                       (func: String => Filter): Filter = {
+                       (func: Any => Filter): Filter = {
     if (dimRange.containsKey(id) && dimCols.containsKey(id.toInt)) {
-      func(value.toString)
+      func(value)
     } else {
       Trivial(true)
     }
@@ -749,23 +750,29 @@ case class SegDimFilters(dimRange: java.util.Map[String, DimensionRangeInfo], di
   }
 
   def foldFilter(filter: Filter): Filter = {
+
+    def getDataType(col: String, value: Any): DataType = {
+      if (value.isInstanceOf[Date] || value.isInstanceOf[Timestamp]) return DataType.getType("date")
+      dimCols.get(col.toInt).getType
+    }
+
     filter match {
       case EqualTo(id, value: Any) =>
         val col = escapeQuote(id)
         insurance(col, value) {
           ts => {
-            val dataType = dimCols.get(col.toInt).getType
-            Trivial(dataType.compare(ts, dimRange.get(col).getMin) >= 0
-              && dataType.compare(ts, dimRange.get(col).getMax) <= 0)
+            val dataType = getDataType(col, value)
+            Trivial(dataType.compare(ts.toString, dimRange.get(col).getMin) >= 0
+              && dataType.compare(ts.toString, dimRange.get(col).getMax) <= 0)
           }
         }
       case In(id, values: Array[Any]) =>
         val col = escapeQuote(id)
         val satisfied = values.map(v => insurance(col, v) {
           ts => {
-            val dataType = dimCols.get(col.toInt).getType
-            Trivial(dataType.compare(ts, dimRange.get(col).getMin) >= 0
-              && dataType.compare(ts, dimRange.get(col).getMax) <= 0)
+            val dataType = getDataType(col, v)
+            Trivial(dataType.compare(ts.toString, dimRange.get(col).getMin) >= 0
+              && dataType.compare(ts.toString, dimRange.get(col).getMax) <= 0)
           }
         }).exists(_.equals(Trivial(true)))
         Trivial(satisfied)
@@ -777,22 +784,22 @@ case class SegDimFilters(dimRange: java.util.Map[String, DimensionRangeInfo], di
       case GreaterThan(id, value: Any) =>
         val col = escapeQuote(id)
         insurance(col, value) {
-          ts => Trivial(dimCols.get(col.toInt).getType.compare(ts, dimRange.get(col).getMax) < 0)
+          ts => Trivial(getDataType(col, value).compare(ts.toString, dimRange.get(col).getMax) < 0)
         }
       case GreaterThanOrEqual(id, value: Any) =>
         val col = escapeQuote(id)
         insurance(col, value) {
-          ts => Trivial(dimCols.get(col.toInt).getType.compare(ts, dimRange.get(col).getMax) <= 0)
+          ts => Trivial(getDataType(col, value).compare(ts.toString, dimRange.get(col).getMax) <= 0)
         }
       case LessThan(id, value: Any) =>
         val col = escapeQuote(id)
         insurance(col, value) {
-          ts => Trivial(dimCols.get(col.toInt).getType.compare(ts, dimRange.get(col).getMin) > 0)
+          ts => Trivial(getDataType(col, value).compare(ts.toString, dimRange.get(col).getMin) > 0)
         }
       case LessThanOrEqual(id, value: Any) =>
         val col = escapeQuote(id)
         insurance(col, value) {
-          ts => Trivial(dimCols.get(col.toInt).getType.compare(ts, dimRange.get(col).getMin) >= 0)
+          ts => Trivial(getDataType(col, value).compare(ts.toString, dimRange.get(col).getMin) >= 0)
         }
       case And(left: Filter, right: Filter) =>
         And(foldFilter(left), foldFilter(right)) match {

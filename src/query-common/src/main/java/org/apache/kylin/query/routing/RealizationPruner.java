@@ -268,7 +268,7 @@ public class RealizationPruner {
 
     private static String normalization(String dateFormat, RexLiteral rexLiteral) {
         RelDataTypeFamily typeFamily = rexLiteral.getType().getFamily();
-        if (SqlTypeFamily.DATE == typeFamily) {
+        if (SqlTypeFamily.DATE == typeFamily || SqlTypeFamily.TIMESTAMP == typeFamily) {
             // Calendar uses UTC timezone, just to keep RexLiteral's value(an instanceof DateString)
             long timeInMillis = ((Calendar) rexLiteral.getValue()).getTimeInMillis();
             String dateStr = DateFormat.formatToDateStr(timeInMillis, dateFormat, RealizationPruner.UTC_ZONE);
