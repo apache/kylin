@@ -2092,6 +2092,7 @@ public class TableService extends BasicService {
      *      - dataflow
      * 5. Delete dirty table metadata
      */
+    @Transaction(project = 0)
     public void updateHiveTable(String projectName, Map<String, TableSchemaUpdateMapping> mapping0, Set<String> modelSetToAffect, boolean isUseExisting) throws IOException {
         final ProjectInstance prjInstance = getProjectManager().getProject(projectName);
         val kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -2116,15 +2117,16 @@ public class TableService extends BasicService {
             infModels = infModels.stream().filter(model -> modelSetToInf.contains(model.getAlias().toUpperCase(Locale.ROOT))).collect(Collectors.toSet());
             ifAllModelUpdate = nModel == infModels.size();
         }
-        // Currently, only only model with offline status is supported to update with mappings.
+        // Currently, only model with offline status is supported to update with mappings.
         Set<NDataModel> readyModelSet = infModels.stream().filter(model -> NDataflowManager.getInstance(kylinConfig, project)
                 .getDataflowByModelAlias(model.getAlias()).getStatus() == RealizationStatusEnum.OFFLINE)
                 .collect(Collectors.toSet());
+        ifAllModelUpdate = (ifAllModelUpdate && readyModelSet.size() == infModels.size());
         // At least 1 model should be update here, otherwise it will throw BadRequestException.
-        if (!readyModelSet.isEmpty()) {
-            throw new BadRequestException("Influenced models " + readyModelSet + " should be OFFLINE");
+        if (readyModelSet.isEmpty()) {
+            throw new BadRequestException("Influenced models " + infModels + " should be OFFLINE");
         }
-        logger.info("Influenced cubes {}", infModels);
+        logger.info("Influenced cubes {}", readyModelSet);
 
         // Get influenced metadata and update the metadata
         NTableMetadataManager tableManager = NTableMetadataManager.getInstance(kylinConfig, project);
@@ -2143,11 +2145,11 @@ public class TableService extends BasicService {
             }
         }
         // -- 2. model
-        Map<String, NDataModel> newModels = infModels.stream().map(model -> TableSchemaUpdater
+        Map<String, NDataModel> newModels = readyModelSet.stream().map(model -> TableSchemaUpdater
                 .dealWithMappingForModel(kylinConfig, project, model, mapping))
                 .collect(Collectors.toMap(NDataModel::getAlias, model -> model));
         // -- 3. dataflow
-        Map<String, NDataflow> newDataflow = infModels.stream()
+        Map<String, NDataflow> newDataflow = readyModelSet.stream()
                 .map(model -> NDataflowManager.getInstance(kylinConfig, project).getDataflowByModelAlias(model.getAlias()))
                 .map(dataflow -> TableSchemaUpdater.dealWithMappingForDataFlow(kylinConfig, project, dataflow, mapping))
                 .collect(Collectors.toMap(NDataflow::resourceName, dataflow -> dataflow));
