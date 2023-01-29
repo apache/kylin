@@ -265,6 +265,10 @@ public class KapConfig {
         return Integer.parseInt(config.getOptional("kylin.query.engine.spark-sql-shuffle-partitions", "-1"));
     }
 
+    public Boolean isConstraintPropagationEnabled() {
+        return Boolean.parseBoolean(config.getOptional("kylin.query.engine.spark-constraint-propagation-enabled", FALSE));
+    }
+
     /**
      * LDAP filter
      */
