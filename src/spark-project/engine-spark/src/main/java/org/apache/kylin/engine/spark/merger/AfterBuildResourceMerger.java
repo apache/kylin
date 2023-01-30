@@ -52,6 +52,7 @@ public class AfterBuildResourceMerger extends SparkJobMetadataMerger {
     @Override
     public NDataLayout[] merge(String dataflowId, Set<String> segmentId, Set<Long> layoutIds,
             ResourceStore remoteResourceStore, JobTypeEnum jobType, Set<Long> partitions) {
+        // TODO checker the input layouts
         switch (jobType) {
         case INDEX_BUILD:
         case SUB_PARTITION_BUILD:
@@ -110,7 +111,6 @@ public class AfterBuildResourceMerger extends SparkJobMetadataMerger {
         dfUpdate.setToUpdateSegs(theSeg);
         dfUpdate.setToRemoveSegs(toRemoveSegments.toArray(new NDataSegment[toRemoveSegments.size()]));
         dfUpdate.setToAddOrUpdateLayouts(theSeg.getSegDetails().getLayouts().toArray(new NDataLayout[0]));
-
         localDataflowManager.updateDataflow(dfUpdate);
         updateIndexPlan(flowName, remoteStore);
         return dfUpdate.getToAddOrUpdateLayouts();

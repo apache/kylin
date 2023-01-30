@@ -42,6 +42,7 @@ import org.apache.kylin.job.execution.ExecutableParams;
 import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.factory.JobFactory;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -164,6 +165,9 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         if (CollectionUtils.isNotEmpty(buckets)) {
             job.setParam(NBatchConstants.P_BUCKETS, ExecutableParams.toBucketParam(buckets));
         }
+
+        enableCostBasedPlannerIfNeed(df, segments, job);
+
         job.setParam(NBatchConstants.P_JOB_ID, jobId);
         job.setParam(NBatchConstants.P_PROJECT_NAME, df.getProject());
         job.setParam(NBatchConstants.P_TARGET_MODEL, job.getTargetSubject());
@@ -421,5 +425,54 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         private final AbstractExecutable secondStorageDeleteIndex;
         private final AbstractExecutable secondStorage;
         private final AbstractExecutable cleanUpTransactionalTable;
+    }
+
+    private static void enableCostBasedPlannerIfNeed(NDataflow df, Set<NDataSegment> segments, NSparkCubingJob job) {
+        // need run the cost based planner:
+        // 1. config enable the cube planner
+        // 2. the model dose not have the `layout_cost_based_pruned_list`
+        // 3. rule index has agg group
+        // 4. just only one segment to be built/refresh(other case will throw exception)
+        IndexPlan indexPlan = df.getIndexPlan();
+        KylinConfig kylinConfig = indexPlan.getConfig();
+        boolean needCostRecommendIndex = indexPlan.getRuleBasedIndex() != null
+                && indexPlan.getRuleBasedIndex().getLayoutsOfCostBasedList() == null
+                && !indexPlan.getRuleBasedIndex().getAggregationGroups().isEmpty();
+        if (kylinConfig.enableCostBasedIndexPlanner() && needCostRecommendIndex
+                && canEnablePlannerJob(job.getJobType())) {
+            // must run the cost based planner
+            if (segments.size() == 1) {
+                if (noBuildingSegmentExist(df.getProject(), job.getTargetSubject(), kylinConfig)) {
+                    // check the count of rowkey:
+                    // if the count of row key exceed the 63, throw exception
+                    if (indexPlan.getRuleBasedIndex().countOfIncludeDimension() > (Long.SIZE - 1)) {
+                        throw new RuntimeException(String.format(
+                                "The count of row key %d can't be larger than 63, when use the cube planner",
+                                indexPlan.getRuleBasedIndex().countOfIncludeDimension()));
+                    }
+                    // Add the parameter `P_JOB_ENABLE_PLANNER` which is used to decide whether to use the  cube planner
+                    job.setParam(NBatchConstants.P_JOB_ENABLE_PLANNER, Boolean.TRUE.toString());
+                } else {
+                    throw new RuntimeException(
+                            "There are running job for this model when submit the build job with cost based planner, "
+                                    + "please wait for other jobs to finish or cancel them");
+                }
+            } else {
+                throw new RuntimeException("The number of segments to be built or refreshed must be 1, "
+                        + "This is the first time to submit build job with enable cost based planner");
+            }
+        }
+    }
+
+    private static boolean noBuildingSegmentExist(String project, String modelId, KylinConfig kylinConfig) {
+        NDataflowManager nDataflowManager = NDataflowManager.getInstance(kylinConfig, project);
+        NDataflow dataflow = nDataflowManager.getDataflow(modelId);
+        // There are no other tasks in building
+        return dataflow.getSegments(SegmentStatusEnum.NEW).size() <= 1;
+    }
+
+    private static boolean canEnablePlannerJob(JobTypeEnum jobType) {
+        // just support: INC_BUILD and INDEX_REFRESH to recommend/prune index
+        return JobTypeEnum.INC_BUILD.equals(jobType) || JobTypeEnum.INDEX_REFRESH.equals(jobType);
     }
 }

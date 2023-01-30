@@ -23,6 +23,7 @@ export function getSubTasksName (that, name) {
     'Generate global dictionary': that.$t('generateGlobalDict'),
     'Generate flat table': that.$t('generateFlatTable'),
     'Save flat table': that.$t('saveFlatTable'),
+    'Cost based planner': that.$t('costBasedPlanner'),
     'Get flat table statistics': that.$t('getFlatTableStatistics'),
     'Generate global dictionary of computed columns': that.$t('generateDictOfCC'),
     'Merge flat table': that.$t('mergeFlatTable'),

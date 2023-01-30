@@ -260,7 +260,7 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         return createTableIndex(project, request.getModelId(), newLayout, request.isLoadData());
     }
 
-    public BuildIndexResponse createTableIndex(String project, String modelId, LayoutEntity newLayout,
+    private BuildIndexResponse createTableIndex(String project, String modelId, LayoutEntity newLayout,
             boolean loadData) {
         NIndexPlanManager indexPlanManager = getManager(NIndexPlanManager.class, project);
         val jobManager = getManager(JobManager.class, project);
@@ -272,6 +272,7 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         }
         int layoutIndex = indexPlan.getWhitelistLayouts().indexOf(newLayout);
         if (layoutIndex != -1) {
+            // find the target layout in this index plan
             indexPlanManager.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> {
                 val oldLayout = copyForWrite.getWhitelistLayouts().get(layoutIndex);
                 oldLayout.setManual(true);
@@ -281,6 +282,8 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
             modelChangeSupporters.forEach(listener -> listener.onUpdate(project, modelId));
             return new BuildIndexResponse(BuildIndexResponse.BuildIndexType.NO_LAYOUT);
         } else {
+            // create a new index for this layout
+            // update this index plan with the new layout
             indexPlanManager.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> {
                 val newCuboid = new IndexEntity();
                 newCuboid.setId(newLayout.getId() - 1);
@@ -456,11 +459,13 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
     public AggIndexResponse calculateAggIndexCount(UpdateRuleBasedCuboidRequest request) {
         aclEvaluate.checkProjectWritePermission(request.getProject());
         val maxCount = getConfig().getCubeAggrGroupMaxCombination();
+        // The agg group for updates which includes all agg group for the index
         List<NAggregationGroup> aggregationGroups = request.getAggregationGroups();
         val indexPlan = getIndexPlan(request.getProject(), request.getModelId()).copy();
         AggIndexCombResult totalResult;
         AggIndexCombResult aggIndexResult;
 
+        // Filter the invalid agg group
         val aggregationGroupsCopy = aggregationGroups.stream()
                 .filter(aggGroup -> aggGroup.getIncludes() != null && aggGroup.getIncludes().length != 0)
                 .collect(Collectors.toList());
@@ -484,7 +489,6 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
                                     StringUtils.join(notExistCols.iterator(), ",")));
                 }
             }
-
             indexPlan.setRuleBasedIndex(ruleBasedIndex);
         } catch (OutOfMaxCombinationException oe) {
             invalid = true;

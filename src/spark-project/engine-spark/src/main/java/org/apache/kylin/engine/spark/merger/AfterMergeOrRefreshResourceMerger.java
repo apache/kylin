@@ -26,21 +26,23 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.PartitionStatusEnum;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import com.clearspring.analytics.util.Lists;
 
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class AfterMergeOrRefreshResourceMerger extends SparkJobMetadataMerger {
 
     public AfterMergeOrRefreshResourceMerger(KylinConfig config, String project) {
@@ -170,6 +172,7 @@ public class AfterMergeOrRefreshResourceMerger extends SparkJobMetadataMerger {
     @Override
     public NDataLayout[] merge(String dataflowId, Set<String> segmentIds, Set<Long> layoutIds,
             ResourceStore remoteResourceStore, JobTypeEnum jobType, Set<Long> partitions) {
+        // TODO checker the input layouts
         if (CollectionUtils.isNotEmpty(partitions)) {
             return mergeMultiPartitionModel(dataflowId, segmentIds, layoutIds, remoteResourceStore, jobType,
                     partitions);
