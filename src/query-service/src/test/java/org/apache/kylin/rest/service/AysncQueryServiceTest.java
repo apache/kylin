@@ -59,6 +59,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.query.QueryMetricsContext;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -220,6 +221,12 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         new QueryExec(PROJECT, getTestConfig()).executeQuery(sql);
 
         assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        String workingDir = getTestConfig().getHdfsWorkingDirectory(PROJECT);
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        Path path = new Path(workingDir + "/async_query_result" + "/" + queryId);
+        Assert.assertTrue(fs.exists(path));
+        Path file = new Path(path + "/" + queryId + "." + "csv");
+        Assert.assertTrue(fs.exists(file));
 
         List<org.apache.spark.sql.Row> rowList = ss.read()
                 .csv(asyncQueryService.getAsyncQueryResultDir(PROJECT, queryId).toString()).collectAsList();
@@ -466,6 +473,12 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         queryContext.setProject(PROJECT);
         SparkSqlClient.executeSql(ss, sql, UUID.fromString(queryId), PROJECT);
         assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        String workingDir = getTestConfig().getHdfsWorkingDirectory(PROJECT);
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        Path path = new Path(workingDir + "/async_query_result" + "/" + queryId);
+        Assert.assertTrue(fs.exists(path));
+        Path resultFile = new Path(path + "/" + queryId + "." + "xlsx");
+        Assert.assertTrue(fs.exists(resultFile));
         HttpServletResponse response = mock(HttpServletResponse.class);
         ByteArrayOutputStream outputStream = mockOutputStream(response);
         asyncQueryService.retrieveSavedQueryResult(PROJECT, queryId, response, "xlsx", encodeDefault);
@@ -938,6 +951,12 @@ public class AysncQueryServiceTest extends ServiceTestBase {
         new QueryExec(PROJECT, getTestConfig()).executeQuery(sql);
 
         assertSame(AsyncQueryService.QueryStatus.SUCCESS, asyncQueryService.queryStatus(PROJECT, queryId));
+        String workingDir = getTestConfig().getHdfsWorkingDirectory(PROJECT);
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        Path path = new Path(workingDir + "/async_query_result" + "/" + queryId);
+        Assert.assertTrue(fs.exists(path));
+        Path file = new Path(path + "/" + queryId + "." + "csv");
+        Assert.assertTrue(fs.exists(file));
 
         QueryMetricsContext.start(queryId, "");
         Assert.assertTrue(QueryMetricsContext.isStarted());
