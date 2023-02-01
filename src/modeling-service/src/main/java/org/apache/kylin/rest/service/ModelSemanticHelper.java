@@ -58,6 +58,7 @@ import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
@@ -966,6 +967,22 @@ public class ModelSemanticHelper extends BasicService {
         return SourceFactory.getSource(tableDesc).getSegmentRange(start, end);
     }
 
+
+    private void handleDatePartitionColumn(NDataModel newModel, NDataflowManager dataflowManager, NDataflow df,
+            String modelId, String project, String start, String end) {
+        // from having partition to no partition
+        if (newModel.getPartitionDesc() == null) {
+            dataflowManager.fillDfManually(df,
+                    Lists.newArrayList(SegmentRange.TimePartitionedSegmentRange.createInfinite()));
+            return;
+        }
+            // change partition column and from no partition to having partition
+        if (StringUtils.isNotEmpty(start) && StringUtils.isNotEmpty(end)) {
+            dataflowManager.fillDfManually(df,
+                    Lists.newArrayList(getSegmentRangeByModel(project, modelId, start, end)));
+        }
+    }
+
     private void handleReloadData(NDataModel newModel, NDataModel oriModel, String project, String start, String end) {
         val config = KylinConfig.getInstanceFromEnv();
         val dataflowManager = NDataflowManager.getInstance(config, project);
@@ -981,27 +998,22 @@ public class ModelSemanticHelper extends BasicService {
         String modelId = newModel.getUuid();
         NDataModelManager modelManager = NDataModelManager.getInstance(config, project);
         if (newModel.isMultiPartitionModel() || oriModel.isMultiPartitionModel()) {
-            boolean isPartitionChange = !isMultiPartitionDescSame(oriModel.getMultiPartitionDesc(),
+            boolean isMultiPartitionChange = !isMultiPartitionDescSame(oriModel.getMultiPartitionDesc(),
                     newModel.getMultiPartitionDesc())
                     || !Objects.equals(oriModel.getPartitionDesc(), newModel.getPartitionDesc());
-            if (isPartitionChange && newModel.isMultiPartitionModel()) {
+            if (isMultiPartitionChange && newModel.isMultiPartitionModel()) {
                 modelManager.updateDataModel(modelId, copyForWrite -> {
                     copyForWrite.setMultiPartitionDesc(
                             new MultiPartitionDesc(newModel.getMultiPartitionDesc().getColumns()));
                 });
             }
+            // Case where the date partition column of the multi partition model has also been changed
+            if (!Objects.equals(oriModel.getPartitionDesc(), newModel.getPartitionDesc())) {
+                handleDatePartitionColumn(newModel, dataflowManager, df, modelId, project, start, end);
+            }
         } else {
             if (!Objects.equals(oriModel.getPartitionDesc(), newModel.getPartitionDesc())) {
-
-                // from having partition to no partition
-                if (newModel.getPartitionDesc() == null) {
-                    dataflowManager.fillDfManually(df,
-                            Lists.newArrayList(SegmentRange.TimePartitionedSegmentRange.createInfinite()));
-                    // change partition column and from no partition to having partition
-                } else if (StringUtils.isNotEmpty(start) && StringUtils.isNotEmpty(end)) {
-                    dataflowManager.fillDfManually(df,
-                            Lists.newArrayList(getSegmentRangeByModel(project, modelId, start, end)));
-                }
+                handleDatePartitionColumn(newModel, dataflowManager, df, modelId, project, start, end);
             } else {
                 List<SegmentRange> segmentRanges = Lists.newArrayList();
                 segments.forEach(segment -> segmentRanges.add(segment.getSegRange()));
