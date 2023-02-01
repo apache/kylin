@@ -43,11 +43,11 @@ import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.realization.HybridRealization;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.JoinsGraph;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -535,7 +535,7 @@ public class OLAPContext {
     }
 
     public void matchJoinWithEnhancementTransformation() {
-        this.setJoinsGraph(JoinsGraph.normalizeJoinGraph(joinsGraph));
+        joinsGraph.normalize();
     }
 
     public RexInputRef createUniqueInputRefContextTables(OLAPTableScan table, int columnIdx) {

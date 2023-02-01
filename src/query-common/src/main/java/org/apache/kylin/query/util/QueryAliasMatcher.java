@@ -50,12 +50,13 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.ColExcludedChecker;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.JoinsGraph;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.alias.ExpressionComparator;
+import org.apache.kylin.metadata.model.graph.DefaultJoinEdgeMatcher;
+import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.relnode.ColumnRowType;
@@ -239,7 +240,7 @@ public class QueryAliasMatcher {
         return null;
     }
 
-    private static class CCJoinEdgeMatcher extends JoinsGraph.DefaultJoinEdgeMatcher {
+    private static class CCJoinEdgeMatcher extends DefaultJoinEdgeMatcher {
         transient QueryAliasMatchInfo matchInfo;
         boolean compareCCExpr;
 
