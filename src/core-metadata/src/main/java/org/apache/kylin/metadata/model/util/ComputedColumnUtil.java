@@ -51,12 +51,12 @@ import org.apache.kylin.metadata.model.BadModelException;
 import org.apache.kylin.metadata.model.BadModelException.CauseType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
-import org.apache.kylin.metadata.model.JoinsGraph;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.alias.AliasDeduce;
 import org.apache.kylin.metadata.model.alias.AliasMapping;
 import org.apache.kylin.metadata.model.alias.ExpressionComparator;
+import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -329,7 +329,7 @@ public class ComputedColumnUtil {
         if (cc.getTableAlias() != null) {
             aliasSets.add(cc.getTableAlias());
         }
-        return model.getJoinsGraph().getSubgraphByAlias(aliasSets);
+        return model.getJoinsGraph().getSubGraphByAlias(aliasSets);
     }
 
     public static boolean isSameName(ComputedColumnDesc col1, ComputedColumnDesc col2) {
