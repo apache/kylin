@@ -29,6 +29,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.metadata.model.graph.DefaultJoinEdgeMatcher;
+import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.junit.Assert;
 import org.junit.Before;
@@ -349,7 +351,7 @@ public class JoinsGraphTest extends NLocalFileMetadataTestCase {
     public void testColumnDescEquals() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         NTableMetadataManager manager = NTableMetadataManager.getInstance(getTestConfig(), "default");
         TableDesc tableDesc = manager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
-        JoinsGraph.DefaultJoinEdgeMatcher matcher = new JoinsGraph.DefaultJoinEdgeMatcher();
+        DefaultJoinEdgeMatcher matcher = new DefaultJoinEdgeMatcher();
         ColumnDesc one = new ColumnDesc();
         one.setTable(tableDesc);
         one.setName("one");

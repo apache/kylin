@@ -355,7 +355,7 @@ public class JoinsGraph implements Serializable {
                 }
                 for (Edge targetEdge : edgeList) {
                     if (!edge.equals(targetEdge) && fkSide.equals(targetEdge.pkSide())
-                            && !targetEdge.isLeftOrInnerJoin()) {
+                            && !targetEdge.isLeftOrInnerJoin() && targetEdge.isLeftJoin()) {
                         setJoinToLeftOrInner(targetEdge.join);
                         normalize();
                     }
