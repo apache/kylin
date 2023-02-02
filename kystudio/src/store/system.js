@@ -239,6 +239,9 @@ export default {
     },
     isStreamingEnabled: (state) => {
       return state.streamingEnabled === 'true'
+    },
+    storageQueryMetricCollect: (state) => {
+      return state.storageQuery === 'true'
     }
   }
 }
