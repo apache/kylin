@@ -24,7 +24,7 @@ import org.apache.spark.launcher.SparkLauncher
 import org.apache.spark.{SparkConf, SparkContext}
 import org.mockito.Mockito.mock
 
-import java.io.OutputStream
+import java.io.{File, OutputStream}
 
 class AsyncProfilingTest extends AsyncPluginWithMeta {
 
@@ -34,55 +34,48 @@ class AsyncProfilingTest extends AsyncPluginWithMeta {
   val statusFileName: String = flagFileDir + "/status"
   val dumpFileName: String = flagFileDir + "/dump.tar.gz"
 
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    val conf = new SparkConf()
+      .setAppName(getClass.getName)
+      .set(SparkLauncher.SPARK_MASTER, "local[1]")
+      .set("spark.plugins", sparkPluginName)
+      .set("spark.submit.deployMode", "client")
+
+    System.setProperty("spark.profiler.flagsDir", flagFileDir)
+    sc = new SparkContext(conf)
+  }
+
   test("init AsyncProfiling") {
     AsyncProfiling.asyncProfilerUtils
   }
 
   test("start and dump AsyncProfiling") {
-    val conf = new SparkConf()
-      .setAppName(getClass.getName)
-      .set(SparkLauncher.SPARK_MASTER, "local[1]")
-      .set("spark.plugins", sparkPluginName)
-
-    sc = new SparkContext(conf)
     AsyncProfiling.start("")
     AsyncProfiling.dump("")
+  }
 
-    sc.stop()
-    sc = null
+  test("start with localCacheDir by delete") {
+    AsyncProfiling.nextCommand()
+    val localCacheDir = AsyncProfiling.localCacheDir
+    new File(localCacheDir.getAbsolutePath).delete()
+    AsyncProfiling.start("")
+    AsyncProfiling.dump("")
   }
 
   test("waitForResult AsyncProfiling") {
     KylinConfig.getInstanceFromEnv.setProperty("kylin.query.async-profiler-result-timeout", "1ms")
 
-    val conf = new SparkConf()
-      .setAppName(getClass.getName)
-      .set(SparkLauncher.SPARK_MASTER, "local[1]")
-      .set("spark.plugins", sparkPluginName)
-
-
-    sc = new SparkContext(conf)
     AsyncProfiling.start("")
     AsyncProfiling.dump("")
     AsyncProfiling.waitForResult(mock(classOf[OutputStream]))
-
-    sc.stop()
-    sc = null
   }
 
   test("cacheExecutorResult AsyncProfiling") {
     KylinConfig.getInstanceFromEnv.setProperty("kylin.query.async-profiler-result-timeout", "1ms")
 
-    val conf = new SparkConf()
-      .setAppName(getClass.getName)
-      .set(SparkLauncher.SPARK_MASTER, "local[1]")
-      .set("spark.plugins", sparkPluginName)
-
-    sc = new SparkContext(conf)
     AsyncProfiling.start("")
     AsyncProfiling.cacheExecutorResult("content", "1")
-
-    sc.stop()
-    sc = null
+    AsyncProfiling.dump("")
   }
 }

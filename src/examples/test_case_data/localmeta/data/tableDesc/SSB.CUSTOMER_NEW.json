@@ -9,31 +9,31 @@
   }, {
     "id" : "2",
     "name" : "C_NAME",
-    "datatype" : "varchar(25)"
+    "datatype": "varchar(4096)"
   }, {
     "id" : "3",
     "name" : "C_ADDRESS",
-    "datatype" : "varchar(40)"
+    "datatype": "varchar(4096)"
   }, {
     "id" : "4",
     "name" : "C_CITY",
-    "datatype" : "varchar(10)"
+    "datatype": "varchar(4096)"
   }, {
     "id" : "5",
     "name" : "C_NATION",
-    "datatype" : "varchar(15)"
+    "datatype": "varchar(4096)"
   }, {
     "id" : "6",
     "name" : "C_REGION",
-    "datatype" : "varchar(12)"
+    "datatype": "varchar(4096)"
   }, {
     "id" : "7",
     "name" : "C_PHONE",
-    "datatype" : "varchar(15)"
+    "datatype": "varchar(4096)"
   }, {
     "id" : "8",
     "name" : "C_MKTSEGMENT",
-    "datatype" : "varchar(10)"
+    "datatype": "varchar(4096)"
   } ],
   "database" : "SSB",
   "last_modified" : 1457444146362,

@@ -30,7 +30,7 @@ public class Constant {
     public final static String FakeCatalogName = "defaultCatalog";
 
     public final static String IDENTITY_USER = "user";
-    public final static String IDENTITY_ROLE = "role";
+    public final static String ADMIN = "ADMIN";
 
     @ThirdPartyDependencies({
             @ThirdPartyDependencies.ThirdPartyDependent(repository = "static-user-manager", classes = {

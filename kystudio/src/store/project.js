@@ -19,6 +19,7 @@ export default {
     snapshot_manual_management_enabled: false,
     scd2_enabled: false,
     second_storage_enabled: false,
+    projectExcludeTableConfig: false,
     emptySegmentEnable: false,
     projectConfig: null,
     multi_partition_enabled: false,
@@ -100,6 +101,9 @@ export default {
     },
     [types.CACHE_PROJECT_PUSHDOWN_CONFIG]: function (state, { projectPushdownConfig }) {
       state.projectPushdownConfig = projectPushdownConfig
+    },
+    [types.CACHE_PROJECT_EXCLUDE_CONFIG]: function (state, { projectExcludeTableConfig }) {
+      state.projectExcludeTableConfig = projectExcludeTableConfig
     },
     [types.UPDATE_SNAPSHOT_MANUAL_ENABLE] (state, type) {
       state.snapshot_manual_management_enabled = type
@@ -230,6 +234,7 @@ export default {
         commit(types.CACHE_PROJECT_CONFIG, {projectDefaultDB: response.data.data})
         commit(types.CACHE_PROJECT_DEFAULT_DB, {projectDefaultDB: response.data.data.default_database})
         commit(types.CACHE_PROJECT_PUSHDOWN_CONFIG, {projectPushdownConfig: response.data.data.push_down_enabled})
+        commit(types.CACHE_PROJECT_EXCLUDE_CONFIG, {projectExcludeTableConfig: response.data.data.table_exclusion_enabled})
         commit(types.UPDATE_SCD2_ENABLE, response.data.data.scd2_enabled || false)
         commit(types.UPDATE_SNAPSHOT_MANUAL_ENABLE, response.data.data.snapshot_manual_management_enabled || false)
         commit(types.UPDATE_MULTI_PARTITION_ENABLE, response.data.data.multi_partition_enabled || false)
@@ -308,6 +313,18 @@ export default {
     },
     [types.GET_MULTI_PARTITION_MODEL]: function ({ commit }, para) {
       return api.project.getMultiPartitionModels(para)
+    },
+    [types.LOAD_EXCLUDE_TABLES]: function ({ commit }, para) {
+      return api.project.loadExcludeTables(para)
+    },
+    [types.LOAD_EXCLUDE_COLUMNS]: function ({ commit }, para) {
+      return api.project.loadExcludeColumns(para)
+    },
+    [types.UPDATE_EXCLUDE_CLUMNS]: function ({ commit }, para) {
+      return api.project.updateExcludeColumns(para)
+    },
+    [types.UPDATE_EXCLUDE_COLUMN_CONFIG]: function ({ commit }, para) {
+      return api.project.updateExcludeColumnConfig(para)
     }
   },
   getters: {

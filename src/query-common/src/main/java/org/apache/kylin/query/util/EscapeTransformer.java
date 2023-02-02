@@ -19,10 +19,11 @@
 package org.apache.kylin.query.util;
 
 import org.apache.kylin.common.KapConfig;
+import org.apache.kylin.query.IQueryTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EscapeTransformer implements KapQueryUtil.IQueryTransformer {
+public class EscapeTransformer implements IQueryTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(EscapeTransformer.class);
 
@@ -51,7 +52,8 @@ public class EscapeTransformer implements KapQueryUtil.IQueryTransformer {
             logger.debug("EscapeParser done parsing");
             return result;
         } catch (Throwable ex) {
-            logger.error("Something unexpected while EscapeTransformer transforming the query, return original query", ex);
+            logger.error("Something unexpected while EscapeTransformer transforming the query, return original query",
+                    ex);
             logger.error(sql);
             return sql;
         }

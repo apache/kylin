@@ -31,6 +31,7 @@ import org.apache.kylin.metadata.model.schema.SchemaUtil;
 import org.apache.kylin.metadata.model.util.MultiPartitionUtil;
 
 import io.kyligence.kap.guava20.shaded.common.collect.MapDifference;
+import lombok.val;
 
 public class MultiplePartitionStrategy extends UnOverWritableStrategy {
     @Override
@@ -40,7 +41,8 @@ public class MultiplePartitionStrategy extends UnOverWritableStrategy {
 
     @Override
     public List<SchemaChangeCheckResult.UpdatedItem> updateItemFunction(SchemaUtil.SchemaDifference difference,
-            MapDifference.ValueDifference<SchemaNode> diff, Set<String> importModels, Set<String> originalModels) {
+            MapDifference.ValueDifference<SchemaNode> diff, Set<String> importModels, Set<String> originalModels,
+            Set<String> originalBrokenModels) {
         String modelAlias = diff.rightValue().getSubject();
 
         boolean overwritable = overwritable(diff);
@@ -66,8 +68,10 @@ public class MultiplePartitionStrategy extends UnOverWritableStrategy {
             }
         }
 
+        val parameter = new SchemaChangeCheckResult.BaseItemParameter(hasSameName(modelAlias, originalModels),
+                hasSameWithBroken(modelAlias, originalBrokenModels), true, true, overwritable);
         return Collections.singletonList(SchemaChangeCheckResult.UpdatedItem.getSchemaUpdate(diff.leftValue(),
-                diff.rightValue(), modelAlias, hasSameName(modelAlias, originalModels), true, true, overwritable));
+                diff.rightValue(), modelAlias, parameter));
     }
 
     /**

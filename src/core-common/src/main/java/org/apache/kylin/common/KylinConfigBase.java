@@ -19,6 +19,8 @@
 package org.apache.kylin.common;
 
 import static java.lang.Math.toIntExact;
+import static org.apache.kylin.common.constant.AsyncProfilerConstants.ASYNC_PROFILER_LIB_LINUX_ARM64;
+import static org.apache.kylin.common.constant.AsyncProfilerConstants.ASYNC_PROFILER_LIB_LINUX_X64;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_CONNECTION_URL_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_DRIVER_KEY;
 import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_PASS_KEY;
@@ -740,10 +742,23 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.metadata.semi-automatic-mode", FALSE));
     }
 
+    public boolean isTableExclusionEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.metadata.table-exclusion-enabled", FALSE));
+    }
+
+    /**
+     * When table exclusion is enabled, this setting ensures the accuracy of query result.
+     */
+    public boolean isSnapshotPreferred() {
+        return Boolean.parseBoolean(getOptional("kylin.query.snapshot-preferred-for-table-exclusion", TRUE));
+    }
+
+    public boolean onlyReuseUserDefinedCC() {
+        return Boolean.parseBoolean(getOptional("kylin.metadata.only-reuse-user-defined-computed-column", FALSE));
+    }
+
     /**
      * expose computed column in the table metadata and select * queries
-     *
-     * @return
      */
     public boolean exposeComputedColumn() {
         return Boolean.parseBoolean(getOptional("kylin.query.metadata.expose-computed-column", FALSE));
@@ -1150,6 +1165,18 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String[] getAdminDls() {
         return getOptionalStringArray("kylin.job.notification-admin-emails", new String[0]);
+    }
+
+    public String[] getJobNotificationStates() {
+        return getOptionalStringArray("kylin.job.notification-enable-states", new String[0]);
+    }
+
+    public int getJobMetadataPersistRetry() {
+        return Integer.parseInt(this.getOptional("kylin.job.metadata-persist-retry", "5"));
+    }
+
+    public Boolean getJobMetadataPersistNotificationEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.job.notification-on-metadata-persist", FALSE));
     }
 
     public int getJobRetry() {
@@ -2488,10 +2515,6 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.job.notification-on-empty-data-load", FALSE));
     }
 
-    public boolean getJobErrorNotificationEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.job.notification-on-job-error", FALSE));
-    }
-
     public Long getStorageResourceSurvivalTimeThreshold() {
         return TimeUtil.timeStringAs(this.getOptional("kylin.storage.resource-survival-time-threshold", "7d"),
                 TimeUnit.MILLISECONDS);
@@ -2640,6 +2663,13 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getLogSparkAppMasterPropertiesFile() {
         return getLogPropertyFile("spark-appmaster-log4j.xml");
+    }
+
+    public String getAsyncProfilerFiles() throws IOException {
+        String kylinHome = getKylinHomeWithoutWarn();
+        File libX64 = new File(kylinHome + "/lib/" + ASYNC_PROFILER_LIB_LINUX_X64);
+        File libArm64 = new File(kylinHome + "/lib/" + ASYNC_PROFILER_LIB_LINUX_ARM64);
+        return libX64.getCanonicalPath() + "," + libArm64.getCanonicalPath();
     }
 
     private String getLogPropertyFile(String filename) {
@@ -2870,7 +2900,7 @@ public abstract class KylinConfigBase implements Serializable {
         return TimeUtil.timeStringAs(this.getOptional("kylin.query.async.result-retain-days", "7d"), TimeUnit.DAYS);
     }
 
-    public Boolean isUniqueAsyncQueryYarnQueue() {
+    public boolean isUniqueAsyncQueryYarnQueue() {
         return Boolean.parseBoolean(this.getOptional("kylin.query.unique-async-query-yarn-queue-enabled", FALSE));
     }
 
@@ -3597,13 +3627,25 @@ public abstract class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.second-storage.wait-index-build-second", "10"));
     }
 
+    public String getSecondStorageJDBCKeepAliveTimeout() {
+        return getOptional("kylin.second-storage.jdbc-keep-alive-timeout", "600000");
+    }
+
+    public String getSecondStorageJDBCSocketTimeout() {
+        return getOptional("kylin.second-storage.jdbc-socket-timeout", "600000");
+    }
+
+    public String getSecondStorageJDBCExtConfig() {
+        return getOptional("kylin.second-storage.jdbc-ext-config", "connect_timeout=3");
+    }
+
     public long getRoutineOpsTaskTimeOut() {
         return TimeUtil.timeStringAs(getOptional("kylin.metadata.ops-cron-timeout", "4h"), TimeUnit.MILLISECONDS);
     }
 
     public boolean buildJobProfilingEnabled() {
         return !Boolean.parseBoolean(System.getProperty("spark.local", FALSE))
-                && Boolean.parseBoolean(getOptional("kylin.engine.async-profiler-enabled", FALSE));
+                && Boolean.parseBoolean(getOptional("kylin.engine.async-profiler-enabled", TRUE));
     }
 
     public long buildJobProfilingResultTimeout() {
@@ -3676,7 +3718,11 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.second-storage.wait-lock-timeout", "180"));
     }
 
-    public boolean getDDLEnabled(){
+    public boolean isBuildSegmentOverlapEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.build.segment-overlap-enabled", FALSE));
+    }
+
+    public boolean getDDLEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.source.ddl.enabled", FALSE));
     }
 

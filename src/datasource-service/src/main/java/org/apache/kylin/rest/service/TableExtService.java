@@ -19,10 +19,12 @@
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.EXCLUDED_TABLE_REQUEST_NOT_ALLOWED;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,12 +34,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -47,7 +51,12 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.S3TableExtInfo;
+import org.apache.kylin.rest.request.TableExclusionRequest;
 import org.apache.kylin.rest.request.UpdateAWSTableExtDescRequest;
+import org.apache.kylin.rest.response.DataResult;
+import org.apache.kylin.rest.response.ExcludedColumnResponse;
+import org.apache.kylin.rest.response.ExcludedTableDetailResponse;
+import org.apache.kylin.rest.response.ExcludedTableResponse;
 import org.apache.kylin.rest.response.LoadTableResponse;
 import org.apache.kylin.rest.response.UpdateAWSTableExtDescResponse;
 import org.apache.kylin.rest.security.KerberosLoginManager;
@@ -67,6 +76,8 @@ import com.google.common.collect.Sets;
 @Component("tableExtService")
 public class TableExtService extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(TableExtService.class);
+
+    public static final int DEFAULT_EXCLUDED_COLUMN_SIZE = 15;
 
     @Autowired
     @Qualifier("tableService")
@@ -260,11 +271,11 @@ public class TableExtService extends BasicService {
             String db;
             String table = null;
             if (isDb) {
-                db = str.toUpperCase(Locale.ROOT);
+                db = StringUtils.upperCase(str);
             } else {
                 String[] dbTableName = HadoopUtil.parseHiveTableName(str);
-                db = dbTableName[0].toUpperCase(Locale.ROOT);
-                table = dbTableName[1].toUpperCase(Locale.ROOT);
+                db = StringUtils.upperCase(dbTableName[0]);
+                table = StringUtils.upperCase(dbTableName[1]);
             }
             Set<String> tables = dbTableMap.getOrDefault(db, Sets.newHashSet());
             if (table != null) {
@@ -320,5 +331,119 @@ public class TableExtService extends BasicService {
             throw new KylinException(INVALID_TABLE_NAME,
                     String.format(Locale.ROOT, MsgPicker.getMsg().getSameTableNameExist(), tableDesc.getIdentity()));
         }
+    }
+
+    public List<ExcludedTableResponse> getExcludedTables(String project, boolean viewPartialCols, String tablePattern) {
+        aclEvaluate.checkProjectReadPermission(project);
+        checkTableExclusionEnabled(project);
+        NTableMetadataManager tableMgr = getManager(NTableMetadataManager.class, project);
+        return tableMgr.listAllTables().stream().map(tableMgr::getTableExtIfExists) //
+                .filter(Objects::nonNull) //
+                .filter(tableExt -> tableExt.isExcluded() || !tableExt.getExcludedColumns().isEmpty()) //
+                .filter(table -> StringUtils.isBlank(tablePattern)
+                        || StringUtils.containsIgnoreCase(table.getIdentity(), tablePattern))
+                .map(tableExt -> {
+                    TableDesc table = tableMgr.getTableDesc(tableExt.getIdentity());
+                    ExcludedTableResponse response = new ExcludedTableResponse();
+                    response.setExcluded(tableExt.isExcluded());
+                    response.setTable(tableExt.getIdentity());
+                    response.setExcludedColSize(tableExt.countExcludedColSize());
+                    response.setExcludedColumns(seekExcludedColumns(viewPartialCols, tableExt, table));
+                    return response;
+                }).collect(Collectors.toList());
+    }
+
+    private void checkTableExclusionEnabled(String project) {
+        ProjectInstance prjInstance = getManager(NProjectManager.class).getProject(project);
+        if (!prjInstance.getConfig().isTableExclusionEnabled()) {
+            throw new KylinException(EXCLUDED_TABLE_REQUEST_NOT_ALLOWED, project);
+        }
+    }
+
+    // excluded columns subject to the order of table columns
+    private List<String> seekExcludedColumns(boolean viewPartialCols, TableExtDesc tableExt, TableDesc table) {
+        ColumnDesc[] columns = table.getColumns();
+        int limit = viewPartialCols ? DEFAULT_EXCLUDED_COLUMN_SIZE : columns.length;
+        return Arrays.stream(columns).filter(tableExt::testExcluded) //
+                .limit(limit).map(ColumnDesc::getName) //
+                .collect(Collectors.toList());
+    }
+
+    public ExcludedTableDetailResponse getExcludedTable(String project, String table, int pageOffset, int pageSize,
+            String colPattern, boolean matchExcludedCols) {
+        aclEvaluate.checkProjectReadPermission(project);
+        checkTableExclusionEnabled(project);
+        NTableMetadataManager tableMgr = getManager(NTableMetadataManager.class, project);
+        TableExtDesc tableExt = tableMgr.getOrCreateTableExt(table);
+        List<ColumnDesc> columnList = Arrays.stream(tableMgr.getTableDesc(table).getColumns())
+                .filter(column -> StringUtils.isBlank(colPattern)
+                        || StringUtils.containsIgnoreCase(column.getName(), colPattern))
+                .filter(column -> matchExcludedCols == tableExt.testExcluded(column)) //
+                .collect(Collectors.toList());
+        DataResult<List<ColumnDesc>> dataResult = DataResult.get(columnList, pageOffset, pageSize);
+        List<ExcludedColumnResponse> columns = dataResult.getValue().stream()
+                .map(column -> new ExcludedColumnResponse(column, matchExcludedCols)) //
+                .collect(Collectors.toList());
+        ExcludedTableDetailResponse response = new ExcludedTableDetailResponse();
+        response.setTable(tableExt.getIdentity());
+        response.setExcluded(tableExt.isExcluded());
+        response.setTotalSize(dataResult.getTotalSize());
+        response.setOffset(dataResult.getOffset());
+        response.setLimit(dataResult.getLimit());
+        if (matchExcludedCols) {
+            response.setExcludedColumns(columns);
+        } else {
+            response.setAdmittedColumns(columns);
+        }
+        return response;
+    }
+
+    @Transaction(project = 0)
+    public void updateExcludedTables(String project, TableExclusionRequest request) {
+        aclEvaluate.checkProjectReadPermission(project);
+        checkTableExclusionEnabled(project);
+
+        // update table ext
+        NTableMetadataManager tableMgr = getManager(NTableMetadataManager.class, project);
+        request.getCanceledTables().stream().map(StringUtils::upperCase).forEach(identity -> {
+            boolean tableExtExist = tableMgr.isTableExtExist(identity);
+            TableExtDesc tableExt = tableMgr.getOrCreateTableExt(identity);
+            tableExt.setIdentity(identity);
+            tableExt.setExcluded(false);
+            tableExt.getExcludedColumns().clear();
+            tableMgr.saveOrUpdateTableExt(tableExtExist, tableExt);
+        });
+        request.getExcludedTables().forEach(excludedTable -> {
+            String excludedTableName = StringUtils.upperCase(excludedTable.getTable());
+            boolean tableExtExist = tableMgr.isTableExtExist(excludedTableName);
+            TableExtDesc tableExt = tableMgr.getOrCreateTableExt(excludedTableName);
+            tableExt.setIdentity(excludedTableName);
+            if (excludedTable.isExcluded()) {
+                tableExt.getExcludedColumns().clear();
+                tableExt.setExcluded(excludedTable.isExcluded());
+            } else {
+                TableDesc table = tableMgr.getTableDesc(tableExt.getIdentity());
+                List<String> toBeRemovedColumns = excludedTable.getRemovedColumns().stream() //
+                        .map(StringUtils::upperCase).collect(Collectors.toList());
+                List<String> toBeAddedColumns = excludedTable.getAddedColumns().stream() //
+                        .map(StringUtils::upperCase).collect(Collectors.toList());
+                if (tableExt.isExcluded()) {
+                    Set<String> colNameSet = Arrays.stream(table.getColumns()).map(ColumnDesc::getName)
+                            .collect(Collectors.toSet());
+                    toBeRemovedColumns.forEach(colNameSet::remove);
+                    tableExt.getExcludedColumns().addAll(colNameSet);
+                    tableExt.setExcluded(excludedTable.isExcluded());
+                } else {
+                    toBeAddedColumns.stream().map(StringUtils::upperCase).forEach(tableExt.getExcludedColumns()::add);
+                    toBeRemovedColumns.forEach(tableExt.getExcludedColumns()::remove);
+                    tableExt.setExcluded(excludedTable.isExcluded());
+                }
+                if (tableExt.getExcludedColumns().size() == table.getColumns().length) {
+                    tableExt.getExcludedColumns().clear();
+                    tableExt.setExcluded(true);
+                }
+            }
+            tableMgr.saveOrUpdateTableExt(tableExtExist, tableExt);
+        });
     }
 }

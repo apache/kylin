@@ -62,7 +62,16 @@ class EpochOrchestratorTest {
 
         val epochOrchestrator = new EpochOrchestrator(config);
         val obj = ReflectionTestUtils.getField(epochOrchestrator, "checkerPool");
-        Assertions.assertTrue(Objects.isNull(obj));
-    }
+        Assertions.assertTrue(Objects.nonNull(obj));
+        Assertions.assertTrue(obj instanceof ScheduledExecutorService);
 
+        val pool = (ScheduledExecutorService) obj;
+        Object obj2 = ReflectionTestUtils.getField(pool, "e");
+        Assertions.assertNotNull(obj2);
+        Assertions.assertTrue(obj2 instanceof ScheduledExecutorService);
+        ScheduledExecutorService executors = (ScheduledExecutorService) obj2;
+        Object obj3 = ReflectionTestUtils.getField(executors, "corePoolSize");
+        Assertions.assertNotNull(obj3);
+        Assertions.assertEquals(1, ((Integer) obj3).intValue());
+    }
 }

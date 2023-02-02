@@ -26,6 +26,8 @@ fi
 
 function help {
     echo "usage: metastore.sh backup METADATA_BACKUP_PATH(the default path is KYLIN_HOME/meta_backups/)"
+    echo "       metastore.sh fetch TARGET_FILE_PATH METADATA_FETCH_PATH(the default path is KYLIN_HOME/meta_fetch/)"
+    echo "       metastore.sh list TARGET_FOLDER_PATH"
     echo "       metastore.sh restore METADATA_RESTORE_PATH [--after-truncate]"
     echo "       metastore.sh backup-project PROJECT_NAME METADATA_BACKUP_PATH(the default path is KYLIN_HOME/meta_backups/)"
     echo "       metastore.sh restore-project PROJECT_NAME METADATA_RESTORE_PATH [--after-truncate]"
@@ -42,6 +44,18 @@ function printBackupResult() {
     else
         echo -e "${YELLOW}Backup failed. Detailed Message is at \"logs/shell.stderr\".${RESTORE}"
     fi
+}
+
+function printFetchResult() {
+  error=$1
+  if [[ $error == 0 ]]; then
+      if [[ -z "$path" ]]; then
+          path="\${KYLIN_HOME}/meta_fetch"
+      fi
+      echo -e "${YELLOW} Fetch at local dist succeed.${RESTORE}"
+  else
+      echo -e "${YELLOW} Fetch failed.${RESTORE}"
+  fi
 }
 
 function printRestoreResult() {
@@ -134,6 +148,34 @@ then
     ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataTool ${BACKUP_OPTS}
     printBackupResult $?
 
+elif [ "$1" == "fetch" ]
+then
+    FETCH_OPTS="-fetch"
+    if [ $# -eq 2 ]; then
+        _file=$2
+        FETCH_OPTS="${FETCH_OPTS} -target ${_file}"
+    elif [ $# -eq 3 ]; then
+        _file=$2
+        path=`cd $3 && pwd -P`
+        check_path_empty ${path}
+        FETCH_OPTS="${FETCH_OPTS} -target ${_file} -dir ${path}"
+    else
+        help
+    fi
+
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataTool ${FETCH_OPTS}
+    printFetchResult $?
+
+elif [ "$1" == "list" ]
+then
+    if [ $# -eq 2 ]; then
+        _folder=$2
+        LIST_OPTS="-list -target ${_folder}"
+    else
+        help
+    fi
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataTool ${LIST_OPTS}
+
 elif [ "$1" == "restore" ]
 then
     if [ $# -eq 2 ]; then
@@ -170,5 +212,4 @@ then
 else
     help
 fi
-
 

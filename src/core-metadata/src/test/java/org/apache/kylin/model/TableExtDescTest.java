@@ -23,13 +23,10 @@ import static org.apache.kylin.metadata.model.NTableMetadataManager.getInstance;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.kylin.measure.hllc.HLLCounter;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -60,11 +57,9 @@ public class TableExtDescTest extends NLocalFileMetadataTestCase {
 
         final String colName = "col_1";
         final List<TableExtDesc.ColumnStats> columnStatsList = new ArrayList<>(tableDesc.getColumnCount());
-        final SegmentRange segRange_1 = new SegmentRange.TimePartitionedSegmentRange(0L, 10L);
         TableExtDesc.ColumnStats colStats = new TableExtDesc.ColumnStats();
         colStats.setColumnName(colName);
-        HLLCounter col_hllc = mockHLLCounter(2, 5);
-        columnStatsList.add(updateColStats(colStats, 10, segRange_1, col_hllc, 1000d, -1000d, 4, 2, "9999", "99"));
+        columnStatsList.add(updateColStats(colStats, 10, 1000d, -1000d, 4, 2, "9999", "99"));
 
         tableExtDesc.setColumnStats(columnStatsList);
         tableMetadataManager.saveTableExt(tableExtDesc);
@@ -76,9 +71,7 @@ public class TableExtDescTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(colName, colStats.getColumnName());
         Assert.assertEquals(10, colStats.getNullCount());
 
-        final SegmentRange segRange_2 = new SegmentRange.TimePartitionedSegmentRange(10L, 20L);
-        col_hllc = mockHLLCounter(6, 10);
-        columnStatsList.add(updateColStats(colStats, 11, segRange_2, col_hllc, 9999d, -9999d, 5, 1, "99999", "9"));
+        columnStatsList.add(updateColStats(colStats, 11, 9999d, -9999d, 5, 1, "99999", "9"));
 
         tableExtDesc.setColumnStats(columnStatsList);
         tableMetadataManager.saveTableExt(tableExtDesc);
@@ -114,25 +107,12 @@ public class TableExtDescTest extends NLocalFileMetadataTestCase {
 
     }
 
-    private TableExtDesc.ColumnStats updateColStats(TableExtDesc.ColumnStats colStats, long nullCount,
-            SegmentRange segRange, HLLCounter hllc, double maxValue, double minValue, int maxLength, int minLength,
-            String maxLengthValue, String minLengthValue) {
+    private TableExtDesc.ColumnStats updateColStats(TableExtDesc.ColumnStats colStats, long nullCount, double maxValue,
+            double minValue, int maxLength, int minLength, String maxLengthValue, String minLengthValue) {
 
         colStats.addNullCount(nullCount);
-
-        colStats.addRangeHLLC(segRange, hllc);
-
         colStats.updateBasicStats(maxValue, minValue, maxLength, minLength, maxLengthValue, minLengthValue);
 
         return colStats;
-    }
-
-    private HLLCounter mockHLLCounter(int min, int max) {
-        final HLLCounter hllCounter = new HLLCounter(14);
-        for (int i = min; i <= max; i++) {
-            hllCounter.add(RandomStringUtils.randomAlphanumeric(i));
-        }
-
-        return hllCounter;
     }
 }

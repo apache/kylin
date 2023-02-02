@@ -21,8 +21,12 @@ package org.apache.kylin.rest.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
@@ -31,11 +35,16 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.S3TableExtInfo;
+import org.apache.kylin.rest.request.TableExclusionRequest;
 import org.apache.kylin.rest.request.UpdateAWSTableExtDescRequest;
+import org.apache.kylin.rest.response.ExcludedColumnResponse;
+import org.apache.kylin.rest.response.ExcludedTableDetailResponse;
+import org.apache.kylin.rest.response.ExcludedTableResponse;
 import org.apache.kylin.rest.response.LoadTableResponse;
 import org.apache.kylin.rest.response.UpdateAWSTableExtDescResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
+import org.apache.kylin.util.MetadataTestUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -217,13 +226,317 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
         tableDesc.setName("TEST_REMOVE");
         tableDesc.setDatabase("DEFAULT");
         tableDesc.setUuid(RandomUtil.randomUUIDStr());
-        NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(),
-                "default");
+        NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(getTestConfig(), "default");
         tableMetadataManager.saveTableExt(tableExtDesc);
         tableMetadataManager.saveSourceTable(tableDesc);
         tableExtService.removeJobIdFromTableExt("test", "default");
         TableExtDesc tableExtDesc1 = tableMetadataManager.getOrCreateTableExt("DEFAULT.TEST_REMOVE");
         Assert.assertNull(tableExtDesc1.getJodID());
+    }
+
+    @Test
+    public void testGetExcludedTableFailed() {
+        try {
+            tableExtService.getExcludedTable("default", "default.test_account", 0, 10, "", false);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(ErrorCodeServer.EXCLUDED_TABLE_REQUEST_NOT_ALLOWED.getErrorCode().getCode(),
+                    e.getErrorCode().getCodeString());
+        }
+    }
+
+    @Test
+    public void testGetExcludedTableWithExcludedColumns() {
+        String project = "default";
+        String table = "DEFAULT.TEST_ACCOUNT";
+        MetadataTestUtils.mockExcludedTable(project, table);
+
+        // get all excluded columns
+        {
+            ExcludedTableDetailResponse response = tableExtService.getExcludedTable(project, table, 0, 10, "", true);
+            Assert.assertEquals(5, response.getTotalSize());
+            Assert.assertEquals(5, response.getExcludedColumns().size());
+            Assert.assertTrue(response.getAdmittedColumns().isEmpty());
+        }
+
+        // get excluded columns with pattern
+        {
+            ExcludedTableDetailResponse response = tableExtService.getExcludedTable(project, table, 0, 10, "level",
+                    true);
+            Assert.assertEquals(2, response.getTotalSize());
+            Assert.assertEquals(2, response.getExcludedColumns().size());
+            Assert.assertTrue(response.getAdmittedColumns().isEmpty());
+        }
+
+        // get admitted columns, the result is empty list [this is abnormal usage]
+        {
+            ExcludedTableDetailResponse response = tableExtService.getExcludedTable(project, table, 0, 10, "", false);
+            Assert.assertEquals(0, response.getTotalSize());
+            Assert.assertTrue(response.getAdmittedColumns().isEmpty());
+            Assert.assertTrue(response.getExcludedColumns().isEmpty());
+        }
+
+        // get excluded columns with pageSize is 2
+        {
+            ExcludedTableDetailResponse response = tableExtService.getExcludedTable(project, table, 0, 2, "", true);
+            Assert.assertEquals(5, response.getTotalSize());
+            Assert.assertEquals(2, response.getExcludedColumns().size());
+            Assert.assertTrue(response.getAdmittedColumns().isEmpty());
+        }
+    }
+
+    @Test
+    public void testGetExcludedTableWithToBeExcludedColumns() {
+        String project = "default";
+        String table = "DEFAULT.TEST_ACCOUNT";
+        MetadataTestUtils.turnOnExcludedTable(getTestConfig());
+
+        // get all columns to be excluded
+        {
+            ExcludedTableDetailResponse response = tableExtService.getExcludedTable(project, table, 0, 10, "", false);
+            Assert.assertEquals(5, response.getTotalSize());
+            Assert.assertEquals(5, response.getAdmittedColumns().size());
+            Assert.assertTrue(response.getExcludedColumns().isEmpty());
+        }
+
+        // get columns to be excluded with pattern
+        {
+            ExcludedTableDetailResponse response = tableExtService.getExcludedTable(project, table, 0, 10, "level",
+                    false);
+            Assert.assertEquals(2, response.getTotalSize());
+            Assert.assertEquals(2, response.getAdmittedColumns().size());
+            Assert.assertTrue(response.getExcludedColumns().isEmpty());
+        }
+
+        // get columns of excluded, the admitted columns is empty list [this is abnormal usage]
+        {
+            ExcludedTableDetailResponse response = tableExtService.getExcludedTable(project, table, 0, 10, "", true);
+            Assert.assertEquals(0, response.getTotalSize());
+            Assert.assertTrue(response.getAdmittedColumns().isEmpty());
+            Assert.assertTrue(response.getExcludedColumns().isEmpty());
+        }
+
+        // get columns of admitted columns with pageSize is 2
+        {
+            ExcludedTableDetailResponse response = tableExtService.getExcludedTable(project, table, 0, 2, "", false);
+            Assert.assertEquals(5, response.getTotalSize());
+            Assert.assertEquals(2, response.getAdmittedColumns().size());
+            Assert.assertTrue(response.getExcludedColumns().isEmpty());
+        }
+    }
+
+    @Test
+    public void testGetExcludedColumnsWhenSettingSomeExcludedColumns() {
+        String project = "default";
+        String table = "DEFAULT.TEST_ACCOUNT";
+        Set<String> excludedColumns = Sets.newHashSet("ACCOUNT_BUYER_LEVEL", "ACCOUNT_SELLER_LEVEL");
+        MetadataTestUtils.mockExcludedCols(project, table, excludedColumns);
+
+        // get all columns to be excluded
+        {
+            ExcludedTableDetailResponse response = tableExtService.getExcludedTable(project, table, 0, 10, "", false);
+            Assert.assertEquals(3, response.getTotalSize());
+            List<ExcludedColumnResponse> admittedColumnList = response.getAdmittedColumns();
+            Assert.assertEquals(3, admittedColumnList.size());
+            Assert.assertTrue(response.getExcludedColumns().isEmpty());
+            admittedColumnList.forEach(admittedColumn -> Assert.assertFalse(admittedColumn.isExcluded()));
+        }
+
+        // get all excluded columns
+        {
+            ExcludedTableDetailResponse response = tableExtService.getExcludedTable(project, table, 0, 10, "", true);
+            Assert.assertEquals(2, response.getTotalSize());
+            List<ExcludedColumnResponse> excludedColumnList = response.getExcludedColumns();
+            Assert.assertEquals(2, excludedColumnList.size());
+            Assert.assertTrue(response.getAdmittedColumns().isEmpty());
+
+            excludedColumnList.forEach(excludedColResp -> Assert.assertTrue(excludedColResp.isExcluded()));
+            Set<String> excludedColNameSet = excludedColumnList.stream().map(ExcludedColumnResponse::getName)
+                    .collect(Collectors.toSet());
+            Assert.assertEquals(excludedColumns, excludedColNameSet);
+        }
+    }
+
+    @Test
+    public void testGetExcludedTables() {
+        String project = "default";
+        String table = "DEFAULT.TEST_ACCOUNT";
+        Set<String> excludedColumns = Sets.newHashSet("ACCOUNT_BUYER_LEVEL", "ACCOUNT_SELLER_LEVEL");
+        MetadataTestUtils.mockExcludedCols(project, table, excludedColumns);
+        MetadataTestUtils.mockExcludedTable(project, "DEFAULT.TEST_COUNTRY");
+
+        // get without table pattern
+        {
+            List<ExcludedTableResponse> excludedTables = tableExtService.getExcludedTables(project, false, "");
+            Assert.assertEquals(2, excludedTables.size());
+            excludedTables.forEach(excludedTableResponse -> {
+                if (excludedTableResponse.getTable().equals(table)) {
+                    Assert.assertFalse(excludedTableResponse.isExcluded());
+                    Assert.assertEquals(2, excludedTableResponse.getExcludedColSize());
+                    Assert.assertEquals(excludedColumns, Sets.newHashSet(excludedTableResponse.getExcludedColumns()));
+                } else {
+                    Assert.assertEquals("DEFAULT.TEST_COUNTRY", excludedTableResponse.getTable());
+                    Assert.assertEquals(4, excludedTableResponse.getExcludedColSize());
+                    Assert.assertTrue(excludedTableResponse.isExcluded());
+                }
+            });
+        }
+
+        // get with table pattern 
+        {
+            List<ExcludedTableResponse> excludedTables = tableExtService.getExcludedTables(project, false,
+                    "TEST_COUNTRY");
+            Assert.assertEquals(1, excludedTables.size());
+            ExcludedTableResponse excludedTableResponse = excludedTables.get(0);
+
+            Assert.assertEquals("DEFAULT.TEST_COUNTRY", excludedTableResponse.getTable());
+            Assert.assertEquals(4, excludedTableResponse.getExcludedColSize());
+            Assert.assertTrue(excludedTableResponse.isExcluded());
+        }
+
+        // get with viewPartialCols
+        {
+            MetadataTestUtils.mockExcludedTable(project, "DEFAULT.TEST_MEASURE");
+            List<ExcludedTableResponse> excludedTables = tableExtService.getExcludedTables(project, true,
+                    "TEST_MEASURE");
+            Assert.assertEquals(1, excludedTables.size());
+            ExcludedTableResponse excludedTableResponse = excludedTables.get(0);
+            Assert.assertEquals("DEFAULT.TEST_MEASURE", excludedTableResponse.getTable());
+            Assert.assertEquals(17, excludedTableResponse.getExcludedColSize());
+            Assert.assertTrue(excludedTableResponse.isExcluded());
+            Assert.assertEquals(TableExtService.DEFAULT_EXCLUDED_COLUMN_SIZE,
+                    excludedTableResponse.getExcludedColumns().size());
+        }
+    }
+
+    @Test
+    public void updateExcludedTablesOfExcludeOneTable() {
+        String project = "default";
+        String table = "DEFAULT.TEST_ACCOUNT";
+        MetadataTestUtils.turnOnExcludedTable(getTestConfig());
+
+        TableExclusionRequest request = new TableExclusionRequest();
+        TableExclusionRequest.ExcludedTable excludedTable = new TableExclusionRequest.ExcludedTable();
+        excludedTable.setExcluded(true);
+        excludedTable.setTable(table);
+        request.setProject(project);
+        request.setExcludedTables(Lists.newArrayList(excludedTable));
+
+        tableExtService.updateExcludedTables(project, request);
+        List<ExcludedTableResponse> excludedTables = tableExtService.getExcludedTables(project, false, "");
+        Assert.assertEquals(1, excludedTables.size());
+        ExcludedTableResponse excludedTableResponse = excludedTables.get(0);
+        Assert.assertTrue(excludedTableResponse.isExcluded());
+        Assert.assertEquals(table, excludedTableResponse.getTable());
+        Assert.assertEquals(5, excludedTableResponse.getExcludedColSize());
+        String expectedExcludedCols = "[ACCOUNT_ID, ACCOUNT_BUYER_LEVEL, ACCOUNT_SELLER_LEVEL, ACCOUNT_COUNTRY, ACCOUNT_CONTACT]";
+        Assert.assertEquals(expectedExcludedCols, excludedTableResponse.getExcludedColumns().toString());
+    }
+
+    @Test
+    public void updateExcludedTablesOfCancelOneTable() {
+        String project = "default";
+        String table = "DEFAULT.TEST_ACCOUNT";
+        MetadataTestUtils.mockExcludedTable(project, table);
+        Set<String> tables = MetadataTestUtils.getExcludedTables(project);
+        Assert.assertEquals(1, tables.size());
+        Assert.assertEquals(table, tables.iterator().next());
+
+        TableExclusionRequest request = new TableExclusionRequest();
+        request.setProject(project);
+        request.setCanceledTables(Lists.newArrayList(table));
+
+        tableExtService.updateExcludedTables(project, request);
+        List<ExcludedTableResponse> excludedTables = tableExtService.getExcludedTables(project, false, "");
+        Assert.assertTrue(excludedTables.isEmpty());
+    }
+
+    @Test
+    public void updateExcludedTablesOfCancelAllExcludedColumns() {
+        String project = "default";
+        String table = "DEFAULT.TEST_ACCOUNT";
+        MetadataTestUtils.mockExcludedTable(project, table);
+        Set<String> tables = MetadataTestUtils.getExcludedTables(project);
+        Assert.assertEquals(1, tables.size());
+        Assert.assertEquals(table, tables.iterator().next());
+
+        // cancel all table columns, but not set excluded, assert the table is excluded.
+        TableExclusionRequest request = new TableExclusionRequest();
+        TableExclusionRequest.ExcludedTable excludedTable = new TableExclusionRequest.ExcludedTable();
+        excludedTable.setExcluded(false);
+        excludedTable.setTable(table);
+        excludedTable.setRemovedColumns(Lists.newArrayList("ACCOUNT_ID", "ACCOUNT_BUYER_LEVEL", "ACCOUNT_SELLER_LEVEL",
+                "ACCOUNT_COUNTRY", "ACCOUNT_CONTACT"));
+        request.setProject(project);
+        request.setExcludedTables(Lists.newArrayList(excludedTable));
+
+        tableExtService.updateExcludedTables(project, request);
+        List<ExcludedTableResponse> excludedTables = tableExtService.getExcludedTables(project, false, "");
+        Assert.assertTrue(excludedTables.isEmpty());
+    }
+
+    @Test
+    public void updateExcludedTablesOfCancelSomeColumns() {
+        String project = "default";
+        String table = "DEFAULT.TEST_ACCOUNT";
+        MetadataTestUtils.turnOnExcludedTable(getTestConfig());
+
+        // add some columns
+        {
+            TableExclusionRequest request = new TableExclusionRequest();
+            TableExclusionRequest.ExcludedTable excludedTable = new TableExclusionRequest.ExcludedTable();
+            excludedTable.setExcluded(false);
+            excludedTable.setTable(table);
+            excludedTable.setAddedColumns(Lists.newArrayList("ACCOUNT_ID", "ACCOUNT_BUYER_LEVEL"));
+            request.setProject(project);
+            request.setExcludedTables(Lists.newArrayList(excludedTable));
+
+            tableExtService.updateExcludedTables(project, request);
+            List<ExcludedTableResponse> excludedTables = tableExtService.getExcludedTables(project, false, "");
+            Assert.assertEquals(1, excludedTables.size());
+            ExcludedTableResponse excludedTableResponse = excludedTables.get(0);
+            Assert.assertFalse(excludedTableResponse.isExcluded());
+            Assert.assertEquals(table, excludedTableResponse.getTable());
+            Assert.assertEquals(2, excludedTableResponse.getExcludedColSize());
+            String expectedExcludedCols = "[ACCOUNT_ID, ACCOUNT_BUYER_LEVEL]";
+            Assert.assertEquals(expectedExcludedCols, excludedTableResponse.getExcludedColumns().toString());
+        }
+
+        // cancel some columns
+        {
+            TableExclusionRequest request = new TableExclusionRequest();
+            TableExclusionRequest.ExcludedTable excludedTable = new TableExclusionRequest.ExcludedTable();
+            excludedTable.setExcluded(false);
+            excludedTable.setTable(table);
+            excludedTable.setRemovedColumns(Lists.newArrayList("ACCOUNT_BUYER_LEVEL"));
+            request.setProject(project);
+            request.setExcludedTables(Lists.newArrayList(excludedTable));
+
+            tableExtService.updateExcludedTables(project, request);
+            List<ExcludedTableResponse> excludedTables = tableExtService.getExcludedTables(project, false, "");
+            Assert.assertEquals(1, excludedTables.size());
+            ExcludedTableResponse excludedTableResponse = excludedTables.get(0);
+            Assert.assertFalse(excludedTableResponse.isExcluded());
+            Assert.assertEquals(table, excludedTableResponse.getTable());
+            Assert.assertEquals(1, excludedTableResponse.getExcludedColSize());
+            String expectedExcludedCols = "[ACCOUNT_ID]";
+            Assert.assertEquals(expectedExcludedCols, excludedTableResponse.getExcludedColumns().toString());
+        }
+
+        // cancel other columns
+        {
+            TableExclusionRequest request = new TableExclusionRequest();
+            TableExclusionRequest.ExcludedTable excludedTable = new TableExclusionRequest.ExcludedTable();
+            excludedTable.setExcluded(false);
+            excludedTable.setTable(table);
+            excludedTable.setRemovedColumns(Lists.newArrayList("ACCOUNT_ID"));
+            request.setProject(project);
+            request.setExcludedTables(Lists.newArrayList(excludedTable));
+
+            tableExtService.updateExcludedTables(project, request);
+            List<ExcludedTableResponse> excludedTables = tableExtService.getExcludedTables(project, false, "");
+            Assert.assertTrue(excludedTables.isEmpty());
+        }
     }
 
     private List<Pair<TableDesc, TableExtDesc>> mockTablePair(int size, String tableName) {

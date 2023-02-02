@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_EXECUTE_MODEL_SQL;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARTITION_COLUMN;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.COMPUTED_COLUMN_CONFLICT;
@@ -71,6 +72,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
@@ -122,8 +124,6 @@ import org.apache.kylin.metadata.cube.model.PartitionStatusEnum;
 import org.apache.kylin.metadata.cube.model.PartitionStatusEnumToDisplay;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 import org.apache.kylin.metadata.cube.optimization.FrequencyMap;
-import org.apache.kylin.metadata.favorite.FavoriteRule;
-import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
 import org.apache.kylin.metadata.model.BadModelException;
 import org.apache.kylin.metadata.model.BadModelException.CauseType;
@@ -148,6 +148,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.VolatileRange;
 import org.apache.kylin.metadata.model.util.ExpandableMeasureUtil;
@@ -157,7 +158,7 @@ import org.apache.kylin.metadata.query.QueryTimesResponse;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.query.util.KapQueryUtil;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
@@ -185,6 +186,7 @@ import org.apache.kylin.rest.response.SegmentPartitionResponse;
 import org.apache.kylin.rest.response.SimplifiedColumnResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
 import org.apache.kylin.rest.response.SimplifiedTableResponse;
+import org.apache.kylin.rest.response.SynchronizedCommentsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.AclUtil;
@@ -192,6 +194,7 @@ import org.apache.kylin.rest.util.SCD2SimplificationConvertUtil;
 import org.apache.kylin.streaming.jobs.StreamingJobListener;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.util.BrokenEntityProxy;
+import org.apache.kylin.util.MetadataTestUtils;
 import org.apache.kylin.util.PasswordEncodeFactory;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -267,8 +270,6 @@ public class ModelServiceTest extends SourceTestCase {
 
     private final StreamingJobListener eventListener = new StreamingJobListener();
 
-    private FavoriteRuleManager favoriteRuleManager;
-
     protected String getProject() {
         return "default";
     }
@@ -285,8 +286,8 @@ public class ModelServiceTest extends SourceTestCase {
         ReflectionTestUtils.setField(semanticService, "userGroupService", userGroupService);
         ReflectionTestUtils.setField(semanticService, "expandableMeasureUtil",
                 new ExpandableMeasureUtil((model, ccDesc) -> {
-                    String ccExpression = KapQueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
-                            AclPermissionUtil.prepareQueryContextACLInfo(model.getProject(),
+                    String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
+                            AclPermissionUtil.createAclInfo(model.getProject(),
                                     semanticService.getCurrentUserGroups()));
                     ccDesc.setInnerExpression(ccExpression);
                     ComputedColumnEvalUtil.evaluateExprAndType(model, ccDesc);
@@ -301,7 +302,6 @@ public class ModelServiceTest extends SourceTestCase {
         val result1 = new QueryTimesResponse();
         result1.setModel("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         result1.setQueryTimes(10);
-        favoriteRuleManager = FavoriteRuleManager.getInstance(getTestConfig(), getProject());
 
         try {
             new JdbcRawRecStore(getTestConfig());
@@ -3587,8 +3587,8 @@ public class ModelServiceTest extends SourceTestCase {
     @Test
     public void testMassageModelFilterConditionWithExcludedTable() {
         overwriteSystemProp("kylin.engine.build-excluded-table", "true");
-        mockExcludeTableRule("DEFAULT.TEST_ORDER");
         String project = "default";
+        MetadataTestUtils.mockExcludedTable(project, "DEFAULT.TEST_ORDER");
         NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         NDataModel model = modelManager
                 .copyForWrite(modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa"));
@@ -3603,8 +3603,8 @@ public class ModelServiceTest extends SourceTestCase {
 
     @Test
     public void testMassageModelFilterConditionWithExcludedTableException() {
-        mockExcludeTableRule("DEFAULT.TEST_ORDER");
         String project = "default";
+        MetadataTestUtils.mockExcludedTable(project, "DEFAULT.TEST_ORDER");
         NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         NDataModel model = modelManager
                 .copyForWrite(modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa"));
@@ -3617,15 +3617,6 @@ public class ModelServiceTest extends SourceTestCase {
                     + "as the join relationships of this table won’t be precomputed.";
             Assert.assertEquals(msg, e.getMessage());
         }
-    }
-
-    private void mockExcludeTableRule(String excludedTables) {
-        List<FavoriteRule.AbstractCondition> conditions = com.clearspring.analytics.util.Lists.newArrayList();
-        FavoriteRule.Condition condition = new FavoriteRule.Condition();
-        condition.setLeftThreshold(null);
-        condition.setRightThreshold(excludedTables);
-        conditions.add(condition);
-        favoriteRuleManager.updateRule(conditions, true, FavoriteRule.EXCLUDED_TABLES_RULE);
     }
 
     @Test
@@ -3889,17 +3880,91 @@ public class ModelServiceTest extends SourceTestCase {
         Assert.assertEquals(0, res.getOverlapSegments().size());
         Assert.assertEquals(1, res.getSegmentHoles().size());
 
-        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "20000", "30000");
+        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "20000", "30000", true, null);
         Assert.assertEquals(0, res.getOverlapSegments().size());
         Assert.assertEquals(3, res.getSegmentHoles().size());
 
-        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "1", "10");
+        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "1", "10", true, null);
         Assert.assertEquals(0, res.getOverlapSegments().size());
         Assert.assertEquals(1, res.getSegmentHoles().size());
 
-        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "1", "5");
+        res = modelService.checkSegHoleExistIfNewRangeBuild(getProject(), modelId, "1", "5", true, null);
         Assert.assertEquals(0, res.getOverlapSegments().size());
         Assert.assertEquals(2, res.getSegmentHoles().size());
+    }
+
+    @Test
+    public void testCheckSegmentToBuildOverlapsBuilt() throws IOException {
+        KylinConfig kylinConfig = getTestConfig();
+        final String defaultProject = getProject();
+        final String streamingProject = "streaming_test";
+        NDataModelManager modelManager = NDataModelManager.getInstance(kylinConfig, defaultProject);
+
+        kylinConfig.setProperty("kylin.build.segment-overlap-enabled", "true");
+
+        List<NDataSegment> overlapSegments = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                modelManager.getDataModelDesc("b780e4e4-69af-449e-b09f-05c90dfa04b6"),
+                new SegmentRange.TimePartitionedSegmentRange(1604188800000L, 1604361600000L), true, null);
+        Assert.assertEquals(3, overlapSegments.size());
+
+        val streamingModelManager = NDataModelManager.getInstance(getTestConfig(), streamingProject);
+        List<NDataSegment> overlapSegments2 = modelService.checkSegmentToBuildOverlapsBuilt(streamingProject,
+                streamingModelManager.getDataModelDesc("e78a89dd-847f-4574-8afa-8768b4228b74"),
+                new SegmentRange.KafkaOffsetPartitionedSegmentRange(1613957110000L, 1613957130000L), true, null);
+        Assert.assertEquals(2, overlapSegments2.size());
+
+        String modelId = "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96";
+        NDataModel dataModelDesc = modelManager.getDataModelDesc(modelId);
+        List<NDataSegment> overlapSegments3 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1509891513770L), true,
+                null);
+        Assert.assertEquals(0, overlapSegments3.size());
+
+        List<NDataSegment> overlapSegments4 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1609891513770L), true,
+                null);
+        Assert.assertEquals(0, overlapSegments4.size());
+
+        List<NDataSegment> overlapSegments5 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1609891513770L), false,
+                null);
+        Assert.assertEquals(1, overlapSegments5.size());
+
+        List<NDataSegment> overlapSegments6 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1609891513770L), true,
+                Lists.newArrayList());
+        Assert.assertEquals(0, overlapSegments6.size());
+
+        List<NDataSegment> overlapSegments7 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1609891513770L), true,
+                Lists.newArrayList(10000L));
+        Assert.assertEquals(1, overlapSegments7.size());
+
+        List<NDataSegment> overlapSegments8 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513780L, 1509891513760L), true,
+                null);
+        Assert.assertEquals(1, overlapSegments8.size());
+
+        MockSecondStorage.mock(defaultProject, new ArrayList<>(), this);
+        val indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), defaultProject);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            indexPlanManager.updateIndexPlan(modelId, indexPlan -> {
+                indexPlan.createAndAddBaseIndex(indexPlan.getModel());
+            });
+            return null;
+        }, defaultProject);
+        SecondStorageUtil.initModelMetaData(defaultProject, modelId);
+        Assert.assertTrue(SecondStorageUtil.isModelEnable(defaultProject, modelId));
+        List<NDataSegment> overlapSegments31 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1509891513770L), true,
+                null);
+        Assert.assertEquals(1, overlapSegments31.size());
+
+        kylinConfig.setProperty("kylin.build.segment-overlap-enabled", "false");
+        List<NDataSegment> overlapSegments9 = modelService.checkSegmentToBuildOverlapsBuilt(defaultProject,
+                dataModelDesc, new SegmentRange.TimePartitionedSegmentRange(1309891513770L, 1509891513770L), true,
+                null);
+        Assert.assertEquals(1, overlapSegments9.size());
     }
 
     @Test
@@ -4794,6 +4859,23 @@ public class ModelServiceTest extends SourceTestCase {
     }
 
     @Test
+    public void testCheckFlatTableSql() {
+        String project = "default";
+        String modelId = "a8ba3ff1-83bd-4066-ad54-d2fb3d1f0e94";
+        NDataModel model = NDataModelManager.getInstance(getTestConfig(), project).getDataModelDesc(modelId);
+        modelService.checkFlatTableSql(model);
+
+        getTestConfig().setProperty("kylin.env", "PROD");
+        try {
+            modelService.checkFlatTableSql(model);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(FAILED_EXECUTE_MODEL_SQL.toErrorCode().getCodeString(),
+                    e.getErrorCode().getCodeString());
+        }
+    }
+
+    @Test
     public void testUpdateModelWithDirtyMeasures() {
         String project = "gc_test";
         String modelId = "e0e90065-e7c3-49a0-a801-20465ca64799";
@@ -5513,5 +5595,97 @@ public class ModelServiceTest extends SourceTestCase {
         measure.setExpression(expr);
         measure.setParameterValue(Lists.newArrayList(parameterResponse));
         return measure;
+    }
+
+    @Test
+    public void testCreateModelSyncDimensionOrMeasure() {
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
+        ModelRequest modelRequest = createModelRequest(modelManager);
+        SynchronizedCommentsResponse response = new SynchronizedCommentsResponse();
+        response.syncComment(modelRequest);
+        ModelRequest newModelRequest = response.getModelRequest();
+        long measureCount = newModelRequest.getSimplifiedMeasures().stream()
+                .filter(simplifiedMeasure -> simplifiedMeasure.getComment() != null
+                        && simplifiedMeasure.getComment().contains("____"))
+                .count();
+        long dimensionCount = newModelRequest.getSimplifiedDimensions().stream()
+                .filter(namedColumn -> namedColumn.getName().contains("____")).count();
+        Assert.assertEquals(11, measureCount);
+        Assert.assertEquals(10, dimensionCount);
+        SynchronizedCommentsResponse.ConflictInfo conflictInfo = response.getConflictInfo();
+        Assert.assertEquals(2, conflictInfo.getColsWithSameComment().size());
+        Assert.assertEquals(20, conflictInfo.getDimsOriginFromSameCol().size());
+    }
+
+    private ModelRequest createModelRequest(NDataModelManager modelManager) {
+        NDataModel model = modelManager.getDataModelDesc("82fa7671-a935-45f5-8779-85703601f49a");
+        ModelRequest modelRequest = new ModelRequest(model);
+        modelRequest.setProject("default");
+        modelRequest.setAlias("test_model");
+        modelRequest.setRootFactTableName(model.getRootFactTableName());
+        modelRequest.setLastModified(0L);
+        modelRequest.setStart("0");
+        modelRequest.setEnd("100");
+        modelRequest.setUuid(null);
+
+        List<NamedColumn> oriAllNamedColumns = model.getAllNamedColumns();
+
+        List<SimplifiedMeasure> simplified_measures = model.getAllMeasures().stream().map(oldSimplifiedMeasure -> {
+            SimplifiedMeasure simplifiedMeasure = new SimplifiedMeasure();
+            simplifiedMeasure.setName(oldSimplifiedMeasure.getName());
+            simplifiedMeasure.setExpression(oldSimplifiedMeasure.getFunction().getExpression());
+            simplifiedMeasure.setReturnType(oldSimplifiedMeasure.getFunction().getReturnType());
+            List<ParameterResponse> parameterResponses = oldSimplifiedMeasure.getFunction().getParameters().stream()
+                    .map(parameterDesc -> {
+                        String value = parameterDesc.getValue();
+                        String type = parameterDesc.getType();
+                        ParameterResponse response = new ParameterResponse();
+                        response.setType(type);
+                        response.setValue(value);
+                        return response;
+                    }).collect(Collectors.toList());
+            simplifiedMeasure.setParameterValue(parameterResponses);
+            return simplifiedMeasure;
+        }).collect(Collectors.toList());
+
+        modelRequest.setSimplifiedMeasures(simplified_measures);
+        modelRequest.setSimplifiedDimensions(oriAllNamedColumns);
+
+        NTableMetadataManager tableMetadataManager = NTableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                "default");
+        TableDesc tableDesc = tableMetadataManager.getTableDesc("DEFAULT.TEST_KYLIN_FACT");
+        int length = tableDesc.getColumns().length;
+        ColumnDesc[] columns = new ColumnDesc[length];
+        for (int i = 0; i < length; i++) {
+            ColumnDesc column = tableDesc.getColumns()[i];
+            column.setComment(
+                    column.getComment() == null ? column.getName() + "____" + i : column.getComment() + "____" + i);
+            columns[i] = column;
+        }
+        String comment = columns[2].getComment();
+        columns[3].setComment(comment);
+        tableDesc.setColumns(columns);
+        tableMetadataManager.updateTableDesc(tableDesc);
+        return modelRequest;
+    }
+
+    @Test
+    public void testGetCanonicalName() {
+        TblColRef colRef = TblColRef.newDynamicColumn("test");
+        Assert.assertEquals("NULL.TEST", colRef.getCanonicalName());
+        TblColRef innerColumn = TblColRef.newInnerColumn("test", TblColRef.InnerDataTypeEnum.AGGREGATION_TYPE);
+        Assert.assertEquals("DEFAULT._KYLIN_TABLE.TEST", innerColumn.getCanonicalName());
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
+        NDataModel model = modelManager.getDataModelDesc("82fa7671-a935-45f5-8779-85703601f49a");
+        List<JoinTableDesc> joinTables = model.getJoinTables();
+        if (joinTables.size() == 0) {
+            return;
+        }
+        TableRef tableRef = joinTables.get(0).getTableRef();
+        Optional<TblColRef> first = tableRef.getColumns().stream().findFirst();
+        if (first.isPresent()) {
+            TblColRef colRef1 = first.get();
+            Assert.assertEquals("DEFAULT.TEST_ORDER.ORDER_ID", colRef1.getCanonicalName());
+        }
     }
 }

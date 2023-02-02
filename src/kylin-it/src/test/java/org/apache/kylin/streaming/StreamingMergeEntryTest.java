@@ -384,6 +384,8 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
         val entry = Mockito.spy(new StreamingMergeEntry());
 
         val segments = new Segments<NDataSegment>();
+        val mgr = NDataflowManager.getInstance(getTestConfig(), PROJECT);
+        var dataflow = mgr.getDataflow(DATAFLOW_ID);
         for (int i = 0; i < 3; i++) {
             val start = LocalDate.parse("2000-01-01").plusMonths(i);
             val end = start.plusMonths(1);
@@ -395,6 +397,7 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
             seg.setSegmentRange(segRange);
             seg.setStatus(SegmentStatusEnum.READY);
             seg.setAdditionalInfo(null);
+            seg.setDataflow(dataflow);
             segments.add(seg);
         }
 
@@ -407,6 +410,8 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
 
         val segments = new Segments<NDataSegment>();
         val addInfo = new HashMap<String, String>();
+        val mgr = NDataflowManager.getInstance(getTestConfig(), PROJECT);
+        var dataflow = mgr.getDataflow(DATAFLOW_ID);
         addInfo.put("abc", "2");
         for (int i = 0; i < 3; i++) {
             val start = LocalDate.parse("2000-01-01").plusMonths(i);
@@ -419,6 +424,7 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
             seg.setSegmentRange(segRange);
             seg.setStatus(SegmentStatusEnum.READY);
             seg.setAdditionalInfo(addInfo);
+            seg.setDataflow(dataflow);
             segments.add(seg);
         }
 
@@ -431,6 +437,8 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
 
         val segments = new Segments<NDataSegment>();
         val addInfo = new HashMap<String, String>();
+        val mgr = NDataflowManager.getInstance(getTestConfig(), PROJECT);
+        var dataflow = mgr.getDataflow(DATAFLOW_ID);
         addInfo.put(StreamingConstants.FILE_LAYER, "2");
         for (int i = 0; i < 3; i++) {
             val start = LocalDate.parse("2000-01-01").plusMonths(i);
@@ -443,6 +451,7 @@ public class StreamingMergeEntryTest extends StreamingTestCase {
             seg.setSegmentRange(segRange);
             seg.setStatus(SegmentStatusEnum.READY);
             seg.setAdditionalInfo(addInfo);
+            seg.setDataflow(dataflow);
             segments.add(seg);
         }
 

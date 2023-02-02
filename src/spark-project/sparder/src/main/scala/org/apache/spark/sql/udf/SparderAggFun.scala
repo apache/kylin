@@ -18,9 +18,6 @@
 
 package org.apache.spark.sql.udf
 
-import java.nio.ByteBuffer
-import java.util
-
 import com.google.common.collect.Maps
 import org.apache.kylin.measure.MeasureAggregator
 import org.apache.kylin.measure.bitmap.BitmapCounter
@@ -34,6 +31,9 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.util.SparderTypeUtil
+
+import java.nio.ByteBuffer
+import java.util
 
 class SparderAggFun(funcName: String, dataTp: KyDataType)
   extends UserDefinedAggregateFunction
@@ -89,7 +89,7 @@ class SparderAggFun(funcName: String, dataTp: KyDataType)
       byteBuffer = ByteBuffer.allocate(1024 * 1024)
     }
 
-     val initVal = if (isCount) {
+    val initVal = if (isCount) {
       // return 0 instead of null in case of no input
       measureAggregator.reset()
       byteBuffer.clear()
@@ -106,6 +106,7 @@ class SparderAggFun(funcName: String, dataTp: KyDataType)
   override def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
     merge(buffer, input)
   }
+
   override def merge(buffer: MutableAggregationBuffer, input: Row): Unit = {
     if (!input.isNullAt(0)) {
       measureAggregator.reset()
@@ -167,7 +168,7 @@ class SparderAggFun(funcName: String, dataTp: KyDataType)
         case _ => null
       }
 
-     ret
+      ret
     }
   }
 

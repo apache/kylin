@@ -40,10 +40,10 @@ public class TableStrategy implements SchemaChangeStrategy {
 
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> missingItems(SchemaUtil.SchemaDifference difference,
-            Set<String> importModels, Set<String> originalModels) {
+            Set<String> importModels, Set<String> originalModels, Set<String> originalBrokenModels) {
         return difference.getNodeDiff().entriesOnlyOnRight().entrySet().stream()
                 .filter(pair -> supportedSchemaNodeTypes().contains(pair.getKey().getType()))
-                .map(pair -> missingItemFunction(difference, pair, importModels, originalModels))
+                .map(pair -> missingItemFunction(difference, pair, importModels, originalModels, originalBrokenModels))
                 .flatMap(Collection::stream).filter(schemaChange -> importModels.contains(schemaChange.getModelAlias()))
                 .collect(Collectors.toList());
     }
@@ -51,11 +51,12 @@ public class TableStrategy implements SchemaChangeStrategy {
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> missingItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         return reachableModel(difference.getTargetGraph(), entry.getValue()).stream()
                 .map(modelAlias -> SchemaChangeCheckResult.ChangedItem.createUnImportableSchemaNode(
                         entry.getKey().getType(), entry.getValue(), modelAlias, MISSING_TABLE,
-                        entry.getValue().getDetail(), hasSameName(modelAlias, originalModels)))
+                        entry.getValue().getDetail(), hasSameName(modelAlias, originalModels),
+                        hasSameWithBroken(modelAlias, originalBrokenModels)))
                 .collect(Collectors.toList());
     }
 }

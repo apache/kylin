@@ -268,6 +268,14 @@ public class ColumnDesc implements Serializable {
         return desc;
     }
 
+    public String getCanonicalName() {
+        String tableName = null;
+        if (table != null) {
+            tableName = table.getIdentity();
+        }
+        return tableName + "." + getName();
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

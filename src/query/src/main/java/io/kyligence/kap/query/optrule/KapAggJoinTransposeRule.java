@@ -51,7 +51,7 @@ import org.apache.calcite.util.mapping.Mapping;
 import org.apache.calcite.util.mapping.Mappings;
 import org.apache.kylin.query.relnode.KapAggregateRel;
 import org.apache.kylin.query.relnode.KapJoinRel;
-import org.apache.kylin.query.util.KapQueryUtil;
+import org.apache.kylin.query.util.QueryUtil;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -81,7 +81,7 @@ public class KapAggJoinTransposeRule extends RelOptRule {
         final KapAggregateRel aggregate = call.rel(0);
         final KapJoinRel joinRel = call.rel(1);
         //Only one agg child of join is accepted
-        return !aggregate.isContainCountDistinct() && KapQueryUtil.isJoinOnlyOneAggChild(joinRel);
+        return !aggregate.isContainCountDistinct() && QueryUtil.isJoinOnlyOneAggChild(joinRel);
     }
 
     @Override

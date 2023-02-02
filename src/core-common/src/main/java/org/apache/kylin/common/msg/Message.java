@@ -1015,7 +1015,7 @@ public class Message {
     }
 
     public String getInvalidTimeFormat() {
-        return "Can’t set the time partition column. The values of the selected column is not time formatted. Please select again.";
+        return "Can’t set the time partition column. The values of the selected column is not time formatted: {%s}. Please select again.";
     }
 
     public String getSegmentMergeStorageCheckError() {

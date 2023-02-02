@@ -57,7 +57,6 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PARAMETER_INVALID_SUPPORT_LIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_BUILD_RANGE_OVERLAP;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_LOCKED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_MERGE_CONTAINS_GAPS;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_NOT_EXIST_ID;
@@ -109,6 +108,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.event.ModelAddEvent;
 import org.apache.kylin.common.event.ModelDropEvent;
 import org.apache.kylin.common.exception.JobErrorCode;
@@ -157,12 +157,11 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
-import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
+import org.apache.kylin.metadata.model.AntiFlatChecker;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.DataCheckDesc;
-import org.apache.kylin.metadata.model.ExcludedLookupChecker;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.FusionModelManager;
@@ -199,9 +198,9 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
-import org.apache.kylin.query.util.KapQueryUtil;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
@@ -299,11 +298,12 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     private static final String LAST_MODIFY = "last_modify";
     public static final String REC_COUNT = "recommendations_count";
 
-    public static final String VALID_NAME_FOR_DIMENSION = "^[\\u4E00-\\u9FA5a-zA-Z0-9 _\\-()%?（）]+$";
+    public static final Pattern VALID_NAME_FOR_DIMENSION = Pattern.compile("^[\\u4E00-\\u9FA5a-zA-Z0-9 _\\-()%?（）]+$");
 
-    public static final String VALID_NAME_FOR_MEASURE = "^[\\u4E00-\\u9FA5a-zA-Z0-9 _\\-()%?（）.]+$";
+    public static final Pattern VALID_NAME_FOR_MEASURE = Pattern.compile("^[\\u4E00-\\u9FA5a-zA-Z0-9 _\\-()%?（）.]+$");
 
     private static final List<String> MODEL_CONFIG_BLOCK_LIST = Lists.newArrayList("kylin.index.rule-scheduler-data");
+    private static final Set<String> STRING_TYPE_SET = Sets.newHashSet("STRING", "CHAR", "VARCHAR");
 
     //The front-end supports only the following formats
     private static final List<String> SUPPORTED_FORMATS = ImmutableList.of("ZZ", "DD", "D", "Do", "dddd", "ddd", "dd", //
@@ -929,7 +929,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         NExecutableManager execManager = NExecutableManager.getInstance(kylinConfig, project);
         return execManager.listPartialExec(path -> StringUtils.endsWith(path, modelId), ExecutableState::isRunning,
-                INDEX_BUILD, JobTypeEnum.SUB_PARTITION_BUILD);
+                INDEX_BUILD, INC_BUILD, JobTypeEnum.SUB_PARTITION_BUILD);
     }
 
     public List<NDataSegmentResponse> getSegmentsResponse(String modelId, String project, String start, String end,
@@ -1715,8 +1715,9 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
     @VisibleForTesting
     public void checkFlatTableSql(NDataModel dataModel) {
-        if (KylinConfig.getInstanceFromEnv().isUTEnv() || getManager(NProjectManager.class)
-                .getProject(dataModel.getProject()).getConfig().isSkipCheckFlatTable()) {
+        String project = dataModel.getProject();
+        ProjectInstance prjInstance = getManager(NProjectManager.class).getProject(project);
+        if (KylinConfig.getInstanceFromEnv().isUTEnv() || prjInstance.getConfig().isSkipCheckFlatTable()) {
             return;
         }
         if (getModelConfig(dataModel).skipCheckFlatTable()) {
@@ -1730,16 +1731,14 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         }
 
         try {
-            ProjectInstance projectInstance = getManager(NProjectManager.class).getProject(dataModel.getProject());
-            if (projectInstance.getSourceType() == ISourceAware.ID_SPARK
+            if (prjInstance.getSourceType() == ISourceAware.ID_SPARK
                     && dataModel.getModelType() == NDataModel.ModelType.BATCH) {
                 SparkSession ss = SparderEnv.getSparkSession();
                 String flatTableSql = JoinedFlatTable.generateSelectDataStatement(dataModel, false);
-                QueryParams queryParams = new QueryParams(dataModel.getProject(), flatTableSql, "default", false);
-                queryParams.setKylinConfig(projectInstance.getConfig());
-                queryParams.setAclInfo(
-                        AclPermissionUtil.prepareQueryContextACLInfo(dataModel.getProject(), getCurrentUserGroups()));
-                String pushdownSql = KapQueryUtil.massagePushDownSql(queryParams);
+                QueryParams queryParams = new QueryParams(project, flatTableSql, "default", false);
+                queryParams.setKylinConfig(prjInstance.getConfig());
+                queryParams.setAclInfo(AclPermissionUtil.createAclInfo(project, getCurrentUserGroups()));
+                String pushdownSql = QueryUtil.massagePushDownSql(queryParams);
                 ss.sql(pushdownSql);
             }
         } catch (Exception e) {
@@ -2150,7 +2149,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             dimension.setName(StringUtils.trim(dimension.getName()));
             // check if the dimension name is valid
             if (StringUtils.length(dimension.getName()) > maxModelDimensionMeasureNameLength
-                    || !Pattern.compile(VALID_NAME_FOR_DIMENSION).matcher(dimension.getName()).matches())
+                    || !VALID_NAME_FOR_DIMENSION.matcher(dimension.getName()).matches())
                 throw new KylinException(INVALID_NAME,
                         String.format(Locale.ROOT, MsgPicker.getMsg().getInvalidDimensionName(), dimension.getName(),
                                 maxModelDimensionMeasureNameLength));
@@ -2164,27 +2163,38 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         }
     }
 
-    @VisibleForTesting
-    public void checkModelMeasures(ModelRequest request) {
-        Set<String> measureNames = new HashSet<>();
-        Set<SimplifiedMeasure> measures = new HashSet<>();
-        KylinConfig kylinConfig = getManager(NProjectManager.class).getProject(request.getProject()).getConfig();
-        int maxModelDimensionMeasureNameLength = kylinConfig.getMaxModelDimensionMeasureNameLength();
-
+    private void checkMeasureNameValid(ModelRequest request) {
+        int maxLen = NProjectManager.getProjectConfig(request.getProject()).getMaxModelDimensionMeasureNameLength();
+        String invalidPattern = MsgPicker.getMsg().getInvalidMeasureName();
         for (SimplifiedMeasure measure : request.getSimplifiedMeasures()) {
-            measure.setName(StringUtils.trim(measure.getName()));
-            // check if the measure name is valid
-            if (StringUtils.length(measure.getName()) > maxModelDimensionMeasureNameLength
-                    || !checkIsValidMeasureName(measure.getName()))
-                throw new KylinException(INVALID_NAME,
-                        String.format(Locale.ROOT, MsgPicker.getMsg().getInvalidMeasureName(), measure.getName(),
-                                maxModelDimensionMeasureNameLength));
+            String name = measure.getName();
+            if (StringUtils.length(name) <= maxLen && checkIsValidMeasureName(name)) {
+                continue;
+            }
+            throw new KylinException(INVALID_NAME, String.format(Locale.ROOT, invalidPattern, name, maxLen));
+        }
+    }
 
-            // check duplicate measure names
-            if (measureNames.contains(measure.getName()))
+    private void checkMeasureNameDuplicate(ModelRequest modelRequest) {
+        Set<String> measureNames = Sets.newHashSet();
+        for (SimplifiedMeasure measure : modelRequest.getSimplifiedMeasures()) {
+            if (measureNames.contains(measure.getName())) {
                 throw new KylinException(DUPLICATE_MEASURE_NAME,
                         String.format(Locale.ROOT, MsgPicker.getMsg().getDuplicateMeasureName(), measure.getName()));
+            } else {
+                measureNames.add(measure.getName());
+            }
+        }
+    }
 
+    @VisibleForTesting
+    public void checkModelMeasures(ModelRequest request) {
+        Set<SimplifiedMeasure> measures = new HashSet<>();
+        request.getSimplifiedMeasures().forEach(measure -> measure.setName(StringUtils.trim(measure.getName())));
+        checkMeasureNameValid(request);
+        checkMeasureNameDuplicate(request);
+
+        for (SimplifiedMeasure measure : request.getSimplifiedMeasures()) {
             // check duplicate measure definitions
             SimplifiedMeasure dupMeasure = null;
             for (SimplifiedMeasure m : measures) {
@@ -2208,7 +2218,6 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                         MsgPicker.getMsg().getDuplicateMeasureDefinition(), measure.getName()));
             }
 
-            measureNames.add(measure.getName());
             measures.add(measure);
         }
     }
@@ -2217,7 +2226,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         if (!KylinConfig.getInstanceFromEnv().isMeasureNameCheckEnabled()) {
             return true;
         }
-        return Pattern.compile(VALID_NAME_FOR_MEASURE).matcher(measureName).matches();
+        return VALID_NAME_FOR_MEASURE.matcher(measureName).matches();
     }
 
     private boolean isDupMeasure(SimplifiedMeasure measure, SimplifiedMeasure measure1) {
@@ -2295,7 +2304,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     }
 
     public SegmentCheckResponse checkSegHoleExistIfNewRangeBuild(String project, String modelId, String start,
-            String end) {
+            String end, boolean isBuildAllIndexes, List<Long> batchIndexIds) {
         aclEvaluate.checkProjectOperationPermission(project);
         Preconditions.checkArgument(!PushDownUtil.needPushdown(start, end), "Load data must set start and end date");
         NDataModel dataModelDesc = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
@@ -2304,18 +2313,17 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         SegmentRange segmentRangeToBuild = SourceFactory.getSource(table).getSegmentRange(start, end);
         List<NDataSegment> segmentGaps = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
                 .checkHoleIfNewSegBuild(modelId, segmentRangeToBuild);
-
-        Segments<NDataSegment> segments = getSegmentsByRange(modelId, project, "0", "" + Long.MAX_VALUE);
-        val overlapSegments = segments.stream().filter(seg -> seg.getSegRange().overlaps(segmentRangeToBuild))
-                .map(seg -> new SegmentRangeResponse(seg.getTSRange().getStart(), seg.getTSRange().getEnd()))
+        List<NDataSegment> overlapSegments = checkSegmentToBuildOverlapsBuilt(project, dataModelDesc,
+                segmentRangeToBuild, isBuildAllIndexes, batchIndexIds);
+        val overlapSegmentResponses = overlapSegments.stream().map(
+                segment -> new SegmentRangeResponse(segment.getTSRange().getStart(), segment.getTSRange().getEnd()))
                 .collect(Collectors.toList());
-
         SegmentCheckResponse segmentCheckResponse = new SegmentCheckResponse();
         val segHoles = segmentGaps.stream()
                 .map(seg -> new SegmentRangeResponse(seg.getTSRange().getStart(), seg.getTSRange().getEnd()))
                 .collect(Collectors.toList());
         segmentCheckResponse.setSegmentHoles(segHoles);
-        segmentCheckResponse.setOverlapSegments(overlapSegments);
+        segmentCheckResponse.setOverlapSegments(overlapSegmentResponses);
         return segmentCheckResponse;
     }
 
@@ -2563,17 +2571,36 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         datamodelManager.updateDataModelDesc(modelUpdate);
     }
 
-    public void checkSegmentToBuildOverlapsBuilt(String project, String model, SegmentRange segmentRangeToBuild) {
-        Segments<NDataSegment> segments = getSegmentsByRange(model, project, "0", "" + Long.MAX_VALUE);
-        if (!CollectionUtils.isEmpty(segments)) {
-            for (NDataSegment existedSegment : segments) {
-                if (existedSegment.getSegRange().overlaps(segmentRangeToBuild)) {
-                    throw new KylinException(SEGMENT_BUILD_RANGE_OVERLAP,
-                            existedSegment.getSegRange().getStart().toString(),
-                            existedSegment.getSegRange().getEnd().toString());
-                }
+    public List<NDataSegment> checkSegmentToBuildOverlapsBuilt(String project, NDataModel model,
+            SegmentRange<Long> segmentRangeToBuild, boolean isBuildAllIndexes, List<Long> batchIndexIds) {
+        boolean isOverlap;
+        Segments<NDataSegment> segments = getSegmentsByRange(model.getId(), project, "0", "" + Long.MAX_VALUE);
+        List<NDataSegment> overlapsBuiltSegment = Lists.newArrayListWithCapacity(segments.size());
+
+        if (CollectionUtils.isEmpty(segments)) {
+            return overlapsBuiltSegment;
+        }
+
+        boolean buildSegmentOverlapEnable = getIndexPlan(model.getId(), project).getConfig()
+                .isBuildSegmentOverlapEnabled();
+        boolean isBuildAllIndexesFinally = batchIndexIds == null || batchIndexIds.size() == 0
+                || batchIndexIds.size() == getIndexPlan(model.getId(), project).getAllIndexes().size();
+
+        for (NDataSegment existedSegment : segments) {
+            if (buildSegmentOverlapEnable && NDataModel.ModelType.BATCH == model.getModelType()
+                    && !model.isMultiPartitionModel() && isBuildAllIndexes && isBuildAllIndexesFinally
+                    && !SecondStorageUtil.isModelEnable(project, model.getId())) {
+                isOverlap = existedSegment.getSegRange().overlaps(segmentRangeToBuild)
+                        && !segmentRangeToBuild.contains(existedSegment.getSegRange());
+            } else {
+                isOverlap = existedSegment.getSegRange().overlaps(segmentRangeToBuild);
+            }
+            if (isOverlap) {
+                overlapsBuiltSegment.add(existedSegment);
             }
         }
+
+        return overlapsBuiltSegment;
     }
 
     public ComputedColumnUsageResponse getComputedColumnUsages(String project) {
@@ -2601,7 +2628,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
         model.init(getConfig(), project, getManager(NDataModelManager.class, project).getCCRelatedModels(model));
         model.getComputedColumnDescs().forEach(cc -> {
-            String innerExp = KapQueryUtil.massageComputedColumn(model, project, cc, null);
+            String innerExp = QueryUtil.massageComputedColumn(model, project, cc, null);
             cc.setInnerExpression(innerExp);
         });
 
@@ -2613,8 +2640,8 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         checkCCNameAmbiguity(model);
         ComputedColumnDesc checkedCC = null;
 
-        Set<String> excludedTables = getManager(FavoriteRuleManager.class, project).getExcludedTables();
-        ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, model.getJoinTables(), model);
+        QueryContext.AclInfo aclInfo = AclPermissionUtil.createAclInfo(project, getCurrentUserGroups());
+        AntiFlatChecker checker = new AntiFlatChecker(model.getJoinTables(), model);
         for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
             checkCCName(cc.getColumnName());
 
@@ -2628,8 +2655,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                             MsgPicker.getMsg().getccOnAntiFlattenLookup(), antiFlattenLookup));
                 }
                 ComputedColumnDesc.simpleParserCheck(cc.getExpression(), model.getAliasMap().keySet());
-                String innerExpression = KapQueryUtil.massageComputedColumn(model, project, cc,
-                        AclPermissionUtil.prepareQueryContextACLInfo(project, getCurrentUserGroups()));
+                String innerExpression = QueryUtil.massageComputedColumn(model, project, cc, aclInfo);
                 cc.setInnerExpression(innerExpression);
 
                 //check by data source, this could be slow
@@ -2729,9 +2755,9 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         checkCCNameAmbiguity(model);
 
         // Update CC expression from query transformers
+        QueryContext.AclInfo aclInfo = AclPermissionUtil.createAclInfo(project, getCurrentUserGroups());
         for (ComputedColumnDesc ccDesc : model.getComputedColumnDescs()) {
-            String ccExpression = KapQueryUtil.massageComputedColumn(model, project, ccDesc,
-                    AclPermissionUtil.prepareQueryContextACLInfo(project, getCurrentUserGroups()));
+            String ccExpression = QueryUtil.massageComputedColumn(model, project, ccDesc, aclInfo);
             ccDesc.setInnerExpression(ccExpression);
             TblColRef tblColRef = model.findColumn(ccDesc.getTableAlias(), ccDesc.getColumnName());
             tblColRef.getColumnDesc().setComputedColumn(ccExpression);
@@ -3073,8 +3099,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         List<JoinTableDesc> joinTables = convertedModel.getJoinTables();
 
         IndexPlan indexPlan = indexPlanManager.getIndexPlan(uuid);
-        Set<String> excludedTables = getManager(FavoriteRuleManager.class, project).getExcludedTables();
-        ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, joinTables, convertedModel);
+        AntiFlatChecker checker = new AntiFlatChecker(joinTables, convertedModel);
         List<ComputedColumnDesc> invalidCCList = checker.getInvalidComputedColumns(convertedModel);
         Set<Integer> invalidDimensions = checker.getInvalidDimensions(convertedModel);
         Set<Integer> invalidMeasures = checker.getInvalidMeasures(convertedModel);
@@ -3581,9 +3606,8 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             return;
         }
 
-        String massagedFilterCond = KapQueryUtil.massageExpression(model, model.getProject(),
-                model.getFilterCondition(),
-                AclPermissionUtil.prepareQueryContextACLInfo(model.getProject(), getCurrentUserGroups()), false);
+        String massagedFilterCond = QueryUtil.massageExpression(model, model.getProject(), model.getFilterCondition(),
+                AclPermissionUtil.createAclInfo(model.getProject(), getCurrentUserGroups()), false);
 
         String filterConditionWithTableName = addTableNameIfNotExist(massagedFilterCond, model);
 
@@ -3616,14 +3640,12 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
         sqlNode.accept(sqlVisitor);
 
-        if (!KylinConfig.getInstanceFromEnv().isBuildExcludedTableEnabled()) {
-            Set<String> excludedTables = getManager(FavoriteRuleManager.class, model.getProject()).getExcludedTables();
-            ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, model.getJoinTables(), model);
-            String antiFlattenLookup = checker.detectFilterConditionDependsLookups(sqlNode.toString(),
-                    checker.getExcludedLookups());
-            if (antiFlattenLookup != null) {
+        if (!NProjectManager.getProjectConfig(model.getProject()).isBuildExcludedTableEnabled()) {
+            AntiFlatChecker checker = new AntiFlatChecker(model.getJoinTables(), model);
+            String antiFlatLookup = checker.detectFilterCondition(sqlNode.toString());
+            if (antiFlatLookup != null) {
                 throw new KylinException(FILTER_CONDITION_DEPENDS_ANTI_FLATTEN_LOOKUP, String.format(Locale.ROOT,
-                        MsgPicker.getMsg().getFilterConditionOnAntiFlattenLookup(), antiFlattenLookup));
+                        MsgPicker.getMsg().getFilterConditionOnAntiFlattenLookup(), antiFlatLookup));
             }
         }
         String exp = sqlNode
@@ -3837,7 +3859,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     }
 
     public NDataModel updateResponseAcl(NDataModel model, String project) {
-        List<NDataModel> models = updateResponseAcl(Arrays.asList(model), project);
+        List<NDataModel> models = updateResponseAcl(Collections.singletonList(model), project);
         return models.get(0);
     }
 
@@ -3889,8 +3911,6 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         }
     }
 
-    private static final Set<String> StringTypes = Sets.newHashSet("STRING", "CHAR", "VARCHAR");
-
     private boolean matchCCDataType(String actual, String expected) {
         if (actual == null) {
             return false;
@@ -3899,8 +3919,8 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         actual = actual.toUpperCase(Locale.ROOT);
         expected = expected.toUpperCase(Locale.ROOT);
         // char, varchar, string are of the same
-        if (StringTypes.contains(actual)) {
-            return StringTypes.contains(expected);
+        if (STRING_TYPE_SET.contains(actual)) {
+            return STRING_TYPE_SET.contains(expected);
         }
 
         // if actual type is of decimal type with no prec, scala
@@ -4050,8 +4070,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         String uuid = model.getUuid();
         List<JoinTableDesc> joinTables = model.getJoinTables();
         IndexPlan indexPlan = getManager(NIndexPlanManager.class, project).getIndexPlan(uuid);
-        Set<String> excludedTables = getManager(FavoriteRuleManager.class, project).getExcludedTables();
-        ExcludedLookupChecker checker = new ExcludedLookupChecker(excludedTables, joinTables, model);
+        AntiFlatChecker checker = new AntiFlatChecker(joinTables, model);
         List<ComputedColumnDesc> invalidCCList = checker.getInvalidComputedColumns(model);
         Set<Integer> invalidDimensions = checker.getInvalidDimensions(model);
         Set<Integer> invalidMeasures = checker.getInvalidMeasures(model);
@@ -4068,7 +4087,6 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                 aggIndexCount.getAndIncrement();
             }
         });
-        List<String> antiFlattenLookupTables = checker.getAntiFlattenLookups();
 
         List<String> invalidDimensionNames = model.getAllNamedColumns().stream()
                 .filter(col -> invalidDimensions.contains(col.getId())).map(NDataModel.NamedColumn::getAliasDotColumn)
@@ -4084,7 +4102,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         response.setIndexes(Lists.newArrayList(invalidIndexes));
         response.setInvalidAggIndexCount(aggIndexCount.get());
         response.setInvalidTableIndexCount(tableIndexCount.get());
-        response.setAntiFlattenLookups(antiFlattenLookupTables);
+        response.setAntiFlattenLookups(Lists.newArrayList(checker.getAntiFlattenLookups()));
         return response;
     }
 
@@ -4153,7 +4171,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         for (ComputedColumnDesc cc : model.getComputedColumnDescs()) {
             String innerExp = cc.getInnerExpression();
             if (cc.getExpression().equalsIgnoreCase(innerExp)) {
-                innerExp = KapQueryUtil.massageComputedColumn(model, project, cc, null);
+                innerExp = QueryUtil.massageComputedColumn(model, project, cc, null);
             }
             cc.setInnerExpression(innerExp);
         }

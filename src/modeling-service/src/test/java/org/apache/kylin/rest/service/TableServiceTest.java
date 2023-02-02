@@ -1060,44 +1060,44 @@ public class TableServiceTest extends CSVSourceTestCase {
     @Test
     public void testGetProjectTables() throws Exception {
         NInitTablesResponse response;
-        response = tableService.getProjectTables("default", "SSB.SS", 0, 14, true,
+        response = tableService.getProjectTables("default", "SSB.SS", 0, 14, true, true,
                 (databaseName, tableName) -> tableService.getTableNameResponses("default", databaseName, tableName));
         Assert.assertEquals(0, response.getDatabases().size());
 
-        response = tableService.getProjectTables("default", "SSB.CU", 0, 14, true,
+        response = tableService.getProjectTables("default", "SSB.CU", 0, 14, true, true,
                 (databaseName, tableName) -> tableService.getTableNameResponses("default", databaseName, tableName));
         Assert.assertEquals(1, response.getDatabases().size());
         Assert.assertEquals(2, response.getDatabases().get(0).getTables().size());
 
-        response = tableService.getProjectTables("default", "", 0, 14, true,
+        response = tableService.getProjectTables("default", "", 0, 14, true, true,
                 (databaseName, tableName) -> tableService.getTableNameResponses("default", databaseName, tableName));
         Assert.assertEquals(3, response.getDatabases().size());
         Assert.assertEquals(21,
                 response.getDatabases().get(0).getTables().size() + response.getDatabases().get(1).getTables().size()
                         + response.getDatabases().get(2).getTables().size());
 
-        response = tableService.getProjectTables("default", "TEST", 0, 14, true,
+        response = tableService.getProjectTables("default", "TEST", 0, 14, true, true,
                 (databaseName, tableName) -> tableService.getTableNameResponses("default", databaseName, tableName));
         Assert.assertEquals(2, response.getDatabases().size());
         Assert.assertEquals(13,
                 response.getDatabases().get(0).getTables().size() + response.getDatabases().get(1).getTables().size());
 
-        response = tableService.getProjectTables("default", "EDW.", 0, 14, true,
+        response = tableService.getProjectTables("default", "EDW.", 0, 14, true, true,
                 (databaseName, tableName) -> tableService.getTableNameResponses("default", databaseName, tableName));
         Assert.assertEquals(1, response.getDatabases().size());
         Assert.assertEquals(3, response.getDatabases().get(0).getTables().size());
 
-        response = tableService.getProjectTables("default", "EDW.", 0, 14, false,
+        response = tableService.getProjectTables("default", "EDW.", 0, 14, true, false,
                 (databaseName, tableName) -> tableService.getTableDesc("default", true, tableName, databaseName, true));
         Assert.assertEquals(1, response.getDatabases().size());
         Assert.assertEquals(3, response.getDatabases().get(0).getTables().size());
 
-        response = tableService.getProjectTables("default", "DEFAULT.TEST_ORDER", 0, 14, false,
+        response = tableService.getProjectTables("default", "DEFAULT.TEST_ORDER", 0, 14, true, false,
                 (databaseName, tableName) -> tableService.getTableDesc("default", true, tableName, databaseName, true));
         Assert.assertEquals(1, response.getDatabases().size());
         Assert.assertEquals(1, response.getDatabases().get(0).getTables().size());
 
-        response = tableService.getProjectTables("default", ".TEST_ORDER", 0, 14, false,
+        response = tableService.getProjectTables("default", ".TEST_ORDER", 0, 14, true, false,
                 (databaseName, tableName) -> tableService.getTableDesc("default", true, tableName, databaseName, true));
         Assert.assertEquals(0, response.getDatabases().size());
 

@@ -178,10 +178,6 @@ public class StringUtil {
         return r.toArray(new String[r.size()]);
     }
 
-    public static String[] split(String str, String splitBy) {
-        return str.split(splitBy);
-    }
-
     public static String[] splitByComma(String str) {
         return split(str, ",");
     }
@@ -215,6 +211,10 @@ public class StringUtil {
 
     public static boolean validateBoolean(String s) {
         return "true".equals(s) || "false".equals(s);
+    }
+
+    public static String[] split(String str, String splitBy) {
+        return str.split(splitBy);
     }
 
 }

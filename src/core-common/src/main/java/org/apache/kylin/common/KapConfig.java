@@ -22,12 +22,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.FileUtils;
 
+@Slf4j
 @Clarification(priority = Clarification.Priority.MAJOR, msg = "Enterprise")
 public class KapConfig {
 
@@ -248,7 +250,7 @@ public class KapConfig {
     }
 
     /**
-     *  Smart modeling
+     * Smart modeling
      */
     public String getSmartModelingConf(String conf) {
         return config.getOptional("kylin.smart.conf." + conf, null);
@@ -515,16 +517,21 @@ public class KapConfig {
 
     public String sparderFiles() {
         try {
-            File storageFile = new File(getKylinConfig().getLogSparkExecutorPropertiesFile());
+            File storageFile = new File(config.getLogSparkExecutorPropertiesFile());
             String additionalFiles = storageFile.getCanonicalPath();
-            storageFile = new File(getKylinConfig().getLogSparkAppMasterPropertiesFile());
+            storageFile = new File(config.getLogSparkAppMasterPropertiesFile());
             if (additionalFiles.isEmpty()) {
                 additionalFiles = storageFile.getCanonicalPath();
             } else {
                 additionalFiles = additionalFiles + "," + storageFile.getCanonicalPath();
             }
+            if (config.asyncProfilingEnabled()) {
+                additionalFiles = additionalFiles + "," + config.getAsyncProfilerFiles();
+            }
+            log.info("Sparder additionalFiles: {}", additionalFiles);
             return config.getOptional("kylin.query.engine.sparder-additional-files", additionalFiles);
         } catch (IOException e) {
+            log.error("Add sparderFiles failed, " + e);
             return "";
         }
     }

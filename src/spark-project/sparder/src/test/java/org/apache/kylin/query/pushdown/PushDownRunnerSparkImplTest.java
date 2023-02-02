@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
@@ -70,7 +70,7 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
     @Test
     public void testCast() {
         PushDownRunnerSparkImpl pushDownRunnerSpark = new PushDownRunnerSparkImpl();
-        pushDownRunnerSpark.init(null);
+        pushDownRunnerSpark.init(null, "tpch");
 
         List<List<String>> returnRows = Lists.newArrayList();
         List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
@@ -108,7 +108,7 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
     @Test
     public void testPushDownRunnerSpark() {
         PushDownRunnerSparkImpl pushDownRunnerSpark = new PushDownRunnerSparkImpl();
-        pushDownRunnerSpark.init(null);
+        pushDownRunnerSpark.init(null, "tpch");
 
         List<List<String>> returnRows = Lists.newArrayList();
         List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
@@ -124,7 +124,7 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
     @Test
     public void testPushDownRunnerSparkWithDotColumn() {
         PushDownRunnerSparkImpl pushDownRunnerSpark = new PushDownRunnerSparkImpl();
-        pushDownRunnerSpark.init(null);
+        pushDownRunnerSpark.init(null, "tpch");
 
         List<List<String>> returnRows = Lists.newArrayList();
         List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
@@ -140,7 +140,7 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
     @Test
     public void testSelectTwoSameExpr() {
         PushDownRunnerSparkImpl pushDownRunnerSpark = new PushDownRunnerSparkImpl();
-        pushDownRunnerSpark.init(null);
+        pushDownRunnerSpark.init(null, "tpch");
 
         List<List<String>> returnRows = Lists.newArrayList();
         List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
@@ -156,7 +156,7 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
     @Test
     public void testCaseSensitiveOnAlias() {
         PushDownRunnerSparkImpl pushDownRunnerSpark = new PushDownRunnerSparkImpl();
-        pushDownRunnerSpark.init(null);
+        pushDownRunnerSpark.init(null, "tpch");
 
         List<List<String>> returnRows = Lists.newArrayList();
         List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();

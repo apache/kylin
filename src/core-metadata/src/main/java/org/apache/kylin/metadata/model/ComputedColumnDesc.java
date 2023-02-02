@@ -32,7 +32,6 @@ import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.dialect.HiveSqlDialect;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.commons.lang.StringUtils;
@@ -40,7 +39,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
-import org.apache.kylin.common.util.ModifyTableNameSqlVisitor;
+import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -211,11 +210,7 @@ public class ComputedColumnDesc implements Serializable {
         return innerExpression;
     }
 
-    public void changeTableAlias(String oldAlias, String newAlias) {
-        SqlVisitor<Object> modifyAlias = new ModifyTableNameSqlVisitor(oldAlias, newAlias);
-        SqlNode sqlNode = CalciteParser.getExpNode(getExpression());
-        sqlNode.accept(modifyAlias);
-        setExpression(sqlNode.toSqlString(HiveSqlDialect.DEFAULT).toString());
+    public boolean isAutoCC() {
+        return getColumnName().startsWith(ComputedColumnUtil.CC_NAME_PREFIX);
     }
-
 }

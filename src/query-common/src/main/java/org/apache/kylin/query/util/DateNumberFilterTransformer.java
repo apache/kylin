@@ -34,10 +34,11 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.util.Litmus;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
+import org.apache.kylin.query.IQueryTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DateNumberFilterTransformer implements KapQueryUtil.IQueryTransformer {
+public class DateNumberFilterTransformer implements IQueryTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(DateNumberFilterTransformer.class);
 
@@ -85,8 +86,8 @@ public class DateNumberFilterTransformer implements KapQueryUtil.IQueryTransform
 
     static class SqlTimeFilterMatcher extends AbstractSqlVisitor {
         private final List<Pair<String, Pair<Integer, Integer>>> timeFilterPositions = new ArrayList<>();
-        private static final List<String> SUPPORT_FUN = Arrays.asList("=", "IN", "NOT IN", "BETWEEN", "NOT BETWEEN", "<", ">", "<=",
-                ">=", "!=", "<>");
+        private static final List<String> SUPPORT_FUN = Arrays.asList("=", "IN", "NOT IN", "BETWEEN", "NOT BETWEEN",
+                "<", ">", "<=", ">=", "!=", "<>");
         private static final List<String> YEAR_FUN = Arrays.asList("YEAR", "{fn YEAR}");
         private static final List<String> MONTH_FUN = Arrays.asList("MONTH", "{fn MONTH}");
         private static final List<String> DAY_FUN = Arrays.asList("DAYOFMONTH", "{fn DAYOFMONTH}");
@@ -421,8 +422,8 @@ public class DateNumberFilterTransformer implements KapQueryUtil.IQueryTransform
                         }
                     } else if (isYearMultiplicationExpression(multiplier, tmpExpression)
                             && (colName == null || colName.equalsDeep(tmpExpression.operand(0), Litmus.IGNORE))) {
-                            colName = tmpExpression.operand(0);
-                            yearExpression = tmpExpression;
+                        colName = tmpExpression.operand(0);
+                        yearExpression = tmpExpression;
                     }
                 }
             }

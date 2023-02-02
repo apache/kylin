@@ -25,14 +25,14 @@ import org.apache.kylin.common.exception.{KylinException, QueryErrorCode}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparderEnv
 
-import java.io.OutputStream
+import java.io.{File, OutputStream}
 import java.nio.file.Files
 import java.util.concurrent.CountDownLatch
 
 
 object AsyncProfiling extends Logging {
 
-  private val localCacheDir = Files.createTempDirectory("ke-async-profiler-result-").toFile
+  var localCacheDir: File = Files.createTempDirectory("ke-async-profiler-result-").toFile
   localCacheDir.deleteOnExit()
   private val resultCollectionTimeout = KylinConfig.getInstanceFromEnv.asyncProfilingResultTimeout
   private val profilingTimeout = KylinConfig.getInstanceFromEnv.asyncProfilingProfileTimeout
@@ -57,6 +57,11 @@ object AsyncProfiling extends Logging {
         throw new KylinException(QueryErrorCode.PROFILING_ALREADY_STARTED, "profiling is already started, stop it first")
       }
       logDebug("profiler start")
+      // Linux may periodically clean up the files in the /tmp directory
+      if (!localCacheDir.exists()) {
+        localCacheDir = Files.createTempDirectory("ke-async-profiler-result-").toFile
+        asyncProfilerUtils.build(localCacheDir)
+      }
       asyncProfilerUtils.cleanLocalCache()
       // expecting driver + count(executor) amount of results
       cachedResult = new CountDownLatch(

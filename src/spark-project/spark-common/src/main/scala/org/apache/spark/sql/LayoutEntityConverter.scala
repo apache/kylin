@@ -49,11 +49,11 @@ object LayoutEntityConverter {
         bucketSpec = Option(bucketSp))
     }
 
-    def toSchema() : StructType = {
+    def toSchema(): StructType = {
       genCuboidSchemaFromNCuboidLayout(layoutEntity)
     }
 
-    def toExactlySchema() : StructType = {
+    def toExactlySchema(): StructType = {
       genCuboidSchemaFromNCuboidLayout(layoutEntity, true)
     }
   }
@@ -122,6 +122,7 @@ object LayoutEntityConverter {
       genSparkStructField(i._1.toString, i._2)
     }.toSeq ++ measures)
   }
+
   def genBucketSpec(layoutEntity: LayoutEntity, partitionColumn: Set[String]): Option[BucketSpec] = {
     if (layoutEntity.getShardByColumns.isEmpty) {
       Option(BucketSpec(layoutEntity.getBucketNum,
@@ -161,6 +162,7 @@ object LayoutEntityConverter {
       case "COLLECT_SET" =>
         val parameter = function.getParameters.get(0)
         ArrayType(SparderTypeUtil.toSparkType(parameter.getColRef.getType))
+      case "SUM_LC" => BinaryType
       case _ => SparderTypeUtil.toSparkType(function.getReturnDataType)
     }
   }

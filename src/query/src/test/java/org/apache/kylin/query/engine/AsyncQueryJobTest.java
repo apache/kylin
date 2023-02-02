@@ -17,11 +17,11 @@
  */
 package org.apache.kylin.query.engine;
 
-import static org.apache.kylin.query.util.AsyncQueryUtil.ASYNC_QUERY_JOB_ID_PRE;
 import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_DIST_META_URL;
 import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_JOB_ID;
 import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_QUERY_CONTEXT;
 import static org.apache.kylin.metadata.cube.model.NBatchConstants.P_QUERY_PARAMS;
+import static org.apache.kylin.query.util.AsyncQueryUtil.ASYNC_QUERY_JOB_ID_PRE;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,11 +45,11 @@ import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.ShellException;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.query.util.QueryParams;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -217,7 +217,7 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
                 rawResourceMap.put(zipEntry.getName(), raw);
             }
         }
-        Assert.assertEquals(83, rawResourceMap.size());
+        Assert.assertEquals(84, rawResourceMap.size());
     }
 
     private void testKylinConfig(FileSystem workingFileSystem, FileStatus metaFileStatus) throws IOException {

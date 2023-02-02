@@ -179,7 +179,7 @@ class SnapshotSourceTableStatsServiceTest extends SparderBaseFunSuite with Local
       + Constants.SOURCE_TABLE_STATS + "/" + tableIdentity)
     try {
       val out = fs.create(statsFile, true)
-      try out.write(new String().getBytes())
+      try out.write(new String("{}").getBytes())
       catch {
         case e: IOException =>
           log.error(s"overwrite stats file [$statsFile] failed!", e)
@@ -482,6 +482,8 @@ class SnapshotSourceTableStatsServiceTest extends SparderBaseFunSuite with Local
       val tableIdentity = table.qualifiedName.toLowerCase(Locale.ROOT)
       writeEmptyJsonFile(tableIdentity)
       writeMarkFile()
+      await.pollDelay(Duration.ONE_SECOND).until(() => true)
+
       var checkStatsFile = snapshotSourceTableStatsService.checkSnapshotSourceTableStatsJsonFile(DEFAULT_PROJECT, tableIdentity)
       assertFalse(checkStatsFile)
 
@@ -507,6 +509,8 @@ class SnapshotSourceTableStatsServiceTest extends SparderBaseFunSuite with Local
       val tableIdentity = table.qualifiedName.toLowerCase(Locale.ROOT)
       writeEmptyJsonFile(tableIdentity)
       writeMarkFile()
+      await.pollDelay(Duration.ONE_SECOND).until(() => true)
+
       var checkStatsFile = snapshotSourceTableStatsService.checkSnapshotSourceTableStatsJsonFile(DEFAULT_PROJECT, tableIdentity)
       assertFalse(checkStatsFile)
 
@@ -516,6 +520,7 @@ class SnapshotSourceTableStatsServiceTest extends SparderBaseFunSuite with Local
       checkStatsFile = snapshotSourceTableStatsService.checkSnapshotSourceTableStatsJsonFile(DEFAULT_PROJECT, tableIdentity)
       assertTrue(checkStatsFile)
 
+      await.pollDelay(Duration.ONE_SECOND).until(() => true)
       writeMarkFile()
       checkStatsFile = snapshotSourceTableStatsService.checkSnapshotSourceTableStatsJsonFile(DEFAULT_PROJECT, tableIdentity)
       assertFalse(checkStatsFile)

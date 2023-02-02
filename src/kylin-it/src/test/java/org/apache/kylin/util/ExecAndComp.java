@@ -46,6 +46,7 @@ import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.QueryParams;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
@@ -55,7 +56,6 @@ import org.apache.spark.sql.util.SparderTypeUtil;
 import io.kyligence.kap.guava20.shaded.common.base.Preconditions;
 import io.kyligence.kap.guava20.shaded.common.collect.Lists;
 import io.kyligence.kap.guava20.shaded.common.collect.Sets;
-import org.apache.kylin.query.util.KapQueryUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -138,7 +138,7 @@ public class ExecAndComp {
             schemaFilePath = sqlPath.substring(0, index) + "/result-" + joinType + sqlPath.substring(index) + ".schema";
         }
         try {
-            if (Files.exists(Paths.get(resultFilePath)) && Files.exists(Paths.get(schemaFilePath))) {
+            if (index > 0 && Files.exists(Paths.get(resultFilePath)) && Files.exists(Paths.get(schemaFilePath))) {
                 StructType schema = StructType.fromDDL(new String(Files.readAllBytes(Paths.get(schemaFilePath))));
                 val structs = Arrays.stream(schema.fields()).map(SparderTypeUtil::convertSparkFieldToJavaField)
                         .collect(Collectors.toList());
@@ -174,8 +174,8 @@ public class ExecAndComp {
         }
 
         QueryParams queryParams = new QueryParams(prj, compareSql, "default", false);
-        queryParams.setKylinConfig(KapQueryUtil.getKylinConfig(prj));
-        String afterConvert = KapQueryUtil.massagePushDownSql(queryParams);
+        queryParams.setKylinConfig(NProjectManager.getProjectConfig(prj));
+        String afterConvert = QueryUtil.massagePushDownSql(queryParams);
         // Table schema comes from csv and DATABASE.TABLE is not supported.
         String sqlForSpark = removeDataBaseInSql(afterConvert);
         val ds = querySparkSql(sqlForSpark);
@@ -304,9 +304,9 @@ public class ExecAndComp {
     public static Dataset<Row> queryModelWithoutCompute(String prj, String sql, List<String> parameters) {
         try {
             SparderEnv.skipCompute();
-            QueryParams queryParams = new QueryParams(KapQueryUtil.getKylinConfig(prj), sql, prj, 0, 0, "DEFAULT",
+            QueryParams queryParams = new QueryParams(NProjectManager.getProjectConfig(prj), sql, prj, 0, 0, "DEFAULT",
                     true);
-            sql = KapQueryUtil.massageSql(queryParams);
+            sql = QueryUtil.massageSql(queryParams);
             List<String> parametersNotNull = parameters == null ? new ArrayList<>() : parameters;
             return queryModel(prj, sql, parametersNotNull);
         } finally {
@@ -336,9 +336,9 @@ public class ExecAndComp {
     }
 
     public static QueryResult queryModelWithMassage(String prj, String sqlText, List<String> parameters) {
-        QueryParams queryParams = new QueryParams(KapQueryUtil.getKylinConfig(prj), sqlText, prj, 0, 0, "DEFAULT",
+        QueryParams queryParams = new QueryParams(NProjectManager.getProjectConfig(prj), sqlText, prj, 0, 0, "DEFAULT",
                 true);
-        sqlText = KapQueryUtil.massageSql(queryParams);
+        sqlText = QueryUtil.massageSql(queryParams);
         if (sqlText == null)
             throw new RuntimeException("Sorry your SQL is null...");
 
@@ -360,8 +360,7 @@ public class ExecAndComp {
         // SQLS like "where 1<>1" will be optimized and run locally and no dataset will be returned
         String prevRunLocalConf = Unsafe.setProperty("kylin.query.engine.run-constant-query-locally", "FALSE");
         try {
-            QueryExec queryExec = new QueryExec(prj,
-                    NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(prj).getConfig(), true);
+            QueryExec queryExec = new QueryExec(prj, NProjectManager.getProjectConfig(prj), true);
             if (parameters != null) {
                 for (int i = 0; i < parameters.size(); i++) {
                     queryExec.setPrepareParam(i, parameters.get(i));
@@ -402,7 +401,7 @@ public class ExecAndComp {
     }
 
     public static void execAndCompareQueryList(List<String> queries, String prj, CompareLevel compareLevel,
-                                               String joinType) {
+            String joinType) {
         List<Pair<String, String>> transformed = queries.stream().map(q -> Pair.newPair("", q))
                 .collect(Collectors.toList());
         execAndCompare(transformed, prj, compareLevel, joinType);

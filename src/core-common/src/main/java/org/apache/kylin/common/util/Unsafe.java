@@ -24,12 +24,10 @@ import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.SystemPropertiesCache;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kylin.common.SystemPropertiesCache;
 
 /**
  * Contains methods that call JDK methods that the
@@ -79,10 +77,6 @@ public class Unsafe {
     public static String format(Locale locale, String pattern, Object... arguments) {
         MessageFormat temp = new MessageFormat(pattern, locale);
         return temp.format(arguments);
-    }
-
-    public static String getUrlFromHttpServletRequest(HttpServletRequest request) {
-        return request.getRequestURL().toString();
     }
 
     /** Reflection usage to work around access flags fails with SecurityManagers

@@ -29,11 +29,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.sdk.datasource.framework.JdbcConnector;
 import org.apache.kylin.sdk.datasource.framework.SourceConnectorFactory;
 import org.apache.kylin.source.adhocquery.IPushDownRunner;
-import org.apache.kylin.metadata.project.NProjectManager;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,6 +44,11 @@ public class PushDownRunnerSDKImpl implements IPushDownRunner {
     @Override
     public void init(KylinConfig config) {
         dataSource = SourceConnectorFactory.getJdbcConnector(config);
+    }
+
+    @Override
+    public void init(KylinConfig config, String project) {
+        init(config);
     }
 
     @Override

@@ -31,6 +31,7 @@ server:
     context-path: "/kylin"
     encoding:
       charset: UTF-8
+      force: true
   max-http-header-size: 32KB
 
 management:

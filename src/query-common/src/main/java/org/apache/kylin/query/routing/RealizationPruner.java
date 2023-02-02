@@ -52,21 +52,21 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.model.ISourceAware;
-import org.apache.kylin.metadata.model.PartitionDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
 import org.apache.kylin.metadata.model.MultiPartitionKeyMapping;
 import org.apache.kylin.metadata.model.MultiPartitionKeyMappingProvider;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OLAPTableScan;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -152,6 +152,10 @@ public class RealizationPruner {
         // sql filter condition is always true
         if (simplifiedSqlFilter.isAlwaysTrue()) {
             log.info("SQL filter condition is always true, pruning no segment");
+            return allReadySegments;
+        }
+
+        if (dateFormat == null) {
             return allReadySegments;
         }
 

@@ -17,11 +17,11 @@
  */
 package org.apache.kylin.query.runtime.plan
 
-import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.calcite.rel.core.AggregateCall
 import org.apache.calcite.rex.RexLiteral
 import org.apache.calcite.sql.SqlKind
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.metadata.model.FunctionDesc
 import org.apache.kylin.query.relnode.{KapAggregateRel, KapProjectRel, KylinAggregateCall, OLAPAggregateRel}
 import org.apache.kylin.query.util.RuntimeHelper
@@ -43,7 +43,8 @@ import scala.collection.JavaConverters._
 // scalastyle:off
 object AggregatePlan extends LogEx {
   val binaryMeasureType =
-    List("PERCENTILE", "PERCENTILE_APPROX", "INTERSECT_COUNT", "COUNT_DISTINCT", "BITMAP_UUID", FunctionDesc.FUNC_BITMAP_BUILD)
+    List("PERCENTILE", "PERCENTILE_APPROX", "INTERSECT_COUNT", "COUNT_DISTINCT", "BITMAP_UUID",
+      FunctionDesc.FUNC_BITMAP_BUILD, FunctionDesc.FUNC_SUM_LC)
 
   def agg(inputs: java.util.List[DataFrame],
           rel: KapAggregateRel): DataFrame = logTime("aggregate", debug = true) {
@@ -83,6 +84,10 @@ object AggregatePlan extends LogEx {
             case FunctionDesc.FUNC_BITMAP_BUILD =>
               val aggName = SchemaProcessor.replaceToAggravateSchemaName(index, "BITMAP_BUILD_DECODE", hash, argNames: _*)
               KapFunctions.precise_bitmap_build_decode(columnName.head).alias(aggName)
+            case FunctionDesc.FUNC_SUM_LC =>
+              val aggName = SchemaProcessor.replaceToAggravateSchemaName(index, "SUM_LC_DECODE", hash, argNames: _*)
+              val sparkDataType = SparderTypeUtil.toSparkType(dataType)
+              KapFunctions.k_sum_lc_decode(columnName.head, sparkDataType.json).alias(aggName)
             case _ =>
               col(schemaNames.apply(call.getArgList.get(0)))
           }
@@ -185,6 +190,8 @@ object AggregatePlan extends LogEx {
         } else if (funcName.equalsIgnoreCase(FunctionDesc.FUNC_PERCENTILE)) {
           require(columnName.size == 2, s"Input columns size ${columnName.size} don't equal to 2.")
           KapFunctions.k_percentile(columnName.head, columnName(1), dataType.getPrecision).alias(aggName)
+        } else if (funcName.equalsIgnoreCase(FunctionDesc.FUNC_SUM_LC)) {
+          KapFunctions.k_sum_lc(columnName.head, SparderTypeUtil.toSparkType(dataType)).alias(aggName)
         } else {
           callUDF(registeredFuncName, columnName.toList: _*).alias(aggName)
         }

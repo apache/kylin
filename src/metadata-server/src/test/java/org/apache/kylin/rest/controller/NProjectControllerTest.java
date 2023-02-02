@@ -46,6 +46,7 @@ import org.apache.kylin.rest.request.JdbcSourceInfoRequest;
 import org.apache.kylin.rest.request.JobNotificationConfigRequest;
 import org.apache.kylin.rest.request.OwnerChangeRequest;
 import org.apache.kylin.rest.request.ProjectConfigRequest;
+import org.apache.kylin.rest.request.ProjectExclusionRequest;
 import org.apache.kylin.rest.request.ProjectGeneralInfoRequest;
 import org.apache.kylin.rest.request.ProjectRequest;
 import org.apache.kylin.rest.request.PushDownConfigRequest;
@@ -104,7 +105,7 @@ public class NProjectControllerTest extends NLocalFileMetadataTestCase {
     @Before
     public void setup() {
         createTestMetadata();
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
 
         mockMvc = MockMvcBuilders.standaloneSetup(nProjectController).defaultRequest(MockMvcRequestBuilders.get("/"))
                 .build();
@@ -243,9 +244,10 @@ public class NProjectControllerTest extends NLocalFileMetadataTestCase {
     public void testUpdateJobNotificationConfig() throws Exception {
         val request = new JobNotificationConfigRequest();
 
-        request.setJobErrorNotificationEnabled(true);
+        request.setJobNotificationStates(Arrays.asList("Succeed", "Error", "Discard"));
         request.setDataLoadEmptyNotificationEnabled(true);
         request.setJobNotificationEmails(Arrays.asList("fff@g.com"));
+        request.setMetadataPersistNotificationEnabled(false);
 
         Mockito.doNothing().when(projectService).updateJobNotificationConfig("default", request);
         mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{project}/job_notification_config", "default")
@@ -467,7 +469,7 @@ public class NProjectControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         Mockito.verify(nProjectController).getNonCustomProjectConfigs();
-        Assert.assertEquals(19, getTestConfig().getNonCustomProjectConfigs().size());
+        Assert.assertEquals(20, getTestConfig().getNonCustomProjectConfigs().size());
     }
 
     @Test
@@ -531,5 +533,17 @@ public class NProjectControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
         Mockito.verify(projectService).updateJdbcInfo(any(), Mockito.any());
+    }
+
+    @Test
+    public void testUpdateTableExclusionRule() throws Exception {
+        ProjectExclusionRequest request = new ProjectExclusionRequest();
+        request.setTableExclusionEnabled(true);
+        Mockito.doNothing().when(projectService).updateTableExclusionRule("project", request);
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{project}/exclusion_enabled", "project")
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        Mockito.verify(nProjectController).updateTableExclusionConfig("project", request);
     }
 }

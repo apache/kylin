@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,8 +37,10 @@ import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexExecutorImpl;
@@ -50,11 +51,9 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.common.ReadFsSwitch;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.calcite.KylinRelDataTypeSystem;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.util.AsyncQueryUtil;
-import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.engine.exec.ExecuteResult;
 import org.apache.kylin.query.engine.exec.calcite.CalciteQueryPlanExec;
@@ -63,8 +62,11 @@ import org.apache.kylin.query.engine.meta.SimpleDataContext;
 import org.apache.kylin.query.engine.view.ViewAnalyzer;
 import org.apache.kylin.query.mask.QueryResultMasks;
 import org.apache.kylin.query.relnode.KapAggregateRel;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.query.util.CalcitePlanRouterVisitor;
 import org.apache.kylin.query.util.HepUtils;
+import org.apache.kylin.query.util.QueryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,8 +168,7 @@ public class QueryExec {
                 return new QueryResult();
             }
 
-            if (kylinConfig.getEmptyResultForSelectStar()
-                    && sql.toLowerCase(Locale.ROOT).matches("^select\\s+\\*\\p{all}*")
+            if (kylinConfig.getEmptyResultForSelectStar() && QueryUtil.isSelectStarStatement(sql)
                     && !QueryContext.current().getQueryTagInfo().isAsyncQuery()) {
                 return new QueryResult(Lists.newArrayList(), 0, resultFields);
             }
@@ -418,6 +419,10 @@ public class QueryExec {
             KapAggregateRel aggregateRel = (KapAggregateRel) rel;
             if (aggregateRel.getAggCallList().stream().anyMatch(
                     aggCall -> FunctionDesc.FUNC_BITMAP_BUILD.equalsIgnoreCase(aggCall.getAggregation().getName()))) {
+                return false;
+            }
+            if (aggregateRel.getInput() instanceof Values
+                    && aggregateRel.getAggCallList().stream().anyMatch(AggregateCall::isDistinct)) {
                 return false;
             }
         }

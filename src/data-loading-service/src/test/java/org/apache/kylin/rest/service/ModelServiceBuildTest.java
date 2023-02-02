@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
@@ -93,8 +94,8 @@ import org.apache.kylin.metadata.model.util.ExpandableMeasureUtil;
 import org.apache.kylin.metadata.query.QueryTimesResponse;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
-import org.apache.kylin.query.util.KapQueryUtil;
 import org.apache.kylin.query.util.PushDownUtil;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.request.ModelRequest;
@@ -125,6 +126,7 @@ import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import lombok.val;
@@ -198,8 +200,8 @@ public class ModelServiceBuildTest extends SourceTestCase {
         ReflectionTestUtils.setField(modelBuildService, "userGroupService", userGroupService);
         ReflectionTestUtils.setField(semanticService, "expandableMeasureUtil",
                 new ExpandableMeasureUtil((model, ccDesc) -> {
-                    String ccExpression = KapQueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
-                            AclPermissionUtil.prepareQueryContextACLInfo(model.getProject(),
+                    String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
+                            AclPermissionUtil.createAclInfo(model.getProject(),
                                     semanticService.getCurrentUserGroups()));
                     ccDesc.setInnerExpression(ccExpression);
                     ComputedColumnEvalUtil.evaluateExprAndType(model, ccDesc);
@@ -1645,6 +1647,50 @@ public class ModelServiceBuildTest extends SourceTestCase {
     @Test
     public void testProposeDateFormat() {
         Assert.assertThrows(KylinException.class, () -> DateFormat.proposeDateFormat("not_exits"));
+    }
+
+    @Test
+    public void testGetMaxConcurrentJobLimitByProject() {
+        String project = getProject();
+        val modelId = "b780e4e4-69af-449e-b09f-05c90dfa04b6";
+        val segmentId = "ff839b0b-2c23-4420-b332-0df70e36c343";
+        val buildPartitions = Lists.<String[]> newArrayList();
+        buildPartitions.add(new String[] { "ASIA" });
+        buildPartitions.add(new String[] { "EUROPE" });
+        buildPartitions.add(new String[] { "MIDDLE EAST" });
+        buildPartitions.add(new String[] { "AMERICA" });
+        buildPartitions.add(new String[] { "MOROCCO" });
+        buildPartitions.add(new String[] { "INDONESIA" });
+
+        overwriteSystemProp("kylin.job.max-concurrent-jobs", "1");
+        Assert.assertEquals(1,
+                modelBuildService.getMaxConcurrentJobLimitByProject(modelBuildService.getConfig(), project));
+        try {
+            modelBuildService.buildSegmentPartitionByValue(getProject(), modelId, segmentId, buildPartitions, true,
+                    false, 0, null, null);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof KylinException);
+            Assert.assertEquals(JOB_CONCURRENT_SUBMIT_LIMIT.getMsg(5), e.getMessage());
+            Assert.assertEquals(0, getRunningExecutables(getProject(), modelId).size());
+        }
+
+        val segmentId2 = "d2edf0c5-5eb2-4968-9ad5-09efbf659324";
+        Map<String, String> testOverrideP = Maps.newLinkedHashMap();
+        testOverrideP.put("kylin.job.max-concurrent-jobs", "2");
+        projectService.updateProjectConfig(project, testOverrideP);
+        Assert.assertEquals(2,
+                modelBuildService.getMaxConcurrentJobLimitByProject(modelBuildService.getConfig(), project));
+        try {
+            modelBuildService.buildSegmentPartitionByValue(getProject(), modelId, segmentId2, buildPartitions, true,
+                    false, 0, null, null);
+        } catch (Exception e) {
+            Assert.fail();
+        }
+        Assert.assertEquals(6, getRunningExecutables(getProject(), modelId).size());
+
+        Assert.assertEquals(1,
+                modelBuildService.getMaxConcurrentJobLimitByProject(modelBuildService.getConfig(), "xxxxx"));
     }
 
 }

@@ -18,16 +18,19 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
-import io.kyligence.kap.secondstorage.SecondStorageConstants;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.val;
+import static java.util.stream.Collectors.joining;
+import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCleanUpTransactionalTableJob;
+import static org.apache.kylin.job.factory.JobFactoryConstant.CUBE_JOB_FACTORY;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -47,24 +50,22 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.PartitionStatusEnum;
-import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
 import org.apache.kylin.metadata.job.JobBucket;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
-import static java.util.stream.Collectors.joining;
-import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCleanUpTransactionalTableJob;
-import static org.apache.kylin.job.factory.JobFactoryConstant.CUBE_JOB_FACTORY;
+import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
+import io.kyligence.kap.secondstorage.SecondStorageConstants;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.val;
 
 public class NSparkCubingJob extends DefaultExecutableOnModel {
 
@@ -96,15 +97,15 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
 
     @VisibleForTesting
     public static NSparkCubingJob create(Set<NDataSegment> segments, Set<LayoutEntity> layouts, String submitter,
-                                         Set<JobBucket> buckets) {
+            Set<JobBucket> buckets) {
         return create(segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, RandomUtil.randomUUIDStr(), null, null,
                 buckets);
     }
 
     @VisibleForTesting
     public static NSparkCubingJob create(Set<NDataSegment> segments, Set<LayoutEntity> layouts, String submitter,
-                                         JobTypeEnum jobType, String jobId, Set<String> ignoredSnapshotTables, Set<Long> partitions,
-                                         Set<JobBucket> buckets) {
+            JobTypeEnum jobType, String jobId, Set<String> ignoredSnapshotTables, Set<Long> partitions,
+            Set<JobBucket> buckets) {
         val params = new JobFactory.JobBuildParams(segments, layouts, submitter, jobType, jobId, null,
                 ignoredSnapshotTables, partitions, buckets, Maps.newHashMap());
         return innerCreate(params);
@@ -175,12 +176,6 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         job.setParam(NBatchConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
         job.setParam(NBatchConstants.P_DATA_RANGE_START, String.valueOf(startTime));
         job.setParam(NBatchConstants.P_DATA_RANGE_END, String.valueOf(endTime));
-        FavoriteRuleManager ruleManager = FavoriteRuleManager.getInstance(kylinConfig, df.getProject());
-        Set<String> excludedTables = ruleManager.getExcludedTables();
-        // if excludedTables contains factTable, remove factTable in excludedTables
-        val rootFactTableName = df.getModel().getRootFactTableName();
-        excludedTables.remove(rootFactTableName);
-        job.setParam(NBatchConstants.P_EXCLUDED_TABLES, String.join(",", excludedTables));
         if (CollectionUtils.isNotEmpty(ignoredSnapshotTables)) {
             job.setParam(NBatchConstants.P_IGNORED_SNAPSHOT_TABLES, String.join(",", ignoredSnapshotTables));
         }
@@ -202,7 +197,7 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
     }
 
     private static AbstractExecutable initSecondStorageDeleteIndex(Set<LayoutEntity> toBeDeletedLayouts,
-                                                                   JobTypeEnum jobType, NDataflow df, NSparkCubingJob job, KylinConfigExt config) {
+            JobTypeEnum jobType, NDataflow df, NSparkCubingJob job, KylinConfigExt config) {
         if (!SecondStorageUtil.isModelEnable(df.getProject(), job.getTargetSubject())) {
             return null;
         }
@@ -215,7 +210,7 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
     }
 
     private static AbstractExecutable initSecondStorage(Set<LayoutEntity> layouts, JobTypeEnum jobType, NDataflow df,
-                                                        NSparkCubingJob job, KylinConfigExt config) {
+            NSparkCubingJob job, KylinConfigExt config) {
         AbstractExecutable secondStorage = null;
         if (SecondStorageUtil.isModelEnable(df.getProject(), job.getTargetSubject())) {
             // can't refresh segment when second storage do rebalanced
@@ -243,7 +238,7 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
     }
 
     private static AbstractExecutable initCleanUpTransactionalTable(KylinConfig kylinConfig, NDataflow df,
-                                                                    NSparkCubingJob job, KylinConfigExt config) {
+            NSparkCubingJob job, KylinConfigExt config) {
         AbstractExecutable cleanUpTransactionalTable = null;
         Boolean isRangePartitionTable = df.getModel().getAllTableRefs().stream()
                 .anyMatch(tableRef -> tableRef.getTableDesc().isRangePartition());
@@ -257,7 +252,8 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         return cleanUpTransactionalTable;
     }
 
-    public static void setDAGRelations(AbstractExecutable job, KylinConfig config, NSparkCubingJob.NSparkCubingJobStep jobStep) {
+    public static void setDAGRelations(AbstractExecutable job, KylinConfig config,
+            NSparkCubingJob.NSparkCubingJobStep jobStep) {
         if (!StringUtils.equalsIgnoreCase(config.getJobSchedulerMode(), JobSchedulerModeEnum.CHAIN.toString())) {
             AbstractExecutable resourceDetect = jobStep.getResourceDetect();
             AbstractExecutable cubing = jobStep.getCubing();
@@ -289,14 +285,14 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
 
     public static void checkIfNeedBuildSnapshots(NSparkCubingJob job) {
         switch (job.getJobType()) {
-            case INC_BUILD:
-            case INDEX_REFRESH:
-            case INDEX_BUILD:
-                job.setParam(NBatchConstants.P_NEED_BUILD_SNAPSHOTS, "true");
-                break;
-            default:
-                job.setParam(NBatchConstants.P_NEED_BUILD_SNAPSHOTS, "false");
-                break;
+        case INC_BUILD:
+        case INDEX_REFRESH:
+        case INDEX_BUILD:
+            job.setParam(NBatchConstants.P_NEED_BUILD_SNAPSHOTS, "true");
+            break;
+        default:
+            job.setParam(NBatchConstants.P_NEED_BUILD_SNAPSHOTS, "false");
+            break;
         }
     }
 
@@ -352,41 +348,41 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         Set<String> segmentIds = getSparkCubingStep().getSegmentIds();
         Set<Long> partitions = getSparkCubingStep().getTargetPartitions();
         switch (getJobType()) {
-            case SUB_PARTITION_BUILD:
-                for (String id : segmentIds) {
-                    NDataSegment segment = df.getSegment(id);
-                    if (segment == null) {
-                        continue;
-                    }
-                    // remove partition in layouts
-                    dfManager.removeLayoutPartition(df.getId(), partitions, Sets.newHashSet(segment.getId()));
-                    // remove partition in segments
-                    dfManager.removeSegmentPartition(df.getId(), partitions, Sets.newHashSet(segment.getId()));
-                    logger.info(String.format(Locale.ROOT, "Remove partitions [%s] in segment [%s] cause to cancel job.",
-                            partitions, id));
+        case SUB_PARTITION_BUILD:
+            for (String id : segmentIds) {
+                NDataSegment segment = df.getSegment(id);
+                if (segment == null) {
+                    continue;
                 }
-                break;
-            case SUB_PARTITION_REFRESH:
-                for (String id : segmentIds) {
-                    NDataSegment segment = df.getSegment(id);
-                    if (segment == null) {
-                        continue;
-                    }
-                    segment.getMultiPartitions().forEach(partition -> {
-                        if (partitions.contains(partition.getPartitionId())
-                                && PartitionStatusEnum.REFRESH == partition.getStatus()) {
-                            partition.setStatus(PartitionStatusEnum.READY);
-                        }
-                    });
-                    val dfUpdate = new NDataflowUpdate(df.getId());
-                    dfUpdate.setToUpdateSegs(segment);
-                    dfManager.updateDataflow(dfUpdate);
-                    logger.info(String.format(Locale.ROOT,
-                            "Change partitions [%s] in segment [%s] status to READY cause to cancel job.", partitions, id));
+                // remove partition in layouts
+                dfManager.removeLayoutPartition(df.getId(), partitions, Sets.newHashSet(segment.getId()));
+                // remove partition in segments
+                dfManager.removeSegmentPartition(df.getId(), partitions, Sets.newHashSet(segment.getId()));
+                logger.info(String.format(Locale.ROOT, "Remove partitions [%s] in segment [%s] cause to cancel job.",
+                        partitions, id));
+            }
+            break;
+        case SUB_PARTITION_REFRESH:
+            for (String id : segmentIds) {
+                NDataSegment segment = df.getSegment(id);
+                if (segment == null) {
+                    continue;
                 }
-                break;
-            default:
-                break;
+                segment.getMultiPartitions().forEach(partition -> {
+                    if (partitions.contains(partition.getPartitionId())
+                            && PartitionStatusEnum.REFRESH == partition.getStatus()) {
+                        partition.setStatus(PartitionStatusEnum.READY);
+                    }
+                });
+                val dfUpdate = new NDataflowUpdate(df.getId());
+                dfUpdate.setToUpdateSegs(segment);
+                dfManager.updateDataflow(dfUpdate);
+                logger.info(String.format(Locale.ROOT,
+                        "Change partitions [%s] in segment [%s] status to READY cause to cancel job.", partitions, id));
+            }
+            break;
+        default:
+            break;
         }
     }
 

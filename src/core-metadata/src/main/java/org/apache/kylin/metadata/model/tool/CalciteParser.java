@@ -74,8 +74,8 @@ public class CalciteParser {
     }
 
     public static SqlNode parse(String sql, String project) throws SqlParseException {
-        KylinConfig kylinConfig = StringUtils.isNotEmpty(project)
-                ? NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project).getConfig()
+        KylinConfig kylinConfig = StringUtils.isNotEmpty(project) //
+                ? NProjectManager.getProjectConfig(project) //
                 : KylinConfig.getInstanceFromEnv();
         SqlParser.ConfigBuilder parserBuilder = SqlParser.configBuilder()
                 .setIdentifierMaxLength(kylinConfig.getMaxModelDimensionMeasureNameLength());

@@ -40,7 +40,7 @@ import org.apache.calcite.util.mapping.Mappings;
 import org.apache.kylin.query.relnode.KapAggregateRel;
 import org.apache.kylin.query.relnode.KapFilterRel;
 import org.apache.kylin.query.relnode.KapJoinRel;
-import org.apache.kylin.query.util.KapQueryUtil;
+import org.apache.kylin.query.util.QueryUtil;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -68,7 +68,7 @@ public class KapAggFilterTransposeRule extends RelOptRule {
         final KapJoinRel joinRel = call.rel(2);
 
         //Only one agg child of join is accepted
-        return KapQueryUtil.isJoinOnlyOneAggChild(joinRel);
+        return QueryUtil.isJoinOnlyOneAggChild(joinRel);
     }
 
     @Override

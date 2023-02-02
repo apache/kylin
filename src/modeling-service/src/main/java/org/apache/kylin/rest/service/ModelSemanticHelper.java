@@ -93,6 +93,8 @@ import org.apache.kylin.metadata.model.util.scd2.SCD2NonEquiCondSimplification;
 import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinDesc;
 import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinTableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.response.BuildIndexResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
@@ -111,8 +113,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
-import org.apache.kylin.query.util.KapQueryUtil;
 import io.kyligence.kap.secondstorage.SecondStorageUpdater;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.Setter;
@@ -130,8 +130,8 @@ public class ModelSemanticHelper extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelSemanticHelper.class);
     private final ExpandableMeasureUtil expandableMeasureUtil = new ExpandableMeasureUtil((model, ccDesc) -> {
-        String ccExpression = KapQueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
-                AclPermissionUtil.prepareQueryContextACLInfo(model.getProject(), getCurrentUserGroups()));
+        String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
+                AclPermissionUtil.createAclInfo(model.getProject(), getCurrentUserGroups()));
         ccDesc.setInnerExpression(ccExpression);
         ComputedColumnEvalUtil.evaluateExprAndType(model, ccDesc);
     });
@@ -423,7 +423,7 @@ public class ModelSemanticHelper extends BasicService {
                     .forEach(x -> x.changeTableAlias(oldAliasName, newAliasName));
             model.getAllMeasures().stream().filter(x -> !x.isTomb())
                     .forEach(x -> x.changeTableAlias(oldAliasName, newAliasName));
-            model.getComputedColumnDescs().forEach(x -> x.changeTableAlias(oldAliasName, newAliasName));
+            model.getComputedColumnDescs().forEach(x -> changeTableAlias(x, oldAliasName, newAliasName));
 
             String filterCondition = model.getFilterCondition();
             if (StringUtils.isNotEmpty(filterCondition)) {
@@ -434,6 +434,13 @@ public class ModelSemanticHelper extends BasicService {
                 model.setFilterCondition(newFilterCondition);
             }
         }
+    }
+
+    private void changeTableAlias(ComputedColumnDesc computedColumnDesc, String oldAlias, String newAlias) {
+        SqlVisitor<Object> modifyAlias = new ModifyTableNameSqlVisitor(oldAlias, newAlias);
+        SqlNode sqlNode = CalciteParser.getExpNode(computedColumnDesc.getExpression());
+        sqlNode.accept(modifyAlias);
+        computedColumnDesc.setExpression(sqlNode.toSqlString(HiveSqlDialect.DEFAULT).toString());
     }
 
     private Map<String, String> getAliasTransformMap(NDataModel originModel, NDataModel expectModel) {

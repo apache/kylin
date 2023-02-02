@@ -18,8 +18,8 @@
 
 package io.kyligence.kap.query.optrule;
 
-import static org.apache.kylin.query.util.KapQueryUtil.isCast;
-import static org.apache.kylin.query.util.KapQueryUtil.isNotNullLiteral;
+import static org.apache.kylin.query.util.QueryUtil.isCast;
+import static org.apache.kylin.query.util.QueryUtil.isNotNullLiteral;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

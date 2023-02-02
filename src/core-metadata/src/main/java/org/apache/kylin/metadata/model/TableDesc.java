@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -307,23 +306,6 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         return null;
     }
 
-    public Pair<Set<ColumnDesc>, Set<ColumnDesc>> findColumns(Set<ColumnDesc> columnDescSet) {
-        Set<ColumnDesc> existColSet = Sets.newHashSet();
-        Set<ColumnDesc> notExistColSet = Sets.newHashSet();
-        if (CollectionUtils.isEmpty(columnDescSet)) {
-            return Pair.newPair(existColSet, notExistColSet);
-        }
-        for (ColumnDesc searchColumnDesc : columnDescSet) {
-            ColumnDesc columnDesc = findColumnByName(searchColumnDesc.getName());
-            if (Objects.isNull(columnDesc)) {
-                notExistColSet.add(searchColumnDesc);
-            } else {
-                existColSet.add(columnDesc);
-            }
-        }
-        return Pair.newPair(existColSet, notExistColSet);
-    }
-
     @Override
     public String getResourcePath() {
         return concatResourcePath(getIdentity(), project);
@@ -342,6 +324,10 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
 
     public String getBackTickIdentity() {
         return getBackTickCaseSensitiveIdentity("");
+    }
+
+    public String getDoubleQuoteIdentity() {
+        return getDoubleQuoteCaseSensitiveIdentity("");
     }
 
     public String getBackTickTransactionalTableIdentity(String suffix) {
@@ -364,6 +350,13 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         return "null".equals(this.getCaseSensitiveDatabase())
                 ? String.format(Locale.ROOT, "`%s`", this.getCaseSensitiveName())
                 : String.format(Locale.ROOT, "`%s`.`%s`", this.getCaseSensitiveDatabase(),
+                        this.getCaseSensitiveName() + suffix);
+    }
+
+    private String getDoubleQuoteCaseSensitiveIdentity(String suffix) {
+        return "null".equals(this.getCaseSensitiveDatabase())
+                ? String.format(Locale.ROOT, "\"%s\"", this.getCaseSensitiveName())
+                : String.format(Locale.ROOT, "\"%s\".\"%s\"", this.getCaseSensitiveDatabase(),
                         this.getCaseSensitiveName() + suffix);
     }
 

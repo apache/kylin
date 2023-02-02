@@ -20,19 +20,20 @@ package org.apache.kylin.query.runtime.plan
 
 import com.google.common.cache.{Cache, CacheBuilder}
 import io.kyligence.kap.secondstorage.SecondStorageUtil
-
 import org.apache.calcite.rel.`type`.RelDataType
-import org.apache.kylin.common.exception.{KylinTimeoutException, NewQueryRefuseException}
+import org.apache.hadoop.fs.Path
+import org.apache.kylin.common.exception.NewQueryRefuseException
 import org.apache.kylin.common.util.{HadoopUtil, RandomUtil}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.metadata.query.{BigQueryThresholdUpdater, StructField}
 import org.apache.kylin.metadata.state.QueryShareStateManager
-import org.apache.kylin.query.SlowQueryDetector
 import org.apache.kylin.query.engine.RelColumnMetaDataExtractor
 import org.apache.kylin.query.engine.exec.ExecuteResult
-import org.apache.kylin.query.exception.UserStopQueryException
-import org.apache.kylin.query.util.{AsyncQueryUtil, SparkJobTrace, SparkQueryJobManager}
+import org.apache.kylin.query.relnode.OLAPContext
+import org.apache.kylin.query.util.{AsyncQueryUtil, QueryUtil, SparkJobTrace, SparkQueryJobManager}
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.spark.SparkConf
 import org.apache.spark.sql.execution._
 import org.apache.spark.sql.hive.QueryMetricUtils
 import org.apache.spark.sql.util.SparderTypeUtil
@@ -40,11 +41,6 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparderEnv}
 
 import java.io.{File, FileOutputStream}
 import java.util
-import org.apache.hadoop.fs.Path
-import org.apache.kylin.query.relnode.OLAPContext
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
-import org.apache.spark.SparkConf
-
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -104,7 +100,7 @@ object ResultPlan extends LogEx {
 
       // judge whether to refuse the new big query
       logDebug(s"Total source scan rows: $sumOfSourceScanRows")
-      if(QueryShareStateManager.isShareStateSwitchEnabled
+      if (QueryShareStateManager.isShareStateSwitchEnabled
         && sumOfSourceScanRows >= bigQueryThreshold
         && SparkQueryJobManager.isNewBigQueryRefuse) {
         QueryContext.current().getQueryTagInfo.setRefused(true)
@@ -158,17 +154,14 @@ object ResultPlan extends LogEx {
         }
       }, resultSize)
     } catch {
-      case e: InterruptedException =>
-        Thread.currentThread.interrupt()
-        sparkContext.cancelJobGroup(jobGroup)
-        if (SlowQueryDetector.getRunningQueries.get(Thread.currentThread()).isStopByUser) {
-          throw new UserStopQueryException("")
+      case e: Throwable =>
+        if (e.isInstanceOf[InterruptedException]) {
+          Thread.currentThread.interrupt()
+          sparkContext.cancelJobGroup(jobGroup)
+          QueryUtil.checkThreadInterrupted("Interrupted at the stage of collecting result in ResultPlan.",
+            "Current step: Collecting dataset for sparder.")
         }
-        QueryContext.current().getQueryTagInfo.setTimeout(true)
-        logWarning(s"Query timeouts after: ${KylinConfig.getInstanceFromEnv.getQueryTimeoutSeconds}s")
-        throw new KylinTimeoutException("The query exceeds the set time limit of "
-          + KylinConfig.getInstanceFromEnv.getQueryTimeoutSeconds + "s. Current step: Collecting dataset for sparder. ")
-      case e: Throwable => throw e
+        throw e
     } finally {
       QueryContext.current().setExecutionID(QueryToExecutionIDCache.getQueryExecutionID(queryId))
     }
@@ -281,7 +274,7 @@ object ResultPlan extends LogEx {
     sparkContext.setJobGroup(jobGroup,
       QueryContext.current().getMetrics.getCorrectedSql,
       interruptOnCancel = true)
-    if(kapConfig.isQueryLimitEnabled && SparderEnv.isSparkExecutorResourceLimited(sparkContext.getConf)) {
+    if (kapConfig.isQueryLimitEnabled && SparderEnv.isSparkExecutorResourceLimited(sparkContext.getConf)) {
       sparkContext.setLocalProperty(SPARK_SCHEDULER_POOL, "async_query_tasks")
     }
     df.sparkSession.sparkContext.setLocalProperty(QueryToExecutionIDCache.KYLIN_QUERY_EXECUTION_ID, queryExecutionId)
@@ -298,7 +291,7 @@ object ResultPlan extends LogEx {
           newDf = newDf.withColumnRenamed(oldColumnNames.apply(i), columnNames.get(i))
         }
         newDf.write.option("timestampFormat", dateTimeFormat).option("encoding", encode)
-        .option("charset", "utf-8").mode(SaveMode.Append).json(path)
+          .option("charset", "utf-8").mode(SaveMode.Append).json(path)
       case "parquet" =>
         val sqlContext = SparderEnv.getSparkSession.sqlContext
         sqlContext.setConf("spark.sql.parquet.writeLegacyFormat", "true")
@@ -311,10 +304,10 @@ object ResultPlan extends LogEx {
         sqlContext.setConf("spark.sql.parquet.writeLegacyFormat", "false")
       case "csv" =>
         df.write
-        .option("timestampFormat", dateTimeFormat)
-        .option("encoding", encode)
-        .option("dateFormat", "yyyy-MM-dd")
-        .option("charset", "utf-8").mode(SaveMode.Append).csv(path)
+          .option("timestampFormat", dateTimeFormat)
+          .option("encoding", encode)
+          .option("dateFormat", "yyyy-MM-dd")
+          .option("charset", "utf-8").mode(SaveMode.Append).csv(path)
       case "xlsx" => {
         val queryId = QueryContext.current().getQueryId
         val file = new File(queryId + ".xlsx")

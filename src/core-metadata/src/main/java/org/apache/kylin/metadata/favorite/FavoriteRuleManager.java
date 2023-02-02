@@ -24,11 +24,12 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,12 +159,14 @@ public class FavoriteRuleManager {
         return enabledRules;
     }
 
+    // only used by upgrade tool
     public Set<String> getExcludedTables() {
         FavoriteRule favoriteRule = getOrDefaultByName(FavoriteRule.EXCLUDED_TABLES_RULE);
-        if (!favoriteRule.isEnabled()) {
+        List<FavoriteRule.AbstractCondition> conditions = favoriteRule.getConds();
+        if (CollectionUtils.isEmpty(conditions)) {
             return Sets.newHashSet();
         }
-        FavoriteRule.Condition condition = (FavoriteRule.Condition) favoriteRule.getConds().get(0);
+        FavoriteRule.Condition condition = (FavoriteRule.Condition) conditions.get(0);
         return Arrays.stream(condition.getRightThreshold().split(",")) //
                 .map(table -> table.toUpperCase(Locale.ROOT)).collect(Collectors.toSet());
     }

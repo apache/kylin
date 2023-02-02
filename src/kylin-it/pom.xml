@@ -11,10 +11,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-it</artifactId>
+    <name>Kylin - Integration Test</name>
 
     <properties>
         <beanutils.version>1.9.4</beanutils.version>
-        <kylin.module.version>5.0.0-SNAPSHOT</kylin.module.version>
     </properties>
 
     <dependencies>
@@ -27,7 +27,6 @@
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
-            <version>${beanutils.version}</version>
         </dependency>
 
         <dependency>
@@ -231,7 +230,6 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-streaming</artifactId>
-            <version>${kylin.module.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -248,11 +246,6 @@
         <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

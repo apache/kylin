@@ -52,13 +52,13 @@ import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.realization.RoutingIndicatorException;
+import org.apache.kylin.query.exception.NoAuthorizedColsError;
 import org.apache.kylin.query.security.AccessDeniedException;
 import org.apache.kylin.source.adhocquery.IPushDownRunner;
 import org.apache.kylin.source.adhocquery.PushdownResult;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.query.exception.NoAuthorizedColsError;
 import org.codehaus.commons.compiler.CompileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +107,7 @@ public class PushDownUtil {
         }
 
         IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
-        runner.init(kylinConfig);
+        runner.init(kylinConfig, project);
         logger.debug("Query Pushdown runner {}", runner);
 
         // set pushdown engine in query context
@@ -125,7 +125,7 @@ public class PushDownUtil {
         queryParams.setKylinConfig(kylinConfig);
         queryParams.setSql(sql);
         try {
-            sql = KapQueryUtil.massagePushDownSql(queryParams);
+            sql = QueryUtil.massagePushDownSql(queryParams);
         } catch (NoAuthorizedColsError e) {
             // on no authorized cols found, return empty result
             return PushdownResult.emptyResult();
@@ -213,7 +213,7 @@ public class PushDownUtil {
         // pushdown
         IPushDownRunner runner = (IPushDownRunner) ClassUtil
                 .newInstance(kylinConfig.getPartitionCheckRunnerClassNameWithDefaultValue());
-        runner.init(kylinConfig);
+        runner.init(kylinConfig, project);
         runner.executeQuery(sql, returnRows, returnColumnMeta, project);
 
         return Pair.newPair(returnRows, returnColumnMeta);
@@ -222,7 +222,7 @@ public class PushDownUtil {
     public static void trySimplePushDownExecute(String sql, String project) throws Exception {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
-        runner.init(kylinConfig);
+        runner.init(kylinConfig, project);
         runner.executeUpdate(sql, project);
     }
 

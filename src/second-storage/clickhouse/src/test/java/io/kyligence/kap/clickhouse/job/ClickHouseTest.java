@@ -23,6 +23,7 @@ import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
 import io.kyligence.kap.secondstorage.config.ClusterInfo;
 import io.kyligence.kap.secondstorage.config.Node;
 import lombok.val;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,10 +34,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ClickHouseTest {
+public class ClickHouseTest extends NLocalFileMetadataTestCase {
 
     @Before
     public void setUp() throws Exception {
+        createTestMetadata();
         initNodeHelper();
     }
 
@@ -66,7 +68,8 @@ public class ClickHouseTest {
     @Test
     public void extractParam() {
         val param = ClickHouse.extractParam(SecondStorageNodeHelper.resolve("node01"));
-        Assert.assertEquals(2, param.size());
+        Assert.assertEquals(3, param.size());
+        Assert.assertEquals("3", param.get("connect_timeout"));
         val param2 = ClickHouse.extractParam(SecondStorageNodeHelper.resolve("node03"));
         Assert.assertEquals(0, param2.size());
     }
@@ -82,5 +85,8 @@ public class ClickHouseTest {
         Assert.assertEquals(properties.get(ClickHouse.SOCKET_TIMEOUT), cluster.getSocketTimeout());
         Assert.assertEquals(properties.get(ClickHouse.USER), node.getUser());
         Assert.assertEquals(properties.get(ClickHouse.PASSWORD), node.getPassword());
+
+        String url = ClickHouse.buildUrl(node.getIp(), node.getPort(), properties);
+        Assert.assertEquals("jdbc:clickhouse://127.0.0.1:9000?socket_timeout=600000&keepAliveTimeout=600000&password=123456&user=default&connect_timeout=3", url);
     }
 }

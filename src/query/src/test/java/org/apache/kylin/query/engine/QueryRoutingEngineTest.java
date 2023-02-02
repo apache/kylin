@@ -39,6 +39,7 @@ import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
 import org.apache.kylin.query.QueryExtension;
 import org.apache.kylin.query.engine.data.QueryResult;
+import org.apache.kylin.query.exception.NotSupportedSQLException;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.source.adhocquery.PushdownResult;
 import org.apache.spark.SparkException;
@@ -303,5 +304,20 @@ public class QueryRoutingEngineTest extends NLocalFileMetadataTestCase {
         }).when(queryRoutingEngine).tryPushDownSelectQuery(Mockito.any(), Mockito.any(), Mockito.anyBoolean());
         QueryResult queryResult = queryRoutingEngine.queryWithSqlMassage(queryParams);
         Assert.assertEquals(0, queryResult.getSize());
+    }
+
+    @Test
+    public void testQueryPushDownWithSumLC() {
+        final String sql = "select sum_lc(column, dateColumn) from success_table_2";
+        final String project = "default";
+        KylinConfig kylinconfig = KylinConfig.getInstanceFromEnv();
+        QueryParams queryParams = new QueryParams();
+        queryParams.setProject(project);
+        queryParams.setSql(sql);
+        queryParams.setKylinConfig(kylinconfig);
+        queryParams.setSelect(true);
+        queryParams.setForcedToPushDown(true);
+
+        Assert.assertThrows(NotSupportedSQLException.class, () -> queryRoutingEngine.queryWithSqlMassage(queryParams));
     }
 }
