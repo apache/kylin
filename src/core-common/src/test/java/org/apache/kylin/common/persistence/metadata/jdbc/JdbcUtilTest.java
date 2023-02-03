@@ -31,7 +31,7 @@ public class JdbcUtilTest {
 
     @Before
     public void setup() throws SQLException {
-        this.connection = DriverManager.getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa",
+        this.connection = DriverManager.getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1", "sa",
                 null);
     }
 
@@ -42,12 +42,12 @@ public class JdbcUtilTest {
         Assert.assertTrue(JdbcUtil.isColumnExists(connection, table, "col1"));
 
         // case insensitive
-        this.connection = DriverManager.getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa",
+        this.connection = DriverManager.getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1", "sa",
                 null);
         Assert.assertTrue(JdbcUtil.isColumnExists(connection, table, "cOL1"));
 
         // not exists
-        this.connection = DriverManager.getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1;MODE=MySQL", "sa",
+        this.connection = DriverManager.getConnection("jdbc:h2:mem:jdbc_util_test;DB_CLOSE_DELAY=-1", "sa",
                 null);
         Assert.assertFalse(JdbcUtil.isColumnExists(connection, table, "not_exists"));
     }
