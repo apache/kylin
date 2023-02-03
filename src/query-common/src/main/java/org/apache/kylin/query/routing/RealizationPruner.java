@@ -18,6 +18,9 @@
 
 package org.apache.kylin.query.routing;
 
+import static org.apache.kylin.common.util.DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS;
+import static org.apache.kylin.common.util.DateFormat.DEFAULT_DATE_PATTERN;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -27,6 +30,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.calcite.plan.RelOptPredicateList;
@@ -86,6 +90,9 @@ public class RealizationPruner {
     private static final String INTEGER = "integer";
     private static final String BIGINT = "bigint";
     private static final TimeZone UTC_ZONE = TimeZone.getTimeZone("UTC");
+    private static final Pattern DATE_PATTERN = Pattern.compile("[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]");
+    private static final Pattern TIMESTAMP_PATTERN = Pattern.compile(
+            "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]" + " " + "[0-9][0-9]:[0-9][0-9]:[0-9][0-9](\\.[0-9]*[1-9])?");
     private static final Set<SqlKind> COMPARISON_OP_KIND_SET = ImmutableSet.of(SqlKind.GREATER_THAN,
             SqlKind.GREATER_THAN_OR_EQUAL, //
             SqlKind.LESS_THAN, SqlKind.LESS_THAN_OR_EQUAL, //
@@ -134,12 +141,18 @@ public class RealizationPruner {
 
         val partitionColInputRef = transformColumn2RexInputRef(partitionColumn, olapContext.allTableScans);
         if (allReadySegments.size() > 0 && dateFormat != null) {
-            val firstSegmentRanges = transformSegment2RexCall(allReadySegments.get(0), dateFormat, rexBuilder,
-                    partitionColInputRef, partitionColumn.getType(), dataflow.isStreaming());
-            RelDataTypeFamily segmentLiteralTypeFamily = getSegmentLiteralTypeFamily(firstSegmentRanges.getFirst());
-            filterConditions = filterConditions.stream().map(filterCondition -> rewriteRexCall(filterCondition,
-                    rexBuilder, segmentLiteralTypeFamily, partitionColInputRef, dateFormat))
-                    .collect(Collectors.toList());
+            try {
+                val firstSegmentRanges = transformSegment2RexCall(allReadySegments.get(0), dateFormat, rexBuilder,
+                        partitionColInputRef, partitionColumn.getType(), dataflow.isStreaming());
+                RelDataTypeFamily segmentLiteralTypeFamily = getSegmentLiteralTypeFamily(firstSegmentRanges.getFirst());
+                filterConditions = filterConditions.stream()//
+                        .map(filterCondition -> rewriteRexCall(filterCondition, rexBuilder, segmentLiteralTypeFamily,
+                                partitionColInputRef, dateFormat))
+                        .collect(Collectors.toList());
+            } catch (Exception ex) {
+                log.warn("Segment pruning error: ", ex);
+                return allReadySegments;
+            }
         }
         var simplifiedSqlFilter = rexSimplify.simplifyAnds(filterConditions);
 
@@ -307,8 +320,9 @@ public class RealizationPruner {
             start = DateFormat.formatToDateStr(dataSegment.getKSRange().getStart(), dateFormat);
             end = DateFormat.formatToDateStr(dataSegment.getKSRange().getEnd(), dateFormat);
         } else {
-            start = DateFormat.formatToDateStr(dataSegment.getTSRange().getStart(), dateFormat);
-            end = DateFormat.formatToDateStr(dataSegment.getTSRange().getEnd(), dateFormat);
+            Pair<String, String> pair = transformDateType(dataSegment, partitionColType, dateFormat);
+            start = pair.getFirst();
+            end = pair.getSecond();
         }
 
         val startRexLiteral = transformValue2RexLiteral(rexBuilder, start, partitionColType);
@@ -320,6 +334,40 @@ public class RealizationPruner {
         val sqlOperator = isStreaming ? SqlStdOperatorTable.LESS_THAN_OR_EQUAL : SqlStdOperatorTable.LESS_THAN;
         val lessCall = rexBuilder.makeCall(sqlOperator, Lists.newArrayList(partitionColInputRef, endRexLiteral));
         return Pair.newPair(greaterThanOrEqualCall, lessCall);
+    }
+
+    private static Pair<String, String> transformDateType(NDataSegment dataSegment, DataType colType,
+            String dateFormat) {
+        long segmentStartTs = dataSegment.getTSRange().getStart();
+        long segmentEndTs = dataSegment.getTSRange().getEnd();
+        String formattedStart = DateFormat.formatToDateStr(segmentStartTs, dateFormat);
+        String formattedEnd = DateFormat.formatToDateStr(segmentEndTs, dateFormat);
+        String start = checkAndReformatDateType(formattedStart, segmentStartTs, colType);
+        String end = checkAndReformatDateType(formattedEnd, segmentEndTs, colType);
+        return Pair.newPair(start, end);
+    }
+
+    private static String checkAndReformatDateType(String formattedValue, long segmentTs, DataType colType) {
+        switch (colType.getName()) {
+        case DATE:
+            if (DATE_PATTERN.matcher(formattedValue).matches()) {
+                return formattedValue;
+            }
+            return DateFormat.formatToDateStr(segmentTs, DEFAULT_DATE_PATTERN);
+        case TIMESTAMP:
+            if (TIMESTAMP_PATTERN.matcher(formattedValue).matches()) {
+                return formattedValue;
+            }
+            return DateFormat.formatToDateStr(segmentTs, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
+        case VARCHAR:
+        case STRING:
+        case INTEGER:
+        case BIGINT:
+            return formattedValue;
+        default:
+            throw new IllegalArgumentException(
+                    String.format(Locale.ROOT, "%s data type is not supported for partition column", colType));
+        }
     }
 
     private static RexNode transformValue2RexLiteral(RexBuilder rexBuilder, String value, DataType colType) {
