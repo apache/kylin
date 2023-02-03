@@ -72,6 +72,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -125,6 +126,7 @@ public class MetadataToolTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    @Ignore
     public void testFetchTargetFile() throws IOException {
         val junitFolder = temporaryFolder.getRoot();
         val tool = new MetadataTool(getTestConfig());

@@ -427,7 +427,7 @@ public class KapConfig {
      * kap monitor
      */
     public boolean isMonitorEnabled() {
-        return Boolean.parseBoolean(config.getOptional("kylin.monitor.enabled", "true"));
+        return Boolean.parseBoolean(config.getOptional("kylin.monitor.enabled", "false"));
     }
 
     public String getMonitorDatabase() {
