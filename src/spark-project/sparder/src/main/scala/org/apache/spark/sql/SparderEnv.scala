@@ -21,20 +21,18 @@ package org.apache.spark.sql
 import java.lang.{Boolean => JBoolean, String => JString}
 import java.security.PrivilegedAction
 import java.util.Map
-import java.util.concurrent.{Callable, ExecutorService}
 import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.{Callable, ExecutorService}
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.security.UserGroupInformation
-import org.apache.kylin.common.{KylinConfig, QueryContext}
 import org.apache.kylin.common.exception.{KylinException, KylinTimeoutException, ServerErrorCode}
 import org.apache.kylin.common.msg.MsgPicker
 import org.apache.kylin.common.util.{DefaultHostInfoFetcher, HadoopUtil, S3AUtil}
+import org.apache.kylin.common.{KylinConfig, QueryContext}
 import org.apache.kylin.metadata.model.{NTableMetadataManager, TableExtDesc}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.query.runtime.plan.QueryToExecutionIDCache
-
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent, SparkListenerLogRollUp}
 import org.apache.spark.sql.KylinSession._
@@ -46,6 +44,7 @@ import org.apache.spark.sql.execution.ui.PostQueryExecutionForKylin
 import org.apache.spark.sql.hive.ReplaceLocationRule
 import org.apache.spark.sql.udf.UdfManager
 import org.apache.spark.util.{ThreadUtils, Utils}
+import org.apache.spark.{SparkConf, SparkContext}
 
 // scalastyle:off
 object SparderEnv extends Logging {
@@ -217,7 +216,8 @@ object SparderEnv extends Logging {
       val appName = "sparder-" + UserGroupInformation.getCurrentUser.getShortUserName + "-" + hostInfoFetcher.getHostname
 
       val isLocalMode = KylinConfig.getInstanceFromEnv.isJobNodeOnly ||
-        ("true").equals(System.getProperty("spark.local"))
+        "true".equals(System.getenv("SPARK_LOCAL")) ||
+        "true".equals(System.getProperty("spark.local"))
       val sparkSession = isLocalMode match {
         case true =>
           SparkSession.builder
@@ -238,11 +238,11 @@ object SparderEnv extends Logging {
             //if user defined other master in kylin.properties,
             // it will get overwrite later in org.apache.spark.sql.KylinSession.KylinBuilder.initSparkConf
             .withExtensions { ext =>
-            ext.injectPlannerStrategy(_ => KylinSourceStrategy)
-            ext.injectPlannerStrategy(_ => LayoutFileSourceStrategy)
-            ext.injectPostHocResolutionRule(ReplaceLocationRule)
-            ext.injectOptimizerRule(_ => new ConvertInnerJoinToSemiJoin())
-          }
+              ext.injectPlannerStrategy(_ => KylinSourceStrategy)
+              ext.injectPlannerStrategy(_ => LayoutFileSourceStrategy)
+              ext.injectPostHocResolutionRule(ReplaceLocationRule)
+              ext.injectOptimizerRule(_ => new ConvertInnerJoinToSemiJoin())
+            }
             .enableHiveSupport()
             .getOrCreateKylinSession()
       }
@@ -343,7 +343,7 @@ object SparderEnv extends Logging {
 
   }
 
-  def getHadoopConfiguration(): /**/Configuration = {
+  def getHadoopConfiguration(): /**/ Configuration = {
     var configuration = HadoopUtil.getCurrentConfiguration
     spark.conf.getAll.filter(item => item._1.startsWith("fs.")).foreach(item => configuration.set(item._1, item._2))
     configuration
