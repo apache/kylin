@@ -99,6 +99,7 @@
 
         <!-- Hadoop versions -->
         <hadoop.version>2.10.1</hadoop.version>
+        <hadoop-yarn-server-resourcemanager.version>2.10.2</hadoop-yarn-server-resourcemanager.version>
         <yarn.version>${hadoop.version}</yarn.version>
         <hadoop.cloud.version>${hadoop.version}</hadoop.cloud.version>
 
@@ -1821,7 +1822,7 @@
                         <artifactId>jackson-mapper-asl</artifactId>
                     </exclusion>
                 </exclusions>
-                <version>${yarn.version}</version>
+                <version>${hadoop-yarn-server-resourcemanager.version}</version>
             </dependency>
 
             <!-- Calcite dependencies -->
