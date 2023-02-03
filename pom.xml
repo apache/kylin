@@ -22,17 +22,69 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.0.0-alpha-SNAPSHOT</version>
 
-    <name>Apache Kylin 5</name>
+    <name>Apache Kylin</name>
     <url>http://kylin.apache.org</url>
     <inceptionYear>2016</inceptionYear>
-    <description>Apache Kylin 5</description>
+    <description>Apache Kylin</description>
 
     <organization>
         <name>Apache</name>
         <url>http://kylin.apache.org</url>
     </organization>
+
+    <scm>
+        <connection>scm:git:git://github.com/apache/kylin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/apache/kylin.git
+        </developerConnection>
+        <url>https://github.com/apache/kylin</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://issues.apache.org/jira/browse/KYLIN</url>
+    </issueManagement>
+
+
+    <mailingLists>
+        <mailingList>
+            <name>kylin-user</name>
+            <subscribe>user-subscribe@kylin.apache.org</subscribe>
+            <unsubscribe>user-unsubscribe@kylin.apache.org</unsubscribe>
+            <post>user@kylin.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-user/</archive>
+        </mailingList>
+        <mailingList>
+            <name>kylin-dev</name>
+            <subscribe>dev-subscribe@kylin.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@kylin.apache.org</unsubscribe>
+            <post>dev@kylin.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>kylin-issues</name>
+            <subscribe>issues-subscribe@kylin.apache.org</subscribe>
+            <unsubscribe>issues-unsubscribe@kylin.apache.org</unsubscribe>
+            <post>issues@kylin.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-issues/</archive>
+        </mailingList>
+        <mailingList>
+            <name>kylin-commits</name>
+            <subscribe>commits-subscribe@kylin.apache.org</subscribe>
+            <unsubscribe>commits-unsubscribe@kylin.apache.org</unsubscribe>
+            <post>commits@kylin.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-commits/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
     <properties>
         <!-- General Properties -->
@@ -3506,6 +3558,262 @@
                     </snapshots>
                 </repository>
             </repositories>
+        </profile>
+        <profile>
+            <!-- This profile adds/overrides few features of the 'apache-release'
+                 profile in the parent pom. -->
+            <id>apache-release</id>
+            <activation>
+                <property>
+                    <name>pre-commit</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+                    <!-- Override the parent assembly execution to customize the assembly
+                        descriptor and final name. -->
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>source-release-assembly</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <tarLongFileMode>posix</tarLongFileMode>
+                                    <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                                    <appendAssemblyId>true</appendAssemblyId>
+                                    <descriptors>
+                                        <descriptor>
+                                            assembly/src/main/config/assemblies/source-assembly.xml
+                                        </descriptor>
+                                    </descriptors>
+                                    <finalName>apache-kylin-${project.version}</finalName>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Apache-RAT checks for files without headers.
+                         If run on a messy developer's sandbox, it will fail.
+                         This serves as a reminder to only build a release in a clean
+                         sandbox! -->
+                    <plugin>
+                        <groupId>org.apache.rat</groupId>
+                        <artifactId>apache-rat-plugin</artifactId>
+                        <configuration>
+                            <!-- Used to print file with unapproved licenses in project to stand output -->
+                            <consoleOutput>true</consoleOutput>
+
+                            <!-- Exclude files/folders for apache release -->
+                            <excludes>
+                                <exclude>**/*.jj</exclude>
+
+                                <exclude>DEPENDENCIES</exclude>
+                                <exclude>.settings/**</exclude>
+                                <exclude>**/LICENSE*</exclude>
+                                <!-- Local git repo -->
+                                <exclude>.git/**</exclude>
+                                <exclude>.gitconfig</exclude>
+                                <!-- IDE files -->
+                                <exclude>.idea/**</exclude>
+                                <exclude>**/*.iml</exclude>
+                                <exclude>**/.classpath</exclude>
+                                <exclude>**/.project</exclude>
+                                <exclude>**/.settings/**</exclude>
+
+                                <!-- image files constitute images required for documentation. .pptx contain the sources for images -->
+                                <exclude>**/*.png</exclude>
+                                <exclude>**/*.jpg</exclude>
+                                <exclude>**/*.gif</exclude>
+                                <exclude>**/*.ico</exclude>
+                                <exclude>**/*.svg</exclude>
+
+                                <!--Test Data-->
+                                <exclude>**/src/test/resources/**</exclude>
+                                <exclude>src/examples/sample_cube/template/**</exclude>
+                                <exclude>src/examples/test_case_data/localmeta/**</exclude>
+                                <exclude>src/examples/test_case_data/parquet_test/**</exclude>
+                                <exclude>**/src/spark-project/engine-spark/metastore_db/db.lck</exclude>
+                                <exclude>**/src/spark-project/engine-spark/metastore_db/service.properties</exclude>
+
+                                <!-- generated files -->
+                                <exclude>**/target/**</exclude>
+                                <exclude>src/examples/test_data/**</exclude>
+                                <exclude>lib/**</exclude>
+                                <exclude>dist/**</exclude>
+                                <exclude>**/dependency-reduced-pom.xml</exclude>
+
+                                <!-- text files without comments -->
+                                <exclude>**/*.csv</exclude>
+                                <exclude>**/*.json</exclude>
+                                <exclude>**/*.json.bad</exclude>
+                                <exclude>**/*.md</exclude>
+                                <exclude>**/*.spec</exclude>
+                                <exclude>**/*.acl</exclude>
+
+                                <!-- binary files -->
+                                <exclude>**/*.dict</exclude>
+                                <exclude>**/*.dic</exclude>
+                                <exclude>**/*.snapshot</exclude>
+                                <exclude>**/*.pdf</exclude>
+                                <exclude>**/*.docx</exclude>
+                                <exclude>**/*.doc</exclude>
+                                <exclude>**/*.txt</exclude>
+                                <exclude>**/.checkstyle</exclude>
+                                <exclude>**/*.eot</exclude>
+                                <exclude>**/*.ttf</exclude>
+                                <exclude>**/*.woff</exclude>
+                                <exclude>**/*.DDLCheck</exclude>
+                                <exclude>**/*.factories</exclude>
+
+                                <!-- Kylin's website content -->
+                                <exclude>**/.sass-cache/**</exclude>
+
+                                <!-- tomcat package -->
+                                <exclude>tomcat/**</exclude>
+
+                                <!-- front end libary and generated files -->
+                                <exclude>kystudio/**/*.js</exclude>
+                                <exclude>kystudio/node_modules/**</exclude>
+                                <exclude>kystudio/dist/**</exclude>
+                                <exclude>kystudio/**/*.vue</exclude>
+                                <exclude>kystudio/**/*.less</exclude>
+                                <exclude>kystudio/static/**</exclude>
+                                <exclude>kystudio/.babelrc</exclude>
+                                <exclude>kystudio/.editorconfig</exclude>
+                                <exclude>kystudio/.eslintignore</exclude>
+                                <exclude>kystudio/.eslintrc.js</exclude>
+                                <exclude>kystudio/index.html</exclude>
+                                <exclude>kystudio/jsconfig.json</exclude>
+                                <exclude>kystudio/package.json</exclude>
+                                <exclude>kystudio/README.md</exclude>
+
+                                <!-- json configuration file-->
+                                <exclude>webapp/.bowerrc</exclude>
+                                <exclude>webapp/.jshintrc</exclude>
+                                <!-- generated dict files -->
+                                <exclude>dictionary/metastore_db/**</exclude>
+
+                                <!-- MIT license -->
+                                <exclude>webapp/app/css/AdminLTE.css</exclude>
+                                <exclude>webapp/app/css/messenger-theme-ice.css</exclude>
+                                <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js</exclude>
+                                <exclude>webapp/app/js/directives/angular-tree-control.js</exclude>
+                                <exclude>webapp/app/js/directives/datetimepicker.js</exclude>
+                                <exclude>webapp/app/js/directives/select.js</exclude>
+                                <exclude>webapp/app/js/directives/ui-grid.js</exclude>
+
+                                <!-- BSD license -->
+                                <exclude>webapp/app/js/utils/liquidFillGauge.js</exclude>
+
+                                <!-- Debug-->
+                                <exclude>dev-support/**/*.env</exclude>
+                                <exclude>dev-support/**/*.yml</exclude>
+                                <exclude>build/sample_project/template/UUID</exclude>
+                                <exclude>build/release/**/*.tmpl</exclude>
+                                <exclude>build/deploy/grafana/custom.ini</exclude>
+
+                                <!--configuration file -->
+                                <exclude>webapp/app/routes.json</exclude>
+                                <exclude>webapp/bower.json</exclude>
+                                <exclude>webapp/grunt.json</exclude>
+                                <exclude>webapp/package.json</exclude>
+                                <exclude>src/license/third-party-file.ftl</exclude>
+                                <exclude>build/spark/**</exclude>
+                                <exclude>lombok.config</exclude>
+
+                                <!-- logs -->
+                                <exclude>**/*.log</exclude>
+                                <exclude>jdbc/kylin_jdbc.log*</exclude>
+                                <exclude>server/logs/**</exclude>
+
+                                <!-- jdbc service -->
+                                <exclude>**/java.sql.Driver</exclude>
+
+                                <!--ODBC sub project is a VS project, exclude related files -->
+                                <exclude>**/*.sln</exclude>
+                                <exclude>**/*.vcxproj</exclude>
+                                <exclude>**/*.vcxproj.filters</exclude>
+                                <exclude>**/*.vcxproj.user</exclude>
+                                <exclude>**/*.props</exclude>
+                                <exclude>**/*.RC</exclude>
+                                <exclude>**/*.dsp</exclude>
+                                <exclude>**/*.DEF</exclude>
+                                <exclude>**/*.isl</exclude>
+                                <exclude>**/*.isproj</exclude>
+                                <exclude>**/*.bmp</exclude>
+
+                                <exclude>src/main/codegen/javacc/org/apache/kylin/query/util/CommentParser.jj</exclude>
+
+                                <!-- protobuf generated -->
+                                <exclude>
+                                    src/main/java/org/apache/kylin/storage/hbase/ii/coprocessor/endpoint/generated/IIProtos.java
+                                </exclude>
+                                <exclude>
+                                    src/main/java/org/apache/kylin/storage/hbase/cube/v1/filter/generated/FilterProtosExt.java
+                                </exclude>
+                                <exclude>
+                                    src/main/java/org/apache/kylin/storage/hbase/cube/v2/coprocessor/endpoint/generated/CubeVisitProtos.java
+                                </exclude>
+                                <exclude>
+                                    storage-hbase/src/main/java/org/apache/kylin/storage/hbase/cube/v2/coprocessor/endpoint/generated/CubeVisitProtos.java
+                                </exclude>
+                                <exclude>
+                                    examples/test_case_data/sample_local/UUID
+                                </exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.maven.doxia</groupId>
+                                <artifactId>doxia-core</artifactId>
+                                <version>1.7</version>
+                                <exclusions>
+                                    <exclusion>
+                                        <groupId>xerces</groupId>
+                                        <artifactId>xercesImpl</artifactId>
+                                    </exclusion>
+                                </exclusions>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <groupId>net.ju-n.maven.plugins</groupId>
+                        <artifactId>checksum-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>artifacts</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <algorithms>
+                                <algorithm>SHA-256</algorithm>
+                            </algorithms>
+                            <failOnError>false</failOnError>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>
