@@ -1,0 +1,13 @@
+{
+  "uuid" : "0f896779-a693-139f-6c50-895e240b4c97",
+  "last_modified" : 0,
+  "create_time" : 1675664450178,
+  "version" : "4.0.0.0",
+  "status" : "OFFLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "segments" : [ ]
+}
