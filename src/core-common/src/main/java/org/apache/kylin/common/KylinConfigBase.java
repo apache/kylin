@@ -3721,7 +3721,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
-    // Cost case cuboid Planner
+    // Cost based index Planner
     // ============================================================================
 
     public boolean enableCostBasedIndexPlanner() {
