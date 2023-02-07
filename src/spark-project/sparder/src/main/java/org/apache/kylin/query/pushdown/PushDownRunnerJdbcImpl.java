@@ -52,7 +52,7 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
 
     @Override
     public void executeQuery(String query, List<List<String>> results, List<SelectedColumnMeta> columnMetas,
-            String project) throws Exception {
+            String project) throws SQLException {
         Statement statement = null;
         Connection connection = manager.getConnection();
         ResultSet resultSet = null;
@@ -83,7 +83,7 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
     }
 
     @Override
-    public void executeUpdate(String sql, String project) throws Exception {
+    public void executeUpdate(String sql, String project) throws SQLException {
         Statement statement = null;
         Connection connection = manager.getConnection();
 

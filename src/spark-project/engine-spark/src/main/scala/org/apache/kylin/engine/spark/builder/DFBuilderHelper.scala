@@ -18,10 +18,10 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import org.apache.kylin.common.persistence.transaction.UnitOfWork
-import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
-import org.apache.kylin.metadata.cube.model.{NDataSegment, NDataflowManager, NDataflowUpdate}
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.common.persistence.transaction.UnitOfWork
+import org.apache.kylin.engine.spark.job.NSparkCubingUtil
+import org.apache.kylin.metadata.cube.model.{NDataSegment, NDataflowManager, NDataflowUpdate}
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.expr
@@ -51,7 +51,7 @@ object DFBuilderHelper extends Logging {
 
   def selectColumnsInTable(table: Dataset[Row], columns: Set[TblColRef]): Set[TblColRef] = {
     columns.filter(col =>
-      isColumnInTable(convertFromDot(col.getBackTickExpressionInSourceDB), table))
+      isColumnInTable(NSparkCubingUtil.convertFromDot(col.getBackTickExp), table))
   }
 
   // ============================= Used by {@link DFBuildJob}.Functions are deprecated. ========================= //
@@ -63,7 +63,7 @@ object DFBuilderHelper extends Logging {
   @deprecated
   def filterOutIntegerFamilyType(table: Dataset[Row], columns: Set[TblColRef]): Set[TblColRef] = {
     columns.filterNot(_.getType.isIntegerFamily).filter(cc =>
-      isColumnInTable(convertFromDot(cc.getBackTickExpressionInSourceDB), table))
+      isColumnInTable(NSparkCubingUtil.convertFromDot(cc.getBackTickExp), table))
   }
 
   def isColumnInTable(colExpr: String, table: Dataset[Row]): Boolean = {
@@ -78,8 +78,8 @@ object DFBuilderHelper extends Logging {
   def chooseSuitableCols(ds: Dataset[Row], needCheckCols: Iterable[TblColRef]): Seq[Column] = {
     needCheckCols
       .filter(ref => isColumnInTable(ref.getExpressionInSourceDB, ds))
-      .map(ref => expr(convertFromDotWithBackTick(ref.getBackTickExpressionInSourceDB))
-        .alias(convertFromDot(ref.getBackTickIdentity)))
+      .map(ref => expr(NSparkCubingUtil.convertFromDotWithBackTick(ref.getBackTickExp))
+        .alias(NSparkCubingUtil.convertFromDot(ref.getBackTickIdentity)))
       .toSeq
   }
 

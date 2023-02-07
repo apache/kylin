@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.pushdown;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -99,14 +100,18 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
 
         queries.forEach(q -> {
             returnRows.clear();
-            pushDownRunnerSpark.executeQuery(q, returnRows, returnColumnMeta, "tpch");
+            try {
+                pushDownRunnerSpark.executeQuery(q, returnRows, returnColumnMeta, "tpch");
+            } catch (SQLException e) {
+                //
+            }
             Assert.assertEquals(10, returnRows.size());
         });
 
     }
 
     @Test
-    public void testPushDownRunnerSpark() {
+    public void testPushDownRunnerSpark() throws SQLException {
         PushDownRunnerSparkImpl pushDownRunnerSpark = new PushDownRunnerSparkImpl();
         pushDownRunnerSpark.init(null, "tpch");
 
@@ -122,7 +127,7 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testPushDownRunnerSparkWithDotColumn() {
+    public void testPushDownRunnerSparkWithDotColumn() throws SQLException {
         PushDownRunnerSparkImpl pushDownRunnerSpark = new PushDownRunnerSparkImpl();
         pushDownRunnerSpark.init(null, "tpch");
 
@@ -138,7 +143,7 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSelectTwoSameExpr() {
+    public void testSelectTwoSameExpr() throws SQLException {
         PushDownRunnerSparkImpl pushDownRunnerSpark = new PushDownRunnerSparkImpl();
         pushDownRunnerSpark.init(null, "tpch");
 
@@ -154,7 +159,7 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCaseSensitiveOnAlias() {
+    public void testCaseSensitiveOnAlias() throws SQLException {
         PushDownRunnerSparkImpl pushDownRunnerSpark = new PushDownRunnerSparkImpl();
         pushDownRunnerSpark.init(null, "tpch");
 

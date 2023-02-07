@@ -53,7 +53,7 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.engine.spark.merger.MetadataMerger;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.JobStoppedException;
@@ -660,7 +660,7 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         }
         // when layout ids not null, set index count
         if (StringUtils.isNotBlank(getParam(NBatchConstants.P_LAYOUT_IDS))) {
-            int indexCount = StringUtil.splitAndTrim(getParam(NBatchConstants.P_LAYOUT_IDS), ",").length;
+            int indexCount = StringHelper.splitAndTrim(getParam(NBatchConstants.P_LAYOUT_IDS), ",").length;
             setParam(NBatchConstants.P_INDEX_COUNT, String.valueOf(indexCount));
         }
     }

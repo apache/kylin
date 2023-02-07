@@ -38,6 +38,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.dialect.CalciteSqlDialect;
 import org.apache.calcite.sql.dialect.HiveSqlDialect;
 import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.commons.collections.CollectionUtils;
@@ -96,6 +97,7 @@ import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinTableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.query.util.QueryUtil;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.response.BuildIndexResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
@@ -131,7 +133,7 @@ public class ModelSemanticHelper extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelSemanticHelper.class);
     private final ExpandableMeasureUtil expandableMeasureUtil = new ExpandableMeasureUtil((model, ccDesc) -> {
-        String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
+        String ccExpression = PushDownUtil.massageComputedColumn(model, model.getProject(), ccDesc,
                 AclPermissionUtil.createAclInfo(model.getProject(), getCurrentUserGroups()));
         ccDesc.setInnerExpression(ccExpression);
         ComputedColumnEvalUtil.evaluateExprAndType(model, ccDesc);
@@ -158,13 +160,22 @@ public class ModelSemanticHelper extends BasicService {
             logger.error("Parse json failed...", e);
             throw new KylinException(CommonErrorCode.FAILED_PARSE_JSON, e);
         }
+
+        Map<String, TableDesc> allTablesMap = getManager(NTableMetadataManager.class, modelRequest.getProject())
+                .getAllTablesMap();
+        List<ComputedColumnDesc> ccList = dataModel.getComputedColumnDescs();
+        if (!ccList.isEmpty()) {
+            String factTableIdentity = dataModel.getRootFactTableName();
+            TableDesc tableDesc = allTablesMap.get(factTableIdentity);
+            TableDesc extendTable = tableDesc.appendColumns(ComputedColumnUtil.createComputedColumns(ccList, tableDesc),
+                    true);
+            allTablesMap.put(factTableIdentity, extendTable);
+        }
         dataModel.setUuid(modelRequest.getUuid() != null ? modelRequest.getUuid() : RandomUtil.randomUUIDStr());
         dataModel.setProject(modelRequest.getProject());
         dataModel.setAllMeasures(convertMeasure(simplifiedMeasures));
         dataModel.setAllNamedColumns(convertNamedColumns(modelRequest.getProject(), dataModel, modelRequest));
-
-        dataModel.initJoinDesc(KylinConfig.getInstanceFromEnv(),
-                getManager(NTableMetadataManager.class, modelRequest.getProject()).getAllTablesMap());
+        dataModel.initJoinDesc(KylinConfig.getInstanceFromEnv(), allTablesMap);
         convertNonEquiJoinCond(dataModel, modelRequest);
         dataModel.setModelType(dataModel.getModelTypeFromTable());
         return dataModel;
@@ -431,7 +442,7 @@ public class ModelSemanticHelper extends BasicService {
                 SqlVisitor<Object> modifyAlias = new ModifyTableNameSqlVisitor(oldAliasName, newAliasName);
                 SqlNode sqlNode = CalciteParser.getExpNode(filterCondition);
                 sqlNode.accept(modifyAlias);
-                String newFilterCondition = sqlNode.toSqlString(HiveSqlDialect.DEFAULT).toString();
+                String newFilterCondition = sqlNode.toSqlString(CalciteSqlDialect.DEFAULT, true).toString();
                 model.setFilterCondition(newFilterCondition);
             }
         }

@@ -72,7 +72,7 @@ import org.apache.kylin.common.util.FileUtils;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.SizeConvertUtil;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.common.util.Unsafe;
 import org.slf4j.Logger;
@@ -2123,7 +2123,7 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.query.pushdown.partition-check.runner-class-name", "");
     }
 
-    public String getPartitionCheckRunnerClassNameWithDefaultValue() {
+    public String getDefaultPartitionCheckerClassName() {
         String partitionCheckRunner = getPartitionCheckRunnerClassName();
         if (StringUtils.isEmpty(partitionCheckRunner)) {
             partitionCheckRunner = "org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl";
@@ -2790,7 +2790,7 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getEngineWriteFs() {
         String engineWriteFs = getOptional("kylin.env.engine-write-fs", "");
-        return StringUtil.dropSuffix(engineWriteFs, File.separator);
+        return StringHelper.dropSuffix(engineWriteFs, File.separator);
     }
 
     public boolean isAllowedProjectAdminGrantAcl() {

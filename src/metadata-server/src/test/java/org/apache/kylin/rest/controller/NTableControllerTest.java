@@ -34,7 +34,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AWSTableLoadRequest;
@@ -152,8 +152,8 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetTableDesc() throws Exception {
-        TableDescRequest mockTableDescRequest = new TableDescRequest("default", "", "DEFAULT", false,
-                true, Pair.newPair(0, 10), Collections.singletonList(9));
+        TableDescRequest mockTableDescRequest = new TableDescRequest("default", "", "DEFAULT", false, true,
+                Pair.newPair(0, 10), Collections.singletonList(9));
 
         Mockito.when(tableService.getTableDesc(mockTableDescRequest, 10)).thenReturn(Pair.newPair(mockTables(), 10));
 
@@ -294,8 +294,8 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
     }
 
     private void initMockito(LoadTableResponse loadTableResponse, TableLoadRequest tableLoadRequest) throws Exception {
-        StringUtil.toUpperCaseArray(tableLoadRequest.getTables(), tableLoadRequest.getTables());
-        StringUtil.toUpperCaseArray(tableLoadRequest.getDatabases(), tableLoadRequest.getDatabases());
+        StringHelper.toUpperCaseArray(tableLoadRequest.getTables(), tableLoadRequest.getTables());
+        StringHelper.toUpperCaseArray(tableLoadRequest.getDatabases(), tableLoadRequest.getDatabases());
         Mockito.when(tableExtService.loadDbTables(tableLoadRequest.getTables(), "default", false))
                 .thenReturn(loadTableResponse);
         Mockito.when(tableExtService.loadDbTables(tableLoadRequest.getDatabases(), "default", true))

@@ -32,7 +32,7 @@ import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -356,7 +356,7 @@ public class ProjectInstance extends RootPersistentEntity implements ISourceAwar
         for (String resource : modelResource) {
             String[] path = resource.split("/");
             resource = path[path.length - 1];
-            resource = StringUtil.dropSuffix(resource, MetadataConstants.FILE_SURFIX);
+            resource = StringHelper.dropSuffix(resource, MetadataConstants.FILE_SURFIX);
             nameList.add(resource);
         }
         return nameList;
@@ -369,7 +369,7 @@ public class ProjectInstance extends RootPersistentEntity implements ISourceAwar
     public List<String> getEmailUsers() {
         String users = this.getOverrideKylinProps().get(NonCustomProjectLevelConfig.NOTIFICATION_USER_EMAILS.getValue());
         if(users != null) {
-            return Arrays.asList(StringUtil.split(users, ","));
+            return Arrays.asList(StringHelper.split(users, ","));
         }
         return new ArrayList<>();
     }

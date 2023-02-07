@@ -159,6 +159,7 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.query.util.QueryUtil;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
@@ -285,7 +286,7 @@ public class ModelServiceTest extends SourceTestCase {
         ReflectionTestUtils.setField(semanticService, "userGroupService", userGroupService);
         ReflectionTestUtils.setField(semanticService, "expandableMeasureUtil",
                 new ExpandableMeasureUtil((model, ccDesc) -> {
-                    String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
+                    String ccExpression = PushDownUtil.massageComputedColumn(model, model.getProject(), ccDesc,
                             AclPermissionUtil.createAclInfo(model.getProject(),
                                     semanticService.getCurrentUserGroups()));
                     ccDesc.setInnerExpression(ccExpression);
@@ -3267,8 +3268,8 @@ public class ModelServiceTest extends SourceTestCase {
         modelRequest.getPartitionDesc().setPartitionDateFormat("yyyy-MM-dd");
 
         String filterCond = "trans_id = 0 and TEST_KYLIN_FACT.order_id < 100 and DEAL_AMOUNT > 123";
-        String expectedFilterCond = "(((`TEST_KYLIN_FACT`.`TRANS_ID` = 0) AND (`TEST_KYLIN_FACT`.`ORDER_ID` <"
-                + " 100)) AND ((`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`) > 123))";
+        String expectedFilterCond = "(((\"TEST_KYLIN_FACT\".\"TRANS_ID\" = 0) "
+                + "AND (\"TEST_KYLIN_FACT\".\"ORDER_ID\" < 100)) AND (\"TEST_KYLIN_FACT\".\"DEAL_AMOUNT\" > 123))";
         modelRequest.setFilterCondition(filterCond);
 
         val newModel = modelService.createModel(modelRequest.getProject(), modelRequest);
@@ -3292,8 +3293,7 @@ public class ModelServiceTest extends SourceTestCase {
         modelRequest.setUuid(null);
 
         String filterCond = "\"day\" = 0 and \"123TABLE\".\"day#\" = 1 and \"中文列\" = 1";
-        String expectedFilterCond = "(((`123TABLE`.`DAY` = 0) AND (`123TABLE`.`day#` = 1)) AND (`123TABLE`"
-                + ".`中文列` = 1))";
+        String expectedFilterCond = "(((\"123TABLE\".\"DAY\" = 0) AND (\"123TABLE\".\"day#\" = 1)) AND (\"123TABLE\".\"中文列\" = 1))";
         modelRequest.setFilterCondition(filterCond);
 
         val newModel = modelService.createModel(modelRequest.getProject(), modelRequest);
@@ -3542,10 +3542,8 @@ public class ModelServiceTest extends SourceTestCase {
         String originSql = "trans_id = 0 and TEST_KYLIN_FACT.order_id < 100 and DEAL_AMOUNT > 123";
         model.setFilterCondition(originSql);
         modelService.massageModelFilterCondition(model);
-        Assert.assertEquals(
-                "(((`TEST_KYLIN_FACT`.`TRANS_ID` = 0) AND " + "(`TEST_KYLIN_FACT`.`ORDER_ID` < 100)) AND "
-                        + "((`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`) > 123))",
-                model.getFilterCondition());
+        Assert.assertEquals("(((\"TEST_KYLIN_FACT\".\"TRANS_ID\" = 0) AND (\"TEST_KYLIN_FACT\".\"ORDER_ID\" < 100)) "
+                + "AND (\"TEST_KYLIN_FACT\".\"DEAL_AMOUNT\" > 123))", model.getFilterCondition());
     }
 
     @Test
@@ -3577,7 +3575,7 @@ public class ModelServiceTest extends SourceTestCase {
         final NDataModel model1 = modelManager.getDataModelDesc(modelId);
         model1.setFilterCondition("TIMESTAMPDIFF(DAY, CURRENT_DATE, TEST_KYLIN_FACT.\"CURRENT_DATE\") >= 0");
         modelService.massageModelFilterCondition(model1);
-        Assert.assertEquals("(TIMESTAMPDIFF(DAY, CURRENT_DATE(), `TEST_KYLIN_FACT`.`CURRENT_DATE`) >= 0)",
+        Assert.assertEquals("(TIMESTAMPDIFF(DAY, CURRENT_DATE(), \"TEST_KYLIN_FACT\".\"CURRENT_DATE\") >= 0)",
                 model1.getFilterCondition());
 
     }
@@ -3593,10 +3591,8 @@ public class ModelServiceTest extends SourceTestCase {
         String originSql = "trans_id = 0 and TEST_ORDER.order_id < 100 and DEAL_AMOUNT > 123";
         model.setFilterCondition(originSql);
         modelService.massageModelFilterCondition(model);
-        Assert.assertEquals(
-                "(((`TEST_KYLIN_FACT`.`TRANS_ID` = 0) " + "AND (`TEST_ORDER`.`ORDER_ID` < 100)) "
-                        + "AND ((`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`) > 123))",
-                model.getFilterCondition());
+        Assert.assertEquals("(((\"TEST_KYLIN_FACT\".\"TRANS_ID\" = 0) AND (\"TEST_ORDER\".\"ORDER_ID\" < 100)) "
+                + "AND (\"TEST_KYLIN_FACT\".\"DEAL_AMOUNT\" > 123))", model.getFilterCondition());
     }
 
     @Test
@@ -3624,10 +3620,11 @@ public class ModelServiceTest extends SourceTestCase {
         NDataModel model = modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
         String originSql = "trans_id = 0 and TEST_KYLIN_FACT.order_id < 100";
         String newSql = modelService.addTableNameIfNotExist(originSql, model);
-        Assert.assertEquals("((`TEST_KYLIN_FACT`.`TRANS_ID` = 0) AND (`TEST_KYLIN_FACT`.`ORDER_ID` < 100))", newSql);
+        Assert.assertEquals("((\"TEST_KYLIN_FACT\".\"TRANS_ID\" = 0) AND (\"TEST_KYLIN_FACT\".\"ORDER_ID\" < 100))",
+                newSql);
         originSql = "trans_id between 1 and 10";
         newSql = modelService.addTableNameIfNotExist(originSql, model);
-        Assert.assertEquals("(`TEST_KYLIN_FACT`.`TRANS_ID` BETWEEN 1 AND 10)", newSql);
+        Assert.assertEquals("(\"TEST_KYLIN_FACT\".\"TRANS_ID\" BETWEEN 1 AND 10)", newSql);
 
         modelManager.updateDataModel(model.getUuid(), copyForWrite -> {
             List<JoinTableDesc> joinTables = copyForWrite.getJoinTables();
@@ -3685,11 +3682,11 @@ public class ModelServiceTest extends SourceTestCase {
     }
 
     @Test
-    public void testComputedColumnNameCheck_PreProcessBeforeModelSave_ExceptionWhenCCNameIsSameWithColumnInLookupTable() {
+    public void testCheckingCcNameIsSameWithLookupColNameBeforeModelSaveThenThrowException() {
 
         expectedEx.expect(KylinException.class);
-        expectedEx.expectMessage("Can’t validate the expression \"TEST_KYLIN_FACT.NEST2\" (computed column: "
-                + "TEST_KYLIN_FACT.NEST1 * 12). Please check the expression, or try again later.");
+        expectedEx.expectMessage("Can’t validate the expression \"TEST_KYLIN_FACT.SITE_ID\" (computed column: "
+                + "nvl(TEST_SITES.SITE_ID)). Please check the expression, or try again later.");
         String tableIdentity = "DEFAULT.TEST_KYLIN_FACT";
         String columnName = "SITE_ID";
         String expression = "nvl(TEST_SITES.SITE_ID)";
@@ -3703,9 +3700,33 @@ public class ModelServiceTest extends SourceTestCase {
         String project = "default";
         NDataModelManager dataModelManager = modelService.getManager(NDataModelManager.class, "default");
         NDataModel model = dataModelManager.getDataModelDesc("741ca86a-1f13-46da-a59f-95fb68615e3a");
-        model.getComputedColumnDescs().add(ccDesc);
+        model.getComputedColumnDescs().add(0, ccDesc);
 
         modelService.preProcessBeforeModelSave(model, project);
+    }
+
+    @Test
+    public void testCheckingCcNameIsSameWithLookupColNameWhenCheckingCCThenThrowException() {
+
+        expectedEx.expect(KylinException.class);
+        expectedEx.expectMessage("Can’t validate the expression \"TEST_KYLIN_FACT.SITE_ID\" (computed column: "
+                + "nvl(TEST_SITES.SITE_ID)). Please check the expression, or try again later.");
+        String tableIdentity = "DEFAULT.TEST_KYLIN_FACT";
+        String columnName = "SITE_ID";
+        String expression = "nvl(TEST_SITES.SITE_ID)";
+        String dataType = "integer";
+        ComputedColumnDesc ccDesc = new ComputedColumnDesc();
+        ccDesc.setTableIdentity(tableIdentity);
+        ccDesc.setColumnName(columnName);
+        ccDesc.setExpression(expression);
+        ccDesc.setDatatype(dataType);
+
+        String project = "default";
+        NDataModelManager dataModelManager = modelService.getManager(NDataModelManager.class, "default");
+        NDataModel model = dataModelManager.getDataModelDesc("741ca86a-1f13-46da-a59f-95fb68615e3a");
+        model.getComputedColumnDescs().add(0, ccDesc);
+
+        modelService.checkComputedColumn(model, project, null);
     }
 
     @Test
@@ -3725,30 +3746,6 @@ public class ModelServiceTest extends SourceTestCase {
         model.getComputedColumnDescs().add(ccDesc);
 
         modelService.checkCCNameAmbiguity(model);
-    }
-
-    @Test
-    public void testComputedColumnNameCheck_CheckCC_ExceptionWhenCCNameIsSameWithColumnInLookupTable() {
-
-        expectedEx.expect(KylinException.class);
-        expectedEx.expectMessage("Can’t validate the expression \"TEST_KYLIN_FACT.NEST2\" (computed column: "
-                + "TEST_KYLIN_FACT.NEST1 * 12). Please check the expression, or try again later.");
-        String tableIdentity = "DEFAULT.TEST_KYLIN_FACT";
-        String columnName = "SITE_ID";
-        String expression = "nvl(TEST_SITES.SITE_ID)";
-        String dataType = "integer";
-        ComputedColumnDesc ccDesc = new ComputedColumnDesc();
-        ccDesc.setTableIdentity(tableIdentity);
-        ccDesc.setColumnName(columnName);
-        ccDesc.setExpression(expression);
-        ccDesc.setDatatype(dataType);
-
-        String project = "default";
-        NDataModelManager dataModelManager = modelService.getManager(NDataModelManager.class, "default");
-        NDataModel model = dataModelManager.getDataModelDesc("741ca86a-1f13-46da-a59f-95fb68615e3a");
-        model.getComputedColumnDescs().add(ccDesc);
-
-        modelService.checkComputedColumn(model, project, null);
     }
 
     private NDataSegment mockSegment() {

@@ -18,9 +18,6 @@
 
 package io.kyligence.kap.query.optrule;
 
-import static org.apache.kylin.query.util.QueryUtil.isCast;
-import static org.apache.kylin.query.util.QueryUtil.isNotNullLiteral;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,6 +52,7 @@ import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.util.AggExpressionUtil;
 import org.apache.kylin.query.util.AggExpressionUtil.AggExpression;
 import org.apache.kylin.query.util.AggExpressionUtil.GroupExpression;
+import org.apache.kylin.query.util.RuleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +67,7 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractAggCaseWhenFunctionRule.class);
 
-    public AbstractAggCaseWhenFunctionRule(RelOptRuleOperand operand, RelBuilderFactory relBuilderFactory,
+    protected AbstractAggCaseWhenFunctionRule(RelOptRuleOperand operand, RelBuilderFactory relBuilderFactory,
             String description) {
         super(operand, relBuilderFactory, description);
     }
@@ -319,7 +317,7 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
         List<RexNode> values = aggExpression.getValuesList();
         for (int i = 0; i < values.size(); i++) {
             aggExpression.getBottomAggValuesInput()[i] = bottomProjectList.size();
-            if (isCast(values.get(i))) {
+            if (RuleUtils.isCast(values.get(i))) {
                 RexNode rexNode = ((RexCall) (values.get(i))).operands.get(0);
                 DataType dataType = DataType.getType(rexNode.getType().getSqlTypeName().getName());
                 if (!AggExpressionUtil.isSum(aggExpression.getAggCall().getAggregation().kind)
@@ -328,7 +326,7 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
                 } else {
                     bottomProjectList.add(values.get(i));
                 }
-            } else if (isNotNullLiteral(values.get(i))) {
+            } else if (RuleUtils.isNotNullLiteral(values.get(i))) {
                 bottomProjectList.add(values.get(i));
             } else {
                 bottomProjectList.add(rexBuilder.makeBigintLiteral(BigDecimal.ZERO));
@@ -405,7 +403,8 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
                         thenNode = relBuilder.getRexBuilder().makeCast(((RexCall) thenNode).type,
                                 relBuilder.getRexBuilder().makeInputRef(relBuilder.peek(),
                                         aggExpression.getTopProjValuesInput()[whenIndex]));
-                    } else if (isNotNullLiteral(thenNode)) {// TODO? keep null or sum(null)
+                    } else if (RuleUtils.isNotNullLiteral(thenNode)) {
+                        // keep null or sum(null)?
                         thenNode = relBuilder.getRexBuilder().makeInputRef(relBuilder.peek(),
                                 aggExpression.getTopProjValuesInput()[whenIndex]);
                     }
@@ -415,7 +414,8 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
                 if (isNeedTackCast(elseNode)) {
                     elseNode = relBuilder.getRexBuilder().makeCast(((RexCall) elseNode).type, relBuilder.getRexBuilder()
                             .makeInputRef(relBuilder.peek(), aggExpression.getTopProjValuesInput()[whenIndex]));
-                } else if (isNotNullLiteral(elseNode)) {// TODO? keep null or sum(null)
+                } else if (RuleUtils.isNotNullLiteral(elseNode)) {
+                    // keep null or sum(null)?
                     elseNode = relBuilder.getRexBuilder().makeInputRef(relBuilder.peek(),
                             aggExpression.getTopProjValuesInput()[whenIndex]);
                 }
@@ -467,7 +467,7 @@ public abstract class AbstractAggCaseWhenFunctionRule extends RelOptRule {
     }
 
     protected boolean isNeedTackCast(RexNode rexNode) {
-        return isCast(rexNode);
+        return RuleUtils.isCast(rexNode);
     }
 
     private static final String BOTTOM_AGG_PREFIX = "SUB_AGG$";

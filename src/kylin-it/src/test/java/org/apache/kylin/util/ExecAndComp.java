@@ -45,6 +45,7 @@ import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.spark.sql.Dataset;
@@ -175,7 +176,7 @@ public class ExecAndComp {
 
         QueryParams queryParams = new QueryParams(prj, compareSql, "default", false);
         queryParams.setKylinConfig(NProjectManager.getProjectConfig(prj));
-        String afterConvert = QueryUtil.massagePushDownSql(queryParams);
+        String afterConvert = PushDownUtil.massagePushDownSql(queryParams);
         // Table schema comes from csv and DATABASE.TABLE is not supported.
         String sqlForSpark = removeDataBaseInSql(afterConvert);
         val ds = querySparkSql(sqlForSpark);

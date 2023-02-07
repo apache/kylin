@@ -112,9 +112,9 @@ class CreateFlatTable(val flatTable: IJoinedFlatTableDesc,
   }
 
   protected def encodeWithCols(ds: Dataset[Row],
-                             ccCols: Set[TblColRef],
-                             dictCols: Set[TblColRef],
-                             encodeCols: Set[TblColRef]): Dataset[Row] = {
+                               ccCols: Set[TblColRef],
+                               dictCols: Set[TblColRef],
+                               encodeCols: Set[TblColRef]): Dataset[Row] = {
     val ccDataset = withColumn(ds, ccCols)
     if (seg.isDictReady) {
       logInfo(s"Skip already built dict, segment: ${seg.getId} of dataflow: ${seg.getDataflow.getId}")
@@ -128,7 +128,7 @@ class CreateFlatTable(val flatTable: IJoinedFlatTableDesc,
     val matchedCols = selectColumnsInTable(ds, withCols)
     var withDs = ds
     matchedCols.foreach(m => withDs = withDs.withColumn(convertFromDot(m.getBackTickIdentity),
-      expr(convertFromDot(m.getBackTickExpressionInSourceDB))))
+      expr(convertFromDot(m.getBackTickExp))))
     withDs
   }
 
@@ -189,8 +189,8 @@ object CreateFlatTable extends LogEx {
   }
 
   def generateLookupTableDataset(model: NDataModel,
-                                         cols: Seq[TblColRef],
-                                         ss: SparkSession): mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]] = {
+                                 cols: Seq[TblColRef],
+                                 ss: SparkSession): mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]] = {
     val lookupTables = mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]]()
     model.getJoinTables.asScala.map(
       joinDesc => {

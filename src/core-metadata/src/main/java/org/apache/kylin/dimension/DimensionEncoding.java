@@ -20,7 +20,7 @@ package org.apache.kylin.dimension;
 
 import java.io.Externalizable;
 
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 /**
@@ -58,8 +58,8 @@ public abstract class DimensionEncoding implements Externalizable {
 
         final String encodingName = parts[0];
         final String[] encodingArgs = parts[parts.length - 1].isEmpty() //
-                ? StringUtil.subArray(parts, 1, parts.length - 1)
-                : StringUtil.subArray(parts, 1, parts.length);
+                ? StringHelper.subArray(parts, 1, parts.length - 1)
+                : StringHelper.subArray(parts, 1, parts.length);
 
         return new Object[] { encodingName, encodingArgs };
     }

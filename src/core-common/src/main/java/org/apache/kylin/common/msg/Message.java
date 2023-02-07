@@ -957,7 +957,7 @@ public class Message {
     }
 
     public String getBadSqlColumnNotFoundReason() {
-        return "Can’t find column \"%s\". Please check if it exists in the source table. If exists, please try reloading the table; if not exist, please contact admin to add it.";
+        return "Can’t find column \"%s\". Please check if it exists in the source table or computed columns. If exists, please try reloading the table; if not exist, please contact admin to add it.";
     }
 
     public String getBadSqlColumnNotFoundSuggest() {

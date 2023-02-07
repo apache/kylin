@@ -35,7 +35,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.junit.After;
 import org.junit.Before;
 
@@ -357,7 +357,7 @@ public class AlgorithmTestBase {
                     StandardCharsets.UTF_8));
 
             while ((sCurrentLine = br.readLine()) != null) {
-                String[] statPair = StringUtil.split(sCurrentLine, " ");
+                String[] statPair = StringHelper.split(sCurrentLine, " ");
                 countMap.put(BigInteger.valueOf(Long.valueOf(statPair[0])), Long.valueOf(statPair[1]));
             }
 

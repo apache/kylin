@@ -18,10 +18,6 @@
 
 package io.kyligence.kap.query.optrule;
 
-import static org.apache.kylin.query.util.QueryUtil.isCast;
-import static org.apache.kylin.query.util.QueryUtil.isNullLiteral;
-import static org.apache.kylin.query.util.QueryUtil.isPlainTableColumn;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,6 +58,7 @@ import org.apache.kylin.query.relnode.KapAggregateRel;
 import org.apache.kylin.query.relnode.KapProjectRel;
 import org.apache.kylin.query.util.AggExpressionUtil;
 import org.apache.kylin.query.util.AggExpressionUtil.AggExpression;
+import org.apache.kylin.query.util.RuleUtils;
 
 /**
  * COUNT(DISTINCT (CASE WHEN ... THEN COLUMN ELSE NULL))
@@ -119,11 +116,11 @@ public class CountDistinctCaseWhenFunctionRule extends AbstractAggCaseWhenFuncti
     }
 
     private boolean isSimpleCaseWhen(Project inputProject, RexNode n1, RexNode n2) {
-        if (isNullLiteral(n1)) {
+        if (RuleUtils.isNullLiteral(n1)) {
             if (n2 instanceof RexInputRef) {
-                return isPlainTableColumn(((RexInputRef) n2).getIndex(), inputProject.getInput(0));
-            } else if (isCast(n2) && ((RexCall) n2).getOperands().get(0) instanceof RexInputRef) {
-                return isPlainTableColumn(((RexInputRef) ((RexCall) n2).getOperands().get(0)).getIndex(),
+                return RuleUtils.isPlainTableColumn(((RexInputRef) n2).getIndex(), inputProject.getInput(0));
+            } else if (RuleUtils.isCast(n2) && ((RexCall) n2).getOperands().get(0) instanceof RexInputRef) {
+                return RuleUtils.isPlainTableColumn(((RexInputRef) ((RexCall) n2).getOperands().get(0)).getIndex(),
                         inputProject.getInput(0)) && !isNeedTackCast(n2);
             }
         }
@@ -209,7 +206,7 @@ public class CountDistinctCaseWhenFunctionRule extends AbstractAggCaseWhenFuncti
 
     @Override
     protected boolean isValidAggColumnExpr(RexNode rexNode) {
-        return !isNullLiteral(rexNode);
+        return !RuleUtils.isNullLiteral(rexNode);
     }
 
     /**
@@ -217,7 +214,7 @@ public class CountDistinctCaseWhenFunctionRule extends AbstractAggCaseWhenFuncti
      */
     @Override
     protected boolean isNeedTackCast(RexNode rexNode) {
-        if (!isCast(rexNode)) {
+        if (!RuleUtils.isCast(rexNode)) {
             return false;
         }
         return !SqlTypeUtil.canCastFrom(rexNode.getType(), ((RexCall) rexNode).getOperands().get(0).getType(), false);

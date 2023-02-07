@@ -88,12 +88,14 @@ public class SampleController extends BaseController {
     @ResponseBody
     public EnvelopeResponse<String> getPartitionColumnFormat(@RequestParam(value = "project") String project,
             @RequestParam(value = "table") String table,
-            @RequestParam(value = "partition_column") String partitionColumn) throws Exception {
+            @RequestParam(value = "partition_column") String partitionColumn,
+            @RequestParam(value = "partition_expression", required = false) String partitionExpression)
+            throws Exception {
         checkProjectName(project);
         checkRequiredArg(TABLE, table);
         checkRequiredArg("partitionColumn", partitionColumn);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-                tableService.getPartitionColumnFormat(project, table, partitionColumn), "");
+                tableService.getPartitionColumnFormat(project, table, partitionColumn, partitionExpression), "");
     }
 
     @ApiOperation(value = "samplingJobs", tags = { "AI" })

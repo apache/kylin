@@ -24,7 +24,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobIssueEnum;
 import org.apache.kylin.job.util.MailNotificationUtil;
@@ -89,7 +89,7 @@ public class EmailNotificationContent {
         if (state == ExecutableState.ERROR) {
             checkErrorTask(executable, dataMap, tasks);
             dataMap.put("error_log",
-                    Matcher.quoteReplacement(StringUtil.noBlank(output.getShortErrMsg(), "no error message")));
+                    Matcher.quoteReplacement(StringHelper.noBlank(output.getShortErrMsg(), "no error message")));
         }
 
         return Pair.newPair(getMailTitle(state, executable), getMailContent(state, dataMap));
@@ -116,7 +116,7 @@ public class EmailNotificationContent {
             dataMap.put("error_step", errorTask.getName());
             if (errorTask.getOutput().getExtra().containsKey(ExecutableConstants.MR_JOB_ID)) {
                 final String mrJobId = errorOutput.getExtra().get(ExecutableConstants.MR_JOB_ID);
-                dataMap.put(ExecutableConstants.MR_JOB_ID, StringUtil.noBlank(mrJobId, "Not initialized"));
+                dataMap.put(ExecutableConstants.MR_JOB_ID, StringHelper.noBlank(mrJobId, "Not initialized"));
             } else {
                 dataMap.put(ExecutableConstants.MR_JOB_ID, MailNotificationUtil.NA);
             }
@@ -127,26 +127,26 @@ public class EmailNotificationContent {
                                                                              AbstractExecutable executable) {
         logger.info("notify on metadata persist exception: {}", exception.getMessage());
         Map<String, Object> dataMap = getDataMap(executable);
-        dataMap.put("error_log", Matcher.quoteReplacement(StringUtil.noBlank(
+        dataMap.put("error_log", Matcher.quoteReplacement(StringHelper.noBlank(
                 exception.getMessage(), "no error message")));
 
         String content = MailNotificationUtil.getMailContent(MailNotificationUtil.METADATA_PERSIST_FAIL, dataMap);
         String title = MailNotificationUtil.getMailTitle("METADATA_PERSIST",
                 "FAIL",
-                StringUtil.noBlank(executable.getConfig().getDeployEnv(), MailNotificationUtil.NA),
+                StringHelper.noBlank(executable.getConfig().getDeployEnv(), MailNotificationUtil.NA),
                 executable.getProject(),
-                StringUtil.noBlank(executable.getTargetSubjectAlias(), MailNotificationUtil.NA));
+                StringHelper.noBlank(executable.getTargetSubjectAlias(), MailNotificationUtil.NA));
         return Pair.newPair(title, content);
     }
 
     private static Map<String, Object> getDataMap(AbstractExecutable executable) {
         Map<String, Object> dataMap = Maps.newHashMap();
-        dataMap.put("job_name", StringUtil.noBlank(executable.getName(), "missing job_name"));
+        dataMap.put("job_name", StringHelper.noBlank(executable.getName(), "missing job_name"));
         dataMap.put("env_name", executable.getConfig().getDeployEnv());
-        dataMap.put("submitter", StringUtil.noBlank(executable.getSubmitter(), "missing submitter"));
+        dataMap.put("submitter", StringHelper.noBlank(executable.getSubmitter(), "missing submitter"));
         dataMap.put("job_engine", MailNotificationUtil.getLocalHostName());
         dataMap.put("project_name", executable.getProject());
-        dataMap.put("model_name", StringUtil.noBlank(executable.getTargetModelAlias(), "missing model_name"));
+        dataMap.put("model_name", StringHelper.noBlank(executable.getTargetModelAlias(), "missing model_name"));
         return dataMap;
     }
 

@@ -20,20 +20,21 @@ package org.apache.kylin.engine.spark.smarter
 import java.util
 import java.util.Collections
 
-import com.google.common.collect.{Lists, Maps, Sets}
+import org.apache.commons.collections.CollectionUtils
+import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.builder.SegmentFlatTable
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.metadata.cube.model.LayoutEntity
-import org.apache.kylin.metadata.model.NDataModel
-import org.apache.commons.collections.CollectionUtils
-import org.apache.commons.lang3.StringUtils
-import org.apache.kylin.metadata.model.{FunctionDesc, JoinTableDesc, TableRef, TblColRef}
+import org.apache.kylin.metadata.model.{FunctionDesc, JoinTableDesc, NDataModel, TableRef, TblColRef}
+import org.apache.kylin.query.util.PushDownUtil
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.{Dataset, Row, SparderEnv, SparkSession}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+
+import com.google.common.collect.{Lists, Maps, Sets}
 
 class IndexDependencyParser(val model: NDataModel) {
 
@@ -105,7 +106,7 @@ class IndexDependencyParser(val model: NDataModel) {
     }
   }
 
-  private def generateFullFlatTableDF(ss: SparkSession, model: NDataModel): Dataset[Row] = {
+  def generateFullFlatTableDF(ss: SparkSession, model: NDataModel): Dataset[Row] = {
     val rootDF = generateDatasetOnTable(ss, model.getRootFactTable)
     // look up tables
     val joinTableDFMap = mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]]()
@@ -113,14 +114,16 @@ class IndexDependencyParser(val model: NDataModel) {
       joinTableDFMap.put(joinTable, generateDatasetOnTable(ss, joinTable.getTableRef))
     })
     val df = SegmentFlatTable.joinFactTableWithLookupTables(rootDF, joinTableDFMap, model, ss)
-    if (StringUtils.isNotEmpty(model.getFilterCondition)) {
-      df.where(NSparkCubingUtil.convertFromDotWithBackTick(model.getFilterCondition))
+    val filterCondition = model.getFilterCondition
+    if (StringUtils.isNotEmpty(filterCondition)) {
+      val massagedCondition = PushDownUtil.massageExpression(model, model.getProject, filterCondition, null)
+      df.where(NSparkCubingUtil.convertFromDotWithBackTick(massagedCondition))
     }
     df
   }
 
   private def generateDatasetOnTable(ss: SparkSession, tableRef: TableRef): Dataset[Row] = {
-    val tableCols = tableRef.getColumns.asScala.map(_.getColumnDesc).filter(!_.isComputedColumn).toArray
+    val tableCols = tableRef.getColumns.asScala.map(_.getColumnDesc).toArray
     val structType = SchemaProcessor.buildSchemaWithRawTable(tableCols)
     val alias = tableRef.getAlias
     val dataset = ss.createDataFrame(Lists.newArrayList[Row], structType).alias(alias)
@@ -190,7 +193,7 @@ class IndexDependencyParser(val model: NDataModel) {
     }
   }
 
-  private def initJoinTableName() {
+  private def initJoinTableName(): Unit = {
     if (CollectionUtils.isEmpty(model.getJoinTables)) {
       return
     }

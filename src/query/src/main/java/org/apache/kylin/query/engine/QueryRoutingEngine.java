@@ -76,8 +76,7 @@ public class QueryRoutingEngine {
 
     public QueryResult queryWithSqlMassage(QueryParams queryParams) throws Exception {
         QueryContext.current().setAclInfo(queryParams.getAclInfo());
-        KylinConfig projectKylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(queryParams.getProject()).getConfig();
+        KylinConfig projectKylinConfig = NProjectManager.getProjectConfig(queryParams.getProject());
         QueryExec queryExec = new QueryExec(queryParams.getProject(), projectKylinConfig, true);
         queryParams.setDefaultSchema(queryExec.getDefaultSchemaName());
 
@@ -230,7 +229,7 @@ public class QueryRoutingEngine {
     private boolean checkBigQueryPushDown(QueryParams queryParams) {
         KylinConfig kylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(queryParams.getProject()).getConfig();
-        boolean isPush = QueryUtil.checkBigQueryPushDown(kylinConfig);
+        boolean isPush = QueryUtil.isBigQueryPushDownCapable(kylinConfig);
         if (isPush) {
             logger.info("Big query route to pushdown.");
         }
@@ -271,22 +270,21 @@ public class QueryRoutingEngine {
             sqlString = QueryUtil.addLimit(sqlString);
         }
 
-        String massagedSql = QueryUtil.normalMassageSql(KylinConfig.getInstanceFromEnv(), sqlString,
-                queryParams.getLimit(), queryParams.getOffset());
+        String massagedSql = QueryUtil.appendLimitOffset(queryParams.getProject(), sqlString, queryParams.getLimit(),
+                queryParams.getOffset());
         if (isPrepareStatementWithParams(queryParams)) {
             QueryContext.current().getMetrics().setCorrectedSql(massagedSql);
         }
         queryParams.setSql(massagedSql);
         queryParams.setSqlException(sqlException);
         queryParams.setPrepare(isPrepare);
-        return PushDownUtil.tryPushDownQueryToIterator(queryParams);
+        return PushDownUtil.tryIterQuery(queryParams);
     }
 
     private boolean isPrepareStatementWithParams(QueryParams queryParams) {
-        KylinConfig kylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(queryParams.getProject()).getConfig();
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(queryParams.getProject());
         return (KapConfig.getInstanceFromEnv().enablePushdownPrepareStatementWithParams()
-                || kylinConfig.enableReplaceDynamicParams()) && queryParams.isPrepareStatementWithParams();
+                || projectConfig.enableReplaceDynamicParams()) && queryParams.isPrepareStatementWithParams();
     }
 
     private QueryResult prepareOnly(String correctedSql, QueryExec queryExec, List<List<String>> results,

@@ -34,15 +34,15 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.request.DDLRequest;
 import org.apache.kylin.rest.response.DDLResponse;
 import org.apache.kylin.rest.response.ExportTablesResponse;
 import org.apache.kylin.rest.response.TableNameResponse;
+import org.apache.kylin.source.ISourceMetadataExplorer;
+import org.apache.kylin.source.SourceFactory;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.DDLDesc;
 import org.apache.spark.sql.Dataset;
@@ -272,15 +272,15 @@ public class SparkSourceService extends BasicService {
                 ss.sql(CREATE_VIEW_P_LINEORDER);
                 createdTables.add(VIEW_P_LINEORDER);
             }
-            log.info("Load samples {} successfully", StringUtil.join(createdTables, ","));
+            log.info("Load samples {} successfully", StringHelper.join(createdTables, ","));
         } finally {
             lock.unlock();
         }
         return createdTables;
     }
 
-    private void loadSamples(SparkSession ss, SaveMode mode, String table, String tableName,
-                             String db, File file, String fileName) throws IOException {
+    private void loadSamples(SparkSession ss, SaveMode mode, String table, String tableName, String db, File file,
+            String fileName) throws IOException {
         String filePath = file.getAbsolutePath();
         FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
         String hdfsPath = String.format(Locale.ROOT, "/tmp/%s", fileName);
@@ -289,13 +289,12 @@ public class SparkSourceService extends BasicService {
             File[] parquetFiles = file.listFiles();
             if (parquetFiles != null) {
                 for (File parquetFile : parquetFiles) {
-                    fileSystem.copyFromLocalFile(new Path(parquetFile.getAbsolutePath()),
-                            new Path(hdfsPath));
+                    fileSystem.copyFromLocalFile(new Path(parquetFile.getAbsolutePath()), new Path(hdfsPath));
                 }
             }
             // KC-6666, check and delete location
-            String tbLocation = String.format(Locale.ROOT, "%s/%s",
-                    ss.catalog().getDatabase(db).locationUri(), tableName);
+            String tbLocation = String.format(Locale.ROOT, "%s/%s", ss.catalog().getDatabase(db).locationUri(),
+                    tableName);
             FileSystem fs = FileSystem.get(ss.sparkContext().hadoopConfiguration());
             Path path = new Path(tbLocation);
             if (fs.exists(path)) {
@@ -305,8 +304,7 @@ public class SparkSourceService extends BasicService {
             ss.read().parquet(hdfsPath).write().mode(mode).saveAsTable(table);
         } catch (Exception e) {
             log.error("Load sample {} failed.", fileName, e);
-            throw new IllegalStateException(String.format(Locale.ROOT, "Load sample %s failed", fileName),
-                    e);
+            throw new IllegalStateException(String.format(Locale.ROOT, "Load sample %s failed", fileName), e);
         } finally {
             fileSystem.delete(new Path(hdfsPath), false);
         }

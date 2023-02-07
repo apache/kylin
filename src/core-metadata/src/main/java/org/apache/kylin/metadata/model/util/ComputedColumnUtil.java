@@ -45,7 +45,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.BadModelException;
 import org.apache.kylin.metadata.model.BadModelException.CauseType;
@@ -89,7 +88,7 @@ public class ComputedColumnUtil {
             JoinsGraph newCCGraph = getCCExprRelatedSubgraph(newCC, newModel);
             for (NDataModel existingModel : otherModels) {
                 for (ComputedColumnDesc existingCC : existingModel.getComputedColumnDescs()) {
-                    if (!StringUtil.equals(newCC.getTableIdentity(), existingCC.getTableIdentity())) {
+                    if (!StringUtils.equals(newCC.getTableIdentity(), existingCC.getTableIdentity())) {
                         continue;
                     }
                     JoinsGraph existCCGraph = getCCExprRelatedSubgraph(existingCC, existingModel);
@@ -105,16 +104,6 @@ public class ComputedColumnUtil {
             return null;
         }
         return null;
-    }
-
-    public static BiMap<String, String> getAllCCNameAndExp(List<NDataModel> allModels) {
-        BiMap<String, String> allCCNameAndExp = HashBiMap.create();
-        for (NDataModel otherModel : allModels) {
-            for (ComputedColumnDesc cc : otherModel.getComputedColumnDescs()) {
-                allCCNameAndExp.put(cc.getColumnName(), cc.getExpression());
-            }
-        }
-        return allCCNameAndExp;
     }
 
     public static class ExprIdentifierFinder extends SqlBasicVisitor<SqlNode> {
@@ -147,16 +136,11 @@ public class ComputedColumnUtil {
 
         @Override
         public SqlNode visit(SqlIdentifier id) {
-            //Preconditions.checkState(id.names.size() == 2, "error when get identifier in cc's expr");
             if (id.names.size() == 2) {
                 columnWithTableAlias.add(Pair.newPair(id.names.get(0), id.names.get(1)));
             }
             return null;
         }
-    }
-
-    public static Map<String, Set<String>> getCCUsedColsMapWithProject(String project, ColumnDesc columnDesc) {
-        return getCCUsedColsMapWithModel(getModel(project, columnDesc.getName()), columnDesc);
     }
 
     public static Set<String> getCCUsedColsWithProject(String project, ColumnDesc columnDesc) {
@@ -201,21 +185,20 @@ public class ComputedColumnUtil {
     public static Map<String, Set<String>> getCCUsedColsMap(NDataModel model, String colName) {
         Map<String, Set<String>> usedCols = Maps.newHashMap();
         Map<String, String> aliasTableMap = getAliasTableMap(model);
-        Preconditions.checkState(aliasTableMap.size() > 0, "can not find cc:" + colName + "'s table alias");
+        Preconditions.checkState(aliasTableMap.size() > 0, "can not find cc:%s's table alias", colName);
 
         ComputedColumnDesc targetCC = model.getComputedColumnDescs().stream()
                 .filter(cc -> cc.getColumnName().equalsIgnoreCase(colName)) //
                 .findFirst().orElse(null);
         if (targetCC == null) {
-            throw new RuntimeException("ComputedColumn(name: " + colName + ") is not on model: " + model.getUuid());
+            throw new IllegalStateException(
+                    "ComputedColumn(name: " + colName + ") is not on model: " + model.getUuid());
         }
 
         List<Pair<String, String>> colsWithAlias = ExprIdentifierFinder.getExprIdentifiers(targetCC.getExpression());
         for (Pair<String, String> cols : colsWithAlias) {
             String tableIdentifier = aliasTableMap.get(cols.getFirst());
-            if (!usedCols.containsKey(tableIdentifier)) {
-                usedCols.put(tableIdentifier, Sets.newHashSet());
-            }
+            usedCols.putIfAbsent(tableIdentifier, Sets.newHashSet());
             usedCols.get(tableIdentifier).add(cols.getSecond());
         }
         return usedCols;
@@ -224,13 +207,12 @@ public class ComputedColumnUtil {
     private static Set<String> getCCUsedCols(NDataModel model, String colName, String ccExpr) {
         Set<String> usedCols = new HashSet<>();
         Map<String, String> aliasTableMap = getAliasTableMap(model);
-        Preconditions.checkState(aliasTableMap.size() > 0, "can not find cc:" + colName + "'s table alias");
+        Preconditions.checkState(aliasTableMap.size() > 0, "can not find cc:%s's table alias", colName);
         List<Pair<String, String>> colsWithAlias = ExprIdentifierFinder.getExprIdentifiers(ccExpr);
         for (Pair<String, String> cols : colsWithAlias) {
             String tableIdentifier = aliasTableMap.get(cols.getFirst());
             usedCols.add(tableIdentifier + "." + cols.getSecond());
         }
-        //Preconditions.checkState(usedCols.size() > 0, "can not find cc:" + columnDesc.getUuid() + "'s used cols");
         return usedCols;
     }
 
@@ -246,8 +228,7 @@ public class ComputedColumnUtil {
     private static NDataModel getModel(String project, String ccName) {
         List<NDataModel> models = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
                 .listUnderliningDataModels();
-        for (NDataModel modelDesc : models) {
-            NDataModel model = modelDesc;
+        for (NDataModel model : models) {
             Set<String> computedColumnNames = model.getComputedColumnNames();
             if (computedColumnNames.contains(ccName)) {
                 return model;
@@ -335,25 +316,6 @@ public class ComputedColumnUtil {
     public static boolean isSameName(ComputedColumnDesc col1, ComputedColumnDesc col2) {
         return StringUtils.equalsIgnoreCase(col1.getTableIdentity() + "." + col1.getColumnName(),
                 col2.getTableIdentity() + "." + col2.getColumnName());
-    }
-
-    public static boolean isLiteralSameCCExpr(ComputedColumnDesc existingCC, ComputedColumnDesc newCC) {
-        String definition0 = existingCC.getExpression();
-        String definition1 = newCC.getExpression();
-
-        if (definition0 == null) {
-            return definition1 == null;
-        } else if (definition1 == null) {
-            return false;
-        }
-
-        return isLiteralSameCCExprString(definition0, definition1);
-    }
-
-    public static boolean isLiteralSameCCExprString(String definition0, String definition1) {
-        definition0 = StringUtils.replaceAll(definition0, "\\s*", "");
-        definition1 = StringUtils.replaceAll(definition1, "\\s*", "");
-        return definition0.equalsIgnoreCase(definition1);
     }
 
     private static boolean isSameCCExpr(ComputedColumnDesc existingCC, ComputedColumnDesc newCC,
@@ -547,12 +509,13 @@ public class ComputedColumnUtil {
         @Override
         public void handleOnSingleModelSameExpr(NDataModel existingModel, ComputedColumnDesc existingCC,
                 ComputedColumnDesc newCC) {
-            logger.error(
-                    String.format(Locale.ROOT, "In model %s, computed columns %s and %s have equivalent expressions.",
-                            existingModel.getAlias(), existingCC.getFullName(), newCC.getFullName()));
+            String ccFullName = newCC.getFullName();
+            String errorMsg = "In model " + existingModel.getAlias() + ", computed columns " + existingCC.getFullName()
+                    + " and " + ccFullName + " have equivalent expressions.";
+            logger.error(errorMsg);
             String msg = MsgPicker.getMsg().getComputedColumnExpressionDuplicatedSingleModel();
             throw new BadModelException(DUPLICATE_COMPUTED_COLUMN_EXPRESSION, msg,
-                    BadModelException.CauseType.SELF_CONFLICT_WITH_SAME_EXPRESSION, null, null, newCC.getFullName());
+                    BadModelException.CauseType.SELF_CONFLICT_WITH_SAME_EXPRESSION, null, null, ccFullName);
         }
     }
 
@@ -676,19 +639,6 @@ public class ComputedColumnUtil {
             return new KylinException(COMPUTED_COLUMN_EXPR_CONFLICT, newCC.getColumnName(), newCC.getExpression(),
                     existingModelName);
         }
-    }
-
-    public static List<Pair<ComputedColumnDesc, NDataModel>> getExistingCCs(String modelId,
-            List<NDataModel> otherModels) {
-        List<Pair<ComputedColumnDesc, NDataModel>> existingCCs = Lists.newArrayList();
-        for (NDataModel otherModel : otherModels) {
-            if (!StringUtils.equals(otherModel.getUuid(), modelId)) {
-                for (ComputedColumnDesc cc : otherModel.getComputedColumnDescs()) {
-                    existingCCs.add(Pair.newPair(cc, otherModel));
-                }
-            }
-        }
-        return existingCCs;
     }
 
     public static List<ComputedColumnDesc> getAuthorizedCC(List<NDataModel> modelList,

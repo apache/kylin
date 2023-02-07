@@ -21,18 +21,21 @@ package org.apache.kylin.common.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-/**
- */
-public class StringUtil {
+public class StringHelper {
 
-    public static String[] EMPTY_ARRAY = new String[0];
+    public static final char QUOTE = '\'';
+    public static final char DOUBLE_QUOTE = '"';
+    public static final char BACKTICK = '`';
+
+    private StringHelper() {
+    }
 
     public static String[] filterSystemArgs(String[] args) {
         List<String> whatsLeft = Lists.newArrayList();
@@ -86,7 +89,7 @@ public class StringUtil {
         if (source != null) {
             for (int i = 0; i < source.length; i++) {
                 if (source[i] != null) {
-                    target[i] = source[i].toUpperCase(Locale.ROOT);
+                    target[i] = StringUtils.upperCase(source[i]);
                 }
             }
         }
@@ -175,7 +178,7 @@ public class StringUtil {
             if (!s.isEmpty())
                 r.add(s);
         }
-        return r.toArray(new String[r.size()]);
+        return r.toArray(new String[0]);
     }
 
     // calculating length in UTF-8 of Java String without actually encoding it
@@ -213,4 +216,72 @@ public class StringUtil {
         return str.split(splitBy);
     }
 
+    public static String backtickToDoubleQuote(String expression) {
+        return convert(expression, StringHelper.BACKTICK, StringHelper.DOUBLE_QUOTE);
+    }
+
+    public static String doubleQuoteToBacktick(String expression) {
+        return convert(expression, StringHelper.DOUBLE_QUOTE, StringHelper.BACKTICK);
+    }
+
+    private static String convert(String expression, char srcQuote, char targetQuote) {
+        char[] chars = expression.toCharArray();
+        List<Integer> indexList = StringHelper.findQuoteIndexes(srcQuote, expression);
+        for (Integer integer : indexList) {
+            chars[integer] = targetQuote;
+        }
+        return new String(chars);
+    }
+
+    public static String backtickQuote(String identifier) {
+        String str = StringUtils.remove(identifier, StringHelper.BACKTICK);
+        return StringHelper.BACKTICK + str + StringHelper.BACKTICK;
+    }
+
+    public static String doubleQuote(String identifier) {
+        String str = StringUtils.remove(identifier, StringHelper.DOUBLE_QUOTE);
+        return StringHelper.DOUBLE_QUOTE + str + StringHelper.DOUBLE_QUOTE;
+    }
+
+    /**
+     * Search identifier quotes in the sql string.
+     * @param key the char to search
+     * @param str the input string
+     * @return index list of {@code key}
+     */
+    public static List<Integer> findQuoteIndexes(char key, String str) {
+        Preconditions.checkState(key == BACKTICK || key == DOUBLE_QUOTE);
+        char[] chars = str.toCharArray();
+        List<Integer> indexList = Lists.newArrayList();
+        List<Pair<Integer, Character>> toMatchTokens = Lists.newArrayList();
+        for (int i = 0; i < chars.length; i++) {
+            char ch = chars[i];
+            if (toMatchTokens.isEmpty()) {
+                if (ch == key || ch == QUOTE) {
+                    toMatchTokens.add(new Pair<>(i, ch));
+                }
+                continue;
+            }
+
+            // The toMatchTokens is not empty, try to collect
+            Character ex = toMatchTokens.get(toMatchTokens.size() - 1).getSecond();
+            if (ch == ex && ch == key) {
+                toMatchTokens.add(new Pair<>(i, ex));
+                Preconditions.checkState(toMatchTokens.size() == 2);
+                indexList.add(toMatchTokens.get(0).getFirst());
+                indexList.add(toMatchTokens.get(1).getFirst());
+                toMatchTokens.clear();
+            } else if (ch == ex && ch == QUOTE) {
+                // There are two kind of single quote in the char array.
+                // One kind has two successive single quote '', we need to clear the toMatchTokens.
+                // Another kind has a form of \', just ignore it and go on match the next char.
+                Preconditions.checkState(toMatchTokens.size() == 1);
+                if (chars[i - 1] != '\\') {
+                    toMatchTokens.clear();
+                }
+            }
+        }
+        Preconditions.checkState(indexList.size() % 2 == 0);
+        return indexList;
+    }
 }

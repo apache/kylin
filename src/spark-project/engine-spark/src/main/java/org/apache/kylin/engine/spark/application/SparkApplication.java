@@ -80,7 +80,6 @@ import org.apache.kylin.metadata.view.LogicalView;
 import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.query.pushdown.SparkSubmitter;
 import org.apache.kylin.query.util.PushDownUtil;
-
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkException;
 import org.apache.spark.application.NoRetryException;
@@ -97,7 +96,6 @@ import org.apache.spark.sql.catalyst.rules.Rule;
 import org.apache.spark.sql.execution.datasource.AlignmentTableStats;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.apache.spark.util.Utils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +104,6 @@ import com.google.common.collect.Maps;
 
 import org.apache.kylin.engine.spark.job.SegmentBuildJob;
 import lombok.val;
-
 import scala.runtime.AbstractFunction1;
 import scala.runtime.BoxedUnit;
 
@@ -360,7 +357,7 @@ public abstract class SparkApplication implements Application {
     }
 
     // Permission exception will not be retried. Simply let the job fail.
-    protected void interceptAccessControlException(Throwable e) throws NoRetryException{
+    protected void interceptAccessControlException(Throwable e) throws NoRetryException {
         logger.error("Permission denied.", e);
         throw new NoRetryException("Permission denied.");
     }
@@ -534,28 +531,27 @@ public abstract class SparkApplication implements Application {
             return;
         }
         val modelManager = NDataModelManager.getInstance(config, project);
-        NDataModel modelDesc = modelManager.getDataModelDesc(modelId);
-        if (checkRangePartitionTableIsExist(modelDesc)) {
+        NDataModel model = modelManager.getDataModelDesc(modelId);
+        if (checkRangePartitionTableIsExist(model)) {
             logger.info("Range partitioned tables do not support pushdown, so do not need to perform subsequent logic");
             return;
         }
 
-        val partitionDesc = modelDesc.getPartitionDesc();
+        val partitionDesc = model.getPartitionDesc();
         if (PartitionDesc.isEmptyPartitionDesc(partitionDesc)
-                || org.apache.commons.lang.StringUtils.isEmpty(partitionDesc.getPartitionDateFormat()))
+                || StringUtils.isEmpty(partitionDesc.getPartitionDateFormat()))
             return;
 
-        if (CatalogTableType.VIEW().name().equals(modelDesc.getRootFactTable().getTableDesc().getTableType()))
+        if (CatalogTableType.VIEW().name().equals(model.getRootFactTable().getTableDesc().getTableType()))
             return;
 
-        String partitionColumn = modelDesc.getPartitionDesc().getPartitionDateColumnRef().getExpressionInSourceDB();
+        String partitionColumn = model.getPartitionDesc().getPartitionDateColumnRef().getBackTickExp();
 
         SparkSession sparkSession = atomicSparkSession.get();
         try (SparkSubmitter.OverriddenSparkSession ignored = SparkSubmitter.getInstance()
                 .overrideSparkSession(sparkSession)) {
-            String dateString = PushDownUtil.getFormatIfNotExist(modelDesc.getRootFactTableName(), partitionColumn,
-                    project);
-            val sdf = new SimpleDateFormat(modelDesc.getPartitionDesc().getPartitionDateFormat(),
+            String dateString = PushDownUtil.probeColFormat(model.getRootFactTableName(), partitionColumn, project);
+            val sdf = new SimpleDateFormat(model.getPartitionDesc().getPartitionDateFormat(),
                     Locale.getDefault(Locale.Category.FORMAT));
             val date = sdf.parse(dateString);
             if (date == null || !dateString.equals(sdf.format(date))) {
@@ -665,9 +661,8 @@ public abstract class SparkApplication implements Application {
         LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
 
         if (StringUtils.isNotBlank(dataflowId)) {
-            viewManager
-                .findLogicalViewsInModel(project, dataflowId)
-                .forEach(view -> LogicalViewLoader.loadView(view.getTableName(), true, ss));
+            viewManager.findLogicalViewsInModel(project, dataflowId)
+                    .forEach(view -> LogicalViewLoader.loadView(view.getTableName(), true, ss));
         }
         if (StringUtils.isNotBlank(tableName)) {
             LogicalView view = viewManager.findLogicalViewInProject(getProject(), tableName);

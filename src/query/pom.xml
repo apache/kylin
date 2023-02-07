@@ -20,7 +20,7 @@
     <packaging>jar</packaging>
     <name>Kylin - Query</name>
     <url>http://kylin.apache.org</url>
-    <description>Kylin  Query Engine</description>
+    <description>Kylin Query Engine</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
@@ -116,6 +116,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!--test jars-->
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-metadata</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
