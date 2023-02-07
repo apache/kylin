@@ -307,7 +307,7 @@ public class PartitionDesc implements Serializable {
 
         private static void buildSingleColumnRangeCondAsDate(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive, String partitionColumnDateFormat) {
-            String partitionColumnName = partitionColumn.getBackTickExpressionInSourceDB();
+            String partitionColumnName = partitionColumn.getBackTickExp();
             builder.append(partitionColumnName).append(" >= ").append(String.format(Locale.ROOT, "to_date('%s', '%s')",
                     DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat), partitionColumnDateFormat));
             builder.append(and);
@@ -317,7 +317,7 @@ public class PartitionDesc implements Serializable {
 
         private static void buildSingleColumnRangeCondAsTimestamp(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive) {
-            String partitionColumnName = partitionColumn.getBackTickExpressionInSourceDB();
+            String partitionColumnName = partitionColumn.getBackTickExp();
             builder.append(partitionColumnName).append(" >= ").append(startInclusive);
             builder.append(and);
             builder.append(partitionColumnName).append(" < ").append(endExclusive);
@@ -325,7 +325,7 @@ public class PartitionDesc implements Serializable {
 
         private static void buildSingleColumnRangeCondAsYmInt(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive) {
-            String partitionColumnName = partitionColumn.getBackTickExpressionInSourceDB();
+            String partitionColumnName = partitionColumn.getBackTickExp();
             builder.append(partitionColumnName).append(" >= ")
                     .append(DateFormat.formatToDateStr(startInclusive, DateFormat.COMPACT_MONTH_PATTERN));
             builder.append(and);
@@ -335,7 +335,7 @@ public class PartitionDesc implements Serializable {
 
         private static void buildSingleColumnRangeCondAsYmdInt(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive) {
-            String partitionColumnName = partitionColumn.getBackTickExpressionInSourceDB();
+            String partitionColumnName = partitionColumn.getBackTickExp();
             builder.append(partitionColumnName).append(" >= ")
                     .append(DateFormat.formatToDateStr(startInclusive, DateFormat.COMPACT_DATE_PATTERN));
             builder.append(and);
@@ -345,7 +345,7 @@ public class PartitionDesc implements Serializable {
 
         private static void buildSingleColumnRangeCondition(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive, String partitionColumnDateFormat) {
-            String partitionColumnName = partitionColumn.getBackTickExpressionInSourceDB();
+            String partitionColumnName = partitionColumn.getBackTickExp();
 
             if (endExclusive <= startInclusive) {
                 builder.append("1=1");

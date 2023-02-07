@@ -42,7 +42,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.request.AWSTableLoadRequest;
@@ -117,7 +117,8 @@ public class NTableController extends NBasicController {
             "AI" }, notes = "Update Param: is_fuzzy, page_offset, page_size; Update Response: no format!")
     @GetMapping(value = "", produces = { HTTP_VND_APACHE_KYLIN_JSON })
     @ResponseBody
-    public EnvelopeResponse<Map<String, Object>> getTableDesc(@RequestParam(value = "ext", required = false) boolean withExt,
+    public EnvelopeResponse<Map<String, Object>> getTableDesc(
+            @RequestParam(value = "ext", required = false) boolean withExt,
             @RequestParam(value = "project") String project,
             @RequestParam(value = "table", required = false) String table,
             @RequestParam(value = "database", required = false) String database,
@@ -133,7 +134,8 @@ public class NTableController extends NBasicController {
         int returnTableSize = calculateTableSize(offset, limit);
         TableDescRequest tableDescRequest = new TableDescRequest(project, table, database, withExt, isFuzzy,
                 Pair.newPair(offset, limit), Collections.singletonList(sourceType));
-        Pair<List<TableDesc>, Integer> tableDescWithActualSize = tableService.getTableDesc(tableDescRequest, returnTableSize);
+        Pair<List<TableDesc>, Integer> tableDescWithActualSize = tableService.getTableDesc(tableDescRequest,
+                returnTableSize);
         // Finally, the results are processed based on the paging parameters and returned to the front-end UI,
         // where the results table to be processed each time is getting longer as the number of paging increases
         Map<String, Object> mockDataResponse = setCustomDataResponse("tables", tableDescWithActualSize, offset, limit);
@@ -155,8 +157,8 @@ public class NTableController extends NBasicController {
             @RequestParam(value = "source_type", required = false, defaultValue = "9") List<Integer> sourceType)
             throws Exception {
         checkProjectName(project);
-        TableDescRequest tableDescRequest = new TableDescRequest(project, table, "", withExt, isFuzzy,
-                offset, limit, sourceType, withExcluded);
+        TableDescRequest tableDescRequest = new TableDescRequest(project, table, "", withExt, isFuzzy, offset, limit,
+                sourceType, withExcluded);
         NInitTablesResponse projectTables = tableService.getProjectTables(tableDescRequest, false);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, projectTables, "");
     }
@@ -230,7 +232,7 @@ public class NTableController extends NBasicController {
 
         LoadTableResponse loadTableResponse = new LoadTableResponse();
         if (ArrayUtils.isNotEmpty(tableLoadRequest.getTables())) {
-            StringUtil.toUpperCaseArray(tableLoadRequest.getTables(), tableLoadRequest.getTables());
+            StringHelper.toUpperCaseArray(tableLoadRequest.getTables(), tableLoadRequest.getTables());
             LoadTableResponse loadByTable = tableExtService.loadDbTables(tableLoadRequest.getTables(),
                     tableLoadRequest.getProject(), false);
             loadTableResponse.getFailed().addAll(loadByTable.getFailed());
@@ -238,7 +240,7 @@ public class NTableController extends NBasicController {
         }
 
         if (ArrayUtils.isNotEmpty(tableLoadRequest.getDatabases())) {
-            StringUtil.toUpperCaseArray(tableLoadRequest.getDatabases(), tableLoadRequest.getDatabases());
+            StringHelper.toUpperCaseArray(tableLoadRequest.getDatabases(), tableLoadRequest.getDatabases());
             LoadTableResponse loadByDb = tableExtService.loadDbTables(tableLoadRequest.getDatabases(),
                     tableLoadRequest.getProject(), true);
             loadTableResponse.getFailed().addAll(loadByDb.getFailed());
@@ -351,8 +353,8 @@ public class NTableController extends NBasicController {
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer offset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer limit) throws Exception {
         String projectName = checkProjectName(project);
-        NInitTablesResponse data = tableService.getProjectTables(projectName, table, offset, limit, true,
-                true, Collections.emptyList());
+        NInitTablesResponse data = tableService.getProjectTables(projectName, table, offset, limit, true, true,
+                Collections.emptyList());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, data, "");
     }
 

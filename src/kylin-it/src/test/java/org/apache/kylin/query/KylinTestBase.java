@@ -51,7 +51,10 @@ import org.apache.kylin.util.ExecAndComp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+
+import lombok.val;
 
 /**
  */
@@ -134,13 +137,22 @@ public class KylinTestBase extends NLocalFileMetadataTestCase {
 
     public Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownSelectQuery(String project, String sql,
             String defaultSchema, SQLException sqlException, boolean isPrepare, boolean isForced) throws Exception {
-        String massagedSql = QueryUtil.normalMassageSql(KylinConfig.getInstanceFromEnv(), sql, 0, 0);
+        String massagedSql = QueryUtil.appendLimitOffset(project, sql, 0, 0);
         QueryParams queryParams = new QueryParams(project, massagedSql, defaultSchema, isPrepare, sqlException,
                 isForced);
         queryParams.setSelect(true);
         queryParams.setLimit(0);
         queryParams.setOffset(0);
-        return PushDownUtil.tryPushDownQuery(queryParams);
+        return tryPushDownQuery(queryParams);
+    }
+
+    public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownQuery(QueryParams queryParams)
+            throws Exception {
+        val results = PushDownUtil.tryIterQuery(queryParams);
+        if (results == null) {
+            return null;
+        }
+        return new Pair<>(ImmutableList.copyOf(results.getRows()), results.getColumnMetas());
     }
 
     // end of execute

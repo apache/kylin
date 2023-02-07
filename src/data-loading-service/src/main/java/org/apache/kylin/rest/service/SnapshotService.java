@@ -24,12 +24,38 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
 import lombok.val;
+import static org.apache.kylin.common.exception.ServerErrorCode.COLUMN_NOT_EXIST;
+import static org.apache.kylin.common.exception.ServerErrorCode.DATABASE_NOT_EXIST;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
+import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
+import static org.apache.kylin.common.exception.ServerErrorCode.SNAPSHOT_MANAGEMENT_NOT_ENABLED;
+import static org.apache.kylin.common.exception.ServerErrorCode.SNAPSHOT_NOT_EXIST;
+import static org.apache.kylin.common.exception.ServerErrorCode.TABLE_NOT_EXIST;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_FAIL;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
+import static org.apache.kylin.job.execution.JobTypeEnum.SNAPSHOT_BUILD;
+import static org.apache.kylin.job.execution.JobTypeEnum.SNAPSHOT_REFRESH;
+import static org.apache.kylin.rest.constant.SnapshotStatus.BROKEN;
+import static org.apache.kylin.rest.util.TableUtils.calculateTableSize;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.dao.JobStatisticsManager;
@@ -82,20 +108,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.apache.kylin.common.exception.ServerErrorCode.COLUMN_NOT_EXIST;
-import static org.apache.kylin.common.exception.ServerErrorCode.DATABASE_NOT_EXIST;
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
-import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
-import static org.apache.kylin.common.exception.ServerErrorCode.SNAPSHOT_MANAGEMENT_NOT_ENABLED;
-import static org.apache.kylin.common.exception.ServerErrorCode.SNAPSHOT_NOT_EXIST;
-import static org.apache.kylin.common.exception.ServerErrorCode.TABLE_NOT_EXIST;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_FAIL;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY;
-import static org.apache.kylin.job.execution.JobTypeEnum.SNAPSHOT_BUILD;
-import static org.apache.kylin.job.execution.JobTypeEnum.SNAPSHOT_REFRESH;
-import static org.apache.kylin.rest.constant.SnapshotStatus.BROKEN;
-import static org.apache.kylin.rest.util.TableUtils.calculateTableSize;
 
 @Component("snapshotService")
 public class SnapshotService extends BasicService implements SnapshotSupporter {
@@ -158,7 +170,7 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
     }
 
     public JobInfoResponse buildSnapshotsInner(SnapshotRequest snapshotsRequest, boolean isRefresh,
-                                               Set<String> needBuildSnapshotTables, Set<TableDesc> tables) {
+            Set<String> needBuildSnapshotTables, Set<TableDesc> tables) {
         val project = snapshotsRequest.getProject();
         val options = snapshotsRequest.getOptions();
         List<String> invalidSnapshotsToBuild = new ArrayList<>();
@@ -212,15 +224,15 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
     }
 
     private void updateTableDesc(String project, Set<TableDesc> tables,
-                                 Map<String, SnapshotRequest.TableOption> finalOptions) {
+            Map<String, SnapshotRequest.TableOption> finalOptions) {
         NTableMetadataManager tableManager = getManager(NTableMetadataManager.class, project);
         for (TableDesc tableDesc : tables) {
             SnapshotRequest.TableOption option = finalOptions.get(tableDesc.getIdentity());
             if (tableDesc.isSnapshotHasBroken()
-                    || !StringUtil.equals(option.getPartitionCol(), tableDesc.getSelectedSnapshotPartitionCol())) {
+                    || !StringUtils.equals(option.getPartitionCol(), tableDesc.getSelectedSnapshotPartitionCol())) {
                 TableDesc newTable = tableManager.copyForWrite(tableDesc);
                 newTable.setSnapshotHasBroken(false);
-                if (!StringUtil.equals(option.getPartitionCol(), tableDesc.getSelectedSnapshotPartitionCol())) {
+                if (!StringUtils.equals(option.getPartitionCol(), tableDesc.getSelectedSnapshotPartitionCol())) {
                     newTable.setSelectedSnapshotPartitionCol(option.getPartitionCol());
                 }
                 tableManager.updateTableDesc(newTable);
@@ -229,7 +241,7 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
     }
 
     private static void invalidSnapshotsToBuild(Map<String, SnapshotRequest.TableOption> options,
-                                                List<String> invalidSnapshotsToBuild) {
+            List<String> invalidSnapshotsToBuild) {
         for (Map.Entry<String, SnapshotRequest.TableOption> entry : options.entrySet()) {
             Set<String> partitionToBuild = entry.getValue().getPartitionsToBuild();
             if (partitionToBuild != null && partitionToBuild.isEmpty()) {
@@ -243,7 +255,7 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
     }
 
     public JobInfoResponse buildSnapshots(SnapshotRequest snapshotsRequest, boolean isRefresh,
-                                          Set<String> needBuildSnapshotTables) {
+            Set<String> needBuildSnapshotTables) {
         val project = snapshotsRequest.getProject();
         checkSnapshotManualManagement(project);
         Set<TableDesc> tables = checkAndGetTable(project, needBuildSnapshotTables);
@@ -440,8 +452,8 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
 
     @Override
     public Pair<List<SnapshotInfoResponse>, Integer> getProjectSnapshots(String project, String table,
-             Set<SnapshotStatus> statusFilter, Set<Boolean> partitionFilter, String sortBy, boolean isReversed,
-             Pair<Integer, Integer> offsetAndLimit) {
+            Set<SnapshotStatus> statusFilter, Set<Boolean> partitionFilter, String sortBy, boolean isReversed,
+            Pair<Integer, Integer> offsetAndLimit) {
         checkSnapshotManualManagement(project);
         aclEvaluate.checkProjectReadPermission(project);
         NTableMetadataManager nTableMetadataManager = getManager(NTableMetadataManager.class, project);
@@ -472,8 +484,8 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
             }
             TableExtDesc tableExtDesc = nTableMetadataManager.getOrCreateTableExt(tableDesc);
             Pair<Integer, Integer> countPair = getModelCount(tableDesc);
-            response.add(new SnapshotInfoResponse(tableDesc, tableExtDesc, tableDesc.getSnapshotTotalRows(), countPair.getFirst(),
-                    countPair.getSecond(), getSnapshotJobStatus(tableDesc, executables),
+            response.add(new SnapshotInfoResponse(tableDesc, tableExtDesc, tableDesc.getSnapshotTotalRows(),
+                    countPair.getFirst(), countPair.getSecond(), getSnapshotJobStatus(tableDesc, executables),
                     getForbiddenColumns(tableDesc)));
             satisfiedTableSize.getAndIncrement();
         });
@@ -487,7 +499,8 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
             // Here the positive order needs to be cut from the offset position backwards
             Comparator<SnapshotInfoResponse> comparator = BasicService.propertyComparator(sortBy, !isReversed);
             response.sort(comparator);
-            return Pair.newPair(PagingUtil.cutPage(response, offsetAndLimit.getFirst(), offsetAndLimit.getSecond()), actualTableSize);
+            return Pair.newPair(PagingUtil.cutPage(response, offsetAndLimit.getFirst(), offsetAndLimit.getSecond()),
+                    actualTableSize);
         }
     }
 
@@ -500,8 +513,8 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
     }
 
     public List<TableDesc> getFilteredTables(NTableMetadataManager nTableMetadataManager,
-             Pair<String, String> databaseAndTable, boolean canUseACLGreenChannel, Set<String> finalAuthorizedTables,
-             List<AbstractExecutable> executables, Set<SnapshotStatus> statusFilter, Set<Boolean> partitionFilter) {
+            Pair<String, String> databaseAndTable, boolean canUseACLGreenChannel, Set<String> finalAuthorizedTables,
+            List<AbstractExecutable> executables, Set<SnapshotStatus> statusFilter, Set<Boolean> partitionFilter) {
         String finalDatabase = databaseAndTable.getFirst();
         String finalTable = databaseAndTable.getSecond();
         return nTableMetadataManager.listAllTables().stream().filter(tableDesc -> {
@@ -523,15 +536,14 @@ public class SnapshotService extends BasicService implements SnapshotSupporter {
                 return true;
             }
             return finalAuthorizedTables.contains(tableDesc.getIdentity());
-        }).filter(tableDesc -> hasLoadedSnapshot(tableDesc, executables)
-        ).filter(tableDesc -> statusFilter.isEmpty() || statusFilter.contains(getSnapshotJobStatus(tableDesc, executables))
-        ).filter(tableDesc -> {
-            if (partitionFilter.size() != 1) {
-                return true;
-            }
-            boolean isPartition = partitionFilter.iterator().next();
-            return isPartition != (tableDesc.getSelectedSnapshotPartitionCol() == null);
-        }).collect(Collectors.toList());
+        }).filter(tableDesc -> hasLoadedSnapshot(tableDesc, executables)).filter(tableDesc -> statusFilter.isEmpty()
+                || statusFilter.contains(getSnapshotJobStatus(tableDesc, executables))).filter(tableDesc -> {
+                    if (partitionFilter.size() != 1) {
+                        return true;
+                    }
+                    boolean isPartition = partitionFilter.iterator().next();
+                    return isPartition != (tableDesc.getSelectedSnapshotPartitionCol() == null);
+                }).collect(Collectors.toList());
     }
 
     private Pair<Integer, Integer> getModelCount(TableDesc tableDesc) {

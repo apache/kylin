@@ -997,7 +997,7 @@ public class CnMessage extends Message {
 
     @Override
     public String getBadSqlColumnNotFoundReason() {
-        return "无法找到列 \"%s\"。请检查此列是否在源表中存在。若存在，可尝试重载表；若不存在，请联系管理员添加。";
+        return "无法找到列 \"%s\"。请检查此列是否在源表或可计算列中存在。若存在，可尝试重载表；若不存在，请联系管理员添加。";
     }
 
     @Override

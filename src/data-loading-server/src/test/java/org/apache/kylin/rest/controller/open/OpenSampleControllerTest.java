@@ -131,7 +131,7 @@ public class OpenSampleControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openSampleController).refreshSegments(Mockito.any(RefreshSegmentsRequest.class));
     }
-    
+
     @Test
     public void testSubmitSamplingCaseInsensitive() throws Exception {
         String tableMixture = "dEFault.teST_kylIN_fact";
@@ -199,7 +199,7 @@ public class OpenSampleControllerTest extends NLocalFileMetadataTestCase {
                     .param("project", project).param("table", tableName).param("column_name", columnName)
                     .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                     .andExpect(MockMvcResultMatchers.status().isOk());
-            Mockito.verify(openSampleController).getPartitionColumnFormat(project, tableName, columnName);
+            Mockito.verify(openSampleController).getPartitionColumnFormat(project, tableName, columnName, null);
         }
 
         {
@@ -216,7 +216,7 @@ public class OpenSampleControllerTest extends NLocalFileMetadataTestCase {
                     .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                     .andExpect(MockMvcResultMatchers.status().isOk());
             Mockito.verify(tableService, Mockito.times(1)).getPartitionColumnFormat(project, tableNameUppercase,
-                    columnName);
+                    columnName, null);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/column_format") //
                     .contentType(MediaType.APPLICATION_JSON) //
@@ -224,7 +224,7 @@ public class OpenSampleControllerTest extends NLocalFileMetadataTestCase {
                     .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                     .andExpect(MockMvcResultMatchers.status().isOk());
             Mockito.verify(tableService, Mockito.times(2)).getPartitionColumnFormat(project, tableNameUppercase,
-                    columnName);
+                    columnName, null);
 
             mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/column_format") //
                     .contentType(MediaType.APPLICATION_JSON) //
@@ -232,7 +232,7 @@ public class OpenSampleControllerTest extends NLocalFileMetadataTestCase {
                     .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                     .andExpect(MockMvcResultMatchers.status().isOk());
             Mockito.verify(tableService, Mockito.times(3)).getPartitionColumnFormat(project, tableNameUppercase,
-                    columnName);
+                    columnName, null);
         }
     }
 

@@ -76,7 +76,7 @@ import org.apache.kylin.common.scheduler.JobDiscardNotifier;
 import org.apache.kylin.common.scheduler.JobReadyNotifier;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.job.common.JobUtil;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -140,6 +140,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import io.kyligence.kap.metadata.epoch.EpochManager;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -1366,7 +1367,7 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
             return;
         }
         // The user's browser may contain multiple language preferences, such as xx,xx;ss,ss
-        String language = StringUtil.dropFirstSuffix(StringUtil.dropFirstSuffix(languageToHandle, ";"), ",");
+        String language = StringHelper.dropFirstSuffix(StringHelper.dropFirstSuffix(languageToHandle, ";"), ",");
         if (CHINESE_LANGUAGE.equals(language) || CHINESE_SIMPLE_LANGUAGE.equals(language)
                 || CHINESE_HK_LANGUAGE.equals(language) || CHINESE_TW_LANGUAGE.equals(language)) {
             ErrorCode.setMsg("cn");

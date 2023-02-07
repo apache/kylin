@@ -103,7 +103,7 @@ public class ComputedColumnUtilTest extends NLocalFileMetadataTestCase {
         NDataModel modelNew = modelManager.getDataModelDesc(model.getUuid());
         ColumnDesc column = new ColumnDesc();
         column.setName("DEAL_AMOUNT");
-        column.setComputedColumn("`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`");
+        column.setComputedColumnExpr("`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`");
         Map<String, Set<String>> colsMapWithModel = ComputedColumnUtil.getCCUsedColsMapWithModel(modelNew, column);
         Assert.assertEquals(1, colsMapWithModel.size());
         Assert.assertTrue(colsMapWithModel.containsKey("DEFAULT.TEST_KYLIN_FACT"));
@@ -112,7 +112,7 @@ public class ComputedColumnUtilTest extends NLocalFileMetadataTestCase {
 
         ColumnDesc notExistColumn = new ColumnDesc();
         notExistColumn.setName("CC_NOT_EXIST");
-        notExistColumn.setComputedColumn("`TEST_KYLIN_FACT`.`PRICE` * 0.95");
+        notExistColumn.setComputedColumnExpr("`TEST_KYLIN_FACT`.`PRICE` * 0.95");
         try {
             ComputedColumnUtil.getCCUsedColsMapWithModel(modelNew, notExistColumn);
             Assert.fail();

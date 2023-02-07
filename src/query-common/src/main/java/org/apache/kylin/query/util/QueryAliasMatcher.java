@@ -105,14 +105,14 @@ public class QueryAliasMatcher {
             String tableAlias = namesOfIdentifier.get(1);
             String colName = namesOfIdentifier.get(2);
             ColumnRowType columnRowType = alias2CRT.get(tableAlias);
-            Preconditions.checkState(columnRowType != null, "Alias {} is not defined", tableAlias);
+            Preconditions.checkState(columnRowType != null, "Alias %s is not defined", tableAlias);
             return columnRowType == QueryAliasMatcher.SUBQUERY_TAG ? null : columnRowType.getColumnByName(colName);
         } else if (namesOfIdentifier.size() == 2) {
             // tableAlias.colName
             String tableAlias = namesOfIdentifier.get(0);
             String colName = namesOfIdentifier.get(1);
             ColumnRowType columnRowType = alias2CRT.get(tableAlias);
-            Preconditions.checkState(columnRowType != null, "Alias {} is not defined", tableAlias);
+            Preconditions.checkState(columnRowType != null, "Alias %s is not defined", tableAlias);
             return columnRowType == QueryAliasMatcher.SUBQUERY_TAG ? null : columnRowType.getColumnByName(colName);
         } else if (namesOfIdentifier.size() == 1) {
             // only colName
@@ -500,9 +500,9 @@ public class QueryAliasMatcher {
             return null;
         }
 
-        private TblColRef resolveComputedColumnRef(SqlCall call, String... tableCandidates) {
+        private TblColRef resolveComputedColumnRef(SqlCall call) {
             foundCC = true;
-            String table = findComputedColumnTable(call, tableCandidates);
+            String table = findComputedColumnTable(call);
             ColumnDesc columnDesc = new ColumnDesc("-1", RandomUtil.randomUUIDStr(), "string", "", null, null,
                     call.toSqlString(CalciteSqlDialect.DEFAULT).getSql());
             TableRef tableRef = alias2CRT.get(table).getColumnByIndex(0).getTableRef();
@@ -510,16 +510,16 @@ public class QueryAliasMatcher {
             return TblColRef.columnForUnknownModel(tableRef, columnDesc);
         }
 
-        private String findComputedColumnTable(SqlCall call, final String... tableCandidates) {
+        private String findComputedColumnTable(SqlCall call) {
             final String[] result = new String[1];
 
             SqlBasicVisitor<SqlNode> visitor = new SqlBasicVisitor<SqlNode>() {
                 @Override
                 public SqlNode visit(SqlIdentifier sqlIdentifier) {
                     TblColRef colRef = resolveTblColRef(sqlIdentifier, alias2CRT);
-                    for (String table : tableCandidates) {
-                        if (alias2CRT.get(table).getAllColumns().contains(colRef)) {
-                            result[0] = table;
+                    for (Map.Entry<String, ColumnRowType> aliasMap : alias2CRT.entrySet()) {
+                        if (aliasMap.getValue().getAllColumns().contains(colRef)) {
+                            result[0] = aliasMap.getKey();
                             return sqlIdentifier;
                         }
                     }
@@ -548,18 +548,15 @@ public class QueryAliasMatcher {
 
                     if ((operand0 instanceof SqlIdentifier || operand0 instanceof SqlCall)
                             && (operand1 instanceof SqlIdentifier || operand1 instanceof SqlCall)) {
-                        int numOfAlias = alias2CRT.size();
                         String pkAlias = Iterables.getLast(alias2CRT.keySet());
-                        String fkAlias = Iterables.get(alias2CRT.keySet(), numOfAlias - 2);
-
                         // sqlCall maybe used as join condition, which need to
                         // translate as CC
                         TblColRef tblColRef0 = operand0 instanceof SqlIdentifier
                                 ? resolveTblColRef((SqlIdentifier) operand0, alias2CRT)
-                                : resolveComputedColumnRef((SqlCall) operand0, pkAlias, fkAlias);
+                                : resolveComputedColumnRef((SqlCall) operand0);
                         TblColRef tblColRef1 = operand1 instanceof SqlIdentifier
                                 ? resolveTblColRef((SqlIdentifier) operand1, alias2CRT)
-                                : resolveComputedColumnRef((SqlCall) operand1, pkAlias, fkAlias);
+                                : resolveComputedColumnRef((SqlCall) operand1);
 
                         if (tblColRef0 == null || tblColRef1 == null) {
                             return null;

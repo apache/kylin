@@ -18,6 +18,7 @@
 
 package org.apache.kylin.source.adhocquery;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
@@ -37,18 +38,18 @@ public interface IPushDownRunner {
     void init(KylinConfig config);
 
     /**
-     * Run an pushdown query in the source database in case Kylin cannot serve using cube.
+     * Run a push-down query in the source database in case Kylin cannot serve using cube.
      *
      * @param query                 the query statement
      * @param returnRows            an empty list to collect returning rows
      * @param returnColumnMeta      an empty list to collect metadata of returning columns
      * @param project               the project name
-     * @throws Exception if running pushdown query fails
+     * @throws SQLException if running pushdown query fails
      */
     void executeQuery(String query, List<List<String>> returnRows, List<SelectedColumnMeta> returnColumnMeta,
-            String project) throws Exception;
+            String project) throws SQLException;
 
-    default PushdownResult executeQueryToIterator(String query, String project) throws Exception {
+    default PushdownResult executeQueryToIterator(String query, String project) throws SQLException {
         List<List<String>> returnRows = Lists.newArrayList();
         List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
         executeQuery(query, returnRows, returnColumnMeta, project);
@@ -58,13 +59,12 @@ public interface IPushDownRunner {
     /**
      * Run an pushdown non-query sql
      *
-     * @param sql                 the sql statement
+     * @param sql the sql statement
+     * @param project the project
      *
-     * @return whether the SQL is executed successfully
-     *
-     * @throws Exception if running pushdown fails
+     * @throws SQLException if running pushdown fails
      */
-    void executeUpdate(String sql, String project) throws Exception;
+    void executeUpdate(String sql, String project) throws SQLException;
 
     String getName();
 

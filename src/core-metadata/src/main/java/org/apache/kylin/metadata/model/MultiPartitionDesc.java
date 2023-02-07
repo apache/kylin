@@ -192,7 +192,7 @@ public class MultiPartitionDesc implements Serializable {
             List<String> conditions = Lists.newArrayList();
             for (int i = 0; i < columnRefs.size(); i++) {
                 final int x = i;
-                String item = columnRefs.get(x).getBackTickExpressionInSourceDB() + " in (" + //
+                String item = columnRefs.get(x).getBackTickExp() + " in (" + //
                         values.stream().map(a -> generateFormattedValue(columnRefs.get(x).getType(), a[x]))
                                 .collect(Collectors.joining(", "))
                         + ")";

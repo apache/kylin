@@ -53,7 +53,7 @@ public class PushDownRunnerSDKImpl implements IPushDownRunner {
 
     @Override
     public void executeQuery(String query, List<List<String>> returnRows, List<SelectedColumnMeta> returnColumnMeta,
-            String project) throws Exception {
+            String project) throws SQLException {
         query = dataSource.convertSql(query);
 
         //extract column metadata
@@ -90,7 +90,7 @@ public class PushDownRunnerSDKImpl implements IPushDownRunner {
     }
 
     @Override
-    public void executeUpdate(String sql, String project) throws Exception {
+    public void executeUpdate(String sql, String project) throws SQLException {
         dataSource.executeUpdate(sql);
     }
 

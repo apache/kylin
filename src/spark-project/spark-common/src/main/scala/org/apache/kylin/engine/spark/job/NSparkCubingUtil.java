@@ -20,7 +20,6 @@ package org.apache.kylin.engine.spark.job;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -37,10 +36,6 @@ import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.spark.sql.Column;
 import org.sparkproject.guava.collect.Sets;
-
-import com.google.common.collect.Maps;
-
-import lombok.val;
 
 public class NSparkCubingUtil {
 
@@ -285,10 +280,4 @@ public class NSparkCubingUtil {
         return withoutDot.replace(SEPARATOR, ".");
     }
 
-    public static Map<Long, LayoutEntity> toLayoutMap(IndexPlan indexPlan, Set<Long> layoutIds) {
-        val layouts = toLayouts(indexPlan, layoutIds).stream().filter(Objects::nonNull).collect(Collectors.toSet());
-        Map<Long, LayoutEntity> map = Maps.newHashMap();
-        layouts.forEach(layout -> map.put(layout.getId(), layout));
-        return map;
-    }
 }

@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.apache.kylin.query.util.QueryUtil;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +42,7 @@ class AntiFlatCheckerTest {
         NDataModelManager modelManager = NDataModelManager.getInstance(kylinConfig, getProject());
         NDataModel model = modelManager.getDataModelDesc(modelId);
         model.getComputedColumnDescs().forEach(cc -> {
-            String innerExp = QueryUtil.massageComputedColumn(model, getProject(), cc, null);
+            String innerExp = PushDownUtil.massageComputedColumn(model, getProject(), cc, null);
             cc.setInnerExpression(innerExp);
         });
         model.init(kylinConfig, getProject(), Lists.newArrayList());

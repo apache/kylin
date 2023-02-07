@@ -19,9 +19,10 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
-import java.util.Locale;
 
 import org.apache.calcite.avatica.util.Quoting;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -30,6 +31,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.google.common.base.Preconditions;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Column Metadata from Source. All name should be uppercase.
@@ -40,27 +44,34 @@ public class ColumnDesc implements Serializable {
 
     private static final String BACK_TICK = Quoting.BACK_TICK.string;
 
+    @Getter
     @JsonProperty("id")
     private String id;
 
     @JsonProperty("name")
     private String name;
 
+    @Getter
     @JsonProperty("datatype")
     private String datatype;
 
     @JsonProperty("comment")
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Getter
+    @Setter
     private String comment;
 
     @JsonProperty("data_gen")
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Getter
     private String dataGen;
 
     @JsonProperty("index")
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Getter
     private String index;
 
+    @Setter
     @JsonProperty("cc_expr")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String computedColumnExpr = null;//if null, it's not a computed column
@@ -73,11 +84,19 @@ public class ColumnDesc implements Serializable {
     public boolean isPartitioned = false;
 
     // parsed from data type
+    @Getter
     private DataType type;
+    @Setter
     private DataType upgradedType;
 
+    @Getter
+    @Setter
     private TableDesc table;
+    @Getter
     private int zeroBasedIndex = -1;
+
+    @Getter
+    @Setter
     private boolean isNullable = true;
 
     public ColumnDesc() { // default constructor for Jackson
@@ -107,25 +126,9 @@ public class ColumnDesc implements Serializable {
         this.computedColumnExpr = computedColumnExpr;
     }
 
-    public void setComputedColumn(String exp) {
-        computedColumnExpr = exp;
-    }
-
-    public int getZeroBasedIndex() {
-        return zeroBasedIndex;
-    }
-
-    public String getDatatype() {
-        return datatype;
-    }
-
     public void setDatatype(String datatype) {
         this.datatype = datatype;
         type = DataType.getType(datatype);
-    }
-
-    public void setUpgradedType(DataType upgradedType) {
-        this.upgradedType = upgradedType;
     }
 
     public DataType getUpgradedType() {
@@ -134,10 +137,6 @@ public class ColumnDesc implements Serializable {
         } else {
             return this.upgradedType;
         }
-    }
-
-    public String getId() {
-        return id;
     }
 
     public void setId(String id) {
@@ -152,7 +151,7 @@ public class ColumnDesc implements Serializable {
     }
 
     public String getName() {
-        return (name == null) ? null : name.toUpperCase(Locale.ROOT);
+        return StringUtils.upperCase(name);
     }
 
     public String getIdentity() {
@@ -177,26 +176,6 @@ public class ColumnDesc implements Serializable {
         this.caseSensitiveName = caseSensitiveName;
     }
 
-    public TableDesc getTable() {
-        return table;
-    }
-
-    public void setTable(TableDesc table) {
-        this.table = table;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public DataType getType() {
-        return type;
-    }
-
     public String getTypeName() {
         return type.getName();
     }
@@ -209,26 +188,18 @@ public class ColumnDesc implements Serializable {
         return type.getScale();
     }
 
-    public boolean isNullable() {
-        return this.isNullable;
-    }
-
-    public void setNullable(boolean nullable) {
-        this.isNullable = nullable;
-    }
-
-    public String getDataGen() {
-        return dataGen;
-    }
-
-    public String getIndex() {
-        return index;
-    }
-
     public String getComputedColumnExpr() {
         Preconditions.checkState(computedColumnExpr != null);
-
         return computedColumnExpr;
+    }
+
+    public String getDoubleQuoteInnerExpr() {
+        Preconditions.checkState(computedColumnExpr != null);
+        int quoteCnt = StringUtils.countMatches(computedColumnExpr, StringHelper.QUOTE);
+        if (quoteCnt == 0 || quoteCnt == 1) {
+            return computedColumnExpr.replace(StringHelper.BACKTICK, StringHelper.DOUBLE_QUOTE);
+        }
+        return StringHelper.backtickToDoubleQuote(computedColumnExpr);
     }
 
     public boolean isComputedColumn() {
@@ -306,8 +277,12 @@ public class ColumnDesc implements Serializable {
 
     @Override
     public String toString() {
-        return "ColumnDesc{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", datatype='" + datatype + '\''
-                + ", comment='" + comment + '\'' + '}';
+        return "ColumnDesc{" //
+                + "id='" + id //
+                + "', name='" + name //
+                + "', datatype='" + datatype //
+                + "', comment='" + comment //
+                + "'}";
     }
 
     public ColumnDesc copy() {

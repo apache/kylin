@@ -38,8 +38,8 @@ import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.engine.spark.IndexDataConstructor;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
-import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.util.ExecAndComp;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -196,7 +196,7 @@ public class TDVTHiveTest {
     private String runWithHive(String sqlStatement) {
         QueryParams queryParams = new QueryParams(project, sqlStatement, "default", false);
         queryParams.setKylinConfig(NProjectManager.getProjectConfig(project));
-        String afterConvert = QueryUtil.massagePushDownSql(queryParams);
+        String afterConvert = PushDownUtil.massagePushDownSql(queryParams);
         // Table schema comes from csv and DATABASE.TABLE is not supported.
         String sqlForSpark = ExecAndComp.removeDataBaseInSql(afterConvert);
         Dataset<Row> plan = ExecAndComp.querySparkSql(sqlForSpark);

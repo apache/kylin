@@ -18,9 +18,6 @@
 
 package io.kyligence.kap.query.optrule;
 
-import static org.apache.kylin.query.util.QueryUtil.containCast;
-import static org.apache.kylin.query.util.QueryUtil.isNotNullLiteral;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,6 +50,7 @@ import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.relnode.KapAggregateRel;
 import org.apache.kylin.query.relnode.KapProjectRel;
 import org.apache.kylin.query.util.AggExpressionUtil;
+import org.apache.kylin.query.util.RuleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +75,7 @@ public class KapSumCastTransposeRule extends RelOptRule {
         }
         List<RexNode> childExps = project.getChildExps();
         for (RexNode rexNode : childExps) {
-            if (containCast(rexNode)) {
+            if (RuleUtils.containCast(rexNode)) {
                 return true;
             }
         }
@@ -93,7 +91,7 @@ public class KapSumCastTransposeRule extends RelOptRule {
             if (AggExpressionUtil.isSum(aggCall.getAggregation().kind)) {
                 int index = aggCall.getArgList().get(0);
                 RexNode value = originalProject.getProjects().get(index);
-                if (containCast(value)) {
+                if (RuleUtils.containCast(value)) {
                     RexNode rexNode = ((RexCall) value).getOperands().get(0);
                     DataType dataType = DataType.getType(rexNode.getType().getSqlTypeName().getName());
                     return dataType.isNumberFamily() || dataType.isIntegerFamily();
@@ -123,7 +121,7 @@ public class KapSumCastTransposeRule extends RelOptRule {
         relBuilder.push(oldProject.getInput());
 
         List<AggExpressionUtil.AggExpression> aggExpressions = oldAgg.getAggCallList().stream()
-                .map(call -> new AggExpressionUtil.AggExpression(call)).collect(Collectors.toList());
+                .map(AggExpressionUtil.AggExpression::new).collect(Collectors.toList());
 
         // #1 Build bottom project
         List<RexNode> bottomProjectList = buildBottomProject(oldProject, aggExpressions);
@@ -140,8 +138,7 @@ public class KapSumCastTransposeRule extends RelOptRule {
         List<RexNode> caseProjList = buildTopProject(relBuilder, oldProject, oldAgg, aggExpressions);
         relBuilder.project(caseProjList);
 
-        RelNode relNode = relBuilder.build();
-        return relNode;
+        return relBuilder.build();
     }
 
     private List<RexNode> buildBottomProject(Project oldProject, List<AggExpressionUtil.AggExpression> aggExpressions) {
@@ -156,7 +153,7 @@ public class KapSumCastTransposeRule extends RelOptRule {
             if (AggExpressionUtil.isSum(aggCall.getAggregation().kind)) {
                 int index = aggCall.getArgList().get(0);
                 RexNode value = oldProject.getProjects().get(index);
-                if (containCast(value)) {
+                if (RuleUtils.containCast(value)) {
                     bottomProjectList.set(index, ((RexCall) (value)).operands.get(0));
                     RelDataType type = ((RexCall) (value)).operands.get(0).getType();
                     if (type instanceof BasicSqlType && SqlTypeName.INTEGER == type.getSqlTypeName()) {
@@ -205,7 +202,7 @@ public class KapSumCastTransposeRule extends RelOptRule {
             if (AggExpressionUtil.isSum(aggCall.getAggregation().kind)) {
                 int index = aggCall.getArgList().get(0);
                 RexNode value = oldProject.getProjects().get(index);
-                if (containCast(value)) {
+                if (RuleUtils.containCast(value)) {
                     RelDataType type = ((RexCall) value).type;
                     if (type instanceof BasicSqlType && type.getPrecision() < aggCall.getType().getPrecision()) {
                         type = aggCall.getType();
@@ -213,7 +210,7 @@ public class KapSumCastTransposeRule extends RelOptRule {
                     value = relBuilder.getRexBuilder().makeCast(type,
                             relBuilder.getRexBuilder().makeInputRef(relBuilder.peek(), i));
                     topProjectList.add(value);
-                } else if (isNotNullLiteral(value)) {
+                } else if (RuleUtils.isNotNullLiteral(value)) {
                     value = relBuilder.getRexBuilder().makeInputRef(relBuilder.peek(), i);
                     topProjectList.add(value);
                 } else {

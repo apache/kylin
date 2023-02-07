@@ -96,13 +96,14 @@ public class OpenSampleController extends BaseController {
     @ResponseBody
     public EnvelopeResponse<OpenPartitionColumnFormatResponse> getPartitionColumnFormat(
             @RequestParam(value = "project") String project, @RequestParam(value = "table") String table,
-            @RequestParam(value = "column_name") String columnName) throws Exception {
+            @RequestParam(value = "column_name") String columnName,
+            @RequestParam(value = "expression", required = false) String expression) throws Exception {
         String projectName = checkProjectName(project);
         checkRequiredArg(TABLE, table);
         checkRequiredArg("column_name", columnName);
 
-        String columnFormat = tableService.getPartitionColumnFormat(projectName,
-                StringUtils.upperCase(table, Locale.ROOT), columnName);
+        String columnFormat = tableService.getPartitionColumnFormat(projectName, StringUtils.upperCase(table),
+                columnName, expression);
         OpenPartitionColumnFormatResponse columnFormatResponse = new OpenPartitionColumnFormatResponse();
         columnFormatResponse.setColumnName(columnName);
         columnFormatResponse.setColumnFormat(columnFormat);

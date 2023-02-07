@@ -23,12 +23,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.job.model.JobParam;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -36,8 +34,10 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.SegmentPartition;
 import org.apache.kylin.metadata.model.ManagementType;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -108,7 +108,7 @@ public class DefaultExecutableOnModel extends DefaultExecutable {
         val indexPlanManager = NIndexPlanManager.getInstance(getConfig(), getProject());
         val indexPlan = indexPlanManager.getIndexPlan(getTargetModel());
         val allLayoutIds = indexPlan.getAllLayouts().stream().map(l -> l.getId() + "").collect(Collectors.toSet());
-        return Stream.of(StringUtil.splitAndTrim(layouts, ",")).anyMatch(allLayoutIds::contains);
+        return Stream.of(StringHelper.splitAndTrim(layouts, ",")).anyMatch(allLayoutIds::contains);
     }
 
     private boolean checkTargetSegmentAndPartitionExists(String segmentId) {

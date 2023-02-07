@@ -18,12 +18,9 @@
 
 package org.apache.kylin.metadata.model;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import org.apache.calcite.avatica.util.Quoting;
@@ -32,12 +29,13 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.datatype.DataType;
 
+import com.google.common.base.Preconditions;
+
 import lombok.Getter;
 import lombok.Setter;
 
 /**
  */
-@SuppressWarnings({ "serial" })
 public class TblColRef implements Serializable {
 
     private static final String INNER_TABLE_NAME = "_kylin_table";
@@ -128,8 +126,7 @@ public class TblColRef implements Serializable {
         column.setDatatype(DYNAMIC_DATA_TYPE);
         TableDesc table = new TableDesc();
         column.setTable(table);
-        TblColRef colRef = new TblColRef(column);
-        return colRef;
+        return new TblColRef(column);
     }
 
     private static final NDataModel UNKNOWN_MODEL = new NDataModel();
@@ -142,14 +139,14 @@ public class TblColRef implements Serializable {
     }
 
     public static TblColRef columnForUnknownModel(TableRef table, ColumnDesc colDesc) {
-        checkArgument(table.getModel() == UNKNOWN_MODEL);
+        Preconditions.checkArgument(table.getModel() == UNKNOWN_MODEL);
         return new TblColRef(table, colDesc);
     }
 
     public static void fixUnknownModel(NDataModel model, String alias, TblColRef col) {
-        checkArgument(col.table.getModel() == UNKNOWN_MODEL || col.table.getModel() == model);
+        Preconditions.checkArgument(col.table.getModel() == UNKNOWN_MODEL || col.table.getModel() == model);
         TableRef tableRef = model.findTable(alias);
-        checkArgument(tableRef.getTableDesc().getIdentity().equals(col.column.getTable().getIdentity()));
+        Preconditions.checkArgument(tableRef.getTableDesc().getIdentity().equals(col.column.getTable().getIdentity()));
         col.fixTableRef(tableRef);
     }
 
@@ -199,7 +196,7 @@ public class TblColRef implements Serializable {
     }
 
     public TblColRef(TableRef table, ColumnDesc column) {
-        checkArgument(table.getTableDesc().getIdentity().equals(column.getTable().getIdentity()));
+        Preconditions.checkArgument(table.getTableDesc().getIdentity().equals(column.getTable().getIdentity()));
         this.table = table;
         this.column = column;
     }
@@ -251,18 +248,15 @@ public class TblColRef implements Serializable {
         }
     }
 
-    public String getDoubleQuoteExpressionInSourceDB() {
+    public String getDoubleQuoteExp() {
         if (column.isComputedColumn())
-            return column.getComputedColumnExpr();
+            return column.getDoubleQuoteInnerExpr();
 
         return wrapIdentity(DOUBLE_QUOTE);
     }
 
-    public String getBackTickExpressionInSourceDB() {
-        if (column.isComputedColumn())
-            return column.getComputedColumnExpr();
-
-        return wrapIdentity(BACK_TICK);
+    public String getBackTickExp() {
+        return column.isComputedColumn() ? column.getComputedColumnExpr() : wrapIdentity(BACK_TICK);
     }
 
     public String getTable() {
@@ -377,13 +371,13 @@ public class TblColRef implements Serializable {
         if (column.getTable() == null) {
             return "NULL";
         } else {
-            return column.getTable().getIdentity().toUpperCase(Locale.ROOT);
+            return StringUtils.upperCase(column.getTable().getIdentity());
         }
     }
 
     // return DB.TABLE.COLUMN
     public String getColumnWithTableAndSchema() {
-        return (getTableWithSchema() + "." + column.getName()).toUpperCase(Locale.ROOT);
+        return StringUtils.upperCase(getTableWithSchema() + "." + column.getName());
     }
 
     public boolean isCastInnerColumn() {

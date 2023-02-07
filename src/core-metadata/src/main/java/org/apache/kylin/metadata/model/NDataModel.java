@@ -53,7 +53,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.scheduler.SchedulerEventNotifier;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
@@ -588,7 +588,7 @@ public class NDataModel extends RootPersistentEntity {
 
         for (TableRef t : allTableRefs) {
             if (t.getTableIdentity().equals(table.getIdentity())
-                    && StringUtil.equals(t.getTableDesc().getProject(), table.getProject()))
+                    && StringUtils.equals(t.getTableDesc().getProject(), table.getProject()))
                 return true;
         }
         return false;
@@ -822,23 +822,17 @@ public class NDataModel extends RootPersistentEntity {
                         continue;
                     }
                 } else {
-                    if (0 == quotationType) {
-                        quotationType = 1;
-                        continue;
-                    }
+                    quotationType = 1;
+                    continue;
                 }
             }
             if ('"' == this.filterCondition.charAt(i)) {
                 if (quotationType > 0) {
                     if (2 == quotationType) {
                         quotationType = 0;
-                        continue;
                     }
                 } else {
-                    if (0 == quotationType) {
-                        quotationType = 2;
-                        continue;
-                    }
+                    quotationType = 2;
                 }
             }
         }
@@ -849,11 +843,12 @@ public class NDataModel extends RootPersistentEntity {
         for (JoinTableDesc joinTable : joinTables) {
             TableRef dimTable = joinTable.getTableRef();
             JoinDesc join = joinTable.getJoin();
-            if (join == null)
+            if (join == null) {
                 throw new IllegalStateException("Missing join conditions on table " + dimTable);
+            }
 
-            StringUtil.toUpperCaseArray(join.getForeignKey(), join.getForeignKey());
-            StringUtil.toUpperCaseArray(join.getPrimaryKey(), join.getPrimaryKey());
+            StringHelper.toUpperCaseArray(join.getForeignKey(), join.getForeignKey());
+            StringHelper.toUpperCaseArray(join.getPrimaryKey(), join.getPrimaryKey());
 
             // primary key
             String[] pks = join.getPrimaryKey();
@@ -1082,7 +1077,6 @@ public class NDataModel extends RootPersistentEntity {
     }
 
     private ImmutableBiMap<Integer, TblColRef> initAllNamedColumns(Predicate<NamedColumn> filter) {
-        List<TblColRef> all = new ArrayList<>(allNamedColumns.size());
         ImmutableBiMap.Builder<Integer, TblColRef> mapBuilder = ImmutableBiMap.builder();
         for (NamedColumn d : allNamedColumns) {
             if (!d.isExist()) {
@@ -1090,7 +1084,6 @@ public class NDataModel extends RootPersistentEntity {
             }
             TblColRef col = this.findColumn(d.aliasDotColumn);
             d.aliasDotColumn = col.getIdentity();
-            all.add(col);
 
             if (filter.test(d)) {
                 mapBuilder.put(d.id, col);

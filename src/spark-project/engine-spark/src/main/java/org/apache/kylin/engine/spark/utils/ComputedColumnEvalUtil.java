@@ -24,31 +24,22 @@ import java.util.Locale;
 
 import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.engine.spark.builder.CreateFlatTable;
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil;
+import org.apache.kylin.engine.spark.smarter.IndexDependencyParser;
 import org.apache.kylin.metadata.model.BadModelException;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.exception.IllegalCCExpressionException;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
-import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.execution.utils.SchemaProcessor;
 import org.apache.spark.sql.util.SparderTypeUtil;
 import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -90,7 +81,7 @@ public class ComputedColumnEvalUtil {
         }
         try {
             evalDataTypeOfCC(computedColumns, SparderEnv.getSparkSession(), nDataModel, 0, computedColumns.size());
-        } catch (AnalysisException e) {
+        } catch (Exception e) {
             evalDataTypeOfCCInManual(computedColumns, nDataModel, 0, computedColumns.size());
         }
     }
@@ -100,7 +91,7 @@ public class ComputedColumnEvalUtil {
         for (int i = start; i < end; i++) {
             try {
                 evalDataTypeOfCC(computedColumns, SparderEnv.getSparkSession(), nDataModel, i, i + 1);
-            } catch (AnalysisException e) {
+            } catch (Exception e) {
                 Preconditions.checkNotNull(computedColumns.get(i));
                 throw new IllegalCCExpressionException(QueryErrorCode.CC_EXPRESSION_ILLEGAL,
                         String.format(Locale.ROOT, MsgPicker.getMsg().getCheckCCExpression(),
@@ -111,42 +102,23 @@ public class ComputedColumnEvalUtil {
     }
 
     private static void evalDataTypeOfCC(List<ComputedColumnDesc> computedColumns, SparkSession ss,
-            NDataModel nDataModel, int start, int end) throws AnalysisException {
-        val originDf = generateFullFlatTableDF(ss, nDataModel);
+            NDataModel nDataModel, int start, int end) {
+        IndexDependencyParser parser = new IndexDependencyParser(nDataModel);
+        Dataset<Row> originDf = parser.generateFullFlatTableDF(ss, nDataModel);
         originDf.persist();
-        Dataset<Row> ds = originDf
-                .selectExpr(computedColumns.subList(start, end).stream().map(ComputedColumnDesc::getInnerExpression)
-                        .map(NSparkCubingUtil::convertFromDotWithBackTick).toArray(String[]::new));
+        String[] ccExprArray = computedColumns.subList(start, end).stream() //
+                .map(ComputedColumnDesc::getInnerExpression) //
+                .map(NSparkCubingUtil::convertFromDotWithBackTick).toArray(String[]::new);
+        Dataset<Row> ds = originDf.selectExpr(ccExprArray);
         for (int i = start; i < end; i++) {
             String dataType = SparderTypeUtil.convertSparkTypeToSqlType(ds.schema().fields()[i - start].dataType());
             computedColumns.get(i).setDatatype(dataType);
         }
     }
 
-    private static Dataset<Row> generateFullFlatTableDF(SparkSession ss, NDataModel model) {
-        // root fact table
-        val rootDF = generateDatasetOnTable(ss, model.getRootFactTable());
-
-        // look up tables
-        val joinTableDFMap = Maps.<JoinTableDesc, Dataset<Row>> newLinkedHashMap();
-        model.getJoinTables().forEach(
-                joinTable -> joinTableDFMap.put(joinTable, generateDatasetOnTable(ss, joinTable.getTableRef())));
-
-        return CreateFlatTable.joinFactTableWithLookupTables(rootDF, joinTableDFMap, model, ss);
-    }
-
-    private static Dataset<Row> generateDatasetOnTable(SparkSession ss, TableRef tableRef) {
-        val tableCols = tableRef.getColumns().stream().map(TblColRef::getColumnDesc)
-                .filter(col -> !col.isComputedColumn()).toArray(ColumnDesc[]::new);
-        val structType = SchemaProcessor.buildSchemaWithRawTable(tableCols);
-        val alias = tableRef.getAlias();
-        val dataset = ss.createDataFrame(Lists.newArrayList(), structType).alias(alias);
-        return CreateFlatTable.changeSchemaToAliasDotName(dataset, alias);
-    }
-
     public static boolean resolveCCName(ComputedColumnDesc ccDesc, NDataModel dataModel, List<NDataModel> otherModels) {
-        // Resolve CC name, Limit MAX_RENAME_CC_TIME retries to avoid infinite loop
-        // TODO: what if the dataModel has more than MAX_RENAME_CC_TIME computed columns?
+        // Resolve CC name, Limit MAX_RENAME_CC_TIME retries to avoid infinite loop.
+        // What if the dataModel has more than MAX_RENAME_CC_TIME computed columns?
         int retryCount = 0;
         while (retryCount < MAX_RENAME_CC_TIME) {
             retryCount++;

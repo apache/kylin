@@ -35,6 +35,7 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.util.ExpandableMeasureUtil;
 import org.apache.kylin.metadata.query.QueryTimesResponse;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
@@ -114,7 +115,7 @@ public class ModelServiceQueryTest extends SourceTestCase {
         ReflectionTestUtils.setField(semanticService, "userGroupService", userGroupService);
         ReflectionTestUtils.setField(semanticService, "expandableMeasureUtil",
                 new ExpandableMeasureUtil((model, ccDesc) -> {
-                    String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
+                    String ccExpression = PushDownUtil.massageComputedColumn(model, model.getProject(), ccDesc,
                             AclPermissionUtil.createAclInfo(model.getProject(),
                                     semanticService.getCurrentUserGroups()));
                     ccDesc.setInnerExpression(ccExpression);

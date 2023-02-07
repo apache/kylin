@@ -18,9 +18,9 @@
 
 package org.apache.kylin.streaming
 
-import com.google.common.base.Preconditions
+import java.nio.ByteBuffer
+
 import org.apache.commons.lang3.StringUtils
-import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.NSparkCubingEngine
 import org.apache.kylin.engine.spark.builder.CreateFlatTable
@@ -31,16 +31,16 @@ import org.apache.kylin.metadata.model._
 import org.apache.kylin.parser.AbstractDataParser
 import org.apache.kylin.source.SourceFactory
 import org.apache.kylin.streaming.common.CreateFlatTableEntry
-import org.apache.kylin.streaming.jobs.StreamingJobUtils
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql.{DataFrame, Dataset, Row}
 import org.apache.spark.storage.StorageLevel
 
-import java.nio.ByteBuffer
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+
+import com.google.common.base.Preconditions
 
 class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
   CreateFlatTable(entry.flatTable, entry.seg, entry.toBuildTree, entry.ss, entry.sourceInfo) {
@@ -63,12 +63,12 @@ class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
     val kafkaJobParams = config.getStreamingKafkaConfigOverride.asScala
     val securityProtocol = kafkaJobParams.get(SECURITY_PROTOCOL)
     if (securityProtocol.isDefined) {
-      kafkaJobParams.remove(SECURITY_PROTOCOL);
+      kafkaJobParams.remove(SECURITY_PROTOCOL)
       kafkaJobParams.put("kafka." + SECURITY_PROTOCOL, securityProtocol.get)
     }
     val saslMechanism = kafkaJobParams.get(SASL_MECHANISM)
     if (saslMechanism.isDefined) {
-      kafkaJobParams.remove(SASL_MECHANISM);
+      kafkaJobParams.remove(SASL_MECHANISM)
       kafkaJobParams.put("kafka." + SASL_MECHANISM, saslMechanism.get)
     }
     kafkaJobParams.foreach { param =>
@@ -91,7 +91,7 @@ class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
     val schema =
       StructType(
         tableDesc.getColumns.map { columnDescs =>
-          StructField(columnDescs.getName, SparderTypeUtil.toSparkType(columnDescs.getType, false))
+          StructField(columnDescs.getName, SparderTypeUtil.toSparkType(columnDescs.getType))
         }
       )
     val rootFactTable = changeSchemaToAliasDotName(
@@ -104,11 +104,11 @@ class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
         val cols = model.getRootFactTable.getColumns.asScala.map(item => {
           col(NSparkCubingUtil.convertFromDot(item.getBackTickIdentity))
         }).toList
-        rootFactTable.withWatermark(partitionColumn, entry.watermark).groupBy(cols: _*).count()
+        rootFactTable.withWatermark(partitionColumn(), entry.watermark).groupBy(cols: _*).count()
       } else {
         rootFactTable
       }
-    tableRefreshInterval = StreamingUtils.parseTableRefreshInterval(config.getStreamingTableRefreshInterval())
+    tableRefreshInterval = StreamingUtils.parseTableRefreshInterval(config.getStreamingTableRefreshInterval)
     loadLookupTables()
     joinFactTableWithLookupTables(factTableDataset, lookupTablesGlobal, model, ss)
   }
@@ -116,7 +116,7 @@ class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
   def loadLookupTables(): Unit = {
     val ccCols = model().getRootFactTable.getColumns.asScala.filter(_.getColumnDesc.isComputedColumn).toSet
     val cleanLookupCC = cleanComputColumn(ccCols.toSeq, factTableDataset.columns.toSet)
-    lookupTablesGlobal = generateLookupTableDataset(model, cleanLookupCC, ss)
+    lookupTablesGlobal = generateLookupTableDataset(model(), cleanLookupCC, ss)
     lookupTablesGlobal.foreach { case (_, df) =>
       df.persist(StorageLevel.MEMORY_AND_DISK)
     }
@@ -138,10 +138,10 @@ class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
   }
 
   def encodeStreamingDataset(seg: NDataSegment, model: NDataModel, batchDataset: Dataset[Row]): Dataset[Row] = {
-    val ccCols = model.getRootFactTable.getColumns.asScala.filter(_.getColumnDesc.isComputedColumn).toSet
+    val ccCols = model.getRootFactTable.getColumns.asScala.toSet
     val (dictCols, encodeCols): GlobalDictType = assemblyGlobalDictTuple(seg, toBuildTree)
     val encodedDataset = encodeWithCols(batchDataset, ccCols, dictCols, encodeCols)
-    val filterEncodedDataset = FlatTableHelper.applyFilterCondition(flatTable, encodedDataset, true)
+    val filterEncodedDataset = FlatTableHelper.applyFilterCondition(flatTable, encodedDataset, needReplaceDot = true)
 
     flatTable match {
       case joined: NCubeJoinedFlatTableDesc =>

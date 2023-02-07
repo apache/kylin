@@ -18,8 +18,12 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import com.google.common.collect.Sets
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+import java.util.{Locale, Objects, Timer, TimerTask}
+
 import org.apache.commons.lang3.StringUtils
+import org.apache.kylin.common.constant.LogConstant
+import org.apache.kylin.common.logging.SetLogCategory
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.common.{CustomUtils, KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
@@ -30,18 +34,12 @@ import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.kylin.metadata.model._
-import org.apache.kylin.query.util.QueryUtil
+import org.apache.kylin.query.util.PushDownUtil
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.{Locale, Objects, Timer, TimerTask}
-
-import org.apache.kylin.common.constant.LogConstant
-import org.apache.kylin.common.logging.SetLogCategory
-import org.apache.spark.util.Utils
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -49,6 +47,8 @@ import scala.collection.parallel.ForkJoinTaskSupport
 import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.util.{Failure, Success, Try}
+
+import com.google.common.collect.Sets
 
 class SegmentFlatTable(private val sparkSession: SparkSession, //
                        private val tableDesc: SegmentFlatTableDesc) extends LogEx {
@@ -128,7 +128,7 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
       val jointDS = joinFactTableWithLookupTables(fastFactTableDS, lookupTableDSMap, dataModel, sparkSession)
       concatCCs(jointDS, factTableCCs)
     } else {
-      fastFactTableDS
+      concatCCs(fastFactTableDS, factTableCCs)
     }
     flatTableDS = applyFilterCondition(flatTableDS)
     changeSchemeToColumnId(flatTableDS, tableDesc)
@@ -258,8 +258,7 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
       logInfo(s"No available FILTER-CONDITION segment $segmentId")
       return originDS
     }
-    val expression = QueryUtil.massageExpression(dataModel, project, //
-      dataModel.getFilterCondition, null)
+    val expression = PushDownUtil.massageExpression(dataModel, project, dataModel.getFilterCondition, null)
     val converted = replaceDot(expression, dataModel)
     val condition = s" (1=1) AND ($converted)"
     logInfo(s"Apply FILTER-CONDITION: $condition segment $segmentId")
@@ -481,7 +480,7 @@ class SegmentFlatTable(private val sparkSession: SparkSession, //
     var tableWithCcs = table
     matchedCols.foreach(m =>
       tableWithCcs = tableWithCcs.withColumn(convertFromDot(m.getBackTickIdentity),
-        expr(convertFromDot(m.getBackTickExpressionInSourceDB))))
+        expr(convertFromDot(m.getBackTickExp))))
     tableWithCcs
   }
 

@@ -95,7 +95,6 @@ import org.apache.kylin.metadata.query.QueryTimesResponse;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.query.util.PushDownUtil;
-import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.PartitionsRefreshRequest;
@@ -199,7 +198,7 @@ public class ModelServiceBuildTest extends SourceTestCase {
         ReflectionTestUtils.setField(modelBuildService, "userGroupService", userGroupService);
         ReflectionTestUtils.setField(semanticService, "expandableMeasureUtil",
                 new ExpandableMeasureUtil((model, ccDesc) -> {
-                    String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
+                    String ccExpression = PushDownUtil.massageComputedColumn(model, model.getProject(), ccDesc,
                             AclPermissionUtil.createAclInfo(model.getProject(),
                                     semanticService.getCurrentUserGroups()));
                     ccDesc.setInnerExpression(ccExpression);
@@ -787,7 +786,7 @@ public class ModelServiceBuildTest extends SourceTestCase {
         NDataflowUpdate dataflowUpdate = new NDataflowUpdate(dataflow.getUuid());
         dataflowUpdate.setToRemoveSegs(dataflow.getSegments().toArray(new NDataSegment[dataflow.getSegments().size()]));
         dataflowManager.updateDataflow(dataflowUpdate);
-        val minAndMaxTime = PushDownUtil.getMaxAndMinTime(modelUpdate.getPartitionDesc().getPartitionDateColumn(),
+        val minAndMaxTime = PushDownUtil.probeMinMaxTs(modelUpdate.getPartitionDesc().getPartitionDateColumn(),
                 modelUpdate.getRootFactTableName(), "default");
         val dateFormat = DateFormat.proposeDateFormat(minAndMaxTime.getFirst());
         modelBuildService.buildSegmentsManually("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa",
@@ -807,7 +806,7 @@ public class ModelServiceBuildTest extends SourceTestCase {
 
         Assert.assertEquals(t1, dataflow.getSegments().get(0).getSegRange().getStart());
         Assert.assertEquals(t2, dataflow.getSegments().get(0).getSegRange().getEnd());
-        val result = PushDownUtil.getMaxAndMinTimeWithTimeOut(modelUpdate.getPartitionDesc().getPartitionDateColumn(),
+        val result = PushDownUtil.probeMinMaxTsWithTimeout(modelUpdate.getPartitionDesc().getPartitionDateColumn(),
                 modelUpdate.getRootFactTableName(), "default");
         Assert.assertNotNull(result);
     }

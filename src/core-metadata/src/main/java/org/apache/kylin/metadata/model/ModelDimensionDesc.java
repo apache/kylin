@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.StringHelper;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -60,7 +60,7 @@ public class ModelDimensionDesc implements Serializable {
     public void init(NDataModel model) {
         table = table.toUpperCase(Locale.ROOT);
         if (columns != null) {
-            StringUtil.toUpperCaseArray(columns, columns);
+            StringHelper.toUpperCaseArray(columns, columns);
         }
 
         if (model != null) {
