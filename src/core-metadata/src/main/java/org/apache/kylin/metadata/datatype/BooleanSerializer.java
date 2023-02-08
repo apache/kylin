@@ -21,7 +21,7 @@ package org.apache.kylin.metadata.datatype;
 import java.nio.ByteBuffer;
 import java.util.Locale;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang.BooleanUtils;
 
 public class BooleanSerializer extends DataTypeSerializer<Long> {

@@ -23,7 +23,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.REQUEST_PAR
 
 import java.util.Collections;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.SystemPropertiesCache;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;

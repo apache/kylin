@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.ClickHouseConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.SecondStorageStepFactory;

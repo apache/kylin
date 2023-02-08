@@ -27,7 +27,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.zookeeper.ConditionalOnZookeeperEnabled;

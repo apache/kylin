@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.naming.directory.SearchControls;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;

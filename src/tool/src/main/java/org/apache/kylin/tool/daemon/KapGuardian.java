@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 import org.apache.calcite.avatica.util.Unsafe;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.ExecutorServiceUtil;

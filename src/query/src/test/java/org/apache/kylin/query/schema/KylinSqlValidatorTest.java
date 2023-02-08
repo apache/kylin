@@ -27,7 +27,7 @@ import java.nio.file.Files;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;

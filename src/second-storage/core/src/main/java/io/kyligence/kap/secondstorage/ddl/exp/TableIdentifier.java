@@ -19,7 +19,7 @@ package io.kyligence.kap.secondstorage.ddl.exp;
 
 import io.kyligence.kap.secondstorage.ddl.visitor.RenderVisitor;
 import io.kyligence.kap.secondstorage.ddl.visitor.Renderable;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class TableIdentifier implements Renderable {
     public static final char TABLE_ESCAPE = '`';

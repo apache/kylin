@@ -20,7 +20,7 @@ package org.apache.kylin.engine.spark.job;
 
 import com.google.common.base.Throwables;
 import lombok.val;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.job.exec.MergeExec;
 import org.apache.kylin.engine.spark.job.stage.BuildParam;

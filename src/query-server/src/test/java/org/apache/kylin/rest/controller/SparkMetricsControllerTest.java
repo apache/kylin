@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.controller;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.rest.service.MonitorService;
 import org.junit.Assert;
 import org.junit.Before;

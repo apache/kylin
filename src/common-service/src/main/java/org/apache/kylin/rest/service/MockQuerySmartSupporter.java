@@ -15,32 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.common.util;
+package org.apache.kylin.rest.service;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.metadata.query.QueryHistory;
+import org.springframework.stereotype.Component;
 
-/**
- */
-public class DaemonThreadFactory implements ThreadFactory {
-    private String poolName = null;
-
-    public DaemonThreadFactory() {
-    }
-
-    public DaemonThreadFactory(String poolName) {
-        this.poolName = poolName;
-    }
-
+@Component
+public class MockQuerySmartSupporter implements QuerySmartSupporter {
     @Override
-    public Thread newThread(Runnable r) {
-        Thread t = Executors.defaultThreadFactory().newThread(r);
-        if (StringUtils.isNotBlank(poolName)) {
-            t.setName(poolName.concat("-") + t.getId());
-        }
-        t.setDaemon(true);
-        return t;
+    public void onMatchQueryHistory(String project, List<QueryHistory> queries, boolean manual) {
+        //do nothing
     }
 }
