@@ -60,7 +60,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.utils;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.engine.spark.job.NSparkCubingStep;
 import org.apache.kylin.engine.spark.job.NSparkMergingJob;

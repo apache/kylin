@@ -28,7 +28,7 @@ import java.util.LinkedHashMap;
 import org.apache.calcite.schema.impl.ViewTable;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.cube.model.IndexPlan;

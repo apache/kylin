@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import org.apache.commons.cli.Option;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.util.OptionsHelper;

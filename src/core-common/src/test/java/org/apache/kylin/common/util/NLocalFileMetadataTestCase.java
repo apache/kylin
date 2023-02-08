@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.AbstractTestCase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;

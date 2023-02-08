@@ -20,7 +20,7 @@ package org.apache.kylin.common.debug;
 
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.Pair;
 
 import com.google.common.collect.Maps;

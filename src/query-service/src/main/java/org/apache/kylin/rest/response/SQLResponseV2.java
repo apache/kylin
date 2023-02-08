@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.slf4j.Logger;

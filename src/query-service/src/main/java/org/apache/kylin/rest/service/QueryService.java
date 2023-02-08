@@ -55,7 +55,7 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.pretty.SqlPrettyWriter;
 import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.ForceToTieredStorage;
 import org.apache.kylin.common.KapConfig;

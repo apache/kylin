@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSource;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.event.ModelAddEvent;
 import org.apache.kylin.common.metrics.MetricsCategory;

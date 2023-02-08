@@ -25,7 +25,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.RESOURCE_GR
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.metadata.resourcegroup.KylinInstance;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupEntity;

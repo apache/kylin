@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;

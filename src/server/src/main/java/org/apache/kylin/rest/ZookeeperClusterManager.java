@@ -24,7 +24,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.discovery.KylinServiceDiscoveryCache;
 import org.apache.kylin.rest.discovery.KylinServiceDiscoveryClient;

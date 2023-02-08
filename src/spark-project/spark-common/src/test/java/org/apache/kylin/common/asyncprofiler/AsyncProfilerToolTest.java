@@ -18,7 +18,7 @@
 
 package org.apache.kylin.common.asyncprofiler;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;

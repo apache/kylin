@@ -21,7 +21,7 @@ package org.apache.kylin.metadata.recommendation.entity;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;

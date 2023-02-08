@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.source;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.SegmentRange;

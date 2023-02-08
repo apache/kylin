@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 
 import io.kyligence.kap.guava20.shaded.common.base.Throwables;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;

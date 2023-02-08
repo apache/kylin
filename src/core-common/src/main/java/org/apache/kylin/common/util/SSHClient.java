@@ -31,7 +31,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
 import com.jcraft.jsch.Channel;

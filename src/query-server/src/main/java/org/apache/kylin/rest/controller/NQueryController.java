@@ -44,7 +44,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.ForceToTieredStorage;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;

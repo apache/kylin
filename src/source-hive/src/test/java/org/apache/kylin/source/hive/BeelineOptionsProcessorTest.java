@@ -19,7 +19,7 @@
 package org.apache.kylin.source.hive;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 

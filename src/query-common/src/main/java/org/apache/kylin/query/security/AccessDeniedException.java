@@ -20,7 +20,7 @@ package org.apache.kylin.query.security;
 
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class AccessDeniedException extends RuntimeException {
     public AccessDeniedException(String s) {

@@ -20,7 +20,7 @@ package org.apache.kylin.tool.obf;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.tool.constant.SensitiveConfigKeysConstant;
 

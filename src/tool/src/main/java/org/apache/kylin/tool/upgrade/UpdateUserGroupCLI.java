@@ -29,7 +29,7 @@ import java.util.List;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.ExecutableApplication;
 import org.apache.kylin.common.util.JsonUtil;

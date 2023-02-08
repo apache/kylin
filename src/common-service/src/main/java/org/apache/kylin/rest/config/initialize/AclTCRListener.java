@@ -21,7 +21,7 @@ package org.apache.kylin.rest.config.initialize;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.transaction.EventListenerRegistry;

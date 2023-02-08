@@ -29,7 +29,7 @@ import java.util.Set;
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.datatype.DataType;
 
 import lombok.Getter;

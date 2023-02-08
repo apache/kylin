@@ -20,7 +20,7 @@ package org.apache.kylin.metadata.filter.function;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Preconditions;
 

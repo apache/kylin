@@ -22,7 +22,7 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;

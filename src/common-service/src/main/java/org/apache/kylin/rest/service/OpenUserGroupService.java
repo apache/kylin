@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.annotation.ThirdPartyDependencies;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.user.ManagedUser;

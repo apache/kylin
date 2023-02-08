@@ -21,7 +21,7 @@ package io.kyligence.kap.clickhouse.job;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 
 import io.kyligence.kap.clickhouse.ddl.ClickHouseCreateTable;

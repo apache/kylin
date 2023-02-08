@@ -18,7 +18,7 @@
 package io.kyligence.kap.secondstorage.ddl;
 import io.kyligence.kap.secondstorage.ddl.visitor.DefaultSQLRender;
 import io.kyligence.kap.secondstorage.ddl.visitor.Renderable;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public abstract class DDL<T extends DDL<T>> implements Renderable {
 

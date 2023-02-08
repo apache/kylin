@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.dbcp2.BasicDataSource;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.RawResource;

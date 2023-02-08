@@ -19,7 +19,7 @@
 package org.apache.kylin.query.util;
 
 import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.alias.ExpressionComparator;
 
