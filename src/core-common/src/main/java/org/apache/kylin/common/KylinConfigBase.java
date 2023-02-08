@@ -62,6 +62,7 @@ import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.persistence.metadata.HDFSMetadataStore;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.ByteUnit;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.ClusterConstant;
@@ -1466,6 +1467,19 @@ public abstract class KylinConfigBase implements Serializable {
             return "";
         }
         return jar.getAbsolutePath();
+    }
+
+    public String getHdfsCustomJarPath(String project, String jarType) {
+        return getHdfsWorkingDirectory() + "custom/jars/" + project + "/" + jarType + "/";
+    }
+
+    public int getStreamingCustomParserLimit() {
+        int parserLimit = Integer.parseInt(getOptional("kylin.streaming.custom-parser-limit", "50"));
+        return parserLimit < 1 ? 50 : parserLimit;
+    }
+
+    public long getStreamingCustomJarSizeMB() {
+        return SizeConvertUtil.byteStringAs(getOptional("kylin.streaming.custom-jar-size", "20mb"), ByteUnit.BYTE);
     }
 
     public String getKylinExtJarsPath() {
@@ -3712,12 +3726,20 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.second-storage.wait-lock-timeout", "180"));
     }
 
+    public boolean getDDLEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.source.ddl.enabled", FALSE));
+    }
+
     public boolean isBuildSegmentOverlapEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.build.segment-overlap-enabled", FALSE));
     }
 
-    public boolean getDDLEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.source.ddl.enabled", FALSE));
+    public boolean isProjectMergeWithBloatEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.project-merge-with-bloat-enabled", "true"));
+    }
+
+    public int getProjectMergeRuleBloatThreshold() {
+        return Integer.parseInt(getOptional("kylin.query.project-merge-bloat-threshold", "0"));
     }
 
     // ============================================================================

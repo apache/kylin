@@ -70,7 +70,7 @@ public class SegmentUtil {
                 return SegmentStatusEnumToDisplay.REFRESHING;
             }
 
-            if (CollectionUtils.isEmpty(overlapSegs) || anyIndexJobRunning(segment, executables)) {
+            if (CollectionUtils.isEmpty(overlapSegs) || anyIncSegmentJobRunning(segment)) {
                 return SegmentStatusEnumToDisplay.LOADING;
             }
 
@@ -104,8 +104,15 @@ public class SegmentUtil {
     protected static <T extends ISegment> boolean anyIndexJobRunning(T segment) {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         NExecutableManager execManager = NExecutableManager.getInstance(kylinConfig, segment.getModel().getProject());
-        val executables = execManager.listExecByJobTypeAndStatus(ExecutableState::isRunning, INDEX_BUILD, INC_BUILD,
+        val executables = execManager.listExecByJobTypeAndStatus(ExecutableState::isRunning, INDEX_BUILD,
                 SUB_PARTITION_BUILD);
+        return executables.stream().anyMatch(task -> task.getSegmentIds().contains(segment.getId()));
+    }
+
+    protected static <T extends ISegment> boolean anyIncSegmentJobRunning(T segment) {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        NExecutableManager execManager = NExecutableManager.getInstance(kylinConfig, segment.getModel().getProject());
+        val executables = execManager.listExecByJobTypeAndStatus(ExecutableState::isRunning, INC_BUILD);
         return executables.stream().anyMatch(task -> task.getSegmentIds().contains(segment.getId()));
     }
 

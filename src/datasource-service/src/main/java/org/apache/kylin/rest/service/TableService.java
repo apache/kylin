@@ -129,6 +129,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.sourceusage.SourceUsageManager;
+import org.apache.kylin.metadata.streaming.DataParserManager;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
 import org.apache.kylin.query.util.PushDownUtil;
@@ -152,6 +153,7 @@ import org.apache.kylin.rest.response.TableNameResponse;
 import org.apache.kylin.rest.response.TableRefresh;
 import org.apache.kylin.rest.response.TableRefreshAll;
 import org.apache.kylin.rest.response.TablesAndColumnsResponse;
+import org.apache.kylin.rest.security.ExternalAclProvider;
 import org.apache.kylin.rest.security.KerberosLoginManager;
 import org.apache.kylin.rest.source.DataSourceState;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -166,7 +168,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -210,6 +211,9 @@ public class TableService extends BasicService {
 
     @Autowired
     private AclEvaluate aclEvaluate;
+
+    @Autowired
+    private AccessService accessService;
 
     @Autowired
     @Qualifier("kafkaService")
@@ -420,6 +424,7 @@ public class TableService extends BasicService {
             tableDescResponse.setKafkaBootstrapServers(table.getKafkaConfig().getKafkaBootstrapServers());
             tableDescResponse.setSubscribe(table.getKafkaConfig().getSubscribe());
             tableDescResponse.setBatchTable(table.getKafkaConfig().getBatchTable());
+            tableDescResponse.setParserName(table.getKafkaConfig().getParserName());
         }
 
         if (tableExtDesc == null) {
@@ -451,6 +456,8 @@ public class TableService extends BasicService {
         final boolean isAclGreen = AclPermissionUtil.canUseACLGreenChannel(project, groups);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         List<NDataModel> healthyModels = projectManager.listHealthyModels(project);
+        Set<String> extPermissionSet = accessService.getUserNormalExtPermissions(project);
+        boolean hasDataQueryPermission = extPermissionSet.contains(ExternalAclProvider.DATA_QUERY);
         for (val originTable : tables) {
             TableDesc table = getAuthorizedTableDesc(project, isAclGreen, originTable, aclTCRS);
             if (Objects.isNull(table)) {
@@ -471,9 +478,11 @@ public class TableService extends BasicService {
             TableExtDesc tableExtDesc = getManager(NTableMetadataManager.class, project).getTableExtIfExists(table);
             if (tableExtDesc != null) {
                 tableDescResponse.setTotalRecords(tableExtDesc.getTotalRows());
-                tableDescResponse.setSamplingRows(tableExtDesc.getSampleRows());
                 tableDescResponse.setJodID(tableExtDesc.getJodID());
-                filterSamplingRows(project, tableDescResponse, isAclGreen, aclTCRS);
+                if (hasDataQueryPermission) {
+                    tableDescResponse.setSamplingRows(tableExtDesc.getSampleRows());
+                    filterSamplingRows(project, tableDescResponse, isAclGreen, aclTCRS);
+                }
             }
 
             if (CollectionUtils.isNotEmpty(modelsUsingRootTable)) {
@@ -712,12 +721,11 @@ public class TableService extends BasicService {
 
         try {
             if (tableDesc.isKafkaTable()) {
-                List<ByteBuffer> messages = kafkaService.getMessages(tableDesc.getKafkaConfig(), project, 0);
+                List<ByteBuffer> messages = kafkaService.getMessages(tableDesc.getKafkaConfig(), project);
                 checkMessage(table, messages);
-                Map<String, Object> resp = kafkaService.getMessageTypeAndDecodedMessages(messages);
-                String json = ((List<String>) resp.get("message")).get(0);
-                ObjectMapper mapper = new ObjectMapper();
-                Map<String, Object> mapping = mapper.readValue(json, Map.class);
+                Map<String, Object> resp = kafkaService.decodeMessage(messages);
+                String message = ((List<String>) resp.get("message")).get(0);
+                Map<String, Object> mapping = kafkaService.parserMessage(project, tableDesc.getKafkaConfig(), message);
                 Map<String, Object> mappingAllCaps = new HashMap<>();
                 mapping.forEach((key, value) -> mappingAllCaps.put(key.toUpperCase(Locale.ROOT), value));
                 String cell = (String) mappingAllCaps.get(partitionColumn);
@@ -858,7 +866,13 @@ public class TableService extends BasicService {
     public void unloadTable(String project, String tableIdentity) {
         getManager(NTableMetadataManager.class, project).removeTableExt(tableIdentity);
         getManager(NTableMetadataManager.class, project).removeSourceTable(tableIdentity);
-        getManager(KafkaConfigManager.class, project).removeKafkaConfig(tableIdentity);
+        KafkaConfigManager kafkaConfigManager = getManager(KafkaConfigManager.class, project);
+        KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(tableIdentity);
+        if (Objects.isNull(kafkaConfig)) {
+            return;
+        }
+        kafkaConfigManager.removeKafkaConfig(tableIdentity);
+        getManager(DataParserManager.class, project).removeUsingTable(tableIdentity, kafkaConfig.getParserName());
     }
 
     public PreUnloadTableResponse preUnloadTable(String project, String tableIdentity) throws IOException {

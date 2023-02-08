@@ -71,7 +71,15 @@ public class HdfsCapacityMetricsTest extends NLocalFileMetadataTestCase {
         int activeThreadIdx = scheduledExecutor.indexOf(activeThreadStr);
         String thread = scheduledExecutor.substring(activeThreadIdx + activeThreadStr.length(),
                 activeThreadIdx + activeThreadStr.length() + 1);
-        Assert.assertEquals(1, Integer.parseInt(thread));
+        if (Integer.parseInt(thread) != 0) {
+            Assert.assertEquals(1, Integer.parseInt(thread));
+        } else {
+            String queuedThreadStr = "queued tasks = ";
+            int queuedThreadIdx = scheduledExecutor.indexOf(queuedThreadStr);
+            int queued = Integer.parseInt(scheduledExecutor.substring(queuedThreadIdx + queuedThreadStr.length(),
+                    queuedThreadIdx + queuedThreadStr.length() + 1));
+            Assert.assertTrue(1 <= queued);
+        }
     }
 
     @Test

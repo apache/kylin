@@ -18,9 +18,6 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import java.math.BigInteger
-import java.util.{Locale, Objects}
-
 import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.Path
@@ -48,6 +45,9 @@ import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils
 
+import java.math.BigInteger
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+import java.util.{Locale, Objects, Timer, TimerTask}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -540,6 +540,8 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     if (dataSegment.isDictReady) {
       logInfo(s"Skip DICTIONARY segment $segmentId")
     } else {
+      // ensure at least one worker was registered before dictionary lock added.
+      waitTillWorkerRegistered()
       buildDict(table, dictCols)
     }
 
@@ -563,6 +565,35 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
       .analyzed
     val encodePlan = DictionaryBuilder.buildGlobalDict(project, sparkSession, dictPlan)
     SparkInternalAgent.getDataFrame(sparkSession, encodePlan)
+  }
+
+  def waitTillWorkerRegistered(timeout: Long = 20, unit: TimeUnit = TimeUnit.SECONDS): Unit = {
+    val cdl = new CountDownLatch(1)
+    val timer = new Timer("worker-starvation-timer", true)
+    timer.scheduleAtFixedRate(new TimerTask {
+
+      private def releaseAll(): Unit = {
+        this.cancel()
+        cdl.countDown()
+      }
+
+      override def run(): Unit = {
+        try {
+          if (sparkSession.sparkContext.statusTracker.getExecutorInfos.isEmpty) {
+            logWarning("Ensure at least one worker has been registered before building dictionary.")
+          } else {
+            releaseAll()
+          }
+        } catch {
+          case t: Throwable =>
+            logError(s"Something unexpected happened, we wouldn't wait for resource ready.", t)
+            releaseAll()
+        }
+      }
+    }, 0, unit.toMillis(timeout))
+    // At most waiting for 10 hours.
+    cdl.await(10, TimeUnit.HOURS)
+    timer.cancel()
   }
 
   private def concatCCs(table: Dataset[Row], computColumns: Set[TblColRef]): Dataset[Row] = {

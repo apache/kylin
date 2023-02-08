@@ -70,7 +70,7 @@ public class KafkaConfigManager {
     }
 
     public KafkaConfig getKafkaConfig(String id) {
-        if (org.apache.commons.lang.StringUtils.isEmpty(id)) {
+        if (StringUtils.isEmpty(id)) {
             return null;
         }
         return crud.get(id);
