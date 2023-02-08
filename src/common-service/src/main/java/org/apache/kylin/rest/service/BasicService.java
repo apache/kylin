@@ -32,7 +32,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifier;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.streaming.DataParserManager;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.NullsLastPropertyComparator;
@@ -49,7 +52,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.google.common.base.CaseFormat;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -91,14 +93,14 @@ public abstract class BasicService {
     }
 
     protected static <T> Comparator<T> propertyComparator(String property, boolean ascending) {
-        return new PropertyComparator<T>(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, property), false,
+        return new PropertyComparator<>(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, property), false,
                 ascending);
 
     }
 
     protected static <T> Comparator<T> nullsLastPropertyComparator(String property, boolean ascending) {
-        return new NullsLastPropertyComparator<>(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, property), false,
-                ascending);
+        return new NullsLastPropertyComparator<>(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, property),
+                false, ascending);
     }
 
     public <T> EnvelopeResponse<T> generateTaskForRemoteHost(final HttpServletRequest request, String url)
@@ -136,5 +138,15 @@ public abstract class BasicService {
             return false;
         }
         return true;
+    }
+
+    protected void initDefaultParser(String project) {
+        if (getManager(DataParserManager.class, project).isInitialized()) {
+            return;
+        }
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            getManager(DataParserManager.class, project).initDefault();
+            return null;
+        }, project);
     }
 }

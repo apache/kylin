@@ -86,6 +86,8 @@ public abstract class AbstractDefaultSchedulerRunner implements Runnable {
                 return;
             }
             doRun();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 

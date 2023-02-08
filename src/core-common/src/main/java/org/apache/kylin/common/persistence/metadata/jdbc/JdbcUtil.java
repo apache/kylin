@@ -190,7 +190,7 @@ public class JdbcUtil {
     public static Properties datasourceParametersForUT(StorageURL url) {
         Properties props = new Properties();
         props.put("driverClassName", "org.h2.Driver");
-        props.put("url", "jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1;MODE=MySQL");
+        props.put("url", "jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1");
         props.put("username", "sa");
         props.put("password", "");
         props.put("maxTotal", "50");

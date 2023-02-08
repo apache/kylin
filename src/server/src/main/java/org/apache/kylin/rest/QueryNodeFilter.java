@@ -153,6 +153,9 @@ public class QueryNodeFilter implements Filter {
 
         //user refresh
         notRoutePutApiSet.add("/kylin/api/user/refresh");
+
+        // custom parse
+        routeGetApiSet.add("/kylin/api/kafka/parsers");
     }
 
     @Autowired

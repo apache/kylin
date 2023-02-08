@@ -20,8 +20,10 @@ package org.apache.kylin.kafka.util;
 
 import static org.apache.kafka.common.config.SaslConfigs.SASL_JAAS_CONFIG;
 
+import java.nio.ByteBuffer;
 import java.util.Properties;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -32,20 +34,42 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.streaming.jobs.StreamingJobUtils;
 
-public class KafkaClient {
+public class KafkaUtils {
+
     /**
      * load jaas file's text into kafkaJaasTextPair to avoid multiple read file
      */
     private static final Pair<Boolean, String> kafkaJaasTextPair = new Pair<>(false, null);
-    private static Consumer<Object, Object> mockup;
 
-    private KafkaClient() {
+    // for test
+    private static Consumer<String, ByteBuffer> mockup;
+
+    private static final String BOOTSTRAP_SERVER = "bootstrap.servers";
+    private static final String KEY_DESERIALIZER = "key.deserializer";
+    private static final String VALUE_DESERIALIZER = "value.deserializer";
+    private static final String GROUP_ID = "group.id";
+    private static final String ENABLE_AUTO_COMMIT = "enable.auto.commit";
+
+    private KafkaUtils() {
         throw new IllegalStateException("Utility class");
     }
 
-    public static Consumer<Object, Object> getKafkaConsumer(String brokers, String consumerGroup,
+    public static AdminClient getKafkaAdminClient(String brokers, String groupId) {
+        return getKafkaAdminClient(brokers, groupId, new Properties());
+    }
+
+    public static AdminClient getKafkaAdminClient(String brokers, String groupId, Properties properties) {
+        Properties props = getAdminClientProperties(brokers, groupId, properties);
+        return AdminClient.create(props);
+    }
+
+    public static Consumer<String, ByteBuffer> getKafkaConsumer(String brokers, String groupId) {
+        return getKafkaConsumer(brokers, groupId, new Properties());
+    }
+
+    public static Consumer<String, ByteBuffer> getKafkaConsumer(String brokers, String groupId,
             Properties properties) {
-        Properties props = constructDefaultKafkaConsumerProperties(brokers, consumerGroup, properties);
+        Properties props = getConsumerProperties(brokers, groupId, properties);
         if (mockup != null) {
             return mockup;
         } else {
@@ -53,41 +77,26 @@ public class KafkaClient {
         }
     }
 
-    public static Consumer<Object, Object> getKafkaConsumer(String brokers, String consumerGroup) {
-        return getKafkaConsumer(brokers, consumerGroup, new Properties());
-    }
-
-    public static AdminClient getKafkaAdminClient(String brokers, String consumerGroup) {
-        return getKafkaAdminClient(brokers, consumerGroup, new Properties());
-    }
-
-    public static AdminClient getKafkaAdminClient(String brokers, String consumerGroup, Properties properties) {
-        Properties props = constructDefaultKafkaAdminClientProperties(brokers, consumerGroup, properties);
-        return AdminClient.create(props);
-    }
-
-    public static Properties constructDefaultKafkaAdminClientProperties(String brokers, String consumerGroup,
-            Properties properties) {
+    public static Properties getAdminClientProperties(String brokers, String consumerGroup, Properties properties) {
         Properties props = new Properties();
         setSaslJaasConf(props);
-        props.put("bootstrap.servers", brokers);
-        props.put("group.id", consumerGroup);
-        if (properties != null) {
+        props.put(BOOTSTRAP_SERVER, brokers);
+        props.put(GROUP_ID, consumerGroup);
+        if (MapUtils.isNotEmpty(properties)) {
             props.putAll(properties);
         }
         return props;
     }
 
-    public static Properties constructDefaultKafkaConsumerProperties(String brokers, String consumerGroup,
-            Properties properties) {
+    public static Properties getConsumerProperties(String brokers, String consumerGroup, Properties properties) {
         Properties props = new Properties();
         setSaslJaasConf(props);
-        props.put("bootstrap.servers", brokers);
-        props.put("key.deserializer", StringDeserializer.class.getName());
-        props.put("value.deserializer", ByteBufferDeserializer.class.getName());
-        props.put("group.id", consumerGroup);
-        props.put("enable.auto.commit", "false");
-        if (properties != null) {
+        props.put(BOOTSTRAP_SERVER, brokers);
+        props.put(KEY_DESERIALIZER, StringDeserializer.class.getName());
+        props.put(VALUE_DESERIALIZER, ByteBufferDeserializer.class.getName());
+        props.put(GROUP_ID, consumerGroup);
+        props.put(ENABLE_AUTO_COMMIT, "false");
+        if (MapUtils.isNotEmpty(properties)) {
             props.putAll(properties);
         }
         return props;
@@ -96,7 +105,7 @@ public class KafkaClient {
     private static void setSaslJaasConf(Properties props) {
         props.putAll(KylinConfig.getInstanceFromEnv().getStreamingKafkaConfigOverride());
         synchronized (kafkaJaasTextPair) {
-            if (!kafkaJaasTextPair.getFirst().booleanValue()) {
+            if (Boolean.FALSE.equals(kafkaJaasTextPair.getFirst())) {
                 kafkaJaasTextPair.setSecond(StreamingJobUtils.extractKafkaSaslJaasConf());
                 kafkaJaasTextPair.setFirst(true);
             }

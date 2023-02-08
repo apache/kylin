@@ -17,14 +17,14 @@
  */
 package org.apache.kylin.streaming.jobs;
 
+import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PARSER_NAME;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.common.StreamingTestConstant;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory;
@@ -36,8 +36,11 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.streaming.CreateStreamingFlatTable;
 import org.apache.kylin.streaming.app.StreamingEntry;
+import org.apache.kylin.streaming.common.CreateFlatTableEntry;
 import org.apache.kylin.streaming.common.MergeJobEntry;
 import org.apache.kylin.streaming.common.MicroBatchEntry;
 import org.apache.kylin.streaming.util.StreamingTestCase;
@@ -101,7 +104,9 @@ public class StreamingDFMergeJobTest extends StreamingTestCase {
         val nSpanningTree = NSpanningTreeFactory.fromLayouts(layouts, DATAFLOW_ID);
 
         val ss = SparkSession.builder().master("local").appName("test").getOrCreate();
-        val flatTable = new CreateStreamingFlatTable(flatTableDesc, null, nSpanningTree, ss, null, null, null);
+        CreateFlatTableEntry flatTableEntry = new CreateFlatTableEntry(flatTableDesc, null, nSpanningTree, ss, null,
+                null, null, DEFAULT_PARSER_NAME);
+        val flatTable = new CreateStreamingFlatTable(flatTableEntry);
 
         val dataset = flatTable.generateStreamingDataset(config);
         StreamingDFBuildJob builder = new StreamingDFBuildJob(PROJECT);

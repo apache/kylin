@@ -17,12 +17,14 @@
  */
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PARSER_NAME;
+
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.SystemPropertiesCache;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.scheduler.EventBusFactory;
@@ -34,6 +36,7 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
 import org.apache.kylin.rest.constant.Constant;
@@ -45,7 +48,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -54,12 +56,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import lombok.val;
 
 public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Mock
     private AclUtil aclUtil = Mockito.spy(AclUtil.class);
@@ -67,8 +66,14 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
     @Mock
     private AclEvaluate aclEvaluate = Mockito.spy(AclEvaluate.class);
 
-    //    @Mock
-    //    private AclTCRService aclTCRService = Mockito.spy(AclTCRService.class);
+    @Mock
+    private UserService userService = Mockito.spy(UserService.class);
+
+    @Mock
+    private UserAclService userAclService = Mockito.spy(UserAclService.class);
+
+    @InjectMocks
+    private AccessService accessService = Mockito.spy(new AccessService());
 
     @InjectMocks
     private StreamingTableService streamingTableService = Mockito.spy(new StreamingTableService());
@@ -95,21 +100,24 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
         projectManager.forceDropProject("broken_test");
         projectManager.forceDropProject("bad_query_test");
 
-        SystemPropertiesCache.setProperty("HADOOP_USER_NAME", "root");
+        System.setProperty("HADOOP_USER_NAME", "root");
 
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
         ReflectionTestUtils.setField(streamingTableService, "aclEvaluate", aclEvaluate);
-        //ReflectionTestUtils.setField(streamingTableService, "aclTCRService", aclTCRService);
-        //ReflectionTestUtils.setField(streamingTableService, "userGroupService", userGroupService);
-        //ReflectionTestUtils.setField(streamingTableService,"tableSupporters", Arrays.asList(tableService));
         ReflectionTestUtils.setField(tableService, "aclEvaluate", aclEvaluate);
-        //ReflectionTestUtils.setField(tableService, "aclTCRService", aclTCRService);
         ReflectionTestUtils.setField(tableService, "userGroupService", userGroupService);
+        ReflectionTestUtils.setField(tableService, "accessService", accessService);
+        ReflectionTestUtils.setField(userAclService, "userService", userService);
+        ReflectionTestUtils.setField(accessService, "userAclService", userAclService);
+        ReflectionTestUtils.setField(accessService, "userService", userService);
 
         val prjManager = NProjectManager.getInstance(getTestConfig());
         val prj = prjManager.getProject(PROJECT);
         val copy = prjManager.copyForWrite(prj);
         prjManager.updateProject(copy);
+        Mockito.when(userService.listSuperAdminUsers()).thenReturn(Collections.singletonList("admin"));
+        Mockito.when(userAclService.hasUserAclPermissionInProject(Mockito.anyString(), Mockito.anyString()))
+                .thenReturn(false);
 
         try {
             new JdbcRawRecStore(getTestConfig());
@@ -127,11 +135,8 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testInnerReloadTable() {
-        val database = "SSB";
-
-        val config = getTestConfig();
         try {
-            val tableDescList = tableService.getTableDesc(PROJECT, true, "P_LINEORDER_STR", database, false);
+            val tableDescList = tableService.getTableDesc(PROJECT, true, "P_LINEORDER_STR", "SSB", false);
             Assert.assertEquals(1, tableDescList.size());
             val tableDesc = tableDescList.get(0);
             val tableExtDesc = tableService.getOrCreateTableExt(PROJECT, tableDesc);
@@ -140,14 +145,12 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
         } catch (Exception e) {
             Assert.fail();
         }
-
     }
 
     @Test
     public void testReloadTable() {
         val database = "DEFAULT";
 
-        val config = getTestConfig();
         try {
             val tableDescList = tableService.getTableDesc(PROJECT, true, "", database, true);
             Assert.assertEquals(2, tableDescList.size());
@@ -167,6 +170,7 @@ public class StreamingTableServiceTest extends NLocalFileMetadataTestCase {
         kafkaConfig.setKafkaBootstrapServers("10.1.2.210:9092");
         kafkaConfig.setSubscribe("tpch_topic");
         kafkaConfig.setStartingOffsets("latest");
+        kafkaConfig.setParserName(DEFAULT_PARSER_NAME);
         streamingTableService.createKafkaConfig(PROJECT, kafkaConfig);
 
         val kafkaConf = KafkaConfigManager.getInstance(getTestConfig(), PROJECT).getKafkaConfig("DEFAULT.TPCH_TOPIC");
