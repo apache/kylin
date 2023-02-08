@@ -1,9 +1,9 @@
 {
-  "uuid" : "0f896779-a693-139f-6c50-895e240b4c97",
-  "last_modified" : 1675664450071,
-  "create_time" : 1675664449931,
+  "uuid" : "d863b37c-e1a9-717f-7df7-74991815b1eb",
+  "last_modified" : 1675840561719,
+  "create_time" : 1675840561668,
   "version" : "4.0.0.0",
-  "alias" : "CUBE_PLANNER_TEST",
+  "alias" : "TEST_CUBE_PLANNER",
   "owner" : "ADMIN",
   "config_last_modifier" : null,
   "config_last_modified" : 0,
@@ -114,8 +114,8 @@
   "canvas" : {
     "coordinate" : {
       "TEST_KYLIN_FACT" : {
-        "x" : 398.83327907986114,
-        "y" : 246.72220865885419,
+        "x" : 419.94439019097223,
+        "y" : 143.38887532552084,
         "width" : 220.0,
         "height" : 200.0
       }

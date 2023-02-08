@@ -22,7 +22,7 @@ import java.util.TimeZone
 
 import org.apache.kylin.common._
 import org.apache.kylin.metadata.cube.model.NDataflowManager.NDataflowUpdater
-import org.apache.kylin.metadata.cube.model.{LayoutEntity, NDataflow, NDataflowManager}
+import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.realization.RealizationStatusEnum
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparderEnv
@@ -39,10 +39,10 @@ class TestCubePlanner extends SparderBaseFunSuite
   with AdaptiveSparkPlanHelper
   with Logging {
 
-  override val DEFAULT_PROJECT = "default"
+  override val DEFAULT_PROJECT = "cube_planner"
 
   // CUBE_PLANNER_TEST
-  private val DF_NAME = "0f896779-a693-139f-6c50-895e240b4c97"
+  private val DF_NAME = "d863b37c-e1a9-717f-7df7-74991815b1eb"
 
   val defaultTimeZone: TimeZone = TimeZone.getDefault
 
@@ -84,9 +84,16 @@ class TestCubePlanner extends SparderBaseFunSuite
     checkOrder(spark, DF_NAME, DEFAULT_PROJECT)
   }
 
+  def rebuild(): Unit = {
+    // build one segment
+    buildOneSegementForCubePlanner(DF_NAME)
+    // replace metadata with new one after build
+    dumpMetadata()
+  }
+
   // test case: check the number of index for this model
   // the number of index for this model will be less than 100 after running the cube planner
-  test("cube planner") {
+  test("test cube planner basic") {
     val config: KylinConfig = KylinConfig.getInstanceFromEnv
     val dsMgr: NDataflowManager = NDataflowManager.getInstance(config, DEFAULT_PROJECT)
     val df: NDataflow = dsMgr.getDataflow(DF_NAME)
@@ -96,4 +103,55 @@ class TestCubePlanner extends SparderBaseFunSuite
     // the original number is more than 1024: the aggregate group has 11 dimension
     assert(count < 100)
   }
+
+  // test corner case:
+  // 1. build segment, get the recommended layouts `layouts1`
+  // 2. delete one dimension for this model which will impact the aggregation group
+  // 3. rebuild the segment, and will get the recommended layouts `layout2`
+  // 4. layout1 != layout2
+  test("test cube planner with changing the metadata") {
+    val config: KylinConfig = KylinConfig.getInstanceFromEnv
+    val dsMgr: NDataflowManager = NDataflowManager.getInstance(config, DEFAULT_PROJECT)
+    val df: NDataflow = dsMgr.getDataflow(DF_NAME)
+    // layouts1
+    val allCuboidLayouts1: util.List[LayoutEntity] = df.getIndexPlan.getAllLayouts
+    val count1 = allCuboidLayouts1.size()
+
+    // layout2
+    // delete the one of the dimension
+    // rebuild the segment
+    val indexMgr: NIndexPlanManager = NIndexPlanManager.getInstance(config, DEFAULT_PROJECT)
+    indexMgr.updateIndexPlan(DF_NAME, new NIndexPlanManager.NIndexPlanUpdater {
+      override def modify(copyForWrite: IndexPlan): Unit = {
+        val ruleIndex = copyForWrite.getRuleBasedIndex
+        // edit the aggregation group
+        val aggGroups = ruleIndex.getAggregationGroups
+        // "includes" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
+        // "mandatory_dims" : [ 0 ],
+        val aggGroup = aggGroups.get(0)
+        var newIncludes: Array[Integer] = Array(0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+        // set new includes: [ 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
+        aggGroup.setIncludes(newIncludes)
+        // set the new agg group to the rule base index
+        ruleIndex.setAggregationGroups(aggGroups)
+        ruleIndex.init()
+        copyForWrite.setRuleBasedIndex(ruleIndex)
+      }
+    });
+
+    // after update the new index, we need to rebuild the segment
+    rebuild()
+
+    // check the result of new layouts for the new aggregation group
+    val dsMgr2: NDataflowManager = NDataflowManager.getInstance(config, DEFAULT_PROJECT)
+    val df2: NDataflow = dsMgr2.getDataflow(DF_NAME)
+    // layouts2
+    val allCuboidLayouts2: util.List[LayoutEntity] = df2.getIndexPlan.getAllLayouts
+    val count2 = allCuboidLayouts2.size()
+
+    // new layouts are not equal to the original layouts
+    assert(count2 < 100)
+    assert(count1 != count2)
+  }
+
 }
