@@ -1,6 +1,3 @@
-export const projectTypeIcons = {
-  MANUAL_MAINTAIN: 'el-icon-ksd-expert_mode_small'
-}
 export const lowUsageStorageTypes = [
   'DAY',
   'WEEK',
@@ -43,7 +40,6 @@ export const initialFormValue = {
   alias: '',
   project: '',
   description: '',
-  maintain_model_type: '',
   jdbc_datasource_enabled: false,
   JDBCConnectSetting: []
 }
@@ -75,13 +71,9 @@ export function _getProjectGeneralInfo (data) {
   let params = {
     project: data.project,
     alias: data.alias || data.project,
-    description: data.description,
-    maintain_model_type: data.maintain_model_type
+    description: data.description
   }
-  // 专家档时才加 semi_automatic_mode 这个属性
-  if (data.maintain_model_type === 'MANUAL_MAINTAIN') {
-    params.semi_automatic_mode = data.semi_automatic_mode || false
-  }
+  params.semi_automatic_mode = data.semi_automatic_mode || false
   return params
 }
 export function _getSegmentSettings (data, project) {

@@ -35,9 +35,6 @@ export default {
       { "id": "kafka", "value": 1, "title": "HIVE" },
       { "id": "rdbms2", "value": 8, "title": "RDBMS2" }
     ],
-    "projectType": [
-      { "id": "manualMaintain", "value": "MANUAL_MAINTAIN", "title": "Manual Maintain" }
-    ],
     "modelType": [
       { "id": "tableOriented", "value": "TABLE_ORIENTED", "title": "Table Oriented" },
       { "id": "modelBased", "value": "MODEL_BASED", "title": "Model Based" }

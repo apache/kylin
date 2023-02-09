@@ -37,9 +37,6 @@ export default {
     [types.SAVE_DEFAULT_CONFIG_LIST]: function (state, { list }) {
       state.defaultConfigList = list
     },
-    [types.UPDATE_PROJECT_SEMI_AUTOMATIC_STATUS]: function (state, result) {
-      state.isSemiAutomatic = result
-    },
     [types.SET_PROJECT]: function (state, project) {
       cacheSessionStorage('preProjectName', state.selected_project) // 储存上一次选中的project
       cacheSessionStorage('projectName', project)
