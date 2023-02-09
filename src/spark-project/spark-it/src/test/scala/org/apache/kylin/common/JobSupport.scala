@@ -212,6 +212,11 @@ trait JobSupport
     val layouts = df.getIndexPlan.getAllLayouts
     var start = SegmentRange.dateToLong("2010-01-01")
     var end = SegmentRange.dateToLong("2023-01-01")
+    var segment = builCuboid(dfName,
+      new SegmentRange.TimePartitionedSegmentRange(start, end),
+      Sets.newLinkedHashSet(layouts),
+      prj)
+    logInfo(s"build cube planner segment: ${segment}")
 
     // validate the first segment for build
     val firstSegment = dsMgr.getDataflow(dfName).getSegments().get(0)

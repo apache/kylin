@@ -50,13 +50,13 @@ class TestCubePlanner extends SparderBaseFunSuite
   override def beforeAll(): Unit = {
     super.beforeAll()
     // enable cube planner
-    overwriteSystemProp("kylin.index.costbased.enabled", "true")
     val timeZoneStr = "GMT+0"
     TimeZone.setDefault(TimeZone.getTimeZone(timeZoneStr))
     logInfo(s"Current time zone set to $timeZoneStr")
     // load the model metadata
     NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, DEFAULT_PROJECT)
       .updateDataflow(DF_NAME, Updater(RealizationStatusEnum.OFFLINE))
+    KylinConfig.getInstanceFromEnv.setProperty("kylin.index.costbased.enabled", "true")
 
     // build one segment and get the recommended segment
     // before recommend, the model has more than 2048 index, after build the number of index will be less than 100
