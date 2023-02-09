@@ -136,11 +136,11 @@
                       <span class="label">{{$t('kylinLang.query.snapshot')}}:</span>
                       <span class="text">{{getSnapshots(props.row.realizations)}}</span>
                     </p>
-                    <p class="list" v-if="!isHaveStorageQuery(props.row.realizations) || (isHaveStorageQuery(props.row.realizations) && storageQueryMetricCollect)">
+                    <p class="list">
                       <span class="label">{{$t('kylinLang.query.total_scan_count')}}:</span>
                       <span class="text">{{props.row.total_scan_count | filterNumbers}}</span>
                     </p>
-                    <p class="list" v-if="!isHaveStorageQuery(props.row.realizations) || (isHaveStorageQuery(props.row.realizations) && storageQueryMetricCollect)">
+                    <p class="list">
                       <span class="label">{{$t('kylinLang.query.total_scan_bytes')}}:</span>
                       <span class="text">{{props.row.total_scan_bytes | filterNumbers}}</span>
                     </p>
@@ -326,8 +326,7 @@ import Diagnostic from 'components/admin/Diagnostic/index'
       'currentSelectedProject',
       'briefMenuGet',
       'queryHistoryFilter',
-      'isNonAdminGenQueryDiagPackage',
-      'storageQueryMetricCollect' // 系统逃生通道：是否可以获取统计分层存储扫描行数、扫描字节数
+      'isNonAdminGenQueryDiagPackage'
     ])
   },
   components: {
@@ -377,8 +376,7 @@ import Diagnostic from 'components/admin/Diagnostic/index'
       downloadQueryDiagnosticPackage: 'Download Query Diagnostic Package',
       queryError: 'Query error.',
       viewDetails: 'View Details',
-      errorTitle: 'Error Details',
-      fetchError: 'Can\'t get the result as the record is missing'
+      errorTitle: 'Error Details'
     }
   },
   filters: {
@@ -460,19 +458,6 @@ export default class QueryHistoryTable extends Vue {
 
   get allHitModels () {
     return [{text: this.$t('allModels'), value: 'modelName', icon: 'el-icon-ksd-cube'}]
-  }
-
-  isHaveStorageQuery (realizations) {
-    let isStorageQuery = false
-    if (realizations && realizations.length) {
-      for (let r of realizations) {
-        if (r.secondStorage) {
-          isStorageQuery = true
-          break
-        }
-      }
-    }
-    return isStorageQuery
   }
 
   // 排除击中 snapshot 的查询对象

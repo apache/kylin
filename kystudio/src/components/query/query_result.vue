@@ -83,15 +83,9 @@
               </span>
               <span class="text" v-else>{{Math.round(extraoption.duration / 1000 * 100) / 100 || 0.00}}s</span>
             </p>
-            <p class="resultText" v-if="!extraoption.pushDown&&(isHaveStorageQuery&&storageQueryMetricCollect || !isHaveStorageQuery)">
+            <p class="resultText" v-if="!extraoption.pushDown">
               <span class="label">{{$t('kylinLang.query.total_scan_count')}}: </span>
-              <span class="text" v-if="!isHaveStorageQuery">{{extraoption.totalScanRows | filterNumbers}}</span>
-              <span class="text" v-else>
-                <span v-if="isLoadingScanRows"><i class="el-ksd-icon-refresh_16"></i><span class="refresh-loading">{{$t('loading')}}</span></span>
-                <span v-else-if="extraoption.totalScanRows === 0" @click="fetchTotalScanRows"><i class="el-ksd-icon-refresh_16"></i><span class="refresh-label">{{$t('refreshManual')}}</span></span>
-                <span v-else-if="extraoption.totalScanRows === -1"><span class="refresh-error">{{$t('fetchError')}}</span></span>
-                <span v-else>{{extraoption.totalScanRows | filterNumbers}}</span>
-              </span>
+              <span class="text">{{extraoption.totalScanRows | filterNumbers}}</span>
             </p>
             <p class="resultText" v-if="!extraoption.pushDown">
               <span class="label">{{$t('kylinLang.query.result_row_count')}}: </span>
@@ -215,8 +209,7 @@ import echarts from 'echarts'
     ...mapActions({
       query: 'QUERY_BUILD_TABLES',
       postToExportCSV: 'EXPORT_CSV',
-      loadAllIndex: 'LOAD_ALL_INDEX',
-      loadSecondStorageScanRows: 'LOAD_SECOND_STORAGE_SCAN_ROWS'
+      loadAllIndex: 'LOAD_ALL_INDEX'
     }),
     ...mapActions('DetailDialogModal', {
       callGlobalDetailDialog: 'CALL_MODAL'
@@ -226,8 +219,7 @@ import echarts from 'echarts'
     ...mapGetters([
       'currentSelectedProject',
       'insightActions',
-      'datasourceActions',
-      'storageQueryMetricCollect' // 系统逃生通道：是否可以获取统计分层存储扫描行数
+      'datasourceActions'
     ])
   },
   components: {
@@ -335,8 +327,6 @@ export default class queryResult extends Vue {
   model = {
     uuid: ''
   }
-  isHaveStorageQuery = false
-  isLoadingScanRows = false
   // 增加可视化按钮
   get insightBtnGroups () {
     return [
@@ -503,15 +493,11 @@ export default class queryResult extends Vue {
     }
   }
   get realizations () {
-    this.isHaveStorageQuery = false
     if (this.extraoption.realizations && this.extraoption.realizations.length) {
       let realizations = []
       for (let i of this.extraoption.realizations) {
         if (i.layoutId !== -1 && i.layoutId !== null && i.layoutId !== 0) {
           realizations.push(i)
-          if (i.secondStorage) {
-            this.isHaveStorageQuery = true
-          }
         }
       }
       return realizations
@@ -547,20 +533,6 @@ export default class queryResult extends Vue {
   }
   get noModelRangeTips () {
     return this.$store.state.project.multi_partition_enabled ? this.$t('noModelRangeTips2') : this.$t('noModelRangeTips')
-  }
-
-  async fetchTotalScanRows () {
-    try {
-      this.isLoadingScanRows = true
-      const { queryId } = this.extraoption
-      const res = await this.loadSecondStorageScanRows({ project: this.currentSelectedProject, query_id: queryId })
-      const data = await handleSuccessAsync(res)
-      this.extraoption.totalScanRows = data.total_scan_count
-      this.isLoadingScanRows = false
-    } catch (e) {
-      this.isLoadingScanRows = false
-      handleError(e)
-    }
   }
 
   // 展示 layout 详情
