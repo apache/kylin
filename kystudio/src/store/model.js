@@ -407,9 +407,6 @@ export default {
     },
     [types.CHECK_INTERNAL_MEASURE] (_, params) {
       return api.model.checkInternalMeasure(params)
-    },
-    [types.LOAD_SECOND_STORAGE_SCAN_ROWS] (_, params) {
-      return api.model.loadSecondStorageScanRows(params)
     }
   },
   getters: {
