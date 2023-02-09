@@ -146,6 +146,45 @@ trait JobSupport
   }
 
   @throws[Exception]
+  protected def buildSegment(cubeName: String,
+                           segmentRange: SegmentRange[_ <: Comparable[_]],
+                           toBuildLayouts: java.util.Set[LayoutEntity],
+                           prj: String): NDataSegment = {
+    val config: KylinConfig = KylinConfig.getInstanceFromEnv
+    val dsMgr: NDataflowManager = NDataflowManager.getInstance(config, prj)
+    val execMgr: NExecutableManager =
+      NExecutableManager.getInstance(config, prj)
+    val df: NDataflow = dsMgr.getDataflow(cubeName)
+    // ready dataflow, segment, cuboid layout
+    val oneSeg: NDataSegment = dsMgr.appendSegment(df, segmentRange)
+    // create job, and the job type is `inc_build`
+    val job: NSparkCubingJob = NSparkCubingJob.createIncBuildJob(Sets.newHashSet(oneSeg), toBuildLayouts, "ADMIN", null)
+    val sparkStep: NSparkCubingStep = job.getSparkCubingStep
+    val distMetaUrl: StorageURL = StorageURL.valueOf(sparkStep.getDistMetaUrl)
+    Assert.assertEquals("hdfs", distMetaUrl.getScheme)
+    Assert.assertTrue(
+      distMetaUrl
+        .getParameter("path")
+        .startsWith(config.getHdfsWorkingDirectory))
+    // launch the job
+    execMgr.addJob(job)
+    if (!Objects.equals(wait(job), ExecutableState.SUCCEED)) {
+      val message = job.getTasks.asScala
+        .find(executable => Objects.equals(executable.getStatus, ExecutableState.ERROR))
+        .map(task => execMgr.getOutputFromHDFSByJobId(job.getId, task.getId, Integer.MAX_VALUE).getVerboseMsg)
+        .getOrElse("Unknown Error")
+      throw new IllegalStateException(message);
+    }
+
+    val buildStore: ResourceStore = ExecutableUtils.getRemoteStore(config, job.getSparkCubingStep)
+    val merger: AfterBuildResourceMerger = new AfterBuildResourceMerger(config, prj)
+    val layoutIds: java.util.Set[java.lang.Long] = toBuildLayouts.asScala.map(c => new java.lang.Long(c.getId)).asJava
+    merger.mergeAfterIncrement(df.getUuid, oneSeg.getId, layoutIds, buildStore)
+    checkSnapshotTable(df.getId, oneSeg.getId, oneSeg.getProject)
+    oneSeg
+  }
+
+  @throws[Exception]
   protected def builCuboid(cubeName: String,
                            segmentRange: SegmentRange[_ <: Comparable[_]],
                            toBuildLayouts: java.util.Set[LayoutEntity],
@@ -212,7 +251,7 @@ trait JobSupport
     val layouts = df.getIndexPlan.getAllLayouts
     var start = SegmentRange.dateToLong("2010-01-01")
     var end = SegmentRange.dateToLong("2023-01-01")
-    var segment = builCuboid(dfName,
+    var segment = buildSegment(dfName,
       new SegmentRange.TimePartitionedSegmentRange(start, end),
       Sets.newLinkedHashSet(layouts),
       prj)
