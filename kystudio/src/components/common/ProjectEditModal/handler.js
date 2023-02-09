@@ -22,7 +22,6 @@ export function getSubmitData (that) {
       return JSON.stringify({
         name: form.name,
         description: form.description,
-        maintain_model_type: 'MANUAL_MAINTAIN',
         override_kylin_properties: fromArrToObj(form.properties)
       })
     case 'edit':

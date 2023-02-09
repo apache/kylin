@@ -91,16 +91,12 @@ export default class ProjectSidebar extends Vue {
   isShowNameTooltip = false
   emptyImg = emptyImg
   get projectTypeClass () {
-    switch (this.project.maintain_model_type) {
-      case 'MANUAL_MAINTAIN':
-        return 'el-icon-ksd-model_designer'
-    }
+    return 'el-icon-ksd-model_designer'
   }
   get projectDetails () {
     return {
       owner: this.project.owner || 'None',
       createTime: dayjs(this.project.create_time_utc).format('MM-DD-YYYY'),
-      projectType: this.$t(this.project.maintain_model_type),
       description: this.project.description
     }
   }
