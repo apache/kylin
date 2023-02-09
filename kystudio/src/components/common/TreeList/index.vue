@@ -237,7 +237,7 @@ export default class TreeList extends Vue {
     }
 
     if (type === 'isMore') {
-      node.visible = data.parent.children.length !== 1 || data.parent.children.length === 0
+      node.visible = (data.parent.children.length !== 1 || data.parent.children.length === 0) && !data.parent.isLoading
     }
     if (data.isHidden !== undefined) {
       node.visible = !data.isHidden
@@ -271,7 +271,8 @@ export default class TreeList extends Vue {
           data.parent.child_options.page_offset += 1
           'childContent' in data.parent && (data.parent.children = data.parent.childContent.slice(0, data.parent.child_options.page_offset * data.parent.child_options.page_size - 1))
           data.parent.isMore = data.parent.child_options.page_offset * data.parent.child_options.page_size < data.parent.childContent.length
-        } else {
+        } else if (!data.parent.isLoading) {
+          data.parent.isLoading = true
           this.$emit('load-more', data, node)
         }
         break
@@ -384,9 +385,13 @@ export default class TreeList extends Vue {
     // margin:0 auto;
     width: auto;
     background: white;
-    flex: none;
     cursor: default;
-    margin-left: calc(50% - 16px)!important;
+    .el-loading-mask {
+      left: -42px;
+      .el-loading-spinner {
+        left: 50%;
+      }
+    }
     .el-loading-spinner {
       width: 16px;
     }
