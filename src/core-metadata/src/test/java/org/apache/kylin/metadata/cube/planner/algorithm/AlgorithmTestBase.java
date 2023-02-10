@@ -47,7 +47,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class ITAlgorithmTestBase {
+public class AlgorithmTestBase {
 
     public final static Comparator<BigInteger> CuboidSelectComparator = new Comparator<BigInteger>() {
         @Override
@@ -121,7 +121,7 @@ public class ITAlgorithmTestBase {
         }
 
         public static CuboidTree createFromCuboids(List<BigInteger> allCuboidIds,
-                Comparator<BigInteger> cuboidComparator) {
+                                                   Comparator<BigInteger> cuboidComparator) {
             // sort the cuboid ids in descending order, so that don't need to adjust
             // the cuboid tree when adding cuboid id to the tree.
             Collections.sort(allCuboidIds, new Comparator<BigInteger>() {
@@ -314,7 +314,7 @@ public class ITAlgorithmTestBase {
         mandatoryCuboids.add(BigInteger.valueOf(88L));
         cuboidStats = new CuboidStats.Builder("test", BigInteger.valueOf(4095L), BigInteger.valueOf(4095L),
                 simulateCount(), simulateSpaceSize()).setMandatoryCuboids(mandatoryCuboids)
-                        .setHitFrequencyMap(simulateHitFrequency()).setScanCountSourceMap(simulateScanCount()).build();
+                .setHitFrequencyMap(simulateHitFrequency()).setScanCountSourceMap(simulateScanCount()).build();
     }
 
     @After

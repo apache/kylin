@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.metadata.cube.planner.algorithm;
+package org.apache.kylin.metadata.cube.planner.algorithm.genetic;
 
 import static org.junit.Assert.assertEquals;
 
@@ -25,14 +25,16 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.math3.genetics.Chromosome;
-import org.apache.kylin.metadata.cube.planner.algorithm.genetic.BitsChromosome;
-import org.apache.kylin.metadata.cube.planner.algorithm.genetic.BitsChromosomeHelper;
-import org.apache.kylin.metadata.cube.planner.algorithm.genetic.GeneticAlgorithm;
+import org.apache.kylin.metadata.cube.planner.algorithm.AlgorithmTestBase;
+import org.apache.kylin.metadata.cube.planner.algorithm.BPUSCalculator;
+import org.apache.kylin.metadata.cube.planner.algorithm.BenefitPolicy;
+import org.apache.kylin.metadata.cube.planner.algorithm.PBPUSCalculator;
+import org.apache.kylin.metadata.cube.planner.algorithm.SPBPUSCalculator;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
 
-public class ITGeneticAlgorithmTest extends ITAlgorithmTestBase {
+public class GeneticAlgorithmTest extends AlgorithmTestBase {
 
     @Test
     public void testChromosomeIsSame() {

@@ -15,19 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.metadata.cube.planner.algorithm;
+package org.apache.kylin.metadata.cube.planner.algorithm.greedy;
 
 import java.math.BigInteger;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.kylin.metadata.cube.planner.algorithm.greedy.GreedyAlgorithm;
-import org.assertj.core.util.Lists;
+import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.cube.planner.algorithm.AlgorithmTestBase;
+import org.apache.kylin.metadata.cube.planner.algorithm.BPUSCalculator;
+import org.apache.kylin.metadata.cube.planner.algorithm.BenefitPolicy;
+import org.apache.kylin.metadata.cube.planner.algorithm.PBPUSCalculator;
+import org.apache.kylin.metadata.cube.planner.algorithm.SPBPUSCalculator;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ITGreedyAlgorithmTest extends ITAlgorithmTestBase {
+public class GreedyAlgorithmTest extends AlgorithmTestBase {
     @Test
     public void testBPUSCalculator() {
         BenefitPolicy benefitPolicy = new BPUSCalculator(cuboidStats);
