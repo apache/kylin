@@ -156,8 +156,6 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
         try {
             counter.await();
         } catch (InterruptedException e) {
-            logger.warn("Thread is interrupted", e);
-            Thread.currentThread().interrupt();
         }
         return best.get();
     }
