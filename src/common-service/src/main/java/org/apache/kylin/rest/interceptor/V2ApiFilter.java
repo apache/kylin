@@ -67,7 +67,7 @@ public class V2ApiFilter implements Filter {
                     HandlerMapping handlerMapping = this.getRequestMappingHandlerMapping(servletRequest);
                     if (handlerMapping != null) {
                         HandlerExecutionChain handler = handlerMapping.getHandler((HttpServletRequest) request);
-                        if (handler == null || handler.getHandler() == null) {
+                        if (handler == null) {
                             throw new NotFoundException(
                                     String.format(Locale.ROOT, "%s API of version v2 is no longer supported", uri));
                         }
