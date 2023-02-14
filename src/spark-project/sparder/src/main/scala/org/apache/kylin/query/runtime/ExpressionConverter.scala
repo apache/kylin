@@ -284,7 +284,7 @@ object ExpressionConverter {
               else children.apply(2).asInstanceOf[Int]
             new Column(StringLocate(k_lit(children.head).expr, k_lit(children.apply(1)).expr, lit(pos).expr)) //position(substr,str,start)
           case "concat" =>
-            concat(k_lit(children.head), k_lit(children.apply(1)))
+            concat(children.map(k_lit): _*)
           case "concat_ws" =>
             concat_ws(children.head.toString, k_lit(children.apply(1)))
           case "split_part" =>
