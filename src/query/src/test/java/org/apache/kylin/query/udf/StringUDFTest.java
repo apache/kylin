@@ -33,16 +33,27 @@ import org.junit.Test;
 public class StringUDFTest {
 
     @Test
-    public void testConcatUDF() throws Exception {
-        ConcatUDF cu = new ConcatUDF();
-        String str1 = cu.CONCAT("Apache ", "Kylin");
+    public void testConcatUDF() {
+        String str1 = ConcatUDF.concat("Apache ", "Kylin");
         assertEquals("Apache Kylin", str1);
 
-        String str2 = cu.CONCAT("", "Kylin");
+        String str2 = ConcatUDF.concat("", "Kylin");
         assertEquals("Kylin", str2);
 
-        String str3 = cu.CONCAT("Apache", "");
+        String str3 = ConcatUDF.concat("Apache", "");
         assertEquals("Apache", str3);
+
+        String str4 = ConcatUDF.concat("Apache", 1);
+        assertEquals("Apache1", str4);
+
+        String str5 = ConcatUDF.concat(1, 1);
+        assertEquals("11", str5);
+
+        String str6 = ConcatUDF.concat("Apache ", "Kylin", " Kyligence");
+        assertEquals("Apache Kylin Kyligence", str6);
+
+        String str7 = ConcatUDF.concat(null);
+        assertNull(str7);
     }
 
     @Test
