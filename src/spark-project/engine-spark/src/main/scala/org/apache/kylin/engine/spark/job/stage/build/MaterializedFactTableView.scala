@@ -38,7 +38,7 @@ class MaterializedFactTableView(jobContext: SegmentJob, dataSegment: NDataSegmen
     val flatTableDesc: SegmentFlatTableDesc = if (jobContext.isPartialBuild) {
       val parser = new IndexDependencyParser(dataModel)
       val relatedTableAlias =
-        parser.getRelatedTablesAlias(jobContext.getReadOnlyLayouts)
+        parser.getRelatedTablesAlias(readOnlyLayouts)
       new SegmentFlatTableDesc(config, dataSegment, spanningTree, relatedTableAlias)
     } else {
       new SegmentFlatTableDesc(config, dataSegment, spanningTree)

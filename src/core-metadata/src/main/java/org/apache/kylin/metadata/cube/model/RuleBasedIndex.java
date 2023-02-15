@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.cube.model;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +30,13 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.metadata.model.IStorageAware;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.metadata.cube.cuboid.CuboidScheduler.ColOrder;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity.IndexIdentifier;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.springframework.beans.BeanUtils;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -100,6 +101,11 @@ public class RuleBasedIndex implements Serializable {
     @Getter
     @JsonProperty("layout_black_list")
     private Set<Long> layoutBlackList = new HashSet<>();
+
+    @Setter
+    @Getter
+    @JsonProperty("layout_cost_based_pruned_list")
+    private Set<Long> layoutsOfCostBasedList = null;
 
     @Setter
     @Getter
@@ -191,7 +197,11 @@ public class RuleBasedIndex implements Serializable {
     }
 
     public Set<LayoutEntity> genCuboidLayouts() {
-        return genCuboidLayouts(Sets.newHashSet(), Sets.newHashSet(), true);
+        return genCuboidLayouts(Sets.newHashSet(), Sets.newHashSet(), true, false);
+    }
+
+    public Set<LayoutEntity> genCuboidLayouts(boolean useCostBasedList) {
+        return genCuboidLayouts(Sets.newHashSet(), Sets.newHashSet(), true, useCostBasedList);
     }
 
     public boolean getIndexUpdateEnabled() {
@@ -234,6 +244,30 @@ public class RuleBasedIndex implements Serializable {
         this.aggregationGroups = aggregationGroups;
     }
 
+    public Map<Integer, Integer> getColumnIdToRowKeyId() {
+        int rowKeyId = 0;
+        Map<Integer, Integer> result = new HashMap<>();
+        for (Integer columnId : dimensions) {
+            result.put(columnId, rowKeyId);
+            rowKeyId++;
+        }
+        return result;
+    }
+
+    public Map<Integer, Integer> getRowKeyIdToColumnId() {
+        int rowKeyId = 0;
+        Map<Integer, Integer> result = new HashMap<>();
+        for (Integer columnId : dimensions) {
+            result.put(rowKeyId, columnId);
+            rowKeyId++;
+        }
+        return result;
+    }
+
+    public int countOfIncludeDimension() {
+        return dimensions.size();
+    }
+
     public boolean isCachedAndShared() {
         return indexPlan != null && indexPlan.isCachedAndShared();
     }
@@ -256,15 +290,24 @@ public class RuleBasedIndex implements Serializable {
     }
 
     Set<LayoutEntity> genCuboidLayouts(Set<LayoutEntity> previousLayouts) {
-        return genCuboidLayouts(previousLayouts, Sets.newHashSet(), true);
+        return genCuboidLayouts(previousLayouts, Sets.newHashSet(), true, false);
     }
 
     Set<LayoutEntity> genCuboidLayouts(Set<LayoutEntity> previousLayouts, Set<LayoutEntity> needDelLayouts) {
-        return genCuboidLayouts(previousLayouts, needDelLayouts, true);
+        return genCuboidLayouts(previousLayouts, needDelLayouts, true, false);
     }
 
-    Set<LayoutEntity> genCuboidLayouts(Set<LayoutEntity> previousLayouts, Set<LayoutEntity> needDelLayouts,
-            boolean excludeDel) {
+    /**
+     *
+     * @param previousLayouts
+     * @param needDelLayouts In order to make no changes for the same layout,
+     *                       we can get the layout id from the previous `RuleBasedIndex` for `previousLayouts` and `needDelLayouts`
+     * @param excludeDel Whether to include the result of deleted layouts
+     * @param useCostBasedList Whether to use the the list of `layoutsOfCostBasedList`
+     * @return
+     */
+    private Set<LayoutEntity> genCuboidLayouts(Set<LayoutEntity> previousLayouts, Set<LayoutEntity> needDelLayouts,
+            boolean excludeDel, boolean useCostBasedList) {
 
         Set<LayoutEntity> genLayouts = Sets.newHashSet();
 
@@ -348,6 +391,18 @@ public class RuleBasedIndex implements Serializable {
         if (excludeDel) {
             genLayouts.removeIf(layout -> layoutBlackList.contains(layout.getId()));
         }
+
+        // If contains the `layout_cost_based_pruned_list`, will use layouts in the cost based planner list
+        if (useCostBasedList && layoutsOfCostBasedList != null) {
+            // use the recommend white list id
+            Set<LayoutEntity> result = Sets.newHashSet();
+            genLayouts.stream().forEach(layout -> {
+                if (layoutsOfCostBasedList.contains(layout.getId())) {
+                    result.add(layout);
+                }
+            });
+            genLayouts = result;
+        }
         return genLayouts;
     }
 
@@ -395,7 +450,7 @@ public class RuleBasedIndex implements Serializable {
     }
 
     public Set<LayoutEntity> getBlacklistLayouts() {
-        val allLayouts = genCuboidLayouts(Sets.newHashSet(), Sets.newHashSet(), false);
+        val allLayouts = genCuboidLayouts(Sets.newHashSet(), Sets.newHashSet(), false, false);
         val existLayouts = genCuboidLayouts();
         return allLayouts.stream().filter(layout -> !existLayouts.contains(layout)).collect(Collectors.toSet());
     }

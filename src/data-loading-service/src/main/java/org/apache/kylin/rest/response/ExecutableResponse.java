@@ -284,6 +284,7 @@ public class ExecutableResponse implements Comparable<ExecutableResponse> {
                 continue;
             }
 
+            // TODO calc the result for the frontend
             final String indexCountString = task.getParam(NBatchConstants.P_INDEX_COUNT);
             final String indexSuccess = stage.getOutput(segmentId).getExtra()
                     .getOrDefault(NBatchConstants.P_INDEX_SUCCESS_COUNT, "");
