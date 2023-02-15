@@ -2502,6 +2502,7 @@ public abstract class KylinConfigBase implements Serializable {
     public int getCalciteBindableCacheSize() {
         return Integer.parseInt(getOptional("kylin.query.calcite.bindable.cache.maxSize", "10"));
     }
+
     public int getCalciteBindableCacheConcurrencyLevel() {
         return Integer.parseInt(getOptional("kylin.query.calcite.bindable.cache.concurrencyLevel", "5"));
     }
@@ -3456,7 +3457,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean skipCheckFlatTable() {
-        return Boolean.parseBoolean(getOptional("kylin.model.skip-flattable-check", FALSE));
+        return Boolean.parseBoolean(getOptional("kylin.model.skip-check-flattable", FALSE));
     }
 
     public boolean isQueryExceptionCacheEnabled() {
@@ -3568,10 +3569,6 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isTableFastReload() {
         return Boolean.parseBoolean(getOptional("kylin.table.fast-reload-enabled", TRUE));
-    }
-
-    public boolean isSkipCheckFlatTable() {
-        return Boolean.parseBoolean(getOptional("kylin.model.skip-check-flattable", FALSE));
     }
 
     public boolean isUnitOfWorkSimulationEnabled() {

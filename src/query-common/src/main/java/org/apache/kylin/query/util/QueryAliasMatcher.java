@@ -43,7 +43,6 @@ import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -72,9 +71,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 // match alias in query to alias in model
 // Not designed to reuse, re-new per query
+@Slf4j
 public class QueryAliasMatcher {
     static final ColumnRowType MODEL_VIEW_COLUMN_ROW_TYPE = new ColumnRowType(new ArrayList<>());
     private static final ColumnRowType SUBQUERY_TAG = new ColumnRowType(null);
@@ -196,8 +197,7 @@ public class QueryAliasMatcher {
             return null;
         }
         JoinsGraph joinsGraph = new JoinsGraph(firstTable, joinDescs);
-        KylinConfigExt projectConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project)
-                .getConfig();
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(project);
 
         if (sqlJoinCapturer.foundJoinOnCC) {
             // 1st round: dry run without cc expr comparison to collect model alias matching
@@ -241,6 +241,7 @@ public class QueryAliasMatcher {
     }
 
     private static class CCJoinEdgeMatcher extends DefaultJoinEdgeMatcher {
+        private static final EscapeTransformer TRANSFORMER = new EscapeTransformer();
         transient QueryAliasMatchInfo matchInfo;
         boolean compareCCExpr;
 
@@ -263,12 +264,20 @@ public class QueryAliasMatcher {
                     || (!a.isComputedColumn() && b.isComputedColumn())) {
                 return false;
             } else {
-                if (!compareCCExpr)
+                if (!compareCCExpr) {
                     return true;
-
-                SqlNode node1 = CalciteParser.getExpNode(a.getComputedColumnExpr());
-                SqlNode node2 = CalciteParser.getExpNode(b.getComputedColumnExpr());
-                return ExpressionComparator.isNodeEqual(node1, node2, matchInfo, new AliasDeduceImpl(matchInfo));
+                }
+                try {
+                    SqlNode node1 = CalciteParser.getExpNode(TRANSFORMER.transform(a.getDoubleQuoteInnerExpr()));
+                    SqlNode node2 = CalciteParser.getExpNode(TRANSFORMER.transform(b.getDoubleQuoteInnerExpr()));
+                    return ExpressionComparator.isNodeEqual(node1, node2, matchInfo, new AliasDeduceImpl(matchInfo));
+                } catch (Exception e) {
+                    // If this situation occurs, it means that there is an error in the parsing of the computed column. 
+                    // Therefore, we can directly assume that these two computed columns are not equal.
+                    log.error("Failed to parse expressions, {} or {}", a.getComputedColumnExpr(),
+                            b.getComputedColumnExpr());
+                    return false;
+                }
             }
         }
     }
