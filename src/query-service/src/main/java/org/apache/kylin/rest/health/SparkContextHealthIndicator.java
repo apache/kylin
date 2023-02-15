@@ -20,10 +20,11 @@ package org.apache.kylin.rest.health;
 
 import org.apache.spark.sql.SparderEnv;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SparkContextHealthIndicator extends AbstractKylinHealthIndicator {
+public class SparkContextHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {

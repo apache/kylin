@@ -304,6 +304,7 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetStorageVolumeInfoResponse() {
+        overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "true");
         prepareLayoutHitCount();
         String error = "do not use aclEvalute in getStorageVolumeInfoResponse, because backend thread would invoke this method in (BootstrapCommand.class)";

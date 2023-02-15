@@ -34,6 +34,7 @@ import org.apache.kylin.common.persistence.transaction.BroadcastEventReadyNotifi
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.streaming.DataParserManager;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -138,6 +139,17 @@ public abstract class BasicService {
             return false;
         }
         return true;
+    }
+
+    public Pair<String, String> checkDatabaseAndTable(String table) {
+        if (table == null)
+            table = "";
+        String database = null;
+        if (table.contains(".")) {
+            database = table.split("\\.", 2)[0].trim();
+            table = table.split("\\.", 2)[1].trim();
+        }
+        return Pair.newPair(database, table);
     }
 
     protected void initDefaultParser(String project) {

@@ -50,6 +50,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import io.kyligence.kap.guava20.shaded.common.base.Throwables;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -88,7 +89,6 @@ import com.google.common.collect.Sets;
 
 import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
 import io.kyligence.kap.guava20.shaded.common.base.MoreObjects;
-import io.kyligence.kap.shaded.curator.org.apache.curator.shaded.com.google.common.base.Throwables;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -264,7 +264,7 @@ public abstract class AbstractExecutable implements Executable {
                 }, project, UnitOfWork.DEFAULT_MAX_RETRY, getEpochId(), getTempLockName());
             } catch (Exception e) {
                 if (Throwables.getCausalChain(e).stream().anyMatch(x -> x instanceof JobStoppedException)) {
-                    // "in this short period user might changed job state" happens
+                    // "in this short period user might change job state" happens
                     logger.info("[LESS_LIKELY_THINGS_HAPPENED] JobStoppedException thrown from in a UnitOfWork", e);
                     tryAgain = true;
                 } else {
@@ -779,7 +779,8 @@ public abstract class AbstractExecutable implements Executable {
         val stagesMap = task.getStagesMap();
         if (stagesMap.size() == 1) {
             for (Map.Entry<String, List<StageBase>> entry : stagesMap.entrySet()) {
-                taskDuration = entry.getValue().stream().map(stage -> getDuration(stage.getOutput(entry.getKey()))) //
+                taskDuration = entry.getValue().stream()
+                        .map(stage -> getStageDuration(stage.getOutput(entry.getKey()), getParent())) //
                         .mapToLong(Long::valueOf) //
                         .sum();
             }
@@ -791,6 +792,28 @@ public abstract class AbstractExecutable implements Executable {
         return getDuration(getOutput());
     }
 
+    public static long computeDuration(Output output) {
+        if (output.getStartTime() == 0) {
+            return 0;
+        }
+        return output.getEndTime() == 0 ? System.currentTimeMillis() - output.getStartTime()
+                : output.getEndTime() - output.getStartTime();
+    }
+
+    // just used for the stage job
+    public static long getStageDuration(Output output, AbstractExecutable parent) {
+        if (output.getDuration() != 0) {
+            var duration = output.getDuration();
+            // If the parent job is not running, the duration of the stage is no longer counted no matter what state the stage is
+            if (parent != null && parent.getStatus() == ExecutableState.RUNNING
+                    && ExecutableState.RUNNING == output.getState()) {
+                duration = duration + System.currentTimeMillis() - output.getLastRunningStartTime();
+            }
+            return duration;
+        }
+        return computeDuration(output);
+    }
+
     public static long getDuration(Output output) {
         if (output.getDuration() != 0) {
             var duration = output.getDuration();
@@ -799,11 +822,7 @@ public abstract class AbstractExecutable implements Executable {
             }
             return duration;
         }
-        if (output.getStartTime() == 0) {
-            return 0;
-        }
-        return output.getEndTime() == 0 ? System.currentTimeMillis() - output.getStartTime()
-                : output.getEndTime() - output.getStartTime();
+        return computeDuration(output);
     }
 
     public long getWaitTime() {

@@ -550,10 +550,10 @@ case class CeilDateTime(timestamp: Expression,
 
   override def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
     val zid = ctx.addReferenceObj("zoneId", zoneId, classOf[ZoneId].getName)
-    val dtu = DateTimeUtils.getClass.getName.stripSuffix("$")
-    defineCodeGen(ctx, ev, (date, fmt) => {
-      s"""$dtu.ceilTimestamp($date, $fmt, $zid)"""
-    })
+    codeGenHelper(ctx, ev, minLevel = DateTimeUtils.TRUNC_TO_SECOND, orderReversed = true) {
+      (date: String, fmt: String) =>
+        s"ceilTimestamp($date, $fmt, $zid);"
+    }
   }
 
   override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = {

@@ -19,12 +19,15 @@ package org.apache.kylin.rest.controller.v2;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
 import static org.apache.kylin.common.exception.ServerErrorCode.UNSUPPORTED_STREAMING_OPERATION;
+import static org.apache.kylin.rest.util.TableUtils.calculateTableSize;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.controller.NBasicController;
@@ -65,9 +68,11 @@ public class NTableControllerV2 extends NBasicController {
             throw new KylinException(UNSUPPORTED_STREAMING_OPERATION,
                     MsgPicker.getMsg().getStreamingOperationNotSupport());
         }
-        List<TableDesc> result = tableService.getTableDescByType(project, withExt, table, database, isFuzzy,
-                sourceType);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(result, offset, limit).getValue(),
+        int returnTableSize = calculateTableSize(offset, limit);
+        Pair<List<TableDesc>, Integer> tableDescWithActualSize = tableService.getTableDesc(project, withExt, table, database,
+                isFuzzy, Collections.singletonList(sourceType), returnTableSize);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                DataResult.getCustom(tableDescWithActualSize, offset, limit).getValue(),
                 "");
     }
 }

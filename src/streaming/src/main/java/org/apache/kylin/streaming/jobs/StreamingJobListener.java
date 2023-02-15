@@ -86,40 +86,32 @@ public class StreamingJobListener implements SparkAppHandle.Listener {
     }
 
     private boolean isFailed(SparkAppHandle.State state) {
-        if (SparkAppHandle.State.FAILED == state || SparkAppHandle.State.KILLED == state
-                || SparkAppHandle.State.LOST == state) {
-            return true;
-        }
-        return false;
+        return SparkAppHandle.State.FAILED == state || SparkAppHandle.State.KILLED == state
+                || SparkAppHandle.State.LOST == state;
     }
 
     private boolean isFinished(SparkAppHandle.State state) {
-        if (SparkAppHandle.State.FINISHED == state) {
-            return true;
-        }
-        return false;
+        return SparkAppHandle.State.FINISHED == state;
     }
 
     @Override
     public void infoChanged(SparkAppHandle handler) {
-
+        // just Override
     }
 
     @Subscribe
     public void onStreamingJobKill(StreamingJobKillEvent streamingJobKillEvent) {
-        val project = streamingJobKillEvent.getProject();
         val modelId = streamingJobKillEvent.getModelId();
-        StreamingScheduler scheduler = StreamingScheduler.getInstance(project);
+        StreamingScheduler scheduler = StreamingScheduler.getInstance(streamingJobKillEvent.getProject());
         scheduler.killJob(modelId, JobTypeEnum.STREAMING_MERGE, JobStatusEnum.STOPPED);
         scheduler.killJob(modelId, JobTypeEnum.STREAMING_BUILD, JobStatusEnum.STOPPED);
     }
 
     @Subscribe
     public void onStreamingJobDrop(StreamingJobDropEvent streamingJobDropEvent) {
-        val project = streamingJobDropEvent.getProject();
         val modelId = streamingJobDropEvent.getModelId();
         val config = KylinConfig.getInstanceFromEnv();
-        val mgr = StreamingJobManager.getInstance(config, project);
+        val mgr = StreamingJobManager.getInstance(config, streamingJobDropEvent.getProject());
         val buildJobId = StreamingUtils.getJobId(modelId, JobTypeEnum.STREAMING_BUILD.toString());
         val mergeJobId = StreamingUtils.getJobId(modelId, JobTypeEnum.STREAMING_MERGE.toString());
         mgr.deleteStreamingJob(buildJobId);

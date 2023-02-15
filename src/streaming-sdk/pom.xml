@@ -20,7 +20,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>5.0.0-SNAPSHOT</version>
+        <version>5.0.0-alpha-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -41,5 +41,5 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
     </dependencies>
-
+    
 </project>

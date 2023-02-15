@@ -33,6 +33,7 @@ public class KylinConfigCheckCLI {
     private static final String SPRING_CONFIG_PREFIX = "spring.";
     private static final String KYLIN_CONFIG_PREFIX = "kylin.";
     private static final String ARTHAS_CONFIG_PREFIX = "arthas.";
+    private static final String MANAGEMENT_CONFIG_PREFIX = "management.";
     /**
      * Not recommended set the configuration items at the beginning with kap
      */
@@ -49,7 +50,8 @@ public class KylinConfigCheckCLI {
             if (!StringUtils.startsWith(key, KYLIN_CONFIG_PREFIX) && !StringUtils.startsWith(key, SERVER_CONFIG_PREFIX)
                     && !StringUtils.startsWith(key, SPRING_CONFIG_PREFIX)
                     && !StringUtils.startsWith(key, KAP_CONFIG_PREFIX)
-                    && !StringUtils.startsWith(key, ARTHAS_CONFIG_PREFIX)) {
+                    && !StringUtils.startsWith(key, ARTHAS_CONFIG_PREFIX)
+                    && !StringUtils.startsWith(key, MANAGEMENT_CONFIG_PREFIX)) {
                 System.out.println(key);
                 break;
             }

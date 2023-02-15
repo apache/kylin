@@ -907,7 +907,7 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
         val env = getTestConfig().getDeployEnv();
         getTestConfig().setProperty("kylin.env", "PROD");
         manager.cancelJob(NExecutableManager.toPO(job, DEFAULT_PROJECT), job.getId());
-        Assertions.assertNull(scheduler.getContext().getRunningJobThread(job));
+        Assertions.assertNotNull(scheduler.getContext().getRunningJobThread(job));
         getTestConfig().setProperty("kylin.env", env);
         scheduler.shutdown();
     }

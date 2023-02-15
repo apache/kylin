@@ -18,7 +18,7 @@
 
 package io.kyligence.kap.secondstorage.metadata;
 
-import io.kyligence.kap.shaded.curator.org.apache.curator.shaded.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 

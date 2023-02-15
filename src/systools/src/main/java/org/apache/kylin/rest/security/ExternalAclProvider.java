@@ -35,7 +35,7 @@ import org.springframework.security.acls.model.Permission;
 
 /**
  */
-abstract public class ExternalAclProvider {
+public abstract class ExternalAclProvider {
 
     public static ExternalAclProvider getInstance() {
         return Singletons.getInstance(ExternalAclProvider.class, clz -> {
@@ -51,11 +51,11 @@ abstract public class ExternalAclProvider {
 
     // ============================================================================
 
-    public final static String ADMINISTRATION = "ADMIN";
-    public final static String MANAGEMENT = "MANAGEMENT";
-    public final static String OPERATION = "OPERATION";
-    public final static String READ = "QUERY";
-    public final static String EMPTY = "EMPTY";
+    public static final String ADMINISTRATION = "ADMIN";
+    public static final String MANAGEMENT = "MANAGEMENT";
+    public static final String OPERATION = "OPERATION";
+    public static final String READ = "QUERY";
+    public static final String EMPTY = "EMPTY";
     public static final String DATA_QUERY = "DATA_QUERY";
 
     // used by ranger ExternalAclProvider
@@ -116,7 +116,7 @@ abstract public class ExternalAclProvider {
 
     // ============================================================================
 
-    abstract public void init();
+    public abstract void init();
 
     /**
      * Checks if a user has permission on an entity.
@@ -129,7 +129,7 @@ abstract public class ExternalAclProvider {
      * 
      * @return true if has permission
      */
-    abstract public boolean checkPermission(String user, List<String> userRoles, //
+    public abstract boolean checkPermission(String user, List<String> userRoles, //
             String entityType, String entityUuid, Permission permission);
 
     /**
@@ -139,6 +139,6 @@ abstract public class ExternalAclProvider {
      * @param entityUuid
      * @return a list of (user/role, permission)
      */
-    abstract public List<Pair<String, AclPermission>> getAcl(String entityType, String entityUuid);
+    public abstract List<Pair<String, AclPermission>> getAcl(String entityType, String entityUuid);
 
 }

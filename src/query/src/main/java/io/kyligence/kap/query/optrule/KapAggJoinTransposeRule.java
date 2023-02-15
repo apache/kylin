@@ -37,13 +37,19 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlAggFunction;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSplittableAggFunction;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
@@ -56,13 +62,15 @@ import org.apache.kylin.query.util.QueryUtil;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class KapAggJoinTransposeRule extends RelOptRule {
+
+    private static final String STAR_TOKEN = "*";
+
     public static final KapAggJoinTransposeRule INSTANCE_JOIN_RIGHT_AGG = new KapAggJoinTransposeRule(
             operand(KapAggregateRel.class, operand(KapJoinRel.class, any())), RelFactories.LOGICAL_BUILDER,
             "KapAggJoinTransposeRule:agg-join-rightAgg");
-
-    private final boolean allowFunctions = true;
 
     public KapAggJoinTransposeRule(RelOptRuleOperand operand) {
         super(operand);
@@ -101,7 +109,7 @@ public class KapAggJoinTransposeRule extends RelOptRule {
 
         // If it is not an inner join, we do not push the
         // aggregate operator
-        if (join.getJoinType() != JoinRelType.INNER || (!allowFunctions && !aggregate.getAggCallList().isEmpty())) {
+        if ((join.getJoinType() != JoinRelType.INNER && join.getJoinType() != JoinRelType.LEFT)) {
             return;
         }
 
@@ -232,8 +240,7 @@ public class KapAggJoinTransposeRule extends RelOptRule {
 
     private static void updateCondition(List<Side> sides, Map<Integer, Integer> map, KapAggregateRel aggregate,
             KapJoinRel join, int belowOffset, RelBuilder relBuilder, boolean allColumnsInAggregate) {
-        final Mapping mapping = (Mapping) Mappings.target(a0 -> map.get(a0), join.getRowType().getFieldCount(),
-                belowOffset);
+        final Mapping mapping = (Mapping) Mappings.target(map::get, join.getRowType().getFieldCount(), belowOffset);
         final RexBuilder rexBuilder = aggregate.getCluster().getRexBuilder();
         final RexNode newCondition = RexUtil.apply(mapping, join.getCondition());
         // Create new join
@@ -244,6 +251,7 @@ public class KapAggJoinTransposeRule extends RelOptRule {
         final int groupIndicatorCount = aggregate.getGroupCount() + aggregate.getIndicatorCount();
         final int newLeftWidth = sides.get(0).newInput.getRowType().getFieldCount();
         final List<RexNode> projects = new ArrayList<>(rexBuilder.identityProjects(relBuilder.peek().getRowType()));
+        Map<Integer, Boolean> leftJoinAggCallMap = new HashMap<>();
         for (Ord<AggregateCall> aggCall : Ord.zip(aggregate.getAggCallList())) {
             final SqlAggFunction aggregation = aggCall.e.getAggregation();
             final SqlSplittableAggFunction splitter = Preconditions
@@ -253,9 +261,13 @@ public class KapAggJoinTransposeRule extends RelOptRule {
             newAggCalls.add(splitter.topSplit(rexBuilder, registry(projects), groupIndicatorCount,
                     relBuilder.peek().getRowType(), aggCall.e, leftSubTotal == null ? -1 : leftSubTotal,
                     rightSubTotal == null ? -1 : rightSubTotal + newLeftWidth));
+            if (join.getJoinType() == JoinRelType.LEFT) {
+                leftJoinAggCallMap.put(projects.size() - 1, isLeftAgg(aggCall.getValue(), join));
+            }
         }
 
-        relBuilder.project(projects);
+        final List<RexNode> newProjects = createNewProjects(rexBuilder, projects, leftJoinAggCallMap);
+        relBuilder.project(newProjects);
 
         boolean aggConvertedToProjects = false;
         if (allColumnsInAggregate) {
@@ -285,6 +297,103 @@ public class KapAggJoinTransposeRule extends RelOptRule {
         }
     }
 
+    private static List<RexNode> createNewProjects(RexBuilder rexBuilder, List<RexNode> projects,
+            Map<Integer, Boolean> leftJoinAggCallMap) {
+        Map<Integer, RelDataType> projectsMap = Maps.newHashMap();
+        for (RexNode rexNode : projects) {
+            if (rexNode instanceof RexInputRef) {
+                RexInputRef rexInputRef = (RexInputRef) rexNode;
+                projectsMap.put(rexInputRef.getIndex(), rexInputRef.getType());
+            }
+        }
+        final List<RexNode> newProjects = new ArrayList<>();
+        for (int i = 0; i < projects.size(); i++) {
+            RexNode rexNode = projects.get(i);
+            if (leftJoinAggCallMap.get(i) == null) {
+                newProjects.add(rexNode);
+            } else {
+                newProjects.add(rewriteRexNode(rexNode, rexBuilder, leftJoinAggCallMap.get(i), projectsMap));
+            }
+        }
+        return newProjects;
+    }
+
+    private static RexNode rewriteRexNode(RexNode rexNode, RexBuilder rexBuilder, boolean isLeft,
+            Map<Integer, RelDataType> projectsRelDataTypeMap) {
+        if (rexNode instanceof RexCall) {
+            RelDataType dataType = new SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT).createSqlType(SqlTypeName.INTEGER);
+            RexCall rexCall = (RexCall) rexNode;
+            SqlOperator sqlOperator = rexCall.getOperator();
+            if (isMultiplicationRexCall(rexCall)) {
+                List<RexNode> rewriteRexNodeList = rewriteRexNodeList(rexCall, rexBuilder, dataType, isLeft,
+                        projectsRelDataTypeMap);
+                return rexBuilder.makeCall(rexCall.type, SqlStdOperatorTable.MULTIPLY, rewriteRexNodeList);
+            } else if (sqlOperator.getKind() == SqlKind.CAST && rexCall.getOperands().size() == 1
+                    && rexCall.getOperands().get(0) instanceof RexCall
+                    && isMultiplicationRexCall((RexCall) rexCall.getOperands().get(0))) {
+
+                RexCall innerRexCall = (RexCall) rexCall.getOperands().get(0);
+                List<RexNode> rewriteRexNodeList = rewriteRexNodeList(innerRexCall, rexBuilder, dataType, isLeft,
+                        projectsRelDataTypeMap);
+                RexNode rewriteInnerRexCall = rexBuilder.makeCall(innerRexCall.type, SqlStdOperatorTable.MULTIPLY,
+                        rewriteRexNodeList);
+                return rexBuilder.makeCast(rexCall.type, rewriteInnerRexCall);
+            }
+        }
+        return rexNode;
+    }
+
+    private static List<RexNode> rewriteRexNodeList(RexCall rexCall, RexBuilder rexBuilder, RelDataType dataType,
+            boolean isLeft, Map<Integer, RelDataType> projectsRelDataTypeMap) {
+        List<RexNode> rexNodeList = rexCall.getOperands();
+        List<RexNode> rewriteRexNodeList = new ArrayList<>();
+        rexNodeList = rewriteRefInputList(rexNodeList, projectsRelDataTypeMap, rexBuilder);
+        if (isLeft) {
+            rewriteRexNodeList.add(rexBuilder.makeCall(SqlStdOperatorTable.COALESCE, rexNodeList.get(0),
+                    rexBuilder.makeLiteral(1, dataType, false)));
+            rewriteRexNodeList.add(rexNodeList.get(1));
+        } else {
+            rewriteRexNodeList.add(rexNodeList.get(0));
+            rewriteRexNodeList.add(rexBuilder.makeCall(SqlStdOperatorTable.COALESCE, rexNodeList.get(1),
+                    rexBuilder.makeLiteral(1, dataType, false)));
+        }
+        return rewriteRexNodeList;
+    }
+
+    private static List<RexNode> rewriteRefInputList(List<RexNode> rexNodeList,
+            Map<Integer, RelDataType> projectsRelDataTypeMap, RexBuilder rexBuilder) {
+        List<RexNode> rewriteRexNodeList = new ArrayList<>();
+        for (RexNode rexNode : rexNodeList) {
+            if (rexNode instanceof RexInputRef) {
+                RexInputRef rexInputRef = (RexInputRef) rexNode;
+                RelDataType originalRelDataType = projectsRelDataTypeMap.get(rexInputRef.getIndex());
+                if (originalRelDataType != null && rexInputRef.getType() != originalRelDataType) {
+                    rexNode = rexBuilder.makeInputRef(originalRelDataType, rexInputRef.getIndex());
+                }
+            }
+            rewriteRexNodeList.add(rexNode);
+        }
+        return rewriteRexNodeList;
+    }
+
+    private static boolean isMultiplicationRexCall(RexCall rexCall) {
+        return rexCall.getOperator().getName().equals(STAR_TOKEN) && rexCall.getOperands().size() == 2;
+    }
+
+    private static boolean isLeftAgg(AggregateCall aggregateCall, KapJoinRel joinRel) {
+        List<Integer> argList = aggregateCall.getArgList();
+        if (argList.isEmpty()) {
+            return true;
+        }
+        int maxIndex = argList.get(0);
+        for (Integer index : argList) {
+            if (maxIndex < index) {
+                maxIndex = index;
+            }
+        }
+        return maxIndex >= joinRel.getLeft().getRowType().getFieldList().size();
+    }
+
     /** Computes the closure of a set of columns according to a given list of
      * constraints. Each 'x = y' constraint causes bit y to be set if bit x is
      * set, and vice versa. */
@@ -304,21 +413,18 @@ public class KapAggJoinTransposeRule extends RelOptRule {
     }
 
     private static void populateEquivalences(Map<Integer, BitSet> equivalence, RexNode predicate) {
-        switch (predicate.getKind()) {
-        case EQUALS:
-            RexCall call = (RexCall) predicate;
-            final List<RexNode> operands = call.getOperands();
-            if (operands.get(0) instanceof RexInputRef) {
-                final RexInputRef ref0 = (RexInputRef) operands.get(0);
-                if (operands.get(1) instanceof RexInputRef) {
-                    final RexInputRef ref1 = (RexInputRef) operands.get(1);
-                    populateEquivalence(equivalence, ref0.getIndex(), ref1.getIndex());
-                    populateEquivalence(equivalence, ref1.getIndex(), ref0.getIndex());
-                }
-            }
-            break;
-        default:
+        if (predicate.getKind() != SqlKind.EQUALS) {
             return;
+        }
+        RexCall call = (RexCall) predicate;
+        final List<RexNode> operands = call.getOperands();
+        if (operands.get(0) instanceof RexInputRef) {
+            final RexInputRef ref0 = (RexInputRef) operands.get(0);
+            if (operands.get(1) instanceof RexInputRef) {
+                final RexInputRef ref1 = (RexInputRef) operands.get(1);
+                populateEquivalence(equivalence, ref0.getIndex(), ref1.getIndex());
+                populateEquivalence(equivalence, ref1.getIndex(), ref0.getIndex());
+            }
         }
     }
 

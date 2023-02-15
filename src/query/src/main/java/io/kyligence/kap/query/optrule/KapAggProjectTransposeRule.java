@@ -18,14 +18,14 @@
 
 package io.kyligence.kap.query.optrule;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -54,6 +54,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+/**
+ * agg-project-join  ->  agg-project-agg-join
+ * agg-project-filter-join -> agg-project-filter-agg-join
+ */
 public class KapAggProjectTransposeRule extends RelOptRule {
     public static final KapAggProjectTransposeRule AGG_PROJECT_FILTER_JOIN = new KapAggProjectTransposeRule(
             operand(KapAggregateRel.class,
@@ -152,7 +156,7 @@ public class KapAggProjectTransposeRule extends RelOptRule {
 
         List<Integer> mappingWithOrderList = Lists.newArrayList(mappingWithOrder);
         final RelNode projectInput = project.getInput();
-        final Mappings.TargetMapping mapping = Mappings.target(a0 -> mappingWithOrderList.indexOf(a0),
+        final Mappings.TargetMapping mapping = Mappings.target(mappingWithOrderList::indexOf,
                 projectInput.getRowType().getFieldCount(), mappingWithOrder.size());
 
         //Process agg calls
@@ -160,21 +164,14 @@ public class KapAggProjectTransposeRule extends RelOptRule {
         final ImmutableList.Builder<AggregateCall> topAggCalls = ImmutableList.builder();
 
         Map<Integer, RelDataType> countArgMap = new HashMap<>();
-        processAggCalls(aggregate, project, aggCalls, topAggCalls, countArgMap);
-
-        ImmutableList<AggregateCall> aggregateCalls = aggCalls.build();
-        final Aggregate newAggregate = aggregate.copy(aggregate.getTraitSet(), project.getInput(), aggregate.indicator,
-                newGroupSet, null, aggregateCalls);
-
+        int newAggregateGroupSetSize = newGroupSet.asSet().size();
         List<RexNode> projects = Lists.newArrayList();
-        for (Ord<RexNode> rel : Ord.zip(project.getProjects())) {
-            RexNode node = rel.e;
-            if (node instanceof RexInputRef && countArgMap.containsKey(rel.i)) {
-                projects.add(new RexInputRef(((RexInputRef) node).getName(), ((RexInputRef) node).getIndex(),
-                        countArgMap.get(rel.i)));
-            } else {
-                projects.add(node);
-            }
+        Set<Integer> newTopAggregateSet = new HashSet<>();
+        int start = 0;
+        for (Integer index : aggregate.getGroupSet().asSet()) {
+            projects.add(project.getProjects().get(index));
+            newTopAggregateSet.add(start);
+            start++;
         }
 
         //Mapping input: the origin input of project is from filter or join
@@ -182,22 +179,45 @@ public class KapAggProjectTransposeRule extends RelOptRule {
         //Origin: agg - project - filter/join
         //Current: agg - project - agg - filter/join
         final List<RexNode> newProjects = Lists.newArrayList();
-        Iterator<RexNode> rexNodes = RexUtil.apply(mapping, projects).iterator();
-        while (rexNodes.hasNext()) {
-            newProjects.add(rexNodes.next());
+        for (RexNode rexNode : RexUtil.apply(mapping, projects)) {
+            newProjects.add(rexNode);
+        }
+        processAggCalls(aggregate, project, aggCalls, topAggCalls, countArgMap, newProjects);
+
+        ImmutableList<AggregateCall> aggregateCalls = aggCalls.build();
+        final Aggregate newAggregate = aggregate.copy(aggregate.getTraitSet(), project.getInput(), aggregate.indicator,
+                newGroupSet, null, aggregateCalls);
+
+        List<String> newProjectFieldNames = new ArrayList<>();
+        List<String> oldProjectFieldNameList = project.getRowType().getFieldNames();
+        for (int i = 0; i < oldProjectFieldNameList.size(); i++) {
+            if (aggregate.getGroupSet().get(i)) {
+                newProjectFieldNames.add(oldProjectFieldNameList.get(i));
+            }
+        }
+        for (Map.Entry<Integer, RelDataType> entry : countArgMap.entrySet()) {
+            int originalRefIndex = entry.getKey();
+            int newRefIndex = newAggregateGroupSetSize + originalRefIndex;
+            RelDataType relDataType = entry.getValue();
+            String projectRefName = "$" + newRefIndex;
+            newProjects.add(new RexInputRef(projectRefName, newRefIndex, relDataType));
+            newProjectFieldNames.add(projectRefName);
         }
 
         final RelDataType newRowType = RexUtil.createStructType(newAggregate.getCluster().getTypeFactory(), newProjects,
-                project.getRowType().getFieldNames(), SqlValidatorUtil.F_SUGGESTER);
+                newProjectFieldNames, SqlValidatorUtil.F_SUGGESTER);
         final Project newProject = project.copy(project.getTraitSet(), newAggregate, newProjects, newRowType);
+        ImmutableBitSet.Builder topAggregateGroupSetBuilder = ImmutableBitSet.builder();
+        topAggregateGroupSetBuilder.addAll(newTopAggregateSet);
         final Aggregate topAggregate = aggregate.copy(aggregate.getTraitSet(), newProject, aggregate.indicator,
-                aggregate.getGroupSet(), null, topAggCalls.build());
+                topAggregateGroupSetBuilder.build(), null, topAggCalls.build());
         call.transformTo(topAggregate);
     }
 
     private void processAggCalls(KapAggregateRel aggregate, KapProjectRel project,
             ImmutableList.Builder<AggregateCall> aggCalls, ImmutableList.Builder<AggregateCall> topAggCalls,
-            Map<Integer, RelDataType> countArgMap) {
+            Map<Integer, RelDataType> countArgMap, List<RexNode> newProjects) {
+        int startIndex = 0;
         for (AggregateCall aggregateCall : aggregate.getAggCallList()) {
             final ImmutableList.Builder<Integer> newArgs = ImmutableList.builder();
             for (int arg : aggregateCall.getArgList()) {
@@ -216,13 +236,17 @@ public class KapAggProjectTransposeRule extends RelOptRule {
             }
             aggCalls.add(aggregateCall.copy(newArgs.build(), newFilterArg));
             //Handle COUNT() for top agg
+            countArgMap.put(startIndex, aggregateCall.type);
+            List<Integer> topAggArgList = new ArrayList<>();
+            topAggArgList.add(newProjects.size() + startIndex);
             if (!aggregateCall.getAggregation().getName().equals("COUNT")) {
-                topAggCalls.add(aggregateCall);
+                topAggCalls.add(AggregateCall.create(aggregateCall.getAggregation(), false, false, topAggArgList, -1,
+                        aggregateCall.type, aggregateCall.name));
             } else {
-                countArgMap.put(aggregateCall.getArgList().get(0), aggregateCall.type);
-                topAggCalls.add(AggregateCall.create(SqlStdOperatorTable.SUM0, false, false, aggregateCall.getArgList(),
-                        -1, aggregateCall.type, aggregateCall.name));
+                topAggCalls.add(AggregateCall.create(SqlStdOperatorTable.SUM0, false, false, topAggArgList, -1,
+                        aggregateCall.type, aggregateCall.name));
             }
+            startIndex++;
         }
     }
 

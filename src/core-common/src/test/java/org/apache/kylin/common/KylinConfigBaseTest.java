@@ -1392,6 +1392,14 @@ class KylinConfigBaseTest {
         config.setProperty("kylin.build.segment-overlap-enabled", "true");
         assertTrue(config.isBuildSegmentOverlapEnabled());
     }
+
+    @Test
+    void testIsQuotaStorageEnabled() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertFalse(config.isStorageQuotaEnabled());
+        config.setProperty("kylin.storage.check-quota-enabled", "true");
+        assertTrue(config.isStorageQuotaEnabled());
+    }
 }
 
 class EnvironmentUpdateUtils {

@@ -22,8 +22,10 @@ import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NA
 import static org.apache.kylin.common.exception.ServerErrorCode.UNSUPPORTED_DATA_SOURCE_TYPE;
 import static org.apache.kylin.common.exception.ServerErrorCode.UNSUPPORTED_STREAMING_OPERATION;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_SAMPLING_RANGE_INVALID;
+import static org.apache.kylin.rest.util.TableUtils.calculateTableSize;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -119,10 +121,11 @@ public class OpenTableController extends NBasicController {
             throw new KylinException(UNSUPPORTED_STREAMING_OPERATION,
                     MsgPicker.getMsg().getStreamingOperationNotSupport());
         }
-        List<TableDesc> result = tableService.getTableDescByType(project, withExt,
+        int returnTableSize = calculateTableSize(offset, limit);
+        Pair<List<TableDesc>, Integer> tableDescWithActualSize = tableService.getTableDesc(project, withExt,
                 StringUtils.upperCase(table, Locale.ROOT), StringUtils.upperCase(database, Locale.ROOT), isFuzzy,
-                sourceType);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(result, offset, limit), "");
+                Collections.singletonList(sourceType), returnTableSize);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.getCustom(tableDescWithActualSize, offset, limit), "");
     }
 
     @ApiOperation(value = "loadTables", tags = { "AI" })

@@ -279,6 +279,17 @@ public class NUserControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testCreateUserWithNullPassword() throws IOException {
+        UserRequest userRequest = new UserRequest();
+        userRequest.setDisabled(false);
+        userRequest.setUsername("123");
+        userRequest.setPassword(null);
+        thrown.expect(KylinException.class);
+        thrown.expectMessage(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY.getMsg("password"));
+        nUserController.createUser(userRequest);
+    }
+
+    @Test
     public void testCreateUser_PasswordLength_Exception() throws Exception {
         val user = new UserRequest();
         user.setUsername("u1");

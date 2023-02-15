@@ -508,8 +508,11 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
         case RESTART:
             SecondStorageUtil.checkJobRestart(project, jobId);
             executableManager.updateJobError(jobId, null, null, null, null);
+            executableManager.addFrozenJob(jobId);
             executableManager.restartJob(jobId);
-            UnitOfWork.get().doAfterUnit(afterUnitTask);
+            UnitOfWorkContext unitOfWorkContext = UnitOfWork.get();
+            unitOfWorkContext.doAfterUnit(afterUnitTask);
+            unitOfWorkContext.doAfterUnit(() -> executableManager.removeFrozenJob(jobId));
             break;
         case DISCARD:
             discardJob(project, jobId);
@@ -899,7 +902,7 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
         result.setExecEndTime(AbstractExecutable.getEndTime(stageOutput));
         result.setCreateTime(AbstractExecutable.getCreateTime(stageOutput));
 
-        result.setDuration(AbstractExecutable.getDuration(stageOutput));
+        result.setDuration(AbstractExecutable.getStageDuration(stageOutput, task.getParent()));
 
         val indexCount = Optional.ofNullable(task.getParam(NBatchConstants.P_INDEX_COUNT)).orElse("0");
         result.setIndexCount(Long.parseLong(indexCount));
@@ -989,6 +992,11 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
             Map<String, String> updateInfo, String errMsg) {
         final ExecutableState newStatus = convertToExecutableState(status);
         val jobId = NExecutableManager.extractJobId(taskId);
+        val jobManager = getManager(NExecutableManager.class, project);
+        boolean isFrozenJob = jobManager.isFrozenJob(jobId);
+        if (isFrozenJob) {
+            return;
+        }
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             val executableManager = getManager(NExecutableManager.class, project);
             executableManager.updateStageStatus(taskId, segmentId, newStatus, updateInfo, errMsg);

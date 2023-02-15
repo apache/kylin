@@ -125,3 +125,27 @@ dn: cn=empty,ou=Groups,dc=example,dc=com
 cn: empty
 objectClass: groupOfNames
 objectClass: top
+
+# rick, People, example.com
+dn: cn=rick,ou=People,dc=example,dc=com
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+cn: rick
+sn: rick gan
+mail: rick@example.io
+ou: Modeler
+userPassword:: ZXhhbXBsZTEyMw==
+
+# oliver, People, example.com
+dn: cn=ricky,ou=People,dc=example,dc=com
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+cn: ricky
+sn: ricky gan
+mail: ricky@example.io
+ou: Modeler
+userPassword::

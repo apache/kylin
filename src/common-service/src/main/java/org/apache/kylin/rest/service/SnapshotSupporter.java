@@ -21,10 +21,12 @@ package org.apache.kylin.rest.service;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.constant.SnapshotStatus;
 import org.apache.kylin.rest.response.SnapshotInfoResponse;
 
 public interface SnapshotSupporter {
-    List<SnapshotInfoResponse> getProjectSnapshots(String project, String table, Set<SnapshotStatus> statusFilter,
-            Set<Boolean> partitionFilter, String sortBy, boolean isReversed);
+    Pair<List<SnapshotInfoResponse>, Integer> getProjectSnapshots(String project, String table,
+                                                                  Set<SnapshotStatus> statusFilter, Set<Boolean> partitionFilter, String sortBy, boolean isReversed,
+                                                                  Pair<Integer, Integer> offsetAndLimit);
 }

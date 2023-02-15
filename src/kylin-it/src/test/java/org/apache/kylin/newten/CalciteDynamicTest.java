@@ -30,7 +30,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
 import org.apache.kylin.util.ExecAndComp;
-import org.apache.parquet.Strings;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
 import org.junit.After;
@@ -68,8 +67,8 @@ public class CalciteDynamicTest extends NLocalWithSparkSessionTest {
         List<List<String>> results = transformToString(rows);
         for (int i = 0; i < benchmark.size(); i++) {
             if (!ListUtils.isEqualList(benchmark.get(i), results.get(i))) {
-                String expected = Strings.join(benchmark.get(i), ",");
-                String actual1 = Strings.join(results.get(i), ",");
+                String expected = String.join(",", benchmark.get(i));
+                String actual1 = String.join(",", results.get(i));
                 fail("expected: " + expected + ", results: " + actual1);
             }
         }

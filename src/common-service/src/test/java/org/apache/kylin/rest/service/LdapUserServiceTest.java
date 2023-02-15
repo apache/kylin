@@ -218,10 +218,10 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testListUsers() throws Exception {
         Set<String> users = ldapUserService.listUsers().stream().map(x -> x.getUsername()).collect(toSet());
-        Assert.assertEquals(4, users.size());
+        Assert.assertEquals(6, users.size());
         List<ManagedUser> managedUserList = ldapUserService.listUsers();
         for (val user : managedUserList) {
-            Assert.assertTrue(user.getAuthorities().size() > 1);
+            Assert.assertTrue(user.getAuthorities().size() >= 1);
         }
     }
 
@@ -259,12 +259,15 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testOnNewUserAdded() throws Exception {
-        Assert.assertFalse(ldapUserService.userExists("rick"));
-        directoryServer.add("dn: cn=rick,ou=People,dc=example,dc=com", "objectClass: inetOrgPerson",
-                "objectClass: organizationalPerson", "objectClass: person", "objectClass: top", "cn: rick",
-                "sn: rick gan", "mail: rick@example.io", "ou: Modeler", "userPassword:: ZXhhbXBsZTEyMw==");
+        Assert.assertTrue(ldapUserService.userExists("rick"));
         ldapUserService.onUserAuthenticated("rick");
         Assert.assertTrue(ldapUserService.userExists("rick"));
+    }
+
+    @Test
+    public void testOnUserWithoutPassword() throws Exception {
+        ldapUserService.onUserAuthenticated("ricky");
+        Assert.assertTrue(ldapUserService.userExists("ricky"));
     }
 
     @Test

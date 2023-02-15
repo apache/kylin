@@ -18,15 +18,12 @@
 
 package org.apache.kylin.rest.security;
 
-import java.lang.reflect.Method;
-
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.util.ReflectionUtils;
 
 public class KerberosLoginManagerTest extends NLocalFileMetadataTestCase {
     @Before
@@ -41,11 +38,8 @@ public class KerberosLoginManagerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testCheckExistsTablesAccess() throws Exception {
-        Method method = KerberosLoginManager.class.getDeclaredMethod("checkExistsTablesAccess",
-                new Class[] { UserGroupInformation.class, String.class });
-        method.setAccessible(true);
         UserGroupInformation userGroupInformation = UserGroupInformation.getCurrentUser();
-        Assert.assertTrue((boolean) ReflectionUtils.invokeMethod(method, KerberosLoginManager.getInstance(),
-                userGroupInformation, "ssb"));
+        KerberosLoginManager kerberosLoginManager = KerberosLoginManager.getInstance();
+        Assert.assertTrue(kerberosLoginManager.checkExistsTablesAccess(userGroupInformation, "ssb"));
     }
 }

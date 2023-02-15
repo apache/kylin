@@ -44,7 +44,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <kylin-pager layout="prev, pager, next" :background="false" class="ksd-mt-10 ksd-center" ref="pager" :refTag="pageRefTags.IndexDetailPager" :perpage_size="currentCount" :curPage="currentAggPage+1" :totalSize="totalAggIndexColumnSize"  v-on:handleCurrentChange='changeAggPage'></kylin-pager>
+      <kylin-pager layout="prev, pager, next" :background="false" class="ksd-mt-10 ksd-center" ref="pager" :refTag="pageRefTags.IndexDetailPager" :perPageSize="currentCount" :curPage="currentAggPage+1" :totalSize="totalAggIndexColumnSize"  v-on:handleCurrentChange='changeAggPage'></kylin-pager>
     </template>
     <div v-else>
         <el-table
@@ -79,7 +79,7 @@
           </template>
           </el-table-column>
         </el-table>
-        <kylin-pager layout="prev, pager, next" :background="false" class="ksd-mt-10 ksd-center" ref="pager" :refTag="pageRefTags.IndexDetailPager" :perpage_size="currentCount" :curPage="currentPage+1" :totalSize="totalTableIndexColumnSize"  v-on:handleCurrentChange='currentChange'></kylin-pager>
+        <kylin-pager layout="prev, pager, next" :background="false" class="ksd-mt-10 ksd-center" ref="pager" :refTag="pageRefTags.IndexDetailPager" :perPageSize="currentCount" :curPage="currentPage+1" :totalSize="totalTableIndexColumnSize"  v-on:handleCurrentChange='currentChange'></kylin-pager>
       </div>
     <div slot="footer" class="dialog-footer">
       <el-button size="medium" @click="closeIndexDetailsDialog">{{$t('kylinLang.common.close')}}</el-button>

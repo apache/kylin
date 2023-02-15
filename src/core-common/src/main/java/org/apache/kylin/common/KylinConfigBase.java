@@ -1208,10 +1208,6 @@ public abstract class KylinConfigBase implements Serializable {
 
     }
 
-    public boolean isCheckQuotaStorageEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.job.check-quota-storage-enabled", TRUE));
-    }
-
     public boolean isDeleteJobTmpWhenRetry() {
         return Boolean.parseBoolean(getOptional("kylin.job.delete-job-tmp-when-retry", FALSE));
     }
@@ -1764,6 +1760,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isConvertSumExpressionEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.convert-sum-expression-enabled", FALSE));
+    }
+
+    public boolean isEnhancedAggPushDownEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.enhanced-agg-pushdown-enabled", FALSE));
     }
 
     public boolean isOptimizedSumCastDoubleRuleEnabled() {
@@ -2465,7 +2465,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.query.calcite.reduce-rules-enabled", TRUE));
     }
 
-    public boolean isAgregatePushdownEnabled() {
+    public boolean isAggregatePushdownEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.calcite.aggregate-pushdown-enabled", FALSE));
     }
 
@@ -3740,6 +3740,14 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getProjectMergeRuleBloatThreshold() {
         return Integer.parseInt(getOptional("kylin.query.project-merge-bloat-threshold", "0"));
+    }
+
+    public boolean isStorageQuotaEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.storage.check-quota-enabled", FALSE));
+    }
+    
+    public boolean skipShardPruningForInExpr() {
+        return Boolean.parseBoolean(getOptional("kylin.query.skip-shard-pruning-for-in", FALSE));
     }
 
     // ============================================================================

@@ -259,7 +259,6 @@ class NModel extends Schama {
         metaData.partition_desc = this.partition_desc
         metaData.batch_partition_desc = this.batch_partition_desc
         metaData.multi_partition_desc = this.multi_partition_desc
-        metaData.maintain_model_type = this._mount.maintain_model_type
         metaData.management_type = this.management_type
         metaData.with_second_storage = this.second_storage_enabled
         metaData.second_storage_size = this.second_storage_size

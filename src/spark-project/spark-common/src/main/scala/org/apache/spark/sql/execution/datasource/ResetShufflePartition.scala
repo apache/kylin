@@ -20,6 +20,7 @@ package org.apache.spark.sql.execution.datasource
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.internal.SQLConf
 
 trait ResetShufflePartition extends Logging {
 
@@ -35,7 +36,15 @@ trait ResetShufflePartition extends Logging {
         KylinConfig.getInstanceFromEnv.getQueryPartitionSplitSizeMB * 1024 * 1024) + 1,
         defaultParallelism).toInt
     }
-    sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", partitionsNum.toString)
-    logInfo(s"Set partition to $partitionsNum, total bytes ${QueryContext.current().getMetrics.getSourceScanBytes}")
+    val originPartitionsNum = QueryContext.current().getShufflePartitionsReset
+    if (partitionsNum > originPartitionsNum) {
+      sparkSession.sessionState.conf.setLocalProperty(SQLConf.SHUFFLE_PARTITIONS.key, partitionsNum.toString)
+      QueryContext.current().setShufflePartitionsReset(partitionsNum)
+      logInfo(s"Set partition from $originPartitionsNum to $partitionsNum, " +
+        s"total bytes ${QueryContext.current().getMetrics.getSourceScanBytes}")
+    } else {
+      logInfo(s"Origin partition is $originPartitionsNum, new partition is $partitionsNum, total bytes " +
+        s"${QueryContext.current().getMetrics.getSourceScanBytes}, will not reset the ${SQLConf.SHUFFLE_PARTITIONS.key}")
+    }
   }
 }

@@ -1,0 +1,53 @@
+{
+  "uuid" : "77ee87d3-534e-a88d-fc55-b18d62a37cae",
+  "last_modified" : 0,
+  "create_time" : 1662087969749,
+  "version" : "4.0.0.0",
+  "name" : "TEST_ORDER",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "order_id"
+  }, {
+    "id" : "2",
+    "name" : "BUYER_ID",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "buyer_id"
+  }, {
+    "id" : "3",
+    "name" : "TEST_DATE_ENC",
+    "datatype" : "date",
+    "case_sensitive_name" : "test_date_enc"
+  }, {
+    "id" : "4",
+    "name" : "TEST_TIME_ENC",
+    "datatype" : "timestamp",
+    "case_sensitive_name" : "test_time_enc"
+  }, {
+    "id" : "5",
+    "name" : "TEST_EXTENDED_COLUMN",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "test_extended_column"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "DEFAULT",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null
+}

@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KapConfig;
@@ -71,7 +71,6 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin;
-import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -367,7 +366,7 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         if (getParent() != null) {
             String yarnQueue = getParent().getSparkYarnQueue();
             // TODO double check if valid yarn queue
-            if (!Strings.isNullOrEmpty(yarnQueue)) {
+            if (!StringUtils.isEmpty(yarnQueue)) {
                 jobOverrides.put("kylin.engine.spark-conf." + SPARK_YARN_QUEUE, yarnQueue);
             }
         }
@@ -405,7 +404,8 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         return desc;
     }
 
-    protected ExecuteResult runSparkSubmit(String hadoopConfDir, String kylinJobJar, String appArgs) {
+    protected ExecuteResult runSparkSubmit(String hadoopConfDir, String kylinJobJar, String appArgs)
+            throws JobStoppedException {
         sparkJobHandler.killOrphanApplicationIfExists(project, getId(), getConfig(), true, getSparkConf());
         try {
             Object cmd;
@@ -432,6 +432,7 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
             }
             return ExecuteResult.createSucceed(output);
         } catch (Exception e) {
+            checkNeedQuit(true);
             logger.warn("failed to execute spark submit command.");
             wrapWithExecuteExceptionUpdateJobError(e);
             return ExecuteResult.createError(e);

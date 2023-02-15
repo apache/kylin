@@ -91,7 +91,6 @@ export default class SchemaModels {
     // this.lookups = options.lookups || options.join_tables || []
     this.all_measures = options.simplified_measures || []
     this.project = options.project
-    this.maintain_model_type = options.maintain_model_type
     this.management_type = options.management_type || 'MODEL_BASED'
     this.globalDataSource = store.state.datasource.dataSource // 全局数据源表数据，新拖入时，需要从这里这个数据中取遍历
     // 能从模型详情接口里取到 simplified_tables 字段，就取这个字段，取不到的时候，取编辑模型时，模型使用到的 table 的信息这个接口里的返回
@@ -126,7 +125,6 @@ export default class SchemaModels {
       this.$set(this._mount, 'zoomYSpace', 0)
       this.$set(this._mount, 'tableIndexColumns', this.tableIndexColumns)
       this.$set(this._mount, 'maintain_model_type', this.maintain_model_type)
-      this.$set(this._mount, 'management_type', this.management_type)
       this.$set(this._mount, 'linkUsedColumns', this.linkUsedColumns)
       this.$set(this._mount, 'hasBrokenLinkedTable', false)
       this.$set(this._mount, 'broken_reason', options.broken_reason)

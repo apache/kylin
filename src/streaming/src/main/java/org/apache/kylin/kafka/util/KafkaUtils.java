@@ -67,8 +67,7 @@ public class KafkaUtils {
         return getKafkaConsumer(brokers, groupId, new Properties());
     }
 
-    public static Consumer<String, ByteBuffer> getKafkaConsumer(String brokers, String groupId,
-            Properties properties) {
+    public static Consumer<String, ByteBuffer> getKafkaConsumer(String brokers, String groupId, Properties properties) {
         Properties props = getConsumerProperties(brokers, groupId, properties);
         if (mockup != null) {
             return mockup;
@@ -106,7 +105,7 @@ public class KafkaUtils {
         props.putAll(KylinConfig.getInstanceFromEnv().getStreamingKafkaConfigOverride());
         synchronized (kafkaJaasTextPair) {
             if (Boolean.FALSE.equals(kafkaJaasTextPair.getFirst())) {
-                kafkaJaasTextPair.setSecond(StreamingJobUtils.extractKafkaSaslJaasConf());
+                kafkaJaasTextPair.setSecond(StreamingJobUtils.extractKafkaJaasConf(true));
                 kafkaJaasTextPair.setFirst(true);
             }
         }

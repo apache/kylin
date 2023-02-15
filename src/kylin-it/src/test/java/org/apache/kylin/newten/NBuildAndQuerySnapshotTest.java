@@ -42,7 +42,6 @@ import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.util.ExecAndComp;
-import org.apache.parquet.Strings;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparderEnv;
 import org.junit.Assert;
@@ -140,8 +139,8 @@ public class NBuildAndQuerySnapshotTest extends NLocalWithSparkSessionTest {
     }
 
     private void setPartitions(NSparkSnapshotJob job, Set<String> partitions) {
-        job.setParam("partitions", Strings.join(partitions, ","));
-        job.getSnapshotBuildingStep().setParam("partitions", Strings.join(partitions, ","));
+        job.setParam("partitions", String.join(",", partitions));
+        job.getSnapshotBuildingStep().setParam("partitions", String.join(",", partitions));
     }
 
 }

@@ -215,6 +215,21 @@ public class NExecutableManager {
         }
     }
 
+    public void addFrozenJob(String jobId) {
+        val scheduler = NDefaultScheduler.getInstance(project);
+        scheduler.getContext().addFrozenJob(jobId);
+    }
+
+    public void removeFrozenJob(String jobId) {
+        val scheduler = NDefaultScheduler.getInstance(project);
+        scheduler.getContext().removeFrozenJob(jobId);
+    }
+
+    public boolean isFrozenJob(String jobId) {
+        val scheduler = NDefaultScheduler.getInstance(project);
+        return scheduler.getContext().isFrozenJob(jobId);
+    }
+
     private void addJobOutput(ExecutablePO executable) {
         ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();
         executable.setOutput(executableOutputPO);
@@ -1222,8 +1237,10 @@ public class NExecutableManager {
                         "[UNEXPECTED_THINGS_HAPPENED] wrong job state transfer! There is no valid state transfer from: {} to: {}, job id: {}",
                         oldStatus, newStatus, taskOrJobId);
             }
+            // DISCARDED must not be transferred to any others status
             if ((oldStatus == ExecutableState.PAUSED && newStatus == ExecutableState.ERROR)
-                    || (oldStatus == ExecutableState.SKIP && newStatus == ExecutableState.SUCCEED)) {
+                    || (oldStatus == ExecutableState.SKIP && newStatus == ExecutableState.SUCCEED)
+                    || oldStatus == ExecutableState.DISCARDED) {
                 return false;
             }
             if (isRestart || (oldStatus != ExecutableState.SUCCEED && oldStatus != ExecutableState.SKIP)) {
@@ -1386,7 +1403,6 @@ public class NExecutableManager {
         if (thread != null) {
             logger.info("Interrupt Job [{}] thread and remove in ExecutableContext", executable.getDisplayName());
             thread.interrupt();
-            scheduler.getContext().removeRunningJob(executable);
         }
     }
 

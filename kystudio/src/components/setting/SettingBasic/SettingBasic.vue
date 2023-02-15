@@ -11,10 +11,6 @@
         <div class="setting-label font-medium">{{$t('projectName')}}</div>
         <div class="setting-value fixed">{{project.alias || project.project}}</div>
       </div>
-      <!-- <div class="setting-item">
-        <div class="setting-label font-medium">{{$t('projectType')}}</div>
-        <div class="setting-value fixed"><i :class="projectIcon"></i>{{$t(project.maintain_model_type)}}</div>
-      </div> -->
       <div class="setting-item clearfix">
         <div class="setting-label font-medium">{{$t('description')}}</div>
         <div class="setting-value">{{project.description}}</div>
@@ -207,7 +203,7 @@ import { Component, Watch } from 'vue-property-decorator'
 
 import locales from './locales'
 import { handleError, handleSuccessAsync, objectClone, ArrayFlat, kylinConfirm } from '../../../util'
-import { projectTypeIcons, lowUsageStorageTypes, autoMergeTypes, volatileTypes, validate, initialFormValue, _getProjectGeneralInfo, _getSegmentSettings, _getPushdownConfig, _getExcludeColumnConfig, _getStorageQuota, _getIndexOptimization, _getRetentionRangeScale } from './handler'
+import { lowUsageStorageTypes, autoMergeTypes, volatileTypes, validate, initialFormValue, _getProjectGeneralInfo, _getSegmentSettings, _getPushdownConfig, _getExcludeColumnConfig, _getStorageQuota, _getIndexOptimization, _getRetentionRangeScale } from './handler'
 import { retentionTypes } from '../handler'
 import { pageCount, pageRefTags } from '../../../config'
 import EditableBlock from '../../common/EditableBlock/EditableBlock.vue'
@@ -290,9 +286,6 @@ export default class SettingBasic extends Vue {
   }
   excludeColumnsTablesSize = 1
 
-  get projectIcon () {
-    return projectTypeIcons[this.project.maintain_model_type]
-  }
   get retentionRangeScale () {
     return _getRetentionRangeScale(this.form).toLowerCase()
   }

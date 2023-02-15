@@ -46,7 +46,6 @@ import org.apache.kylin.query.engine.PrepareSqlStateParam;
 import org.apache.kylin.query.pushdown.SparkSqlClient;
 import org.apache.kylin.rest.util.PrepareSQLUtils;
 import org.apache.kylin.util.ExecAndComp;
-import org.apache.parquet.Strings;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderEnv;
@@ -128,9 +127,9 @@ public class TimeZoneQueryTest extends NLocalWithSparkSessionTest {
         for (int i = 0; i < jdbc.size(); i++) {
             if (!ListUtils.isEqualList(calciteDf.get(i), pushDown.get(i))
                     && !ListUtils.isEqualList(calciteDf.get(i), jdbc.get(i))) {
-                String expected = Strings.join(pushDown.get(i), ",");
-                String actual = Strings.join(jdbc.get(i), ",");
-                String actual2 = Strings.join(calciteDf.get(i), ",");
+                String expected = String.join(",", pushDown.get(i));
+                String actual = String.join(",", jdbc.get(i));
+                String actual2 = String.join(",", calciteDf.get(i));
                 fail("expected: " + expected + ", actual: " + actual + ", actual2: " + actual2);
             }
         }
@@ -188,11 +187,11 @@ public class TimeZoneQueryTest extends NLocalWithSparkSessionTest {
                     && !ListUtils.isEqualList(benchmark.get(i), setTimestampPushdownResults.get(i))
                     && !ListUtils.isEqualList(benchmark.get(i), setStringResults.get(i))
                     && !ListUtils.isEqualList(benchmark.get(i), setStringPushdownResults.get(i))) {
-                String expected = Strings.join(benchmark.get(i), ",");
-                String actual1 = Strings.join(setTimestampResults.get(i), ",");
-                String actual2 = Strings.join(setTimestampPushdownResults.get(i), ",");
-                String actual3 = Strings.join(setStringResults.get(i), ",");
-                String actual4 = Strings.join(setStringPushdownResults.get(i), ",");
+                String expected = String.join(",", benchmark.get(i));
+                String actual1 = String.join(",", setTimestampResults.get(i));
+                String actual2 = String.join(",", setTimestampPushdownResults.get(i));
+                String actual3 = String.join(",", setStringResults.get(i));
+                String actual4 = String.join(",", setStringPushdownResults.get(i));
                 fail("expected: " + expected + ", setTimestampResults: " + actual1 + ", setTimestampPushdownResults: "
                         + actual2 + ", setStringResults: " + actual3 + ", setStringPushdownResults: " + actual4);
             }

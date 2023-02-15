@@ -56,7 +56,6 @@ import org.apache.kylin.metadata.query.QueryStatistics;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDaoTest;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.response.QueryStatisticsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
@@ -368,12 +367,8 @@ public class QueryHistoryServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(29, tableMap.size());
 
         // not existing project
-        try {
-            tableMap = queryHistoryService.getQueryHistoryTableMap(Lists.newArrayList("not_existing_project"));
-        } catch (Exception ex) {
-            Assert.assertEquals(BadRequestException.class, ex.getClass());
-            Assert.assertEquals("Cannot find project 'not_existing_project'.", ex.getMessage());
-        }
+        tableMap = queryHistoryService.getQueryHistoryTableMap(Lists.newArrayList("not_existing_project"));
+        Assert.assertTrue(tableMap.isEmpty());
     }
 
     @Test
