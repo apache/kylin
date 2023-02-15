@@ -113,7 +113,7 @@ public class CCOnRealModelTest extends NLocalFileMetadataTestCase {
     }
 
     // ignored for KAP#16258
-    @Ignore
+    @Ignore("historic ignored")
     @Test
     public void testSubquery() {
         {
@@ -198,7 +198,6 @@ public class CCOnRealModelTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    @Ignore("Not support CC on Join condition")
     public void testJoinOnCC() {
         {
             String originSql = "select count(*) from TEST_KYLIN_FACT\n"
@@ -232,11 +231,9 @@ public class CCOnRealModelTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testNoFrom() throws Exception {
-        String originSql = "select sum(price * item_count),(SELECT 1 as VERSION) from test_kylin_fact";
-        String ccSql = "select sum(TEST_KYLIN_FACT.DEAL_AMOUNT),(SELECT 1 as VERSION) from test_kylin_fact";
-
-        check(converter, originSql, ccSql);
+    public void testNoFrom() {
+        check(converter, "select sum(price * item_count),(SELECT 1 as VERSION) from test_kylin_fact",
+                "select sum(TEST_KYLIN_FACT.DEAL_AMOUNT),(SELECT 1 as VERSION) from test_kylin_fact");
     }
 
     @Test

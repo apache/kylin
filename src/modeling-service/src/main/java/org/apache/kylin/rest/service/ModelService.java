@@ -167,7 +167,6 @@ import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.JoinedFlatTable;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
@@ -1292,8 +1291,8 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
     public String getModelSql(String modelId, String project) {
         aclEvaluate.checkProjectReadPermission(project);
-        NDataModel modelDesc = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
-        return JoinedFlatTable.generateSelectDataStatement(modelDesc, false);
+        NDataModel model = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
+        return PushDownUtil.generateFlatTableSql(model, project, false);
     }
 
     public List<RelatedModelResponse> getRelateModels(String project, String table, String modelId) {
@@ -1712,16 +1711,12 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     }
 
     @VisibleForTesting
-    public void checkFlatTableSql(NDataModel dataModel) {
-        String project = dataModel.getProject();
-        ProjectInstance prjInstance = getManager(NProjectManager.class).getProject(project);
-        if (KylinConfig.getInstanceFromEnv().isUTEnv() || prjInstance.getConfig().isSkipCheckFlatTable()) {
+    public void checkFlatTableSql(NDataModel model) {
+        if (skipCheckFlatTable(model)) {
             return;
         }
-        if (getModelConfig(dataModel).skipCheckFlatTable()) {
-            return;
-        }
-        long rangePartitionTableCount = dataModel.getAllTableRefs().stream()
+
+        long rangePartitionTableCount = model.getAllTableRefs().stream()
                 .filter(p -> p.getTableDesc().isRangePartition()).count();
         if (rangePartitionTableCount > 0) {
             logger.info("Range partitioned tables do not support pushdown, so do not need to perform subsequent logic");
@@ -1729,22 +1724,34 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         }
 
         try {
+            String project = model.getProject();
+            ProjectInstance prjInstance = getManager(NProjectManager.class).getProject(project);
             if (prjInstance.getSourceType() == ISourceAware.ID_SPARK
-                    && dataModel.getModelType() == NDataModel.ModelType.BATCH) {
+                    && model.getModelType() == NDataModel.ModelType.BATCH) {
                 SparkSession ss = SparderEnv.getSparkSession();
-                String flatTableSql = JoinedFlatTable.generateSelectDataStatement(dataModel, false);
+                String flatTableSql = PushDownUtil.generateFlatTableSql(model, project, false);
                 QueryParams queryParams = new QueryParams(project, flatTableSql, "default", false);
                 queryParams.setKylinConfig(prjInstance.getConfig());
                 queryParams.setAclInfo(AclPermissionUtil.createAclInfo(project, getCurrentUserGroups()));
-                String pushdownSql = PushDownUtil.massagePushDownSql(queryParams);
-                ss.sql(pushdownSql);
+                ss.sql(PushDownUtil.massagePushDownSql(queryParams));
             }
         } catch (Exception e) {
-            buildExceptionMessage(dataModel, e);
+            buildExceptionMessage(model, e);
         }
     }
 
-    private static void buildExceptionMessage(NDataModel dataModel, Exception e) {
+    private boolean skipCheckFlatTable(NDataModel model) {
+        if (KylinConfig.getInstanceFromEnv().isUTEnv()) {
+            return true;
+        }
+        IndexPlan indexPlan = getIndexPlan(model.getId(), model.getProject());
+        KylinConfig config = indexPlan == null || indexPlan.getConfig() == null
+                ? NProjectManager.getProjectConfig(model.getProject())
+                : indexPlan.getConfig();
+        return config.skipCheckFlatTable();
+    }
+
+    private void buildExceptionMessage(NDataModel dataModel, Exception e) {
         Pattern pattern = Pattern.compile("cannot resolve '(.*?)' given input columns");
         Matcher matcher = pattern.matcher(e.getMessage().replace("`", ""));
         if (matcher.find()) {
@@ -1759,14 +1766,6 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                             null != e.getMessage() ? e.getMessage() : "null"));
             throw new KylinException(FAILED_EXECUTE_MODEL_SQL, errorMsg);
         }
-    }
-
-    private KylinConfig getModelConfig(NDataModel dataModel) {
-        IndexPlan indexPlan = getIndexPlan(dataModel.getId(), dataModel.getProject());
-        if (indexPlan == null || indexPlan.getConfig() == null) {
-            return getManager(NProjectManager.class).getProject(dataModel.getProject()).getConfig();
-        }
-        return indexPlan.getConfig();
     }
 
     private void validatePartitionDateColumn(ModelRequest modelRequest) {
@@ -2350,7 +2349,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     }
 
     public JobInfoResponse fixSegmentHoles(String project, String modelId, List<SegmentTimeRequest> segmentHoles,
-            Set<String> ignoredSnapshotTables) throws Exception {
+            Set<String> ignoredSnapshotTables) throws SQLException {
         aclEvaluate.checkProjectOperationPermission(project);
         NDataModel modelDesc = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
         checkModelAndIndexManually(project, modelId);
@@ -2580,7 +2579,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
         boolean buildSegmentOverlapEnable = getIndexPlan(model.getId(), project).getConfig()
                 .isBuildSegmentOverlapEnabled();
-        boolean isBuildAllIndexesFinally = batchIndexIds == null || batchIndexIds.size() == 0
+        boolean isBuildAllIndexesFinally = CollectionUtils.isEmpty(batchIndexIds)
                 || batchIndexIds.size() == getIndexPlan(model.getId(), project).getAllIndexes().size();
 
         for (NDataSegment existedSegment : segments) {

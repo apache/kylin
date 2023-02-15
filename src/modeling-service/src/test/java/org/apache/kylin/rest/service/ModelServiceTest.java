@@ -84,8 +84,8 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -2203,7 +2203,6 @@ public class ModelServiceTest extends SourceTestCase {
         request.setEnd("100");
         request.setUuid(RandomUtil.randomUUIDStr());
         modelService.createModel(request.getProject(), request);
-        //TODO modelService.updateModelToResourceStore(deserialized, "default");
 
         List<NDataModelResponse> dataModelDescs = modelService.getModels("nmodel_cc_test", "default", true, null, null,
                 "", false);
@@ -5161,20 +5160,23 @@ public class ModelServiceTest extends SourceTestCase {
     public void testBuildExceptionMessage() {
         NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
         NDataModel dataModel = modelManager.getDataModelDesc("a8ba3ff1-83bd-4066-ad54-d2fb3d1f0e94");
-        {
-            val testException = new RuntimeException("test");
-            Assert.assertThrows("model [test_encoding], Something went wrong. test", KylinException.class,
-                    () -> ReflectionTestUtils.invokeMethod(ModelService.class, "buildExceptionMessage", dataModel,
-                            testException));
-        }
+        String toValidMethodName = "buildExceptionMessage";
+        String expectedMsg = "model [test_encoding], Something went wrong. test";
+        val testException = new RuntimeException("test");
+        Assert.assertThrows(expectedMsg, KylinException.class,
+                () -> ReflectionTestUtils.invokeMethod(modelService, toValidMethodName, dataModel, testException));
+    }
 
-        {
-            val testException = new RuntimeException("cannot resolve 'test' given input columns");
-            Assert.assertThrows(
-                    "Can’t save model \"test_encoding\". Please ensure that the used column \"test\" exist in source table \"DEFAULT.TEST_ENCODING\".",
-                    KylinException.class, () -> ReflectionTestUtils.invokeMethod(ModelService.class,
-                            "buildExceptionMessage", dataModel, testException));
-        }
+    @Test
+    public void testBuildExceptionMessageCausedByResolveProblem() {
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
+        NDataModel dataModel = modelManager.getDataModelDesc("a8ba3ff1-83bd-4066-ad54-d2fb3d1f0e94");
+        String toValidMethodName = "buildExceptionMessage";
+        String expectedMsg = "Can’t save model \"test_encoding\". Please ensure that the used column \"test\" "
+                + "exist in source table \"DEFAULT.TEST_ENCODING\".";
+        val testException = new RuntimeException("cannot resolve 'test' given input columns");
+        Assert.assertThrows(expectedMsg, KylinException.class,
+                () -> ReflectionTestUtils.invokeMethod(modelService, toValidMethodName, dataModel, testException));
     }
 
     @Test
