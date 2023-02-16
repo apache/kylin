@@ -25,17 +25,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AsyncQueryRequestLimits implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(AsyncQueryRequestLimits.class);
+
     private static volatile AtomicInteger asyncQueryCount = new AtomicInteger(0);
 
     private static final int MAX_COUNT = KylinConfig.getInstanceFromEnv().getAsyncQueryMaxConcurrentJobs();
 
-    private static void openAsyncQueryRequest() {
+    private static synchronized void openAsyncQueryRequest() {
         if (MAX_COUNT <= 0) {
             return;
         }
+        checkCount();
         asyncQueryCount.incrementAndGet();
+        logger.debug("current async query job count is {}.", asyncQueryCount.get());
 
     }
 
