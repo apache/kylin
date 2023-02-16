@@ -88,7 +88,9 @@ public class ColExcludedChecker {
         if (model == null || model.isBroken()) {
             return;
         }
-        model.init(config, project, Lists.newArrayList());
+        if (!model.isInitAlready()) {
+            model.init(config, project, Lists.newArrayList());
+        }
         model.getAllTables().stream().filter(Objects::nonNull) //
                 .flatMap(tableRef -> tableRef.getColumns().stream())
                 .filter(tblColRef -> excludedCols.contains(tblColRef.getColumnDesc()))

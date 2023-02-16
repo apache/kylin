@@ -95,6 +95,7 @@ import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
+import org.apache.kylin.metadata.realization.RealizationRuntimeException;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPContextProp;
@@ -185,6 +186,8 @@ public class RealizationChooser {
                 throw (NoRealizationFoundException) e.getCause();
             } else if (e.getCause() instanceof NoStreamingRealizationFoundException) {
                 throw (NoStreamingRealizationFoundException) e.getCause();
+            } else {
+                throw new RealizationRuntimeException("unexpected error when choose layout", e);
             }
         } catch (InterruptedException e) {
             for (Future<?> future : futureList) {
