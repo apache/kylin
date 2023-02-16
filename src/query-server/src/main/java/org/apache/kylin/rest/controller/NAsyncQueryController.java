@@ -125,10 +125,11 @@ public class NAsyncQueryController extends NBasicController {
         if (StringUtils.isEmpty(sqlRequest.getSeparator())) {
             sqlRequest.setSeparator(",");
         }
+        AsyncQueryRequestLimits asyncQueryRequestLimits = null;
         if (NProjectManager.getProjectConfig(sqlRequest.getProject()).isUniqueAsyncQueryYarnQueue()) {
-            AsyncQueryRequestLimits.checkCount();
+            asyncQueryRequestLimits = new AsyncQueryRequestLimits();
         }
-
+        AsyncQueryRequestLimits finalAsyncQueryRequestLimits = asyncQueryRequestLimits;
         executorService.submit(Objects.requireNonNull(TtlRunnable.get(() -> {
             String format = sqlRequest.getFormat().toLowerCase(Locale.ROOT);
             String encode = sqlRequest.getEncode().toLowerCase(Locale.ROOT);
@@ -166,6 +167,9 @@ public class NAsyncQueryController extends NBasicController {
                     throw new RuntimeException(e1);
                 }
             } finally {
+                if (finalAsyncQueryRequestLimits != null) {
+                    finalAsyncQueryRequestLimits.close();
+                }
                 logger.info("Async query with queryId: {} end", queryContext.getQueryId());
                 QueryContext.current().close();
             }
