@@ -162,7 +162,7 @@ public class CuboIdToLayoutUtilsTest {
                 cuboId = Math.abs(cuboId);
             }
             BigInteger bigIntegerCuboId = BigInteger.valueOf(cuboId);
-            List<Integer> dimensionIds = CuboIdToLayoutUtils.convertLongToDimensionColOrder(bigIntegerCuboId,
+            List<Integer> dimensionIds = CuboIdToLayoutUtils.converCuboidToDimensionColOrder(bigIntegerCuboId,
                     maxCountDimension, getMap(maxCountDimension), getSortList(maxCountDimension));
             BigInteger expected = CostBasePlannerUtils.convertDimensionsToCuboId(dimensionIds, maxCountDimension,
                     getMap(maxCountDimension));
@@ -176,14 +176,14 @@ public class CuboIdToLayoutUtilsTest {
         int maxCountDimension = 12;
         long cuboid = 1 << 0 | 1 << 3 | 1 << 7;
         BigInteger bigIntegerCuboId = BigInteger.valueOf(cuboid);
-        List<Integer> result = CuboIdToLayoutUtils.convertLongToDimensionColOrder(bigIntegerCuboId, maxCountDimension,
+        List<Integer> result = CuboIdToLayoutUtils.converCuboidToDimensionColOrder(bigIntegerCuboId, maxCountDimension,
                 getMap(maxCountDimension), getSortList(maxCountDimension));
         List<Integer> expected = Lists.newArrayList(11 - 7, 11 - 3, 11 - 0);
         assertEquals(expected, result);
 
         cuboid = 1 << 4 | 1 << 10 | 1 << 5;
         bigIntegerCuboId = BigInteger.valueOf(cuboid);
-        result = CuboIdToLayoutUtils.convertLongToDimensionColOrder(bigIntegerCuboId, maxCountDimension,
+        result = CuboIdToLayoutUtils.converCuboidToDimensionColOrder(bigIntegerCuboId, maxCountDimension,
                 getMap(maxCountDimension), getSortList(maxCountDimension));
         expected = Lists.newArrayList(11 - 10, 11 - 5, 11 - 4);
         assertEquals(expected, result);
@@ -197,7 +197,7 @@ public class CuboIdToLayoutUtilsTest {
         cuboid = cuboid.setBit(3);
         cuboid = cuboid.setBit(7);
         cuboid = cuboid.setBit(77);
-        List<Integer> result = CuboIdToLayoutUtils.convertLongToDimensionColOrder(cuboid, maxCountDimension,
+        List<Integer> result = CuboIdToLayoutUtils.converCuboidToDimensionColOrder(cuboid, maxCountDimension,
                 getMap(maxCountDimension), getSortList(maxCountDimension));
         List<Integer> expected = Lists.newArrayList(99 - 77, 99 - 7, 99 - 3, 99 - 0);
         assertEquals(expected, result);
@@ -207,7 +207,7 @@ public class CuboIdToLayoutUtilsTest {
         cuboid = cuboid.setBit(10);
         cuboid = cuboid.setBit(5);
         cuboid = cuboid.setBit(88);
-        result = CuboIdToLayoutUtils.convertLongToDimensionColOrder(cuboid, maxCountDimension,
+        result = CuboIdToLayoutUtils.converCuboidToDimensionColOrder(cuboid, maxCountDimension,
                 getMap(maxCountDimension), getSortList(maxCountDimension));
         expected = Lists.newArrayList(99 - 88, 99 - 10, 99 - 5, 99 - 4);
         assertEquals(expected, result);

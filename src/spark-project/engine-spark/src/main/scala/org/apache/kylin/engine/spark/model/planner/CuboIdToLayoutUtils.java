@@ -28,24 +28,23 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 
 import com.google.common.collect.Lists;
 
 public class CuboIdToLayoutUtils {
     /**
-     * convert the cuboids to layout entity
-     *
+     * convert the cuboids to column orders
      * @param cuboids
      * @param ruleBasedIndex
      * @return
      */
-    public static Set<LayoutEntity> convertCuboIdsToLayoutEntity(Map<BigInteger, Long> cuboids,
-                                                                 RuleBasedIndex ruleBasedIndex) {
+    public static Set<List<Integer>> convertCuboIdsToAggIndexColOrders(Map<BigInteger, Long> cuboids,
+            RuleBasedIndex ruleBasedIndex) {
         // convert the cuboid to each agg group
-        Set<LayoutEntity> result = new HashSet<>();
-        List<NAggregationGroup> aggregationGroups = ruleBasedIndex.getAggregationGroups();
+        Set<List<Integer>> result = new HashSet<>();
+        List<NAggregationGroup> aggregationGroups = ruleBasedIndex != null ? ruleBasedIndex.getAggregationGroups()
+                : Lists.newArrayList();
         for (NAggregationGroup group : aggregationGroups) {
             // dimension order in this agg group
             List<Integer> dimensionOrder = Lists.newArrayList(group.getIncludes());
@@ -53,9 +52,7 @@ public class CuboIdToLayoutUtils {
             List<Integer> measuresIds = Lists.newArrayList(group.getMeasures());
             Set<List<Integer>> colOrders = convertCuboIdsToColOrders(cuboids, ruleBasedIndex.countOfIncludeDimension(),
                     measuresIds, ruleBasedIndex.getRowKeyIdToColumnId(), dimensionOrder);
-            for (List<Integer> colOrder : colOrders) {
-                result.add(createRecommendAggIndexLayout(colOrder));
-            }
+            result.addAll(colOrders);
         }
 
         // base agg layout for each agg group
@@ -65,44 +62,25 @@ public class CuboIdToLayoutUtils {
             colOrders.addAll(Lists.newArrayList(group.getIncludes()));
             // all measure in this agg
             colOrders.addAll(Lists.newArrayList(group.getMeasures()));
-            result.add(createRecommendAggIndexLayout(colOrders));
+            result.add(colOrders);
         }
         return result;
     }
 
     /**
-     * create recommend agg layout base on the colOrder.
-     *
-     * @param colOrder
-     * @return LayoutEntity or null
-     * null: if the measures in the colOrder can't match the measures in this Index Plan
-     */
-    private static LayoutEntity createRecommendAggIndexLayout(List<Integer> colOrder) {
-        LayoutEntity newAddIndexLayout = new LayoutEntity();
-        // The layout is not the manual
-        newAddIndexLayout.setManual(false);
-        newAddIndexLayout.setColOrder(colOrder);
-        newAddIndexLayout.setUpdateTime(System.currentTimeMillis());
-        newAddIndexLayout.setBase(false);
-        newAddIndexLayout.initalId(true);
-        return newAddIndexLayout;
-    }
-
-    /**
      * convert the cuboids to column order set which contain dimension ids and measure ids
-     *
      * @param cuboids
      * @param dimensionCount
      * @param measuresIds
      * @return
      */
     protected static Set<List<Integer>> convertCuboIdsToColOrders(Map<BigInteger, Long> cuboids, int dimensionCount,
-                                                                  List<Integer> measuresIds, Map<Integer, Integer> rowkeyIdToColumnId, List<Integer> sortOfDims) {
+            List<Integer> measuresIds, Map<Integer, Integer> rowkeyIdToColumnId, List<Integer> sortOfDims) {
         Set<List<Integer>> result = new HashSet<>();
         for (BigInteger cuboid : cuboids.keySet()) {
             // 1. get the dimension with order
             // convert the cuboid to the order of dimension which is sorted by the order of `sortOfDims`
-            List<Integer> colOrder = convertLongToDimensionColOrder(cuboid, dimensionCount, rowkeyIdToColumnId,
+            List<Integer> colOrder = converCuboidToDimensionColOrder(cuboid, dimensionCount, rowkeyIdToColumnId,
                     sortOfDims);
             if (colOrder.isEmpty()) {
                 // If the cuboid can't match the `sortOfDims`, and will not get the column order for this layout
@@ -123,8 +101,8 @@ public class CuboIdToLayoutUtils {
      * @param maxDimensionCount
      * @return
      */
-    public static List<Integer> convertLongToDimensionColOrder(BigInteger cuboid, int maxDimensionCount,
-                                                               Map<Integer, Integer> rowkeyIdToColumnId, List<Integer> sortOfDims) {
+    public static List<Integer> converCuboidToDimensionColOrder(BigInteger cuboid, int maxDimensionCount,
+            Map<Integer, Integer> rowkeyIdToColumnId, List<Integer> sortOfDims) {
         // If cuboid is 00000000,00000000,00000000,10001001, and the max dimension count is 12
         // It will be converted to [4,8,11]
         List<Integer> colOrder = new ArrayList<>();

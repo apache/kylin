@@ -176,9 +176,9 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     val cuboids = CostBasePlannerUtils.
       getRecommendCuboidList(indexPlan.getRuleBasedIndex, config, dataModel.getAlias, cuboIdToRowCount, cuboIdToSize)
     logDebug(s"Segment $segmentId get the recommended cuboid ${cuboids.keySet()}")
-    val allRecommendedLayouts = CuboIdToLayoutUtils.convertCuboIdsToLayoutEntity(cuboids, indexPlan.getRuleBasedIndex)
-    logInfo(s"Segment $segmentId get ${allRecommendedLayouts.size()} recommended layouts with duplicate layouts removed.")
-    jobContext.setRecommendAggLayouts(allRecommendedLayouts)
+    val allRecommendedAggColOrders = CuboIdToLayoutUtils.convertCuboIdsToAggIndexColOrders(cuboids, indexPlan.getRuleBasedIndex)
+    logInfo(s"Segment $segmentId get ${allRecommendedAggColOrders.size()} recommended layouts with duplicate layouts removed.")
+    jobContext.setRecommendAggColOrders(allRecommendedAggColOrders)
   }
 
   protected def generateFlatTable(): Dataset[Row] = {

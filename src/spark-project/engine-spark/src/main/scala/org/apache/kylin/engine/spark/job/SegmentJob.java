@@ -84,39 +84,38 @@ public abstract class SegmentJob extends SparkApplication {
         return readOnlyLayouts;
     }
 
-    private Set<LayoutEntity> recommendAggLayouts = new HashSet<>();
+    private Set<List<Integer>> recommendAggColOrders = new HashSet<>();
 
-    private Set<LayoutEntity> getRecommendAggLayouts() {
-        return recommendAggLayouts;
+    public void setRecommendAggColOrders(Set<List<Integer>> recommendAggColOrders) {
+        this.recommendAggColOrders = recommendAggColOrders;
     }
 
-    public void setRecommendAggLayouts(Set<LayoutEntity> aggIndexLayouts) {
-        recommendAggLayouts.clear();
-        recommendAggLayouts.addAll(aggIndexLayouts);
+    public Set<List<Integer>> getRecommendAggColOrders() {
+        return recommendAggColOrders;
     }
 
     public boolean updateIndexPlanIfNeed() {
         // when run the cube planner, there will be some recommended index layouts for this model
-        if (getRecommendAggLayouts().size() != 0) {
+        if (getRecommendAggColOrders().size() != 0) {
             UnitOfWork.doInTransactionWithRetry(() -> {
                 // update and add the recommended index layout to the index plan
-                val recommendAggLayouts = Lists.newArrayList(getRecommendAggLayouts());
+                val recommendAggLayouts = Lists.newArrayList(getRecommendAggColOrders());
                 NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(config, project);
                 logger.debug("Update the index plan and add recommended agg index {}", recommendAggLayouts);
                 indexPlanManager.updateIndexPlan(dataflowId, copyForWrite -> {
-                    // construct the map: layout -> id
+                    // construct the map: colOrder of layout -> id
                     val allRuleLayouts = copyForWrite.getRuleBasedIndex().genCuboidLayouts();
-                    Map<LayoutEntity, Long> layouts2Id = Maps.newHashMap();
+                    Map<List<Integer>, Long> colOrder2Id = Maps.newHashMap();
                     allRuleLayouts.forEach(layoutEntity -> {
-                        layouts2Id.put(layoutEntity, layoutEntity.getId());
+                        colOrder2Id.put(layoutEntity.getColOrder(), layoutEntity.getId());
                     });
                     logger.debug("All rule base layouts {}", allRuleLayouts);
                     Set<Long> costBasedResult = Sets.newHashSet();
-                    for (LayoutEntity layoutEntity : recommendAggLayouts) {
-                        if (layouts2Id.containsKey(layoutEntity)) {
-                            costBasedResult.add(layouts2Id.get(layoutEntity));
+                    for (List<Integer> colOrder : recommendAggLayouts) {
+                        if (colOrder2Id.containsKey(colOrder)) {
+                            costBasedResult.add(colOrder2Id.get(colOrder));
                         } else {
-                            logger.debug("Can't find the layout {} in the rule base index", layoutEntity);
+                            logger.debug("Can't find the layout {} in the rule base index", colOrder);
                         }
                     }
                     // reset the rule base layouts
