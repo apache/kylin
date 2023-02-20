@@ -17,16 +17,23 @@
 
 package org.apache.kylin.common
 
+import java.io.{DataInputStream, File}
+import java.nio.charset.Charset
+import java.nio.file.Files
+import java.util.Locale
+
 import com.google.common.base.Preconditions
+import org.apache.commons.io.IOUtils
+import org.apache.commons.lang.StringUtils
+import org.apache.kylin.common.persistence.{JsonSerializer, RootPersistentEntity}
 import org.apache.kylin.common.util.TempMetadataBuilder
-import org.apache.kylin.metadata.model.NTableMetadataManager
+import org.apache.kylin.metadata.cube.model.{IndexPlan, NDataflowManager, NIndexPlanManager}
+import org.apache.kylin.metadata.model.{NDataModel, NDataModelManager, NTableMetadataManager}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.query.util.{QueryParams, QueryUtil}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession}
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.scalatest.Suite
-
-import java.util.Locale
 
 trait SSSource extends SharedSparkSession with LocalMetadata {
   self: Suite =>
@@ -78,5 +85,26 @@ trait SSSource extends SharedSparkSession with LocalMetadata {
     val queryParams = new QueryParams("default", sqlForSpark, "DEFAULT", false)
     queryParams.setKylinConfig(NProjectManager.getProjectConfig("default"))
     QueryUtil.massagePushDownSql(queryParams)
+  }
+
+  def addModels(resourcePath: String, modelIds: Seq[String]): Unit = {
+    val modelMgr = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv, getProject)
+    val indexPlanMgr = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv, getProject)
+    val dfMgr = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, getProject)
+    modelIds.foreach { id =>
+      val model = read(classOf[NDataModel], resourcePath, s"model_desc/$id.json")
+      model.setProject(getProject)
+      modelMgr.createDataModelDesc(model, "ADMIN")
+      dfMgr.createDataflow(indexPlanMgr.createIndexPlan(
+        read(classOf[IndexPlan], resourcePath, s"index_plan/$id.json")), "ADMIN")
+    }
+  }
+
+  private def read[T <: RootPersistentEntity](clz: Class[T], prePath: String, subPath: String): T = {
+    val path = prePath + subPath;
+    // val path = "src/test/resources/view/" + subPath
+    val contents = StringUtils.join(Files.readAllLines(new File(path).toPath, Charset.defaultCharset), "\n")
+    val bais = IOUtils.toInputStream(contents, Charset.defaultCharset)
+    new JsonSerializer[T](clz).deserialize(new DataInputStream(bais))
   }
 }

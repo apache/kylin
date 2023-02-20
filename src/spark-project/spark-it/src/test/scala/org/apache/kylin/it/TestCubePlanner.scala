@@ -39,13 +39,14 @@ class TestCubePlanner extends SparderBaseFunSuite
   with AdaptiveSparkPlanHelper
   with Logging {
 
-  override val DEFAULT_PROJECT = "cube_planner"
+  override val DEFAULT_PROJECT = "default"
+  override protected def getProject: String = DEFAULT_PROJECT
 
-  // CUBE_PLANNER_TEST
   private val DF_NAME = "d863b37c-e1a9-717f-7df7-74991815b1eb"
 
   val defaultTimeZone: TimeZone = TimeZone.getDefault
 
+  private val modelIds = Seq(DF_NAME)
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -53,11 +54,10 @@ class TestCubePlanner extends SparderBaseFunSuite
     val timeZoneStr = "GMT+0"
     TimeZone.setDefault(TimeZone.getTimeZone(timeZoneStr))
     logInfo(s"Current time zone set to $timeZoneStr")
-    // load the model metadata
-    NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, DEFAULT_PROJECT)
-      .updateDataflow(DF_NAME, Updater(RealizationStatusEnum.OFFLINE))
     KylinConfig.getInstanceFromEnv.setProperty("kylin.index.costbased.enabled", "true")
 
+    // load the model metadata
+    addModels("src/test/resources/index_planner/", modelIds)
     // build one segment and get the recommended segment
     // before recommend, the model has more than 2048 index, after build the number of index will be less than 100
     build()
