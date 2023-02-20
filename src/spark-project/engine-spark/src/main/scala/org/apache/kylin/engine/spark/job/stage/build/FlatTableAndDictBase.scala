@@ -18,9 +18,7 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.{Locale, Objects, Timer, TimerTask}
-
+import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.util.HadoopUtil
@@ -54,14 +52,14 @@ import java.util.{Locale, Objects, Timer, TimerTask}
 import org.apache.kylin.common.constant.LogConstant
 import org.apache.kylin.common.logging.SetLogCategory
 
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+import java.util.{Locale, Objects, Timer, TimerTask}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
 import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.util.{Failure, Success, Try}
-
-import com.google.common.collect.Sets
 
 abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
                                     private val dataSegment: NDataSegment,
@@ -284,7 +282,7 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
         }
         if (joinDesc.isFlattenable && !antiFlattenTableSet.contains(joinDesc.getTable)) {
           val tableRef = joinDesc.getTableRef
-          val tableDS = newTableDS(tableRef)
+          val tableDS = newSnapshotDS(tableRef)
           ret.put(joinDesc, fulfillDS(tableDS, Set.empty, tableRef))
         }
       }
@@ -353,7 +351,11 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     }
     logInfo(s"Segment $segmentId persist flat table: $flatTablePath")
     sparkSession.sparkContext.setJobDescription(s"Segment $segmentId persist flat table.")
+    if (config.isFlatTableRedistributionEnabled) {
+      sparkSession.sessionState.conf.setLocalProperty("spark.sql.sources.repartitionWritingDataSource", "true")
+    }
     tableDS.write.mode(SaveMode.Overwrite).parquet(flatTablePath.toString)
+    sparkSession.sessionState.conf.setLocalProperty("spark.sql.sources.repartitionWritingDataSource", null)
     DFBuilderHelper.checkPointSegment(dataSegment, (copied: NDataSegment) => {
       copied.setFlatTableReady(true)
       if (dataSegment.isFlatTableReady) {
@@ -418,6 +420,20 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     // The previous flat table could be reusable.
     logInfo(s"Segment $segmentId skip build flat table.")
     Some(tableDS)
+  }
+
+  def newSnapshotDS(tableRef: TableRef): Dataset[Row] = {
+    val snapshotResPath = tableRef.getTableDesc.getLastSnapshotPath
+    val baseDir = KapConfig.getInstanceFromEnv.getMetadataWorkingDirectory
+    val snapshotResFilePath = new Path(baseDir + snapshotResPath)
+    val fs = HadoopUtil.getWorkingFileSystem
+    if (snapshotResPath == null
+      || !fs.exists(snapshotResFilePath)
+      || config.isPersistFlatUseSnapshotEnabled) {
+      newTableDS(tableRef)
+    } else {
+      sparkSession.read.parquet(snapshotResFilePath.toString).alias(tableRef.getAlias)
+    }
   }
 
   protected def newTableDS(tableRef: TableRef): Dataset[Row] = {

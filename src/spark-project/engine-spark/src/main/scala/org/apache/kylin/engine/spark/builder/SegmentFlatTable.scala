@@ -37,6 +37,7 @@ import org.apache.kylin.metadata.model._
 import org.apache.kylin.query.util.PushDownUtil
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{col, expr}
+import org.apache.spark.sql.manager.SparderLookupManager
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils

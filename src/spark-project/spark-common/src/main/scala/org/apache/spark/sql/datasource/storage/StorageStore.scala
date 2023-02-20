@@ -18,14 +18,14 @@
 
 package org.apache.spark.sql.datasource.storage
 
-import org.apache.kylin.engine.spark.job.NSparkCubingUtil
-import org.apache.kylin.engine.spark.utils.StorageUtils.findCountDistinctMeasure
-import org.apache.kylin.engine.spark.utils.{JobMetrics, Metrics, Repartitioner, StorageUtils}
-import org.apache.kylin.metadata.cube.model.{LayoutEntity, NDataSegment, NDataflow}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KapConfig
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.engine.spark.job.NSparkCubingUtil
+import org.apache.kylin.engine.spark.utils.StorageUtils.findCountDistinctMeasure
+import org.apache.kylin.engine.spark.utils.{Metrics, Repartitioner, StorageUtils}
+import org.apache.kylin.metadata.cube.model.{LayoutEntity, NDataSegment, NDataflow}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.LayoutEntityConverter._
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
@@ -92,43 +92,12 @@ abstract class StorageStore extends Logging {
 
 class StorageStoreV1 extends StorageStore {
   override def save(layout: LayoutEntity, outputPath: Path, kapConfig: KapConfig, dataFrame: DataFrame): WriteTaskStats = {
-    val (metrics: JobMetrics, rowCount: Long, hadoopConf: Configuration, bucketNum: Int) =
-      repartitionWriter(layout, outputPath, kapConfig, dataFrame)
-    val (fileCount, byteSize) = collectFileCountAndSizeAfterSave(outputPath, hadoopConf)
+    val outputSpec =
+      LayoutFormatWriter.write(dataFrame, layout, outputPath, kapConfig, storageListener)
+    val (fileCount, byteSize) = collectFileCountAndSizeAfterSave(outputPath, outputSpec.hadoopConf)
     checkAndWriterFastBitmapLayout(dataFrame, layout, kapConfig, outputPath)
-    WriteTaskStats(0, fileCount, byteSize, rowCount, metrics.getMetrics(Metrics.SOURCE_ROWS_CNT), bucketNum, new util.ArrayList[String]())
-  }
-
-  private def repartitionWriter(layout: LayoutEntity, outputPath: Path, kapConfig: KapConfig, dataFrame: DataFrame) = {
-    val ss = dataFrame.sparkSession
-    val hadoopConf = ss.sparkContext.hadoopConfiguration
-    val fs = outputPath.getFileSystem(hadoopConf)
-
-    val tempPath = outputPath.toString + TEMP_FLAG + System.currentTimeMillis()
-    val metrics = StorageUtils.writeWithMetrics(dataFrame, tempPath)
-    val rowCount = metrics.getMetrics(Metrics.CUBOID_ROWS_CNT)
-    storageListener.foreach(_.onPersistBeforeRepartition(dataFrame, layout))
-
-    val bucketNum = StorageUtils.calculateBucketNum(tempPath, layout, rowCount, kapConfig)
-    val summary = HadoopUtil.getContentSummary(fs, new Path(tempPath))
-    val repartitionThresholdSize = if (findCountDistinctMeasure(layout)) {
-      kapConfig.getParquetStorageCountDistinctShardSizeRowCount
-    } else {
-      kapConfig.getParquetStorageShardSizeRowCount
-    }
-    val repartitioner = new Repartitioner(
-      kapConfig.getParquetStorageShardSizeMB,
-      kapConfig.getParquetStorageRepartitionThresholdSize,
-      rowCount,
-      repartitionThresholdSize,
-      summary,
-      layout.getShardByColumns,
-      layout.getOrderedDimensions.keySet().asList(),
-      kapConfig.optimizeShardEnabled()
-    )
-    repartitioner.doRepartition(outputPath.toString, tempPath, bucketNum, ss)
-    storageListener.foreach(_.onPersistAfterRepartition(ss.read.parquet(outputPath.toString), layout))
-    (metrics, rowCount, hadoopConf, bucketNum)
+    WriteTaskStats(0, fileCount, byteSize, outputSpec.rowCount,
+      outputSpec.metrics.getMetrics(Metrics.SOURCE_ROWS_CNT), outputSpec.bucketNum, new util.ArrayList[String]())
   }
 
   def checkAndWriterFastBitmapLayout(dataset: DataFrame, layoutEntity: LayoutEntity, kapConfig: KapConfig, layoutPath: Path): Unit = {
@@ -153,7 +122,7 @@ class StorageStoreV1 extends StorageStore {
     }
 
     val afterReplaced = replaceCountDistinctEvalColumn(bitmaps, dataset)
-    repartitionWriter(layoutEntity, outputPath, kapConfig, afterReplaced)
+    LayoutFormatWriter.write(afterReplaced, layoutEntity, outputPath, kapConfig, storageListener)
   }
 
 
