@@ -52,7 +52,6 @@ public class AfterBuildResourceMerger extends SparkJobMetadataMerger {
     @Override
     public NDataLayout[] merge(String dataflowId, Set<String> segmentId, Set<Long> layoutIds,
             ResourceStore remoteResourceStore, JobTypeEnum jobType, Set<Long> partitions) {
-        // TODO checker the input layouts
         switch (jobType) {
         case INDEX_BUILD:
         case SUB_PARTITION_BUILD:

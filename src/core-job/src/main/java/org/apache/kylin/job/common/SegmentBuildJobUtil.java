@@ -32,7 +32,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This is used to compute and set the parameters for spark building segment job.
+ * This is used for computing and setting the parameters for spark building segment job.
  **/
 @Slf4j
 public class SegmentBuildJobUtil extends ExecutableUtil {

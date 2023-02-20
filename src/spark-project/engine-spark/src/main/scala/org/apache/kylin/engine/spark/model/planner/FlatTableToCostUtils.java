@@ -440,23 +440,6 @@ public class FlatTableToCostUtils {
         // replace the size with the row count
         return getCuboidSizeMapFromSamplingByCount(rowCountMap, sourceCount, ruleBasedIndex, kylinConfig,
                 segmentFlatTableDesc);
-        //        final List<Integer> rowkeyColumnSize = getRowkeyColumnSize(indexPlan, segmentFlatTableDesc);
-        //        // base id and base size
-        //        final long baseCuboid = CostBasePlannerUtils.generateBaseCuboId(indexPlan);
-        //        Preconditions.checkNotNull(rowCountMap.get(baseCuboid));
-        //        final Long baseCuboIDRowCount = rowCountMap.get(baseCuboid);
-        //
-        //        Map<Long, Double> cuboidSizeMap = Maps.newHashMap();
-        //        for (Map.Entry<Long, Long> entry : rowCountMap.entrySet()) {
-        //            cuboidSizeMap.put(entry.getKey(),
-        //                    estimateCuboidStorageSize(indexPlan.getEffectiveMeasures().values(), entry.getKey(),
-        //                            entry.getValue(), baseCuboid, baseCuboIDRowCount, rowkeyColumnSize, sourceCount,
-        //                            kylinConfig));
-        //        }
-        //        if (kylinConfig.enableJobCuboidSizeOptimize()) {
-        //            optimizeSizeMap(cuboidSizeMap);
-        //        }
-        //        return cuboidSizeMap;
     }
 
     private static List<Integer> getRowkeyColumnSize(IndexPlan indexPlan, SegmentFlatTableDesc flatTableDesc) {
@@ -471,7 +454,6 @@ public class FlatTableToCostUtils {
                 // find the i-th dimension in the index-th column in the flat table or flat data set.
                 TblColRef tblColRef = tblColRefs.get(index);
                 // get DimensionEncoding for this table column ref.
-                // TODO: how estimate dimension size (string type)
                 // Noe we just use the row count as the weight
                 int length = 0;
                 rowkeyColumnSize.add(length);

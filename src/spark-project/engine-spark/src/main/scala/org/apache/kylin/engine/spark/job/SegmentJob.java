@@ -63,7 +63,7 @@ public abstract class SegmentJob extends SparkApplication {
     protected IndexPlan indexPlan;
 
     protected String dataflowId;
-    // In order to support the cube planner, `readOnlyLayouts` can be changed
+    // In order to support the cost based planner, `readOnlyLayouts` can be changed
     private Set<LayoutEntity> readOnlyLayouts;
     protected Set<NDataSegment> readOnlySegments;
 
@@ -95,7 +95,7 @@ public abstract class SegmentJob extends SparkApplication {
     }
 
     public boolean updateIndexPlanIfNeed() {
-        // when run the cube planner, there will be some recommended index layouts for this model
+        // when run the cost based index planner, there will be some recommended index layouts for this model
         if (getRecommendAggColOrders().size() != 0) {
             UnitOfWork.doInTransactionWithRetry(() -> {
                 // update and add the recommended index layout to the index plan

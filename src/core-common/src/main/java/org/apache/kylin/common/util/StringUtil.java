@@ -178,10 +178,6 @@ public class StringUtil {
         return r.toArray(new String[r.size()]);
     }
 
-    public static String[] splitByComma(String str) {
-        return split(str, ",");
-    }
-
     // calculating length in UTF-8 of Java String without actually encoding it
     public static int utf8Length(CharSequence sequence) {
         int count = 0;

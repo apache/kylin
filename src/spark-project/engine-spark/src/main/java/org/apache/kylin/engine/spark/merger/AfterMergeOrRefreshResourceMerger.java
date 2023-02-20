@@ -172,7 +172,6 @@ public class AfterMergeOrRefreshResourceMerger extends SparkJobMetadataMerger {
     @Override
     public NDataLayout[] merge(String dataflowId, Set<String> segmentIds, Set<Long> layoutIds,
             ResourceStore remoteResourceStore, JobTypeEnum jobType, Set<Long> partitions) {
-        // TODO checker the input layouts
         if (CollectionUtils.isNotEmpty(partitions)) {
             return mergeMultiPartitionModel(dataflowId, segmentIds, layoutIds, remoteResourceStore, jobType,
                     partitions);

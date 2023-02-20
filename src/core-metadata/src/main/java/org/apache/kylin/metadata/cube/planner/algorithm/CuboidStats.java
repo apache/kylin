@@ -211,7 +211,6 @@ public class CuboidStats {
                 || scanCountSourceMap.get(sourceCuboid).size() <= 0) {
             return statistics.get(sourceCuboid);
         } else {
-            //TODO some improvement can be done by assigning weights based on distance between source cuboid and target cuboid
             Map<BigInteger, Long> scanCountTargetMap = scanCountSourceMap.get(sourceCuboid);
             long totalEstScanCount = 0L;
             for (Map.Entry<BigInteger, Long> subEntry : scanCountTargetMap.entrySet()) {
