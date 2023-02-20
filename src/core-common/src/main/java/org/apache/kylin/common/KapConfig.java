@@ -682,6 +682,10 @@ public class KapConfig {
         return Boolean.parseBoolean(config.getOptional("kylin.build.optimize-shard-enabled", TRUE));
     }
 
+    public boolean isAggIndexAdaptiveBuildEnabled() {
+        return Boolean.parseBoolean(config.getOptional("kylin.engine.aggIndex-adaptive-build-enabled", FALSE));
+    }
+
     public String getSwitchBackupFsExceptionAllowString() {
         return config.getOptional("kylin.query.switch-backup-fs-exception-allow-string", "alluxio");
     }
