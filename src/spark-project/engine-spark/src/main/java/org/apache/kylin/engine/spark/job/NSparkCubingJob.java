@@ -32,6 +32,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.common.exception.JobErrorCode;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultExecutableOnModel;
@@ -451,20 +453,22 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
                     // check the count of rowkey:
                     // if the count of row key exceed the 63, throw exception
                     if (indexPlan.getRuleBasedIndex().countOfIncludeDimension() > (Long.SIZE - 1)) {
-                        throw new RuntimeException(String.format(
-                                "The count of row key %d can't be larger than 63, when use the cube planner",
-                                indexPlan.getRuleBasedIndex().countOfIncludeDimension()));
+                        throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR,
+                                String.format(Locale.ROOT,
+                                        "The count of row key %d can't be larger than 63, when use the cube planner",
+                                        indexPlan.getRuleBasedIndex().countOfIncludeDimension()));
                     }
                     // Add the parameter `P_JOB_ENABLE_PLANNER` which is used to decide whether to use the  cube planner
                     job.setParam(NBatchConstants.P_JOB_ENABLE_PLANNER, Boolean.TRUE.toString());
                 } else {
-                    throw new RuntimeException(
+                    throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR, String.format(Locale.ROOT,
                             "There are running job for this model when submit the build job with cost based planner, "
-                                    + "please wait for other jobs to finish or cancel them");
+                                    + "please wait for other jobs to finish or cancel them"));
                 }
             } else {
-                throw new RuntimeException("The number of segments to be built or refreshed must be 1, "
-                        + "This is the first time to submit build job with enable cost based planner");
+                throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR,
+                        String.format(Locale.ROOT, "The number of segments to be built or refreshed must be 1, "
+                                + "This is the first time to submit build job with enable cost based planner"));
             }
         }
     }

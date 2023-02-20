@@ -35,7 +35,10 @@ public enum JobErrorCode implements ErrorCodeSupplier {
 
     SECOND_STORAGE_SEGMENTS_CONFLICTS("KE-030002001"),
     SECOND_STORAGE_JOB_EXISTS("KE-030002002"),
-    SECOND_STORAGE_PROJECT_JOB_EXISTS("KE-030002003");
+    SECOND_STORAGE_PROJECT_JOB_EXISTS("KE-030002003"),
+
+    // cost based planner error code
+    COST_BASED_PLANNER_ERROR("KE-030003001");
 
     private final ErrorCode errorCode;
 
