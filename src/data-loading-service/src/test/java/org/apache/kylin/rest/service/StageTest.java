@@ -549,6 +549,9 @@ public class StageTest extends NLocalFileMetadataTestCase {
 
         result = ExecutableState.DISCARDED.toJobStatus();
         Assert.assertEquals(JobStatusEnum.DISCARDED, result);
+
+        result = ExecutableState.WARNING.toJobStatus();
+        Assert.assertEquals(JobStatusEnum.WARNING, result);
     }
 
     @Test

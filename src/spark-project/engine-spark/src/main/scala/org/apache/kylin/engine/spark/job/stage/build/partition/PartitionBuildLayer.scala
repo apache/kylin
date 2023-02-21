@@ -18,12 +18,19 @@
 
 package org.apache.kylin.engine.spark.job.stage.build.partition
 
-import org.apache.kylin.engine.spark.job.SegmentJob
+import io.kyligence.kap.guava20.shaded.common.util.concurrent.RateLimiter
 import org.apache.kylin.engine.spark.job.stage.BuildParam
-import org.apache.kylin.metadata.cube.model.NDataSegment
+import org.apache.kylin.engine.spark.job.{KylinBuildEnv, SegmentJob}
+import org.apache.kylin.metadata.cube.model.{NBatchConstants, NDataSegment}
+
+import java.util.concurrent.TimeUnit
+import scala.collection.JavaConverters._
 
 class PartitionBuildLayer(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
   extends PartitionBuildStage(jobContext, dataSegment, buildParam) {
+
+  private val rateLimiter: RateLimiter = createRateLimiter()
+
   override def execute(): Unit = {
     // Build layers.
     buildLayouts()
@@ -32,4 +39,16 @@ class PartitionBuildLayer(jobContext: SegmentJob, dataSegment: NDataSegment, bui
   }
 
   override def getStageName: String = "PartitionBuildLayer"
+
+  override protected def drain(timeout: Long, unit: TimeUnit): Unit = {
+    super.drain(timeout, unit)
+
+    val buildJobInfos = KylinBuildEnv.get().buildJobInfos
+    val layoutCountTotal = buildJobInfos.getSeg2cuboidsNumPerLayer.get(segmentId)
+    if (rateLimiter.tryAcquire() && layoutCountTotal != null) {
+      val layoutCount = layoutCountTotal.get() / partitions.size()
+      updateStageInfo(null, null, mapAsJavaMap(Map(NBatchConstants.P_INDEX_SUCCESS_COUNT ->
+        String.valueOf(layoutCount))))
+    }
+  }
 }

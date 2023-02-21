@@ -1177,7 +1177,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             boolean allToComplement, Set<Long> allIndexWithoutTobeDel, NDataSegment segment) {
         if (allToComplement) {
             // find seg that does not have all indexes(don't include tobeDeleted)
-            val segLayoutIds = segment.getSegDetails().getLayouts().stream().map(NDataLayout::getLayoutId)
+            val segLayoutIds = segment.getSegDetails().getWorkingLayouts().stream().map(NDataLayout::getLayoutId)
                     .collect(Collectors.toSet());
             return !Sets.difference(allIndexWithoutTobeDel, segLayoutIds).isEmpty();
         }
@@ -2386,7 +2386,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             for (String segmentId : segmentIds) {
                 NDataSegment seg = dataflow.getSegment(segmentId);
                 NDataSegDetails segDetails = seg.getSegDetails();
-                List<NDataLayout> layouts = new LinkedList<>(segDetails.getLayouts());
+                List<NDataLayout> layouts = new LinkedList<>(segDetails.getAllLayouts());
                 layouts.removeIf(layout -> indexIds.contains(layout.getLayoutId()));
                 dfManger.updateDataflowDetailsLayouts(seg, layouts);
             }

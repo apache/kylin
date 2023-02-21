@@ -28,8 +28,6 @@ class GatherFlatTableStats(jobContext: SegmentJob, dataSegment: NDataSegment, bu
   extends BuildStage(jobContext, dataSegment, buildParam) {
 
   override def execute(): Unit = {
-    scheduleCheckpoint()
-
     // Build flat table?
     if (buildParam.getSpanningTree.fromFlatTable()) {
       // Collect statistics for flat table.

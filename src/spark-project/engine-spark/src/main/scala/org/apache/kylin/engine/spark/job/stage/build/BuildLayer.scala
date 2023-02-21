@@ -18,14 +18,22 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import org.apache.kylin.engine.spark.job.SegmentJob
+import io.kyligence.kap.guava20.shaded.common.util.concurrent.RateLimiter
 import org.apache.kylin.engine.spark.job.stage.BuildParam
-import org.apache.kylin.metadata.cube.model.NDataSegment
+import org.apache.kylin.engine.spark.job.{KylinBuildEnv, SegmentJob}
+import org.apache.kylin.metadata.cube.model.{NBatchConstants, NDataSegment}
+
+import java.util.concurrent.TimeUnit
+import scala.collection.JavaConverters._
 
 class BuildLayer(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
   extends BuildStage(jobContext, dataSegment, buildParam) {
 
+  private val rateLimiter: RateLimiter = createRateLimiter()
+
   override def execute(): Unit = {
+    // Start an independent thread doing drain at a fixed rate
+    scheduleCheckpoint()
     // Build layers.
     buildLayouts()
     // Drain results immediately after building.
@@ -33,4 +41,15 @@ class BuildLayer(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: 
   }
 
   override def getStageName: String = "BuildLayer"
+
+  override protected def drain(timeout: Long, unit: TimeUnit): Unit = {
+    super.drain(timeout, unit)
+
+    val buildJobInfos = KylinBuildEnv.get().buildJobInfos
+    val layoutCount = buildJobInfos.getSeg2cuboidsNumPerLayer.get(segmentId)
+    if (rateLimiter.tryAcquire() && layoutCount != null) {
+      updateStageInfo(null, null, mapAsJavaMap(Map(NBatchConstants.P_INDEX_SUCCESS_COUNT ->
+        String.valueOf(layoutCount.get()))))
+    }
+  }
 }

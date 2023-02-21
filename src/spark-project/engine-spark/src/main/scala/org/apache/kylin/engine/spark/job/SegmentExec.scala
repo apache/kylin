@@ -18,25 +18,24 @@
 
 package org.apache.kylin.engine.spark.job
 
-import java.util
-import java.util.Objects
-import java.util.concurrent.{BlockingQueue, ForkJoinPool, LinkedBlockingQueue, TimeUnit}
-
 import com.google.common.collect.{Lists, Queues}
-import org.apache.kylin.engine.spark.job.SegmentExec.{LayoutResult, ResultType, SourceStats}
-import org.apache.kylin.engine.spark.job.stage.merge.MergeStage
-import org.apache.kylin.engine.spark.scheduler.JobRuntime
-import org.apache.kylin.metadata.cube.model._
-import org.apache.kylin.metadata.model.NDataModel
 import org.apache.hadoop.fs.{Path, PathFilter}
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.common.{KapConfig, KylinConfig}
-import org.apache.kylin.metadata.model.TblColRef
+import org.apache.kylin.engine.spark.job.SegmentExec.{LayoutResult, ResultType, SourceStats, filterSuccessfulLayoutResult}
+import org.apache.kylin.engine.spark.job.stage.merge.MergeStage
+import org.apache.kylin.engine.spark.scheduler.JobRuntime
+import org.apache.kylin.metadata.cube.model.NDataLayout.AbnormalType
+import org.apache.kylin.metadata.cube.model._
+import org.apache.kylin.metadata.model.{NDataModel, TblColRef}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.datasource.storage.{StorageListener, StorageStoreFactory, WriteTaskStats}
 import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
 import org.apache.spark.tracker.BuildContext
 
+import java.util
+import java.util.Objects
+import java.util.concurrent.{BlockingQueue, ForkJoinPool, LinkedBlockingQueue, TimeUnit}
 import scala.collection.JavaConverters._
 import scala.collection.parallel.ForkJoinTaskSupport
 
@@ -202,6 +201,9 @@ trait SegmentExec extends Logging {
     logInfo(s"Segment $segmentId drained layouts: " + //
       s"${results.asScala.map(_.layoutId).mkString("[", ",", "]")}")
 
+    val buildJobInfos = KylinBuildEnv.get().buildJobInfos
+    buildJobInfos.recordCuboidsNumPerLayer(segmentId, results.asScala.count(filterSuccessfulLayoutResult))
+
     class DFUpdate extends UnitOfWork.Callback[Int] {
       override def process(): Int = {
 
@@ -227,6 +229,7 @@ trait SegmentExec extends Logging {
           dataLayout.setPartitionValues(taskStats.partitionValues)
           dataLayout.setFileCount(taskStats.numFiles)
           dataLayout.setByteSize(taskStats.numBytes)
+          dataLayout.setAbnormalType(lr.abnormalType)
           dataLayout
         }
         logInfo(s"Segment $segmentId update the data layouts $dataLayouts")
@@ -290,7 +293,13 @@ trait SegmentExec extends Logging {
     val storagePath = NSparkCubingUtil.getStoragePath(segment, layout.getId)
     val taskStats = saveWithStatistics(layout, layoutDS, storagePath, readableDesc, storageListener)
     val sourceStats = newSourceStats(layout, taskStats)
-    pipe.offer(LayoutResult(layout.getId, taskStats, sourceStats))
+    pipe.offer(LayoutResult(layout.getId, taskStats, sourceStats, null))
+  }
+
+  protected final def newEmptyDataLayout(layout: LayoutEntity, abnormalType: AbnormalType): Unit = {
+    val taskStats = WriteTaskStats(0, 0, 0, 0, 0, 0, new util.ArrayList[String]())
+    val sourceStats = SourceStats(0)
+    pipe.offer(LayoutResult(layout.getId, taskStats, sourceStats, abnormalType))
   }
 
   protected def newSourceStats(layout: LayoutEntity, taskStats: WriteTaskStats): SourceStats = {
@@ -417,6 +426,11 @@ object SegmentExec {
 
   case class SourceStats(rows: Long)
 
-  case class LayoutResult(layoutId: java.lang.Long, stats: WriteTaskStats, sourceStats: SourceStats) extends ResultType
+  case class LayoutResult(layoutId: java.lang.Long, stats: WriteTaskStats, sourceStats: SourceStats,
+                          abnormalType: NDataLayout.AbnormalType) extends ResultType
+
+  protected def filterSuccessfulLayoutResult(layoutResult: LayoutResult): Boolean = {
+    layoutResult.abnormalType == null
+  }
 
 }

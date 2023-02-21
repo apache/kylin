@@ -55,6 +55,7 @@ public interface NBatchConstants {
     /** use for stage calculate exec ratio */
     String P_INDEX_COUNT = "indexCount";
     String P_INDEX_SUCCESS_COUNT = "indexSuccessCount";
+    String P_WARNING_CODE = "warning_code";
     /** value like : { "segmentId1": 1223, "segmentId2": 1223 } */
     String P_WAITE_TIME = "waiteTime";
 

@@ -67,12 +67,6 @@ abstract class PartitionBuildStage(jobContext: SegmentJob, dataSegment: NDataSeg
 
   override protected def columnIdFunc(colRef: TblColRef): String = flatTableDesc.getColumnIdAsString(colRef)
 
-
-  override protected def reportTaskProgress(): Unit = {
-    val layoutCount = KylinBuildEnv.get().buildJobInfos.getSeg2cuboidsNumPerLayer.get(segmentId).asScala.sum
-    onBuildLayoutSuccess(layoutCount / partitions.size())
-  }
-
   override protected def buildLayouts(): Unit = {
 
     val taskIter = new BuildTaskIterator[PartitionBuildTask] {

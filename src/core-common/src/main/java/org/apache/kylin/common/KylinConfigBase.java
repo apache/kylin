@@ -980,6 +980,10 @@ public abstract class KylinConfigBase implements Serializable {
         return !getBuildConf().isEmpty() && !getWritingClusterWorkingDir().isEmpty();
     }
 
+    public String getWriteClusterWorkingDir() {
+        return getOptional("kylin.env.write-hdfs-working-dir", "");
+    }
+
     public String getWritingClusterWorkingDir() {
         return getOptional(WRITING_CLUSTER_WORKING_DIR, "");
     }
@@ -3798,6 +3802,14 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getDDLLogicalViewCatchupInterval() {
         return Integer.parseInt(getOptional("kylin.source.ddl.logical-view-catchup-interval", "60"));
+    }
+
+    public boolean isDataCountCheckEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.build.data-count-check-enabled", FALSE));
+    }
+
+    public boolean isNonStrictCountCheckAllowed() {
+        return Boolean.parseBoolean(getOptional("kylin.build.allow-non-strict-count-check", FALSE));
     }
 
     // ============================================================================

@@ -100,6 +100,12 @@ public enum JobStatusEnum {
         public boolean checkAction(JobActionEnum actionEnum) {
             return false;
         }
+    },
+    WARNING(2048) {
+        @Override
+        public boolean checkAction(JobActionEnum actionEnum) {
+            return false;
+        }
     };
 
     public abstract boolean checkAction(JobActionEnum actionEnum);

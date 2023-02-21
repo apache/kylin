@@ -18,23 +18,30 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.collect.Sets;
-import lombok.NoArgsConstructor;
-import lombok.val;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.merger.MetadataMerger;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.NExecutableManager;
+import org.apache.kylin.job.execution.StageBase;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import com.google.common.collect.Sets;
+
+import lombok.NoArgsConstructor;
+import lombok.val;
 
 @NoArgsConstructor
 public class NSparkCubingStep extends NSparkExecutable {
@@ -99,6 +106,29 @@ public class NSparkCubingStep extends NSparkExecutable {
             }
         });
         return result;
+    }
+
+    @Override
+    protected ExecutableState adjustState(ExecutableState originalState) {
+        if (hasWarningStage()) {
+            return ExecutableState.WARNING;
+        }
+        return super.adjustState(originalState);
+    }
+
+    protected boolean hasWarningStage() {
+        NExecutableManager executableManager = getManager();
+        Map<String, List<StageBase>> stagesMap = getStagesMap();
+        for (Map.Entry<String, List<StageBase>> entry : stagesMap.entrySet()) {
+            String segmentId = entry.getKey();
+            List<StageBase> stages = entry.getValue();
+            boolean hasWarning = stages.stream()
+                    .anyMatch(stage -> executableManager.getOutput(stage.getId(), segmentId).getState() == ExecutableState.WARNING);
+            if (hasWarning) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static class Mockup {

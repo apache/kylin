@@ -78,7 +78,7 @@ public class DataflowCleanerCLI {
         val layoutIds = getLayouts(dataflow);
         val toBeRemoved = Sets.<Long> newHashSet();
         for (NDataSegment segment : dataflow.getSegments()) {
-            toBeRemoved.addAll(segment.getSegDetails().getLayouts().stream().map(NDataLayout::getLayoutId)
+            toBeRemoved.addAll(segment.getSegDetails().getAllLayouts().stream().map(NDataLayout::getLayoutId)
                     .filter(id -> !layoutIds.contains(id)).collect(Collectors.toSet()));
         }
         dataflowManager.removeLayouts(dataflow, Lists.newArrayList(toBeRemoved));

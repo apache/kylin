@@ -138,7 +138,7 @@ public class DictionaryBuilderHelper {
 
         List<LayoutEntity> buildedLayouts = Lists.newArrayList();
         if (seg.getSegDetails() != null) {
-            for (NDataLayout cuboid : seg.getSegDetails().getLayouts()) {
+            for (NDataLayout cuboid : seg.getSegDetails().getWorkingLayouts()) {
                 buildedLayouts.add(cuboid.getLayout());
             }
         }

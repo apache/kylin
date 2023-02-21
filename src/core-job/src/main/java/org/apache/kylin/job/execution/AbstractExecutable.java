@@ -285,7 +285,9 @@ public abstract class AbstractExecutable implements Executable {
         MetricsGroup.hostTagCounterInc(MetricsName.JOB_STEP_ATTEMPTED, MetricsCategory.PROJECT, project, retry);
         if (result.succeed()) {
             wrapWithCheckQuit(() -> {
-                updateJobOutput(project, getId(), ExecutableState.SUCCEED, result.getExtraInfo(), result.output(),
+                ExecutableState state = adjustState(ExecutableState.SUCCEED);
+                logger.info("Job {} adjust future state from {} to {}", getId(), ExecutableState.SUCCEED.name(), state.name());
+                updateJobOutput(project, getId(), state, result.getExtraInfo(), result.output(),
                         null);
             });
         } else if (result.skip()) {
@@ -302,6 +304,10 @@ public abstract class AbstractExecutable implements Executable {
             });
             throw new ExecuteException(result.getThrowable());
         }
+    }
+
+    protected ExecutableState adjustState(ExecutableState originalState) {
+        return originalState;
     }
 
     protected void onExecuteStopHook() {
@@ -337,7 +343,7 @@ public abstract class AbstractExecutable implements Executable {
 
             //The output will be stored in HDFS,not in RS
             if (this instanceof ChainedStageExecutable) {
-                if (newStatus == ExecutableState.SUCCEED) {
+                if (newStatus.isNotBad()) {
                     executableManager.makeStageSuccess(jobId);
                 } else if (newStatus == ExecutableState.ERROR) {
                     executableManager.makeStageError(jobId);

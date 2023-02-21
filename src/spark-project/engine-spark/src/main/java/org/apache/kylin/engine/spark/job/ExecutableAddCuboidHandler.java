@@ -18,21 +18,24 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.base.Preconditions;
-import lombok.val;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.merger.AfterBuildResourceMerger;
 import org.apache.kylin.job.execution.DefaultExecutableOnModel;
 import org.apache.kylin.job.execution.ExecutableHandler;
+import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
+import com.google.common.base.Preconditions;
+
+import lombok.val;
 
 public class ExecutableAddCuboidHandler extends ExecutableHandler {
     private static final Logger logger = LoggerFactory.getLogger(ExecutableAddCuboidHandler.class);
@@ -59,6 +62,28 @@ public class ExecutableAddCuboidHandler extends ExecutableHandler {
                 .filter(task -> ((NSparkExecutable) task).needMergeMetadata())
                 .forEach(task -> ((NSparkExecutable) task).mergerMetadata(merger));
 
+        tryRemoveToBeDeletedLayouts(project, modelId, jobId, executable);
+        markDFStatus();
+    }
+
+    @Override
+    public void handleDiscardOrSuicidal() {
+        val job = getExecutable();
+        // anyTargetSegmentExists && checkCuttingInJobByModel need restart job
+        if (!(job.checkCuttingInJobByModel() && job.checkAnyTargetSegmentAndPartitionExists())) {
+            return;
+        }
+    }
+
+    private void tryRemoveToBeDeletedLayouts(String project, String modelId, String jobId, DefaultExecutableOnModel executable) {
+        if (!(executable instanceof NSparkCubingJob)) {
+            return;
+        }
+        NSparkCubingJob job = (NSparkCubingJob) executable;
+        if (job.getSparkCubingStep().getStatus() != ExecutableState.SUCCEED) {
+            return;
+        }
+
         Optional.ofNullable(executable.getParams()).ifPresent(params -> {
             String toBeDeletedLayoutIdsStr = params.get(NBatchConstants.P_TO_BE_DELETED_LAYOUT_IDS);
             if (StringUtils.isNotBlank(toBeDeletedLayoutIdsStr)) {
@@ -72,16 +97,5 @@ public class ExecutableAddCuboidHandler extends ExecutableHandler {
                         copyForWrite -> copyForWrite.removeLayouts(toBeDeletedLayoutIds, true, true));
             }
         });
-        markDFStatus();
     }
-
-    @Override
-    public void handleDiscardOrSuicidal() {
-        val job = getExecutable();
-        // anyTargetSegmentExists && checkCuttingInJobByModel need restart job
-        if (!(job.checkCuttingInJobByModel() && job.checkAnyTargetSegmentAndPartitionExists())) {
-            return;
-        }
-    }
-
 }

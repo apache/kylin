@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.cube.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -114,18 +115,40 @@ public class NDataSegDetails extends RootPersistentEntity implements Serializabl
 
     public long getTotalRowCount() {
         long count = 0L;
-        for (NDataLayout cuboid : getLayouts()) {
+        for (NDataLayout cuboid : getWorkingLayouts()) {
             count += cuboid.getRows();
         }
         return count;
     }
 
+    /**
+     * @deprecated Deprecated because of non-working layouts were added.
+     * <p>Use {@link NDataSegDetails#getWorkingLayouts} or {@link NDataSegDetails#getAllLayouts} instead.
+     */
+    @Deprecated
     public List<NDataLayout> getLayouts() {
-        return isCachedAndShared() ? ImmutableList.copyOf(layouts) : layouts;
+        return getAllLayouts();
+    }
+
+    public List<NDataLayout> getWorkingLayouts() {
+        List<NDataLayout> workingLayouts = getLayouts0(false);
+        return isCachedAndShared() ? ImmutableList.copyOf(workingLayouts) : workingLayouts;
+    }
+
+    public List<NDataLayout> getAllLayouts() {
+        List<NDataLayout> allLayouts = getLayouts0(true);
+        return isCachedAndShared() ? ImmutableList.copyOf(allLayouts) : allLayouts;
+    }
+
+    private List<NDataLayout> getLayouts0(boolean includingNonWorkingLayouts) {
+        if (includingNonWorkingLayouts) {
+            return layouts;
+        }
+        return layouts.stream().filter(NDataLayout::filterWorkingLayout).collect(Collectors.toList());
     }
 
     public NDataLayout getLayoutById(long layoutId) {
-        for (NDataLayout cuboid : getLayouts()) {
+        for (NDataLayout cuboid : getAllLayouts()) {
             if (cuboid.getLayoutId() == layoutId)
                 return cuboid;
         }
@@ -156,8 +179,8 @@ public class NDataSegDetails extends RootPersistentEntity implements Serializabl
         if (another == this)
             return false;
 
-        List<NDataLayout> currentSortedLayouts = getSortedLayouts(getLayouts());
-        List<NDataLayout> anotherSortedLayouts = getSortedLayouts(another.getLayouts());
+        List<NDataLayout> currentSortedLayouts = getSortedLayouts(getAllLayouts());
+        List<NDataLayout> anotherSortedLayouts = getSortedLayouts(another.getAllLayouts());
         int size = currentSortedLayouts.size();
         if (size != anotherSortedLayouts.size())
             return false;

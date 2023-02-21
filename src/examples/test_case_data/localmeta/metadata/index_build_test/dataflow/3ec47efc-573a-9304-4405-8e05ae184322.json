@@ -1,0 +1,70 @@
+{
+  "uuid": "3ec47efc-573a-9304-4405-8e05ae184322",
+  "last_modified": 1675944717956,
+  "create_time": 1675944415945,
+  "version": "4.0.0.0",
+  "status": "ONLINE",
+  "last_status": null,
+  "cost": 50,
+  "query_hit_count": 0,
+  "last_query_time": 0,
+  "layout_query_hit_count": {},
+  "segments": [
+    {
+      "id": "b2f206e1-7a15-c94a-20f5-f608d550ead6",
+      "name": "FULL_BUILD",
+      "create_time_utc": 1675944504890,
+      "status": "READY",
+      "segRange": {
+        "@class": "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+        "date_range_start": 0,
+        "date_range_end": 9223372036854775807
+      },
+      "timeRange": null,
+      "dimension_range_info_map": {
+        "0": {
+          "min": "1",
+          "max": "6"
+        },
+        "24": {
+          "min": "1",
+          "max": "5"
+        },
+        "13": {
+          "min": "5",
+          "max": "15"
+        },
+        "22": {
+          "min": "Customer#000000001",
+          "max": "Customer#000000005"
+        },
+        "16": {
+          "min": "1",
+          "max": "5"
+        }
+      },
+      "parameters": null,
+      "dictionaries": null,
+      "snapshots": null,
+      "last_build_time": 1675944668815,
+      "source_count": 6,
+      "source_bytes_size": 27732,
+      "column_source_bytes": {
+        "SSB.CUSTOMER.C_NAME": 108,
+        "SSB.LINEORDER.LO_QUANTITY": 9,
+        "SSB.LINEORDER.LO_ORDERKEY": 6,
+        "SSB.LINEORDER.LO_CUSTKEY": 6,
+        "SSB.CUSTOMER.C_CUSTKEY": 6
+      },
+      "ori_snapshot_size": {},
+      "additionalInfo": {},
+      "is_realtime_segment": false,
+      "is_snapshot_ready": false,
+      "is_dict_ready": true,
+      "is_flat_table_ready": true,
+      "is_fact_view_ready": false,
+      "multi_partitions": [],
+      "max_bucket_id": -1
+    }
+  ]
+}
