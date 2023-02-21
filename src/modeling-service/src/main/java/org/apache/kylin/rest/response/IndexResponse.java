@@ -19,6 +19,7 @@ package org.apache.kylin.rest.response;
 
 import java.util.List;
 
+import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexEntity.Source;
@@ -100,6 +101,9 @@ public class IndexResponse {
         }
 
     }
+
+    @JsonProperty("abnormal_type")
+    private NDataLayout.AbnormalType abnormalType;
 
     @Data
     @AllArgsConstructor

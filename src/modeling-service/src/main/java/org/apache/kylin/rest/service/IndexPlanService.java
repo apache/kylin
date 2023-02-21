@@ -98,6 +98,8 @@ import org.apache.kylin.rest.response.IndexGraphResponse;
 import org.apache.kylin.rest.response.IndexResponse;
 import org.apache.kylin.rest.response.IndexStatResponse;
 import org.apache.kylin.rest.response.TableIndexResponse;
+import org.apache.kylin.rest.service.params.IndexPlanParams;
+import org.apache.kylin.rest.service.params.PaginationParams;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.SpringContext;
 import org.slf4j.Logger;
@@ -651,7 +653,21 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
     }
 
     public List<IndexResponse> getIndexes(String project, String modelId, String key, List<IndexEntity.Status> status,
-            String orderBy, Boolean desc, List<IndexEntity.Source> sources) {
+                                          String orderBy, Boolean desc, List<IndexEntity.Source> sources) {
+        return getIndexes(new IndexPlanParams(project, modelId, null, null, sources, status, null),
+                new PaginationParams(null, null, orderBy, desc),
+                key);
+    }
+
+    public List<IndexResponse> getIndexes(IndexPlanParams indexPlanParams, PaginationParams paginationParams, String key) {
+        String project = indexPlanParams.getProject();
+        String modelId = indexPlanParams.getModelId();
+        String segmentId = indexPlanParams.getSegmentId();
+        List<IndexEntity.Source> sources = indexPlanParams.getSources();
+        List<IndexEntity.Status> status = indexPlanParams.getStatus();
+        String orderBy = paginationParams.getOrderBy();
+        Boolean desc = paginationParams.getReverse();
+
         aclEvaluate.checkProjectReadPermission(project);
         Set<IndexEntity.Status> statusSet = Sets.newHashSet(status);
 
@@ -662,7 +678,7 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         Set<Long> layoutsByRunningJobs = getLayoutsByRunningJobs(project, modelId);
         if (StringUtils.isBlank(key)) {
             return sortAndFilterLayouts(layouts.stream()
-                    .map(layoutEntity -> convertToResponse(layoutEntity, indexPlan.getModel(), layoutsByRunningJobs))
+                    .map(layoutEntity -> convertToResponse(layoutEntity, indexPlan.getModel(), layoutsByRunningJobs, segmentId))
                     .filter(indexResponse -> statusSet.isEmpty() || statusSet.contains(indexResponse.getStatus())),
                     orderBy, desc, sources);
         }
@@ -676,7 +692,7 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
             return String.valueOf(index.getId()).equals(key.trim())
                     || !Sets.intersection(matchDimensions, colOrderSet).isEmpty()
                     || !Sets.intersection(matchMeasures, colOrderSet).isEmpty();
-        }).map(layoutEntity -> convertToResponse(layoutEntity, indexPlan.getModel(), layoutsByRunningJobs))
+        }).map(layoutEntity -> convertToResponse(layoutEntity, indexPlan.getModel(), layoutsByRunningJobs, segmentId))
                 .filter(indexResponse -> statusSet.isEmpty() || statusSet.contains(indexResponse.getStatus())), orderBy,
                 desc, sources);
     }
@@ -735,7 +751,7 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         for (NDataSegment seg : readySegments) {
             val lockedIndexCountInSeg = seg.getLayoutsMap().values().stream()
                     .filter(nDataLayout -> nDataLayout.getLayout().isToBeDeleted()).count();
-            if ((seg.getSegDetails().getLayouts().size() - lockedIndexCountInSeg) != allIndexCountWithoutTobeDel) {
+            if ((seg.getSegDetails().getAllLayouts().size() - lockedIndexCountInSeg) != allIndexCountWithoutTobeDel) {
                 segmentToComplementCount += 1;
             }
         }
@@ -840,11 +856,11 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
     }
 
     private IndexResponse convertToResponse(LayoutEntity layoutEntity, NDataModel model) {
-        return convertToResponse(layoutEntity, model, Sets.newHashSet());
+        return convertToResponse(layoutEntity, model, Sets.newHashSet(), null);
     }
 
     private IndexResponse convertToResponse(LayoutEntity layoutEntity, NDataModel model,
-            Set<Long> layoutIdsOfRunningJobs) {
+            Set<Long> layoutIdsOfRunningJobs, String segmentId) {
 
         // remove all internal measures
         val colOrders = Lists.newArrayList(layoutEntity.getColOrder());
@@ -862,20 +878,32 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         val dataflow = dfMgr.getDataflow(layoutEntity.getIndex().getIndexPlan().getUuid());
         long dataSize = 0L;
         int readyCount = 0;
-        for (NDataSegment segment : dataflow.getSegments()) {
-            val dataCuboid = segment.getLayout(layoutEntity.getId());
-            if (dataCuboid == null) {
+        boolean hasDataInconsistent = false;
+
+        List<NDataSegment> segments = StringUtils.isBlank(segmentId) ? dataflow.getSegments()
+                : dataflow.getSegments().stream().filter(seg -> seg.getId().equals(segmentId)).collect(Collectors.toList());
+        for (NDataSegment segment : segments) {
+            NDataLayout layout = segment.getLayout(layoutEntity.getId(), true);
+            if (layout == null) {
+                continue;
+            }
+            if (layout.getAbnormalType() == NDataLayout.AbnormalType.DATA_INCONSISTENT) {
+                hasDataInconsistent = true;
                 continue;
             }
             readyCount++;
-            dataSize += dataCuboid.getByteSize();
+            dataSize += layout.getByteSize();
         }
 
         IndexEntity.Status status;
         if (readyCount <= 0) {
-            status = IndexEntity.Status.NO_BUILD;
             if (layoutIdsOfRunningJobs.contains(layoutEntity.getId())) {
                 status = IndexEntity.Status.BUILDING;
+            } else {
+                status = IndexEntity.Status.NO_BUILD;
+                if (hasDataInconsistent) {
+                    response.setAbnormalType(NDataLayout.AbnormalType.DATA_INCONSISTENT);
+                }
             }
         } else {
             status = IndexEntity.Status.ONLINE;

@@ -47,17 +47,18 @@ public final class ExecuteResult {
     private ExecuteResult(State state, String output, Throwable throwable) {
         Preconditions.checkArgument(state != null, "state cannot be null");
 
-        if (state == State.SUCCEED) {
-            Preconditions.checkNotNull(output);
-            Preconditions.checkState(throwable == null);
-        } else if (state == State.SKIP) {
-            Preconditions.checkNotNull(output);
-            Preconditions.checkState(throwable == null);
-        } else if (state == State.ERROR) {
-            Preconditions.checkNotNull(throwable);
-            Preconditions.checkState(output == null);
-        } else {
-            throw new IllegalStateException();
+        switch (state) {
+            case SUCCEED:
+            case SKIP:
+                Preconditions.checkNotNull(output);
+                Preconditions.checkState(throwable == null);
+                break;
+            case ERROR:
+                Preconditions.checkNotNull(throwable);
+                Preconditions.checkState(output == null);
+                break;
+            default:
+                throw new IllegalStateException();
         }
 
         this.state = state;

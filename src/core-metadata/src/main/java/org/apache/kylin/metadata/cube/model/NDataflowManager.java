@@ -730,7 +730,7 @@ public class NDataflowManager implements IRealizationProvider {
 
     private void updateSegmentStatus(NDataSegment seg) {
         NDataSegDetails segDetails = NDataSegDetailsManager.getInstance(seg.getConfig(), project).getForSegment(seg);
-        if (seg.getStatus() == SegmentStatusEnum.WARNING && segDetails != null && segDetails.getLayouts().isEmpty()) {
+        if (seg.getStatus() == SegmentStatusEnum.WARNING && segDetails != null && segDetails.getAllLayouts().isEmpty()) {
             seg.setStatus(SegmentStatusEnum.READY);
         }
     }
@@ -830,7 +830,7 @@ public class NDataflowManager implements IRealizationProvider {
         }
         val affectedLayouts = Lists.newArrayList();
         for (NDataSegment segment : updateSegments) {
-            val layouts = segment.getSegDetails().getLayouts();
+            val layouts = segment.getSegDetails().getAllLayouts();
             layouts.forEach(dataLayout -> {
                 if (dataLayout.removeMultiPartition(toBeDeletedPartIds)) {
                     affectedLayouts.add(dataLayout);

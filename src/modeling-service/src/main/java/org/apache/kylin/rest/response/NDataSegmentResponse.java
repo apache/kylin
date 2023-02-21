@@ -120,14 +120,14 @@ public class NDataSegmentResponse extends NDataSegment {
         startTime = Long.parseLong(getSegRange().getStart().toString());
         endTime = Long.parseLong(getSegRange().getEnd().toString());
         storage = bytesSize;
-        indexCount = segment.getLayoutSize();
+        indexCount = segment.getWorkingLayoutSize();
         indexCountTotal = segment.getIndexPlan().getAllLayoutsSize(true);
         multiPartitionCount = segment.getMultiPartitions().size();
         hasBaseAggIndex = segment.getIndexPlan().containBaseAggLayout();
         hasBaseTableIndex = segment.getIndexPlan().containBaseTableLayout();
         if (segment.getIndexPlan().getBaseTableLayout() != null) {
             val indexPlan = segment.getDataflow().getIndexPlan();
-            long segmentFileCount = segment.getSegDetails().getLayouts().stream()
+            long segmentFileCount = segment.getSegDetails().getWorkingLayouts().stream()
                     .filter(layout -> indexPlan.getLayoutEntity(layout.getLayoutId()) != null
                             && indexPlan.getLayoutEntity(layout.getLayoutId()).isBaseIndex())
                     .mapToLong(NDataLayout::getFileCount).sum();

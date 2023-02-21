@@ -60,6 +60,7 @@ public class JsonUtil {
 
     static {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
                 .setConfig(mapper.getSerializationConfig().withView(PersistenceView.class));
         mapper.setFilterProvider(simpleFilterProvider);
         indentMapper.configure(SerializationFeature.INDENT_OUTPUT, true)

@@ -184,7 +184,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
     private void executeStep(Executable executable, ExecutableContext context) throws ExecuteException {
         if (executable.isRunnable()) {
             executable.execute(context);
-        } else if (ExecutableState.SUCCEED == executable.getStatus()) {
+        } else if (executable.getStatus().isNotBad()) {
             logger.info("step {} is already succeed, skip it.", executable.getDisplayName());
         } else {
             throw new IllegalStateException("invalid subtask state, sub task:" + executable.getDisplayName()
@@ -289,27 +289,28 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
             logger.info("Sub-task finished {}, state: {}", task.getDisplayName(), task.getStatus());
             boolean taskSucceed = false;
             switch (task.getStatus()) {
-                case RUNNING:
-                    hasError = true;
-                    break;
-                case ERROR:
-                    hasError = true;
-                    break;
-                case DISCARDED:
-                    hasDiscarded = true;
-                    break;
-                case SUICIDAL:
-                    hasSuicidal = true;
-                    break;
-                case PAUSED:
-                    hasPaused = true;
-                    break;
-                case SKIP:
-                case SUCCEED:
-                    taskSucceed = true;
-                    break;
-                default:
-                    break;
+            case RUNNING:
+                hasError = true;
+                break;
+            case ERROR:
+                hasError = true;
+                break;
+            case DISCARDED:
+                hasDiscarded = true;
+                break;
+            case SUICIDAL:
+                hasSuicidal = true;
+                break;
+            case PAUSED:
+                hasPaused = true;
+                break;
+            case SUCCEED:
+            case SKIP:
+            case WARNING:
+                taskSucceed = true;
+                break;
+            default:
+                break;
             }
             allSucceed &= taskSucceed;
         }

@@ -35,7 +35,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -71,6 +73,7 @@ import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.kylin.engine.spark.scheduler.ClusterMonitor;
 import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
 import org.apache.kylin.engine.spark.utils.SparkConfHelper;
+import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
@@ -118,6 +121,7 @@ public abstract class SparkApplication implements Application {
     protected String project;
     protected int layoutSize = -1;
     protected BuildJobInfos infos;
+    protected ConcurrentHashMap<String, Boolean> skipFollowingStagesMap = new ConcurrentHashMap<>();
     /**
      * path for spark app args on HDFS
      */
@@ -213,6 +217,17 @@ public abstract class SparkApplication implements Application {
      */
     public String getTrackingUrl(IClusterManager clusterManager, SparkSession sparkSession) {
         return clusterManager.getBuildTrackingUrl(sparkSession);
+    }
+
+    public void setSkipFollowingStages(String segmentId) {
+        skipFollowingStagesMap.put(segmentId, true);
+    }
+
+    public boolean isSkipFollowingStages(String segmentId) {
+        if (segmentId == null) {
+            return false;
+        }
+        return Optional.ofNullable(skipFollowingStagesMap.get(segmentId)).orElse(false);
     }
 
     private String tryReplaceHostAddress(String url) {
@@ -446,7 +461,7 @@ public abstract class SparkApplication implements Application {
 
     protected void waiteForResourceSuccess() throws Exception {
         val waiteForResource = WAITE_FOR_RESOURCE.create(this, null, null);
-        waiteForResource.onStageFinished(true);
+        waiteForResource.onStageFinished(ExecutableState.SUCCEED);
         infos.recordStageId("");
     }
 

@@ -33,7 +33,7 @@ import com.google.common.collect.Multimaps;
  */
 public enum ExecutableState {
 
-    READY, RUNNING, ERROR, PAUSED, DISCARDED, SUCCEED, SUICIDAL, SKIP;
+    READY, RUNNING, ERROR, PAUSED, DISCARDED, SUCCEED, SUICIDAL, SKIP, WARNING;
 
     private static Multimap<ExecutableState, ExecutableState> VALID_STATE_TRANSFER;
 
@@ -60,6 +60,7 @@ public enum ExecutableState {
         VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.SUICIDAL);
         VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.PAUSED);
         VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.SKIP);
+        VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.WARNING);
 
         VALID_STATE_TRANSFER.put(ExecutableState.PAUSED, ExecutableState.DISCARDED);
         VALID_STATE_TRANSFER.put(ExecutableState.PAUSED, ExecutableState.SUICIDAL);
@@ -94,6 +95,12 @@ public enum ExecutableState {
                 this == READY;//restart case
     }
 
+    public boolean isNotBad() {
+        return this == SUCCEED
+                || this == SKIP
+                || this == WARNING;
+    }
+
     public static boolean isValidStateTransfer(ExecutableState from, ExecutableState to) {
         return VALID_STATE_TRANSFER.containsEntry(from, to);
     }
@@ -115,6 +122,8 @@ public enum ExecutableState {
         case SUICIDAL:
         case DISCARDED:
             return JobStatusEnum.DISCARDED;
+        case WARNING:
+            return JobStatusEnum.WARNING;
         default:
             throw new RuntimeException("invalid state:" + this);
         }

@@ -247,4 +247,8 @@ public abstract class SegmentJob extends SparkApplication {
     public BuildContext getBuildContext() {
         return buildContext;
     }
+
+    public IndexPlan getIndexPlan() {
+        return indexPlan;
+    }
 }

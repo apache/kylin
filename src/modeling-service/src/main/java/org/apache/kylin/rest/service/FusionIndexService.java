@@ -55,6 +55,8 @@ import org.apache.kylin.rest.response.AggIndexResponse;
 import org.apache.kylin.rest.response.BuildIndexResponse;
 import org.apache.kylin.rest.response.DiffRuleBasedIndexResponse;
 import org.apache.kylin.rest.response.IndexResponse;
+import org.apache.kylin.rest.service.params.IndexPlanParams;
+import org.apache.kylin.rest.service.params.PaginationParams;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -195,10 +197,24 @@ public class FusionIndexService extends BasicService {
     }
 
     public List<IndexResponse> getIndexes(String project, String modelId, String key, List<IndexEntity.Status> status,
-            String orderBy, Boolean desc, List<IndexEntity.Source> sources, List<Long> ids,
-            List<IndexEntity.Range> range) {
-        List<IndexResponse> indexes = indexPlanService.getIndexes(project, modelId, key, status, orderBy, desc,
-                sources);
+                                          String orderBy, Boolean desc, List<IndexEntity.Source> sources, List<Long> ids,
+                                          List<IndexEntity.Range> range) {
+        return getIndexes(new IndexPlanParams(project, modelId, null, ids, sources, status, range),
+                new PaginationParams(null, null, orderBy, desc),
+                key);
+    }
+
+    public List<IndexResponse> getIndexes(IndexPlanParams indexPlanParams, PaginationParams paginationParams, String key) {
+        String project = indexPlanParams.getProject();
+        String modelId = indexPlanParams.getModelId();
+        List<Long> ids = indexPlanParams.getIds();
+        List<IndexEntity.Source> sources = indexPlanParams.getSources();
+        List<IndexEntity.Status> status = indexPlanParams.getStatus();
+        List<IndexEntity.Range> range = indexPlanParams.getRange();
+        String orderBy = paginationParams.getOrderBy();
+        Boolean desc = paginationParams.getReverse();
+
+        List<IndexResponse> indexes = indexPlanService.getIndexes(indexPlanParams, paginationParams, key);
         NDataModel model = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
         if (model.isFusionModel()) {
             FusionModel fusionModel = getManager(FusionModelManager.class, project).getFusionModel(modelId);

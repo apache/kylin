@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.job.exec.MergeExec;
 import org.apache.kylin.engine.spark.job.stage.BuildParam;
+import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.spark.tracker.BuildContext;
 
@@ -72,7 +73,7 @@ public class SegmentMergeJob extends SegmentJob {
                 mergeColumnBytes.toWorkWithoutFinally();
 
                 if (finishedSegmentCount.incrementAndGet() < segmentsCount) {
-                    mergeColumnBytes.onStageFinished(true);
+                    mergeColumnBytes.onStageFinished(ExecutableState.SUCCEED);
                 }
             } catch (IOException e) {
                 Throwables.propagate(e);

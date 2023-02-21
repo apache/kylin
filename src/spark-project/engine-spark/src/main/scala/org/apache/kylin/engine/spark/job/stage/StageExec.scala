@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.spark.job.stage
 
 import com.google.common.base.Throwables
+import io.kyligence.kap.guava20.shaded.common.util.concurrent.RateLimiter
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.JsonUtil
 import org.apache.kylin.job.execution.ExecutableState
@@ -44,27 +45,64 @@ trait StageExec extends Logging {
 
   def execute(): Unit
 
-  def onStageStart(): Unit = {
-    val taskId = getId
-    val segmentId = getSegmentId
-    val project = getJobContext.getProject
-    val status = ExecutableState.RUNNING.toString
-    val errMsg = null
-    val updateInfo: util.HashMap[String, String] = null
-
-    updateStageInfo(taskId, segmentId, project, status, errMsg, updateInfo)
+  def createRateLimiter(permitsPerSecond: Double = 0.1): RateLimiter = {
+    RateLimiter.create(permitsPerSecond)
   }
 
-  def updateStageInfo(taskId: String, segmentId: String, project: String, status: String,
-                      errMsg: String, updateInfo: util.HashMap[String, String]): Unit = {
+  def onStageStart(): Unit = {
+    if (getJobContext.isSkipFollowingStages(getSegmentId)) {
+      return
+    }
+    updateStageInfo(ExecutableState.RUNNING.toString, null, null)
+  }
+
+  def onStageFinished(state: ExecutableState = ExecutableState.SUCCEED): Unit = {
+    updateStageInfo(state.toString, null, null)
+  }
+
+  def onStageSkipped(): Unit = {
+    updateStageInfo(ExecutableState.SKIP.toString, null, null)
+  }
+
+  def toWork(): Unit = {
+    toWork0()
+  }
+
+  def toWorkWithoutFinally(): Unit = {
+    toWork0(false)
+  }
+
+  def toWork0(doFinally: Boolean = true): Unit = {
+    onStageStart()
+    var state: ExecutableState = ExecutableState.SUCCEED
+    try {
+      if (getJobContext.isSkipFollowingStages(getSegmentId)) {
+        state = ExecutableState.SKIP
+        return
+      }
+      execute()
+    } catch {
+      case throwable: Throwable =>
+        state = ExecutableState.ERROR
+        KylinBuildEnv.get().buildJobInfos.recordSegmentId(getSegmentId)
+        KylinBuildEnv.get().buildJobInfos.recordStageId(getId)
+        Throwables.propagate(throwable)
+    } finally {
+      if (doFinally) {
+        onStageFinished(state)
+      }
+    }
+  }
+
+  def updateStageInfo(status: String, errMsg: String, updateInfo: util.Map[String, String]): Unit = {
     val context = getJobContext
 
     val url = "/kylin/api/jobs/stage/status"
 
     val payload: util.HashMap[String, Object] = new util.HashMap[String, Object](6)
-    payload.put("task_id", taskId)
-    payload.put("segment_id", segmentId)
-    payload.put("project", project)
+    payload.put("task_id", getId)
+    payload.put("segment_id", getSegmentId)
+    payload.put("project", context.getProject)
     payload.put("status", status)
     payload.put("err_msg", errMsg)
     payload.put("update_info", updateInfo)
@@ -72,70 +110,9 @@ trait StageExec extends Logging {
     val params = new util.HashMap[String, String]()
     val config = KylinConfig.getInstanceFromEnv
     params.put(ParamsConstants.TIME_OUT, config.getUpdateJobInfoTimeout.toString)
-    params.put(ParamsConstants.JOB_TMP_DIR, config.getJobTmpDir(project, true))
+    params.put(ParamsConstants.JOB_TMP_DIR, config.getJobTmpDir(context.getProject, true))
     context.getReport.updateSparkJobInfo(params, url, json)
   }
-
-  def onStageFinished(result: Boolean): Unit = {
-    val taskId = getId
-    val segmentId = getSegmentId
-    val project = getJobContext.getProject
-    val status = if (result) ExecutableState.SUCCEED.toString else ExecutableState.ERROR.toString
-    val errMsg = null
-    val updateInfo: util.HashMap[String, String] = null
-
-    updateStageInfo(taskId, segmentId, project, status, errMsg, updateInfo)
-  }
-
-  def onBuildLayoutSuccess(layoutCount: Int): Unit = {
-    val taskId = getId
-    val segmentId = getSegmentId
-    val project = getJobContext.getProject
-    val status = null
-    val errMsg = null
-    val updateInfo: util.HashMap[String, String] = new util.HashMap[String, String]
-    updateInfo.put(NBatchConstants.P_INDEX_SUCCESS_COUNT, String.valueOf(layoutCount))
-
-    updateStageInfo(taskId, segmentId, project, status, errMsg, updateInfo)
-  }
-
-  def onStageSkipped(): Unit = {
-    val taskId = getId
-    val segmentId = getSegmentId
-    val project = getJobContext.getProject
-    val status = ExecutableState.SKIP.toString
-    val errMsg = null
-    val updateInfo: util.HashMap[String, String] = null
-
-    updateStageInfo(taskId, segmentId, project, status, errMsg, updateInfo)
-  }
-
-  def toWork(): Unit = {
-    onStageStart()
-    var result: Boolean = false
-    try {
-      execute()
-      result = true
-    } catch {
-      case throwable: Throwable =>
-        KylinBuildEnv.get().buildJobInfos.recordSegmentId(getSegmentId)
-        KylinBuildEnv.get().buildJobInfos.recordStageId(getId)
-        Throwables.propagate(throwable)
-    } finally onStageFinished(result)
-  }
-
-  def toWorkWithoutFinally(): Unit = {
-    onStageStart()
-    try {
-      execute()
-    } catch {
-      case throwable: Throwable =>
-        KylinBuildEnv.get().buildJobInfos.recordSegmentId(getSegmentId)
-        KylinBuildEnv.get().buildJobInfos.recordStageId(getId)
-        Throwables.propagate(throwable)
-    }
-  }
-
 
   def setId(id: String): Unit = {
     this.id = id

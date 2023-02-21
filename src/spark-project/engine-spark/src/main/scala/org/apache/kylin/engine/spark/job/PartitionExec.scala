@@ -91,6 +91,10 @@ private[job] trait PartitionExec {
     }
     logInfo(s"Segment $segmentId drained layout partition: " + //
       s"${results.asScala.map(lp => s"(${lp.layoutId} ${lp.partitionId})").mkString("[", ",", "]")}")
+
+    val buildJobInfos = KylinBuildEnv.get().buildJobInfos
+    buildJobInfos.recordCuboidsNumPerLayer(segmentId, results.size())
+
     class DFUpdate extends UnitOfWork.Callback[Int] {
       override def process(): Int = {
         // Merge into the newest data segment.

@@ -29,10 +29,14 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.builder.SnapshotBuilder;
+import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
+import org.apache.kylin.engine.spark.job.SegmentJob;
+import org.apache.kylin.engine.spark.job.SparkJobConstants;
 import org.apache.kylin.engine.spark.job.exec.BuildExec;
 import org.apache.kylin.engine.spark.job.stage.BuildParam;
 import org.apache.kylin.engine.spark.job.stage.StageExec;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -88,7 +92,7 @@ public class SegmentBuildJob extends SegmentJob {
             checkDateFormatIfExist(project, dataflowId);
         }
         val waiteForResource = WAITE_FOR_RESOURCE.create(this, null, null);
-        waiteForResource.onStageFinished(true);
+        waiteForResource.onStageFinished(ExecutableState.SUCCEED);
         infos.recordStageId("");
     }
 
@@ -135,8 +139,6 @@ public class SegmentBuildJob extends SegmentJob {
     protected void build() throws IOException {
         Stream<NDataSegment> segmentStream = config.isSegmentParallelBuildEnabled() ? //
                 readOnlySegments.parallelStream() : readOnlySegments.stream();
-        AtomicLong finishedSegmentCount = new AtomicLong(0);
-        val segmentsCount = readOnlySegments.size();
         segmentStream.forEach(seg -> {
             try (KylinConfig.SetAndUnsetThreadLocalConfig autoCloseConfig = KylinConfig
                     .setAndUnsetThreadLocalConfig(config)) {
@@ -156,14 +158,10 @@ public class SegmentBuildJob extends SegmentJob {
 
                 GATHER_FLAT_TABLE_STATS.createStage(this, seg, buildParam, exec);
                 BUILD_LAYER.createStage(this, seg, buildParam, exec);
+                REFRESH_COLUMN_BYTES.createStage(this, seg, buildParam, exec);
 
                 buildSegment(seg, exec);
 
-                val refreshColumnBytes = REFRESH_COLUMN_BYTES.createStage(this, seg, buildParam, exec);
-                refreshColumnBytes.toWorkWithoutFinally();
-                if (finishedSegmentCount.incrementAndGet() < segmentsCount) {
-                    refreshColumnBytes.onStageFinished(true);
-                }
             } catch (IOException e) {
                 Throwables.propagate(e);
             }

@@ -163,6 +163,27 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testExecutableStateCorrectness() {
+        assertTrue(ExecutableState.READY.isProgressing());
+        assertTrue(ExecutableState.RUNNING.isProgressing());
+
+        assertTrue(ExecutableState.SUCCEED.isFinalState());
+        assertTrue(ExecutableState.DISCARDED.isFinalState());
+        assertTrue(ExecutableState.SUICIDAL.isFinalState());
+
+        assertTrue(ExecutableState.ERROR.isNotProgressing());
+        assertTrue(ExecutableState.PAUSED.isNotProgressing());
+
+        assertTrue(ExecutableState.DISCARDED.isStoppedNonVoluntarily());
+        assertTrue(ExecutableState.PAUSED.isStoppedNonVoluntarily());
+        assertTrue(ExecutableState.READY.isStoppedNonVoluntarily());
+
+        assertTrue(ExecutableState.SUCCEED.isNotBad());
+        assertTrue(ExecutableState.SKIP.isNotBad());
+        assertTrue(ExecutableState.WARNING.isNotBad());
+    }
+
+    @Test
     public void testValidStateTransfer() {
         SucceedTestExecutable job = new SucceedTestExecutable();
         job.setJobType(JobTypeEnum.INDEX_BUILD);

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,10 @@ import lombok.val;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class NDataLayout implements Serializable {
 
+    public enum AbnormalType {
+        DATA_INCONSISTENT
+    }
+
     public static NDataLayout newDataLayout(NDataflow df, String segId, long layoutId) {
         return newDataLayout(NDataSegDetails.newSegDetails(df, segId), layoutId);
     }
@@ -52,6 +57,13 @@ public class NDataLayout implements Serializable {
         r.setSegDetails(segDetails);
         r.setLayoutId(layoutId);
         return r;
+    }
+
+    public static boolean filterWorkingLayout(NDataLayout layout) {
+        if (layout == null) {
+            return false;
+        }
+        return Objects.isNull(layout.getAbnormalType());
     }
 
     // ============================================================================
@@ -96,6 +108,11 @@ public class NDataLayout implements Serializable {
     @Setter
     @JsonProperty("multi_partition")
     private List<LayoutPartition> multiPartition = new ArrayList<>();
+
+    @Getter
+    @Setter
+    @JsonProperty("abnormal_type")
+    private AbnormalType abnormalType;
 
     public NDataLayout() {
         this.createTime = System.currentTimeMillis();
@@ -260,7 +277,7 @@ public class NDataLayout implements Serializable {
         if (segDetails == null || !segDetails.isCachedAndShared())
             return false;
 
-        for (NDataLayout cached : segDetails.getLayouts()) {
+        for (NDataLayout cached : segDetails.getWorkingLayouts()) {
             if (cached == this)
                 return true;
         }

@@ -148,12 +148,6 @@ abstract class BuildStage(private val jobContext: SegmentJob,
 
   override protected def recordTaskInfo(t: Task): Unit = {
     logInfo(s"Segment $segmentId submit task: ${t.getTaskDesc}")
-    KylinBuildEnv.get().buildJobInfos.recordCuboidsNumPerLayer(segmentId, 1)
-  }
-
-  override protected def reportTaskProgress(): Unit = {
-    val layoutCount = KylinBuildEnv.get().buildJobInfos.getSeg2cuboidsNumPerLayer.get(segmentId).asScala.sum
-    onBuildLayoutSuccess(layoutCount)
   }
 
   protected def buildStatistics(): Statistics = {

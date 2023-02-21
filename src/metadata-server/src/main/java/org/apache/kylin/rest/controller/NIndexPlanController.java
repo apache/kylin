@@ -48,6 +48,8 @@ import org.apache.kylin.rest.response.TableIndexResponse;
 import org.apache.kylin.rest.service.FusionIndexService;
 import org.apache.kylin.rest.service.IndexPlanService;
 import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.service.params.IndexPlanParams;
+import org.apache.kylin.rest.service.params.PaginationParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -178,6 +180,7 @@ public class NIndexPlanController extends NBasicController {
     @GetMapping(value = "/index")
     public EnvelopeResponse<FusionRuleDataResult<List<IndexResponse>>> getIndex(
             @RequestParam(value = "project") String project, @RequestParam(value = "model") String modelId, //
+            @RequestParam(value = "segment_id", required = false, defaultValue = "") String segmentId,
             @RequestParam(value = "sort_by", required = false, defaultValue = "") String order,
             @RequestParam(value = "reverse", required = false, defaultValue = "false") Boolean desc,
             @RequestParam(value = "sources", required = false, defaultValue = "") List<IndexEntity.Source> sources,
@@ -189,7 +192,9 @@ public class NIndexPlanController extends NBasicController {
             @RequestParam(value = "range", required = false, defaultValue = "") List<IndexEntity.Range> range) {
         checkProjectName(project);
         checkRequiredArg(MODEL_ID, modelId);
-        val indexes = fusionIndexService.getIndexes(project, modelId, key, status, order, desc, sources, ids, range);
+        IndexPlanParams indexPlanParams = new IndexPlanParams(project, modelId, segmentId, ids, sources, status, range);
+        PaginationParams paginationParams = new PaginationParams(offset, limit, order, desc);
+        val indexes = fusionIndexService.getIndexes(indexPlanParams, paginationParams, key);
         val indexUpdateEnabled = FusionIndexService.checkUpdateIndexEnabled(project, modelId);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
                 FusionRuleDataResult.get(indexes, offset, limit, indexUpdateEnabled), "");

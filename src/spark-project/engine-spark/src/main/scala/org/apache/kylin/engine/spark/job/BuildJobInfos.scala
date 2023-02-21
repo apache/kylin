@@ -24,10 +24,12 @@ import org.apache.spark.application.RetryInfo
 import org.apache.spark.sql.execution.SparkPlan
 
 import java.util
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 class BuildJobInfos {
   // BUILD
-  private val seg2cuboidsNumPerLayer: util.Map[String, util.List[Int]] = new util.HashMap[String, util.List[Int]]
+  private val seg2cuboidsNumPerLayer: util.Map[String, AtomicInteger] = new ConcurrentHashMap[String, AtomicInteger]()
 
   private val seg2SpanningTree: java.util.Map[String, NSpanningTree] = new util.HashMap[String, NSpanningTree]
 
@@ -157,22 +159,19 @@ class BuildJobInfos {
   }
 
   def recordCuboidsNumPerLayer(segId: String, num: Int): Unit = {
-    if (seg2cuboidsNumPerLayer.containsKey(segId)) {
-      seg2cuboidsNumPerLayer.get(segId).add(num)
-    } else {
-      val nums = new util.LinkedList[Int]()
-      nums.add(num)
-      seg2cuboidsNumPerLayer.put(segId, nums)
+    var counter = seg2cuboidsNumPerLayer.get(segId)
+    if (counter == null) {
+      seg2cuboidsNumPerLayer.putIfAbsent(segId, new AtomicInteger())
+      counter = seg2cuboidsNumPerLayer.get(segId)
     }
+    counter.addAndGet(num)
   }
 
   def clearCuboidsNumPerLayer(segId: String): Unit = {
-    if (seg2cuboidsNumPerLayer.containsKey(segId)) {
-      seg2cuboidsNumPerLayer.get(segId).clear()
-    }
+    seg2cuboidsNumPerLayer.remove(segId)
   }
 
-  def getSeg2cuboidsNumPerLayer: util.Map[String, util.List[Int]] = {
+  def getSeg2cuboidsNumPerLayer: util.Map[String, AtomicInteger] = {
     seg2cuboidsNumPerLayer
   }
 
