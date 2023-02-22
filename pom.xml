@@ -113,7 +113,7 @@
     <commons-lang.version>2.6</commons-lang.version>
     <commons-httpclient.version>3.1</commons-httpclient.version>
     <commons-io.version>2.11.0</commons-io.version>
-    <commons-upload.version>1.3.3</commons-upload.version>
+    <commons-upload.version>1.5</commons-upload.version>
     <commons-math3.version>3.1.1</commons-math3.version>
     <commons-collections.version>3.2.2</commons-collections.version>
     <commons-pool.version>2.5.0</commons-pool.version>
