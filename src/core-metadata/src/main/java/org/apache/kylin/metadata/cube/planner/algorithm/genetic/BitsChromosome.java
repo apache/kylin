@@ -20,10 +20,11 @@ package org.apache.kylin.metadata.cube.planner.algorithm.genetic;
 
 import java.math.BigInteger;
 import java.util.BitSet;
+import java.util.Objects;
 
 import org.apache.commons.math3.genetics.Chromosome;
 import org.apache.kylin.metadata.cube.planner.algorithm.BenefitPolicy;
-import org.apache.kylin.metadata.cube.planner.algorithm.CuboidBenefitModel;
+import org.apache.kylin.metadata.cube.planner.algorithm.LayoutBenefitModel;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -39,7 +40,7 @@ public class BitsChromosome extends Chromosome {
      * BitSet representing the chromosome
      */
     private final BitSet representation;
-    private final ImmutableSet<BigInteger> cuboids;
+    private final ImmutableSet<BigInteger> layouts;
 
     private final BenefitPolicy benefitPolicy;
 
@@ -49,11 +50,11 @@ public class BitsChromosome extends Chromosome {
         this.helper = helper;
 
         this.representation = representation;
-        this.cuboids = ImmutableSet.copyOf(helper.toCuboidList(representation));
+        this.layouts = ImmutableSet.copyOf(helper.toLayoutList(representation));
 
         this.benefitPolicy = benefitPolicy;
 
-        this.spaceCost = helper.getCuboidSize(Sets.newHashSet(cuboids));
+        this.spaceCost = helper.getLayoutSize(Sets.newHashSet(layouts));
     }
 
     public BitsChromosome newBitsChromosome(BitSet newRepresentation) {
@@ -73,14 +74,14 @@ public class BitsChromosome extends Chromosome {
         return helper.getLength();
     }
 
-    public ImmutableSet<BigInteger> getCuboids() {
-        return cuboids;
+    public ImmutableSet<BigInteger> getLayouts() {
+        return layouts;
     }
 
     @Override
     public synchronized double fitness() {
-        CuboidBenefitModel.BenefitModel benefitModel = benefitPolicy.calculateBenefitTotal(cuboids,
-                helper.getMandatoryCuboids());
+        LayoutBenefitModel.BenefitModel benefitModel = benefitPolicy.calculateBenefitTotal(layouts,
+                helper.getMandatoryLayouts());
         double totalBenefit = benefitModel.benefit;
         if (spaceCost > helper.spaceLimit) {
             totalBenefit = totalBenefit * helper.spaceLimit / spaceCost;
@@ -102,9 +103,9 @@ public class BitsChromosome extends Chromosome {
 
         BitsChromosome that = (BitsChromosome) o;
 
-        if (helper != null ? !helper.equals(that.helper) : that.helper != null)
+        if (!Objects.equals(helper, that.helper))
             return false;
-        return representation != null ? representation.equals(that.representation) : that.representation == null;
+        return Objects.equals(representation, that.representation);
 
     }
 

@@ -18,7 +18,10 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import com.google.common.collect.Sets
+import java.math.BigInteger
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+import java.util.{Locale, Objects, Timer, TimerTask}
+
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.util.HadoopUtil
@@ -31,7 +34,7 @@ import org.apache.kylin.engine.spark.job.NSparkCubingUtil.convertFromDot
 import org.apache.kylin.engine.spark.job.stage.{BuildParam, StageExec}
 import org.apache.kylin.engine.spark.job.{FiltersUtil, SegmentJob, TableMetaManager}
 import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
-import org.apache.kylin.engine.spark.model.planner.{CuboIdToLayoutUtils, FlatTableToCostUtils}
+import org.apache.kylin.engine.spark.model.planner.{FlatTableToCostUtils, LayoutIdToEntityUtils}
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.metadata.cube.model.NDataSegment
@@ -45,15 +48,14 @@ import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.utils.ProxyThreadUtils
 
-import java.math.BigInteger
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.{Locale, Objects, Timer, TimerTask}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
 import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.util.{Failure, Success, Try}
+
+import com.google.common.collect.Sets
 
 abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
                                     private val dataSegment: NDataSegment,
@@ -158,27 +160,32 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     logInfo(s"Segment $segmentId calculate the cost, the dimension in rule index is: " +
       s"${indexPlan.getRuleBasedIndex.getDimensions}, " +
       s"the column in flat table is: ${tableDesc.getColumnIds}")
-    val cuboIdsCost = FlatTableToCostUtils.generateCost(javaRddFlatTable, config, indexPlan.getRuleBasedIndex, tableDesc)
+    val layoutIdsCost = FlatTableToCostUtils.generateCost(javaRddFlatTable,
+      config, indexPlan.getRuleBasedIndex, tableDesc)
     // get the count for the flat table
     val sourceCount = FLAT_TABLE.count()
     logInfo(s"The total source count is $sourceCount")
     sparkSession.sparkContext.setJobDescription(null)
-    val cuboIdToRowCount = FlatTableToCostUtils.getCuboidRowCountMapFromSampling(cuboIdsCost)
-    (cuboIdToRowCount, sourceCount)
+    val layoutIdToRowCount = FlatTableToCostUtils.getLayoutRowCountMapFromSampling(layoutIdsCost)
+    (layoutIdToRowCount, sourceCount)
   }
 
-  protected def getRecommendedLayoutAndUpdateMetadata(cuboIdToRowCount: java.util.Map[BigInteger, java.lang.Long],
-                                                      sourceCount: Long): Unit = {
-    logDebug(s"Segment $segmentId get the row count cost $cuboIdToRowCount")
-    val cuboIdToSize = FlatTableToCostUtils.
-      getCuboidSizeMapFromSampling(cuboIdToRowCount, sourceCount, indexPlan.getRuleBasedIndex, config, tableDesc)
-    logDebug(s"Segment $segmentId get the size cost $cuboIdToSize")
-    val cuboids = CostBasePlannerUtils.
-      getRecommendCuboidList(indexPlan.getRuleBasedIndex, config, dataModel.getAlias, cuboIdToRowCount, cuboIdToSize)
-    logDebug(s"Segment $segmentId get the recommended cuboid ${cuboids.keySet()}")
-    val allRecommendedAggColOrders = CuboIdToLayoutUtils.convertCuboIdsToAggIndexColOrders(cuboids, indexPlan.getRuleBasedIndex)
-    logInfo(s"Segment $segmentId get ${allRecommendedAggColOrders.size()} recommended layouts with duplicate layouts removed.")
-    jobContext.setRecommendAggColOrders(allRecommendedAggColOrders)
+  /**
+   * Get recommended layouts and convert them to colOrders,
+   * which will serve as the basis for updating the IndexPlan in the next step.
+   */
+  protected def recordRecAggColOrders(layoutIdToRowCount: java.util.Map[BigInteger, java.lang.Long],
+                                      sourceCount: Long): Unit = {
+    logDebug(s"Segment $segmentId get the row count cost $layoutIdToRowCount")
+    val layoutIdToSize = FlatTableToCostUtils.getLayoutSizeMapFromSampling(layoutIdToRowCount)
+    logDebug(s"Segment $segmentId get the size cost $layoutIdToSize")
+    val layouts = CostBasePlannerUtils
+      .getRecommendLayoutList(indexPlan.getRuleBasedIndex,
+        config, dataModel.getAlias, layoutIdToRowCount, layoutIdToSize)
+    logDebug(s"Segment $segmentId get the recommended layout ${layouts.keySet()}")
+    val allRecAggColOrders = LayoutIdToEntityUtils.convertLayoutIdsToColOrders(layouts, indexPlan.getRuleBasedIndex)
+    logInfo(s"Segment $segmentId get ${allRecAggColOrders.size()} recommended layouts with duplicate layouts removed.")
+    jobContext.setRecommendAggColOrders(allRecAggColOrders)
   }
 
   protected def generateFlatTable(): Dataset[Row] = {

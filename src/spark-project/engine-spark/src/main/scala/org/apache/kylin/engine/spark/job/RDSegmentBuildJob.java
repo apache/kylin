@@ -21,9 +21,6 @@ package org.apache.kylin.engine.spark.job;
 import java.io.IOException;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
-import org.apache.kylin.engine.spark.job.RDPartitionBuildExec;
-import org.apache.kylin.engine.spark.job.RDSegmentBuildExec;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 

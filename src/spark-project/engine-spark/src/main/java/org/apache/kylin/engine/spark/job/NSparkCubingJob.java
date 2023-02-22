@@ -18,16 +18,19 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
-import io.kyligence.kap.secondstorage.SecondStorageConstants;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.val;
+import static java.util.stream.Collectors.joining;
+import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCleanUpTransactionalTableJob;
+import static org.apache.kylin.job.factory.JobFactoryConstant.CUBE_JOB_FACTORY;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -54,18 +57,17 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
-import static java.util.stream.Collectors.joining;
-import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCleanUpTransactionalTableJob;
-import static org.apache.kylin.job.factory.JobFactoryConstant.CUBE_JOB_FACTORY;
+import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
+import io.kyligence.kap.secondstorage.SecondStorageConstants;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.val;
 
 public class NSparkCubingJob extends DefaultExecutableOnModel {
 
@@ -103,8 +105,8 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
     }
 
     @VisibleForTesting
-    public static NSparkCubingJob createIncBuildJob(Set<NDataSegment> segments, Set<LayoutEntity> layouts, String submitter,
-                                                    Set<JobBucket> buckets) {
+    public static NSparkCubingJob createIncBuildJob(Set<NDataSegment> segments, Set<LayoutEntity> layouts,
+            String submitter, Set<JobBucket> buckets) {
         return create(segments, layouts, submitter, JobTypeEnum.INC_BUILD, RandomUtil.randomUUIDStr(), null, null,
                 buckets);
     }
@@ -437,7 +439,7 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
     private static void enableCostBasedPlannerIfNeed(NDataflow df, Set<NDataSegment> segments, NSparkCubingJob job) {
         // need run the cost based planner:
         // 1. config enable the cube planner
-        // 2. the model dose not have the `layout_cost_based_pruned_list`
+        // 2. the model does not have the `layout_cost_based_pruned_list`
         // 3. rule index has agg group
         // 4. just only one segment to be built/refresh(other case will throw exception)
         IndexPlan indexPlan = df.getIndexPlan();
@@ -461,14 +463,14 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
                     // Add the parameter `P_JOB_ENABLE_PLANNER` which is used to decide whether to use the  cube planner
                     job.setParam(NBatchConstants.P_JOB_ENABLE_PLANNER, Boolean.TRUE.toString());
                 } else {
-                    throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR, String.format(Locale.ROOT,
+                    throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR,
                             "There are running job for this model when submit the build job with cost based planner, "
-                                    + "please wait for other jobs to finish or cancel them"));
+                                    + "please wait for other jobs to finish or cancel them");
                 }
             } else {
                 throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR,
-                        String.format(Locale.ROOT, "The number of segments to be built or refreshed must be 1, "
-                                + "This is the first time to submit build job with enable cost based planner"));
+                        "The number of segments to be built or refreshed must be 1, "
+                                + "This is the first time to submit build job with enable cost based planner");
             }
         }
     }

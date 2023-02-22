@@ -22,34 +22,33 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
-public abstract class AbstractRecommendAlgorithm implements CuboidRecommendAlgorithm {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractRecommendAlgorithm.class);
+@Slf4j
+public abstract class AbstractRecommendAlgorithm implements LayoutRecommendAlgorithm {
 
-    protected final CuboidStats cuboidStats;
+    protected final LayoutStats layoutStats;
     protected final BenefitPolicy benefitPolicy;
 
-    private AtomicBoolean cancelRequested = new AtomicBoolean(false);
-    private AtomicBoolean canceled = new AtomicBoolean(false);
+    private final AtomicBoolean cancelRequested = new AtomicBoolean(false);
+    private final AtomicBoolean canceled = new AtomicBoolean(false);
 
-    private long timeoutMillis;
+    private final long timeoutMillis;
 
-    public AbstractRecommendAlgorithm(final long timeout, BenefitPolicy benefitPolicy, CuboidStats cuboidStats) {
+    public AbstractRecommendAlgorithm(final long timeout, BenefitPolicy benefitPolicy, LayoutStats layoutStats) {
         if (timeout <= 0) {
             this.timeoutMillis = Long.MAX_VALUE;
         } else {
             this.timeoutMillis = timeout;
         }
-        this.cuboidStats = cuboidStats;
+        this.layoutStats = layoutStats;
         this.benefitPolicy = benefitPolicy;
     }
 
     @Override
     public List<BigInteger> recommend(double expansionRate) {
-        double spaceLimit = cuboidStats.getBaseCuboidSize() * expansionRate;
-        logger.info("space limit for the algorithm is {} with expansion rate {}", spaceLimit, expansionRate);
+        double spaceLimit = layoutStats.getBaseLayoutSize() * expansionRate;
+        log.info("space limit for the algorithm is {} with expansion rate {}", spaceLimit, expansionRate);
         return start(spaceLimit);
     }
 
@@ -68,13 +67,13 @@ public abstract class AbstractRecommendAlgorithm implements CuboidRecommendAlgor
         if (cancelRequested.get()) {
             canceled.set(true);
             cancelRequested.set(false);
-            logger.warn("Algorithm is canceled.");
+            log.warn("Algorithm is canceled.");
             return true;
         }
         final long currentTimeMillis = System.currentTimeMillis();
         if (currentTimeMillis > timeoutMillis) {
             canceled.set(true);
-            logger.warn("Algorithm exceeds time limit.");
+            log.warn("Algorithm exceeds time limit.");
             return true;
         }
         return false;

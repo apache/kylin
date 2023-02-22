@@ -30,15 +30,14 @@ import org.apache.commons.math3.genetics.Population;
 import org.apache.commons.math3.genetics.StoppingCondition;
 import org.apache.kylin.metadata.cube.planner.algorithm.AbstractRecommendAlgorithm;
 import org.apache.kylin.metadata.cube.planner.algorithm.BenefitPolicy;
-import org.apache.kylin.metadata.cube.planner.algorithm.CuboidStats;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.kylin.metadata.cube.planner.algorithm.LayoutStats;
 
 import com.google.common.collect.Lists;
 
-public class GeneticAlgorithm extends AbstractRecommendAlgorithm {
+import lombok.extern.slf4j.Slf4j;
 
-    private static final Logger logger = LoggerFactory.getLogger(GeneticAlgorithm.class);
+@Slf4j
+public class GeneticAlgorithm extends AbstractRecommendAlgorithm {
 
     private final org.apache.commons.math3.genetics.GeneticAlgorithm geneticAlgorithm;
 
@@ -59,25 +58,25 @@ public class GeneticAlgorithm extends AbstractRecommendAlgorithm {
      */
     private final int maxPopulationSize = 510;
 
-    public GeneticAlgorithm(final long timeout, BenefitPolicy benefitPolicy, CuboidStats cuboidStats) {
-        super(timeout, benefitPolicy, cuboidStats);
+    public GeneticAlgorithm(final long timeout, BenefitPolicy benefitPolicy, LayoutStats layoutStats) {
+        super(timeout, benefitPolicy, layoutStats);
         this.geneticAlgorithm = new org.apache.commons.math3.genetics.GeneticAlgorithm(new BitsOnePointCrossover(),
                 crossoverRate, new BitsMutation(), mutationRate, new RouletteWheelSelection());
     }
 
     @Override
     public List<BigInteger> start(double maxSpaceLimit) {
-        logger.debug("Genetic Algorithm started.");
+        log.debug("Genetic Algorithm started.");
 
-        //Initial mandatory cuboids
+        //Initial mandatory layouts
         double remainingSpace = maxSpaceLimit;
-        for (BigInteger mandatoryOne : cuboidStats.getAllCuboidsForMandatory()) {
-            if (cuboidStats.getCuboidSize(mandatoryOne) != null) {
-                remainingSpace -= cuboidStats.getCuboidSize(mandatoryOne);
+        for (BigInteger mandatoryOne : layoutStats.getAllLayoutsForMandatory()) {
+            if (layoutStats.getLayoutSize(mandatoryOne) != null) {
+                remainingSpace -= layoutStats.getLayoutSize(mandatoryOne);
             }
         }
 
-        BitsChromosomeHelper helper = new BitsChromosomeHelper(remainingSpace, cuboidStats);
+        BitsChromosomeHelper helper = new BitsChromosomeHelper(remainingSpace, layoutStats);
 
         //Generate a population randomly
         Population initial = initRandomPopulation(helper);
@@ -90,24 +89,24 @@ public class GeneticAlgorithm extends AbstractRecommendAlgorithm {
         //Start the evolution
         Population current = geneticAlgorithm.evolve(initial, stopCondition);
         BitsChromosome chromosome = (BitsChromosome) current.getFittestChromosome();
-        logger.debug("Genetic Algorithm finished.");
+        log.debug("Genetic Algorithm finished.");
         List<BigInteger> finalList = Lists.newArrayList();
-        finalList.addAll(helper.getMandatoryCuboids());
-        finalList.addAll(chromosome.getCuboids());
+        finalList.addAll(helper.getMandatoryLayouts());
+        finalList.addAll(chromosome.getLayouts());
 
         double totalSpace = 0;
-        if (logger.isTraceEnabled()) {
-            for (BigInteger cuboid : finalList) {
-                Double unitSpace = cuboidStats.getCuboidSize(cuboid);
+        if (log.isTraceEnabled()) {
+            for (BigInteger layout : finalList) {
+                Double unitSpace = layoutStats.getLayoutSize(layout);
                 if (unitSpace != null) {
-                    logger.trace(String.format(Locale.ROOT, "cuboidId %d and Space: %f", cuboid, unitSpace));
+                    log.trace(String.format(Locale.ROOT, "layoutId %d and Space: %f", layout, unitSpace));
                     totalSpace += unitSpace;
                 } else {
-                    logger.trace(String.format(Locale.ROOT, "mandatory cuboidId %d", cuboid));
+                    log.trace(String.format(Locale.ROOT, "mandatory layoutId %d", layout));
                 }
             }
-            logger.trace("Total Space:" + totalSpace);
-            logger.trace("Space Expansion Rate:" + totalSpace / cuboidStats.getBaseCuboidSize());
+            log.trace("Total Space:" + totalSpace);
+            log.trace("Space Expansion Rate:" + totalSpace / layoutStats.getBaseLayoutSize());
         }
         return finalList;
     }
@@ -124,7 +123,7 @@ public class GeneticAlgorithm extends AbstractRecommendAlgorithm {
                 int j = org.apache.commons.math3.genetics.GeneticAlgorithm.getRandomGenerator()
                         .nextInt(helper.getLength());
                 if (!bitSetForSelection.get(j)) {
-                    totalSpace += helper.getCuboidSizeByBitIndex(j);
+                    totalSpace += helper.getLayoutSizeByBitIndex(j);
                     bitSetForSelection.set(j);
                 }
             }

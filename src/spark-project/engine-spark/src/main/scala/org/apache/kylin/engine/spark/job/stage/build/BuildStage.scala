@@ -18,7 +18,10 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import com.google.common.collect.Queues
+import java.util
+import java.util.Objects
+import java.util.concurrent.CountDownLatch
+
 import org.apache.commons.math3.ml.clustering.{Clusterable, KMeansPlusPlusClusterer}
 import org.apache.commons.math3.ml.distance.EarthMoversDistance
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
@@ -37,10 +40,10 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.storage.StorageLevel
 
-import java.util.Objects
-import java.util.concurrent.CountDownLatch
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+
+import com.google.common.collect.Queues
 
 
 abstract class BuildStage(private val jobContext: SegmentJob,
@@ -63,8 +66,10 @@ abstract class BuildStage(private val jobContext: SegmentJob,
 
   // These parameters can be changed when running the cube planner, should use the
   // `def` to get the latest data
-  protected def readOnlyLayouts = jobContext.getReadOnlyLayouts
+  protected def readOnlyLayouts: util.Set[LayoutEntity] = jobContext.getReadOnlyLayouts
+
   private def spanningTree = buildParam.getSpanningTree
+
   private def flatTableDesc = buildParam.getFlatTableDesc
 
   // Needed variables from data segment.

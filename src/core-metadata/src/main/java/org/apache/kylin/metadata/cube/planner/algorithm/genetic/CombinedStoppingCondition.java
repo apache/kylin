@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class CombinedStoppingCondition implements StoppingCondition {
     private static final Logger logger = LoggerFactory.getLogger(GeneticAlgorithm.class);
 
-    private List<StoppingCondition> conditions;
+    private final List<StoppingCondition> conditions;
 
     public CombinedStoppingCondition(List<StoppingCondition> conditions) {
         this.conditions = conditions;

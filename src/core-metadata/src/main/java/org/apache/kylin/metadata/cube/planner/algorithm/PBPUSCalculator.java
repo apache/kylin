@@ -25,31 +25,31 @@ import com.google.common.collect.ImmutableMap;
 
 public class PBPUSCalculator extends BPUSCalculator {
 
-    public PBPUSCalculator(final CuboidStats cuboidStats) {
-        super(cuboidStats);
+    public PBPUSCalculator(final LayoutStats layoutStats) {
+        super(layoutStats);
     }
 
-    protected PBPUSCalculator(CuboidStats cuboidStats, ImmutableMap<BigInteger, Long> initCuboidAggCostMap) {
-        super(cuboidStats, initCuboidAggCostMap);
+    protected PBPUSCalculator(LayoutStats layoutStats, ImmutableMap<BigInteger, Long> initLayoutAggCostMap) {
+        super(layoutStats, initLayoutAggCostMap);
     }
 
     @Override
-    protected double getCostSaving(BigInteger descendant, BigInteger cuboid) {
-        return getCuboidHitProbability(descendant) * super.getCostSaving(descendant, cuboid);
+    protected double getCostSaving(BigInteger descendant, BigInteger layout) {
+        return getLayoutHitProb(descendant) * super.getCostSaving(descendant, layout);
     }
 
-    protected double getCuboidHitProbability(BigInteger cuboid) {
-        return cuboidStats.getCuboidHitProbability(cuboid);
+    protected double getLayoutHitProb(BigInteger layout) {
+        return layoutStats.getLayoutHitProb(layout);
     }
 
     public double getMinBenefitRatio() {
-        int cuboidDomainSize = cuboidStats.getAllCuboidsForSelection().size();
-        Preconditions.checkArgument(cuboidDomainSize > 0, "The set of cuboids for selection is empty!!!");
-        return super.getMinBenefitRatio() / cuboidDomainSize;
+        int layoutDomainSize = layoutStats.getAllLayoutsForSelection().size();
+        Preconditions.checkArgument(layoutDomainSize > 0, "The set of layouts for selection is empty!!!");
+        return super.getMinBenefitRatio() / layoutDomainSize;
     }
 
     @Override
     public BenefitPolicy getInstance() {
-        return new PBPUSCalculator(this.cuboidStats, this.initCuboidAggCostMap);
+        return new PBPUSCalculator(this.layoutStats, this.initLayoutAggCostMap);
     }
 }

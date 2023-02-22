@@ -53,7 +53,6 @@ public class BitsMutation implements MutationPolicy {
         // change it
         newNey.set(geneIndex, !newNey.get(geneIndex));
 
-        Chromosome newChrom = origChrom.newBitsChromosome(newNey);
-        return newChrom;
+        return origChrom.newBitsChromosome(newNey);
     }
 }

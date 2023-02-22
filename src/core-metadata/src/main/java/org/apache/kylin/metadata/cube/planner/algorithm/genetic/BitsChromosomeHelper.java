@@ -22,9 +22,10 @@ import java.math.BigInteger;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
-import org.apache.kylin.metadata.cube.planner.algorithm.CuboidStats;
+import org.apache.kylin.metadata.cube.planner.algorithm.LayoutStats;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -33,37 +34,37 @@ import com.google.common.collect.Lists;
 public class BitsChromosomeHelper {
 
     public final double spaceLimit;
-    private final CuboidStats cuboidStats;
-    private final CuboidEncoder cuboidEncoder;
+    private final LayoutStats layoutStats;
+    private final LayoutEncoder layoutEncoder;
 
-    public BitsChromosomeHelper(final double spaceLimit, final CuboidStats cuboidStats) {
+    public BitsChromosomeHelper(final double spaceLimit, final LayoutStats layoutStats) {
         this.spaceLimit = spaceLimit;
-        this.cuboidStats = cuboidStats;
-        this.cuboidEncoder = new CuboidEncoder(cuboidStats.getAllCuboidsForSelection());
+        this.layoutStats = layoutStats;
+        this.layoutEncoder = new LayoutEncoder(layoutStats.getAllLayoutsForSelection());
     }
 
-    public ImmutableSet<BigInteger> getMandatoryCuboids() {
-        return cuboidStats.getAllCuboidsForMandatory();
+    public ImmutableSet<BigInteger> getMandatoryLayouts() {
+        return layoutStats.getAllLayoutsForMandatory();
     }
 
-    public List<BigInteger> toCuboidList(BitSet bits) {
-        return cuboidEncoder.toCuboidList(bits);
+    public List<BigInteger> toLayoutList(BitSet bits) {
+        return layoutEncoder.toLayoutList(bits);
     }
 
-    public double getCuboidSize(Set<BigInteger> cuboids) {
+    public double getLayoutSize(Set<BigInteger> layouts) {
         double ret = 0;
-        for (BigInteger cuboid : cuboids) {
-            ret += cuboidStats.getCuboidSize(cuboid);
+        for (BigInteger layout : layouts) {
+            ret += layoutStats.getLayoutSize(layout);
         }
         return ret;
     }
 
-    public double getCuboidSizeByBitIndex(int index) {
-        return cuboidStats.getCuboidSize(cuboidEncoder.cuboidDomain.get(index));
+    public double getLayoutSizeByBitIndex(int index) {
+        return layoutStats.getLayoutSize(layoutEncoder.layoutDomain.get(index));
     }
 
     public int getLength() {
-        return cuboidEncoder.cuboidDomain.size();
+        return layoutEncoder.layoutDomain.size();
     }
 
     @Override
@@ -74,31 +75,30 @@ public class BitsChromosomeHelper {
             return false;
 
         BitsChromosomeHelper that = (BitsChromosomeHelper) o;
-
-        return cuboidEncoder != null ? cuboidEncoder.equals(that.cuboidEncoder) : that.cuboidEncoder == null;
+        return Objects.equals(layoutEncoder, that.layoutEncoder);
 
     }
 
     @Override
     public int hashCode() {
-        return cuboidEncoder != null ? cuboidEncoder.hashCode() : 0;
+        return layoutEncoder != null ? layoutEncoder.hashCode() : 0;
     }
 
-    private static class CuboidEncoder {
-        public final ImmutableList<BigInteger> cuboidDomain;
+    private static class LayoutEncoder {
+        public final ImmutableList<BigInteger> layoutDomain;
 
-        public CuboidEncoder(Set<BigInteger> cuboidSet) {
-            List<BigInteger> cuboidList = Lists.newArrayList(cuboidSet);
-            Collections.sort(cuboidList, Collections.reverseOrder());
-            this.cuboidDomain = ImmutableList.copyOf(cuboidList);
+        public LayoutEncoder(Set<BigInteger> layoutSet) {
+            List<BigInteger> layoutList = Lists.newArrayList(layoutSet);
+            layoutList.sort(Collections.reverseOrder());
+            this.layoutDomain = ImmutableList.copyOf(layoutList);
         }
 
-        public List<BigInteger> toCuboidList(BitSet bits) {
-            List<BigInteger> cuboids = Lists.newArrayListWithExpectedSize(bits.cardinality());
+        public List<BigInteger> toLayoutList(BitSet bits) {
+            List<BigInteger> layouts = Lists.newArrayListWithExpectedSize(bits.cardinality());
             for (int i = bits.nextSetBit(0); i >= 0; i = bits.nextSetBit(i + 1)) {
-                cuboids.add(cuboidDomain.get(i));
+                layouts.add(layoutDomain.get(i));
             }
-            return cuboids;
+            return layouts;
         }
 
         @Override
@@ -108,15 +108,14 @@ public class BitsChromosomeHelper {
             if (o == null || getClass() != o.getClass())
                 return false;
 
-            CuboidEncoder that = (CuboidEncoder) o;
-
-            return cuboidDomain != null ? cuboidDomain.equals(that.cuboidDomain) : that.cuboidDomain == null;
+            LayoutEncoder that = (LayoutEncoder) o;
+            return Objects.equals(layoutDomain, that.layoutDomain);
 
         }
 
         @Override
         public int hashCode() {
-            return cuboidDomain != null ? cuboidDomain.hashCode() : 0;
+            return layoutDomain != null ? layoutDomain.hashCode() : 0;
         }
     }
 }

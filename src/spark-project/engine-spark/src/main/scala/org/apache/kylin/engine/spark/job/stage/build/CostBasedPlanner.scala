@@ -30,7 +30,7 @@ class CostBasedPlanner(jobContext: SegmentJob, dataSegment: NDataSegment, buildP
   extends FlatTableAndDictBase(jobContext, dataSegment, buildParam) {
   override def execute(): Unit = {
     val (cost, sourceCount) = generateCostTable()
-    getRecommendedLayoutAndUpdateMetadata(cost, sourceCount)
+    recordRecAggColOrders(cost, sourceCount)
 
     val result = jobContext.updateIndexPlanIfNeed()
     if (result) {

@@ -22,12 +22,12 @@ import java.math.BigInteger;
 import java.util.List;
 
 /**
- * Algorithm to calculate the cuboid benefit and recommend cost-effective cuboid list based on the cube statistics.
+ * Algorithm to calculate the layout benefit and recommend cost-effective layout list based on the cube statistics.
  */
-public interface CuboidRecommendAlgorithm {
+public interface LayoutRecommendAlgorithm {
 
     /**
-     * Return a list of recommended cuboids for the building segment based on expansionRate
+     * Return a list of recommended layouts for the building segment based on expansionRate
      *
      */
     List<BigInteger> recommend(double expansionRate);

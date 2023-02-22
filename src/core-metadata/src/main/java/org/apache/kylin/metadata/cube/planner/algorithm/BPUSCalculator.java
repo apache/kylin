@@ -23,65 +23,64 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class BPUSCalculator implements BenefitPolicy {
-    private static Logger logger = LoggerFactory.getLogger(BPUSCalculator.class);
 
-    protected final CuboidStats cuboidStats;
-    protected final ImmutableMap<BigInteger, Long> initCuboidAggCostMap;
-    protected final Map<BigInteger, Long> processCuboidAggCostMap;
+    protected final LayoutStats layoutStats;
+    protected final ImmutableMap<BigInteger, Long> initLayoutAggCostMap;
+    protected final Map<BigInteger, Long> processLayoutAggCostMap;
 
-    public BPUSCalculator(CuboidStats cuboidStats) {
-        this.cuboidStats = cuboidStats;
-        this.initCuboidAggCostMap = ImmutableMap.copyOf(initCuboidAggCostMap());
-        this.processCuboidAggCostMap = Maps.newHashMap(initCuboidAggCostMap);
+    public BPUSCalculator(LayoutStats layoutStats) {
+        this.layoutStats = layoutStats;
+        this.initLayoutAggCostMap = ImmutableMap.copyOf(initLayoutAggCostMap());
+        this.processLayoutAggCostMap = Maps.newHashMap(initLayoutAggCostMap);
     }
 
-    protected BPUSCalculator(CuboidStats cuboidStats, ImmutableMap<BigInteger, Long> initCuboidAggCostMap) {
-        this.cuboidStats = cuboidStats;
-        this.initCuboidAggCostMap = initCuboidAggCostMap;
-        this.processCuboidAggCostMap = Maps.newHashMap(initCuboidAggCostMap);
+    protected BPUSCalculator(LayoutStats layoutStats, ImmutableMap<BigInteger, Long> initLayoutAggCostMap) {
+        this.layoutStats = layoutStats;
+        this.initLayoutAggCostMap = initLayoutAggCostMap;
+        this.processLayoutAggCostMap = Maps.newHashMap(initLayoutAggCostMap);
     }
 
-    private Map<BigInteger, Long> initCuboidAggCostMap() {
-        Map<BigInteger, Long> cuboidAggCostMap = Maps.newHashMap();
-        //Initialize stats for mandatory cuboids
-        for (BigInteger cuboid : cuboidStats.getAllCuboidsForMandatory()) {
-            if (getCuboidCost(cuboid) != null) {
-                cuboidAggCostMap.put(cuboid, getCuboidCost(cuboid));
+    private Map<BigInteger, Long> initLayoutAggCostMap() {
+        Map<BigInteger, Long> layoutAggCostMap = Maps.newHashMap();
+        //Initialize stats for mandatory layouts
+        for (BigInteger layout : layoutStats.getAllLayoutsForMandatory()) {
+            if (getLayoutCost(layout) != null) {
+                layoutAggCostMap.put(layout, getLayoutCost(layout));
             }
         }
 
-        //Initialize stats for selection cuboids
-        long baseCuboidCost = getCuboidCost(cuboidStats.getBaseCuboid());
-        for (BigInteger cuboid : cuboidStats.getAllCuboidsForSelection()) {
-            long leastCost = baseCuboidCost;
-            for (Map.Entry<BigInteger, Long> cuboidTargetEntry : cuboidAggCostMap.entrySet()) {
+        //Initialize stats for selection layouts
+        long baseLayoutCost = getLayoutCost(layoutStats.getBaseLayout());
+        for (BigInteger layout : layoutStats.getAllLayoutsForSelection()) {
+            long leastCost = baseLayoutCost;
+            for (Map.Entry<BigInteger, Long> layoutTargetEntry : layoutAggCostMap.entrySet()) {
                 // use the equal to check two value
-                if ((cuboid.or(cuboidTargetEntry.getKey())).equals(cuboidTargetEntry.getKey())) {
-                    if (leastCost > cuboidTargetEntry.getValue()) {
-                        leastCost = cuboidTargetEntry.getValue();
+                if ((layout.or(layoutTargetEntry.getKey())).equals(layoutTargetEntry.getKey())) {
+                    if (leastCost > layoutTargetEntry.getValue()) {
+                        leastCost = layoutTargetEntry.getValue();
                     }
                 }
             }
-            cuboidAggCostMap.put(cuboid, leastCost);
+            layoutAggCostMap.put(layout, leastCost);
         }
-        return cuboidAggCostMap;
+        return layoutAggCostMap;
     }
 
     @Override
-    public CuboidBenefitModel.BenefitModel calculateBenefit(BigInteger cuboid, Set<BigInteger> selected) {
+    public LayoutBenefitModel.BenefitModel calculateBenefit(BigInteger layout, Set<BigInteger> selected) {
         double totalCostSaving = 0;
         int benefitCount = 0;
-        for (BigInteger descendant : cuboidStats.getAllDescendants(cuboid)) {
+        for (BigInteger descendant : layoutStats.getAllDescendants(layout)) {
             if (!selected.contains(descendant)) {
-                double costSaving = getCostSaving(descendant, cuboid);
+                double costSaving = getCostSaving(descendant, layout);
                 if (costSaving > 0) {
                     totalCostSaving += costSaving;
                     benefitCount++;
@@ -89,87 +88,87 @@ public class BPUSCalculator implements BenefitPolicy {
             }
         }
 
-        double spaceCost = calculateSpaceCost(cuboid);
+        double spaceCost = calculateSpaceCost(layout);
         double benefitPerUnitSpace = totalCostSaving / spaceCost;
-        return new CuboidBenefitModel.BenefitModel(benefitPerUnitSpace, benefitCount);
+        return new LayoutBenefitModel.BenefitModel(benefitPerUnitSpace, benefitCount);
     }
 
     @Override
-    public CuboidBenefitModel.BenefitModel calculateBenefitTotal(Set<BigInteger> cuboidsToAdd,
+    public LayoutBenefitModel.BenefitModel calculateBenefitTotal(Set<BigInteger> layoutsToAdd,
             Set<BigInteger> selected) {
         Set<BigInteger> selectedInner = Sets.newHashSet(selected);
-        Map<BigInteger, Long> cuboidAggCostMapCopy = Maps.newHashMap(processCuboidAggCostMap);
-        for (BigInteger cuboid : cuboidsToAdd) {
-            selectedInner.add(cuboid);
-            propagateAggregationCost(cuboid, selectedInner, cuboidAggCostMapCopy);
+        Map<BigInteger, Long> layoutAggCostMapCopy = Maps.newHashMap(processLayoutAggCostMap);
+        for (BigInteger layout : layoutsToAdd) {
+            selectedInner.add(layout);
+            propagateAggregationCost(layout, selectedInner, layoutAggCostMapCopy);
         }
         double totalCostSaving = 0;
         int benefitCount = 0;
-        for (Map.Entry<BigInteger, Long> entry : cuboidAggCostMapCopy.entrySet()) {
-            if (entry.getValue() < processCuboidAggCostMap.get(entry.getKey())) {
-                totalCostSaving += processCuboidAggCostMap.get(entry.getKey()) - entry.getValue();
+        for (Map.Entry<BigInteger, Long> entry : layoutAggCostMapCopy.entrySet()) {
+            if (entry.getValue() < processLayoutAggCostMap.get(entry.getKey())) {
+                totalCostSaving += processLayoutAggCostMap.get(entry.getKey()) - entry.getValue();
                 benefitCount++;
             }
         }
 
         double benefitPerUnitSpace = totalCostSaving;
-        return new CuboidBenefitModel.BenefitModel(benefitPerUnitSpace, benefitCount);
+        return new LayoutBenefitModel.BenefitModel(benefitPerUnitSpace, benefitCount);
     }
 
-    protected double getCostSaving(BigInteger descendant, BigInteger cuboid) {
-        long cuboidCost = getCuboidCost(cuboid);
-        long descendantAggCost = getCuboidAggregationCost(descendant);
-        return (double) descendantAggCost - cuboidCost;
+    protected double getCostSaving(BigInteger descendant, BigInteger layout) {
+        long layoutCost = getLayoutCost(layout);
+        long descendantAggCost = getLayoutAggregationCost(descendant);
+        return (double) descendantAggCost - layoutCost;
     }
 
-    protected Long getCuboidCost(BigInteger cuboid) {
-        return cuboidStats.getCuboidCount(cuboid);
+    protected Long getLayoutCost(BigInteger layout) {
+        return layoutStats.getLayoutCount(layout);
     }
 
-    private long getCuboidAggregationCost(BigInteger cuboid) {
-        return processCuboidAggCostMap.get(cuboid);
+    private long getLayoutAggregationCost(BigInteger layout) {
+        return processLayoutAggCostMap.get(layout);
     }
 
     @Override
-    public boolean ifEfficient(CuboidBenefitModel best) {
+    public boolean ifEfficient(LayoutBenefitModel best) {
         if (best.getBenefit() < getMinBenefitRatio()) {
-            logger.info(String.format(Locale.ROOT, "The recommended cuboid %s doesn't meet minimum benifit ratio %f",
-                    best, getMinBenefitRatio()));
+            log.info(String.format(Locale.ROOT, "The recommended layout %s doesn't meet minimum benefit ratio %f", best,
+                    getMinBenefitRatio()));
             return false;
         }
         return true;
     }
 
     public double getMinBenefitRatio() {
-        return cuboidStats.getBpusMinBenefitRatio();
+        return layoutStats.getBpusMinBenefitRatio();
     }
 
     @Override
-    public void propagateAggregationCost(BigInteger cuboid, Set<BigInteger> selected) {
-        propagateAggregationCost(cuboid, selected, processCuboidAggCostMap);
+    public void propagateAggregationCost(BigInteger layout, Set<BigInteger> selected) {
+        propagateAggregationCost(layout, selected, processLayoutAggCostMap);
     }
 
-    private void propagateAggregationCost(BigInteger cuboid, Set<BigInteger> selected,
-            Map<BigInteger, Long> processCuboidAggCostMap) {
-        long aggregationCost = getCuboidCost(cuboid);
-        Set<BigInteger> childrenCuboids = cuboidStats.getAllDescendants(cuboid);
-        for (BigInteger child : childrenCuboids) {
-            if (!selected.contains(child) && (aggregationCost < getCuboidAggregationCost(child))) {
-                processCuboidAggCostMap.put(child, aggregationCost);
+    private void propagateAggregationCost(BigInteger layout, Set<BigInteger> selected,
+            Map<BigInteger, Long> processLayoutAggCostMap) {
+        long aggregationCost = getLayoutCost(layout);
+        Set<BigInteger> childrenLayouts = layoutStats.getAllDescendants(layout);
+        for (BigInteger child : childrenLayouts) {
+            if (!selected.contains(child) && (aggregationCost < getLayoutAggregationCost(child))) {
+                processLayoutAggCostMap.put(child, aggregationCost);
             }
         }
     }
 
     /**
-     * Return the space cost of building a cuboid.
+     * Return the space cost of building a layout.
      *
      */
-    public double calculateSpaceCost(BigInteger cuboid) {
-        return cuboidStats.getCuboidCount(cuboid);
+    public double calculateSpaceCost(BigInteger layout) {
+        return layoutStats.getLayoutCount(layout);
     }
 
     @Override
     public BenefitPolicy getInstance() {
-        return new BPUSCalculator(this.cuboidStats, this.initCuboidAggCostMap);
+        return new BPUSCalculator(this.layoutStats, this.initLayoutAggCostMap);
     }
 }

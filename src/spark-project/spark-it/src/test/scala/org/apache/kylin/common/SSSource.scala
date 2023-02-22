@@ -22,7 +22,6 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.util.Locale
 
-import com.google.common.base.Preconditions
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.StringUtils
 import org.apache.kylin.common.persistence.{JsonSerializer, RootPersistentEntity}
@@ -34,6 +33,8 @@ import org.apache.kylin.query.util.{QueryParams, QueryUtil}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession}
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.scalatest.Suite
+
+import com.google.common.base.Preconditions
 
 trait SSSource extends SharedSparkSession with LocalMetadata {
   self: Suite =>

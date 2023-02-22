@@ -40,9 +40,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import com.clearspring.analytics.util.Lists;
 
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class AfterMergeOrRefreshResourceMerger extends SparkJobMetadataMerger {
 
     public AfterMergeOrRefreshResourceMerger(KylinConfig config, String project) {

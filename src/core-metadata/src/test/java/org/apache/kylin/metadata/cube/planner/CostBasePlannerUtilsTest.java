@@ -22,10 +22,11 @@ public class CostBasePlannerUtilsTest {
     }
 
     @Test
-    public void testConvertDimensionsToCuboId() {
+    public void testConvertDimensionsToLayoutId() {
         int maxCountDimension = 12;
         List<Integer> dimensionIds = Lists.newArrayList(4, 8, 11);
-        BigInteger result = CostBasePlannerUtils.convertDimensionsToCuboId(dimensionIds, maxCountDimension, getMap(12));
+        BigInteger result = CostBasePlannerUtils.convertDimensionsToLayoutId(dimensionIds, maxCountDimension,
+                getMap(12));
         long expected = 0;
         expected = 1 << (12 - 1 - 4) | 1 << (12 - 1 - 8) | 1 << (12 - 1 - 11);
         BigInteger expectedInteger = BigInteger.valueOf(expected);

@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
@@ -90,48 +91,42 @@ public abstract class SegmentJob extends SparkApplication {
         this.recommendAggColOrders = recommendAggColOrders;
     }
 
-    public Set<List<Integer>> getRecommendAggColOrders() {
-        return recommendAggColOrders;
-    }
-
     public boolean updateIndexPlanIfNeed() {
-        // when run the cost based index planner, there will be some recommended index layouts for this model
-        if (getRecommendAggColOrders().size() != 0) {
-            UnitOfWork.doInTransactionWithRetry(() -> {
-                // update and add the recommended index layout to the index plan
-                val recommendAggLayouts = Lists.newArrayList(getRecommendAggColOrders());
-                NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(config, project);
-                logger.debug("Update the index plan and add recommended agg index {}", recommendAggLayouts);
-                indexPlanManager.updateIndexPlan(dataflowId, copyForWrite -> {
-                    // construct the map: colOrder of layout -> id
-                    val allRuleLayouts = copyForWrite.getRuleBasedIndex().genCuboidLayouts();
-                    Map<List<Integer>, Long> colOrder2Id = Maps.newHashMap();
-                    allRuleLayouts.forEach(layoutEntity -> {
-                        colOrder2Id.put(layoutEntity.getColOrder(), layoutEntity.getId());
-                    });
-                    logger.debug("All rule base layouts {}", allRuleLayouts);
-                    Set<Long> costBasedResult = Sets.newHashSet();
-                    for (List<Integer> colOrder : recommendAggLayouts) {
-                        if (colOrder2Id.containsKey(colOrder)) {
-                            costBasedResult.add(colOrder2Id.get(colOrder));
-                        } else {
-                            logger.debug("Can't find the layout {} in the rule base index", colOrder);
-                        }
-                    }
-                    // reset the rule base layouts
-                    logger.debug("Set the rule pruning cost based list layouts {}", costBasedResult);
-                    val ruleBaseIndex = copyForWrite.getRuleBasedIndex();
-                    ruleBaseIndex.setLayoutsOfCostBasedList(costBasedResult);
-                    copyForWrite.setRuleBasedIndex(ruleBaseIndex);
-                });
-                return null;
-            }, project);
-            updateJobLayoutsIfNeed();
-            return true;
-        } else {
+        if (CollectionUtils.isEmpty(recommendAggColOrders)) {
             logger.info("There is no recommended agg index");
             return false;
         }
+
+        // when run the cost based index planner, there will be some recommended index layouts for this model
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            // update and add the recommended index layout to the index plan
+            val recommendAggLayouts = Lists.newArrayList(recommendAggColOrders);
+            NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(config, project);
+            logger.debug("Update the index plan and add recommended agg index {}", recommendAggLayouts);
+            indexPlanManager.updateIndexPlan(dataflowId, copyForWrite -> {
+                // construct the map: colOrder of layout -> id
+                Set<LayoutEntity> allRuleLayouts = copyForWrite.getRuleBasedIndex().genCuboidLayouts();
+                Map<List<Integer>, Long> colOrderToIdMap = Maps.newHashMap();
+                allRuleLayouts.forEach(layout -> colOrderToIdMap.put(layout.getColOrder(), layout.getId()));
+                logger.debug("All rule base layouts {}", allRuleLayouts);
+                Set<Long> costBasedResult = Sets.newHashSet();
+                for (List<Integer> colOrder : recommendAggLayouts) {
+                    if (colOrderToIdMap.containsKey(colOrder)) {
+                        costBasedResult.add(colOrderToIdMap.get(colOrder));
+                    } else {
+                        logger.debug("Can't find the layout {} in the rule base index", colOrder);
+                    }
+                }
+                // reset the rule base layouts
+                logger.debug("Set the rule pruning cost based list layouts {}", costBasedResult);
+                val ruleBaseIndex = copyForWrite.getRuleBasedIndex();
+                ruleBaseIndex.setLayoutsOfCostBasedList(costBasedResult);
+                copyForWrite.setRuleBasedIndex(ruleBaseIndex);
+            });
+            return null;
+        }, project);
+        updateJobLayoutsIfNeed();
+        return true;
     }
 
     private void updateJobLayoutsIfNeed() {
@@ -140,7 +135,7 @@ public abstract class SegmentJob extends SparkApplication {
         // get the new index plan
         indexPlan = dataflowManager.getDataflow(dataflowId).getIndexPlan();
         // get the new layout
-        val newJobLayouts = indexPlan.getAllLayouts();
+        List<LayoutEntity> newJobLayouts = indexPlan.getAllLayouts();
         logger.debug("Update Job layouts count from {} to {}", readOnlyLayouts.size(), newJobLayouts.size());
         readOnlyLayouts = new HashSet<>(newJobLayouts);
         // rewrite the `P_LAYOUT_IDS` parameters

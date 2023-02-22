@@ -76,9 +76,9 @@ public class BitsOnePointCrossover implements CrossoverPolicy {
      *                                      not an instance of {@link BitsChromosome}
      * @throws MathIllegalArgumentException if the length of the two chromosomes is different
      */
-    @SuppressWarnings("unchecked") // OK because of instanceof checks
+    // OK because of instanceof checks
     public ChromosomePair crossover(final Chromosome first, final Chromosome second)
-            throws DimensionMismatchException, MathIllegalArgumentException {
+            throws MathIllegalArgumentException {
 
         if (!(first instanceof BitsChromosome && second instanceof BitsChromosome)) {
             throw new MathIllegalArgumentException(

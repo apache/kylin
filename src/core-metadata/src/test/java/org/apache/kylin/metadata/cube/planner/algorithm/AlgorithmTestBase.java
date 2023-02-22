@@ -49,23 +49,19 @@ import com.google.common.collect.Sets;
 
 public class AlgorithmTestBase {
 
-    public final static Comparator<BigInteger> CuboidSelectComparator = new Comparator<BigInteger>() {
-        @Override
-        public int compare(BigInteger o1, BigInteger o2) {
-            return ComparisonChain.start().compare(o1.bitCount(), o2.bitCount()).compare(o1, o2).result();
-        }
-    };
+    public final static Comparator<BigInteger> LayoutSelectComparator = (o1, o2) -> ComparisonChain.start()
+            .compare(o1.bitCount(), o2.bitCount()).compare(o1, o2).result();
 
     private static class TreeNode implements Serializable {
-        @JsonProperty("cuboid_id")
-        BigInteger cuboidId;
+        @JsonProperty("layout_id")
+        BigInteger layoutId;
         @JsonIgnore
         int level;
         @JsonProperty("children")
         List<TreeNode> children = Lists.newArrayList();
 
-        public BigInteger getCuboidId() {
-            return cuboidId;
+        public BigInteger getLayoutId() {
+            return layoutId;
         }
 
         public int getLevel() {
@@ -76,8 +72,8 @@ public class AlgorithmTestBase {
             return children;
         }
 
-        TreeNode(BigInteger cuboidId, int level) {
-            this.cuboidId = cuboidId;
+        TreeNode(BigInteger layoutId, int level) {
+            this.layoutId = layoutId;
             this.level = level;
         }
 
@@ -87,7 +83,7 @@ public class AlgorithmTestBase {
 
         @Override
         public int hashCode() {
-            return Objects.hash(cuboidId, level);
+            return Objects.hash(layoutId, level);
         }
 
         @Override
@@ -99,118 +95,111 @@ public class AlgorithmTestBase {
             if (getClass() != obj.getClass())
                 return false;
             TreeNode other = (TreeNode) obj;
-            if (cuboidId != other.cuboidId)
+            if (!Objects.equals(layoutId, other.layoutId))
                 return false;
-            if (level != other.level)
-                return false;
-            return true;
+            return level == other.level;
         }
     }
 
-    public static class CuboidTree implements Serializable {
+    public static class LayoutTree implements Serializable {
         private int treeLevels;
 
         private TreeNode root;
 
-        private Comparator<BigInteger> cuboidComparator;
+        private final Comparator<BigInteger> layoutComparator;
 
-        private Map<BigInteger, TreeNode> index = new HashMap<>();
+        private final Map<BigInteger, TreeNode> index = new HashMap<>();
 
-        static CuboidTree createFromCuboids(List<BigInteger> allCuboidIds) {
-            return createFromCuboids(allCuboidIds, CuboidSelectComparator);
+        static LayoutTree createFromLayouts(List<BigInteger> allLayoutIds) {
+            return createFromLayouts(allLayoutIds, LayoutSelectComparator);
         }
 
-        public static CuboidTree createFromCuboids(List<BigInteger> allCuboidIds,
-                                                   Comparator<BigInteger> cuboidComparator) {
-            // sort the cuboid ids in descending order, so that don't need to adjust
-            // the cuboid tree when adding cuboid id to the tree.
-            Collections.sort(allCuboidIds, new Comparator<BigInteger>() {
-                @Override
-                public int compare(BigInteger o1, BigInteger o2) {
-                    return o2.compareTo(o1);
-                }
-            });
-            BigInteger basicCuboidId = allCuboidIds.get(0);
-            CuboidTree cuboidTree = new CuboidTree(cuboidComparator);
-            cuboidTree.setRoot(basicCuboidId);
+        public static LayoutTree createFromLayouts(List<BigInteger> allLayoutIds,
+                Comparator<BigInteger> layoutComparator) {
+            // sort the layout ids in descending order, so that don't need to adjust
+            // the layout tree when adding layout id to the tree.
+            allLayoutIds.sort(Comparator.reverseOrder());
+            BigInteger basicLayoutId = allLayoutIds.get(0);
+            LayoutTree layoutTree = new LayoutTree(layoutComparator);
+            layoutTree.setRoot(basicLayoutId);
 
-            for (BigInteger cuboidId : allCuboidIds) {
-                cuboidTree.addCuboid(cuboidId);
+            for (BigInteger layoutId : allLayoutIds) {
+                layoutTree.addLayout(layoutId);
             }
-            cuboidTree.buildIndex();
-            return cuboidTree;
+            layoutTree.buildIndex();
+            return layoutTree;
         }
 
-        private CuboidTree(Comparator<BigInteger> cuboidComparator) {
-            this.cuboidComparator = cuboidComparator;
+        private LayoutTree(Comparator<BigInteger> layoutComparator) {
+            this.layoutComparator = layoutComparator;
         }
 
-        public Set<BigInteger> getAllCuboidIds() {
+        public Set<BigInteger> getAllLayoutIds() {
             return index.keySet();
         }
 
-        public List<BigInteger> getSpanningCuboid(BigInteger cuboidId) {
-            TreeNode node = index.get(cuboidId);
+        public List<BigInteger> getSpanningLayout(BigInteger layoutId) {
+            TreeNode node = index.get(layoutId);
             if (node == null) {
-                throw new IllegalArgumentException("the cuboid:" + cuboidId + " is not exist in the tree");
+                throw new IllegalArgumentException("the layout:" + layoutId + " is not exist in the tree");
             }
 
             List<BigInteger> result = Lists.newArrayList();
             for (TreeNode child : node.children) {
-                result.add(child.cuboidId);
+                result.add(child.layoutId);
             }
             return result;
         }
 
-        public BigInteger findBestMatchCuboid(BigInteger cuboidId) {
+        public BigInteger findBestMatchLayout(BigInteger layoutId) {
             // exactly match
-            if (isValid(cuboidId)) {
-                return cuboidId;
+            if (isValid(layoutId)) {
+                return layoutId;
             }
 
-            return findBestParent(cuboidId).cuboidId;
+            return findBestParent(layoutId).layoutId;
         }
 
-        public boolean isValid(BigInteger cuboidId) {
-            return index.containsKey(cuboidId);
+        public boolean isValid(BigInteger layoutId) {
+            return index.containsKey(layoutId);
         }
 
-        private int getCuboidCount(BigInteger cuboidId) {
+        private int getLayoutCount(BigInteger layoutId) {
             int r = 1;
-            for (BigInteger child : getSpanningCuboid(cuboidId)) {
-                r += getCuboidCount(child);
+            for (BigInteger child : getSpanningLayout(layoutId)) {
+                r += getLayoutCount(child);
             }
             return r;
         }
 
         public void print(PrintWriter out) {
-            int dimensionCnt = root.cuboidId.bitCount();
+            int dimensionCnt = root.layoutId.bitCount();
             doPrint(root, dimensionCnt, 0, out);
         }
 
         private void doPrint(TreeNode node, int dimensionCount, int depth, PrintWriter out) {
-            printCuboid(node.cuboidId, dimensionCount, depth, out);
+            printLayout(node.layoutId, dimensionCount, depth, out);
 
             for (TreeNode child : node.children) {
                 doPrint(child, dimensionCount, depth + 1, out);
             }
         }
 
-        private void printCuboid(BigInteger cuboidID, int dimensionCount, int depth, PrintWriter out) {
+        private void printLayout(BigInteger layoutId, int dimensionCount, int depth, PrintWriter out) {
             StringBuffer sb = new StringBuffer();
             for (int i = 0; i < depth; i++) {
                 sb.append("    ");
             }
-            String cuboidName = getDisplayName(cuboidID, dimensionCount);
-            sb.append("|---- Cuboid ").append(cuboidName).append("(" + cuboidID + ")");
-            out.println(sb.toString());
+            String layoutName = getDisplayName(layoutId, dimensionCount);
+            sb.append("|---- Layout ").append(layoutName).append("(").append(layoutId).append(")");
+            out.println(sb);
         }
 
-        private String getDisplayName(BigInteger cuboidID, int dimensionCount) {
+        private String getDisplayName(BigInteger layoutId, int dimensionCount) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < dimensionCount; ++i) {
 
-                if ((cuboidID.and((BigInteger.valueOf(1L << i))).equals(BigInteger.ZERO))) {
+                if ((layoutId.and((BigInteger.valueOf(1L << i))).equals(BigInteger.ZERO))) {
                     sb.append('0');
                 } else {
                     sb.append('1');
@@ -219,8 +208,8 @@ public class AlgorithmTestBase {
             return StringUtils.reverse(sb.toString());
         }
 
-        private void setRoot(BigInteger basicCuboidId) {
-            this.root = new TreeNode(basicCuboidId, 0);
+        private void setRoot(BigInteger basicLayoutId) {
+            this.root = new TreeNode(basicLayoutId, 0);
             this.treeLevels = 0;
         }
 
@@ -229,92 +218,88 @@ public class AlgorithmTestBase {
             queue.add(root);
             while (!queue.isEmpty()) {
                 TreeNode node = queue.removeFirst();
-                index.put(node.cuboidId, node);
-                for (TreeNode child : node.children) {
-                    queue.add(child);
-                }
+                index.put(node.layoutId, node);
+                queue.addAll(node.children);
             }
         }
 
-        private void addCuboid(BigInteger cuboidId) {
-            TreeNode parent = findBestParent(cuboidId);
-            if (parent != null && !parent.cuboidId.equals(cuboidId)) {
-                parent.addChild(cuboidId, parent.level);
+        private void addLayout(BigInteger layoutId) {
+            TreeNode parent = findBestParent(layoutId);
+            if (!parent.layoutId.equals(layoutId)) {
+                parent.addChild(layoutId, parent.level);
                 this.treeLevels = Math.max(this.treeLevels, parent.level + 1);
             }
         }
 
-        private TreeNode findBestParent(BigInteger cuboidId) {
-            TreeNode bestParent = doFindBestParent(cuboidId, root);
+        private TreeNode findBestParent(BigInteger layoutId) {
+            TreeNode bestParent = doFindBestParent(layoutId, root);
             if (bestParent == null) {
-                throw new IllegalStateException("Cannot find the parent of the cuboid:" + cuboidId);
+                throw new IllegalStateException("Cannot find the parent of the layout:" + layoutId);
             }
             return bestParent;
         }
 
-        private TreeNode doFindBestParent(BigInteger cuboidId, TreeNode parentCuboid) {
-            if (!canDerive(cuboidId, parentCuboid.cuboidId)) {
+        private TreeNode doFindBestParent(BigInteger layoutId, TreeNode parentLayout) {
+            if (!canDerive(layoutId, parentLayout.layoutId)) {
                 return null;
             }
 
             List<TreeNode> candidates = Lists.newArrayList();
-            for (TreeNode childCuboid : parentCuboid.children) {
-                TreeNode candidate = doFindBestParent(cuboidId, childCuboid);
+            for (TreeNode childLayout : parentLayout.children) {
+                TreeNode candidate = doFindBestParent(layoutId, childLayout);
                 if (candidate != null) {
                     candidates.add(candidate);
                 }
             }
             if (candidates.isEmpty()) {
-                candidates.add(parentCuboid);
+                candidates.add(parentLayout);
             }
 
             return Collections.min(candidates, new Comparator<TreeNode>() {
                 @Override
                 public int compare(TreeNode o1, TreeNode o2) {
-                    return cuboidComparator.compare(o1.cuboidId, o2.cuboidId);
+                    return layoutComparator.compare(o1.layoutId, o2.layoutId);
                 }
             });
         }
 
-        private boolean canDerive(BigInteger cuboidId, BigInteger parentCuboid) {
-            return (cuboidId.and(parentCuboid.not())).equals(BigInteger.ZERO);
+        private boolean canDerive(BigInteger layoutId, BigInteger parentLayout) {
+            return (layoutId.and(parentLayout.not())).equals(BigInteger.ZERO);
         }
     }
 
-    private static class CuboidCostComparator implements Comparator<BigInteger>, Serializable {
-        private Map<BigInteger, Long> cuboidStatistics;
+    private static class LayoutCostComparator implements Comparator<BigInteger>, Serializable {
+        private final Map<BigInteger, Long> layoutStatistics;
 
-        public CuboidCostComparator(Map<BigInteger, Long> cuboidStatistics) {
-            Preconditions.checkArgument(cuboidStatistics != null,
-                    "the input " + cuboidStatistics + " should not be null!!!");
-            this.cuboidStatistics = cuboidStatistics;
+        public LayoutCostComparator(Map<BigInteger, Long> layoutStatistics) {
+            Preconditions.checkArgument(layoutStatistics != null,
+                    "the input " + layoutStatistics + " should not be null!!!");
+            this.layoutStatistics = layoutStatistics;
         }
 
         @Override
-        public int compare(BigInteger cuboid1, BigInteger cuboid2) {
-            Long rowCnt1 = cuboidStatistics.get(cuboid1);
-            Long rowCnt2 = cuboidStatistics.get(cuboid2);
+        public int compare(BigInteger layout1, BigInteger layout2) {
+            Long rowCnt1 = layoutStatistics.get(layout1);
+            Long rowCnt2 = layoutStatistics.get(layout2);
             if (rowCnt2 == null || rowCnt1 == null) {
-                return CuboidSelectComparator.compare(cuboid1, cuboid2);
+                return LayoutSelectComparator.compare(layout1, layout2);
             }
             return Long.compare(rowCnt1, rowCnt2);
         }
     }
 
-    public CuboidStats cuboidStats;
-
-    private Set<BigInteger> mandatoryCuboids;
+    public LayoutStats layoutStats;
 
     @Before
     public void setUp() throws Exception {
 
-        mandatoryCuboids = Sets.newHashSet();
-        mandatoryCuboids.add(BigInteger.valueOf(3000L));
-        mandatoryCuboids.add(BigInteger.valueOf(1888L));
-        mandatoryCuboids.add(BigInteger.valueOf(88L));
-        cuboidStats = new CuboidStats.Builder("test", BigInteger.valueOf(4095L), BigInteger.valueOf(4095L),
-                simulateCount(), simulateSpaceSize()).setMandatoryCuboids(mandatoryCuboids)
-                .setHitFrequencyMap(simulateHitFrequency()).setScanCountSourceMap(simulateScanCount()).build();
+        Set<BigInteger> mandatoryLayouts = Sets.newHashSet();
+        mandatoryLayouts.add(BigInteger.valueOf(3000L));
+        mandatoryLayouts.add(BigInteger.valueOf(1888L));
+        mandatoryLayouts.add(BigInteger.valueOf(88L));
+        layoutStats = new LayoutStats.Builder("test", BigInteger.valueOf(4095L), BigInteger.valueOf(4095L),
+                simulateCount(), simulateSpaceSize()).setMandatoryLayouts(mandatoryLayouts)
+                        .setHitFrequencyMap(simulateHitFrequency()).setScanCountSourceMap(simulateScanCount()).build();
     }
 
     @After
@@ -322,23 +307,23 @@ public class AlgorithmTestBase {
     }
 
     /** better if closer to 1, worse if closer to 0*/
-    public double getQueryCostRatio(CuboidStats cuboidStats, List<BigInteger> recommendList) {
-        CuboidTree cuboidTree = CuboidTree.createFromCuboids(recommendList,
-                new CuboidCostComparator(cuboidStats.getStatistics()));
+    public double getQueryCostRatio(LayoutStats layoutStats, List<BigInteger> recommendList) {
+        LayoutTree layoutTree = LayoutTree.createFromLayouts(recommendList,
+                new LayoutCostComparator(layoutStats.getStatistics()));
         double queryCostBest = 0;
-        for (BigInteger cuboidId : cuboidStats.getAllCuboidsForSelection()) {
-            if (cuboidStats.getCuboidQueryCost(cuboidId) != null) {
-                queryCostBest += cuboidStats.getCuboidHitProbability(cuboidId) * cuboidStats.getCuboidCount(cuboidId);
-                //                queryCostBest += cuboidStats.getCuboidHitProbability(cuboidId) * cuboidStats.getCuboidQueryCost(cuboidId);
+        for (BigInteger layoutId : layoutStats.getAllLayoutsForSelection()) {
+            if (layoutStats.getLayoutQueryCost(layoutId) != null) {
+                queryCostBest += layoutStats.getLayoutHitProb(layoutId) * layoutStats.getLayoutCount(layoutId);
+                // queryCostBest += layoutStats.getLayoutHitProb(layoutId) * layoutStats.getLayoutQueryCost(layoutId);
             }
         }
 
         double queryCost = 0;
-        for (BigInteger cuboidId : cuboidStats.getAllCuboidsForSelection()) {
-            BigInteger matchCuboidId = cuboidTree.findBestMatchCuboid(cuboidId);
-            if (cuboidStats.getCuboidQueryCost(matchCuboidId) != null) {
-                queryCost += cuboidStats.getCuboidHitProbability(cuboidId) * cuboidStats.getCuboidCount(matchCuboidId);
-                //                queryCost += cuboidStats.getCuboidHitProbability(cuboidId) * cuboidStats.getCuboidQueryCost(matchCuboidId);
+        for (BigInteger layoutId : layoutStats.getAllLayoutsForSelection()) {
+            BigInteger matchLayoutId = layoutTree.findBestMatchLayout(layoutId);
+            if (layoutStats.getLayoutQueryCost(matchLayoutId) != null) {
+                queryCost += layoutStats.getLayoutHitProb(layoutId) * layoutStats.getLayoutCount(matchLayoutId);
+                // queryCost += layoutStats.getLayoutHitProb(layoutId) * layoutStats.getLayoutQueryCost(matchLayoutId);
             }
         }
 
@@ -358,7 +343,7 @@ public class AlgorithmTestBase {
 
             while ((sCurrentLine = br.readLine()) != null) {
                 String[] statPair = StringUtil.split(sCurrentLine, " ");
-                countMap.put(BigInteger.valueOf(Long.valueOf(statPair[0])), Long.valueOf(statPair[1]));
+                countMap.put(BigInteger.valueOf(Long.parseLong(statPair[0])), Long.valueOf(statPair[1]));
             }
 
         } catch (IOException e) {

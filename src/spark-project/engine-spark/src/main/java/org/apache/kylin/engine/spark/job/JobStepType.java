@@ -18,15 +18,6 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.SecondStorageStepFactory;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultExecutable;
-import org.apache.kylin.job.execution.DefaultExecutableOnModel;
-import org.apache.kylin.metadata.cube.model.NBatchConstants;
-
 import static org.apache.kylin.engine.spark.job.StageType.BUILD_DICT;
 import static org.apache.kylin.engine.spark.job.StageType.BUILD_LAYER;
 import static org.apache.kylin.engine.spark.job.StageType.COST_BASED_PLANNER;
@@ -41,6 +32,16 @@ import static org.apache.kylin.engine.spark.job.StageType.REFRESH_SNAPSHOTS;
 import static org.apache.kylin.engine.spark.job.StageType.SNAPSHOT_BUILD;
 import static org.apache.kylin.engine.spark.job.StageType.TABLE_SAMPLING;
 import static org.apache.kylin.engine.spark.job.StageType.WAITE_FOR_RESOURCE;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.job.SecondStorageStepFactory;
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.DefaultExecutable;
+import org.apache.kylin.job.execution.DefaultExecutableOnModel;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public enum JobStepType {
@@ -86,7 +87,7 @@ public enum JobStepType {
             BUILD_DICT.createStage(parent, config);
             GENERATE_FLAT_TABLE.createStage(parent, config);
             String enablePlanner = parent.getParam(NBatchConstants.P_JOB_ENABLE_PLANNER);
-            if (enablePlanner != null && Boolean.valueOf(enablePlanner)) {
+            if (Boolean.parseBoolean(enablePlanner)) {
                 COST_BASED_PLANNER.createStage(parent, config);
             }
             GATHER_FLAT_TABLE_STATS.createStage(parent, config);
@@ -142,8 +143,8 @@ public enum JobStepType {
             if (!(parent instanceof DefaultExecutableOnModel)) {
                 throw new IllegalArgumentException();
             }
-            ((DefaultExecutableOnModel) parent).setHandler(
-                    ExecutableHandlerFactory.createExecutableHandler((DefaultExecutableOnModel) parent));
+            ((DefaultExecutableOnModel) parent)
+                    .setHandler(ExecutableHandlerFactory.createExecutableHandler((DefaultExecutableOnModel) parent));
             return new NSparkUpdateMetadataStep();
         }
 
