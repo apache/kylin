@@ -381,4 +381,8 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     public Enumerable<Object[]> executeSimpleAggregationQuery(DataContext optiqContext, int ctxSeq) {
         return new OLAPQuery(optiqContext, OLAPQuery.EnumeratorTypeEnum.SIMPLE_AGGREGATION, ctxSeq);
     }
+
+    public Enumerable<Object[]> executeMetadataQuery(DataContext optiqContext, int ctxSeq) {
+        return new OLAPQuery(optiqContext, OLAPQuery.EnumeratorTypeEnum.METADATA, ctxSeq);
+    }
 }

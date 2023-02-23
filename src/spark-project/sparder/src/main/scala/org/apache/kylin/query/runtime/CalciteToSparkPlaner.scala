@@ -19,17 +19,20 @@
 package org.apache.kylin.query.runtime
 
 import java.util
+
 import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.calcite.DataContext
 import org.apache.calcite.rel.{RelNode, RelVisitor}
+import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.query.relnode.{KapAggregateRel, KapFilterRel, KapJoinRel, KapLimitRel, KapMinusRel, KapModelViewRel, KapNonEquiJoinRel, KapProjectRel, KapRel, KapSortRel, KapTableScan, KapUnionRel, KapValuesRel, KapWindowRel}
 import org.apache.kylin.query.runtime.plan.{AggregatePlan, FilterPlan, LimitPlan, ProjectPlan, SortPlan, TableScanPlan, ValuesPlan, WindowPlan}
 import org.apache.kylin.query.util.KapRelUtil
-import org.apache.kylin.common.KylinConfig
 import org.apache.spark.sql.DataFrame
 
 import scala.collection.JavaConverters._
+
 
 class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with LogEx {
   private val stack = new util.Stack[DataFrame]()
@@ -56,15 +59,7 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
       node.childrenAccept(this)
     }
     stack.push(node match {
-      case rel: KapTableScan =>
-        rel.genExecFunc() match {
-          case "executeLookupTableQuery" =>
-            logTime("createLookupTable") { TableScanPlan.createLookupTable(rel) }
-          case "executeOLAPQuery" =>
-            logTime("createOLAPTable") { TableScanPlan.createOLAPTable(rel) }
-          case "executeSimpleAggregationQuery" =>
-            logTime("createSingleRow") { TableScanPlan.createSingleRow() }
-        }
+      case rel: KapTableScan => convertTableScan(rel)
       case rel: KapFilterRel =>
         logTime("filter") { FilterPlan.filter(Lists.newArrayList(stack.pop()), rel, dataContext) }
       case rel: KapProjectRel =>
@@ -85,26 +80,8 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
             AggregatePlan.agg(Lists.newArrayList(stack.pop()), rel)
           }
         }
-      case rel: KapJoinRel =>
-        if (!rel.isRuntimeJoin) {
-          logTime("join with table scan") { TableScanPlan.createOLAPTable(rel) }
-        } else {
-          val right = stack.pop()
-          val left = stack.pop()
-          logTime("join") { plan.JoinPlan.join(Lists.newArrayList(left, right), rel) }
-        }
-      case rel: KapNonEquiJoinRel =>
-        if (!rel.isRuntimeJoin) {
-          logTime("join with table scan") {
-            TableScanPlan.createOLAPTable(rel)
-          }
-        } else {
-          val right = stack.pop()
-          val left = stack.pop()
-          logTime("non-equi join") {
-            plan.JoinPlan.nonEquiJoin(Lists.newArrayList(left, right), rel, dataContext)
-          }
-        }
+      case rel: KapJoinRel => convertJoinRel(rel)
+      case rel: KapNonEquiJoinRel => convertNonEquiJoinRel(rel)
       case rel: KapUnionRel =>
         val size = setOpStack.pop()
         val java = Range(0, stack.size() - size).map(a => stack.pop()).asJava
@@ -119,6 +96,62 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
     })
     if (node.isInstanceOf[KapUnionRel]) {
       unionLayer = unionLayer - 1
+    }
+  }
+
+  private def convertTableScan(rel: KapTableScan): DataFrame = {
+    rel.getContext.genExecFunc(rel, rel.getTableName) match {
+      case "executeLookupTableQuery" =>
+        logTime("createLookupTable") {
+          TableScanPlan.createLookupTable(rel)
+        }
+      case "executeOLAPQuery" =>
+        logTime("createOLAPTable") {
+          TableScanPlan.createOLAPTable(rel)
+        }
+      case "executeSimpleAggregationQuery" =>
+        logTime("createSingleRow") {
+          TableScanPlan.createSingleRow()
+        }
+      case "executeMetadataQuery" =>
+        logTime("createMetadataTable") {
+          TableScanPlan.createMetadataTable(rel)
+        }
+    }
+  }
+
+  private def convertJoinRel(rel: KapJoinRel): DataFrame = {
+    if (!rel.isRuntimeJoin) {
+      rel.getContext.genExecFunc(rel, "") match {
+        case "executeMetadataQuery" =>
+          logTime("createMetadataTable") {
+            TableScanPlan.createMetadataTable(rel)
+          }
+        case _ =>
+          logTime("join with table scan") {
+            TableScanPlan.createOLAPTable(rel)
+          }
+      }
+    } else {
+      val right = stack.pop()
+      val left = stack.pop()
+      logTime("join") {
+        plan.JoinPlan.join(Lists.newArrayList(left, right), rel)
+      }
+    }
+  }
+
+  private def convertNonEquiJoinRel(rel: KapNonEquiJoinRel): DataFrame = {
+    if (!rel.isRuntimeJoin) {
+      logTime("join with table scan") {
+        TableScanPlan.createOLAPTable(rel)
+      }
+    } else {
+      val right = stack.pop()
+      val left = stack.pop()
+      logTime("non-equi join") {
+        plan.JoinPlan.nonEquiJoin(Lists.newArrayList(left, right), rel, dataContext)
+      }
     }
   }
 

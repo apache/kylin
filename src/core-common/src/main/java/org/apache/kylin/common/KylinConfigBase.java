@@ -75,13 +75,12 @@ import org.apache.kylin.common.util.SizeConvertUtil;
 import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.common.util.Unsafe;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.kyligence.config.core.loader.IExternalConfigLoader;
 import lombok.val;
@@ -1727,6 +1726,10 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
     // QUERY
     // ============================================================================
+
+    public boolean isRouteToMetadataEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.query.using-metadata-answer-minmax-of-dimension", FALSE));
+    }
 
     public boolean partialMatchNonEquiJoins() {
         return Boolean.parseBoolean(getOptional("kylin.query.match-partial-non-equi-join-model", FALSE));

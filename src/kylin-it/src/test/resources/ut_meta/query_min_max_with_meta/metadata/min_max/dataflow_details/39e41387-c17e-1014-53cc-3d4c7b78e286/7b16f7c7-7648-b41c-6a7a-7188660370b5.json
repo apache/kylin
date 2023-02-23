@@ -1,0 +1,36 @@
+{
+  "uuid" : "7b16f7c7-7648-b41c-6a7a-7188660370b5",
+  "last_modified" : 1678694113559,
+  "create_time" : 1678694113559,
+  "version" : "4.0.0.0",
+  "dataflow" : "39e41387-c17e-1014-53cc-3d4c7b78e286",
+  "layout_instances" : [ {
+    "layout_id" : 1,
+    "build_job_id" : "5660d5d6-5cb0-4cf9-19e2-7ad9f034dd0c-39e41387-c17e-1014-53cc-3d4c7b78e286",
+    "rows" : 14293,
+    "byte_size" : 156478,
+    "file_count" : 1,
+    "source_rows" : 14293,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "is_ready" : false,
+    "create_time" : 1678694458193,
+    "multi_partition" : [ ],
+    "abnormal_type" : null
+  }, {
+    "layout_id" : 20000000001,
+    "build_job_id" : "5660d5d6-5cb0-4cf9-19e2-7ad9f034dd0c-39e41387-c17e-1014-53cc-3d4c7b78e286",
+    "rows" : 14293,
+    "byte_size" : 156154,
+    "file_count" : 1,
+    "source_rows" : 14293,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "partition_values" : [ ],
+    "is_ready" : false,
+    "create_time" : 1678694458193,
+    "multi_partition" : [ ],
+    "abnormal_type" : null
+  } ]
+}

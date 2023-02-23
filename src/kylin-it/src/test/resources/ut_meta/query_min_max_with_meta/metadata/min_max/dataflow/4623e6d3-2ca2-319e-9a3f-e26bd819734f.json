@@ -1,0 +1,101 @@
+{
+  "uuid": "4623e6d3-2ca2-319e-9a3f-e26bd819734f",
+  "last_modified": 1678694363841,
+  "create_time": 1678693815468,
+  "version": "4.0.0.0",
+  "status": "ONLINE",
+  "last_status": null,
+  "cost": 50,
+  "query_hit_count": 0,
+  "last_query_time": 0,
+  "layout_query_hit_count": {},
+  "segments": [
+    {
+      "id": "c183b315-eb0e-3eac-8607-73c5b1552bce",
+      "name": "FULL_BUILD",
+      "create_time_utc": 1678693815468,
+      "status": "READY",
+      "segRange": {
+        "@class": "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+        "date_range_start": 0,
+        "date_range_end": 9223372036854775807
+      },
+      "timeRange": null,
+      "dimension_range_info_map": {
+        "0": {
+          "min": "1",
+          "max": "60000"
+        },
+        "1": {
+          "min": "1",
+          "max": "2000"
+        },
+        "12": {
+          "min": "0",
+          "max": "0"
+        },
+        "15": {
+          "min": "1",
+          "max": "7"
+        },
+        "16": {
+          "min": "1",
+          "max": "299"
+        },
+        "7": {
+          "min": "1",
+          "max": "20"
+        },
+        "18": {
+          "min": "ALGERIA",
+          "max": "VIETNAM"
+        },
+        "8": {
+          "min": "87489",
+          "max": "46600128"
+        },
+        "9": {
+          "min": "82530",
+          "max": "9479950"
+        },
+        "10": {
+          "min": "1992-01-01",
+          "max": "1998-08-02"
+        },
+        "21": {
+          "min": "AFRICA",
+          "max": "MIDDLE EAST"
+        }
+      },
+      "parameters": null,
+      "dictionaries": null,
+      "snapshots": null,
+      "last_build_time": 1679587178031,
+      "source_count": 60175,
+      "source_bytes_size": 5687314,
+      "column_source_bytes": {
+        "SSB.CUSTOMER.C_REGION": 2107,
+        "SSB.LINEORDER.LO_LINENUMBER": 60175,
+        "SSB.LINEORDER.LO_SHIPPRIOTITY": 60175,
+        "SSB.LINEORDER.LO_ORDERKEY": 172702,
+        "SSB.LINEORDER.LO_ORDERDATE": 601750,
+        "SSB.LINEORDER.LO_REVENUE": 412258,
+        "SSB.LINEORDER.LO_SUPPKEY": 94173,
+        "SSB.LINEORDER.LO_PARTKEY": 207663,
+        "SSB.LINEORDER.LO_ORDTOTALPRICE": 469425,
+        "SSB.LINEORDER.LO_CUSTKEY": 155432,
+        "SSB.CUSTOMER.C_NATION": 2073
+      },
+      "ori_snapshot_size": {},
+      "additionalInfo": {},
+      "is_realtime_segment": false,
+      "is_snapshot_ready": false,
+      "is_dict_ready": false,
+      "is_flat_table_ready": true,
+      "is_fact_view_ready": false,
+      "multi_partitions": [],
+      "max_bucket_id": -1
+    }
+  ]
+}
+

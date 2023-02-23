@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
@@ -39,12 +40,19 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
+import org.apache.kylin.metadata.cube.model.DimensionRangeInfo;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.realization.HybridRealization;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.graph.JoinsGraph;
@@ -52,15 +60,13 @@ import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.query.routing.RealizationCheck;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.Getter;
@@ -80,7 +86,7 @@ public class OLAPContext {
     // query info
     public OLAPSchema olapSchema = null;
     public OLAPTableScan firstTableScan = null; // to be fact table scan except "select * from lookupTable"
-    public Set<OLAPTableScan> allTableScans = new HashSet<>();
+    public Set<OLAPTableScan> allTableScans = new LinkedHashSet<>();
     public Set<OLAPJoinRel> allOlapJoins = new HashSet<>();
     public Set<MeasureDesc> involvedMeasure = new HashSet<>();
     public TupleInfo returnTupleInfo = null;
@@ -540,6 +546,126 @@ public class OLAPContext {
 
     public RexInputRef createUniqueInputRefContextTables(OLAPTableScan table, int columnIdx) {
         return createUniqueInputRefAmongTables(table, columnIdx, allTableScans);
+    }
+
+    public String genExecFunc(OLAPRel rel, String tableName) {
+        setReturnTupleInfo(rel.getRowType(), rel.getColumnRowType());
+        if (canMinMaxDimAnsweredByMetadata(rel)) {
+            return "executeMetadataQuery";
+        }
+
+        if (isConstantQueryWithAggregations()) {
+            return "executeSimpleAggregationQuery";
+        }
+
+        // If the table being scanned is not a fact table, then it is a lookup table.
+        if (realization.getModel().isLookupTable(tableName)) {
+            return "executeLookupTableQuery";
+        }
+
+        return "executeOLAPQuery";
+    }
+
+    private boolean canMinMaxDimAnsweredByMetadata(OLAPRel rel) {
+        if (!KylinConfig.getInstanceFromEnv().isRouteToMetadataEnabled()) {
+            return false;
+        }
+
+        if (!(realization instanceof NDataflow) || !(rel instanceof OLAPJoinRel || rel instanceof OLAPTableScan)) {
+            logger.info("Can't route to metadata, the realization is {} and this OLAPRel is {}", realization, rel);
+            return false;
+        }
+
+        /*
+         * Find the target pattern as shown below.
+         *       (other rel)
+         *            |
+         *           Agg
+         *            |
+         *          Project
+         *            |
+         *   (TableScan or JoinRel)
+         */
+        List<OLAPRel> relStack = new ArrayList<>();
+        OLAPRel current = this.topNode;
+        while (current != rel && current.getInputs().size() == 1 && current.getInput(0) instanceof OLAPRel) {
+            relStack.add(current);
+            current = (OLAPRel) current.getInput(0);
+        }
+        if (current != rel || relStack.size() < 2 || !(relStack.get(relStack.size() - 1) instanceof OLAPProjectRel)
+                || !(relStack.get(relStack.size() - 2) instanceof OLAPAggregateRel)) {
+            logger.info("Can't route to query metadata, the rel stack is not matched");
+            return false;
+        }
+
+        OLAPAggregateRel aggregateRel = (OLAPAggregateRel) relStack.get(relStack.size() - 2);
+        if (aggregateRel.groups.size() > 1 || aggregateRel.groups.size() == 1 && !TblColRef.InnerDataTypeEnum.LITERAL
+                .getDataType().equals(aggregateRel.groups.get(0).getDatatype())) {
+            logger.info("Cannot route to query metadata, only group by constants are supported.");
+            return false;
+        }
+
+        if (aggregations.isEmpty() || !aggregations.stream().allMatch(agg -> agg.isMin() || agg.isMax())) {
+            logger.info("Cannot route to query metadata, only min/max aggregate functions are supported.");
+            return false;
+        }
+
+        if (aggregations.stream()
+                .anyMatch(agg -> TblColRef.InnerDataTypeEnum.contains(agg.getColRefs().get(0).getDatatype()))) {
+            logger.info("Cannot route to query metadata, not support min(expression), such as min(id+1)");
+            return false;
+        }
+
+        if (!Sets.newHashSet(realization.getAllDimensions()).containsAll(allColumns)) {
+            logger.info("Cannot route to query metadata, not all columns queried are treated as dimensions of index.");
+            return false;
+        }
+
+        // reset rewriteAggCalls to aggCall, to avoid using measures.
+        aggregateRel.rewriteAggCalls.clear();
+        aggregateRel.rewriteAggCalls.addAll(aggregateRel.getAggCallList());
+        logger.info("Use kylin metadata to answer query with realization : {}", realization);
+        return true;
+    }
+
+    public List<Object[]> getColValuesRange() {
+        Preconditions.checkState(realization instanceof NDataflow, "Only support dataflow");
+        // As it is a min/max aggregate function, it only has one parameter.
+        List<TblColRef> cols = aggregations.stream() //
+                .map(FunctionDesc::getColRefs) //
+                .filter(tblColRefs -> tblColRefs.size() == 1) //
+                .map(tblColRefs -> tblColRefs.get(0)) //
+                .collect(Collectors.toList());
+        List<TblColRef> allFields = new ArrayList<>();
+        allTableScans.forEach(tableScan -> {
+            List<TblColRef> colRefs = tableScan.getColumnRowType().getAllColumns();
+            allFields.addAll(colRefs);
+        });
+        List<Object[]> result = new ArrayList<>();
+        for (NDataSegment segment : ((NDataflow) realization).getSegments()) {
+            if (segment.getStatus() != SegmentStatusEnum.READY) {
+                continue;
+            }
+            Map<String, DimensionRangeInfo> infoMap = segment.getDimensionRangeInfoMap();
+            Object[] minList = new Object[allFields.size()];
+            Object[] maxList = new Object[allFields.size()];
+            for (TblColRef col : cols) {
+                String dataType = col.getColumnDesc().getUpgradedType().getName();
+                int colId = allFields.indexOf(col);
+                String tblColRefIndex = getTblColRefIndex(col, realization);
+                minList[colId] = Tuple.convertOptiqCellValue(infoMap.get(tblColRefIndex).getMin(), dataType);
+                maxList[colId] = Tuple.convertOptiqCellValue(infoMap.get(tblColRefIndex).getMax(), dataType);
+            }
+
+            result.add(minList);
+            result.add(maxList);
+        }
+        return result;
+    }
+
+    private String getTblColRefIndex(TblColRef colRef, IRealization df) {
+        NDataModel model = df.getModel();
+        return String.valueOf(model.getColumnIdByColumnName(colRef.getAliasDotName()));
     }
 
     public interface IAccessController {

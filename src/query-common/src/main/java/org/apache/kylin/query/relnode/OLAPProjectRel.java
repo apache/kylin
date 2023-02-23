@@ -157,7 +157,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
 
     TblColRef translateRexNode(RexNode rexNode, ColumnRowType inputColumnRowType, String fieldName,
             Set<TblColRef> sourceCollector, Map<RexNode, TblColRef> nodeAndTblColMap) {
-        if (!this.rewriting && !this.afterAggregate) {
+        if (!this.afterAggregate) {
             return RexToTblColRefTranslator.translateRexNode(rexNode, inputColumnRowType, fieldName, sourceCollector,
                     nodeAndTblColMap);
         } else {

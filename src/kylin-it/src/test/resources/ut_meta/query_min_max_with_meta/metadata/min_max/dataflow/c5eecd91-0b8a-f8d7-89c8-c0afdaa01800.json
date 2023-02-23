@@ -1,0 +1,73 @@
+{
+  "uuid" : "c5eecd91-0b8a-f8d7-89c8-c0afdaa01800",
+  "last_modified" : 1678679278043,
+  "create_time" : 1678677245818,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 0,
+  "last_query_time" : 0,
+  "layout_query_hit_count" : { },
+  "segments" : [ {
+    "id" : "d36576c3-8ca1-a567-e54d-5d4062d3b742",
+    "name" : "FULL_BUILD",
+    "create_time_utc" : 1678678578344,
+    "status" : "READY",
+    "segRange" : {
+      "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+      "date_range_start" : 0,
+      "date_range_end" : 9223372036854775807
+    },
+    "timeRange" : null,
+    "dimension_range_info_map" : {
+      "0" : {
+        "min" : "1",
+        "max" : "60000"
+      },
+      "1" : {
+        "min" : "1",
+        "max" : "2000"
+      },
+      "13" : {
+        "min" : "1",
+        "max" : "50"
+      },
+      "15" : {
+        "min" : "1",
+        "max" : "7"
+      },
+      "16" : {
+        "min" : "1",
+        "max" : "299"
+      },
+      "8" : {
+        "min" : "87489",
+        "max" : "46600128"
+      }
+    },
+    "parameters" : null,
+    "dictionaries" : null,
+    "snapshots" : null,
+    "last_build_time" : 1679571652315,
+    "source_count" : 60175,
+    "source_bytes_size" : 5659955,
+    "column_source_bytes" : {
+      "SSB.LINEORDER.LO_LINENUMBER" : 60175,
+      "SSB.LINEORDER.LO_QUANTITY" : 109578,
+      "SSB.LINEORDER.LO_ORDERKEY" : 172702,
+      "SSB.LINEORDER.LO_PARTKEY" : 207663,
+      "SSB.LINEORDER.LO_ORDTOTALPRICE" : 469425,
+      "SSB.LINEORDER.LO_CUSTKEY" : 155432
+    },
+    "ori_snapshot_size" : { },
+    "additionalInfo" : { },
+    "is_realtime_segment" : false,
+    "is_snapshot_ready" : false,
+    "is_dict_ready" : true,
+    "is_flat_table_ready" : true,
+    "is_fact_view_ready" : false,
+    "multi_partitions" : [ ],
+    "max_bucket_id" : -1
+  } ]
+}

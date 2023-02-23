@@ -35,6 +35,7 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
     private final DataContext optiqContext;
     private final EnumeratorTypeEnum type;
     private final int contextId;
+
     public OLAPQuery(DataContext optiqContext, EnumeratorTypeEnum type, int ctxId) {
         this.optiqContext = optiqContext;
         this.type = type;
@@ -56,6 +57,10 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
             return new OLAPEnumerator(olapContext, optiqContext);
         case HIVE:
             return new HiveEnumerator(olapContext);
+        case METADATA:
+            // Typically, this branch is considered to be unreachable 
+            // for we use sparder query engine rather than Calcite query engine.
+            return new MetadataEnumerator(olapContext);
         default:
             throw new IllegalArgumentException("Wrong type " + type + "!");
         }
@@ -64,7 +69,8 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
     public enum EnumeratorTypeEnum {
         SIMPLE_AGGREGATION, //probing query like select min(2) from table
         OLAP, //finish query with Cube or II, or a combination of both
-        HIVE //using hive
+        HIVE, //using hive
+        METADATA // using metadata for min/max
     }
 
     public static class EmptyEnumerator implements Enumerator<Object[]> {
