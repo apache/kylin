@@ -346,5 +346,8 @@ object SparderEnv extends Logging {
     configuration
   }
 
-
+  // Return the list of currently active executors
+  def getActiveExecutorIds(): Seq[String] = {
+    getSparkSession.sparkContext.getExecutorIds()
+  }
 }

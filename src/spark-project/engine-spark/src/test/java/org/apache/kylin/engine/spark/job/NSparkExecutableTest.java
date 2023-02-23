@@ -29,6 +29,8 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin;
+import org.apache.kylin.query.plugin.asyncprofiler.QueryAsyncProfilerSparkPlugin;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -152,12 +154,11 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
 
             Assert.assertNotNull(cmd);
-            Assert.assertTrue(
-                    cmd.contains("spark.plugins=org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
+            Assert.assertTrue(cmd.contains("spark.plugins=" + BuildAsyncProfilerSparkPlugin.class.getCanonicalName()));
         }
 
         overwriteSystemProp("kylin.engine.spark-conf.spark.plugins",
-                "org.apache.kylin.query.asyncprofiler.QueryAsyncProfilerSparkPlugin");
+                QueryAsyncProfilerSparkPlugin.class.getCanonicalName());
         {
             val desc = sparkExecutable.getSparkAppDesc();
             desc.setHadoopConfDir(hadoopConf);
@@ -166,9 +167,8 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
 
             Assert.assertNotNull(cmd);
-            Assert.assertTrue(
-                    cmd.contains("spark.plugins=org.apache.kylin.query.asyncprofiler.QueryAsyncProfilerSparkPlugin,"
-                            + "org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
+            Assert.assertTrue(cmd.contains("spark.plugins=" + QueryAsyncProfilerSparkPlugin.class.getCanonicalName()
+                    + "," + BuildAsyncProfilerSparkPlugin.class.getCanonicalName()));
         }
 
         overwriteSystemProp("kylin.engine.async-profiler-enabled", "false");
@@ -180,8 +180,7 @@ public class NSparkExecutableTest extends NLocalFileMetadataTestCase {
             String cmd = (String) sparkExecutable.sparkJobHandler.generateSparkCmd(kylinConfig, desc);
 
             Assert.assertNotNull(cmd);
-            Assert.assertFalse(
-                    cmd.contains("spark.plugins=org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin"));
+            Assert.assertFalse(cmd.contains("spark.plugins=" + BuildAsyncProfilerSparkPlugin.class.getCanonicalName()));
         }
 
         overwriteSystemProp("kylin.engine.spark-conf.spark.driver.extraJavaOptions",

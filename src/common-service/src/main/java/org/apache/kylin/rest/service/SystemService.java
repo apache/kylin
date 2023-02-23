@@ -60,6 +60,7 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.query.plugin.diagnose.DiagnoseHelper;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.BackupRequest;
 import org.apache.kylin.rest.request.DiagProgressRequest;
@@ -138,6 +139,8 @@ public class SystemService extends BasicService {
         String[] arguments;
         // full
         if (StringUtils.isEmpty(jobId) && StringUtils.isEmpty(queryId)) {
+            // Sparder executor gc log should be collected before FULL and QUERY diag package
+            DiagnoseHelper.collectSparderExecutorGc();
             if (startTime == null && endTime == null) {
                 startTime = Long.toString(System.currentTimeMillis() - 259200000L);
                 endTime = Long.toString(System.currentTimeMillis());
@@ -153,6 +156,8 @@ public class SystemService extends BasicService {
             arguments = new String[] { jobOpt, jobId, "-destDir", exportFile.getAbsolutePath(), "-diagId", uuid };
             diagPackageType = JOB;
         } else { //query
+            // Sparder executor gc log should be collected before FULL and QUERY diag package
+            DiagnoseHelper.collectSparderExecutorGc();
             arguments = new String[] { "-project", project, "-query", queryId, "-destDir", exportFile.getAbsolutePath(),
                     "-diagId", uuid };
             diagPackageType = QUERY;

@@ -16,14 +16,23 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.query.asyncprofiler
+package org.apache.kylin.query.plugin.diagnose
 
-import org.apache.kylin.common.asyncprofiler.AsyncProfilerExecutorPlugin
-import org.apache.spark.api.plugin.{DriverPlugin, ExecutorPlugin, SparkPlugin}
+object DiagnoseConstant {
+  // state
+  val STATE_WAIT = "STATE_WAIT"
+  val STATE_COLLECT = "STATE_COLLECT"
 
-class QueryAsyncProfilerSparkPlugin extends SparkPlugin {
+  // executor message
+  val NEXTCMD = "NEXTCMD"
+  val SENDRESULT = "SENDRESULT"
+  val HDFSDIR = "HDFSDIR"
 
-  override def driverPlugin(): DriverPlugin = new QueryAsyncProfilerDriverPlugin
+  // driver message
+  val NOP = "NOP"
+  val COLLECT = "COLLECT"
 
-  override def executorPlugin(): ExecutorPlugin = new AsyncProfilerExecutorPlugin
+  // empty
+  val EMPTY = ""
+
 }

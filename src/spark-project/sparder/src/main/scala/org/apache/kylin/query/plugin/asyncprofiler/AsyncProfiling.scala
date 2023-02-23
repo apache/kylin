@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.query.asyncprofiler
+package org.apache.kylin.query.plugin.asyncprofiler
 
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.asyncprofiler.Message._

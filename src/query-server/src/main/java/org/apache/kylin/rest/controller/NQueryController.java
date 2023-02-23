@@ -71,7 +71,7 @@ import org.apache.kylin.common.persistence.transaction.StopQueryBroadcastEventNo
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.metadata.query.QueryHistoryRequest;
 import org.apache.kylin.metadata.query.util.QueryHisTransformStandardUtil;
-import org.apache.kylin.query.asyncprofiler.AsyncProfiling;
+import org.apache.kylin.query.plugin.asyncprofiler.AsyncProfiling;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.request.SQLFormatRequest;
 import org.apache.kylin.rest.response.QueryStatisticsResponse;
