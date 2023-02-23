@@ -29,6 +29,7 @@ export default class SchemaModels {
       partition_date_start: 0,
       partition_type: 'APPEND'
     }
+    this.endPointDragging = false
     this.anti_flatten_lookups = options.join_tables ? options.join_tables.filter(item => item.flattenable === 'normalized').map(it => it.alias) : []
     this.anti_flatten_cc = []
     this.multi_partition_desc = options.multi_partition_desc || null
@@ -114,6 +115,7 @@ export default class SchemaModels {
       }
     }
     if (_mount) {
+      this.$set(this._mount, 'vm', this.vm)
       this.$set(this._mount, 'computed_columns', this.computed_columns)
       this.$set(this._mount, 'tables', this.tables)
       this.$set(this._mount, 'simplified_dimensions', this.simplified_dimensions)
@@ -133,20 +135,21 @@ export default class SchemaModels {
       this.$set(this._mount, 'anti_flatten_cc', this.anti_flatten_cc)
       this.$set(this._mount, 'has_base_agg_index', this.has_base_agg_index)
       this.$set(this._mount, 'has_base_table_index', this.has_base_table_index)
+      this.$set(this._mount, 'endPointDragging', this.endPointDragging)
     }
     if (options.renderDom) {
       this.renderDom = this.vm.$el.querySelector(options.renderDom)
       this.plumbInstance = this.plumbTool.init(this.renderDom, this._mount.zoom / 10)
-      this.plumbInstance.registerConnectionTypes({
-        'broken': {
-          paintStyle: { stroke: '#e73371', strokeWidth: 2 },
-          hoverPaintStyle: { stroke: '#e73371', strokeWidth: 2 }
-        },
-        'normal': {
-          paintStyle: { stroke: '#0988de', strokeWidth: 1 },
-          hoverPaintStyle: { stroke: '#0988de', strokeWidth: 1 }
-        }
-      })
+      // this.plumbInstance.registerConnectionTypes({
+      //   'broken': {
+      //     paintStyle: { stroke: '#e73371', strokeWidth: 2 },
+      //     hoverPaintStyle: { stroke: '#e73371', strokeWidth: 2 }
+      //   },
+      //   'normal': {
+      //     paintStyle: { stroke: '#0988de', strokeWidth: 1 },
+      //     hoverPaintStyle: { stroke: '#0988de', strokeWidth: 1 }
+      //   }
+      // })
     }
     this.allConnInfo = {}
   }

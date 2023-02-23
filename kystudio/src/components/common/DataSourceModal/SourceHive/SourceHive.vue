@@ -141,8 +141,7 @@ import arealabel from '../../area_label.vue'
   },
   computed: {
     ...mapGetters([
-      'currentSelectedProject',
-      'selectedProjectDatasource'
+      'currentSelectedProject'
     ]),
     ...mapState({
       loadHiveTableNameEnabled: state => state.system.loadHiveTableNameEnabled
@@ -427,29 +426,6 @@ export default class SourceHive extends Vue {
       tagEl.style.maxWidth = `${this.selectorWidth - 5}px`
     }
   }
-  async loadDatabase () {
-    if (this.$refs['tree-list']) {
-      this.$refs['tree-list'].showLoading()
-    }
-    this.loadingTreeData = true
-    try {
-      const projectName = this.currentSelectedProject
-      const sourceType = this.sourceType
-      const res = await this.fetchDatabase({ projectName, sourceType })
-      this.treeData = this.getDatabaseTree(await handleSuccessAsync(res))
-      this.isDatabaseError = false
-      this.$nextTick(() => {
-        Scrollbar.init(this.$el.querySelector('.filter-tree'))
-      })
-    } catch (e) {
-      this.isDatabaseError = true
-      handleError(e)
-    }
-    if (this.$refs['tree-list']) {
-      this.$refs['tree-list'].hideLoading()
-    }
-    this.loadingTreeData = false
-  }
   async loadTables ({database, tableName = '', isTableReset = false}) {
     const projectName = this.currentSelectedProject
     const sourceType = this.sourceType
@@ -561,10 +537,6 @@ export default class SourceHive extends Vue {
         ? this.handleRemoveTable(data.id)
         : this.handleAddTable(data.id)
     }
-    // 点击数据库节点时，不用再重新获取了
-    /* if (data.type === 'datasource' && this.isDatabaseError) {
-      await this.loadDatabase()
-    } */
   }
   handleResize (treeWidth) {
     const marginLeft = treeWidth + 25 + 20

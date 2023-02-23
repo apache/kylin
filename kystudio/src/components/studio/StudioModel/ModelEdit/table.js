@@ -10,9 +10,10 @@ class NTable {
     this.columns = objectClone(options.columns).filter((col) => {
       return !col.is_computed_column
     }) // 所有列
-    this.columnPerSize = 50 // 每批显示条数
-    this.hasMoreColumns = this.columns.length > 50 // 是否显示加载更多
+    this.columnPerSize = 10 // 每批显示条数
+    this.hasMoreColumns = this.columns.length > 10 // 是否显示加载更多
     this.columnCurrentPage = 1 // 当前页数
+    this.hasScrollEnd = false // 是否滚动到底部
     this.filterColumnChar = '' // 搜索字符串
     this.showColumns = this.columns.slice(0, this.columnPerSize)
     this.getOtherTableByGuid = options.getTableByGuid
@@ -25,6 +26,9 @@ class NTable {
     this._cache_search_columns = this.columns // 搜索结果缓存
     // this._parent = options._parent
     this.ST = null
+    this.spreadOut = true
+    this.spreadHeight = 200
+    this.modelEvents = options.modelEvents
     this.drawSize = Object.assign({}, { // 绘制信息
       left: 100,
       top: 20,
@@ -48,7 +52,7 @@ class NTable {
         _parent.windowWidth = sw
         _parent.windowHeight = sh
         if (!dragInfo.needCheckEdge && !dragInfo.needCheckOutOfView) { return }
-        let left = dragInfo.left * (_parent.zoom / 10) + _parent.zoomXSpace
+        let left = dragInfo.left
         // 判断是否到达边缘
         if (dragInfo.needCheckEdge) {
           if (left + dragInfo.width > sw - dragInfo.edgeOffset) {
@@ -61,7 +65,9 @@ class NTable {
           }
         }
         // 判断是否超过边界
-        this.checkIsOutOfView(_parent, dragInfo, sw, sh)
+        this.checkIsOutOfView(_parent, dragInfo, sw, sh, this.guid)
+        // 判断是否需要加载更多数据
+        this.exchangeMoreTableColumns()
         options.plumbTool.lazyRender(() => {
           options.plumbTool.refreshPlumbInstance()
         })
@@ -85,18 +91,21 @@ class NTable {
     this.columnCurrentPage = 1
     this.getPagerColumns()
   }
-  checkIsOutOfView (_parent, dragInfo, sw, sh) {
+  checkIsOutOfView (_parent, dragInfo, sw, sh, tableGuid) {
     clearTimeout(this.ST)
     this.ST = setTimeout(() => {
-      const { left: mL, top: mT } = _parent.marginClient ?? { left: 0, top: 0 }
-      let left = (dragInfo.left + mL) * (_parent.zoom / 10) + _parent.zoomXSpace
-      let top = (dragInfo.top + mT) * (_parent.zoom / 10) + _parent.zoomYSpace
-      let offset = 20
-      if (left - offset > sw || left + dragInfo.width + offset < 0 || top + dragInfo.height + offset < 0 || top - offset > sh) {
+      const { x: tX, y: tY } = document.getElementById(tableGuid).getBoundingClientRect()
+      const { x: boxX, y: boxY } = document.querySelector(dragInfo.box).getBoundingClientRect()
+      // const { left: mL, top: mT } = _parent.marginClient ?? { left: 0, top: 0 }
+      // let left = dragInfo.left * (_parent.zoom / 10) + mL + (_parent.zoomXSpace / (_parent.zoom / 10))
+      // let top = dragInfo.top * (_parent.zoom / 10)  + mT + (_parent.zoomYSpace / (_parent.zoom / 10))
+      let offset = 30
+      if (tX - boxX + offset > sw || tX - boxX + dragInfo.width * (_parent.zoom / 10) < 0 || tY - boxY + dragInfo.height * (_parent.zoom / 10) < 0 || tY - boxY + offset > sh) {
         dragInfo.isOutOfView = true
       } else {
         dragInfo.isOutOfView = false
       }
+      _parent.vm.hideLinkLabel(this.modelEvents.getAllConnectsByGuid(tableGuid), {drawSize: dragInfo})
     }, 200)
   }
   // 链接关系处理 (链接数据都存储在主键表上)
@@ -281,6 +290,16 @@ class NTable {
   setSize (w, h) {
     this.drawSize.width = w
     this.drawSize.height = h
+  }
+  exchangeMoreTableColumns () {
+    const tableDom = document.getElementById(`${this.guid}`)
+    if (!tableDom) return
+    const columnListBounding = tableDom.getElementsByClassName('column-list-box')[0]?.getBoundingClientRect()
+    const scrollContentBounding = tableDom.getElementsByClassName('scroll-content')[0]?.getBoundingClientRect()
+    if (!columnListBounding || !scrollContentBounding) return
+    if (columnListBounding.height >= scrollContentBounding.height) {
+      this.loadMoreColumns()
+    }
   }
 }
 

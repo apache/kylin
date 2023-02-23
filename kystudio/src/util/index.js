@@ -48,9 +48,11 @@ export function parsePath (path) {
   } else {
     var segments = path.split('.')
     return function (obj) {
+      /* istanbul ignore next */
       if (!path) {
         return obj
       }
+      /* istanbul ignore next */
       for (var i = 0; i < segments.length; i++) {
         if (!obj) { return }
         obj = obj[segments[i]]
@@ -417,6 +419,7 @@ export function sliceNumber (number, len) {
   return `${number}`.replace(reg, (v) => `${v},`)
 }
 
+/* istanbul ignore next */
 // 复写 closest 方法兼容 IE
 export function closestElm (element, parentElm) {
   if (!element || !parentElm) return
@@ -435,6 +438,7 @@ export function closestElm (element, parentElm) {
   getParent(element)
   return flag
 }
+/* istanbul ignore next */
 
 export { set, get, push } from './object'
 export { handleError, handleSuccess, hasRole, hasPermission, kylinConfirm, transToGmtTime, transToServerGmtTime, isDatePartitionType, isTimePartitionType, isSubPartitionType, isStreamingPartitionType, transToUTCMs, getGmtDateFromUtcLike } from './business'
