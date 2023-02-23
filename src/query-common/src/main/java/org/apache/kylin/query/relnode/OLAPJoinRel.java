@@ -221,7 +221,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
                     "RowType=" + this.rowType.getFieldCount() + ", ColumnRowType=" + columns.size());
         }
 
-        columns.stream().forEach(col -> sourceColumns.add(col.getSourceColumns()));
+        columns.forEach(col -> sourceColumns.add(col.getSourceColumns()));
 
         return new ColumnRowType(columns, sourceColumns);
     }
@@ -244,9 +244,9 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
         JoinDesc join = new JoinDesc();
         join.setForeignKey(fks.toArray(COLUMN_ARRAY_MARKER));
-        join.setForeignKeyColumns(fkCols.toArray(new TblColRef[fkCols.size()]));
+        join.setForeignKeyColumns(fkCols.toArray(new TblColRef[0]));
         join.setPrimaryKey(pks.toArray(COLUMN_ARRAY_MARKER));
-        join.setPrimaryKeyColumns(pkCols.toArray(new TblColRef[pkCols.size()]));
+        join.setPrimaryKeyColumns(pkCols.toArray(new TblColRef[0]));
         join.sortByFK();
         return join;
     }
@@ -299,12 +299,9 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
      */
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-        context.setReturnTupleInfo(rowType, columnRowType);
-
+        String execFunc = context.genExecFunc(this, "");
         PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), pref.preferArray());
         RelOptTable factTable = context.firstTableScan.getTable();
-        // query result is error like select min(2+2), max(2) from EmptyTable
-        String execFunc = context.isConstantQueryWithAggregations() ? "executeSimpleAggregationQuery" : "executeOLAPQuery";
         MethodCallExpression exprCall = Expressions.call(factTable.getExpression(OLAPTable.class), execFunc,
                 implementor.getRootExpression(), Expressions.constant(context.id));
         return implementor.result(physType, Blocks.toBlock(exprCall));

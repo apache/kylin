@@ -17,10 +17,10 @@
  */
 package org.apache.kylin.query.runtime.plan
 
-import org.apache.kylin.guava30.shaded.common.base.Joiner
-import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
 import org.apache.kylin.engine.spark.utils.{LogEx, LogUtils}
+import org.apache.kylin.guava30.shaded.common.base.Joiner
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate
 import org.apache.kylin.metadata.cube.gridtable.NLayoutToGridTableMapping
 import org.apache.kylin.metadata.cube.model.{LayoutEntity, NDataSegment, NDataflow}
@@ -34,7 +34,7 @@ import org.apache.kylin.query.util.{RuntimeHelper, SparderDerivedUtil}
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.manager.SparderLookupManager
-import org.apache.spark.sql.types.{ArrayType, DoubleType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql._
 
@@ -42,15 +42,13 @@ import java.util.concurrent.ConcurrentHashMap
 import java.{lang, util}
 import scala.collection.JavaConverters._
 
+
 // scalastyle:off
 object TableScanPlan extends LogEx {
 
-  def listSegmentsForQuery(cube: NDataflow): util.List[NDataSegment] = {
+  def listSegmentsForQuery(dataflow: NDataflow): util.List[NDataSegment] = {
     val r = new util.ArrayList[NDataSegment]
-    import scala.collection.JavaConversions._
-    for (seg <- cube.getQueryableSegments) {
-      r.add(seg)
-    }
+    dataflow.getQueryableSegments.forEach(seg => r.add(seg))
     r
   }
 
@@ -80,14 +78,59 @@ object TableScanPlan extends LogEx {
       }).reduce(_.union(_))
   }
 
+  def createMetadataTable(rel: KapRel): DataFrame = {
+    val session: SparkSession = SparderEnv.getSparkSession
+    val olapContext = rel.getContext
+    val allFields: util.List[TblColRef] = new util.ArrayList[TblColRef]
+    olapContext.allTableScans.forEach(tableScan => {
+      val columns = tableScan.getColumnRowType.getAllColumns
+      allFields.addAll(columns)
+    })
+    // convert data
+    val dataSet = olapContext.getColValuesRange
+    val result = new util.ArrayList[Row]
+    dataSet.forEach(rowData => {
+      val sparderData = new Array[Any](rowData.length)
+      sparderData.indices.foreach(index => {
+        val dataType = allFields.get(index).getColumnDesc.getUpgradedType
+        sparderData(index) = SparderTypeUtil.convertStringToResultValueBasedOnKylinSQLType(rowData.apply(index), dataType)
+      })
+      result.add(Row.fromSeq(sparderData))
+    })
+
+    // create schema
+    val structTypes = new util.ArrayList[StructField]()
+    allFields.forEach(col => {
+      try {
+        val dataType = col.getColumnDesc.getUpgradedType
+        val spaType = SparderTypeUtil.kylinTypeToSparkResultType(dataType)
+        structTypes.add(StructField(col.getIdentity.replace(".", "_"), spaType))
+      } catch {
+        // some dataTypes are not support in sparder, such as 'any',
+        // but these types can not be used in min/max, just return stringType
+        case e: IllegalArgumentException => {
+          structTypes.add(StructField(col.getIdentity.replace(".", "_"), StringType))
+          logInfo(e.toString)
+        }
+      }
+    })
+    val schema: StructType = StructType(structTypes)
+
+    session.createDataFrame(result, schema)
+  }
+
   // prunedSegments is null
-  def tableScanEmptySegment(rel: KapRel): DataFrame = {
+  private def tableScanEmptySegment(rel: KapRel): DataFrame = {
     logInfo("prunedSegments is null")
     val df = SparkOperation.createEmptyDataFrame(
-      StructType(
-        rel.getColumnRowType.getAllColumns.asScala
-          .map(column =>
-            StructField(column.toString.replaceAll("\\.", "_"), SparderTypeUtil.toSparkType(column.getType)))))
+      StructType(rel.getColumnRowType
+        .getAllColumns.asScala
+        .map(column => StructField(
+          column.toString.replaceAll("\\.", "_"),
+          SparderTypeUtil.toSparkType(column.getType))
+        )
+      )
+    )
     val cols = df.schema.map(structField => {
       col(structField.name)
     })
@@ -101,7 +144,8 @@ object TableScanPlan extends LogEx {
   }
 
   def tableScan(rel: KapRel, dataflow: NDataflow, olapContext: OLAPContext,
-                session: SparkSession, prunedSegments: util.List[NDataSegment], candidate: NLayoutCandidate): DataFrame = {
+                session: SparkSession, prunedSegments: util.List[NDataSegment],
+                candidate: NLayoutCandidate): DataFrame = {
     val prunedPartitionMap = olapContext.storageContext.getPrunedPartitions
     olapContext.resetSQLDigest()
     //TODO: refactor
@@ -122,7 +166,7 @@ object TableScanPlan extends LogEx {
     val fileList = prunedSegments.asScala.map(
       seg => toLayoutPath(dataflow, cuboidLayout.getId, basePath, seg, prunedPartitionMap)
     )
-    val path = fileList.mkString(",") + olapContext.isExactlyFastBitmap()
+    val path = fileList.mkString(",") + olapContext.isExactlyFastBitmap
     printLogInfo(basePath, dataflow.getId, cuboidLayout.getId, prunedSegments, prunedPartitionMap)
 
     val cached = cacheDf.get().getOrDefault(path, null)
@@ -139,7 +183,7 @@ object TableScanPlan extends LogEx {
         }
       }.mkString(",")
       val newDf = session.kylin
-        .isFastBitmapEnabled(olapContext.isExactlyFastBitmap())
+        .isFastBitmapEnabled(olapContext.isExactlyFastBitmap)
         .bucketingEnabled(bucketEnabled(olapContext, cuboidLayout))
         .cuboidTable(dataflow, cuboidLayout, pruningInfo)
         .toDF(columnNames: _*)
@@ -238,7 +282,8 @@ object TableScanPlan extends LogEx {
     s"$basePath${dataflow.getUuid}/${seg.getId}/$cuboidId"
   }
 
-  def toLayoutPath(dataflow: NDataflow, layoutId: Long, basePath: String, seg: NDataSegment, partitionsMap: util.Map[String, util.List[lang.Long]]): List[String] = {
+  def toLayoutPath(dataflow: NDataflow, layoutId: Long, basePath: String,
+                   seg: NDataSegment, partitionsMap: util.Map[String, util.List[lang.Long]]): List[String] = {
     if (partitionsMap == null) {
       List(toLayoutPath(dataflow, layoutId, basePath, seg))
     } else {

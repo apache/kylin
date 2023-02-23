@@ -52,11 +52,11 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.query.schema.OLAPTable;
-import org.apache.kylin.metadata.model.NDataModel;
 
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
@@ -176,7 +176,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     }
 
     /**
-     * There're 3 special RelNode in parents stack, OLAPProjectRel, OLAPToEnumerableConverter
+     * There are 3 special RelNode in parents stack, OLAPProjectRel, OLAPToEnumerableConverter
      * and OLAPUnionRel. OLAPProjectRel will helps collect required columns but the other two
      * don't. Go through the parent RelNodes from bottom to top, and the first-met special
      * RelNode determines the behavior.
@@ -266,27 +266,11 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
      */
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-        context.setReturnTupleInfo(rowType, columnRowType);
-        String execFunction = genExecFunc();
-
+        String execFunction = context.genExecFunc(this, tableName);
         PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), JavaRowFormat.ARRAY, false);
         MethodCallExpression exprCall = Expressions.call(table.getExpression(OLAPTable.class), execFunction,
                 implementor.getRootExpression(), Expressions.constant(context.id));
         return implementor.result(physType, Blocks.toBlock(exprCall));
-    }
-
-    public String genExecFunc() {
-        context.setReturnTupleInfo(rowType, columnRowType);
-        if (context.isConstantQueryWithAggregations())
-            return "executeSimpleAggregationQuery";
-        // if the table to scan is not the fact table of cube, then it's a lookup table,
-        // TODO: this is not right!
-        if (context.realization.getModel().isLookupTable(tableName)) {
-            return "executeLookupTableQuery";
-        } else {
-            return "executeOLAPQuery";
-        }
-
     }
 
     @Override
