@@ -65,10 +65,10 @@ function getJointsData (tablesData) {
 
   for (const tableData of tablesData) {
     try {
-      const { join, alias } = tableData
+      const { join, alias, guid } = tableData
       if (tableData.kind === 'LOOKUP') {
         const { primary, foreign } = getPrimaryAndForeign(join, alias)
-        const jointData = { guid: sampleGuid(), ...join, primary, foreign }
+        const jointData = { guid, ...join, primary, foreign }
         jointsData = [...jointsData, jointData]
       }
     } catch (e) {
@@ -78,16 +78,19 @@ function getJointsData (tablesData) {
   return jointsData
 }
 
-function formatJoinsData (jointData) {
+function formatJoinsData (jointData, tablesData) {
   let joinsData = []
 
   try {
     const { primary_key: pKeys, foreign_key: fKeys } = jointData
-    joinsData = pKeys.map((pKey, index) => ({
-      guid: sampleGuid(),
-      primaryKey: pKey,
-      foreignKey: fKeys[index]
-    }))
+    joinsData = pKeys.map((pKey, index) => {
+      const [tb] = tablesData.filter(it => it.alias === fKeys[index].split('.')[0])
+      return {
+        guid: tb ? tb.guid : sampleGuid(),
+        primaryKey: pKey,
+        foreignKey: fKeys[index]
+      }
+    })
     // 模型数据结构不严谨，防错用
     if (pKeys.length !== fKeys.length) {
       throw new Error('The length of primary keys isn\'t the same as foreign keys.')
@@ -141,7 +144,8 @@ export function generateModel (modelData) {
       guid: tableData.guid,
       name: tableData.table,
       alias: tableData.alias,
-      type: tableData.kind
+      type: tableData.kind,
+      spreadOut: true
     })),
     dimensions: dimensionsData.map(dimensionData => ({
       guid: dimensionData.guid,
@@ -164,7 +168,7 @@ export function generateModel (modelData) {
       primary: jointData.primary,
       foreign: jointData.foreign,
       type: jointData.type,
-      joins: formatJoinsData(jointData)
+      joins: formatJoinsData(jointData, tablesData)
     }))
   }
 }

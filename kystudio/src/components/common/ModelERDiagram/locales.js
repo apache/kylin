@@ -1,6 +1,7 @@
 export default {
   en: {
-    factTable: 'Fact Table',
-    lookupTable: 'Lookup Table'
+    FACT: 'Fact Table',
+    LOOKUP: 'Dimension Table',
+    tableColumnNum: ''
   }
 }

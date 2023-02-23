@@ -1,5 +1,7 @@
 export default {
   'en': {
+    FACT: 'Fact Table',
+    LOOKUP: 'Dimension Table',
     'adddimension': 'Add Dimension',
     'addmeasure': 'Add Measure',
     'addjoin': 'Add Join Relationship',
@@ -21,11 +23,13 @@ export default {
     'allowSysChange': 'Allow system change semantics',
     'delTableTip': 'All dimensions, measures and joins using this table would be deleted. Are you sure you want to delete this table?',
     'noFactTable': 'Please select a fact table.',
-    switchLookup: 'Switch to Lookup Table',
-    switchFact: 'Switch to Fact Table',
+    switchLookup: 'Set as Dimension Table',
+    switchFact: 'Set as Fact Table',
+    switchTableTypeTips: 'Continue switching will replace the current fact table, confirm to replace?',
+    switchReplace: 'Switch and Replace',
     kafakFactTips: 'Kafka tables can only be used as fact tables. Please delete the current fact table or switch it to a dimension table before loading a Kafka table.',
     kafakDisableSecStorageTips: 'Can\'t use Kafka tables when the tiered storage is ON.',
-    editTableAlias: 'Edit table alias',
+    editTableAlias: 'Rename',
     deleteTable: 'Delete the table',
     noSelectJobs: 'Please check at least one item',
     add: 'Add',
@@ -90,6 +94,13 @@ export default {
     flattenLookupTableTips: 'Unable to use columns from this table for dimension and measure. Because the join relationship of this dimension table won\'t be precomputed.',
     disableDelDimTips: 'When the tiered storage is ON, the time partition column can\'t be deleted from the dimension.',
     forbidenCreateCCTip: 'Can\'t add computed column to fusion model',
-    streamTips: 'For fusion model, the time partition column can\'t be deleted from the dimension.'
+    streamTips: 'For fusion model, the time partition column can\'t be deleted from the dimension.',
+    rename: 'Rename Table Name',
+    spreadTableColumns: 'Collapse',
+    expandTableColumns: 'Expand',
+    noResults: 'No result',
+    searchResults: '{number} results',
+    doubleClick: 'Double Click',
+    loseFactTableAlert: 'The current model is missing a fact table, please set up a fact table.'
   }
 }

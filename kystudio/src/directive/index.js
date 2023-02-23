@@ -177,7 +177,7 @@ Vue.directive('scroll', {
       let needObserve = binding.modifiers.observe
       if (needObserve) {
         scrollbar.addListener((status) => {
-          if (status.offset.y > status.limit.y - 10) {
+          if (status.offset.y > status.limit.y - 5) {
             let scrollBottomFunc = vnode.data.on && vnode.data.on['scroll-bottom']
             scrollBottomFunc && scrollBottomFunc()
           }
@@ -425,18 +425,15 @@ Vue.directive('drag', {
       ev.preventDefault()
       let offsetX = ev.clientX
       let offsetY = ev.clientY
-      let flag = false
       regainBox()
       if (changeOption.hasOwnProperty('height') || changeOption.hasOwnProperty('width')) {
         el.className += ' ky-resize-ing'
       } else {
         el.className += ' ky-move-ing'
       }
-      var timer = setInterval(() => { flag = true }, 30)
       document.onmousemove = (e) => {
         ev.stopPropagation()
         ev.preventDefault()
-        if (!flag) return
         let x = e.clientX - offsetX
         let y = e.clientY - offsetY
         let parent = oDiv.parentElement
@@ -444,7 +441,6 @@ Vue.directive('drag', {
         y /= zoom / 10
         offsetX = e.clientX
         offsetY = e.clientY
-        flag = false
 
         if (changeOption) {
           for (let i in changeOption) {
@@ -502,29 +498,9 @@ Vue.directive('drag', {
             }
           }
         }
-        if (closestElm(oDiv, '.model-edit-outer')) {
-          const { width, height, right, left, top, zIndex } = info
-          if ([...oDiv.classList].includes('drag-bar')) {
-            parent = parent.parentElement
-          }
-          if ([...oDiv.classList].includes('model-edit-outer')) {
-            const child = oDiv.querySelector('.model-edit')
-            if (!child) return
-            const mL = child.offsetLeft ?? 0
-            const mT = child.offsetTop ?? 0
-            child.style.cssText += `margin-left: ${mL + x}px; margin-top: ${mT + y}px`
-          }
-          const cloneId = parent.getAttribute('id')
-          if (cloneId && /temp$/.test(cloneId)) {
-            const targetDom = document.getElementById(`${cloneId.replace(/temp$/, '')}`)
-            targetDom && (targetDom.style.cssText += `width: ${width}px; height: ${height}px; right: ${right ? right + 'px' : null}; left: ${left ? left + 'px' : null}; top: ${top}px; z-index: ${zIndex}`)
-          }
-          parent && (parent.style.cssText += `width: ${width}px; height: ${height}px; right: ${right ? right + 'px' : null}; left: ${left ? left + 'px' : null}; top: ${top}px; z-index: ${zIndex}`)
-        } else {
-          Object.keys(info).forEach(item => {
-            dragInfo[item] = info[item]
-          })
-        }
+        Object.keys(info).forEach(item => {
+          dragInfo[item] = info[item]
+        })
 
         callback && callback(x, y, boxW, boxH, info, oDiv)
       }
@@ -532,54 +508,8 @@ Vue.directive('drag', {
         el.className = el.className.replace(/ky-[a-z]+-ing/g, '').replace(/\s+$/, '')
         document.onmousemove = null
         document.onmouseup = null
-        timer = null
-        Object.keys(info).forEach(item => {
-          dragInfo[item] = info[item]
-        })
         $(window).unbind('resize')
       }
-    }
-  }
-})
-// 收集guide dom
-Vue.directive('guide', {
-  // bind: function (el, binding, vnode) {
-  //   console.log('----', vnode.key, vnode)
-  //   // 设置alone参数 避免虚拟dom重用导致指令生命周期错误
-  //   let keys = binding.modifiers
-  //   if (binding.arg === 'alone') {
-  //     vnode.key = Object.keys(keys).join('-')
-  //   }
-  // },
-  update: function (el, binding, vnode) {
-    let keys = binding.modifiers
-    let storeGuide = store.state.system.guideConfig.targetList
-    if (storeGuide) {
-      for (let i in keys) {
-        storeGuide[i] = el.__vue__ || el
-      }
-      if (store.state.system.guideConfig.globalMaskVisible && binding.value) {
-        storeGuide[binding.value] = el.__vue__ || el
-      }
-    }
-  },
-  inserted: function (el, binding, vnode) {
-    let keys = binding.modifiers
-    let storeGuide = store.state.system.guideConfig.targetList
-    if (storeGuide) {
-      for (let i in keys) {
-        storeGuide[i] = el.__vue__ || el
-      }
-      if (store.state.system.guideConfig.globalMaskVisible && binding.value) {
-        storeGuide[binding.value] = el.__vue__ || el
-      }
-    }
-  },
-  unbind: function (el, binding) {
-    let keys = binding.modifiers
-    let storeGuide = store.state.system.guideConfig.targetList
-    for (let i in keys) {
-      delete storeGuide[i]
     }
   }
 })

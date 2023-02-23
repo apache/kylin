@@ -1,44 +1,123 @@
 <template>
-  <div class="model-edit-outer" @drop='dropTable($event)' @dragover='allowDrop($event)' v-drag="{sizeChangeCb:dragBox}" @dragleave="dragLeave">
+  <div class="model-edit-outer" @drop='dropTable($event)' @dragover='allowDrop($event)' v-drag="{sizeChangeCb:dragBox}" @dragleave="dragLeave" @click="removeTableFocus">
+    <el-alert class="lose-fact-table-alert" v-if="modelRender && modelRender.tables && Object.keys(modelRender.tables).length && !showFactTableAlert" :title="$t('loseFactTableAlert')" type="warning" show-icon :closable="false"></el-alert>
     <div class="model-edit">
       <el-button v-visible @click="guideActions"></el-button>
       <!-- 为了保证 gif 每次都从第一帧开始播放，所以每次都要重新加载 -->
       <kylin-empty-data class="gifEmptyData" :content="$t('noTableTip')" :image="require('../../../../assets/img/editmodel.gif') + '?v=' + new Date().getTime()" v-if="!Object.keys(modelRender.tables).length"></kylin-empty-data>
       <!-- table box -->
-      <div class="table-box" @click="activeTablePanel(t)" v-visible="!currentEditTable || currentEditTable.guid !== t.guid" :id="t.guid" v-event-stop :class="['js_' + t.alias.toLocaleLowerCase(), {'isLookup':t.kind==='LOOKUP'}]" v-for="t in modelRender && modelRender.tables || []" :key="t.guid" :style="tableBoxStyle(t.drawSize)">
-        <div class="table-title" :data-zoom="modelRender.zoom"  v-drag:change.left.top="t.drawSize">
-          <common-tip class="name" v-show="!t.aliasIsEdit">
-            <span slot="content">{{t.alias}}</span>
-            <span class="alias-span ksd-ml-4">{{t.alias}}</span>
-          </common-tip>
-          <span class="setting-icon" v-if="!isSchemaBrokenModel" @click="editTable(t.guid)"><i class="el-icon-ksd-table_setting"></i></span>
+      <div
+        :ref="`table_${t.guid}`"
+        class="table-box"
+        @click="(e) => activeTablePanel(e, t)"
+        @mouseleave="removeCustomHoverStatus"
+        :id="t.guid"
+        v-event-stop
+        :class="['js_' + t.alias.toLocaleLowerCase(), {'isLookup':t.kind==='LOOKUP'}]"
+        v-for="t in modelRender && modelRender.tables || []"
+        :key="`${t.guid}`"
+        :style="tableBoxStyle(t.drawSize)"
+      >
+        <div :class="['table-title', {'table-spread-out': !t.spreadOut}]" :data-zoom="modelRender.zoom" v-drag:change.left.top="t.drawSize" @dblclick="handleDBClick(t)">
+          <span class="table-sign">
+            <el-tooltip :content="$t(t.kind)" placement="top">
+              <i class="el-ksd-n-icon-symbol-f-filled kind" v-if="t.kind === 'FACT'"></i>
+              <i v-else class="el-ksd-n-icon-dimention-table-filled kind"></i>
+            </el-tooltip>
+          </span>
+          <el-tooltip :visible-arrow="false" popper-class="popper--small model-alias-tooltip" effect="dark" class="name" :content="t.alias">
+            <span class="alias-span">{{t.alias}}</span>
+          </el-tooltip>
+          <el-tooltip :content="`${t.columns.length}`" placement="top" :disabled="typeof getColumnNums(t) === 'number'">
+            <span class="table-column-nums">{{getColumnNums(t)}}</span>
+          </el-tooltip>
+          <el-dropdown class="table-dropdown" trigger="click" :disabled="isSchemaBrokenModel">
+            <span class="setting-icon" v-if="!isSchemaBrokenModel"><i class="el-ksd-n-icon-more-vertical-filled"></i></span>
+            <el-dropdown-menu class="table-actions" slot="dropdown">
+              <el-dropdown-item>
+                <div v-if="t.kind === 'FACT' || modelInstance.checkTableCanSwitchFact(t.guid)">
+                  <div class="action switch" :class="{'disabled': t.source_type === 1}" v-if="t.kind === 'FACT'" @click.stop="changeTableType(t)">
+                    <span>{{$t('switchLookup')}}</span>
+                  </div>
+                  <div class="action switch" v-if="modelInstance.checkTableCanSwitchFact(t.guid)" @click.stop="changeTableType(t)">
+                    <span >{{$t('switchFact')}}</span>
+                  </div>
+                </div>
+              </el-dropdown-item>
+              <el-dropdown-item>
+                <div class="spread-or-expand-table" @click="handleDBClick(t)"><span>{{$t(t.spreadOut ? 'spreadTableColumns' : 'expandTableColumns')}}</span><span class="db">{{$t('doubleClick')}}</span></div>
+              </el-dropdown-item>
+              <el-dropdown-item v-if="t.kind !== 'FACT'">
+                <div @click.stop="openEditAliasForm(t)">{{$t('editTableAlias')}}</div>
+              </el-dropdown-item>
+              <el-dropdown-item>
+                <div class="action del" @click.stop="delTable(t)"> {{$t('kylinLang.common.delete')}}</div>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </div>
-        <div class="column-search-box"><el-input prefix-icon="el-ksd-icon-search_22" v-model="t.filterColumnChar" @input="t.filterColumns()" size="small" :placeholder="$t('searchColumn')"></el-input></div>
-        <div class="column-list-box ksd-drag-box" v-if="!t.drawSize.isOutOfView&&t.showColumns.length" @dragover='($event) => {allowDropColumn($event, t.guid)}' @drop='(e) => {dropColumn(e, null, t)}' v-scroll.reactive>
+        <div class="column-search-box" v-show="t.spreadOut"><el-input prefix-icon="el-ksd-icon-search_22" v-model="t.filterColumnChar" @input="t.filterColumns()" size="small" :placeholder="$t('kylinLang.common.search')"></el-input></div>
+        <div class="column-list-box ksd-drag-box" :ref="`${t.guid}_column_box`" v-if="!t.drawSize.isOutOfView && t.showColumns.length" v-scroll.observe.reactive @scroll-bottom="handleScrollBottom(t)">
+          <!-- 锚点拖拽功能暂时隐藏
+            @mouseleave="(e) => handleMouseLeave(e, t, col)"
+            @mouseenter="(e) => handleMouseEnterColumn(e, t, col)"
+          -->
           <ul>
-            <li v-on:dragover="(e) => {dragColumnEnter(e, t)}" v-on:dragleave="dragColumnLeave" class="column-li" :class="{'column-li-cc': col.is_computed_column}" @drop.stop='(e) => {dropColumn(e, col, t)}' @dragstart="(e) => {dragColumns(e, col, t)}"  draggable v-for="col in t.showColumns" :key="col.name">
+            <li class="column-search-results" v-if="t.filterColumnChar && t._cache_search_columns.length > 0"><span>{{$t('searchResults', {number: t._cache_search_columns.length})}}</span></li>
+            <li
+              :id="`${t.guid}_${col.column}`"
+              @dragover="(e) => {dragColumnEnter(e, t, col)}"
+              @dragleave="dragColumnLeave"
+              @dragstart="(e) => {dragColumns(e, col, t)}"
+              @mouseenter="(e) => handleMouseEnterColumn(e, t, col)"
+              @mouseleave="(e) => handleMouseLeave(e, t, col)"
+              draggable
+              class="column-li"
+              :class="{'column-li-cc': col.is_computed_column, 'is-link': col.isPK || col.isFK}"
+              @drop.stop='(e) => {dropColumn(e, col, t)}'
+              v-for="col in t.showColumns"
+              :key="col.name"
+            >
               <span class="ksd-nobr-text">
                 <span class="col-type-icon">
-                  <i class="el-icon-ksd-fkpk_big is-pfk" v-show="col.isPFK"></i><i :class="columnTypeIconMap(col.datatype)"></i>
+                  <span class="is-pfk" v-show="col.isPK || col.isFK">{{`${col.isFK && col.isPK ? 'FK PK' : col.isFK ? 'FK' : 'PK'}`}}</span><i :class="columnTypeIconMap(col.datatype)"></i>
                 </span>
-                <span class="col-name">{{col.name}}</span>
+                <el-tooltip :visible-arrow="false" popper-class="popper--small" effect="dark" :content="col.name" placement="bottom-start">
+                  <span :class="['col-name']">{{col.name}}</span>
+                </el-tooltip>
               </span>
             </li>
-            <!-- 渲染可计算列 -->
+            <!-- 
+              渲染可计算列 
+              @mouseleave="(e) => handleMouseLeave(e, t, col)"
+              @mouseenter="(e) => handleMouseEnterColumn(e, t, col)"
+            -->
             <template v-if="t.kind=== 'FACT'">
-              <li class="column-li column-li-cc" @drop='(e) => {dropColumn(e, {name: col.columnName }, t)}' @dragstart="(e) => {dragColumns(e, {name: col.columnName}, t)}"  draggable v-for="col in modelRender.computed_columns" :key="col.name">
+              <li :class="['column-li', 'column-li-cc', {'is-link': col.isPK || col.isFK}]"
+                @drop='(e) => {dropColumn(e, {name: col.columnName }, t)}'
+                @dragover="(e) => {dragColumnEnter(e, t, col)}"
+                @dragleave="dragColumnLeave"
+                @dragstart="(e) => {dragColumns(e, col, t)}"
+                @mouseleave="(e) => handleMouseLeave(e, t, col)"
+                @mouseenter="(e) => handleMouseEnterColumn(e, t, col)"
+                draggable
+                v-for="col in modelRender.computed_columns"
+                :key="col.name"
+              >
                 <span class="ksd-nobr-text">
                   <span class="col-type-icon">
-                    <i class="el-icon-ksd-fkpk_big is-pfk" v-show="col.isPFK"></i><i :class="columnTypeIconMap(col.datatype)"></i>
+                    <span class="is-pfk" v-show="col.isPK || col.isFK">{{`${col.isFK && col.isPK ? 'FK PK' : col.isFK ? 'FK' : 'PK'}`}}</span><i :class="columnTypeIconMap(col.datatype)"></i>
                   </span>
-                  <span class="col-name">{{col.columnName}}</span>
+                  <el-tooltip :visible-arrow="false" popper-class="popper--small" effect="dark" :content="col.columnName" placement="bottom-start">
+                    <span :class="['col-name']">{{col.columnName}}</span>
+                  </el-tooltip>
                 </span>
               </li>
             </template>
-            <li class="li-load-more" v-if="t.hasMoreColumns" @click="t.loadMoreColumns()">{{$t('kylinLang.common.loadMore')}}</li>
+            <li class="li-load-more" v-if="t.hasMoreColumns && t.hasScrollEnd"><i class="el-ksd-icon-loading_16"></i></li>
           </ul>
         </div>
-        <kylin-nodata v-else :content="$t('kylinLang.common.noResults')"></kylin-nodata>
+        <!-- <kylin-nodata v-else :content="$t('noResults')"></kylin-nodata> -->
         <!-- 拖动操纵 -->
         <DragBar :dragData="t.drawSize" :dragZoom="modelRender.zoom"/>
         <!-- 拖动操纵 -->
@@ -47,260 +126,259 @@
     </div>
     <!-- datasource面板  index 3-->
     <div class="tool-icon icon-ds" v-if="panelAppear.datasource.icon_display" :class="{active: panelAppear.datasource.display}" v-event-stop @click="toggleMenu('datasource')"><i class="el-icon-ksd-data_source"></i></div>
-      <transition name="bounceleft">
-        <div class="panel-box panel-datasource"  v-show="panelAppear.datasource.display" :style="panelStyle('datasource')" v-event-stop>
-          <div class="panel-title" v-drag:change.left.top="panelAppear.datasource"><span class="title">{{$t('kylinLang.common.dataSource')}}</span><span class="close" @click="toggleMenu('datasource')"><i class="el-icon-ksd-close"></i></span></div>
-          <!-- <div v-scroll style="height:calc(100% - 79px)"> -->
-          <DataSourceBar
-            :ignore-node-types="['column']"
-            class="tree-box"
-            ref="datasourceTree"
-            :project-name="currentSelectedProject"
-            :is-show-load-source="true"
-            :is-show-load-table="datasourceActions.includes('loadSource')"
-            :is-show-load-table-inner-btn="datasourceActions.includes('loadSource')"
-            :is-show-settings="false"
-            :is-show-action-group="false"
-            :is-expand-on-click-node="false"
-            :expand-node-types="['datasource', 'database']"
-            :draggable-node-types="['table']"
-            :searchable-node-types="['table']"
-            :is-model-have-fact="modelInstance && !!modelInstance.fact_table"
-            :is-second-storage-enabled="modelInstance && modelInstance.second_storage_enabled"
-            @drag="dragTable">
-          </DataSourceBar>
-          <!-- </div> -->
-          <!-- 拖动操纵 -->
-          <DragBar :dragData="panelAppear.datasource"/>
-          <!-- 拖动操纵 -->
-        </div>
-      </transition>
-      <!-- datasource面板  end-->
-      <div class="tool-icon-group" v-event-stop>
-        <div class="tool-icon broken-icon" v-if="panelAppear.brokenFocus.icon_display" @click="focusBrokenLinkedTable">
-          <i class="el-icon-ksd-broken_disconnect"></i>
-        </div>
-        <div class="tool-icon" v-if="panelAppear.dimension.icon_display" :class="{active: panelAppear.dimension.display}" @click="toggleMenu('dimension')">D</div>
-        <div class="tool-icon" v-if="panelAppear.measure.icon_display" :class="{active: panelAppear.measure.display}" @click="toggleMenu('measure')">M</div>
-        <div class="tool-icon" v-if="panelAppear.cc.icon_display" :class="{active: panelAppear.cc.display}" @click="toggleMenu('cc')"><i class="el-icon-ksd-computed_column"></i></div>
-        <div class="tool-icon" v-if="panelAppear.search.icon_display" :class="{active: panelAppear.search.display}" @click="toggleMenu('search')">
-          <i class="el-icon-ksd-search"></i>
-          <span class="new-icon">New</span>
-        </div>
+    <transition name="bounceleft">
+      <div class="panel-box panel-datasource"  v-show="panelAppear.datasource.display" :style="panelStyle('datasource')" v-event-stop>
+        <div class="panel-title" v-drag:change.left.top="panelAppear.datasource"><span class="title">{{$t('kylinLang.common.dataSource')}}</span><span class="close" @click="toggleMenu('datasource')"><i class="el-icon-ksd-close"></i></span></div>
+        <!-- <div v-scroll style="height:calc(100% - 79px)"> -->
+        <DataSourceBar
+          :ignore-node-types="['column']"
+          class="tree-box"
+          :class="{'iframeTreeBox': $store.state.config.platform === 'iframe'}"
+          ref="datasourceTree"
+          :project-name="currentSelectedProject"
+          :is-show-load-source="true"
+          :is-show-load-table="datasourceActions.includes('loadSource')"
+          :is-show-load-table-inner-btn="datasourceActions.includes('loadSource')"
+          :is-show-settings="false"
+          :is-show-action-group="false"
+          :is-expand-on-click-node="false"
+          :expand-node-types="['datasource', 'database']"
+          :draggable-node-types="['table']"
+          :searchable-node-types="['table']"
+          :is-model-have-fact="modelInstance && !!modelInstance.fact_table"
+          :is-second-storage-enabled="modelInstance && modelInstance.second_storage_enabled"
+          @drag="dragTable">
+        </DataSourceBar>
+        <!-- </div> -->
+        <!-- 拖动操纵 -->
+        <DragBar :dragData="panelAppear.datasource"/>
+        <!-- 拖动操纵 -->
       </div>
-      <!-- 快捷操作 -->
-      <div class="sub-tool-icon-group" v-event-stop>
-        <div class="tool-icon" @click="reduceZoom"><i class="el-icon-ksd-shrink" ></i></div>
-        <div class="tool-icon" @click="addZoom"><i class="el-icon-ksd-enlarge"></i></div>
-        <!-- <div class="tool-icon" v-event-stop>{{modelRender.zoom}}0%</div> -->
-        <div class="tool-icon tool-full-screen" @click="fullScreen"><i class="el-icon-ksd-full_screen_2" v-if="!isFullScreen"></i><i class="el-icon-ksd-collapse_2" v-if="isFullScreen"></i></div>
-        <div class="tool-icon" @click="autoLayout"><i class="el-icon-ksd-auto"></i></div>
+    </transition>
+    <!-- datasource面板  end-->
+    <div class="tool-icon-group" v-event-stop>
+      <div class="tool-icon broken-icon" v-if="panelAppear.brokenFocus.icon_display" @click="focusBrokenLinkedTable">
+        <i class="el-icon-ksd-broken_disconnect"></i>
       </div>
-      <!-- 右侧面板组 -->
-      <!-- <div class="panel-group"> -->
-        <!-- dimension面板  index 0-->
-        <transition name="bounceright">
-          <div class="panel-box panel-dimension" @mousedown.stop="activePanel('dimension')" :style="panelStyle('dimension')" v-if="panelAppear.dimension.display">
-            <div class="panel-title" @mousedown="activePanel('dimension')" v-drag:change.right.top="panelAppear.dimension">
-              <span><i class="el-icon-ksd-dimension"></i></span>
-              <span class="title">{{$t('kylinLang.common.dimension')}} <template v-if="(modelRender.dimensions || []).length">({{modelRender.dimensions.length}})</template></span>
-              <span class="close" @click="toggleMenu('dimension')"><i class="el-icon-ksd-close"></i></span>
-            </div>
-            <div class="panel-sub-title">
-              <div class="action_group" :class="{'is_active': !isShowCheckbox}">
-                <!-- <span class="action_btn" @click="addCCDimension">
-                  <i class="el-icon-ksd-project_add"></i>
-                  <span>{{$t('add')}}</span>
-                </span> -->
-                <span class="action_btn" @click="batchSetDimension">
-                  <i class="el-icon-ksd-backup"></i>
-                  <span>{{$t('batchAdd')}}</span>
-                </span>
-                <span class="action_btn" :class="{'disabled': allDimension.length==0}" @click="toggleCheckbox">
-                  <i class="el-icon-ksd-batch_delete"></i>
-                  <span>{{$t('batchDel')}}</span>
-                </span>
-              </div>
-              <div
-              class="batch_group"
-              :class="{'is_active': isShowCheckbox}"
-              :style="{transform: isShowCheckbox ? 'translateX(0)' : 'translateX(100%)'}"
-              >
-                <span class="action_btn" :class="{'disabled': isDisableBatchCheck}" @click="toggleCheckAllDimension">
-                  <i class="el-icon-ksd-batch_uncheck" v-if="dimensionSelectedList.length==modelRender.dimensions.length || (modelInstance.second_storage_enabled||isHybridModel)&&dimensionSelectedList.length+1==modelRender.dimensions.length&&!isDisableBatchCheck"></i>
-                  <i class="el-icon-ksd-batch" v-else></i>
-                  <span v-if="dimensionSelectedList.length==modelRender.dimensions.length || (modelInstance.second_storage_enabled||isHybridModel)&&dimensionSelectedList.length+1==modelRender.dimensions.length&&!isDisableBatchCheck">{{$t('unCheckAll')}}</span>
-                  <span v-else>{{$t('checkAll')}}</span>
-                </span>
-                <span class="action_btn" :class="{'disabled': dimensionSelectedList.length==0}" @click="deleteDimenisons">
-                  <i class="el-icon-ksd-table_delete"></i>
-                  <span>{{$t('delete')}}</span>
-                </span>
-                <span class="action_btn" @click="toggleCheckbox">
-                  <i class="el-icon-ksd-back"></i>
-                  <span>{{$t('back')}}</span>
-                </span>
-              </div>
-            </div>
-            <div class="panel-main-content" @dragover='($event) => {allowDropColumnToPanle($event)}' @drop='(e) => {dropColumnToPanel(e, "dimension")}'>
-              <div class="content-scroll-layout" v-if="allDimension.length" v-scroll.observe.reactive @scroll-bottom="boardScrollBottom('dimension')">
-                <ul class="dimension-list">
-                  <li v-for="(d, i) in allDimension" :key="d.name" :class="{'is-checked':dimensionSelectedList.indexOf(d.name)>-1}">
-                    <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowCheckbox}]">
-                      <el-checkbox v-model="dimensionSelectedList" v-if="isShowCheckbox" :disabled="(modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column" :label="d.name" class="text">{{d.name}}</el-checkbox>
-                      <span v-else :title="d.name" class="text">{{d.name}}</span>
-                      <span class="icon-group">
-                        <el-tooltip :content="disableDelDimTips" placement="top-end" :disabled="!((modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column)">
-                          <span class="icon-span" :class="{'is-disabled': (modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column}" @click="deleteDimenison(d)"><i class="el-icon-ksd-table_delete"></i></span>
-                        </el-tooltip>
-                        <span class="icon-span"><i class="el-icon-ksd-table_edit" @click="editDimension(d, i)"></i></span>
-                        <span class="li-type ky-option-sub-info">{{d.datatype && d.datatype.toLocaleLowerCase()}}</span>
-                      </span>
-                    </span>
-                  </li>
-                </ul>
-              </div>
-              <kylin-nodata v-else></kylin-nodata>
-            </div>
-            <!-- 拖动操纵 -->
-            <DragBar :dragData="panelAppear.dimension"/>
-            <!-- 拖动操纵 -->
+      <div class="tool-icon" v-if="panelAppear.dimension.icon_display" :class="{active: panelAppear.dimension.display}" @click="toggleMenu('dimension')">D</div>
+      <div class="tool-icon" v-if="panelAppear.measure.icon_display" :class="{active: panelAppear.measure.display}" @click="toggleMenu('measure')">M</div>
+      <div class="tool-icon" v-if="panelAppear.cc.icon_display" :class="{active: panelAppear.cc.display}" @click="toggleMenu('cc')"><i class="el-icon-ksd-computed_column"></i></div>
+      <div class="tool-icon" v-if="panelAppear.search.icon_display" :class="{active: panelAppear.search.display}" @click="toggleMenu('search')">
+        <i class="el-icon-ksd-search"></i>
+        <span class="new-icon">New</span>
+      </div>
+    </div>
+    <!-- 快捷操作 -->
+    <div class="sub-tool-icon-group" v-event-stop>
+      <div class="tool-icon" @click="reduceZoom"><i class="el-icon-ksd-shrink" ></i></div>
+      <div class="tool-icon" @click="addZoom"><i class="el-icon-ksd-enlarge"></i></div>
+      <!-- <div class="tool-icon" v-event-stop>{{modelRender.zoom}}0%</div> -->
+      <div class="tool-icon tool-full-screen" @click="fullScreen"><i class="el-icon-ksd-full_screen_2" v-if="!isFullScreen"></i><i class="el-icon-ksd-collapse_2" v-if="isFullScreen"></i></div>
+      <div class="tool-icon" @click="autoLayout"><i class="el-icon-ksd-auto"></i></div>
+    </div>
+    <!-- 右侧面板组 -->
+    <!-- dimension面板  index 0-->
+    <transition name="bounceright">
+      <div class="panel-box panel-dimension" @mousedown.stop="activePanel('dimension')" :style="panelStyle('dimension')" v-if="panelAppear.dimension.display">
+        <div class="panel-title" @mousedown="activePanel('dimension')" v-drag:change.right.top="panelAppear.dimension">
+          <span><i class="el-icon-ksd-dimension"></i></span>
+          <span class="title">{{$t('kylinLang.common.dimension')}} <template v-if="(modelRender.dimensions || []).length">({{modelRender.dimensions.length}})</template></span>
+          <span class="close" @click="toggleMenu('dimension')"><i class="el-icon-ksd-close"></i></span>
+        </div>
+        <div class="panel-sub-title">
+          <div class="action_group" :class="{'is_active': !isShowCheckbox}">
+            <!-- <span class="action_btn" @click="addCCDimension">
+              <i class="el-icon-ksd-project_add"></i>
+              <span>{{$t('add')}}</span>
+            </span> -->
+            <span class="action_btn" @click="batchSetDimension">
+              <i class="el-icon-ksd-backup"></i>
+              <span>{{$t('batchAdd')}}</span>
+            </span>
+            <span class="action_btn" :class="{'disabled': allDimension.length==0}" @click="toggleCheckbox">
+              <i class="el-icon-ksd-batch_delete"></i>
+              <span>{{$t('batchDel')}}</span>
+            </span>
           </div>
-        </transition>
-        <!-- measure面板  index 1-->
-        <transition name="bounceright">
-          <div class="panel-box panel-measure" @mousedown.stop="activePanel('measure')" :style="panelStyle('measure')"  v-if="panelAppear.measure.display">
-            <div class="panel-title" @mousedown="activePanel('measure')" v-drag:change.right.top="panelAppear.measure">
-              <span><i class="el-icon-ksd-measure"></i></span>
-              <span class="title">{{$t('kylinLang.common.measure')}}<template v-if="modelRender.all_measures.length">({{modelRender.all_measures.length}})</template></span>
-              <span class="close" @click="toggleMenu('measure')"><i class="el-icon-ksd-close"></i></span>
-            </div>
-            <div class="panel-sub-title">
-              <div class="action_group" :class="{'is_active': !isShowMeaCheckbox}">
-                <span class="action_btn" @click="addNewMeasure">
-                  <i class="el-icon-ksd-project_add"></i>
-                  <span>{{$t('add')}}</span>
-                </span>
-                <span class="action_btn" @click="batchSetMeasure">
-                  <i class="el-icon-ksd-backup"></i>
-                  <span>{{$t('batchAdd')}}</span>
-                </span>
-                <span class="action_btn" @click="toggleMeaCheckbox" :class="{'disabled': canDelMeasureAll}">
-                  <i class="el-icon-ksd-batch_delete"></i>
-                  <span>{{$t('batchDel')}}</span>
-                </span>
-              </div>
-              <div
-                class="batch_group"
-                :class="{'is_active': isShowMeaCheckbox}"
-                :style="{transform: isShowMeaCheckbox ? 'translateX(0)' : 'translateX(100%)'}"
-              >
-                <span class="action_btn" @click="toggleCheckAllMeasure">
-                  <i class="el-icon-ksd-batch" v-if="measureSelectedList.length > 0 && measureSelectedList.length==toggleMeasureStatus"></i>
-                  <i class="el-icon-ksd-batch_uncheck" v-else></i>
-                  <span v-if="measureSelectedList.length > 0 && measureSelectedList.length==toggleMeasureStatus">{{$t('unCheckAll')}}</span>
-                  <span v-else>{{$t('checkAll')}}</span>
-                </span>
-                <span class="action_btn" :class="{'disabled': measureSelectedList.length==0}" @click="deleteMeasures">
-                  <i class="el-icon-ksd-table_delete"></i>
-                  <span>{{$t('delete')}}</span>
-                </span>
-                <span class="action_btn" @click="toggleMeaCheckbox">
-                  <i class="el-icon-ksd-back"></i>
-                  <span>{{$t('back')}}</span>
-                </span>
-              </div>
-            </div>
-            <div class="panel-main-content" @dragover='($event) => {allowDropColumnToPanle($event)}' @drop='(e) => {dropColumnToPanel(e, "measure")}'>
-              <div class="content-scroll-layout" v-if="allMeasure.length" v-scroll.observe.reactive @scroll-bottom="boardScrollBottom('measure')">
-                <ul class="measure-list">
-                  <li v-for="m in allMeasure" :key="m.name" :class="{'is-checked':measureSelectedList.indexOf(m.name)>-1, 'error-measure': ['SUM', 'PERCENTILE_APPROX'].includes(m.expression) && m.return_type && m.return_type.indexOf('varchar') > -1}">
-                    <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowMeaCheckbox}]">
-                      <el-tooltip class="count-all" :offset="isShowMeaCheckbox ? 50 : 60" :content="m.name ==='COUNT_ALL' ? $t('disabledConstantMeasureTip') : $t('measureRuleErrorTip', {type: m.expression})" effect="dark" placement="bottom" :disabled="!(['SUM', 'PERCENTILE_APPROX'].includes(m.expression) && m.return_type && m.return_type.indexOf('varchar') > -1) && m.name !== 'COUNT_ALL'">
-                        <span>
-                          <el-checkbox v-model="measureSelectedList" v-if="isShowMeaCheckbox" :disabled="m.name === 'COUNT_ALL'" :label="m.name" class="text">{{m.name}}</el-checkbox>
-                          <span v-else class="text">{{m.name}}</span>
-                        </span>
-                      </el-tooltip>
-                      <span class="icon-group">
-                        <span class="icon-span" v-if="m.name !== 'COUNT_ALL'"><i class="el-icon-ksd-table_delete" @click="deleteMeasure(m.name)"></i></span>
-                        <span class="icon-span" v-if="m.name !== 'COUNT_ALL'"><i class="el-icon-ksd-table_edit" @click="editMeasure(m)"></i></span>
-                        <span class="li-type ky-option-sub-info">{{m.return_type && m.return_type.toLocaleLowerCase()}}</span>
-                      </span>
-                    </span>
-                  </li>
-                </ul>
-              </div>
-              <kylin-nodata v-else></kylin-nodata>
-            </div>
-            <!-- 拖动操纵 -->
-            <DragBar :dragData="panelAppear.measure"/>
-            <!-- 拖动操纵 -->
+          <div
+          class="batch_group"
+          :class="{'is_active': isShowCheckbox}"
+          :style="{transform: isShowCheckbox ? 'translateX(0)' : 'translateX(100%)'}"
+          >
+            <span class="action_btn" :class="{'disabled': isDisableBatchCheck}" @click="toggleCheckAllDimension">
+              <i class="el-icon-ksd-batch_uncheck" v-if="dimensionSelectedList.length==modelRender.dimensions.length || (modelInstance.second_storage_enabled||isHybridModel)&&dimensionSelectedList.length+1==modelRender.dimensions.length&&!isDisableBatchCheck"></i>
+              <i class="el-icon-ksd-batch" v-else></i>
+              <span v-if="dimensionSelectedList.length==modelRender.dimensions.length || (modelInstance.second_storage_enabled || isHybridModel) && dimensionSelectedList.length+1 == modelRender.dimensions.length && !isDisableBatchCheck">{{$t('unCheckAll')}}</span>
+              <span v-else>{{$t('checkAll')}}</span>
+            </span>
+            <span class="action_btn" :class="{'disabled': dimensionSelectedList.length === 0}" @click="deleteDimenisons">
+              <i class="el-icon-ksd-table_delete"></i>
+              <span>{{$t('delete')}}</span>
+            </span>
+            <span class="action_btn" @click="toggleCheckbox">
+              <i class="el-icon-ksd-back"></i>
+              <span>{{$t('back')}}</span>
+            </span>
           </div>
-        </transition>
-        <!-- 可计算列 -->
-        <transition name="bounceright">
-          <div class="panel-box panel-cc" @mousedown.stop="activePanel('cc')" :style="panelStyle('cc')"  v-if="panelAppear.cc.display">
-            <div class="panel-title" @mousedown="activePanel('cc')" v-drag:change.right.top="panelAppear.cc">
-              <span><i class="el-ksd-icon-auto_computed_column_old"></i></span>
-              <span class="title">{{$t('kylinLang.model.computedColumn')}} <template v-if="modelRender.computed_columns.length">({{modelRender.computed_columns.length}})</template></span>
-              <span class="close" @click="toggleMenu('cc')"><i class="el-icon-ksd-close"></i></span>
-            </div>
-            <div class="panel-sub-title">
-              <div class="action_group" :class="{'is_active': !isShowCCCheckbox}">
-                <el-tooltip :content="$t('forbidenCreateCCTip')" :disabled="!isHybridModel">
-                  <span :class="['action_btn', {'disabled': isHybridModel}]" @click="!isHybridModel && addCC()">
-                    <i class="el-icon-ksd-project_add"></i>
-                    <span>{{$t('add')}}</span>
+        </div>
+        <div class="panel-main-content" @dragover='($event) => {allowDropColumnToPanle($event)}' @drop='(e) => {dropColumnToPanel(e, "dimension")}'>
+          <div class="content-scroll-layout" v-if="allDimension.length" v-scroll.observe.reactive @scroll-bottom="boardScrollBottom('dimension')">
+            <ul class="dimension-list">
+              <li v-for="(d, i) in allDimension" :key="`${d.name}_${i}`" :class="{'is-checked':dimensionSelectedList.indexOf(d.name)>-1}">
+                <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowCheckbox}]">
+                  <el-checkbox v-model="dimensionSelectedList" v-if="isShowCheckbox" :disabled="(modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column" :label="d.name" class="text">{{d.name}}</el-checkbox>
+                  <span v-else :title="d.name" class="text">{{d.name}}</span>
+                  <span class="icon-group">
+                    <el-tooltip :content="disableDelDimTips" placement="top-end" :disabled="!((modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column)">
+                      <span class="icon-span" :class="{'is-disabled': (modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column}" @click="deleteDimenison(d)"><i class="el-icon-ksd-table_delete"></i></span>
+                    </el-tooltip>
+                    <span class="icon-span"><i class="el-icon-ksd-table_edit" @click="editDimension(d, i)"></i></span>
+                    <span class="li-type ky-option-sub-info">{{d.datatype && d.datatype.toLocaleLowerCase()}}</span>
                   </span>
-                </el-tooltip>
-                <span class="action_btn" @click="toggleCCCheckbox" :class="{'active': isShowCCCheckbox}">
-                  <i class="el-icon-ksd-batch_delete"></i>
-                  <span>{{$t('batchDel')}}</span>
                 </span>
-              </div>
-              <div
-                class="batch_group"
-                :class="{'is_active': isShowCCCheckbox}"
-              >
-                <span class="action_btn" @click="toggleCheckAllCC">
-                  <i class="el-icon-ksd-batch_uncheck" v-if="ccSelectedList.length==modelRender.computed_columns.length"></i>
-                  <i class="el-icon-ksd-batch" v-else></i>
-                  <span v-if="ccSelectedList.length==modelRender.computed_columns.length">{{$t('unCheckAll')}}</span>
-                  <span v-else>{{$t('checkAll')}}</span>
-                </span>
-                <span class="action_btn" :class="{'disabled': ccSelectedList.length==0}" @click="delCCs">
-                  <i class="el-icon-ksd-table_delete"></i>
-                  <span>{{$t('delete')}}</span>
-                </span>
-                <span class="action_btn" @click="toggleCCCheckbox">
-                  <i class="el-icon-ksd-back"></i>
-                  <span>{{$t('back')}}</span>
-                </span>
-              </div>
-            </div>
-            <div class="panel-main-content" v-scroll.obverse  v-if="modelRender.computed_columns.length">
-              <ul class="cc-list">
-                <li v-for="m in modelRender.computed_columns" :key="m.name" :class="{'is-checked':ccSelectedList.indexOf(m.columnName)>-1}">
-                  <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowCCCheckbox}]">
-                    <el-checkbox v-model="ccSelectedList" v-if="isShowCCCheckbox" :label="m.columnName" class="text">{{m.columnName}}</el-checkbox>
-                    <span v-else class="text">{{m.columnName}}</span>
-                    <span class="icon-group">
-                      <span class="icon-span"><i class="el-icon-ksd-table_delete" @click="delCC(m.columnName)"></i></span>
-                      <span class="icon-span"><i class="el-icon-ksd-table_edit" @click="editCC(m)"></i></span>
-                      <span class="li-type ky-option-sub-info">{{m.datatype && m.datatype.toLocaleLowerCase()}}</span>
-                    </span>
-                  </span>
-                </li>
-              </ul>
-            </div>
-            <kylin-nodata v-if="!modelRender.computed_columns.length"></kylin-nodata>
-            <!-- 拖动操纵 -->
-            <DragBar :dragData="panelAppear.cc"/>
-            <!-- 拖动操纵 -->
+              </li>
+            </ul>
           </div>
-        </transition>
-
+          <kylin-nodata v-else></kylin-nodata>
+        </div>
+        <!-- 拖动操纵 -->
+        <DragBar :dragData="panelAppear.dimension"/>
+        <!-- 拖动操纵 -->
+      </div>
+    </transition>
+    <!-- measure面板  index 1-->
+    <transition name="bounceright">
+      <div class="panel-box panel-measure" @mousedown.stop="activePanel('measure')" :style="panelStyle('measure')"  v-if="panelAppear.measure.display">
+        <div class="panel-title" @mousedown="activePanel('measure')" v-drag:change.right.top="panelAppear.measure">
+          <span><i class="el-icon-ksd-measure"></i></span>
+          <span class="title">{{$t('kylinLang.common.measure')}}<template v-if="modelRender.all_measures.length">({{modelRender.all_measures.length}})</template></span>
+          <span class="close" @click="toggleMenu('measure')"><i class="el-icon-ksd-close"></i></span>
+        </div>
+        <div class="panel-sub-title">
+          <div class="action_group" :class="{'is_active': !isShowMeaCheckbox}">
+            <span class="action_btn" @click="addNewMeasure">
+              <i class="el-icon-ksd-project_add"></i>
+              <span>{{$t('add')}}</span>
+            </span>
+            <span class="action_btn" @click="batchSetMeasure">
+              <i class="el-icon-ksd-backup"></i>
+              <span>{{$t('batchAdd')}}</span>
+            </span>
+            <span class="action_btn" @click="toggleMeaCheckbox" :class="{'disabled': canDelMeasureAll}">
+              <i class="el-icon-ksd-batch_delete"></i>
+              <span>{{$t('batchDel')}}</span>
+            </span>
+          </div>
+          <div
+            class="batch_group"
+            :class="{'is_active': isShowMeaCheckbox}"
+            :style="{transform: isShowMeaCheckbox ? 'translateX(0)' : 'translateX(100%)'}"
+          >
+            <span class="action_btn" @click="toggleCheckAllMeasure">
+              <i class="el-icon-ksd-batch" v-if="measureSelectedList.length > 0 && measureSelectedList.length === toggleMeasureStatus"></i>
+              <i class="el-icon-ksd-batch_uncheck" v-else></i>
+              <span v-if="measureSelectedList.length > 0 && measureSelectedList.length === toggleMeasureStatus">{{$t('unCheckAll')}}</span>
+              <span v-else>{{$t('checkAll')}}</span>
+            </span>
+            <span class="action_btn" :class="{'disabled': measureSelectedList.length==0}" @click="deleteMeasures">
+              <i class="el-icon-ksd-table_delete"></i>
+              <span>{{$t('delete')}}</span>
+            </span>
+            <span class="action_btn" @click="toggleMeaCheckbox">
+              <i class="el-icon-ksd-back"></i>
+              <span>{{$t('back')}}</span>
+            </span>
+          </div>
+        </div>
+        <div class="panel-main-content" @dragover='($event) => {allowDropColumnToPanle($event)}' @drop='(e) => {dropColumnToPanel(e, "measure")}'>
+          <div class="content-scroll-layout" v-if="allMeasure.length" v-scroll.observe.reactive @scroll-bottom="boardScrollBottom('measure')">
+            <ul class="measure-list">
+              <li v-for="m in allMeasure" :key="m.name" :class="{'is-checked':measureSelectedList.indexOf(m.name)>-1, 'error-measure': ['SUM', 'PERCENTILE_APPROX'].includes(m.expression) && m.return_type && m.return_type.indexOf('varchar') > -1}">
+                <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowMeaCheckbox}]">
+                  <el-tooltip class="count-all" :offset="isShowMeaCheckbox ? 50 : 60" :content="m.name ==='COUNT_ALL' ? $t('disabledConstantMeasureTip') : $t('measureRuleErrorTip', {type: m.expression})" effect="dark" placement="bottom" :disabled="!(['SUM', 'PERCENTILE_APPROX'].includes(m.expression) && m.return_type && m.return_type.indexOf('varchar') > -1) && m.name !== 'COUNT_ALL'">
+                    <span>
+                      <el-checkbox v-model="measureSelectedList" v-if="isShowMeaCheckbox" :disabled="m.name === 'COUNT_ALL'" :label="m.name" class="text">{{m.name}}</el-checkbox>
+                      <span v-else class="text">{{m.name}}</span>
+                    </span>
+                  </el-tooltip>
+                  <span class="icon-group">
+                    <span class="icon-span" v-if="m.name !== 'COUNT_ALL'"><i class="el-icon-ksd-table_delete" @click="deleteMeasure(m.name)"></i></span>
+                    <span class="icon-span" v-if="m.name !== 'COUNT_ALL'"><i class="el-icon-ksd-table_edit" @click="editMeasure(m)"></i></span>
+                    <span class="li-type ky-option-sub-info">{{m.return_type && m.return_type.toLocaleLowerCase()}}</span>
+                  </span>
+                </span>
+              </li>
+            </ul>
+          </div>
+          <kylin-nodata v-else></kylin-nodata>
+        </div>
+        <!-- 拖动操纵 -->
+        <DragBar :dragData="panelAppear.measure"/>
+        <!-- 拖动操纵 -->
+      </div>
+    </transition>
+    <!-- 可计算列 -->
+    <transition name="bounceright">
+      <div class="panel-box panel-cc" @mousedown.stop="activePanel('cc')" :style="panelStyle('cc')"  v-if="panelAppear.cc.display">
+        <div class="panel-title" @mousedown="activePanel('cc')" v-drag:change.right.top="panelAppear.cc">
+          <span><i class="el-ksd-icon-auto_computed_column_old"></i></span>
+          <span class="title">{{$t('kylinLang.model.computedColumn')}} <template v-if="modelRender.computed_columns.length">({{modelRender.computed_columns.length}})</template></span>
+          <span class="close" @click="toggleMenu('cc')"><i class="el-icon-ksd-close"></i></span>
+        </div>
+        <div class="panel-sub-title">
+          <div class="action_group" :class="{'is_active': !isShowCCCheckbox}">
+            <el-tooltip :content="$t('forbidenCreateCCTip')" :disabled="!isHybridModel">
+              <span :class="['action_btn', {'disabled': isHybridModel}]" @click="!isHybridModel && addCC()">
+                <i class="el-icon-ksd-project_add"></i>
+                <span>{{$t('add')}}</span>
+              </span>
+            </el-tooltip>
+            <span class="action_btn" @click="toggleCCCheckbox" :class="{'active': isShowCCCheckbox}">
+              <i class="el-icon-ksd-batch_delete"></i>
+              <span>{{$t('batchDel')}}</span>
+            </span>
+          </div>
+          <div
+            class="batch_group"
+            :class="{'is_active': isShowCCCheckbox}"
+          >
+            <span class="action_btn" @click="toggleCheckAllCC">
+              <i class="el-icon-ksd-batch_uncheck" v-if="ccSelectedList.length==modelRender.computed_columns.length"></i>
+              <i class="el-icon-ksd-batch" v-else></i>
+              <span v-if="ccSelectedList.length==modelRender.computed_columns.length">{{$t('unCheckAll')}}</span>
+              <span v-else>{{$t('checkAll')}}</span>
+            </span>
+            <span class="action_btn" :class="{'disabled': ccSelectedList.length==0}" @click="delCCs">
+              <i class="el-icon-ksd-table_delete"></i>
+              <span>{{$t('delete')}}</span>
+            </span>
+            <span class="action_btn" @click="toggleCCCheckbox">
+              <i class="el-icon-ksd-back"></i>
+              <span>{{$t('back')}}</span>
+            </span>
+          </div>
+        </div>
+        <div class="panel-main-content" v-scroll.obverse  v-if="modelRender.computed_columns.length">
+          <ul class="cc-list">
+            <li v-for="m in modelRender.computed_columns" :key="m.name" :class="{'is-checked':ccSelectedList.indexOf(m.columnName)>-1}">
+              <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowCCCheckbox}]">
+                <el-checkbox v-model="ccSelectedList" v-if="isShowCCCheckbox" :label="m.columnName" class="text">{{m.columnName}}</el-checkbox>
+                <span v-else class="text">{{m.columnName}}</span>
+                <span class="icon-group">
+                  <span class="icon-span"><i class="el-icon-ksd-table_delete" @click="delCC(m.columnName)"></i></span>
+                  <span class="icon-span"><i class="el-icon-ksd-table_edit" @click="editCC(m)"></i></span>
+                  <span class="li-type ky-option-sub-info">{{m.datatype && m.datatype.toLocaleLowerCase()}}</span>
+                </span>
+              </span>
+            </li>
+          </ul>
+        </div>
+        <kylin-nodata v-if="!modelRender.computed_columns.length"></kylin-nodata>
+        <!-- 拖动操纵 -->
+        <DragBar :dragData="panelAppear.cc"/>
+        <!-- 拖动操纵 -->
+      </div>
+    </transition>
     <!-- 搜索面板 -->
     <transition name="bouncecenter">
       <div class="panel-search-box panel-box" :class="{'full-screen': isFullScreen}"  v-event-stop :style="panelStyle('search')" v-if="panelAppear.search.display">
@@ -363,94 +441,8 @@
     <SingleDimensionModal/>
     <AddCC/>
     <ShowCC/>
+    <ActionUpdateGuide v-if="showModelGuide" @close-guide="showModelGuide = false" />
 
-    <!-- 编辑模型table遮罩 -->
-    <div class="full-screen-cover" v-event-stop @click="cancelTableEdit" v-if="showTableCoverDiv"></div>
-    <div class="edit-table-layout" v-if="showTableCoverDiv" v-event-stop @click.self="cancelTableEdit">
-      <!-- 被编辑table clone dom -->
-      <div class="table-box fast-action-temp-table" :id="currentEditTable.guid + 'temp'" v-event-stop :class="{isLookup:currentEditTable.kind==='LOOKUP'}" :style="tableBoxStyleNoZoom(currentEditTable.drawSize)">
-        <transition name="slide-fade">
-          <!-- 编辑table 快捷按钮 -->
-          <div class="fast-action-box" v-event-stop @click="cancelTableEdit" :class="{'edge-right': currentEditTable.drawSize.isInRightEdge}" v-if="currentEditTable">
-            <div v-if="currentEditTable.kind === 'FACT' || modelInstance.checkTableCanSwitchFact(currentEditTable.guid)">
-              <div class="action switch" :class="{'disabled': currentEditTable.source_type === 1}" v-if="currentEditTable.kind === 'FACT'" @click.stop="changeTableType(currentEditTable)"><i class="el-icon-ksd-switch"></i>
-                <span>{{$t('switchLookup')}}</span>
-              </div>
-              <div class="action switch" v-if="modelInstance.checkTableCanSwitchFact(currentEditTable.guid)" @click.stop="changeTableType(currentEditTable)"><i class="el-icon-ksd-switch"></i>
-                <span >{{$t('switchFact')}}</span>
-              </div>
-            </div>
-            <div v-show="showEditAliasForm">
-              <div class="alias-form" v-event-stop:click>
-                <el-form :model="formTableAlias" :rules="aliasRules" ref="aliasForm" @submit.native="()=> {return false}">
-                  <el-form-item prop="currentEditAlias">
-                  <el-input v-model="formTableAlias.currentEditAlias" size="mini" @click.stop @keyup.enter.native="saveEditTableAlias"></el-input>
-                  <input type="text" style="display:none" />
-                  <el-button type="primary" size="mini" icon="el-icon-check" @click.stop="saveEditTableAlias"></el-button><el-button size="mini" @click.stop="cancelEditAlias" icon="el-icon-close" plain></el-button>
-                  </el-form-item>
-                </el-form>
-              </div>
-            </div>
-            <div v-show="!showEditAliasForm && currentEditTable.kind!=='FACT'">
-              <div class="action">
-                <div @click.stop="openEditAliasForm"><i class="el-icon-ksd-table_edit"></i> {{$t('editTableAlias')}}</div>
-              </div>
-            </div>
-            <template v-if="!showEditAliasForm">
-              <el-popover
-                popper-class="fast-action-popper"
-                style="z-index:100001"
-                ref="popover5"
-                placement="top"
-                width="160"
-                v-model="delTipVisible">
-                <p>{{$t('delTableTip')}}</p>
-                <div style="text-align: right; margin: 0">
-                  <el-button size="mini" type="info" text @click="delTipVisible = false">{{$t('kylinLang.common.cancel')}}</el-button>
-                  <el-button type="primary" size="mini" @click.enter="delTable">{{$t('kylinLang.common.ok')}}</el-button>
-                </div>
-              </el-popover>
-              <div class="action del" v-if="!modelInstance.checkTableCanDel(currentEditTable.guid)" @click.stop="showDelTableTip"  v-popover:popover5><i class="el-icon-ksd-table_delete"></i> {{$t('deleteTable')}}</div>
-              <div class="action del" v-else @click.stop="delTable"><i class="el-icon-ksd-table_delete"></i> {{$t('deleteTable')}}</div>
-            </template>
-          </div>
-      </transition>
-        <div class="table-title" :data-zoom="modelRender.zoom"  v-drag:change.left.top="currentEditTable.drawSize">
-          <span @click.stop="changeTableType(currentEditTable)">
-            <i class="el-icon-ksd-fact_table kind" v-if="currentEditTable.kind==='FACT'"></i>
-            <i v-else class="el-icon-ksd-lookup_table kind"></i>
-          </span>
-          <span class="alias-span name">{{currentEditTable.alias}}</span>
-          <span class="setting-icon guide-setting" @click="cancelTableEdit"><i class="el-icon-ksd-table_setting"></i></span>
-        </div>
-        <div class="column-search-box"><el-input prefix-icon="el-ksd-icon-search_22" v-model="currentEditTable.filterColumnChar" @input="currentEditTable.filterColumns()" size="small"></el-input></div>
-        <div class="column-list-box" v-scroll v-if="currentEditTable.showColumns.length">
-          <ul >
-            <li class="column-li" :class="{'column-li-cc': col.is_computed_column}"  v-for="col in currentEditTable.showColumns" :key="col.name">
-              <span class="ksd-nobr-text">
-                <span class="col-type-icon"> <i class="el-icon-ksd-fkpk_big is-pfk" v-show="col.isPFK"></i><i :class="columnTypeIconMap(col.datatype)"></i></span>
-                <span class="col-name">{{col.name}}</span>
-              </span>
-              <!-- <span class="li-type ky-option-sub-info">{{col.datatype}}</span> -->
-            </li>
-            <template v-if="currentEditTable.kind=== 'FACT'">
-              <li class="column-li column-li-cc"  v-for="col in modelRender.computed_columns" :key="col.name">
-                <span class="ksd-nobr-text">
-                  <span class="col-type-icon"><i class="el-icon-ksd-fkpk_big is-pfk" v-show="col.isPFK"></i><i :class="columnTypeIconMap(col.datatype)"></i></span>
-                  <span class="col-name">{{col.columnName}}</span>
-                </span>
-                <!-- <span class="li-type ky-option-sub-info">{{col.datatype}}</span> -->
-              </li>
-            </template>
-            <li class="li-load-more" v-if="currentEditTable.hasMoreColumns" @click="currentEditTable.loadMoreColumns()">{{$t('kylinLang.common.loadMore')}}</li>
-          </ul>
-        </div>
-        <kylin-nodata v-else :content="$t('kylinLang.common.noResults')"></kylin-nodata>
-        <!-- 拖动操纵 -->
-        <DragBar :dragData="currentEditTable.drawSize"/>
-        <!-- 拖动操纵 -->
-      </div>
-    </div>
     <el-dialog
       :title="$t('kylinLang.common.tip')"
       :visible.sync="gotoIndexdialogVisible"
@@ -473,16 +465,6 @@
         <el-button plain @click="ignoreAddIndex">{{getBaseIndexCount(saveModelResponse).createBaseIndexNum > 0 ? $t('kylinLang.common.cancel') : $t('ignoreaddIndexTip')}}</el-button>
         <el-button type="primary" @click="willAddIndex">{{getBaseIndexCount(saveModelResponse).createBaseIndexNum > 0 ? $t('viewIndexes') : $t('addIndex')}}</el-button>
       </span>
-      <!-- <div class="ksd-pl-26">
-        <div>{{$t('saveSuccessTip')}}</div>
-        <div v-if="saveModelType==='saveModel'&&!isFullLoad || saveModelType==='updataModel'&&modelData.segments&&!modelData.segments.length">{{$t('addSegmentTips')}}</div>
-        <div v-if="saveModelType==='saveModel'&&isFullLoad || saveModelType==='updataModel'&&modelData.segments&&modelData.segments.length">{{$t('addIndexTips')}}</div>
-      </div>
-      <span slot="footer" class="dialog-footer" v-if="gotoIndexdialogVisible">
-        <el-button plain @click="ignoreAddIndex">{{$t('ignoreaddIndexTip')}}</el-button>
-        <el-button type="primary" v-if="saveModelType==='saveModel'&&!isFullLoad || saveModelType==='updataModel'&&modelData.segments&&(!modelData.segments.length || isPurgeSegment)" @click="willAddSegment">{{$t('addSegment')}}</el-button>
-        <el-button type="primary" v-if="saveModelType==='saveModel'&&isFullLoad || saveModelType==='updataModel'&&modelData.segments&&modelData.segments.length&&!isPurgeSegment" @click="willAddIndex">{{$t('addIndex')}}</el-button>
-      </span> -->
     </el-dialog>
   </div>
 </template>
@@ -492,8 +474,8 @@ import { Component, Watch } from 'vue-property-decorator'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 import locales from './locales'
 import DataSourceBar from '../../../common/DataSourceBar'
-import { handleSuccess, handleError, loadingBox, kylinMessage, kylinConfirm } from '../../../../util/business'
-import { isIE, groupData, objectClone, filterObjectArray, handleSuccessAsync, indexOfObjWithSomeKey } from '../../../../util'
+import { handleSuccess, handleError, loadingBox, kylinMessage, kylinConfirm } from 'util/business'
+import { isIE, isFireFox, groupData, objectClone, filterObjectArray, handleSuccessAsync, indexOfObjWithSomeKey } from 'util'
 import $ from 'jquery'
 import DimensionModal from '../DimensionsModal/index.vue'
 import BatchMeasureModal from '../BatchMeasureModal/index.vue'
@@ -505,6 +487,7 @@ import DragBar from './dragbar.vue'
 import AddCC from '../AddCCModal/addcc.vue'
 import ShowCC from '../ShowCC/showcc.vue'
 import NModel from './model.js'
+import ActionUpdateGuide from '../../../guide/modelEditPage/ActionUpdateGuide.vue'
 import { modelRenderConfig, modelErrorMsg } from './config'
 import { NamedRegex, columnTypeIcon } from '../../../../config'
 @Component({
@@ -584,7 +567,8 @@ import { NamedRegex, columnTypeIcon } from '../../../../config'
     SingleDimensionModal,
     ModelSaveConfig,
     AddCC,
-    ShowCC
+    ShowCC,
+    ActionUpdateGuide
   },
   locales
 })
@@ -657,7 +641,13 @@ export default class ModelEdit extends Vue {
       pageOffset: 1
     }
   }
-
+  dimensionBoardPager = 1
+  listenerDragPoint = false
+  selectedConnect = null
+  dragPoint = { x: 0, y: 0 }
+  currentPot = { x: 0, y: 0 }
+  linkLineFocus = []
+  showModelGuide = false
   get disableDelDimTips () {
     if (this.isHybridModel) {
       return this.$t('streamTips')
@@ -665,11 +655,251 @@ export default class ModelEdit extends Vue {
       return this.$t('disableDelDimTips')
     }
   }
-
   get isHybridModel () {
     return this.modelInstance.getFactTable() && this.modelInstance.getFactTable().batch_table_identity || this.modelInstance.model_type === 'HYBRID'
   }
-
+  // 是否展示缺失事实表提醒
+  get showFactTableAlert () {
+    return Object.values(this.modelRender.tables).filter(table => table.kind === 'FACT').length > 0
+  }
+  // 维度、度量滚动到底部
+  boardScrollBottom (name) {
+    switch (name) {
+      case 'dimension':
+        const { dimension } = this.boardPager
+        const dimensionTotalSize = this.modelRender.dimensions.length
+        if (dimension.pageOffset <= Math.ceil(dimensionTotalSize / dimension.pageSize)) {
+          this.$set(dimension, 'pageOffset', dimension.pageOffset + 1)
+        }
+      case 'measure':
+        const { measure } = this.boardPager
+        const measureTotalSize = this.modelRender.all_measures.length
+        if (measure.pageOffset <= Math.ceil(measureTotalSize / measure.pageSize)) {
+          this.$set(measure, 'pageOffset', measure.pageOffset + 1)
+        }
+    }
+  }
+  // 当维度或度量高度改变时，需要增加页码以填充多余的空白区域
+  changePageOfBround (obj) {
+    switch (obj) {
+      case 'dimension':
+        const scrollContent = this.$el.querySelector('.panel-dimension .content-scroll-layout')
+        const dimensionDom = this.$el.querySelector('.panel-dimension .dimension-list')
+        if (!scrollContent || !dimensionDom) return
+        if (dimensionDom.offsetHeight < scrollContent.offsetHeight) {
+          this.boardScrollBottom('dimension')
+        }
+      case 'measure':
+        const measureScrollContent = this.$el.querySelector('.panel-measure .content-scroll-layout')
+        const measureDom = this.$el.querySelector('.panel-measure .measure-list')
+        if (!measureScrollContent || !measureDom) return
+        if (measureDom.offsetHeight < measureScrollContent.offsetHeight) {
+          this.boardScrollBottom('measure')
+        }
+    }
+  }
+  // 获取列的数量
+  getColumnNums (t) {
+    return t.columns.length > 999 ? '999+' : t.columns.length
+  }
+  // 双击表头 - 展开或收起
+  handleDBClick (t) {
+    this.$set(t, 'spreadOut', !t.spreadOut)
+    !t.spreadOut && this.$set(t, 'spreadHeight', t.drawSize.height)
+    const boxH = !t.spreadOut ? this.$el.querySelector('.table-title').offsetHeight + 4 : t.spreadHeight
+    this.$set(t.drawSize, 'height', boxH)
+    // this.$refs[`table_${t.guid}`].length && (this.$refs[`table_${t.guid}`][0].style.cssText += `height: ${boxH}px;`)
+    this.$nextTick(() => {
+      this.modelInstance.plumbTool.refreshPlumbInstance()
+    })
+  }
+  // 滚动加载 columns
+  handleScrollBottom (table) {
+    if (table.hasMoreColumns) {
+      table.hasScrollEnd = true
+      setTimeout(() => {
+        table.loadMoreColumns()
+        table.hasScrollEnd = false
+      }, 300)
+    }
+  }
+  // 连线 selected 状态时监听键盘事件
+  listenTableLink (connect) {
+    this.selectedConnect = connect
+    document.addEventListener('keydown', this.removeTableLinkEvent, true)
+  }
+  // 键盘 delete 按键删除连线
+  removeTableLinkEvent (e) {
+    e.returnValue = false
+    if (!this.$el.querySelector('.jtk-connector.is-focus')) {
+      document.removeEventListener('keydown', this.removeTableLinkEvent, true)
+      return
+    }
+    if (e.keyCode !== 8) return
+    kylinConfirm(this.$t('delConnTip'), null, this.$t('delConnTitle')).then(() => {
+      this.modelInstance.removeRenderLink(this.selectedConnect)
+      if (this.modelData.available_indexes_count > 0 && !this.isIgnore) {
+        this.showChangeTips()
+      }
+    })
+  }
+  // 移除拖拽点状态
+  removeColumnDragPots () {
+    (Array.prototype.slice.call(this.$el.querySelectorAll('.column-li'))).forEach(item => item.classList.remove('is-hover'))
+    const svgDom = this.$el.querySelector('.drag-svg')
+    const customDragImage = document.getElementById('custom-drag-image')
+    if (svgDom) {
+      typeof svgDom.remove === 'function' ? svgDom.remove() : svgDom.parentNode.removeChild(svgDom)
+    }
+    if (customDragImage) {
+      typeof customDragImage.remove === 'function' ? customDragImage.remove() : customDragImage.parentNode.removeChild(customDragImage)
+    }
+    this.$el.querySelectorAll('.column-point-dot').length && (Array.prototype.slice.call(this.$el.querySelectorAll('.column-point-dot'))).forEach(element => {
+      if (typeof element.remove === 'function') {
+        element.remove()
+      } else {
+        element.parentNode.removeChild(element)
+      }
+    })
+  }
+  // 移除自定义 linked column hover 属性
+  removeCustomHoverStatus () {
+    (Array.prototype.slice.call(this.$el.querySelectorAll('.table-box'))).forEach(item => item.classList.remove('is-hover'));
+    (Array.prototype.slice.call(this.$el.querySelectorAll('.column-li'))).forEach(item => item.classList.remove('is-hover'))
+  }
+  // hover 一个列对应 linked column 也要展示为 hover 状态
+  displayLinkColumn (t, col) {
+    this.removeCustomHoverStatus()
+    let { linkUsedColumns, tables } = this.modelRender
+    tables = Object.values(tables)
+    linkUsedColumns = Object.values(linkUsedColumns)
+    const fullColumnName = `${t.alias}.${col.column || col.columnName}`
+    const currentJoins = linkUsedColumns.filter(it => it.includes(fullColumnName))
+    if (!currentJoins.length) return
+    let links = []
+    currentJoins.forEach(item => {
+      const indexes = []
+      item.forEach((v, index) => {
+        v === fullColumnName && indexes.push(index)
+      })
+      indexes.forEach(num => {
+        const middleNum = item.length / 2
+        let [table, column] = item[num >= middleNum ? num - middleNum : num + middleNum].split('.')
+        links.push({table, column})
+      })
+    })
+    links.forEach(list => {
+      const [{ guid }] = tables.filter(it => it.alias === list.table)
+      const tDom = document.getElementById(`${guid}`)
+      const cDom = document.getElementById(`${guid}_${list.column}`)
+      const linkLines = document.getElementsByClassName(`${t.guid}&${guid}`).length > 0 ? document.getElementsByClassName(`${t.guid}&${guid}`) : document.getElementsByClassName(`${guid}&${t.guid}`)
+      this.linkLineFocus.push(...linkLines)
+      tDom && (tDom.className += ' is-hover')
+      cDom && (cDom.className += ' is-hover');
+      (Array.prototype.slice.call(linkLines)).forEach(item => {
+        if (item.nodeName === 'svg') {
+          const cls = item.getAttribute('class')
+          item.setAttribute('class', `${cls} is-focus`)
+        } else {
+          item.className += ' is-focus'
+        }
+      })
+    })
+  }
+  // table columns 上显示连接点
+  handleMouseEnterColumn (_, table, column) {
+    this.displayLinkColumn(table, column)
+  }
+  // 曲线连接线的 focus 状态
+  cancelLinkLineFocus () {
+    Array.prototype.slice.call(this.linkLineFocus).forEach(item => {
+      if (item.nodeName === 'svg') {
+        item.setAttribute('class', `${item.className.baseVal.replace(/is-focus/g, '')}`)
+      } else {
+        item.classList.remove('is-focus')
+      }
+    })
+    this.linkLineFocus.splice(0, this.linkLineFocus.length)
+  }
+  handleMouseLeave (event, table, column) {
+    this.cancelLinkLineFocus()
+  }
+  // 拖拽连接点绘制 svg
+  createAndResetSvg (e) {
+    e.preventDefault()
+    const dragSvg = this.$el.querySelector('.drag-svg')
+    const modelEdit = this.$el.querySelector('.model-edit')
+    const { clientX, clientY } = e
+    if (this.currentPot.x === clientX && this.currentPot.y === clientY) return
+    this.currentPot.x = clientX
+    this.currentPot.y = clientY
+    const tableBox = this.$el.querySelector('.model-edit')
+    const tableBoxBound = tableBox.getBoundingClientRect()
+    let sW = Math.abs(clientX - this.dragPoint.x) / (this.modelRender.zoom / 10)
+    let sH = Math.abs(clientY - this.dragPoint.y) / (this.modelRender.zoom / 10)
+    sW = sW - (clientX > this.dragPoint.x && clientY > this.dragPoint.y ? -2 : 4) < 0 ? sW : sW - (clientX > this.dragPoint.x && clientY > this.dragPoint.y ? -2 : 4)
+    sH = sH < 2 ? sH : sH - 2
+    if (!dragSvg) {
+      const sign = 'http://www.w3.org/2000/svg'
+      const svg = document.createElementNS(sign, 'svg')
+      const path = document.createElementNS(sign, 'path')
+      svg.style.cssText = `position: absolute; top: ${(Math.min(this.dragPoint.y, clientY) - tableBoxBound.top) / (this.modelRender.zoom / 10)}px; left: ${(Math.min(this.dragPoint.x, clientX) - tableBoxBound.left + (clientX > this.dragPoint.x && clientY > this.dragPoint.y ? -3 : 2)) / (this.modelRender.zoom / 10)}px`
+      svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+      svg.setAttribute('width', sW)
+      svg.setAttribute('height', sH)
+      svg.setAttribute('class', 'drag-svg')
+      path.setAttribute('d', this.setSvgPath({x: clientX, y: clientY}, this.dragPoint, sW, sH))
+      path.setAttribute('stroke', '#0875DA')
+      path.setAttribute('stroke-width', 2)
+      path.setAttribute('fill', 'none')
+      svg.appendChild(path)
+      modelEdit.appendChild(svg)
+    } else {
+      const dragPath = this.$el.querySelector('.drag-svg path')
+      dragSvg.style.cssText = `position: absolute; top: ${(Math.min(this.dragPoint.y, clientY) - tableBoxBound.top) / (this.modelRender.zoom / 10)}px; left: ${(Math.min(this.dragPoint.x, clientX) - tableBoxBound.left + (clientX > this.dragPoint.x && clientY > this.dragPoint.y ? -3 : 2)) / (this.modelRender.zoom / 10)}px`
+      dragSvg.setAttribute('width', sW)
+      dragSvg.setAttribute('height', sH)
+      dragPath.setAttribute('d', this.setSvgPath({x: clientX, y: clientY}, this.dragPoint, sW, sH))
+    }
+  }
+  // 创建直角曲线 svg 轨迹
+  setSvgPath (currentPot, dragPot, bW, bH) {
+    const { x: currentX, y: currentY } = currentPot
+    const { x: dragX, y: dragY } = dragPot
+    let d = ''
+    // 第三象限
+    if (currentX < dragX && currentY > dragY) {
+      if (bW > bH) { // 宽度要大于高度
+        d = `M ${bW} 1 L ${bW - 1.5} 1 L ${bW / 2} 1 A 3 3 0 0,0 ${bW / 2 - 3} 3 L ${bW / 2 - 3} ${bH - 6} A 3 3 0 0,1 ${bW / 2 - 6} ${bH - 3} L 0.5 ${bH - 3} L 0 ${bH - 3}`
+      } else {
+        d = `M ${bW - 2} 1 L ${bW - 2} 1.5 L ${bW - 2} ${bH / 2} A 3 3 0 0,1 ${bW - 5} ${bH / 2 + 3} L 3 ${bH / 2 + 3} A 3 3 0 0,0 1 ${bH / 2 + 6} L 1 ${bH - 0.5} L 1 ${bH}`
+      }
+    // 第四象限
+    } else if (currentX > dragX && currentY > dragY) {
+      d = `M 1 0.5 L 1 2.5 L 1 ${bH / 2} A 3 3 0 0,0 3 ${bH / 2 + 3} L ${bW - 3} ${bH / 2 + 3} A 3 3 0 0,1 ${bW - 1} ${bH / 2 + 6} L ${bW - 1} ${bH - 0.5} L ${bW - 1} ${bH}`
+    // 第二象限
+    } else if (currentX < dragX && currentY < dragY) {
+      d = `M ${bW} ${bH - 1} L ${bW} ${bH - 1} L ${bW / 2} ${bH - 1} A 3 3 0 0,1 ${bW / 2 - 4} ${bH - 3} L ${bW / 2 - 3} 3 A 3 3 0 0,0 ${bW / 2 - 6} 1 L 0.5 1 L 0 1`
+    // 第一象限
+    } else if (currentX > dragX && currentY < dragY) {
+      d = `M 0 ${bH} L 0 ${bH - 1} L ${bW / 2} ${bH - 1} A 3 3 0 0,0 ${bW / 2 + 3} ${bH - 4} L ${bW / 2 + 3} 3 A 3 3 0 0,1 ${bW / 2 + 6} 1 L ${bW - 0.5} 1 L ${bW} 1`
+    }
+    return d
+  }
+  // 当表不在可视区域内隐藏自定义连接 label
+  hideLinkLabel (connect, table) {
+    if (connect.length === 0) return
+    connect.forEach(item => {
+      const { _jsPlumb } = item
+      Object.values(_jsPlumb.overlays).forEach(label => {
+        if (table.drawSize.isOutOfView) {
+          label.canvas.className += ' is-hide'
+        } else {
+          label.canvas.className = label.canvas.className.replace(/is-hide/, '')
+        }
+      })
+    })
+  }
   validateName (rule, value, callback) {
     if (!value) {
       callback(new Error(this.$t('requiredName')))
@@ -681,9 +911,8 @@ export default class ModelEdit extends Vue {
       }
     }
   }
-
   async showGuide () {
-    await this.callGuideModal({ isShowDimAndMeasGuide: true })
+    this.showModelGuide = true
     localStorage.setItem('isFirstAddModel', 'false')
   }
   initAllPanels () {
@@ -803,7 +1032,6 @@ export default class ModelEdit extends Vue {
   showDelTableTip () {
     this.delTipVisible = true
   }
-
   // 维度、度量滚动到底部
   boardScrollBottom (name) {
     switch (name) {
@@ -821,7 +1049,6 @@ export default class ModelEdit extends Vue {
         }
     }
   }
-
   // 当维度或度量高度改变时，需要增加页码以填充多余的空白区域
   changePageOfBround (obj) {
     switch (obj) {
@@ -841,7 +1068,6 @@ export default class ModelEdit extends Vue {
         }
     }
   }
-
   toggleCheckbox () {
     if (this.allDimension.length === 0 && !this.isShowCheckbox) {
       return
@@ -887,43 +1113,25 @@ export default class ModelEdit extends Vue {
       return 0
     }
   }
-  delTable () {
-    this.modelInstance.delTable(this.currentEditTable.guid).then(() => {
-      this.cancelTableEdit()
+  async delTable (table) {
+    if (!this.modelInstance.checkTableCanDel(table.guid)) {
+      await this.$msgbox({
+        title: this.$t('kylinLang.common.delete'),
+        message: this.$t('delTableTip'),
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonText: this.$t('kylinLang.common.delete')
+      })
+    }
+    this.modelInstance.delTable(table.guid).then(() => {
+      // this.cancelTableEdit()
       if (this.modelData.available_indexes_count > 0 && !this.isIgnore) {
         this.showChangeTips()
       }
-    }, () => {
-      this.delTipVisible = false
-      // kylinMessage(this.$t('delTableTip'), {type: 'warning'})
     })
   }
-  // 编辑table
-  editTable (guid) {
-    this._hisZoom = this.modelRender.zoom
-    this.currentEditTable = this.modelInstance.getTableByGuid(guid)
-    this.formTableAlias.currentEditAlias = this.currentEditTable.alias
-    this.showTableCoverDiv = true
-    this.showEditAliasForm = false
-    this.delTipVisible = false
-    this.$nextTick(() => {
-      const dom = this.$el.querySelector('.edit-table-layout')
-      const modelEdit = this.$el.querySelector('.model-edit')
-      dom && (dom.style.cssText = modelEdit?.style.cssText ?? '')
-    })
-  }
-  // 保存table的别名
-  saveEditTableAlias () {
-    this.$refs.aliasForm.validate((valid) => {
-      if (valid) {
-        this.currentEditTable.alias = this.formTableAlias.currentEditAlias
-        this.saveNewAlias(this.currentEditTable)
-        this.showEditAliasForm = false
-      }
-    })
-  }
-  saveNewAlias (t) {
-    this.modelInstance.setUniqueAlias(t)
+  saveNewAlias (t, value) {
+    this.modelInstance.setUniqueAlias(t, value)
     this.modelInstance.changeAlias()
   }
   // 快捷编辑table操作 end
@@ -942,8 +1150,37 @@ export default class ModelEdit extends Vue {
     var curPanel = this.panelAppear[i]
     this.modelInstance.setIndexTop(Object.values(this.panelAppear), curPanel, '')
   }
-  activeTablePanel (t) {
+  activeTablePanel (e, t) {
+    e.stopPropagation()
     this.modelInstance.setIndexTop(Object.values(this.modelRender.tables), t, 'drawSize')
+    // this.$refs[`table_${t.guid}`]
+    this.removeTableFocus()
+    if (this.$refs[`table_${t.guid}`]) {
+      this.$refs[`table_${t.guid}`][0].className += ' is-focus'
+    }
+  }
+  // 取消 table focus 状态
+  removeTableFocus () {
+    const tableBoxes = this.$el.querySelectorAll('.table-box')
+    const linkLabels = this.$el.querySelectorAll('.link-label')
+    const svgLine = this.$el.querySelectorAll('.jtk-connector.is-focus')
+    if (tableBoxes.length > 0) {
+      Array.prototype.slice.call(tableBoxes).forEach(item => {
+        item.classList.remove('is-focus')
+        item.classList.remove('is-broken')
+      })
+    }
+    if (linkLabels.length > 0) {
+      Array.prototype.slice.call(linkLabels).forEach(item => {
+        item.classList.remove('is-focus')
+        item.classList.remove('is-broken')
+      })
+    }
+    if (svgLine.length > 0) {
+      Array.prototype.slice.call(svgLine).forEach(item => {
+        item.setAttribute('class', `${item.className.baseVal.replace(/is-focus|is-broken/g, '')}`)
+      })
+    }
   }
   closeAddMeasureDia ({isSubmit, data, isEdit, fromSearch}) {
     if (isSubmit) {
@@ -954,22 +1191,29 @@ export default class ModelEdit extends Vue {
     }
     this.measureVisible = false
   }
-  changeTableType (t) {
+  async changeTableType (t) {
     if (t.kind === 'FACT' && t.source_type === 1) {
       return
     }
     if (this._checkTableType(t)) {
       let joinT = Object.keys(this.modelInstance.linkUsedColumns).filter(it => it.indexOf(t.guid) === 0)
       if (joinT.length && joinT.some(it => this.modelInstance.linkUsedColumns[it].length)) {
-        this.cancelTableEdit()
+        // this.cancelTableEdit()
         this.$message({
           message: this.$t('changeTableJoinCondition'),
           type: 'warning'
         })
         return
       }
+      t.kind !== 'FACT' && await this.$msgbox({
+        title: t.kind !== 'FACT' ? this.$t('switchFact') : this.$t('switchLookup'),
+        type: 'warning',
+        message: this.$t('switchTableTypeTips'),
+        showCancelButton: true,
+        confirmButtonText: this.$t('switchReplace')
+      })
       this.modelInstance.changeTableType(t)
-      this.cancelTableEdit()
+      // this.cancelTableEdit()
       if (this.modelData.available_indexes_count > 0 && !this.isIgnore) {
         this.showChangeTips()
       }
@@ -1177,9 +1421,20 @@ export default class ModelEdit extends Vue {
   cancelEditAlias () {
     this.showEditAliasForm = false
   }
-  openEditAliasForm () {
-    this.showEditAliasForm = true
-    this.formTableAlias.currentEditAlias = this.currentEditTable.alias
+  openEditAliasForm (table) {
+    // this.showEditAliasForm = true
+    this.$prompt(null, this.$t('rename'), {
+      type: 'info',
+      inputValue: table.alias,
+      inputPattern: /^\w+$/,
+      inputErrorMessage: this.$t('kylinLang.common.nameFormatValidTip'),
+      inputPlaceholder: this.$t('kylinLang.common.pleaseInput'),
+      confirmButtonText: this.$t('kylinLang.common.save'),
+      cancelButtonText: this.$t('kylinLang.common.cancel')
+    }).then(({ value }) => {
+      // table.alias = value
+      this.saveNewAlias(table, value)
+    })
   }
   filterColumns (filterVal, columns, t) {
     let reg = new RegExp(filterVal, 'gi')
@@ -1192,7 +1447,13 @@ export default class ModelEdit extends Vue {
     return filterObjectArray(columns, 'isHidden', false)
   }
   // 拖动画布
-  dragBox (x, y) {
+  dragBox (x, y, boxW, boxH, info, oDiv) {
+    const child = oDiv.querySelector('.model-edit')
+    if (child) {
+      const mL = child.offsetLeft ?? 0
+      const mT = child.offsetTop ?? 0
+      child.style.cssText += `margin-left: ${mL + x}px; margin-top: ${mT + y}px`
+    }
     this.$nextTick(() => {
       this.modelInstance.getSysInfo()
       this.modelInstance.moveModelPosition(x, y)
@@ -1203,14 +1464,16 @@ export default class ModelEdit extends Vue {
     this.currentDragTable = node.database + '.' + node.label
   }
   // 拖动列
-  dragColumns (event, col, table) {
+  dragColumns (event, col, table, customDragImage) {
     event.stopPropagation()
-    this.currentDragColumn = event.srcElement ? event.srcElement : event.target
+    this.currentDragColumn = customDragImage || (event.srcElement ? event.srcElement : event.target)
     event.dataTransfer && (event.dataTransfer.effectAllowed = 'move')
     if (!isIE()) {
       event.dataTransfer && event.dataTransfer.setData && event.dataTransfer.setData('text', '')
     }
-    event.dataTransfer.setDragImage && event.dataTransfer.setDragImage(this.currentDragColumn, 0, 0)
+    if (event.dataTransfer.setDragImage) {
+      customDragImage ? event.dataTransfer.setDragImage(this.currentDragColumn, 15, 27) : event.dataTransfer.setDragImage(this.currentDragColumn, 0, 0)
+    }
     this.currentDragColumnData = {
       guid: table.guid,
       columnName: col.name,
@@ -1218,16 +1481,20 @@ export default class ModelEdit extends Vue {
     }
     return true
   }
-  dragColumnEnter (event, t) {
+  dragColumnEnter (event, t, col) {
+    event.preventDefault()
     if (t.guid === this.currentDragColumnData.guid) {
       return
     }
     var target = event.currentTarget
-    $(target).addClass('drag-column-in')
+    // const dom = document.getElementById(`${t.guid}_${col.column}`)
+    $(target).addClass('drag-column-li-in')
+    // if (dom.className.indexOf('drag-column-in') >= 0) return
+    // dom.className += ' drag-column-li-in'
   }
   dragColumnLeave (event) {
     var target = event.currentTarget
-    $(target).removeClass('drag-column-in')
+    $(target).removeClass('drag-column-li-in')
   }
   // 释放table
   dropTable (e) {
@@ -1262,12 +1529,17 @@ export default class ModelEdit extends Vue {
     const currentTablesIncludeFact = Object.values(this.modelInstance.tables).filter(it => it.kind === 'FACT')
     if (!currentTablesIncludeFact.length && tableIsFact) {
       this.modelInstance.changeTableType(this.modelInstance.getTableByGuid(Object.keys(this.modelInstance.tables).pop()))
-    } else if (Object.keys(this.modelInstance.tables).length === 1) {
-      this.editTable(Object.keys(this.modelInstance.tables)[0])
     }
     this.currentDragTableData = {}
     this.currentDragTable = null
     this.removeDragInClass()
+    this.$nextTick(() => {
+      if (Object.keys(this.modelInstance.tables).length === 1 && !(!currentTablesIncludeFact.length && tableIsFact)) {
+        // this.editTable(Object.keys(this.modelInstance.tables)[0])
+        const guid = Object.keys(this.modelInstance.tables)[0]
+        this.$refs[`table_${guid}`]?.[0].querySelector('.table-dropdown .setting-icon')?.click()
+      }
+    })
   }
   showChangeTips () {
     this.$message({
@@ -1284,6 +1556,7 @@ export default class ModelEdit extends Vue {
     // 火狐默认行为会打开drop对应列的url，所以需要阻止默认行为
     event.preventDefault && event.preventDefault()
     this.removeDragInClass()
+    this.removeColumnDragPots()
     let fromTable = this.modelInstance.getTableByGuid(this.currentDragColumnData.guid)
     // 判断是否是自己连自己
     if (this.currentDragColumnData.guid === table.guid) {
@@ -1447,12 +1720,27 @@ export default class ModelEdit extends Vue {
     } else {
     // 正常连线
       this.modelInstance.renderLink(pGuid, fGuid)
+      this.$nextTick(() => {
+        // const cloneTables = objectClone(this.modelRender.tables)
+        Object.values(this.modelRender.tables).forEach(t => {
+          const pfkLinkColumns = t.columns.filter(it => it.isPK && it.isFK).sort((a, b) => a - b)
+          const pkLinkColumns = t.columns.filter(it => it.isPK && !it.isFK).sort((a, b) => a - b)
+          const fkLinkColumns = t.columns.filter(it => it.isFK && !it.isPK).sort((a, b) => a - b)
+          const unlinkColumns = t.columns.filter(it => !it.isPK && !it.isFK)
+          t.columns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns]
+          t._cache_search_columns = t.columns
+          t.showColumns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns].slice(0, t.columnPerSize)
+        })
+        // this.$set(this.modelRender, 'tables', cloneTables)
+        this.$set(this.modelInstance, 'tables', this.modelRender.tables)
+      }, 500)
     }
     // 同步因为预计算被禁用的表
     this.modelRender.anti_flatten_lookups = this.modelInstance.anti_flatten_lookups = Object.values(this.modelInstance.tables).filter(it => data.anti_flatten_lookups.includes(it.name)).map(it => it.alias)
     this.modelRender.anti_flatten_cc = this.modelInstance.anti_flatten_cc = data.anti_flatten_cc
   }
   removeDragInClass () {
+    $(this.$el).find('.drag-column-li-in').removeClass('drag-column-li-in')
     $(this.$el).find('.drag-column-in').removeClass('drag-column-in')
     $(this.$el).removeClass('drag-in').find('.drag-in').removeClass('drag-in')
   }
@@ -1473,7 +1761,7 @@ export default class ModelEdit extends Vue {
       if (this.currentDragColumnData.guid === guid) {
         return
       }
-      $(target).parents('.column-list-box').addClass('drag-in')
+      // $(target).parents('.column-list-box').addClass('drag-in')
     }
   }
   allowDropColumnToPanle (e) {
@@ -1689,12 +1977,8 @@ export default class ModelEdit extends Vue {
     return styleObj
     // }
   }
-  get tableBoxStyle () {
-    return (drawSize) => {
-      if (drawSize) {
-        return {'z-index': drawSize.zIndex, width: drawSize.width + 'px', height: drawSize.height + 'px', left: drawSize.left + 'px', top: drawSize.top + 'px'}
-      }
-    }
+  tableBoxStyle (drawSize) {
+    return {'z-index': drawSize.zIndex, width: drawSize.width + 'px', height: drawSize.height + 'px', left: drawSize.left + 'px', top: drawSize.top + 'px'}
   }
   get tableBoxStyleNoZoom () {
     return (drawSize) => {
@@ -1772,7 +2056,6 @@ export default class ModelEdit extends Vue {
       this.$emit('saveRequestEnd')
     })
   }
-
   // 对于老数据检测 SUM 或 PERCENTILE_APPROX 度量中是否使用 varchar cc 列
   checkMeasureWithCC (data) {
     return new Promise((resolve, reject) => {
@@ -1800,14 +2083,12 @@ export default class ModelEdit extends Vue {
       }
     })
   }
-
   setModelBoundStyle () {
     const { left, top } = this.modelRender.marginClient ?? {left: 0, top: 0}
     const dom = this.$el.querySelector('.model-edit')
     if (!dom) return
     dom.style.cssText += `margin-left: ${left}px; margin-top: ${top}px`
   }
-
   async mounted () {
     this.globalLoading.show()
     this.$el.onselectstart = function (e) {
@@ -1881,12 +2162,12 @@ export default class ModelEdit extends Vue {
         })
       }
     })
+    
     this.setModelBoundStyle()
-    if (localStorage.getItem('isFirstAddModel') === 'true') {
+    if (localStorage.getItem('isFirstAddModel') === 'true' || !localStorage.getItem('isFirstAddModel')) {
       await this.showGuide()
     }
   }
-
   // 更新 model.js 里的 tables 数据
   updateTableInfo () {
     for (let key in this.modelInstance.tables) {
@@ -1895,15 +2176,9 @@ export default class ModelEdit extends Vue {
       index >= 0 && (this.modelInstance.tables[key].source_type = this.datasource[index].source_type)
     }
   }
-
   async checkInvalidIndex () {
     if (this.extraoption.action === 'edit') {
       const res = await this.modelInstance.generateMetadata(true)
-      // const _data = {
-      //   project: this.currentSelectedProject,
-      //   model_id: res.uuid,
-      //   join_tables: res.join_tables
-      // }
       const response = await this.invalidIndexes(res)
       const result = await handleSuccessAsync(response)
       const { computed_columns, anti_flatten_lookups } = result
@@ -1981,14 +2256,12 @@ export default class ModelEdit extends Vue {
     this.$router.replace({name: 'ModelDetails', params: { modelName: this.modelInstance.alias, tabTypes: 'first', ignoreIntercept: true }})
     this.gotoIndexdialogVisible = false
   }
-
   getBaseIndexCount (result) {
     const { base_agg_index, base_table_index } = result
     const createBaseIndexNum = base_agg_index ? [...[{...base_agg_index}].filter(it => it.operate_type === 'CREATE'), ...[{...base_table_index}].filter(it => it.operate_type === 'CREATE')].length : 0
     const updateBaseIndexNum = base_table_index ? [...[{...base_agg_index}].filter(it => it.operate_type === 'UPDATE'), ...[{...base_table_index}].filter(it => it.operate_type === 'UPDATE')].length : 0
     return {createBaseIndexNum, updateBaseIndexNum}
   }
-
   handleSaveModel ({data, modelSaveConfigData, createBaseIndex}) {
     this.saveModelType = 'saveModel'
     let para = {...data, with_base_index: createBaseIndex}
@@ -2060,25 +2333,9 @@ export default class ModelEdit extends Vue {
       handleError(res)
     })
   }
-  // autoFilter () {
-  //   clearTimeout(this.stCycle)
-  //   this.stCycle = setTimeout(() => {
-  //     this.getAboutKap().then((res) => {
-  //       handleSuccess(res, (data) => {
-  //         if (this._isDestroyed) {
-  //           return
-  //         }
-  //         this.autoFilter()
-  //       })
-  //     }, (res) => {
-  //       handleError(res)
-  //     })
-  //   }, 1500000)
-  // }
   updateBetchMeasure (val) {
     this.modelInstance.all_measures = val
   }
-
   // 构建基础索引
   buildBaseIndexEvent (result) {
     const { base_agg_index, base_table_index } = result
@@ -2093,16 +2350,10 @@ export default class ModelEdit extends Vue {
       model: this.modelInstance
     })
   }
-
   // 跳转至job页面
   jumpToJobs () {
     this.$router.push('/monitor/job')
   }
-
-  // created () {
-  //   // 心跳请求，保持用户 active
-  //   // this.autoFilter()
-  // }
   beforeDestroy () {
     this.toggleFullScreen(false)
   }
@@ -2137,79 +2388,148 @@ export default class ModelEdit extends Vue {
   box-shadow: inset 0 0 4px 0 @base-color;
 }
 .fast-action-popper {
-  z-index:100001!important;
+  z-index:100001 !important;
+}
+.jtk-connector.is-focus {
+  path {
+    stroke: @ke-color-primary;
+    stroke-width: 2;
+  }
+}
+.jtk-connector.is-broken.is-focus {
+  path {
+    stroke: @ke-color-danger;
+    stroke-width: 2;
+  }
 }
 .jtk-overlay {
-  &.link-label-broken {
-    background-color: @broken-line-color;
-    &:hover {
-      background-color: @broken-line-color;
-      .close {
-        &:hover {
-          color:@fff;
-          background: @broken-line-lable-close-hover-color;
-        }
-      }
-    }
-  }
-  background-color: @base-color;
-  font-size: 12px;
-  z-index: 21;
+  z-index: 9;
   cursor: pointer;
-  min-width: 40px;
-  height: 20px;
   border-radius: 10px;
   text-align: center;
-  line-height: 20px;
-  padding: 0 4px;
-  color:@fff;
-  transition: width 0.5s;
-  .close {
-    display: none;
-    .ky-square-box(14px, 14px);
-    line-height: 14px;
-    font-size:12px;
-    float:right;
-    border-radius: 7px;
-    margin-left:8px;
-    // vertical-align: text-bottom;
-    margin-top:3px;
+  background: @grey-3;
+  padding: 0 10px;
+  &.is-hide {
+    font-size: 0;
+    .join-type-hide {
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .join-type {
+      display: none;
+    }
   }
-  &:hover {
-    .close {
-      display: block;
-      color:#ccc;
-      // .ky-square-box(14px, 14px);
-      // border-radius: 50%;
-      // display: inline-block;
-      &:hover {
-        color:#fff;
-        background: #4da9e7;
+  &.is-hide.jtk-hover {
+    // background: #0875DA;
+    .join-type {
+      display: inline-block;
+    }
+    .join-type-hide {
+      display: none;
+    }
+  }
+  &.link-label-broken {
+    .join-type {
+      font-size: 24px;
+      color: @ke-color-danger;
+    }
+    .join-type-hide {
+      background: @ke-color-danger;
+    }
+    &:hover {
+      .join-type {
+        color: @ke-color-danger-hover;
       }
     }
-    // height: 20px;
-    // line-height: 20px;
-    // font-size:13px;
-    color:@fff;
-    background-color: @base-color-11;
-    // border: 2px solid @base-color-11;
   }
+  &.link-label.is-focus {
+    .join-type {
+      color: @ke-color-primary;
+    }
+    .join-type-hide {
+      background: @ke-color-primary;
+    }
+  }
+  &.link-label.is-broken.is-focus {
+    .join-type {
+      color: @ke-color-danger;
+    }
+    .join-type-hide {
+      background: @ke-color-danger;
+    }
+  }
+  &.jtk-hover {
+    .close-icon {
+      display: inline-block;
+    }
+  }
+  &.jtk-hover:not(.link-label-broken):not(.is-focus) {
+    .join-type {
+      color: #9DCEFB;
+    }
+    
+  }
+  .join-type-hide {
+    display: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 100%;
+    background: @text-placeholder-color;
+  }
+  .join-type {
+    color: @text-placeholder-color;
+    font-size: 30px;
+    &:hover {
+      color: @ke-color-primary;
+    }
+  }
+  .close-icon {
+    display: none;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    right: -13px;
+    font-size: 16px;
+  }
+  // .close {
+  //   display: none;
+  //   .ky-square-box(14px, 14px);
+  //   line-height: 14px;
+  //   font-size:12px;
+  //   float:right;
+  //   border-radius: 7px;
+  //   margin-left:8px;
+  //   margin-top:3px;
+  // }
 }
-.drag-column-in {
- background-color: @base-color-10;
- box-shadow: 2px 2px 4px 0 @text-secondary-color;
+.drag-column-li-in {
+  background-color: #CEE6FD;
+  border: 2px solid @line-border-drag !important;
 }
 .box-css() {
   position:relative;
   background-color:@grey-3;
 }
+@-moz-document url-prefix() {
+  .column-point-dot {
+    .add-point {
+      top: -1.5px !important;
+    }
+  }
+}
 .search-position() {
-  // width:620px;
-  // left:50%;
-  // margin-left:-310px;
   position:relative;
 }
 .model-edit-outer {
+  border-top:@text-placeholder-color;
+  user-select:none;
+  overflow:hidden;
+  .box-css();
+  height: 100%;
+  .lose-fact-table-alert {
+    position: absolute;
+    z-index: 1;
+  }
   .slide-fade-enter-active {
     transition: all .3s;
   }
@@ -2232,11 +2552,14 @@ export default class ModelEdit extends Vue {
   }
   .fast-action-box {
     width: 210px;
-    left: 230px;
-    color: @fff;
+    left: 215px;
+    color: #fff;
     position: absolute;
     z-index: 100001;
-    margin-left:10px;
+    margin-left: 10px;
+    background: #fff;
+    border: 1px solid #ECF0F8;
+    border-radius: 6px;
     .el-form-item__content {
       line-height: 0;
     }
@@ -2284,15 +2607,13 @@ export default class ModelEdit extends Vue {
   .fast-action-temp-table {
     z-index:100000!important;
   }
-  border-top:@text-placeholder-color;
-  user-select:none;
-  overflow:hidden;
-  .box-css();
-  height: 100%;
+  
   .panel-box{
-      box-shadow: 0 2px 4px 0 @color-text-placeholder;
-      position:relative;
-      width:250px;
+    box-shadow: 0 2px 4px 0 @color-text-placeholder;
+    position:relative;
+    width:250px;
+    background:#fff;
+    position:absolute;
       .panel-title {
         background:@text-normal-color;
         height:28px;
@@ -2320,19 +2641,22 @@ export default class ModelEdit extends Vue {
         left:0;
         .ksd-nobr-text {
           width: calc(~'100% - 80px');
-          color:@text-title-color;
+          color: @text-title-color;
           &.checkbox-text-overflow {
             width: calc(~'100% - 90px');
             height: 100%;
             .el-checkbox {
               width: 100%;
-              overflow: hidden;
-              text-overflow: ellipsis;
+              // overflow: hidden;
+              // text-overflow: ellipsis;
               display: inline-block;
               .el-checkbox__label {
-                display: initial;
+                width: calc(~'100% - 20px');
+                display: inline-block;
                 position: relative;
                 top: -1px;
+                text-overflow: ellipsis;
+                overflow: hidden;
               }
               .el-checkbox__input {
                 top: 2px;
@@ -2502,423 +2826,648 @@ export default class ModelEdit extends Vue {
           }
         }
       }
-      background:#fff;
-      position:absolute;
-    }
-    .panel-datasource {
-      .tree-box {
+  }
+  .panel-datasource {
+    .tree-box {
+      width:100%;
+      &.iframeTreeBox {
+        .el-tree > .el-tree-node > .el-tree-node__content{
+          display: none;
+        }
+        .el-tree > .el-tree-node > .el-tree-node__children > .el-tree-node{
+          border-top: none;
+        }
+      }
+      .body{
         width:100%;
-        .body{
-          width:100%;
-          padding:10px;
-        }
-        .empty-data {
-          top:120%;
-        }
+        padding:10px;
+      }
+      .empty-data {
+        top:120%;
       }
     }
-    .panel-setting {
-      height:316px;
-      .panel-main-content{
+  }
+  .panel-setting {
+    height:316px;
+    .panel-main-content{
+      color:@text-disabled-color;
+      .el-radio {
         color:@text-disabled-color;
-        .el-radio {
-          color:@text-disabled-color;
-        }
-        overflow:hidden;
-        padding: 10px;
-        .active{
+      }
+      overflow:hidden;
+      padding: 10px;
+      .active{
+        color:@text-normal-color;
+        .el-radio{
           color:@text-normal-color;
-          .el-radio{
-            color:@text-normal-color;
-          }
         }
-        ul {
-          margin-left:40px;
-          li{
-            list-style:disc;
-          }
+      }
+      ul {
+        margin-left:40px;
+        li{
+          list-style:disc;
         }
       }
     }
-    .panel-search-box {
-      cursor: default;
-      .search-action-list {
-        font-size:12px;
-        margin-top:140px;
-        padding-right:30px;
-        .action-list-title {
-          height:30px;
-          line-height:30px;
-          font-weight: @font-medium;
-          border-bottom: solid 1px @line-split-color;
-        }
-        .search-list-icon {
-          width:16px;
-          height:16px;
-          position:absolute;
-          .ky-square-box(16px, 16px);
-          border-radius: 50%;
-        }
-        .action-content {
-          border-bottom: dashed 1px @line-split-color;
-          .action-title {
-            padding:10px 0;
-          }
-          .action-desc {
-            margin-left:26px;
-            word-break: break-all;
-            i {
-              font-weight: @font-medium;
-              font-style: normal;
-            }
-
-          }
-        }
-      }
-      &.full-screen {
-        top:51px!important;
-      }
-      width:100%!important;
-      height:100%!important;
-      position:fixed;
-      top:102px!important;
-      bottom:0!important;
-      left:0!important;
-      right:0!important;
-      background:rgba(255,255,255,.93);
-      z-index: 120!important;
-      .close {
-        position: absolute;
-        right:10px;
-        top:10px;
-        width:72px;
-        height:72px;
-        font-size:18px;
-        text-align:center;
-        border-radius: 50%;
-        cursor:pointer;
-        i {
-          font-size:24px;
-        }
-        &:hover {
-          background: @grey-2;
-        }
-      }
-      .search-result-box {
-        box-shadow: 0 0px 2px 0 @color-text-placeholder;
-        background-color: rgba(255, 255, 255, 1);
-        height:calc(~'100vh - 464px')!important;
-        min-height:250px;
-        // overflow:auto;
-        .search-position();
-        // box-shadow:@box-shadow;
-        .search-noresult {
-          font-size:20px;
-          text-align: center;
-          margin-top:100px;
-          color:@text-placeholder-color;
-        }
-        .search-group {
-          padding-top: 5px;
-          padding-bottom: 5px;
-        }
-        .search-content {
-          &.active,&:hover{
-            background-color:@base-color-9;
-          }
-          cursor:pointer;
-          height:32px;
-          line-height:32px;
-          padding-left: 20px;
-          .search-category {
-            font-size:12px;
-            color:@text-normal-color;
-          }
-          .search-name {
-            i {
-              color:@base-color;
-              font-style: normal;
-            }
-            font-size:14px;
-            color:@text-title-color;
-          }
-        }
-      }
-      .search-action-result {
-        width:620px;
-        // margin: 0 auto;
-        top: 90px;
-        position: absolute;
-        left: 50%;
-        margin-left: -310px;
-      }
-      .search-input {
-        .search-position();
-        height:72px;
-        margin-top: 140px;
-        .el-input__inner {
-          height:72px;
-          font-size:24px;
-          color:@text-normal-color;
-          padding-left: 50px;
-        }
-        .el-input__prefix {
-          font-size:24px;
-          margin-left: 14px;
-        }
-        .el-input__suffix {
-          font-size:24px;
-        }
-      }
-    }
-    .tool-icon{
-      position:absolute;
-      width: 32px;
-      height:32px;
-      text-align: center;
-      line-height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      .new-icon {
-        background-color:@error-color-1;
-        border-radius:2px;
-        font-size:12px;
-        text-align: center;
-        position:absolute;
-        width:30px;
-        height:18px;
-        line-height:18px;
-        left: 16px;
-        top:-6px;
-        transform:scale(0.6);
-      }
-    }
-    .tool-icon-group {
-      position:absolute;
-      width:32px;
-      top:12px;
-      right:10px;
-      .tool-icon {
-        box-shadow: @box-shadow;
-        background:@text-normal-color;
-        color:#fff;
-        position:relative;
-        margin-bottom: 10px;
-        font-weight: @font-medium;
-        font-size: 16px;
-        &.active{
-          background:@base-color;
-        }
-      }
-    }
-    .sub-tool-icon-group {
-      position:absolute;
-      right:10px;
-      top:258px;
-      width:32px;
-      .tool-icon{
-        &.broken-location i{
-          color:@error-color-1;
-        }
-        position:relative;
+  }
+  .panel-search-box {
+    cursor: default;
+    .search-action-list {
+      font-size:12px;
+      margin-top:140px;
+      padding-right:30px;
+      .action-list-title {
         height:30px;
         line-height:30px;
-        i {
-          color:@text-normal-color;
-          font-size:18px;
-          &:hover{
-            color:@base-color;
+        font-weight: @font-medium;
+        border-bottom: solid 1px @line-split-color;
+      }
+      .search-list-icon {
+        width:16px;
+        height:16px;
+        position:absolute;
+        .ky-square-box(16px, 16px);
+        border-radius: 50%;
+      }
+      .action-content {
+        border-bottom: dashed 1px @line-split-color;
+        .action-title {
+          padding:10px 0;
+        }
+        .action-desc {
+          margin-left:26px;
+          word-break: break-all;
+          i {
+            font-weight: @font-medium;
+            font-style: normal;
           }
         }
       }
     }
-    .icon-ds {
+    &.full-screen {
+      top:51px!important;
+    }
+    width:100%!important;
+    height:100%!important;
+    position:fixed;
+    top:102px!important;
+    bottom:0!important;
+    left:0!important;
+    right:0!important;
+    background:rgba(255,255,255,.93);
+    z-index: 120!important;
+    .close {
+      position: absolute;
+      right:10px;
       top:10px;
-      left:10px;
+      width:72px;
+      height:72px;
+      font-size:18px;
+      text-align:center;
+      border-radius: 50%;
+      cursor:pointer;
+      i {
+        font-size:24px;
+      }
+      &:hover {
+        background: @grey-2;
+      }
+    }
+    .search-result-box {
+      box-shadow: 0 0px 2px 0 @color-text-placeholder;
+      background-color: rgba(255, 255, 255, 1);
+      height:calc(~'100vh - 464px')!important;
+      min-height:250px;
+      .search-position();
+      .search-noresult {
+        font-size:20px;
+        text-align: center;
+        margin-top:100px;
+        color:@text-placeholder-color;
+      }
+      .search-group {
+        padding-top: 5px;
+        padding-bottom: 5px;
+      }
+      .search-content {
+        &.active,&:hover{
+          background-color:@base-color-9;
+        }
+        cursor:pointer;
+        height:32px;
+        line-height:32px;
+        padding-left: 20px;
+        .search-category {
+          font-size:12px;
+          color:@text-normal-color;
+        }
+        .search-name {
+          i {
+            color:@base-color;
+            font-style: normal;
+          }
+          font-size:14px;
+          color:@text-title-color;
+        }
+      }
+    }
+    .search-action-result {
+      width:620px;
+      // margin: 0 auto;
+      top: 90px;
+      position: absolute;
+      left: 50%;
+      margin-left: -310px;
+    }
+    .search-input {
+      .search-position();
+      height:72px;
+      margin-top: 140px;
+      .el-input__inner {
+        height:72px;
+        font-size:24px;
+        color:@text-normal-color;
+        padding-left: 50px;
+      }
+      .el-input__prefix {
+        font-size:24px;
+        margin-left: 14px;
+      }
+      .el-input__suffix {
+        font-size:24px;
+      }
+    }
+  }
+  .tool-icon{
+    position:absolute;
+    width: 32px;
+    height:32px;
+    text-align: center;
+    line-height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    .new-icon {
+      background-color:@error-color-1;
+      border-radius:2px;
+      font-size:12px;
+      text-align: center;
+      position:absolute;
+      width:30px;
+      height:18px;
+      line-height:18px;
+      left: 16px;
+      top:-6px;
+      transform:scale(0.6);
+    }
+  }
+  .tool-icon-group {
+    position:absolute;
+    width:32px;
+    top:12px;
+    right:10px;
+    .tool-icon {
+      box-shadow: @box-shadow;
       background:@text-normal-color;
       color:#fff;
-      box-shadow: @box-shadow;
+      position:relative;
+      margin-bottom: 10px;
+      font-weight: @font-medium;
+      font-size: 16px;
       &.active{
         background:@base-color;
       }
-      &:hover{
-        background:@base-color;
-      }
     }
-    .icon-lock-status {
-      top:10px;
-      right:10px;
+  }
+  .sub-tool-icon-group {
+    position:absolute;
+    right:10px;
+    top:258px;
+    width:32px;
+    .tool-icon{
+      &.broken-location i{
+        color:@error-color-1;
+      }
+      position:relative;
+      height:30px;
+      line-height:30px;
       i {
-         display: block;
-         line-height: 32px;
-      }
-      border:solid 1px @text-normal-color;
-      &:hover{
-        color: #fff;
-        background-color:@normal-color-1;
-        border:solid 1px @normal-color-1;
-      }
-    }
-    .unlock-icon {
-      &:hover{
-        color: #fff;
-        background-color:@base-color;
-        border:solid 1px @base-color;
+        color:@text-normal-color;
+        font-size:18px;
+        &:hover{
+          color:@base-color;
+        }
       }
     }
   }
-  .model-edit-outer{
-    .model-edit {
-      height: 100%;
-      position:relative;
+  .icon-ds {
+    top:10px;
+    left:10px;
+    background:@text-normal-color;
+    color:#fff;
+    box-shadow: @box-shadow;
+    &.active{
+      background:@base-color;
     }
-    .edit-table-layout {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 100000;
+    &:hover{
+      background:@base-color;
     }
-    .box-css();
-    .table-box {
-      &:hover{
-        .scrollbar-track-y{
-          opacity: 1;
+  }
+  .icon-lock-status {
+    top:10px;
+    right:10px;
+    i {
+        display: block;
+        line-height: 32px;
+    }
+    border:solid 1px @text-normal-color;
+    &:hover{
+      color: #fff;
+      background-color:@normal-color-1;
+      border:solid 1px @normal-color-1;
+    }
+  }
+  .unlock-icon {
+    &:hover{
+      color: @fff;
+      background-color:@base-color;
+      border:solid 1px @base-color;
+    }
+  }
+  .model-edit {
+    height: 100%;
+    position:relative;
+    .drag-svg {
+      z-index: 50;
+    }
+    svg.jtk-connector {
+      cursor: pointer;
+    }
+  }
+  .edit-table-layout {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100000;
+  }
+  .table-box {
+    background-color: @fff;
+    position: absolute;
+    // box-shadow: @fact-shadow;
+    border-radius: 6px;
+    border: 2px solid #E6EBF4;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    &.is-focus {
+      border: 2px solid #0867BF;
+      .column-list-box {
+        .column-li.drag-column-li-in {
+          border: 0 !important;
+          border-top: 2px solid @line-border-drag !important;
+          border-bottom: 2px solid @line-border-drag !important;
         }
       }
-      &.isLookup {
-        box-shadow:@lookup-shadow;
-        &:hover {
-          box-shadow:@lookup-hover-shadow;
-        }
-        .table-title {
-          background-color: @lookup-title-color;
-          color:@fff;
-          .setting-icon {
-            &:hover{
-              background-color:@base-color-14;
-            }
-          }
-        }
+    }
+    &.is-broken.is-focus {
+      border: 2px solid @ke-color-danger;
+    }
+    &.link-hover:not(.is-focus) {
+      border: 2px solid #9DCEFB;
+    }
+    &:hover:not(.is-focus) {
+      // box-shadow: @fact-hover-shadow;
+      border: 2px solid #9DCEFB;
+      .scrollbar-track-y{
+        opacity: 1;
       }
-      background-color:#fff;
-      position:absolute;
-      box-shadow:@fact-shadow;
-      &:hover {
-        box-shadow:@fact-hover-shadow;
-      }
-      // overflow: hidden;
+    }
+    &.is-hover:not(.is-focus) {
+      border: 2px solid #9DCEFB;
+    }
+    &:focus {
+      border: 2px solid @line-border-focus;
+    }
+    &.isLookup {
+      // box-shadow:@lookup-shadow;
+      // &:hover {
+      //   box-shadow:@lookup-hover-shadow;
+      // }
       .table-title {
+        background-color: @background-gray;
+        color: @fff;
         .setting-icon {
-          float:right;
-          font-size:14px;
-          width:20px;
-          height:20px;
-          line-height:20px;
-          text-align: center;
-          margin-top: 6px;
-          margin-right: 3px;
-          &:hover {
-            background-color:@base-color-11;
-          }
-          i {
-            margin: auto;
-            color:@fff;
+          i:hover {
+            background-color: rgba(0, 0, 0, 0.2);
           }
         }
-        .name {
-          &.tip_box {
-            .alias-span {
-              font-size: 14px;
+      }
+    }
+    &:not(.is-focus) .column-list-box {
+      &.ksd-drag-box *[draggable="true"].is-link:hover {
+        border: 0 !important;
+        border: 2px solid #0875DA !important;
+      }
+      .column-li {
+        &.is-link {
+          &.is-hover {
+            background-color: #CEE6FD;
+            border: 2px solid @line-border-drag;
+          }
+        }
+      }
+    }
+    &.is-focus .column-list-box {
+      &.ksd-drag-box *[draggable="true"].is-link:hover {
+        border: 0 !important;
+        border-top: 2px solid #0875DA !important;
+        border-bottom: 2px solid #0875DA !important;
+      }
+      .column-li {
+        &.is-link {
+          &.is-hover {
+            background-color: #CEE6FD;
+            border-top: 2px solid @line-border-drag;
+            border-bottom: 2px solid @line-border-drag;
+          }
+        }
+      }
+    }
+    .no-data {
+      position: initial;
+      margin-top: 32px;
+    }
+    // overflow: hidden;
+    .table-title {
+      background-color: @fact-title-color;
+      color:#fff;
+      line-height: 38px;
+      border-radius: 4px 4px 0 0;
+      height: 38px;
+      padding: 0 8px 0 12px;
+      display: flex;
+      align-items: center;
+      &.table-spread-out {
+        border-radius: 4px;
+      }
+      .table-sign {
+        display: inline-block;
+        font-size: 0;
+        // cursor: pointer;
+      }
+      .table-column-nums {
+        font-size: 12px;
+        // cursor: pointer;
+      }
+      .setting-icon {
+        font-size: 0;
+        text-align: center;
+        margin-left: 4px;
+        cursor: pointer;
+        i {
+          font-size: 22px;
+          margin: auto;
+          color: @fff;
+          cursor: pointer;
+          border-radius: 4px;
+          &:hover {
+            background-color: rgba(47, 55, 76, 0.2);
+          }
+        }
+      }
+      .table-dropdown {
+        font-size: 0;
+      }
+      .name {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        line-height: 29px\0;
+        width: calc(~"100% - 50px");
+        display: inline-block;
+        margin-left: 4px;
+        font-weight: bold;
+        &.tip_box {
+          .alias-span {
+            font-size: 14px;
+            font-weight: @font-medium;
+          }
+        }
+      }
+      span {
+        // width:24px;
+        // height:24px;
+        // float:left;
+        line-height: 30px\0;
+      }
+      .kind {
+        font-size: 14px;
+        margin: 0;
+      }
+      .kind:hover {
+        // background-color:@base-color;
+        color:@grey-3;
+      }
+      i {
+        color:@fff;
+        margin: auto 6px 8px;
+      }
+    }
+    .column-search-box {
+      height: 44px;
+      line-height: 44px;
+      padding: 0 8px;
+      border-bottom: solid 1px @line-border-color;
+      .el-input__inner {
+        border: none;
+        &:focus {
+          box-shadow: none;
+        }
+      }
+    }
+    .column-list-box {
+      overflow: auto;
+      // border-top: solid 1px @line-border-color;
+      overflow-x: hidden;
+      flex: 1;
+      &.ksd-drag-box *[draggable="true"]:not(.is-link):hover {
+        border: 0 !important;
+        border-top: 2px solid #9DCEFB !important;
+        border-bottom: 2px solid #9DCEFB !important;
+      }
+      // &.ksd-drag-box *[draggable="true"].is-link:hover {
+      //   border: 0 !important;
+      //   border: 2px solid #0875DA !important;
+      // }
+      .column-li {
+        cursor: default;
+      }
+      ul {
+        li {       
+          padding-left:5px;
+          cursor: move;
+          border-top: solid 2px transparent;
+          border-bottom: 2px solid transparent;
+          height: 32px;
+          line-height: 32px;
+          font-size:14px;
+          position: relative;
+          &.is-hover {
+            background-color: @ke-background-color-secondary;
+            border-top: 2px solid #9DCEFB;
+            border-bottom: 2px solid #9DCEFB;
+          }
+          &.is-focus {
+            background-color: #CEE6FD;
+            border-top: 2px solid @line-border-drag;
+            border-bottom: 2px solid @line-border-drag;
+          }
+          &:hover{
+            border-top: 2px solid #9DCEFB;
+            border-bottom: 2px solid #9DCEFB;
+            background-color: @ke-color-info-bg;
+          }
+          &.is-link {
+            background: @ke-color-info-bg;
+            .col-name {
+              color: @ke-color-primary;
               font-weight: @font-medium;
             }
-          }
-          text-overflow: ellipsis;
-          overflow: hidden;
-          line-height: 29px\0;
-          width:calc(~"100% - 50px");
-        }
-        span {
-          width:24px;
-          height:24px;
-          float:left;
-          line-height: 30px\0;
-        }
-        .kind {
-          cursor:move;
-        }
-        .kind:hover {
-          // background-color:@base-color;
-          color:@grey-3;
-        }
-        height:32px;
-        background-color: @fact-title-color;
-        color:#fff;
-        line-height:32px;
-        i {
-          color:@fff;
-          margin: auto 6px 8px;
-        }
-      }
-      .column-search-box {
-        height: 30px;
-        line-height: 30px;
-        padding: 0 5px;
-      }
-      .column-list-box {
-        overflow:auto;
-        position:absolute;
-        border-top: solid 1px @line-border-color;
-        top:62px;
-        bottom:5px;
-        right:0;
-        left:0;
-        overflow-x:hidden;
-        ul {
-          li {
-            &:hover{
-              background-color:@base-color-9;
+            // &.is-hover {
+            //   background-color: #CEE6FD;
+            //   border: 2px solid @line-border-drag;
+            // }
+            &.is-focus {
+              background: #CEE6FD;
             }
-            padding-left:5px;
-            cursor:move;
-            border-bottom:solid 1px @line-border-color;
-            height:28px;
-            line-height:28px;
-            font-size:14px;
-            .col-type-icon {
-              color:@text-disabled-color;
-              font-size:12px;
-              .is-pfk{
-                color: #f7ba2a;
-              }
-            }
-            .col-name {
-              color:@text-title-color;
-            }
-            &.column-li-cc {
-              background-color:@warning-color-2;
-              &:hover {
-                background-color:@warning-color-3;
-              }
-            }
-            &.li-load-more {
-              text-align:center;
-              cursor:pointer;
-              font-size: 12px;
-              color: @text-disabled-color;
-              border-bottom:none;
-              &:hover{
-                color:@base-color;
-              }
+            &:hover {
+              background: #CEE6FD;
             }
           }
+          .ksd-nobr-text {
+            width: calc(~'100% - 25px');
+          }
+          .col-type-icon {
+            color:@text-disabled-color;
+            font-size:12px;
+            .is-pfk{
+              color: @text-placeholder-color;
+              position: absolute;
+              right: 8px;
+            }
+            i {
+              cursor: default;
+            }
+          }
+          .col-name {
+            color: @text-title-color;
+            font-size: 12px;
+          }
+          &.column-li-cc {
+            background-color:@warning-color-2;
+            &:hover {
+              background-color:@warning-color-3;
+            }
+          }
+          &.li-load-more {
+            text-align:center;
+            cursor:pointer;
+            font-size: 12px;
+            color: @text-disabled-color;
+            border-bottom:none;
+          }
+        }
+        .column-search-results {
+          font-size: 12px;
+          color: @text-placeholder-color;
+          text-align: center;
+          cursor: default;
+          padding-left: 0;
+          &:hover{
+            background-color: transparent;
+          }
+        }
+      }
+      .scrollbar-track-y {
+        width: 4px;
+        margin-right: 2px;
+        .scrollbar-thumb-y {
+          width: 4px;
+          background: #ECF0F8;
         }
       }
     }
   }
-  .error-font {
-    color: @error-color-1;
+  .column-point-dot {
+    z-index: 100;
+    border: 2px solid #9DCEFB;
+    border-radius: 100%;
+    height: 8px !important;
+    width: 8px !important;
+    background: #fff !important;
+    transform: translate(-30%, -25%);
+    &.jtk-hover {
+      width: 16px !important;
+      height: 16px !important;
+      transform: translate(-30%, -37%) !important;
+    }
+    .add-point {
+      position: absolute;
+      color: #9DCEFB;
+      z-index: 20;
+      cursor: pointer;
+      width: 100%;
+      display: inline-block;
+      top: -3px;
+      padding: 0 2px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    &.is-focus {
+      border: 3px solid #0875DA;
+      .add-point {
+        color: #0875DA;
+      }
+    }
   }
-
+  .line-end {
+    background: transparent;
+    z-index: 100;
+    .line-end-pointer {
+      font-size: 20px;
+      color: #9DCEFB;
+      &:hover {
+        color: #0875DA;
+      }
+    }
+  }
+}
+.error-font {
+  color: @error-color-1;
+}
+.table-actions {
+  transform: translate(106%, 0);
+  margin-top: -38px !important;
+  // margin-left: 26px;
+  width: 200px;
+  .spread-or-expand-table {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .db {
+      color: @text-placeholder-color;
+      font-size: 12px;
+    }
+  }
+}
+.model-alias-tooltip {
+  margin-top: -10px !important;
+}
+#custom-drag-image {
+  color: #0875DA;
+  font-size: 18px;
+  position: absolute;
+  background: transparent;
+  opacity: 0;
+}
 </style>

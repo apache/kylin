@@ -293,7 +293,7 @@ export default class BatchMeasureModal extends Vue {
             name: this.checkHasSameName(allMeasureArr, column.name + '_SUM', column) ? column.name + '_SUM_' + column.table_alias : column.name + '_SUM',
             guid: sampleGuid(),
             expression: 'SUM',
-            parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName)}],
+            parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName), table_guid: column.table_guid}],
             table_guid: column.table_guid,
             comment: this.syncComment ? column.comment : ''
           }
@@ -304,7 +304,7 @@ export default class BatchMeasureModal extends Vue {
             name: this.checkHasSameName(allMeasureArr, column.name + '_MIN', column) ? column.name + '_MIN_' + column.table_alias : column.name + '_MIN',
             guid: sampleGuid(),
             expression: 'MIN',
-            parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName)}],
+            parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName), table_guid: column.table_guid}],
             table_guid: column.table_guid,
             comment: this.syncComment ? column.comment : ''
           }
@@ -315,7 +315,7 @@ export default class BatchMeasureModal extends Vue {
             name: this.checkHasSameName(allMeasureArr, column.name + '_MAX', column) ? column.name + '_MAX_' + column.table_alias : column.name + '_MAX',
             guid: sampleGuid(),
             expression: 'MAX',
-            parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName)}],
+            parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName), table_guid: column.table_guid}],
             table_guid: column.table_guid,
             comment: this.syncComment ? column.comment : ''
           }
@@ -326,7 +326,7 @@ export default class BatchMeasureModal extends Vue {
             name: this.checkHasSameName(allMeasureArr, column.name + '_COUNT', column) ? column.name + '_COUNT_' + column.table_alias : column.name + '_COUNT',
             guid: sampleGuid(),
             expression: 'COUNT',
-            parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName)}],
+            parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName), table_guid: column.table_guid}],
             table_guid: column.table_guid,
             comment: this.syncComment ? column.comment : ''
           }

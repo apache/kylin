@@ -111,7 +111,7 @@
             width="180"
             :filters="allStatus.map(item => ({text: $t(item), value: item}))" :filtered-value="filter.status" :label="$t('ProgressStatus')" filter-icon="el-ksd-icon-filter_22" :show-multiple-footer="false" :filter-change="(v) => filterContent(v, 'status')">
             <template slot-scope="scope">
-              <kylin-progress :percent="scope.row.step_ratio * 100 | number(0)" :status="scope.row.job_status"></kylin-progress>
+              <el-progress :percentage="scope.row.step_ratio * 100 | number(0)" :status="progressStatus(scope.row.job_status)" :icon-class="progressIconClass(scope.row.job_status)"></el-progress>
             </template>
           </el-table-column>
           <el-table-column
@@ -252,10 +252,10 @@
                 </div>
                 <div class="timeline-body">
                   <el-alert class="ksd-mb-8" type="error" show-icon v-if="step.step_status === 'ERROR'" :closable="false">
-                    <p slot="title">
+                    <div slot="title">
                       <p class="err-msg">{{getErrorReson(step)}}</p>
                       <el-button nobg-text size="small" v-if="step.failed_stack" @click="viewErrorDetails(step)">{{$t('viewDetails')}}</el-button>
-                    </p>
+                    </div>
                   </el-alert>
                   <el-alert class="ksd-mb-8" type="tip" show-icon v-if="step.step_status !== 'ERROR' && 'segment_sub_stages' in step && step.segment_sub_stages && Object.keys(step.segment_sub_stages).length > 1" :closable="false">
                     <p slot="title">{{$t('buildSegmentTips', {segments: Object.keys(step.segment_sub_stages).length, successLen: getSegmentStatusLen(step, 'FINISHED'), pendingLen: getSegmentStatusLen(step, 'PENDING'), runningLen: getSegmentStatusLen(step, 'RUNNING')})}}
@@ -468,6 +468,29 @@ export default class JobsList extends Vue {
 
   get isShowAdminTips () {
     return this.$store.state.user.isShowAdminTips && this.isAdminRole && !this.$store.state.system.isShowGlobalAlter
+  }
+
+  progressStatus (status) {
+    if (status === 'PENDING') {
+      return 'pending'
+    } else if (status === 'RUNNING') {
+      return ''
+    } else if (status === 'FINISHED') {
+      return 'success'
+    } else if (status === 'ERROR') {
+      return 'exception'
+    } else if (status === 'DISCARDED') {
+      return 'discarded'
+    } else if (status === 'STOPPED') {
+      return ''
+    }
+  }
+  progressIconClass (status) {
+    if (status === 'STOPPED') {
+      return 'el-ksd-n-icon-pause-circle-filled'
+    } else {
+      return ''
+    }
   }
 
   getErrorReson (step) {
@@ -1311,6 +1334,13 @@ export default class JobsList extends Vue {
               color: inherit;
             }
           }
+        }
+      }
+    }
+    .el-progress {
+      .el-progress__text {
+        .el-ksd-n-icon-pause-circle-filled {
+          color: @ke-color-primary;
         }
       }
     }
