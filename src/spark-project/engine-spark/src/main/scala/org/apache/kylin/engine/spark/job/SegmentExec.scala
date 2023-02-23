@@ -229,6 +229,7 @@ trait SegmentExec extends Logging {
           dataLayout.setByteSize(taskStats.numBytes)
           dataLayout
         }
+        logInfo(s"Segment $segmentId update the data layouts $dataLayouts")
         updateDataLayouts(manager, dataLayouts)
       }
     }

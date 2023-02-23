@@ -18,23 +18,22 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import static java.util.stream.Collectors.joining;
-import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCleanUpTransactionalTableJob;
-import static org.apache.kylin.job.factory.JobFactoryConstant.CUBE_JOB_FACTORY;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
+import io.kyligence.kap.secondstorage.SecondStorageConstants;
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
+import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.common.exception.JobErrorCode;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultExecutableOnModel;
@@ -42,6 +41,7 @@ import org.apache.kylin.job.execution.ExecutableParams;
 import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.factory.JobFactory;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -54,17 +54,18 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
-import io.kyligence.kap.secondstorage.SecondStorageConstants;
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
-import io.kyligence.kap.secondstorage.enums.LockTypeEnum;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.val;
+import static java.util.stream.Collectors.joining;
+import static org.apache.kylin.engine.spark.stats.utils.HiveTableRefChecker.isNeedCleanUpTransactionalTableJob;
+import static org.apache.kylin.job.factory.JobFactoryConstant.CUBE_JOB_FACTORY;
 
 public class NSparkCubingJob extends DefaultExecutableOnModel {
 
@@ -98,6 +99,13 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
     public static NSparkCubingJob create(Set<NDataSegment> segments, Set<LayoutEntity> layouts, String submitter,
             Set<JobBucket> buckets) {
         return create(segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, RandomUtil.randomUUIDStr(), null, null,
+                buckets);
+    }
+
+    @VisibleForTesting
+    public static NSparkCubingJob createIncBuildJob(Set<NDataSegment> segments, Set<LayoutEntity> layouts, String submitter,
+                                                    Set<JobBucket> buckets) {
+        return create(segments, layouts, submitter, JobTypeEnum.INC_BUILD, RandomUtil.randomUUIDStr(), null, null,
                 buckets);
     }
 
@@ -164,6 +172,9 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         if (CollectionUtils.isNotEmpty(buckets)) {
             job.setParam(NBatchConstants.P_BUCKETS, ExecutableParams.toBucketParam(buckets));
         }
+
+        enableCostBasedPlannerIfNeed(df, segments, job);
+
         job.setParam(NBatchConstants.P_JOB_ID, jobId);
         job.setParam(NBatchConstants.P_PROJECT_NAME, df.getProject());
         job.setParam(NBatchConstants.P_TARGET_MODEL, job.getTargetSubject());
@@ -421,5 +432,56 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         private final AbstractExecutable secondStorageDeleteIndex;
         private final AbstractExecutable secondStorage;
         private final AbstractExecutable cleanUpTransactionalTable;
+    }
+
+    private static void enableCostBasedPlannerIfNeed(NDataflow df, Set<NDataSegment> segments, NSparkCubingJob job) {
+        // need run the cost based planner:
+        // 1. config enable the cube planner
+        // 2. the model dose not have the `layout_cost_based_pruned_list`
+        // 3. rule index has agg group
+        // 4. just only one segment to be built/refresh(other case will throw exception)
+        IndexPlan indexPlan = df.getIndexPlan();
+        KylinConfig kylinConfig = indexPlan.getConfig();
+        boolean needCostRecommendIndex = indexPlan.getRuleBasedIndex() != null
+                && indexPlan.getRuleBasedIndex().getLayoutsOfCostBasedList() == null
+                && !indexPlan.getRuleBasedIndex().getAggregationGroups().isEmpty();
+        if (kylinConfig.enableCostBasedIndexPlanner() && needCostRecommendIndex
+                && canEnablePlannerJob(job.getJobType())) {
+            // must run the cost based planner
+            if (segments.size() == 1) {
+                if (noBuildingSegmentExist(df.getProject(), job.getTargetSubject(), kylinConfig)) {
+                    // check the count of rowkey:
+                    // if the count of row key exceed the 63, throw exception
+                    if (indexPlan.getRuleBasedIndex().countOfIncludeDimension() > (Long.SIZE - 1)) {
+                        throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR,
+                                String.format(Locale.ROOT,
+                                        "The count of row key %d can't be larger than 63, when use the cube planner",
+                                        indexPlan.getRuleBasedIndex().countOfIncludeDimension()));
+                    }
+                    // Add the parameter `P_JOB_ENABLE_PLANNER` which is used to decide whether to use the  cube planner
+                    job.setParam(NBatchConstants.P_JOB_ENABLE_PLANNER, Boolean.TRUE.toString());
+                } else {
+                    throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR, String.format(Locale.ROOT,
+                            "There are running job for this model when submit the build job with cost based planner, "
+                                    + "please wait for other jobs to finish or cancel them"));
+                }
+            } else {
+                throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR,
+                        String.format(Locale.ROOT, "The number of segments to be built or refreshed must be 1, "
+                                + "This is the first time to submit build job with enable cost based planner"));
+            }
+        }
+    }
+
+    private static boolean noBuildingSegmentExist(String project, String modelId, KylinConfig kylinConfig) {
+        NDataflowManager nDataflowManager = NDataflowManager.getInstance(kylinConfig, project);
+        NDataflow dataflow = nDataflowManager.getDataflow(modelId);
+        // There are no other tasks in building
+        return dataflow.getSegments(SegmentStatusEnum.NEW).size() <= 1;
+    }
+
+    private static boolean canEnablePlannerJob(JobTypeEnum jobType) {
+        // just support: INC_BUILD and INDEX_REFRESH to recommend/prune index
+        return JobTypeEnum.INC_BUILD.equals(jobType) || JobTypeEnum.INDEX_REFRESH.equals(jobType);
     }
 }

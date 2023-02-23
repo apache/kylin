@@ -394,7 +394,10 @@ public class LayoutEntity implements IStorageAware, Serializable {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("id", id).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("colOrder", getColOrder().toString())
+                .toString();
     }
 
     public boolean isDraft() {

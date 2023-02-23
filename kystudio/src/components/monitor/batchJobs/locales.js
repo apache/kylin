@@ -110,6 +110,7 @@ export default {
     generateGlobalDict: 'Generate global dictionary',
     generateFlatTable: 'Generate flat table',
     saveFlatTable: 'Save flat table',
+    costBasedPlanner: 'Cost based planner',
     getFlatTableStatistics: 'Get flat table statistics',
     generateDictOfCC: 'Generate global dictionary of computed columns',
     mergeFlatTable: 'Merge flat table',

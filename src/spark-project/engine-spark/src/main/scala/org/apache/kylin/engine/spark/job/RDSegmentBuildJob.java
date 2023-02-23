@@ -65,6 +65,6 @@ public class RDSegmentBuildJob extends SegmentJob implements ResourceDetect {
 
     private void writeCountDistinct() {
         ResourceDetectUtils.write(new Path(rdSharedPath, ResourceDetectUtils.countDistinctSuffix()), //
-                ResourceDetectUtils.findCountDistinctMeasure(readOnlyLayouts));
+                ResourceDetectUtils.findCountDistinctMeasure(getReadOnlyLayouts()));
     }
 }

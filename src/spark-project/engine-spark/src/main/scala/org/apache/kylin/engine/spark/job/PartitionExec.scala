@@ -137,7 +137,7 @@ private[job] trait PartitionExec {
           dataLayout.setByteSize(partitions.map(_.getByteSize).sum)
           dataLayout
         }.toSeq
-
+        logInfo(s"Partition segment $segmentId update the data layouts $dataLayouts")
         updateDataLayouts(manager, dataLayouts)
       }
     }

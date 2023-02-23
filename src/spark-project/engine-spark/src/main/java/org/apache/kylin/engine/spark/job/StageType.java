@@ -32,6 +32,7 @@ import org.apache.kylin.engine.spark.job.stage.StageExec;
 import org.apache.kylin.engine.spark.job.stage.WaiteForResource;
 import org.apache.kylin.engine.spark.job.stage.build.BuildDict;
 import org.apache.kylin.engine.spark.job.stage.build.BuildLayer;
+import org.apache.kylin.engine.spark.job.stage.build.CostBasedPlanner;
 import org.apache.kylin.engine.spark.job.stage.build.GatherFlatTableStats;
 import org.apache.kylin.engine.spark.job.stage.build.GenerateFlatTable;
 import org.apache.kylin.engine.spark.job.stage.build.MaterializedFactTableView;
@@ -39,6 +40,7 @@ import org.apache.kylin.engine.spark.job.stage.build.RefreshColumnBytes;
 import org.apache.kylin.engine.spark.job.stage.build.RefreshSnapshots;
 import org.apache.kylin.engine.spark.job.stage.build.partition.PartitionBuildDict;
 import org.apache.kylin.engine.spark.job.stage.build.partition.PartitionBuildLayer;
+import org.apache.kylin.engine.spark.job.stage.build.partition.PartitionCostBasedPlanner;
 import org.apache.kylin.engine.spark.job.stage.build.partition.PartitionGatherFlatTableStats;
 import org.apache.kylin.engine.spark.job.stage.build.partition.PartitionGenerateFlatTable;
 import org.apache.kylin.engine.spark.job.stage.build.partition.PartitionMaterializedFactTableView;
@@ -118,6 +120,20 @@ public enum StageType {
         @Override
         protected StageBase create(NSparkExecutable parent, KylinConfig config) {
             return new NStageForBuild(ExecutableConstants.STAGE_NAME_GENERATE_FLAT_TABLE);
+        }
+    },
+    COST_BASED_PLANNER {
+        @Override
+        public StageExec create(SparkApplication jobContext, NDataSegment dataSegment, BuildParam buildParam) {
+            if (isPartitioned(jobContext)) {
+                return new PartitionCostBasedPlanner((SegmentJob) jobContext, dataSegment, buildParam);
+            }
+            return new CostBasedPlanner((SegmentJob) jobContext, dataSegment, buildParam);
+        }
+
+        @Override
+        protected StageBase create(NSparkExecutable parent, KylinConfig config) {
+            return new NStageForBuild(ExecutableConstants.STAGE_NAME_COST_BASED_PLANNER);
         }
     },
     GATHER_FLAT_TABLE_STATS {

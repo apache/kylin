@@ -3749,4 +3749,53 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean skipShardPruningForInExpr() {
         return Boolean.parseBoolean(getOptional("kylin.query.skip-shard-pruning-for-in", FALSE));
     }
+
+    // ============================================================================
+    // Cost based index Planner
+    // ============================================================================
+
+    public boolean enableCostBasedIndexPlanner() {
+        // If enable the cost based planner, will recommend subset of index layouts from the index rule.
+        return Boolean.parseBoolean(getOptional("kylin.index.costbased.enabled", FALSE));
+    }
+
+    public int getCostBasedPlannerGreedyAlgorithmAutoThreshold() {
+        return Integer.parseInt(getOptional("kylin.index.costbased.algorithm-threshold-greedy", "8"));
+    }
+
+    public int getCostBasedPlannerGeneticAlgorithmAutoThreshold() {
+        return Integer.parseInt(getOptional("kylin.index.costbased.algorithm-threshold-genetic", "23"));
+    }
+
+    public double getCostBasedPlannerExpansionRateThreshold() {
+        return Double.parseDouble(getOptional("kylin.index.costbased.expansion-threshold", "15.0"));
+    }
+
+    public double getCostBasedPlannerBPUSMinBenefitRatio() {
+        return Double.parseDouble(getOptional("kylin.index.costbased.bpus-min-benefit-ratio", "0.01"));
+    }
+
+    public int getStatsHLLPrecision() {
+        return Integer.parseInt(getOptional("kylin.index.costbased.sampling-hll-precision", "14"));
+    }
+
+    public double getJobCuboidSizeRatio() {
+        return Double.parseDouble(getOptional("kylin.index.costbased.model-size-estimate-ratio", "0.25"));
+    }
+
+    public double getJobCuboidSizeCountDistinctRatio() {
+        return Double.parseDouble(getOptional("kylin.index.costbased.model-size-estimate-countdistinct-ratio", "0.5"));
+    }
+
+    public double getJobCuboidSizeTopNRatio() {
+        return Double.parseDouble(getOptional("kylin.index.costbased.model-size-estimate-topn-ratio", "0.5"));
+    }
+
+    public int getJobPerReducerHLLCuboidNumber() {
+        return Integer.parseInt(getOptional("kylin.index.costbased.per-reducer-hll-cuboid-number", "100"));
+    }
+
+    public int getJobHLLMaxReducerNumber() {
+        return Integer.parseInt(getOptional("kylin.index.costbased.hll-max-reducer-number", "1"));
+    }
 }

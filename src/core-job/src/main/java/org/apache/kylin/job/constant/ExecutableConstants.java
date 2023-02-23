@@ -79,6 +79,7 @@ public final class ExecutableConstants {
     public static final String STAGE_NAME_MATERIALIZED_FACT_TABLE = "Materialize fact table view";
     public static final String STAGE_NAME_BUILD_DICT = "Generate global dictionary";
     public static final String STAGE_NAME_GENERATE_FLAT_TABLE = "Generate flat table";
+    public static final String STAGE_NAME_COST_BASED_PLANNER = "Cost based planner";
     public static final String STAGE_NAME_GATHER_FLAT_TABLE_STATS = "Get flat table statistics";
     public static final String STAGE_NAME_BUILD_LAYER = "Build indexes by layer";
     public static final String STAGE_NAME_REFRESH_COLUMN_BYTES = "Update flat table statistics";
