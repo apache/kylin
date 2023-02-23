@@ -16,13 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.query.asyncprofiler
+package org.apache.kylin.query.plugin.asyncprofiler
 
+import org.apache.kylin.query.plugin.SparkPluginWithMeta
 import org.apache.spark.launcher.SparkLauncher
 import org.apache.spark.{SparkConf, SparkContext}
 import org.junit.Assert
 
-class QueryAsyncProfilerDriverPluginTest extends AsyncPluginWithMeta {
+class QueryAsyncProfilerDriverPluginTest extends SparkPluginWithMeta {
 
   val sparkPluginName: String = classOf[QueryAsyncProfilerSparkPlugin].getName
 

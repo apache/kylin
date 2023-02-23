@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.query.asyncprofiler
+package org.apache.kylin.query.plugin.asyncprofiler
 
 import org.apache.kylin.common.asyncprofiler.AsyncProfilerTool
 import org.apache.spark.SparkContext

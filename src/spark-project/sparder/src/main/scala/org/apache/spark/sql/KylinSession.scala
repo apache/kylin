@@ -18,28 +18,28 @@
 
 package org.apache.spark.sql
 
-import java.io._
-import java.net.URI
-import java.nio.file.Paths
-
-import scala.collection.JavaConverters._
-
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.security.UserGroupInformation
-import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.common.util.{HadoopUtil, Unsafe}
+import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater
+import org.apache.kylin.query.plugin.asyncprofiler.QueryAsyncProfilerSparkPlugin
+import org.apache.kylin.query.plugin.diagnose.DiagnoseSparkPlugin
 import org.apache.kylin.query.util.ExtractFactory
-import org.springframework.expression.common.TemplateParserContext
-import org.springframework.expression.spel.standard.SpelExpressionParser
-
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd}
 import org.apache.spark.sql.SparkSession.Builder
-import org.apache.spark.sql.internal.{SessionState, SharedState, SQLConf, StaticSQLConf}
+import org.apache.spark.sql.internal.{SQLConf, SessionState, SharedState, StaticSQLConf}
 import org.apache.spark.sql.udf.UdfManager
 import org.apache.spark.util.{KylinReflectUtils, Utils}
+import org.apache.spark.{SparkConf, SparkContext}
+import org.springframework.expression.common.TemplateParserContext
+import org.springframework.expression.spel.standard.SpelExpressionParser
+
+import java.io._
+import java.net.URI
+import java.nio.file.Paths
+import scala.collection.JavaConverters._
 
 class KylinSession(
                     @transient val sc: SparkContext,
@@ -112,6 +112,7 @@ class KylinSession(
 object KylinSession extends Logging {
   val NORMAL_FAIR_SCHEDULER_FILE_NAME: String = "/fairscheduler.xml"
   val QUERY_LIMIT_FAIR_SCHEDULER_FILE_NAME: String = "/query-limit-fair-scheduler.xml"
+  val SPARK_PLUGINS_KEY = "spark.plugins"
 
   implicit class KylinBuilder(builder: Builder) {
     var queryCluster: Boolean = true
@@ -328,16 +329,30 @@ object KylinSession extends Logging {
         }
       }
 
-      if (kapConfig.getKylinConfig.asyncProfilingEnabled()) {
-        val plugins = sparkConf.get("spark.plugins", "")
-        if (plugins.isEmpty) {
-          sparkConf.set("spark.plugins", "org.apache.kylin.query.asyncprofiler.QueryAsyncProfilerSparkPlugin")
-        } else {
-          sparkConf.set("spark.plugins", "org.apache.kylin.query.asyncprofiler.QueryAsyncProfilerSparkPlugin," + plugins)
-        }
-      }
+      checkAndSetSparkPlugins(sparkConf)
 
       sparkConf
+    }
+
+    def checkAndSetSparkPlugins(sparkConf: SparkConf): Unit = {
+      // Sparder diagnose plugin
+      if (kapConfig.getKylinConfig.queryDiagnoseEnable()) {
+        addSparkPlugin(sparkConf, classOf[DiagnoseSparkPlugin].getCanonicalName)
+      }
+
+      // Query profile plugin
+      if (kapConfig.getKylinConfig.asyncProfilingEnabled()) {
+        addSparkPlugin(sparkConf, classOf[QueryAsyncProfilerSparkPlugin].getCanonicalName)
+      }
+    }
+
+    def addSparkPlugin(sparkConf: SparkConf, pluginName: String): Unit = {
+      val plugins = sparkConf.get(SPARK_PLUGINS_KEY, "")
+      if (plugins.isEmpty) {
+        sparkConf.set(SPARK_PLUGINS_KEY, pluginName)
+      } else {
+        sparkConf.set(SPARK_PLUGINS_KEY, pluginName + "," + plugins)
+      }
     }
 
     def buildCluster(): KylinBuilder = {
@@ -411,7 +426,8 @@ object KylinSession extends Logging {
     val parser = new SpelExpressionParser()
     val parserCtx = new TemplateParserContext()
     while ( {
-      templateLine = fileReader.readLine(); templateLine != null
+      templateLine = fileReader.readLine();
+      templateLine != null
     }) {
       processedLine = parser.parseExpression(templateLine, parserCtx).getValue(params, classOf[String]) + "\r\n"
       fileWriter.write(processedLine)

@@ -16,21 +16,13 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.query.asyncprofiler
+package org.apache.kylin.query.plugin.diagnose
 
-import org.apache.kylin.common.asyncprofiler.AsyncProfilerExecutorPlugin
-import org.junit.Assert
-import org.scalatest.funsuite.AnyFunSuite
+import org.apache.spark.api.plugin.{DriverPlugin, ExecutorPlugin, SparkPlugin}
 
-class QueryAsyncProfilerSparkPluginTest extends AnyFunSuite {
+class DiagnoseSparkPlugin extends SparkPlugin {
 
-  private val plugin: QueryAsyncProfilerSparkPlugin = new QueryAsyncProfilerSparkPlugin()
+  override def driverPlugin(): DriverPlugin = new DiagnoseDriverPlugin
 
-  test("QueryAsyncProfilerSparkPlugin driver plugin") {
-    Assert.assertEquals(classOf[QueryAsyncProfilerDriverPlugin].getName, plugin.driverPlugin().getClass.getName)
-  }
-
-  test("QueryAsyncProfilerSparkPlugin executor plugin") {
-    Assert.assertEquals(classOf[AsyncProfilerExecutorPlugin].getName, plugin.executorPlugin().getClass.getName)
-  }
+  override def executorPlugin(): ExecutorPlugin = new DiagnoseExecutorPlugin
 }

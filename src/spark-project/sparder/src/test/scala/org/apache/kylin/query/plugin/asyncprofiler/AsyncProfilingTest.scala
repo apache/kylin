@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.query.asyncprofiler
+package org.apache.kylin.query.plugin.asyncprofiler
 
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.query.plugin.SparkPluginWithMeta
 import org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin
 import org.apache.spark.launcher.SparkLauncher
 import org.apache.spark.{SparkConf, SparkContext}
@@ -26,7 +27,7 @@ import org.mockito.Mockito.mock
 
 import java.io.{File, OutputStream}
 
-class AsyncProfilingTest extends AsyncPluginWithMeta {
+class AsyncProfilingTest extends SparkPluginWithMeta {
 
   val sparkPluginName: String = classOf[BuildAsyncProfilerSparkPlugin].getName
   val flagFileDir: String = System.getProperty("java.io.tmpdir") + "default/jobStepId/"

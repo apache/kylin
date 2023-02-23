@@ -2565,6 +2565,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.job.notification-on-empty-data-load", FALSE));
     }
 
+    public boolean getJobErrorNotificationEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.job.notification-on-job-error", FALSE));
+    }
+
     public Long getStorageResourceSurvivalTimeThreshold() {
         return TimeUtil.timeStringAs(this.getOptional("kylin.storage.resource-survival-time-threshold", "7d"),
                 TimeUnit.MILLISECONDS);
@@ -3810,6 +3814,16 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isNonStrictCountCheckAllowed() {
         return Boolean.parseBoolean(getOptional("kylin.build.allow-non-strict-count-check", FALSE));
+    }
+
+    public long queryDiagnoseCollectionTimeout() {
+        return TimeUtil.timeStringAs(getOptional("kylin.query.diagnose-collection-timeout", "30s"),
+                TimeUnit.MILLISECONDS);
+    }
+
+    public boolean queryDiagnoseEnable() {
+        return !Boolean.parseBoolean(System.getProperty("spark.local", FALSE))
+                && Boolean.parseBoolean(getOptional("kylin.query.diagnose-enabled", TRUE));
     }
 
     // ============================================================================
