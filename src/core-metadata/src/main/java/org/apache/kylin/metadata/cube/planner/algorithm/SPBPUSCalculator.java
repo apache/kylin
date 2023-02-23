@@ -24,21 +24,21 @@ import com.google.common.collect.ImmutableMap;
 
 public class SPBPUSCalculator extends PBPUSCalculator {
 
-    public SPBPUSCalculator(final CuboidStats cuboidStats) {
-        super(cuboidStats);
+    public SPBPUSCalculator(final LayoutStats layoutStats) {
+        super(layoutStats);
     }
 
-    protected SPBPUSCalculator(CuboidStats cuboidStats, ImmutableMap<BigInteger, Long> initCuboidAggCostMap) {
-        super(cuboidStats, initCuboidAggCostMap);
+    protected SPBPUSCalculator(LayoutStats layoutStats, ImmutableMap<BigInteger, Long> initLayoutAggCostMap) {
+        super(layoutStats, initLayoutAggCostMap);
     }
 
     @Override
-    protected Long getCuboidCost(BigInteger cuboid) {
-        return cuboidStats.getCuboidQueryCost(cuboid);
+    protected Long getLayoutCost(BigInteger layout) {
+        return layoutStats.getLayoutQueryCost(layout);
     }
 
     @Override
     public BenefitPolicy getInstance() {
-        return new SPBPUSCalculator(this.cuboidStats, this.initCuboidAggCostMap);
+        return new SPBPUSCalculator(this.layoutStats, this.initLayoutAggCostMap);
     }
 }

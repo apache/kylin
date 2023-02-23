@@ -26,26 +26,26 @@ public interface BenefitPolicy {
     /**
      * @return a cloned instance with initial status
      */
-    public BenefitPolicy getInstance();
+    BenefitPolicy getInstance();
 
     /**
      * @param selected should not be changed
      *                 Will not change the inner instance status
      */
-    public CuboidBenefitModel.BenefitModel calculateBenefit(BigInteger cuboid, Set<BigInteger> selected);
+    LayoutBenefitModel.BenefitModel calculateBenefit(BigInteger layout, Set<BigInteger> selected);
 
     /**
-     * @param cuboidsToAdd should not be changed
+     * @param layoutsToAdd should not be changed
      * @param selected     should not be changed
      *                     Will not change the inner instance status
      */
-    public CuboidBenefitModel.BenefitModel calculateBenefitTotal(Set<BigInteger> cuboidsToAdd, Set<BigInteger> selected);
+    LayoutBenefitModel.BenefitModel calculateBenefitTotal(Set<BigInteger> layoutsToAdd, Set<BigInteger> selected);
 
-    public boolean ifEfficient(CuboidBenefitModel best);
+    boolean ifEfficient(LayoutBenefitModel best);
 
     /**
      * @param selected should not be changed
      * Will update the inner instance status
      */
-    public void propagateAggregationCost(BigInteger cuboid, Set<BigInteger> selected);
+    void propagateAggregationCost(BigInteger layout, Set<BigInteger> selected);
 }

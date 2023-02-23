@@ -147,15 +147,15 @@ trait JobSupport
 
   @throws[Exception]
   protected def buildSegment(cubeName: String,
-                           segmentRange: SegmentRange[_ <: Comparable[_]],
-                           toBuildLayouts: java.util.Set[LayoutEntity],
-                           prj: String): NDataSegment = {
+                             segmentRange: SegmentRange[_ <: Comparable[_]],
+                             toBuildLayouts: java.util.Set[LayoutEntity],
+                             prj: String): NDataSegment = {
     val config: KylinConfig = KylinConfig.getInstanceFromEnv
     val dsMgr: NDataflowManager = NDataflowManager.getInstance(config, prj)
     val execMgr: NExecutableManager =
       NExecutableManager.getInstance(config, prj)
     val df: NDataflow = dsMgr.getDataflow(cubeName)
-    // ready dataflow, segment, cuboid layout
+    // ready dataflow, segment, layout
     val oneSeg: NDataSegment = dsMgr.appendSegment(df, segmentRange)
     // create job, and the job type is `inc_build`
     val job: NSparkCubingJob = NSparkCubingJob.createIncBuildJob(Sets.newHashSet(oneSeg), toBuildLayouts, "ADMIN", null)

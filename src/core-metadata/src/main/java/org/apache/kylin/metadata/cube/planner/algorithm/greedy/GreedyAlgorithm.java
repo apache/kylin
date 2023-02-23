@@ -29,8 +29,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.kylin.metadata.cube.planner.algorithm.AbstractRecommendAlgorithm;
 import org.apache.kylin.metadata.cube.planner.algorithm.BenefitPolicy;
-import org.apache.kylin.metadata.cube.planner.algorithm.CuboidBenefitModel;
-import org.apache.kylin.metadata.cube.planner.algorithm.CuboidStats;
+import org.apache.kylin.metadata.cube.planner.algorithm.LayoutBenefitModel;
+import org.apache.kylin.metadata.cube.planner.algorithm.LayoutStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * A simple implementation of the Greedy Algorithm , it chooses the cuboids which give
+ * A simple implementation of the Greedy Algorithm , it chooses the layouts which give
  * the greatest benefit based on expansion rate and time limitation.
  */
 public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
@@ -49,11 +49,11 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
     private static final int THREAD_NUM = 8;
     private ExecutorService executor;
 
-    private Set<BigInteger> selected = Sets.newLinkedHashSet();
-    private List<BigInteger> remaining = Lists.newLinkedList();
+    private final Set<BigInteger> selected = Sets.newLinkedHashSet();
+    private final List<BigInteger> remaining = Lists.newLinkedList();
 
-    public GreedyAlgorithm(final long timeout, BenefitPolicy benefitPolicy, CuboidStats cuboidStats) {
-        super(timeout, benefitPolicy, cuboidStats);
+    public GreedyAlgorithm(final long timeout, BenefitPolicy benefitPolicy, LayoutStats layoutStats) {
+        super(timeout, benefitPolicy, layoutStats);
     }
 
     @Override
@@ -62,30 +62,30 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
         executor = Executors.newFixedThreadPool(THREAD_NUM,
                 new ThreadFactoryBuilder().setNameFormat("greedy-algorithm-benefit-calculator-pool-%d").build());
 
-        //Initial mandatory cuboids
+        //Initial mandatory layouts
         selected.clear();
         double remainingSpace = spaceLimit;
-        for (BigInteger mandatoryOne : cuboidStats.getAllCuboidsForMandatory()) {
+        for (BigInteger mandatoryOne : layoutStats.getAllLayoutsForMandatory()) {
             selected.add(mandatoryOne);
-            if (cuboidStats.getCuboidSize(mandatoryOne) != null) {
-                remainingSpace -= cuboidStats.getCuboidSize(mandatoryOne);
+            if (layoutStats.getLayoutSize(mandatoryOne) != null) {
+                remainingSpace -= layoutStats.getLayoutSize(mandatoryOne);
             }
         }
-        //Initial remaining cuboid set
+        //Initial remaining layout set
         remaining.clear();
-        remaining.addAll(cuboidStats.getAllCuboidsForSelection());
+        remaining.addAll(layoutStats.getAllLayoutsForSelection());
 
         long round = 0;
         while (!shouldCancel()) {
-            // Choose one cuboid having the maximum benefit per unit space in all available list
-            CuboidBenefitModel best = recommendBestOne();
+            // Choose one layout having the maximum benefit per unit space in all available list
+            LayoutBenefitModel best = recommendBestOne();
             // If return null, then we should finish the process and return
             if (best == null) {
                 logger.info("Greedy algorithm ends due to cannot find next best one");
                 break;
             }
-            // If we finally find the cuboid selected does not meet a minimum threshold of benefit (for
-            // example, a cuboid with 0.99M roll up from a parent cuboid with 1M
+            // If we finally find the layout selected does not meet a minimum threshold of benefit (for
+            // example, a layout with 0.99M roll up from a parent layout with 1M
             // rows), then we should finish the process and return
             if (!benefitPolicy.ifEfficient(best)) {
                 logger.info("Greedy algorithm ends due to the benefit of the best one is not efficient {}",
@@ -93,18 +93,18 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
                 break;
             }
 
-            remainingSpace -= cuboidStats.getCuboidSize(best.getCuboidId());
+            remainingSpace -= layoutStats.getLayoutSize(best.getLayoutId());
             // If we finally find there is no remaining space,  then we should finish the process and return
             if (remainingSpace <= 0) {
                 logger.info("Greedy algorithm ends due to there's no remaining space");
                 break;
             }
-            selected.add(best.getCuboidId());
-            remaining.remove(best.getCuboidId());
-            benefitPolicy.propagateAggregationCost(best.getCuboidId(), selected);
+            selected.add(best.getLayoutId());
+            remaining.remove(best.getLayoutId());
+            benefitPolicy.propagateAggregationCost(best.getLayoutId(), selected);
             round++;
             if (logger.isTraceEnabled()) {
-                logger.trace(String.format(Locale.ROOT, "Recommend in round %d : %s", round, best.toString()));
+                logger.trace(String.format(Locale.ROOT, "Recommend in round %d : %s", round, best));
             }
         }
 
@@ -117,32 +117,32 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
         logger.info("Greedy Algorithm finished.");
 
         if (logger.isTraceEnabled()) {
-            logger.trace("Excluded cuboidId size: {}", excluded.size());
-            logger.trace("Excluded cuboidId detail:");
-            for (BigInteger cuboid : excluded) {
-                logger.trace("cuboidId {} and Cost: {} and Space: {}", cuboid, cuboidStats.getCuboidQueryCost(cuboid),
-                        cuboidStats.getCuboidSize(cuboid));
+            logger.trace("Excluded layoutId size: {}", excluded.size());
+            logger.trace("Excluded layoutId detail:");
+            for (BigInteger layout : excluded) {
+                logger.trace("layoutId {} and Cost: {} and Space: {}", layout, layoutStats.getLayoutQueryCost(layout),
+                        layoutStats.getLayoutSize(layout));
             }
             logger.trace("Total Space: {}", spaceLimit - remainingSpace);
-            logger.trace("Space Expansion Rate: {}", (spaceLimit - remainingSpace) / cuboidStats.getBaseCuboidSize());
+            logger.trace("Space Expansion Rate: {}", (spaceLimit - remainingSpace) / layoutStats.getBaseLayoutSize());
         }
         return Lists.newArrayList(selected);
     }
 
-    private CuboidBenefitModel recommendBestOne() {
+    private LayoutBenefitModel recommendBestOne() {
         final int selectedSize = selected.size();
-        final AtomicReference<CuboidBenefitModel> best = new AtomicReference<>();
+        final AtomicReference<LayoutBenefitModel> best = new AtomicReference<>();
 
         final CountDownLatch counter = new CountDownLatch(remaining.size());
-        for (final BigInteger cuboid : remaining) {
+        for (final BigInteger layout : remaining) {
             executor.submit(() -> {
-                CuboidBenefitModel currentBest = best.get();
+                LayoutBenefitModel currentBest = best.get();
                 assert (selected.size() == selectedSize);
-                CuboidBenefitModel.BenefitModel benefitModel = benefitPolicy.calculateBenefit(cuboid, selected);
+                LayoutBenefitModel.BenefitModel benefitModel = benefitPolicy.calculateBenefit(layout, selected);
                 if (benefitModel != null && (currentBest == null || currentBest.getBenefit() == null
                         || benefitModel.benefit > currentBest.getBenefit())) {
                     while (!best.compareAndSet(currentBest,
-                            new CuboidBenefitModel(cuboidStats.getCuboidModel(cuboid), benefitModel))) {
+                            new LayoutBenefitModel(layoutStats.getLayoutModel(layout), benefitModel))) {
                         currentBest = best.get();
                         if (benefitModel.benefit <= currentBest.getBenefit()) {
                             break;
@@ -155,7 +155,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
 
         try {
             counter.await();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
         }
         return best.get();
     }

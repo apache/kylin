@@ -22,16 +22,14 @@ import java.util
 import java.util.Objects
 import java.util.concurrent.{BlockingQueue, ForkJoinPool, LinkedBlockingQueue, TimeUnit}
 
-import com.google.common.collect.{Lists, Queues}
+import org.apache.hadoop.fs.{Path, PathFilter}
+import org.apache.kylin.common.persistence.transaction.UnitOfWork
+import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.job.SegmentExec.{LayoutResult, ResultType, SourceStats}
 import org.apache.kylin.engine.spark.job.stage.merge.MergeStage
 import org.apache.kylin.engine.spark.scheduler.JobRuntime
 import org.apache.kylin.metadata.cube.model._
-import org.apache.kylin.metadata.model.NDataModel
-import org.apache.hadoop.fs.{Path, PathFilter}
-import org.apache.kylin.common.persistence.transaction.UnitOfWork
-import org.apache.kylin.common.{KapConfig, KylinConfig}
-import org.apache.kylin.metadata.model.TblColRef
+import org.apache.kylin.metadata.model.{NDataModel, TblColRef}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.datasource.storage.{StorageListener, StorageStoreFactory, WriteTaskStats}
 import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
@@ -39,6 +37,8 @@ import org.apache.spark.tracker.BuildContext
 
 import scala.collection.JavaConverters._
 import scala.collection.parallel.ForkJoinTaskSupport
+
+import com.google.common.collect.{Lists, Queues}
 
 trait SegmentExec extends Logging {
 

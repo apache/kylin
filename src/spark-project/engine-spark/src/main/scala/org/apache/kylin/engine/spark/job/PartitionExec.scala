@@ -18,7 +18,10 @@
 
 package org.apache.kylin.engine.spark.job
 
-import com.google.common.collect.{Lists, Maps}
+import java.util
+import java.util.Objects
+import java.util.concurrent.TimeUnit
+
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.engine.spark.job.PartitionExec.PartitionResult
@@ -28,11 +31,10 @@ import org.apache.kylin.metadata.job.JobBucket
 import org.apache.spark.sql.datasource.storage.{StorageListener, WriteTaskStats}
 import org.apache.spark.sql.{Dataset, Row}
 
-import java.util
-import java.util.Objects
-import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+
+import com.google.common.collect.{Lists, Maps}
 
 private[job] trait PartitionExec {
   this: SegmentExec =>

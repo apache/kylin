@@ -19,10 +19,8 @@ package org.apache.kylin.metadata.cube.planner.algorithm.greedy;
 
 import java.math.BigInteger;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.planner.algorithm.AlgorithmTestBase;
 import org.apache.kylin.metadata.cube.planner.algorithm.BPUSCalculator;
 import org.apache.kylin.metadata.cube.planner.algorithm.BenefitPolicy;
@@ -31,11 +29,13 @@ import org.apache.kylin.metadata.cube.planner.algorithm.SPBPUSCalculator;
 import org.junit.Assert;
 import org.junit.Test;
 
+import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+
 public class GreedyAlgorithmTest extends AlgorithmTestBase {
     @Test
     public void testBPUSCalculator() {
-        BenefitPolicy benefitPolicy = new BPUSCalculator(cuboidStats);
-        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, cuboidStats);
+        BenefitPolicy benefitPolicy = new BPUSCalculator(layoutStats);
+        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, layoutStats);
 
         List<BigInteger> recommendList = algorithm.recommend(10);
         // The result is copy from the result of 3.1 test
@@ -47,22 +47,18 @@ public class GreedyAlgorithmTest extends AlgorithmTestBase {
                 4092, 435, 2482, 1664, 2037, 340, 3976, 492, 800, 3498, 1451, 3572, 438, 1454, 496, 889, 2920, 4081,
                 872, 1457, 811, 1256, 370, 3504, 2858, 48, 466, 814, 371, 2418, 374, 4094, 1928, 400, 1963, 1992, 1460,
                 988, 891, 4010, 2938);
-        List<BigInteger> expectedBigInteger = expected.stream().map(new Function<Integer, BigInteger>() {
-            @Override
-            public BigInteger apply(Integer integer) {
-                return new BigInteger(integer.toString());
-            }
-        }).collect(Collectors.toList());
+        List<BigInteger> expectedBigInteger = expected.stream().map(integer -> new BigInteger(integer.toString()))
+                .collect(Collectors.toList());
         Assert.assertEquals(expectedBigInteger, recommendList);
         System.out.println("recommendList by BPUSCalculator: " + recommendList);
 
-        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
+        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(layoutStats, recommendList));
     }
 
     @Test
     public void testPBPUSCalculator() {
-        BenefitPolicy benefitPolicy = new PBPUSCalculator(cuboidStats);
-        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, cuboidStats);
+        BenefitPolicy benefitPolicy = new PBPUSCalculator(layoutStats);
+        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, layoutStats);
 
         List<BigInteger> recommendList = algorithm.recommend(10);
         // The result is copy from the result of 3.1 test
@@ -73,21 +69,17 @@ public class GreedyAlgorithmTest extends AlgorithmTestBase {
                 1980, 3459, 4013, 2043, 2046, 4088, 320, 32, 3582, 4090, 2047, 3977, 2352, 2448, 291, 876, 422, 2338,
                 387, 769, 308, 323, 2434, 1168, 2384, 2861, 404, 326, 2370, 1961, 2044, 1444, 435, 3583, 2482, 1664,
                 340);
-        List<BigInteger> expectedBigInteger = expected.stream().map(new Function<Integer, BigInteger>() {
-            @Override
-            public BigInteger apply(Integer integer) {
-                return new BigInteger(integer.toString());
-            }
-        }).collect(Collectors.toList());
+        List<BigInteger> expectedBigInteger = expected.stream().map(integer -> new BigInteger(integer.toString()))
+                .collect(Collectors.toList());
         Assert.assertEquals(expectedBigInteger, recommendList);
         System.out.println("recommendList by PBPUSCalculator:" + recommendList);
-        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
+        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(layoutStats, recommendList));
     }
 
     @Test
     public void testSPBPUSCalculator() {
-        BenefitPolicy benefitPolicy = new SPBPUSCalculator(cuboidStats);
-        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, cuboidStats);
+        BenefitPolicy benefitPolicy = new SPBPUSCalculator(layoutStats);
+        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, layoutStats);
 
         List<BigInteger> recommendList = algorithm.recommend(10);
         // The result is copy from the result of 3.1 test
@@ -97,14 +89,10 @@ public class GreedyAlgorithmTest extends AlgorithmTestBase {
                 276, 385, 292, 321, 388, 2336, 1513, 324, 259, 305, 2320, 3780, 262, 401, 1532, 337, 3576, 2306, 1529,
                 3145, 275, 4094, 1531, 2861, 3459, 3849, 2041, 2043, 2047, 291, 323, 3583, 435, 2037, 969, 811, 953,
                 370, 4081, 466, 491, 1457, 339, 1961, 1963, 1459, 891, 497, 889, 1535, 1680, 1210, 308, 1515, 1690);
-        List<BigInteger> expectedBigInteger = expected.stream().map(new Function<Integer, BigInteger>() {
-            @Override
-            public BigInteger apply(Integer integer) {
-                return new BigInteger(integer.toString());
-            }
-        }).collect(Collectors.toList());
+        List<BigInteger> expectedBigInteger = expected.stream().map(integer -> new BigInteger(integer.toString()))
+                .collect(Collectors.toList());
         Assert.assertEquals(expectedBigInteger, recommendList);
         System.out.println("recommendList by SPBPUSCalculator:" + recommendList);
-        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
+        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(layoutStats, recommendList));
     }
 }

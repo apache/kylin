@@ -36,15 +36,9 @@ import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.measure.hllc.RegisterType;
-import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 import org.apache.kylin.metadata.cube.planner.CostBasePlannerUtils;
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -75,29 +69,26 @@ public class FlatTableToCostUtils {
     public static Map<BigInteger, HLLCounter> generateCost(JavaRDD<Row> input, KylinConfig kylinConfig,
             RuleBasedIndex ruleBasedIndex, SegmentFlatTableDesc flatTableDesc) throws IOException {
         // step1: convert each cell to string data type, and get RDD[String[]]
-        JavaRDD<String[]> flatTableRDD = input.map(new Function<Row, String[]>() {
-            @Override
-            public String[] call(Row row) throws Exception {
-                String[] result = new String[row.length()];
-                for (int i = 0; i < row.length(); i++) {
-                    final Object o = row.get(i);
-                    if (o != null) {
-                        result[i] = o.toString();
-                    } else {
-                        result[i] = null;
-                    }
+        JavaRDD<String[]> flatTableRDD = input.map((Function<Row, String[]>) row -> {
+            String[] result = new String[row.length()];
+            for (int i = 0; i < row.length(); i++) {
+                final Object o = row.get(i);
+                if (o != null) {
+                    result[i] = o.toString();
+                } else {
+                    result[i] = null;
                 }
-                return result;
             }
+            return result;
         });
         // step2: calculate the cost for each partition, and get the new RDD.
-        // The key is cuboid, and the value is the data encoded from the hll for each partition.
+        // The key is layout, and the value is the data encoded from the hll for each partition.
         int rowKeyCount = ruleBasedIndex.countOfIncludeDimension();
         // layouts from the rule index(agg group)
-        Set<LayoutEntity> inputLayouts = ruleBasedIndex.genCuboidLayouts();
-        // add the mock layout which include all of the dimensions in the rule index
-        inputLayouts.add(createMockRuleBaseLayout(ruleBasedIndex));
-        BigInteger[] inputCuboids = getCuboIdsFromLayouts(Lists.newArrayList(inputLayouts), rowKeyCount,
+        Set<LayoutEntity> ruleBasedLayouts = ruleBasedIndex.genCuboidLayouts();
+        // add the mock layout which include all the dimensions in the rule index
+        ruleBasedLayouts.add(createMockRuleBaseLayout(ruleBasedIndex));
+        BigInteger[] inputLayoutIds = getLayoutIdsFromEntity(Lists.newArrayList(ruleBasedLayouts), rowKeyCount,
                 ruleBasedIndex.getColumnIdToRowKeyId());
         // rowkey id ->  column index in the flat table of the flat dataset.
         int[] rowkeyColumnIndexes = getRowkeyColumnIndexes(ruleBasedIndex, flatTableDesc);
@@ -106,15 +97,15 @@ public class FlatTableToCostUtils {
         log.info("The row key count is {}, and the index/column map is {}", rowKeyCount,
                 Lists.newArrayList(rowkeyColumnIndexes));
         JavaPairRDD<BigInteger, byte[]> costRddByPartition = flatTableRDD.mapPartitionsToPair(
-                new FlatOutputFunction(hllPrecision, rowKeyCount, inputCuboids, rowkeyColumnIndexes));
+                new FlatOutputFunction(hllPrecision, rowKeyCount, inputLayoutIds, rowkeyColumnIndexes));
 
-        // step3: reduce by cuboid, and merge hll data
-        // The key is the cuboid, the value is data encoded from the hll
-        int partitionNum = getCuboidHLLCounterReducerNum(inputCuboids.length, kylinConfig);
+        // step3: reduce by layout, and merge hll data
+        // The key is the layout, the value is data encoded from the hll
+        int partitionNum = getLayoutHLLCounterReducerNum(inputLayoutIds.length, kylinConfig);
         log.info("Get the partition count for the HLL reducer: {}", partitionNum);
         JavaPairRDD<BigInteger, byte[]> costRDD = costRddByPartition.reduceByKey(new Partitioner() {
-            private int num = partitionNum;
-            private BigInteger bigIntegerMod = BigInteger.valueOf(num);
+            private final int num = partitionNum;
+            private final BigInteger bigIntegerMod = BigInteger.valueOf(num);
 
             @Override
             public int numPartitions() {
@@ -128,7 +119,7 @@ public class FlatTableToCostUtils {
                 return value.mod(bigIntegerMod).intValue();
             }
         }, new Function2<byte[], byte[], byte[]>() {
-            private int precision = hllPrecision;
+            private final int precision = hllPrecision;
 
             @Override
             public byte[] call(byte[] array1, byte[] array2) throws Exception {
@@ -151,7 +142,7 @@ public class FlatTableToCostUtils {
             }
         });
         // step4: collect the final result, and convert value(text) to hll
-        // The key is the cuboid, and the value is the estimated statistics
+        // The key is the layout, and the value is the estimated statistics
         Map<BigInteger, HLLCounter> resultCost = Maps.newHashMap();
         for (Tuple2<BigInteger, byte[]> pair : costRDD.collect()) {
             HLLCounter hll = new HLLCounter(kylinConfig.getStatsHLLPrecision());
@@ -163,7 +154,7 @@ public class FlatTableToCostUtils {
         }
         // log data
         if (log.isDebugEnabled()) {
-            logMapperAndCuboidStatistics(resultCost, 100);
+            logMapperAndLayoutStatistics(resultCost, 100);
         }
         return resultCost;
     }
@@ -171,8 +162,8 @@ public class FlatTableToCostUtils {
     /**
      * @return reducer number for calculating hll
      */
-    private static int getCuboidHLLCounterReducerNum(int nCuboids, KylinConfig kylinConfig) {
-        int shardBase = (nCuboids - 1) / kylinConfig.getJobPerReducerHLLCuboidNumber() + 1;
+    private static int getLayoutHLLCounterReducerNum(int nLayouts, KylinConfig kylinConfig) {
+        int shardBase = (nLayouts - 1) / kylinConfig.getJobPerReducerHllLayoutNumber() + 1;
         int hllMaxReducerNumber = kylinConfig.getJobHLLMaxReducerNumber();
         if (shardBase > hllMaxReducerNumber) {
             shardBase = hllMaxReducerNumber;
@@ -180,15 +171,15 @@ public class FlatTableToCostUtils {
         return Math.max(shardBase, 1);
     }
 
-    private static BigInteger[] getCuboIdsFromLayouts(List<LayoutEntity> allLayouts, int dimensionCount,
+    private static BigInteger[] getLayoutIdsFromEntity(List<LayoutEntity> allLayouts, int dimensionCount,
             Map<Integer, Integer> columnIdToRowkeyId) {
         Set<BigInteger> set = new HashSet<>();
         for (LayoutEntity layoutEntity : allLayouts) {
-            BigInteger cuboId = CostBasePlannerUtils.convertDimensionsToCuboId(layoutEntity.getDimsIds(),
+            BigInteger layoutId = CostBasePlannerUtils.convertDimensionsToLayoutId(layoutEntity.getDimsIds(),
                     dimensionCount, columnIdToRowkeyId);
-            set.add(cuboId);
+            set.add(layoutId);
         }
-        return set.toArray(new BigInteger[set.size()]);
+        return set.toArray(new BigInteger[0]);
     }
 
     private static int[] getRowkeyColumnIndexes(RuleBasedIndex ruleBasedIndex, SegmentFlatTableDesc flatTableDesc) {
@@ -216,115 +207,115 @@ public class FlatTableToCostUtils {
 
     private static class FlatOutputFunction implements PairFlatMapFunction<Iterator<String[]>, BigInteger, byte[]> {
         private transient volatile boolean initialized = false;
-        private transient CuboidStatCalculator cuboidStatCalculator;
+        private transient LayoutStatCalculator layoutStatCalculator;
         private final int samplingPercent = 100;
         private final int hllPrecision;
         private final int rowKeyCount;
-        private final BigInteger[] cuboidIds;
+        private final BigInteger[] layoutIds;
         private final int[] rowkeyColumnIndexes;
 
-        public FlatOutputFunction(int hllPrecision, int rowKeyCount, BigInteger[] cuboidIds,
+        public FlatOutputFunction(int hllPrecision, int rowKeyCount, BigInteger[] layoutIds,
                 int[] rowkeyColumnIndexes) {
             this.hllPrecision = hllPrecision;
             this.rowKeyCount = rowKeyCount;
-            this.cuboidIds = cuboidIds;
+            this.layoutIds = layoutIds;
             this.rowkeyColumnIndexes = rowkeyColumnIndexes;
         }
 
-        private Integer[][] getCuboidBitSet(BigInteger[] cuboidIds, int nRowKey) {
-            Integer[][] allCuboidsBitSet = new Integer[cuboidIds.length][];
-            for (int j = 0; j < cuboidIds.length; j++) {
-                BigInteger cuboidId = cuboidIds[j];
+        private Integer[][] getLayoutBitSet(BigInteger[] layoutIds, int nRowKey) {
+            Integer[][] allLayoutsBitSet = new Integer[layoutIds.length][];
+            for (int j = 0; j < layoutIds.length; j++) {
+                BigInteger layoutId = layoutIds[j];
 
-                allCuboidsBitSet[j] = new Integer[cuboidId.bitCount()];
+                allLayoutsBitSet[j] = new Integer[layoutId.bitCount()];
                 int position = 0;
                 for (int i = 0; i < nRowKey; i++) {
                     BigInteger bigMask = BigInteger.ZERO.setBit(nRowKey - 1 - i);
-                    if ((bigMask.and(cuboidId).compareTo(BigInteger.ZERO)) > 0) {
-                        // bigMask & cuboid > 0
-                        allCuboidsBitSet[j][position] = i;
+                    if ((bigMask.and(layoutId).compareTo(BigInteger.ZERO)) > 0) {
+                        // bigMask & layoutId > 0
+                        allLayoutsBitSet[j][position] = i;
                         position++;
                     }
                 }
             }
-            return allCuboidsBitSet;
+            return allLayoutsBitSet;
         }
 
-        private HLLCounter[] getInitCuboidsHLL(int cuboidSize, int hllPrecision) {
-            HLLCounter[] cuboidsHLL = new HLLCounter[cuboidSize];
-            for (int i = 0; i < cuboidSize; i++) {
-                cuboidsHLL[i] = new HLLCounter(hllPrecision, RegisterType.DENSE);
+        private HLLCounter[] getInitLayoutsHLL(int layoutSize, int hllPrecision) {
+            HLLCounter[] layoutsHLL = new HLLCounter[layoutSize];
+            for (int i = 0; i < layoutSize; i++) {
+                layoutsHLL[i] = new HLLCounter(hllPrecision, RegisterType.DENSE);
             }
-            return cuboidsHLL;
+            return layoutsHLL;
         }
 
         private void init() {
-            Integer[][] cuboidsBitSet = getCuboidBitSet(cuboidIds, rowKeyCount);
-            HLLCounter[] cuboidsHLL = getInitCuboidsHLL(cuboidIds.length, hllPrecision);
-            cuboidStatCalculator = new CuboidStatCalculator(rowkeyColumnIndexes, cuboidIds, cuboidsBitSet, true,
-                    cuboidsHLL);
+            Integer[][] layoutsBitSet = getLayoutBitSet(layoutIds, rowKeyCount);
+            HLLCounter[] layoutsHLL = getInitLayoutsHLL(layoutIds.length, hllPrecision);
+            layoutStatCalculator = new LayoutStatCalculator(rowkeyColumnIndexes, layoutIds, layoutsBitSet, true,
+                    layoutsHLL);
             initialized = true;
         }
 
         @Override
         public Iterator<Tuple2<BigInteger, byte[]>> call(Iterator<String[]> iterator) throws Exception {
-            if (initialized == false) {
+            if (!initialized) {
                 // just sync this object
                 synchronized (this) {
-                    if (initialized == false) {
+                    if (!initialized) {
                         init();
                     }
                 }
             }
 
-            // One tuple is a cost pair, the left is the cuboid and the right is the cost
+            // One tuple is a cost pair, the left is the layout and the right is the cost
             int rowCount = 0;
             while (iterator.hasNext()) {
                 String[] row = iterator.next();
                 if (rowCount % 100 < samplingPercent) {
-                    cuboidStatCalculator.putRow(row);
+                    layoutStatCalculator.putRow(row);
                 }
                 rowCount++;
             }
 
             List<Tuple2<BigInteger, byte[]>> result = Lists.newArrayList();
             ByteBuffer hllBuf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
-            BigInteger[] cuboidIds = cuboidStatCalculator.getCuboidIds();
-            HLLCounter[] cuboidsHLL = cuboidStatCalculator.getHLLCounters();
+            BigInteger[] layoutIds = layoutStatCalculator.getLayoutIds();
+            HLLCounter[] layoutsHLL = layoutStatCalculator.getHLLCounters();
             HLLCounter hll;
-            for (int i = 0; i < cuboidIds.length; i++) {
+            for (int i = 0; i < layoutIds.length; i++) {
                 // key
-                BigInteger outputKey = cuboidIds[i];
+                BigInteger outputKey = layoutIds[i];
                 // value
-                hll = cuboidsHLL[i];
+                hll = layoutsHLL[i];
                 hllBuf.clear();
                 hll.writeRegisters(hllBuf);
                 byte[] value = new byte[hllBuf.position()];
                 System.arraycopy(hllBuf.array(), 0, value, 0, hllBuf.position());
-                result.add(new Tuple2<BigInteger, byte[]>(outputKey, value));
+                result.add(new Tuple2<>(outputKey, value));
             }
             return result.iterator();
         }
     }
 
-    static class CuboidStatCalculator {
+    static class LayoutStatCalculator {
         private final int nRowKey;
         private final int[] rowkeyColIndex;
-        private final BigInteger[] cuboidIds;
-        private final Integer[][] cuboidsBitSet;
-        private HLLCounter[] cuboidsHLL;
+        private final BigInteger[] layoutIds;
+        private final Integer[][] layoutsBitSet;
+        private final HLLCounter[] layoutsHLL;
 
         //about details of the new algorithm, please see KYLIN-2518
         private final boolean isNewAlgorithm;
         private final HashFunction hf;
         private long[] rowHashCodesLong;
 
-        public CuboidStatCalculator(int[] rowkeyColIndex, BigInteger[] cuboidIds, Integer[][] cuboidsBitSet,
-                boolean isUsePutRowKeyToHllNewAlgorithm, HLLCounter[] cuboidsHLL) {
+        public LayoutStatCalculator(int[] rowkeyColIndex, BigInteger[] layoutIds, Integer[][] layoutsBitSet,
+                boolean isUsePutRowKeyToHllNewAlgorithm, HLLCounter[] layoutsHLL) {
             this.nRowKey = rowkeyColIndex.length;
             this.rowkeyColIndex = rowkeyColIndex;
-            this.cuboidIds = cuboidIds;
-            this.cuboidsBitSet = cuboidsBitSet;
+            this.layoutIds = layoutIds;
+            this.layoutsBitSet = layoutsBitSet;
             this.isNewAlgorithm = isUsePutRowKeyToHllNewAlgorithm;
             if (!isNewAlgorithm) {
                 this.hf = Hashing.murmur3_32();
@@ -332,7 +323,7 @@ public class FlatTableToCostUtils {
                 rowHashCodesLong = new long[nRowKey];
                 this.hf = Hashing.murmur3_128();
             }
-            this.cuboidsHLL = cuboidsHLL;
+            this.layoutsHLL = layoutsHLL;
         }
 
         public void putRow(final String[] row) {
@@ -358,14 +349,14 @@ public class FlatTableToCostUtils {
                 }
             }
 
-            // user the row key column hash to get a consolidated hash for each cuboid
-            for (int i = 0, n = cuboidsBitSet.length; i < n; i++) {
+            // user the row key column hash to get a consolidated hash for each layout
+            for (int i = 0, n = layoutsBitSet.length; i < n; i++) {
                 Hasher hc = hf.newHasher();
-                for (int position = 0; position < cuboidsBitSet[i].length; position++) {
-                    hc.putBytes(rowHashCodes[cuboidsBitSet[i][position]]);
+                for (int position = 0; position < layoutsBitSet[i].length; position++) {
+                    hc.putBytes(rowHashCodes[layoutsBitSet[i][position]]);
                 }
 
-                cuboidsHLL[i].add(hc.hash().asBytes());
+                layoutsHLL[i].add(hc.hash().asBytes());
             }
         }
 
@@ -381,138 +372,59 @@ public class FlatTableToCostUtils {
                 rowHashCodesLong[i] = (Bytes.toLong(bytes) + i);
             }
 
-            // user the row key column hash to get a consolidated hash for each cuboid
-            for (int i = 0, n = cuboidsBitSet.length; i < n; i++) {
+            // user the row key column hash to get a consolidated hash for each layout
+            for (int i = 0, n = layoutsBitSet.length; i < n; i++) {
                 long value = 0;
-                for (int position = 0; position < cuboidsBitSet[i].length; position++) {
-                    value += rowHashCodesLong[cuboidsBitSet[i][position]];
+                for (int position = 0; position < layoutsBitSet[i].length; position++) {
+                    value += rowHashCodesLong[layoutsBitSet[i][position]];
                 }
-                cuboidsHLL[i].addHashDirectly(value);
+                layoutsHLL[i].addHashDirectly(value);
             }
         }
 
         public HLLCounter[] getHLLCounters() {
-            return cuboidsHLL;
+            return layoutsHLL;
         }
 
-        public BigInteger[] getCuboidIds() {
-            return cuboidIds;
+        public BigInteger[] getLayoutIds() {
+            return layoutIds;
         }
     }
 
-    private static void logMapperAndCuboidStatistics(Map<BigInteger, HLLCounter> cuboidHLLMap, int samplingPercentage) {
-        log.debug("Total cuboid number: \t" + cuboidHLLMap.size());
+    private static void logMapperAndLayoutStatistics(Map<BigInteger, HLLCounter> layoutHLLMap, int samplingPercentage) {
+        log.debug("Total layout number: \t" + layoutHLLMap.size());
         log.debug("Sampling percentage: \t" + samplingPercentage);
         log.debug("The following statistics are collected based on sampling data.");
 
-        List<BigInteger> allCuboids = Lists.newArrayList(cuboidHLLMap.keySet());
-        Collections.sort(allCuboids);
-        for (BigInteger i : allCuboids) {
-            log.debug("Cuboid " + i + " row count is: \t " + cuboidHLLMap.get(i).getCountEstimate());
+        List<BigInteger> allLayouts = Lists.newArrayList(layoutHLLMap.keySet());
+        Collections.sort(allLayouts);
+        for (BigInteger i : allLayouts) {
+            log.debug("Layout " + i + " row count is: \t " + layoutHLLMap.get(i).getCountEstimate());
         }
     }
 
-    public static Map<BigInteger, Long> getCuboidRowCountMapFromSampling(Map<BigInteger, HLLCounter> hllcMap) {
-        Map<BigInteger, Long> cuboidRowCountMap = Maps.newHashMap();
+    public static Map<BigInteger, Long> getLayoutRowCountMapFromSampling(Map<BigInteger, HLLCounter> hllcMap) {
+        Map<BigInteger, Long> layoutRowCountMap = Maps.newHashMap();
         for (Map.Entry<BigInteger, HLLCounter> entry : hllcMap.entrySet()) {
             // No need to adjust according sampling percentage. Assumption is that data set is far
             // more than cardinality. Even a percentage of the data should already see all cardinalities.
-            cuboidRowCountMap.put(entry.getKey(), entry.getValue().getCountEstimate());
+            layoutRowCountMap.put(entry.getKey(), entry.getValue().getCountEstimate());
         }
-        return cuboidRowCountMap;
+        return layoutRowCountMap;
     }
 
-    private static Map<BigInteger, Double> getCuboidSizeMapFromSamplingByCount(Map<BigInteger, Long> rowCountMap,
-            long sourceCount, RuleBasedIndex ruleBasedIndex, KylinConfig kylinConfig,
-            SegmentFlatTableDesc segmentFlatTableDesc) {
+    private static Map<BigInteger, Double> getLayoutSizeMapFromSamplingByCount(Map<BigInteger, Long> rowCountMap) {
         // use the row count to replace the size
-        Map<BigInteger, Double> cuboidSizeMap = Maps.newHashMap();
+        Map<BigInteger, Double> layoutSizeMap = Maps.newHashMap();
         for (Map.Entry<BigInteger, Long> entry : rowCountMap.entrySet()) {
             double value = entry.getValue();
-            cuboidSizeMap.put(entry.getKey(), value);
+            layoutSizeMap.put(entry.getKey(), value);
         }
-        return cuboidSizeMap;
+        return layoutSizeMap;
     }
 
-    public static Map<BigInteger, Double> getCuboidSizeMapFromSampling(Map<BigInteger, Long> rowCountMap,
-            long sourceCount, RuleBasedIndex ruleBasedIndex, KylinConfig kylinConfig,
-            SegmentFlatTableDesc segmentFlatTableDesc) {
+    public static Map<BigInteger, Double> getLayoutSizeMapFromSampling(Map<BigInteger, Long> rowCountMap) {
         // replace the size with the row count
-        return getCuboidSizeMapFromSamplingByCount(rowCountMap, sourceCount, ruleBasedIndex, kylinConfig,
-                segmentFlatTableDesc);
-    }
-
-    private static List<Integer> getRowkeyColumnSize(IndexPlan indexPlan, SegmentFlatTableDesc flatTableDesc) {
-        int rowKeyCount = indexPlan.getRuleBasedIndex().countOfIncludeDimension();
-        List<Integer> columnIds = flatTableDesc.getColumnIds();
-        List<TblColRef> tblColRefs = flatTableDesc.getColumns();
-        List<Integer> rowkeyColumnSize = Lists.newArrayList();
-
-        for (int i = 0; i < rowKeyCount; i++) {
-            int index = columnIds.indexOf(i);
-            if (index >= 0) {
-                // find the i-th dimension in the index-th column in the flat table or flat data set.
-                TblColRef tblColRef = tblColRefs.get(index);
-                // get DimensionEncoding for this table column ref.
-                // Noe we just use the row count as the weight
-                int length = 0;
-                rowkeyColumnSize.add(length);
-            } else {
-                // not find the column id
-                throw new RuntimeException(
-                        String.format("Can't find the column id %d, column ids %s", i, columnIds.toString()));
-            }
-        }
-        // the index means column id for the dimension, the value is the estimated size for this dimension
-        return rowkeyColumnSize;
-    }
-
-    private static double estimateCuboidStorageSize(Set<NDataModel.Measure> measureDescs, long cuboidId, long rowCount,
-            long baseCuboidId, long baseCuboidCount, List<Integer> rowKeyColumnLength, long sourceRowCount,
-            KylinConfig kylinConfig) {
-        // row key header
-        int rowkeyLength = 8; // 8 or 10
-        long mask = Long.highestOneBit(baseCuboidId);
-        // actual: the parentCuboidIdActualLength is rowkey count
-        long parentCuboidIdActualLength = (long) Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
-        // dimension length
-        for (int i = 0; i < parentCuboidIdActualLength; i++) {
-            if ((mask & cuboidId) > 0) {
-                rowkeyLength += rowKeyColumnLength.get(i); //colIO.getColumnLength(columnList.get(i));
-            }
-            mask = mask >> 1;
-        }
-        // measure size
-        int normalSpace = rowkeyLength;
-        int countDistinctSpace = 0;
-        double percentileSpace = 0;
-        int topNSpace = 0;
-        for (MeasureDesc measureDesc : measureDescs) {
-            if (rowCount == 0)
-                break;
-            DataType returnType = measureDesc.getFunction().getReturnDataType();
-            if (measureDesc.getFunction().getExpression().equals(FunctionDesc.FUNC_COUNT_DISTINCT)) {
-                long estimateDistinctCount = sourceRowCount / rowCount;
-                estimateDistinctCount = estimateDistinctCount == 0 ? 1L : estimateDistinctCount;
-                countDistinctSpace += returnType.getStorageBytesEstimate(estimateDistinctCount);
-            } else if (measureDesc.getFunction().getExpression().equals(FunctionDesc.FUNC_PERCENTILE)) {
-                percentileSpace += returnType.getStorageBytesEstimate(baseCuboidCount * 1.0 / rowCount);
-            } else if (measureDesc.getFunction().getExpression().equals(FunctionDesc.FUNC_TOP_N)) {
-                long estimateTopNCount = sourceRowCount / rowCount;
-                estimateTopNCount = estimateTopNCount == 0 ? 1L : estimateTopNCount;
-                topNSpace += returnType.getStorageBytesEstimate(estimateTopNCount);
-            } else {
-                normalSpace += returnType.getStorageBytesEstimate();
-            }
-        }
-
-        double cuboidSizeRatio = kylinConfig.getJobCuboidSizeRatio();
-        double cuboidSizeMemHungryRatio = kylinConfig.getJobCuboidSizeCountDistinctRatio();
-        double cuboidSizeTopNRatio = kylinConfig.getJobCuboidSizeTopNRatio();
-
-        double ret = (1.0 * normalSpace * rowCount * cuboidSizeRatio
-                + 1.0 * countDistinctSpace * rowCount * cuboidSizeMemHungryRatio + 1.0 * percentileSpace * rowCount
-                + 1.0 * topNSpace * rowCount * cuboidSizeTopNRatio) / (1024L * 1024L);
-        return ret;
+        return getLayoutSizeMapFromSamplingByCount(rowCountMap);
     }
 }

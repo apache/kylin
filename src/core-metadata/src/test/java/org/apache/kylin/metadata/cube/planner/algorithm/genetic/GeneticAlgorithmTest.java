@@ -38,13 +38,13 @@ public class GeneticAlgorithmTest extends AlgorithmTestBase {
 
     @Test
     public void testChromosomeIsSame() {
-        BenefitPolicy benefitPolicy = new BPUSCalculator(cuboidStats);
+        BenefitPolicy benefitPolicy = new BPUSCalculator(layoutStats);
 
-        double maxSpaceLimit = cuboidStats.getBaseCuboidSize() * 10;
-        BitsChromosomeHelper helper = new BitsChromosomeHelper(maxSpaceLimit, cuboidStats);
+        double maxSpaceLimit = layoutStats.getBaseLayoutSize() * 10;
+        BitsChromosomeHelper helper = new BitsChromosomeHelper(maxSpaceLimit, layoutStats);
 
-        double maxSpaceLimit1 = cuboidStats.getBaseCuboidSize() * 12;
-        BitsChromosomeHelper helper1 = new BitsChromosomeHelper(maxSpaceLimit1, cuboidStats);
+        double maxSpaceLimit1 = layoutStats.getBaseLayoutSize() * 12;
+        BitsChromosomeHelper helper1 = new BitsChromosomeHelper(maxSpaceLimit1, layoutStats);
 
         BitSet representation = new BitSet();
         representation.set(10);
@@ -69,31 +69,31 @@ public class GeneticAlgorithmTest extends AlgorithmTestBase {
 
     @Test
     public void testBPUSCalculator() {
-        BenefitPolicy benefitPolicy = new BPUSCalculator(cuboidStats);
-        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
+        BenefitPolicy benefitPolicy = new BPUSCalculator(layoutStats);
+        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, layoutStats);
 
         List<BigInteger> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by BPUSCalculator: " + recommendList);
-        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
+        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(layoutStats, recommendList));
     }
 
     @Test
     public void testPBPUSCalculator() {
-        BenefitPolicy benefitPolicy = new PBPUSCalculator(cuboidStats);
-        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
+        BenefitPolicy benefitPolicy = new PBPUSCalculator(layoutStats);
+        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, layoutStats);
 
         List<BigInteger> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by PBPUSCalculator:" + recommendList);
-        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
+        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(layoutStats, recommendList));
     }
 
     @Test
     public void testSPBPUSCalculator() {
-        BenefitPolicy benefitPolicy = new SPBPUSCalculator(cuboidStats);
-        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
+        BenefitPolicy benefitPolicy = new SPBPUSCalculator(layoutStats);
+        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, layoutStats);
 
         List<BigInteger> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by SPBPUSCalculator:" + recommendList);
-        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
+        System.out.println("Cost evaluated for each query: " + getQueryCostRatio(layoutStats, recommendList));
     }
 }

@@ -20,22 +20,22 @@ package org.apache.kylin.metadata.cube.planner.algorithm;
 
 import java.math.BigInteger;
 
-public class CuboidBenefitModel {
-    private CuboidModel cuboidModel;
+public class LayoutBenefitModel {
+    private LayoutModel layoutModel;
     private BenefitModel benefitModel;
 
-    public CuboidBenefitModel(CuboidModel cuboidModel, BenefitModel benefitModel) {
-        this.cuboidModel = cuboidModel;
+    public LayoutBenefitModel(LayoutModel layoutModel, BenefitModel benefitModel) {
+        this.layoutModel = layoutModel;
         this.benefitModel = benefitModel;
     }
 
-    public void reset(CuboidModel cuboidModel, BenefitModel benefitModel) {
-        this.cuboidModel = cuboidModel;
+    public void reset(LayoutModel layoutModel, BenefitModel benefitModel) {
+        this.layoutModel = layoutModel;
         this.benefitModel = benefitModel;
     }
 
-    public BigInteger getCuboidId() {
-        return cuboidModel == null ? null : cuboidModel.cuboidId;
+    public BigInteger getLayoutId() {
+        return layoutModel == null ? null : layoutModel.layoutId;
     }
 
     public Double getBenefit() {
@@ -44,31 +44,30 @@ public class CuboidBenefitModel {
 
     @Override
     public String toString() {
-        return "CuboidBenefitModel [cuboidModel=" + cuboidModel + ", benefitModel=" + benefitModel + "]";
+        return "LayoutBenefitModel [layoutModel=" + layoutModel + ", benefitModel=" + benefitModel + "]";
     }
 
-    public static class CuboidModel {
-        public final BigInteger cuboidId;
+    public static class LayoutModel {
+        public final BigInteger layoutId;
 
         public final long recordCount;
         public final double spaceSize;
 
-        public final double hitProbability;
+        public final double hitProb;
         public final long scanCount;
 
-        public CuboidModel(BigInteger cuboId, long recordCount, double spaceSize, double hitProbability,
-                long scanCount) {
-            this.cuboidId = cuboId;
+        public LayoutModel(BigInteger layoutId, long recordCount, double spaceSize, double hitProb, long scanCount) {
+            this.layoutId = layoutId;
             this.recordCount = recordCount;
             this.spaceSize = spaceSize;
-            this.hitProbability = hitProbability;
+            this.hitProb = hitProb;
             this.scanCount = scanCount;
         }
 
         @Override
         public String toString() {
-            return "CuboidModel [cuboidId=" + cuboidId + ", recordCount=" + recordCount + ", spaceSize=" + spaceSize
-                    + ", hitProbability=" + hitProbability + ", scanCount=" + scanCount + "]";
+            return "LayoutModel [layoutId=" + layoutId + ", recordCount=" + recordCount + ", spaceSize=" + spaceSize
+                    + ", hitProbability=" + hitProb + ", scanCount=" + scanCount + "]";
         }
     }
 

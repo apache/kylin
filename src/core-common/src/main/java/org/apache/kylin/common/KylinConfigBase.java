@@ -3745,7 +3745,7 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isStorageQuotaEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.storage.check-quota-enabled", FALSE));
     }
-    
+
     public boolean skipShardPruningForInExpr() {
         return Boolean.parseBoolean(getOptional("kylin.query.skip-shard-pruning-for-in", FALSE));
     }
@@ -3779,19 +3779,19 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.index.costbased.sampling-hll-precision", "14"));
     }
 
-    public double getJobCuboidSizeRatio() {
+    public double getJobLayoutSizeRatio() {
         return Double.parseDouble(getOptional("kylin.index.costbased.model-size-estimate-ratio", "0.25"));
     }
 
-    public double getJobCuboidSizeCountDistinctRatio() {
+    public double getJobLayoutSizeCountDistinctRatio() {
         return Double.parseDouble(getOptional("kylin.index.costbased.model-size-estimate-countdistinct-ratio", "0.5"));
     }
 
-    public double getJobCuboidSizeTopNRatio() {
+    public double getJobLayoutSizeTopNRatio() {
         return Double.parseDouble(getOptional("kylin.index.costbased.model-size-estimate-topn-ratio", "0.5"));
     }
 
-    public int getJobPerReducerHLLCuboidNumber() {
+    public int getJobPerReducerHllLayoutNumber() {
         return Integer.parseInt(getOptional("kylin.index.costbased.per-reducer-hll-cuboid-number", "100"));
     }
 

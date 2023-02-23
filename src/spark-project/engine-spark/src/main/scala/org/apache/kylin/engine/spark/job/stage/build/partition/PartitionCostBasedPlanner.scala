@@ -33,14 +33,21 @@ class PartitionCostBasedPlanner(jobContext: SegmentJob, dataSegment: NDataSegmen
   extends PartitionFlatTableAndDictBase(jobContext, dataSegment, buildParam) {
   override def execute(): Unit = {
     val (cost, sourceCount) = generateCostTable()
-    getRecommendedLayoutAndUpdateMetadata(cost, sourceCount)
-    //    jobContext.addMockIndex()
+    recordRecAggColOrders(cost, sourceCount)
+    // jobContext.addMockIndex()
     val result = jobContext.updateIndexPlanIfNeed()
     if (result) {
       // update span tree and table desc with the new build job layouts
       val spanTree = new PartitionSpanningTree(config,
-        new PartitionTreeBuilder(dataSegment, readOnlyLayouts, jobId, partitions,
-          jobContext.getReadOnlyBuckets.stream.filter(_.getSegmentId.equals(segmentId)).collect(Collectors.toSet[JobBucket])))
+        new PartitionTreeBuilder(dataSegment,
+          readOnlyLayouts,
+          jobId,
+          partitions,
+          jobContext.getReadOnlyBuckets.stream
+            .filter(_.getSegmentId.equals(segmentId))
+            .collect(Collectors.toSet[JobBucket])
+        )
+      )
       buildParam.setPartitionSpanningTree(spanTree)
 
       // update table desc with new span tree
