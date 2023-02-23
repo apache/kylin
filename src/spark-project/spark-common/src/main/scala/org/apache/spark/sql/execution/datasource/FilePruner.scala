@@ -18,6 +18,8 @@
 
 package org.apache.spark.sql.execution.datasource
 
+import io.kyligence.kap.guava20.shaded.common.collect.Sets
+
 import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.kylin.common.exception.TargetSegmentNotFoundException
 import org.apache.kylin.common.util.{DateFormat, HadoopUtil}
@@ -39,6 +41,7 @@ import org.apache.spark.util.collection.BitSet
 import java.sql.{Date, Timestamp}
 import java.util
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 case class SegmentDirectory(segmentID: String, partitions: List[Long], files: Seq[FileStatus])
 
@@ -79,9 +82,11 @@ class FilePruner(val session: SparkSession,
   private val dataflow: NDataflow = {
     val dataflowId = options.getOrElse("dataflowId", sys.error("dataflowId option is required"))
     val prj = options.getOrElse("project", sys.error("project option is required"))
+    val prunedSegmentIds = Sets.newHashSet(prunedSegmentDirs.map(_.segmentID).asJavaCollection)
     val dfMgr = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, prj)
-    val dataflow = dfMgr.getDataflow(dataflowId)
-    FilePruner.checkSegmentStatus(prunedSegmentDirs, dataflow)
+    // init pruned Segment LayoutInfo immediately
+    val dataflow = dfMgr.getDataflow(dataflowId, prunedSegmentIds)
+    FilePruner.checkSegmentStatus(prunedSegmentIds, dataflow)
     dataflow
   }
 
@@ -450,8 +455,14 @@ class FilePruner(val session: SparkSession,
 
     def getShardSetFromIterable(attr: Attribute, iter: Iterable[Any]): BitSet = {
       val matchedShards = new BitSet(numShards)
-      iter.map(v => getShardNumber(attr, v))
-        .foreach(shardNum => matchedShards.set(shardNum))
+      val prj = options.getOrElse("project", sys.error("project option is required"))
+      val skipShardPruning = NProjectManager.getProjectConfig(prj).skipShardPruningForInExpr && iter.size > 256
+      if (skipShardPruning) {
+        matchedShards.setUntil(matchedShards.capacity)
+      } else {
+        iter.map(v => getShardNumber(attr, v))
+          .foreach(shardNum => matchedShards.set(shardNum))
+      }
       matchedShards
     }
 
@@ -546,14 +557,12 @@ object FilePruner {
     }
   }
 
-  def checkSegmentStatus(segDirs: Seq[SegmentDirectory], dataflow: NDataflow): Unit = {
+  def checkSegmentStatus(prunedSegmentIds: util.HashSet[String], dataflow: NDataflow): Unit = {
     // check whether each segment id corresponds to the segment in NDataflow
-    val candidateSegIds = new util.HashSet[String]
-    segDirs.foreach(seg => candidateSegIds.add(seg.segmentID))
-    val filterSegmentIds = dataflow.getSegments(candidateSegIds).asScala.map(e => e.getId).toSet
-    if(candidateSegIds.size != filterSegmentIds.size) {
-      val missSegId = new StringBuilder
-      candidateSegIds.asScala.foreach(e => {
+    val filterSegmentIds = dataflow.getSegments(prunedSegmentIds).asScala.map(e => e.getId).toSet
+    if (prunedSegmentIds.size != filterSegmentIds.size) {
+      val missSegId = new mutable.StringBuilder
+      prunedSegmentIds.asScala.foreach(e => {
         if (!filterSegmentIds.contains(e)) {
           missSegId.append(e).append(";")
         }
@@ -735,7 +744,9 @@ case class SegDimFilters(dimRange: java.util.Map[String, DimensionRangeInfo], di
    * blocks are always non-empty.
    */
 
-  def escapeQuote(colName: String): String = {s"${colName.replace("`", "")}"}
+  def escapeQuote(colName: String): String = {
+    s"${colName.replace("`", "")}"
+  }
 
   def foldFilter(filter: Filter): Filter = {
     filter match {

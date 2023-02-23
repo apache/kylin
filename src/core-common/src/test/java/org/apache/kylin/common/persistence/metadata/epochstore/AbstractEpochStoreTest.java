@@ -27,9 +27,10 @@ import org.apache.kylin.common.persistence.metadata.EpochStore;
 import org.apache.kylin.common.persistence.metadata.JdbcEpochStore;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.Lists;
 
 import lombok.val;
 
@@ -56,152 +57,107 @@ public abstract class AbstractEpochStoreTest {
     @Test
     public void testInsertAndUpdate() {
 
-        Epoch newSaveEpoch = new Epoch();
-        newSaveEpoch.setEpochTarget("test1");
-        newSaveEpoch.setCurrentEpochOwner("owner1");
-        newSaveEpoch.setEpochId(1);
-        newSaveEpoch.setLastEpochRenewTime(System.currentTimeMillis());
-
+        Epoch mockEpoch = getMockEpoch("test1", "owner1");
         //insert one
-        epochStore.insert(newSaveEpoch);
-        val epochs = epochStore.list();
-        Assert.assertEquals(epochs.size(), 1);
+        epochStore.insert(mockEpoch);
 
-        Assert.assertTrue(compareEpoch(newSaveEpoch, epochs.get(0)));
+        val epochs = epochStore.list();
+        Assertions.assertEquals(1, epochs.size());
+        Assertions.assertTrue(compareEpoch(mockEpoch, epochs.get(0)));
 
         //update owner
-        newSaveEpoch.setCurrentEpochOwner("o2");
-        epochStore.update(newSaveEpoch);
+        mockEpoch.setCurrentEpochOwner("o2");
+        epochStore.update(mockEpoch);
 
-        Assert.assertEquals(newSaveEpoch.getCurrentEpochOwner(), epochStore.list().get(0).getCurrentEpochOwner());
-
+        Assertions.assertEquals(mockEpoch.getCurrentEpochOwner(), epochStore.list().get(0).getCurrentEpochOwner());
     }
 
     @Test
     public void testExecuteWithTransaction_Success() {
 
-        Epoch e1 = new Epoch();
-        e1.setEpochTarget("test1");
-        e1.setCurrentEpochOwner("owner1");
-        e1.setEpochId(1);
-        e1.setLastEpochRenewTime(System.currentTimeMillis());
-
+        Epoch mockEpoch = getMockEpoch("test1", "owner1");
         epochStore.executeWithTransaction(() -> {
-            epochStore.insert(e1);
-
+            epochStore.insert(mockEpoch);
             //insert success
-            Assert.assertEquals(epochStore.list().size(), 1);
-            Assert.assertTrue(compareEpoch(e1, epochStore.list().get(0)));
-
+            Assertions.assertEquals(1, epochStore.list().size());
+            Assertions.assertTrue(compareEpoch(mockEpoch, epochStore.list().get(0)));
             return null;
         });
-
     }
 
     @Test
     public void testBatchUpdate() {
-        Epoch e1 = new Epoch();
-        e1.setEpochTarget("test1");
-        e1.setCurrentEpochOwner("owner1");
-        e1.setEpochId(1);
-        e1.setLastEpochRenewTime(System.currentTimeMillis());
+
+        Epoch e1 = getMockEpoch("test1", "owner1");
+        Epoch e2 = getMockEpoch("test2", "owner2");
 
         epochStore.insert(e1);
-
-        Epoch e2 = new Epoch();
-        e2.setEpochTarget("test2");
-        e2.setCurrentEpochOwner("owner2");
-        e2.setEpochId(1);
-        e2.setLastEpochRenewTime(System.currentTimeMillis());
         epochStore.insert(e2);
 
-        val batchEpochs = Arrays.asList(e1, e2);
-
+        val batchEpochs = Lists.newArrayList(e1, e2);
         epochStore.updateBatch(batchEpochs);
-
-        batchEpochs.forEach(epoch -> {
-            Assert.assertTrue(compareEpoch(epoch, epochStore.getEpoch(epoch.getEpochTarget())));
-        });
-
+        batchEpochs.forEach(
+                epoch -> Assertions.assertTrue(compareEpoch(epoch, epochStore.getEpoch(epoch.getEpochTarget()))));
     }
 
     @Test
     public void testBatchUpdateWithError() {
-        Epoch e1 = new Epoch();
-        e1.setEpochTarget("test1");
-        e1.setCurrentEpochOwner("owner1");
-        e1.setEpochId(1);
-        e1.setLastEpochRenewTime(System.currentTimeMillis());
+
+        Epoch e1 = getMockEpoch("test1", "owner1");
+        Epoch e2 = getMockEpoch("test2", "owner2");
 
         epochStore.insert(e1);
 
-        Epoch e2 = new Epoch();
-        e2.setEpochTarget("test2");
-        e2.setCurrentEpochOwner("owner2");
-        e2.setEpochId(1);
-        e2.setLastEpochRenewTime(System.currentTimeMillis());
-
-        val batchEpochs = Arrays.asList(e1, e2);
         boolean isError = false;
         try {
-            epochStore.updateBatch(batchEpochs);
+            epochStore.updateBatch(Lists.newArrayList(e1, e2));
         } catch (Exception e) {
             isError = true;
         }
         if (epochStore instanceof JdbcEpochStore) {
-            Assert.assertTrue(isError);
+            Assertions.assertTrue(isError);
         }
     }
 
     @Test
     public void testBatchInsert() {
-        Epoch e1 = new Epoch();
-        e1.setEpochTarget("test1");
-        e1.setCurrentEpochOwner("owner1");
-        e1.setEpochId(1);
-        e1.setLastEpochRenewTime(System.currentTimeMillis());
-
-        Epoch e2 = new Epoch();
-        e2.setEpochTarget("test2");
-        e2.setCurrentEpochOwner("owner2");
-        e2.setEpochId(1);
-        e2.setLastEpochRenewTime(System.currentTimeMillis());
+        Epoch e1 = getMockEpoch("test1", "owner1");
+        Epoch e2 = getMockEpoch("test2", "owner2");
 
         val batchEpochs = Arrays.asList(e1, e2);
-
         epochStore.insertBatch(batchEpochs);
-
-        batchEpochs.forEach(epoch -> {
-            Assert.assertTrue(compareEpoch(epoch, epochStore.getEpoch(epoch.getEpochTarget())));
-        });
-
+        batchEpochs.forEach(
+                epoch -> Assertions.assertTrue(compareEpoch(epoch, epochStore.getEpoch(epoch.getEpochTarget()))));
     }
 
     @Test
     public void testIsLeaderNodeWithCurrentEpochOwnerNull() {
-        Epoch epoch = new Epoch();
-        epoch.setEpochTarget("_global");
-        epoch.setCurrentEpochOwner(null);
-        epochStore.insert(epoch);
+        Epoch mockEpoch = getMockEpoch("_global", null);
+        epochStore.insert(mockEpoch);
         Assertions.assertFalse(EpochStore.isLeaderNode());
     }
 
     @Test
     public void testIsLeaderNodeWithServiceInfoNotEqual() {
-        Epoch epoch = new Epoch();
-        epoch.setEpochTarget("_global");
-        epoch.setCurrentEpochOwner("owner1");
-        epochStore.insert(epoch);
+        Epoch mockEpoch = getMockEpoch("_global", "owner1");
+        epochStore.insert(mockEpoch);
         Assertions.assertFalse(EpochStore.isLeaderNode());
     }
 
     @Test
     public void testIsLeaderNodeWithServiceInfoEqual() {
         Assertions.assertFalse(EpochStore.isLeaderNode());
-        Epoch epoch = new Epoch();
-        epoch.setEpochTarget("_global");
-        epoch.setCurrentEpochOwner(AddressUtil.getLocalInstance() + "|" + Long.MAX_VALUE);
-        epochStore.insert(epoch);
+        Epoch mockEpoch = getMockEpoch("_global", AddressUtil.getLocalInstance() + "|" + Long.MAX_VALUE);
+        epochStore.insert(mockEpoch);
         Assertions.assertTrue(EpochStore.isLeaderNode());
+    }
+
+    protected Epoch getMockEpoch(String epochTarget, String epochOwner) {
+        Epoch epoch = new Epoch();
+        epoch.setEpochTarget(epochTarget);
+        epoch.setCurrentEpochOwner(epochOwner);
+        epoch.setEpochId(1);
+        epoch.setLastEpochRenewTime(System.currentTimeMillis());
+        return epoch;
     }
 }

@@ -17,6 +17,17 @@
  */
 package org.apache.kylin.tool.bisync.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class ColumnDef {
 
     private String role;
@@ -29,74 +40,11 @@ public class ColumnDef {
 
     private String columnType;
 
-    private boolean isHidden;
+    private boolean isHidden = true;
 
     private boolean isComputedColumn;
 
-    public ColumnDef(String role, String tableAlias, String columnAlias, String columnName, String columnType,
-            boolean isHidden, boolean isComputedColumn) {
-        this.role = role;
-        this.tableAlias = tableAlias;
-        this.columnAlias = columnAlias;
-        this.columnName = columnName;
-        this.columnType = columnType;
-        this.isHidden = isHidden;
-        this.isComputedColumn = isComputedColumn;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public String getTableAlias() {
-        return tableAlias;
-    }
-
-    public void setTableAlias(String tableAlias) {
-        this.tableAlias = tableAlias;
-    }
-
-    public boolean isHidden() {
-        return isHidden;
-    }
-
-    public void setHidden(boolean hidden) {
-        isHidden = hidden;
-    }
-
-    public String getColumnAlias() {
-        return columnAlias;
-    }
-
-    public void setColumnAlias(String columnAlias) {
-        this.columnAlias = columnAlias;
-    }
-
-    public String getColumnName() {
-        return columnName;
-    }
-
-    public void setColumnName(String columnName) {
-        this.columnName = columnName;
-    }
-
-    public String getColumnType() {
-        return columnType;
-    }
-
-    public void setColumnType(String columnType) {
-        this.columnType = columnType;
-    }
-
-    public boolean isComputedColumn() {
-        return isComputedColumn;
-    }
-
-    public void setComputedColumn(boolean computedColumn) {
-        isComputedColumn = computedColumn;
+    public boolean isDimension() {
+        return columnType.equalsIgnoreCase("nominal");
     }
 }

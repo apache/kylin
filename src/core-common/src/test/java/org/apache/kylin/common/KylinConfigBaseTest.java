@@ -627,9 +627,11 @@ class KylinConfigBaseTest {
 
         map.put("getJobDataLoadEmptyNotificationEnabled",
                 new PropertiesEntity("kylin.job.notification-on-empty-data-load", "false", false));
+        map.put("getJobNotificationStates",
+                new PropertiesEntity("kylin.job.notification-enable-states", "", new String[0]));
 
-        map.put("getJobErrorNotificationEnabled",
-                new PropertiesEntity("kylin.job.notification-on-job-error", "false", false));
+        map.put("getJobMetadataPersistNotificationEnabled",
+                new PropertiesEntity("kylin.job.notification-on-metadata-persist", "false", false));
 
         map.put("getStorageResourceSurvivalTimeThreshold",
                 new PropertiesEntity("kylin.storage.resource-survival-time-threshold", "7d", 7L * 24 * 60 * 60 * 1000));
@@ -899,7 +901,7 @@ class KylinConfigBaseTest {
         map.put("isSkipBasicAuthorization",
                 new PropertiesEntity("kap.authorization.skip-basic-authorization", "false", false));
         map.put("getMetricsQuerySlaSeconds",
-                new PropertiesEntity("kylin.metrics.query.sla.seconds", "1,3,a,15,60", new long[] { 3, 15, 60 }));
+                new PropertiesEntity("kylin.metrics.query.sla.seconds", "1,3,15,60", new long[] { 1, 3, 15, 60 }));
         map.put("getMetricsJobSlaMinutes",
                 new PropertiesEntity("kylin.metrics.job.sla.minutes", "1,30,60,300", new long[] { 1, 30, 60, 300 }));
         map.put("isMetadataKeyCaseInSensitiveEnabled",
@@ -982,9 +984,9 @@ class KylinConfigBaseTest {
     @Test
     void testGetNonCustomProjectConfigs() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        assertEquals(19, config.getNonCustomProjectConfigs().size());
-        config.setProperty("kylin.server.non-custom-project-configs", "kylin.job.retry");
         assertEquals(20, config.getNonCustomProjectConfigs().size());
+        config.setProperty("kylin.server.non-custom-project-configs", "kylin.job.retry");
+        assertEquals(21, config.getNonCustomProjectConfigs().size());
     }
 
     @Test
@@ -1191,6 +1193,7 @@ class KylinConfigBaseTest {
     @Test
     void testBuildJobProfilingEnabled() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.engine.async-profiler-enabled", "false");
         assertFalse(config.buildJobProfilingEnabled());
         config.setProperty("kylin.engine.async-profiler-enabled", "true");
         assertTrue(config.buildJobProfilingEnabled());
@@ -1258,6 +1261,7 @@ class KylinConfigBaseTest {
     @Test
     void testIsHdfsMetricsPeriodicCalculationEnabled() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.metrics.hdfs-periodic-calculation-enabled", "false");
         assertFalse(config.isHdfsMetricsPeriodicCalculationEnabled());
         config.setProperty("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
         assertTrue(config.isHdfsMetricsPeriodicCalculationEnabled());
@@ -1358,6 +1362,43 @@ class KylinConfigBaseTest {
                 new Path(config.getWritingClusterWorkingDir(flatTableDirSuffix)));
         // Reset to prevent impacting other tests
         config.setProperty(WRITING_CLUSTER_WORKING_DIR, "");
+    }
+
+    @Test
+    void testGetEpochRenewTimeoutRate() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        Assertions.assertEquals(0.8, config.getEpochRenewTimeoutRate());
+        config.setProperty("kylin.server.leader-race.heart-beat-timeout-rate", "0.0");
+        Assertions.assertEquals(0.0, config.getEpochRenewTimeoutRate());
+        config.setProperty("kylin.server.leader-race.heart-beat-timeout-rate", "0");
+        Assertions.assertEquals(0.0, config.getEpochRenewTimeoutRate());
+        config.setProperty("kylin.server.leader-race.heart-beat-timeout-rate", "1");
+        Assertions.assertEquals(1.0, config.getEpochRenewTimeoutRate());
+    }
+
+    @Test
+    void testGetSubstitutor() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        val sub1 = config.getSubstitutor();
+        val sub2 = config.getSubstitutor();
+        Assertions.assertSame(sub1, sub2);
+    }
+
+    @Test
+    void testIsBuildSegmentOverlapEnabled() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.build.segment-overlap-enabled", "false");
+        assertFalse(config.isBuildSegmentOverlapEnabled());
+        config.setProperty("kylin.build.segment-overlap-enabled", "true");
+        assertTrue(config.isBuildSegmentOverlapEnabled());
+    }
+
+    @Test
+    void testIsQuotaStorageEnabled() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertFalse(config.isStorageQuotaEnabled());
+        config.setProperty("kylin.storage.check-quota-enabled", "true");
+        assertTrue(config.isStorageQuotaEnabled());
     }
 }
 

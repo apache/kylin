@@ -1,0 +1,18 @@
+{
+  "uuid" : "2c2a724d-6e23-4d48-b42f-68d5d7f71cf9",
+  "name" : "TEST_COUNT_DISTINCT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "CITY",
+    "datatype" : "string",
+    "index": "T"
+  }, {
+    "id" : "2",
+    "name" : "STRING_ID",
+    "datatype" : "string",
+    "index": "T"
+  } ],
+  "database" : "default",
+  "last_modified" : 0,
+  "source_type" : 9
+}

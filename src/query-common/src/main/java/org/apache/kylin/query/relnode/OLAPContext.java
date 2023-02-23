@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
@@ -40,31 +39,30 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
+import org.apache.kylin.metadata.cube.realization.HybridRealization;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinsGraph;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.query.NativeQueryRealization;
+import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.query.routing.RealizationCheck;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
-import org.apache.kylin.metadata.cube.realization.HybridRealization;
-import org.apache.kylin.metadata.model.ExcludedLookupChecker;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.query.NativeQueryRealization;
-import org.apache.kylin.metadata.query.QueryMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -238,7 +236,9 @@ public class OLAPContext {
 
             final String realizationType;
             Set<String> tableSets = Sets.newHashSet();
-            if (ctx.storageContext.isEmptyLayout()) {
+            if (ctx.storageContext.isEmptyLayout() && ctx.storageContext.isFilterCondAlwaysFalse()) {
+                realizationType = QueryMetrics.FILTER_CONFLICT;
+            } else if (ctx.storageContext.isEmptyLayout()) {
                 realizationType = null;
             } else if (ctx.storageContext.isUseSnapshot()) {
                 realizationType = QueryMetrics.TABLE_SNAPSHOT;
@@ -292,7 +292,8 @@ public class OLAPContext {
                 realizationType, ctx.storageContext.isPartialMatchModel(), snapshots);
         realization.setSecondStorage(
                 QueryContext.current().getSecondStorageUsageMap().getOrDefault(realization.getLayoutId(), false));
-        realization.setRecommendSecondStorage(recommendSecondStorage(ctx.realization.getProject(), modelId, realizationType));
+        realization.setRecommendSecondStorage(
+                recommendSecondStorage(ctx.realization.getProject(), modelId, realizationType));
         return realization;
     }
 
@@ -539,24 +540,6 @@ public class OLAPContext {
 
     public RexInputRef createUniqueInputRefContextTables(OLAPTableScan table, int columnIdx) {
         return createUniqueInputRefAmongTables(table, columnIdx, allTableScans);
-    }
-
-    public Map<String, TblColRef> collectFKAsDimensionMap(ExcludedLookupChecker checker) {
-        Map<String, TblColRef> fKAsDimensionMap = Maps.newHashMap();
-        Set<String> usingExcludedLookupTables = checker.getUsedExcludedLookupTable(this.allColumns);
-        this.joins.forEach(join -> {
-            for (int i = 0; i < join.getForeignKeyColumns().length; i++) {
-                TblColRef foreignKeyColumn = join.getForeignKeyColumns()[i];
-                String derivedTable = join.getPrimaryKeyColumns()[i].getTableWithSchema();
-                if (usingExcludedLookupTables.contains(derivedTable)
-                        && !usingExcludedLookupTables.contains(foreignKeyColumn.getTableWithSchema())
-                        && !checker.getExcludedLookups().contains(foreignKeyColumn.getTableWithSchema())) {
-                    fKAsDimensionMap.putIfAbsent(foreignKeyColumn.getCanonicalName(), foreignKeyColumn);
-                }
-            }
-        });
-
-        return fKAsDimensionMap;
     }
 
     public interface IAccessController {

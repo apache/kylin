@@ -35,6 +35,9 @@ import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableParams;
@@ -42,11 +45,6 @@ import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
 import org.apache.kylin.job.manager.JobManager;
 import org.apache.kylin.job.model.JobParam;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.ExecutableUtils;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
@@ -60,6 +58,8 @@ import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.PartitionStatusEnum;
 import org.apache.kylin.metadata.job.JobBucket;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -353,17 +353,18 @@ public class JobManagerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testQuotaLimitReached() {
-        thrown.expect(KylinException.class);
         NDefaultScheduler defaultScheduler = NDefaultScheduler.getInstance(PROJECT);
-        defaultScheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
+        defaultScheduler.init(new JobEngineConfig(getTestConfig()));
         defaultScheduler.getContext().setReachQuotaLimit(true);
-        JobParam param = new JobParam(Sets.newHashSet(), null, null, "ADMIn", Sets.newHashSet(), null);
-        try {
-            jobManager.addJob(param);
-        } finally {
-            defaultScheduler.forceShutdown();
-            defaultScheduler.getContext().setReachQuotaLimit(false);
-        }
+        Assert.assertThrows(KylinException.class, () -> {
+            try {
+                JobManager.checkStorageQuota(PROJECT);
+            } finally {
+                defaultScheduler.forceShutdown();
+                defaultScheduler.getContext().setReachQuotaLimit(false);
+            }
+        });
+
     }
 
     @Test

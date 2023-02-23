@@ -64,6 +64,10 @@ public class DateFormat {
     public static final String DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS = "yyyy-MM-dd HH:mm:ss.SSS";
     public static final String DEFAULT_DATETIME_PATTERN_WITH_TIMEZONE = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
+    private static final int NANOS_TIMESTAMP_LENGTH = 16;
+    private static final int MILLIS_TIMESTAMP_LENGTH = 13;
+    private static final int SECONDS_TIMESTAMP_LENGTH = 10;
+
     static final private Map<String, FastDateFormat> formatMap = new ConcurrentHashMap<String, FastDateFormat>();
 
     private static final Map<String, String> dateFormatRegex = Maps.newHashMap();
@@ -159,7 +163,6 @@ public class DateFormat {
         return getDateFormat(pattern, timeZone).format(new Date(millis));
     }
 
-    @VisibleForTesting
     public static String formatToTimeWithoutMilliStr(long millis) {
         return formatToTimeStr(millis, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
     }
@@ -210,13 +213,26 @@ public class DateFormat {
                 return stringToDate(str, regexToPattern.getValue()).getTime();
         }
 
-        // try parse it as days to epoch
         try {
-            long daysToEpoch = Long.parseLong(str);
-            return daysToEpoch * 24 * 60 * 60 * 1000;
+            long strToDigit = Long.parseLong(str);
+            if (strToDigit > 0) {
+                if (str.length() == NANOS_TIMESTAMP_LENGTH) {
+                    return strToDigit / 1000;
+                } else if (str.length() == MILLIS_TIMESTAMP_LENGTH) {
+                    return strToDigit;
+                } else if (str.length() == SECONDS_TIMESTAMP_LENGTH) {
+                    return strToDigit * 1000;
+                } else {
+                    // try parse it as days to epoch
+                    return strToDigit * 24 * 60 * 60 * 1000;
+                }
+            }
         } catch (NumberFormatException e) {
+            throw new KylinException(INVALID_TIME_PARTITION_COLUMN,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getInvalidTimeFormat(), str), e);
         }
-        throw new KylinException(INVALID_TIME_PARTITION_COLUMN, MsgPicker.getMsg().getInvalidTimeFormat());
+        throw new KylinException(INVALID_TIME_PARTITION_COLUMN,
+                String.format(Locale.ROOT, MsgPicker.getMsg().getInvalidTimeFormat(), str));
     }
 
     public static boolean isSupportedDateFormat(String dateStr) {
@@ -244,7 +260,8 @@ public class DateFormat {
             if (sampleData.matches(patternMap.getKey()))
                 return patternMap.getValue();
         }
-        throw new KylinException(INVALID_TIME_PARTITION_COLUMN, MsgPicker.getMsg().getInvalidTimeFormat());
+        throw new KylinException(INVALID_TIME_PARTITION_COLUMN,
+                String.format(Locale.ROOT, MsgPicker.getMsg().getInvalidTimeFormat(), sampleData));
     }
 
     /**
@@ -291,4 +308,5 @@ public class DateFormat {
                 || DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS.equals(format)
                 || DEFAULT_DATETIME_PATTERN_WITH_TIMEZONE.equals(format));
     }
+
 }

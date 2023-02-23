@@ -20,9 +20,10 @@ package org.apache.kylin.query.util;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.kylin.query.IQueryTransformer;
 import org.apache.kylin.source.adhocquery.IPushDownConverter;
 
-public class PowerBIConverter implements KapQueryUtil.IQueryTransformer, IPushDownConverter {
+public class PowerBIConverter implements IQueryTransformer, IPushDownConverter {
 
     private static final String S0 = "\\s*";
     private static final String SM = "\\s+";
@@ -40,8 +41,7 @@ public class PowerBIConverter implements KapQueryUtil.IQueryTransformer, IPushDo
             if (!m.find())
                 break;
 
-            sql = sql.substring(0, m.start()) + " SUM(" + m.group(1).trim() + ")"
-                    + sql.substring(m.end(), sql.length());
+            sql = sql.substring(0, m.start()) + " SUM(" + m.group(1).trim() + ")" + sql.substring(m.end());
         }
         return sql;
     }

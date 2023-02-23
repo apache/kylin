@@ -1,1 +1,0 @@
-`sha1(CAST(Spark AS BINARY))` STRING

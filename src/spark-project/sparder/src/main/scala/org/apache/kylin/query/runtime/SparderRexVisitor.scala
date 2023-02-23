@@ -31,9 +31,10 @@ import org.apache.calcite.sql.fun.SqlDatetimeSubtractionOperator
 import org.apache.calcite.sql.fun.SqlDateTimeDivisionOperator
 import org.apache.kylin.common.util.DateFormat
 import org.apache.spark.sql.KapFunctions._
+import org.apache.spark.sql.catalyst.expressions.Literal
 import org.apache.spark.sql.catalyst.util.DateTimeUtils._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{DateType, LongType, TimestampType}
+import org.apache.spark.sql.types.{DataTypes, DateType, LongType, TimestampType}
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.unsafe.types.UTF8String
@@ -80,6 +81,15 @@ class SparderRexVisitor(val inputFieldNames: Array[String],
       children += childFilter
     }
 
+    def getColumns: ListBuffer[Column] = {
+      children.map {
+        case null => new Column(Literal(null, DataTypes.BooleanType))
+        case child =>
+          assert(child.isInstanceOf[Column])
+          child.asInstanceOf[Column]
+      }
+    }
+
     def getOperands: (Column, Column) = {
       var left = k_lit(children.head)
       var right = k_lit(children.last)
@@ -112,13 +122,11 @@ class SparderRexVisitor(val inputFieldNames: Array[String],
     val op = call.getOperator
     op.getKind match {
       case AND =>
-        children.foreach(filter => if (filter != null) assert(filter.isInstanceOf[Column]))
-        children.map(_.asInstanceOf[Column]).reduce {
+        getColumns.reduce {
           _.and(_)
         }
       case OR =>
-        children.foreach(filter => if (filter != null) assert(filter.isInstanceOf[Column]))
-        children.map(_.asInstanceOf[Column]).reduce {
+        getColumns.reduce {
           _.or(_)
         }
 
@@ -270,6 +278,9 @@ class SparderRexVisitor(val inputFieldNames: Array[String],
           divisionResult = divisionResult.cast(LongType)
         }
         divisionResult
+      case COALESCE =>
+        assert(children.size == 2)
+        coalesce(children.apply(0).asInstanceOf[Column], k_lit(children.apply(1)))
       case _ =>
 
         ExpressionConverter.convert(call.getType.getSqlTypeName, call.`type`, op.getKind, op.getName, children)

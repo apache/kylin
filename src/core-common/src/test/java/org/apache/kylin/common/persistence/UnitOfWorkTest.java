@@ -25,7 +25,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
-import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.junit.Assert;
@@ -173,12 +172,12 @@ public class UnitOfWorkTest {
             UnitOfWork.doInTransactionWithRetry(UnitOfWorkParams.builder().unitName(UnitOfWork.GLOBAL_UNIT)
                     .readonly(true).maxRetry(1).processor(() -> {
                         synchronized (condition) {
-                            Unsafe.notify(condition);
+                            condition.notify();
                         }
                         boolean interrupted = false;
                         while (!interrupted && !Thread.interrupted() && !stop.get()) {
                             synchronized (condition) {
-                                Unsafe.notify(condition);
+                                condition.notify();
                             }
                             try {
                                 Thread.sleep(1000);
@@ -192,7 +191,7 @@ public class UnitOfWorkTest {
         readLockHelder.start();
         synchronized (condition) {
             try {
-                Unsafe.wait(condition);
+                condition.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -246,12 +245,12 @@ public class UnitOfWorkTest {
                         resourceStoreInTransaction.checkAndPutResource("/_global/path/to/res1",
                                 ByteSource.wrap("{}".getBytes(Charset.defaultCharset())), -1L);
                         synchronized (condition) {
-                            Unsafe.notify(condition);
+                            condition.notify();
                         }
                         boolean interrupted = false;
                         while (!interrupted && !Thread.interrupted() && !stop.get()) {
                             synchronized (condition) {
-                                Unsafe.notify(condition);
+                                condition.notify();
                             }
                             try {
                                 Thread.sleep(1000);
@@ -260,7 +259,7 @@ public class UnitOfWorkTest {
                             }
                         }
                         synchronized (condition) {
-                            Unsafe.notify(condition);
+                            condition.notify();
                         }
                         return 0;
                     }).build());
@@ -268,7 +267,7 @@ public class UnitOfWorkTest {
         writeLockHelder.start();
         synchronized (condition) {
             try {
-                Unsafe.wait(condition);
+                condition.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

@@ -43,7 +43,8 @@ public class ProjectConfigResponse {
     private String defaultDatabase;
     @JsonProperty("semi_automatic_mode")
     private boolean semiAutomaticMode;
-
+    @JsonProperty("table_exclusion_enabled")
+    private boolean tableExclusionEnabled;
     @JsonProperty("storage_quota_size")
     private long storageQuotaSize;
 
@@ -88,8 +89,12 @@ public class ProjectConfigResponse {
     @JsonProperty("retention_range")
     private RetentionRange retentionRange;
 
-    @JsonProperty("job_error_notification_enabled")
-    private boolean jobErrorNotificationEnabled;
+    @JsonProperty("job_notification_states")
+    private List<String> jobNotificationStates;
+
+    @JsonProperty("metadata_persist_notification_enabled")
+    private boolean metadataPersistNotificationEnabled;
+
     @JsonProperty("data_load_empty_notification_enabled")
     private boolean dataLoadEmptyNotificationEnabled;
     @JsonProperty("job_notification_emails")
@@ -141,17 +146,17 @@ public class ProjectConfigResponse {
 
     public void setFrequencyTimeWindow(int frequencyTimeWindow) {
         switch (frequencyTimeWindow) {
-            case 1:
-                this.frequencyTimeWindow = "DAY";
-                break;
-            case 7:
-                this.frequencyTimeWindow = "WEEK";
-                break;
-            case 30:
-                this.frequencyTimeWindow = "MONTH";
-                break;
-            default:
-                break;
+        case 1:
+            this.frequencyTimeWindow = "DAY";
+            break;
+        case 7:
+            this.frequencyTimeWindow = "WEEK";
+            break;
+        case 30:
+            this.frequencyTimeWindow = "MONTH";
+            break;
+        default:
+            break;
         }
 
     }

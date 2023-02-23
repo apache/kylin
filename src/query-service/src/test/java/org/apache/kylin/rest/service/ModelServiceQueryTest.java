@@ -36,7 +36,7 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.util.ExpandableMeasureUtil;
 import org.apache.kylin.metadata.query.QueryTimesResponse;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
-import org.apache.kylin.query.util.KapQueryUtil;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.config.initialize.ModelBrokenListener;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
@@ -114,8 +114,8 @@ public class ModelServiceQueryTest extends SourceTestCase {
         ReflectionTestUtils.setField(semanticService, "userGroupService", userGroupService);
         ReflectionTestUtils.setField(semanticService, "expandableMeasureUtil",
                 new ExpandableMeasureUtil((model, ccDesc) -> {
-                    String ccExpression = KapQueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
-                            AclPermissionUtil.prepareQueryContextACLInfo(model.getProject(),
+                    String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
+                            AclPermissionUtil.createAclInfo(model.getProject(),
                                     semanticService.getCurrentUserGroups()));
                     ccDesc.setInnerExpression(ccExpression);
                     ComputedColumnEvalUtil.evaluateExprAndType(model, ccDesc);
@@ -151,7 +151,6 @@ public class ModelServiceQueryTest extends SourceTestCase {
         cleanupTestMetadata();
     }
 
-//    @Ignore("TODO: re-run to check.")
     @Test
     public void testQueryModels() {
         String project = "streaming_test";
@@ -233,7 +232,6 @@ public class ModelServiceQueryTest extends SourceTestCase {
         Assert.assertEquals(ModelStatusToDisplayEnum.BROKEN, nDataModelResponse.getStatus());
     }
 
-//    @Ignore("TODO: re-run to check.")
     @Test
     public void testGetFusionModel() {
         String project = "streaming_test";

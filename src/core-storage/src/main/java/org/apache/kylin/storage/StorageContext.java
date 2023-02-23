@@ -54,6 +54,10 @@ public class StorageContext {
     @Setter
     private NLayoutCandidate candidate;
 
+    @Getter
+    @Setter
+    private boolean isFilterCondAlwaysFalse;
+
     public NLayoutCandidate getCandidate() {
         if (isBatchCandidateEmpty() && !isStreamCandidateEmpty()) {
             return streamingCandidate;

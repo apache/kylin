@@ -38,7 +38,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.zookeeper.discovery.ZookeeperInstance;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.event.ContextClosedEvent;
@@ -60,7 +59,7 @@ import lombok.val;
 @EnableDiscoveryClient
 @LoadBalancerClient(name = "spring-boot-provider", configuration = org.apache.kylin.rest.LoadBalanced.class)
 @EnableSpringHttpSession
-public class BootstrapServer implements ApplicationListener<ApplicationEvent> {
+public class BootstrapServer implements ISmartApplicationListenerForSystem {
 
     private static final Logger logger = LoggerFactory.getLogger(BootstrapServer.class);
 
@@ -135,4 +134,10 @@ public class BootstrapServer implements ApplicationListener<ApplicationEvent> {
             EpochManager.getInstance().releaseOwnedEpochs();
         }
     }
+
+    @Override
+    public int getOrder() {
+        return LOWEST_PRECEDENCE;
+    }
+
 }

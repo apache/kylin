@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.kyligence.kap.secondstorage.ColumnMapping;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -166,7 +167,7 @@ public class ClickHouseQueryOperator implements QueryOperator {
                 QueryMetrics.SOURCE_RESULT_COUNT, -1L);
     }
 
-    public void modifyColumnByCardinality(String database, String destTableName) {
+    public void modifyColumnByCardinality(String database, String destTableName, Set<Integer> secondaryIndex) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         List<NodeGroup> nodeGroups = SecondStorageUtil.listNodeGroup(config, project);
         Set<String> nodes = nodeGroups.stream()
@@ -178,7 +179,10 @@ public class ClickHouseQueryOperator implements QueryOperator {
             return;
 
         ProjectInstance projectInstance = NProjectManager.getInstance(config).getProject(project);
-        List<ClickHouseSystemQuery.DescTable> modifyColumns = getFilterDescTable(maxRowsNode, database, destTableName, projectInstance.getConfig());
+        val tableColumns = getFilterDescTable(maxRowsNode, database, destTableName, projectInstance.getConfig());
+        val modifyColumns = tableColumns.stream()
+                .filter(col -> !secondaryIndex.contains(Integer.valueOf(ColumnMapping.secondStorageColumnToKapColumn(col.getColumn()))))
+                .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(modifyColumns))
             return;
 

@@ -91,6 +91,7 @@ public class HepUtils {
             KapAggFilterTransposeRule.AGG_FILTER_JOIN,
             KapAggJoinTransposeRule.INSTANCE_JOIN_RIGHT_AGG,
             KapCountDistinctJoinRule.INSTANCE_COUNT_DISTINCT_JOIN_ONESIDEAGG,
+            KapCountDistinctJoinRule.INSTANCE_COUNT_DISTINCT_AGG_PROJECT_JOIN,
             KapProjectRule.INSTANCE,
             KapAggregateRule.INSTANCE,
             KapJoinRule.INSTANCE
@@ -123,8 +124,8 @@ public class HepUtils {
         return runRuleCollection(rel, ruleCollection, true);
     }
 
-    public static RelNode runRuleCollection(
-            RelNode rel, Collection<RelOptRule> ruleCollection, boolean alwaysGenerateNewRelNodes) {
+    public static RelNode runRuleCollection(RelNode rel, Collection<RelOptRule> ruleCollection,
+            boolean alwaysGenerateNewRelNodes) {
         HepProgram program = HepProgram.builder().addRuleCollection(ruleCollection).build();
         HepPlanner planner = new HepPlanner(program, null, true, null, RelOptCostImpl.FACTORY);
         planner.setRoot(rel);

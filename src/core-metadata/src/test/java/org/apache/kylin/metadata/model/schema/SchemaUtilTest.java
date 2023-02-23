@@ -40,8 +40,10 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.metadata.model.ModelJoinRelationTypeEnum;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.metadata.model.ModelJoinRelationTypeEnum;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,6 +51,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.kyligence.kap.guava20.shaded.common.collect.Sets;
@@ -555,6 +558,17 @@ public class SchemaUtilTest extends NLocalFileMetadataTestCase {
                         && schemaChange.getConflictReason()
                                 .getReason() == SchemaChangeCheckResult.UN_IMPORT_REASON.MISSING_TABLE
                         && schemaChange.getConflictReason().getConflictItem().equals("SSB.CUSTOMER_NEW")));
+
+        NTableMetadataManager manager = NTableMetadataManager.getInstance(getTestConfig(), getTargetProject());
+        TableDesc tableDesc = manager.getTableDesc("SSB.CUSTOMER");
+        tableDesc.setName("CUSTOMER_NEW");
+        tableDesc.init(getTargetProject());
+        val diff = SchemaUtil.diff(getTargetProject(), KylinConfig.getInstanceFromEnv(),
+                importModelContext.getTargetKylinConfig(), Lists.newArrayList(tableDesc));
+        val checkResult = ModelImportChecker.check(diff, importModelContext);
+        Assert.assertFalse(checkResult.getModels().isEmpty());
+        val change = checkResult.getModels().get(getTargetModel());
+        Assert.assertTrue(change.getMissingItems().isEmpty());
     }
 
     @Test

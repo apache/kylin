@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.kylin.engine.spark.job.step.NStageForBuild;
@@ -60,7 +61,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -204,6 +207,7 @@ public class StageTest extends NLocalFileMetadataTestCase {
         manager.addJob(executable);
 
         manager.updateStageStatus(logicStep1.getId(), segmentId, ExecutableState.RUNNING, null, null, false);
+        manager.saveUpdatedJob();
 
         manager.updateStagePaused(executable);
 
@@ -256,6 +260,7 @@ public class StageTest extends NLocalFileMetadataTestCase {
 
         manager.updateJobOutput(executable.getId(), ExecutableState.RUNNING, null, null, null);
         manager.updateStageStatus(logicStep1.getId(), segmentId, ExecutableState.RUNNING, null, null, false);
+        manager.saveUpdatedJob();
         manager.updateJobOutput(executable.getId(), ExecutableState.SUCCEED, null, null, null);
         manager.makeStageSuccess(sparkExecutable.getId());
 
@@ -295,12 +300,14 @@ public class StageTest extends NLocalFileMetadataTestCase {
         manager.addJob(executable);
 
         manager.updateStageStatus(logicStep1.getId(), segmentId, ExecutableState.SUCCEED, null, errMsg);
+        manager.saveUpdatedJob();
         var output1 = manager.getOutput(logicStep1.getId(), segmentId);
         Assert.assertEquals(ExecutableState.SUCCEED, output1.getState());
         Assert.assertEquals(output1.getShortErrMsg(), errMsg);
         Assert.assertTrue(MapUtils.isEmpty(output1.getExtra()));
 
         manager.updateStageStatus(logicStep1.getId(), null, ExecutableState.ERROR, null, errMsg);
+        manager.saveUpdatedJob();
         output1 = manager.getOutput(logicStep1.getId(), segmentId);
         Assert.assertEquals(ExecutableState.SUCCEED, output1.getState());
         Assert.assertEquals(output1.getShortErrMsg(), errMsg);
@@ -314,6 +321,45 @@ public class StageTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(ExecutableState.READY, outputLogicStep2.getState());
         Assert.assertNull(outputLogicStep2.getShortErrMsg());
         Assert.assertTrue(MapUtils.isEmpty(outputLogicStep2.getExtra()));
+    }
+
+    @Test
+    public void testUpdateStageStatusNoSaveCache() {
+        val segmentId = RandomUtil.randomUUIDStr();
+        val segmentId2 = RandomUtil.randomUUIDStr();
+
+        val manager = NExecutableManager.getInstance(jobService.getConfig(), getProject());
+        val executable = new SucceedChainedTestExecutable();
+
+        executable.setId(RandomUtil.randomUUIDStr());
+
+        val sparkExecutable = new NSparkExecutable();
+        sparkExecutable.setParam(NBatchConstants.P_SEGMENT_IDS, segmentId + "," + segmentId2);
+        sparkExecutable.setId(RandomUtil.randomUUIDStr());
+        executable.addTask(sparkExecutable);
+
+        val build1 = new NStageForBuild();
+        val build2 = new NStageForBuild();
+        val build3 = new NStageForBuild();
+        sparkExecutable.addStage(build1);
+        sparkExecutable.addStage(build2);
+        sparkExecutable.addStage(build3);
+        sparkExecutable.setStageMap();
+
+        manager.addJob(executable);
+
+        List<AbstractExecutable> tasks = executable.getTasks();
+        tasks.forEach(task -> {
+            final Map<String, List<StageBase>> tasksMap = ((ChainedStageExecutable) task).getStagesMap();
+            for (Map.Entry<String, List<StageBase>> entry : tasksMap.entrySet()) {
+                Optional.ofNullable(entry.getValue()).orElse(Lists.newArrayList())//
+                        .forEach(stage -> //
+                manager.updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.DISCARDED, null, null));
+            }
+            manager.saveUpdatedJob();
+        });
+
+        Assert.assertEquals(1, manager.getAllJobs().get(0).getMvcc());
     }
 
     @Test
@@ -338,6 +384,12 @@ public class StageTest extends NLocalFileMetadataTestCase {
         flag = manager.setStageOutput(jobOutput, taskOrJobId, newStatus, updateInfo, failedMsg, isRestart);
         Assert.assertFalse(flag);
         Assert.assertEquals("SKIP", jobOutput.getStatus());
+
+        jobOutput.setStatus(ExecutableState.DISCARDED.toString());
+        newStatus = ExecutableState.RUNNING;
+        flag = manager.setStageOutput(jobOutput, taskOrJobId, newStatus, updateInfo, failedMsg, isRestart);
+        Assert.assertFalse(flag);
+        Assert.assertEquals("DISCARDED", jobOutput.getStatus());
 
         jobOutput.setStatus(ExecutableState.READY.toString());
         newStatus = ExecutableState.SUCCEED;
@@ -445,6 +497,7 @@ public class StageTest extends NLocalFileMetadataTestCase {
         manager.updateStageStatus(stage1.getId(), segmentId, ExecutableState.RUNNING, null, "test output");
         manager.updateStageStatus(stage2.getId(), segmentId, ExecutableState.RUNNING, null, "test output");
         manager.updateStageStatus(stage3.getId(), segmentId, ExecutableState.RUNNING, null, "test output");
+        manager.saveUpdatedJob();
 
         manager.makeStageError(executable.getId());
         var job = manager.getJob(executable.getId());

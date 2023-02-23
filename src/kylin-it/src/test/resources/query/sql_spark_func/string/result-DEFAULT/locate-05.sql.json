@@ -1,5 +1,0 @@
-{"sum(locate(dab, rpad(lpad(LSTG_FORMAT_NAME, (CAST(CAST(15 AS TINYINT) AS INT) - 1), abc,b,c,d), 25, abc,b,c,d), 1))":45793}
-{"sum(locate(dab, rpad(lpad(LSTG_FORMAT_NAME, (CAST(CAST(15 AS TINYINT) AS INT) - 1), abc,b,c,d), 25, abc,b,c,d), 1))":46667}
-{"sum(locate(dab, rpad(lpad(LSTG_FORMAT_NAME, (CAST(CAST(15 AS TINYINT) AS INT) - 1), abc,b,c,d), 25, abc,b,c,d), 1))":46851}
-{"sum(locate(dab, rpad(lpad(LSTG_FORMAT_NAME, (CAST(CAST(15 AS TINYINT) AS INT) - 1), abc,b,c,d), 25, abc,b,c,d), 1))":45517}
-{"sum(locate(dab, rpad(lpad(LSTG_FORMAT_NAME, (CAST(CAST(15 AS TINYINT) AS INT) - 1), abc,b,c,d), 25, abc,b,c,d), 1))":45172}

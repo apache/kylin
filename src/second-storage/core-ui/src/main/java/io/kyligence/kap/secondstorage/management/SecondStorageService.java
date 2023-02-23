@@ -1158,18 +1158,23 @@ public class SecondStorageService extends BasicService implements SecondStorageU
         SecondStorageUtil.validateProjectLock(project, Collections.singletonList(LockTypeEnum.LOAD.name()));
         List<AbstractExecutable> jobs = getRelationJobsWithoutFinish(project, modelId);
         if (!jobs.isEmpty()) {
-            throw new KylinException(JobErrorCode.SECOND_STORAGE_PROJECT_JOB_EXISTS,
-                    String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageProjectJobExists(), project));
+            throw new KylinException(JobErrorCode.SECOND_STORAGE_JOB_EXISTS,
+                    MsgPicker.getMsg().getSecondStorageConcurrentOperate());
         }
         jobs = getJobs(project, modelId, Sets.newHashSet(ExecutableState.ERROR),
                 Sets.newHashSet(JobTypeEnum.SECOND_STORAGE_REFRESH_SECONDARY_INDEXES));
         if (!jobs.isEmpty()) {
-            throw new KylinException(JobErrorCode.SECOND_STORAGE_PROJECT_JOB_EXISTS,
-                    String.format(Locale.ROOT, MsgPicker.getMsg().getSecondStorageProjectJobExists(), project));
+            throw new KylinException(JobErrorCode.SECOND_STORAGE_JOB_EXISTS,
+                    MsgPicker.getMsg().getSecondStorageConcurrentOperate());
+        }
+        if (SecondStorageLockUtils.containsKey(modelId)) {
+            throw new KylinException(JobErrorCode.SECOND_STORAGE_JOB_EXISTS,
+                    MsgPicker.getMsg().getSecondStorageConcurrentOperate());
         }
     }
 
     public void modifyColumn(String project, String model, String column, String datatype) {
+        isProjectAdmin(project);
         logger.info("Start to modify second storage low cardinality on model {}.", model);
         if (!SecondStorageUtil.isProjectEnable(project) || !SecondStorageUtil.isModelEnable(project, model)) {
             throw new KylinException(INVALID_PARAMETER, String.format("The model does not have tiered storage enabled on project %s.", project));
@@ -1191,6 +1196,12 @@ public class SecondStorageService extends BasicService implements SecondStorageU
             });
             if (StringUtils.isEmpty(colPrefix.get()))
                 throw new KylinException(INVALID_PARAMETER, String.format("There is no column %s in model %s", column, df.getModel().getAlias()));
+
+            val tablePlanManager = SecondStorageUtil.tablePlanManager(config, project);
+            TablePlan tablePlan = tablePlanManager.get().get(model).get();
+            TableEntity tableEntity = tablePlan.getEntity(SecondStorageUtil.getBaseIndex(df).getId()).orElse(null);
+            if (tableEntity.getSecondaryIndexColumns().contains(Integer.valueOf(ColumnMapping.secondStorageColumnToKapColumn(colPrefix.get()))))
+                throw new KylinException(INVALID_PARAMETER, String.format("The column %s is Secondary Index Column.", column));
 
             val destTableName = NameUtil.getTable(df, layout.getId());
             queryOperator.modifyColumnByCardinality(database, destTableName, colPrefix.get(), datatype);

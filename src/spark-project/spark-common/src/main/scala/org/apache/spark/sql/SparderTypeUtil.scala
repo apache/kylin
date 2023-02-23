@@ -18,11 +18,6 @@
 
 package org.apache.spark.sql.util
 
-import java.lang.{Boolean => JBoolean, Byte => JByte, Double => JDouble, Float => JFloat, Long => JLong, Short => JShort}
-import java.math.BigDecimal
-import java.sql.{Date, Timestamp, Types}
-import java.time.ZoneId
-import java.util.{GregorianCalendar, Locale, TimeZone}
 import org.apache.calcite.avatica.util.TimeUnitRange
 import org.apache.calcite.rel.`type`.RelDataType
 import org.apache.calcite.rex.RexLiteral
@@ -33,7 +28,7 @@ import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.catalyst.expressions.{Base64, Cast}
+import org.apache.spark.sql.catalyst.expressions.Cast
 import org.apache.spark.sql.catalyst.parser.ParserUtils
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.functions._
@@ -41,6 +36,11 @@ import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.springframework.util.Base64Utils
 
+import java.lang.{Boolean => JBoolean, Byte => JByte, Double => JDouble, Float => JFloat, Long => JLong, Short => JShort}
+import java.math.BigDecimal
+import java.sql.{Date, Timestamp, Types}
+import java.time.ZoneId
+import java.util.{GregorianCalendar, Locale, TimeZone}
 import scala.collection.{immutable, mutable}
 
 object SparderTypeUtil extends Logging {
@@ -117,6 +117,7 @@ object SparderTypeUtil extends Logging {
       case tp if tp.startsWith("extendedcolumn") => BinaryType
       case tp if tp.startsWith("percentile") => BinaryType
       case tp if tp.startsWith("raw") => BinaryType
+      case "any" => StringType
       case _ => throw new IllegalArgumentException(dataTp.toString)
     }
   }

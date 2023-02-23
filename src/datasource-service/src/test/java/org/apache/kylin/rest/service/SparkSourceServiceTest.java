@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.test.TestingServer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
@@ -36,9 +37,11 @@ import org.apache.kylin.rest.request.DDLRequest;
 import org.apache.kylin.rest.response.DDLResponse;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.DDLDesc;
+import org.apache.spark.sql.DdlOperation;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.catalyst.TableIdentifier;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -185,13 +188,13 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testDatabaseExists() {
-        Assert.assertEquals(true, sparkSourceService.databaseExists("default"));
+        Assert.assertTrue(sparkSourceService.databaseExists("default"));
     }
 
     @Test
     public void testDropTable() throws AnalysisException {
         sparkSourceService.dropTable("default", "COUNTRY");
-        Assert.assertEquals(false, sparkSourceService.tableExists("default", "COUNTRY"));
+        Assert.assertFalse(sparkSourceService.tableExists("default", "COUNTRY"));
     }
 
     @Test
@@ -202,6 +205,7 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testExportTables() {
+        // hive data source
         String expectedTableStructure = "CREATE EXTERNAL TABLE `default`.`hive_bigints`(   `id` BIGINT) "
                 + "ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe' "
                 + "WITH SERDEPROPERTIES (   'serialization.format' = '1') STORED AS   "
@@ -210,12 +214,26 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
                 + "LOCATION 'file:/tmp/parquet_data' ";
         sparkSourceService.executeSQL(
                 "CREATE EXTERNAL TABLE hive_bigints(id bigint)  STORED AS PARQUET LOCATION '/tmp/parquet_data'");
-
         String actureTableStructure = sparkSourceService.exportTables("default", new String[] { "hive_bigints" })
                 .getTables().get("hive_bigints");
-
         Assert.assertEquals(actureTableStructure.substring(0, actureTableStructure.lastIndexOf("TBLPROPERTIES")),
                 expectedTableStructure);
+        Assert.assertTrue(DdlOperation.isHiveTable("default", "hive_bigints"));
+
+        // spark datasource
+        sparkSourceService.executeSQL(
+                "CREATE EXTERNAL TABLE spark_bigints(id bigint) USING PARQUET LOCATION '/tmp/parquet_data_spark'");
+        Assert.assertFalse(DdlOperation.isHiveTable("default", "spark_bigints"));
+        String sparkDDL = sparkSourceService.exportTables("default", new String[] { "spark_bigints" }).getTables()
+                .get("spark_bigints");
+        Assert.assertFalse(sparkDDL.isEmpty());
+        Assert.assertTrue(StringUtils.containsIgnoreCase(sparkDDL, "USING PARQUET"));
+
+        // view
+        sparkSourceService.executeSQL("CREATE VIEW view_bigints as select id from default.spark_bigints");
+        String viewDDL = DdlOperation.collectDDL(TableIdentifier.apply("view_bigints"),
+                "show create view default.view_bigints");
+        Assert.assertFalse(StringUtils.isEmpty(viewDDL));
     }
 
     @Test
@@ -269,7 +287,7 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testTableExists() throws IOException {
+    public void testTableExists() {
         Assert.assertTrue(sparkSourceService.tableExists("default", "COUNTRY"));
     }
 }

@@ -17,8 +17,12 @@
  */
 package org.apache.kylin.streaming.jobs.impl;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.JOB_START_FAILURE;
+import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PARSER_NAME;
+
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -28,10 +32,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.common.persistence.metadata.HDFSMetadataStore;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.streaming.DataParserInfo;
 import org.apache.kylin.streaming.constants.StreamingConstants;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.streaming.util.ReflectionUtils;
@@ -45,12 +50,22 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import lombok.val;
 
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({ "javax.net.ssl.*", "javax.management.*", "org.apache.hadoop.*", "javax.security.*", "javax.crypto.*",
+        "javax.script.*" })
+@PrepareForTest(StreamingJobLauncher.class)
 public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
-    private static String PROJECT = "streaming_test";
+    private static final String PROJECT = "streaming_test";
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
@@ -172,6 +187,9 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
                 "-Djava.security.krb5.conf=./krb5.conf -Djava.security.auth.login.config=./kafka_jaas.conf");
         val mockup = new MockupSparkLauncher();
         ReflectionUtils.setField(launcher, "launcher", mockup);
+        FileUtils.write(new File(kapConfig.getKafkaJaasConfPath()),
+                "KafkaClient{ org.apache.kafka.common.security.scram.ScramLoginModule required;}",
+                StandardCharsets.UTF_8);
         launcher.startYarnJob();
         Assert.assertNotNull(mockup.sparkConf.get("spark.driver.extraJavaOptions"));
         Assert.assertNotNull(mockup.sparkConf.get("spark.executor.extraJavaOptions"));
@@ -191,14 +209,15 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
             val kapConfig = KapConfig.getInstanceFromEnv();
             config.setProperty("kylin.kafka-jaas.enabled", "true");
             FileUtils.write(new File(kapConfig.getKafkaJaasConfPath()),
-                    "KafkaClient{ org.apache.kafka.common.security.scram.ScramLoginModule required}");
+                    "KafkaClient{ org.apache.kafka.common.security.scram.ScramLoginModule required}",
+                    StandardCharsets.UTF_8);
 
             val mockup = new MockupSparkLauncher();
             ReflectionUtils.setField(launcher, "launcher", mockup);
             launcher.startYarnJob();
             Assert.assertNotNull(mockup.sparkConf.get("spark.kerberos.keytab"));
             Assert.assertNotNull(mockup.sparkConf.get("spark.kerberos.principal"));
-            Assert.assertTrue(mockup.files.contains(kapConfig.getKafkaJaasConfPath()));
+            Assert.assertFalse(mockup.files.contains(kapConfig.getKafkaJaasConfPath()));
         } finally {
             FileUtils.deleteQuietly(new File(KapConfig.getInstanceFromEnv().getKafkaJaasConfPath()));
         }
@@ -217,14 +236,15 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
             launcher.launch();
         } catch (Exception e) {
             Assert.assertTrue(e instanceof KylinException);
-            Assert.assertEquals("KE-010035005", ((KylinException) e).getErrorCode().getCodeString());
+            Assert.assertEquals(JOB_START_FAILURE.toErrorCode().getCodeString(),
+                    ((KylinException) e).getErrorCode().getCodeString());
         }
     }
 
     @Test
     public void testLaunchMergeJobException_Yarn() {
         try {
-            overwriteSystemProp("streaming.local", "fale");
+            overwriteSystemProp("streaming.local", "false");
             val config = getTestConfig();
 
             val modelId = "e78a89dd-847f-4574-8afa-8768b4228b72";
@@ -234,7 +254,8 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
             launcher.launch();
         } catch (Exception e) {
             Assert.assertTrue(e instanceof KylinException);
-            Assert.assertEquals("KE-010035005", ((KylinException) e).getErrorCode().getCodeString());
+            Assert.assertEquals(JOB_START_FAILURE.toErrorCode().getCodeString(),
+                    ((KylinException) e).getErrorCode().getCodeString());
         }
     }
 
@@ -250,7 +271,8 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
             launcher.launch();
         } catch (Exception e) {
             Assert.assertTrue(e instanceof KylinException);
-            Assert.assertEquals("KE-010035005", ((KylinException) e).getErrorCode().getCodeString());
+            Assert.assertEquals(JOB_START_FAILURE.toErrorCode().getCodeString(),
+                    ((KylinException) e).getErrorCode().getCodeString());
         }
     }
 
@@ -267,7 +289,8 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
             launcher.launch();
         } catch (Exception e) {
             Assert.assertTrue(e instanceof KylinException);
-            Assert.assertEquals("KE-010035005", ((KylinException) e).getErrorCode().getCodeString());
+            Assert.assertEquals(JOB_START_FAILURE.toErrorCode().getCodeString(),
+                    ((KylinException) e).getErrorCode().getCodeString());
         }
     }
 
@@ -460,14 +483,57 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(HDFSMetadataStore.HDFS_SCHEME, storageUrl.getScheme());
     }
 
+    @Test
+    public void testAddParserJar() throws Exception {
+        val modelId = "e78a89dd-847f-4574-8afa-8768b4228b72";
+        val launcher = new StreamingJobLauncher();
+        launcher.init(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD);
+        val mockup = new MockupSparkLauncher();
+        ReflectionTestUtils.setField(launcher, "launcher", mockup);
+        val mockLaunch = PowerMockito.spy(launcher);
+        PowerMockito.when(mockLaunch, "getParserName").thenReturn("org.apache.kylin.parser.TimedJsonStreamParser2");
+        DataParserInfo dataParserInfo = new DataParserInfo(PROJECT, DEFAULT_PARSER_NAME, "default");
+        PowerMockito.when(mockLaunch, "getDataParser", Mockito.anyString()).thenReturn(dataParserInfo);
+        PowerMockito.doReturn("default").when(mockLaunch, "getParserJarPath", dataParserInfo);
+        ReflectionTestUtils.invokeMethod(mockLaunch, "addParserJar", mockup);
+        mockup.startApplication();
+        Assert.assertTrue(mockup.jars.contains("default"));
+    }
+
+    @Test
+    public void testStartYarnBuildJobWithoutExtraOpts() throws Exception {
+        val config = getTestConfig();
+        val modelId = "e78a89dd-847f-4574-8afa-8768b4228b72";
+
+        val launcher = new StreamingJobLauncher();
+        launcher.init(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD);
+        config.setProperty("kylin.kerberos.enabled", "true");
+        config.setProperty("kylin.tool.mount-spark-log-dir", ".");
+        val kapConfig = KapConfig.getInstanceFromEnv();
+
+        config.setProperty("kylin.kerberos.enabled", "true");
+        config.setProperty("kylin.kafka-jaas.enabled", "true");
+        val mockup = new MockupSparkLauncher();
+        ReflectionUtils.setField(launcher, "launcher", mockup);
+        FileUtils.write(new File(kapConfig.getKafkaJaasConfPath()),
+                "KafkaClient{ org.apache.kafka.common.security.scram.ScramLoginModule required;}",
+                StandardCharsets.UTF_8);
+        launcher.startYarnJob();
+        Assert.assertNotNull(mockup.sparkConf.get("spark.driver.extraJavaOptions"));
+        Assert.assertNotNull(mockup.sparkConf.get("spark.executor.extraJavaOptions"));
+        Assert.assertNotNull(mockup.sparkConf.get("spark.yarn.am.extraJavaOptions"));
+    }
+
     static class MockupSparkLauncher extends SparkLauncher {
         private Map<String, String> sparkConf;
         private List<String> files;
+        private List<String> jars;
 
-        public SparkAppHandle startApplication(SparkAppHandle.Listener... listeners) throws IOException {
+        public SparkAppHandle startApplication(SparkAppHandle.Listener... listeners) {
             val builder = ReflectionUtils.getField(this, "builder");
-            sparkConf = (Map) ReflectionUtils.getField(builder, "conf");
+            sparkConf = (Map<String, String>) ReflectionUtils.getField(builder, "conf");
             files = (List<String>) ReflectionUtils.getField(builder, "files");
+            jars = (List<String>) ReflectionUtils.getField(builder, "jars");
             return null;
         }
     }

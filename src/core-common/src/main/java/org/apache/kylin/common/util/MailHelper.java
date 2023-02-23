@@ -18,20 +18,22 @@
 
 package org.apache.kylin.common.util;
 
-import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class MailHelper {
 
+    public static final String OVER_CAPACITY_THRESHOLD = "OVER_CAPACITY_THRESHOLD";
+    public static final String CAPACITY = "CAPACITY";
     protected static final Logger logger = LoggerFactory.getLogger(MailHelper.class);
 
     public static List<String> getOverCapacityMailingUsers(KylinConfig kylinConfig) {
@@ -47,24 +49,13 @@ public class MailHelper {
         return users;
     }
 
-    public static Pair<String, String> formatNotifications(BasicEmailNotificationContent content) {
-        if (content == null) {
-            return null;
-        }
-        String title = content.getEmailTitle();
-        String body = content.getEmailBody();
-        return Pair.newPair(title, body);
-    }
-
-    public static boolean notifyUser(KylinConfig kylinConfig, BasicEmailNotificationContent content,
-            List<String> users) {
+    public static boolean notifyUser(KylinConfig kylinConfig, Pair<String, String> mail, List<String> users) {
         try {
             if (users.isEmpty()) {
                 logger.debug("no need to send email, user list is empty.");
                 return false;
             }
-            final Pair<String, String> email = MailHelper.formatNotifications(content);
-            return doSendMail(kylinConfig, users, email);
+            return doSendMail(kylinConfig, users, mail);
         } catch (Exception e) {
             logger.error("error send email", e);
             return false;
@@ -81,27 +72,29 @@ public class MailHelper {
         return new MailService(kylinConfig).sendMail(users, email.getFirst(), email.getSecond());
     }
 
-    public static BasicEmailNotificationContent creatContentForCapacityUsage(Long licenseVolume, Long currentCapacity) {
-        BasicEmailNotificationContent content = new BasicEmailNotificationContent();
-        content.setIssue("Over capacity threshold");
-        content.setTime(LocalDate.now(Clock.systemDefaultZone()).toString());
-        content.setJobType("CHECK_USAGE");
-        content.setProject("NULL");
+    public static Pair<String, String> creatContentForCapacityUsage(Long licenseVolume, Long currentCapacity, String resourceName) {
 
         String readableCurrentCapacity = SizeConvertUtil.getReadableFileSize(currentCapacity);
         String readableLicenseVolume = SizeConvertUtil.getReadableFileSize(licenseVolume);
         double overCapacityThreshold = KylinConfig.getInstanceFromEnv().getOverCapacityThreshold() * 100;
-        content.setConclusion(BasicEmailNotificationContent.CONCLUSION_FOR_OVER_CAPACITY_THRESHOLD
-                .replaceAll("\\$\\{volume_used\\}", readableCurrentCapacity)
-                .replaceAll("\\$\\{volume_total\\}", readableLicenseVolume)
-                .replaceAll("\\$\\{capacity_threshold\\}", BigDecimal.valueOf(overCapacityThreshold).toString()));
-        content.setSolution(BasicEmailNotificationContent.SOLUTION_FOR_OVER_CAPACITY_THRESHOLD);
-        return content;
+        KylinConfig env = KylinConfig.getInstanceFromEnv();
+
+        Map<String, Object> dataMap = Maps.newHashMap();
+        dataMap.put("resource_name", resourceName);
+        dataMap.put("volume_used", readableCurrentCapacity);
+        dataMap.put("volume_total", readableLicenseVolume);
+        dataMap.put("capacity_threshold", BigDecimal.valueOf(overCapacityThreshold).toString());
+        dataMap.put("env_name", KylinConfig.getInstanceFromEnv().getDeployEnv());
+        String title = getMailTitle(CAPACITY,
+                OVER_CAPACITY_THRESHOLD,
+                env.getMetadataUrlPrefix(),
+                env.getDeployEnv());
+        String content = MailTemplateProvider.getInstance().buildMailContent(OVER_CAPACITY_THRESHOLD, dataMap);
+        return Pair.newPair(title, content);
     }
 
-    public static boolean notifyUserForOverCapacity(Long licenseVolume, Long currentCapacity) {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        List<String> users = getOverCapacityMailingUsers(kylinConfig);
-        return notifyUser(kylinConfig, creatContentForCapacityUsage(licenseVolume, currentCapacity), users);
+
+    public static String getMailTitle(String... titleParts) {
+        return "[" + Joiner.on("]-[").join(titleParts) + "]";
     }
 }

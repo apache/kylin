@@ -17,42 +17,28 @@
  */
 package org.apache.kylin.query.util;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.LinkedHashMap;
 
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
-import org.apache.kylin.query.relnode.ColumnRowType;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.model.alias.AliasMapping;
 import org.apache.kylin.metadata.model.alias.ExpressionComparator;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
+import org.apache.kylin.query.relnode.ColumnRowType;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
-public class ExpressionComparatorTest extends NLocalFileMetadataTestCase {
-
-    @Before
-    public void setUp() {
-        this.createTestMetadata();
-    }
-
-    @After
-    public void after() {
-        this.cleanupTestMetadata();
-    }
+@MetadataInfo(project = "default")
+class ExpressionComparatorTest {
 
     @Test
-    public void testBasicEqual() throws SqlParseException {
+    void testBasicEqual() {
         String sql0 = "select a.a + a.b + a.c from t as a";
         String sql1 = "select (((a . a +    a.b +    a.c))) from t as a";
         String sql2 = "select a.a + (a.b + a.c) from t as a";
@@ -65,13 +51,12 @@ public class ExpressionComparatorTest extends NLocalFileMetadataTestCase {
         aliasMapping.put("A", "A");
         QueryAliasMatchInfo matchInfo = new QueryAliasMatchInfo(aliasMapping, null);
 
-        assertEquals(true, ExpressionComparator.isNodeEqual(sn0, sn1, matchInfo, AliasDeduceImpl.NO_OP));
-        assertEquals(false, ExpressionComparator.isNodeEqual(sn0, sn3, matchInfo, AliasDeduceImpl.NO_OP));
-
+        Assertions.assertTrue(ExpressionComparator.isNodeEqual(sn0, sn1, matchInfo, AliasDeduceImpl.NO_OP));
+        Assertions.assertFalse(ExpressionComparator.isNodeEqual(sn0, sn3, matchInfo, AliasDeduceImpl.NO_OP));
     }
 
     @Test
-    public void testCommutativeEqual() throws SqlParseException {
+    void testCommutativeEqual() {
         String sql0 = "select a.a + a.b * a.c from t as a";
         String sql1 = "select a.c * a.b + a.a from t as a";
 
@@ -81,12 +66,11 @@ public class ExpressionComparatorTest extends NLocalFileMetadataTestCase {
         BiMap<String, String> aliasMapping = HashBiMap.create();
         aliasMapping.put("A", "A");
         QueryAliasMatchInfo matchInfo = new QueryAliasMatchInfo(aliasMapping, null);
-
-        Assert.assertTrue(ExpressionComparator.isNodeEqual(sn0, sn1, matchInfo, AliasDeduceImpl.NO_OP));
+        Assertions.assertTrue(ExpressionComparator.isNodeEqual(sn0, sn1, matchInfo, AliasDeduceImpl.NO_OP));
     }
 
     @Test
-    public void testAdvancedEqual() throws SqlParseException {
+    void testAdvancedEqual() {
         //treat sql0 as model
         String sql0 = "select a.a + a.b + a.c, cast(a.d as decimal(19,4)) from t as a";
 
@@ -112,7 +96,7 @@ public class ExpressionComparatorTest extends NLocalFileMetadataTestCase {
             mockQueryAlias.put("B", columnRowType);
 
             QueryAliasMatchInfo matchInfo = new QueryAliasMatchInfo(aliasMapping, mockQueryAlias);
-            assertEquals(true, ExpressionComparator.isNodeEqual(sn1, sn0, matchInfo, AliasDeduceImpl.NO_OP));
+            Assertions.assertTrue(ExpressionComparator.isNodeEqual(sn1, sn0, matchInfo, AliasDeduceImpl.NO_OP));
         }
 
         // when query not using alias
@@ -130,13 +114,31 @@ public class ExpressionComparatorTest extends NLocalFileMetadataTestCase {
             mockQueryAlias.put("T", columnRowType);
 
             QueryAliasMatchInfo matchInfo = new QueryAliasMatchInfo(aliasMapping, mockQueryAlias);
-            assertEquals(true, ExpressionComparator.isNodeEqual(sn2, sn0, matchInfo, new AliasDeduceImpl(matchInfo)));
+            Assertions.assertTrue(ExpressionComparator.isNodeEqual(sn2, sn0, matchInfo, //
+                    new AliasDeduceImpl(matchInfo)));
         }
 
+        // with excluded column
+        {
+            BiMap<String, String> aliasMapping = HashBiMap.create();
+            aliasMapping.put("T", "A");
+
+            ColumnRowType columnRowType = ColumnRowTypeMockUtil.mock("T", "T", //
+                    ImmutableList.of(Pair.newPair("A", "integer"), //
+                            Pair.newPair("B", "integer"), //
+                            Pair.newPair("C", "integer"), //
+                            Pair.newPair("D", "integer")));
+            LinkedHashMap<String, ColumnRowType> mockQueryAlias = Maps.newLinkedHashMap();
+            mockQueryAlias.put("T", columnRowType);
+            QueryAliasMatchInfo matchInfo = new QueryAliasMatchInfo(aliasMapping, mockQueryAlias);
+            matchInfo.getExcludedColumns().add("A.A");
+            Assertions.assertFalse(ExpressionComparator.isNodeEqual(sn2, sn0, matchInfo, //
+                    new AliasDeduceImpl(matchInfo)));
+        }
     }
 
     @Test
-    public void testNoNPE() {
+    void testNoNPE() {
         //https://github.com/Kyligence/KAP/issues/10934
         String sql0 = "select a.a + a.b + a.c from t as a";
         String sql1 = "select a.a + a.b + a.c from t as a";
@@ -148,30 +150,38 @@ public class ExpressionComparatorTest extends NLocalFileMetadataTestCase {
         SqlNode sn2 = CalciteParser.getOnlySelectNode(sql2);
         SqlNode sn3 = CalciteParser.getOnlySelectNode(sql3);
         {
-            AliasMapping aliasMapping = null;
-            ExpressionComparator.AliasMachingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMachingSqlNodeComparator(
-                    aliasMapping, null);
-
-            assertEquals(false, matchInfo.isSqlNodeEqual(sn0, sn1));
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
+                    null, null);
+            Assertions.assertFalse(matchInfo.isSqlNodeEqual(sn0, sn1));
         }
         {
             AliasMapping aliasMapping = new AliasMapping(null);
-            ExpressionComparator.AliasMachingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMachingSqlNodeComparator(
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
                     aliasMapping, null);
-            assertEquals(false, matchInfo.isSqlNodeEqual(sn0, sn1));
+            Assertions.assertFalse(matchInfo.isSqlNodeEqual(sn0, sn1));
         }
         {
-            AliasMapping aliasMapping = null;
-            ExpressionComparator.AliasMachingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMachingSqlNodeComparator(
-                    aliasMapping, null);
-            assertEquals(true, matchInfo.isSqlNodeEqual(sn2, sn3));
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
+                    null, null);
+            Assertions.assertTrue(matchInfo.isSqlNodeEqual(sn2, sn3));
         }
         {
             AliasMapping aliasMapping = new AliasMapping(null);
-            ExpressionComparator.AliasMachingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMachingSqlNodeComparator(
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
                     aliasMapping, null);
-            assertEquals(true, matchInfo.isSqlNodeEqual(sn2, sn3));
+            Assertions.assertTrue(matchInfo.isSqlNodeEqual(sn2, sn3));
         }
 
+        {
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
+                    null, null);
+            Assertions.assertFalse(matchInfo.isSqlNodeEqual(sn0, null));
+        }
+
+        {
+            ExpressionComparator.AliasMatchingSqlNodeComparator matchInfo = new ExpressionComparator.AliasMatchingSqlNodeComparator(
+                    null, null);
+            Assertions.assertFalse(matchInfo.isSqlNodeEqual(null, sn1));
+        }
     }
 }

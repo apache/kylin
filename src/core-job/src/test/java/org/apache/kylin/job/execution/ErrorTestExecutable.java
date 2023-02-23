@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.exception.PersistentException;
 
 /**
  */
@@ -36,10 +37,11 @@ public class ErrorTestExecutable extends BaseTestExecutable {
     }
 
     @Override
-    public ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException, InterruptedException {
         Map<String, String> info = new HashMap<String, String>() {
             {
                 put("runningStatus", "inRunning");
+                put("mr_job_id", "38spvzt-981h-9831-vus8-9aklushnfbza");
             }
         };
         updateJobOutput(getProject(), getId(), ExecutableState.RUNNING, info, null, null);

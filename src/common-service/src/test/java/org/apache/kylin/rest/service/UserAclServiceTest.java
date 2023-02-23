@@ -29,13 +29,14 @@ import java.util.Locale;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.GlobalAccessRequest;
 import org.apache.kylin.rest.request.GlobalBatchAccessRequest;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.UserAclManager;
 import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.SpringContext;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,9 +52,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.metadata.epoch.EpochManager;
-import org.apache.kylin.metadata.user.ManagedUser;
 
 public class UserAclServiceTest extends ServiceTestBase {
 
@@ -130,7 +128,6 @@ public class UserAclServiceTest extends ServiceTestBase {
         };
         ReflectionTestUtils.setField(userAclService, "userService", kylinUserService);
         Assert.assertTrue(userAclService.listUserAcl().isEmpty());
-        ReflectionTestUtils.setField(userAclService, "userService", SpringContext.getBean(UserService.class));
     }
 
     @Test

@@ -992,7 +992,7 @@ export default class QueryHistoryTable extends Vue {
         status: []
       })
       const data = await handleSuccessAsync(res)
-      let row = data.value[0]
+      let [row = {}] = data.value.filter(it => it.id === layoutId)
       this.cuboidData = row
       let idStr = (row.id !== undefined) && (row.id !== null) && (row.id !== '') ? ' [' + row.id + ']' : ''
       this.detailType = row.source.indexOf('AGG') >= 0 ? 'aggDetail' : 'tabelIndexDetail'

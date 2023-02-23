@@ -22,13 +22,12 @@
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>5.0.0-SNAPSHOT</version>
+        <version>5.0.0-alpha-SNAPSHOT</version>
         <relativePath>../../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <name>Kylin - Engine Build SDK</name>
     <artifactId>kylin-engine-build-sdk</artifactId>
-
 
     <dependencies>
         <dependency>
@@ -42,16 +41,6 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-spark-common</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-core-job</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>

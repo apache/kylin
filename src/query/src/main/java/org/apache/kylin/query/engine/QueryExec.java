@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,8 +37,10 @@ import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexExecutorImpl;
@@ -50,11 +51,10 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.common.ReadFsSwitch;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.calcite.KylinRelDataTypeSystem;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.util.AsyncQueryUtil;
-import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.engine.exec.ExecuteResult;
 import org.apache.kylin.query.engine.exec.calcite.CalciteQueryPlanExec;
@@ -62,20 +62,34 @@ import org.apache.kylin.query.engine.exec.sparder.SparderQueryPlanExec;
 import org.apache.kylin.query.engine.meta.SimpleDataContext;
 import org.apache.kylin.query.engine.view.ViewAnalyzer;
 import org.apache.kylin.query.mask.QueryResultMasks;
+import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.relnode.KapAggregateRel;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.query.util.CalcitePlanRouterVisitor;
 import org.apache.kylin.query.util.HepUtils;
+import org.apache.kylin.query.util.QueryUtil;
+import org.apache.kylin.query.util.RelAggPushDownUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Entrance for query execution
  */
 public class QueryExec {
     private static final Logger logger = LoggerFactory.getLogger(QueryExec.class);
+
+    private static final int MAX_TRY_TIMES_OPTIMIZED = 10;
+    // only for test
+    @Setter
+    @Getter
+    private String sparderQueryOptimizedExceptionMsg = "";
 
     private final KylinConfig kylinConfig;
     private final KECalciteConfig config;
@@ -166,8 +180,7 @@ public class QueryExec {
                 return new QueryResult();
             }
 
-            if (kylinConfig.getEmptyResultForSelectStar()
-                    && sql.toLowerCase(Locale.ROOT).matches("^select\\s+\\*\\p{all}*")
+            if (kylinConfig.getEmptyResultForSelectStar() && QueryUtil.isSelectStarStatement(sql)
                     && !QueryContext.current().getQueryTagInfo().isAsyncQuery()) {
                 return new QueryResult(Lists.newArrayList(), 0, resultFields);
             }
@@ -225,7 +238,7 @@ public class QueryExec {
             postOptRules.addAll(HepUtils.CountDistinctExprRules);
         }
 
-        if (kylinConfig.isAgregatePushdownEnabled()) {
+        if (kylinConfig.isAggregatePushdownEnabled()) {
             postOptRules.addAll(HepUtils.AggPushDownRules);
         }
 
@@ -349,6 +362,10 @@ public class QueryExec {
                 OLAPContext.clearParameter();
                 return new SparderQueryPlanExec().executeToIterable(rel, dataContext);
             } catch (NoRealizationFoundException e) {
+                ExecuteResult result = tryEnhancedAggPushDown(rel);
+                if (result != null) {
+                    return result;
+                }
                 lastException = e;
             } catch (IllegalArgumentException e) {
                 if (e.getMessage().contains("Unsupported function name BITMAP_UUID")) {
@@ -363,6 +380,46 @@ public class QueryExec {
         }
         assert lastException != null;
         throw lastException;
+    }
+
+    private ExecuteResult tryEnhancedAggPushDown(RelNode rel) {
+        String project = QueryContext.current().getProject();
+        if (project != null && NProjectManager.getProjectConfig(project).isEnhancedAggPushDownEnabled()) {
+            Collection<RelOptRule> postOptRules = new LinkedHashSet<>();
+            postOptRules.addAll(HepUtils.AggPushDownRules);
+            return sparderQueryOptimized(rel, 1, postOptRules);
+        }
+        return null;
+    }
+
+    private ExecuteResult sparderQueryOptimized(RelNode relNode, int tryTimes, Collection<RelOptRule> postOptRules) {
+        if (QueryContext.current().getUnmatchedJoinDigest().isEmpty() || tryTimes > MAX_TRY_TIMES_OPTIMIZED) {
+            return null;
+        }
+        if (!QueryContext.current().isEnhancedAggPushDown() && tryTimes > 1) {
+            return null;
+        }
+        OLAPContext.clearThreadLocalContexts();
+        OLAPContext.clearParameter();
+        RelAggPushDownUtil.clearCtxRelNode(relNode);
+        QueryContext.current().setEnhancedAggPushDown(false);
+        RelNode transformed = HepUtils.runRuleCollection(relNode, postOptRules, false);
+        ContextUtil.dumpCalcitePlan("EXECUTION PLAN AFTER TABLEINDEX JOIN SNAPSHOT AGG PUSH DOWN tryTimes: " + tryTimes,
+                transformed, logger);
+        try {
+            RelAggPushDownUtil.clearUnmatchedJoinDigest();
+            return new SparderQueryPlanExec().executeToIterable(transformed, dataContext);
+        } catch (NoRealizationFoundException e) {
+            QueryUtil.checkThreadInterrupted("Interrupted SparderQueryOptimized NoRealizationFoundException",
+                    "Current step: TableIndex join snapshot aggPushDown");
+            tryTimes = tryTimes + 1;
+            return sparderQueryOptimized(transformed, tryTimes, postOptRules);
+        } catch (Exception e) {
+            QueryUtil.checkThreadInterrupted("Interrupted SparderQueryOptimized error",
+                    "Current step: Table Index join snapshot aggPushDown");
+            setSparderQueryOptimizedExceptionMsg(e.getMessage());
+            return null;
+        }
     }
 
     private Prepare.CatalogReader createCatalogReader(CalciteConnectionConfig connectionConfig,
@@ -418,6 +475,10 @@ public class QueryExec {
             KapAggregateRel aggregateRel = (KapAggregateRel) rel;
             if (aggregateRel.getAggCallList().stream().anyMatch(
                     aggCall -> FunctionDesc.FUNC_BITMAP_BUILD.equalsIgnoreCase(aggCall.getAggregation().getName()))) {
+                return false;
+            }
+            if (aggregateRel.getInput() instanceof Values
+                    && aggregateRel.getAggCallList().stream().anyMatch(AggregateCall::isDistinct)) {
                 return false;
             }
         }

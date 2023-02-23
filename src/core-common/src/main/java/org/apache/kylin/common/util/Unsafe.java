@@ -18,17 +18,12 @@
 
 package org.apache.kylin.common.util;
 
-import java.io.StringWriter;
 import java.lang.reflect.AccessibleObject;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang.StringUtils;
-
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kylin.common.SystemPropertiesCache;
 
 /**
@@ -39,7 +34,6 @@ import org.apache.kylin.common.SystemPropertiesCache;
  * <p>This class is excluded from the check, so methods called via this class
  * will not fail the build.
  */
-@Slf4j
 public class Unsafe {
 
     private Unsafe() {
@@ -50,39 +44,10 @@ public class Unsafe {
         System.exit(status);
     }
 
-    /** Calls {@link Object#notifyAll()}. */
-    public static void notifyAll(Object o) {
-        o.notifyAll();
-    }
-
-    /** Calls {@link Object#notify()}. */
-    public static void notify(Object o) {
-        o.notify();
-    }
-
-    /** Calls {@link Object#wait()}. */
-    public static void wait(Object o) throws InterruptedException {
-        o.wait();
-    }
-
-    public static void wait(Object o, long ms) throws InterruptedException {
-        o.wait(ms);
-    }
-
-    /** Clears the contents of a {@link StringWriter}. */
-    public static void clear(StringWriter sw) {
-        // Included in this class because StringBuffer is banned.
-        sw.getBuffer().setLength(0);
-    }
-
     /** For {@link MessageFormat#format(String, Object...)} cannot set locale*/
     public static String format(Locale locale, String pattern, Object... arguments) {
         MessageFormat temp = new MessageFormat(pattern, locale);
         return temp.format(arguments);
-    }
-
-    public static String getUrlFromHttpServletRequest(HttpServletRequest request) {
-        return request.getRequestURL().toString();
     }
 
     /** Reflection usage to work around access flags fails with SecurityManagers

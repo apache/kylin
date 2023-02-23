@@ -67,7 +67,6 @@ import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.SetThreadName;
-import org.apache.kylin.metadata.MetadataExtension;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
@@ -91,6 +90,7 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectLoader;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
@@ -99,6 +99,7 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPContextProp;
 import org.apache.kylin.query.relnode.OLAPTableScan;
+import org.apache.kylin.query.util.RelAggPushDownUtil;
 import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -207,6 +208,7 @@ public class RealizationChooser {
         Multimap<NDataModel, IRealization> modelMap = makeOrderedModelMap(context);
         if (modelMap.size() == 0) {
             checkNoRealizationWithStreaming(context);
+            RelAggPushDownUtil.registerUnmatchedJoinDigest(context.getTopNode());
             throw new NoRealizationFoundException("No model found for " + toErrorMsg(context));
         }
         logger.trace("Models matched fact table {}: {}", context.firstTableScan.getTableName(), modelMap.values());
@@ -243,7 +245,7 @@ public class RealizationChooser {
         }
 
         // Step 3. find the lowest-cost candidate
-        candidates.sort(Candidate.COMPARATOR);
+        sortCandidate(context, candidates);
         logger.trace("Cost Sorted Realizations {}", candidates);
         if (!candidates.isEmpty()) {
             Candidate selectedCandidate = candidates.get(0);
@@ -270,7 +272,18 @@ public class RealizationChooser {
         }
 
         checkNoRealizationWithStreaming(context);
+        RelAggPushDownUtil.registerUnmatchedJoinDigest(context.getTopNode());
         throw new NoRealizationFoundException("No realization found for " + toErrorMsg(context));
+    }
+
+    private static void sortCandidate(OLAPContext context, List<Candidate> candidates) {
+        ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(context.olapSchema.getProjectName());
+        if (projectInstance.getConfig().useTableIndexAnswerSelectStarEnabled() && context.getSQLDigest().isRawQuery) {
+            candidates.sort(Candidate.COMPARATOR_TABLE_INDEX);
+        } else {
+            candidates.sort(Candidate.COMPARATOR);
+        }
     }
 
     private static void checkNoRealizationWithStreaming(OLAPContext context) {
@@ -282,7 +295,7 @@ public class RealizationChooser {
             TableDesc tableDesc = tableManager.getTableDesc(tableScan.getTableName());
             if (tableDesc.getSourceType() == ISourceAware.ID_STREAMING) {
                 throw new NoStreamingRealizationFoundException(STREAMING_MODEL_NOT_FOUND,
-                        String.format(Locale.ROOT, MsgPicker.getMsg().getNoStreamingModelFound()));
+                        MsgPicker.getMsg().getNoStreamingModelFound());
             }
         }
     }
@@ -322,15 +335,7 @@ public class RealizationChooser {
     }
 
     private static boolean needToManyDerived(NDataModel model) {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        Set<String> excludedTables = MetadataExtension.getFactory().getQueryExcludedTablesExtension()
-                .getExcludedTables(config, model.getProject());
-        for (JoinTableDesc joinTable : model.getJoinTables()) {
-            if (joinTable.isDerivedToManyJoinRelation() || excludedTables.contains(joinTable.getTable())) {
-                return true;
-            }
-        }
-        return false;
+        return model.getJoinTables().stream().anyMatch(JoinTableDesc::isDerivedToManyJoinRelation);
     }
 
     private static boolean hasReadySegments(NDataModel model) {
@@ -712,16 +717,16 @@ public class RealizationChooser {
     }
 
     private static KylinConfig getProjectConfig() {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String project = QueryContext.current().getProject();
         try {
-            if (QueryContext.current().getProject() != null) {
-                return NProjectManager.getInstance(kylinConfig).getProject(QueryContext.current().getProject())
-                        .getConfig();
+            if (project != null) {
+                return NProjectManager.getProjectConfig(project);
             }
         } catch (Exception e) {
-            logger.error("Fail to get project config is query match partial inner join model.", e);
+            logger.error("Failed to get config of project<{}> when matching partial inner join model. {}", //
+                    project, e.getMessage());
         }
-        return kylinConfig;
+        return KylinConfig.getInstanceFromEnv();
     }
 
 }

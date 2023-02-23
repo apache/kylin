@@ -20,10 +20,10 @@ package org.apache.kylin.sdk.datasource;
 import java.util.List;
 
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.sdk.datasource.framework.JdbcConnectorTest;
-import org.apache.kylin.metadata.project.NProjectManager;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,7 +38,7 @@ public class PushdownRunnerSDKImplTest extends JdbcConnectorTest {
         npr.updateProject(projectInstance);
 
         PushDownRunnerSDKImpl pushDownRunnerSDK = new PushDownRunnerSDKImpl();
-        pushDownRunnerSDK.init(getTestConfig());
+        pushDownRunnerSDK.init(getTestConfig(), projectInstance.getName());
         List<List<String>> returnRows = Lists.newArrayList();
         List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
         String sql = "select count(*) from LINEORDER";
@@ -49,7 +49,7 @@ public class PushdownRunnerSDKImplTest extends JdbcConnectorTest {
     @Test
     public void testExecuteUpdate() throws Exception {
         PushDownRunnerSDKImpl pushDownRunnerSDK = new PushDownRunnerSDKImpl();
-        pushDownRunnerSDK.init(getTestConfig());
+        pushDownRunnerSDK.init(getTestConfig(), null);
         String sql = "update SSB.LINEORDER set LO_TAX=1 where LO_ORDERKEY = 1";
         pushDownRunnerSDK.executeUpdate(sql, null);
     }

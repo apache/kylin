@@ -22,6 +22,7 @@ import java.util
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import com.amazonaws.services.s3.model.AmazonS3Exception
+import org.apache.hadoop.security.AccessControlException
 import org.apache.kylin.cluster.{AvailableResource, IClusterManager, ResourceInfo}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
@@ -306,7 +307,6 @@ class TestJobMonitor extends SparderBaseFunSuite with BeforeAndAfterEach {
       eventLoop.unregisterListener(listener)
     }
   }
-
 
   test("post JobFailed event when receive class not found event") {
     withEventLoop { eventLoop =>

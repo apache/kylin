@@ -1,0 +1,25 @@
+{
+  "uuid" : "6e37c4c3-2b23-45c3-a52b-ef09e93a1903",
+  "last_modified" : 0,
+  "create_time" : 1595855849607,
+  "version" : "4.0.0.0",
+  "name" : "TOPN_WITH_CHINESE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "CITY",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "2",
+    "name" : "INT_ID",
+    "datatype" : "integer"
+  } ],
+  "source_type" : 9,
+  "kafka_bootstrap_servers" : null,
+  "subscribe" : null,
+  "starting_offsets" : null,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT"
+}

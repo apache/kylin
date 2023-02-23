@@ -11,10 +11,6 @@
         <div class="setting-label font-medium">{{$t('projectName')}}</div>
         <div class="setting-value fixed">{{project.alias || project.project}}</div>
       </div>
-      <!-- <div class="setting-item">
-        <div class="setting-label font-medium">{{$t('projectType')}}</div>
-        <div class="setting-value fixed"><i :class="projectIcon"></i>{{$t(project.maintain_model_type)}}</div>
-      </div> -->
       <div class="setting-item clearfix">
         <div class="setting-label font-medium">{{$t('description')}}</div>
         <div class="setting-value">{{project.description}}</div>
@@ -137,6 +133,66 @@
         </div>
       </el-form>
     </EditableBlock>
+    <!-- 屏蔽列设置 -->
+    <EditableBlock
+      :header-content="$t('excludeRuleSettings')"
+      :isEditable="false">
+      <div class="setting-item">
+        <div class="conds-title">
+          <span class="setting-label font-medium">{{$t('excludeRule')}}</span><span class="ksd-fs-12">
+          <el-switch
+            :value="form.table_exclusion_enabled"
+            :active-text="$t('kylinLang.common.OFF')"
+            :inactive-text="$t('kylinLang.common.ON')"
+            @input="value => handleSwitch('exclude-rule', value)"></el-switch></span>
+        </div>
+        <div class="conds-content clearfix">
+          <div class="ksd-mt-8 ksd-fs-14">
+            <div class="exclude-rule-msg">
+              <p class="tips"><span v-html="$t('excludeRuleTip')"></span><span class="review-details" @click="showExcludeRuleDetails = !showExcludeRuleDetails">{{$t('moreDetails')}}<i class="" :class="['arrow', 'ksd-fs-16', showExcludeRuleDetails ? 'el-ksd-n-icon-arrow-down-outlined' : 'el-ksd-n-icon-arrow-right-outlined']"></i></span></p>
+              <div class="details" v-if="showExcludeRuleDetails">
+                <ol>
+                  <li><i class="point ksd-mr-2">•</i>{{$t('excludeRuleDetailMsg1')}}</li>
+                  <li><i class="point ksd-mr-2">•</i>{{$t('excludeRuleDetailMsg2')}}</li>
+                  <li><i class="point ksd-mr-2">•</i>{{$t('excludeRuleDetailMsg3')}}</li>
+                </ol>
+              </div>
+            </div>
+            <div v-if="form.table_exclusion_enabled">
+              <el-button class="ksd-mt-8 ksd-mb-4" icon="el-ksd-icon-add_22" @click="addExcludeColumns()">{{$t('addExcludeColumns')}}</el-button>
+              <el-table
+                :data="excludeColumnsTables"
+                class="exclude-column-table"
+                style="width: 100%">
+                <el-table-column width="230px" show-overflow-tooltip prop="table" :label="$t('table')"></el-table-column>
+                <el-table-column show-overflow-tooltip prop="excluded_columns" :label="$t('columns')">
+                  <template slot-scope="scope">
+                    <span v-if="scope.row.excluded">{{$t('allColumns')}}</span>
+                    <span v-else>({{scope.row.excluded_col_size}} {{$t('columns')}}) {{scope.row.excluded_columns.join(', ')}}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  width="90px"
+                  :label="$t('kylinLang.common.action')">
+                    <template slot-scope="scope">
+                      <common-tip>
+                        <div slot="content">{{$t('addExcludeColumns')}}</div>
+                        <i class="el-ksd-n-icon-plus-outlined ksd-fs-18" @click="addExcludeColumns(scope.row.table)"></i>
+                      </common-tip>
+                      <common-tip>
+                        <div slot="content">{{$t('delExcludeColumns')}}</div>
+                        <i class="el-icon-ksd-table_delete ksd-fs-14" @click="delExcludeColumns(scope.row.table)"></i>
+                      </common-tip>
+                    </template>
+                </el-table-column>
+              </el-table>
+              <kylin-pager :totalSize="excludeColumnsTablesSize" :perPageSize="filter.page_size" :curPage="filter.page_offset+1" v-on:handleCurrentChange='currentChange' ref="excludeColumnsTablesPager" :refTag="pageRefTags.excludeColumnsTablesPager" class="ksd-mtb-10 ksd-center" ></kylin-pager>
+            </div>
+          </div>
+        </div>
+      </div>
+    </EditableBlock>
+    <ExcludeColumnsDialog />
   </div>
 </template>
 
@@ -146,10 +202,12 @@ import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 import { Component, Watch } from 'vue-property-decorator'
 
 import locales from './locales'
-import { handleError, handleSuccessAsync, objectClone, ArrayFlat } from '../../../util'
-import { projectTypeIcons, lowUsageStorageTypes, autoMergeTypes, volatileTypes, validate, initialFormValue, _getProjectGeneralInfo, _getSegmentSettings, _getPushdownConfig, _getStorageQuota, _getIndexOptimization, _getRetentionRangeScale } from './handler'
+import { handleError, handleSuccessAsync, objectClone, ArrayFlat, kylinConfirm } from '../../../util'
+import { lowUsageStorageTypes, autoMergeTypes, volatileTypes, validate, initialFormValue, _getProjectGeneralInfo, _getSegmentSettings, _getPushdownConfig, _getExcludeColumnConfig, _getStorageQuota, _getIndexOptimization, _getRetentionRangeScale } from './handler'
 import { retentionTypes } from '../handler'
+import { pageCount, pageRefTags } from '../../../config'
 import EditableBlock from '../../common/EditableBlock/EditableBlock.vue'
+import ExcludeColumnsDialog from '../../common/EditExcludeColumnsDialog/EditExcludeColumnsDialog.vue'
 import SourceAuthorityForm from '../../common/DataSourceModal/SourceJDBC/SourceAuthorityForm/SourceAuthorityForm.vue'
 
 @Component({
@@ -161,7 +219,8 @@ import SourceAuthorityForm from '../../common/DataSourceModal/SourceJDBC/SourceA
   },
   components: {
     EditableBlock,
-    SourceAuthorityForm
+    SourceAuthorityForm,
+    ExcludeColumnsDialog
   },
   computed: {
     ...mapGetters([
@@ -184,10 +243,15 @@ import SourceAuthorityForm from '../../common/DataSourceModal/SourceJDBC/SourceA
       getUserAndGroups: 'GET_USER_AND_GROUPS',
       updateFavoriteRules: 'UPDATE_FAVORITE_RULES',
       fetchDBandTables: 'FETCH_DB_AND_TABLES',
-      checkConnectByGbase: 'CHECK_BASE_CONFIG'
+      checkConnectByGbase: 'CHECK_BASE_CONFIG',
+      loadExcludeTables: 'LOAD_EXCLUDE_TABLES',
+      updateExcludeColumnConfig: 'UPDATE_EXCLUDE_COLUMN_CONFIG'
     }),
     ...mapActions('DetailDialogModal', {
       callGlobalDetailDialog: 'CALL_MODAL'
+    }),
+    ...mapActions('ExcludeColumnsDialog', {
+      callExcludeColumnsDialog: 'CALL_MODAL'
     }),
     ...mapMutations({
       updateProject: 'UPDATE_PROJECT'
@@ -213,10 +277,15 @@ export default class SettingBasic extends Vue {
   JDBCConnectSettingBackup = []
   jdbcDatasourceEnabled = false
   allDatasourceTables = []
-
-  get projectIcon () {
-    return projectTypeIcons[this.project.maintain_model_type]
+  showExcludeRuleDetails = false
+  pageRefTags = pageRefTags
+  excludeColumnsTables = []
+  filter = {
+    page_offset: 0,
+    page_size: +localStorage.getItem(this.pageRefTags.excludeColumnsTablesPager) || pageCount
   }
+  excludeColumnsTablesSize = 1
+
   get retentionRangeScale () {
     return _getRetentionRangeScale(this.form).toLowerCase()
   }
@@ -303,7 +372,7 @@ export default class SettingBasic extends Vue {
   @Watch('project', { deep: true })
   @Watch('rulesObj', { deep: true })
   onFormChange () {
-    const basicSetting = this.isFormEdited(this.form, 'basic-info') || this.isFormEdited(this.form, 'datasource-info') || this.isFormEdited(this.form, 'segment-settings') || this.isFormEdited(this.form, 'storage-quota')
+    const basicSetting = this.isFormEdited(this.form, 'basic-info') || this.isFormEdited(this.form, 'datasource-info') || this.isFormEdited(this.form, 'segment-settings')
     this.$emit('form-changed', { basicSetting })
   }
   initForm () {
@@ -313,10 +382,14 @@ export default class SettingBasic extends Vue {
     this.handleInit('pushdown-settings')
     this.handleInit('storage-quota')
     this.handleInit('index-optimization')
+    this.handleInit('exclude-rule')
   }
   async mounted () {
     this.initForm()
     this.getAllDatasourceTables()
+    if (this.$store.state.project.projectExcludeTableConfig) {
+      this.getExcludeColumns()
+    }
   }
   handleCheckMergeRanges (value) {
     if (value.length > 0) {
@@ -346,6 +419,23 @@ export default class SettingBasic extends Vue {
           submitData.push_down_enabled = value
           await this.updatePushdownConfig(submitData); break
         }
+        case 'exclude-rule': {
+          if (!value) {
+            try {
+              await kylinConfirm(this.$t('confirmCloseExcludeRule'), {type: 'warning'}, this.$t('closeExcludeRuleTitle'))
+            } catch (e) {
+              return
+            }
+          }
+          const submitData = _getExcludeColumnConfig(this.project)
+          submitData.table_exclusion_enabled = value
+          await this.updateExcludeColumnConfig(submitData)
+          this.form.table_exclusion_enabled = value
+          if (value) {
+            this.getExcludeColumns()
+          }
+          break
+        }
       }
       this.$emit('reload-setting')
       this.$message({ type: 'success', message: this.$t('kylinLang.common.updateSuccess') })
@@ -358,35 +448,8 @@ export default class SettingBasic extends Vue {
       switch (type) {
         case 'basic-info': {
           const submitData = _getProjectGeneralInfo(this.form)
-          if (!submitData.semi_automatic_mode) {
-            await this.callGlobalDetailDialog({
-              msg: this.$t('turnOffTips'),
-              title: this.$t('turnOff') + this.$t('enableSemiAutomatic'),
-              dialogType: 'warning',
-              isBeta: false,
-              wid: '600px',
-              showDetailBtn: false,
-              dangerouslyUseHTMLString: true,
-              needConcelReject: true,
-              submitText: this.$t('confirmClose')
-            })
-            await this.updateProjectGeneralInfo(submitData); break
-          } else {
-            await this.callGlobalDetailDialog({
-              msg: this.$t('turnOnTips'),
-              title: this.$t('turnOn') + this.$t('enableSemiAutomatic'),
-              dialogType: 'warning',
-              isBeta: false,
-              wid: '400px',
-              isCenterBtn: true,
-              showDetailBtn: false,
-              dangerouslyUseHTMLString: true,
-              needConcelReject: true,
-              submitText: this.$t('confirmOpen')
-            })
-            await this.updateProjectGeneralInfo(submitData)
-            break
-          }
+          await this.updateProjectGeneralInfo(submitData)
+          break
         }
         case 'datasource-info': {
           if (!this.form.JDBCConnectSetting.length) return errorCallback()
@@ -501,6 +564,9 @@ export default class SettingBasic extends Vue {
       case 'index-optimization': {
         this.form = { ...this.form, ..._getIndexOptimization(this.project) }; break
       }
+      case 'exclude-rule': {
+        this.form = { ...this.form, ..._getExcludeColumnConfig(this.project) }; break
+      }
     }
   }
   async handleResetForm (type, successCallback, errorCallback) {
@@ -576,6 +642,37 @@ export default class SettingBasic extends Vue {
       const results = await handleSuccessAsync(response)
       const { databases } = results
       databases && databases.length > 0 && (this.allDatasourceTables = ArrayFlat(databases.map(it => 'tables' in it ? it.tables : [])))
+    } catch (e) {
+      handleError(e)
+    }
+  }
+
+  async addExcludeColumns (excludeTable) {
+    const isSubmit = await this.callExcludeColumnsDialog({ excludeColumntitle: !excludeTable ? 'addExcludeColumns' : 'appendExcludeColumns', excludeTable: excludeTable })
+    if (isSubmit) {
+      this.getExcludeColumns()
+    }
+  }
+
+  async delExcludeColumns (excludeTable) {
+    const isSubmit = await this.callExcludeColumnsDialog({ excludeColumntitle: 'delExcludeColumns', excludeTable: excludeTable })
+    if (isSubmit) {
+      this.getExcludeColumns()
+    }
+  }
+
+  currentChange (size, count) {
+    this.filter.page_offset = size
+    this.filter.page_size = count
+    this.getExcludeColumns()
+  }
+
+  async getExcludeColumns () {
+    try {
+      const res = await this.loadExcludeTables({ ...this.filter, project: this.currentSelectedProject })
+      const { value, total_size } = await handleSuccessAsync(res)
+      this.excludeColumnsTables = value
+      this.excludeColumnsTablesSize = total_size
     } catch (e) {
       handleError(e)
     }
@@ -718,6 +815,26 @@ export default class SettingBasic extends Vue {
       }
     }
   }
+  .exclude-rule-msg {
+    font-size: 12px;
+    .tips {
+      .review-details {
+        color: @base-color;
+        cursor: pointer !important;
+        position: relative;
+      }
+    }
+    .details {
+      background: @base-background-color-1;
+      padding: 10px 10px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      .point {
+        font-style: inherit;
+        margin-right: 5px;
+      }
+    }
+  }
   .ruleSetting {
     padding: 15px 20px;
     .conds-title {
@@ -743,38 +860,6 @@ export default class SettingBasic extends Vue {
     .conds {
       margin-bottom: 16px;
     }
-    .exclude-rule-msg {
-      font-size: 12px;
-      .tips {
-        .review-details {
-          color: @base-color;
-          cursor: pointer;
-          position: relative;
-          .arrow {
-            transform: rotate(90deg);
-            font-size: 10px;
-            margin-left: 5px;
-          }
-        }
-      }
-      .details {
-        background: @base-background-color-1;
-        padding: 10px 10px;
-        margin-top: 5px;
-        box-sizing: border-box;
-        .point {
-          font-style: inherit;
-          margin-right: 5px;
-        }
-      }
-    }
-    .exclude_rule-form {
-      width: 100%;
-      .exclude_rule-select {
-        width: 100%;
-        margin-top: 10px;
-      }
-    }
   }
   .rule-setting-input {
     display: inline-block;
@@ -795,13 +880,6 @@ export default class SettingBasic extends Vue {
     color: #ff0000;
     font-size: 12px;
   }
-}
-.limit-excluded-tables-msg {
-  height: 32px;
-  color: @text-normal-color;
-  line-height: 32px;
-  text-align: center;
-  font-size: 12px;
 }
 
 </style>

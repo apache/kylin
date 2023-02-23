@@ -17,6 +17,10 @@
  */
 package org.apache.kylin.streaming.app;
 
+import static org.apache.kylin.streaming.constants.StreamingConstants.ACTION_GRACEFUL_SHUTDOWN;
+import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PARSER_NAME;
+import static org.apache.kylin.streaming.constants.StreamingConstants.STREAMING_KAFKA_STARTING_OFFSETS;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Locale;
@@ -28,18 +32,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigBase;
-import org.apache.kylin.common.response.RestResponse;
-import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.common.StreamingTestConstant;
+import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
+import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.metadata.cube.model.NCubeJoinedFlatTableDesc;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.utils.StreamingUtils;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.streaming.CreateStreamingFlatTable;
-import org.apache.kylin.streaming.constants.StreamingConstants;
+import org.apache.kylin.streaming.common.CreateFlatTableEntry;
 import org.apache.kylin.streaming.jobs.GracefulStopInterface;
 import org.apache.kylin.streaming.jobs.StreamingJobUtils;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
@@ -112,7 +116,9 @@ public class StreamingEntryTest extends StreamingTestCase {
         Assert.assertNotNull(nSpanningTree);
 
         val ss = createSparkSession();
-        val flatTable = CreateStreamingFlatTable.apply(flatTableDesc, null, nSpanningTree, ss, null, null, null);
+        CreateFlatTableEntry flatTableEntry = new CreateFlatTableEntry(flatTableDesc, null, nSpanningTree, ss, null,
+                null, null, DEFAULT_PARSER_NAME);
+        val flatTable = CreateStreamingFlatTable.apply(flatTableEntry);
 
         val ds = flatTable.generateStreamingDataset(config);
         Assert.assertEquals(1, ds.count());
@@ -122,7 +128,7 @@ public class StreamingEntryTest extends StreamingTestCase {
         Assert.assertEquals("earliest", kafkaParam.get("startingOffsets"));
 
         val jobParams = new HashMap<String, String>();
-        jobParams.put(StreamingConstants.STREAMING_KAFKA_STARTING_OFFSETS, "latest");
+        jobParams.put(STREAMING_KAFKA_STARTING_OFFSETS, "latest");
         val newConfig = StreamingJobUtils.getStreamingKylinConfig(config, jobParams, model.getId(), PROJECT);
         source.post(StreamingTestConstant.KAP_SSB_STREAMING_JSON_FILE());
         flatTable.generateStreamingDataset(newConfig);
@@ -211,7 +217,7 @@ public class StreamingEntryTest extends StreamingTestCase {
             val mgr = StreamingJobManager.getInstance(getTestConfig(), PROJECT);
             val jobId = DATAFLOW_ID + "_build";
             mgr.updateStreamingJob(jobId, copyForWrite -> {
-                copyForWrite.setAction(StreamingConstants.ACTION_GRACEFUL_SHUTDOWN);
+                copyForWrite.setAction(ACTION_GRACEFUL_SHUTDOWN);
             });
         });
         try {
@@ -298,8 +304,8 @@ public class StreamingEntryTest extends StreamingTestCase {
     @Test
     public void testDimensionTableRefresh_Skip() {
         {
-            val fakeStreamingTable = Mockito
-                    .spy(new CreateStreamingFlatTable(null, null, null, null, null, null, null));
+            val fakeStreamingTable = Mockito.spy(new CreateStreamingFlatTable(
+                    new CreateFlatTableEntry(null, null, null, null, null, null, null, null)));
             val entry = Mockito.spy(new StreamingEntry());
             entry.refreshTable(fakeStreamingTable);
             Mockito.doReturn(false).when(fakeStreamingTable).shouldRefreshTable();
@@ -308,8 +314,8 @@ public class StreamingEntryTest extends StreamingTestCase {
         }
 
         {
-            val fakeStreamingTable = Mockito
-                    .spy(new CreateStreamingFlatTable(null, null, null, null, null, null, null));
+            val fakeStreamingTable = Mockito.spy(new CreateStreamingFlatTable(
+                    new CreateFlatTableEntry(null, null, null, null, null, null, null, null)));
             val entry = Mockito.spy(new StreamingEntry());
             entry.refreshTable(fakeStreamingTable);
             Mockito.doReturn(true).when(fakeStreamingTable).shouldRefreshTable();

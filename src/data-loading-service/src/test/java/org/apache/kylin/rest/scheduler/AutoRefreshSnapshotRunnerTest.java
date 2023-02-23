@@ -35,7 +35,6 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -67,7 +66,6 @@ import io.kyligence.kap.guava20.shaded.common.collect.Lists;
 import io.kyligence.kap.guava20.shaded.common.collect.Maps;
 import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import lombok.val;
-import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -116,7 +114,6 @@ class AutoRefreshSnapshotRunnerTest {
             runner.doRun();
             assertTrue(CollectionUtils.isEmpty(runner.getCheckSourceTableQueue()));
             assertTrue(MapUtils.isEmpty(runner.getBuildSnapshotCount()));
-            assertTrue(MapUtils.isEmpty(runner.getBuildSnapshotFutures()));
             assertTrue(MapUtils.isEmpty(runner.getCheckSourceTableFutures()));
             assertTrue(MapUtils.isEmpty(runner.getSourceTableSnapshotMapping()));
         } finally {
@@ -247,6 +244,16 @@ class AutoRefreshSnapshotRunnerTest {
                 if (i < 14) {
                     tables.add(allTables.get(i));
                 }
+                if (allTables.get(i).isView()) {
+                    tables.add(allTables.get(i));
+                    val sourceTables = Sets.<String> newHashSet();
+                    for (int j = 0; j < 7; j++) {
+                        sourceTables.add("default.table_" + j);
+                        excepted.add("default.table_" + j);
+                    }
+                    sourceTables.add(allTables.get(i).getIdentity().toLowerCase(Locale.ROOT));
+                    viewTableMapping.put(allTables.get(i).getIdentity(), sourceTables);
+                }
                 if (i > 7) {
                     val sourceTables = Sets.<String> newHashSet();
                     for (int j = 0; j < 7; j++) {
@@ -307,9 +314,9 @@ class AutoRefreshSnapshotRunnerTest {
             val sourceTables = sourceTableSnapshotMapping.keySet();
             runner.getSourceTableSnapshotMapping().putAll(sourceTableSnapshotMapping);
 
-            try (val ignored = Mockito.mockConstruction(CheckSourceTableThread.class,
+            try (val ignored = Mockito.mockConstruction(CheckSourceTableRunnable.class,
                     (mock, context) -> Mockito.doNothing().when(mock).checkTable())) {
-                try (val ignored2 = Mockito.mockConstruction(BuildSnapshotThread.class,
+                try (val ignored2 = Mockito.mockConstruction(BuildSnapshotRunnable.class,
                         (mock, context) -> Mockito.doNothing().when(mock).buildSnapshot())) {
                     runner.checkSourceTable(sourceTables);
 
@@ -334,39 +341,8 @@ class AutoRefreshSnapshotRunnerTest {
                     exceptedTmp.addAll(tableDescs);
                     val excepted = exceptedTmp.stream().distinct().collect(Collectors.toList());
                     assertEquals(excepted.size(), buildSnapshotCount.size());
-
-                    val buildSnapshotFutures = runner.getBuildSnapshotFutures();
-                    assertEquals(excepted.size(), buildSnapshotFutures.size());
                 }
             }
-        } finally {
-            AutoRefreshSnapshotRunner.shutdown(project);
-        }
-    }
-
-    @Test
-    void waitBuildSnapshotTaskDone() {
-        val project = "default";
-        try {
-            val runner = AutoRefreshSnapshotRunner.getInstance(project);
-            val tasks = Lists.<Future<String>> newArrayList();
-            for (int i = 0; i < 5; i++) {
-                val futureTask = new FutureTask<String>(() -> null);
-                tasks.add(futureTask);
-                runner.getBuildSnapshotFutures().put(futureTask, System.currentTimeMillis());
-            }
-            val result = new AtomicBoolean(false);
-            val thread = new Thread(() -> {
-                try {
-                    runner.waitBuildSnapshotTaskDone();
-                    result.set(true);
-                } catch (InterruptedException e) {
-                    log.error(e.getMessage(), e);
-                }
-            });
-            thread.start();
-            tasks.forEach(task -> task.cancel(true));
-            await().atMost(new Duration(12, SECONDS)).untilAsserted(() -> assertTrue(result.get()));
         } finally {
             AutoRefreshSnapshotRunner.shutdown(project);
         }
@@ -385,11 +361,11 @@ class AutoRefreshSnapshotRunnerTest {
             for (int i = 0; i < 5; i++) {
                 val futureTask = new FutureTask<String>(() -> null);
                 tasks.add(futureTask);
-                runner.getBuildSnapshotFutures().put(futureTask, System.currentTimeMillis());
+                runner.getCheckSourceTableFutures().put(futureTask, System.currentTimeMillis());
             }
             await().pollDelay(new Duration(2, SECONDS)).until(() -> true);
-            runner.cancelTimeoutFuture(runner.getBuildSnapshotFutures());
-            runner.getBuildSnapshotFutures().keySet().forEach(future -> {
+            runner.cancelTimeoutFuture(runner.getCheckSourceTableFutures());
+            runner.getCheckSourceTableFutures().keySet().forEach(future -> {
                 assertTrue(future.isCancelled());
                 assertTrue(future.isDone());
             });
@@ -457,16 +433,6 @@ class AutoRefreshSnapshotRunnerTest {
             val overrideProps = Maps.<String, String> newLinkedHashMap();
             projectManager.createProject(project, "test", "", overrideProps);
             val runner = AutoRefreshSnapshotRunner.getInstance(project);
-            for (int i = 0; i < 5; i++) {
-                val futureTask = new FutureTask<String>(() -> null);
-                runner.getBuildSnapshotFutures().put(futureTask, System.currentTimeMillis());
-                if (i % 2 == 0) {
-                    futureTask.cancel(true);
-                }
-            }
-            runner.cancelFuture(runner.getBuildSnapshotFutures());
-            var actual = runner.getBuildSnapshotFutures().keySet().stream().filter(Future::isDone).count();
-            assertEquals(runner.getBuildSnapshotFutures().size(), actual);
 
             for (int i = 0; i < 5; i++) {
                 val futureTask = new FutureTask<String>(() -> null);
@@ -476,7 +442,7 @@ class AutoRefreshSnapshotRunnerTest {
                 }
             }
             runner.cancelFuture(runner.getCheckSourceTableFutures());
-            actual = runner.getCheckSourceTableFutures().keySet().stream().filter(Future::isDone).count();
+            val actual = runner.getCheckSourceTableFutures().keySet().stream().filter(Future::isDone).count();
             assertEquals(runner.getCheckSourceTableFutures().size(), actual);
         } finally {
             AutoRefreshSnapshotRunner.shutdown(project);

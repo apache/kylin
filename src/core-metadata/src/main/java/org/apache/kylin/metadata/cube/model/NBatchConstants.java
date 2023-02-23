@@ -23,6 +23,7 @@ public interface NBatchConstants {
     String P_SEGMENT_IDS = "segmentIds";
     String P_JOB_ID = "jobId";
     String P_JOB_TYPE = "jobType";
+    String P_JOB_ENABLE_PLANNER = "enablePlanner";
     String P_LAYOUT_IDS = "layoutIds";
     String P_TO_BE_DELETED_LAYOUT_IDS = "toBeDeletedLayoutIds";
     String P_CLASS_NAME = "className";
@@ -35,7 +36,6 @@ public interface NBatchConstants {
     String P_TARGET_MODEL = "targetModel";
     String P_DATA_RANGE_START = "dataRangeStart";
     String P_DATA_RANGE_END = "dataRangeEnd";
-    String P_EXCLUDED_TABLES = "excludedTables";
 
     String P_IGNORED_SNAPSHOT_TABLES = "ignoredSnapshotTables";
     String P_NEED_BUILD_SNAPSHOTS = "needBuildSnapshots";

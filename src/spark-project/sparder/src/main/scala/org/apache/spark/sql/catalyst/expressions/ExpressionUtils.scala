@@ -22,8 +22,8 @@ import org.apache.kylin.measure.hllc.HLLCounter
 import org.apache.kylin.measure.percentile.PercentileSerializer
 import org.apache.spark.sql.AnalysisException
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.types.Decimal
-import org.apache.spark.sql.udaf.BitmapSerAndDeSerObj
+import org.apache.spark.sql.types.{DataType, Decimal}
+import org.apache.spark.sql.udaf.{BitmapSerAndDeSerObj, SumLCUtil}
 
 import java.nio.ByteBuffer
 import scala.reflect.ClassTag
@@ -117,15 +117,15 @@ object ExpressionUtils {
   }
 
   def approxCountDistinctDecodeHelper(bytes: Any, precision: Any): Long = {
-      val storageFormat = bytes.asInstanceOf[Array[Byte]]
-      val preciseValue = precision.asInstanceOf[Int]
-      if (storageFormat.nonEmpty) {
-        val counter = new HLLCounter(preciseValue)
-        counter.readRegisters(ByteBuffer.wrap(storageFormat))
-        counter.getCountEstimate
-      } else {
-        0L
-      }
+    val storageFormat = bytes.asInstanceOf[Array[Byte]]
+    val preciseValue = precision.asInstanceOf[Int]
+    if (storageFormat.nonEmpty) {
+      val counter = new HLLCounter(preciseValue)
+      counter.readRegisters(ByteBuffer.wrap(storageFormat))
+      counter.getCountEstimate
+    } else {
+      0L
+    }
   }
 
   def percentileDecodeHelper(bytes: Any, quantile: Any, precision: Any): Double = {
@@ -134,5 +134,12 @@ object ExpressionUtils {
     val counter = serializer.deserialize(ByteBuffer.wrap(arrayBytes))
     counter.getResultEstimateWithQuantileRatio(quantile.asInstanceOf[Decimal].toDouble)
   }
-}
 
+  def sumLCDecodeHelper(bytes: Any, wrapDataType: Any): Number = {
+    val arrayBytes = bytes.asInstanceOf[Array[Byte]]
+    val codec = SumLCUtil.getNumericNullSafeSerializerByDataType(DataType.fromJson(wrapDataType.toString))
+    val counter = SumLCUtil.decodeToSumLCCounter(arrayBytes, codec)
+    counter.getSumLC
+  }
+
+}

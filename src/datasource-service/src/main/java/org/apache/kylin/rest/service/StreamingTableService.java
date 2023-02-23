@@ -32,15 +32,16 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.schema.ReloadTableContext;
+import org.apache.kylin.metadata.streaming.DataParserManager;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.StreamingRequest;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.TableUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -81,8 +82,14 @@ public class StreamingTableService extends TableService {
     @Transaction(project = 0)
     public void createKafkaConfig(String project, KafkaConfig kafkaConfig) {
         aclEvaluate.checkProjectWritePermission(project);
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        KafkaConfigManager.getInstance(kylinConfig, project).createKafkaConfig(kafkaConfig);
+        getManager(KafkaConfigManager.class, project).createKafkaConfig(kafkaConfig);
+
+        DataParserManager manager = getManager(DataParserManager.class, project);
+        manager.initDefault();
+        val info = manager.getDataParserInfo(kafkaConfig.getParserName());
+        val copyInfo = manager.copyForWrite(info);
+        copyInfo.getStreamingTables().add(kafkaConfig.resourceName());
+        manager.updateDataParserInfo(copyInfo);
     }
 
     @Transaction(project = 0)
@@ -131,10 +138,7 @@ public class StreamingTableService extends TableService {
                 .collect(Collectors.toList());
         List<String> streamColumns = Arrays.stream(streamColumnDescs).map(ColumnDesc::getName).sorted()
                 .collect(Collectors.toList());
-        if (!batchColumns.equals(streamColumns)) {
-            return false;
-        }
-        return true;
+        return batchColumns.equals(streamColumns);
     }
 
 }

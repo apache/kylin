@@ -32,6 +32,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.common.exception.JobErrorCode;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultExecutableOnModel;
@@ -39,6 +41,7 @@ import org.apache.kylin.job.execution.ExecutableParams;
 import org.apache.kylin.job.execution.JobSchedulerModeEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.factory.JobFactory;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -46,7 +49,6 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.PartitionStatusEnum;
-import org.apache.kylin.metadata.favorite.FavoriteRuleManager;
 import org.apache.kylin.metadata.job.JobBucket;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
@@ -95,15 +97,22 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
 
     @VisibleForTesting
     public static NSparkCubingJob create(Set<NDataSegment> segments, Set<LayoutEntity> layouts, String submitter,
-                                         Set<JobBucket> buckets) {
+            Set<JobBucket> buckets) {
         return create(segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, RandomUtil.randomUUIDStr(), null, null,
                 buckets);
     }
 
     @VisibleForTesting
+    public static NSparkCubingJob createIncBuildJob(Set<NDataSegment> segments, Set<LayoutEntity> layouts, String submitter,
+                                                    Set<JobBucket> buckets) {
+        return create(segments, layouts, submitter, JobTypeEnum.INC_BUILD, RandomUtil.randomUUIDStr(), null, null,
+                buckets);
+    }
+
+    @VisibleForTesting
     public static NSparkCubingJob create(Set<NDataSegment> segments, Set<LayoutEntity> layouts, String submitter,
-                                         JobTypeEnum jobType, String jobId, Set<String> ignoredSnapshotTables, Set<Long> partitions,
-                                         Set<JobBucket> buckets) {
+            JobTypeEnum jobType, String jobId, Set<String> ignoredSnapshotTables, Set<Long> partitions,
+            Set<JobBucket> buckets) {
         val params = new JobFactory.JobBuildParams(segments, layouts, submitter, jobType, jobId, null,
                 ignoredSnapshotTables, partitions, buckets, Maps.newHashMap());
         return innerCreate(params);
@@ -163,6 +172,9 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         if (CollectionUtils.isNotEmpty(buckets)) {
             job.setParam(NBatchConstants.P_BUCKETS, ExecutableParams.toBucketParam(buckets));
         }
+
+        enableCostBasedPlannerIfNeed(df, segments, job);
+
         job.setParam(NBatchConstants.P_JOB_ID, jobId);
         job.setParam(NBatchConstants.P_PROJECT_NAME, df.getProject());
         job.setParam(NBatchConstants.P_TARGET_MODEL, job.getTargetSubject());
@@ -171,12 +183,6 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         job.setParam(NBatchConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
         job.setParam(NBatchConstants.P_DATA_RANGE_START, String.valueOf(startTime));
         job.setParam(NBatchConstants.P_DATA_RANGE_END, String.valueOf(endTime));
-        FavoriteRuleManager ruleManager = FavoriteRuleManager.getInstance(kylinConfig, df.getProject());
-        Set<String> excludedTables = ruleManager.getExcludedTables();
-        // if excludedTables contains factTable, remove factTable in excludedTables
-        val rootFactTableName = df.getModel().getRootFactTableName();
-        excludedTables.remove(rootFactTableName);
-        job.setParam(NBatchConstants.P_EXCLUDED_TABLES, String.join(",", excludedTables));
         if (CollectionUtils.isNotEmpty(ignoredSnapshotTables)) {
             job.setParam(NBatchConstants.P_IGNORED_SNAPSHOT_TABLES, String.join(",", ignoredSnapshotTables));
         }
@@ -198,7 +204,7 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
     }
 
     private static AbstractExecutable initSecondStorageDeleteIndex(Set<LayoutEntity> toBeDeletedLayouts,
-                                                                   JobTypeEnum jobType, NDataflow df, NSparkCubingJob job, KylinConfigExt config) {
+            JobTypeEnum jobType, NDataflow df, NSparkCubingJob job, KylinConfigExt config) {
         if (!SecondStorageUtil.isModelEnable(df.getProject(), job.getTargetSubject())) {
             return null;
         }
@@ -211,7 +217,7 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
     }
 
     private static AbstractExecutable initSecondStorage(Set<LayoutEntity> layouts, JobTypeEnum jobType, NDataflow df,
-                                                        NSparkCubingJob job, KylinConfigExt config) {
+            NSparkCubingJob job, KylinConfigExt config) {
         AbstractExecutable secondStorage = null;
         if (SecondStorageUtil.isModelEnable(df.getProject(), job.getTargetSubject())) {
             // can't refresh segment when second storage do rebalanced
@@ -239,7 +245,7 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
     }
 
     private static AbstractExecutable initCleanUpTransactionalTable(KylinConfig kylinConfig, NDataflow df,
-                                                                    NSparkCubingJob job, KylinConfigExt config) {
+            NSparkCubingJob job, KylinConfigExt config) {
         AbstractExecutable cleanUpTransactionalTable = null;
         Boolean isRangePartitionTable = df.getModel().getAllTableRefs().stream()
                 .anyMatch(tableRef -> tableRef.getTableDesc().isRangePartition());
@@ -253,7 +259,8 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         return cleanUpTransactionalTable;
     }
 
-    public static void setDAGRelations(AbstractExecutable job, KylinConfig config, NSparkCubingJob.NSparkCubingJobStep jobStep) {
+    public static void setDAGRelations(AbstractExecutable job, KylinConfig config,
+            NSparkCubingJob.NSparkCubingJobStep jobStep) {
         if (!StringUtils.equalsIgnoreCase(config.getJobSchedulerMode(), JobSchedulerModeEnum.CHAIN.toString())) {
             AbstractExecutable resourceDetect = jobStep.getResourceDetect();
             AbstractExecutable cubing = jobStep.getCubing();
@@ -285,14 +292,14 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
 
     public static void checkIfNeedBuildSnapshots(NSparkCubingJob job) {
         switch (job.getJobType()) {
-            case INC_BUILD:
-            case INDEX_REFRESH:
-            case INDEX_BUILD:
-                job.setParam(NBatchConstants.P_NEED_BUILD_SNAPSHOTS, "true");
-                break;
-            default:
-                job.setParam(NBatchConstants.P_NEED_BUILD_SNAPSHOTS, "false");
-                break;
+        case INC_BUILD:
+        case INDEX_REFRESH:
+        case INDEX_BUILD:
+            job.setParam(NBatchConstants.P_NEED_BUILD_SNAPSHOTS, "true");
+            break;
+        default:
+            job.setParam(NBatchConstants.P_NEED_BUILD_SNAPSHOTS, "false");
+            break;
         }
     }
 
@@ -348,41 +355,41 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         Set<String> segmentIds = getSparkCubingStep().getSegmentIds();
         Set<Long> partitions = getSparkCubingStep().getTargetPartitions();
         switch (getJobType()) {
-            case SUB_PARTITION_BUILD:
-                for (String id : segmentIds) {
-                    NDataSegment segment = df.getSegment(id);
-                    if (segment == null) {
-                        continue;
-                    }
-                    // remove partition in layouts
-                    dfManager.removeLayoutPartition(df.getId(), partitions, Sets.newHashSet(segment.getId()));
-                    // remove partition in segments
-                    dfManager.removeSegmentPartition(df.getId(), partitions, Sets.newHashSet(segment.getId()));
-                    logger.info(String.format(Locale.ROOT, "Remove partitions [%s] in segment [%s] cause to cancel job.",
-                            partitions, id));
+        case SUB_PARTITION_BUILD:
+            for (String id : segmentIds) {
+                NDataSegment segment = df.getSegment(id);
+                if (segment == null) {
+                    continue;
                 }
-                break;
-            case SUB_PARTITION_REFRESH:
-                for (String id : segmentIds) {
-                    NDataSegment segment = df.getSegment(id);
-                    if (segment == null) {
-                        continue;
-                    }
-                    segment.getMultiPartitions().forEach(partition -> {
-                        if (partitions.contains(partition.getPartitionId())
-                                && PartitionStatusEnum.REFRESH == partition.getStatus()) {
-                            partition.setStatus(PartitionStatusEnum.READY);
-                        }
-                    });
-                    val dfUpdate = new NDataflowUpdate(df.getId());
-                    dfUpdate.setToUpdateSegs(segment);
-                    dfManager.updateDataflow(dfUpdate);
-                    logger.info(String.format(Locale.ROOT,
-                            "Change partitions [%s] in segment [%s] status to READY cause to cancel job.", partitions, id));
+                // remove partition in layouts
+                dfManager.removeLayoutPartition(df.getId(), partitions, Sets.newHashSet(segment.getId()));
+                // remove partition in segments
+                dfManager.removeSegmentPartition(df.getId(), partitions, Sets.newHashSet(segment.getId()));
+                logger.info(String.format(Locale.ROOT, "Remove partitions [%s] in segment [%s] cause to cancel job.",
+                        partitions, id));
+            }
+            break;
+        case SUB_PARTITION_REFRESH:
+            for (String id : segmentIds) {
+                NDataSegment segment = df.getSegment(id);
+                if (segment == null) {
+                    continue;
                 }
-                break;
-            default:
-                break;
+                segment.getMultiPartitions().forEach(partition -> {
+                    if (partitions.contains(partition.getPartitionId())
+                            && PartitionStatusEnum.REFRESH == partition.getStatus()) {
+                        partition.setStatus(PartitionStatusEnum.READY);
+                    }
+                });
+                val dfUpdate = new NDataflowUpdate(df.getId());
+                dfUpdate.setToUpdateSegs(segment);
+                dfManager.updateDataflow(dfUpdate);
+                logger.info(String.format(Locale.ROOT,
+                        "Change partitions [%s] in segment [%s] status to READY cause to cancel job.", partitions, id));
+            }
+            break;
+        default:
+            break;
         }
     }
 
@@ -425,5 +432,56 @@ public class NSparkCubingJob extends DefaultExecutableOnModel {
         private final AbstractExecutable secondStorageDeleteIndex;
         private final AbstractExecutable secondStorage;
         private final AbstractExecutable cleanUpTransactionalTable;
+    }
+
+    private static void enableCostBasedPlannerIfNeed(NDataflow df, Set<NDataSegment> segments, NSparkCubingJob job) {
+        // need run the cost based planner:
+        // 1. config enable the cube planner
+        // 2. the model dose not have the `layout_cost_based_pruned_list`
+        // 3. rule index has agg group
+        // 4. just only one segment to be built/refresh(other case will throw exception)
+        IndexPlan indexPlan = df.getIndexPlan();
+        KylinConfig kylinConfig = indexPlan.getConfig();
+        boolean needCostRecommendIndex = indexPlan.getRuleBasedIndex() != null
+                && indexPlan.getRuleBasedIndex().getLayoutsOfCostBasedList() == null
+                && !indexPlan.getRuleBasedIndex().getAggregationGroups().isEmpty();
+        if (kylinConfig.enableCostBasedIndexPlanner() && needCostRecommendIndex
+                && canEnablePlannerJob(job.getJobType())) {
+            // must run the cost based planner
+            if (segments.size() == 1) {
+                if (noBuildingSegmentExist(df.getProject(), job.getTargetSubject(), kylinConfig)) {
+                    // check the count of rowkey:
+                    // if the count of row key exceed the 63, throw exception
+                    if (indexPlan.getRuleBasedIndex().countOfIncludeDimension() > (Long.SIZE - 1)) {
+                        throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR,
+                                String.format(Locale.ROOT,
+                                        "The count of row key %d can't be larger than 63, when use the cube planner",
+                                        indexPlan.getRuleBasedIndex().countOfIncludeDimension()));
+                    }
+                    // Add the parameter `P_JOB_ENABLE_PLANNER` which is used to decide whether to use the  cube planner
+                    job.setParam(NBatchConstants.P_JOB_ENABLE_PLANNER, Boolean.TRUE.toString());
+                } else {
+                    throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR, String.format(Locale.ROOT,
+                            "There are running job for this model when submit the build job with cost based planner, "
+                                    + "please wait for other jobs to finish or cancel them"));
+                }
+            } else {
+                throw new KylinException(JobErrorCode.COST_BASED_PLANNER_ERROR,
+                        String.format(Locale.ROOT, "The number of segments to be built or refreshed must be 1, "
+                                + "This is the first time to submit build job with enable cost based planner"));
+            }
+        }
+    }
+
+    private static boolean noBuildingSegmentExist(String project, String modelId, KylinConfig kylinConfig) {
+        NDataflowManager nDataflowManager = NDataflowManager.getInstance(kylinConfig, project);
+        NDataflow dataflow = nDataflowManager.getDataflow(modelId);
+        // There are no other tasks in building
+        return dataflow.getSegments(SegmentStatusEnum.NEW).size() <= 1;
+    }
+
+    private static boolean canEnablePlannerJob(JobTypeEnum jobType) {
+        // just support: INC_BUILD and INDEX_REFRESH to recommend/prune index
+        return JobTypeEnum.INC_BUILD.equals(jobType) || JobTypeEnum.INDEX_REFRESH.equals(jobType);
     }
 }

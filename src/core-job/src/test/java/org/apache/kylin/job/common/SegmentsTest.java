@@ -19,13 +19,13 @@
 package org.apache.kylin.job.common;
 
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.junit.TimeZoneTestRunner;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.SegmentStatusEnumToDisplay;
 import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.junit.TimeZoneTestRunner;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,6 +57,49 @@ public class SegmentsTest {
         Mockito.when(SegmentUtil.getSegmentStatusToDisplay(segments, seg, null)).thenCallRealMethod();
         Mockito.when(SegmentUtil.anyIndexJobRunning(seg)).thenReturn(true);
         Assert.assertEquals(status, SegmentStatusEnumToDisplay.LOADING);
+    }
+
+    @Test
+    public void testGetSegmentStatusToDisplay_Loading_Merging() {
+        Segments<NDataSegment> segments = new Segments<>();
+        val seg = NDataSegment.empty();
+        seg.setId("0");
+        seg.setSegmentRange(new SegmentRange.TimePartitionedSegmentRange(0L, 5L));
+        seg.setStatus(SegmentStatusEnum.READY);
+        segments.add(seg);
+
+        val seg1 = NDataSegment.empty();
+        seg.setId("1");
+        seg1.setSegmentRange(new SegmentRange.TimePartitionedSegmentRange(5L, 10L));
+        seg1.setStatus(SegmentStatusEnum.READY);
+        segments.add(seg1);
+
+        val seg2 = NDataSegment.empty();
+        seg2.setId("2");
+        seg2.setSegmentRange(new SegmentRange.TimePartitionedSegmentRange(0L, 15L));
+        seg2.setStatus(SegmentStatusEnum.NEW);
+        segments.add(seg2);
+
+        Mockito.mockStatic(SegmentUtil.class);
+        Mockito.when(SegmentUtil.getSegmentStatusToDisplay(segments, seg2, null)).thenCallRealMethod();
+        Mockito.when(SegmentUtil.anyIncSegmentJobRunning(seg2)).thenReturn(true);
+        Mockito.when(SegmentUtil.anyIndexJobRunning(seg2)).thenReturn(false);
+
+        SegmentStatusEnumToDisplay status = SegmentUtil.getSegmentStatusToDisplay(segments, seg2, null);
+        Assert.assertEquals(SegmentStatusEnumToDisplay.LOADING, status);
+
+        val seg3 = NDataSegment.empty();
+        seg3.setId("3");
+        seg3.setSegmentRange(new SegmentRange.TimePartitionedSegmentRange(0L, 10L));
+        seg3.setStatus(SegmentStatusEnum.NEW);
+        segments.add(seg3);
+
+        Mockito.when(SegmentUtil.getSegmentStatusToDisplay(segments, seg3, null)).thenCallRealMethod();
+        Mockito.when(SegmentUtil.anyIncSegmentJobRunning(seg3)).thenReturn(false);
+        Mockito.when(SegmentUtil.anyIndexJobRunning(seg3)).thenReturn(false);
+
+        SegmentStatusEnumToDisplay status2 = SegmentUtil.getSegmentStatusToDisplay(segments, seg3, null);
+        Assert.assertEquals(SegmentStatusEnumToDisplay.MERGING, status2);
     }
 
     @Test
@@ -157,15 +200,21 @@ public class SegmentsTest {
         newSeg.setStatus(SegmentStatusEnum.NEW);
         segments.add(newSeg);
 
+        Mockito.mockStatic(SegmentUtil.class);
+        Mockito.when(SegmentUtil.getSegmentStatusToDisplay(segments, newSeg, null)).thenCallRealMethod();
+        Mockito.when(SegmentUtil.anyIndexJobRunning(newSeg)).thenReturn(false);
         SegmentStatusEnumToDisplay status = SegmentUtil.getSegmentStatusToDisplay(segments, newSeg, null);
         Assert.assertEquals(status, SegmentStatusEnumToDisplay.MERGING);
 
+        Mockito.when(SegmentUtil.getSegmentStatusToDisplay(segments, seg, null)).thenCallRealMethod();
+        Mockito.when(SegmentUtil.anyIndexJobRunning(seg)).thenReturn(false);
         SegmentStatusEnumToDisplay status2 = SegmentUtil.getSegmentStatusToDisplay(segments, seg, null);
         Assert.assertEquals(status2, SegmentStatusEnumToDisplay.LOCKED);
 
+        Mockito.when(SegmentUtil.getSegmentStatusToDisplay(segments, seg2, null)).thenCallRealMethod();
+        Mockito.when(SegmentUtil.anyIndexJobRunning(seg2)).thenReturn(false);
         SegmentStatusEnumToDisplay status3 = SegmentUtil.getSegmentStatusToDisplay(segments, seg2, null);
         Assert.assertEquals(status3, SegmentStatusEnumToDisplay.LOCKED);
-
     }
 
     public NDataSegment newReadySegment(Long startTime, Long endTime) {

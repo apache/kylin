@@ -60,7 +60,12 @@ abstract class BuildStage(private val jobContext: SegmentJob,
   protected final val sparkSession = jobContext.getSparkSession
   protected final val resourceContext = jobContext.getBuildContext
   protected final val runtime = jobContext.getRuntime
-  protected final val readOnlyLayouts = jobContext.getReadOnlyLayouts
+
+  // These parameters can be changed when running the cube planner, should use the
+  // `def` to get the latest data
+  protected def readOnlyLayouts = jobContext.getReadOnlyLayouts
+  private def spanningTree = buildParam.getSpanningTree
+  private def flatTableDesc = buildParam.getFlatTableDesc
 
   // Needed variables from data segment.
   protected final val segmentId = dataSegment.getId
@@ -68,10 +73,6 @@ abstract class BuildStage(private val jobContext: SegmentJob,
 
   protected final val dataModel = dataSegment.getModel
   protected final val storageType = dataModel.getStorageType
-
-  private lazy val spanningTree = buildParam.getSpanningTree
-
-  private lazy val flatTableDesc = buildParam.getFlatTableDesc
 
   private lazy val flatTable = buildParam.getBuildFlatTable
 

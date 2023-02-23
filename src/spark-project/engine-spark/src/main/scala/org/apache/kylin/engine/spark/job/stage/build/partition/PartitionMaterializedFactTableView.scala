@@ -44,7 +44,7 @@ class PartitionMaterializedFactTableView(jobContext: SegmentJob, dataSegment: ND
     val tableDesc = if (jobContext.isPartialBuild) {
       val parser = new IndexDependencyParser(dataModel)
       val relatedTableAlias =
-        parser.getRelatedTablesAlias(jobContext.getReadOnlyLayouts)
+        parser.getRelatedTablesAlias(readOnlyLayouts)
       new PartitionFlatTableDesc(config, dataSegment, spanTree, relatedTableAlias, jobId, partitions)
     } else {
       new PartitionFlatTableDesc(config, dataSegment, spanTree, jobId, partitions)

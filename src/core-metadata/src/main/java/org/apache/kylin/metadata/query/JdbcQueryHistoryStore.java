@@ -25,6 +25,7 @@ import static org.mybatis.dynamic.sql.SqlBuilder.isGreaterThan;
 import static org.mybatis.dynamic.sql.SqlBuilder.isGreaterThanOrEqualTo;
 import static org.mybatis.dynamic.sql.SqlBuilder.isIn;
 import static org.mybatis.dynamic.sql.SqlBuilder.isLessThan;
+import static org.mybatis.dynamic.sql.SqlBuilder.isLessThanOrEqualTo;
 import static org.mybatis.dynamic.sql.SqlBuilder.isLike;
 import static org.mybatis.dynamic.sql.SqlBuilder.isLikeCaseInsensitive;
 import static org.mybatis.dynamic.sql.SqlBuilder.isNotEqualTo;
@@ -40,8 +41,10 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -54,10 +57,10 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.logging.LogOutputStream;
 import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.query.util.QueryHisStoreUtil;
 import org.mybatis.dynamic.sql.BasicColumn;
 import org.mybatis.dynamic.sql.SqlBuilder;
@@ -66,6 +69,8 @@ import org.mybatis.dynamic.sql.insert.render.InsertStatementProvider;
 import org.mybatis.dynamic.sql.render.RenderingStrategies;
 import org.mybatis.dynamic.sql.select.QueryExpressionDSL;
 import org.mybatis.dynamic.sql.select.SelectModel;
+import org.mybatis.dynamic.sql.select.join.EqualTo;
+import org.mybatis.dynamic.sql.select.aggregate.Count;
 import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
 import org.mybatis.dynamic.sql.update.render.UpdateStatementProvider;
 
@@ -83,6 +88,7 @@ public class JdbcQueryHistoryStore {
     public static final String WEEK = "week";
     public static final String DAY = "day";
     public static final String COUNT = "count";
+    public static final String ID_TABLE_ALIAS = "idTable";
     public static final String DELETE_REALIZATION_LOG = "Delete {} row query history realization takes {} ms";
 
     private final QueryHistoryTable queryHistoryTable;
@@ -154,7 +160,7 @@ public class JdbcQueryHistoryStore {
             insertQhRealProviderList.forEach(qhRealizationMapper::insert);
 
             session.commit();
-            if (!queryMetricsList.isEmpty()) {
+            if (queryMetricsList.size() > 0) {
                 log.info("Insert {} query history into database takes {} ms", queryMetricsList.size(),
                         System.currentTimeMillis() - startTime);
             }
@@ -196,7 +202,8 @@ public class JdbcQueryHistoryStore {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
             SelectStatementProvider statementProvider = selectDistinct(queryHistoryRealizationTable.queryId)
-                    .from(queryHistoryRealizationTable).where(queryHistoryRealizationTable.model, isIn(modelIds))
+                    .from(queryHistoryRealizationTable) //
+                    .where(queryHistoryRealizationTable.model, isIn(modelIds)) //
                     .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectMany(statementProvider).stream().map(QueryHistory::getQueryId)
                     .collect(Collectors.toList());
@@ -207,14 +214,16 @@ public class JdbcQueryHistoryStore {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryStatisticsMapper mapper = session.getMapper(QueryStatisticsMapper.class);
             SelectStatementProvider statementProvider1 = selectDistinct(queryHistoryTable.engineType)
-                    .from(queryHistoryTable).where(queryHistoryTable.engineType, isNotEqualTo("NATIVE"))
-                    .and(queryHistoryTable.projectName, isEqualTo(request.getProject())).build()
-                    .render(RenderingStrategies.MYBATIS3);
+                    .from(queryHistoryTable) //
+                    .where(queryHistoryTable.engineType, isNotEqualTo("NATIVE")) //
+                    .and(queryHistoryTable.projectName, isEqualTo(request.getProject())) //
+                    .build().render(RenderingStrategies.MYBATIS3);
             List<QueryStatistics> engineTypes = mapper.selectMany(statementProvider1);
 
             SelectStatementProvider statementProvider2 = selectDistinct(queryHistoryRealizationTable.model)
-                    .from(queryHistoryRealizationTable)
-                    .where(queryHistoryRealizationTable.projectName, isEqualTo(request.getProject())).limit(size)
+                    .from(queryHistoryRealizationTable) //
+                    .where(queryHistoryRealizationTable.projectName, isEqualTo(request.getProject())) //
+                    .limit(size) //
                     .build().render(RenderingStrategies.MYBATIS3);
             List<QueryStatistics> modelIds = mapper.selectMany(statementProvider2);
             engineTypes.addAll(modelIds);
@@ -222,52 +231,68 @@ public class JdbcQueryHistoryStore {
         }
     }
 
-    public long getMaxId() {
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
-            SelectStatementProvider statementProvider = select(max(queryHistoryTable.id))
-                    .from(queryHistoryTable)
-                    .build().render(RenderingStrategies.MYBATIS3);
-            Long maxId = mapper.selectAsLong(statementProvider);
-            return maxId == null ? 0 : maxId;
-        }
-    }
-
-    public QueryHistory queryOldestQueryHistory(long retainMinId) {
+    public QueryHistory getOldestQueryHistory(long index) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
             SelectStatementProvider statementProvider = select(getSelectFields(queryHistoryTable))
-                    .from(queryHistoryTable)
-                    .where(queryHistoryTable.id, isEqualTo(retainMinId))
+                    .from(queryHistoryTable) //
+                    .orderBy(queryHistoryTable.id) //
+                    .limit(1) //
+                    .offset(index - 1L) //
                     .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectOne(statementProvider);
         }
     }
 
-    public long getProjectCount(String project) {
+    public QueryHistory getOldestQueryHistory(String project, long index) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
-            SelectStatementProvider statementProvider = select(count(queryHistoryTable.id)) //
+            SelectStatementProvider statementProvider = select(getSelectFields(queryHistoryTable))
                     .from(queryHistoryTable) //
                     .where(queryHistoryTable.projectName, isEqualTo(project)) //
+                    .orderBy(queryHistoryTable.id) //
+                    .limit(1) //
+                    .offset(index - 1L) //
+                    .build().render(RenderingStrategies.MYBATIS3);
+            return mapper.selectOne(statementProvider);
+        }
+    }
+
+    public Long getCountOnQueryHistory() {
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
+            SelectStatementProvider statementProvider = select(Count.of(queryHistoryTable.id)) //
+                    .from(queryHistoryTable) //
                     .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectAsLong(statementProvider);
         }
     }
 
-    public QueryHistory queryOldestQueryHistory(long maxSize, String project) {
+    public Long getCountOnQueryHistory(long retainTime) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
-            SelectStatementProvider statementProvider = select(getSelectFields(queryHistoryTable)) //
+            SelectStatementProvider statementProvider = select(Count.of(queryHistoryTable.id).as(COUNT)) //
                     .from(queryHistoryTable) //
-                    .where(queryHistoryTable.id, //
-                            isEqualTo(select(queryHistoryTable.id) //
-                                    .from(queryHistoryTable) //
-                                    .where(queryHistoryTable.projectName, isEqualTo(project)) //
-                                    .orderBy(queryHistoryTable.id.descending()).limit(1).offset(maxSize - 1)) //
-                    ).build().render(RenderingStrategies.MYBATIS3);
-            return mapper.selectOne(statementProvider);
+                    .where(queryHistoryTable.queryTime, isLessThan(retainTime)) //
+                    .build().render(RenderingStrategies.MYBATIS3);
+            return mapper.selectAsLong(statementProvider);
         }
+    }
+
+    public Map<String, Long> getCountGroupByProject() {
+        Map<String, Long> projectCounts = new HashMap<>();
+        List<QueryHistoryProjectInfo> projectInfos;
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
+            SelectStatementProvider statementProvider = select(queryHistoryTable.projectName,
+                    count(queryHistoryTable.id).as(COUNT)) //
+                    .from(queryHistoryTable) //
+                    .groupBy(queryHistoryTable.projectName) //
+                    .build().render(RenderingStrategies.MYBATIS3);
+            projectInfos = mapper.selectByProject(statementProvider);
+        }
+        projectInfos.forEach(projectInfo -> projectCounts.put(projectInfo.getProjectName(), projectInfo.getCount()));
+        return projectCounts;
     }
 
     public QueryHistory queryByQueryId(String queryId) {
@@ -296,10 +321,14 @@ public class JdbcQueryHistoryStore {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
             SelectStatementProvider statementProvider = select(getSelectFields(queryHistoryTable)) //
                     .from(queryHistoryTable) //
-                    .where(queryHistoryTable.id, isGreaterThan(id)) //
-                    .and(queryHistoryTable.projectName, isEqualTo(project)) //
+                    .join(select(BasicColumn.columnList(queryHistoryTable.id)).from(queryHistoryTable)
+                            .where(queryHistoryTable.id, isGreaterThan(id)) //
+                            .and(queryHistoryTable.projectName, isEqualTo(project)) //
+                            .orderBy(queryHistoryTable.id) //
+                            .limit(batchSize), ID_TABLE_ALIAS) //
+                    .on(queryHistoryTable.id.qualifiedWith(queryHistoryTable.tableNameAtRuntime()),
+                            new EqualTo(queryHistoryTable.id.qualifiedWith(ID_TABLE_ALIAS)))
                     .orderBy(queryHistoryTable.id) //
-                    .limit(batchSize) //
                     .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectMany(statementProvider);
         }
@@ -310,11 +339,11 @@ public class JdbcQueryHistoryStore {
             QueryStatisticsMapper mapper = session.getMapper(QueryStatisticsMapper.class);
             SelectStatementProvider statementProvider = select(count(queryHistoryTable.queryId).as(COUNT),
                     avg(queryHistoryTable.duration).as("mean")) //
-                            .from(queryHistoryTable) //
-                            .where(queryHistoryTable.queryTime, isGreaterThanOrEqualTo(startTime)) //
-                            .and(queryHistoryTable.queryTime, isLessThan(endTime)) //
-                            .and(queryHistoryTable.projectName, isEqualTo(project)) //
-                            .build().render(RenderingStrategies.MYBATIS3);
+                    .from(queryHistoryTable) //
+                    .where(queryHistoryTable.queryTime, isGreaterThanOrEqualTo(startTime)) //
+                    .and(queryHistoryTable.queryTime, isLessThan(endTime)) //
+                    .and(queryHistoryTable.projectName, isEqualTo(project)) //
+                    .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectMany(statementProvider);
         }
     }
@@ -324,12 +353,12 @@ public class JdbcQueryHistoryStore {
             QueryStatisticsMapper mapper = session.getMapper(QueryStatisticsMapper.class);
             SelectStatementProvider statementProvider = select(queryHistoryRealizationTable.model,
                     count(queryHistoryRealizationTable.queryId).as(COUNT)) //
-                            .from(queryHistoryRealizationTable) //
-                            .where(queryHistoryRealizationTable.queryTime, isGreaterThanOrEqualTo(startTime)) //
-                            .and(queryHistoryRealizationTable.queryTime, isLessThan(endTime)) //
-                            .and(queryHistoryRealizationTable.projectName, isEqualTo(project)) //
-                            .groupBy(queryHistoryRealizationTable.model) //
-                            .build().render(RenderingStrategies.MYBATIS3);
+                    .from(queryHistoryRealizationTable) //
+                    .where(queryHistoryRealizationTable.queryTime, isGreaterThanOrEqualTo(startTime)) //
+                    .and(queryHistoryRealizationTable.queryTime, isLessThan(endTime)) //
+                    .and(queryHistoryRealizationTable.projectName, isEqualTo(project)) //
+                    .groupBy(queryHistoryRealizationTable.model) //
+                    .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectMany(statementProvider);
         }
     }
@@ -380,18 +409,18 @@ public class JdbcQueryHistoryStore {
             QueryStatisticsMapper mapper = session.getMapper(QueryStatisticsMapper.class);
             SelectStatementProvider statementProvider = select(queryHistoryRealizationTable.model,
                     avg(queryHistoryRealizationTable.duration).as("mean")) //
-                            .from(queryHistoryRealizationTable) //
-                            .where(queryHistoryRealizationTable.queryTime, isGreaterThanOrEqualTo(startTime)) //
-                            .and(queryHistoryRealizationTable.queryTime, isLessThan(endTime)) //
-                            .and(queryHistoryRealizationTable.projectName, isEqualTo(project)) //
-                            .groupBy(queryHistoryRealizationTable.model) //
-                            .build().render(RenderingStrategies.MYBATIS3);
+                    .from(queryHistoryRealizationTable) //
+                    .where(queryHistoryRealizationTable.queryTime, isGreaterThanOrEqualTo(startTime)) //
+                    .and(queryHistoryRealizationTable.queryTime, isLessThan(endTime)) //
+                    .and(queryHistoryRealizationTable.projectName, isEqualTo(project)) //
+                    .groupBy(queryHistoryRealizationTable.model) //
+                    .build().render(RenderingStrategies.MYBATIS3);
             return mapper.selectMany(statementProvider);
         }
     }
 
     public List<QueryStatistics> queryAvgDurationByTime(long startTime, long endTime, String timeDimension,
-            String project) {
+                                                        String project) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryStatisticsMapper mapper = session.getMapper(QueryStatisticsMapper.class);
             SelectStatementProvider statementProvider = queryAvgDurationByTimeProvider(startTime, endTime,
@@ -414,27 +443,28 @@ public class JdbcQueryHistoryStore {
         }
     }
 
-    public void deleteQueryHistory(long queryTime) {
+    public int deleteQueryHistory(long id) {
         long startTime = System.currentTimeMillis();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
             DeleteStatementProvider deleteStatement = SqlBuilder.deleteFrom(queryHistoryTable) //
-                    .where(queryHistoryTable.queryTime, isLessThan(queryTime)) //
+                    .where(queryHistoryTable.id, isLessThanOrEqualTo(id)) //
                     .build().render(RenderingStrategies.MYBATIS3);
             int deleteRows = mapper.delete(deleteStatement);
             session.commit();
             if (deleteRows > 0) {
                 log.info("Delete {} row query history takes {} ms", deleteRows, System.currentTimeMillis() - startTime);
             }
+            return deleteRows;
         }
     }
 
-    public void deleteQueryHistory(long queryTime, String project) {
+    public int deleteQueryHistory(String project, long id) {
         long startTime = System.currentTimeMillis();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
             DeleteStatementProvider deleteStatement = SqlBuilder.deleteFrom(queryHistoryTable) //
-                    .where(queryHistoryTable.queryTime, isLessThan(queryTime)) //
+                    .where(queryHistoryTable.id, isLessThanOrEqualTo(id)) //
                     .and(queryHistoryTable.projectName, isEqualTo(project)) //
                     .build().render(RenderingStrategies.MYBATIS3);
             int deleteRows = mapper.delete(deleteStatement);
@@ -443,6 +473,7 @@ public class JdbcQueryHistoryStore {
                 log.info("Delete {} row query history for project [{}] takes {} ms", deleteRows, project,
                         System.currentTimeMillis() - startTime);
             }
+            return deleteRows;
         }
     }
 
@@ -479,7 +510,7 @@ public class JdbcQueryHistoryStore {
         }
     }
 
-    public void deleteQueryHistoryRealization(long queryTime, String project) {
+    public void deleteQueryHistoryRealization(String project, long queryTime) {
         long startTime = System.currentTimeMillis();
         try (SqlSession session = sqlSessionFactory.openSession()) {
             QueryHistoryMapper mapper = session.getMapper(QueryHistoryMapper.class);
@@ -520,7 +551,7 @@ public class JdbcQueryHistoryStore {
             idToQHInfoList.forEach(pair -> providers.add(changeQHInfoProvider(pair.getFirst(), pair.getSecond())));
             providers.forEach(mapper::update);
             session.commit();
-            if (!idToQHInfoList.isEmpty()) {
+            if (idToQHInfoList.size() > 0) {
                 log.info("Update {} query history info takes {} ms", idToQHInfoList.size(),
                         System.currentTimeMillis() - start);
             }
@@ -579,11 +610,16 @@ public class JdbcQueryHistoryStore {
     }
 
     private SelectStatementProvider queryQueryHistoriesByConditionsProvider(QueryHistoryRequest request, int limit,
-            int offset) {
-        return filterByConditions(select(getSelectFields(queryHistoryTable)).from(queryHistoryTable), request)
+                                                                            int offset) {
+        return select(getSelectFields(queryHistoryTable)).from(queryHistoryTable)
+                .join(filterByConditions(select(BasicColumn.columnList(queryHistoryTable.id)).from(queryHistoryTable),
+                        request).orderBy(queryHistoryTable.queryTime.descending()) //
+                                .limit(limit) //
+                                .offset(offset),
+                        ID_TABLE_ALIAS) //
+                .on(queryHistoryTable.id.qualifiedWith(queryHistoryTable.tableNameAtRuntime()),
+                        new EqualTo(queryHistoryTable.id.qualifiedWith(ID_TABLE_ALIAS)))
                 .orderBy(queryHistoryTable.queryTime.descending()) //
-                .limit(limit) //
-                .offset(offset) //
                 .build().render(RenderingStrategies.MYBATIS3);
     }
 
@@ -706,7 +742,7 @@ public class JdbcQueryHistoryStore {
     }
 
     private SelectStatementProvider queryCountByTimeProvider(long startTime, long endTime, String timeDimension,
-            String project) {
+                                                             String project) {
         if (timeDimension.equalsIgnoreCase(MONTH)) {
             return select(queryHistoryTable.queryFirstDayOfMonth.as("time"), count(queryHistoryTable.id).as(COUNT)) //
                     .from(queryHistoryTable) //
@@ -737,7 +773,7 @@ public class JdbcQueryHistoryStore {
     }
 
     private SelectStatementProvider queryAvgDurationByTimeProvider(long startTime, long endTime, String timeDimension,
-            String project) {
+                                                                   String project) {
         if (timeDimension.equalsIgnoreCase(MONTH)) {
             return select(queryHistoryTable.queryFirstDayOfMonth.as("time"), avg(queryHistoryTable.duration).as("mean")) //
                     .from(queryHistoryTable) //
@@ -768,13 +804,12 @@ public class JdbcQueryHistoryStore {
     }
 
     private BasicColumn[] getSelectFields(QueryHistoryTable queryHistoryTable) {
-        return BasicColumn.columnList(queryHistoryTable.id, queryHistoryTable.cacheHit, queryHistoryTable.duration,
-                queryHistoryTable.engineType, queryHistoryTable.errorType, queryHistoryTable.hostName,
-                queryHistoryTable.indexHit, queryHistoryTable.projectName, queryHistoryTable.queryHistoryInfo,
-                queryHistoryTable.queryId, queryHistoryTable.queryRealizations, queryHistoryTable.queryStatus,
-                queryHistoryTable.querySubmitter, queryHistoryTable.queryTime, queryHistoryTable.resultRowCount,
-                queryHistoryTable.sql, queryHistoryTable.sqlPattern, queryHistoryTable.totalScanBytes,
-                queryHistoryTable.totalScanCount);
+        return BasicColumn.columnList(queryHistoryTable.id.qualifiedWith(queryHistoryTable.tableNameAtRuntime()),
+                queryHistoryTable.cacheHit, queryHistoryTable.duration, queryHistoryTable.engineType,
+                queryHistoryTable.errorType, queryHistoryTable.hostName, queryHistoryTable.indexHit,
+                queryHistoryTable.projectName, queryHistoryTable.queryHistoryInfo, queryHistoryTable.queryId,
+                queryHistoryTable.queryRealizations, queryHistoryTable.queryStatus, queryHistoryTable.querySubmitter,
+                queryHistoryTable.queryTime, queryHistoryTable.resultRowCount, queryHistoryTable.sql,
+                queryHistoryTable.sqlPattern, queryHistoryTable.totalScanBytes, queryHistoryTable.totalScanCount);
     }
-
 }

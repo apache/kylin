@@ -215,6 +215,28 @@ class EpochManagerTest {
     }
 
     @Test
+    void testGetOwnedEpochs() {
+        Epoch e1 = new Epoch();
+        e1.setEpochTarget("test1");
+        e1.setCurrentEpochOwner("owner1");
+
+        Epoch e2 = new Epoch();
+        e2.setEpochTarget("test2");
+        e2.setCurrentEpochOwner("owner2");
+
+        Epoch e3 = new Epoch();
+        e3.setEpochTarget("test3");
+        e3.setCurrentEpochOwner("owner2");
+
+        getEpochStore().insertBatch(Arrays.asList(e1, e2, e3));
+
+        EpochManager epochManager = EpochManager.getInstance();
+        epochManager.setIdentity("owner2");
+
+        Assertions.assertEquals(2, epochManager.getOwnedEpochs().size());
+    }
+
+    @Test
     void testForceUpdateEpoch() {
         EpochManager epochManager = EpochManager.getInstance();
         Assertions.assertNull(epochManager.getGlobalEpoch());
@@ -227,9 +249,7 @@ class EpochManagerTest {
     void testUpdateProjectEpochWithResourceGroupEnabled() {
         val manager = ResourceGroupManager.getInstance(getTestConfig());
         manager.getResourceGroup();
-        manager.updateResourceGroup(copyForWrite -> {
-            copyForWrite.setResourceGroupEnabled(true);
-        });
+        manager.updateResourceGroup(copyForWrite -> copyForWrite.setResourceGroupEnabled(true));
         EpochManager epochManager = EpochManager.getInstance();
         val prjMgr = NProjectManager.getInstance(getTestConfig());
         for (ProjectInstance prj : prjMgr.listAllProjects()) {
@@ -244,9 +264,7 @@ class EpochManagerTest {
     @Test
     void testGetEpochOwnerWithException() {
         EpochManager epochManager = EpochManager.getInstance();
-        Assertions.assertThrows(IllegalStateException.class, () -> {
-            epochManager.getEpochOwner(null);
-        });
+        Assertions.assertThrows(IllegalStateException.class, () -> epochManager.getEpochOwner(null));
     }
 
     @Test
@@ -390,6 +408,55 @@ class EpochManagerTest {
         Assertions.assertTrue(
                 getEpochStore().list().stream().allMatch(epoch -> epoch.getLastEpochRenewTime() >= curTime));
 
+    }
+
+    @Test
+    void testEpochRenewTimeoutDefault() {
+        KylinConfig config = getTestConfig();
+        double epochRenewTimeoutRate = config.getEpochRenewTimeoutRate();
+        Assertions.assertEquals(0.8, epochRenewTimeoutRate);
+        EpochManager manager = EpochManager.getInstance();
+        Object epochExpiredTime = ReflectionTestUtils.getField(manager, "epochExpiredTime");
+        Assertions.assertNotNull(epochExpiredTime);
+        Assertions.assertEquals(60, (long) epochExpiredTime);
+
+        Object epochRenewTimeout = ReflectionTestUtils.getField(manager, "epochRenewTimeout");
+        Assertions.assertNotNull(epochRenewTimeout);
+        Assertions.assertEquals(60 * epochRenewTimeoutRate, (int) epochRenewTimeout);
+    }
+
+    @Test
+    @OverwriteProp(key = "kylin.server.leader-race.heart-beat-timeout-rate", value = "0.0")
+    void testEpochRenewTimeoutOverride1() {
+        KylinConfig config = getTestConfig();
+        double epochRenewTimeoutRate = config.getEpochRenewTimeoutRate();
+        Assertions.assertEquals(0.0, epochRenewTimeoutRate);
+
+        EpochManager manager = EpochManager.getInstance();
+        Object epochExpiredTime = ReflectionTestUtils.getField(manager, "epochExpiredTime");
+        Assertions.assertNotNull(epochExpiredTime);
+        Assertions.assertEquals(60, (long) epochExpiredTime);
+
+        Object epochRenewTimeout = ReflectionTestUtils.getField(manager, "epochRenewTimeout");
+        Assertions.assertNotNull(epochRenewTimeout);
+        Assertions.assertEquals(60, (int) epochRenewTimeout);
+    }
+
+    @Test
+    @OverwriteProp(key = "kylin.server.leader-race.heart-beat-timeout-rate", value = "1.5")
+    void testEpochRenewTimeoutOverride2() {
+        KylinConfig config = getTestConfig();
+        double epochRenewTimeoutRate = config.getEpochRenewTimeoutRate();
+        Assertions.assertEquals(1.5, epochRenewTimeoutRate);
+
+        EpochManager manager = EpochManager.getInstance();
+        Object epochExpiredTime = ReflectionTestUtils.getField(manager, "epochExpiredTime");
+        Assertions.assertNotNull(epochExpiredTime);
+        Assertions.assertEquals(60, (long) epochExpiredTime);
+
+        Object epochRenewTimeout = ReflectionTestUtils.getField(manager, "epochRenewTimeout");
+        Assertions.assertNotNull(epochRenewTimeout);
+        Assertions.assertEquals(60 * epochRenewTimeoutRate, (int) epochRenewTimeout);
     }
 
     EpochStore getEpochStore() {

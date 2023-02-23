@@ -36,7 +36,6 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.metadata.PersistException;
 import org.apache.kylin.common.util.EncryptUtil;
-import org.msgpack.core.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -45,6 +44,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,19 +53,27 @@ public class JdbcUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(JdbcUtil.class);
 
+    public static <T> T withTransactionTimeout(DataSourceTransactionManager transactionManager, Callback<T> consumer,
+            int timeout) {
+        return withTransaction(transactionManager, consumer, TransactionDefinition.ISOLATION_REPEATABLE_READ, null,
+                timeout);
+    }
+
     public static <T> T withTransaction(DataSourceTransactionManager transactionManager, Callback<T> consumer) {
         return withTransaction(transactionManager, consumer, TransactionDefinition.ISOLATION_REPEATABLE_READ);
     }
 
     public static <T> T withTransaction(DataSourceTransactionManager transactionManager, Callback<T> consumer,
             int isolationLevel) {
-        return withTransaction(transactionManager, consumer, isolationLevel, null);
+        return withTransaction(transactionManager, consumer, isolationLevel, null,
+                TransactionDefinition.TIMEOUT_DEFAULT);
     }
 
     public static <T> T withTransaction(DataSourceTransactionManager transactionManager, Callback<T> consumer,
-            int isolationLevel, Callback<T> beforeCommit) {
+            int isolationLevel, Callback<T> beforeCommit, int timeout) {
         val definition = new DefaultTransactionDefinition();
         definition.setIsolationLevel(isolationLevel);
+        definition.setTimeout(timeout);
         val status = transactionManager.getTransaction(definition);
         try {
             T result = consumer.handle();
@@ -182,7 +190,7 @@ public class JdbcUtil {
     public static Properties datasourceParametersForUT(StorageURL url) {
         Properties props = new Properties();
         props.put("driverClassName", "org.h2.Driver");
-        props.put("url", "jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1;MODE=MySQL");
+        props.put("url", "jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1");
         props.put("username", "sa");
         props.put("password", "");
         props.put("maxTotal", "50");

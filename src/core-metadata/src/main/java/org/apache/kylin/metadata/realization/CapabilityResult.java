@@ -48,10 +48,14 @@ public class CapabilityResult {
     @Setter
     private IRealizationCandidate selectedStreamingCandidate;
 
+    @Getter
+    @Setter
+    private int layoutUnmatchedColsSize;
+
     /**
      * The smaller the cost, the more capable the realization
      */
-    public int cost;
+    public int cost = Integer.MAX_VALUE;
 
     /**
      * reason of incapable

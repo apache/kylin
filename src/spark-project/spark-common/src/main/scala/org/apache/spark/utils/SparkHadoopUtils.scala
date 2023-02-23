@@ -24,6 +24,10 @@ import org.apache.spark.deploy.SparkHadoopUtil
 object SparkHadoopUtils {
 
   def newConfigurationWithSparkConf(): Configuration = {
-    SparkHadoopUtil.newConfiguration(SparkEnv.get.conf)
+    val sparkEnv = SparkEnv.get
+    if (sparkEnv != null) {
+      SparkHadoopUtil.newConfiguration(sparkEnv.conf)
+    }
+    new Configuration()
   }
 }

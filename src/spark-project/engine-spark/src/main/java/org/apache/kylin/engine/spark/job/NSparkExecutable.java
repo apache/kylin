@@ -18,16 +18,26 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin;
-import lombok.val;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KapConfig;
@@ -60,26 +70,17 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.parquet.Strings;
+import org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
+import lombok.val;
 
 /**
  *
@@ -206,8 +207,9 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
     public void waiteForResourceStart(ExecutableContext context) {
         // mark waiteForResource stage start
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-            getExecutableManager(getProject()) //
-                    .updateStageStatus(getId() + "_00", null, ExecutableState.RUNNING, null, null);
+            NExecutableManager manager = getExecutableManager(getProject());
+            manager.updateStageStatus(getId() + "_00", null, ExecutableState.RUNNING, null, null);
+            manager.saveUpdatedJob();
             return 0;
         }, project, UnitOfWork.DEFAULT_MAX_RETRY, context.getEpochId(), getTempLockName());
     }
@@ -309,22 +311,10 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         if (Objects.isNull(dataFlow) || StringUtils.isBlank(originSegments)) {
             return copied;
         }
-        removeFactTableInExcludedTables(dataFlow, copied);
         String newSegments = Stream.of(StringUtils.split(originSegments, COMMA))
                 .filter(id -> Objects.nonNull(dataFlow.getSegment(id))).collect(Collectors.joining(COMMA));
         copied.put(NBatchConstants.P_SEGMENT_IDS, newSegments);
         return copied;
-    }
-
-    private void removeFactTableInExcludedTables(NDataflow dataFlow, final Map<String, String> originParams) {
-        val rootFactTableName = dataFlow.getModel().getRootFactTableName();
-        val excludedTablesString = originParams.getOrDefault(NBatchConstants.P_EXCLUDED_TABLES, "");
-        if (StringUtils.isBlank(excludedTablesString)) {
-            return;
-        }
-        val excludedTables = Sets.newHashSet(excludedTablesString.split(","));
-        excludedTables.remove(rootFactTableName);
-        originParams.put(NBatchConstants.P_EXCLUDED_TABLES, String.join(",", excludedTables));
     }
 
     /**
@@ -376,7 +366,7 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         if (getParent() != null) {
             String yarnQueue = getParent().getSparkYarnQueue();
             // TODO double check if valid yarn queue
-            if (!Strings.isNullOrEmpty(yarnQueue)) {
+            if (!StringUtils.isEmpty(yarnQueue)) {
                 jobOverrides.put("kylin.engine.spark-conf." + SPARK_YARN_QUEUE, yarnQueue);
             }
         }
@@ -414,7 +404,8 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         return desc;
     }
 
-    protected ExecuteResult runSparkSubmit(String hadoopConfDir, String kylinJobJar, String appArgs) {
+    protected ExecuteResult runSparkSubmit(String hadoopConfDir, String kylinJobJar, String appArgs)
+            throws JobStoppedException {
         sparkJobHandler.killOrphanApplicationIfExists(project, getId(), getConfig(), true, getSparkConf());
         try {
             Object cmd;
@@ -441,6 +432,7 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
             }
             return ExecuteResult.createSucceed(output);
         } catch (Exception e) {
+            checkNeedQuit(true);
             logger.warn("failed to execute spark submit command.");
             wrapWithExecuteExceptionUpdateJobError(e);
             return ExecuteResult.createError(e);
@@ -882,6 +874,13 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         filePaths.add(kylinConf.getLogSparkAppMasterPropertiesFile());
         filePaths.add(kylinConf.getLogSparkDriverPropertiesFile());
         filePaths.add(kylinConf.getLogSparkExecutorPropertiesFile());
+        if (kylinConf.buildJobProfilingEnabled()) {
+            try {
+                filePaths.add(kylinConf.getAsyncProfilerFiles());
+            } catch (IOException e) {
+                logger.error("Add SparkPluginFile failed.", e);
+            }
+        }
         filePaths.add(sparkConf.get(SPARK_FILES_1));
         filePaths.add(sparkConf.get(SPARK_FILES_2));
 

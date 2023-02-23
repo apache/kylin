@@ -34,6 +34,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.TABLE_RELOA
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.TABLE_RELOAD_MODEL_RETRY;
 import static org.apache.kylin.job.execution.JobTypeEnum.SNAPSHOT_BUILD;
 import static org.apache.kylin.job.execution.JobTypeEnum.SNAPSHOT_REFRESH;
+import static org.apache.kylin.rest.util.TableUtils.calculateTableSize;
 
 import java.io.File;
 import java.io.IOException;
@@ -129,6 +130,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.sourceusage.SourceUsageManager;
+import org.apache.kylin.metadata.streaming.DataParserManager;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.metadata.streaming.KafkaConfigManager;
 import org.apache.kylin.query.util.PushDownUtil;
@@ -138,6 +140,7 @@ import org.apache.kylin.rest.constant.JobInfoEnum;
 import org.apache.kylin.rest.request.AutoMergeRequest;
 import org.apache.kylin.rest.request.DateRangeRequest;
 import org.apache.kylin.rest.request.S3TableExtInfo;
+import org.apache.kylin.rest.request.TableDescRequest;
 import org.apache.kylin.rest.response.AutoMergeConfigResponse;
 import org.apache.kylin.rest.response.BatchLoadTableResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -152,6 +155,7 @@ import org.apache.kylin.rest.response.TableNameResponse;
 import org.apache.kylin.rest.response.TableRefresh;
 import org.apache.kylin.rest.response.TableRefreshAll;
 import org.apache.kylin.rest.response.TablesAndColumnsResponse;
+import org.apache.kylin.rest.security.ExternalAclProvider;
 import org.apache.kylin.rest.security.KerberosLoginManager;
 import org.apache.kylin.rest.source.DataSourceState;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -166,7 +170,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -189,6 +192,7 @@ public class TableService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(TableService.class);
     private static final String REFRESH_SINGLE_CATALOG_PATH = "/kylin/api/tables/single_catalog_cache";
+    private static final String SSB_ERROR_MSG = "import ssb data error.";
 
     @Autowired
     private TableModelSupporter modelService;
@@ -211,6 +215,9 @@ public class TableService extends BasicService {
     private AclEvaluate aclEvaluate;
 
     @Autowired
+    private AccessService accessService;
+
+    @Autowired
     @Qualifier("kafkaService")
     private KafkaService kafkaService;
 
@@ -221,44 +228,43 @@ public class TableService extends BasicService {
     @Autowired
     private ClusterManager clusterManager;
 
-    public List<TableDesc> getTableDescByType(String project, boolean withExt, final String tableName,
-            final String database, boolean isFuzzy, int sourceType) throws IOException {
-        return getTableDesc(project, withExt, tableName, database, isFuzzy).stream()
-                .filter(tableDesc -> sourceType == tableDesc.getSourceType()).collect(Collectors.toList());
+    public Pair<List<TableDesc>, Integer> getTableDesc(String project, boolean withExt, final String table, final String database,
+                                        boolean isFuzzy, List<Integer> sourceType, int returnTableSize) throws IOException {
+        TableDescRequest internalTableDescRequest = new TableDescRequest(project, withExt, table, database, isFuzzy, sourceType);
+        return getTableDesc(internalTableDescRequest, returnTableSize);
     }
 
-    public List<TableDesc> getTableDescByTypes(String project, boolean withExt, final String tableName,
-            final String database, boolean isFuzzy, List sourceType) throws IOException {
-        return getTableDesc(project, withExt, tableName, database, isFuzzy).stream()
-                .filter(tableDesc -> sourceType.contains(tableDesc.getSourceType())).collect(Collectors.toList());
-    }
-
-    public List<TableDesc> getTableDesc(String project, boolean withExt, final String tableName, final String database,
-            boolean isFuzzy) throws IOException {
-        aclEvaluate.checkProjectReadPermission(project);
+    public Pair<List<TableDesc>, Integer> getTableDesc(TableDescRequest tableDescRequest, int returnTableSize) throws IOException {
+        aclEvaluate.checkProjectReadPermission(tableDescRequest.getProject());
         boolean streamingEnabled = getConfig().streamingEnabled();
-        NTableMetadataManager nTableMetadataManager = getManager(NTableMetadataManager.class, project);
+        NTableMetadataManager nTableMetadataManager = getManager(NTableMetadataManager.class, tableDescRequest.getProject());
         List<TableDesc> tables = Lists.newArrayList();
         //get table not fuzzy,can use getTableDesc(tableName)
-        if (StringUtils.isNotEmpty(tableName) && !isFuzzy) {
-            val tableDesc = nTableMetadataManager.getTableDesc(database + "." + tableName);
+        if (StringUtils.isNotEmpty(tableDescRequest.getTable()) && !tableDescRequest.isFuzzy()) {
+            val tableDesc = nTableMetadataManager.getTableDesc(tableDescRequest.getDatabase() + "." + tableDescRequest.getTable());
             if (tableDesc != null && tableDesc.isAccessible(streamingEnabled))
                 tables.add(tableDesc);
         } else {
             tables.addAll(nTableMetadataManager.listAllTables().stream().filter(tableDesc -> {
-                if (StringUtils.isEmpty(database)) {
+                if (StringUtils.isEmpty(tableDescRequest.getDatabase())) {
                     return true;
                 }
-                return tableDesc.getDatabase().equalsIgnoreCase(database);
+                return tableDesc.getDatabase().equalsIgnoreCase(tableDescRequest.getDatabase());
             }).filter(tableDesc -> {
-                if (StringUtils.isEmpty(tableName)) {
+                if (StringUtils.isEmpty(tableDescRequest.getTable())) {
                     return true;
                 }
-                return tableDesc.getName().toLowerCase(Locale.ROOT).contains(tableName.toLowerCase(Locale.ROOT));
+                return tableDesc.getName().toLowerCase(Locale.ROOT).contains(tableDescRequest.getTable().toLowerCase(Locale.ROOT));
+            }).filter(tableDesc -> {
+                // Advance the logic of filtering the table by sourceType to here
+                if (!tableDescRequest.getSourceType().isEmpty()) {
+                    return tableDescRequest.getSourceType().contains(tableDesc.getSourceType());
+                }
+                return true;
             }).filter(table -> table.isAccessible(streamingEnabled)).sorted(this::compareTableDesc)
                     .collect(Collectors.toList()));
         }
-        return getTablesResponse(tables, project, withExt);
+        return getTablesResponse(tables, tableDescRequest.getProject(), tableDescRequest.isWithExt(), returnTableSize);
     }
 
     public int compareTableDesc(TableDesc table1, TableDesc table2) {
@@ -282,8 +288,7 @@ public class TableService extends BasicService {
         final NTableMetadataManager tableMetaMgr = getManager(NTableMetadataManager.class, project);
         // save table meta
         List<String> saved = Lists.newArrayList();
-        List<TableDesc> savedTables = Lists.newArrayList();
-        Set<TableExtDesc.S3RoleCredentialInfo> brodcasttedS3Conf = new HashSet<>();
+        Set<TableExtDesc.S3RoleCredentialInfo> broadcastS3Conf = new HashSet<>();
         for (Pair<TableDesc, TableExtDesc> pair : allMeta) {
             TableDesc tableDesc = pair.getFirst();
             TableExtDesc extDesc = pair.getSecond();
@@ -324,17 +329,15 @@ public class TableService extends BasicService {
                 nTableExtDesc.init(project);
 
                 tableMetaMgr.saveTableExt(nTableExtDesc);
-                if (!brodcasttedS3Conf.contains(extDesc.getS3RoleCredentialInfo())) {
+                if (!broadcastS3Conf.contains(extDesc.getS3RoleCredentialInfo())) {
                     addAndBroadcastSparkSession(extDesc.getS3RoleCredentialInfo());
-                    brodcasttedS3Conf.add(extDesc.getS3RoleCredentialInfo());
+                    broadcastS3Conf.add(extDesc.getS3RoleCredentialInfo());
                 }
             }
 
             saved.add(tableDesc.getIdentity());
-            savedTables.add(tableDesc);
         }
-        String[] result = saved.toArray(new String[saved.size()]);
-        return result;
+        return saved.toArray(new String[0]);
     }
 
     public List<Pair<TableDesc, TableExtDesc>> extractTableMeta(String[] tables, String project) {
@@ -415,35 +418,40 @@ public class TableService extends BasicService {
         return tableNameResponses;
     }
 
-    private TableDescResponse getTableResponse(TableDesc table, String project) {
+    private TableDescResponse getTableResponse(TableDesc table, String project, boolean withExt) {
+        if (!withExt) {
+            return new TableDescResponse(table);
+        }
         TableDescResponse tableDescResponse = new TableDescResponse(table);
         TableExtDesc tableExtDesc = getManager(NTableMetadataManager.class, project).getTableExtIfExists(table);
         if (table.isKafkaTable()) {
             tableDescResponse.setKafkaBootstrapServers(table.getKafkaConfig().getKafkaBootstrapServers());
             tableDescResponse.setSubscribe(table.getKafkaConfig().getSubscribe());
             tableDescResponse.setBatchTable(table.getKafkaConfig().getBatchTable());
+            tableDescResponse.setParserName(table.getKafkaConfig().getParserName());
         }
 
         if (tableExtDesc == null) {
             return tableDescResponse;
         }
 
-        for (TableDescResponse.ColumnDescResponse colDescRes : tableDescResponse.getExtColumns()) {
-            final TableExtDesc.ColumnStats columnStats = tableExtDesc.getColumnStatsByName(colDescRes.getName());
+        for (TableDescResponse.ColumnDescResponse colDescResponse : tableDescResponse.getExtColumns()) {
+            TableExtDesc.ColumnStats columnStats = tableExtDesc.getColumnStatsByName(colDescResponse.getName());
+            colDescResponse.setExcluded(tableExtDesc.isExcludedCol(colDescResponse.getName()));
             if (columnStats != null) {
-                colDescRes.setCardinality(columnStats.getCardinality());
-                colDescRes.setMaxValue(columnStats.getMaxValue());
-                colDescRes.setMinValue(columnStats.getMinValue());
-                colDescRes.setNullCount(columnStats.getNullCount());
+                colDescResponse.setCardinality(columnStats.getCardinality());
+                colDescResponse.setMaxValue(columnStats.getMaxValue());
+                colDescResponse.setMinValue(columnStats.getMinValue());
+                colDescResponse.setNullCount(columnStats.getNullCount());
             }
         }
         tableDescResponse.setDescExd(tableExtDesc.getDataSourceProps());
         tableDescResponse.setCreateTime(tableExtDesc.getCreateTime());
+        tableDescResponse.setExcluded(tableExtDesc.isExcluded());
         return tableDescResponse;
     }
 
-    private List<TableDesc> getTablesResponse(List<TableDesc> tables, String project, boolean withExt)
-            throws IOException {
+    private Pair<List<TableDesc>, Integer> getTablesResponse(List<TableDesc> tables, String project, boolean withExt, int returnTableSize) {
         List<TableDesc> descs = new ArrayList<>();
         val projectManager = getManager(NProjectManager.class);
         val groups = getCurrentUserGroups();
@@ -452,36 +460,33 @@ public class TableService extends BasicService {
         final boolean isAclGreen = AclPermissionUtil.canUseACLGreenChannel(project, groups);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         List<NDataModel> healthyModels = projectManager.listHealthyModels(project);
+        Set<String> extPermissionSet = accessService.getUserNormalExtPermissions(project);
+        boolean hasDataQueryPermission = extPermissionSet.contains(ExternalAclProvider.DATA_QUERY);
+        int satisfiedTableSize = 0;
         for (val originTable : tables) {
+            // New judgment logic, when the total size of tables meet the current size of paging directly after the exit
+            // Also, if the processing is not finished, the total size of tables is returned
+            if (satisfiedTableSize == returnTableSize) {
+                return Pair.newPair(descs, tables.size());
+            }
             TableDesc table = getAuthorizedTableDesc(project, isAclGreen, originTable, aclTCRS);
             if (Objects.isNull(table)) {
                 continue;
             }
-            TableDescResponse tableDescResponse;
-            val modelsUsingRootTable = Lists.<NDataModel> newArrayList();
-            val modelsUsingTable = Lists.<NDataModel> newArrayList();
-            for (NDataModel model : healthyModels) {
-                if (model.containsTable(table)) {
-                    modelsUsingTable.add(model);
-                }
-
-                if (model.isRootFactTable(table)) {
-                    modelsUsingRootTable.add(model);
-                }
-            }
-
-            if (withExt) {
-                tableDescResponse = getTableResponse(table, project);
-            } else {
-                tableDescResponse = new TableDescResponse(table);
-            }
+            TableDescResponse tableDescResponse = getTableResponse(table, project, withExt);
+            List<NDataModel> modelsUsingTable = healthyModels.stream() //
+                    .filter(model -> model.containsTable(table)).collect(Collectors.toList());
+            List<NDataModel> modelsUsingRootTable = healthyModels.stream() //
+                    .filter(model -> model.isRootFactTable(table)).collect(Collectors.toList());
 
             TableExtDesc tableExtDesc = getManager(NTableMetadataManager.class, project).getTableExtIfExists(table);
             if (tableExtDesc != null) {
                 tableDescResponse.setTotalRecords(tableExtDesc.getTotalRows());
-                tableDescResponse.setSamplingRows(tableExtDesc.getSampleRows());
                 tableDescResponse.setJodID(tableExtDesc.getJodID());
-                filterSamplingRows(project, tableDescResponse, isAclGreen, aclTCRS);
+                if (hasDataQueryPermission) {
+                    tableDescResponse.setSamplingRows(tableExtDesc.getSampleRows());
+                    filterSamplingRows(project, tableDescResponse, isAclGreen, aclTCRS);
+                }
             }
 
             if (CollectionUtils.isNotEmpty(modelsUsingRootTable)) {
@@ -492,19 +497,12 @@ public class TableService extends BasicService {
                 tableDescResponse.setStorageSize(getSnapshotSize(project, table.getIdentity(), fs));
             }
             Pair<Set<String>, Set<String>> tableColumnType = getTableColumnType(project, table, modelsUsingTable);
-            NDataLoadingRange dataLoadingRange = getManager(NDataLoadingRangeManager.class, project)
-                    .getDataLoadingRange(table.getIdentity());
-            if (null != dataLoadingRange) {
-                tableDescResponse.setPartitionedColumn(dataLoadingRange.getColumnName());
-                tableDescResponse.setPartitionedColumnFormat(dataLoadingRange.getPartitionDateFormat());
-                tableDescResponse.setSegmentRange(dataLoadingRange.getCoveredRange());
-            }
             tableDescResponse.setForeignKey(tableColumnType.getSecond());
             tableDescResponse.setPrimaryKey(tableColumnType.getFirst());
             descs.add(tableDescResponse);
+            satisfiedTableSize++;
         }
-
-        return descs;
+        return Pair.newPair(descs, descs.size());
     }
 
     @VisibleForTesting
@@ -514,7 +512,7 @@ public class TableService extends BasicService {
         }
         List<String[]> result = Lists.newArrayList();
         final String dbTblName = rtableDesc.getIdentity();
-        Map columnRows = Arrays.stream(rtableDesc.getExtColumns()).map(cdr -> {
+        Map<Integer, AclTCR.ColumnRealRows> columnRows = Arrays.stream(rtableDesc.getExtColumns()).map(cdr -> {
             int id = Integer.parseInt(cdr.getId());
             val columnRealRows = getManager(AclTCRManager.class, project).getAuthorizedRows(dbTblName, cdr.getName(),
                     aclTCRS);
@@ -531,7 +529,7 @@ public class TableService extends BasicService {
                 if (!columnRows.containsKey(i)) {
                     continue;
                 }
-                val columnRealRows = (AclTCR.ColumnRealRows) columnRows.get(i);
+                val columnRealRows = columnRows.get(i);
                 if (Objects.isNull(columnRealRows)) {
                     jumpThisSample = true;
                     break;
@@ -727,12 +725,11 @@ public class TableService extends BasicService {
 
         try {
             if (tableDesc.isKafkaTable()) {
-                List<ByteBuffer> messages = kafkaService.getMessages(tableDesc.getKafkaConfig(), project, 0);
+                List<ByteBuffer> messages = kafkaService.getMessages(tableDesc.getKafkaConfig(), project);
                 checkMessage(table, messages);
-                Map<String, Object> resp = kafkaService.getMessageTypeAndDecodedMessages(messages);
-                String json = ((List<String>) resp.get("message")).get(0);
-                ObjectMapper mapper = new ObjectMapper();
-                Map<String, Object> mapping = mapper.readValue(json, Map.class);
+                Map<String, Object> resp = kafkaService.decodeMessage(messages);
+                String message = ((List<String>) resp.get("message")).get(0);
+                Map<String, Object> mapping = kafkaService.parserMessage(project, tableDesc.getKafkaConfig(), message);
                 Map<String, Object> mappingAllCaps = new HashMap<>();
                 mapping.forEach((key, value) -> mappingAllCaps.put(key.toUpperCase(Locale.ROOT), value));
                 String cell = (String) mappingAllCaps.get(partitionColumn);
@@ -803,9 +800,7 @@ public class TableService extends BasicService {
                 .filter(exec -> table.equalsIgnoreCase(exec.getParam(NBatchConstants.P_TABLE_NAME)))
                 .collect(Collectors.toList());
 
-        conflictJobs.forEach(job -> {
-            execManager.discardJob(job.getId());
-        });
+        conflictJobs.forEach(job -> execManager.discardJob(job.getId()));
         return conflictJobs;
     }
 
@@ -875,7 +870,13 @@ public class TableService extends BasicService {
     public void unloadTable(String project, String tableIdentity) {
         getManager(NTableMetadataManager.class, project).removeTableExt(tableIdentity);
         getManager(NTableMetadataManager.class, project).removeSourceTable(tableIdentity);
-        getManager(KafkaConfigManager.class, project).removeKafkaConfig(tableIdentity);
+        KafkaConfigManager kafkaConfigManager = getManager(KafkaConfigManager.class, project);
+        KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(tableIdentity);
+        if (Objects.isNull(kafkaConfig)) {
+            return;
+        }
+        kafkaConfigManager.removeKafkaConfig(tableIdentity);
+        getManager(DataParserManager.class, project).removeUsingTable(tableIdentity, kafkaConfig.getParserName());
     }
 
     public PreUnloadTableResponse preUnloadTable(String project, String tableIdentity) throws IOException {
@@ -1072,11 +1073,12 @@ public class TableService extends BasicService {
 
     public OpenPreReloadTableResponse preProcessBeforeReloadWithoutFailFast(String project, String tableIdentity,
             boolean needDetails) throws Exception {
+        Preconditions.checkNotNull(tableIdentity, "table identity can not be null");
         aclEvaluate.checkProjectWritePermission(project);
-
-        val context = calcReloadContext(project, tableIdentity, false);
+        val context = calcReloadContext(project, tableIdentity.toUpperCase(Locale.ROOT), false);
         removeFusionModelBatchPart(project, context);
-        PreReloadTableResponse preReloadTableResponse = preProcessBeforeReloadWithContext(project, context, needDetails);
+        PreReloadTableResponse preReloadTableResponse = preProcessBeforeReloadWithContext(project, context,
+                needDetails);
 
         OpenPreReloadTableResponse openPreReloadTableResponse = new OpenPreReloadTableResponse(preReloadTableResponse);
         openPreReloadTableResponse.setDuplicatedColumns(Lists.newArrayList(context.getDuplicatedColumns()));
@@ -1503,7 +1505,7 @@ public class TableService extends BasicService {
 
     private void checkNewColumn(String project, String tableName, Set<String> addColumns) {
         Multimap<String, String> duplicatedColumns = getDuplicatedColumns(project, tableName, addColumns);
-        if (Objects.nonNull(duplicatedColumns) && !duplicatedColumns.isEmpty()) {
+        if (!duplicatedColumns.isEmpty()) {
             Map.Entry<String, String> entry = duplicatedColumns.entries().iterator().next();
             throw new KylinException(DUPLICATED_COLUMN_NAME,
                     MsgPicker.getMsg().getTableReloadAddColumnExist(entry.getKey(), entry.getValue()));
@@ -1548,10 +1550,11 @@ public class TableService extends BasicService {
                 .collect(Collectors.toList());
 
         List<String> effectedJobs = Lists.newArrayList();
-        for (AbstractExecutable job : notFinalStateJobs) {
+        notFinalStateJobs.forEach(job -> {
             if (JobTypeEnum.TABLE_SAMPLING == job.getJobType()) {
                 if (newTableDesc.getIdentity().equalsIgnoreCase(job.getTargetSubject())) {
-                    effectedJobs.add(JobInfoEnum.JOB_ID == jobInfoType ? job.getId() : job.getTargetSubject());
+                    String jobId = JobInfoEnum.JOB_ID == jobInfoType ? job.getId() : job.getTargetSubject();
+                    effectedJobs.add(jobId);
                 }
             } else {
                 try {
@@ -1564,7 +1567,7 @@ public class TableService extends BasicService {
                     logger.warn("Get model by Job target subject failed!", e);
                 }
             }
-        }
+        });
         return effectedJobs;
     }
 
@@ -1578,15 +1581,16 @@ public class TableService extends BasicService {
                 return extractTableMeta(new String[] { tableIdentity }, project).get(0);
             }
         });
-        val newTableDesc = new TableDesc(tableMeta.getFirst());
+        TableDesc newTableDesc = new TableDesc(tableMeta.getFirst());
         context.setTableDesc(newTableDesc);
         context.setTableExtDesc(tableMeta.getSecond());
 
-        val originTableDesc = getManager(NTableMetadataManager.class, project).getTableDesc(tableIdentity);
+        handleExcludedColumns(project, context, newTableDesc, tableIdentity);
+
+        TableDesc originTableDesc = getManager(NTableMetadataManager.class, project).getTableDesc(tableIdentity);
         val collector = Collectors.toMap(ColumnDesc::getName, col -> Pair.newPair(col.getName(), col.getDatatype()));
         val originCols = Stream.of(originTableDesc.getColumns()).collect(collector);
         val newCols = Stream.of(newTableDesc.getColumns()).collect(collector);
-
         val diff = Maps.difference(newCols, originCols);
         context.setAddColumns(diff.entriesOnlyOnLeft().keySet());
         context.setRemoveColumns(diff.entriesOnlyOnRight().keySet());
@@ -1647,6 +1651,40 @@ public class TableService extends BasicService {
         context.setChangeTypeAffectedModels(toAffectedModels.apply(context.getChangeTypeColumns(), false));
 
         return context;
+    }
+
+    /**
+     * Handle excluded column when reloading table.
+     * 1. Add column to the excluded table, the added column will be treated as an excluded column automatically.
+     * 2. If the last un-excluded column is removed, this table will be treated as an excluded table.
+     */
+    private void handleExcludedColumns(String project, ReloadTableContext context, TableDesc newTable,
+            String tableIdentity) {
+        NTableMetadataManager tableManager = getManager(NTableMetadataManager.class, project);
+        TableDesc originTable = tableManager.getTableDesc(tableIdentity);
+        TableExtDesc originExt = tableManager.getTableExtIfExists(originTable);
+        if (originExt == null) {
+            return;
+        }
+
+        boolean excluded = originExt.isExcluded();
+        context.getTableExtDesc().setExcluded(excluded);
+        if (excluded) {
+            context.getTableExtDesc().getExcludedColumns().clear();
+        } else {
+            Set<String> excludedColumns = Sets.newHashSet(originExt.getExcludedColumns());
+            Set<String> newColNameSet = Arrays.stream(newTable.getColumns()).map(ColumnDesc::getName)
+                    .collect(Collectors.toSet());
+            excludedColumns.removeIf(col -> !newColNameSet.contains(col));
+            logger.debug("reserved excluded columns are: {}", excludedColumns);
+            if (newColNameSet.equals(excludedColumns)) {
+                context.getTableExtDesc().setExcluded(true);
+                context.getTableExtDesc().getExcludedColumns().clear();
+                logger.debug("Set the table to excluded table for all columns is excluded.");
+            } else {
+                context.getTableExtDesc().getExcludedColumns().addAll(excludedColumns);
+            }
+        }
     }
 
     /**
@@ -1746,39 +1784,54 @@ public class TableService extends BasicService {
         return loadedDatabases;
     }
 
-    public interface ProjectTablesFilter {
-        List process(String database, String table) throws Exception;
+    public NInitTablesResponse getProjectTables(String project, String table, int offset, int limit,
+                                                boolean withExcluded, boolean useHiveDatabase, List<Integer> sourceType) throws Exception {
+        TableDescRequest internalTableDescRequest = new TableDescRequest(project, table, offset, limit, withExcluded, sourceType);
+        return getProjectTables(internalTableDescRequest, useHiveDatabase);
     }
 
-    public NInitTablesResponse getProjectTables(String project, String table, Integer offset, Integer limit,
-            Boolean useHiveDatabase, ProjectTablesFilter projectTablesFilter) throws Exception {
+    public NInitTablesResponse getProjectTables(TableDescRequest tableDescRequest, boolean useHiveDatabase) throws Exception {
+        String project = tableDescRequest.getProject();
         aclEvaluate.checkProjectReadPermission(project);
         NInitTablesResponse response = new NInitTablesResponse();
-        if (table == null)
-            table = "";
-        String exceptDatabase = null;
-        if (table.contains(".")) {
-            exceptDatabase = table.split("\\.", 2)[0].trim();
-            table = table.split("\\.", 2)[1].trim();
-        }
+        logger.debug("only get project tables of excluded: {}", tableDescRequest.isWithExcluded());
+
+        Pair<String, String> databaseAndTable = checkDatabaseAndTable(tableDescRequest.getTable());
+        String exceptDatabase = databaseAndTable.getFirst();
+        String table = databaseAndTable.getSecond();
         String notAllowedModifyTableName = table;
+
         Collection<String> databases = useHiveDatabase ? getSourceDbNames(project) : getLoadedDatabases(project);
         val projectInstance = getManager(NProjectManager.class).getProject(project);
         List<String> tableFilterList = DataSourceState.getInstance().getHiveFilterList(projectInstance);
         for (String database : databases) {
             if ((exceptDatabase != null && !exceptDatabase.equalsIgnoreCase(database))
-                    ||(!tableFilterList.isEmpty() && !tableFilterList.contains(database))) {
+                    || (!tableFilterList.isEmpty() && !tableFilterList.contains(database))) {
                 continue;
             }
-            List<?> tables;
+            // we may temporarily change the table name, but later to change back
+            // Avoid affecting the next loop and causing logic errors
             if (exceptDatabase == null && database.toLowerCase(Locale.ROOT).contains(table.toLowerCase(Locale.ROOT))) {
-                tables = projectTablesFilter.process(database, "");
-            } else {
-                tables = projectTablesFilter.process(database, table);
+                table = "";
             }
-            List<?> tablePage = PagingUtil.cutPage(tables, offset, limit);
+            tableDescRequest.setDatabase(database);
+            tableDescRequest.setTable(table);
+            Pair<List<?>, Integer> objWithActualSize = new Pair<>();
+            if (tableDescRequest.getSourceType().isEmpty()) {
+                // This means request api for showProjectTableNames
+                List<TableNameResponse> hiveTableNameResponses = getHiveTableNameResponses(project, database, table);
+                objWithActualSize.setFirst(hiveTableNameResponses);
+                objWithActualSize.setSecond(hiveTableNameResponses.size());
+            } else {
+                int returnTableSize = calculateTableSize(tableDescRequest.getOffset(), tableDescRequest.getLimit());
+                Pair<List<TableDesc>, Integer> tableDescWithActualSize = getTableDesc(tableDescRequest, returnTableSize);
+                objWithActualSize.setFirst(tableDescWithActualSize.getFirst());
+                objWithActualSize.setSecond(tableDescWithActualSize.getSecond());
+            }
+            table = notAllowedModifyTableName;
+            List<?> tablePage = PagingUtil.cutPage(objWithActualSize.getFirst(), tableDescRequest.getOffset(), tableDescRequest.getLimit());
             if (!tablePage.isEmpty()) {
-                response.putDatabase(database, tables.size(), tablePage);
+                response.putDatabase(database, objWithActualSize.getSecond(), tablePage);
             }
         }
         return response;
@@ -1827,8 +1880,7 @@ public class TableService extends BasicService {
         }
     }
 
-    public List<TableNameResponse> getTableNameResponsesInCache(String project, String database, final String table)
-            throws Exception {
+    public List<TableNameResponse> getTableNameResponsesInCache(String project, String database, final String table) {
         aclEvaluate.checkProjectReadPermission(project);
         List<TableNameResponse> responses = new ArrayList<>();
         NTableMetadataManager tableManager = getManager(NTableMetadataManager.class, project);
@@ -1864,13 +1916,10 @@ public class TableService extends BasicService {
         DataSourceState.getInstance().loadAllSourceInfoToCache();
     }
 
-    public NHiveTableNameResponse loadProjectHiveTableNameToCacheImmediately(String project, boolean force)
-            throws Exception {
+    public NHiveTableNameResponse loadProjectHiveTableNameToCacheImmediately(String project, boolean force) {
         aclEvaluate.checkProjectWritePermission(project);
         return DataSourceState.getInstance().loadAllSourceInfoToCacheForced(project, force);
     }
-
-    private static final String SSB_ERROR_MSG = "import ssb data error.";
 
     public void importSSBDataBase() {
         aclEvaluate.checkIsGlobalAdmin();
@@ -1887,7 +1936,6 @@ public class TableService extends BasicService {
             try {
                 exec.execute(sampleSh, patternedLogger);
             } catch (ShellException e) {
-                logger.error(SSB_ERROR_MSG, e);
                 throw new KylinException(FAILED_IMPORT_SSB_DATA, SSB_ERROR_MSG, e);
             }
             if (!checkSSBDataBase()) {

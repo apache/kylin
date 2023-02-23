@@ -34,6 +34,7 @@ import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.measure.hllc.HLLCMeasureType;
 import org.apache.kylin.measure.percentile.PercentileMeasureType;
 import org.apache.kylin.measure.raw.RawMeasureType;
+import org.apache.kylin.measure.sumlc.SumLCMeasureType;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
@@ -120,6 +121,7 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new IntersectMeasureType.Factory());
         factoryInsts.add(new CollectSetMeasureType.Factory());
         factoryInsts.add(new CorrMeasureType.Factory());
+        factoryInsts.add(new SumLCMeasureType.Factory());
 
         logger.info("Checking custom measure types from kylin config");
 

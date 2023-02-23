@@ -72,6 +72,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -122,6 +123,43 @@ public class MetadataToolTest extends NLocalFileMetadataTestCase {
         Mockito.when(tool.getMetadataUrl(Mockito.anyString(), Mockito.anyBoolean()))
                 .thenReturn("kylin_metadata@hdfs,zip=1,path=file://" + path);
         return tool;
+    }
+
+    @Test
+    @Ignore
+    public void testFetchTargetFile() throws IOException {
+        val junitFolder = temporaryFolder.getRoot();
+        val tool = new MetadataTool(getTestConfig());
+        // test case for fetching a specific file
+        tool.execute(new String[] { "-fetch", "-target", "default/table/DEFAULT.STREAMING_TABLE.json", "-dir",
+                junitFolder.getAbsolutePath(), "-folder", "target_fetch" });
+        //test case for fetching a folder
+        tool.execute(new String[] { "-fetch", "-target", "_global", "-dir", junitFolder.getAbsolutePath(), "-folder",
+                "target_fetch_global" });
+
+        Assertions.assertThat(junitFolder.listFiles()).hasSize(2);
+        File archiveFolder = null;
+        File globalFolder = null;
+        for (File folder : junitFolder.listFiles()) {
+            if (folder.getName().equals("target_fetch_global")) {
+                globalFolder = folder;
+            }
+            if (folder.getName().equals("target_fetch")) {
+                archiveFolder = folder;
+            }
+        }
+        Assertions.assertThat(archiveFolder).exists();
+
+        Assertions.assertThat(archiveFolder.list()).isNotEmpty().containsOnly("default", "UUID");
+
+        val projectFolder = findFile(archiveFolder.listFiles(), f -> f.getName().equals("default"));
+        assertProjectFolder(projectFolder, globalFolder);
+    }
+
+    @Test
+    public void testListFile() {
+        val tool = new MetadataTool(getTestConfig());
+        tool.execute(new String[] { "-list", "-target", "default" });
     }
 
     @Test

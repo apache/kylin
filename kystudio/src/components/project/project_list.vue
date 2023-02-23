@@ -26,15 +26,6 @@
         :width="320"
         prop="name">
       </el-table-column>
-      <!-- <el-table-column
-        :label="$t('type')"
-        show-overflow-tooltip
-        :width="120"
-        prop="maintain_model_type">
-        <template slot-scope="scope">
-          {{scope.row.maintain_model_type === projectType.auto ? $t('autoType') : $t('manualType')}}
-        </template>
-      </el-table-column> -->
       <el-table-column
         :label="$t('owner')"
         :width="220"
@@ -214,8 +205,7 @@ import { Component } from 'vue-property-decorator'
 })
 export default class ProjectList extends Vue {  
   canExecuteModelMetadata (row) {
-    return this.projectActions.includes('executeModelsMetadata') &&
-      row.maintain_model_type !== projectCfgs.projectType.auto
+    return this.projectActions.includes('executeModelsMetadata')
   }
   inputFilter (value) {
     this.filterData.project = value

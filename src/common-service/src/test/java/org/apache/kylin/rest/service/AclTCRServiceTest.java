@@ -311,7 +311,7 @@ public class AclTCRServiceTest extends NLocalFileMetadataTestCase {
     }
 
     private SensitiveDataMask.MaskType getColumnDataMask(AclTCRRequest acl, String database, String table,
-                                                         String column) {
+            String column) {
         if (acl.getDatabaseName().equals(database)) {
             for (val tb : acl.getTables()) {
                 if (tb.getTableName().equals(table)) {
@@ -1316,7 +1316,7 @@ public class AclTCRServiceTest extends NLocalFileMetadataTestCase {
         Mockito.when(userService.isGlobalAdmin("ADMIN")).thenReturn(true);
         List<SidPermissionWithAclResponse> responses = accessService.getUserOrGroupAclPermissions(projects, "ADMIN",
                 true);
-        Assert.assertEquals(27, responses.size());
+        Assert.assertEquals(28, responses.size());
         Assert.assertTrue(responses.stream().allMatch(response -> "ADMIN".equals(response.getProjectPermission())));
 
         // test normal group

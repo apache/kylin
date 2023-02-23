@@ -39,6 +39,7 @@ import lombok.Setter;
 public class Candidate {
 
     public static final CandidateComparator COMPARATOR = new CandidateComparator();
+    public static final CandidateTableIndexComparator COMPARATOR_TABLE_INDEX = new CandidateTableIndexComparator();
 
     // ============================================================================
 
@@ -109,36 +110,53 @@ public class Candidate {
 
         @Override
         public int compare(Candidate c1, Candidate c2) {
-            IRealization real1 = c1.getRealization();
-            IRealization real2 = c2.getRealization();
-
-            if (QueryContext.current().getModelPriorities().length > 0) {
-
-                Map<String, Integer> priorities = new HashMap<>();
-                for (int i = 0; i < QueryContext.current().getModelPriorities().length; i++) {
-                    priorities.put(QueryContext.current().getModelPriorities()[i], i);
-                }
-
-                int comp = priorities.getOrDefault(real1.getModel().getAlias().toUpperCase(Locale.ROOT),
-                        Integer.MAX_VALUE)
-                        - priorities.getOrDefault(real2.getModel().getAlias().toUpperCase(Locale.ROOT),
-                                Integer.MAX_VALUE);
-                if (comp != 0) {
-                    return comp;
-                }
-            }
-
-            int comp = real1.getCost() - real2.getCost();
-            if (comp != 0) {
-                return comp;
-            }
-
-            comp = Double.compare(c1.capability.cost, c2.capability.cost);
-            if (comp != 0) {
-                return comp;
-            }
-
-            return real1.getModel().getId().compareTo(real2.getModel().getId());
+            return compareCandidate(c1, c2);
         }
+    }
+
+    public static class CandidateTableIndexComparator implements Comparator<Candidate> {
+
+        @Override
+        public int compare(Candidate c1, Candidate c2) {
+            CapabilityResult capabilityResult1 = c1.getCapability();
+            CapabilityResult capabilityResult2 = c2.getCapability();
+            if (capabilityResult1.getLayoutUnmatchedColsSize() != capabilityResult2.getLayoutUnmatchedColsSize()) {
+                return capabilityResult1.getLayoutUnmatchedColsSize() - capabilityResult2.getLayoutUnmatchedColsSize();
+            }
+            return compareCandidate(c1, c2);
+        }
+    }
+
+    private static int compareCandidate(Candidate c1, Candidate c2) {
+        IRealization real1 = c1.getRealization();
+        IRealization real2 = c2.getRealization();
+
+        if (QueryContext.current().getModelPriorities().length > 0) {
+
+            Map<String, Integer> priorities = new HashMap<>();
+            for (int i = 0; i < QueryContext.current().getModelPriorities().length; i++) {
+                priorities.put(QueryContext.current().getModelPriorities()[i], i);
+            }
+
+            int comp = priorities.getOrDefault(real1.getModel().getAlias().toUpperCase(Locale.ROOT),
+                    Integer.MAX_VALUE)
+                    - priorities.getOrDefault(real2.getModel().getAlias().toUpperCase(Locale.ROOT),
+                    Integer.MAX_VALUE);
+            if (comp != 0) {
+                return comp;
+            }
+        }
+
+        int comp = real1.getCost() - real2.getCost();
+        if (comp != 0) {
+            return comp;
+        }
+
+        comp = Double.compare(c1.capability.cost, c2.capability.cost);
+        if (comp != 0) {
+            return comp;
+        }
+
+        return real1.getModel().getId().compareTo(real2.getModel().getId());
     }
 }

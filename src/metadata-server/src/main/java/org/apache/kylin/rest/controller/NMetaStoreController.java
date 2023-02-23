@@ -18,10 +18,12 @@
 
 package org.apache.kylin.rest.controller;
 
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_MODEL_ID;
 import static org.apache.kylin.common.exception.ServerErrorCode.FILE_FORMAT_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.FILE_NOT_EXIST;
-import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
+import static org.apache.kylin.rest.request.ModelImportRequest.ImportType.NEW;
+import static org.apache.kylin.rest.request.ModelImportRequest.ImportType.OVERWRITE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import java.io.ByteArrayInputStream;
@@ -37,14 +39,14 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.util.ZipFileUtils;
-import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.util.ZipFileUtils;
 import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
 import org.apache.kylin.rest.request.MetadataCleanupRequest;
 import org.apache.kylin.rest.request.ModelImportRequest;
 import org.apache.kylin.rest.request.ModelPreviewRequest;
 import org.apache.kylin.rest.request.StorageCleanupRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ModelPreviewResponse;
 import org.apache.kylin.rest.service.MetaStoreService;
 import org.apache.kylin.tool.util.HashFunction;
@@ -61,6 +63,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.google.common.collect.Lists;
+
 import io.swagger.annotations.ApiOperation;
 
 @Controller
@@ -70,6 +74,8 @@ public class NMetaStoreController extends NBasicController {
     @Autowired
     @Qualifier("metaStoreService")
     private MetaStoreService metaStoreService;
+
+    private static final List<ModelImportRequest.ImportType> IMPORT_TYPE = Lists.newArrayList(NEW, OVERWRITE);
 
     @ApiOperation(value = "previewModels", tags = { "MID" })
     @GetMapping(value = "/previews/models")
@@ -133,13 +139,10 @@ public class NMetaStoreController extends NBasicController {
         checkProjectName(project);
         checkUploadFile(metadataFile);
         if (request.getModels().stream()
-                .noneMatch(modelImport -> modelImport.getImportType() == ModelImportRequest.ImportType.NEW
-                        || modelImport.getImportType() == ModelImportRequest.ImportType.OVERWRITE)) {
+                .noneMatch(modelImport -> IMPORT_TYPE.contains(modelImport.getImportType()))) {
             throw new KylinException(EMPTY_MODEL_ID, "At least one model should be selected to import!");
         }
-
         metaStoreService.importModelMetadata(project, metadataFile, request);
-
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 

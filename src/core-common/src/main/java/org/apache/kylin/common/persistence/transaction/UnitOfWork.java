@@ -18,7 +18,6 @@
 package org.apache.kylin.common.persistence.transaction;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -31,11 +30,6 @@ import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ThreadViewResourceStore;
 import org.apache.kylin.common.persistence.TombRawResource;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.common.metrics.MetricsCategory;
-import org.apache.kylin.common.metrics.MetricsGroup;
-import org.apache.kylin.common.metrics.MetricsName;
 import org.apache.kylin.common.persistence.UnitMessages;
 import org.apache.kylin.common.persistence.event.EndUnit;
 import org.apache.kylin.common.persistence.event.Event;
@@ -44,6 +38,8 @@ import org.apache.kylin.common.persistence.event.ResourceDeleteEvent;
 import org.apache.kylin.common.persistence.event.ResourceRelatedEvent;
 import org.apache.kylin.common.persistence.event.StartUnit;
 import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.Unsafe;
 
 import com.google.common.base.Preconditions;
@@ -100,17 +96,6 @@ public class UnitOfWork {
         int retry = 0;
         val traceId = RandomUtil.randomUUIDStr();
         while (retry++ < maxRetry) {
-            if (retry > 1) {
-                Map<String, String> tags = MetricsGroup.getHostTagMap(params.getUnitName());
-
-                if (!GLOBAL_UNIT.equals(params.getUnitName())) {
-                    MetricsGroup.counterInc(MetricsName.TRANSACTION_RETRY_COUNTER, MetricsCategory.PROJECT,
-                            params.getUnitName(), tags);
-                } else {
-                    MetricsGroup.counterInc(MetricsName.TRANSACTION_RETRY_COUNTER, MetricsCategory.GLOBAL, "global",
-                            tags);
-                }
-            }
 
             val ret = doTransaction(params, retry, traceId);
             if (ret.getSecond()) {
@@ -146,9 +131,6 @@ public class UnitOfWork {
             UnitOfWork.endTransaction(traceId, params);
             long duration = System.currentTimeMillis() - startTransactionTime;
             logIfLongTransaction(duration, traceId);
-
-            MetricsGroup.hostTagHistogramUpdate(MetricsName.TRANSACTION_LATENCY, MetricsCategory.PROJECT,
-                    !GLOBAL_UNIT.equals(params.getUnitName()) ? params.getUnitName() : "global", duration);
 
             result = Pair.newPair(ret, true);
         } catch (Throwable throwable) {

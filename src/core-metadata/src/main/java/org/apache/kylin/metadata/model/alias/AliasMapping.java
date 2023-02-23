@@ -17,17 +17,25 @@
  */
 package org.apache.kylin.metadata.model.alias;
 
+import java.util.Set;
+
 import com.google.common.collect.BiMap;
+import com.google.common.collect.Sets;
+
+import lombok.Getter;
 
 public class AliasMapping {
 
-    private BiMap<String, String> aliasMapping;
+    private final BiMap<String, String> aliasMap;
 
-    public AliasMapping(BiMap<String, String> aliasMapping) {
-        this.aliasMapping = aliasMapping;
+    @Getter
+    private final Set<String> excludedColumns = Sets.newHashSet();
+
+    public AliasMapping(BiMap<String, String> aliasMap) {
+        this.aliasMap = aliasMap;
     }
 
-    public BiMap<String, String> getAliasMapping() {
-        return aliasMapping;
+    public BiMap<String, String> getAliasMap() {
+        return aliasMap;
     }
 }

@@ -467,7 +467,10 @@
           show-icon>
         </el-alert>
         <div class="filter-dimension">
-          <el-tooltip :content="$t('excludeTableCheckboxTip')" effect="dark" placement="top"><el-checkbox class="ksd-mr-5" v-model="displayExcludedTables" @change="changeExcludedTables" v-if="showExcludedTableCheckBox">{{$t('excludeTableCheckbox')}}</el-checkbox></el-tooltip>
+          <!-- <el-tooltip effect="dark" placement="bottom">
+            <div slot="content" v-html="$t('excludeTableCheckboxTip')"></div>
+            <el-checkbox class="ksd-mr-5" v-model="displayExcludedTables" @change="changeExcludedTables" v-if="showExcludedTableCheckBox">{{$t('excludeTableCheckbox')}}</el-checkbox>
+          </el-tooltip> -->
           <el-input v-model="searchName" v-global-key-event.enter.debounce="filterChange" @clear="clearFilter" size="medium" prefix-icon="el-ksd-icon-search_22" style="width:240px" :placeholder="$t('kylinLang.common.pleaseFilter')"></el-input>
         </div>
       </div>
@@ -736,9 +739,9 @@ export default class AggregateModal extends Vue {
   }
 
   // 是否展示屏蔽表 checkbox
-  get showExcludedTableCheckBox () {
-    return this.backUpDimensions.length ? this.backUpDimensions.filter(it => typeof it.depend_lookup_table !== 'undefined' && it.depend_lookup_table).length > 0 : false
-  }
+  // get showExcludedTableCheckBox () {
+  //   return this.backUpDimensions.length ? this.backUpDimensions.filter(it => typeof it.excluded !== 'undefined' && it.excluded).length > 0 : false
+  // }
 
   // 是否存在多对多且被屏蔽的表
   get hasManyToManyAndAntiTable () {
@@ -766,7 +769,7 @@ export default class AggregateModal extends Vue {
 
   // 是否为屏蔽表的 column
   isExistExcludeTable (col) {
-    return typeof col.depend_lookup_table !== 'undefined' ? col.depend_lookup_table : false
+    return typeof col.excluded !== 'undefined' ? col.excluded : false
   }
 
   getMultipleCardinality (aggregateIdx, jointRowIdx) {

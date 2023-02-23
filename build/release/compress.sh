@@ -43,6 +43,11 @@ if [[ -d "influxdb" ]]; then
     cp -rf postgresql ${package_name}/
 fi
 
+# copy async profiler native files
+cp -rf async-profiler-lib/libasyncProfiler-mac.so "${package_name}"/lib/libasyncProfiler-mac.so
+cp -rf async-profiler-lib/libasyncProfiler-linux-x64.so "${package_name}"/lib/libasyncProfiler-linux-x64.so
+cp -rf async-profiler-lib/libasyncProfiler-linux-arm64.so "${package_name}"/lib/libasyncProfiler-linux-arm64.so
+
 # Add ssb data preparation files
 mkdir -p ${package_name}/tool/ssb
 cp -rf ../src/examples/sample_cube/data ${package_name}/tool/ssb/

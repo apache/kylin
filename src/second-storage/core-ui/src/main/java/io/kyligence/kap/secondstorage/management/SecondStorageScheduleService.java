@@ -19,6 +19,8 @@
 package io.kyligence.kap.secondstorage.management;
 
 import com.google.common.collect.Maps;
+import io.kyligence.kap.secondstorage.metadata.TableEntity;
+import io.kyligence.kap.secondstorage.metadata.TablePlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -98,7 +100,10 @@ public class SecondStorageScheduleService {
                     try {
                         val database = NameUtil.getDatabase(df);
                         val destTableName = NameUtil.getTable(df, SecondStorageUtil.getBaseIndex(df).getId());
-                        queryOperator.modifyColumnByCardinality(database, destTableName);
+                        val tablePlanManager = SecondStorageUtil.tablePlanManager(config, project);
+                        TablePlan tablePlan = tablePlanManager.get().get(model.getId()).get();
+                        TableEntity tableEntity = tablePlan.getEntity(SecondStorageUtil.getBaseIndex(df).getId()).orElse(null);
+                        queryOperator.modifyColumnByCardinality(database, destTableName, tableEntity.getSecondaryIndexColumns());
                     } catch (Exception exception) {
                         log.error("Failed to modify second storage low cardinality on model {}.", model.getId(), exception);
                     } finally {

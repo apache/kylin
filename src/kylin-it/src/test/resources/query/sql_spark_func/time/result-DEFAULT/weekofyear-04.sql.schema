@@ -1,1 +1,0 @@
-`weekofyear(CAST(2020-01-15 AS DATE))` INT

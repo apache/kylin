@@ -17,10 +17,15 @@
  */
 package org.apache.kylin.engine.spark;
 
-import com.google.common.base.Preconditions;
-import org.apache.kylin.engine.spark.job.NSparkMergingJob;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
+import java.io.File;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Random;
+import java.util.Set;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.util.Shell;
@@ -28,6 +33,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
+import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -60,21 +66,17 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.sparkproject.guava.collect.Sets;
 
-import java.io.File;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
+import com.google.common.base.Preconditions;
+
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase implements Serializable {
 
     private static final String CSV_TABLE_DIR = TempMetadataBuilder.TEMP_TEST_METADATA + "/data/%s.csv";
 
-    protected static final String KAP_SQL_BASE_DIR = "../kap-it/src/test/resources/query";
+    protected static final String KYLIN_SQL_BASE_DIR = "../kylin-it/src/test/resources/query";
 
     protected static SparkConf sparkConf;
     protected static SparkSession ss;
@@ -129,7 +131,9 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
 
     @AfterClass
     public static void afterClass() {
-        ss.close();
+        if (ss != null) {
+            ss.close();
+        }
         FileUtils.deleteQuietly(new File("../kap-it/metastore_db"));
     }
 
@@ -196,12 +200,6 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
 
     }
 
-    protected void updateProjectConfig(String property, String value) {
-        NProjectManager projectManager = NProjectManager.getInstance(getTestConfig());
-        projectManager.updateProject(getProject(),
-                copyForWrite -> copyForWrite.getOverrideKylinProps().put(property, value));
-    }
-
     private static DataType convertType(org.apache.kylin.metadata.datatype.DataType type) {
         if (type.isTimeFamily())
             return DataTypes.TimestampType;
@@ -211,29 +209,29 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
 
         if (type.isIntegerFamily())
             switch (type.getName()) {
-                case "tinyint":
-                    return DataTypes.ByteType;
-                case "smallint":
-                    return DataTypes.ShortType;
-                case "integer":
-                case "int4":
-                    return DataTypes.IntegerType;
-                default:
-                    return DataTypes.LongType;
+            case "tinyint":
+                return DataTypes.ByteType;
+            case "smallint":
+                return DataTypes.ShortType;
+            case "integer":
+            case "int4":
+                return DataTypes.IntegerType;
+            default:
+                return DataTypes.LongType;
             }
 
         if (type.isNumberFamily())
             switch (type.getName()) {
-                case "float":
-                    return DataTypes.FloatType;
-                case "double":
-                    return DataTypes.DoubleType;
-                default:
-                    if (type.getPrecision() == -1 || type.getScale() == -1) {
-                        return DataTypes.createDecimalType(19, 4);
-                    } else {
-                        return DataTypes.createDecimalType(type.getPrecision(), type.getScale());
-                    }
+            case "float":
+                return DataTypes.FloatType;
+            case "double":
+                return DataTypes.DoubleType;
+            default:
+                if (type.getPrecision() == -1 || type.getScale() == -1) {
+                    return DataTypes.createDecimalType(19, 4);
+                } else {
+                    return DataTypes.createDecimalType(type.getPrecision(), type.getScale());
+                }
             }
 
         if (type.isStringFamily())

@@ -22,17 +22,69 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.0.0-alpha-SNAPSHOT</version>
 
-    <name>Apache Kylin 5</name>
+    <name>Apache Kylin</name>
     <url>http://kylin.apache.org</url>
     <inceptionYear>2016</inceptionYear>
-    <description>Apache Kylin 5</description>
+    <description>Apache Kylin</description>
 
     <organization>
         <name>Apache</name>
         <url>http://kylin.apache.org</url>
     </organization>
+
+    <scm>
+        <connection>scm:git:git://github.com/apache/kylin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/apache/kylin.git
+        </developerConnection>
+        <url>https://github.com/apache/kylin</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://issues.apache.org/jira/browse/KYLIN</url>
+    </issueManagement>
+
+
+    <mailingLists>
+        <mailingList>
+            <name>kylin-user</name>
+            <subscribe>user-subscribe@kylin.apache.org</subscribe>
+            <unsubscribe>user-unsubscribe@kylin.apache.org</unsubscribe>
+            <post>user@kylin.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-user/</archive>
+        </mailingList>
+        <mailingList>
+            <name>kylin-dev</name>
+            <subscribe>dev-subscribe@kylin.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@kylin.apache.org</unsubscribe>
+            <post>dev@kylin.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>kylin-issues</name>
+            <subscribe>issues-subscribe@kylin.apache.org</subscribe>
+            <unsubscribe>issues-unsubscribe@kylin.apache.org</unsubscribe>
+            <post>issues@kylin.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-issues/</archive>
+        </mailingList>
+        <mailingList>
+            <name>kylin-commits</name>
+            <subscribe>commits-subscribe@kylin.apache.org</subscribe>
+            <unsubscribe>commits-unsubscribe@kylin.apache.org</unsubscribe>
+            <post>commits@kylin.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-commits/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
     <properties>
         <!-- General Properties -->
@@ -41,8 +93,7 @@
         <maven-model.version>3.3.9</maven-model.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <kylin.module.version>5.0.0-SNAPSHOT</kylin.module.version>
-        <arthas.version>3.6.3-kyarthas-r2</arthas.version>
+        <arthas.version>3.6.7-kyarthas-r2</arthas.version>
 
         <!-- Keep same order with dependencyManagement -->
 
@@ -59,13 +110,14 @@
         <!-- soft affinity -->
         <alluxio.version>2.7.4</alluxio.version>
         <libthrift.version>0.12.0</libthrift.version>
+        <libfb303.version>0.9.3</libfb303.version>
 
         <!-- Kafka versions -->
         <kafka.version>2.8.2</kafka.version>
 
         <!-- Spark versions -->
         <delta.version>1.2.1</delta.version>
-        <spark.version>3.2.0-kylin-4.5.20.0-SNAPSHOT</spark.version>
+        <spark.version>3.2.0-kylin-4.6.3.0</spark.version>
 
         <roaring.version>0.9.2-kylin-r4</roaring.version>
 
@@ -74,7 +126,7 @@
         <scala-retry>0.3.0</scala-retry>
 
         <!-- Calcite Version -->
-        <calcite.version>1.116.0-kylin-4.x-r023</calcite.version>
+        <calcite.version>1.116.0-kylin-4.x-r024</calcite.version>
         <avatica.version>4.x_1.10-r01</avatica.version>
 
         <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
@@ -124,7 +176,6 @@
         <log4j2-cachefile-transformer.version>2.14.1</log4j2-cachefile-transformer.version>
         <slf4j.version>1.7.30</slf4j.version>
         <apache-log4j.version>2.12.1</apache-log4j.version>
-        <xalan.version>2.7.2</xalan.version>
         <ehcache.version>2.10.9.2</ehcache.version>
         <net.spy.memcached.verion>2.12.3</net.spy.memcached.verion>
         <redis.version>3.8.0</redis.version>
@@ -141,7 +192,7 @@
         <cglib.version>3.2.4</cglib.version>
         <supercsv.version>2.4.0</supercsv.version>
         <cors.version>2.5</cors.version>
-        <tomcat.version>9.0.63</tomcat.version>
+        <tomcat.version>9.0.68</tomcat.version>
         <t-digest.version>3.1.1-kylin-r1</t-digest.version>
         <jsonpath.version>2.3.0</jsonpath.version>
         <lombok.version>1.18.2</lombok.version>
@@ -156,11 +207,10 @@
         <dropwizard.version>4.1.1</dropwizard.version>
 
         <spring.cloud.version>2021.0.0</spring.cloud.version>
-        <spring.boot.version>2.6.8</spring.boot.version>
+        <spring.boot.version>2.6.14</spring.boot.version>
         <spring-boot-admin.version>2.6.6</spring-boot-admin.version>
-        <spring-session.version>2.6.1-kylin-r3</spring-session.version>
+        <spring-session.version>2.6.1-kylin-r4</spring-session.version>
         <spring.framework.security.extensions.version>1.0.10.RELEASE</spring.framework.security.extensions.version>
-        <spring-security-web.version>5.6.4</spring-security-web.version>
         <opensaml.version>2.6.6</opensaml.version>
         <aspectj.version>1.8.9</aspectj.version>
         <unboundid-ldapsdk.version>3.1.1</unboundid-ldapsdk.version>
@@ -174,7 +224,7 @@
         <jetty.toolchain.test-helper.version>3.1.1</jetty.toolchain.test-helper.version>
         <test.container.version>1.15.3</test.container.version>
 
-        <groovy-all.version>2.4.7</groovy-all.version>
+        <groovy-all.version>2.4.21</groovy-all.version>
         <slf4j-ext.version>1.7.26</slf4j-ext.version>
         <protobuf-java.version>3.16.1</protobuf-java.version>
 
@@ -302,7 +352,7 @@
         <xmlsec.version>2.1.7</xmlsec.version>
         <derby.version>10.14.2.0</derby.version>
         <jcommander.version>1.75</jcommander.version>
-        <ant.version>1.9.15</ant.version>
+        <ant.version>1.9.16</ant.version>
         <netty-all.version>4.1.73.Final</netty-all.version>
         <netty.version>3.10.6.Final</netty.version>
         <servo-core.version>0.13.2</servo-core.version>
@@ -310,8 +360,9 @@
         <saas.nacos.discovery.starter.version>2.6.2</saas.nacos.discovery.starter.version>
         <jersey.version>2.35</jersey.version>
         <validation.api.version>2.0.1.Final</validation.api.version>
-        <jackson-databind.version>2.13.2.2</jackson-databind.version>
+        <jackson-databind.version>2.13.4.2</jackson-databind.version>
         <nimbus-jose-jwt.version>9.23</nimbus-jose-jwt.version>
+        <system-lambda.version>1.2.1</system-lambda.version>
     </properties>
 
     <modules>
@@ -321,6 +372,8 @@
         <module>src/query</module>
         <module>src/core-common</module>
         <module>src/core-metadata</module>
+        <module>src/distributed-lock-ext</module>
+        <module>src/core-metrics</module>
         <module>src/source-hive</module>
         <module>src/server</module>
         <module>src/spark-project/kylin-soft-affinity-cache</module>
@@ -329,11 +382,13 @@
         <module>src/spark-project/engine-spark</module>
         <module>src/spark-project/source-jdbc</module>
         <module>src/spark-project/engine-build-sdk</module>
+        <module>src/spark-project/spark-ddl-plugin</module>
         <module>src/spark-project/spark-it</module>
         <module>src/streaming</module>
         <module>src/assembly</module>
         <module>src/tool</module>
         <module>src/datasource-sdk</module>
+        <module>src/streaming-sdk</module>
         <module>src/second-storage/core</module>
         <module>src/second-storage/core-ui</module>
         <module>src/second-storage/clickhouse</module>
@@ -346,7 +401,6 @@
         <module>src/common-service</module>
         <module>src/job-service</module>
         <module>src/streaming-service</module>
-        <module>src/integration-service</module>
         <module>src/kylin-it</module>
 
         <!-- controller  -->
@@ -359,6 +413,7 @@
         <module>src/data-loading-booter</module>
         <module>src/query-booter</module>
         <module>src/common-booter</module>
+        <module>src/jdbc</module>
     </modules>
 
     <dependencyManagement>
@@ -381,6 +436,11 @@
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-datasource-sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-streaming-sdk</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -522,8 +582,19 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-integration-service</artifactId>
+                <artifactId>distributed-lock-ext</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-core-metrics</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.freemarker</groupId>
+                <artifactId>freemarker</artifactId>
+                <version>2.3.31</version>
             </dependency>
 
             <!-- arthas -->
@@ -653,6 +724,11 @@
                 <artifactId>kylin-soft-affinity-cache</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-spark-ddl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>
@@ -754,6 +830,13 @@
                 <artifactId>kylin-sparder</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-streaming</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
@@ -1081,6 +1164,11 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${beanutils.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>listenablefuture</artifactId>
                 <version>${listenablefuture.version}</version>
@@ -1096,11 +1184,6 @@
                 <artifactId>commons-cli</artifactId>
                 <version>${commons-cli.version}</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>commons-lang</groupId>
-                <artifactId>commons-lang</artifactId>
-                <version>${commons-lang.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -1309,6 +1392,10 @@
                 <artifactId>hive-exec</artifactId>
                 <version>${hive.version}</version>
                 <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.ivy</groupId>
+                        <artifactId>ivy</artifactId>
+                    </exclusion>
                     <exclusion>
                         <groupId>org.apache.logging.log4j</groupId>
                         <artifactId>log4j-1.2-api</artifactId>
@@ -1596,7 +1683,7 @@
             <dependency>
                 <groupId>org.apache.thrift</groupId>
                 <artifactId>libfb303</artifactId>
-                <version>0.9.3</version>
+                <version>${libfb303.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.slf4j</groupId>
@@ -1945,6 +2032,12 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.owasp.esapi</groupId>
+                <artifactId>esapi</artifactId>
+                <version>${esapi.version}</version>
             </dependency>
 
             <!-- Logging -->
@@ -2073,11 +2166,6 @@
                 <version>${xerces.version}</version>
             </dependency>
             <dependency>
-                <groupId>xalan</groupId>
-                <artifactId>xalan</artifactId>
-                <version>${xalan.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.github.jbellis</groupId>
                 <artifactId>jamm</artifactId>
                 <version>${jamm.version}</version>
@@ -2199,13 +2287,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring.boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
                 <groupId>de.codecentric</groupId>
                 <artifactId>spring-boot-admin-starter-client</artifactId>
                 <version>${spring-boot-admin.version}</version>
@@ -2291,11 +2372,6 @@
 
             <!-- Spring Security -->
             <dependency>
-                <groupId>org.springframework.security</groupId>
-                <artifactId>spring-security-web</artifactId>
-                <version>${spring-security-web.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.springframework.security.extensions</groupId>
                 <artifactId>spring-security-saml2-core</artifactId>
                 <version>${spring.framework.security.extensions.version}</version>
@@ -2307,6 +2383,14 @@
                     <exclusion>
                         <groupId>org.bouncycastle</groupId>
                         <artifactId>bcprov-jdk15on</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>xalan</groupId>
+                        <artifactId>xalan</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework.security</groupId>
+                        <artifactId>spring-security-web</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -2818,6 +2902,13 @@
                 <artifactId>snakeyaml</artifactId>
                 <version>${snakeyaml.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.github.stefanbirkner</groupId>
+                <artifactId>system-lambda</artifactId>
+                <version>${system-lambda.version}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -2829,6 +2920,10 @@
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-compiler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
         </dependency>
     </dependencies>
 
@@ -3458,6 +3553,262 @@
                     </snapshots>
                 </repository>
             </repositories>
+        </profile>
+        <profile>
+            <!-- This profile adds/overrides few features of the 'apache-release'
+                 profile in the parent pom. -->
+            <id>apache-release</id>
+            <activation>
+                <property>
+                    <name>pre-commit</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+                    <!-- Override the parent assembly execution to customize the assembly
+                        descriptor and final name. -->
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>source-release-assembly</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <tarLongFileMode>posix</tarLongFileMode>
+                                    <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                                    <appendAssemblyId>true</appendAssemblyId>
+                                    <descriptors>
+                                        <descriptor>
+                                            assembly/src/main/config/assemblies/source-assembly.xml
+                                        </descriptor>
+                                    </descriptors>
+                                    <finalName>apache-kylin-${project.version}</finalName>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Apache-RAT checks for files without headers.
+                         If run on a messy developer's sandbox, it will fail.
+                         This serves as a reminder to only build a release in a clean
+                         sandbox! -->
+                    <plugin>
+                        <groupId>org.apache.rat</groupId>
+                        <artifactId>apache-rat-plugin</artifactId>
+                        <configuration>
+                            <!-- Used to print file with unapproved licenses in project to stand output -->
+                            <consoleOutput>true</consoleOutput>
+
+                            <!-- Exclude files/folders for apache release -->
+                            <excludes>
+                                <exclude>**/*.jj</exclude>
+
+                                <exclude>DEPENDENCIES</exclude>
+                                <exclude>.settings/**</exclude>
+                                <exclude>**/LICENSE*</exclude>
+                                <!-- Local git repo -->
+                                <exclude>.git/**</exclude>
+                                <exclude>.gitconfig</exclude>
+                                <!-- IDE files -->
+                                <exclude>.idea/**</exclude>
+                                <exclude>**/*.iml</exclude>
+                                <exclude>**/.classpath</exclude>
+                                <exclude>**/.project</exclude>
+                                <exclude>**/.settings/**</exclude>
+
+                                <!-- image files constitute images required for documentation. .pptx contain the sources for images -->
+                                <exclude>**/*.png</exclude>
+                                <exclude>**/*.jpg</exclude>
+                                <exclude>**/*.gif</exclude>
+                                <exclude>**/*.ico</exclude>
+                                <exclude>**/*.svg</exclude>
+
+                                <!--Test Data-->
+                                <exclude>**/src/test/resources/**</exclude>
+                                <exclude>src/examples/sample_cube/template/**</exclude>
+                                <exclude>src/examples/test_case_data/localmeta/**</exclude>
+                                <exclude>src/examples/test_case_data/parquet_test/**</exclude>
+                                <exclude>**/src/spark-project/engine-spark/metastore_db/db.lck</exclude>
+                                <exclude>**/src/spark-project/engine-spark/metastore_db/service.properties</exclude>
+
+                                <!-- generated files -->
+                                <exclude>**/target/**</exclude>
+                                <exclude>src/examples/test_data/**</exclude>
+                                <exclude>lib/**</exclude>
+                                <exclude>dist/**</exclude>
+                                <exclude>**/dependency-reduced-pom.xml</exclude>
+
+                                <!-- text files without comments -->
+                                <exclude>**/*.csv</exclude>
+                                <exclude>**/*.json</exclude>
+                                <exclude>**/*.json.bad</exclude>
+                                <exclude>**/*.md</exclude>
+                                <exclude>**/*.spec</exclude>
+                                <exclude>**/*.acl</exclude>
+
+                                <!-- binary files -->
+                                <exclude>**/*.dict</exclude>
+                                <exclude>**/*.dic</exclude>
+                                <exclude>**/*.snapshot</exclude>
+                                <exclude>**/*.pdf</exclude>
+                                <exclude>**/*.docx</exclude>
+                                <exclude>**/*.doc</exclude>
+                                <exclude>**/*.txt</exclude>
+                                <exclude>**/.checkstyle</exclude>
+                                <exclude>**/*.eot</exclude>
+                                <exclude>**/*.ttf</exclude>
+                                <exclude>**/*.woff</exclude>
+                                <exclude>**/*.DDLCheck</exclude>
+                                <exclude>**/*.factories</exclude>
+
+                                <!-- Kylin's website content -->
+                                <exclude>**/.sass-cache/**</exclude>
+
+                                <!-- tomcat package -->
+                                <exclude>tomcat/**</exclude>
+
+                                <!-- front end libary and generated files -->
+                                <exclude>kystudio/**/*.js</exclude>
+                                <exclude>kystudio/node_modules/**</exclude>
+                                <exclude>kystudio/dist/**</exclude>
+                                <exclude>kystudio/**/*.vue</exclude>
+                                <exclude>kystudio/**/*.less</exclude>
+                                <exclude>kystudio/static/**</exclude>
+                                <exclude>kystudio/.babelrc</exclude>
+                                <exclude>kystudio/.editorconfig</exclude>
+                                <exclude>kystudio/.eslintignore</exclude>
+                                <exclude>kystudio/.eslintrc.js</exclude>
+                                <exclude>kystudio/index.html</exclude>
+                                <exclude>kystudio/jsconfig.json</exclude>
+                                <exclude>kystudio/package.json</exclude>
+                                <exclude>kystudio/README.md</exclude>
+
+                                <!-- json configuration file-->
+                                <exclude>webapp/.bowerrc</exclude>
+                                <exclude>webapp/.jshintrc</exclude>
+                                <!-- generated dict files -->
+                                <exclude>dictionary/metastore_db/**</exclude>
+
+                                <!-- MIT license -->
+                                <exclude>webapp/app/css/AdminLTE.css</exclude>
+                                <exclude>webapp/app/css/messenger-theme-ice.css</exclude>
+                                <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js</exclude>
+                                <exclude>webapp/app/js/directives/angular-tree-control.js</exclude>
+                                <exclude>webapp/app/js/directives/datetimepicker.js</exclude>
+                                <exclude>webapp/app/js/directives/select.js</exclude>
+                                <exclude>webapp/app/js/directives/ui-grid.js</exclude>
+
+                                <!-- BSD license -->
+                                <exclude>webapp/app/js/utils/liquidFillGauge.js</exclude>
+
+                                <!-- Debug-->
+                                <exclude>dev-support/**/*.env</exclude>
+                                <exclude>dev-support/**/*.yml</exclude>
+                                <exclude>build/sample_project/template/UUID</exclude>
+                                <exclude>build/release/**/*.tmpl</exclude>
+                                <exclude>build/deploy/grafana/custom.ini</exclude>
+
+                                <!--configuration file -->
+                                <exclude>webapp/app/routes.json</exclude>
+                                <exclude>webapp/bower.json</exclude>
+                                <exclude>webapp/grunt.json</exclude>
+                                <exclude>webapp/package.json</exclude>
+                                <exclude>src/license/third-party-file.ftl</exclude>
+                                <exclude>build/spark/**</exclude>
+                                <exclude>lombok.config</exclude>
+
+                                <!-- logs -->
+                                <exclude>**/*.log</exclude>
+                                <exclude>jdbc/kylin_jdbc.log*</exclude>
+                                <exclude>server/logs/**</exclude>
+
+                                <!-- jdbc service -->
+                                <exclude>**/java.sql.Driver</exclude>
+
+                                <!--ODBC sub project is a VS project, exclude related files -->
+                                <exclude>**/*.sln</exclude>
+                                <exclude>**/*.vcxproj</exclude>
+                                <exclude>**/*.vcxproj.filters</exclude>
+                                <exclude>**/*.vcxproj.user</exclude>
+                                <exclude>**/*.props</exclude>
+                                <exclude>**/*.RC</exclude>
+                                <exclude>**/*.dsp</exclude>
+                                <exclude>**/*.DEF</exclude>
+                                <exclude>**/*.isl</exclude>
+                                <exclude>**/*.isproj</exclude>
+                                <exclude>**/*.bmp</exclude>
+
+                                <exclude>src/main/codegen/javacc/org/apache/kylin/query/util/CommentParser.jj</exclude>
+
+                                <!-- protobuf generated -->
+                                <exclude>
+                                    src/main/java/org/apache/kylin/storage/hbase/ii/coprocessor/endpoint/generated/IIProtos.java
+                                </exclude>
+                                <exclude>
+                                    src/main/java/org/apache/kylin/storage/hbase/cube/v1/filter/generated/FilterProtosExt.java
+                                </exclude>
+                                <exclude>
+                                    src/main/java/org/apache/kylin/storage/hbase/cube/v2/coprocessor/endpoint/generated/CubeVisitProtos.java
+                                </exclude>
+                                <exclude>
+                                    storage-hbase/src/main/java/org/apache/kylin/storage/hbase/cube/v2/coprocessor/endpoint/generated/CubeVisitProtos.java
+                                </exclude>
+                                <exclude>
+                                    examples/test_case_data/sample_local/UUID
+                                </exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.maven.doxia</groupId>
+                                <artifactId>doxia-core</artifactId>
+                                <version>1.7</version>
+                                <exclusions>
+                                    <exclusion>
+                                        <groupId>xerces</groupId>
+                                        <artifactId>xercesImpl</artifactId>
+                                    </exclusion>
+                                </exclusions>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <groupId>net.ju-n.maven.plugins</groupId>
+                        <artifactId>checksum-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>artifacts</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <algorithms>
+                                <algorithm>SHA-256</algorithm>
+                            </algorithms>
+                            <failOnError>false</failOnError>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

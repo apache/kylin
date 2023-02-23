@@ -1,5 +1,0 @@
-{"sum(find_in_set(dab, rpad(lpad(LSTG_FORMAT_NAME, (CAST(CAST(15 AS TINYINT) AS INT) - 1), abc,b,c,d), 25, abc,b,c,d)))":13937}
-{"sum(find_in_set(dab, rpad(lpad(LSTG_FORMAT_NAME, (CAST(CAST(15 AS TINYINT) AS INT) - 1), abc,b,c,d), 25, abc,b,c,d)))":12174}
-{"sum(find_in_set(dab, rpad(lpad(LSTG_FORMAT_NAME, (CAST(CAST(15 AS TINYINT) AS INT) - 1), abc,b,c,d), 25, abc,b,c,d)))":14259}
-{"sum(find_in_set(dab, rpad(lpad(LSTG_FORMAT_NAME, (CAST(CAST(15 AS TINYINT) AS INT) - 1), abc,b,c,d), 25, abc,b,c,d)))":9895}
-{"sum(find_in_set(dab, rpad(lpad(LSTG_FORMAT_NAME, (CAST(CAST(15 AS TINYINT) AS INT) - 1), abc,b,c,d), 25, abc,b,c,d)))":13748}

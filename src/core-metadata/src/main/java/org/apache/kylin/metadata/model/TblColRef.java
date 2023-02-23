@@ -203,7 +203,7 @@ public class TblColRef implements Serializable {
         this.table = table;
         this.column = column;
     }
-    
+
     private String wrapIdentity(String wrap) {
         return wrap + getTableAlias() + wrap + "." + wrap + getName() + wrap;
     }
@@ -281,7 +281,7 @@ public class TblColRef implements Serializable {
     }
 
     public String getCanonicalName() {
-        return getTable() + "." + getName();
+        return column.getCanonicalName();
     }
 
     public String getDatatype() {

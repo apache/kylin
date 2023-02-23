@@ -31,6 +31,7 @@ import java.util.Set;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.SnapshotStatus;
@@ -221,9 +222,10 @@ public class SnapshotController extends BaseController {
         } catch (NoSuchFieldException e) {
             throw new KylinException(SORT_BY_FIELD_NOT_EXIST, sortBy);
         }
-        List<SnapshotInfoResponse> responses = snapshotService.getProjectSnapshots(project, table, statusFilter,
-                partitionFilter, sortBy, isReversed);
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, DataResult.get(responses, offset, limit), "");
+        Pair<List<SnapshotInfoResponse>, Integer> snapshotsAndSize = snapshotService.getProjectSnapshots(project, table,
+                statusFilter, partitionFilter, sortBy, isReversed, Pair.newPair(offset, limit));
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                new DataResult<>(snapshotsAndSize.getFirst(), snapshotsAndSize.getSecond(), offset, limit), "");
     }
 
     @ApiOperation(value = "getTables", tags = { "AI" }, notes = "get all tables with or without snapshot")

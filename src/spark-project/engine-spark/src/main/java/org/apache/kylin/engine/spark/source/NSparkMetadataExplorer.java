@@ -28,8 +28,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
@@ -163,6 +165,45 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
             }
         }
         return isAccess;
+    }
+
+    public boolean checkDatabaseHadoopAccessFast(String database) throws Exception {
+        boolean isAccess = true;
+        val spark = SparderEnv.getSparkSession();
+        try {
+            String databaseLocation = spark.catalog().getDatabase(database).locationUri();
+            RemoteIterator<FileStatus> tablesIterator = getFilesIterator(databaseLocation, false);
+            if (tablesIterator.hasNext()) {
+                Path tablePath = tablesIterator.next().getPath();
+                getFilesIterator(tablePath.toString(), true);
+            }
+        } catch (Exception e) {
+            isAccess = false;
+            try {
+                logger.error("Read hive database {} error:{}, ugi name: {}.", database, e.getMessage(),
+                    UserGroupInformation.getCurrentUser().getUserName());
+            } catch (IOException ex) {
+                logger.error("fetch user curr ugi info error.", e);
+            }
+        }
+        return isAccess;
+    }
+
+    private RemoteIterator<FileStatus> getFilesIterator(String location, boolean checkList) throws IOException {
+        val sparkConf = SparderEnv.getSparkSession().sessionState().conf();
+        String hiveSpecFsLocation;
+        FileSystem fs;
+        if (sparkConf.contains("spark.sql.hive.specific.fs.location")) {
+            hiveSpecFsLocation = sparkConf.getConf(SQLConf.HIVE_SPECIFIC_FS_LOCATION());
+            location = location.replace("hdfs://hacluster", hiveSpecFsLocation);
+            fs = HadoopUtil.getFileSystem(hiveSpecFsLocation);
+        } else {
+            fs = HadoopUtil.getFileSystem(location);
+        }
+        if (checkList) {
+            fs.listStatus(new Path(location));
+        }
+        return fs.listStatusIterator(new Path(location));
     }
 
     @Override

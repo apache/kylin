@@ -22,14 +22,12 @@ import static io.kyligence.kap.secondstorage.SecondStorageConstants.STEP_SECOND_
 import static io.kyligence.kap.secondstorage.SecondStorageUtil.getTableFlow;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
@@ -39,9 +37,7 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
-import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -102,14 +98,15 @@ public class ClickhouseRefreshSecondaryIndex extends AbstractExecutable {
                 }
             }
 
+            val dataflow = NDataflowManager.getInstance(getConfig(), getProject()).getDataflow(modelId);
+            String database = NameUtil.getDatabase(getConfig(), getProject());
+            String table = NameUtil.getTable(dataflow, layoutId);
+            List<Future<?>> results = Lists.newArrayList();
             List<SecondStorageNode> nodes = SecondStorageUtil.listProjectNodes(getProject());
-            List<RefreshSecondaryIndex> allJob = getAddIndexJob(nodes, newIndexes, layoutId);
-            allJob.addAll(getToBeDeleteIndexJob(nodes, toBeDeleteIndexed, layoutId));
-
-            List<Future<?>> results = new ArrayList<>();
             val taskPool = new ThreadPoolExecutor(nodes.size(), nodes.size(), 0L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<>(), new NamedThreadFactory("Refresh Tiered Storage Index"));
-            allJob.forEach(job -> results.add(taskPool.submit(job::refresh)));
+            nodes.forEach(node -> results.add(taskPool.submit(() -> new RefreshSecondaryIndex(node.getName(), database,
+                    table, newIndexes, toBeDeleteIndexed, dataflow).refresh())));
 
             try {
                 for (Future<?> result : results) {
@@ -127,37 +124,5 @@ public class ClickhouseRefreshSecondaryIndex extends AbstractExecutable {
 
             return ExecuteResult.createSucceed();
         });
-    }
-
-    private List<RefreshSecondaryIndex> getAddIndexJob(List<SecondStorageNode> nodes, Set<Integer> newIndexes,
-            long layoutId) {
-        String modelId = getTargetSubject();
-        val indexPlan = NIndexPlanManager.getInstance(getConfig(), project).getIndexPlan(modelId);
-
-        if (indexPlan == null || indexPlan.getLayoutEntity(layoutId) == null) {
-            return Lists.newArrayList();
-        }
-
-        LayoutEntity layout = indexPlan.getLayoutEntity(layoutId);
-        String database = NameUtil.getDatabase(getConfig(), getProject());
-        String table = NameUtil.getTable(NDataflowManager.getInstance(getConfig(), getProject()).getDataflow(modelId),
-                layoutId);
-        return nodes.stream()
-                .flatMap(node -> newIndexes.stream().map(column -> new RefreshSecondaryIndex(node.getName(), database,
-                        table, column, layout, RefreshSecondaryIndex.Type.ADD)))
-                .collect(Collectors.toList());
-    }
-
-    private List<RefreshSecondaryIndex> getToBeDeleteIndexJob(List<SecondStorageNode> nodes,
-            Set<Integer> toBeDeleteIndexed, long layoutId) {
-        String modelId = getTargetSubject();
-        String database = NameUtil.getDatabase(getConfig(), getProject());
-        String table = NameUtil.getTable(NDataflowManager.getInstance(getConfig(), getProject()).getDataflow(modelId),
-                layoutId);
-
-        return nodes.stream()
-                .flatMap(node -> toBeDeleteIndexed.stream().map(column -> new RefreshSecondaryIndex(node.getName(),
-                        database, table, column, null, RefreshSecondaryIndex.Type.DELETE)))
-                .collect(Collectors.toList());
     }
 }

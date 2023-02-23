@@ -20,10 +20,11 @@ package org.apache.kylin.common.persistence.metadata;
 import java.util.List;
 import java.util.Objects;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.util.AddressUtil;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class EpochStore {
@@ -53,6 +54,8 @@ public abstract class EpochStore {
     public abstract void createIfNotExist() throws Exception;
 
     public abstract <T> T executeWithTransaction(Callback<T> callback);
+
+    public abstract <T> T executeWithTransaction(Callback<T> callback, int timeout);
 
     public Epoch getGlobalEpoch() {
         return getEpoch("_global");

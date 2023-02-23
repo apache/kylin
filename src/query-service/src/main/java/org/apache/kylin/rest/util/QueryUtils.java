@@ -26,14 +26,13 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.engine.PrepareSqlStateParam;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.util.QueryParams;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.util.TempStatementUtil;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.query.util.KapQueryUtil;
 
 public class QueryUtils {
 
@@ -49,10 +48,8 @@ public class QueryUtils {
     }
 
     public static boolean isPrepareStatementWithParams(SQLRequest sqlRequest) {
-        if (sqlRequest instanceof PrepareSqlRequest && ((PrepareSqlRequest) sqlRequest).getParams() != null
-                && ((PrepareSqlRequest) sqlRequest).getParams().length > 0)
-            return true;
-        return false;
+        return sqlRequest instanceof PrepareSqlRequest && ((PrepareSqlRequest) sqlRequest).getParams() != null
+                && ((PrepareSqlRequest) sqlRequest).getParams().length > 0;
     }
 
     public static void fillInPrepareStatParams(SQLRequest sqlRequest, boolean pushdown) {
@@ -82,11 +79,11 @@ public class QueryUtils {
             } catch (Exception e) {
                 logger.warn("Failed to get connection, project: {}", queryContext.getProject(), e);
             }
-            QueryParams queryParams = new QueryParams(KapQueryUtil.getKylinConfig(queryContext.getProject()),
-                    alternativeSql, queryContext.getProject(), queryContext.getLimit(),
-                    queryContext.getOffset(), defaultSchema, false);
+            QueryParams queryParams = new QueryParams(NProjectManager.getProjectConfig(queryContext.getProject()),
+                    alternativeSql, queryContext.getProject(), queryContext.getLimit(), queryContext.getOffset(),
+                    defaultSchema, false);
             queryParams.setAclInfo(queryContext.getAclInfo());
-            queryContext.getMetrics().setCorrectedSql(KapQueryUtil.massageSql(queryParams));
+            queryContext.getMetrics().setCorrectedSql(QueryUtil.massageSql(queryParams));
         }
         if (StringUtils.isEmpty(queryContext.getMetrics().getCorrectedSql())) {
             queryContext.getMetrics().setCorrectedSql(alternativeSql);

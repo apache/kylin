@@ -49,6 +49,7 @@ import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobStoppedException;
 import org.apache.kylin.job.exception.JobStoppedNonVoluntarilyException;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.BaseTestExecutable;
 import org.apache.kylin.job.execution.DefaultExecutable;
@@ -71,10 +72,10 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
-import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.assertj.core.api.Assertions;
 import org.awaitility.core.ConditionTimeoutException;
@@ -93,6 +94,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.val;
 import lombok.var;
 
@@ -109,7 +111,7 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
     public void setup() throws Exception {
         overwriteSystemProp("kylin.job.auto-set-concurrent-jobs", "true");
         overwriteSystemProp("kylin.env", "UT");
-        overwriteSystemProp("kylin.job.check-quota-storage-enabled", "true");
+        overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
         super.setup();
     }
 
@@ -156,7 +158,7 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
     }
 
     @Test
-    public void testGetOutputFromHDFSByJobId() throws IOException {
+    public void testGetOutputFromHDFSByJobId() throws IOException, PersistentException {
         File file = temporaryFolder.newFile("execute_output.json." + System.currentTimeMillis() + ".log");
         for (int i = 0; i < 200; i++) {
             Files.write(file.toPath(), String.format(Locale.ROOT, "lines: %s\n", i).getBytes(Charset.defaultCharset()),
@@ -940,8 +942,7 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
         Assert.assertEquals(RealizationStatusEnum.ONLINE, updateDf.getStatus());
     }
 
-    private DefaultExecutable testDataflowStatusWhenJobError(ManagementType tableOriented,
-            JobTypeEnum indexBuild) {
+    private DefaultExecutable testDataflowStatusWhenJobError(ManagementType tableOriented, JobTypeEnum indexBuild) {
         val dfMgr = NDataflowManager.getInstance(getTestConfig(), project);
         val modelMgr = NDataModelManager.getInstance(getTestConfig(), project);
         modelMgr.updateDataModel("89af4ee2-2cdb-4b07-b39e-4c29856309aa", copyForWrite -> {
@@ -2025,5 +2026,78 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
             overwriteSystemProp("kylin.storage.quota-in-giga-bytes", Integer.toString(Integer.MAX_VALUE));
             scheduler.getContext().setReachQuotaLimit(false);
         }
+    }
+
+    @Test
+    @Repeat(3)
+    public void testProjectConcurrentJobLimit() {
+        String project = "heterogeneous_segment";
+        String modelId = "747f864b-9721-4b97-acde-0aa8e8656cba";
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.job.max-concurrent-jobs", "1");
+        config.setProperty("kylin.engine.driver-memory-base", "512");
+
+        val scheduler = NDefaultScheduler.getInstance(project);
+        val originExecutableManager = NExecutableManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        val executableManager = Mockito.spy(originExecutableManager);
+        executableManager.deleteAllJob();
+        Mockito.doAnswer(invocation -> {
+            String jobId = invocation.getArgument(0);
+            originExecutableManager.destroyProcess(jobId);
+            return null;
+        }).when(executableManager).destroyProcess(Mockito.anyString());
+
+        scheduler.init(new JobEngineConfig(config));
+        val projectManager = NProjectManager.getInstance(config);
+
+        if (!scheduler.hasStarted()) {
+            throw new RuntimeException("scheduler has not been started");
+        }
+        int memory = NDefaultScheduler.getMemoryRemaining().availablePermits();
+        val df = NDataflowManager.getInstance(getTestConfig(), project).getDataflow(modelId);
+        val job1 = generateJob(df, project);
+        val job2 = generatePartial(df, project);
+        executableManager.addJob(job1);
+        executableManager.addJob(job2);
+        waitForJobByStatus(job1.getId(), 60000, ExecutableState.RUNNING, executableManager);
+        Assert.assertNotEquals(memory, NDefaultScheduler.getMemoryRemaining().availablePermits());
+        var runningExecutables = executableManager.getRunningExecutables(project, modelId);
+        runningExecutables.sort(Comparator.comparing(AbstractExecutable::getCreateTime));
+        Assert.assertEquals(ExecutableState.RUNNING, runningExecutables.get(0).getStatus());
+        Assert.assertEquals(ExecutableState.READY, runningExecutables.get(1).getStatus());
+
+        projectManager.getProject(project).getConfig().setProperty("kylin.job.max-concurrent-jobs", "2");
+        Assert.assertNotEquals(memory, NDefaultScheduler.getMemoryRemaining().availablePermits());
+        val job3 = generateJob(df, project);
+        executableManager.addJob(job3);
+        waitForJobByStatus(job1.getId(), 60000, ExecutableState.RUNNING, executableManager);
+        waitForJobByStatus(job2.getId(), 60000, ExecutableState.RUNNING, executableManager);
+        runningExecutables = executableManager.getRunningExecutables(project, modelId);
+        runningExecutables.sort(Comparator.comparing(AbstractExecutable::getCreateTime));
+        Assert.assertEquals(ExecutableState.RUNNING, runningExecutables.get(0).getStatus());
+        Assert.assertEquals(ExecutableState.RUNNING, runningExecutables.get(1).getStatus());
+        Assert.assertEquals(ExecutableState.READY, runningExecutables.get(2).getStatus());
+
+        projectManager.getProject(project).getConfig().setProperty("kylin.job.max-concurrent-jobs", "1");
+        waitForJobByStatus(job1.getId(), 60000, ExecutableState.RUNNING, executableManager);
+        waitForJobByStatus(job2.getId(), 60000, ExecutableState.RUNNING, executableManager);
+
+        runningExecutables.sort(Comparator.comparing(AbstractExecutable::getCreateTime));
+        Assert.assertEquals(ExecutableState.RUNNING, runningExecutables.get(0).getStatus());
+        Assert.assertEquals(ExecutableState.RUNNING, runningExecutables.get(1).getStatus());
+        Assert.assertEquals(ExecutableState.READY, runningExecutables.get(2).getStatus());
+
+        waitForJobByStatus(job1.getId(), 60000, null, executableManager);
+        runningExecutables = executableManager.getRunningExecutables(project, modelId);
+        Assert.assertEquals(2, runningExecutables.size());
+        runningExecutables.sort(Comparator.comparing(AbstractExecutable::getCreateTime));
+        Assert.assertEquals(ExecutableState.RUNNING, runningExecutables.get(0).getStatus());
+        Assert.assertEquals(ExecutableState.READY, runningExecutables.get(1).getStatus());
+
+        scheduler.shutdown();
+        Assert.assertEquals(memory, NDefaultScheduler.getMemoryRemaining().availablePermits());
+
+        Assert.assertEquals(1,
+                scheduler.getMaxConcurrentJobLimitByProject(config, scheduler.getJobEngineConfig(), "xxxxx"));
     }
 }

@@ -42,7 +42,7 @@ public class SlowQueryDetector extends Thread {
     private static final ConcurrentMap<String, CanceledSlowQueryStatus> canceledSlowQueriesStatus = Maps
             .newConcurrentMap();
     private final int detectionIntervalMs;
-    private int queryTimeoutMs;
+    private final int queryTimeoutMs;
 
     public SlowQueryDetector() {
         super("SlowQueryDetector");

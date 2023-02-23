@@ -26,53 +26,36 @@ class QueryAsyncProfilerDriverPluginTest extends AsyncPluginWithMeta {
 
   val sparkPluginName: String = classOf[QueryAsyncProfilerSparkPlugin].getName
 
-  test("plugin initialization") {
+  override def beforeAll(): Unit = {
+    super.beforeAll()
     val conf = new SparkConf()
       .setAppName(getClass.getName)
       .set(SparkLauncher.SPARK_MASTER, "local[1]")
       .set("spark.plugins", sparkPluginName)
 
     sc = new SparkContext(conf)
-    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins"))
-    new QueryAsyncProfilerDriverPlugin().receive("NEX-1:start,event=cpu")
+  }
 
-    sc.stop()
-    sc = null
+  test("plugin initialization") {
+    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins").toString)
+    new QueryAsyncProfilerDriverPlugin().receive("NEX-1:start,event=cpu")
   }
 
   test("plugin initialization receive result") {
-    val conf = new SparkConf()
-      .setAppName(getClass.getName)
-      .set(SparkLauncher.SPARK_MASTER, "local[1]")
-      .set("spark.plugins", sparkPluginName)
-
-    sc = new SparkContext(conf)
-    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins"))
+    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins").toString)
     try {
       new QueryAsyncProfilerDriverPlugin().receive("RES-1:flamegraph")
     } catch {
       case _: Throwable =>
     }
-
-    sc.stop()
-    sc = null
   }
 
   test("plugin initialization receive others") {
-    val conf = new SparkConf()
-      .setAppName(getClass.getName)
-      .set(SparkLauncher.SPARK_MASTER, "local[1]")
-      .set("spark.plugins", sparkPluginName)
-
-    sc = new SparkContext(conf)
-    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins"))
+    Assert.assertEquals(sparkPluginName, sc.getConf.get("spark.plugins").toString)
     try {
       new QueryAsyncProfilerDriverPlugin().receive("OTH-1:start,event=cpu")
     } catch {
       case _: Throwable =>
     }
-
-    sc.stop()
-    sc = null
   }
 }

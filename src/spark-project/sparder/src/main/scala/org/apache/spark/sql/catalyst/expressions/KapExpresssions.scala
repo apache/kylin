@@ -125,7 +125,6 @@ case class KapSubtractMonths(a: Expression, b: Expression)
 
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.util.TypeUtils
-import org.apache.spark.sql.types._
 
 @ExpressionDescription(
   usage = "_FUNC_(expr) - Returns the sum calculated from values of a group. " +
@@ -551,10 +550,10 @@ case class CeilDateTime(timestamp: Expression,
 
   override def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
     val zid = ctx.addReferenceObj("zoneId", zoneId, classOf[ZoneId].getName)
-    val dtu = DateTimeUtils.getClass.getName.stripSuffix("$")
-    defineCodeGen(ctx, ev, (date, fmt) => {
-      s"""$dtu.ceilTimestamp($date, $fmt, $zid)"""
-    })
+    codeGenHelper(ctx, ev, minLevel = DateTimeUtils.TRUNC_TO_SECOND, orderReversed = true) {
+      (date: String, fmt: String) =>
+        s"ceilTimestamp($date, $fmt, $zid);"
+    }
   }
 
   override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = {
@@ -770,6 +769,67 @@ case class PercentileDecode(bytes: Expression, quantile: Expression, precision: 
 
   override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression = {
     val newChildren = Seq(newFirst, newSecond, newThird)
+    super.legacyWithNewChildren(newChildren)
+  }
+}
+
+case class SumLCDecode(bytes: Expression, wrapDataTypeExpr: Expression) extends BinaryExpression with ExpectsInputTypes {
+  override def left: Expression = bytes;
+
+  override def right: Expression = wrapDataTypeExpr
+
+  override def inputTypes: Seq[AbstractDataType] = Seq(BinaryType, StringType)
+
+  def wrapDataType = DataType.fromJson(wrapDataTypeExpr.toString)
+
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
+    val leftGen = left.genCode(ctx)
+    val rightGen = right.genCode(ctx)
+    val expressionUtils = ExpressionUtils.getClass.getName.stripSuffix("$")
+    val decimalUtil = classOf[Decimal].getName
+    val evalValue = ctx.freshName("evalValue")
+    val javaType = CodeGenerator.javaType(dataType)
+    val boxedJavaType = CodeGenerator.boxedType(javaType)
+    val commonCodeBlock =
+      code"""
+        ${leftGen.code}
+        ${rightGen.code}
+        Number $evalValue = $expressionUtils.sumLCDecodeHelper(${leftGen.value}, ${rightGen.value});
+        boolean ${ev.isNull} = $evalValue == null;
+        $javaType ${ev.value} = ${CodeGenerator.defaultValue(dataType)};
+          """
+    val conditionCodeBlock = if (wrapDataType.isInstanceOf[DecimalType]) {
+      code"""
+        if(!${ev.isNull}) {
+            ${ev.value} = $decimalUtil.fromDecimal($evalValue);
+        }
+          """
+    } else {
+      code"""
+        if(!${ev.isNull}) {
+            ${ev.value} = ($boxedJavaType) $evalValue;
+        }
+          """
+    }
+    ev.copy(code = commonCodeBlock + conditionCodeBlock)
+  }
+
+  override protected def nullSafeEval(bytes: Any, wrapDataTypeExpr: Any): Any = {
+    val decodeVal = ExpressionUtils.sumLCDecodeHelper(bytes, wrapDataTypeExpr)
+    wrapDataType match {
+      case DecimalType() =>
+        Decimal.fromDecimal(decodeVal.asInstanceOf[java.math.BigDecimal])
+      case _ =>
+        decodeVal
+    }
+  }
+
+  override def dataType: DataType = wrapDataType
+
+  override def prettyName: String = "sum_lc_decode"
+
+  override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = {
+    val newChildren = Seq(newLeft, newRight)
     super.legacyWithNewChildren(newChildren)
   }
 }

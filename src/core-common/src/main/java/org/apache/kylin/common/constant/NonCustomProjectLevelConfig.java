@@ -40,9 +40,10 @@ public enum NonCustomProjectLevelConfig {
     PUSH_DOWN_ENABLED("kylin.query.pushdown-enabled"),
 
     JOB_DATA_LOAD_EMPTY_NOTIFICATION_ENABLED(
-            "kylin.job.notification-on-empty-data-load"), JOB_ERROR_NOTIFICATION_ENABLED(
-                    "kylin.job.notification-on-job-error"), NOTIFICATION_ADMIN_EMAILS(
-                            "kylin.job.notification-admin-emails"),
+            "kylin.job.notification-on-empty-data-load"), JOB_NOTIFICATION_ENABLED_STATES(
+                    "kylin.job.notification-enable-states"), NOTIFICATION_USER_EMAILS(
+                            "kylin.job.notification-user-emails"), NOTIFICATION_ON_METADATA_PERSIST(
+                                    "kylin.job.notification-on-metadata-persist"),
 
     ENGINE_SPARK_YARN_QUEUE("kylin.engine.spark-conf.spark.yarn.queue"),
 

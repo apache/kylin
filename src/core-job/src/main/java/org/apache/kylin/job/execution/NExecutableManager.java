@@ -79,6 +79,7 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.dao.NExecutableDao;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
@@ -214,6 +215,21 @@ public class NExecutableManager {
         }
     }
 
+    public void addFrozenJob(String jobId) {
+        val scheduler = NDefaultScheduler.getInstance(project);
+        scheduler.getContext().addFrozenJob(jobId);
+    }
+
+    public void removeFrozenJob(String jobId) {
+        val scheduler = NDefaultScheduler.getInstance(project);
+        scheduler.getContext().removeFrozenJob(jobId);
+    }
+
+    public boolean isFrozenJob(String jobId) {
+        val scheduler = NDefaultScheduler.getInstance(project);
+        return scheduler.getContext().isFrozenJob(jobId);
+    }
+
     private void addJobOutput(ExecutablePO executable) {
         ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();
         executable.setOutput(executableOutputPO);
@@ -279,6 +295,10 @@ public class NExecutableManager {
             logger.error(PARSE_ERROR_MSG, e);
             return null;
         }
+    }
+
+    public void saveUpdatedJob() {
+        executableDao.saveUpdatedJob();
     }
 
     public Set<String> getYarnApplicationJobs(String id) {
@@ -785,6 +805,7 @@ public class NExecutableManager {
                                     .forEach(stage -> //
                             updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.READY, null, null));
                         }
+                        saveUpdatedJob();
                     }
                 }
             });
@@ -866,6 +887,7 @@ public class NExecutableManager {
                                     .forEach(stage -> // when restart, reset stage
                             updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.READY, null, null, true));
                         }
+                        saveUpdatedJob();
                     }
                 }
 
@@ -908,6 +930,7 @@ public class NExecutableManager {
                                     .forEach(stage -> //
                             updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.SUICIDAL, null, null));
                         }
+                        saveUpdatedJob();
                     }
                 }
             });
@@ -933,6 +956,7 @@ public class NExecutableManager {
                                     .forEach(stage -> //
                             updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.DISCARDED, null, null));
                         }
+                        saveUpdatedJob();
                     }
                 }
             });
@@ -963,6 +987,7 @@ public class NExecutableManager {
                                     .forEach(stage -> //
                             updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.ERROR, null, null));
                         }
+                        saveUpdatedJob();
                     }
                 }
             });
@@ -1002,6 +1027,7 @@ public class NExecutableManager {
                                     .forEach(stage -> //
                             updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.PAUSED, null, null));
                         }
+                        saveUpdatedJob();
                     }
                 }
             });
@@ -1158,7 +1184,7 @@ public class NExecutableManager {
     public void updateStageStatus(String taskOrJobId, String segmentId, ExecutableState newStatus,
             Map<String, String> updateInfo, String failedMsg, Boolean isRestart) {
         val jobId = extractJobId(taskOrJobId);
-        executableDao.updateJob(jobId, job -> {
+        executableDao.updateJobWithoutSave(jobId, job -> {
             final List<Map<String, List<ExecutablePO>>> collect = job.getTasks().stream()//
                     .map(ExecutablePO::getStagesMap)//
                     .filter(MapUtils::isNotEmpty)//
@@ -1211,8 +1237,10 @@ public class NExecutableManager {
                         "[UNEXPECTED_THINGS_HAPPENED] wrong job state transfer! There is no valid state transfer from: {} to: {}, job id: {}",
                         oldStatus, newStatus, taskOrJobId);
             }
+            // DISCARDED must not be transferred to any others status
             if ((oldStatus == ExecutableState.PAUSED && newStatus == ExecutableState.ERROR)
-                    || (oldStatus == ExecutableState.SKIP && newStatus == ExecutableState.SUCCEED)) {
+                    || (oldStatus == ExecutableState.SKIP && newStatus == ExecutableState.SUCCEED)
+                    || oldStatus == ExecutableState.DISCARDED) {
                 return false;
             }
             if (isRestart || (oldStatus != ExecutableState.SUCCEED && oldStatus != ExecutableState.SKIP)) {
@@ -1253,6 +1281,7 @@ public class NExecutableManager {
                                     .forEach(stage -> //
                             updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.SUCCEED, null, null));
                         }
+                        saveUpdatedJob();
                     }
                 }
             });
@@ -1278,6 +1307,7 @@ public class NExecutableManager {
                                     .forEach(stage -> //
                             updateStageStatus(stage.getId(), entry.getKey(), ExecutableState.ERROR, null, null));
                         }
+                        saveUpdatedJob();
                     }
                 }
             });
@@ -1371,10 +1401,8 @@ public class NExecutableManager {
         }
         val thread = scheduler.getContext().getRunningJobThread(executable);
         if (thread != null) {
-            logger.info("Interrupt Job [{}] thread and remove in ExecutableContext",
-                    executable.getDisplayName());
+            logger.info("Interrupt Job [{}] thread and remove in ExecutableContext", executable.getDisplayName());
             thread.interrupt();
-            scheduler.getContext().removeRunningJob(executable);
         }
     }
 
@@ -1496,7 +1524,7 @@ public class NExecutableManager {
                 || to == ExecutableState.ERROR || to == ExecutableState.SUICIDAL;
     }
 
-    public void updateJobOutputToHDFS(String resPath, ExecutableOutputPO obj) {
+    public void updateJobOutputToHDFS(String resPath, ExecutableOutputPO obj) throws PersistentException {
         DataOutputStream dout = null;
         try {
             Path path = new Path(resPath);
@@ -1505,7 +1533,7 @@ public class NExecutableManager {
             JsonUtil.writeValue(dout, obj);
         } catch (Exception e) {
             // the operation to update output to hdfs failed, next task should not be interrupted.
-            logger.error("update job output [{}] to HDFS failed.", resPath, e);
+            throw new PersistentException("update job output: " + resPath + " to HDFS failed", e);
         } finally {
             IOUtils.closeQuietly(dout);
         }

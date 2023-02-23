@@ -24,26 +24,30 @@ import java.util.Set;
 import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.apache.kylin.tool.bisync.tableau.TableauDataSourceConverter;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class BISyncTool {
 
     private BISyncTool() {
     }
 
+    @VisibleForTesting
     public static BISyncModel dumpToBISyncModel(SyncContext syncContext) {
         SyncModel syncModel = new SyncModelBuilder(syncContext).buildSourceSyncModel();
         return getBISyncModel(syncContext, syncModel);
     }
 
-    private static BISyncModel getBISyncModel(SyncContext syncContext, SyncModel syncModel) {
+    public static BISyncModel getBISyncModel(SyncContext syncContext, SyncModel syncModel) {
         switch (syncContext.getTargetBI()) {
-            case TABLEAU_ODBC_TDS:
-            case TABLEAU_CONNECTOR_TDS:
-                return new TableauDataSourceConverter().convert(syncModel, syncContext);
-            default:
-                throw new IllegalArgumentException();
+        case TABLEAU_ODBC_TDS:
+        case TABLEAU_CONNECTOR_TDS:
+            return new TableauDataSourceConverter().convert(syncModel, syncContext);
+        default:
+            throw new IllegalArgumentException();
         }
     }
 
+    @VisibleForTesting
     public static BISyncModel dumpHasPermissionToBISyncModel(SyncContext syncContext, Set<String> authTables,
             Set<String> authColumns, List<String> dimensions, List<String> measures) {
         SyncModel syncModel = new SyncModelBuilder(syncContext).buildHasPermissionSourceSyncModel(authTables,
@@ -51,8 +55,8 @@ public class BISyncTool {
         return getBISyncModel(syncContext, syncModel);
     }
 
-    public static BISyncModel dumpBISyncModel(SyncContext syncContext,
-            List<String> dimensions, List<String> measures) {
+    @VisibleForTesting
+    public static BISyncModel dumpBISyncModel(SyncContext syncContext, List<String> dimensions, List<String> measures) {
         SyncModel syncModel = new SyncModelBuilder(syncContext).buildSourceSyncModel(dimensions, measures);
         return getBISyncModel(syncContext, syncModel);
     }

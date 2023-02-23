@@ -18,21 +18,22 @@
 
 package org.apache.kylin.rest.controller.open;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
 
 import java.io.IOException;
 import java.util.Locale;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.rest.request.SamplingRequest;
-import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.controller.BaseController;
 import org.apache.kylin.rest.controller.SampleController;
 import org.apache.kylin.rest.request.RefreshSegmentsRequest;
+import org.apache.kylin.rest.request.SamplingRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.OpenPartitionColumnFormatResponse;
 import org.apache.kylin.rest.service.TableService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,6 +86,7 @@ public class OpenSampleController extends BaseController {
     @ResponseBody
     public EnvelopeResponse<String> submitSampling(@RequestBody SamplingRequest request) {
         checkProjectName(request.getProject());
+        request.setQualifiedTableName(StringUtils.upperCase(request.getQualifiedTableName(), Locale.ROOT));
         checkStreamingOperation(request.getProject(), request.getQualifiedTableName());
         return sampleController.submitSampling(request);
     }
@@ -99,8 +101,8 @@ public class OpenSampleController extends BaseController {
         checkRequiredArg(TABLE, table);
         checkRequiredArg("column_name", columnName);
 
-        String columnFormat = tableService.getPartitionColumnFormat(projectName, table.toUpperCase(Locale.ROOT),
-                columnName);
+        String columnFormat = tableService.getPartitionColumnFormat(projectName,
+                StringUtils.upperCase(table, Locale.ROOT), columnName);
         OpenPartitionColumnFormatResponse columnFormatResponse = new OpenPartitionColumnFormatResponse();
         columnFormatResponse.setColumnName(columnName);
         columnFormatResponse.setColumnFormat(columnFormat);

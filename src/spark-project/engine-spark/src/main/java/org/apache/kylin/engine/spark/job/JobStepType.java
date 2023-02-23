@@ -25,9 +25,11 @@ import org.apache.kylin.job.SecondStorageStepFactory;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.DefaultExecutableOnModel;
+import org.apache.kylin.metadata.cube.model.NBatchConstants;
 
 import static org.apache.kylin.engine.spark.job.StageType.BUILD_DICT;
 import static org.apache.kylin.engine.spark.job.StageType.BUILD_LAYER;
+import static org.apache.kylin.engine.spark.job.StageType.COST_BASED_PLANNER;
 import static org.apache.kylin.engine.spark.job.StageType.GATHER_FLAT_TABLE_STATS;
 import static org.apache.kylin.engine.spark.job.StageType.GENERATE_FLAT_TABLE;
 import static org.apache.kylin.engine.spark.job.StageType.MATERIALIZED_FACT_TABLE;
@@ -83,6 +85,10 @@ public enum JobStepType {
             MATERIALIZED_FACT_TABLE.createStage(parent, config);
             BUILD_DICT.createStage(parent, config);
             GENERATE_FLAT_TABLE.createStage(parent, config);
+            String enablePlanner = parent.getParam(NBatchConstants.P_JOB_ENABLE_PLANNER);
+            if (enablePlanner != null && Boolean.valueOf(enablePlanner)) {
+                COST_BASED_PLANNER.createStage(parent, config);
+            }
             GATHER_FLAT_TABLE_STATS.createStage(parent, config);
             BUILD_LAYER.createStage(parent, config);
             REFRESH_COLUMN_BYTES.createStage(parent, config);

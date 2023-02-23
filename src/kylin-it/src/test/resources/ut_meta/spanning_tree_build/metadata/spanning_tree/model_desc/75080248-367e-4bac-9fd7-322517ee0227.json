@@ -1,0 +1,62 @@
+{
+  "uuid": "75080248-367e-4bac-9fd7-322517ee0227",
+  "alias": "test_spanning_tree",
+  "fact_table": "DEFAULT.TEST_KYLIN_FACT",
+  "owner": "ADMIN",
+  "all_named_columns": [
+    {
+      "id": 0,
+      "name": "TRANS_ID",
+      "column": "TEST_KYLIN_FACT.TRANS_ID",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 1,
+      "name": "CAL_DT",
+      "column": "TEST_KYLIN_FACT.CAL_DT",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 2,
+      "name": "LSTG_FORMAT_NAME",
+      "column": "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 3,
+      "name": "LSTG_SITE_ID",
+      "column": "TEST_KYLIN_FACT.LSTG_SITE_ID",
+      "status": "DIMENSION"
+    },
+    {
+      "id": 4,
+      "name": "LEAF_CATEG_ID",
+      "column": "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+      "status": "DIMENSION"
+    }
+  ],
+  "all_measures": [
+    {
+      "id": 100000,
+      "name": "TRANS_CNT",
+      "function": {
+        "expression": "COUNT",
+        "parameters": [{
+          "type": "constant",
+          "value": "1"
+        }],
+        "returntype": "bigint"
+      }
+    }
+  ],
+  "column_correlations": [],
+  "computed_columns": [],
+  "last_modified": 1422435345352,
+  "filter_condition": null,
+  "partition_desc": {
+    "partition_date_column": "DEFAULT.TEST_KYLIN_FACT.CAL_DT",
+    "partition_date_start": 0,
+    "partition_date_format": "yyyy-MM-dd",
+    "partition_type": "APPEND"
+  }
+}

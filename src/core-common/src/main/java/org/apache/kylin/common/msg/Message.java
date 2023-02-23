@@ -38,9 +38,6 @@ public class Message {
     private static final String NON_EXISTEN_MODEL = "Model %s doesn't exist. Please confirm and try again later.";
     private static final String LACK_PROJECT = "Please fill in the project parameters.";
     private static final String NON_EXIST_PROJECT = "Project %s doesn't exist. Please confirm and try again later.";
-    private static final String DUP_MODCOL_MEASURE_NAME = "There are duplicated names among model column %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
-    private static final String DUP_DIM_MEASURE_NAME = "There are duplicated names among dimension name %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
-    private static final String DUP_DIMCOL_MEASURE_NAME = "There are duplicated names among dimension column %s and measure name %s. Cannot export a valid TDS file. Please correct the duplicated names and try again.";
     private static final String MODIFY_PERMISSION_OF_SUPER_ADMIN = "Super Admin’s permission can’t be modified.";
     private static final String ILLEGAL_AUTHORIZING_USER = "Unable to modify. Only Super Admin or System Admin with query permission can modify query permission.";
     private static final String GRANT_TO_NON_SYSTEM_ADMIN = "Unable to modify. You can only modify the permission of the System Admin.";
@@ -63,6 +60,15 @@ public class Message {
     private static final String LICENSE_MISMATCH_LICENSE = "The license doesn’t match the current cluster information. Please upload a new license, or contact Kyligence.";
     private static final String LICENSE_NOT_EFFECTIVE = "License is not effective yet, please apply for a new license.";
     private static final String LICENSE_EXPIRED = "The license has expired. Please upload a new license, or contact Kyligence.";
+    private static final String DDL_UNSUPPORTED = "Unsupported DDL syntax, only support single `create view`, `drop "
+        + "view`,  `alter view`, `show create table`";
+    private static final String DDL_VIEW_NAME_ERROR = "View names need to start with KE_";
+    private static final String DDL_DROP_ERROR = "Only support drop view";
+    private static final String DDL_TABLE_NOT_LOADED = "Table '%s' is not loaded into the data source ";
+    private static final String DDL_TABLE_NOT_SUPPORT = "Only support hive table, but '%s' is not hive table";
+    private static final String DDL_PERMISSION_DENIED = "Only Administrator or Project Administrator can do DDL operations";
+    private static final String DDL_DATABASE_ACCESSN_DENIED = "The user does not have the database permission to "
+        + "which the view belongs.";
 
     protected Message() {
 
@@ -1009,7 +1015,7 @@ public class Message {
     }
 
     public String getInvalidTimeFormat() {
-        return "Can’t set the time partition column. The values of the selected column is not time formatted. Please select again.";
+        return "Can’t set the time partition column. The values of the selected column is not time formatted: {%s}. Please select again.";
     }
 
     public String getSegmentMergeStorageCheckError() {
@@ -1303,6 +1309,7 @@ public class Message {
     public String getInvalidLowCardinalityDataType() {
         return SECOND_STORAGE_CARDINALITY_DATATYPE_INVALID;
     }
+
     public String getJobRestartFailed() {
         return "Tiered storage task doesn't support restart.\n";
     }
@@ -1525,18 +1532,6 @@ public class Message {
         return "The indexes included in the selected segments are not loaded to HDFS storage/object storage. Please ensure the indexes are loaded into HDFS storage and try merging again.";
     }
 
-    public String getDuplicateModelColumnAndMeasureName() {
-        return DUP_MODCOL_MEASURE_NAME;
-    }
-
-    public String getDuplicateDimensionNameAndMeasureName() {
-        return DUP_DIM_MEASURE_NAME;
-    }
-
-    public String getDuplicateDimensionColAndMeasureName() {
-        return DUP_DIMCOL_MEASURE_NAME;
-    }
-
     public String getProfilingNotEnabled() {
         return PROFILING_NOT_ENABLED;
     }
@@ -1595,5 +1590,33 @@ public class Message {
 
     public String getSecondStorageNodeNotAvailable(String nodeName) {
         return String.format(Locale.ROOT, "Tiered storage node '%s' not available.", nodeName);
+    }
+
+    public String getDDLUnSupported() {
+        return DDL_UNSUPPORTED;
+    }
+
+    public String getDDLViewNameError() {
+        return DDL_VIEW_NAME_ERROR;
+    }
+
+    public String getDDLDropError() {
+        return DDL_DROP_ERROR;
+    }
+
+    public String getDDLTableNotLoad(String table) {
+        return String.format(Locale.ROOT, DDL_TABLE_NOT_LOADED, table);
+    }
+
+    public String getDDLTableNotSupport(String table) {
+        return String.format(Locale.ROOT, DDL_TABLE_NOT_SUPPORT, table);
+    }
+
+    public String getDDLPermissionDenied() {
+        return DDL_PERMISSION_DENIED;
+    }
+
+    public String getDDLDatabaseAccessnDenied() {
+        return DDL_DATABASE_ACCESSN_DENIED;
     }
 }

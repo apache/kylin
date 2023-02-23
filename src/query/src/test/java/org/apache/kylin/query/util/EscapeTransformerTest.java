@@ -307,8 +307,7 @@ public class EscapeTransformerTest {
                 + " from tbl where a in ('a--b') and c in (\"a---b\", 'a--b', '')";
         String transformedSQL = (new RawSqlParser(originalSQL)).parse().getStatementString();
 
-        String expectedSQL =
-                "select 'a---b'+\"a--b\", 'ab''cd', \"abc\"\"cd\" , 'abc\"def', \"abc'def\"\n"
+        String expectedSQL = "select 'a---b'+\"a--b\", 'ab''cd', \"abc\"\"cd\" , 'abc\"def', \"abc'def\"\n"
                 + "\"--won't remove in quote, /*test*/\", { fn count(*) } from tbl where a in ('a--b') and c in (\"a---b\", 'a--b', '')";
         Assert.assertEquals(expectedSQL, transformedSQL);
     }

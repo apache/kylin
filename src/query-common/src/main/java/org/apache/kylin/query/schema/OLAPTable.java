@@ -16,24 +16,6 @@
  * limitations under the License.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.query.schema;
 
 import java.util.ArrayList;
@@ -74,6 +56,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.CollectionUtil;
 import org.apache.kylin.measure.topn.TopNMeasureType;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
@@ -83,6 +67,8 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.QueryExtension;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPTableScan;
@@ -268,10 +254,34 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     }
 
     private List<ColumnDesc> listTableColumnsIncludingCC() {
-        val allColumns = Lists.newArrayList(sourceTable.getColumns());
+        List<ColumnDesc> allColumns = Lists.newArrayList(sourceTable.getColumns());
 
-        if (!modelsMap.containsKey(sourceTable.getIdentity()))
+        if (!modelsMap.containsKey(sourceTable.getIdentity())) {
             return allColumns;
+        }
+
+        ProjectInstance projectInstance = NProjectManager.getInstance(olapSchema.getConfig())
+                .getProject(sourceTable.getProject());
+        NDataflowManager dataflowManager = NDataflowManager.getInstance(olapSchema.getConfig(),
+                sourceTable.getProject());
+        if (projectInstance.getConfig().useTableIndexAnswerSelectStarEnabled()) {
+            Set<ColumnDesc> exposeColumnDescSet = new HashSet<>();
+            String tableName = sourceTable.getIdentity();
+            List<NDataModel> modelList = modelsMap.get(tableName);
+            for (NDataModel dataModel : modelList) {
+                NDataflow dataflow = dataflowManager.getDataflow(dataModel.getId());
+                if (dataflow.getStatus() == RealizationStatusEnum.ONLINE) {
+                    dataflow.getAllColumns().forEach(tblColRef -> {
+                        if (tblColRef.getTable().equalsIgnoreCase(tableName)) {
+                            exposeColumnDescSet.add(tblColRef.getColumnDesc());
+                        }
+                    });
+                }
+            }
+            if (!exposeColumnDescSet.isEmpty()) {
+                allColumns = Lists.newArrayList(exposeColumnDescSet);
+            }
+        }
 
         val authorizedCC = getAuthorizedCC();
         if (CollectionUtils.isNotEmpty(authorizedCC)) {
@@ -279,7 +289,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             allColumns.addAll(Lists.newArrayList(ccAsColumnDesc));
         }
 
-        return allColumns;
+        return allColumns.stream().distinct().collect(Collectors.toList());
     }
 
     // since computed columns are either of different expr and different names,

@@ -19,10 +19,11 @@ package org.apache.kylin.rest.health;
 
 import org.apache.kylin.rest.monitor.SparkContextCanary;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SparkSqlContextHealthIndicator extends AbstractKylinHealthIndicator {
+public class SparkSqlContextHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {

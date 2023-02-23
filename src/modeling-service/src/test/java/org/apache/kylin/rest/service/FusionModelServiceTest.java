@@ -28,29 +28,31 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.JobStatusEnum;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.response.DataResult;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.AclUtil;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.rest.config.initialize.ModelUpdateListener;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.OwnerChangeRequest;
+import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.junit.After;
 import org.junit.Assert;
@@ -67,6 +69,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import lombok.val;
@@ -153,8 +156,23 @@ public class FusionModelServiceTest extends SourceTestCase {
         dimensions.removeIf(column -> column.getAliasDotColumn().equalsIgnoreCase("P_LINEORDER_STREAMING.LO_PARTKEY"));
         request.setSimplifiedDimensions(dimensions);
         doNothing().when(modelService).validateFusionModelDimension(Mockito.any());
+        NDataModelResponse fusionModel = modelService.getModels("streaming_test", "streaming_test", false, null,
+                Lists.newArrayList(), null, false, null, null, null, true).get(0);
+        Assert.assertFalse(fusionModel.isHasBaseAggIndex());
+        Assert.assertFalse(fusionModel.isHasBaseTableIndex());
+        request.setWithBaseIndex(true);
         fusionModelService.updateDataModelSemantic("streaming_test", request);
-
+        fusionModel = modelService.getModels("streaming_test", "streaming_test", false, null, Lists.newArrayList(),
+                null, false, null, null, null, true).get(0);
+        Assert.assertTrue(fusionModel.isHasBaseAggIndex());
+        Assert.assertTrue(fusionModel.isHasBaseTableIndex());
+        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(getTestConfig(), "streaming_test");
+        IndexPlan streamingIndex = indexPlanManager.getIndexPlan(modelId);
+        Assert.assertFalse(streamingIndex.containBaseAggLayout());
+        Assert.assertFalse(streamingIndex.containBaseTableLayout());
+        IndexPlan batchIndex = indexPlanManager.getIndexPlan(batchId);
+        Assert.assertTrue(batchIndex.containBaseAggLayout());
+        Assert.assertTrue(batchIndex.containBaseTableLayout());
         model = modelMgr.getDataModelDesc(modelId);
         var batchModel = modelMgr.getDataModelDesc(batchId);
         Assert.assertEquals("P_LINEORDER_STREAMING.LO_SHIPMODE", model.getPartitionDesc().getPartitionDateColumn());
@@ -162,7 +180,34 @@ public class FusionModelServiceTest extends SourceTestCase {
     }
 
     @Test
-    public void testDropFusionModel() throws Exception {
+    public void testUpdateStreamingModel() throws Exception {
+        String modelId = "e78a89dd-847f-4574-8afa-8768b4228b73";
+        val modelMgr = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "streaming_test");
+        var model = modelMgr.getDataModelDesc(modelId);
+        val request = JsonUtil.readValue(JsonUtil.writeValueAsString(model), ModelRequest.class);
+        request.setProject("streaming_test");
+        request.setUuid(modelId);
+        request.setAllNamedColumns(model.getAllNamedColumns().stream().filter(NDataModel.NamedColumn::isDimension)
+                .collect(Collectors.toList()));
+        request.setSimplifiedMeasures(model.getAllMeasures().stream().filter(m -> !m.isTomb())
+                .map(SimplifiedMeasure::fromMeasure).collect(Collectors.toList()));
+        request.getPartitionDesc().setPartitionDateColumn("SSB_TOPIC.LO_PARTITIONCOLUMN");
+        List<NDataModel.NamedColumn> dimensions = request.getAllNamedColumns().stream()
+                .filter(NDataModel.NamedColumn::isDimension).collect(Collectors.toList());
+        request.setSimplifiedDimensions(dimensions);
+        NDataModelResponse fusionModel = modelService.getModels("stream_merge", "streaming_test", false, null,
+                Lists.newArrayList(), null, false, null, null, null, true).get(0);
+        Assert.assertFalse(fusionModel.isHasBaseAggIndex());
+        request.setWithBaseIndex(true);
+        fusionModelService.updateDataModelSemantic("streaming_test", request);
+        fusionModel = modelService.getModels("stream_merge", "streaming_test", false, null, Lists.newArrayList(),
+                null, false, null, null, null, true).get(0);
+        Assert.assertFalse(fusionModel.isHasBaseAggIndex());
+        Assert.assertFalse(fusionModel.isHasBaseTableIndex());
+    }
+
+    @Test
+    public void testDropFusionModel() {
         String modelId = "b05034a8-c037-416b-aa26-9e6b4a41ee40";
         String batchId = "334671fd-e383-4fc9-b5c2-94fce832f77a";
         UnitOfWork.doInTransactionWithRetry(() -> {

@@ -45,7 +45,7 @@ import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.MailHelper;
+import org.apache.kylin.common.util.MailTemplateProvider;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -233,8 +233,8 @@ public class SourceUsageManager {
                         logger.info("Capacity usage is less than threshold, enable notification");
                     } else if (copyForWrite.isCapacityNotification() && config.isOverCapacityNotificationEnabled()
                             && isOverCapacityThreshold(copyForWrite)) {
-                        if (MailHelper.notifyUserForOverCapacity(copyForWrite.getLicenseCapacity(),
-                                copyForWrite.getCurrentCapacity())) {
+                        if (MailTemplateProvider.notifyUserForOverCapacity(copyForWrite.getLicenseCapacity(),
+                                copyForWrite.getCurrentCapacity(), usageRecord.resourceName())) {
                             copyForWrite.setCapacityNotification(false);
                             logger.info("Capacity usage is more than threshold, disable notification");
                         } else {

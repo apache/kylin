@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+
+<Root>
+    <TestCase name="test">
+        <Resource name="query01.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(EXPR$0=[$1], ctx=[])
+    KapAggregateRel(group-set=[[0]], groups=[null], EXPR$0=[COUNT()], ctx=[])
+      KapProjectRel(CAL_DT=[$2], ctx=[])
+        KapFilterRel(condition=[AND(=($1, $39), >($1, 10), =($40, $44), =($52, $58), >($2, 1992-01-01))], ctx=[])
+          KapJoinRel(condition=[=($52, $58)], joinType=[inner], ctx=[])
+            KapJoinRel(condition=[=($47, $54)], joinType=[inner], ctx=[])
+              KapJoinRel(condition=[=($7, $49)], joinType=[inner], ctx=[])
+                KapJoinRel(condition=[=($40, $44)], joinType=[inner], ctx=[])
+                  KapJoinRel(condition=[=($1, $39)], joinType=[inner], ctx=[])
+                    KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+                    KapTableScan(table=[[DEFAULT, TEST_ORDER]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+                  KapTableScan(table=[[DEFAULT, TEST_ACCOUNT]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+                KapTableScan(table=[[DEFAULT, TEST_ACCOUNT]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+              KapTableScan(table=[[DEFAULT, TEST_COUNTRY]], ctx=[], fields=[[0, 1, 2, 3]])
+            KapTableScan(table=[[DEFAULT, TEST_COUNTRY]], ctx=[], fields=[[0, 1, 2, 3]])
+]]>
+        </Resource>
+        <Resource name="query01.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(EXPR$0=[$1], ctx=[])
+    KapAggregateRel(group-set=[[0]], groups=[null], EXPR$0=[COUNT()], ctx=[])
+      KapProjectRel(CAL_DT=[$2], ctx=[])
+        LogicalFilter(condition=[AND(>($1, 10), >($2, 1992-01-01))])
+          KapJoinRel(condition=[=($52, $58)], joinType=[inner], ctx=[])
+            KapJoinRel(condition=[=($47, $54)], joinType=[inner], ctx=[])
+              KapJoinRel(condition=[=($7, $49)], joinType=[inner], ctx=[])
+                KapJoinRel(condition=[=($40, $44)], joinType=[inner], ctx=[])
+                  KapJoinRel(condition=[=($1, $39)], joinType=[inner], ctx=[])
+                    KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+                    KapTableScan(table=[[DEFAULT, TEST_ORDER]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+                  KapTableScan(table=[[DEFAULT, TEST_ACCOUNT]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+                KapTableScan(table=[[DEFAULT, TEST_ACCOUNT]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+              KapTableScan(table=[[DEFAULT, TEST_COUNTRY]], ctx=[], fields=[[0, 1, 2, 3]])
+            KapTableScan(table=[[DEFAULT, TEST_COUNTRY]], ctx=[], fields=[[0, 1, 2, 3]])
+]]>
+        </Resource>
+        <Resource name="query02.planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(EXPR$0=[$1], ctx=[])
+    KapAggregateRel(group-set=[[0]], groups=[null], EXPR$0=[COUNT()], ctx=[])
+      KapProjectRel(CAL_DT=[$2], ctx=[])
+        KapFilterRel(condition=[AND(>($2, 1992-01-01), OR(=(SUBSTRING($3, 1, 1), 'A'), =(SUBSTRING($3, 1, 1), 'B'), =(SUBSTRING($3, 1, 1), 'C'), =(SUBSTRING($3, 1, 1), 'D'), =(SUBSTRING($3, 1, 1), 'E'), =(SUBSTRING($3, 1, 1), 'F'), =('G', SUBSTRING($3, 1, 1)), =(SUBSTRING($3, 1, 1), 'H')))], ctx=[])
+          KapJoinRel(condition=[=($1, $39)], joinType=[inner], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+            KapTableScan(table=[[DEFAULT, TEST_ORDER]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+]]>
+        </Resource>
+        <Resource name="query02.planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapProjectRel(EXPR$0=[$1], ctx=[])
+    KapAggregateRel(group-set=[[0]], groups=[null], EXPR$0=[COUNT()], ctx=[])
+      KapProjectRel(CAL_DT=[$2], ctx=[])
+        LogicalFilter(condition=[AND(>($2, 1992-01-01), IN(SUBSTRING($3, 1, 1), 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'))])
+          KapJoinRel(condition=[=($1, $39)], joinType=[inner], ctx=[])
+            KapTableScan(table=[[DEFAULT, TEST_KYLIN_FACT]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]])
+            KapTableScan(table=[[DEFAULT, TEST_ORDER]], ctx=[], fields=[[0, 1, 2, 3, 4]])
+]]>
+        </Resource>
+    </TestCase>
+</Root>

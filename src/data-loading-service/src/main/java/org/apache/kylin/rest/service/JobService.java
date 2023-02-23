@@ -32,6 +32,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -65,6 +66,7 @@ import org.apache.kylin.common.metrics.MetricsGroup;
 import org.apache.kylin.common.metrics.MetricsName;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.metadata.Epoch;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkContext;
 import org.apache.kylin.common.scheduler.EventBusFactory;
@@ -95,6 +97,7 @@ import org.apache.kylin.job.execution.StageBase;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -106,6 +109,7 @@ import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.ISmartApplicationListenerForSystem;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.JobFilter;
 import org.apache.kylin.rest.request.JobUpdateRequest;
@@ -121,6 +125,8 @@ import org.apache.kylin.rest.util.SparkHistoryUIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
@@ -140,7 +146,7 @@ import lombok.val;
 import lombok.var;
 
 @Component("jobService")
-public class JobService extends BasicService implements JobSupporter {
+public class JobService extends BasicService implements JobSupporter, ISmartApplicationListenerForSystem {
 
     @Autowired
     private ProjectService projectService;
@@ -502,8 +508,11 @@ public class JobService extends BasicService implements JobSupporter {
         case RESTART:
             SecondStorageUtil.checkJobRestart(project, jobId);
             executableManager.updateJobError(jobId, null, null, null, null);
+            executableManager.addFrozenJob(jobId);
             executableManager.restartJob(jobId);
-            UnitOfWork.get().doAfterUnit(afterUnitTask);
+            UnitOfWorkContext unitOfWorkContext = UnitOfWork.get();
+            unitOfWorkContext.doAfterUnit(afterUnitTask);
+            unitOfWorkContext.doAfterUnit(() -> executableManager.removeFrozenJob(jobId));
             break;
         case DISCARD:
             discardJob(project, jobId);
@@ -893,7 +902,7 @@ public class JobService extends BasicService implements JobSupporter {
         result.setExecEndTime(AbstractExecutable.getEndTime(stageOutput));
         result.setCreateTime(AbstractExecutable.getCreateTime(stageOutput));
 
-        result.setDuration(AbstractExecutable.getDuration(stageOutput));
+        result.setDuration(AbstractExecutable.getStageDuration(stageOutput, task.getParent()));
 
         val indexCount = Optional.ofNullable(task.getParam(NBatchConstants.P_INDEX_COUNT)).orElse("0");
         result.setIndexCount(Long.parseLong(indexCount));
@@ -983,9 +992,15 @@ public class JobService extends BasicService implements JobSupporter {
             Map<String, String> updateInfo, String errMsg) {
         final ExecutableState newStatus = convertToExecutableState(status);
         val jobId = NExecutableManager.extractJobId(taskId);
+        val jobManager = getManager(NExecutableManager.class, project);
+        boolean isFrozenJob = jobManager.isFrozenJob(jobId);
+        if (isFrozenJob) {
+            return;
+        }
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             val executableManager = getManager(NExecutableManager.class, project);
             executableManager.updateStageStatus(taskId, segmentId, newStatus, updateInfo, errMsg);
+            executableManager.saveUpdatedJob();
             return null;
         }, project, UnitOfWork.DEFAULT_MAX_RETRY, UnitOfWork.DEFAULT_EPOCH_ID, jobId);
     }
@@ -1095,6 +1110,26 @@ public class JobService extends BasicService implements JobSupporter {
         aclEvaluate.checkProjectOperationPermission(project);
         val executableManager = getManager(NExecutableManager.class, project);
         return executableManager.getOutputFromHDFSByJobId(jobId, stepId).getVerboseMsg();
+    }
+
+    public Map<String, Object> getStepOutput(String project, String jobId, String stepId) {
+        aclEvaluate.checkProjectOperationPermission(project);
+        val executableManager = getManager(NExecutableManager.class, project);
+        Output output = executableManager.getOutputFromHDFSByJobId(jobId, stepId);
+        Map<String, Object> result = new HashMap<>();
+        result.put("cmd_output", output.getVerboseMsg());
+
+        Map<String, String> info = output.getExtra();
+        List<String> servers = Lists.newArrayList();
+        if (info != null && info.get("nodes") != null) {
+            servers = Lists.newArrayList(info.get("nodes").split(","));
+        }
+        List<String> nodes = servers.stream().map(server -> {
+            String[] split = server.split(":");
+            return split[0] + ":" + split[1];
+        }).collect(Collectors.toList());
+        result.put("nodes", nodes);
+        return result;
     }
 
     @SneakyThrows
@@ -1313,6 +1348,7 @@ public class JobService extends BasicService implements JobSupporter {
     }
 
     public void setResponseLanguage(HttpServletRequest request) {
+        aclEvaluate.checkIsGlobalAdmin();
         String languageToHandle = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
         if (languageToHandle == null) {
             ErrorCode.setMsg("cn");
@@ -1330,6 +1366,33 @@ public class JobService extends BasicService implements JobSupporter {
             MsgPicker.setMsg("en");
         }
     }
+
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        if (event instanceof ContextClosedEvent) {
+            logger.info("Stop kyligence node, kill job on yarn for yarn cluster mode");
+            EpochManager epochManager = EpochManager.getInstance();
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            List<Epoch> ownedEpochs = epochManager.getOwnedEpochs();
+
+            for (Epoch epoch : ownedEpochs) {
+                String project = epoch.getEpochTarget();
+                NExecutableManager executableManager = NExecutableManager.getInstance(kylinConfig, project);
+                if (executableManager != null) {
+                    List<ExecutablePO> allJobs = executableManager.getAllJobs();
+                    for (ExecutablePO executablePO : allJobs) {
+                        executableManager.cancelRemoteJob(executablePO);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public int getOrder() {
+        return HIGHEST_PRECEDENCE;
+    }
+
     @Setter
     @Getter
     static class ExecutablePOSortBean {

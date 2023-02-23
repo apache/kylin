@@ -251,7 +251,7 @@ public class RecCandidateTool extends ExecutableApplication {
         }
     }
 
-    private String getProjectByModelId(String modelId) {
+    String getProjectByModelId(String modelId) {
         if (StringUtils.isEmpty(modelId)) {
             throw new KylinException(PARAMETER_EMPTY, "model");
         }

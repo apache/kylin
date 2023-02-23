@@ -200,7 +200,7 @@ public class JdbcAuditLogStore implements AuditLogStore {
                             }
                             return null;
                         }).filter(Objects::nonNull).collect(Collectors.toList())),
-                TransactionDefinition.ISOLATION_REPEATABLE_READ, beforeCommit);
+                TransactionDefinition.ISOLATION_REPEATABLE_READ, beforeCommit, TransactionDefinition.TIMEOUT_DEFAULT);
     }
 
     public void batchInsert(List<AuditLog> auditLogs) {
@@ -335,10 +335,14 @@ public class JdbcAuditLogStore implements AuditLogStore {
     @Override
     public void rotate() {
         withTransaction(transactionManager, () -> {
-            val maxSize = config.getMetadataAuditLogMaxSize();
-            val deletableMaxId = getMaxId() - maxSize + 1;
-            log.info("try to delete audit_logs which id less than {}", deletableMaxId);
-            jdbcTemplate.update(String.format(Locale.ROOT, DELETE_ID_LESSTHAN_SQL, table), deletableMaxId);
+            val retainMaxSize = config.getMetadataAuditLogMaxSize();
+            val currentMaxId = getMaxId();
+            val deletableMaxId = currentMaxId - retainMaxSize + 1;
+            log.info("try to delete audit_logs which id < {}", deletableMaxId);
+            log.info("retainMaxSize: {}, currentMaxId: {}", retainMaxSize, currentMaxId);
+            val startTime = System.currentTimeMillis();
+            val update = jdbcTemplate.update(String.format(Locale.ROOT, DELETE_ID_LESSTHAN_SQL, table), deletableMaxId);
+            log.info("delete audit_logs count: {}, cost: {}ms", update, System.currentTimeMillis() - startTime);
             return null;
         });
     }

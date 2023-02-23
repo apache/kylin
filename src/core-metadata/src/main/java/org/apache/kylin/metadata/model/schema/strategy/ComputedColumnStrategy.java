@@ -48,7 +48,7 @@ public class ComputedColumnStrategy implements SchemaChangeStrategy {
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> newItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         List<SchemaNode> allComputedColumns = difference.getSourceGraph().nodes().stream()
                 .filter(schemaNode -> supportedSchemaNodeTypes().contains(schemaNode.getType()))
                 .collect(Collectors.toList());
@@ -59,7 +59,7 @@ public class ComputedColumnStrategy implements SchemaChangeStrategy {
         if (hasComputedColumnNameWithDifferentExpression(entry.getValue(), allComputedColumns)) {
             return Collections.singletonList(SchemaChangeCheckResult.ChangedItem.createUnImportableSchemaNode(
                     entry.getKey().getType(), entry.getValue(), SAME_CC_NAME_HAS_DIFFERENT_EXPR, null,
-                    hasSameName(modelAlias, originalModels)));
+                    hasSameName(modelAlias, originalModels), hasSameWithBroken(modelAlias, originalBrokenModels)));
         }
 
         // different cc name with same expression
@@ -67,21 +67,25 @@ public class ComputedColumnStrategy implements SchemaChangeStrategy {
         if (optional.isPresent()) {
             return Collections.singletonList(SchemaChangeCheckResult.ChangedItem.createUnImportableSchemaNode(
                     entry.getKey().getType(), entry.getValue(), DIFFERENT_CC_NAME_HAS_SAME_EXPR,
-                    optional.get().getDetail(), hasSameName(modelAlias, originalModels)));
+                    optional.get().getDetail(), hasSameName(modelAlias, originalModels),
+                    hasSameWithBroken(modelAlias, originalBrokenModels)));
         }
 
         if (overwritable(importModels, originalModels, modelAlias)) {
             return Collections.singletonList(SchemaChangeCheckResult.ChangedItem.createOverwritableSchemaNode(
-                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels)));
+                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels),
+                    hasSameWithBroken(modelAlias, originalBrokenModels)));
         } else {
             return Collections.singletonList(SchemaChangeCheckResult.ChangedItem.createCreatableSchemaNode(
-                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels)));
+                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels),
+                    hasSameWithBroken(modelAlias, originalBrokenModels)));
         }
     }
 
     @Override
     public List<SchemaChangeCheckResult.UpdatedItem> updateItemFunction(SchemaUtil.SchemaDifference difference,
-            MapDifference.ValueDifference<SchemaNode> diff, Set<String> importModels, Set<String> originalModels) {
+            MapDifference.ValueDifference<SchemaNode> diff, Set<String> importModels, Set<String> originalModels,
+            Set<String> originalBrokenModels) {
         List<SchemaNode> allComputedColumns = difference.getSourceGraph().nodes().stream()
                 .filter(schemaNode -> supportedSchemaNodeTypes().contains(schemaNode.getType()))
                 .collect(Collectors.toList());
@@ -90,36 +94,43 @@ public class ComputedColumnStrategy implements SchemaChangeStrategy {
         String modelAlias = diff.rightValue().getSubject();
         // same cc name with different expression
         if (hasComputedColumnNameWithDifferentExpression(schemaNode, allComputedColumns)) {
+            val parameter = new SchemaChangeCheckResult.BaseItemParameter(hasSameName(modelAlias, originalModels),
+                    hasSameWithBroken(modelAlias, originalBrokenModels), false, false, false);
             return Collections.singletonList(SchemaChangeCheckResult.UpdatedItem.getSchemaUpdate(diff.leftValue(),
-                    diff.rightValue(), modelAlias, SAME_CC_NAME_HAS_DIFFERENT_EXPR, null,
-                    hasSameName(modelAlias, originalModels), false, false, false));
+                    diff.rightValue(), modelAlias, SAME_CC_NAME_HAS_DIFFERENT_EXPR, null, parameter));
         }
 
         // different cc name with same expression
         val optional = hasExpressionWithDifferentComputedColumn(schemaNode, allComputedColumns);
         if (optional.isPresent()) {
+            val parameter = new SchemaChangeCheckResult.BaseItemParameter(hasSameName(modelAlias, originalModels),
+                    hasSameWithBroken(modelAlias, originalBrokenModels), false, false, false);
             return Collections.singletonList(SchemaChangeCheckResult.UpdatedItem.getSchemaUpdate(diff.leftValue(),
                     diff.rightValue(), modelAlias, DIFFERENT_CC_NAME_HAS_SAME_EXPR, optional.get().getDetail(),
-                    hasSameName(modelAlias, originalModels), false, false, false));
+                    parameter));
         }
 
         boolean overwritable = overwritable(importModels, originalModels, modelAlias);
+        val parameter = new SchemaChangeCheckResult.BaseItemParameter(hasSameName(modelAlias, originalModels),
+                hasSameWithBroken(modelAlias, originalBrokenModels), true, true, overwritable);
         return Collections.singletonList(SchemaChangeCheckResult.UpdatedItem.getSchemaUpdate(diff.leftValue(),
-                diff.rightValue(), modelAlias, hasSameName(modelAlias, originalModels), true, true, overwritable));
+                diff.rightValue(), modelAlias, parameter));
     }
 
     @Override
     public List<SchemaChangeCheckResult.ChangedItem> reduceItemFunction(SchemaUtil.SchemaDifference difference,
             Map.Entry<SchemaNode.SchemaNodeIdentifier, SchemaNode> entry, Set<String> importModels,
-            Set<String> originalModels) {
+            Set<String> originalModels, Set<String> originalBrokenModels) {
         String modelAlias = entry.getValue().getSubject();
         boolean overwritable = overwritable(importModels, originalModels, modelAlias);
         if (overwritable) {
             return Collections.singletonList(SchemaChangeCheckResult.ChangedItem.createOverwritableSchemaNode(
-                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels)));
+                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels),
+                    hasSameWithBroken(modelAlias, originalBrokenModels)));
         } else {
             return Collections.singletonList(SchemaChangeCheckResult.ChangedItem.createCreatableSchemaNode(
-                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels)));
+                    entry.getKey().getType(), entry.getValue(), hasSameName(modelAlias, originalModels),
+                    hasSameWithBroken(modelAlias, originalBrokenModels)));
         }
     }
 

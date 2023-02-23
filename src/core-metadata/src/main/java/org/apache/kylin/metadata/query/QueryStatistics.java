@@ -18,44 +18,36 @@
 
 package org.apache.kylin.metadata.query;
 
-import java.time.Instant;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.kyligence.kap.shaded.influxdb.org.influxdb.annotation.Column;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.Instant;
 
 @Getter
 @Setter
 @NoArgsConstructor
 public class QueryStatistics {
     @JsonProperty("engine_type")
-    @Column(name = "engine_type", tag = true)
     private String engineType;
 
     @JsonProperty("count")
-    @Column(name = "count")
     private long count;
 
     @JsonProperty("ratio")
     private double ratio;
 
     @JsonProperty("mean")
-    @Column(name = "mean")
     private double meanDuration;
 
     @JsonProperty("model")
-    @Column(name = "model", tag = true)
     private String model;
 
     @JsonProperty("time")
-    @Column(name = "time")
     private Instant time;
 
     @JsonProperty("month")
-    @Column(name = "month", tag = true)
     private String month;
 
     public QueryStatistics(String engineType) {

@@ -53,4 +53,6 @@ public class SyncContext {
     private NDataflow dataflow;
 
     private KylinConfig kylinConfig;
+
+    private boolean isAdmin;
 }

@@ -28,14 +28,23 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.optimization.FrequencyMap;
+import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.metadata.favorite.AbstractAsyncTask;
+import org.apache.kylin.metadata.favorite.AccelerateRuleUtil;
+import org.apache.kylin.metadata.favorite.AsyncAccelerationTask;
+import org.apache.kylin.metadata.favorite.AsyncTaskManager;
+import org.apache.kylin.metadata.favorite.QueryHistoryIdOffset;
+import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
@@ -53,13 +62,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.kylin.metadata.epoch.EpochManager;
-import org.apache.kylin.metadata.favorite.AbstractAsyncTask;
-import org.apache.kylin.metadata.favorite.AccelerateRuleUtil;
-import org.apache.kylin.metadata.favorite.AsyncAccelerationTask;
-import org.apache.kylin.metadata.favorite.AsyncTaskManager;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffset;
-import org.apache.kylin.metadata.favorite.QueryHistoryIdOffsetManager;
 import lombok.Data;
 import lombok.Getter;
 import lombok.val;
@@ -224,25 +226,30 @@ public class QueryHistoryTaskScheduler {
         }
 
         private Map<String, DataflowHitCount> collectDataflowHitCount(List<QueryHistory> queryHistories) {
-            val dfManager = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
             val result = Maps.<String, DataflowHitCount> newHashMap();
             for (QueryHistory queryHistory : queryHistories) {
-                val realizations = queryHistory.transformRealizations();
+                val realizations = queryHistory.transformRealizations(project);
                 if (CollectionUtils.isEmpty(realizations)) {
                     continue;
                 }
-                for (val realization : realizations) {
-                    if (dfManager.getDataflow(realization.getModelId()) == null || realization.getLayoutId() == null) {
-                        continue;
-                    }
-                    result.computeIfAbsent(realization.getModelId(), k -> new DataflowHitCount());
-                    result.get(realization.getModelId()).dataflowHit += 1;
-                    val layoutHits = result.get(realization.getModelId()).getLayoutHits();
+                val realizationList = realizations.stream().filter(this::isValidRealization)
+                        .collect(Collectors.toList());
+                for (val realization : realizationList) {
+                    String modelId = realization.getModelId();
+                    result.computeIfAbsent(modelId, k -> new DataflowHitCount());
+                    result.get(modelId).dataflowHit += 1;
+                    val layoutHits = result.get(modelId).getLayoutHits();
                     layoutHits.computeIfAbsent(realization.getLayoutId(), k -> new FrequencyMap());
                     layoutHits.get(realization.getLayoutId()).incFrequency(queryHistory.getQueryTime());
                 }
             }
             return result;
+        }
+
+        private boolean isValidRealization(NativeQueryRealization realization) {
+            val config = KylinConfig.getInstanceFromEnv();
+            val dfManager = NDataflowManager.getInstance(config, project);
+            return dfManager.getDataflow(realization.getModelId()) != null && realization.getLayoutId() != null;
         }
 
         private Map<TableExtDesc, Integer> collectSnapshotHitCount(List<QueryHistory> queryHistories) {
@@ -254,7 +261,7 @@ public class QueryHistoryTaskScheduler {
                 }
                 val snapshotsInRealization = queryHistory.getQueryHistoryInfo().getQuerySnapshots();
                 for (val snapshots : snapshotsInRealization) {
-                    snapshots.stream().forEach(tableIdentify -> {
+                    snapshots.forEach(tableIdentify -> {
                         results.merge(tableManager.getOrCreateTableExt(tableIdentify), 1, Integer::sum);
                     });
                 }
@@ -263,10 +270,13 @@ public class QueryHistoryTaskScheduler {
         }
 
         private void collectModelLastQueryTime(QueryHistory queryHistory, Map<String, Long> modelsLastQueryTime) {
-            List<NativeQueryRealization> realizations = queryHistory.transformRealizations();
+            List<NativeQueryRealization> realizations = queryHistory.transformRealizations(project);
             long queryTime = queryHistory.getQueryTime();
             for (NativeQueryRealization realization : realizations) {
                 String modelId = realization.getModelId();
+                if (StringUtils.isEmpty(modelId)) {
+                    continue;
+                }
                 modelsLastQueryTime.put(modelId, queryTime);
             }
         }
@@ -305,6 +315,9 @@ public class QueryHistoryTaskScheduler {
             for (Map.Entry<String, Long> entry : modelsLastQueryTime.entrySet()) {
                 String dataflowId = entry.getKey();
                 Long lastQueryTime = entry.getValue();
+                if (dfManager.getDataflow(dataflowId) == null) {
+                    continue;
+                }
                 dfManager.updateDataflow(dataflowId, copyForWrite -> copyForWrite.setLastQueryTime(lastQueryTime));
             }
         }

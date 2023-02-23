@@ -65,22 +65,21 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.streaming.KafkaConfigManager;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.exception.UnauthorizedException;
+import org.apache.kylin.rest.request.Validation;
 import org.apache.kylin.rest.response.ErrorResponse;
+import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.PagingUtil;
-import org.apache.kylin.common.persistence.transaction.TransactionException;
-import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.streaming.KafkaConfigManager;
-import org.apache.kylin.rest.request.Validation;
-import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -151,7 +150,7 @@ public class BaseController {
         if (kylinException != null) {
             cause = kylinException;
         }
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), cause);
+        return new ErrorResponse(req.getRequestURL().toString(), cause);
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
@@ -159,7 +158,7 @@ public class BaseController {
     @ResponseBody
     ErrorResponse handleForbidden(HttpServletRequest req, Exception ex) {
         getLogger().error("", ex);
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), ex);
+        return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -167,7 +166,7 @@ public class BaseController {
     @ResponseBody
     ErrorResponse handleNotFound(HttpServletRequest req, Exception ex) {
         getLogger().error("", ex);
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), ex);
+        return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -191,7 +190,7 @@ public class BaseController {
     ErrorResponse handleAccessDenied(HttpServletRequest req, Throwable ex) {
         getLogger().error("", ex);
         KylinException e = new KylinException(ACCESS_DENIED, MsgPicker.getMsg().getAccessDeny());
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), e);
+        return new ErrorResponse(req.getRequestURL().toString(), e);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -200,7 +199,7 @@ public class BaseController {
     ErrorResponse handleInvalidRequestParam(HttpServletRequest req, Throwable ex) {
         KylinException e = new KylinException(INVALID_PARAMETER, ex);
         getLogger().error("", e);
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), e);
+        return new ErrorResponse(req.getRequestURL().toString(), e);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -210,7 +209,7 @@ public class BaseController {
         String parameterName = ex.getParameterName();
         KylinException e = new KylinException(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY, parameterName);
         getLogger().error("", e);
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), e);
+        return new ErrorResponse(req.getRequestURL().toString(), e);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -219,14 +218,14 @@ public class BaseController {
     ErrorResponse handleErrorCode(HttpServletRequest req, Throwable ex) {
         getLogger().error("", ex);
         KylinException cause = (KylinException) ex;
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), cause);
+        return new ErrorResponse(req.getRequestURL().toString(), cause);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseBody
     ErrorResponse handleInvalidArgument(HttpServletRequest request, MethodArgumentNotValidException ex) {
-        val response = new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(request), ex);
+        val response = new ErrorResponse(request.getRequestURL().toString(), ex);
         val target = ex.getBindingResult().getTarget();
         if (target instanceof Validation) {
             response.setMsg(((Validation) target).getErrorMessage(ex.getBindingResult().getFieldErrors()));
@@ -244,7 +243,7 @@ public class BaseController {
     ErrorResponse handleUnauthorized(HttpServletRequest req, Throwable ex) {
         KylinException e = new KylinException(USER_UNAUTHORIZED, ex);
         getLogger().error("", e);
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), ex);
+        return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 
     protected void checkRequiredArg(String fieldName, Object fieldValue) {

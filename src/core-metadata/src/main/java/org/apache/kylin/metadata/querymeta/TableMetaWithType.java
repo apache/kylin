@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.querymeta;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 import lombok.NoArgsConstructor;
 
@@ -51,6 +52,16 @@ public class TableMetaWithType extends TableMeta {
         SELF_REFERENCING_COL_NAME = sELF_REFERENCING_COL_NAME;
         REF_GENERATION = rEF_GENERATION;
         TYPE = new HashSet<tableTypeEnum>();
+    }
+
+    public static TableMetaWithType ofColumnMeta(TableMeta tableMeta) {
+        TableMetaWithType tableMetaWithType = new TableMetaWithType(tableMeta.getTABLE_CAT(),
+                tableMeta.getTABLE_SCHEM(), tableMeta.getTABLE_NAME(), tableMeta.getTABLE_TYPE(),
+                tableMeta.getREMARKS(), tableMeta.getTYPE_CAT(), tableMeta.getTYPE_SCHEM(), tableMeta.getTYPE_NAME(),
+                tableMeta.getSELF_REFERENCING_COL_NAME(), tableMeta.getREF_GENERATION());
+        tableMetaWithType.setColumns(
+                tableMeta.getColumns().stream().map(ColumnMetaWithType::ofColumnMeta).collect(Collectors.toList()));
+        return tableMetaWithType;
     }
 
     public HashSet<tableTypeEnum> getTYPE() {

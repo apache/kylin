@@ -50,9 +50,9 @@ import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
 import org.apache.kylin.query.engine.data.QueryResult;
+import org.apache.kylin.query.exception.NotSupportedSQLException;
 import org.apache.kylin.query.mask.QueryResultMasks;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.util.KapQueryUtil;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
@@ -82,18 +82,18 @@ public class QueryRoutingEngine {
         queryParams.setDefaultSchema(queryExec.getDefaultSchemaName());
 
         if (queryParams.isForcedToPushDown()) {
+            checkContainsSumLC(queryParams, null);
             return pushDownQuery(null, queryParams);
         }
 
         try {
             return doTransactionEnabled(() -> {
 
-                if (projectKylinConfig.enableReplaceDynamicParams()
-                        && queryParams.isPrepareStatementWithParams()) {
+                if (projectKylinConfig.enableReplaceDynamicParams() && queryParams.isPrepareStatementWithParams()) {
                     queryParams.setSql(queryParams.getPrepareSql());
                 }
 
-                String correctedSql = KapQueryUtil.massageSql(queryParams);
+                String correctedSql = QueryUtil.massageSql(queryParams);
 
                 //CAUTION: should not change sqlRequest content!
                 QueryContext.current().getMetrics().setCorrectedSql(correctedSql);
@@ -128,8 +128,9 @@ public class QueryRoutingEngine {
         } catch (TransactionException e) {
             Throwable cause = e.getCause();
             if (cause instanceof SQLException && cause.getCause() instanceof KylinException) {
-                throw (SQLException)cause;
+                throw (SQLException) cause;
             }
+            checkContainsSumLC(queryParams, e);
             if (shouldPushdown(cause, queryParams)) {
                 return pushDownQuery((SQLException) cause, queryParams);
             } else {
@@ -137,13 +138,18 @@ public class QueryRoutingEngine {
             }
         } catch (SQLException e) {
             if (e.getCause() instanceof KylinException) {
-                if(checkIfRetryQuery(e.getCause())) {
+                if (checkIfRetryQuery(e.getCause())) {
                     NProjectLoader.removeCache();
                     return queryWithSqlMassage(queryParams);
                 } else {
-                    throw e;
+                    if (e.getCause() instanceof NewQueryRefuseException && shouldPushdown(e, queryParams)) {
+                        return pushDownQuery(e, queryParams);
+                    } else {
+                        throw e;
+                    }
                 }
             }
+            checkContainsSumLC(queryParams, e);
             if (shouldPushdown(e, queryParams)) {
                 return pushDownQuery(e, queryParams);
             } else {
@@ -165,6 +171,17 @@ public class QueryRoutingEngine {
         return false;
     }
 
+    private void checkContainsSumLC(QueryParams queryParams, Throwable t) {
+        if (queryParams.getSql().contains("sum_lc")) {
+            String message = "There is no aggregate index to answer this query, sum_lc() function now is not supported by other query engine";
+            if (t != null) {
+                throw new NotSupportedSQLException(message, t);
+            } else {
+                throw new NotSupportedSQLException(message);
+            }
+        }
+    }
+
     private boolean shouldPushdown(Throwable e, QueryParams queryParams) {
         if (queryParams.isForcedToIndex()) {
             return false;
@@ -179,7 +196,7 @@ public class QueryRoutingEngine {
         }
 
         if (e.getCause() instanceof NewQueryRefuseException) {
-            return false;
+            return checkBigQueryPushDown(queryParams);
         }
 
         return e instanceof SQLException && !e.getMessage().contains(SPARK_MEM_LIMIT_EXCEEDED);
@@ -208,6 +225,16 @@ public class QueryRoutingEngine {
         QueryContext.current().setNativeQueryRealizationList(nativeQueryRealizationList);
 
         return queryResult;
+    }
+
+    private boolean checkBigQueryPushDown(QueryParams queryParams) {
+        KylinConfig kylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getProject(queryParams.getProject()).getConfig();
+        boolean isPush = QueryUtil.checkBigQueryPushDown(kylinConfig);
+        if (isPush) {
+            logger.info("Big query route to pushdown.");
+        }
+        return isPush;
     }
 
     private QueryResult pushDownQuery(SQLException sqlException, QueryParams queryParams) throws SQLException {
@@ -244,7 +271,7 @@ public class QueryRoutingEngine {
             sqlString = QueryUtil.addLimit(sqlString);
         }
 
-        String massagedSql = KapQueryUtil.normalMassageSql(KylinConfig.getInstanceFromEnv(), sqlString,
+        String massagedSql = QueryUtil.normalMassageSql(KylinConfig.getInstanceFromEnv(), sqlString,
                 queryParams.getLimit(), queryParams.getOffset());
         if (isPrepareStatementWithParams(queryParams)) {
             QueryContext.current().getMetrics().setCorrectedSql(massagedSql);

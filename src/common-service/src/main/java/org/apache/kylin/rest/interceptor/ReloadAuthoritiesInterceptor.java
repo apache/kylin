@@ -31,10 +31,9 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.response.ErrorResponse;
 import org.apache.kylin.rest.service.UserService;
-import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.user.ManagedUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.Order;
@@ -84,7 +83,7 @@ public class ReloadAuthoritiesInterceptor extends HandlerInterceptorAdapter {
                 if (present) {
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    ErrorResponse errorResponse = new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(request),
+                    ErrorResponse errorResponse = new ErrorResponse(request.getRequestURL().toString(),
                             new KylinException(USER_DATA_SOURCE_CONNECTION_FAILED,
                                     MsgPicker.getMsg().getlDapUserDataSourceConnectionFailed()));
                     response.setCharacterEncoding("UTF-8");

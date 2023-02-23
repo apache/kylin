@@ -34,8 +34,6 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.rest.response.AggIndexResponse;
-import org.apache.kylin.rest.response.DiffRuleBasedIndexResponse;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexEntity.Range;
@@ -53,7 +51,9 @@ import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.AggShardByColumnsRequest;
 import org.apache.kylin.rest.request.CreateTableIndexRequest;
 import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
+import org.apache.kylin.rest.response.AggIndexResponse;
 import org.apache.kylin.rest.response.BuildIndexResponse;
+import org.apache.kylin.rest.response.DiffRuleBasedIndexResponse;
 import org.apache.kylin.rest.response.IndexResponse;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 import org.apache.kylin.streaming.metadata.StreamingJobMeta;
@@ -416,7 +416,8 @@ public class FusionIndexService extends BasicService {
             String modelId) {
         if ((streamResponse.getDecreaseLayouts() > 0 || streamResponse.getIncreaseLayouts() > 0)
                 && checkStreamingJobAndSegments(project, modelId)) {
-            throw new KylinException(ServerErrorCode.STREAMING_INDEX_UPDATE_DISABLE, MsgPicker.getMsg().getStreamingIndexesEdit());
+            throw new KylinException(ServerErrorCode.STREAMING_INDEX_UPDATE_DISABLE,
+                    MsgPicker.getMsg().getStreamingIndexesEdit());
         }
     }
 
@@ -434,7 +435,8 @@ public class FusionIndexService extends BasicService {
     private static void checkStreamingIndexEnabled(String project, NDataModel model) throws KylinException {
         if (NDataModel.ModelType.STREAMING == model.getModelType()
                 && checkStreamingJobAndSegments(project, model.getUuid())) {
-            throw new KylinException(ServerErrorCode.STREAMING_INDEX_UPDATE_DISABLE, MsgPicker.getMsg().getStreamingIndexesDelete());
+            throw new KylinException(ServerErrorCode.STREAMING_INDEX_UPDATE_DISABLE,
+                    MsgPicker.getMsg().getStreamingIndexesDelete());
         }
     }
 

@@ -19,11 +19,12 @@
 package org.apache.kylin.streaming
 
 import org.apache.kylin.streaming.CreateStreamingFlatTable.castDF
+import org.apache.kylin.streaming.constants.StreamingConstants
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.{RowFactory, SparkSession}
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.util.Arrays
-import org.apache.spark.sql.{RowFactory, SparkSession}
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
-import org.scalatest.funsuite.AnyFunSuite
 
 class TestDataSourceParser extends AnyFunSuite {
 
@@ -74,7 +75,7 @@ class TestDataSourceParser extends AnyFunSuite {
     val df = spark.createDataFrame(rowList, valueSchema)
 
     assert(df.count() == 4)
-    val parsedDataframe = castDF(df.toDF(), schema, "windowDateLong")
+    val parsedDataframe = castDF(df.toDF(), schema, "windowDateLong", StreamingConstants.DEFAULT_PARSER_NAME)
     assert(parsedDataframe.count() == 4)
     assert(parsedDataframe.selectExpr("windowDate").head().get(0) == "2021-06-01 00:00:00")
     assert(parsedDataframe.selectExpr("windowDateLong").head().get(0) == "1625037465002")

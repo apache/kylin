@@ -17,23 +17,15 @@
 
 package org.apache.kylin.it
 
-import org.apache.commons.io.IOUtils
-import org.apache.commons.lang.StringUtils
 import org.apache.kylin.common._
-import org.apache.kylin.common.persistence.{JsonSerializer, RootPersistentEntity}
 import org.apache.kylin.common.util.Unsafe
 import org.apache.kylin.engine.spark.utils.LogEx
-import org.apache.kylin.metadata.cube.model.{IndexPlan, NDataflowManager, NIndexPlanManager}
-import org.apache.kylin.metadata.model.{NDataModel, NDataModelManager}
 import org.apache.kylin.metadata.realization.NoRealizationFoundException
 import org.apache.kylin.query.QueryFetcher
 import org.apache.spark.sql._
 import org.apache.spark.sql.common.{LocalMetadata, SparderBaseFunSuite}
 import org.apache.spark.sql.execution.adaptive.AdaptiveSparkPlanHelper
 
-import java.io.{DataInputStream, File}
-import java.nio.charset.Charset
-import java.nio.file.Files
 import java.sql.SQLException
 import java.util.TimeZone
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
@@ -76,7 +68,7 @@ class TestModelViewQuery
     KylinConfig.getInstanceFromEnv.setProperty("kylin.query.pushdown-enabled", "false")
     KylinConfig.getInstanceFromEnv.setProperty("kylin.snapshot.parallel-build-enabled", "true")
 
-    addModels()
+    addModels("src/test/resources/view/", modelIds)
 
     build()
   }
@@ -90,27 +82,6 @@ class TestModelViewQuery
 
   private val modelIds = Seq(
     "fc883850-60a2-01c7-d9a1-f8782211bf87", "b0fab5a2-7c65-03e6-0dc8-8a396b05d833", "98d390ef-66ae-8acb-f57a-fe0bfb4fdf13");
-
-  private def addModels(): Unit = {
-    val modelMgr = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv, getProject)
-    val indexPlanMgr = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv, getProject)
-    val dfMgr = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, getProject)
-    modelIds.foreach { id =>
-      val model = read(classOf[NDataModel], s"model_desc/$id.json")
-      model.setProject(getProject)
-      modelMgr.createDataModelDesc(model, "ADMIN")
-      dfMgr.createDataflow(indexPlanMgr.createIndexPlan(
-        read(classOf[IndexPlan], s"index_plan/$id.json")), "ADMIN")
-    }
-  }
-
-  private def read[T <: RootPersistentEntity](clz: Class[T], subPath: String): T = {
-    val path = "src/test/resources/view/" + subPath
-    val contents = StringUtils.join(Files.readAllLines(new File(path).toPath, Charset.defaultCharset), "\n")
-    val bais = IOUtils.toInputStream(contents, Charset.defaultCharset)
-    new JsonSerializer[T](clz).deserialize(new DataInputStream(bais))
-  }
-
 
   def build(): Unit = logTime("Build Time: ", debug = true) {
     modelIds.foreach { id => fullBuildCube(id) }

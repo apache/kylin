@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 /**
  * 1. Unify the entry point for all calculation calls to obtain the capacity of the WorkingDir through scheduled threads
  * 2. Expose two configurations externally:
- * - function enable switch: kylin.metrics.hdfs-periodic-calculation-enabled  - default false
+ * - function enable switch: kylin.metrics.hdfs-periodic-calculation-enabled  - default true
  * - polling time parameter: kylin.metrics.hdfs-periodic-calculation-interval - default 5min
  */
 @Slf4j
@@ -56,6 +56,7 @@ public class HdfsCapacityMetrics {
     protected static final FileSystem WORKING_FS;
     protected static final ScheduledExecutorService HDFS_METRICS_SCHEDULED_EXECUTOR;
     protected static boolean hdfsMetricsPeriodicCalculationEnabled;
+    protected static boolean quotaStorageEnabled;
     // For all places that need to query WorkingDir capacity for retrieval, initialize to avoid NPE
     protected static ConcurrentMap<String, Long> workingDirCapacity = new ConcurrentHashMap<>();
     // Used to clear the existing workingDirCapacity in memory, you cannot use the clear method for workingDirCapacity
@@ -83,8 +84,9 @@ public class HdfsCapacityMetrics {
         // 3. Junk cleanup: theoretically the file will not be very large, do not need to consider cleaning up for the time
         // being, cleaning will affect the recalculation of the directory involved
         hdfsMetricsPeriodicCalculationEnabled = KYLIN_CONFIG.isHdfsMetricsPeriodicCalculationEnabled();
-        if (hdfsMetricsPeriodicCalculationEnabled) {
-            log.info("HDFS metrics periodic calculation is enabled, path: {}", HDFS_CAPACITY_METRICS_PATH);
+        quotaStorageEnabled = KYLIN_CONFIG.isStorageQuotaEnabled();
+        if (quotaStorageEnabled && hdfsMetricsPeriodicCalculationEnabled) {
+            log.info("Quota storage and HDFS metrics periodic calculation are enabled, path: {}", HDFS_CAPACITY_METRICS_PATH);
             HDFS_METRICS_SCHEDULED_EXECUTOR.scheduleAtFixedRate(HdfsCapacityMetrics::handleNodeHdfsMetrics,
                     0, KYLIN_CONFIG.getHdfsMetricsPeriodicCalculationInterval(), TimeUnit.MILLISECONDS);
         }
@@ -153,7 +155,9 @@ public class HdfsCapacityMetrics {
      */
     public static Long getHdfsCapacityByProject(String project) {
         if (hdfsMetricsPeriodicCalculationEnabled) {
-            return workingDirCapacity.getOrDefault(project, 0L);
+            // Writing numbers in JSON may be read as integer
+            Object orDefault = workingDirCapacity.getOrDefault(project, 0L);
+            return Long.parseLong(orDefault.toString());
         }
         return -1L;
     }

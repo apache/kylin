@@ -17,7 +17,6 @@
 
 package org.apache.kylin.common
 
-import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.ClassUtil
 import org.apache.spark.internal.Logging
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}

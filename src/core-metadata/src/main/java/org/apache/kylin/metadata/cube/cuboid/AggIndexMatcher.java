@@ -31,15 +31,19 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
+import org.apache.kylin.metadata.cube.model.IndexEntity;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.model.AntiFlatChecker;
+import org.apache.kylin.metadata.model.ColExcludedChecker;
 import org.apache.kylin.metadata.model.DeriveInfo;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.metadata.cube.model.IndexEntity;
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.metadata.model.NDataModel;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -50,19 +54,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AggIndexMatcher extends IndexMatcher {
 
-    private final boolean isReplaceCount;
-    private Set<Integer> sqlColumns;
-    private final Map<FunctionDesc, List<Integer>> functionCols = Maps.newHashMap();
-    private final boolean valid;
+    private final Map<FunctionDesc, List<Integer>> functionCols;
 
-    public AggIndexMatcher(SQLDigest sqlDigest, ChooserContext model, Set<String> excludedTables,
-            boolean isReplaceCount) {
-        super(sqlDigest, model, excludedTables);
-        this.isReplaceCount = isReplaceCount;
-        valid = init();
+    public AggIndexMatcher(SQLDigest sqlDigest, ChooserContext chooserContext, NDataflow dataflow,
+            ColExcludedChecker exColChecker, AntiFlatChecker antiFlatChecker) {
+        super(sqlDigest, chooserContext, dataflow, exColChecker, antiFlatChecker);
+        this.functionCols = Maps.newHashMap();
+        this.valid = fastValidCheckBeforeMatch();
     }
 
-    private boolean init() {
+    @Override
+    protected boolean fastValidCheckBeforeMatch() {
         // cols may have null values as the CC col in query may not present in the model
         sqlColumns = Stream.concat(sqlDigest.filterColumns.stream(), sqlDigest.groupbyColumns.stream())
                 .map(tblColMap::get).collect(Collectors.toSet());
@@ -82,28 +84,18 @@ public class AggIndexMatcher extends IndexMatcher {
         return true;
     }
 
-    public boolean valid() {
-        return valid;
-    }
-
     @Override
     MatchResult match(LayoutEntity layout) {
-        if (!needAggIndexMatch(layout.getIndex()) || !valid) {
-            return new MatchResult(false);
+        if (canSkipIndexMatch(layout.getIndex()) || !isValid()) {
+            return new MatchResult();
         }
         log.trace("Matching agg index");
-        Set<Integer> unmatchedCols = Sets.newHashSet();
-        unmatchedCols.addAll(sqlColumns);
         Set<FunctionDesc> unmatchedMetrics = Sets.newHashSet(sqlDigest.aggregations);
-
-        if (isBatchFusionModel) {
-            unmatchedCols.removeAll(layout.getStreamingColumns().keySet());
-        }
-        unmatchedCols.removeAll(layout.getOrderedDimensions().keySet());
+        Set<Integer> unmatchedCols = initUnmatchedColumnIds(layout);
         final Map<Integer, DeriveInfo> needDerive = Maps.newHashMap();
         goThruDerivedDims(layout.getIndex(), needDerive, unmatchedCols);
         unmatchedAggregations(unmatchedMetrics, layout);
-        if (isReplaceCount) {
+        if (NProjectManager.getProjectConfig(project).isReplaceColCountWithCountStar()) {
             unmatchedCountColumnIfExistCountStar(unmatchedMetrics);
         }
 
@@ -115,6 +107,13 @@ public class AggIndexMatcher extends IndexMatcher {
         }
 
         boolean matched = unmatchedCols.isEmpty() && unmatchedMetrics.isEmpty();
+        if (!matched) {
+            unmatchedCols.removeAll(filterExcludedDims(layout));
+            log.debug("After rolling back to AggIndex to match, the unmatched columns are: ({}), "
+                    + "the unmatched measures are: ({})", unmatchedCols, unmatchedMetrics);
+            matched = unmatchedMetrics.isEmpty() && unmatchedCols.isEmpty();
+        }
+
         if (!matched && log.isDebugEnabled()) {
             log.debug("Agg index {} with unmatched columns {}, unmatched metrics {}", //
                     layout, unmatchedCols, unmatchedMetrics);
@@ -123,8 +122,9 @@ public class AggIndexMatcher extends IndexMatcher {
         return new MatchResult(matched, needDerive, null, influences);
     }
 
-    private boolean needAggIndexMatch(IndexEntity indexEntity) {
-        return !indexEntity.isTableIndex() && !sqlDigest.isRawQuery;
+    @Override
+    protected boolean canSkipIndexMatch(IndexEntity indexEntity) {
+        return indexEntity.isTableIndex() || sqlDigest.isRawQuery;
     }
 
     private void removeUnmatchedGroupingAgg(Collection<FunctionDesc> unmatchedAggregations) {
@@ -210,7 +210,7 @@ public class AggIndexMatcher extends IndexMatcher {
             }
         }
         if (!influencingMeasures.isEmpty()) {
-            log.info("NDataflow {} CapabilityInfluences: {}", indexEntity.getIndexPlan().getUuid(),
+            log.info("NDataflow {} CapabilityInfluences: {}", dataflow.getUuid(),
                     StringUtils.join(influencingMeasures, ","));
         }
     }

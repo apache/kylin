@@ -17,6 +17,8 @@
  */
 package org.apache.kylin.streaming.jobs;
 
+import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PARSER_NAME;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StreamingTestConstant;
 import org.apache.kylin.metadata.cube.model.NCubeJoinedFlatTableDesc;
@@ -24,6 +26,7 @@ import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.streaming.CreateStreamingFlatTable;
 import org.apache.kylin.streaming.app.StreamingEntry;
+import org.apache.kylin.streaming.common.CreateFlatTableEntry;
 import org.apache.kylin.streaming.util.StreamingTestCase;
 import org.junit.After;
 import org.junit.Assert;
@@ -73,8 +76,10 @@ public class CreateStreamingFlatTableTest extends StreamingTestCase {
         val seg = NDataSegment.empty();
         seg.setId("test-1234");
 
-        val steamingFlatTable = CreateStreamingFlatTable.apply(flatTableDesc, seg, entry.createSpanningTree(dataflow),
-                entry.getSparkSession(), null, "LO_PARTITIONCOLUMN", null);
+        CreateFlatTableEntry flatTableEntry = new CreateFlatTableEntry(flatTableDesc, seg,
+                entry.createSpanningTree(dataflow), entry.getSparkSession(), null, "LO_PARTITIONCOLUMN", null,
+                DEFAULT_PARSER_NAME);
+        val steamingFlatTable = CreateStreamingFlatTable.apply(flatTableEntry);
 
         val ds = steamingFlatTable.generateStreamingDataset(config);
         source.post(StreamingTestConstant.KAP_SSB_STREAMING_JSON_FILE());

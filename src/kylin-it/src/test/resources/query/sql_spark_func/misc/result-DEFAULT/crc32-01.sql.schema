@@ -1,1 +1,0 @@
-`crc32(CAST(Spark AS BINARY))` BIGINT

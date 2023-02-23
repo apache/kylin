@@ -43,6 +43,7 @@ import org.apache.kylin.common.metrics.prometheus.PrometheusMetrics;
 import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -57,8 +58,6 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.user.ManagedUser;
-import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.query.util.LoadCounter;
 import org.apache.kylin.query.util.LoadDesc;
 import org.apache.kylin.rest.service.ProjectService;
@@ -72,6 +71,8 @@ import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.NKylinUserManager;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -88,6 +89,10 @@ public class MetricsRegistry {
     private static final String GLOBAL = "global";
 
     private static final Map<String, Long> totalStorageSizeMap = Maps.newHashMap();
+    private static volatile Map<String, Map<Integer, Long>> projectPendingJobMap = Maps.newHashMap();
+    private static volatile Map<String, Map<Double, Long>> projectRunningJobMap = Maps.newHashMap();
+    private static final int[] PENDING_JOB_TIMEOUT_MINUTE = new int[] { 5, 10, 15, 30 };
+    private static final double[] RUNNING_JOB_TIMEOUT_HOUR = new double[] { 0.5d, 1d, 1.5d, 2d, 3d };
 
     private static final Logger logger = LoggerFactory.getLogger(MetricsRegistry.class);
 
@@ -97,6 +102,42 @@ public class MetricsRegistry {
             val storageVolumeInfoResponse = projectService.getStorageVolumeInfoResponse(project);
             totalStorageSizeMap.put(project, storageVolumeInfoResponse.getTotalStorageSize());
         });
+    }
+
+    public static void refreshProjectLongRunningJobs(KylinConfig kylinConfig, Set<String> projects) {
+        Map<String, Map<Integer, Long>> tempProjectPendingJobMap = Maps.newHashMap();
+        Map<String, Map<Double, Long>> tempProjectRunningJobMap = Maps.newHashMap();
+        for (String project : projects) {
+            final NExecutableManager executableManager = NExecutableManager.getInstance(kylinConfig, project);
+            tempProjectPendingJobMap.put(project, collectTimeoutToPendingJobsMap(executableManager));
+            tempProjectRunningJobMap.put(project, collectTimeoutToRunningJobsMap(executableManager));
+        }
+        projectPendingJobMap = tempProjectPendingJobMap;
+        projectRunningJobMap = tempProjectRunningJobMap;
+    }
+    
+    private static Map<Integer, Long> collectTimeoutToPendingJobsMap(NExecutableManager executableManager) {
+        Map<Integer, Long> timeoutToPendingJobsMap = Maps.newHashMap();
+        List<AbstractExecutable> pendingJobs = executableManager.getAllJobs().stream()
+                .filter(e -> ExecutableState.READY.name().equals(e.getOutput().getStatus()))
+                .map(executableManager::fromPO).collect(Collectors.toList());
+        for (int pendingJobMin : PENDING_JOB_TIMEOUT_MINUTE) {
+            timeoutToPendingJobsMap.put(pendingJobMin,
+                    pendingJobs.stream().filter(e -> e.getWaitTime() / 1000.0 > pendingJobMin * 60).count());
+        }
+        return timeoutToPendingJobsMap;
+    }
+
+    private static Map<Double, Long> collectTimeoutToRunningJobsMap(NExecutableManager executableManager) {
+        Map<Double, Long> timeoutToRunningJobsMap = Maps.newHashMap();
+        List<AbstractExecutable> runningJobs = executableManager.getAllJobs().stream()
+                .filter(e -> ExecutableState.RUNNING.name().equals(e.getOutput().getStatus()))
+                .map(executableManager::fromPO).collect(Collectors.toList());
+        for (double runningJobHour : RUNNING_JOB_TIMEOUT_HOUR) {
+            timeoutToRunningJobsMap.put(runningJobHour,
+                    runningJobs.stream().filter(e -> e.getDuration() / 1000.0 > runningJobHour * 3600).count());
+        }
+        return timeoutToRunningJobsMap;
     }
 
     public static void removeProjectFromStorageSizeMap(String project) {
@@ -189,6 +230,24 @@ public class MetricsRegistry {
                         : scheduler.getContext().getRunningJobs().values().stream()
                                 .filter(job -> ExecutableState.RUNNING.equals(job.getOutput().getState())).count())
                 .tags(projectTag).tags(MetricsTag.STATE.getVal(), MetricsTag.RUNNING.getVal()).register(meterRegistry);
+
+        for (double runningTimeoutHour : RUNNING_JOB_TIMEOUT_HOUR) {
+            Gauge.builder(PrometheusMetrics.JOB_LONG_RUNNING.getValue(),
+                    () -> MetricsRegistry.projectRunningJobMap.getOrDefault(project, Maps.newHashMap())
+                            .getOrDefault(runningTimeoutHour, 0L))
+                    .tags(projectTag).tags(MetricsTag.STATE.getVal(), MetricsTag.RUNNING.getVal(),
+                            MetricsTag.TIMEOUT.getVal(), runningTimeoutHour + "h")
+                    .register(meterRegistry);
+        }
+
+        for (int waitTimeoutMin : PENDING_JOB_TIMEOUT_MINUTE) {
+            Gauge.builder(PrometheusMetrics.JOB_LONG_RUNNING.getValue(),
+                    () -> MetricsRegistry.projectPendingJobMap.getOrDefault(project, Maps.newHashMap())
+                            .getOrDefault(waitTimeoutMin, 0L))
+                    .tags(projectTag).tags(MetricsTag.STATE.getVal(), MetricsTag.WAITING.getVal(),
+                            MetricsTag.TIMEOUT.getVal(), waitTimeoutMin + "m")
+                    .register(meterRegistry);
+        }
     }
 
     public static void registerHostMetrics(String host) {

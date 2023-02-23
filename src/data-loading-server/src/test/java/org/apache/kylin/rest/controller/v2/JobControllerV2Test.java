@@ -23,13 +23,17 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.JobFilter;
+import org.apache.kylin.rest.request.JobUpdateRequest;
+import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.ExecutableResponse;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -48,7 +52,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.google.common.collect.Lists;
 
-public class JobControllerV2Test {
+public class JobControllerV2Test extends NLocalFileMetadataTestCase {
 
     private MockMvc mockMvc;
 
@@ -75,6 +79,12 @@ public class JobControllerV2Test {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
         ReflectionTestUtils.setField(jobService, "aclEvaluate", aclEvaluate);
+        createTestMetadata();
+    }
+
+    @After
+    public void tearDown() {
+        cleanupTestMetadata();
     }
 
     @Test
@@ -107,7 +117,54 @@ public class JobControllerV2Test {
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
         Mockito.verify(jobControllerV2).getJobList(new Integer[] { 0 }, 1, "", "default", null, 0, 10, "last_modified",
-                true);
+                null, true);
+    }
+
+    @Test
+    public void testGetJobsWithoutProjectAndSortby() throws Exception {
+        List<ExecutableResponse> jobs = new ArrayList<>();
+        List<String> jobNames = Lists.newArrayList();
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, null, null, null, "job_name", true);
+        Mockito.when(jobService.listGlobalJobs(jobFilter, 0, Integer.MAX_VALUE))
+                .thenReturn(new DataResult<>(jobs, 0, 0, 0));
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/api/jobs").contentType(MediaType.APPLICATION_JSON).param("timeFilter", "4")
+                        .param("sortby", "job_name").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+
+        Mockito.verify(jobControllerV2).getJobList(new Integer[0], 4, null, null, null, 0, 10, "last_modified",
+                "job_name", true);
+    }
+
+    @Test
+    public void testGetJob() throws Exception {
+        mockJobUpdateRequest();
+        String jobId = "e1ad7bb0-522e-456a-859d-2eab1df448de";
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs/{jobId}", jobId)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+
+        Mockito.verify(jobControllerV2).getJob(jobId);
+    }
+
+    @Test
+    public void testGetJobOutput() throws Exception {
+        mockJobUpdateRequest();
+        String jobId = "e1ad7bb0-522e-456a-859d-2eab1df448de";
+        Mockito.when(jobService.getProjectByJobId(jobId)).thenReturn("default");
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs/{job_id:.+}/steps/{step_id:.+}/output", jobId, jobId)
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+
+        Mockito.verify(jobControllerV2).getJobOutput(jobId, jobId);
+    }
+
+    private JobUpdateRequest mockJobUpdateRequest() {
+        JobUpdateRequest jobUpdateRequest = new JobUpdateRequest();
+        jobUpdateRequest.setProject("default");
+        jobUpdateRequest.setAction("RESUME");
+        jobUpdateRequest.setJobIds(Lists.newArrayList("e1ad7bb0-522e-456a-859d-2eab1df448de"));
+        return jobUpdateRequest;
     }
 
     @Test
@@ -147,7 +204,5 @@ public class JobControllerV2Test {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-
     }
-
 }

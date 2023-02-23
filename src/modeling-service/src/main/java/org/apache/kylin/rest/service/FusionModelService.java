@@ -26,10 +26,9 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.rest.response.DataResult;
-import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.metadata.model.FusionModel;
 import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -39,6 +38,7 @@ import org.apache.kylin.rest.request.IndexesToSegmentsRequest;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.request.OwnerChangeRequest;
 import org.apache.kylin.rest.response.BuildBaseIndexResponse;
+import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.JobInfoResponse;
 import org.apache.kylin.rest.response.JobInfoResponseWithFailure;
 import org.apache.kylin.rest.response.NDataModelResponse;
@@ -53,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service("fusionModelService")
-public class FusionModelService extends BasicService implements TableFusionModelSupporter {
+public class FusionModelService extends AbstractModelService implements TableFusionModelSupporter {
 
     @Autowired
     private ModelService modelService;
@@ -128,6 +128,9 @@ public class FusionModelService extends BasicService implements TableFusionModel
             String oldAliasName = model.getRootFactTableRef().getTableName();
             convertModel(copy, tableAlias, oldAliasName);
             modelService.updateDataModelSemantic(project, copy);
+        }
+        if (model.isStreaming()) {
+            request.setWithBaseIndex(false);
         }
         return modelService.updateDataModelSemantic(project, request);
     }

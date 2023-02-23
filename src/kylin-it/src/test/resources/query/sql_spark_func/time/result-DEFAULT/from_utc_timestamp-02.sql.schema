@@ -1,1 +1,0 @@
-`from_utc_timestamp(TEST_TIME_ENC, Asia/Seoul)` TIMESTAMP,`TEST_TIME_ENC` TIMESTAMP

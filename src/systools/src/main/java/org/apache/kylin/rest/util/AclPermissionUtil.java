@@ -27,12 +27,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.security.AclEntityFactory;
@@ -43,7 +44,6 @@ import org.apache.kylin.rest.security.AclPermissionFactory;
 import org.apache.kylin.rest.security.CompositeAclPermission;
 import org.apache.kylin.rest.security.MutableAclRecord;
 import org.apache.kylin.rest.security.ObjectIdentityImpl;
-import org.apache.kylin.metadata.project.NProjectManager;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
@@ -231,7 +231,7 @@ public class AclPermissionUtil {
         }
     }
 
-    public static QueryContext.AclInfo prepareQueryContextACLInfo(String project, Set<String> groups) {
+    public static QueryContext.AclInfo createAclInfo(String project, Set<String> groups) {
         return new QueryContext.AclInfo(getCurrentUsername(), groups, isAdminInProject(project, groups));
     }
 

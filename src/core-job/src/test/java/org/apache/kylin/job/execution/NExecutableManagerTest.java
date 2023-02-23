@@ -49,12 +49,16 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.MailHelper;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobIssueEnum;
 import org.apache.kylin.job.dao.NExecutableDao;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
+import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
@@ -599,18 +603,37 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
         job.setParam(NBatchConstants.P_DATA_RANGE_START, SegmentRange.dateToLong(start) + "");
         job.setParam(NBatchConstants.P_DATA_RANGE_END, SegmentRange.dateToLong(end) + "");
         job.setTargetSubject("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
-        EmailNotificationContent content = EmailNotificationContent.createContent(JobIssueEnum.JOB_ERROR, job);
-        Assert.assertTrue(content.getEmailTitle().contains(JobIssueEnum.JOB_ERROR.getDisplayName()));
-        Assert.assertTrue(!content.getEmailBody().contains("$"));
-        Assert.assertTrue(content.getEmailBody().contains(project));
-        Assert.assertTrue(content.getEmailBody().contains(job.getName()));
+        Pair<String, String> mail = EmailNotificationContent.createContent(ExecutableState.ERROR, job, job.getTasks());
+        assert mail != null;
+        Assert.assertTrue(mail.getFirst().contains(ExecutableState.ERROR.toString()));
+        Assert.assertTrue(mail.getSecond().contains("Job Error Details"));
+        Assert.assertTrue(mail.getSecond().contains(project));
+        Assert.assertTrue(mail.getSecond().contains(job.getName()));
 
-        content = EmailNotificationContent.createContent(JobIssueEnum.LOAD_EMPTY_DATA, job);
-        Assert.assertTrue(content.getEmailBody().contains(job.getTargetModelAlias()));
+        mail = EmailNotificationContent.createContent(JobIssueEnum.LOAD_EMPTY_DATA, job);
+        assert mail != null;
+        Assert.assertTrue(mail.getSecond().contains(job.getTargetModelAlias()));
         Assert.assertEquals("89af4ee2-2cdb-4b07-b39e-4c29856309aa", job.getTargetModelId());
-        content = EmailNotificationContent.createContent(JobIssueEnum.SOURCE_RECORDS_CHANGE, job);
-        Assert.assertTrue(content.getEmailBody().contains(start));
-        Assert.assertTrue(content.getEmailBody().contains(end));
+
+        mail = EmailNotificationContent.createContent(JobIssueEnum.SOURCE_RECORDS_CHANGE, job);
+        assert mail != null;
+        Assert.assertTrue(mail.getFirst().contains("Source Records Change"));
+        Assert.assertTrue(mail.getSecond().contains("reload updated records"));
+
+        Throwable exception = new Throwable("metadata persist failed!");
+        mail = EmailNotificationContent.createMetadataPersistExceptionContent(exception, job);
+        Assert.assertTrue(mail.getFirst().contains("METADATA_PERSIST"));
+        Assert.assertTrue(mail.getSecond().contains("Hadoop Service"));
+
+        mail = MailHelper.creatContentForCapacityUsage(1000000L, 10000L, project);
+        Assert.assertTrue(mail.getFirst().contains("OVER_CAPACITY_THRESHOLD"));
+        Assert.assertTrue(mail.getSecond().contains("deleting some segments"));
+
+        mail = EmailNotificationContent.createContent(null, job);
+        Assert.assertNull(mail);
+
+        mail = EmailNotificationContent.createContent(ExecutableState.READY, job, job.getTasks());
+        Assert.assertNull(mail);
 
     }
 
@@ -884,7 +907,7 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
         val env = getTestConfig().getDeployEnv();
         getTestConfig().setProperty("kylin.env", "PROD");
         manager.cancelJob(NExecutableManager.toPO(job, DEFAULT_PROJECT), job.getId());
-        Assertions.assertNull(scheduler.getContext().getRunningJobThread(job));
+        Assertions.assertNotNull(scheduler.getContext().getRunningJobThread(job));
         getTestConfig().setProperty("kylin.env", env);
         scheduler.shutdown();
     }
@@ -934,4 +957,60 @@ public class NExecutableManagerTest extends NLocalFileMetadataTestCase {
         manager.updateJobOutput(job.getId(), ExecutableState.RUNNING);
         executable.checkParentJobStatus();
     }
+
+    @Test
+    public void testMetadataPersistConfig() throws ExecuteException, PersistentException {
+        DefaultExecutable job = new DefaultExecutable();
+        job.setProject("default");
+        val executable = new SucceedTestExecutable();
+        executable.setProject("default");
+        job.addTask(executable);
+        manager.addJob(job);
+
+        executable.checkMetadataPersistConfig(null);
+
+        executable.handleMetadataPersistException(new PersistentException("test email"));
+
+        PersistentException persistentException = new PersistentException("test");
+        boolean flag = executable.isMetaDataPersistException(persistentException, 1);
+        Assert.assertTrue(flag);
+        ExecuteException executeException = new ExecuteException("test1", new Throwable());
+        flag = executable.isMetaDataPersistException(executeException, 1);
+        Assert.assertFalse(flag);
+        executable.checkMetadataPersistConfig(persistentException);
+
+        //cover default
+        DefaultExecutable defaultExecutable = new DefaultExecutable();
+        defaultExecutable.setProject("default");
+        job = new DefaultExecutable();
+        job.setProject("default");
+        job.addTask(defaultExecutable);
+        manager.addJob(job);
+
+        defaultExecutable.handleMetadataPersistException(new PersistentException("test email1"));
+
+        persistentException = new PersistentException("test");
+        flag = defaultExecutable.isMetaDataPersistException(persistentException, 1);
+        Assert.assertTrue(flag);
+        executeException = new ExecuteException("test1", new Throwable());
+        flag = defaultExecutable.isMetaDataPersistException(executeException, 1);
+        Assert.assertFalse(flag);
+
+    }
+
+    @Test
+    public void testLoadEmptyData() {
+        NDataLayout dataLayout = new NDataLayout();
+        NDataLayout[] nDataLayouts = {dataLayout};
+        DefaultExecutable job = new DefaultExecutable();
+        job.setProject("default");
+        val executable = new SucceedTestExecutable();
+        executable.setProject("default");
+        job.addTask(executable);
+        manager.addJob(job);
+        executable.notifyUserIfNecessary(nDataLayouts);
+
+    }
+
+
 }

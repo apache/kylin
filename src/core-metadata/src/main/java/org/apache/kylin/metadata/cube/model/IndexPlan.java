@@ -29,6 +29,8 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -50,12 +52,12 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -65,6 +67,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -159,6 +162,8 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
 
     private final LinkedHashSet<TblColRef> allColumns = Sets.newLinkedHashSet();
 
+    private Set<Integer> allColumnsIndex = new HashSet<>();
+
     private List<LayoutEntity> ruleBasedLayouts = Lists.newArrayList();
     @Setter
     @Getter
@@ -235,7 +240,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         if (ruleBasedIndex.getBaseLayoutEnabled() == null) {
             ruleBasedIndex.setBaseLayoutEnabled(getConfig().isBaseCuboidAlwaysValid());
         }
-        ruleBasedLayouts.addAll(ruleBasedIndex.genCuboidLayouts());
+        ruleBasedLayouts.addAll(ruleBasedIndex.genCuboidLayouts(true));
         if (config.base().isSystemConfig() && isCachedAndShared) {
             ruleBasedIndex.getCuboidScheduler().validateOrder();
         }
@@ -276,6 +281,14 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
             //all lookup tables are automatically derived
             allColumns.addAll(join.getTableRef().getColumns());
         }
+        initAllColumnsIndex();
+    }
+
+    private void initAllColumnsIndex() {
+        Map<TblColRef, Integer> tblColMap = Maps.newHashMap();
+        ImmutableBiMap<Integer, TblColRef> effectiveCols = getModel().getEffectiveCols();
+        effectiveCols.forEach((key, value) -> tblColMap.put(value, key));
+        allColumnsIndex = allColumns.stream().map(tblColMap::get).collect(Collectors.toSet());
     }
 
     private void initDictionaryDesc() {
@@ -367,6 +380,10 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         return allColumns;
     }
 
+    public Set<Integer> listAllTblColRefsIndex() {
+        return allColumnsIndex;
+    }
+
     private void addLayout2TargetIndex(LayoutEntity sourceLayout, IndexEntity targetIndex) {
         addLayout2TargetIndex(sourceLayout, targetIndex, false);
     }
@@ -415,7 +432,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
             copy.getLayouts().forEach(layout -> layout.setInProposing(layouts.get(layout.getId()).isInProposing()));
             retSubscript++;
         }
-        for (LayoutEntity ruleBasedLayout : ruleBasedLayouts) {
+        for (LayoutEntity ruleBasedLayout : getRuleBaseLayouts()) {
             val ruleRelatedIndex = ruleBasedLayout.getIndex();
             if (!retSubscriptMap.containsKey(ruleRelatedIndex.getId())) {
                 val copy = JsonUtil.deepCopyQuietly(ruleRelatedIndex, IndexEntity.class);
@@ -464,7 +481,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         for (IndexEntity indexEntity : indexes) {
             indexEntity.getLayouts().forEach(layout -> classifyByIndexId(layout, resultMap, layout.isToBeDeleted()));
         }
-        for (LayoutEntity ruleBasedLayout : ruleBasedLayouts) {
+        for (LayoutEntity ruleBasedLayout : getRuleBaseLayouts()) {
             classifyByIndexId(ruleBasedLayout, resultMap, false);
         }
         for (IndexEntity indexEntity : toBeDeletedIndexes) {
@@ -578,8 +595,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         this.ruleBasedIndex = ruleBasedIndex;
 
         Set<LayoutEntity> targetSet = this.ruleBasedIndex.genCuboidLayouts();
-
-        this.ruleBasedLayouts = Lists.newArrayList(targetSet);
+        this.ruleBasedLayouts = Lists.newArrayList(this.ruleBasedIndex.genCuboidLayouts(true));
         if (markToBeDeleted && CollectionUtils.isNotEmpty(layoutsNotIn(targetSet, originSet))) {
             Set<LayoutEntity> toBeDeletedSet = layoutsNotIn(originSet, targetSet);
             if (CollectionUtils.isNotEmpty(toBeDeletedSet)) {
@@ -605,7 +621,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
             ruleBasedIndex.setIndexStartId(nextAggregationIndexId);
             ruleBasedIndex.setLayoutIdMapping(Lists.newArrayList());
             ruleBasedIndex.genCuboidLayouts(ruleLayouts);
-            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts());
+            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts(true));
         }
         this.aggShardByColumns = aggShardByColumns;
         updateNextId();
@@ -618,7 +634,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
             this.extendPartitionColumns = extendPartitionColumns;
             ruleBasedIndex.setLayoutIdMapping(Lists.newArrayList());
             ruleBasedIndex.genCuboidLayouts(ruleLayouts);
-            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts());
+            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts(true));
         }
         this.extendPartitionColumns = extendPartitionColumns;
         updateNextId();
@@ -725,7 +741,7 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
             val newBlacklist = Sets.newHashSet(originBlacklist);
             newBlacklist.addAll(blacklist);
             ruleBasedIndex.setLayoutBlackList(newBlacklist);
-            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts());
+            this.ruleBasedLayouts = Lists.newArrayList(ruleBasedIndex.genCuboidLayouts(true));
         }
         updateNextId();
     }

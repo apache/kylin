@@ -20,8 +20,10 @@ package org.apache.kylin.job.execution;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
+import io.kyligence.kap.guava20.shaded.common.collect.Sets;
 import org.apache.kylin.common.KylinConfig;
 
 import io.kyligence.kap.guava20.shaded.common.collect.Maps;
@@ -46,12 +48,14 @@ public class ExecutableContext {
 
     private final ConcurrentMap<String, Thread> runningJobThreads;
     private final ConcurrentMap<String, Executable> runningJobs;
+    private final Set<String> frozenJobs;
     private final ConcurrentMap<String, Long> runningJobInfos;
     private final KylinConfig kylinConfig;
 
     public ExecutableContext(ConcurrentMap<String, Executable> runningJobs, ConcurrentMap<String, Long> runningJobInfos,
             KylinConfig kylinConfig, long epochId) {
         this.runningJobThreads = Maps.newConcurrentMap();
+        this.frozenJobs = Sets.newConcurrentHashSet();
         this.runningJobs = runningJobs;
         this.runningJobInfos = runningJobInfos;
         this.kylinConfig = kylinConfig;
@@ -80,6 +84,18 @@ public class ExecutableContext {
 
     public Map<String, Executable> getRunningJobs() {
         return Collections.unmodifiableMap(runningJobs);
+    }
+
+    public void addFrozenJob(String jobId) {
+        frozenJobs.add(jobId);
+    }
+
+    public boolean isFrozenJob(String jobId) {
+        return frozenJobs.contains(jobId);
+    }
+
+    public void removeFrozenJob(String jobId) {
+        frozenJobs.remove(jobId);
     }
 
     public Map<String, Long> getRunningJobInfos() {

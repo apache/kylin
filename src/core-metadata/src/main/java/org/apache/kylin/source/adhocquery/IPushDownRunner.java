@@ -27,6 +27,13 @@ import com.google.common.collect.Lists;
 
 public interface IPushDownRunner {
 
+    void init(KylinConfig config, String project);
+
+    /**
+     * @deprecated for compatibility with old plugins
+     * @param config
+     */
+    @Deprecated
     void init(KylinConfig config);
 
     /**

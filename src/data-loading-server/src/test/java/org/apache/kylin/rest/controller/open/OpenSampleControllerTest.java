@@ -26,21 +26,22 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.request.SamplingRequest;
-import org.apache.kylin.rest.response.EnvelopeResponse;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.controller.SampleController;
 import org.apache.kylin.rest.request.RefreshSegmentsRequest;
+import org.apache.kylin.rest.request.SamplingRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.TableService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -130,6 +131,44 @@ public class OpenSampleControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openSampleController).refreshSegments(Mockito.any(RefreshSegmentsRequest.class));
     }
+    
+    @Test
+    public void testSubmitSamplingCaseInsensitive() throws Exception {
+        String tableMixture = "dEFault.teST_kylIN_fact";
+        String tableLowercase = "default.test_kylin_fact";
+        String tableUppercase = "DEFAULT.TEST_KYLIN_FACT";
+        SamplingRequest request = new SamplingRequest();
+        request.setProject("default");
+        request.setRows(20000);
+        ArgumentCaptor<SamplingRequest> argumentCaptor = ArgumentCaptor.forClass(SamplingRequest.class);
+
+        request.setQualifiedTableName(tableMixture);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/sampling_jobs") //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .content(JsonUtil.writeValueAsString(request)) //
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        Mockito.verify(sampleController).submitSampling(argumentCaptor.capture());
+        Assert.assertEquals(tableUppercase, argumentCaptor.getValue().getQualifiedTableName());
+
+        request.setQualifiedTableName(tableLowercase);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/sampling_jobs") //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .content(JsonUtil.writeValueAsString(request)) //
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        Mockito.verify(sampleController, Mockito.times(2)).submitSampling(argumentCaptor.capture());
+        Assert.assertEquals(tableUppercase, argumentCaptor.getValue().getQualifiedTableName());
+
+        request.setQualifiedTableName(tableUppercase);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/sampling_jobs") //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .content(JsonUtil.writeValueAsString(request)) //
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        Mockito.verify(sampleController, Mockito.times(3)).submitSampling(argumentCaptor.capture());
+        Assert.assertEquals(tableUppercase, argumentCaptor.getValue().getQualifiedTableName());
+    }
 
     @Test
     public void testSubmitSamplingFailedForKafkaTable() throws Exception {
@@ -151,17 +190,50 @@ public class OpenSampleControllerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetPartitionColumnFormat() throws Exception {
-        String project = "default";
-        String tableName = "TEST_KYLIN_FACT";
-        String columnName = "PART_DT";
+        {
+            String project = "default";
+            String tableName = "TEST_KYLIN_FaCT";
+            String columnName = "PART_DT";
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/column_format") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableName).param("column_name", columnName)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(openSampleController).getPartitionColumnFormat(project, tableName, columnName);
+        }
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/column_format") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .param("project", project).param("table", tableName).param("column_name", columnName)
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Assert.assertNotNull(tableService);
-        Mockito.verify(openSampleController).getPartitionColumnFormat(project, tableName, columnName);
+        {
+            // test case-insensitive
+            String project = "default";
+            String tableNameMixture = "LINeOrder";
+            String tableNameLowercase = "lineorder";
+            String tableNameUppercase = "LINEORDER";
+            String columnName = "PART_DT";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/column_format") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableNameMixture).param("column_name", columnName)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(1)).getPartitionColumnFormat(project, tableNameUppercase,
+                    columnName);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/column_format") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableNameLowercase).param("column_name", columnName)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(2)).getPartitionColumnFormat(project, tableNameUppercase,
+                    columnName);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/column_format") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableNameUppercase).param("column_name", columnName)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(3)).getPartitionColumnFormat(project, tableNameUppercase,
+                    columnName);
+        }
     }
 
 }

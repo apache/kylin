@@ -21,6 +21,9 @@ package org.apache.kylin.streaming.constants;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.metadata.HDFSMetadataStore;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class StreamingConstants {
 
     // spark job conf
@@ -38,6 +41,9 @@ public class StreamingConstants {
     public static final String SPARK_DRIVER_OVERHEAD = "spark.driver.memoryOverhead";
     public static final String SPARK_DRIVER_OVERHEAD_DEFAULT = "1g";
 
+    public static final String SPARK_KERBEROS_KEYTAB = "spark.kerberos.keytab";
+    public static final String SPARK_KERBEROS_PRINCIPAL = "spark.kerberos.principal";
+
     public static final String SPARK_YARN_DIST_JARS = "spark.yarn.dist.jars";
     public static final String SPARK_DRIVER_OPTS = "spark.driver.extraJavaOptions";
     public static final String SPARK_EXECUTOR_OPTS = "spark.executor.extraJavaOptions";
@@ -52,6 +58,9 @@ public class StreamingConstants {
     // main class
     public static final String SPARK_STREAMING_ENTRY = "org.apache.kylin.streaming.app.StreamingEntry";
     public static final String SPARK_STREAMING_MERGE_ENTRY = "org.apache.kylin.streaming.app.StreamingMergeEntry";
+
+    // default parser
+    public static final String DEFAULT_PARSER_NAME = "org.apache.kylin.parser.TimedJsonStreamParser";
 
     // hadoop conf
     public static final String HADOOP_CONF_DIR = "HADOOP_CONF_DIR";

@@ -1701,21 +1701,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getDuplicateModelColumnAndMeasureName() {
-        return "模型中的列名 %s 与度量名 %s 重复，无法导出 TDS。请去除重名后再重试。";
-    }
-
-    @Override
-    public String getDuplicateDimensionNameAndMeasureName() {
-        return "维度名 %s 与度量名 %s 重复，无法导出 TDS。请去除重名后再重试。";
-    }
-
-    @Override
-    public String getDuplicateDimensionColAndMeasureName() {
-        return "维度的列名 %s 与度量名 %s 重复，无法导出 TDS。请去除重名后再重试。";
-    }
-
-    @Override
     public String getProfilingNotEnabled() {
         return "构建火焰图" + PARAMETER_NOT_ENABLED;
     }
@@ -1750,7 +1735,6 @@ public class CnMessage extends Message {
         return "构建火焰图任务" + TASK_TIMEOUT;
     }
 
-
     @Override
     public String getSecondStorageIndexNotSupport() {
         return "Order by列和Skipping Index列不支持使用分区列";
@@ -1769,5 +1753,40 @@ public class CnMessage extends Message {
     @Override
     public String getSecondStorageNodeNotAvailable(String nodeName) {
         return String.format(Locale.ROOT, "分层存储节点'%s'不可用。", nodeName);
+    }
+
+    @Override
+    public String getDDLUnSupported() {
+        return "不支持的 DDL 语法，仅支持 `create view`, `drop view`, `alter view`, `show create table` 语法";
+    }
+
+    @Override
+    public String getDDLViewNameError() {
+        return "视图名需要以 KE_ 开头";
+    }
+
+    @Override
+    public String getDDLDropError() {
+        return "仅支持删除 view 类型表且 view 名称需要以 KE_ 开头";
+    }
+
+    @Override
+    public String getDDLTableNotLoad(String table) {
+        return String.format(Locale.ROOT, "'%s' 没有加载到数据源", table);
+    }
+
+    @Override
+    public String getDDLTableNotSupport(String table) {
+        return String.format(Locale.ROOT, "仅支持 hive 数据表，但 '%s' 不是 hive 表", table);
+    }
+
+    @Override
+    public String getDDLPermissionDenied() {
+        return "只有系统或者项目管理员可以进行 DDL 操作";
+    }
+
+    @Override
+    public String getDDLDatabaseAccessnDenied() {
+        return "用户没有视图所在数据库的权限";
     }
 }

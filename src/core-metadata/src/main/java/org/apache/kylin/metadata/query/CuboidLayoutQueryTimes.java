@@ -18,20 +18,14 @@
 
 package org.apache.kylin.metadata.query;
 
-import io.kyligence.kap.shaded.influxdb.org.influxdb.annotation.Column;
-import io.kyligence.kap.shaded.influxdb.org.influxdb.annotation.Measurement;
 import lombok.Getter;
 import lombok.Setter;
 
 @SuppressWarnings("serial")
-@Measurement(name = "realization_metric")
 @Getter
 @Setter
 public class CuboidLayoutQueryTimes {
-    @Column(name = "model")
     private String modelId;
-    @Column(name = "layout_id")
     private String layoutId;
-    @Column(name = "query_times")
     private int queryTimes;
 }

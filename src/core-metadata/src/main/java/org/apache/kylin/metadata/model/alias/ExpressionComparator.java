@@ -43,6 +43,9 @@ public class ExpressionComparator {
 
     private static final Logger logger = LoggerFactory.getLogger(ExpressionComparator.class);
 
+    private ExpressionComparator() {
+    }
+
     /**
      *
      * @param queryNode
@@ -56,7 +59,7 @@ public class ExpressionComparator {
         if (aliasMapping == null) {
             return false;
         }
-        return isNodeEqual(queryNode, exprNode, new AliasMachingSqlNodeComparator(aliasMapping, aliasDeduce));
+        return isNodeEqual(queryNode, exprNode, new AliasMatchingSqlNodeComparator(aliasMapping, aliasDeduce));
     }
 
     public static boolean isNodeEqual(SqlNode queryNode, SqlNode exprNode, SqlNodeComparator nodeComparator) {
@@ -69,17 +72,17 @@ public class ExpressionComparator {
         }
     }
 
-    public static class AliasMachingSqlNodeComparator extends SqlNodeComparator {
+    public static class AliasMatchingSqlNodeComparator extends SqlNodeComparator {
         private final AliasMapping aliasMapping;
         private final AliasDeduce aliasDeduce;
 
-        public AliasMachingSqlNodeComparator(AliasMapping aliasMapping, AliasDeduce aliasDeduce) {
+        public AliasMatchingSqlNodeComparator(AliasMapping aliasMapping, AliasDeduce aliasDeduce) {
             this.aliasMapping = aliasMapping;
             this.aliasDeduce = aliasDeduce;
         }
 
         protected boolean isSqlIdentifierEqual(SqlIdentifier querySqlIdentifier, SqlIdentifier exprSqlIdentifier) {
-            if (aliasMapping == null || aliasMapping.getAliasMapping() == null) {
+            if (aliasMapping == null || aliasMapping.getAliasMap() == null) {
                 return false;
             }
             Preconditions.checkState(exprSqlIdentifier.names.size() == 2);
@@ -100,9 +103,14 @@ public class ExpressionComparator {
                 }
 
                 //translate user alias to alias in model
-                String modelAlias = aliasMapping.getAliasMapping().get(queryAlias);
+                String modelAlias = aliasMapping.getAliasMap().get(queryAlias);
                 Preconditions.checkNotNull(modelAlias);
                 Preconditions.checkNotNull(queryCol);
+
+                String identity = modelAlias + "." + queryCol;
+                if (aliasMapping.getExcludedColumns().contains(identity)) {
+                    return false;
+                }
 
                 return StringUtils.equalsIgnoreCase(modelAlias, exprSqlIdentifier.names.get(0))
                         && StringUtils.equalsIgnoreCase(queryCol, exprSqlIdentifier.names.get(1));

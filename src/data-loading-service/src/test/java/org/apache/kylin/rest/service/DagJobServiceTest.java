@@ -165,6 +165,7 @@ class DagJobServiceTest {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             manager.updateJobOutput(task1.getId(), ExecutableState.ERROR);
             manager.updateStageStatus(stage11.getId(), task1.getId(), ExecutableState.ERROR, null, null);
+            manager.saveUpdatedJob();
             return null;
         }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
 
@@ -175,6 +176,7 @@ class DagJobServiceTest {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             manager.updateJobOutput(task3.getId(), ExecutableState.ERROR);
             manager.updateStageStatus(stage31.getId(), task3.getId(), ExecutableState.ERROR, null, null);
+            manager.saveUpdatedJob();
             return null;
         }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
 
@@ -239,6 +241,7 @@ class DagJobServiceTest {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             manager.updateJobOutput(task1.getId(), ExecutableState.ERROR);
             manager.updateStageStatus(stage11.getId(), task1.getId(), ExecutableState.ERROR, null, null);
+            manager.saveUpdatedJob();
             return null;
         }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
 
@@ -249,6 +252,7 @@ class DagJobServiceTest {
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             manager.updateJobOutput(task3.getId(), ExecutableState.ERROR);
             manager.updateStageStatus(stage31.getId(), task3.getId(), ExecutableState.ERROR, null, null);
+            manager.saveUpdatedJob();
             return null;
         }, DEFAULT_PROJECT, 1, UnitOfWork.DEFAULT_EPOCH_ID);
 

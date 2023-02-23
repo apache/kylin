@@ -33,7 +33,6 @@ import org.apache.kylin.job.dao.JobStatisticsManager;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.LayoutPartition;
@@ -45,6 +44,7 @@ import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.PartitionStatusEnum;
 import org.apache.kylin.metadata.cube.model.SegmentPartition;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,6 +214,20 @@ public abstract class SparkJobMetadataMerger extends MetadataMerger {
         NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(getConfig(), getProject());
         indexPlanManager.updateIndexPlan(dfId, copyForWrite -> {
             copyForWrite.setLayoutBucketNumMapping(remoteIndexPlan.getLayoutBucketNumMapping());
+            // This is used for the cube planner
+            // In the function of `updateIndexPlanIfNeed`, we may add recommended index for this index plan.
+            // We need to update the `RuleBasedIndex` for the index plan to kylin metadata
+            val remoteRuleIndex = remoteIndexPlan.getRuleBasedIndex();
+            val currentRuleIndex = copyForWrite.getRuleBasedIndex();
+            if (remoteRuleIndex != null && currentRuleIndex != null) {
+                // remote store has the recommended index
+                // current store does not contain the recommended index
+                if (remoteRuleIndex.getLayoutsOfCostBasedList() != null
+                        && currentRuleIndex.getLayoutsOfCostBasedList() == null) {
+                    currentRuleIndex.setLayoutsOfCostBasedList(remoteRuleIndex.getLayoutsOfCostBasedList());
+                }
+                copyForWrite.setRuleBasedIndex(currentRuleIndex);
+            }
         });
     }
 }

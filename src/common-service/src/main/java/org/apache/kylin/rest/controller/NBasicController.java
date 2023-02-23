@@ -58,7 +58,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -78,28 +80,29 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.streaming.KafkaConfigManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.exception.UnauthorizedException;
+import org.apache.kylin.rest.request.Validation;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ErrorResponse;
+import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.PagingUtil;
-import org.apache.kylin.common.persistence.transaction.TransactionException;
-import org.apache.kylin.common.util.Unsafe;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.streaming.KafkaConfigManager;
-import org.apache.kylin.rest.request.Validation;
-import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -186,7 +189,7 @@ public class NBasicController {
         if (kylinException != null) {
             cause = kylinException;
         }
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), cause);
+        return new ErrorResponse(req.getRequestURL().toString(), cause);
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
@@ -194,7 +197,7 @@ public class NBasicController {
     @ResponseBody
     ErrorResponse handleForbidden(HttpServletRequest req, Exception ex) {
         getLogger().error("", ex);
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), ex);
+        return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -202,7 +205,7 @@ public class NBasicController {
     @ResponseBody
     ErrorResponse handleNotFound(HttpServletRequest req, Exception ex) {
         getLogger().error("", ex);
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), ex);
+        return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -226,7 +229,7 @@ public class NBasicController {
     ErrorResponse handleAccessDenied(HttpServletRequest req, Throwable ex) {
         getLogger().error("", ex);
         KylinException e = new KylinException(ACCESS_DENIED, MsgPicker.getMsg().getAccessDeny());
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), e);
+        return new ErrorResponse(req.getRequestURL().toString(), e);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -236,7 +239,7 @@ public class NBasicController {
     ErrorResponse handleInvalidRequestParam(HttpServletRequest req, Throwable ex) {
         KylinException e = new KylinException(INVALID_PARAMETER, ex);
         getLogger().error("", e);
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), e);
+        return new ErrorResponse(req.getRequestURL().toString(), e);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -245,14 +248,14 @@ public class NBasicController {
     ErrorResponse handleErrorCode(HttpServletRequest req, Throwable ex) {
         getLogger().error("", ex);
         KylinException cause = (KylinException) ex;
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), cause);
+        return new ErrorResponse(req.getRequestURL().toString(), cause);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseBody
     ErrorResponse handleInvalidArgument(HttpServletRequest request, MethodArgumentNotValidException ex) {
-        val response = new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(request), ex);
+        val response = new ErrorResponse(request.getRequestURL().toString(), ex);
         val target = ex.getBindingResult().getTarget();
         if (target instanceof Validation) {
             response.setMsg(((Validation) target).getErrorMessage(ex.getBindingResult().getFieldErrors()));
@@ -270,7 +273,7 @@ public class NBasicController {
     ErrorResponse handleUnauthorized(HttpServletRequest req, Throwable ex) {
         KylinException e = new KylinException(USER_UNAUTHORIZED, ex);
         getLogger().error("", e);
-        return new ErrorResponse(Unsafe.getUrlFromHttpServletRequest(req), ex);
+        return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 
     protected void checkRequiredArg(String fieldName, Object fieldValue) {
@@ -370,15 +373,35 @@ public class NBasicController {
         return isAdmin;
     }
 
-    public HashMap<String, Object> getDataResponse(String name, List<?> result, int offset, int limit) {
-        HashMap<String, Object> data = new HashMap<>();
+    public Map<String, Object> getDataResponse(String name, List<?> result, int offset, int limit) {
+        Map<String, Object> data = new HashMap<>();
         data.put(name, PagingUtil.cutPage(result, offset, limit));
         data.put("size", result.size());
         return data;
     }
 
+    public Map<String, Object> setCustomDataResponse(String name, Pair<List<TableDesc>, Integer> result, int offset, int limit) {
+        Map<String, Object> data = new HashMap<>();
+        data.put(name, PagingUtil.cutPage(result.getFirst(), offset, limit));
+        data.put("size", result.getSecond());
+        return data;
+    }
+
     public List<?> getDataNoEnvelopeResponse(List<?> result, int offset, int limit) {
         return PagingUtil.cutPage(result, offset, limit);
+    }
+
+    public String getHost(String serverHost, String serverName) {
+        String host = KylinConfig.getInstanceFromEnv().getModelExportHost();
+        host = Optional.ofNullable(Optional.ofNullable(host).orElse(serverHost)).orElse(serverName);
+        return host;
+    }
+
+    public int getPort(Integer serverPort, Integer requestServerPort) {
+        Integer port = KylinConfig.getInstanceFromEnv().getModelExportPort() == -1 ? null
+                : KylinConfig.getInstanceFromEnv().getModelExportPort();
+        port = Optional.ofNullable(Optional.ofNullable(port).orElse(serverPort)).orElse(requestServerPort);
+        return port;
     }
 
     public String checkProjectName(String project) {
@@ -632,8 +655,8 @@ public class NBasicController {
         if (CollectionUtils.isEmpty(statuses)) {
             return;
         }
-        List<String> streamingJobsStatus = Arrays.asList(JobStatusEnum.STARTING.name(),
-                JobStatusEnum.RUNNING.name(), JobStatusEnum.STOPPING.name(), JobStatusEnum.ERROR.name(), JobStatusEnum.STOPPED.name());
+        List<String> streamingJobsStatus = Arrays.asList(JobStatusEnum.STARTING.name(), JobStatusEnum.RUNNING.name(),
+                JobStatusEnum.STOPPING.name(), JobStatusEnum.ERROR.name(), JobStatusEnum.STOPPED.name());
         for (String status : statuses) {
             if (!streamingJobsStatus.contains(status)) {
                 throw new KylinException(PARAMETER_INVALID_SUPPORT_LIST, "statuses",

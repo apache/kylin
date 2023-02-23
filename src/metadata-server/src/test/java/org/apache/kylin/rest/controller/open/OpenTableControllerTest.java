@@ -21,6 +21,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -117,28 +118,77 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetTable() throws Exception {
-        String project = "default";
-        String tableName = "TEST_KYLIN_FACT";
-        String database = "DEFAULT";
+        {
+            String project = "default";
+            String tableName = "TEST_KYLIN_FACT";
+            String database = "DEFAULT";
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .param("project", project).param("table", tableName).param("database", database)
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(openTableController).getTableDesc(project, tableName, database, false, true, 0, 10, 9);
+            Mockito.when(tableService.getTableDesc(project, true, tableName, database, false, Collections.singletonList(9), 10))
+                    .thenReturn(Pair.newPair(Collections.singletonList(new TableDesc()), 10));
 
-        // call failed  when table is kafka table
-        String project1 = "streaming_test";
-        String tableName1 = "P_LINEORDER_STR";
-        String database1 = "SSB";
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableName).param("database", database)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(openTableController).getTableDesc(project, tableName, database, false, true, 0, 10, 9);
+        }
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .param("project", project1).param("table", tableName1).param("database", database1)
-                .param("source_type", "1").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
-        Mockito.verify(openTableController).getTableDesc(project1, tableName1, database1, false, true, 0, 10, 1);
+        {
+            // call failed  when table is kafka table
+            String project = "streaming_test";
+            String tableName = "P_LINEORDER_STR";
+            String database = "SSB";
+
+            Mockito.when(tableService.getTableDesc(project, true, tableName, database, false, Collections.singletonList(1), 10))
+                    .thenReturn(Pair.newPair(Collections.singletonList(new TableDesc()), 10));
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableName).param("database", database)
+                    .param("source_type", "1").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+            Mockito.verify(openTableController).getTableDesc(project, tableName, database, false, true, 0, 10, 1);
+        }
+
+        {
+            // test case-insensitive
+            String project = "default";
+            String tableNameMixture = "TEsT_KYliN";
+            String tableNameLowerCase = "test_kylin";
+            String tableNameUppercase = "TEST_KYLIN";
+            String databaseMixture = "Ssb";
+            String databaseLowercase = "ssb";
+            String databaseUppercase = "SSB";
+
+            Mockito.when(tableService.getTableDesc(project, true, tableNameUppercase, databaseUppercase, false,
+                            Collections.singletonList(9), 10))
+                    .thenReturn(Pair.newPair(Collections.singletonList(new TableDesc()), 10));
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableNameMixture).param("database", databaseMixture)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(1)).getTableDesc(project, true, tableNameUppercase,
+                    databaseUppercase, false, Collections.singletonList(9), 10);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableNameLowerCase).param("database", databaseLowercase)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(2)).getTableDesc(project, true, tableNameUppercase,
+                    databaseUppercase, false, Collections.singletonList(9), 10);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableNameUppercase).param("database", databaseUppercase)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(3)).getTableDesc(project, true, tableNameUppercase,
+                    databaseUppercase, false, Collections.singletonList(9), 10);
+        }
     }
 
     @Test
@@ -148,6 +198,7 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
         tableLoadRequest.setTables(new String[] { "hh.kk" });
         tableLoadRequest.setNeedSampling(false);
         tableLoadRequest.setProject("default");
+        tableLoadRequest.setSamplingRows(0);
         Mockito.doNothing().when(openTableController).updateDataSourceType("default", 9);
         Mockito.doAnswer(x -> null).when(nTableController).loadTables(tableLoadRequest);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tables") //
@@ -203,27 +254,27 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
         Mockito.doNothing().when(openTableController).updateDataSourceType("default", 9);
         Mockito.doAnswer(x -> null).when(nTableController).loadAWSTablesCompatibleCrossAccount(tableLoadRequest);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/compatibility/aws") //
-                        .contentType(MediaType.APPLICATION_JSON) //
-                        .content(JsonUtil.writeValueAsString(tableLoadRequest)) //
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .content(JsonUtil.writeValueAsString(tableLoadRequest)) //
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openTableController).loadAWSTablesCompatibleCrossAccount(tableLoadRequest);
 
         tableLoadRequest.setNeedSampling(true);
         tableLoadRequest.setSamplingRows(10000);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/compatibility/aws") //
-                        .contentType(MediaType.APPLICATION_JSON) //
-                        .content(JsonUtil.writeValueAsString(tableLoadRequest)) //
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .content(JsonUtil.writeValueAsString(tableLoadRequest)) //
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openTableController).loadAWSTablesCompatibleCrossAccount(tableLoadRequest);
 
         tableLoadRequest.setNeedSampling(true);
         tableLoadRequest.setSamplingRows(1000);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/compatibility/aws") //
-                        .contentType(MediaType.APPLICATION_JSON) //
-                        .content(JsonUtil.writeValueAsString(tableLoadRequest)) //
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .content(JsonUtil.writeValueAsString(tableLoadRequest)) //
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError());
         Mockito.verify(openTableController).loadAWSTablesCompatibleCrossAccount(tableLoadRequest);
 
@@ -248,35 +299,72 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
         request.setTables(tableExtInfoList);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/api/tables/ext/prop/aws") //
-                        .contentType(MediaType.APPLICATION_JSON) //
-                        .content(JsonUtil.writeValueAsString(request)) //
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .content(JsonUtil.writeValueAsString(request)) //
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(openTableController).updateLoadedAWSTableExtProp(Mockito.any(UpdateAWSTableExtDescRequest.class));
+        Mockito.verify(openTableController)
+                .updateLoadedAWSTableExtProp(Mockito.any(UpdateAWSTableExtDescRequest.class));
     }
 
     @Test
     public void testPreReloadTable() throws Exception {
-        String project = "default";
-        String tableName = "TEST_KYLIN_FACT";
+        {
+            String project = "default";
+            String tableName = "TEST_KYLIN_FACT";
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/pre_reload") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .param("project", project).param("table", tableName)
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(openTableController).preReloadTable(project, tableName, false);
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/pre_reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableName)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(openTableController).preReloadTable(project, tableName, false);
+        }
 
-        // call failed  when table is kafka table
-        String project1 = "streaming_test";
-        String tableName1 = "SSB.P_LINEORDER";
+        {
+            // call failed  when table is kafka table
+            String project = "streaming_test";
+            String tableName = "SSB.P_LINEORDER";
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/pre_reload") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .param("project", project1).param("table", tableName1)
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
-        Mockito.verify(openTableController).preReloadTable(project1, tableName1, false);
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/pre_reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableName)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+            Mockito.verify(openTableController).preReloadTable(project, tableName, false);
+        }
+
+        {
+            // test case-insensitive
+            String project = "default";
+            String tableMixture = "SsB.P_LINEorDER";
+            String tableLowercase = "ssb.p_lineorder";
+            String tableUppercase = "SSB.P_LINEORDER";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/pre_reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableMixture)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(1)).preProcessBeforeReloadWithoutFailFast(project,
+                    tableUppercase, false);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/pre_reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableLowercase)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(2)).preProcessBeforeReloadWithoutFailFast(project,
+                    tableUppercase, false);
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/pre_reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .param("project", project).param("table", tableUppercase)
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(3)).preProcessBeforeReloadWithoutFailFast(project,
+                    tableUppercase, false);
+        }
     }
 
     @Test
@@ -294,45 +382,98 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testReloadTable() throws Exception {
-        String project = "default";
-        String tableName = "TEST_KYLIN_FACT";
+        {
+            String project = "default";
+            String tableName = "TEST_KYLIN_FACT";
 
-        OpenReloadTableRequest request = new OpenReloadTableRequest();
-        request.setProject(project);
-        request.setTable(tableName);
-        request.setNeedSampling(false);
+            OpenReloadTableRequest request = new OpenReloadTableRequest();
+            request.setProject(project);
+            request.setTable(tableName);
+            request.setNeedSampling(false);
 
-        Mockito.doReturn(new Pair<String, List<String>>()).when(tableService).reloadTable(request.getProject(),
-                request.getTable(), request.getNeedSampling(), 0, false, ExecutablePO.DEFAULT_PRIORITY, null);
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .content(JsonUtil.writeValueAsString(request)) //
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(openTableController).reloadTable(request);
+            Mockito.doReturn(new Pair<String, List<String>>()).when(tableService).reloadTable(request.getProject(),
+                    request.getTable(), request.getNeedSampling(), 0, false, ExecutablePO.DEFAULT_PRIORITY, null);
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .content(JsonUtil.writeValueAsString(request)) //
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(openTableController).reloadTable(request);
+            Mockito.reset(tableService);
+        }
 
-        // test request without need_sampling
-        OpenReloadTableRequest request2 = new OpenReloadTableRequest();
-        request2.setProject(project);
-        request2.setTable(tableName);
+        {
+            // test request without need_sampling
+            String project = "default";
+            String tableName = "TEST_KYLIN_FACT";
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .content(JsonUtil.writeValueAsString(request2)) //
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
-        Mockito.verify(openTableController).reloadTable(request2);
+            OpenReloadTableRequest request = new OpenReloadTableRequest();
+            request.setProject(project);
+            request.setTable(tableName);
 
-        // test request without need_sampling
-        OpenReloadTableRequest request3 = new OpenReloadTableRequest();
-        request3.setProject("streaming_test");
-        request3.setTable("SSB.P_LINEORDER");
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload") //
-                .contentType(MediaType.APPLICATION_JSON) //
-                .content(JsonUtil.writeValueAsString(request3)) //
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
-                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
-        Mockito.verify(openTableController).reloadTable(request3);
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .content(JsonUtil.writeValueAsString(request)) //
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+            Mockito.verify(openTableController).reloadTable(request);
+        }
+
+        {
+            // test request without need_sampling
+            OpenReloadTableRequest request = new OpenReloadTableRequest();
+            request.setProject("streaming_test");
+            request.setTable("SSB.P_LINEORDER");
+
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .content(JsonUtil.writeValueAsString(request)) //
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+            Mockito.verify(openTableController).reloadTable(request);
+        }
+
+        {
+            // test case-insensitive
+            String project = "default";
+            String tableNameMixture = "TEst_KYliN_FacT";
+            String tableNameLowercase = "test_kylin_fact";
+            String tableNameUppercase = "TEST_KYLIN_FACT";
+
+            OpenReloadTableRequest request = new OpenReloadTableRequest();
+            request.setProject(project);
+            request.setNeedSampling(false);
+
+            request.setTable(tableNameMixture);
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .content(JsonUtil.writeValueAsString(request)) //
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+            Mockito.verify(tableService, Mockito.times(1)).reloadTable(request.getProject(), tableNameUppercase,
+                    request.getNeedSampling(), request.getSamplingRows(), request.getNeedBuilding(),
+                    request.getPriority(), request.getYarnQueue());
+
+            request.setTable(tableNameLowercase);
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .content(JsonUtil.writeValueAsString(request)) //
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+            Mockito.verify(tableService, Mockito.times(2)).reloadTable(request.getProject(), tableNameUppercase,
+                    request.getNeedSampling(), request.getSamplingRows(), request.getNeedBuilding(),
+                    request.getPriority(), request.getYarnQueue());
+
+            request.setTable(tableNameUppercase);
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload") //
+                    .contentType(MediaType.APPLICATION_JSON) //
+                    .content(JsonUtil.writeValueAsString(request)) //
+                    .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                    .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+            Mockito.verify(tableService, Mockito.times(3)).reloadTable(request.getProject(), tableNameUppercase,
+                    request.getNeedSampling(), request.getSamplingRows(), request.getNeedBuilding(),
+                    request.getPriority(), request.getYarnQueue());
+        }
     }
 
     @Test
@@ -349,12 +490,13 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
         request.setNeedSampling(false);
         request.setS3TableExtInfo(s3TableExtInfo);
 
-        Mockito.doReturn(new Pair<String, List<String>>()).when(tableService).reloadAWSTableCompatibleCrossAccount(request.getProject(),
-                request.getS3TableExtInfo(), request.getNeedSampling(), 0, false, ExecutablePO.DEFAULT_PRIORITY, null);
+        Mockito.doReturn(new Pair<String, List<String>>()).when(tableService).reloadAWSTableCompatibleCrossAccount(
+                request.getProject(), request.getS3TableExtInfo(), request.getNeedSampling(), 0, false,
+                ExecutablePO.DEFAULT_PRIORITY, null);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload/compatibility/aws") //
-                        .contentType(MediaType.APPLICATION_JSON) //
-                        .content(JsonUtil.writeValueAsString(request)) //
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .content(JsonUtil.writeValueAsString(request)) //
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openTableController).reloadAWSTablesCompatibleCrossAccount(request);
 
@@ -364,33 +506,96 @@ public class OpenTableControllerTest extends NLocalFileMetadataTestCase {
         request2.setS3TableExtInfo(s3TableExtInfo);
         request2.setNeedSampling(true);
         request2.setSamplingRows(10000);
-        Mockito.doReturn(new Pair<String, List<String>>()).when(tableService).reloadAWSTableCompatibleCrossAccount(request2.getProject(),
-                request2.getS3TableExtInfo(), request2.getNeedSampling(), request2.getSamplingRows(), false, ExecutablePO.DEFAULT_PRIORITY, null);
+        Mockito.doReturn(new Pair<String, List<String>>()).when(tableService).reloadAWSTableCompatibleCrossAccount(
+                request2.getProject(), request2.getS3TableExtInfo(), request2.getNeedSampling(),
+                request2.getSamplingRows(), false, ExecutablePO.DEFAULT_PRIORITY, null);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tables/reload/compatibility/aws") //
-                        .contentType(MediaType.APPLICATION_JSON) //
-                        .content(JsonUtil.writeValueAsString(request2)) //
-                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
+                .contentType(MediaType.APPLICATION_JSON) //
+                .content(JsonUtil.writeValueAsString(request2)) //
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON))) //
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openTableController).reloadAWSTablesCompatibleCrossAccount(request2);
     }
 
     @Test
     public void testPrepareUnloadTable() throws Exception {
-        Mockito.doReturn(new PreUnloadTableResponse()).when(tableService).preUnloadTable("default", "DEFAULT.TABLE");
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/tables/{database}/{table}/prepare_unload", "DEFAULT", "TABLE")
-                .param("project", "default").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(openTableController).prepareUnloadTable("default", "DEFAULT", "TABLE");
+        {
+            Mockito.doReturn(new PreUnloadTableResponse()).when(tableService).preUnloadTable("default",
+                    "DEFAULT.TABLE");
+            mockMvc.perform(MockMvcRequestBuilders
+                    .get("/api/tables/{database}/{table}/prepare_unload", "DEFAULT", "TABLE")
+                    .param("project", "default").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(openTableController).prepareUnloadTable("default", "DEFAULT", "TABLE");
+            Mockito.reset(tableService);
+        }
+
+        {
+            // test case-insensitive
+            String tableNameMixture = "TEsT_KYliNFAct";
+            String tableNameLowerCase = "test_kylinfact";
+            String tableNameUppercase = "TEST_KYLINFACT";
+            String databaseMixture = "Ssb";
+            String databaseLowercase = "ssb";
+            String databaseUppercase = "SSB";
+
+            mockMvc.perform(MockMvcRequestBuilders
+                    .get("/api/tables/{database}/{table}/prepare_unload", databaseMixture, tableNameMixture)
+                    .param("project", "default").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(1)).preUnloadTable("default",
+                    databaseUppercase + "." + tableNameUppercase);
+
+            mockMvc.perform(MockMvcRequestBuilders
+                    .get("/api/tables/{database}/{table}/prepare_unload", databaseLowercase, tableNameLowerCase)
+                    .param("project", "default").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(2)).preUnloadTable("default",
+                    databaseUppercase + "." + tableNameUppercase);
+
+            mockMvc.perform(MockMvcRequestBuilders
+                    .get("/api/tables/{database}/{table}/prepare_unload", databaseUppercase, tableNameUppercase)
+                    .param("project", "default").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(3)).preUnloadTable("default",
+                    databaseUppercase + "." + tableNameUppercase);
+        }
     }
 
     @Test
     public void testUnloadTable() throws Exception {
-        Mockito.doReturn(false).when(modelService).isModelsUsingTable("DEFAULT.TABLE", "default");
-        Mockito.doReturn("DEFAULT.TABLE").when(tableService).unloadTable("default", "DEFAULT.TABLE", false);
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/tables/{database}/{table}", "DEFAULT", "TABLE")
-                .param("project", "default").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(openTableController).unloadTable("default", "DEFAULT", "TABLE", false);
+        {
+            Mockito.doReturn(false).when(modelService).isModelsUsingTable("DEFAULT.TABLE", "default");
+            Mockito.doReturn("DEFAULT.TABLE").when(tableService).unloadTable("default", "DEFAULT.TABLE", false);
+            mockMvc.perform(MockMvcRequestBuilders.delete("/api/tables/{database}/{table}", "DEFAULT", "TABLE")
+                    .param("project", "default").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(openTableController).unloadTable("default", "DEFAULT", "TABLE", false);
+        }
+
+        {
+            // test case-insensitive
+            String tableNameMixture = "TEsT_KYliN";
+            String tableNameLowerCase = "test_kylin";
+            String tableNameUppercase = "TEST_KYLIN";
+            String databaseMixture = "Ssb";
+            String databaseLowercase = "ssb";
+            String databaseUppercase = "SSB";
+
+            mockMvc.perform(MockMvcRequestBuilders
+                    .delete("/api/tables/{database}/{table}", databaseMixture, tableNameMixture)
+                    .param("project", "default").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(1)).unloadTable("default",
+                    databaseUppercase + "." + tableNameUppercase, false);
+
+            mockMvc.perform(MockMvcRequestBuilders
+                    .delete("/api/tables/{database}/{table}", databaseLowercase, tableNameLowerCase)
+                    .param("project", "default").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                    .andExpect(MockMvcResultMatchers.status().isOk());
+            Mockito.verify(tableService, Mockito.times(2)).unloadTable("default",
+                    databaseUppercase + "." + tableNameUppercase, false);
+        }
     }
 
     @Test

@@ -54,6 +54,7 @@ import org.apache.kylin.common.persistence.transaction.AclTCRRevokeEventNotifier
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.config.initialize.AfterMetadataReadyEvent;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.UnauthorizedException;
@@ -101,10 +102,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import org.apache.kylin.metadata.user.ManagedUser;
 import io.swagger.annotations.ApiOperation;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping(value = "/api/user", produces = { HTTP_VND_APACHE_KYLIN_JSON })
@@ -170,18 +174,15 @@ public class NUserController extends NBasicController implements ApplicationList
     //do not use aclEvaluate, if there's no users and will come into init() and will call save.
     public EnvelopeResponse<String> createUser(@RequestBody UserRequest user) throws IOException {
         checkRequiredArg("disabled", user.getDisabled());
+        checkUsername(user.getUsername());
+        checkRequiredArg("password", user.getPassword());
+        val decodedPassword = pwdBase64Decode(user.getPassword());
+        checkPasswordLength(decodedPassword);
+        checkPasswordCharacter(decodedPassword);
+        user.setPassword(decodedPassword);
         val simpleGrantedAuthorities = user.transformSimpleGrantedAuthorities();
-        val username = user.getUsername();
-        val password = pwdBase64Decode(user.getPassword());
-        user.setPassword(password);
-
-        checkUsername(username);
-        checkPasswordLength(password);
-        checkPasswordCharacter(password);
         checkUserGroupNotEmpty(simpleGrantedAuthorities);
-
-        List<String> allGroups = userGroupService.getAllUserGroups();
-        checkUserGroupExists(simpleGrantedAuthorities, allGroups);
+        checkUserGroupExists(simpleGrantedAuthorities, userGroupService.getAllUserGroups());
         checkUserGroupNotDuplicated(simpleGrantedAuthorities);
         return createAdminUser(user.updateManager(new ManagedUser()));
     }
@@ -423,21 +424,15 @@ public class NUserController extends NBasicController implements ApplicationList
             throw new KylinException(PERMISSION_DENIED, msg.getPermissionDenied());
         }
         accessService.checkDefaultAdmin(username, true);
-        val oldPassword = pwdBase64Decode(StringUtils.isEmpty(user.getPassword()) ? StringUtils.EMPTY : user.getPassword());
-        val newPassword = pwdBase64Decode(user.getNewPassword());
 
         checkUsername(username);
-
-        checkPasswordLength(newPassword);
-
-        checkPasswordCharacter(newPassword);
 
         ManagedUser existingUser = getManagedUser(username);
         if (existingUser == null) {
             throw new KylinException(USER_NOT_EXIST, String.format(Locale.ROOT, msg.getUserNotFound(), username));
         }
         val actualOldPassword = existingUser.getPassword();
-
+        val oldPassword = pwdBase64Decode(StringUtils.isEmpty(user.getPassword()) ? StringUtils.EMPTY : user.getPassword());
         // when reset oneself's password (includes ADMIN users), check old password
         if (StringUtils.equals(getPrincipal(), username)) {
             checkRequiredArg("password", user.getPassword());
@@ -447,6 +442,9 @@ public class NUserController extends NBasicController implements ApplicationList
         }
 
         checkRequiredArg("new_password", user.getNewPassword());
+        val newPassword = pwdBase64Decode(StringUtils.isEmpty(user.getNewPassword()) ? StringUtils.EMPTY : user.getNewPassword());
+        checkPasswordLength(newPassword);
+        checkPasswordCharacter(newPassword);
 
         if (newPassword.equals(oldPassword)) {
             throw new KylinException(FAILED_UPDATE_PASSWORD, msg.getNewPasswordSameAsOld());
@@ -478,6 +476,7 @@ public class NUserController extends NBasicController implements ApplicationList
     @ResponseBody
     public EnvelopeResponse<UserDetails> authenticate() {
         EnvelopeResponse<UserDetails> response = authenticatedUser();
+        checkSessionStoreType(KylinConfig.getInstanceFromEnv());
         logger.debug("User login: {}", response.getData());
         return response;
     }
@@ -634,6 +633,17 @@ public class NUserController extends NBasicController implements ApplicationList
                 .collect(Collectors.toList());
         if (authorities.size() != Sets.newHashSet(authorities).size()) {
             throw new KylinException(REPEATED_PARAMETER, "authorities");
+        }
+    }
+
+    private void checkSessionStoreType(KylinConfig env) {
+        String type = env.getSpringStoreType();
+        HttpServletRequest request =
+                ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
+                        .getRequest();
+        //todo other session store-type
+        if ("jbdc".equals(type)) {
+            request.getSession().setMaxInactiveInterval(env.getJdbcSessionMaxInactiveInterval());
         }
     }
 }
