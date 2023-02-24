@@ -199,7 +199,6 @@ import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.rest.aspect.Transaction;
-import org.apache.kylin.rest.constant.ModelAttributeEnum;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.request.ModelConfigRequest;
 import org.apache.kylin.rest.request.ModelParatitionDescRequest;
@@ -225,6 +224,7 @@ import org.apache.kylin.rest.response.ModelConfigResponse;
 import org.apache.kylin.rest.response.ModelSaveCheckResponse;
 import org.apache.kylin.rest.response.MultiPartitionValueResponse;
 import org.apache.kylin.rest.response.NCubeDescResponse;
+import org.apache.kylin.rest.response.NDataModelLiteResponse;
 import org.apache.kylin.rest.response.NDataModelOldParams;
 import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.response.NDataSegmentResponse;
@@ -378,7 +378,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                     ((NDataModelResponse) model).isHasSegments() || CollectionUtils.isNotEmpty(segments));
         }
 
-        if (model instanceof FusionModelResponse) {
+        if (model.isFusionModel()) {
             FusionModel fusionModel = getManager(FusionModelManager.class, model.getProject())
                     .getFusionModel(model.getId());
             NDataModel batchModel = fusionModel.getBatchModel();
@@ -386,7 +386,9 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                 List<NDataSegmentResponse> batchSegments = getSegmentsResponse(batchModel.getUuid(), model.getProject(),
                         "1", String.valueOf(Long.MAX_VALUE - 1), null, executables, LAST_MODIFY, true);
                 calculateRecordSizeAndCount(batchSegments, oldParams);
-                ((FusionModelResponse) model).setBatchSegments(batchSegments);
+                if (model instanceof FusionModelResponse) {
+                    ((FusionModelResponse) model).setBatchSegments(batchSegments);
+                }
             }
         }
     }
@@ -639,18 +641,18 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                 .filter(NDataModel::isMultiPartitionModel).collect(Collectors.toList());
     }
 
-    public DataResult<List<NDataModel>> getModels(String modelId, String modelAlias, boolean exactMatch, String project,
-            String owner, List<String> status, String table, Integer offset, Integer limit, String sortBy,
-            boolean reverse, String modelAliasOrOwner, List<ModelAttributeEnum> modelAttributes, Long lastModifyFrom,
-            Long lastModifyTo, boolean onlyNormalDim) {
+    public DataResult<List<NDataModel>> getModels(ModelQueryParams params) {
         List<NDataModel> models = new ArrayList<>();
         DataResult<List<NDataModel>> filterModels;
+        val table = params.getTable();
+        val project = params.getProjectName();
+        val modelAttributes = params.getModelAttributes();
+        val modelId = params.getModelId();
+        val offset = params.getOffset();
+        val limit = params.getLimit();
         if (StringUtils.isEmpty(table)) {
-            val modelQueryParams = new ModelQueryParams(modelId, modelAlias, exactMatch, project, owner, status, offset,
-                    limit, sortBy, reverse, modelAliasOrOwner, modelAttributes, lastModifyFrom, lastModifyTo,
-                    onlyNormalDim);
-            val tripleList = modelQuerySupporter.getModels(modelQueryParams);
-            val pair = getModelsOfCurrentPage(modelQueryParams, tripleList);
+            val tripleList = modelQuerySupporter.getModels(params);
+            val pair = getModelsOfCurrentPage(params, tripleList, params.isLite());
             models.addAll(pair.getFirst());
             // add second storage infos
             ModelUtils.addSecondStorageInfo(project, models);
@@ -659,7 +661,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             filterModels.setValue(updateResponseAcl(filterModels.getValue(), project));
             return filterModels;
         }
-        models.addAll(getRelateModels(project, table, modelAlias));
+        models.addAll(getRelateModels(project, table, params.getModelAlias()));
         Set<NDataModel> filteredModels = ModelUtils.getFilteredModels(project, modelAttributes, models);
 
         if (CollectionUtils.isNotEmpty(modelAttributes)) {
@@ -676,7 +678,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     }
 
     public Pair<List<NDataModelResponse>, Integer> getModelsOfCurrentPage(ModelQueryParams queryElem,
-            List<ModelTriple> modelTripleList) {
+            List<ModelTriple> modelTripleList, boolean lite) {
         val projectName = queryElem.getProjectName();
         val offset = queryElem.getOffset();
         val limit = queryElem.getLimit();
@@ -691,8 +693,13 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             }
             NDataModel dataModel = t.getDataModel();
             try {
-                return convertToDataModelResponse(dataModel, projectName, dfManager, status,
-                        queryElem.isOnlyNormalDim());
+                NDataModelResponse nDataModelResponse = convertToDataModelResponse(dataModel, projectName, dfManager,
+                        status, queryElem.isOnlyNormalDim());
+                if (lite) {
+                    return new NDataModelLiteResponse(nDataModelResponse, dataModel);
+                } else {
+                    return nDataModelResponse;
+                }
             } catch (Exception e) {
                 String errorMsg = String.format(Locale.ROOT,
                         "convert NDataModelResponse failed, mark to broken. %s, %s", dataModel.getAlias(),
@@ -708,6 +715,11 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         });
 
         return new Pair<>(filterModels, totalSize.get());
+    }
+
+    public Pair<List<NDataModelResponse>, Integer> getModelsOfCurrentPage(ModelQueryParams queryElem,
+            List<ModelTriple> modelTripleList) {
+        return getModelsOfCurrentPage(queryElem, modelTripleList, false);
     }
 
     public NDataModelResponse convertToDataModelResponseBroken(NDataModel modelDesc) {

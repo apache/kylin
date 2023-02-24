@@ -75,6 +75,7 @@ import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.IndexPlanService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ModelTdsService;
+import org.apache.kylin.rest.service.params.ModelQueryParams;
 import org.apache.kylin.tool.bisync.SyncContext;
 import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.apache.kylin.util.DataRangeUtils;
@@ -143,13 +144,15 @@ public class NModelController extends NBasicController {
             @RequestParam(value = "model_attributes", required = false) List<ModelAttributeEnum> modelAttributes,
             @RequestParam(value = "last_modify_from", required = false) Long lastModifyFrom,
             @RequestParam(value = "last_modify_to", required = false) Long lastModifyTo,
-            @RequestParam(value = "only_normal_dim", required = false, defaultValue = "true") boolean onlyNormalDim) {
+            @RequestParam(value = "only_normal_dim", required = false, defaultValue = "true") boolean onlyNormalDim,
+            @RequestParam(value = "lite", required = false, defaultValue = "false") boolean lite) {
         checkProjectName(project);
         status = formatStatus(status, ModelStatusToDisplayEnum.class);
 
-        DataResult<List<NDataModel>> filterModels = modelService.getModels(modelId, modelAlias, exactMatch, project,
-                owner, status, table, offset, limit, sortBy, reverse, modelAliasOrOwner, modelAttributes,
-                lastModifyFrom, lastModifyTo, onlyNormalDim);
+        ModelQueryParams request = new ModelQueryParams(modelId, modelAlias, exactMatch, project, owner, status,
+                table, offset, limit, sortBy, reverse, modelAliasOrOwner, modelAttributes, lastModifyFrom, lastModifyTo,
+                onlyNormalDim, lite);
+        DataResult<List<NDataModel>> filterModels = modelService.getModels(request);
         fusionModelService.setModelUpdateEnabled(filterModels);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, filterModels, "");
     }

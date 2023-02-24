@@ -40,6 +40,7 @@ import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
+import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.model.TableRef;
@@ -167,6 +168,23 @@ public class NDataModelResponse extends NDataModel {
         // filter out and hide internal measures from users
         this.setAllMeasures(getAllMeasures().stream().filter(m -> m.getType() != MeasureType.INTERNAL)
                 .collect(Collectors.toList()));
+    }
+
+    @JsonIgnore
+    public boolean isEmptyModel() {
+        List<SimplifiedMeasure> simplifiedMeasures = getSimplifiedMeasures();
+        return getNamedColumns().isEmpty() && simplifiedMeasures.size() == 1
+                && "COUNT_ALL".equals(simplifiedMeasures.get(0).getName());
+    }
+
+    @JsonIgnore
+    public boolean isPartitionColumnInDims() {
+        PartitionDesc partitionDesc = getPartitionDesc();
+        if (partitionDesc == null || partitionDesc.getPartitionDateColumn() == null) {
+            return false;
+        }
+        String partitionColumn = partitionDesc.getPartitionDateColumn();
+        return getNamedColumns().stream().anyMatch(dim -> dim.getAliasDotColumn().equalsIgnoreCase(partitionColumn));
     }
 
     @JsonProperty("simplified_dimensions")

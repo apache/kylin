@@ -161,11 +161,12 @@ public class OpenModelController extends NBasicController {
             @RequestParam(value = "model_alias_or_owner", required = false) String modelAliasOrOwner,
             @RequestParam(value = "last_modify_from", required = false) Long lastModifyFrom,
             @RequestParam(value = "last_modify_to", required = false) Long lastModifyTo,
-            @RequestParam(value = "only_normal_dim", required = false, defaultValue = "true") boolean onlyNormalDim) {
+            @RequestParam(value = "only_normal_dim", required = false, defaultValue = "true") boolean onlyNormalDim,
+            @RequestParam(value = "lite", required = false, defaultValue = "false") boolean lite) {
         String projectName = checkProjectName(project);
         return modelController.getModels(modelId, modelAlias, exactMatch, projectName, owner, status, table, offset,
                 limit, sortBy, reverse, modelAliasOrOwner, Collections.singletonList(ModelAttributeEnum.BATCH),
-                lastModifyFrom, lastModifyTo, onlyNormalDim);
+                lastModifyFrom, lastModifyTo, onlyNormalDim, lite);
     }
 
     @ApiOperation(value = "getIndexes", tags = { "AI" })
