@@ -84,6 +84,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -783,7 +784,8 @@ public class NModelControllerTest extends NLocalFileMetadataTestCase {
         SyncModel syncModel = Mockito.mock(SyncModel.class);
         Mockito.doReturn(syncContext).when(tdsService).prepareSyncContext(project, modelName,
                 SyncContext.BI.TABLEAU_CONNECTOR_TDS, SyncContext.ModelElement.CUSTOM_COLS, "localhost", 8080);
-        Mockito.doReturn(syncModel).when(tdsService).exportModel(syncContext);
+        Mockito.doReturn(syncModel).when(tdsService).exportTDSDimensionsAndMeasuresByAdmin(syncContext,
+                ImmutableList.of(), ImmutableList.of());
         Mockito.doReturn(Boolean.TRUE).when(tdsService).preCheckNameConflict(syncModel);
         mockMvc.perform(MockMvcRequestBuilders.get("/api/models/validate_export").param("model", modelName)
                 .param("project", project).contentType(MediaType.APPLICATION_JSON))
@@ -805,7 +807,8 @@ public class NModelControllerTest extends NLocalFileMetadataTestCase {
         syncContext.setKylinConfig(getTestConfig());
         syncContext.setAdmin(true);
         SyncModel syncModel = Mockito.mock(SyncModel.class);
-        Mockito.doReturn(syncModel).when(tdsService).exportModel(syncContext);
+        Mockito.doReturn(syncModel).when(tdsService).exportTDSDimensionsAndMeasuresByAdmin(syncContext,
+                ImmutableList.of(), ImmutableList.of());
         mockMvc.perform(MockMvcRequestBuilders.get("/api/models/{model}/export", modelName).param("project", project)
                 .param("export_as", "TABLEAU_CONNECTOR_TDS").param("element", "AGG_INDEX_AND_TABLE_INDEX_COL")
                 .param("server_host", "localhost").param("server_port", "8080").contentType(MediaType.APPLICATION_JSON)

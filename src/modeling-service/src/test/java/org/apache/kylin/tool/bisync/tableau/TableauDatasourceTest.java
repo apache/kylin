@@ -36,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 
 import lombok.val;
@@ -72,7 +73,7 @@ public class TableauDatasourceTest extends NLocalFileMetadataTestCase {
         val project = "default";
         val modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
         val syncContext = SyncModelTestUtil.createSyncContext(project, modelId, KylinConfig.getInstanceFromEnv());
-        val syncModel = new SyncModelBuilder(syncContext).buildSourceSyncModel();
+        val syncModel = new SyncModelBuilder(syncContext).buildSourceSyncModel(ImmutableList.of(), ImmutableList.of());
 
         TableauDatasourceModel datasource = new TableauDataSourceConverter().convert(syncModel, syncContext);
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
@@ -86,7 +87,7 @@ public class TableauDatasourceTest extends NLocalFileMetadataTestCase {
         val project = "default";
         val modelId = "cb596712-3a09-46f8-aea1-988b43fe9b6c";
         val syncContext = SyncModelTestUtil.createSyncContext(project, modelId, KylinConfig.getInstanceFromEnv());
-        val syncModel = new SyncModelBuilder(syncContext).buildSourceSyncModel();
+        val syncModel = new SyncModelBuilder(syncContext).buildSourceSyncModel(ImmutableList.of(), ImmutableList.of());
 
         TableauDatasourceModel datasource = new TableauDataSourceConverter().convert(syncModel, syncContext);
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();

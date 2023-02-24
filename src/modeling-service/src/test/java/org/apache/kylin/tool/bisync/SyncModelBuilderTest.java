@@ -76,7 +76,7 @@ public class SyncModelBuilderTest extends NLocalFileMetadataTestCase {
         val syncContext = SyncModelTestUtil.createSyncContext(project, modelId, KylinConfig.getInstanceFromEnv());
         syncContext.setModelElement(SyncContext.ModelElement.ALL_COLS);
         syncContext.setAdmin(true);
-        val syncModel = new SyncModelBuilder(syncContext).buildSourceSyncModel();
+        val syncModel = new SyncModelBuilder(syncContext).buildSourceSyncModel(ImmutableList.of(), ImmutableList.of());
         val df = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), project).getDataflow(modelId);
         val model = df.getModel();
 

@@ -44,7 +44,6 @@ import org.apache.kylin.tool.bisync.model.JoinTreeNode;
 import org.apache.kylin.tool.bisync.model.MeasureDef;
 import org.apache.kylin.tool.bisync.model.SyncModel;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -55,10 +54,6 @@ public class SyncModelBuilder {
 
     public SyncModelBuilder(SyncContext syncContext) {
         this.syncContext = syncContext;
-    }
-
-    public SyncModel buildSourceSyncModel() {
-        return buildSourceSyncModel(ImmutableList.of(), ImmutableList.of());
     }
 
     public SyncModel buildSourceSyncModel(List<String> dimensions, List<String> measures) {
