@@ -2053,12 +2053,28 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     }
 
     public void addBaseIndex(ModelRequest modelRequest, NDataModel model, IndexPlan indexPlan) {
-        if (!modelRequest.isWithSecondStorage() && NDataModel.ModelType.BATCH == model.getModelType()
-                && modelRequest.isWithBaseIndex()) {
-            indexPlan.createAndAddBaseIndex(model);
+        if (!modelRequest.isWithSecondStorage() && NDataModel.ModelType.BATCH == model.getModelType()) {
+            List<IndexEntity.Source> sources = needHandleBaseIndexType(modelRequest);
+            indexPlan.createAndAddBaseIndex(model, sources);
         } else if (modelRequest.isWithSecondStorage()) {
             indexPlan.createAndAddBaseIndex(Collections.singletonList(indexPlan.createBaseTableIndex(model)));
         }
+    }
+
+    private List<IndexEntity.Source> needHandleBaseIndexType(ModelRequest modelRequest) {
+        List<IndexEntity.Source> sources = Lists.newArrayList();
+        if (modelRequest.getBaseIndexType() != null) {
+            if (modelRequest.getBaseIndexType().contains(IndexEntity.Source.BASE_AGG_INDEX)) {
+                sources.add(IndexEntity.Source.BASE_AGG_INDEX);
+            }
+            if (modelRequest.getBaseIndexType().contains(IndexEntity.Source.BASE_TABLE_INDEX)) {
+                sources.add(IndexEntity.Source.BASE_TABLE_INDEX);
+            }
+        } else if (modelRequest.isWithBaseIndex()) {
+            sources.add(IndexEntity.Source.BASE_AGG_INDEX);
+            sources.add(IndexEntity.Source.BASE_TABLE_INDEX);
+        }
+        return sources;
     }
 
     // for streaming & fusion model
@@ -2995,7 +3011,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
                 copyModel.init(modelManager.getConfig(), project, modelManager.getCCRelatedModels(copyModel));
 
                 BaseIndexUpdateHelper baseIndexUpdater = new BaseIndexUpdateHelper(originModel,
-                        request.isWithBaseIndex());
+                        needHandleBaseIndexType(request));
 
                 preProcessBeforeModelSave(copyModel, project);
                 val updated = modelManager.updateDataModelDesc(copyModel);

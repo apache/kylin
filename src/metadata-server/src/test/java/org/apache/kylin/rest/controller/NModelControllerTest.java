@@ -361,6 +361,63 @@ public class NModelControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testCreateModelWithBaseIndexTypeAndWithBaseIndex() throws Exception {
+        ModelRequest request = new ModelRequest();
+        request.setProject("default");
+
+        request.setBaseIndexType(
+                Sets.newHashSet(IndexEntity.Source.BASE_AGG_INDEX, IndexEntity.Source.BASE_TABLE_INDEX));
+        request.setWithBaseIndex(true);
+        NDataModel mockModel = new NDataModel();
+        mockModel.setUuid("mock");
+        mockModel.setProject("default");
+        Mockito.doReturn(mockModel).when(modelService).createModel(request.getProject(), request);
+        Mockito.doReturn(new IndexPlan()).when(modelService).getIndexPlan(mockModel.getId(), mockModel.getProject());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/models").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nModelController).createModel(Mockito.any(ModelRequest.class));
+    }
+
+    @Test
+    public void testCreateModelWithBaseIndex() throws Exception {
+        ModelRequest request = new ModelRequest();
+        request.setProject("default");
+
+        request.setWithBaseIndex(true);
+        NDataModel mockModel = new NDataModel();
+        mockModel.setUuid("mock");
+        mockModel.setProject("default");
+        Mockito.doReturn(mockModel).when(modelService).createModel(request.getProject(), request);
+        Mockito.doReturn(new IndexPlan()).when(modelService).getIndexPlan(mockModel.getId(), mockModel.getProject());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/models").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nModelController).createModel(Mockito.any(ModelRequest.class));
+    }
+
+    @Test
+    public void testCreateModelWithBaseIndexType() throws Exception {
+        ModelRequest request = new ModelRequest();
+        request.setProject("default");
+
+        request.setBaseIndexType(
+                Sets.newHashSet(IndexEntity.Source.BASE_AGG_INDEX, IndexEntity.Source.BASE_TABLE_INDEX));
+        NDataModel mockModel = new NDataModel();
+        mockModel.setUuid("mock");
+        mockModel.setProject("default");
+        Mockito.doReturn(mockModel).when(modelService).createModel(request.getProject(), request);
+        Mockito.doReturn(new IndexPlan()).when(modelService).getIndexPlan(mockModel.getId(), mockModel.getProject());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/models").contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nModelController).createModel(Mockito.any(ModelRequest.class));
+    }
+
+    @Test
     public void checkPartitionDesc() throws Exception {
         PartitionDesc partitionDesc = new PartitionDesc();
         partitionDesc.setPartitionDateColumn("col");

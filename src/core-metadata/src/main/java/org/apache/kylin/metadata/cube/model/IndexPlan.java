@@ -24,6 +24,7 @@ import static org.apache.kylin.metadata.cube.model.IndexEntity.isAggIndex;
 import static org.apache.kylin.metadata.cube.model.IndexEntity.isTableIndex;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -994,16 +995,29 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
         return !curLayout.equalsCols(replace);
     }
 
-    public void createAndAddBaseIndex(NDataModel model) {
+    public void createAndAddBaseIndex(NDataModel model, List<IndexEntity.Source> sources) {
         checkIsNotCachedAndShared();
-        LayoutEntity agg = createBaseAggIndex(model);
-        LayoutEntity table = createBaseTableIndex(model);
         List<LayoutEntity> baseLayouts = Lists.newArrayList();
-        baseLayouts.add(agg);
-        if (table != null) {
-            baseLayouts.add(table);
+        if (sources.contains(IndexEntity.Source.BASE_AGG_INDEX)) {
+            LayoutEntity agg = createBaseAggIndex(model);
+            baseLayouts.add(agg);
         }
-        createAndAddBaseIndex(baseLayouts);
+
+        if (sources.contains(IndexEntity.Source.BASE_TABLE_INDEX)) {
+            LayoutEntity table = createBaseTableIndex(model);
+            if (table != null) {
+                baseLayouts.add(table);
+            }
+        }
+        if (!baseLayouts.isEmpty()) {
+            createAndAddBaseIndex(baseLayouts);
+        }
+    }
+
+    public void createAndAddBaseIndex(NDataModel model) {
+        ArrayList<IndexEntity.Source> sources = Lists.newArrayList(IndexEntity.Source.BASE_AGG_INDEX,
+                IndexEntity.Source.BASE_TABLE_INDEX);
+        createAndAddBaseIndex(model, sources);
     }
 
     public void createAndAddBaseIndex(List<LayoutEntity> needCreateBaseLayouts) {
