@@ -137,6 +137,7 @@ import org.apache.kylin.rest.service.QueryHistoryScheduler;
 import org.apache.kylin.rest.service.QueryHistoryService;
 import org.apache.kylin.rest.service.SegmentHelper;
 import org.apache.kylin.rest.service.params.MergeSegmentParams;
+import org.apache.kylin.rest.service.params.ModelQueryParams;
 import org.apache.kylin.rest.service.params.RefreshSegmentParams;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
@@ -2088,8 +2089,9 @@ public class SecondStorageLockTest implements JobWaiter {
 
         val sum = segments.stream().mapToLong(NDataSegmentResponse::getSecondStorageSize).sum();
 
-        DataResult<List<NDataModel>> result = modelService.getModels(modelId, null, true, getProject(), null, null,
-                null, 0, 10, "last_modify", false, null, null, null, null, true);
+        ModelQueryParams request = new ModelQueryParams(modelId, null, true, getProject(), null, null, null, 0, 10,
+                "last_modify", false, null, null, null, null, true, false);
+        DataResult<List<NDataModel>> result = modelService.getModels(request);
 
         result.getValue().stream().filter(nDataModel -> modelId.equals(nDataModel.getId())).forEach(nDataModel -> {
             val nDataModelRes = (NDataModelResponse) nDataModel;

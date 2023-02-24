@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
 import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.service.params.ModelQueryParams;
@@ -77,8 +77,8 @@ public class ModelQueryServiceTest extends NLocalFileMetadataTestCase {
         List models = Arrays.asList(mt1);
 
         List<ModelAttributeEnum> modelAttributeSet1 = Lists.newArrayList(ModelAttributeEnum.BATCH);
-        ModelQueryParams modelQueryParams = new ModelQueryParams("", null, true, "default", null, null, 0, 10, "", true,
-                null, modelAttributeSet1, null, null, true);
+        ModelQueryParams modelQueryParams = new ModelQueryParams("", null, true, "default", null, null, "", 0, 10, "",
+                true, null, modelAttributeSet1, null, null, true, false);
         PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isProjectEnable")).toReturn(Boolean.TRUE);
         PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isModelEnable")).toReturn(Boolean.FALSE);
 
@@ -96,8 +96,8 @@ public class ModelQueryServiceTest extends NLocalFileMetadataTestCase {
 
         List<ModelAttributeEnum> modelAttributeSet1 = Lists.newArrayList(ModelAttributeEnum.STREAMING,
                 ModelAttributeEnum.HYBRID);
-        ModelQueryParams modelQueryParams = new ModelQueryParams("", null, true, "streaming_test", null, null, 0, 10,
-                "", true, null, modelAttributeSet1, null, null, true);
+        ModelQueryParams modelQueryParams = new ModelQueryParams("", null, true, "streaming_test", null, null, "", 0,
+                10, "", true, null, modelAttributeSet1, null, null, true, false);
         PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isProjectEnable")).toReturn(Boolean.TRUE);
         PowerMockito.stub(PowerMockito.method(SecondStorageUtil.class, "isModelEnable")).toReturn(Boolean.FALSE);
 
@@ -120,14 +120,14 @@ public class ModelQueryServiceTest extends NLocalFileMetadataTestCase {
 
         List<ModelAttributeEnum> modelAttributeSet1 = Lists.newArrayList(ModelAttributeEnum.BATCH,
                 ModelAttributeEnum.SECOND_STORAGE);
-        ModelQueryParams modelQueryParams = new ModelQueryParams("", null, true, "default", null, null, 0, 10, "", true,
-                null, modelAttributeSet1, null, null, true);
+        ModelQueryParams modelQueryParams = new ModelQueryParams("", null, true, "default", null, null, "", 0, 10, "",
+                true, null, modelAttributeSet1, null, null, true, false);
         List<ModelTriple> filteredModels1 = modelQueryService.filterModels(models, modelQueryParams);
         Assert.assertEquals(1, filteredModels1.size());
 
         List<ModelAttributeEnum> modelAttributeSet2 = Lists.newArrayList(ModelAttributeEnum.SECOND_STORAGE);
-        ModelQueryParams modelQueryParams2 = new ModelQueryParams("", null, true, "default", null, null, 0, 10, "",
-                true, null, modelAttributeSet2, null, null, true);
+        ModelQueryParams modelQueryParams2 = new ModelQueryParams("", null, true, "default", null, null, "", 0, 10, "",
+                true, null, modelAttributeSet2, null, null, true, false);
         List<ModelTriple> filteredModels2 = modelQueryService.filterModels(models, modelQueryParams2);
         Assert.assertEquals(1, filteredModels2.size());
     }

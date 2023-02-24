@@ -33,6 +33,7 @@ public class ModelQueryParams {
     private String projectName;
     private String owner;
     private List<String> status;
+    private String table;
     private Integer offset;
     private Integer limit;
     private String sortBy;
@@ -42,4 +43,5 @@ public class ModelQueryParams {
     private Long lastModifyFrom;
     private Long lastModifyTo;
     private boolean onlyNormalDim;
+    private boolean lite;
 }

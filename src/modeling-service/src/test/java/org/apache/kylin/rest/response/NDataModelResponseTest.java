@@ -21,7 +21,10 @@ package org.apache.kylin.rest.response;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 import static org.apache.kylin.metadata.model.FunctionDesc.FUNC_COUNT;
+import static org.apache.kylin.metadata.model.FunctionDesc.FUNC_MIN;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
@@ -30,6 +33,7 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.util.MetadataTestUtils;
 import org.junit.jupiter.api.Assertions;
@@ -168,6 +172,108 @@ class NDataModelResponseTest {
         Assertions.assertEquals(1, selectedColumns.size());
         List<NDataModelResponse.SimplifiedNamedColumn> namedColumns = modelResponse.getNamedColumns();
         Assertions.assertEquals(1, namedColumns.size());
+    }
+
+    @Test
+    void testIsHaveNoDimsAndMeasWithoutCountAll() {
+        List<NDataModel.NamedColumn> allNamedColumns = Lists.newArrayList();
+        NDataModel modelWithoutNamedColumns = new NDataModel();
+        modelWithoutNamedColumns.setUuid("model");
+        modelWithoutNamedColumns.setProject(PROJECT);
+        modelWithoutNamedColumns.setAllNamedColumns(allNamedColumns);
+        modelWithoutNamedColumns.setAllMeasures(Lists.newArrayList(createMeasure()));
+        modelWithoutNamedColumns.setRootFactTableName("DEFAULT.TEST_KYLIN_FACT");
+        createModel(modelWithoutNamedColumns);
+        NDataModelResponse withoutColumnResponse = new NDataModelResponse(modelWithoutNamedColumns);
+        Assertions.assertFalse(withoutColumnResponse.isEmptyModel());
+
+        NDataModel model1 = new NDataModel();
+        model1.setProject(PROJECT);
+        model1.setAllNamedColumns(allNamedColumns);
+        model1.setRootFactTableName("DEFAULT.TEST_KYLIN_FACT");
+        model1.setUuid("model1");
+        model1.setAllMeasures(Arrays.asList(createCountAllMeasure(), createTestMeasure()));
+        createModel(model1);
+        NDataModelResponse model1Response = new NDataModelResponse(model1);
+        Assertions.assertFalse(model1Response.isEmptyModel());
+
+        NDataModel model2 = new NDataModel();
+        model2.setProject(PROJECT);
+        model2.setAllNamedColumns(allNamedColumns);
+        model2.setRootFactTableName("DEFAULT.TEST_KYLIN_FACT");
+        model2.setUuid("model2");
+        model2.setAllMeasures(Collections.singletonList(createCountAllMeasure()));
+        createModel(model2);
+        NDataModelResponse model2Response = new NDataModelResponse(model2);
+        Assertions.assertTrue(model2Response.isEmptyModel());
+
+        NDataModel model3 = new NDataModel();
+        model3.setProject(PROJECT);
+        model3.setAllNamedColumns(allNamedColumns);
+        model3.setRootFactTableName("DEFAULT.TEST_KYLIN_FACT");
+        model3.setUuid("model3");
+        model3.setAllMeasures(Collections.singletonList(createMeasure()));
+        createModel(model3);
+        NDataModelResponse model3Response = new NDataModelResponse(model3);
+        Assertions.assertFalse(model3Response.isEmptyModel());
+    }
+
+    @Test
+    void testIsPartitionColumnInDims() {
+        PartitionDesc partitionDesc = new PartitionDesc();
+        List<NDataModel.NamedColumn> allNamedColumns = Lists.newArrayList();
+
+        NDataModel model = new NDataModel();
+        model.setUuid("model");
+        model.setProject(PROJECT);
+        model.setAllNamedColumns(allNamedColumns);
+        model.setAllMeasures(Lists.newArrayList(createMeasure()));
+        model.setRootFactTableName("DEFAULT.TEST_KYLIN_FACT");
+        model.setPartitionDesc(partitionDesc);
+        createModel(model);
+        NDataModelResponse modelResponse = new NDataModelResponse(model);
+        Assertions.assertFalse(modelResponse.isPartitionColumnInDims());
+
+        NDataModel model1 = new NDataModel();
+        model1.setUuid("model1");
+        model1.setProject(PROJECT);
+        model1.setAllNamedColumns(allNamedColumns);
+        model1.setAllMeasures(Lists.newArrayList(createMeasure()));
+        model1.setRootFactTableName("DEFAULT.TEST_KYLIN_FACT");
+        model1.setPartitionDesc(null);
+        createModel(model1);
+        NDataModelResponse modelResponse1 = new NDataModelResponse(model1);
+        Assertions.assertFalse(modelResponse1.isPartitionColumnInDims());
+
+        NDataModel model2 = new NDataModel();
+        model2.setUuid("model2");
+        model2.setProject(PROJECT);
+        model2.setAllNamedColumns(allNamedColumns);
+        model2.setAllMeasures(Lists.newArrayList(createMeasure()));
+        model2.setRootFactTableName("DEFAULT.TEST_KYLIN_FACT");
+        partitionDesc.setPartitionDateColumn("CAL_DT");
+        model2.setPartitionDesc(partitionDesc);
+        createModel(model2);
+        NDataModelResponse modelResponse2 = new NDataModelResponse(model2);
+        Assertions.assertFalse(modelResponse2.isPartitionColumnInDims());
+    }
+
+    private NDataModel.Measure createCountAllMeasure() {
+        NDataModel.Measure countOneMeasure = new NDataModel.Measure();
+        countOneMeasure.setName("COUNT_ALL");
+        countOneMeasure.setFunction(
+                FunctionDesc.newInstance(FUNC_COUNT, newArrayList(ParameterDesc.newInstance("1")), "bigint"));
+        countOneMeasure.setId(200001);
+        return countOneMeasure;
+    }
+
+    private NDataModel.Measure createTestMeasure() {
+        NDataModel.Measure countOneMeasure = new NDataModel.Measure();
+        countOneMeasure.setName("TEST_M");
+        countOneMeasure.setFunction(
+                FunctionDesc.newInstance(FUNC_MIN, newArrayList(ParameterDesc.newInstance("1")), "bigint"));
+        countOneMeasure.setId(1);
+        return countOneMeasure;
     }
 
     private NDataModel.Measure createMeasure() {
