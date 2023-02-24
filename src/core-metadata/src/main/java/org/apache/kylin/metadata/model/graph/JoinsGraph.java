@@ -349,13 +349,14 @@ public class JoinsGraph implements Serializable {
         for (Edge edge : edgeSet) {
             if (!edge.isLeftJoin() || edge.isLeftOrInnerJoin()) {
                 TableRef fkSide = edge.fkSide();
-                List<Edge> edgeList = inwardEdges(fkSide);
+                List<Edge> edgeList = inwardEdges(fkSide).stream().filter(e -> !e.isSwapJoin())
+                        .collect(Collectors.toList());
                 if (CollectionUtils.isEmpty(edgeList)) {
                     continue;
                 }
                 for (Edge targetEdge : edgeList) {
                     if (!edge.equals(targetEdge) && fkSide.equals(targetEdge.pkSide())
-                            && !targetEdge.isLeftOrInnerJoin() && targetEdge.isLeftJoin()) {
+                            && !targetEdge.isLeftOrInnerJoin()) {
                         setJoinToLeftOrInner(targetEdge.join);
                         normalize();
                     }
