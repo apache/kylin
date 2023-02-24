@@ -25,6 +25,7 @@ import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.apache.kylin.tool.bisync.tableau.TableauDataSourceConverter;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 public class BISyncTool {
 
@@ -33,7 +34,8 @@ public class BISyncTool {
 
     @VisibleForTesting
     public static BISyncModel dumpToBISyncModel(SyncContext syncContext) {
-        SyncModel syncModel = new SyncModelBuilder(syncContext).buildSourceSyncModel();
+        SyncModel syncModel = new SyncModelBuilder(syncContext).buildSourceSyncModel(ImmutableList.of(),
+                ImmutableList.of());
         return getBISyncModel(syncContext, syncModel);
     }
 

@@ -69,6 +69,7 @@ import org.apache.kylin.tool.bisync.model.MeasureDef;
 import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
@@ -111,7 +112,6 @@ public class ModelTdsService extends AbstractModelService {
             Set<String> measureNames = syncModel.getMetrics().stream().filter(measureDef -> !measureDef.isHidden())
                     .map(measureDef -> measureDef.getMeasure().getName()).collect(Collectors.toSet());
             Map<String, ColumnDef> nameOfColDefMap = syncModel.getColumnDefMap().values().stream()
-                    .filter(columnDef -> !columnDef.isHidden())
                     .collect(Collectors.toMap(ColumnDef::getAliasDotColumn, Function.identity()));
 
             nameOfColDefMap.forEach((aliasColName, columnDef) -> {
@@ -129,9 +129,9 @@ public class ModelTdsService extends AbstractModelService {
     }
 
     public SyncModel exportModel(SyncContext syncContext) {
-        checkModelExportPermission(syncContext.getProjectName(), syncContext.getModelId());
-        checkModelPermission(syncContext.getProjectName(), syncContext.getModelId());
-        return new SyncModelBuilder(syncContext).buildSourceSyncModel();
+        return AclPermissionUtil.isAdmin()
+                ? exportTDSDimensionsAndMeasuresByAdmin(syncContext, ImmutableList.of(), ImmutableList.of())
+                : exportTDSDimensionsAndMeasuresByNormalUser(syncContext, ImmutableList.of(), ImmutableList.of());
     }
 
     public SyncModel exportTDSDimensionsAndMeasuresByNormalUser(SyncContext syncContext, List<String> dimensions,
@@ -162,8 +162,8 @@ public class ModelTdsService extends AbstractModelService {
 
         checkTableHasColumnPermission(syncContext.getModelElement(), project, modelId, authorizedCols, dimensions,
                 measures);
-        return new SyncModelBuilder(syncContext).buildHasPermissionSourceSyncModel(authTables, authColumns, dimensions,
-                measures);
+        return new SyncModelBuilder(syncContext).buildHasPermissionSourceSyncModel(authTables, authorizedCols,
+                dimensions, measures);
     }
 
     public SyncModel exportTDSDimensionsAndMeasuresByAdmin(SyncContext syncContext, List<String> dimensions,
