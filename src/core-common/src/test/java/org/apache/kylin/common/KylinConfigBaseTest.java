@@ -1398,6 +1398,15 @@ class KylinConfigBaseTest {
     }
 
     @Test
+    void testIsJobTmpDirReadWritePermissionEnabled() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.engine.job-tmp-dir-all-permission-enabled", "false");
+        assertFalse(config.isJobTmpDirALLPermissionEnabled());
+        config.setProperty("kylin.engine.job-tmp-dir-all-permission-enabled", "true");
+        assertTrue(config.isJobTmpDirALLPermissionEnabled());
+    }
+
+    @Test
     void testIsQuotaStorageEnabled() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         assertFalse(config.isStorageQuotaEnabled());
