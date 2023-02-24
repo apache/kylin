@@ -21,6 +21,7 @@ package org.apache.kylin.query;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.calcite.util.CancelFlag;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.slf4j.Logger;
@@ -78,8 +79,9 @@ public class SlowQueryDetector extends Thread {
         if (QueryContext.current().getQueryTagInfo().isAsyncQuery()) {
             return;
         }
-        runningQueries.put(currentThread(), new QueryEntry(System.currentTimeMillis(), currentThread(),
-                QueryContext.current().getQueryId(), QueryContext.current().getUserSQL(), stopId, false));
+        runningQueries.put(currentThread(),
+                new QueryEntry(System.currentTimeMillis(), currentThread(), QueryContext.current().getQueryId(),
+                        QueryContext.current().getUserSQL(), stopId, false, CancelFlag.getContextCancelFlag()));
     }
 
     public void queryEnd() {
@@ -112,6 +114,7 @@ public class SlowQueryDetector extends Thread {
         // interrupt query thread if Stop By User but running
         for (QueryEntry e : runningQueries.values()) {
             if (e.isStopByUser) {
+                e.getPlannerCancelFlag().requestCancel();
                 e.getThread().interrupt();
                 logger.error("Trying to cancel query: {}", e.getThread().getName());
             }
@@ -162,6 +165,7 @@ public class SlowQueryDetector extends Thread {
         final String sql;
         final String stopId;
         boolean isStopByUser;
+        final CancelFlag plannerCancelFlag;
 
         public long getRunningTime() {
             return (System.currentTimeMillis() - startTime) / 1000;
@@ -170,6 +174,7 @@ public class SlowQueryDetector extends Thread {
         private boolean setInterruptIfTimeout() {
             long runningMs = System.currentTimeMillis() - startTime;
             if (runningMs >= queryTimeoutMs) {
+                plannerCancelFlag.requestCancel();
                 thread.interrupt();
                 logger.error("Trying to cancel query: {}", thread.getName());
                 return true;

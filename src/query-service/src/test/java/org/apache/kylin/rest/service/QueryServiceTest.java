@@ -18,11 +18,13 @@
 
 package org.apache.kylin.rest.service;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.kylin.common.QueryContext.PUSHDOWN_HIVE;
 import static org.apache.kylin.common.QueryTrace.EXECUTION;
 import static org.apache.kylin.common.QueryTrace.SPARK_JOB_EXECUTION;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
 import static org.apache.kylin.rest.metrics.QueryMetricsContextTest.getInfluxdbFields;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.security.acls.domain.BasePermission.ADMINISTRATION;
 
 import java.io.ByteArrayInputStream;
@@ -101,6 +103,7 @@ import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.query.SlowQueryDetector;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.query.blacklist.SQLBlacklistItem;
 import org.apache.kylin.query.blacklist.SQLBlacklistManager;
@@ -133,6 +136,7 @@ import org.apache.kylin.rest.util.QueryCacheSignatureUtil;
 import org.apache.kylin.rest.util.SpringContext;
 import org.apache.kylin.source.adhocquery.PushdownResult;
 import org.apache.spark.sql.SparkSession;
+import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -2697,5 +2701,25 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         RelNode rel2 = queryExec.parseAndOptimize(sql2);
         Object routeToCalcite2 = isCalciteEngineCapable.invoke(queryExec, rel2);
         Assert.assertEquals(true, routeToCalcite2);
+    }
+
+    @Test
+    public void testStop() {
+        val stopId = RandomUtil.randomUUIDStr();
+        val execute = new Thread(() -> {
+            QueryContext.current().setQueryId(RandomUtil.randomUUIDStr());
+            QueryContext.current().setProject("default");
+            QueryContext.current().setUserSQL("select 1");
+            queryService.slowQueryDetector.queryStart(stopId);
+            await().pollDelay(new Duration(5, SECONDS)).until(() -> true);
+        });
+        execute.start();
+        await().pollDelay(new Duration(1, SECONDS)).until(() -> true);
+        queryService.stopQuery(stopId);
+        val result = SlowQueryDetector.getRunningQueries().values().stream()
+                .filter(entry -> StringUtils.equals(stopId, entry.getStopId())).findFirst();
+        Assert.assertTrue(result.isPresent());
+        val queryEntry = result.get();
+        Assert.assertTrue(queryEntry.getPlannerCancelFlag().isCancelRequested());
     }
 }
