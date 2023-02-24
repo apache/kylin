@@ -20,15 +20,7 @@ package org.apache.kylin.engine.spark.job.stage.build.partition
 
 import org.apache.kylin.engine.spark.job.SegmentJob
 import org.apache.kylin.engine.spark.job.stage.BuildParam
-import org.apache.kylin.engine.spark.model.PartitionFlatTableDesc
-import org.apache.kylin.engine.spark.smarter.IndexDependencyParser
-import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree
-import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree.PartitionTreeBuilder
 import org.apache.kylin.metadata.cube.model.NDataSegment
-import org.apache.kylin.metadata.job.JobBucket
-import org.apache.spark.sql.{Dataset, Row}
-
-import java.util.stream.Collectors
 
 class PartitionMaterializedFactTableView(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
   extends PartitionFlatTableAndDictBase(jobContext, dataSegment, buildParam) {
@@ -36,27 +28,7 @@ class PartitionMaterializedFactTableView(jobContext: SegmentJob, dataSegment: ND
 
   override def execute(): Unit = {
     logInfo(s"Build SEGMENT $segmentId")
-    val spanTree = new PartitionSpanningTree(config,
-      new PartitionTreeBuilder(dataSegment, readOnlyLayouts, jobId, partitions,
-        jobContext.getReadOnlyBuckets.stream.filter(_.getSegmentId.equals(segmentId)).collect(Collectors.toSet[JobBucket])))
-    buildParam.setPartitionSpanningTree(spanTree)
-
-    val tableDesc = if (jobContext.isPartialBuild) {
-      val parser = new IndexDependencyParser(dataModel)
-      val relatedTableAlias =
-        parser.getRelatedTablesAlias(readOnlyLayouts)
-      new PartitionFlatTableDesc(config, dataSegment, spanTree, relatedTableAlias, jobId, partitions)
-    } else {
-      new PartitionFlatTableDesc(config, dataSegment, spanTree, jobId, partitions)
-    }
-    buildParam.setTableDesc(tableDesc)
-
-    val factTableDS: Dataset[Row] = newFactTableDS()
-    buildParam.setFactTableDS(factTableDS)
-
-    val fastFactTableDS: Dataset[Row] = newFastFactTableDS()
-    buildParam.setFastFactTableDS(fastFactTableDS)
-
+    materializedFactTableView()
     if (buildParam.isSkipMaterializedFactTableView) {
       onStageSkipped()
     }

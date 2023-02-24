@@ -20,12 +20,9 @@ package org.apache.kylin.engine.spark.job
 
 import com.google.common.collect.Maps
 import org.apache.hadoop.fs.Path
-import org.apache.kylin.engine.spark.builder.SegmentFlatTable
-import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
-import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
-import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
+import org.apache.kylin.engine.spark.job.stage.BuildParam
+import org.apache.kylin.engine.spark.job.stage.build.FlatTableAndDictBase
 import org.apache.kylin.metadata.cube.model.NDataSegment
-import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparderEnv
 import org.apache.spark.sql.datasource.storage.StorageStoreUtils
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
@@ -33,33 +30,20 @@ import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 import java.io.IOException
 import scala.collection.JavaConverters._
 
-class RDSegmentBuildExec(private val jobContext: RDSegmentBuildJob, //
-                         private val dataSegment: NDataSegment) extends Logging {
+class RDSegmentBuildExec(private val jobContext: SegmentJob, //
+                         private val dataSegment: NDataSegment, private val buildParam: BuildParam
+                        )
+  extends FlatTableAndDictBase(jobContext, dataSegment, buildParam) {
   // Resource detect segment build exec.
 
-  // Needed variables from job context.
-  protected final val jobId = jobContext.getJobId
-  protected final val config = jobContext.getConfig
-  protected final val dataflowId = jobContext.getDataflowId
-  protected final val sparkSession = jobContext.getSparkSession
   protected final val rdSharedPath = jobContext.getRdSharedPath
-  protected final val readOnlyLayouts = jobContext.getReadOnlyLayouts
-
-  // Needed variables from data segment.
-  protected final val segmentId = dataSegment.getId
-  protected final val project = dataSegment.getProject
-
-  private lazy val spanningTree = new AdaptiveSpanningTree(config, new AdaptiveTreeBuilder(dataSegment, readOnlyLayouts))
-
-  private lazy val flatTableDesc = new SegmentFlatTableDesc(config, dataSegment, spanningTree)
-
-  private lazy val flatTable = new SegmentFlatTable(sparkSession, flatTableDesc)
 
   @throws(classOf[IOException])
   def detectResource(): Unit = {
+    initFlatTableOnDetectResource()
 
     val flatTableExecutions = if (spanningTree.fromFlatTable()) {
-      Seq((-1L, flatTable.getFlatTablePartDS.queryExecution))
+      Seq((-1L, getFlatTablePartDS.queryExecution))
     } else {
       Seq.empty
     }

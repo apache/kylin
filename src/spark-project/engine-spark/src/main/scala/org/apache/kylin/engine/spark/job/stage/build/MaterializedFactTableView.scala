@@ -20,36 +20,14 @@ package org.apache.kylin.engine.spark.job.stage.build
 
 import org.apache.kylin.engine.spark.job.SegmentJob
 import org.apache.kylin.engine.spark.job.stage.BuildParam
-import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
-import org.apache.kylin.engine.spark.smarter.IndexDependencyParser
-import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
-import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
 import org.apache.kylin.metadata.cube.model.NDataSegment
-import org.apache.spark.sql.{Dataset, Row}
 
 class MaterializedFactTableView(jobContext: SegmentJob, dataSegment: NDataSegment, buildParam: BuildParam)
   extends FlatTableAndDictBase(jobContext, dataSegment, buildParam) {
 
   override def execute(): Unit = {
     logInfo(s"Build SEGMENT $segmentId")
-    val spanTree = new AdaptiveSpanningTree(config, new AdaptiveTreeBuilder(dataSegment, readOnlyLayouts))
-    buildParam.setSpanningTree(spanTree)
-
-    val flatTableDesc: SegmentFlatTableDesc = if (jobContext.isPartialBuild) {
-      val parser = new IndexDependencyParser(dataModel)
-      val relatedTableAlias =
-        parser.getRelatedTablesAlias(readOnlyLayouts)
-      new SegmentFlatTableDesc(config, dataSegment, spanningTree, relatedTableAlias)
-    } else {
-      new SegmentFlatTableDesc(config, dataSegment, spanningTree)
-    }
-    buildParam.setFlatTableDesc(flatTableDesc)
-
-    val factTableDS: Dataset[Row] = newFactTableDS()
-    buildParam.setFactTableDS(factTableDS)
-
-    val fastFactTableDS: Dataset[Row] = newFastFactTableDS()
-    buildParam.setFastFactTableDS(fastFactTableDS)
+    materializedFactTableView()
     if (buildParam.isSkipMaterializedFactTableView) {
       onStageSkipped()
     }

@@ -31,9 +31,12 @@ import org.apache.kylin.engine.spark.job.NSparkCubingUtil.convertFromDot
 import org.apache.kylin.engine.spark.job.stage.{BuildParam, StageExec}
 import org.apache.kylin.engine.spark.job.{FiltersUtil, SegmentJob, TableMetaManager}
 import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
+import org.apache.kylin.engine.spark.smarter.IndexDependencyParser
 import org.apache.kylin.engine.spark.model.planner.{CuboIdToLayoutUtils, FlatTableToCostUtils}
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
+import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
+import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.kylin.metadata.cube.planner.CostBasePlannerUtils
 import org.apache.kylin.metadata.model._
@@ -485,29 +488,7 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
               total = tableSizeMap(tableName).longValue()
               logInfo(s"Find $column's table $tableName count $total from cache")
             } else {
-              val catalogStatistics = TableMetaManager.getTableMeta(tableDesc.getTableName(column))
-              if (catalogStatistics.isDefined) {
-                total = catalogStatistics.get.rowCount.get.longValue()
-                logInfo(s"Find $column's table $tableName count $total from catalog")
-              } else {
-                val tableMetadataDesc = tableMetadataManager.getTableDesc(tableDesc.getTableName(column))
-                if (tableMetadataDesc != null) {
-                  val tableExtDesc = tableMetadataManager.getTableExtIfExists(tableMetadataDesc)
-                  if (tableExtDesc.getTotalRows > 0) {
-                    total = tableExtDesc.getTotalRows
-                    logInfo(s"Find $column's table $tableName count $total from table ext")
-                  } else if (tableMetadataDesc.getLastSnapshotPath != null) {
-                    val baseDir = KapConfig.getInstanceFromEnv.getMetadataWorkingDirectory
-                    val fs = HadoopUtil.getWorkingFileSystem
-                    val path = new Path(baseDir, tableMetadataDesc.getLastSnapshotPath)
-                    if (fs.exists(path)) {
-                      total = sparkSession.read.parquet(path.toString).count()
-                      logInfo(s"Calculate $column's table $tableName count $total " +
-                        s"from parquet ${tableMetadataDesc.getLastSnapshotPath}")
-                    }
-                  }
-                }
-              }
+              total = evaluateColumnTotalFromTableDesc(tableMetadataManager, totalCount, tableName, column)
             }
           }
         } catch {
@@ -526,6 +507,29 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
         val multiple = 1.0 * total / realSampledCount
         column -> (bytes * multiple).toLong
     }
+  }
+
+  def evaluateColumnTotalFromTableDesc(tableMetadataManager: NTableMetadataManager, totalCount: Long, //
+                                       tableName: String, column: String): Long = {
+    var total: Long = totalCount
+    val tableMetadataDesc = tableMetadataManager.getTableDesc(tableDesc.getTableName(column))
+    if (tableMetadataDesc != null) {
+      val tableExtDesc = tableMetadataManager.getTableExtIfExists(tableMetadataDesc)
+      if (tableExtDesc.getTotalRows > 0) {
+        total = tableExtDesc.getTotalRows
+        logInfo(s"Find $column's table $tableName count $total from table ext")
+      } else if (tableMetadataDesc.getLastSnapshotPath != null) {
+        val baseDir = KapConfig.getInstanceFromEnv.getMetadataWorkingDirectory
+        val fs = HadoopUtil.getWorkingFileSystem
+        val path = new Path(baseDir, tableMetadataDesc.getLastSnapshotPath)
+        if (fs.exists(path)) {
+          total = sparkSession.read.parquet(path.toString).count()
+          logInfo(s"Calculate $column's table $tableName count $total " +
+            s"from parquet ${tableMetadataDesc.getLastSnapshotPath}")
+        }
+      }
+    }
+    total
   }
 
   // Copied from DFChooser.
@@ -648,6 +652,42 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     }
     encodeDs
   }
+
+  protected def initSpanningTree(): Unit = {
+    val spanTree = new AdaptiveSpanningTree(config, new AdaptiveTreeBuilder(dataSegment, readOnlyLayouts))
+    buildParam.setSpanningTree(spanTree)
+  }
+
+  protected def initFlatTableDesc(): Unit = {
+    val flatTableDesc: SegmentFlatTableDesc = if (jobContext.isPartialBuild) {
+      val parser = new IndexDependencyParser(dataModel)
+      val relatedTableAlias =
+        parser.getRelatedTablesAlias(jobContext.getReadOnlyLayouts)
+      new SegmentFlatTableDesc(config, dataSegment, spanningTree, relatedTableAlias)
+    } else {
+      new SegmentFlatTableDesc(config, dataSegment, spanningTree)
+    }
+    buildParam.setFlatTableDesc(flatTableDesc)
+  }
+
+  def initFactTable(): Unit = {
+    val factTableDS: Dataset[Row] = newFactTableDS()
+    buildParam.setFactTableDS(factTableDS)
+    val fastFactTableDS: Dataset[Row] = newFastFactTableDS()
+    buildParam.setFastFactTableDS(fastFactTableDS)
+  }
+
+  def materializedFactTableView(): Unit = {
+    initSpanningTree()
+    initFlatTableDesc()
+    initFactTable()
+  }
+
+  def initFlatTableOnDetectResource(): Unit = {
+    materializedFactTableView()
+    val flatTablePart: Dataset[Row] = generateFlatTablePart()
+    buildParam.setFlatTablePart(flatTablePart)
+  }
 }
 
 object FlatTableAndDictBase extends LogEx {
@@ -707,10 +747,7 @@ object FlatTableAndDictBase extends LogEx {
       logInfo(s"Lookup table schema ${lookupDataset.schema.treeString}")
 
       if (join.getNonEquiJoinCondition != null) {
-        var condition = NonEquiJoinConditionBuilder.convert(join.getNonEquiJoinCondition)
-        if (!equiConditionColPairs.isEmpty) {
-          condition = condition && equiConditionColPairs.reduce(_ && _)
-        }
+        val condition: Column = getCondition(join, equiConditionColPairs)
         logInfo(s"Root table ${rootFactDesc.getIdentity}, join table ${lookupDesc.getAlias}, non-equi condition: ${condition.toString()}")
         afterJoin = afterJoin.join(lookupDataset, condition, joinType)
       } else {
@@ -724,6 +761,14 @@ object FlatTableAndDictBase extends LogEx {
       }
     }
     afterJoin
+  }
+
+  def getCondition(join: JoinDesc, equiConditionColPairs: Array[Column]): Column = {
+    var condition = NonEquiJoinConditionBuilder.convert(join.getNonEquiJoinCondition)
+    if (!equiConditionColPairs.isEmpty) {
+      condition = condition && equiConditionColPairs.reduce(_ && _)
+    }
+    condition
   }
 
   def changeSchemeToColumnId(ds: Dataset[Row], tableDesc: SegmentFlatTableDesc): Dataset[Row] = {

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.spark.job.stage.build.partition
 
+import io.kyligence.kap.guava20.shaded.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.builder.{DictionaryBuilderHelper, PartitionDictionaryBuilderHelper}
 import org.apache.kylin.engine.spark.job.stage.BuildParam
@@ -25,6 +26,9 @@ import org.apache.kylin.engine.spark.job.stage.build.FlatTableAndDictBase
 import org.apache.kylin.engine.spark.job.stage.build.FlatTableAndDictBase.Statistics
 import org.apache.kylin.engine.spark.job.{PartitionExec, SegmentJob}
 import org.apache.kylin.engine.spark.model.PartitionFlatTableDesc
+import org.apache.kylin.engine.spark.smarter.IndexDependencyParser
+import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree
+import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree.PartitionTreeBuilder
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.sql.{Dataset, Row}
@@ -98,5 +102,23 @@ abstract class PartitionFlatTableAndDictBase(private val jobContext: SegmentJob,
     val dictColsWithoutCc = dictCols.filter(!_.getColumnDesc.isComputedColumn)
     val encodeColsWithoutCc = encodeCols.filter(!_.getColumnDesc.isComputedColumn)
     (dictCols, encodeCols, dictColsWithoutCc, encodeColsWithoutCc)
+  }
+
+  override def initSpanningTree(): Unit = {
+    val spanTree = new PartitionSpanningTree(config, //
+      new PartitionTreeBuilder(dataSegment, readOnlyLayouts, jobId, partitions, Sets.newHashSet(newBuckets.asJava)))
+    buildParam.setPartitionSpanningTree(spanTree)
+  }
+
+  override def initFlatTableDesc(): Unit = {
+    val tableDesc = if (jobContext.isPartialBuild) {
+      val parser = new IndexDependencyParser(dataModel)
+      val relatedTableAlias =
+        parser.getRelatedTablesAlias(jobContext.getReadOnlyLayouts)
+      new PartitionFlatTableDesc(config, dataSegment, spanningTree, relatedTableAlias, jobId, partitions)
+    } else {
+      new PartitionFlatTableDesc(config, dataSegment, spanningTree, jobId, partitions)
+    }
+    buildParam.setTableDesc(tableDesc)
   }
 }

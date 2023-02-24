@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CONCURRENT_SUBMIT_LIMIT;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_FAIL;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_MULTI_PARTITION_ABANDON;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_MULTI_PARTITION_DUPLICATE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_LOCKED;
@@ -505,7 +504,6 @@ public class ModelServiceBuildTest extends SourceTestCase {
     }
 
     @Test
-    @Ignore("Sorry, I don't know")
     public void testBuildSegmentsManually_NoPartition_FullSegExisted() throws Exception {
         val modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
         val project = "default";
@@ -527,13 +525,14 @@ public class ModelServiceBuildTest extends SourceTestCase {
         modelService.updateDataModelSemantic(project, request);
         try {
             modelBuildService.buildSegmentsManually("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa", "", "");
+            Assert.fail();
         } catch (TransactionException exception) {
             Assert.assertTrue(exception.getCause() instanceof KylinException);
-            Assert.assertEquals(JOB_CREATE_CHECK_FAIL.getErrorMsg().getLocalizedString(),
-                    exception.getCause().getMessage());
+            Assert.assertEquals(SEGMENT_STATUS.getErrorMsg().getCodeString(),
+                    ((KylinException) exception.getCause()).getErrorCode().getCodeString());
         }
         val executables = getRunningExecutables(project, modelId);
-        Assert.assertEquals(2, executables.size());
+        Assert.assertEquals(1, executables.size());
         Assert.assertTrue(((NSparkCubingJob) executables.get(0)).getHandler() instanceof ExecutableAddCuboidHandler);
     }
 

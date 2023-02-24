@@ -19,11 +19,11 @@
 package org.apache.kylin.engine.spark.job
 
 import io.kyligence.kap.guava20.shaded.common.collect.{Maps, Sets}
+import io.kyligence.kap.guava20.shaded.common.collect.Maps
 import org.apache.hadoop.fs.Path
-import org.apache.kylin.engine.spark.builder.PartitionFlatTable
-import org.apache.kylin.engine.spark.model.PartitionFlatTableDesc
-import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree
-import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree.{PartitionTreeBuilder, PartitionTreeNode}
+import org.apache.kylin.engine.spark.job.stage.BuildParam
+import org.apache.kylin.engine.spark.job.stage.build.partition.PartitionFlatTableAndDictBase
+import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree.PartitionTreeNode
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.spark.sql.SparderEnv
 import org.apache.spark.sql.datasource.storage.StorageStoreUtils
@@ -32,31 +32,18 @@ import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 import java.io.IOException
 import scala.collection.JavaConverters._
 
-class RDPartitionBuildExec(private val jobContext: RDSegmentBuildJob, //
-                           private val dataSegment: NDataSegment) extends RDSegmentBuildExec(jobContext, dataSegment) {
+class RDPartitionBuildExec(private val jobContext: SegmentJob, //
+                           private val dataSegment: NDataSegment, private val buildParam: BuildParam)
+  extends PartitionFlatTableAndDictBase(jobContext, dataSegment, buildParam) {
 
-  private val newBuckets =
-    jobContext.getReadOnlyBuckets.asScala.filter(_.getSegmentId.equals(segmentId)).toSeq
-
-  protected final lazy val partitions = {
-    val distincted = newBuckets.map(_.getPartitionId).distinct.sorted
-    logInfo(s"Segment $segmentId partitions: ${distincted.mkString("[", ",", "]")}")
-    scala.collection.JavaConverters.seqAsJavaList(distincted.map(java.lang.Long.valueOf))
-  }
-
-  private lazy val spanningTree = new PartitionSpanningTree(config, //
-    new PartitionTreeBuilder(dataSegment, readOnlyLayouts, jobId, partitions, Sets.newHashSet(newBuckets.asJava)))
-
-  private lazy val flatTableDesc = new PartitionFlatTableDesc(config, dataSegment, spanningTree, jobId, partitions)
-
-  private lazy val flatTable = new PartitionFlatTable(sparkSession, flatTableDesc)
-
+  protected final val rdSharedPath = jobContext.getRdSharedPath
 
   @throws(classOf[IOException])
-  override def detectResource(): Unit = {
+  def detectResource(): Unit = {
+    initFlatTableOnDetectResource()
 
     val flatTableExecutions = if (spanningTree.fromFlatTable()) {
-      Seq((-1L, Seq(flatTable.getFlatTablePartDS.queryExecution)))
+      Seq((-1L, Seq(getFlatTablePartDS.queryExecution)))
     } else {
       Seq.empty
     }

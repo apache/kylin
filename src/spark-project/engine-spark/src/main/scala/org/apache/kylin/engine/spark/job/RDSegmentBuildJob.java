@@ -24,8 +24,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
 import org.apache.kylin.engine.spark.job.RDPartitionBuildExec;
 import org.apache.kylin.engine.spark.job.RDSegmentBuildExec;
+import org.apache.kylin.engine.spark.job.ResourceDetect;
+import org.apache.kylin.engine.spark.job.SegmentJob;
+import org.apache.kylin.engine.spark.job.stage.BuildParam;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
+
+import lombok.val;
 
 public class RDSegmentBuildJob extends SegmentJob implements ResourceDetect {
 
@@ -46,14 +51,16 @@ public class RDSegmentBuildJob extends SegmentJob implements ResourceDetect {
 
     private void detectPartition() throws IOException {
         for (NDataSegment dataSegment : readOnlySegments) {
-            RDSegmentBuildExec exec = new RDPartitionBuildExec(this, dataSegment);
+            val buildParam = new BuildParam();
+            val exec = new RDPartitionBuildExec(this, dataSegment, buildParam);
             exec.detectResource();
         }
     }
 
     private void detect() throws IOException {
         for (NDataSegment dataSegment : readOnlySegments) {
-            RDSegmentBuildExec exec = new RDSegmentBuildExec(this, dataSegment);
+            val buildParam = new BuildParam();
+            val exec = new RDSegmentBuildExec(this, dataSegment, buildParam);
             exec.detectResource();
         }
     }
@@ -65,6 +72,6 @@ public class RDSegmentBuildJob extends SegmentJob implements ResourceDetect {
 
     private void writeCountDistinct() {
         ResourceDetectUtils.write(new Path(rdSharedPath, ResourceDetectUtils.countDistinctSuffix()), //
-                ResourceDetectUtils.findCountDistinctMeasure(getReadOnlyLayouts()));
+                ResourceDetectUtils.findCountDistinctMeasure(readOnlyLayouts));
     }
 }
