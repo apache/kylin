@@ -17,24 +17,22 @@
  */
 package org.apache.kylin.engine.spark.smarter
 
-import java.util
-import java.util.Collections
-
+import com.google.common.collect.{Lists, Maps, Sets}
 import org.apache.commons.collections.CollectionUtils
 import org.apache.commons.lang3.StringUtils
-import org.apache.kylin.engine.spark.builder.SegmentFlatTable
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
+import org.apache.kylin.engine.spark.job.stage.build.FlatTableAndDictBase
 import org.apache.kylin.metadata.cube.model.LayoutEntity
-import org.apache.kylin.metadata.model.{FunctionDesc, JoinTableDesc, NDataModel, TableRef, TblColRef}
+import org.apache.kylin.metadata.model._
 import org.apache.kylin.query.util.PushDownUtil
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.{Dataset, Row, SparderEnv, SparkSession}
 
+import java.util
+import java.util.Collections
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-
-import com.google.common.collect.{Lists, Maps, Sets}
 
 class IndexDependencyParser(val model: NDataModel) {
 
@@ -113,7 +111,7 @@ class IndexDependencyParser(val model: NDataModel) {
     model.getJoinTables.asScala.map((joinTable: JoinTableDesc) => {
       joinTableDFMap.put(joinTable, generateDatasetOnTable(ss, joinTable.getTableRef))
     })
-    val df = SegmentFlatTable.joinFactTableWithLookupTables(rootDF, joinTableDFMap, model, ss)
+    val df = FlatTableAndDictBase.joinFactTableWithLookupTables(rootDF, joinTableDFMap, model, ss)
     val filterCondition = model.getFilterCondition
     if (StringUtils.isNotEmpty(filterCondition)) {
       val massagedCondition = PushDownUtil.massageExpression(model, model.getProject, filterCondition, null)
@@ -127,7 +125,7 @@ class IndexDependencyParser(val model: NDataModel) {
     val structType = SchemaProcessor.buildSchemaWithRawTable(tableCols)
     val alias = tableRef.getAlias
     val dataset = ss.createDataFrame(Lists.newArrayList[Row], structType).alias(alias)
-    SegmentFlatTable.wrapAlias(dataset, alias)
+    FlatTableAndDictBase.wrapAlias(dataset, alias)
   }
 
   private def initTableNames(): Unit = {

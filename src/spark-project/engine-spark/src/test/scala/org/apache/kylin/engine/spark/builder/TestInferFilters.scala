@@ -19,8 +19,9 @@
 package org.apache.kylin.engine.spark.builder
 
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.engine.spark.job.FiltersUtil
-import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
+import org.apache.kylin.engine.spark.job.stage.BuildParam
+import org.apache.kylin.engine.spark.job.stage.build.FlatTableAndDictBase
+import org.apache.kylin.engine.spark.job.{FiltersUtil, SegmentJob}
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
 import org.apache.kylin.metadata.cube.model._
@@ -30,6 +31,7 @@ import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBa
 import org.apache.spark.sql.execution.adaptive.AdaptiveSparkPlanHelper
 import org.apache.spark.sql.execution.{FilterExec, SparkPlan}
 import org.junit.Assert
+import org.mockito.Mockito
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.Set
@@ -46,11 +48,11 @@ class TestInferFilters extends SparderBaseFunSuite with AdaptiveSparkPlanHelper 
   }
 
   override def beforeEach(): Unit = {
-    SegmentFlatTable.inferFiltersEnabled = true
+    FlatTableAndDictBase.inferFiltersEnabled = true
   }
 
   override def afterEach(): Unit = {
-    SegmentFlatTable.inferFiltersEnabled = false
+    FlatTableAndDictBase.inferFiltersEnabled = false
   }
 
   test("infer filters from join desc") {
@@ -64,10 +66,12 @@ class TestInferFilters extends SparderBaseFunSuite with AdaptiveSparkPlanHelper 
 
     val seg = dsMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(0L, 1356019200000L))
     val toBuildTree = new AdaptiveSpanningTree(getTestConfig, new AdaptiveTreeBuilder(seg, seg.getIndexPlan.getAllLayouts))
-    val flatTableDesc = new SegmentFlatTableDesc(getTestConfig, seg, toBuildTree)
-    val flatTable = new SegmentFlatTable(spark, flatTableDesc)
+    val segmentJob = Mockito.mock(classOf[SegmentJob])
+    Mockito.when(segmentJob.getSparkSession).thenReturn(spark)
+    val buildParam = new BuildParam()
+    new TestFlatTable(segmentJob, seg, buildParam).test(getTestConfig, toBuildTree)
 
-    val filters = getFilterPlan(flatTable.getFlatTableDS.queryExecution.executedPlan)
+    val filters = getFilterPlan(buildParam.getFlatTable.queryExecution.executedPlan)
 
     Assert.assertTrue(Set("EDW.TEST_CAL_DT.CAL_DT", "DEFAULT.TEST_KYLIN_FACT.CAL_DT",
       "DEFAULT.TEST_ORDER.TEST_DATE_ENC").subsetOf(FiltersUtil.getAllEqualColSets))

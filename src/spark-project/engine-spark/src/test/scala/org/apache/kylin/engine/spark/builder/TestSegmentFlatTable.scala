@@ -19,9 +19,8 @@
 package org.apache.kylin.engine.spark.builder
 
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
-import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
-import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
+import org.apache.kylin.engine.spark.job.SegmentJob
+import org.apache.kylin.engine.spark.job.stage.BuildParam
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.model.{SegmentRange, TableDesc, TableRef}
 import org.apache.spark.SparkExecutorInfo
@@ -53,16 +52,17 @@ class TestSegmentFlatTable extends SparderBaseFunSuite with SharedSparkSession w
     dfMgr.updateDataflow(update)
 
     val seg = dfMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(0L, 1356019200000L))
-    val toBuildTree = new AdaptiveSpanningTree(getTestConfig, new AdaptiveTreeBuilder(seg, seg.getIndexPlan.getAllLayouts))
-    val flatTableDesc = new SegmentFlatTableDesc(getTestConfig, seg, toBuildTree)
-    val flatTable = new SegmentFlatTable(spark, flatTableDesc)
-    assert(flatTable.newTableDS(df.getModel.getAllTables.iterator().next()) != null)
+    val segmentJob = Mockito.mock(classOf[SegmentJob])
+    Mockito.when(segmentJob.getSparkSession).thenReturn(spark)
+    val buildParam = new BuildParam()
+    val testFlatTable = new TestFlatTable(segmentJob, seg, buildParam)
+    assert(testFlatTable.testNewTableDS(df.getModel.getAllTables.iterator().next()) != null)
 
     val tableRef: TableRef = df.getModel.getAllTables.iterator().next()
     val tableDesc: TableDesc = tableRef.getTableDesc
     tableDesc.setRangePartition(true)
     val ref = new TableRef(df.getModel, tableDesc.getName, tableDesc, false)
-    assert(flatTable.newTableDS(ref) != null)
+    assert(testFlatTable.testNewTableDS(ref) != null)
   }
 
   test("testSegmentFlatTableWithChineseAndSpecialChar") {
@@ -78,16 +78,17 @@ class TestSegmentFlatTable extends SparderBaseFunSuite with SharedSparkSession w
     dfMgr.updateDataflow(update)
 
     val seg = dfMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(0L, 1356019200000L))
-    val toBuildTree = new AdaptiveSpanningTree(getTestConfig, new AdaptiveTreeBuilder(seg, seg.getIndexPlan.getAllLayouts))
-    val flatTableDesc = new SegmentFlatTableDesc(getTestConfig, seg, toBuildTree)
-    val flatTable = new SegmentFlatTable(spark, flatTableDesc)
-    assert(flatTable.newTableDS(df.getModel.getAllTables.iterator().next()) != null)
+    val segmentJob = Mockito.mock(classOf[SegmentJob])
+    Mockito.when(segmentJob.getSparkSession).thenReturn(spark)
+    val buildParam = new BuildParam()
+    val testFlatTable = new TestFlatTable(segmentJob, seg, buildParam)
+    assert(testFlatTable.testNewTableDS(df.getModel.getAllTables.iterator().next()) != null)
 
     val tableRef: TableRef = df.getModel.getAllTables.iterator().next()
     val tableDesc: TableDesc = tableRef.getTableDesc
     tableDesc.setRangePartition(true)
     val ref = new TableRef(df.getModel, tableDesc.getName, tableDesc, false)
-    assert(flatTable.newTableDS(ref) != null)
+    assert(testFlatTable.testNewTableDS(ref) != null)
   }
 
   test("waitTillWorkerRegistered") {
@@ -106,13 +107,13 @@ class TestSegmentFlatTable extends SparderBaseFunSuite with SharedSparkSession w
     dfMgr.updateDataflow(update)
 
     val seg = dfMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(0L, 1356019200000L))
-    val toBuildTree = new AdaptiveSpanningTree(getTestConfig, new AdaptiveTreeBuilder(seg, seg.getIndexPlan.getAllLayouts))
-    val flatTableDesc = new SegmentFlatTableDesc(getTestConfig, seg, toBuildTree)
-
     val spiedSparkSession = Mockito.spy(spark)
     val spiedSparkContext = Mockito.spy(spark.sparkContext)
     val spiedTracker = Mockito.spy(spark.sparkContext.statusTracker)
-    val flatTable = new SegmentFlatTable(spiedSparkSession, flatTableDesc)
+    val segmentJob = Mockito.mock(classOf[SegmentJob])
+    Mockito.when(segmentJob.getSparkSession).thenReturn(spark)
+    val buildParam = new BuildParam()
+    val flatTable = new TestFlatTable(segmentJob, seg, buildParam)
     Mockito.when(spiedSparkSession.sparkContext).thenReturn(spiedSparkContext)
     Mockito.when(spiedSparkContext.statusTracker).thenReturn(spiedTracker)
     Mockito.when(spiedTracker.getExecutorInfos)

@@ -19,13 +19,14 @@
 package org.apache.kylin.engine.spark.builder
 
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.engine.spark.job.TableMetaManager
-import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
+import org.apache.kylin.engine.spark.job.stage.BuildParam
+import org.apache.kylin.engine.spark.job.{SegmentJob, TableMetaManager}
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.model.SegmentRange
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
+import org.mockito.Mockito
 
 import scala.collection.JavaConverters._
 
@@ -54,9 +55,11 @@ class TestDimensionTableStat extends SparderBaseFunSuite with SharedSparkSession
 
     val seg = dfMgr.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(0L, 1356019200000L))
     val toBuildTree = new AdaptiveSpanningTree(getTestConfig, new AdaptiveTreeBuilder(seg, seg.getIndexPlan.getAllLayouts))
-    val flatTableDesc = new SegmentFlatTableDesc(getTestConfig, seg, toBuildTree)
-    val flatTable = new SegmentFlatTable(spark, flatTableDesc)
-    flatTable.getFlatTableDS
+    val segmentJob = Mockito.mock(classOf[SegmentJob])
+    Mockito.when(segmentJob.getSparkSession).thenReturn(spark)
+    val buildParam = new BuildParam()
+    new TestFlatTable(segmentJob, seg, buildParam).test(getTestConfig, toBuildTree)
+
 
     df.getModel.getJoinTables.asScala.foreach { joinTable =>
       val dimCount = TableMetaManager.getTableMeta(joinTable.getTable).get.rowCount.get
