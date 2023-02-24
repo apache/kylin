@@ -18,10 +18,13 @@
 
 package org.apache.kylin.rest.request;
 
+
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiFunction;
 
+import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.insensitive.ModelInsensitiveRequest;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -83,6 +86,9 @@ public class ModelRequest extends NDataModel implements ModelInsensitiveRequest 
 
     @JsonProperty("with_base_index")
     private boolean withBaseIndex = false;
+
+    @JsonProperty("base_index_type")
+    private Set<IndexEntity.Source> baseIndexType;
 
     @JsonProperty("with_second_storage")
     private boolean withSecondStorage = false;

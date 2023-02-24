@@ -143,6 +143,25 @@ public class BaseIndexTest extends SourceTestCase {
     }
 
     @Test
+    public void testCreateBaseTableLayoutWithBaseIndexTypes() {
+        NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), "default");
+        ModelRequest modelRequest = FormModel(modelManager.getDataModelDesc(COMMON_MODEL_ID));
+        modelRequest.setWithBaseIndex(false);
+        String modelId = modelService.createModel(modelRequest.getProject(), modelRequest).getId();
+        BaseIndexUpdateHelper baseIndexUpdater = new BaseIndexUpdateHelper(modelRequest,
+                Lists.newArrayList(Source.BASE_AGG_INDEX));
+        BuildBaseIndexResponse baseIndexResponse = baseIndexUpdater.update(indexPlanService);
+        LayoutEntity baseAggLayout = LayoutBuilder.builder().colOrder(0, 1, 2, 3, 100000, 100001).id(1L).build();
+        LayoutEntity baseTableLayout = null;
+        compareBaseIndex(getModelIdFrom(modelRequest.getAlias()), baseTableLayout, baseAggLayout);
+
+        baseIndexUpdater = new BaseIndexUpdateHelper(modelRequest, Lists.newArrayList(Source.BASE_TABLE_INDEX));
+        baseIndexResponse = baseIndexUpdater.update(indexPlanService);
+        baseTableLayout = LayoutBuilder.builder().colOrder(0, 1, 2, 3).id(20000000001L).build();
+        compareBaseIndex(getModelIdFrom(modelRequest.getAlias()), baseTableLayout, baseAggLayout);
+    }
+
+    @Test
     public void testCreateBaseLayoutWithProperties() {
         // create base index is same with index in rulebaseindex or indexes
         CreateBaseIndexRequest request = new CreateBaseIndexRequest();
@@ -402,7 +421,7 @@ public class BaseIndexTest extends SourceTestCase {
         IndexPlan indexPlan = NIndexPlanManager.getInstance(getTestConfig(), getProject()).getIndexPlan(modelId);
         return indexPlan.getAllLayouts().stream()
                 .filter(layoutEntity -> layoutEntity.isBase() && isAggIndex(layoutEntity.getId())).findFirst()
-                .orElseGet(null);
+                .orElse(null);
     }
 
     private String createBaseIndexFromModel(String modelId) {
@@ -417,18 +436,24 @@ public class BaseIndexTest extends SourceTestCase {
         if (expectedBaseTableLayout == null && baseTableLayout == null) {
             return;
         }
-        Assert.assertThat(baseAggLayout.getColOrder(), equalTo(expectedBaseAggLayout.getColOrder()));
-        Assert.assertThat(baseAggLayout.getShardByColumns(), equalTo(expectedBaseAggLayout.getShardByColumns()));
-        Assert.assertThat(baseAggLayout.getSortByColumns(), equalTo(expectedBaseAggLayout.getSortByColumns()));
-        Assert.assertThat(baseTableLayout.getColOrder(), equalTo(expectedBaseTableLayout.getColOrder()));
-        Assert.assertThat(baseTableLayout.getShardByColumns(), equalTo(expectedBaseTableLayout.getShardByColumns()));
-        Assert.assertThat(baseTableLayout.getSortByColumns(), equalTo(expectedBaseTableLayout.getSortByColumns()));
-        if (baseAggLayout.getId() != -1) {
-            Assert.assertEquals(expectedBaseAggLayout.getId(), baseAggLayout.getId());
+        if (expectedBaseAggLayout != null) {
+            Assert.assertThat(baseAggLayout.getColOrder(), equalTo(expectedBaseAggLayout.getColOrder()));
+            Assert.assertThat(baseAggLayout.getShardByColumns(), equalTo(expectedBaseAggLayout.getShardByColumns()));
+            Assert.assertThat(baseAggLayout.getSortByColumns(), equalTo(expectedBaseAggLayout.getSortByColumns()));
+            if (baseAggLayout.getId() != -1) {
+                Assert.assertEquals(expectedBaseAggLayout.getId(), baseAggLayout.getId());
+            }
         }
-        if (baseTableLayout.getId() != -1) {
-            Assert.assertEquals(expectedBaseTableLayout.getId(), baseTableLayout.getId());
 
+        if (expectedBaseTableLayout != null) {
+            Assert.assertThat(baseTableLayout.getColOrder(), equalTo(expectedBaseTableLayout.getColOrder()));
+            Assert.assertThat(baseTableLayout.getShardByColumns(),
+                    equalTo(expectedBaseTableLayout.getShardByColumns()));
+            Assert.assertThat(baseTableLayout.getSortByColumns(), equalTo(expectedBaseTableLayout.getSortByColumns()));
+
+            if (baseTableLayout.getId() != -1) {
+                Assert.assertEquals(expectedBaseTableLayout.getId(), baseTableLayout.getId());
+            }
         }
     }
 

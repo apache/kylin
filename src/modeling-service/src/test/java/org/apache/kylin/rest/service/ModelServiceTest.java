@@ -5009,8 +5009,38 @@ public class ModelServiceTest extends SourceTestCase {
         when(modelRequest.isWithSecondStorage()).thenReturn(false);
         when(model.getModelType()).thenReturn(NDataModel.ModelType.BATCH);
         when(modelRequest.isWithBaseIndex()).thenReturn(true);
+        when(modelRequest.getBaseIndexType()).thenReturn(null);
         modelService.addBaseIndex(modelRequest, model, indexPlan);
-        Mockito.verify(indexPlan).createAndAddBaseIndex(model);
+        Mockito.verify(indexPlan).createAndAddBaseIndex(model,
+                Lists.newArrayList(IndexEntity.Source.BASE_AGG_INDEX, IndexEntity.Source.BASE_TABLE_INDEX));
+        when(modelRequest.isWithSecondStorage()).thenReturn(true);
+        when(indexPlan.createBaseTableIndex(model)).thenReturn(null);
+        modelService.addBaseIndex(modelRequest, model, indexPlan);
+        Mockito.verify(indexPlan).createAndAddBaseIndex(anyList());
+    }
+
+    @Test
+    public void testAddBaseAggIndex() {
+        val modelRequest = mock(ModelRequest.class);
+        val model = mock(NDataModel.class);
+        val indexPlan = mock(IndexPlan.class);
+
+        when(modelRequest.isWithSecondStorage()).thenReturn(false);
+        when(model.getModelType()).thenReturn(NDataModel.ModelType.BATCH);
+        when(modelRequest.isWithBaseIndex()).thenReturn(true);
+        when(modelRequest.getBaseIndexType()).thenReturn(null);
+        modelService.addBaseIndex(modelRequest, model, indexPlan);
+        Mockito.verify(indexPlan).createAndAddBaseIndex(model,
+                Lists.newArrayList(IndexEntity.Source.BASE_AGG_INDEX, IndexEntity.Source.BASE_TABLE_INDEX));
+
+        when(modelRequest.getBaseIndexType()).thenReturn(Collections.singleton(IndexEntity.Source.BASE_AGG_INDEX));
+        modelService.addBaseIndex(modelRequest, model, indexPlan);
+        Mockito.verify(indexPlan).createAndAddBaseIndex(model, Lists.newArrayList(IndexEntity.Source.BASE_AGG_INDEX));
+
+        when(modelRequest.getBaseIndexType()).thenReturn(Collections.singleton(IndexEntity.Source.BASE_TABLE_INDEX));
+        modelService.addBaseIndex(modelRequest, model, indexPlan);
+        Mockito.verify(indexPlan).createAndAddBaseIndex(model, Lists.newArrayList(IndexEntity.Source.BASE_TABLE_INDEX));
+
         when(modelRequest.isWithSecondStorage()).thenReturn(true);
         when(indexPlan.createBaseTableIndex(model)).thenReturn(null);
         modelService.addBaseIndex(modelRequest, model, indexPlan);

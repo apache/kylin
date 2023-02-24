@@ -17,14 +17,19 @@
  */
 package org.apache.kylin.rest.service;
 
+import java.util.List;
+
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.util.SpringContext;
+import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.rest.request.CreateBaseIndexRequest;
 import org.apache.kylin.rest.response.BuildBaseIndexResponse;
+import org.apache.kylin.rest.util.SpringContext;
+
+import com.google.common.collect.Lists;
 
 import io.kyligence.kap.secondstorage.SecondStorageUpdater;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
@@ -43,14 +48,25 @@ public class BaseIndexUpdateHelper {
 
     private String project;
     private String modelId;
-    private boolean createIfNotExist;
+    private List<IndexEntity.Source> updateBaseIndexTypes;
     private boolean needUpdate;
     private boolean secondStorageEnabled = false;
     @Setter
     private boolean needCleanSecondStorage = true;
 
     public BaseIndexUpdateHelper(NDataModel model, boolean createIfNotExist) {
+        this(model, updateTypesByFlag(createIfNotExist));
+    }
 
+    private static List<IndexEntity.Source> updateTypesByFlag(boolean createIfNotExist) {
+        if (createIfNotExist) {
+            return Lists.newArrayList(IndexEntity.Source.BASE_AGG_INDEX, IndexEntity.Source.BASE_TABLE_INDEX);
+        } else {
+            return Lists.newArrayList();
+        }
+    }
+
+    public BaseIndexUpdateHelper(NDataModel model, List<IndexEntity.Source> updateBaseIndexTypes) {
         NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(),
                 model.getProject());
         IndexPlan indexPlan = indexPlanManager.getIndexPlan(model.getId());
@@ -61,7 +77,7 @@ public class BaseIndexUpdateHelper {
         if (needUpdate) {
             project = model.getProject();
             modelId = model.getId();
-            this.createIfNotExist = createIfNotExist;
+            this.updateBaseIndexTypes = updateBaseIndexTypes;
             preBaseAggLayout = getBaseAggLayout();
             preBaseTableLayout = getBaseTableLayout();
         }
@@ -76,18 +92,20 @@ public class BaseIndexUpdateHelper {
         if (!needUpdate) {
             return BuildBaseIndexResponse.EMPTY;
         }
-        if (notExist(preBaseAggLayout) && notExist(preBaseTableLayout) && !createIfNotExist) {
+        if (notExist(preBaseAggLayout) && notExist(preBaseTableLayout)
+                && !updateBaseIndexTypes.contains(IndexEntity.Source.BASE_TABLE_INDEX)
+                && !updateBaseIndexTypes.contains(IndexEntity.Source.BASE_AGG_INDEX)) {
             return BuildBaseIndexResponse.EMPTY;
         }
 
         long curBaseTableLayout = getBaseTableLayout();
-        boolean needCreateBaseTable = createIfNotExist;
+        boolean needCreateBaseTable = updateBaseIndexTypes.contains(IndexEntity.Source.BASE_TABLE_INDEX);
         if (exist(preBaseTableLayout) && notExist(curBaseTableLayout)) {
             needCreateBaseTable = true;
         }
 
         Long curExistBaseAggLayout = getBaseAggLayout();
-        boolean needCreateBaseAgg = createIfNotExist;
+        boolean needCreateBaseAgg = updateBaseIndexTypes.contains(IndexEntity.Source.BASE_AGG_INDEX);
         if (exist(preBaseAggLayout) && notExist(curExistBaseAggLayout)) {
             needCreateBaseAgg = true;
         }
@@ -98,8 +116,8 @@ public class BaseIndexUpdateHelper {
         CreateBaseIndexRequest indexRequest = new CreateBaseIndexRequest();
         indexRequest.setModelId(modelId);
         indexRequest.setProject(project);
-        BuildBaseIndexResponse response = service.updateBaseIndex(project, indexRequest, needCreateBaseAgg,
-                needCreateBaseTable, true);
+        BuildBaseIndexResponse response = service.updateBaseIndex(project, indexRequest, needCreateBaseTable,
+                needCreateBaseAgg, true);
         response.judgeIndexOperateType(exist(preBaseAggLayout), true);
         response.judgeIndexOperateType(exist(preBaseTableLayout), false);
 
