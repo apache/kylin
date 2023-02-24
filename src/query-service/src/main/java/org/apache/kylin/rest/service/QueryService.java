@@ -336,6 +336,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             if (e.getStopId().equals(id)) {
                 logger.error("Trying to cancel query: {}", e.getThread().getName());
                 e.setStopByUser(true);
+                e.getPlannerCancelFlag().requestCancel();
                 e.getThread().interrupt();
                 break;
             }
