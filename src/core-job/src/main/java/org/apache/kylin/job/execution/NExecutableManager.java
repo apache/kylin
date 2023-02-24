@@ -62,6 +62,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
@@ -1535,6 +1537,9 @@ public class NExecutableManager {
             Path path = new Path(resPath);
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             dout = fs.create(path, true);
+            if (KylinConfig.getInstanceFromEnv().isJobTmpDirALLPermissionEnabled()) {
+                fs.setPermission(path.getParent(), new FsPermission(FsAction.ALL, FsAction.READ, FsAction.ALL));
+            }
             JsonUtil.writeValue(dout, obj);
         } catch (Exception e) {
             // the operation to update output to hdfs failed, next task should not be interrupted.
