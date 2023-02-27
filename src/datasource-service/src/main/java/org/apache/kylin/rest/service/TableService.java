@@ -2099,7 +2099,7 @@ public class TableService extends BasicService {
         if (prjInstance == null) {
             throw new BadRequestException("Project " + projectName + " does not exist");
         }
-        // To deal with case sensitive issue for table resource path
+        // To deal with case-sensitive issue for table resource path
         final String project = prjInstance.getName();
         aclEvaluate.checkProjectWritePermission(project);
 
@@ -2118,15 +2118,16 @@ public class TableService extends BasicService {
             ifAllModelUpdate = nModel == infModels.size();
         }
         // Currently, only model with offline status is supported to update with mappings.
-        Set<NDataModel> readyModelSet = infModels.stream().filter(model -> NDataflowManager.getInstance(kylinConfig, project)
+        Set<NDataModel> offlineModelSet = infModels.stream().filter(model -> NDataflowManager.getInstance(kylinConfig, project)
                 .getDataflowByModelAlias(model.getAlias()).getStatus() == RealizationStatusEnum.OFFLINE)
                 .collect(Collectors.toSet());
-        ifAllModelUpdate = (ifAllModelUpdate && readyModelSet.size() == infModels.size());
+        ifAllModelUpdate = (ifAllModelUpdate && offlineModelSet.size() == infModels.size());
         // At least 1 model should be update here, otherwise it will throw BadRequestException.
-        if (readyModelSet.isEmpty()) {
-            throw new BadRequestException("Influenced models " + infModels + " should be OFFLINE");
+        if (offlineModelSet.isEmpty()) {
+            throw new BadRequestException("Affected models " + infModels + " should be OFFLINE");
         }
-        logger.info("Influenced cubes {}", readyModelSet);
+        logger.info("Should affected models {}", infModels);
+        logger.info("Actually affected offline models {}", offlineModelSet);
 
         // Get influenced metadata and update the metadata
         NTableMetadataManager tableManager = NTableMetadataManager.getInstance(kylinConfig, project);
@@ -2145,11 +2146,11 @@ public class TableService extends BasicService {
             }
         }
         // -- 2. model
-        Map<String, NDataModel> newModels = readyModelSet.stream().map(model -> TableSchemaUpdater
+        Map<String, NDataModel> newModels = offlineModelSet.stream().map(model -> TableSchemaUpdater
                 .dealWithMappingForModel(kylinConfig, project, model, mapping))
                 .collect(Collectors.toMap(NDataModel::getAlias, model -> model));
         // -- 3. dataflow
-        Map<String, NDataflow> newDataflow = readyModelSet.stream()
+        Map<String, NDataflow> newDataflow = offlineModelSet.stream()
                 .map(model -> NDataflowManager.getInstance(kylinConfig, project).getDataflowByModelAlias(model.getAlias()))
                 .map(dataflow -> TableSchemaUpdater.dealWithMappingForDataFlow(kylinConfig, project, dataflow, mapping))
                 .collect(Collectors.toMap(NDataflow::resourceName, dataflow -> dataflow));

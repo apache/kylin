@@ -45,7 +45,7 @@ public class TableSchemaUpdater {
             return other;
         }
 
-        TableDesc copy = new TableDesc(other);
+        TableDesc copy = new TableDesc(other, false);
 
         copy.setDatabase(mapping.getDatabase(other.getDatabase()));
         copy.setName(mapping.getTableName(other.getName()));
