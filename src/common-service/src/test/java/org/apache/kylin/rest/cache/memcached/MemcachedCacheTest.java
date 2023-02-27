@@ -30,6 +30,7 @@ import com.google.common.collect.Maps;
 import net.spy.memcached.DefaultConnectionFactory;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.cache.memcached.CompositeMemcachedCache.MemCachedCacheAdaptor;
+import org.apache.kylin.rest.service.CommonQueryCacheSupporter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -54,7 +55,7 @@ public class MemcachedCacheTest extends NLocalFileMetadataTestCase {
 
         cacheConfig = new MemcachedCacheConfig();
         MemcachedClient memcachedClient = mock(MemcachedClient.class);
-        MemcachedCache memcachedCache = new MemcachedCache(memcachedClient, cacheConfig, MemCachedConstants.QUERY_CACHE,
+        MemcachedCache memcachedCache = new MemcachedCache(memcachedClient, cacheConfig, CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName,
                 7 * 24 * 3600);
         memCachedAdaptor = new MemCachedCacheAdaptor(memcachedCache);
 
@@ -98,11 +99,11 @@ public class MemcachedCacheTest extends NLocalFileMetadataTestCase {
         cacheConfig.setMaxOperationQueueSize(1);
         cacheConfig.setReadBufferSize(DefaultConnectionFactory.DEFAULT_READ_BUFFER_SIZE);
         cacheConfig.setEnableCompression(false);
-        Assert.assertEquals(cacheConfig.getTimeout(), 1000);
-        Assert.assertEquals(cacheConfig.getHosts(), "localhost:11211");
-        Assert.assertEquals(cacheConfig.getMaxChunkSize(), 1024);
-        Assert.assertEquals(cacheConfig.getMaxOperationQueueSize(), 1);
-        Assert.assertEquals(cacheConfig.getReadBufferSize(), 16384);
+        Assert.assertEquals(1000, cacheConfig.getTimeout());
+        Assert.assertEquals("localhost:11211", cacheConfig.getHosts());
+        Assert.assertEquals(1024, cacheConfig.getMaxChunkSize());
+        Assert.assertEquals(1, cacheConfig.getMaxOperationQueueSize());
+        Assert.assertEquals(16384, cacheConfig.getReadBufferSize());
         Assert.assertFalse(cacheConfig.isEnableCompression());
     }
 }

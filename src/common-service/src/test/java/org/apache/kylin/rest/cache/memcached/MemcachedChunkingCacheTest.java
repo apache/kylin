@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.cache.memcached.CompositeMemcachedCache.MemCachedCacheAdaptor;
+import org.apache.kylin.rest.service.CommonQueryCacheSupporter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,7 +63,7 @@ public class MemcachedChunkingCacheTest extends NLocalFileMetadataTestCase {
         MemcachedCacheConfig cacheConfig = new MemcachedCacheConfig();
         cacheConfig.setMaxObjectSize(maxObjectSize);
         MemcachedClient memcachedClient = mock(MemcachedClient.class);
-        MemcachedCache memcachedCache = new MemcachedCache(memcachedClient, cacheConfig, MemCachedConstants.QUERY_CACHE,
+        MemcachedCache memcachedCache = new MemcachedCache(memcachedClient, cacheConfig, CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName,
                 7 * 24 * 3600);
         memcachedChunkingCache = new MemcachedChunkingCache(memcachedCache);
         memCachedAdaptor = new MemCachedCacheAdaptor(memcachedChunkingCache);
@@ -136,10 +137,13 @@ public class MemcachedChunkingCacheTest extends NLocalFileMetadataTestCase {
     public void testEvict() {
         memcachedChunkingCache.evict("");
         memcachedChunkingCache.evict(null);
+        memcachedChunkingCache.put("first", "first_value");
         keyHook.setChunkskey(new String[]{"first", "second"});
         for (String key : keyHook.getChunkskey()) {
             memcachedChunkingCache.evict(key);
         }
+        byte[] value = memcachedChunkingCache.get("first");
+        Assert.assertEquals(0, value.length);
     }
 
     @Test

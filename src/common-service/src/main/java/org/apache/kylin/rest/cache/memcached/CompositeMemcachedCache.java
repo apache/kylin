@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.common.Singletons;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.rest.service.CommonQueryCacheSupporter;
 import org.slf4j.Logger;
 import org.apache.kylin.rest.cache.KylinCache;
 import org.slf4j.LoggerFactory;
@@ -49,18 +50,18 @@ public class CompositeMemcachedCache implements KylinCache {
     private static final MemcachedCacheConfig memcachedCacheConfig = Singletons.getInstance(MemcachedCacheConfig.class);
 
     private static final Cache exceptionCache = new MemCachedCacheAdaptor(
-            new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, MemCachedConstants.EXCEPTION_QUERY_CACHE, 86400)));
+            new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, CommonQueryCacheSupporter.Type.EXCEPTION_QUERY_CACHE.rootCacheName, 86400)));
 
     private static final Cache schemaCache = new MemCachedCacheAdaptor(
-            new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, MemCachedConstants.SCHEMA_CACHE, 86400)));
+            new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, CommonQueryCacheSupporter.Type.SCHEMA_CACHE.rootCacheName, 86400)));
 
     private static final Cache successCache = new MemCachedCacheAdaptor(
-            new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, MemCachedConstants.QUERY_CACHE)));
+            new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName)));
 
     static {
-         cacheMap.put(MemCachedConstants.EXCEPTION_QUERY_CACHE, exceptionCache);
-         cacheMap.put(MemCachedConstants.SCHEMA_CACHE, schemaCache);
-         cacheMap.put(MemCachedConstants.QUERY_CACHE, successCache);
+         cacheMap.put(CommonQueryCacheSupporter.Type.EXCEPTION_QUERY_CACHE.rootCacheName, exceptionCache);
+         cacheMap.put(CommonQueryCacheSupporter.Type.SCHEMA_CACHE.rootCacheName, schemaCache);
+         cacheMap.put(CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName, successCache);
     }
 
     public static KylinCache getInstance() {
