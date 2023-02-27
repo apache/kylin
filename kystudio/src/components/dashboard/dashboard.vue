@@ -282,6 +282,7 @@ export default class Dashboard extends Vue {
     this.getModelInfo()
     this.getQueryMetrics()
     this.createCharts()
+    this.getJobMetrics()
   }
   hideLoading () {
     this.isLoading = false
@@ -339,6 +340,8 @@ export default class Dashboard extends Vue {
         if (this.jobTotalByteSize > 0) {
           this.jobAvgBuildTime = this.numFilter(this.determineAvgJobBuildTimeUnit(
             this.jobTotalLatency / this.jobTotalByteSize))
+        } else {
+          this.jobAvgBuildTime = 0
         }
       }
     })
