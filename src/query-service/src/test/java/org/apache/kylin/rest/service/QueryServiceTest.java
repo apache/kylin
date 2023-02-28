@@ -2104,17 +2104,17 @@ public class QueryServiceTest extends NLocalFileMetadataTestCase {
         PrepareSqlStateParam[] params1 = new PrepareSqlStateParam[2];
         params1[0] = new PrepareSqlStateParam(Double.class.getCanonicalName(), "123.1");
         params1[1] = new PrepareSqlStateParam(Integer.class.getCanonicalName(), "123");
-        String originSql1 = "with t1 as (select ORDER_ID, PRICE > ? from test_kylin_fact where ORDER_ID = ?)\n, "
-                + "t2 as (select bf from test_kylin_fact)\n" + "select * from t1 where ORDER_ID = '100'\n" //
+        String originSql1 = "with t1 as (select ORDER_ID, PRICE > ? from test_kylin_fact where ORDER_ID > ?)\n, "
+                + "t2 as (select bf from test_kylin_fact)\n" + "select * from t1 where ORDER_ID = '125'\n" //
                 + "union all\n" //
-                + "select * from t1 where ORDER_ID = '200'";
-        String filledSql1 = "with t1 as (select ORDER_ID, PRICE > 123.1 from test_kylin_fact where ORDER_ID = 123)\n"
-                + ", t2 as (select bf from test_kylin_fact)\n" + "select * from t1 where ORDER_ID = '100'\n"
-                + "union all\n" + "select * from t1 where ORDER_ID = '200'";
+                + "select * from t1 where ORDER_ID < '200'";
+        String filledSql1 = "with t1 as (select ORDER_ID, PRICE > 123.1 from test_kylin_fact where ORDER_ID > 123)\n"
+                + ", t2 as (select bf from test_kylin_fact)\n" + "select * from t1 where ORDER_ID = '125'\n"
+                + "union all\n" + "select * from t1 where ORDER_ID < '200'";
         String transformedFilledSql1 = "SELECT *\n" + "FROM (SELECT ORDER_ID, PRICE > 123.1\n"
-                + "FROM TEST_KYLIN_FACT\n" + "WHERE ORDER_ID = 123) AS T1\n" + "WHERE ORDER_ID = '100'\n"
+                + "FROM TEST_KYLIN_FACT\n" + "WHERE ORDER_ID > 123) AS T1\n" + "WHERE ORDER_ID = '125'\n"
                 + "UNION ALL\n" + "SELECT *\n" + "FROM (SELECT ORDER_ID, PRICE > 123.1\n" + "FROM TEST_KYLIN_FACT\n"
-                + "WHERE ORDER_ID = 123) AS T1\n" + "WHERE ORDER_ID = '200'";
+                + "WHERE ORDER_ID > 123) AS T1\n" + "WHERE ORDER_ID < '200'";
         queryWithParamWhenTransformWithToSubQuery(params1, originSql1, filledSql1, transformedFilledSql1);
 
         PrepareSqlStateParam[] params2 = new PrepareSqlStateParam[1];

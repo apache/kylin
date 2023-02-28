@@ -1427,6 +1427,15 @@ class KylinConfigBaseTest {
         config.setProperty("kylin.query.calcite.bindable.cache.concurrencyLevel", "3");
         assertEquals(3, config.getCalciteBindableCacheConcurrencyLevel());
     }
+
+    @Test
+    void testGetMaxMeasureSegmentPrunerBeforeDays() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        long defaultValue = config.getMaxMeasureSegmentPrunerBeforeDays();
+        assertEquals(-1, defaultValue);
+        config.setProperty("kylin.query.max-measure-segment-pruner-before-days", "1");
+        assertEquals(1, config.getMaxMeasureSegmentPrunerBeforeDays());
+    }
 }
 
 class EnvironmentUpdateUtils {

@@ -31,11 +31,13 @@ import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
+import org.apache.calcite.rex.RexExecutorImpl;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.debug.BackdoorToggles;
-import org.apache.kylin.query.calcite.KylinRelDataTypeSystem;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.query.QueryExtension;
+import org.apache.kylin.query.calcite.KylinRelDataTypeSystem;
+import org.apache.kylin.query.engine.meta.SimpleDataContext;
 import org.apache.kylin.query.util.QueryContextCutter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -68,6 +70,9 @@ class SelectRealizationTest {
         String defaultSchemaName = schemaFactory.getDefaultSchema();
         val catalogReader = createCatalogReader(config, rootSchema, defaultSchemaName);
         val planner = new PlannerFactory(kylinConfig).createVolcanoPlanner(config);
+        SimpleDataContext dataContext = new SimpleDataContext(rootSchema.plus(), TypeSystem.javaTypeFactory(),
+                kylinConfig);
+        planner.setExecutor(new RexExecutorImpl(dataContext));
         val sqlConverter = SQLConverter.createConverter(config, planner, catalogReader);
         val queryOptimizer = new QueryOptimizer(planner);
         RelRoot relRoot = sqlConverter

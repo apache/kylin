@@ -3838,6 +3838,10 @@ public abstract class KylinConfigBase implements Serializable {
                 && Boolean.parseBoolean(getOptional("kylin.query.diagnose-enabled", TRUE));
     }
 
+    public long getMaxMeasureSegmentPrunerBeforeDays() {
+        return Long.parseLong(getOptional("kylin.query.max-measure-segment-pruner-before-days", "-1"));
+    }
+
     // ============================================================================
     // Cost based index Planner
     // ============================================================================

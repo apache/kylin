@@ -60,6 +60,8 @@ import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.MultiPartitionDesc;
 import org.apache.kylin.metadata.model.MultiPartitionKeyMapping;
@@ -67,6 +69,7 @@ import org.apache.kylin.metadata.model.MultiPartitionKeyMappingProvider;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.relnode.OLAPContext;
@@ -89,6 +92,7 @@ public class RealizationPruner {
     private static final String STRING = "string";
     private static final String INTEGER = "integer";
     private static final String BIGINT = "bigint";
+    public static final long DAY = 24 * 3600 * 1000L;
     private static final TimeZone UTC_ZONE = TimeZone.getTimeZone("UTC");
     private static final Pattern DATE_PATTERN = Pattern.compile("[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]");
     private static final Pattern TIMESTAMP_PATTERN = Pattern.compile(
@@ -102,80 +106,90 @@ public class RealizationPruner {
     private RealizationPruner() {
     }
 
-    public static List<NDataSegment> pruneSegments(NDataflow dataflow, OLAPContext olapContext) {
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
-        val projectName = dataflow.getProject();
-
-        val projectInstance = NProjectManager.getInstance(kylinConfig).getProject(projectName);
-        val allReadySegments = dataflow.getQueryableSegments();
-        if (!projectInstance.getConfig().isHeterogeneousSegmentEnabled()) {
-            return allReadySegments;
-        }
-        val isStreamingFactTable = olapContext.firstTableScan.getOlapTable().getSourceTable()
-                .getSourceType() == ISourceAware.ID_STREAMING;
-        val isBatchFusionModel = isStreamingFactTable && dataflow.getModel().isFusionModel() && !dataflow.isStreaming();
-        val partitionDesc = isBatchFusionModel
-                ? getStreamingPartitionDesc(dataflow.getModel(), kylinConfig, projectName)
-                : dataflow.getModel().getPartitionDesc();
-        // no partition column
-        if (PartitionDesc.isEmptyPartitionDesc(partitionDesc)) {
-            log.info("No partition column");
+    public static Segments<NDataSegment> pruneSegments(NDataflow dataflow, OLAPContext olapContext) {
+        Segments<NDataSegment> allReadySegments = dataflow.getQueryableSegments();
+        if (!NProjectManager.getProjectConfig(dataflow.getProject()).isHeterogeneousSegmentEnabled()) {
             return allReadySegments;
         }
 
-        val partitionColumn = partitionDesc.getPartitionDateColumnRef();
-        val dateFormat = partitionDesc.getPartitionDateFormat();
-        val filterColumns = olapContext.filterColumns;
-        // sql filter columns do not include partition column
-        if (!filterColumns.contains(partitionColumn)) {
-            log.info("Filter columns do not contain partition column");
+        // pruner segment by partition column and dataformat
+        PartitionDesc partitionCol = getPartitionDesc(dataflow, olapContext);
+        if (isFullBuildModel(partitionCol)) {
+            log.info("No partition column or partition column format is null.");
             return allReadySegments;
         }
 
-        val selectedSegments = Lists.<NDataSegment> newArrayList();
-        var filterConditions = olapContext.getExpandedFilterConditions();
+        // pruner segment by simplify sql filter
         val relOptCluster = olapContext.firstTableScan.getCluster();
         val rexBuilder = relOptCluster.getRexBuilder();
         val rexSimplify = new RexSimplify(relOptCluster.getRexBuilder(), RelOptPredicateList.EMPTY, true,
                 relOptCluster.getPlanner().getExecutor());
 
-        val partitionColInputRef = transformColumn2RexInputRef(partitionColumn, olapContext.allTableScans);
-        if (allReadySegments.size() > 0 && dateFormat != null) {
+        var filterConditions = olapContext.getExpandedFilterConditions();
+        val dateFormat = partitionCol.getPartitionDateFormat();
+        val partitionColRef = partitionCol.getPartitionDateColumnRef();
+        RexInputRef partitionColInputRef = null;
+        if (needRewritePartitionColInFilter(dataflow, olapContext)) {
+            partitionColInputRef = transformColumn2RexInputRef(partitionColRef, olapContext.allTableScans);
             try {
                 val firstSegmentRanges = transformSegment2RexCall(allReadySegments.get(0), dateFormat, rexBuilder,
-                        partitionColInputRef, partitionColumn.getType(), dataflow.isStreaming());
+                        partitionColInputRef, partitionColRef.getType(), dataflow.isStreaming());
                 RelDataTypeFamily segmentLiteralTypeFamily = getSegmentLiteralTypeFamily(firstSegmentRanges.getFirst());
-                filterConditions = filterConditions.stream()//
-                        .map(filterCondition -> rewriteRexCall(filterCondition, rexBuilder, segmentLiteralTypeFamily,
-                                partitionColInputRef, dateFormat))
-                        .collect(Collectors.toList());
+                List<RexNode> filterRexNodeList = new ArrayList<>();
+                for (RexNode filterCondition : filterConditions) {
+                    RexNode rexNode = rewriteRexCall(filterCondition, rexBuilder, segmentLiteralTypeFamily,
+                            partitionColInputRef, dateFormat);
+                    filterRexNodeList.add(rexNode);
+                }
+                filterConditions = filterRexNodeList;
             } catch (Exception ex) {
                 log.warn("Segment pruning error: ", ex);
+                if (canPruneSegmentsForMaxMeasure(dataflow, olapContext, partitionColRef)) {
+                    return selectSegmentsForMaxMeasure(dataflow);
+                }
                 return allReadySegments;
             }
         }
-        var simplifiedSqlFilter = rexSimplify.simplifyAnds(filterConditions);
 
-        // sql filter condition is always false
+        RexNode simplifiedSqlFilter = rexSimplify.simplifyAnds(filterConditions);
         if (simplifiedSqlFilter.isAlwaysFalse()) {
             log.info("SQL filter condition is always false, pruning all ready segments");
             olapContext.storageContext.setFilterCondAlwaysFalse(true);
-            return selectedSegments;
+            return Segments.empty();
         }
-        // sql filter condition is always true
+
+        // pruner segment by customized scene optimize
+        if (canPruneSegmentsForMaxMeasure(dataflow, olapContext, partitionColRef)) {
+            return selectSegmentsForMaxMeasure(dataflow);
+        }
+
+        if (!olapContext.filterColumns.contains(partitionColRef)) {
+            log.info("Filter columns do not contain partition column");
+            return allReadySegments;
+        }
+
         if (simplifiedSqlFilter.isAlwaysTrue()) {
             log.info("SQL filter condition is always true, pruning no segment");
             return allReadySegments;
         }
 
-        if (dateFormat == null) {
-            return allReadySegments;
-        }
+        // prune segments by partition filter
+        Segments<NDataSegment> selectedSegments = pruneSegmentsByPartitionFilter(dataflow, olapContext, rexSimplify,
+                partitionColInputRef, simplifiedSqlFilter);
+        log.info("Scan segment.size: {} after segment pruning", selectedSegments.size());
+        return selectedSegments;
+    }
 
-        for (NDataSegment dataSegment : allReadySegments) {
+    private static Segments<NDataSegment> pruneSegmentsByPartitionFilter(NDataflow dataflow, OLAPContext olapContext,
+            RexSimplify rexSimplify, RexInputRef partitionColInputRef, RexNode simplifiedSqlFilter) {
+        Segments<NDataSegment> selectedSegments = new Segments<>();
+        PartitionDesc partitionCol = getPartitionDesc(dataflow, olapContext);
+        RexBuilder rexBuilder = olapContext.firstTableScan.getCluster().getRexBuilder();
+        for (NDataSegment dataSegment : dataflow.getQueryableSegments()) {
             try {
-                val segmentRanges = transformSegment2RexCall(dataSegment, dateFormat, rexBuilder, partitionColInputRef,
-                        partitionColumn.getType(), dataflow.isStreaming());
+                val segmentRanges = transformSegment2RexCall(dataSegment, partitionCol.getPartitionDateFormat(),
+                        rexBuilder, partitionColInputRef, partitionCol.getPartitionDateColumnRef().getType(),
+                        dataflow.isStreaming());
                 // compare with segment start
                 val segmentStartPredicate = RelOptPredicateList.of(rexBuilder,
                         Lists.newArrayList(segmentRanges.getFirst()));
@@ -197,8 +211,77 @@ public class RealizationPruner {
                 selectedSegments.add(dataSegment);
             }
         }
-        log.info("Scan segment.size: {} after segment pruning", selectedSegments.size());
         return selectedSegments;
+    }
+
+    private static boolean needRewritePartitionColInFilter(NDataflow dataflow, OLAPContext olapContext) {
+        return !dataflow.getQueryableSegments().isEmpty() && olapContext.filterColumns
+                .contains(getPartitionDesc(dataflow, olapContext).getPartitionDateColumnRef());
+    }
+
+    private static boolean isFullBuildModel(PartitionDesc partitionCol) {
+        return PartitionDesc.isEmptyPartitionDesc(partitionCol) || partitionCol.getPartitionDateFormat() == null;
+    }
+
+    private static Segments<NDataSegment> selectSegmentsForMaxMeasure(NDataflow dataflow) {
+        Segments<NDataSegment> selectedSegments = new Segments<>();
+        long days = dataflow.getConfig().getMaxMeasureSegmentPrunerBeforeDays();
+        // segment was sorted
+        Segments<NDataSegment> allReadySegments = dataflow.getQueryableSegments();
+        long maxDt = allReadySegments.getLatestReadySegment().getTSRange().getEnd();
+        long minDt = maxDt - DAY * days;
+        for (int i = allReadySegments.size() - 1; i >= 0; i--) {
+            if (allReadySegments.get(i).getTSRange().getEnd() > minDt) {
+                selectedSegments.add(allReadySegments.get(i));
+            } else {
+                break;
+            }
+        }
+        log.info("Scan segment size: {} after max measure segment pruner. The before days: {}. Passed on segment: {}",
+                selectedSegments.size(), days,
+                selectedSegments.stream().map(ISegment::getName).collect(Collectors.joining(",")));
+        return selectedSegments;
+    }
+
+    private static boolean canPruneSegmentsForMaxMeasure(NDataflow dataflow, OLAPContext olapContext,
+            TblColRef partitionColRef) {
+        if (dataflow.getConfig().getMaxMeasureSegmentPrunerBeforeDays() < 0) {
+            return false;
+        }
+
+        if (CollectionUtils.isNotEmpty(olapContext.getGroupByColumns())
+                && !olapContext.getGroupByColumns().stream().allMatch(partitionColRef::equals)) {
+            return false;
+        }
+
+        if (CollectionUtils.isEmpty(olapContext.aggregations)) {
+            return false;
+        }
+
+        for (FunctionDesc agg : olapContext.aggregations) {
+            if (FunctionDesc.FUNC_MAX.equalsIgnoreCase(agg.getExpression())
+                    && !partitionColRef.equals(agg.getParameters().get(0).getColRef())) {
+                return false;
+            }
+            if (!FunctionDesc.FUNC_MAX.equalsIgnoreCase(agg.getExpression())
+                    && CollectionUtils.isNotEmpty(agg.getParameters())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static PartitionDesc getPartitionDesc(NDataflow dataflow, OLAPContext olapContext) {
+        NDataModel model = dataflow.getModel();
+        val isStreamingFactTable = olapContext.firstTableScan.getOlapTable().getSourceTable()
+                .getSourceType() == ISourceAware.ID_STREAMING;
+        val isBatchFusionModel = isStreamingFactTable && dataflow.getModel().isFusionModel() && !dataflow.isStreaming();
+        if (!isBatchFusionModel) {
+            return model.getPartitionDesc();
+        }
+        return NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), dataflow.getProject())
+                .getDataModelDesc(model.getFusionId()).getPartitionDesc();
     }
 
     public static RexNode rewriteRexCall(RexNode rexNode, RexBuilder rexBuilder, RelDataTypeFamily relDataTypeFamily,
@@ -304,12 +387,6 @@ public class RealizationPruner {
             }
         }
         return null;
-    }
-
-    private static PartitionDesc getStreamingPartitionDesc(NDataModel model, KylinConfig kylinConfig, String project) {
-        NDataModelManager modelManager = NDataModelManager.getInstance(kylinConfig, project);
-        NDataModel streamingModel = modelManager.getDataModelDesc(model.getFusionId());
-        return streamingModel.getPartitionDesc();
     }
 
     private static Pair<RexNode, RexNode> transformSegment2RexCall(NDataSegment dataSegment, String dateFormat,
