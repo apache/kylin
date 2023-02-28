@@ -457,6 +457,10 @@ const sidebars = {
                     type: 'doc',
                     id: 'datasource/data_sampling'
                 },
+                {
+                    type: 'doc',
+                    id: 'datasource/logical_view'
+                },
             ],
         },
         {
