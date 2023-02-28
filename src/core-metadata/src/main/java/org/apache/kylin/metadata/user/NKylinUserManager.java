@@ -23,7 +23,6 @@ import static org.apache.kylin.common.persistence.ResourceStore.USER_ROOT;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -92,7 +91,8 @@ public class NKylinUserManager {
             return user;
         }
         return Objects.nonNull(user) ? user
-                : crud.listPartial(path -> StringUtils.endsWithIgnoreCase(path, name)).stream().findAny().orElse(null);
+                : crud.listPartial(path -> StringUtils.endsWithIgnoreCase(path, name)).stream()
+                        .filter(u -> StringUtils.equalsIgnoreCase(u.getUsername(), name)).findAny().orElse(null);
     }
 
     public List<ManagedUser> list() {
@@ -122,21 +122,7 @@ public class NKylinUserManager {
     }
 
     public boolean exists(String username) {
-        if (StringUtils.isEmpty(username)) {
-            return false;
-        }
-        ManagedUser user = crud.get(username);
-        if (getConfig().isMetadataKeyCaseInSensitiveEnabled()) {
-            return Objects.nonNull(user);
-        }
-        if (Objects.nonNull(user)) {
-            return true;
-        }
-        NavigableSet<String> users = getStore().listResources(USER_ROOT);
-        if (Objects.isNull(users)) {
-            return false;
-        }
-        return users.stream().anyMatch(path -> StringUtils.endsWithIgnoreCase(path, username));
+        return Objects.nonNull(get(username));
     }
 
     public Set<String> getUserGroups(String userName) {
