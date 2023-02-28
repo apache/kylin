@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
@@ -367,5 +368,21 @@ public class JoinsGraphTest extends NLocalFileMetadataTestCase {
         Unsafe.changeAccessibleObject(method, true);
         Object invoke = method.invoke(matcher, a, b);
         Assert.assertEquals(true, invoke);
+    }
+
+    @Test
+    public void testToString() {
+        NDataModel modelDesc = NDataModelManager.getInstance(getTestConfig(), "default")
+                .getDataModelDescByAlias("nmodel_basic_inner");
+        JoinsGraph graph1 = new MockJoinGraphBuilder(modelDesc, "TEST_KYLIN_FACT")
+                .innerJoin(new String[] { "TEST_KYLIN_FACT.ORDER_ID" }, new String[] { "TEST_ORDER.ORDER_ID" }).build();
+        Assert.assertTrue(StringUtils.isNotEmpty(graph1.toString()));
+
+        JoinsGraph graph2 = new MockJoinGraphBuilder(modelDesc, "TEST_KYLIN_FACT")
+                .innerJoin(new String[] { "TEST_KYLIN_FACT.ORDER_ID" }, new String[] { "TEST_ORDER.ORDER_ID" })
+                .innerJoin(new String[] { "TEST_ORDER.BUYER_ID" }, new String[] { "BUYER_ACCOUNT.ACCOUNT_ID" })
+                .innerJoin(new String[] { "BUYER_ACCOUNT.ACCOUNT_COUNTRY" }, new String[] { "BUYER_COUNTRY.COUNTRY" })
+                .build();
+        Assert.assertTrue(StringUtils.isNotEmpty(graph2.toString()));
     }
 }
