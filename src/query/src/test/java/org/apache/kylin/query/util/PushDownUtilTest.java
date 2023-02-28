@@ -237,7 +237,7 @@ public class PushDownUtilTest extends NLocalFileMetadataTestCase {
                 + "ON \"TEST_BANK_INCOME\".\"COUNTRY\" = \"TEST_BANK_LOCATION\".\"COUNTRY\"\n" //
                 + "WHERE\n" //
                 + "1 = 1\n" //
-                + " AND (SUBSTRING(`TEST_BANK_INCOME`.`COUNTRY`, 0, 4) = 'china' and (SUBSTRING(`TEST_BANK_INCOME`.`COUNTRY`, 0, 4)) = 'china')";
+                + " AND (SUBSTRING(\"TEST_BANK_INCOME\".\"COUNTRY\", 0, 4) = 'china' and cc1 = 'china')";
         NDataModel updatedModel = modelManager.getDataModelDesc(model.getUuid());
         Assert.assertEquals(expected, PushDownUtil.generateFlatTableSql(updatedModel, project, false));
     }
@@ -270,7 +270,7 @@ public class PushDownUtilTest extends NLocalFileMetadataTestCase {
                 + "ON \"TEST_BANK_INCOME\".\"COUNTRY\" = \"TEST_BANK_LOCATION\".\"COUNTRY\"\n" //
                 + "WHERE\n" //
                 + "1 = 1\n" //
-                + " AND (TIMESTAMPADD(day, 1, current_date) = '2012-01-01' and (SUBSTRING(`TEST_BANK_INCOME`.`COUNTRY`, 0, 4)) = 'china')";
+                + " AND (TIMESTAMPADD(day, 1, current_date) = '2012-01-01' and cc1 = 'china')";
         NDataModel updatedModel = modelManager.getDataModelDesc(model.getUuid());
         Assert.assertEquals(expected, PushDownUtil.generateFlatTableSql(updatedModel, project, false));
     }
