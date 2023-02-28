@@ -1,12 +1,6 @@
 <template>
   <!-- tableindex的添加和编辑 -->
   <el-dialog :title="tableIndexModalTitle" append-to-body limited-area top="5vh" class="table-edit-dialog" width="880px" v-if="isShow" :visible="true" :close-on-press-escape="false" :close-on-click-modal="false" @close="isShow && closeModal()">
-      <!-- <el-form :model="tableIndexMeta" :rules="rules" ref="tableIndexForm" label-position="top">
-        <el-form-item :label="$t('tableIndexName')" prop="name">
-          <el-input v-focus="isShow" v-model="tableIndexMeta.name" auto-complete="off" placeholder="" size="medium" style="width:500px"></el-input>
-        </el-form-item>
-      </el-form> -->
-      <!-- <div class="ky-line ksd-mtb-10"></div> -->
       <div class="table-index-list">
         <div class="ksd-mb-10" v-if="modelInstance.model_type === 'HYBRID'">
           <h4>
@@ -24,7 +18,6 @@
             </el-tooltip>
           </el-radio-group>
         </div>
-        <!-- <el-button type="primary" plain size="medium" @click="selectAll">{{$t('selectAllColumns')}}</el-button><el-button plain size="medium" @click="clearAll">{{$t('clearAll')}}</el-button> -->
         <div class="header">
           <h4 class="ksd-left" v-if="modelInstance.model_type === 'HYBRID'">{{$t('includeColumns')}}</h4>
           <el-alert
@@ -36,10 +29,6 @@
           </el-alert>
           <template v-if="modelInstance.model_type !== 'HYBRID' || modelInstance.model_type === 'HYBRID' && tableIndexMeta.index_range">
             <p class="anit-table-tips" v-if="hasManyToManyAndAntiTable">{{$t('manyToManyAntiTableTip')}}</p>
-            <!-- <el-tooltip effect="dark" placement="top">
-              <div slot="content" v-html="$t('excludeTableCheckboxTip')"></div>
-              <el-checkbox class="ksd-mr-5" v-if="showExcludedTableCheckBox" v-model="displayExcludedTables">{{$t('excludeTableCheckbox')}}</el-checkbox>
-            </el-tooltip> -->
             <el-input v-model="searchColumn" size="medium" prefix-icon="el-ksd-icon-search_22" style="width:200px" :placeholder="$t('filterByColumns')"></el-input>
           </template>
         </div>
@@ -85,10 +74,9 @@
        </div>
       </div>
       <div slot="footer" class="dialog-footer ky-no-br-space">
-        <!-- <el-checkbox v-model="tableIndexMeta.load_data" :label="true" class="ksd-fleft ksd-mt-8">{{$t('catchup')}}</el-checkbox> -->
         <el-button :type="onlyBatchType ? 'primary' : ''" :text="onlyBatchType" @click="closeModal" size="medium">{{$t('kylinLang.common.cancel')}}</el-button>
-        <el-button :type="!onlyBatchType ? 'primary' : ''" :loading="btnLoading" size="medium" @click="submit(false)" :disabled="saveBtnDisable">{{$t('kylinLang.common.save')}}</el-button>
-        <el-button v-if="onlyBatchType" type="primary" :loading="btnLoading" size="medium" @click="submit(true)" :disabled="saveBtnDisable">{{$t('saveAndBuild')}}</el-button>
+        <el-button :type="!onlyBatchType ? 'primary' : ''" :loading="btnLoading&&!isLoadDataLoading" size="medium" @click="submit(false)" :disabled="saveBtnDisable || btnLoading&&isLoadDataLoading">{{$t('kylinLang.common.save')}}</el-button>
+        <el-button v-if="onlyBatchType" type="primary" :loading="btnLoading&&isLoadDataLoading" size="medium" @click="submit(true)" :disabled="saveBtnDisable || btnLoading&&!isLoadDataLoading">{{$t('saveAndBuild')}}</el-button>
       </div>
   </el-dialog>
 </template>
@@ -159,6 +147,7 @@
     cloneMeta = ''
     isSelectAllTableIndex = false
     displayExcludedTables = false
+    isLoadDataLoading = false
 
     @Watch('searchColumn')
     changeSearchColumn (val) {
@@ -174,9 +163,6 @@
       return (this.modelInstance.model_type === 'HYBRID' && this.tableIndexMeta.index_range !== 'STREAMING') || (this.modelInstance.model_type !== 'STREAMING' && this.modelInstance.model_type !== 'HYBRID')
     }
 
-    // get showExcludedTableCheckBox () {
-    //   return this.allColumns.length ? this.allColumns.filter(it => typeof it.excluded !== 'undefined' && it.excluded).length > 0 : false
-    // }
     topRow (col) {
       let index = this.getRowIndex(col, 'fullName')
       this.allColumns.splice(0, 0, col)
@@ -248,14 +234,9 @@
     }
     getAllColumns () {
       this.allColumns = []
-      // let result = []
       let result = this.modelInstance.selected_columns.map((c) => {
         return { fullName: c.column, cardinality: c.cardinality, excluded: typeof c.excluded !== 'undefined' ? c.excluded : true }
       })
-      // let modelUsedTables = this.modelInstance && this.modelInstance.getTableColumns() || []
-      // modelUsedTables.forEach((col) => {
-      //   result.push(col.full_colname)
-      // })
       if (this.tableIndexMeta.col_order.length) {
         const selected = this.tableIndexMeta.col_order.map(item => {
           const index = result.findIndex(it => it.fullName === item)
@@ -264,11 +245,6 @@
         const unSort = result.filter(item => !this.tableIndexMeta.col_order.includes(item.fullName))
         result = [...selected, ...unSort]
       }
-      // cc列也要放到这里
-      // let ccColumns = this.modelInstance && this.modelInstance.computed_columns || []
-      // ccColumns.forEach((col) => {
-      //   result.push(col.tableAlias + '.' + col.columnName)
-      // })
       result.forEach((ctx, index) => {
         let obj = {fullName: ctx.fullName, cardinality: ctx.cardinality, excluded: ctx.excluded, isUsed: false, isShared: false, colorful: false}
         if (this.tableIndexMeta.col_order.indexOf(ctx.fullName) >= 0) {
@@ -331,10 +307,8 @@
     closeModal (isSubmit) {
       this.hideModal()
       this.btnLoading = false
-      // this.tableIndexMeta.name = ''
       this.searchColumn = ''
       this.isSelectAllTableIndex = false
-      // this.$refs.tableIndexForm.resetFields()
       setTimeout(() => {
         this.callback && this.callback({
           isSubmit: isSubmit
@@ -376,6 +350,7 @@
       }
     }
     confirmSubmit (isLoadData) {
+      this.isLoadDataLoading = isLoadData
       this.btnLoading = true
       let successCb = (res) => {
         handleSuccess(res, (data) => {
@@ -399,7 +374,6 @@
       }
       // 按照sort选中列的顺序对col_order进行重新排序
       this.tableIndexMeta.col_order = []
-      // this.tableIndexMeta.sort_by_columns = []
       this.tableIndexMeta.shard_by_columns = []
       this.allColumns.forEach((col) => {
         if (col.isUsed) {
@@ -408,9 +382,6 @@
         if (col.isShared) {
           this.tableIndexMeta.shard_by_columns.push(col.fullName)
         }
-        // if (col.isSorted) {
-        //   this.tableIndexMeta.sort_by_columns.push(col.fullName)
-        // }
       })
       this.tableIndexMeta.project = this.currentSelectedProject
       this.tableIndexMeta.model_id = this.isHybridBatch ? this.modelInstance.batch_id : this.modelInstance.uuid
@@ -442,13 +413,11 @@
       this.allColumns.forEach(item => {
         if (v && this.getDisabledTableType(item)) return
         item.isUsed = v
-        // item.isSorted = v
       })
     }
     selectTableIndex (status, col) {
       const selectedColumns = this.getSelectedColumns
       const unSelected = this.allColumns.filter(it => !it.isUsed)
-      // col.isSorted = status
       this.allColumns = [...selectedColumns, ...unSelected]
       selectedColumns.length === this.allColumns.length && (this.isSelectAllTableIndex = true)
       unSelected.length === this.allColumns.length && (this.isSelectAllTableIndex = false)

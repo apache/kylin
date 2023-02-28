@@ -38,11 +38,6 @@
               <el-col :span="3">
                 <div class="action-list" @click="toggleColumnShard(col)" v-if="!(sortCount >= 9 && getRowIndex(col, 'fullName') + 1 > 9)">
                   <i class="el-icon-success" :class="{active: col.isShared}"></i>
-                  <!-- <span class="ky-dot-tag" v-if="col.isUsed" :class="{'no-sorted': !col.isSorted}">{{col.isSorted ? getRowIndex(col, 'fullName') + 1 : sortCount + 1}}</span> -->
-                  <!-- <span class="up-down" :class="{hide: searchColumn}">
-                    <i v-visible="col.isUsed && col.isSorted && !checkIsTopSort(col)" @click.stop="upRow(col)" class="el-icon-ksd-arrow_up"></i>
-                    <i v-visible="col.isUsed && col.isSorted && !checkIsBottomSort(col)" @click.stop="downRow(col)" class="el-icon-ksd-arrow_down"></i>
-                  </span> -->
                 </div>
               </el-col>
             </el-row>
