@@ -695,7 +695,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             try {
                 NDataModelResponse nDataModelResponse = convertToDataModelResponse(dataModel, projectName, dfManager,
                         status, queryElem.isOnlyNormalDim());
-                if (lite) {
+                if (lite && nDataModelResponse != null) {
                     return new NDataModelLiteResponse(nDataModelResponse, dataModel);
                 } else {
                     return nDataModelResponse;
