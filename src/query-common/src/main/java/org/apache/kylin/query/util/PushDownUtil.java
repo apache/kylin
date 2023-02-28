@@ -250,8 +250,8 @@ public class PushDownUtil {
         sqlBuilder.append("WHERE ").append(sep);
         sqlBuilder.append("1 = 1").append(sep);
         if (StringUtils.isNotEmpty(model.getFilterCondition())) {
-            String filterCondition = massageExpression(model, project, model.getFilterCondition(), null);
-            sqlBuilder.append(" AND (").append(filterCondition).append(") ").append(sep);
+            massageExpression(model, project, model.getFilterCondition(), null);
+            sqlBuilder.append(" AND (").append(model.getFilterCondition()).append(") ").append(sep);
         }
 
         return new EscapeTransformer().transform(sqlBuilder.toString());
