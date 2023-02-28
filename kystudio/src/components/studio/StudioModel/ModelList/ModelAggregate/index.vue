@@ -117,7 +117,7 @@
               <div class="filter-tags-layout"><el-tag size="mini" closable v-for="(item, index) in filterTags" :key="index" @close="handleClose(item)">{{`${$t(item.source)}：${$t(item.label)}`}}</el-tag></div>
               <span class="clear-all-filters" @click="clearAllTags">{{$t('clearAll')}}</span>
             </div>
-            <div class="index-table-list" :class="{'is-show-tips' :isRealTimeMode&&isShowRealTimeModelActionTips, 'is-show-tab-button': showModelTypeSwitch, 'is-show-tips--tab-button': isRealTimeMode&&isShowRealTimeModelActionTips&&showModelTypeSwitch}">
+            <div class="index-table-list" :class="{'is-show-filter': filterTags.length, 'is-show-tips' :isRealTimeMode&&isShowRealTimeModelActionTips, 'is-show-tab-button': showModelTypeSwitch, 'is-show-tips--tab-button': isRealTimeMode&&isShowRealTimeModelActionTips&&showModelTypeSwitch}">
               <el-table
                 ref="indexesTable"
                 :data="indexDatas"
@@ -934,6 +934,9 @@ export default class ModelAggregate extends Vue {
   .index-table-list {
     max-height: 90%;
     overflow: auto;
+    &.is-show-filter {
+      max-height: calc(~'90% - 36px');
+    }
     &.is-show-tips {
       max-height: calc(~'90% - 45px');
     }
@@ -942,6 +945,15 @@ export default class ModelAggregate extends Vue {
     }
     &.is-show-tips--tab-button {
       max-height: calc(~'90% - 45px - 36px');
+    }
+    &.is-show-filter.is-show-tips {
+      max-height: calc(~'90% - 36px - 45px');
+    }
+    &.is-show-filter.is-show-tab-button {
+      max-height: calc(~'90% - 36px - 36px');
+    }
+    &.is-show-filter.is-show-tips--tab-button {
+      max-height: calc(~'90% - 36px - 45px - 36px');
     }
   }
   .indexes-table {
