@@ -476,6 +476,10 @@ public class JoinsGraph implements Serializable {
         return unmatched;
     }
 
+    public List<Edge> getEdgesByFKSideWithoutSwap(TableRef table) {
+        return getEdgesByFKSide(table).stream().filter(e -> !e.isSwapJoin()).collect(Collectors.toList());
+    }
+
     /**
      * Root: TableRef[TEST_KYLIN_FACT]
      *   Edge: TableRef[TEST_KYLIN_FACT] LEFT JOIN TableRef[TEST_ORDER] ON [ORDER_ID] = [ORDER_ID]
@@ -487,7 +491,9 @@ public class JoinsGraph implements Serializable {
         StringBuilder sb = new StringBuilder();
         sb.append("Root: ").append(center);
         // build next edges
-        getEdgesByFKSide(center).forEach(e -> buildGraphStr(sb, e, 1));
+        for (Edge e : getEdgesByFKSideWithoutSwap(center)) {
+            buildGraphStr(sb, e, 1);
+        }
         return sb.toString();
     }
 
@@ -495,7 +501,9 @@ public class JoinsGraph implements Serializable {
         sb.append(IntStream.range(0, indent).mapToObj(i -> "  ")
                 .collect(Collectors.joining("", "\n", String.valueOf(edge))));
         // build next edges
-        getEdgesByFKSide(edge.pkSide()).forEach(e -> buildGraphStr(sb, e, indent + 1));
+        for (Edge e : getEdgesByFKSideWithoutSwap(edge.pkSide())) {
+            buildGraphStr(sb, e, indent + 1);
+        }
     }
 
     private <T> void addIfAbsent(List<T> edges, T edge) {
