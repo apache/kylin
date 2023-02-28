@@ -11,7 +11,7 @@ keywords:
     - async query api
 draft: false
 last_update:
-    date: 08/12/2022
+    date: 02/28/2023
 ---
 
 > Reminders:
@@ -21,6 +21,7 @@ last_update:
 > 3. In this chapter， all get requests and delete by ID request are forward compatible, that is, if the project parameter is not transferred to the URL, the request can also be successful if the project parameter is transferred to the request body.
 > 4. Due to the requirements of the parquet format, the naming of the column can not contain characters such as ",; {} () \\ n\\ t =", so you need to display the definition alias in the SQL query, and the alias does not contain these special characters.
 > 5. The earlier versions of hive do not support reading the parquet date type field, so you can replace the original table data type with timestamp, or upgrade hive to the versions after 1.2 .
+> 6. In order to solve performance problem, we move the `include_header` parameter to Submit Async Query API, the `include_header` parameter in Download Query Result API doesn't work now.
 
 
 
@@ -40,10 +41,11 @@ last_update:
   - `limit` - `optional` `int `, limit on the quantity of query result
   - `project` - `required` `string`, project name
   - `format` - `optional` `string`，file format, the default value is "csv", other optional values are "json", "xlsx", "parquet"
-     > Note: When the file format is "xlsx" or "json", specifying the separator separator is not supported. When the file format is "parquet", it is currently not supported to download the result file through the [Download Query Result](#Download-Query-Result) API, and can only be obtained directly from HDFS.
+     > Note: When the file format is "xlsx" or "json", specifying the separator separator is not supported. When the file format is "parquet", it is currently not supported to download the result file through the [Download Query Result](#Download-Query-Result) API, and can only be obtained directly from HDFS. File format "xlsx" may cause performance issue, therefore is not recommended. 
   - `encode` - `optional` `string`，file encoding, the default value is "utf-8", other optional values are "gbk"
   - `file_name` - `optional` `string`，file name, Chinese is not supported temporarily, the default value is "result"
   - `spark_queue` - `optional` `string`, the cluster queue specified, the default value is "default". It will take effect after enabling `kylin.query.unique-async-query-yarn-queue-enabled`
+  - `include_header` - `optional` `boolean`, whether the result includes header, the default value is `false`
 
 - Curl Request Example
 
@@ -225,7 +227,6 @@ last_update:
 
 - URL Parameters
   - `query_id` - `required` `string`,  Query ID of the Async Query
-  - `include_header` - `optional` `boolean`, result include header, default is false
   - `project` `required` `string`,  project name
   
 - HTTP Header
