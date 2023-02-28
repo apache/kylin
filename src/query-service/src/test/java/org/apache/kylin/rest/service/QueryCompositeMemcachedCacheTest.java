@@ -18,15 +18,28 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.code.ssm.jmemcached.plugin.AbstractJmemcachedMojo;
 import com.google.code.ssm.jmemcached.plugin.JmemcachedStartMojo;
 import com.google.code.ssm.jmemcached.plugin.Server;
+import net.spy.memcached.ConnectionFactory;
+import net.spy.memcached.ConnectionFactoryBuilder;
+import net.spy.memcached.DefaultHashAlgorithm;
+import net.spy.memcached.FailureMode;
+import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.ops.LinkedOperationQueueFactory;
+import net.spy.memcached.ops.OperationQueueFactory;
+import net.spy.memcached.transcoders.SerializingTranscoder;
 import org.apache.kylin.rest.cache.KylinCache;
 import org.apache.kylin.rest.cache.memcached.CacheStats;
 import org.apache.kylin.rest.cache.memcached.CompositeMemcachedCache;
+import org.apache.kylin.rest.cache.memcached.MemcachedCache;
+import org.apache.kylin.rest.cache.memcached.MemcachedCacheConfig;
+import org.apache.kylin.rest.cache.memcached.MemcachedConnectionFactory;
+import org.apache.kylin.rest.cache.memcached.MemcachedConnectionFactoryBuilder;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -87,6 +100,43 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
     @After
     public void destroy() {
         cleanupTestMetadata();
+    }
+
+    @Test
+    public void testMemcachedConnection() throws IOException {
+        SerializingTranscoder transcoder = new SerializingTranscoder(1048576);
+        transcoder.setCompressionThreshold(Integer.MAX_VALUE);
+        OperationQueueFactory opQueueFactory;
+        opQueueFactory = new LinkedOperationQueueFactory();
+
+        MemcachedCacheConfig config = new MemcachedCacheConfig();
+
+        String memcachedPrefix = "testCli";
+        String hostStr = "localhost:11211";
+        String cacheKey = "test_cache_key";
+        String cacheVal = "test_cache_val";
+        int timeToLive = 7 * 24 * 3600;
+        MemcachedConnectionFactoryBuilder builder = new MemcachedConnectionFactoryBuilder();
+
+        ConnectionFactory connectionFactory = builder
+                .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
+                .setHashAlg(DefaultHashAlgorithm.FNV1A_64_HASH)
+                .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
+                .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
+                .setOpQueueMaxBlockTime(config.getTimeout()).setOpTimeout(config.getTimeout())
+                .setReadBufferSize(config.getReadBufferSize()).setOpQueueFactory(opQueueFactory).build();
+
+        MemcachedConnectionFactory factory = new MemcachedConnectionFactory(connectionFactory);
+        MemcachedCache cache = new MemcachedCache(new MemcachedClient(factory,
+                MemcachedCache.getResolvedAddrList(hostStr)), config, memcachedPrefix, timeToLive);
+        cache.put(cacheKey, cacheVal);
+        cache.put("", cacheVal);
+        cache.put(null, cacheVal);
+        cache.evict(cacheKey);
+        Assert.assertEquals(0, cache.get("").length);
+        Assert.assertEquals(0, cache.get(null).length);
+        Assert.assertEquals(0, cache.get(cacheKey).length);
+        cache.clear();
     }
 
     @Test

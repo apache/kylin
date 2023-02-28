@@ -75,10 +75,16 @@ public class MemcacheConnectionFactoryTest extends NLocalFileMetadataTestCase {
         Assert.assertNotNull(factory.getOperationFactory());
         Assert.assertNotNull(factory.getMetricCollector());
         Assert.assertNotNull(factory.getListenerExecutorService());
+        Assert.assertNotNull(factory.getInitialObservers());
         Assert.assertEquals(500, factory.getOperationTimeout());
         Assert.assertEquals(16384, factory.getReadBufSize());
         Assert.assertEquals(500, factory.getOpQueueMaxBlockTime());
         Assert.assertEquals(MetricType.OFF, factory.enableMetrics());
         Assert.assertTrue(factory.isDefaultExecutorService());
+        Assert.assertTrue(factory.shouldOptimize());
+        Assert.assertFalse(factory.useNagleAlgorithm());
+        Assert.assertEquals(30, factory.getMaxReconnectDelay());
+        Assert.assertEquals(1000, factory.getAuthWaitTime());
+        Assert.assertEquals(500, factory.getOperationTimeout());
     }
 }

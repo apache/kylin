@@ -136,10 +136,6 @@ public class CompositeMemcachedCache implements KylinCache {
     @Override
     public boolean remove(String type, String project, Object key) {
         checkCacheType(type);
-        if (key == null) {
-            logger.warn("evict cache key should not be null");
-            return false;
-        }
         String keyS = serializeKey(key);
         if (keyS == null) {
             logger.warn("evict cache failed for key can not convert to String");

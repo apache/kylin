@@ -178,5 +178,12 @@ public class MemcachedChunkingCacheTest extends NLocalFileMetadataTestCase {
 
         Assert.assertEquals(keyHook, keyHookEq);
         Assert.assertEquals(keyHook.hashCode(), keyHookEq.hashCode());
+        Assert.assertTrue(keyHook.equals(keyHookEq) && (keyHook.toString().equals(keyHookEq.toString())));
+
+        keyHookEq.setChunkskey(null);
+        keyHookEq.setValues(null);
+
+        Assert.assertNotEquals(keyHook, keyHookEq);
+        Assert.assertFalse(keyHook.equals(keyHookEq) || keyHook.toString().equals(keyHookEq.toString()));
     }
 }
