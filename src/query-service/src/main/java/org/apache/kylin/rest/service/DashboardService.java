@@ -52,8 +52,6 @@ public class DashboardService extends BasicService {
     public static final String AVG_QUERY_LATENCY = "AVG_QUERY_LATENCY";
     public static final String JOB = "JOB";
     public static final String AVG_JOB_BUILD_TIME = "AVG_JOB_BUILD_TIME";
-    private static final String WEEK = "week";
-    private static final String MONTH = "month";
     private static final String QUERY = "QUERY";
     private static final String QUERY_COUNT = "QUERY_COUNT";
     private static final String JOB_COUNT = "JOB_COUNT";
@@ -190,16 +188,34 @@ public class DashboardService extends BasicService {
             date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault(Locale.Category.FORMAT)).parse(time);
         } catch (ParseException e) {
             logger.error("parse time to timestamp error!");
-            throw new RuntimeException(e);
+            return 0L;
         }
         return date.getTime();
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
-    public void checkAuthorization(ProjectInstance project) throws AccessDeniedException {
+    private void checkAuthorization(ProjectInstance project) throws AccessDeniedException {
+        //for selected project
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void checkAuthorization() throws AccessDeniedException {
+    private void checkAuthorization() throws AccessDeniedException {
+        //for no selected project
+    }
+
+    public void checkAuthorization(String projectName) {
+        if (projectName != null && !projectName.isEmpty()) {
+            ProjectInstance project = getProjectManager().getProject(projectName);
+            try {
+                checkAuthorization(project);
+            } catch (AccessDeniedException e) {
+                List<NDataModelResponse> models = modelService.getCubes0(null, projectName);
+                if (models.isEmpty()) {
+                    throw new AccessDeniedException("Access is denied");
+                }
+            }
+        } else {
+            checkAuthorization();
+        }
     }
 }

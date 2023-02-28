@@ -18,19 +18,14 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.util.List;
-
 import org.apache.kylin.common.response.MetricsResponse;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.exception.UnsupportedQueryException;
-import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.service.DashboardService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.QueryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,7 +52,7 @@ public class DashboardController extends NBasicController {
     @ResponseBody
     public MetricsResponse getCubeMetrics(@RequestParam(value = "projectName") String projectName,
             @RequestParam(value = "modelName", required = false) String modelName) {
-        checkAuthorization(projectName);
+        dashboardService.checkAuthorization(projectName);
         return dashboardService.getModelMetrics(projectName, modelName);
     }
 
@@ -66,7 +61,7 @@ public class DashboardController extends NBasicController {
     public MetricsResponse getQueryMetrics(@RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "modelName", required = false) String cubeName,
             @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
-        checkAuthorization(projectName);
+        dashboardService.checkAuthorization(projectName);
         return dashboardService.getQueryMetrics(projectName, startTime, endTime);
     }
 
@@ -75,7 +70,7 @@ public class DashboardController extends NBasicController {
     public MetricsResponse getJobMetrics(@RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "modelName", required = false) String cubeName,
             @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
-        checkAuthorization(projectName);
+        dashboardService.checkAuthorization(projectName);
         return dashboardService.getJobMetrics(projectName, startTime, endTime);
     }
 
@@ -85,8 +80,7 @@ public class DashboardController extends NBasicController {
             @PathVariable String category, @RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "modelName", required = false) String cubeName,
             @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
-        checkAuthorization(projectName);
-
+        dashboardService.checkAuthorization(projectName);
         try {
             return dashboardService.getChartData(category, projectName, startTime, endTime, dimension, metric);
         } catch (Exception e) {
@@ -94,19 +88,5 @@ public class DashboardController extends NBasicController {
         }
     }
 
-    private void checkAuthorization(String projectName) {
-        if (projectName != null && !projectName.isEmpty()) {
-            ProjectInstance project = dashboardService.getProjectManager().getProject(projectName);
-            try {
-                dashboardService.checkAuthorization(project);
-            } catch (AccessDeniedException e) {
-                List<NDataModelResponse> models = modelService.getCubes0(null, projectName);
-                if (models.isEmpty()) {
-                    throw new AccessDeniedException("Access is denied");
-                }
-            }
-        } else {
-            dashboardService.checkAuthorization();
-        }
-    }
+
 }

@@ -91,6 +91,8 @@ public class JdbcQueryHistoryStore {
     public static final String ID_TABLE_ALIAS = "idTable";
     public static final String DELETE_REALIZATION_LOG = "Delete {} row query history realization takes {} ms";
 
+    public static final String UNSUPPORTED_MESSAGE = "Unsupported time window!";
+
     private final QueryHistoryTable queryHistoryTable;
     private final QueryHistoryRealizationTable queryHistoryRealizationTable;
 
@@ -807,7 +809,7 @@ public class JdbcQueryHistoryStore {
                     .groupBy(queryHistoryTable.queryDay) //
                     .build().render(RenderingStrategies.MYBATIS3);
         } else {
-            throw new IllegalStateException("Unsupported time window!");
+            throw new IllegalStateException(UNSUPPORTED_MESSAGE);
         }
     }
 
@@ -838,7 +840,7 @@ public class JdbcQueryHistoryStore {
                     .groupBy(queryHistoryTable.queryDay) //
                     .build().render(RenderingStrategies.MYBATIS3);
         } else {
-            throw new IllegalStateException("Unsupported time window!");
+            throw new IllegalStateException(UNSUPPORTED_MESSAGE);
         }
     }
 
@@ -872,7 +874,7 @@ public class JdbcQueryHistoryStore {
                             .groupBy(queryHistoryRealizationTable.queryDay) //
                             .build().render(RenderingStrategies.MYBATIS3);
         } else {
-            throw new IllegalStateException("Unsupported time window!");
+            throw new IllegalStateException(UNSUPPORTED_MESSAGE);
         }
     }
 
@@ -906,7 +908,7 @@ public class JdbcQueryHistoryStore {
                             .groupBy(queryHistoryRealizationTable.queryDay) //
                             .build().render(RenderingStrategies.MYBATIS3);
         } else {
-            throw new IllegalStateException("Unsupported time window!");
+            throw new IllegalStateException(UNSUPPORTED_MESSAGE);
         }
     }
 

@@ -24,23 +24,11 @@ public class MetricsResponse extends TreeMap<String, Float> {
 
     public static final long serialVersionUID = 1L;
 
-    public void increase(String key) {
-        increase(key, (float) 1);
-    }
-
     public void increase(String key, Float increased) {
         if (this.containsKey(key)) {
             this.put(key, (this.get(key) + increased));
         } else {
             this.put(key, increased);
-        }
-    }
-
-    public void decrease(String key, Float decreased) {
-        if (this.containsKey(key)) {
-            this.put(key, (this.get(key) - decreased));
-        } else {
-            this.put(key, decreased);
         }
     }
 }

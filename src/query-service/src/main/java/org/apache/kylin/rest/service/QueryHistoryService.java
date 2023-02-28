@@ -87,6 +87,9 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
     //    public static final String DELETED_MODEL = "Deleted Model";
     //    public static final byte[] CSV_UTF8_BOM = new byte[]{(byte)0xEF, (byte)0xBB, (byte)0xBF};
     public static final String DAY = "day";
+    public static final String MODEL = "model";
+    public static final String COUNT = "count";
+    public static final String MEAN_DURATION = "meanDuration";
     private static final Logger logger = LoggerFactory.getLogger("query");
     @Autowired
     private AclEvaluate aclEvaluate;
@@ -336,14 +339,14 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
         QueryHistoryDAO queryHistoryDAO = getQueryHistoryDao();
         List<QueryStatistics> queryStatistics;
 
-        if (dimension.equals("model")) {
+        if (dimension.equals(MODEL)) {
             queryStatistics = queryHistoryDAO.getQueryCountByModel(startTime, endTime, project);
-            return transformQueryStatisticsByModel(project, queryStatistics, "count");
+            return transformQueryStatisticsByModel(project, queryStatistics, COUNT);
         }
 
         queryStatistics = queryHistoryDAO.getQueryCountByTime(startTime, endTime, dimension, project);
         fillZeroForQueryStatistics(queryStatistics, startTime, endTime, dimension);
-        return transformQueryStatisticsByTime(queryStatistics, "count", dimension);
+        return transformQueryStatisticsByTime(queryStatistics, COUNT, dimension);
     }
 
     public Map<String, Object> getAvgDuration(String project, long startTime, long endTime, String dimension) {
@@ -352,14 +355,14 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
         QueryHistoryDAO queryHistoryDAO = getQueryHistoryDao();
         List<QueryStatistics> queryStatistics;
 
-        if (dimension.equals("model")) {
+        if (dimension.equals(MODEL)) {
             queryStatistics = queryHistoryDAO.getAvgDurationByModel(startTime, endTime, project);
-            return transformQueryStatisticsByModel(project, queryStatistics, "meanDuration");
+            return transformQueryStatisticsByModel(project, queryStatistics, MEAN_DURATION);
         }
 
         queryStatistics = queryHistoryDAO.getAvgDurationByTime(startTime, endTime, dimension, project);
         fillZeroForQueryStatistics(queryStatistics, startTime, endTime, dimension);
-        return transformQueryStatisticsByTime(queryStatistics, "meanDuration", dimension);
+        return transformQueryStatisticsByTime(queryStatistics, MEAN_DURATION, dimension);
     }
 
     public Map<String, Object> getAvgDurationByRealization(String project, long startTime, long endTime,
@@ -369,14 +372,14 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
         QueryHistoryDAO queryHistoryDAO = getQueryHistoryDao();
         List<QueryStatistics> queryStatistics;
 
-        if (dimension.equals("model")) {
+        if (dimension.equals(MODEL)) {
             queryStatistics = queryHistoryDAO.getAvgDurationByModel(startTime, endTime, project);
-            return transformQueryStatisticsByModel(project, queryStatistics, "meanDuration");
+            return transformQueryStatisticsByModel(project, queryStatistics, MEAN_DURATION);
         }
 
         queryStatistics = queryHistoryDAO.getAvgDurationRealizationByTime(startTime, endTime, dimension, project);
         fillZeroForQueryStatistics(queryStatistics, startTime, endTime, dimension);
-        return transformQueryStatisticsByTime(queryStatistics, "meanDuration", dimension);
+        return transformQueryStatisticsByTime(queryStatistics, MEAN_DURATION, dimension);
     }
 
     public Map<String, Object> getQueryCountByRealization(String project, long startTime, long endTime,
@@ -386,14 +389,14 @@ public class QueryHistoryService extends BasicService implements AsyncTaskQueryH
         QueryHistoryDAO queryHistoryDAO = getQueryHistoryDao();
         List<QueryStatistics> queryStatistics;
 
-        if (dimension.equals("model")) {
+        if (dimension.equals(MODEL)) {
             queryStatistics = queryHistoryDAO.getQueryCountByModel(startTime, endTime, project);
-            return transformQueryStatisticsByModel(project, queryStatistics, "count");
+            return transformQueryStatisticsByModel(project, queryStatistics, COUNT);
         }
 
         queryStatistics = queryHistoryDAO.getQueryCountRealizationByTime(startTime, endTime, dimension, project);
         fillZeroForQueryStatistics(queryStatistics, startTime, endTime, dimension);
-        return transformQueryStatisticsByTime(queryStatistics, "count", dimension);
+        return transformQueryStatisticsByTime(queryStatistics, COUNT, dimension);
     }
 
     private Map<String, Object> transformQueryStatisticsByModel(String project, List<QueryStatistics> statistics,

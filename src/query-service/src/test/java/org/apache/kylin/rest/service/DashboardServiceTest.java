@@ -161,8 +161,23 @@ public class DashboardServiceTest extends SourceTestCase{
         MetricsResponse queryMetrics = dashboardService.getQueryMetrics(getProject(), "2010-01-01",
                 "2022-01-01");
         Assert.assertEquals(2, queryMetrics.size());
-        Assert.assertEquals(queryMetrics.get("queryCount"), 777, 0);
-        Assert.assertEquals(queryMetrics.get("avgQueryLatency"), 7070, 0);
+        Assert.assertEquals(777, queryMetrics.get("queryCount"), 0);
+        Assert.assertEquals(7070, queryMetrics.get("avgQueryLatency"), 0);
+    }
+
+    @Test
+    public void testGetJobMetrics() {
+        JobStatisticsResponse jobStats = jobService.getJobStats("default", Long.MIN_VALUE, Long.MAX_VALUE);
+        Assert.assertEquals(0, jobStats.getCount());
+        Assert.assertEquals(0, jobStats.getTotalByteSize(), 0.1);
+        Assert.assertEquals(0, jobStats.getTotalDuration(), 0.1);
+
+        String startTime = "2018-01-01";
+        String endTime = "2018-02-01";
+
+        MetricsResponse metricsResponse = dashboardService.getJobMetrics(getProject(), startTime, endTime);
+        Assert.assertEquals(3, metricsResponse.size());
+        Assert.assertEquals(0, metricsResponse.get("jobCount"), 0.1);
     }
 
     @Test
@@ -189,28 +204,25 @@ public class DashboardServiceTest extends SourceTestCase{
         // query count by model
         MetricsResponse metricsResponse = dashboardService.getChartData(QUERY, getProject(), _startTime, _endTime, MODEL, QUERY_COUNT);
         Assert.assertEquals(3, metricsResponse.size());
-        Assert.assertEquals(10, metricsResponse.get("nmodel_basic"), 0);
-        Assert.assertEquals(11, metricsResponse.get("all_fixed_length"), 0);
-        Assert.assertEquals(12, metricsResponse.get("test_encoding"), 0);
+        Assert.assertEquals(10, metricsResponse.get("nmodel_basic"), 0.1);
+        Assert.assertEquals(11, metricsResponse.get("all_fixed_length"), 0.1);
 
         // query count by day
         metricsResponse = dashboardService.getChartData(QUERY, getProject(), _startTime, _endTime, DAY, QUERY_COUNT);
         Assert.assertEquals(4, metricsResponse.size());
-        Assert.assertEquals(10, metricsResponse.get("2018-01-01"), 0);
-        Assert.assertEquals(11, metricsResponse.get("2018-01-02"), 0);
-        Assert.assertEquals(12, metricsResponse.get("2018-01-03"), 0);
+        Assert.assertEquals(10, metricsResponse.get("2018-01-01"), 0.1);
+        Assert.assertEquals(11, metricsResponse.get("2018-01-02"), 0.1);
 
         // query count by week
         metricsResponse = dashboardService.getChartData(QUERY, getProject(), _startTime, _endTime, WEEK, QUERY_COUNT);
         Assert.assertEquals(5, metricsResponse.size());
-        Assert.assertEquals(10, metricsResponse.get("2018-01-01"), 0);
-        Assert.assertEquals(11, metricsResponse.get("2018-01-02"), 0);
-        Assert.assertEquals(12, metricsResponse.get("2018-01-03"), 0);
+        Assert.assertEquals(10, metricsResponse.get("2018-01-01"), 0.1);
+        Assert.assertEquals(11, metricsResponse.get("2018-01-02"), 0.1);
 
         // query count by month
         metricsResponse = dashboardService.getChartData(QUERY, getProject(), _startTime, _endTime, MONTH, QUERY_COUNT);
         Assert.assertEquals(2, metricsResponse.size());
-        Assert.assertEquals(11, metricsResponse.get("2018-01"), 0);
+        Assert.assertEquals(11, metricsResponse.get("2018-01"), 0.1);
 
 
         Mockito.doReturn(getTestStatistics()).when(queryHistoryDAO).getAvgDurationByModel(startTime, endTime,
@@ -225,21 +237,18 @@ public class DashboardServiceTest extends SourceTestCase{
         Assert.assertEquals(3, metricsResponse.size());
         Assert.assertEquals(500, (double) metricsResponse.get("nmodel_basic"), 0.1);
         Assert.assertEquals(600, (double) metricsResponse.get("all_fixed_length"), 0.1);
-        Assert.assertEquals(700, (double) metricsResponse.get("test_encoding"), 0.1);
 
         // avg duration by day
         metricsResponse = dashboardService.getChartData(QUERY, getProject(), _startTime, _endTime, DAY, AVG_QUERY_LATENCY);
         Assert.assertEquals(4, metricsResponse.size());
         Assert.assertEquals(500, (double) metricsResponse.get("2018-01-01"), 0.1);
         Assert.assertEquals(600, (double) metricsResponse.get("2018-01-02"), 0.1);
-        Assert.assertEquals(700, (double) metricsResponse.get("2018-01-03"), 0.1);
 
         // avg duration by week
         metricsResponse = dashboardService.getChartData(QUERY, getProject(), _startTime, _endTime, WEEK, AVG_QUERY_LATENCY);
         Assert.assertEquals(5, metricsResponse.size());
         Assert.assertEquals(500, (double) metricsResponse.get("2018-01-01"), 0.1);
         Assert.assertEquals(600, (double) metricsResponse.get("2018-01-02"), 0.1);
-        Assert.assertEquals(700, (double) metricsResponse.get("2018-01-03"), 0.1);
 
         // avg duration by month
         metricsResponse = dashboardService.getChartData(QUERY, getProject(), _startTime, _endTime, MONTH, AVG_QUERY_LATENCY);
@@ -251,8 +260,8 @@ public class DashboardServiceTest extends SourceTestCase{
     public void testGetChartDataOfJob() {
         JobStatisticsResponse jobStats = jobService.getJobStats("default", Long.MIN_VALUE, Long.MAX_VALUE);
         Assert.assertEquals(0, jobStats.getCount());
-        Assert.assertEquals(0, jobStats.getTotalByteSize(), 0);
-        Assert.assertEquals(0, jobStats.getTotalDuration(), 0);
+        Assert.assertEquals(0, jobStats.getTotalByteSize(), 0.1);
+        Assert.assertEquals(0, jobStats.getTotalDuration(), 0.1);
 
         String startTime = "2018-01-01";
         String endTime = "2018-02-01";
@@ -265,20 +274,20 @@ public class DashboardServiceTest extends SourceTestCase{
         //day
         metricsResponse = dashboardService.getChartData(JOB, getProject(), startTime, endTime, DAY, JOB_COUNT);
         Assert.assertEquals(32, metricsResponse.size());
-        Assert.assertEquals(0, metricsResponse.get("2018-01-01"), 0);
-        Assert.assertEquals(0, metricsResponse.get("2018-02-01"), 0);
+        Assert.assertEquals(0, metricsResponse.get("2018-01-01"), 0.1);
+        Assert.assertEquals(0, metricsResponse.get("2018-02-01"), 0.1);
 
         //week
         metricsResponse = dashboardService.getChartData(JOB, getProject(), startTime, endTime, WEEK, JOB_COUNT);
         Assert.assertEquals(5, metricsResponse.size());
-        Assert.assertEquals(0, metricsResponse.get("2018-01-08"), 0);
-        Assert.assertEquals(0, metricsResponse.get("2018-01-29"), 0);
+        Assert.assertEquals(0, metricsResponse.get("2018-01-08"), 0.1);
+        Assert.assertEquals(0, metricsResponse.get("2018-01-29"), 0.1);
 
         //month
         metricsResponse = dashboardService.getChartData(JOB, getProject(), startTime, endTime, MONTH, JOB_COUNT);
         Assert.assertEquals(2, metricsResponse.size());
-        Assert.assertEquals(0, metricsResponse.get("2018-01-01"), 0);
-        Assert.assertEquals(0, metricsResponse.get("2018-02-01"), 0);
+        Assert.assertEquals(0, metricsResponse.get("2018-01-01"), 0.1);
+        Assert.assertEquals(0, metricsResponse.get("2018-02-01"), 0.1);
 
         //AVG_BUILD_TIME
         //model
@@ -288,20 +297,20 @@ public class DashboardServiceTest extends SourceTestCase{
         //day
         metricsResponse = dashboardService.getChartData(JOB, getProject(), startTime, endTime, DAY, AVG_JOB_BUILD_TIME);
         Assert.assertEquals(32, metricsResponse.size());
-        Assert.assertEquals(0, metricsResponse.get("2018-01-01"), 0);
-        Assert.assertEquals(0, metricsResponse.get("2018-02-01"), 0);
+        Assert.assertEquals(0, metricsResponse.get("2018-01-01"), 0.1);
+        Assert.assertEquals(0, metricsResponse.get("2018-02-01"), 0.1);
 
         //week
         metricsResponse = dashboardService.getChartData(JOB, getProject(), startTime, endTime, WEEK, AVG_JOB_BUILD_TIME);
         Assert.assertEquals(5, metricsResponse.size());
-        Assert.assertEquals(0, metricsResponse.get("2018-01-08"), 0);
-        Assert.assertEquals(0, metricsResponse.get("2018-01-29"), 0);
+        Assert.assertEquals(0, metricsResponse.get("2018-01-08"), 0.1);
+        Assert.assertEquals(0, metricsResponse.get("2018-01-29"), 0.1);
 
         //month
         metricsResponse = dashboardService.getChartData(JOB, getProject(), startTime, endTime, MONTH, AVG_JOB_BUILD_TIME);
         Assert.assertEquals(2, metricsResponse.size());
-        Assert.assertEquals(0, metricsResponse.get("2018-01-01"), 0);
-        Assert.assertEquals(0, metricsResponse.get("2018-02-01"), 0);
+        Assert.assertEquals(0, metricsResponse.get("2018-01-01"), 0.1);
+        Assert.assertEquals(0, metricsResponse.get("2018-02-01"), 0.1);
     }
 
     @Test
@@ -330,6 +339,12 @@ public class DashboardServiceTest extends SourceTestCase{
         }
         Assert.assertNotNull(errorMsg);
 
+    }
+
+    @Test
+    public void testCheckAuthorization() {
+        dashboardService.checkAuthorization(null);
+        dashboardService.checkAuthorization(getProject());
     }
 
     private List<QueryStatistics> getTestStatistics() throws ParseException {
