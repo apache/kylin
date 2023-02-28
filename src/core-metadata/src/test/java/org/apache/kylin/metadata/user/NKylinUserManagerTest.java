@@ -68,4 +68,16 @@ class NKylinUserManagerTest extends NLocalFileMetadataTestCase {
         Assertions.assertNull(manager.get("notexist"));
         Assertions.assertNull(manager.get(null));
     }
+
+    @Test
+    void testNameSuffix() {
+        NKylinUserManager manager = NKylinUserManager.getInstance(getTestConfig());
+        ManagedUser normalUser = new ManagedUser("test_ut", "KYLIN", false, Arrays.asList(
+                new SimpleGrantedAuthority(Constant.ROLE_ANALYST), new SimpleGrantedAuthority(Constant.ROLE_MODELER)));
+        manager.update(normalUser);
+        Assertions.assertTrue(manager.exists("test_ut"));
+        Assertions.assertFalse(manager.exists("ut"));
+        Assertions.assertNotNull(manager.get("test_ut"));
+        Assertions.assertNull(manager.get("ut"));
+    }
 }
