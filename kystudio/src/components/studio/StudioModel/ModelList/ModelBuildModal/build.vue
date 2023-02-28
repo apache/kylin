@@ -456,7 +456,7 @@
       return !(this.partitionMeta.table && this.partitionMeta.column && this.partitionMeta.format)
     }
     get incrementalDisabled () {
-      return !(this.partitionMeta.table && this.partitionMeta.column && this.partitionMeta.format && this.modelBuildMeta.dataRangeVal.length) && this.buildType === 'incremental'
+      return !(this.partitionMeta.table && this.partitionMeta.column && this.partitionMeta.format && this.modelBuildMeta.dataRangeVal.length && this.modelBuildMeta.dataRangeVal[0] && this.modelBuildMeta.dataRangeVal[1]) && this.buildType === 'incremental'
     }
     get partitionFormat () {
       if (this.partitionMeta.format === 'TIMESTAMP SECOND') {
