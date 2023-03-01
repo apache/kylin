@@ -73,7 +73,7 @@ public class DFMergeJob extends SparkApplication {
         // collect layouts need to merge
         Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = Maps.newConcurrentMap();
         for (NDataSegment seg : mergingSegments) {
-            for (NDataLayout cuboid : seg.getSegDetails().getWorkingLayouts()) {
+            for (NDataLayout cuboid : seg.getSegDetails().getEffectiveLayouts()) {
                 long layoutId = cuboid.getLayoutId();
 
                 DFLayoutMergeAssist assist = mergeCuboidsAssist.get(layoutId);

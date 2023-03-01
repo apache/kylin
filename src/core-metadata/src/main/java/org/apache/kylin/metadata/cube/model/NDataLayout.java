@@ -59,7 +59,7 @@ public class NDataLayout implements Serializable {
         return r;
     }
 
-    public static boolean filterWorkingLayout(NDataLayout layout) {
+    public static boolean filterEffectiveLayout(NDataLayout layout) {
         if (layout == null) {
             return false;
         }
@@ -277,7 +277,7 @@ public class NDataLayout implements Serializable {
         if (segDetails == null || !segDetails.isCachedAndShared())
             return false;
 
-        for (NDataLayout cached : segDetails.getWorkingLayouts()) {
+        for (NDataLayout cached : segDetails.getEffectiveLayouts()) {
             if (cached == this)
                 return true;
         }

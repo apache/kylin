@@ -49,7 +49,7 @@ public class PartitionDictionaryBuilderHelper extends DictionaryBuilderHelper {
                     .filter(partition -> !partition.getStatus().equals(PartitionStatusEnum.READY))
                     .collect(Collectors.toSet());
             if (CollectionUtils.isEmpty(newPartitions)) {
-                for (NDataLayout cuboid : seg.getSegDetails().getWorkingLayouts()) {
+                for (NDataLayout cuboid : seg.getSegDetails().getEffectiveLayouts()) {
                     buildedLayouts.add(cuboid.getLayout());
                 }
             }

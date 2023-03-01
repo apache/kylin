@@ -43,7 +43,7 @@ public interface ISegment extends Comparable<ISegment> {
 
     public int getLayoutSize();
 
-    public int getWorkingLayoutSize();
+    public int getEffectiveLayoutSize();
 
     public NDataModel getModel();
 

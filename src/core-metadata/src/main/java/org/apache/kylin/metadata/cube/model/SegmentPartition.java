@@ -142,7 +142,7 @@ public class SegmentPartition implements Serializable {
                 return 0;
             }
             storageSize = dataSegment.getSegDetails() //
-                    .getWorkingLayouts().stream() //
+                    .getEffectiveLayouts().stream() //
                     .flatMap(layout -> layout.getMultiPartition().stream()) //
                     .filter(partition -> partition.getPartitionId() == partitionId) //
                     .mapToLong(LayoutPartition::getByteSize).sum();

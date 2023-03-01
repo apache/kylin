@@ -110,7 +110,7 @@ public class AfterBuildResourceMerger extends SparkJobMetadataMerger {
         theSeg.setStatus(SegmentStatusEnum.READY);
         dfUpdate.setToUpdateSegs(theSeg);
         dfUpdate.setToRemoveSegs(toRemoveSegments.toArray(new NDataSegment[toRemoveSegments.size()]));
-        dfUpdate.setToAddOrUpdateLayouts(theSeg.getSegDetails().getWorkingLayouts().toArray(new NDataLayout[0]));
+        dfUpdate.setToAddOrUpdateLayouts(theSeg.getSegDetails().getEffectiveLayouts().toArray(new NDataLayout[0]));
 
         localDataflowManager.updateDataflow(dfUpdate);
         updateIndexPlan(flowName, remoteStore);

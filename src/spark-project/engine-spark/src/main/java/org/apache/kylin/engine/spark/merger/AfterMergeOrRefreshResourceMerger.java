@@ -83,7 +83,7 @@ public class AfterMergeOrRefreshResourceMerger extends SparkJobMetadataMerger {
                 partition.setLastBuildTime(lastBuildTime);
             });
             mergedSegment.setLastBuildTime(lastBuildTime);
-            toUpdateCuboids.addAll(new ArrayList<>(mergedSegment.getSegDetails().getWorkingLayouts()));
+            toUpdateCuboids.addAll(new ArrayList<>(mergedSegment.getSegDetails().getEffectiveLayouts()));
         } else {
             mergedSegment = upsertSegmentPartition(localSegment, remoteSegment, partitions);
             for (val segId : segmentIds) {
@@ -158,7 +158,7 @@ public class AfterMergeOrRefreshResourceMerger extends SparkJobMetadataMerger {
                 mergedSegment.setStatus(SegmentStatusEnum.WARNING);
             }
         }
-        toUpdateCuboids.addAll(new ArrayList<>(mergedSegment.getSegDetails().getWorkingLayouts()));
+        toUpdateCuboids.addAll(new ArrayList<>(mergedSegment.getSegDetails().getEffectiveLayouts()));
 
         update.setToAddOrUpdateLayouts(toUpdateCuboids.toArray(new NDataLayout[0]));
         update.setToRemoveSegs(toRemoveSegments.toArray(new NDataSegment[0]));

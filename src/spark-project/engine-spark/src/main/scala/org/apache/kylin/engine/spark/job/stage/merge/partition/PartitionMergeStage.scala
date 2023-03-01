@@ -50,7 +50,7 @@ abstract class PartitionMergeStage(private val jobContext: SegmentJob,
 
   override protected def mergeIndices(): Unit = {
     val tasks = unmerged.flatMap(segment =>
-      segment.getSegDetails.getWorkingLayouts.asScala.flatMap(layout =>
+      segment.getSegDetails.getEffectiveLayouts.asScala.flatMap(layout =>
         layout.getMultiPartition.asScala.map(partition => (layout, partition))
       )).groupBy(tp => (tp._1.getLayoutId, tp._2.getPartitionId)).values.map(PartitionMergeTask)
     slowStartExec(tasks.iterator, mergePartition)
