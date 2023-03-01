@@ -55,6 +55,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase {
 
     static {
@@ -73,6 +76,11 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
             e.printStackTrace();
         }
     }
+
+    private static String PROJECT = "test_project";
+    private static String TYPE = "test_type";
+    private static String CACHE_KEY = "test_key";
+    private static String CACHE_VAL = "test_val";
 
     @Spy
     private KylinCache memcachedCache = Mockito.spy(CompositeMemcachedCache.getInstance());
@@ -139,6 +147,45 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
         cache.clear();
     }
 
+    @Test()
+    public void testTypeAsNull() {
+        CompositeMemcachedCache compositeMemcachedCache = (CompositeMemcachedCache) CompositeMemcachedCache.getInstance();
+        Assert.assertNotNull(compositeMemcachedCache);
+        Assert.assertThrows(NullPointerException.class, () -> compositeMemcachedCache.put(null, PROJECT, CACHE_KEY, CACHE_VAL));
+    }
+
+    @Test()
+    public void testUnsupportedCacheType() {
+        CompositeMemcachedCache compositeMemcachedCache = (CompositeMemcachedCache) CompositeMemcachedCache.getInstance();
+        Assert.assertNotNull(compositeMemcachedCache);
+        Assert.assertThrows(IllegalArgumentException.class, () -> compositeMemcachedCache.put(TYPE, PROJECT, CACHE_KEY, CACHE_VAL));
+    }
+
+    @Test
+    public void testCompositeMemcachedCache() {
+        CompositeMemcachedCache compositeMemcachedCache = (CompositeMemcachedCache) CompositeMemcachedCache.getInstance();
+        Assert.assertNotNull(compositeMemcachedCache);
+        Object mockItem = mock(Object.class);
+        when(mockItem.toString()).thenReturn(mockItem.getClass().getName());
+        // write bad case
+        String type = CommonQueryCacheSupporter.Type.SUCCESS_QUERY_CACHE.rootCacheName;
+        compositeMemcachedCache.put(type, PROJECT, mockItem, CACHE_VAL);
+        compositeMemcachedCache.update(type, PROJECT, mockItem, CACHE_VAL);
+        Object result1 = compositeMemcachedCache.get(type, PROJECT, mockItem);
+        Assert.assertNull(result1);
+        Assert.assertFalse(compositeMemcachedCache.remove(type, PROJECT, mockItem));
+
+        compositeMemcachedCache.put(type, PROJECT, CACHE_KEY, CACHE_VAL);
+        Object result2 = compositeMemcachedCache.get(type, PROJECT, CACHE_KEY);
+        Assert.assertEquals("test_val", (String)result2);
+
+        compositeMemcachedCache.update(type, PROJECT, CACHE_KEY, "update_val");
+        Object result3 = compositeMemcachedCache.get(type, PROJECT, CACHE_KEY);
+        Assert.assertEquals("update_val", (String)result3);
+
+        compositeMemcachedCache.clearAll();
+    }
+
     @Test
     public void testProjectCompositeMemcachedCacheQuery() {
         overwriteSystemProp("kylin.cache.memcached.enabled", "true");
@@ -170,6 +217,7 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
         Assert.assertEquals(resp1.getResultRowCount(), queryCacheManager.searchQuery(req1).getResultRowCount());
         queryCacheManager.clearProjectCache(project);
         Assert.assertNull(queryCacheManager.searchQuery(req1));
+        queryCacheManager.clearProjectCache(null);
 
         queryCacheManager.recoverCache();
     }

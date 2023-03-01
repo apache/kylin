@@ -23,15 +23,21 @@ import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.DefaultConnectionFactory;
 import net.spy.memcached.DefaultHashAlgorithm;
 import net.spy.memcached.FailureMode;
+import net.spy.memcached.OperationFactory;
 import net.spy.memcached.metrics.MetricType;
+import net.spy.memcached.metrics.NoopMetricCollector;
 import net.spy.memcached.ops.LinkedOperationQueueFactory;
 import net.spy.memcached.ops.OperationQueueFactory;
+import net.spy.memcached.protocol.binary.BinaryOperationFactory;
 import net.spy.memcached.transcoders.SerializingTranscoder;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MemcacheConnectionFactoryTest extends NLocalFileMetadataTestCase {
 
@@ -86,5 +92,52 @@ public class MemcacheConnectionFactoryTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(30, factory.getMaxReconnectDelay());
         Assert.assertEquals(1000, factory.getAuthWaitTime());
         Assert.assertEquals(500, factory.getOperationTimeout());
+    }
+
+    @Test
+    public void testMemcachedConnectionConfig() {
+        SerializingTranscoder transcoder = new SerializingTranscoder(1048576);
+        // always no compression inside, we compress/decompress outside
+        transcoder.setCompressionThreshold(Integer.MAX_VALUE);
+        OperationQueueFactory opQueueFactory;
+        opQueueFactory = new LinkedOperationQueueFactory();
+        OperationFactory operationFactory = new BinaryOperationFactory();
+        ExecutorService executorService;
+        executorService = Executors.newSingleThreadExecutor();
+
+        MemcachedConnectionFactoryBuilder builder = new MemcachedConnectionFactoryBuilder();
+
+        ConnectionFactory connectionFactory = builder
+                .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
+                .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
+                .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
+                .setListenerExecutorService(executorService)
+                .setOpFact(operationFactory)
+                .setEnableMetrics(MetricType.OFF)
+                .setMetricCollector(new NoopMetricCollector())
+                .setOpQueueFactory(opQueueFactory).build();
+
+        MemcachedConnectionFactory factory = new MemcachedConnectionFactory(connectionFactory);
+
+        factory.createOperationQueue();
+        factory.createReadOperationQueue();
+        factory.createWriteOperationQueue();
+        Assert.assertEquals(transcoder, factory.getDefaultTranscoder());
+        Assert.assertEquals(FailureMode.Redistribute, factory.getFailureMode());
+        Assert.assertEquals(DefaultHashAlgorithm.NATIVE_HASH, factory.getHashAlg());
+        Assert.assertNotNull(factory.getOperationFactory());
+        Assert.assertNotNull(factory.getMetricCollector());
+        Assert.assertNotNull(factory.getListenerExecutorService());
+        Assert.assertNotNull(factory.getInitialObservers());
+        Assert.assertEquals(2500, factory.getOperationTimeout());
+        Assert.assertEquals(16384, factory.getReadBufSize());
+        Assert.assertEquals(10000, factory.getOpQueueMaxBlockTime());
+        Assert.assertEquals(MetricType.OFF, factory.enableMetrics());
+        Assert.assertFalse(factory.isDefaultExecutorService());
+        Assert.assertTrue(factory.shouldOptimize());
+        Assert.assertFalse(factory.useNagleAlgorithm());
+        Assert.assertEquals(30, factory.getMaxReconnectDelay());
+        Assert.assertEquals(1000, factory.getAuthWaitTime());
+        Assert.assertEquals(2500, factory.getOperationTimeout());
     }
 }
