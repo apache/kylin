@@ -91,7 +91,7 @@ class GenerateFlatTable(jobContext: SegmentJob, dataSegment: NDataSegment, build
    * @return <tt>true</tt> if data count check pass, <tt>false</tt> otherwise
    */
   private def checkDataCount(): Boolean = {
-    val layouts = dataSegment.getSegDetails.getWorkingLayouts.asScala.map(lay => jobContext.getIndexPlan.getLayoutEntity(lay.getLayoutId))
+    val layouts = dataSegment.getSegDetails.getEffectiveLayouts.asScala.map(lay => jobContext.getIndexPlan.getLayoutEntity(lay.getLayoutId))
     val tasks = layouts.map(layout => new DataCountCheckTask(layout, StorageStoreUtils.toDF(dataSegment, layout, sparkSession)))
     val resultsQueue = Queues.newLinkedBlockingQueue[DataCountCheckResult]()
 

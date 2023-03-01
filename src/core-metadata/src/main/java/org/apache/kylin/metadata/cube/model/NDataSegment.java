@@ -276,9 +276,9 @@ public class NDataSegment implements ISegment, Serializable {
     }
 
     @Override
-    public int getWorkingLayoutSize() {
+    public int getEffectiveLayoutSize() {
         return (int) getLayoutInfo().getLayoutsMap().values().stream()
-                .filter(NDataLayout::filterWorkingLayout).count();
+                .filter(NDataLayout::filterEffectiveLayout).count();
     }
 
     public NDataLayout getLayout(long layoutId) {
@@ -332,7 +332,7 @@ public class NDataSegment implements ISegment, Serializable {
         private NDataSegDetails segDetails;
         // not required by spark cubing
         private Map<Long, NDataLayout> allLayoutsMap = Collections.emptyMap();
-        private Map<Long, NDataLayout> workingLayoutsMap = Collections.emptyMap();
+        private Map<Long, NDataLayout> effectiveLayoutsMap = Collections.emptyMap();
         /**
          * for each layout, partition id -> bucket id
          */
@@ -348,8 +348,8 @@ public class NDataSegment implements ISegment, Serializable {
 
         public LayoutInfo(Map<Long, NDataLayout> layoutsMap) {
             this.allLayoutsMap = layoutsMap;
-            this.workingLayoutsMap = layoutsMap.entrySet().stream()
-                    .filter(entry -> NDataLayout.filterWorkingLayout(entry.getValue()))
+            this.effectiveLayoutsMap = layoutsMap.entrySet().stream()
+                    .filter(entry -> NDataLayout.filterEffectiveLayout(entry.getValue()))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
 
@@ -373,11 +373,11 @@ public class NDataSegment implements ISegment, Serializable {
             segDetails.setCachedAndShared(dataflow.isCachedAndShared());
             List<NDataLayout> allLayouts = segDetails.getAllLayouts();
             allLayoutsMap = Maps.newHashMap();
-            workingLayoutsMap = Maps.newHashMap();
+            effectiveLayoutsMap = Maps.newHashMap();
             for (NDataLayout layout : allLayouts) {
                 allLayoutsMap.put(layout.getLayoutId(), layout);
-                if (NDataLayout.filterWorkingLayout(layout)) {
-                    workingLayoutsMap.put(layout.getLayoutId(), layout);
+                if (NDataLayout.filterEffectiveLayout(layout)) {
+                    effectiveLayoutsMap.put(layout.getLayoutId(), layout);
                     Map<Long, Long> cuboidBucketMap = Maps.newHashMap();
                     layout.getMultiPartition().forEach(dataPartition -> cuboidBucketMap.put(dataPartition.getPartitionId(),
                             dataPartition.getBucketId()));
@@ -387,15 +387,15 @@ public class NDataSegment implements ISegment, Serializable {
         }
 
         public int getLayoutSize() {
-            return workingLayoutsMap.size();
+            return effectiveLayoutsMap.size();
         }
 
         public NDataLayout getLayout(long layoutId) {
-            return workingLayoutsMap.get(layoutId);
+            return effectiveLayoutsMap.get(layoutId);
         }
 
         public Map<Long, NDataLayout> getLayoutsMap() {
-            return workingLayoutsMap;
+            return effectiveLayoutsMap;
         }
 
         public Map<Long, NDataLayout> getAllLayoutsMap() {
@@ -403,7 +403,7 @@ public class NDataSegment implements ISegment, Serializable {
         }
 
         public Set<Long> getLayoutIds() {
-            return workingLayoutsMap.keySet();
+            return effectiveLayoutsMap.keySet();
         }
 
         public List<Long> getMultiPartitionIds() {
@@ -419,8 +419,8 @@ public class NDataSegment implements ISegment, Serializable {
         }
 
         public boolean isAlreadyBuilt(long layoutId) {
-            if (Objects.nonNull(workingLayoutsMap) && workingLayoutsMap.containsKey(layoutId)) {
-                return workingLayoutsMap.get(layoutId).isReady();
+            if (Objects.nonNull(effectiveLayoutsMap) && effectiveLayoutsMap.containsKey(layoutId)) {
+                return effectiveLayoutsMap.get(layoutId).isReady();
             }
             return false;
         }

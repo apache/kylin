@@ -78,7 +78,7 @@ abstract class MergeStage(private val jobContext: SegmentJob,
     // Cleanup previous potentially left temp layout data.
     cleanupLayoutTempData(dataSegment, jobContext.getReadOnlyLayouts.asScala.toSeq)
 
-    val tasks = unmerged.flatMap(segment => segment.getSegDetails.getWorkingLayouts.asScala) //
+    val tasks = unmerged.flatMap(segment => segment.getSegDetails.getEffectiveLayouts.asScala) //
       .groupBy(_.getLayoutId).values.map(LayoutMergeTask)
     slowStartExec(tasks.iterator, mergeLayout)
   }

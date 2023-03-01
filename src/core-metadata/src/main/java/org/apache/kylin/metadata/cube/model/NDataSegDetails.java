@@ -115,7 +115,7 @@ public class NDataSegDetails extends RootPersistentEntity implements Serializabl
 
     public long getTotalRowCount() {
         long count = 0L;
-        for (NDataLayout cuboid : getWorkingLayouts()) {
+        for (NDataLayout cuboid : getEffectiveLayouts()) {
             count += cuboid.getRows();
         }
         return count;
@@ -123,16 +123,16 @@ public class NDataSegDetails extends RootPersistentEntity implements Serializabl
 
     /**
      * @deprecated Deprecated because of non-working layouts were added.
-     * <p>Use {@link NDataSegDetails#getWorkingLayouts} or {@link NDataSegDetails#getAllLayouts} instead.
+     * <p>Use {@link NDataSegDetails#getEffectiveLayouts} or {@link NDataSegDetails#getAllLayouts} instead.
      */
     @Deprecated
     public List<NDataLayout> getLayouts() {
         return getAllLayouts();
     }
 
-    public List<NDataLayout> getWorkingLayouts() {
-        List<NDataLayout> workingLayouts = getLayouts0(false);
-        return isCachedAndShared() ? ImmutableList.copyOf(workingLayouts) : workingLayouts;
+    public List<NDataLayout> getEffectiveLayouts() {
+        List<NDataLayout> effectiveLayouts = getLayouts0(false);
+        return isCachedAndShared() ? ImmutableList.copyOf(effectiveLayouts) : effectiveLayouts;
     }
 
     public List<NDataLayout> getAllLayouts() {
@@ -140,11 +140,11 @@ public class NDataSegDetails extends RootPersistentEntity implements Serializabl
         return isCachedAndShared() ? ImmutableList.copyOf(allLayouts) : allLayouts;
     }
 
-    private List<NDataLayout> getLayouts0(boolean includingNonWorkingLayouts) {
-        if (includingNonWorkingLayouts) {
+    private List<NDataLayout> getLayouts0(boolean includingNonEffectiveLayouts) {
+        if (includingNonEffectiveLayouts) {
             return layouts;
         }
-        return layouts.stream().filter(NDataLayout::filterWorkingLayout).collect(Collectors.toList());
+        return layouts.stream().filter(NDataLayout::filterEffectiveLayout).collect(Collectors.toList());
     }
 
     public NDataLayout getLayoutById(long layoutId) {
