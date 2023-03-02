@@ -19,7 +19,7 @@
 package org.apache.kylin.query.schema;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -249,7 +249,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             }
         }
 
-        Collections.sort(tableColumns, (o1, o2) -> o1.getZeroBasedIndex() - o2.getZeroBasedIndex());
+        tableColumns.sort(Comparator.comparingInt(ColumnDesc::getZeroBasedIndex));
         return Lists.newArrayList(Iterables.concat(tableColumns, metricColumns));
     }
 
