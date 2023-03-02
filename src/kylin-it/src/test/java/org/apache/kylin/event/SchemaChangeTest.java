@@ -79,7 +79,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +93,6 @@ import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
-@Ignore("disable unstable test")
 @Slf4j
 public class SchemaChangeTest extends AbstractMVCIntegrationTestCase {
 
@@ -246,7 +244,6 @@ public class SchemaChangeTest extends AbstractMVCIntegrationTestCase {
         assertSqls();
     }
 
-    @Ignore("TODO: remove or adapt")
     @Test
     public void testChangeColumnType() throws Exception {
         changeColumns(TABLE_IDENTITY, Sets.newHashSet("SRC_ID"), columnDesc -> columnDesc.setDatatype("string"));
@@ -334,7 +331,7 @@ public class SchemaChangeTest extends AbstractMVCIntegrationTestCase {
 
     private void setupPushdownEnv() throws Exception {
         getTestConfig().setProperty("kylin.query.pushdown.runner-class-name",
-                "io.kyligence.kap.query.pushdown.PushDownRunnerJdbcImpl");
+                "org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl");
         getTestConfig().setProperty("kylin.query.pushdown-enabled", "true");
         // Load H2 Tables (inner join)
         Connection h2Connection = DriverManager.getConnection("jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1", "sa", "");

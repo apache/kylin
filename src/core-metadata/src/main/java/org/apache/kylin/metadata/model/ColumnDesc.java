@@ -272,7 +272,17 @@ public class ColumnDesc implements Serializable {
         } else if (!name.equals(other.name))
             return false;
 
-        return table == null ? other.table == null : table.getIdentity().equals(other.table.getIdentity());
+        boolean isSameTable = table == null ? other.table == null
+                : table.getIdentity().equals(other.table.getIdentity());
+        if (!isSameTable) {
+            return false;
+        }
+        if (this.isComputedColumn() && other.isComputedColumn()) {
+            // add a simple check of computed column's inner expression
+            return StringUtils.equals(computedColumnExpr, other.getComputedColumnExpr());
+        }
+
+        return !this.isComputedColumn() && !other.isComputedColumn();
     }
 
     @Override

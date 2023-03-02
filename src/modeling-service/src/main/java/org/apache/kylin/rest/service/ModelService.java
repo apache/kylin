@@ -128,6 +128,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.StringHelper;
+import org.apache.kylin.common.util.ThreadUtil;
 import org.apache.kylin.engine.spark.utils.ComputedColumnEvalUtil;
 import org.apache.kylin.job.SecondStorageJobParamUtil;
 import org.apache.kylin.job.common.SegmentUtil;
@@ -3264,7 +3265,11 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         val modelManager = getManager(NDataModelManager.class, project);
         val origin = modelManager.getDataModelDesc(modelRequest.getUuid());
         val copyModel = modelManager.copyForWrite(origin);
-        semanticUpdater.updateModelColumns(copyModel, modelRequest);
+        try {
+            semanticUpdater.updateModelColumns(copyModel, modelRequest);
+        } catch (Exception e) {
+            log.warn("Update existing model failed.{}", ThreadUtil.getKylinStackTrace());
+        }
         copyModel.setBrokenReason(NDataModel.BrokenReason.SCHEMA);
         copyModel.getAllNamedColumns().forEach(namedColumn -> {
             if (columnIds.contains(namedColumn.getId())) {
