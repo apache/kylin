@@ -146,7 +146,7 @@
         <commons-cli.version>1.2</commons-cli.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-io.version>2.7</commons-io.version>
-        <commons-upload.version>1.3.3</commons-upload.version>
+        <commons-upload.version>1.5</commons-upload.version>
         <commons-math3.version>3.4.1</commons-math3.version>
         <commons-collections.version>3.2.2</commons-collections.version>
         <commons-codec.version>1.10</commons-codec.version>
@@ -2363,6 +2363,12 @@
                 <artifactId>spring-session-data-redis</artifactId>
                 <version>${spring-session.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>9.0.71</version>
+            </dependency>
+
 
             <!-- Spring Security -->
             <dependency>
