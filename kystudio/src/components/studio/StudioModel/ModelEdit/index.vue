@@ -2288,6 +2288,8 @@ export default class ModelEdit extends Vue {
       if (drawSize.height === modelTableTitle.offsetHeight + modelTableBoxBorder * 2 + 4) {
         this.modelRender.tables[item].spreadOut = false
         this.modelRender.tables[item].spreadHeight = modelRenderConfig.tableBoxHeight
+      } else if (drawSize.height < 140) {
+        this.$set(this.modelRender.tables[item].drawSize, 'height', 140)
       }
     }
   }
