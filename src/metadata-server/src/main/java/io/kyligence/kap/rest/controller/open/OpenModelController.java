@@ -73,6 +73,7 @@ import org.apache.kylin.rest.service.FusionIndexService;
 import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ModelTdsService;
+import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.tool.bisync.SyncContext;
 import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.apache.kylin.util.DataRangeUtils;
@@ -413,7 +414,9 @@ public class OpenModelController extends NBasicController {
         }
 
         SyncContext syncContext = tdsService.prepareSyncContext(projectName, modelId, exportAs, element, host, port);
-        SyncModel syncModel = tdsService.exportModel(syncContext);
+        SyncModel syncModel = AclPermissionUtil.isAdmin()
+                ? tdsService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, dimensions, measures)
+                : tdsService.exportTDSDimensionsAndMeasuresByNormalUser(syncContext, dimensions, measures);
         tdsService.preCheckNameConflict(syncModel);
         tdsService.dumpSyncModel(syncContext, syncModel, response);
     }

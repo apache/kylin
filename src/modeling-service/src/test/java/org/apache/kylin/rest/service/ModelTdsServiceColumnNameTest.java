@@ -123,7 +123,8 @@ public class ModelTdsServiceColumnNameTest extends SourceTestCase {
         syncContext.setAdmin(true);
         syncContext.setDataflow(NDataflowManager.getInstance(getTestConfig(), getProject()).getDataflow(modelId));
         syncContext.setKylinConfig(getTestConfig());
-        SyncModel syncModel = tdsService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, ImmutableList.of(), ImmutableList.of());
+        SyncModel syncModel = tdsService.exportModel(syncContext);
+        overwriteSystemProp("kylin.model.skip-check-tds", "false");
         Assert.assertTrue(tdsService.preCheckNameConflict(syncModel));
     }
 }
