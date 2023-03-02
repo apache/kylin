@@ -30,7 +30,10 @@ import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.DefaultHashAlgorithm;
 import net.spy.memcached.FailureMode;
 import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.NodeLocator;
 import net.spy.memcached.ops.LinkedOperationQueueFactory;
+import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationQueueFactory;
 import net.spy.memcached.transcoders.SerializingTranscoder;
 import org.apache.kylin.rest.cache.KylinCache;
@@ -128,15 +131,16 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
 
         ConnectionFactory connectionFactory = builder
                 .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
-                .setHashAlg(DefaultHashAlgorithm.FNV1A_64_HASH)
+                .setHashAlg(DefaultHashAlgorithm.KETAMA_HASH)
                 .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
                 .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
                 .setOpQueueMaxBlockTime(config.getTimeout()).setOpTimeout(config.getTimeout())
                 .setReadBufferSize(config.getReadBufferSize()).setOpQueueFactory(opQueueFactory).build();
 
         MemcachedConnectionFactory factory = new MemcachedConnectionFactory(connectionFactory);
-        MemcachedCache cache = new MemcachedCache(new MemcachedClient(factory,
-                MemcachedCache.getResolvedAddrList(hostStr)), config, memcachedPrefix, timeToLive);
+        MemcachedClient memcachedClient = new MemcachedClient(factory,
+                MemcachedCache.getResolvedAddrList(hostStr));
+        MemcachedCache cache = new MemcachedCache(memcachedClient, config, memcachedPrefix, timeToLive);
         cache.put(cacheKey, cacheVal);
         cache.put("", cacheVal);
         cache.put(null, cacheVal);
@@ -145,6 +149,71 @@ public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase 
         Assert.assertEquals(0, cache.get(null).length);
         Assert.assertEquals(0, cache.get(cacheKey).length);
         cache.clear();
+    }
+
+    @Test
+    public void testMemcachedClient() throws IOException {
+        SerializingTranscoder transcoder = new SerializingTranscoder(1048576);
+        transcoder.setCompressionThreshold(Integer.MAX_VALUE);
+        OperationQueueFactory opQueueFactory;
+        opQueueFactory = new LinkedOperationQueueFactory();
+
+        MemcachedCacheConfig config = new MemcachedCacheConfig();
+
+        String hostStr = "localhost:11211";
+        MemcachedConnectionFactoryBuilder builder = new MemcachedConnectionFactoryBuilder();
+
+        ConnectionFactory connectionFactory = builder
+                .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
+                .setHashAlg(DefaultHashAlgorithm.FNV1A_64_HASH)
+                .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
+                .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
+                .setOpQueueMaxBlockTime(config.getTimeout()).setOpTimeout(config.getTimeout())
+                .setReadBufferSize(config.getReadBufferSize()).setOpQueueFactory(opQueueFactory).build();
+
+        MemcachedConnectionFactory factory = new MemcachedConnectionFactory(connectionFactory);
+        MemcachedClient memcachedClient = new MemcachedClient(factory,
+                MemcachedCache.getResolvedAddrList(hostStr));
+        List<MemcachedNode> nodeList = new ArrayList<>(memcachedClient.getNodeLocator().getReadonlyCopy().getAll());
+        NodeLocator nodeLocator = memcachedClient.getNodeLocator();
+        memcachedClient.getNodeLocator().updateLocator(nodeList);
+        Assert.assertEquals(500, memcachedClient.getOperationTimeout());
+        Assert.assertNotEquals(nodeLocator, memcachedClient.getNodeLocator());
+    }
+
+    @Test
+    public void testMemcachedNode() throws IOException {
+        SerializingTranscoder transcoder = new SerializingTranscoder(1048576);
+        transcoder.setCompressionThreshold(Integer.MAX_VALUE);
+        OperationQueueFactory opQueueFactory;
+        opQueueFactory = new LinkedOperationQueueFactory();
+
+        MemcachedCacheConfig config = new MemcachedCacheConfig();
+
+        String hostStr = "localhost:11211";
+        MemcachedConnectionFactoryBuilder builder = new MemcachedConnectionFactoryBuilder();
+
+        ConnectionFactory connectionFactory = builder
+                .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
+                .setHashAlg(DefaultHashAlgorithm.FNV1A_64_HASH)
+                .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
+                .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
+                .setOpQueueMaxBlockTime(config.getTimeout()).setOpTimeout(config.getTimeout())
+                .setReadBufferSize(config.getReadBufferSize()).setOpQueueFactory(opQueueFactory).build();
+
+        MemcachedConnectionFactory factory = new MemcachedConnectionFactory(connectionFactory);
+        MemcachedClient memcachedClient = new MemcachedClient(factory,
+                MemcachedCache.getResolvedAddrList(hostStr));
+        List<MemcachedNode> nodeList = new ArrayList<>(memcachedClient.getNodeLocator().getReadonlyCopy().getAll());
+        nodeList.forEach(node -> {
+            Assert.assertThrows(UnsupportedOperationException.class, node::setupResend);
+            Assert.assertThrows(UnsupportedOperationException.class, node::setupForAuth);
+            Assert.assertThrows(UnsupportedOperationException.class, node::destroyInputQueue);
+            Assert.assertThrows(UnsupportedOperationException.class, node::reconnecting);
+            Operation op = Mockito.spy(Operation.class);
+            Assert.assertThrows(UnsupportedOperationException.class, () -> node.insertOp(op));
+            Assert.assertThrows(UnsupportedOperationException.class, () -> node.addOp(op));
+        });
     }
 
     @Test()
