@@ -72,21 +72,29 @@ class NModel extends Schama {
   renderPosition () {
     // 自动布局前先理顺链表方向
     // this._arrangeLinks()
-    const layers = this.autoCalcLayer()
+    const layersRoot = this.autoCalcLayer()
+    let layers = layersRoot?.rightNodes?.db
+    if (layersRoot?.leftNodes) {
+      layers = [...layers, ...layersRoot.leftNodes.db]
+    }
     if (layers && layers.length > 0) {
       const baseL = modelRenderConfig.baseLeft
       const baseT = modelRenderConfig.baseTop
       const centerL = $(this.renderDom).width() / 2 - modelRenderConfig.tableBoxWidth / 2
-      const moveL = layers[0].X - centerL
+      const centerLeft = $(this.renderDom).width() / 4 - modelRenderConfig.tableBoxWidth / 2
+
+      const moveL = layersRoot.leftNodes ? layers[0].X - centerL : layers[0].X - centerLeft
       this.renderDom.style.cssText += `margin-left: 0; margin-top: 0;`
       this._mount.marginClient.top = 0
       this._mount.marginClient.left = 0
       for (let k = 0; k < layers.length; k++) {
+        const centerT = $(this.renderDom).height() / 3 - this.tables[layers[k].guid].drawSize.height / 2
+        const moveT = layers[0].Y - centerT
         var currentTable = this.getTableByGuid(layers[k].guid)
         currentTable.drawSize.left = baseL - moveL + layers[k].X
-        currentTable.drawSize.top = baseT + layers[k].Y
+        currentTable.drawSize.top = baseT - moveT + layers[k].Y
         currentTable.drawSize.width = modelRenderConfig.tableBoxWidth
-        currentTable.drawSize.height = modelRenderConfig.tableBoxHeight
+         // !this.vm.showOnlyConnectedColumn && (currentTable.drawSize.height = modelRenderConfig.tableBoxHeight)
         currentTable.checkIsOutOfView(this._mount, currentTable.drawSize, this._mount.windowWidth, this._mount.windowHeight, layers[k].guid)
       }
       this.vm.$nextTick(() => {
@@ -649,7 +657,7 @@ class NModel extends Schama {
   }
   search (keywords) {
     var stables = this.searchTable(keywords)
-    var smeasures = this.searchMeasure(keywords)
+    var smeasures = this.searchMeasure(keywords).filter(it => it.name !== 'COUNT_ALL') // COUNT_ALL 度量不允许编辑
     var sdimensions = this.searchDimension(keywords)
     var sjoins = this.searchJoin(keywords)
     var scolumns = this.searchColumn(keywords)
@@ -1002,6 +1010,13 @@ class NModel extends Schama {
     })
     pathObj(t).zIndex = maxZindex
   }
+  checkOutsideByTables () {
+    for (var i in this.tables) {
+      var curTable = this.tables[i]
+      curTable.checkIsOutOfView(this._mount, curTable.drawSize, this._mount.windowWidth, this._mount.windowHeight, i)
+      this.vm.hideLinkLabel(this.getAllConnectsByGuid(curTable.guid), curTable)
+    }
+  }
   setZoom (zoom) {
     this.plumbTool.setZoom(zoom / 10)
     this.getZoomSpace()
@@ -1011,12 +1026,14 @@ class NModel extends Schama {
     var nextZoom = this._mount.zoom + 1 > 10 ? 10 : this._mount.zoom += 1
     this.plumbTool.setZoom(nextZoom / 10)
     this.getZoomSpace()
+    this.checkOutsideByTables()
   }
   // 缩小视图
   reduceZoom () {
     var nextZoom = this._mount.zoom - 1 < 4 ? 4 : this._mount.zoom -= 1
     this.plumbTool.setZoom(nextZoom / 10)
     this.getZoomSpace()
+    this.checkOutsideByTables()
   }
   getZoomSpace () {
     if (this.renderDom) {
@@ -1037,13 +1054,7 @@ class NModel extends Schama {
     }
     this._mount.marginClient.left += x
     this._mount.marginClient.top += y
-    for (var i in this.tables) {
-      var curTable = this.tables[i]
-      // curTable.drawSize.left += x
-      // curTable.drawSize.top += y
-      curTable.checkIsOutOfView(this._mount, curTable.drawSize, this._mount.windowWidth, this._mount.windowHeight, i)
-      this.vm.hideLinkLabel(this.getAllConnectsByGuid(curTable.guid), curTable)
-    }
+    this.checkOutsideByTables()
     this.vm.$nextTick(() => {
       this.plumbTool.refreshPlumbInstance()
     })
@@ -1395,9 +1406,9 @@ class NModel extends Schama {
       return
     }
     const rootGuid = factTable.guid
-    const tree = new ModelTree({rootGuid: rootGuid, showLinkCons: this.allConnInfo})
+    const tree = new ModelTree({rootGuid: rootGuid, showLinkCons: this.allConnInfo, tables: this.tables})
     tree.positionTree()
-    return tree.nodeDB.db
+    return tree.nodeDB.rootNode
   }
   // 添加连接点
   addPlumbPoints (guid, columnName, columnType, isBroken) {
@@ -1448,14 +1459,17 @@ class NModel extends Schama {
     }
     var joinType = joinInfo.join.type
     var labelCanvas = $(labelObj.canvas)
+    const [lineCanvas] = $(conn.canvas)
     const fKeys = joinInfo.join.foreign_key.map(it => it.split('.')[1])
     const pKeys = joinInfo.join.primary_key.map(it => it.split('.')[1])
     // let tooltipId = labelCanvas?.find('.el-tooltip')?.eq(0)?.attr('aria-describedby')
+    lineCanvas.setAttribute('class', `${lineCanvas.className.baseVal.replace(/is-broken/g, '')}`)
     labelCanvas.removeClass('link-label-broken')
     conn.setType(isBroken ? 'broken' : 'normal')
     conn.isBroken = isBroken
     this.getBrokenLinkedTable()
     labelCanvas.addClass(isBroken ? 'link-label link-label-broken' : `link-label ${fid}&${pid}`)
+    isBroken && lineCanvas.setAttribute('class', `${lineCanvas.className.baseVal} is-broken`)
 
     const child = document.createElement('i')
     child.className = 'close-icon el-ksd-n-icon-close-outlined'

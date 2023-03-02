@@ -28,8 +28,8 @@ export function jsPlumbTool () {
       },
       isSource: true,
       isTarget: true,
-      // connector: [ 'Flowchart', { stub: 1, gap: 1, cornerRadius: 3, alwaysRespectStubs: true } ], // 设置连线为直角曲线
-      connector: [ 'Bezier', { curviness: 22 } ],
+      connector: [ 'Flowchart', { stub: 1, gap: 1, cornerRadius: 3, alwaysRespectStubs: true } ], // 设置连线为直角曲线
+      // connector: [ 'Bezier', { curviness: 22 } ],
       connectorStyle: {
         strokeWidth: strokeWidth,
         stroke: lineColor
@@ -92,6 +92,7 @@ export function jsPlumbTool () {
       this.endpointConfig.hoverPaintStyle.fill = hoverBrokenColor
       this.endpointConfig.connectorStyle.stroke = brokenColor
       this.endpointConfig.connectorHoverStyle.stroke = hoverBrokenColor
+      this.endpointConfig.connectorStyle['cssClass'] = 'broken-connector'
     },
     lazyRender (cb) {
       jsPlumb.setSuspendDrawing(true)

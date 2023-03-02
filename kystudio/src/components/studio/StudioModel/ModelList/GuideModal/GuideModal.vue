@@ -132,7 +132,7 @@ export default class GuideModal extends Vue {
   }
   .dim-meas-block {
     position: absolute;
-    top:86px;
+    top: 120px;
     right: 0px;
     &.is-show-global-alter {
       top:142px;

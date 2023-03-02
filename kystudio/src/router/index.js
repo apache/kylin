@@ -71,7 +71,7 @@ let routerOptions = {
         name: 'ModelEdit',
         path: 'studio/model/:modelName/:action',
         meta: {},
-        component: () => import('../components/studio/StudioModel/ModelTabs/index.vue')
+        component: () => import('../components/studio/StudioModel/ModelEdit/index.vue')
       }, {
         name: 'ModelSubPartitionValues',
         path: 'studio/model_sub_partition_values/:modelName/:modelId',

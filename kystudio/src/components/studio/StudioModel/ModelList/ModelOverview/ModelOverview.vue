@@ -1,7 +1,7 @@
 <template>
-  <el-tabs class="model-overview" v-model="activeTab" v-if="model">
+  <el-tabs :class="['model-overview', {'er-overview': activeTab === 'erDiagram'}]" v-model="activeTab" v-if="model">
     <el-tab-pane :label="$t('erDiagram')" name="erDiagram">
-      <ModelERDiagram ref="$er-diagram" is-show-full-screen :model="model" />
+      <ModelERDiagram ref="$er-diagram" :model="model" />
     </el-tab-pane>
     <el-tab-pane :label="$t('dimension')" name="dimension">
       <ModelDimensionList :model="model" />
@@ -55,8 +55,8 @@ export default class ModelOverview extends Vue {
 @import '../../../../../assets/styles/variables.less';
 
 .model-overview {
-  // height: 100%;
-  height: calc(~'100% - 32px');
+  height: 100%;
+  // height: calc(~'100% - 32px');
   // margin: 15px;
   box-shadow: none;
   // border:1px solid rgba(245,245,245,1);
@@ -68,8 +68,12 @@ export default class ModelOverview extends Vue {
     //   font-weight: normal;
     // }
   }
+  .el-tabs__header {
+    margin: 0 0 1px !important;
+  }
   > .el-tabs__content {
     padding: 0;
+    height: calc(~'100% - 38px') !important;
   }
   > .el-tabs__content > .el-tab-pane {
     // padding: 20px;
@@ -80,12 +84,30 @@ export default class ModelOverview extends Vue {
   .el-tabs__nav-scroll {
     background-color: @ke-background-color-white;
   }
+  &.er-overview {
+    .el-tabs__header.is-top {
+      padding-left: 24px;
+    }
+    #pane-erDiagram {
+      overflow: hidden;
+    }
+  }
   .model-er-diagram {
     // margin: -20px;
     // height: calc(~'100% + 40px');
     // width: calc(~'100% + 40px');
     height: 100%;
     width: 100%;
+    background-color: #F8F9FB;
+    margin-left: 1px;
+    overflow: hidden;
   }
+  .model-dimension-list, .model-measure-list {
+    margin-top: 16px;
+  }
+}
+.model-overview:not(.er-overview) {
+  padding: 0 24px 24px 24px;
+  box-sizing: border-box;
 }
 </style>

@@ -101,6 +101,17 @@ export default {
     noResults: 'No result',
     searchResults: '{number} results',
     doubleClick: 'Double Click',
-    loseFactTableAlert: 'The current model is missing a fact table, please set up a fact table.'
+    loseFactTableAlert: 'The current model is missing a fact table, please set up a fact table.',
+    discardChange: 'Discard Changes',
+    continueEditing: 'Continue Editing',
+    fullScreen: 'Full Screen',
+    cancelFullScreen: 'Exit Full Screen',
+    autoLayout: 'Auto-organize',
+    expandAllTables: 'Expand All Tables',
+    collapseAllTables: 'Collapse all tables',
+    showOnlyConnectedColumn: 'Show only connected columns',
+    betaSearchTips: 'The current search is beta version. Having search problems? ',
+    feedback: 'Go to feedback',
+    introductionUrl: 'http://kyligence.io/enterprise/#analytics'
   }
 }

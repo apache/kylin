@@ -47,6 +47,7 @@
           type="primary"
           text>{{buildText}}</el-button>
       </common-tip>
+      <span class="divide-line" v-if="buildText">|</span>
       <common-tip :content="$t('kylinLang.common.moreActions')" :disabled="!!moreText" v-if="datasourceActions.includes('modelActions') || modelActions.includes('purge') || modelActions.includes('exportTDS')">
         <el-dropdown @command="(command) => {handleCommand(command, currentModel)}" :id="currentModel.name" trigger="click" >
           <span class="el-dropdown-link" >
@@ -682,9 +683,16 @@ export default class ModelActions extends Vue {
   .tip_box {
     line-height: inherit !important;
     vertical-align: inherit !important;
+    display: inline-block;
   }
   .item {
     cursor: pointer;
+  }
+  .divide-line {
+    display: inline-block;
+    width: 1px;
+    background: #E6EBF4;
+    margin-right: 8px;
   }
   .icon-item {
     font-size: 22px;

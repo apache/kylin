@@ -1,471 +1,535 @@
 <template>
-  <div class="model-edit-outer" @drop='dropTable($event)' @dragover='allowDrop($event)' v-drag="{sizeChangeCb:dragBox}" @dragleave="dragLeave" @click="removeTableFocus">
-    <el-alert class="lose-fact-table-alert" v-if="modelRender && modelRender.tables && Object.keys(modelRender.tables).length && !showFactTableAlert" :title="$t('loseFactTableAlert')" type="warning" show-icon :closable="false"></el-alert>
-    <div class="model-edit">
-      <el-button v-visible @click="guideActions"></el-button>
-      <!-- 为了保证 gif 每次都从第一帧开始播放，所以每次都要重新加载 -->
-      <kylin-empty-data class="gifEmptyData" :content="$t('noTableTip')" :image="require('../../../../assets/img/editmodel.gif') + '?v=' + new Date().getTime()" v-if="!Object.keys(modelRender.tables).length"></kylin-empty-data>
-      <!-- table box -->
-      <div
-        :ref="`table_${t.guid}`"
-        class="table-box"
-        @click="(e) => activeTablePanel(e, t)"
-        @mouseleave="removeCustomHoverStatus"
-        :id="t.guid"
-        v-event-stop
-        :class="['js_' + t.alias.toLocaleLowerCase(), {'isLookup':t.kind==='LOOKUP'}]"
-        v-for="t in modelRender && modelRender.tables || []"
-        :key="`${t.guid}`"
-        :style="tableBoxStyle(t.drawSize)"
-      >
-        <div :class="['table-title', {'table-spread-out': !t.spreadOut}]" :data-zoom="modelRender.zoom" v-drag:change.left.top="t.drawSize" @dblclick="handleDBClick(t)">
-          <span class="table-sign">
-            <el-tooltip :content="$t(t.kind)" placement="top">
-              <i class="el-ksd-n-icon-symbol-f-filled kind" v-if="t.kind === 'FACT'"></i>
-              <i v-else class="el-ksd-n-icon-dimention-table-filled kind"></i>
-            </el-tooltip>
-          </span>
-          <el-tooltip :visible-arrow="false" popper-class="popper--small model-alias-tooltip" effect="dark" class="name" :content="t.alias">
-            <span class="alias-span">{{t.alias}}</span>
-          </el-tooltip>
-          <el-tooltip :content="`${t.columns.length}`" placement="top" :disabled="typeof getColumnNums(t) === 'number'">
-            <span class="table-column-nums">{{getColumnNums(t)}}</span>
-          </el-tooltip>
-          <el-dropdown class="table-dropdown" trigger="click" :disabled="isSchemaBrokenModel">
-            <span class="setting-icon" v-if="!isSchemaBrokenModel"><i class="el-ksd-n-icon-more-vertical-filled"></i></span>
-            <el-dropdown-menu class="table-actions" slot="dropdown">
-              <el-dropdown-item>
-                <div v-if="t.kind === 'FACT' || modelInstance.checkTableCanSwitchFact(t.guid)">
-                  <div class="action switch" :class="{'disabled': t.source_type === 1}" v-if="t.kind === 'FACT'" @click.stop="changeTableType(t)">
-                    <span>{{$t('switchLookup')}}</span>
-                  </div>
-                  <div class="action switch" v-if="modelInstance.checkTableCanSwitchFact(t.guid)" @click.stop="changeTableType(t)">
-                    <span >{{$t('switchFact')}}</span>
+  <div class="model-edit-layout">
+    <div class="model-edit-header">
+      <div class="model-title">
+        <model-title-description :modelData="modelData" source="modelEdit" v-if="modelData" hideTimeTooltip :onlyShowModelName="extraoption.action === 'add'" />
+      </div>
+      <div class="model-search-layout">
+        <el-input
+          @input="searchModelEverything"
+          clearable
+          :placeholder="$t('kylinLang.common.search')"
+          v-model="modelGlobalSearch"
+          prefix-icon="el-ksd-n-icon-search-outlined"
+        ></el-input>
+        <transition name="bounceleft">
+          <div class="search-board" v-if="modelGlobalSearch && showSearchResult">
+            <el-row>
+              <el-col :span="16" class="search-content-col">
+                <div v-scroll.reactive class="search-result-box" v-keyborad-select="{scope:'.search-content', searchKey: modelGlobalSearch}" v-search-highlight="{scope:'.search-name', hightlight: modelGlobalSearch}">
+                  <div>
+                    <div class="search-group" v-for="(k,v) in searchResultData" :key="v">
+                      <ul>
+                        <li class="search-content" v-for="(x, i) in k" @click="(e) => {selectResult(e, x)}" :key="x.action + x.name + i"><span class="search-category">[{{$t(x.i18n)}}]</span> <span class="search-name">{{x.name}}</span><span v-html="x.extraInfo"></span></li>
+                      </ul>
+                      <div class="ky-line"></div>
+                    </div>
+                    <div v-show="Object.keys(searchResultData).length === 0" class="search-noresult">{{$t('kylinLang.common.noResults')}}</div>
                   </div>
                 </div>
-              </el-dropdown-item>
-              <el-dropdown-item>
-                <div class="spread-or-expand-table" @click="handleDBClick(t)"><span>{{$t(t.spreadOut ? 'spreadTableColumns' : 'expandTableColumns')}}</span><span class="db">{{$t('doubleClick')}}</span></div>
-              </el-dropdown-item>
-              <el-dropdown-item v-if="t.kind !== 'FACT'">
-                <div @click.stop="openEditAliasForm(t)">{{$t('editTableAlias')}}</div>
-              </el-dropdown-item>
-              <el-dropdown-item>
-                <div class="action del" @click.stop="delTable(t)"> {{$t('kylinLang.common.delete')}}</div>
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+                </el-col>
+              <el-col :span="8" class="search-history">
+                <div class="search-action-list" v-if="modelSearchActionHistoryList && modelSearchActionHistoryList.length">
+                  <div class="action-list-title">{{$t('searchHistory')}}</div>
+                  <div class="action-content" v-for="(item, index) in modelSearchActionHistoryList" :key="index">
+                    <div class="action-title">
+                      <i :class="item.icon" class="ksd-mr-6 search-list-icon"></i>
+                      <div class="action-desc" v-html="item.title"></div>
+                    </div>
+                    <div class="action-detail"></div>
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
+            <div class="search-footer"><span><el-tag type="beta" size="mini">Beta</el-tag>{{$t('betaSearchTips')}}<a class="feedback-btn" target="_blank" :href="$store.state.system.serverAboutKap['ke.license.isEvaluation'] ? supportUrl : $t('introductionUrl')">{{$t('feedback')}}</a></span></div>
+          </div>
+        </transition>
+      </div>
+      <div class="model-actions">
+        <div class="btn-group ky-no-br-space">
+          <el-button @click="goModelList" size="medium">{{$t('kylinLang.common.cancel')}}</el-button>
+          <el-button size="medium" type="primary" @click="saveModelEvent" :loading="saveBtnLoading">{{$t('kylinLang.common.save')}}</el-button>
         </div>
-        <div class="column-search-box" v-show="t.spreadOut"><el-input prefix-icon="el-ksd-icon-search_22" v-model="t.filterColumnChar" @input="t.filterColumns()" size="small" :placeholder="$t('kylinLang.common.search')"></el-input></div>
-        <div class="column-list-box ksd-drag-box" :ref="`${t.guid}_column_box`" v-if="!t.drawSize.isOutOfView && t.showColumns.length" v-scroll.observe.reactive @scroll-bottom="handleScrollBottom(t)">
-          <!-- 锚点拖拽功能暂时隐藏
-            @mouseleave="(e) => handleMouseLeave(e, t, col)"
-            @mouseenter="(e) => handleMouseEnterColumn(e, t, col)"
-          -->
-          <ul>
-            <li class="column-search-results" v-if="t.filterColumnChar && t._cache_search_columns.length > 0"><span>{{$t('searchResults', {number: t._cache_search_columns.length})}}</span></li>
-            <li
-              :id="`${t.guid}_${col.column}`"
-              @dragover="(e) => {dragColumnEnter(e, t, col)}"
-              @dragleave="dragColumnLeave"
-              @dragstart="(e) => {dragColumns(e, col, t)}"
-              @mouseenter="(e) => handleMouseEnterColumn(e, t, col)"
-              @mouseleave="(e) => handleMouseLeave(e, t, col)"
-              draggable
-              class="column-li"
-              :class="{'column-li-cc': col.is_computed_column, 'is-link': col.isPK || col.isFK}"
-              @drop.stop='(e) => {dropColumn(e, col, t)}'
-              v-for="col in t.showColumns"
-              :key="col.name"
-            >
-              <span class="ksd-nobr-text">
-                <span class="col-type-icon">
-                  <span class="is-pfk" v-show="col.isPK || col.isFK">{{`${col.isFK && col.isPK ? 'FK PK' : col.isFK ? 'FK' : 'PK'}`}}</span><i :class="columnTypeIconMap(col.datatype)"></i>
-                </span>
-                <el-tooltip :visible-arrow="false" popper-class="popper--small" effect="dark" :content="col.name" placement="bottom-start">
-                  <span :class="['col-name']">{{col.name}}</span>
-                </el-tooltip>
-              </span>
-            </li>
-            <!-- 
-              渲染可计算列 
-              @mouseleave="(e) => handleMouseLeave(e, t, col)"
-              @mouseenter="(e) => handleMouseEnterColumn(e, t, col)"
-            -->
-            <template v-if="t.kind=== 'FACT'">
-              <li :class="['column-li', 'column-li-cc', {'is-link': col.isPK || col.isFK}]"
-                @drop='(e) => {dropColumn(e, {name: col.columnName }, t)}'
+      </div>
+    </div>
+    <div class="model-edit-outer" @drop='dropTable($event)' @dragover='allowDrop($event)' v-drag="{sizeChangeCb:dragBox}" @dragleave="dragLeave" @click="removeTableFocus">
+      <el-alert class="lose-fact-table-alert" v-if="modelRender && modelRender.tables && Object.keys(modelRender.tables).length && !showFactTableAlert" :title="$t('loseFactTableAlert')" type="warning" show-icon :closable="false"></el-alert>
+      <div class="model-edit" :style="getModelEditStyles">
+        <!-- 为了保证 gif 每次都从第一帧开始播放，所以每次都要重新加载 -->
+        <kylin-empty-data class="gifEmptyData" :content="$t('noTableTip')" :image="require('../../../../assets/img/editmodel.gif') + '?v=' + new Date().getTime()" v-if="!Object.keys(modelRender.tables).length"></kylin-empty-data>
+        <!-- table box -->
+        <div
+          :ref="`table_${t.guid}`"
+          class="table-box"
+          @click="(e) => activeTablePanel(e, t)"
+          @mouseleave="removeCustomHoverStatus"
+          :id="t.guid"
+          v-event-stop
+          :class="['js_' + t.alias.toLocaleLowerCase(), {'isLookup':t.kind==='LOOKUP'}]"
+          v-for="t in modelRender && modelRender.tables || []"
+          :key="`${t.guid}`"
+          :style="tableBoxStyle(t.drawSize)"
+        >
+          <div :class="['table-title', {'table-spread-out': !t.spreadOut}]" :data-zoom="modelRender.zoom" v-drag:change.left.top="t.drawSize" @dblclick="handleDBClick(t)">
+            <span class="table-sign">
+              <el-tooltip :content="$t(t.kind)" placement="top">
+                <i class="el-ksd-n-icon-symbol-f-filled kind" v-if="t.kind === 'FACT'"></i>
+                <i v-else class="el-ksd-n-icon-dimention-table-filled kind"></i>
+              </el-tooltip>
+            </span>
+            <!-- <el-tooltip :visible-arrow="false" popper-class="popper--small model-alias-tooltip" effect="dark" class="name" :content="t.alias"> -->
+            <span class="alias-span name" v-custom-tooltip="{text: t.alias, w: 20, effect: 'dark', 'popper-class': 'popper--small model-alias-tooltip', 'visible-arrow': false, position: 'bottom-start'}">{{t.alias}}</span>
+            <!-- </el-tooltip> -->
+            <el-tooltip :content="`${t.columns.length}`" placement="top" :disabled="typeof getColumnNums(t) === 'number'">
+              <span class="table-column-nums">{{getColumnNums(t)}}</span>
+            </el-tooltip>
+            <el-dropdown ref="tableActionsDropdown" class="table-dropdown" trigger="click" :disabled="isSchemaBrokenModel">
+              <span class="setting-icon" @click.stop v-if="!isSchemaBrokenModel"><i class="el-ksd-n-icon-more-vertical-filled"></i></span>
+              <el-dropdown-menu class="table-actions" slot="dropdown">
+                <el-dropdown-item>
+                  <div v-if="t.kind === 'FACT' || modelInstance.checkTableCanSwitchFact(t.guid)">
+                    <div class="action switch" :class="{'disabled': t.source_type === 1}" v-if="t.kind === 'FACT'" @click.stop="changeTableType(t)">
+                      <span>{{$t('switchLookup')}}</span>
+                    </div>
+                    <div class="action switch" v-if="modelInstance.checkTableCanSwitchFact(t.guid)" @click.stop="changeTableType(t)">
+                      <span >{{$t('switchFact')}}</span>
+                    </div>
+                  </div>
+                </el-dropdown-item>
+                <el-dropdown-item>
+                  <div class="spread-or-expand-table" @click="handleDBClick(t)"><span>{{$t(t.spreadOut ? 'spreadTableColumns' : 'expandTableColumns')}}</span><span class="db">{{$t('doubleClick')}}</span></div>
+                </el-dropdown-item>
+                <el-dropdown-item v-if="t.kind !== 'FACT'">
+                  <div @click.stop="openEditAliasForm(t)">{{$t('editTableAlias')}}</div>
+                </el-dropdown-item>
+                <el-dropdown-item>
+                  <div class="action del" @click.stop="delTable(t)"> {{$t('kylinLang.common.delete')}}</div>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+          </div>
+          <div class="column-search-box" v-show="t.spreadOut && !showOnlyConnectedColumn"><el-input prefix-icon="el-ksd-icon-search_22" v-model="t.filterColumnChar" @input="t.filterColumns()" size="small" :placeholder="$t('kylinLang.common.search')"></el-input></div>
+          <div class="column-list-box ksd-drag-box" :ref="`${t.guid}_column_box`" v-if="!t.drawSize.isOutOfView && t.showColumns.length" v-scroll.observe.reactive @scroll-bottom="handleScrollBottom(t)">
+            <ul>
+              <li class="column-search-results" v-if="t.filterColumnChar && t._cache_search_columns.length > 0"><span>{{$t('searchResults', {number: t._cache_search_columns.length})}}</span></li>
+              <li
+                :id="`${t.guid}_${col.column}`"
                 @dragover="(e) => {dragColumnEnter(e, t, col)}"
                 @dragleave="dragColumnLeave"
                 @dragstart="(e) => {dragColumns(e, col, t)}"
-                @mouseleave="(e) => handleMouseLeave(e, t, col)"
                 @mouseenter="(e) => handleMouseEnterColumn(e, t, col)"
+                @mouseleave="(e) => handleMouseLeave(e, t, col)"
                 draggable
-                v-for="col in modelRender.computed_columns"
+                class="column-li"
+                :class="{'column-li-cc': col.is_computed_column, 'is-link': col.isPK || col.isFK}"
+                @drop.stop='(e) => {dropColumn(e, col, t)}'
+                v-for="col in getCurrentColumns(t)"
                 :key="col.name"
               >
                 <span class="ksd-nobr-text">
                   <span class="col-type-icon">
                     <span class="is-pfk" v-show="col.isPK || col.isFK">{{`${col.isFK && col.isPK ? 'FK PK' : col.isFK ? 'FK' : 'PK'}`}}</span><i :class="columnTypeIconMap(col.datatype)"></i>
                   </span>
-                  <el-tooltip :visible-arrow="false" popper-class="popper--small" effect="dark" :content="col.columnName" placement="bottom-start">
-                    <span :class="['col-name']">{{col.columnName}}</span>
+                  <el-tooltip :visible-arrow="false" popper-class="popper--small" effect="dark" :content="col.name" placement="bottom-start">
+                    <span :class="['col-name']">{{col.name}}</span>
                   </el-tooltip>
                 </span>
               </li>
-            </template>
-            <li class="li-load-more" v-if="t.hasMoreColumns && t.hasScrollEnd"><i class="el-ksd-icon-loading_16"></i></li>
-          </ul>
-        </div>
-        <!-- <kylin-nodata v-else :content="$t('noResults')"></kylin-nodata> -->
-        <!-- 拖动操纵 -->
-        <DragBar :dragData="t.drawSize" :dragZoom="modelRender.zoom"/>
-        <!-- 拖动操纵 -->
-      </div>
-      <!-- table box end -->
-    </div>
-    <!-- datasource面板  index 3-->
-    <div class="tool-icon icon-ds" v-if="panelAppear.datasource.icon_display" :class="{active: panelAppear.datasource.display}" v-event-stop @click="toggleMenu('datasource')"><i class="el-icon-ksd-data_source"></i></div>
-    <transition name="bounceleft">
-      <div class="panel-box panel-datasource"  v-show="panelAppear.datasource.display" :style="panelStyle('datasource')" v-event-stop>
-        <div class="panel-title" v-drag:change.left.top="panelAppear.datasource"><span class="title">{{$t('kylinLang.common.dataSource')}}</span><span class="close" @click="toggleMenu('datasource')"><i class="el-icon-ksd-close"></i></span></div>
-        <!-- <div v-scroll style="height:calc(100% - 79px)"> -->
-        <DataSourceBar
-          :ignore-node-types="['column']"
-          class="tree-box"
-          :class="{'iframeTreeBox': $store.state.config.platform === 'iframe'}"
-          ref="datasourceTree"
-          :project-name="currentSelectedProject"
-          :is-show-load-source="true"
-          :is-show-load-table="datasourceActions.includes('loadSource')"
-          :is-show-load-table-inner-btn="datasourceActions.includes('loadSource')"
-          :is-show-settings="false"
-          :is-show-action-group="false"
-          :is-expand-on-click-node="false"
-          :expand-node-types="['datasource', 'database']"
-          :draggable-node-types="['table']"
-          :searchable-node-types="['table']"
-          :is-model-have-fact="modelInstance && !!modelInstance.fact_table"
-          :is-second-storage-enabled="modelInstance && modelInstance.second_storage_enabled"
-          @drag="dragTable">
-        </DataSourceBar>
-        <!-- </div> -->
-        <!-- 拖动操纵 -->
-        <DragBar :dragData="panelAppear.datasource"/>
-        <!-- 拖动操纵 -->
-      </div>
-    </transition>
-    <!-- datasource面板  end-->
-    <div class="tool-icon-group" v-event-stop>
-      <div class="tool-icon broken-icon" v-if="panelAppear.brokenFocus.icon_display" @click="focusBrokenLinkedTable">
-        <i class="el-icon-ksd-broken_disconnect"></i>
-      </div>
-      <div class="tool-icon" v-if="panelAppear.dimension.icon_display" :class="{active: panelAppear.dimension.display}" @click="toggleMenu('dimension')">D</div>
-      <div class="tool-icon" v-if="panelAppear.measure.icon_display" :class="{active: panelAppear.measure.display}" @click="toggleMenu('measure')">M</div>
-      <div class="tool-icon" v-if="panelAppear.cc.icon_display" :class="{active: panelAppear.cc.display}" @click="toggleMenu('cc')"><i class="el-icon-ksd-computed_column"></i></div>
-      <div class="tool-icon" v-if="panelAppear.search.icon_display" :class="{active: panelAppear.search.display}" @click="toggleMenu('search')">
-        <i class="el-icon-ksd-search"></i>
-        <span class="new-icon">New</span>
-      </div>
-    </div>
-    <!-- 快捷操作 -->
-    <div class="sub-tool-icon-group" v-event-stop>
-      <div class="tool-icon" @click="reduceZoom"><i class="el-icon-ksd-shrink" ></i></div>
-      <div class="tool-icon" @click="addZoom"><i class="el-icon-ksd-enlarge"></i></div>
-      <!-- <div class="tool-icon" v-event-stop>{{modelRender.zoom}}0%</div> -->
-      <div class="tool-icon tool-full-screen" @click="fullScreen"><i class="el-icon-ksd-full_screen_2" v-if="!isFullScreen"></i><i class="el-icon-ksd-collapse_2" v-if="isFullScreen"></i></div>
-      <div class="tool-icon" @click="autoLayout"><i class="el-icon-ksd-auto"></i></div>
-    </div>
-    <!-- 右侧面板组 -->
-    <!-- dimension面板  index 0-->
-    <transition name="bounceright">
-      <div class="panel-box panel-dimension" @mousedown.stop="activePanel('dimension')" :style="panelStyle('dimension')" v-if="panelAppear.dimension.display">
-        <div class="panel-title" @mousedown="activePanel('dimension')" v-drag:change.right.top="panelAppear.dimension">
-          <span><i class="el-icon-ksd-dimension"></i></span>
-          <span class="title">{{$t('kylinLang.common.dimension')}} <template v-if="(modelRender.dimensions || []).length">({{modelRender.dimensions.length}})</template></span>
-          <span class="close" @click="toggleMenu('dimension')"><i class="el-icon-ksd-close"></i></span>
-        </div>
-        <div class="panel-sub-title">
-          <div class="action_group" :class="{'is_active': !isShowCheckbox}">
-            <!-- <span class="action_btn" @click="addCCDimension">
-              <i class="el-icon-ksd-project_add"></i>
-              <span>{{$t('add')}}</span>
-            </span> -->
-            <span class="action_btn" @click="batchSetDimension">
-              <i class="el-icon-ksd-backup"></i>
-              <span>{{$t('batchAdd')}}</span>
-            </span>
-            <span class="action_btn" :class="{'disabled': allDimension.length==0}" @click="toggleCheckbox">
-              <i class="el-icon-ksd-batch_delete"></i>
-              <span>{{$t('batchDel')}}</span>
-            </span>
-          </div>
-          <div
-          class="batch_group"
-          :class="{'is_active': isShowCheckbox}"
-          :style="{transform: isShowCheckbox ? 'translateX(0)' : 'translateX(100%)'}"
-          >
-            <span class="action_btn" :class="{'disabled': isDisableBatchCheck}" @click="toggleCheckAllDimension">
-              <i class="el-icon-ksd-batch_uncheck" v-if="dimensionSelectedList.length==modelRender.dimensions.length || (modelInstance.second_storage_enabled||isHybridModel)&&dimensionSelectedList.length+1==modelRender.dimensions.length&&!isDisableBatchCheck"></i>
-              <i class="el-icon-ksd-batch" v-else></i>
-              <span v-if="dimensionSelectedList.length==modelRender.dimensions.length || (modelInstance.second_storage_enabled || isHybridModel) && dimensionSelectedList.length+1 == modelRender.dimensions.length && !isDisableBatchCheck">{{$t('unCheckAll')}}</span>
-              <span v-else>{{$t('checkAll')}}</span>
-            </span>
-            <span class="action_btn" :class="{'disabled': dimensionSelectedList.length === 0}" @click="deleteDimenisons">
-              <i class="el-icon-ksd-table_delete"></i>
-              <span>{{$t('delete')}}</span>
-            </span>
-            <span class="action_btn" @click="toggleCheckbox">
-              <i class="el-icon-ksd-back"></i>
-              <span>{{$t('back')}}</span>
-            </span>
-          </div>
-        </div>
-        <div class="panel-main-content" @dragover='($event) => {allowDropColumnToPanle($event)}' @drop='(e) => {dropColumnToPanel(e, "dimension")}'>
-          <div class="content-scroll-layout" v-if="allDimension.length" v-scroll.observe.reactive @scroll-bottom="boardScrollBottom('dimension')">
-            <ul class="dimension-list">
-              <li v-for="(d, i) in allDimension" :key="`${d.name}_${i}`" :class="{'is-checked':dimensionSelectedList.indexOf(d.name)>-1}">
-                <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowCheckbox}]">
-                  <el-checkbox v-model="dimensionSelectedList" v-if="isShowCheckbox" :disabled="(modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column" :label="d.name" class="text">{{d.name}}</el-checkbox>
-                  <span v-else :title="d.name" class="text">{{d.name}}</span>
-                  <span class="icon-group">
-                    <el-tooltip :content="disableDelDimTips" placement="top-end" :disabled="!((modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column)">
-                      <span class="icon-span" :class="{'is-disabled': (modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column}" @click="deleteDimenison(d)"><i class="el-icon-ksd-table_delete"></i></span>
-                    </el-tooltip>
-                    <span class="icon-span"><i class="el-icon-ksd-table_edit" @click="editDimension(d, i)"></i></span>
-                    <span class="li-type ky-option-sub-info">{{d.datatype && d.datatype.toLocaleLowerCase()}}</span>
-                  </span>
-                </span>
-              </li>
-            </ul>
-          </div>
-          <kylin-nodata v-else></kylin-nodata>
-        </div>
-        <!-- 拖动操纵 -->
-        <DragBar :dragData="panelAppear.dimension"/>
-        <!-- 拖动操纵 -->
-      </div>
-    </transition>
-    <!-- measure面板  index 1-->
-    <transition name="bounceright">
-      <div class="panel-box panel-measure" @mousedown.stop="activePanel('measure')" :style="panelStyle('measure')"  v-if="panelAppear.measure.display">
-        <div class="panel-title" @mousedown="activePanel('measure')" v-drag:change.right.top="panelAppear.measure">
-          <span><i class="el-icon-ksd-measure"></i></span>
-          <span class="title">{{$t('kylinLang.common.measure')}}<template v-if="modelRender.all_measures.length">({{modelRender.all_measures.length}})</template></span>
-          <span class="close" @click="toggleMenu('measure')"><i class="el-icon-ksd-close"></i></span>
-        </div>
-        <div class="panel-sub-title">
-          <div class="action_group" :class="{'is_active': !isShowMeaCheckbox}">
-            <span class="action_btn" @click="addNewMeasure">
-              <i class="el-icon-ksd-project_add"></i>
-              <span>{{$t('add')}}</span>
-            </span>
-            <span class="action_btn" @click="batchSetMeasure">
-              <i class="el-icon-ksd-backup"></i>
-              <span>{{$t('batchAdd')}}</span>
-            </span>
-            <span class="action_btn" @click="toggleMeaCheckbox" :class="{'disabled': canDelMeasureAll}">
-              <i class="el-icon-ksd-batch_delete"></i>
-              <span>{{$t('batchDel')}}</span>
-            </span>
-          </div>
-          <div
-            class="batch_group"
-            :class="{'is_active': isShowMeaCheckbox}"
-            :style="{transform: isShowMeaCheckbox ? 'translateX(0)' : 'translateX(100%)'}"
-          >
-            <span class="action_btn" @click="toggleCheckAllMeasure">
-              <i class="el-icon-ksd-batch" v-if="measureSelectedList.length > 0 && measureSelectedList.length === toggleMeasureStatus"></i>
-              <i class="el-icon-ksd-batch_uncheck" v-else></i>
-              <span v-if="measureSelectedList.length > 0 && measureSelectedList.length === toggleMeasureStatus">{{$t('unCheckAll')}}</span>
-              <span v-else>{{$t('checkAll')}}</span>
-            </span>
-            <span class="action_btn" :class="{'disabled': measureSelectedList.length==0}" @click="deleteMeasures">
-              <i class="el-icon-ksd-table_delete"></i>
-              <span>{{$t('delete')}}</span>
-            </span>
-            <span class="action_btn" @click="toggleMeaCheckbox">
-              <i class="el-icon-ksd-back"></i>
-              <span>{{$t('back')}}</span>
-            </span>
-          </div>
-        </div>
-        <div class="panel-main-content" @dragover='($event) => {allowDropColumnToPanle($event)}' @drop='(e) => {dropColumnToPanel(e, "measure")}'>
-          <div class="content-scroll-layout" v-if="allMeasure.length" v-scroll.observe.reactive @scroll-bottom="boardScrollBottom('measure')">
-            <ul class="measure-list">
-              <li v-for="m in allMeasure" :key="m.name" :class="{'is-checked':measureSelectedList.indexOf(m.name)>-1, 'error-measure': ['SUM', 'PERCENTILE_APPROX'].includes(m.expression) && m.return_type && m.return_type.indexOf('varchar') > -1}">
-                <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowMeaCheckbox}]">
-                  <el-tooltip class="count-all" :offset="isShowMeaCheckbox ? 50 : 60" :content="m.name ==='COUNT_ALL' ? $t('disabledConstantMeasureTip') : $t('measureRuleErrorTip', {type: m.expression})" effect="dark" placement="bottom" :disabled="!(['SUM', 'PERCENTILE_APPROX'].includes(m.expression) && m.return_type && m.return_type.indexOf('varchar') > -1) && m.name !== 'COUNT_ALL'">
-                    <span>
-                      <el-checkbox v-model="measureSelectedList" v-if="isShowMeaCheckbox" :disabled="m.name === 'COUNT_ALL'" :label="m.name" class="text">{{m.name}}</el-checkbox>
-                      <span v-else class="text">{{m.name}}</span>
+              <!-- 渲染可计算列 -->
+              <template v-if="t.kind=== 'FACT'">
+                <li :class="['column-li', 'column-li-cc', {'is-link': col.isPK || col.isFK}]"
+                  @drop='(e) => {dropColumn(e, {name: col.columnName }, t)}'
+                  @dragover="(e) => {dragColumnEnter(e, t, col)}"
+                  @dragleave="dragColumnLeave"
+                  @dragstart="(e) => {dragColumns(e, col, t)}"
+                  @mouseleave="(e) => handleMouseLeave(e, t, col)"
+                  @mouseenter="(e) => handleMouseEnterColumn(e, t, col)"
+                  draggable
+                  v-for="col in getCurrentColumns(modelRender, 'cc')"
+                  :key="col.name"
+                >
+                  <span class="ksd-nobr-text">
+                    <span class="col-type-icon">
+                      <span class="is-pfk" v-show="col.isPK || col.isFK">{{`${col.isFK && col.isPK ? 'FK PK' : col.isFK ? 'FK' : 'PK'}`}}</span><i :class="columnTypeIconMap(col.datatype)"></i>
                     </span>
-                  </el-tooltip>
-                  <span class="icon-group">
-                    <span class="icon-span" v-if="m.name !== 'COUNT_ALL'"><i class="el-icon-ksd-table_delete" @click="deleteMeasure(m.name)"></i></span>
-                    <span class="icon-span" v-if="m.name !== 'COUNT_ALL'"><i class="el-icon-ksd-table_edit" @click="editMeasure(m)"></i></span>
-                    <span class="li-type ky-option-sub-info">{{m.return_type && m.return_type.toLocaleLowerCase()}}</span>
+                    <el-tooltip :visible-arrow="false" popper-class="popper--small" effect="dark" :content="col.columnName" placement="bottom-start">
+                      <span :class="['col-name']">{{col.columnName}}</span>
+                    </el-tooltip>
                   </span>
-                </span>
-              </li>
+                </li>
+              </template>
+              <li class="li-load-more" v-if="t.hasMoreColumns && t.hasScrollEnd && !showOnlyConnectedColumn"><i class="el-ksd-icon-loading_16"></i></li>
             </ul>
           </div>
-          <kylin-nodata v-else></kylin-nodata>
+          <!-- <kylin-nodata v-else :content="$t('noResults')"></kylin-nodata> -->
+          <!-- 拖动操纵 -->
+          <DragBar :dragData="t.drawSize" :dragZoom="modelRender.zoom"/>
+          <!-- 拖动操纵 -->
         </div>
-        <!-- 拖动操纵 -->
-        <DragBar :dragData="panelAppear.measure"/>
-        <!-- 拖动操纵 -->
+        <!-- table box end -->
       </div>
-    </transition>
-    <!-- 可计算列 -->
-    <transition name="bounceright">
-      <div class="panel-box panel-cc" @mousedown.stop="activePanel('cc')" :style="panelStyle('cc')"  v-if="panelAppear.cc.display">
-        <div class="panel-title" @mousedown="activePanel('cc')" v-drag:change.right.top="panelAppear.cc">
-          <span><i class="el-ksd-icon-auto_computed_column_old"></i></span>
-          <span class="title">{{$t('kylinLang.model.computedColumn')}} <template v-if="modelRender.computed_columns.length">({{modelRender.computed_columns.length}})</template></span>
-          <span class="close" @click="toggleMenu('cc')"><i class="el-icon-ksd-close"></i></span>
+      <!-- datasource面板  index 3-->
+      <div class="tool-icon icon-ds" v-if="panelAppear.datasource.icon_display" :class="{active: panelAppear.datasource.display}" v-event-stop @click="toggleMenu('datasource')"><i class="el-icon-ksd-data_source"></i></div>
+      <transition name="bounceleft">
+        <div class="panel-box panel-datasource"  v-show="panelAppear.datasource.display" :style="panelStyle('datasource')" v-event-stop>
+          <div class="panel-title" v-drag:change.left.top="panelAppear.datasource"><span class="title">{{$t('kylinLang.common.dataSource')}}</span><span class="close" @click="toggleMenu('datasource')"><i class="el-icon-ksd-close"></i></span></div>
+          <DataSourceBar
+            :ignore-node-types="['column']"
+            class="tree-box"
+            :class="{'iframeTreeBox': $store.state.config.platform === 'iframe'}"
+            ref="datasourceTree"
+            :project-name="currentSelectedProject"
+            :is-show-load-source="true"
+            :is-show-load-table="datasourceActions.includes('loadSource')"
+            :is-show-load-table-inner-btn="datasourceActions.includes('loadSource')"
+            :is-show-settings="false"
+            :is-show-action-group="false"
+            :is-expand-on-click-node="false"
+            :expand-node-types="['datasource', 'database']"
+            :draggable-node-types="['table']"
+            :searchable-node-types="['table']"
+            :is-model-have-fact="modelInstance && !!modelInstance.fact_table"
+            :is-second-storage-enabled="modelInstance && modelInstance.second_storage_enabled"
+            @drag="dragTable">
+          </DataSourceBar>
+          <!-- </div> -->
+          <!-- 拖动操纵 -->
+          <DragBar :dragData="panelAppear.datasource"/>
+          <!-- 拖动操纵 -->
         </div>
-        <div class="panel-sub-title">
-          <div class="action_group" :class="{'is_active': !isShowCCCheckbox}">
-            <el-tooltip :content="$t('forbidenCreateCCTip')" :disabled="!isHybridModel">
-              <span :class="['action_btn', {'disabled': isHybridModel}]" @click="!isHybridModel && addCC()">
+      </transition>
+      <!-- datasource面板  end-->
+      <div class="tool-icon-group" v-event-stop>
+        <div class="tool-icon broken-icon" v-if="panelAppear.brokenFocus.icon_display" @click="focusBrokenLinkedTable">
+          <i class="el-icon-ksd-broken_disconnect"></i>
+        </div>
+        <div class="tool-icon" v-if="panelAppear.dimension.icon_display" :class="{active: panelAppear.dimension.display}" @click="toggleMenu('dimension')">D</div>
+        <div class="tool-icon" v-if="panelAppear.measure.icon_display" :class="{active: panelAppear.measure.display}" @click="toggleMenu('measure')">M</div>
+        <div class="tool-icon" v-if="panelAppear.cc.icon_display" :class="{active: panelAppear.cc.display}" @click="toggleMenu('cc')"><i class="el-icon-ksd-computed_column"></i></div>
+        <!-- <div class="tool-icon" v-if="panelAppear.search.icon_display" :class="{active: panelAppear.search.display}" @click="toggleMenu('search')">
+          <i class="el-icon-ksd-search"></i>
+          <span class="new-icon">New</span>
+        </div> -->
+      </div>
+      <!-- 快捷操作 -->
+      <!-- <div class="sub-tool-icon-group" v-event-stop>
+        <div class="tool-icon" @click="reduceZoom"><i class="el-icon-ksd-shrink" ></i></div>
+        <div class="tool-icon" @click="addZoom"><i class="el-icon-ksd-enlarge"></i></div> -->
+        <!-- <div class="tool-icon" v-event-stop>{{modelRender.zoom}}0%</div> -->
+        <!-- <div class="tool-icon tool-full-screen" @click="fullScreen"><i class="el-icon-ksd-full_screen_2" v-if="!isFullScreen"></i><i class="el-icon-ksd-collapse_2" v-if="isFullScreen"></i></div>
+        <div class="tool-icon" @click="autoLayout"><i class="el-icon-ksd-auto"></i></div>
+      </div> -->
+
+      <div class="shortcuts-group">
+        <el-tooltip :content="isFullScreen ? $t('cancelFullScreen') : $t('fullScreen')" placement="top" >
+          <div :class="['full-screen', !isFullScreen ? 'el-ksd-n-icon-arrows-alt-outlined' : 'el-ksd-n-icon-shrink-exit-outlined']" @click="fullScreen"></div>
+        </el-tooltip>
+        <el-tooltip :content="$t('autoLayout')" placement="top" >
+          <div class="auto-layout el-ksd-n-icon-map-outlined" @click="autoLayout"></div>
+        </el-tooltip>
+        <span class="divide-line">|</span>
+        <el-dropdown class="action-dropdown" @command="handleActionsCommand">
+          <el-button icon="el-ksd-n-icon-column-3-outlined" iconr="el-ksd-n-icon-arrow-table-down-filled" nobg-text></el-button>
+          <el-dropdown-menu slot="dropdown" class="model-action-tools">
+            <el-dropdown-item command="expandAllTables"><i class="el-ksd-n-icon-column-3-outlined ksd-mr-8"></i>{{$t('expandAllTables')}}</el-dropdown-item>
+            <el-dropdown-item command="collapseAllTables" :class="{'is-active': collapseAllTables}"><i class="el-ksd-n-icon-workflow-outlined ksd-mr-8"></i>{{$t('collapseAllTables')}}</el-dropdown-item>
+            <el-dropdown-item command="showOnlyConnectedColumn"  :class="{'is-active': showOnlyConnectedColumn}"><i class="el-ksd-n-icon-workspace-outlined ksd-mr-8"></i>{{$t('showOnlyConnectedColumn')}}</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+        <span class="divide-line">|</span>
+        <div class="zoom-tools"><span class="reduce-zoom el-ksd-n-icon-minus-outlined" @click="reduceZoom"></span><span class="zoom-num">{{modelRender.zoom / 10 * 100}}%</span><span class="add-zoom el-ksd-n-icon-plus-outlined" @click="addZoom"></span></div>
+      </div>
+      <!-- 右侧面板组 -->
+      <!-- dimension面板  index 0-->
+      <transition name="bounceright">
+        <div class="panel-box panel-dimension" @mousedown.stop="activePanel('dimension')" :style="panelStyle('dimension')" v-if="panelAppear.dimension.display">
+          <div class="panel-title" @mousedown="activePanel('dimension')" v-drag:change.right.top="panelAppear.dimension">
+            <span><i class="el-icon-ksd-dimension"></i></span>
+            <span class="title">{{$t('kylinLang.common.dimension')}} <template v-if="(modelRender.dimensions || []).length">({{modelRender.dimensions.length}})</template></span>
+            <span class="close" @click="toggleMenu('dimension')"><i class="el-icon-ksd-close"></i></span>
+          </div>
+          <div class="panel-sub-title">
+            <div class="action_group" :class="{'is_active': !isShowCheckbox}">
+              <!-- <span class="action_btn" @click="addCCDimension">
+                <i class="el-icon-ksd-project_add"></i>
+                <span>{{$t('add')}}</span>
+              </span> -->
+              <span class="action_btn" @click="batchSetDimension">
+                <i class="el-icon-ksd-backup"></i>
+                <span>{{$t('batchAdd')}}</span>
+              </span>
+              <span class="action_btn" :class="{'disabled': allDimension.length==0}" @click="toggleCheckbox">
+                <i class="el-icon-ksd-batch_delete"></i>
+                <span>{{$t('batchDel')}}</span>
+              </span>
+            </div>
+            <div
+            class="batch_group"
+            :class="{'is_active': isShowCheckbox}"
+            :style="{transform: isShowCheckbox ? 'translateX(0)' : 'translateX(100%)'}"
+            >
+              <span class="action_btn" :class="{'disabled': isDisableBatchCheck}" @click="toggleCheckAllDimension">
+                <i class="el-icon-ksd-batch_uncheck" v-if="dimensionSelectedList.length==modelRender.dimensions.length || (modelInstance.second_storage_enabled||isHybridModel)&&dimensionSelectedList.length+1==modelRender.dimensions.length&&!isDisableBatchCheck"></i>
+                <i class="el-icon-ksd-batch" v-else></i>
+                <span v-if="dimensionSelectedList.length==modelRender.dimensions.length || (modelInstance.second_storage_enabled || isHybridModel) && dimensionSelectedList.length+1 == modelRender.dimensions.length && !isDisableBatchCheck">{{$t('unCheckAll')}}</span>
+                <span v-else>{{$t('checkAll')}}</span>
+              </span>
+              <span class="action_btn" :class="{'disabled': dimensionSelectedList.length === 0}" @click="deleteDimenisons">
+                <i class="el-icon-ksd-table_delete"></i>
+                <span>{{$t('delete')}}</span>
+              </span>
+              <span class="action_btn" @click="toggleCheckbox">
+                <i class="el-icon-ksd-back"></i>
+                <span>{{$t('back')}}</span>
+              </span>
+            </div>
+          </div>
+          <div class="panel-main-content" @dragover='($event) => {allowDropColumnToPanle($event)}' @drop='(e) => {dropColumnToPanel(e, "dimension")}'>
+            <div class="content-scroll-layout" v-if="allDimension.length" v-scroll.observe.reactive @scroll-bottom="boardScrollBottom('dimension')">
+              <ul class="dimension-list">
+                <li v-for="(d, i) in allDimension" :key="`${d.name}_${i}`" :class="{'is-checked':dimensionSelectedList.indexOf(d.name)>-1}">
+                  <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowCheckbox}]">
+                    <el-checkbox v-model="dimensionSelectedList" v-if="isShowCheckbox" :disabled="(modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column" :label="d.name" class="text">{{d.name}}</el-checkbox>
+                    <span v-else :title="d.name" class="text">{{d.name}}</span>
+                    <span class="icon-group">
+                      <el-tooltip :content="disableDelDimTips" placement="top-end" :disabled="!((modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column)">
+                        <span class="icon-span" :class="{'is-disabled': (modelInstance.second_storage_enabled||isHybridModel)&&modelInstance.partition_desc&&modelInstance.partition_desc.partition_date_column===d.column}" @click="deleteDimenison(d)"><i class="el-icon-ksd-table_delete"></i></span>
+                      </el-tooltip>
+                      <span class="icon-span"><i class="el-icon-ksd-table_edit" @click="editDimension(d, i)"></i></span>
+                      <span class="li-type ky-option-sub-info">{{d.datatype && d.datatype.toLocaleLowerCase()}}</span>
+                    </span>
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <kylin-nodata v-else></kylin-nodata>
+          </div>
+          <!-- 拖动操纵 -->
+          <DragBar :dragData="panelAppear.dimension"/>
+          <!-- 拖动操纵 -->
+        </div>
+      </transition>
+      <!-- measure面板  index 1-->
+      <transition name="bounceright">
+        <div class="panel-box panel-measure" @mousedown.stop="activePanel('measure')" :style="panelStyle('measure')"  v-if="panelAppear.measure.display">
+          <div class="panel-title" @mousedown="activePanel('measure')" v-drag:change.right.top="panelAppear.measure">
+            <span><i class="el-icon-ksd-measure"></i></span>
+            <span class="title">{{$t('kylinLang.common.measure')}}<template v-if="modelRender.all_measures.length">({{modelRender.all_measures.length}})</template></span>
+            <span class="close" @click="toggleMenu('measure')"><i class="el-icon-ksd-close"></i></span>
+          </div>
+          <div class="panel-sub-title">
+            <div class="action_group" :class="{'is_active': !isShowMeaCheckbox}">
+              <span class="action_btn" @click="addNewMeasure">
                 <i class="el-icon-ksd-project_add"></i>
                 <span>{{$t('add')}}</span>
               </span>
-            </el-tooltip>
-            <span class="action_btn" @click="toggleCCCheckbox" :class="{'active': isShowCCCheckbox}">
-              <i class="el-icon-ksd-batch_delete"></i>
-              <span>{{$t('batchDel')}}</span>
-            </span>
-          </div>
-          <div
-            class="batch_group"
-            :class="{'is_active': isShowCCCheckbox}"
-          >
-            <span class="action_btn" @click="toggleCheckAllCC">
-              <i class="el-icon-ksd-batch_uncheck" v-if="ccSelectedList.length==modelRender.computed_columns.length"></i>
-              <i class="el-icon-ksd-batch" v-else></i>
-              <span v-if="ccSelectedList.length==modelRender.computed_columns.length">{{$t('unCheckAll')}}</span>
-              <span v-else>{{$t('checkAll')}}</span>
-            </span>
-            <span class="action_btn" :class="{'disabled': ccSelectedList.length==0}" @click="delCCs">
-              <i class="el-icon-ksd-table_delete"></i>
-              <span>{{$t('delete')}}</span>
-            </span>
-            <span class="action_btn" @click="toggleCCCheckbox">
-              <i class="el-icon-ksd-back"></i>
-              <span>{{$t('back')}}</span>
-            </span>
-          </div>
-        </div>
-        <div class="panel-main-content" v-scroll.obverse  v-if="modelRender.computed_columns.length">
-          <ul class="cc-list">
-            <li v-for="m in modelRender.computed_columns" :key="m.name" :class="{'is-checked':ccSelectedList.indexOf(m.columnName)>-1}">
-              <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowCCCheckbox}]">
-                <el-checkbox v-model="ccSelectedList" v-if="isShowCCCheckbox" :label="m.columnName" class="text">{{m.columnName}}</el-checkbox>
-                <span v-else class="text">{{m.columnName}}</span>
-                <span class="icon-group">
-                  <span class="icon-span"><i class="el-icon-ksd-table_delete" @click="delCC(m.columnName)"></i></span>
-                  <span class="icon-span"><i class="el-icon-ksd-table_edit" @click="editCC(m)"></i></span>
-                  <span class="li-type ky-option-sub-info">{{m.datatype && m.datatype.toLocaleLowerCase()}}</span>
-                </span>
+              <span class="action_btn" @click="batchSetMeasure">
+                <i class="el-icon-ksd-backup"></i>
+                <span>{{$t('batchAdd')}}</span>
               </span>
-            </li>
-          </ul>
-        </div>
-        <kylin-nodata v-if="!modelRender.computed_columns.length"></kylin-nodata>
-        <!-- 拖动操纵 -->
-        <DragBar :dragData="panelAppear.cc"/>
-        <!-- 拖动操纵 -->
-      </div>
-    </transition>
-    <!-- 搜索面板 -->
-    <transition name="bouncecenter">
-      <div class="panel-search-box panel-box" :class="{'full-screen': isFullScreen}"  v-event-stop :style="panelStyle('search')" v-if="panelAppear.search.display">
-        <el-row :gutter="20">
-          <el-col :span="14" :offset="5">
-            <el-alert class="search-action-result" v-if="modelSearchActionSuccessTip" v-timer-hide:2
-              :title="modelSearchActionSuccessTip"
-              type="success"
-              :closable="false"
-              show-icon>
-            </el-alert>
-            <el-input @input="searchModelEverything"  clearable class="search-input" :placeholder="$t('searchInputPlaceHolder')" v-model="modelGlobalSearch" prefix-icon="el-ksd-icon-search_22"></el-input>
-            <transition name="bounceleft">
-              <div v-scroll.reactive class="search-result-box" v-keyborad-select="{scope:'.search-content', searchKey: modelGlobalSearch}" v-if="modelGlobalSearch && showSearchResult" v-search-highlight="{scope:'.search-name', hightlight: modelGlobalSearch}">
-                <div>
-                <div class="search-group" v-for="(k,v) in searchResultData" :key="v">
-                  <ul>
-                    <li class="search-content" v-for="(x, i) in k" @click="(e) => {selectResult(e, x)}" :key="x.action + x.name + i"><span class="search-category">[{{$t(x.i18n)}}]</span> <span class="search-name">{{x.name}}</span><span v-html="x.extraInfo"></span></li>
-                  </ul>
-                  <div class="ky-line"></div>
-                </div>
-                <div v-show="Object.keys(searchResultData).length === 0" class="search-noresult">{{$t('kylinLang.common.noResults')}}</div>
-              </div>
+              <span class="action_btn" @click="toggleMeaCheckbox" :class="{'disabled': canDelMeasureAll}">
+                <i class="el-icon-ksd-batch_delete"></i>
+                <span>{{$t('batchDel')}}</span>
+              </span>
             </div>
-            </transition>
-          </el-col>
-          <el-col :span="5">
-            <div class="search-action-list" v-if="modelSearchActionHistoryList && modelSearchActionHistoryList.length">
-              <div class="action-list-title">{{$t('searchHistory')}}</div>
-              <div class="action-content" v-for="(item, index) in modelSearchActionHistoryList" :key="index">
-                <div class="action-title">
-                  <i :class="item.icon" class="ksd-mr-6 search-list-icon"></i>
-                  <div class="action-desc" v-html="item.title"></div>
-                </div>
-                <div class="action-detail"></div>
-              </div>
+            <div
+              class="batch_group"
+              :class="{'is_active': isShowMeaCheckbox}"
+              :style="{transform: isShowMeaCheckbox ? 'translateX(0)' : 'translateX(100%)'}"
+            >
+              <span class="action_btn" @click="toggleCheckAllMeasure">
+                <i class="el-icon-ksd-batch" v-if="measureSelectedList.length > 0 && measureSelectedList.length === toggleMeasureStatus"></i>
+                <i class="el-icon-ksd-batch_uncheck" v-else></i>
+                <span v-if="measureSelectedList.length > 0 && measureSelectedList.length === toggleMeasureStatus">{{$t('unCheckAll')}}</span>
+                <span v-else>{{$t('checkAll')}}</span>
+              </span>
+              <span class="action_btn" :class="{'disabled': measureSelectedList.length==0}" @click="deleteMeasures">
+                <i class="el-icon-ksd-table_delete"></i>
+                <span>{{$t('delete')}}</span>
+              </span>
+              <span class="action_btn" @click="toggleMeaCheckbox">
+                <i class="el-icon-ksd-back"></i>
+                <span>{{$t('back')}}</span>
+              </span>
             </div>
-          </el-col>
-        </el-row>
-        <div class="close" @click="toggleMenu('search')" v-global-key-event.esc="() => {toggleMenu('search')}">
-          <i class="el-icon-ksd-close ksd-mt-12"></i><br/>
-          <span>ESC</span>
+          </div>
+          <div class="panel-main-content" @dragover='($event) => {allowDropColumnToPanle($event)}' @drop='(e) => {dropColumnToPanel(e, "measure")}'>
+            <div class="content-scroll-layout" v-if="allMeasure.length" v-scroll.observe.reactive @scroll-bottom="boardScrollBottom('measure')">
+              <ul class="measure-list">
+                <li v-for="m in allMeasure" :key="m.name" :class="{'is-checked':measureSelectedList.indexOf(m.name)>-1, 'error-measure': ['SUM', 'PERCENTILE_APPROX'].includes(m.expression) && m.return_type && m.return_type.indexOf('varchar') > -1}">
+                  <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowMeaCheckbox}]">
+                    <el-tooltip class="count-all" :offset="isShowMeaCheckbox ? 50 : 60" :content="m.name ==='COUNT_ALL' ? $t('disabledConstantMeasureTip') : $t('measureRuleErrorTip', {type: m.expression})" effect="dark" placement="bottom" :disabled="!(['SUM', 'PERCENTILE_APPROX'].includes(m.expression) && m.return_type && m.return_type.indexOf('varchar') > -1) && m.name !== 'COUNT_ALL'">
+                      <span>
+                        <el-checkbox v-model="measureSelectedList" v-if="isShowMeaCheckbox" :disabled="m.name === 'COUNT_ALL'" :label="m.name" class="text">{{m.name}}</el-checkbox>
+                        <span v-else class="text">{{m.name}}</span>
+                      </span>
+                    </el-tooltip>
+                    <span class="icon-group">
+                      <span class="icon-span" v-if="m.name !== 'COUNT_ALL'"><i class="el-icon-ksd-table_delete" @click="deleteMeasure(m.name)"></i></span>
+                      <span class="icon-span" v-if="m.name !== 'COUNT_ALL'"><i class="el-icon-ksd-table_edit" @click="editMeasure(m)"></i></span>
+                      <span class="li-type ky-option-sub-info">{{m.return_type && m.return_type.toLocaleLowerCase()}}</span>
+                    </span>
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <kylin-nodata v-else></kylin-nodata>
+          </div>
+          <!-- 拖动操纵 -->
+          <DragBar :dragData="panelAppear.measure"/>
+          <!-- 拖动操纵 -->
         </div>
-      </div>
-    </transition>
-
-
-    <ModelSaveConfig/>
-    <DimensionModal/>
-    <BatchMeasureModal @betchMeasures="updateBetchMeasure"/>
-    <TableJoinModal/>
-    <AddMeasure
-      v-if="measureVisible"
-      :isEditMeasure="isEditMeasure"
-      :measureObj="measureObj"
-      :modelInstance="modelInstance"
-      :isHybridModel="isHybridModel"
-      v-on:closeAddMeasureDia="closeAddMeasureDia">
-    </AddMeasure>
-    <SingleDimensionModal/>
-    <AddCC/>
-    <ShowCC/>
-    <ActionUpdateGuide v-if="showModelGuide" @close-guide="showModelGuide = false" />
-
-    <el-dialog
-      :title="$t('kylinLang.common.tip')"
-      :visible.sync="gotoIndexdialogVisible"
-      width="30%"
-      append-to-body
-      limited-area
-      class="add-index-confirm-dialog"
-      :close-on-click-modal="false"
-      :show-close="false">
-      <i class="el-icon-success ksd-mr-10 ky-dialog-icon"></i>
-      <div class="ksd-pl-26">
-        <div>{{$t('saveSuccessTip')}}</div>
-        <div>
-          <span v-if="getBaseIndexCount(saveModelResponse).createBaseIndexNum > 0">{{$t('createAndBuildBaseIndexTips', {createBaseIndexNum: getBaseIndexCount(saveModelResponse).createBaseIndexNum})}}</span>
-          <span v-if="getBaseIndexCount(saveModelResponse).createBaseIndexNum === 0">{{$t('addIndexTips')}}</span>
-          <span v-else>{{$t('addIndexAndBaseIndex')}}</span>
+      </transition>
+      <!-- 可计算列 -->
+      <transition name="bounceright">
+        <div class="panel-box panel-cc" @mousedown.stop="activePanel('cc')" :style="panelStyle('cc')"  v-if="panelAppear.cc.display">
+          <div class="panel-title" @mousedown="activePanel('cc')" v-drag:change.right.top="panelAppear.cc">
+            <span><i class="el-ksd-icon-auto_computed_column_old"></i></span>
+            <span class="title">{{$t('kylinLang.model.computedColumn')}} <template v-if="modelRender.computed_columns.length">({{modelRender.computed_columns.length}})</template></span>
+            <span class="close" @click="toggleMenu('cc')"><i class="el-icon-ksd-close"></i></span>
+          </div>
+          <div class="panel-sub-title">
+            <div class="action_group" :class="{'is_active': !isShowCCCheckbox}">
+              <el-tooltip :content="$t('forbidenCreateCCTip')" :disabled="!isHybridModel">
+                <span :class="['action_btn', {'disabled': isHybridModel}]" @click="!isHybridModel && addCC()">
+                  <i class="el-icon-ksd-project_add"></i>
+                  <span>{{$t('add')}}</span>
+                </span>
+              </el-tooltip>
+              <span class="action_btn" @click="toggleCCCheckbox" :class="{'active': isShowCCCheckbox}">
+                <i class="el-icon-ksd-batch_delete"></i>
+                <span>{{$t('batchDel')}}</span>
+              </span>
+            </div>
+            <div
+              class="batch_group"
+              :class="{'is_active': isShowCCCheckbox}"
+            >
+              <span class="action_btn" @click="toggleCheckAllCC">
+                <i class="el-icon-ksd-batch_uncheck" v-if="ccSelectedList.length==modelRender.computed_columns.length"></i>
+                <i class="el-icon-ksd-batch" v-else></i>
+                <span v-if="ccSelectedList.length==modelRender.computed_columns.length">{{$t('unCheckAll')}}</span>
+                <span v-else>{{$t('checkAll')}}</span>
+              </span>
+              <span class="action_btn" :class="{'disabled': ccSelectedList.length==0}" @click="delCCs">
+                <i class="el-icon-ksd-table_delete"></i>
+                <span>{{$t('delete')}}</span>
+              </span>
+              <span class="action_btn" @click="toggleCCCheckbox">
+                <i class="el-icon-ksd-back"></i>
+                <span>{{$t('back')}}</span>
+              </span>
+            </div>
+          </div>
+          <div class="panel-main-content" v-scroll.obverse  v-if="modelRender.computed_columns.length">
+            <ul class="cc-list">
+              <li v-for="m in modelRender.computed_columns" :key="m.name" :class="{'is-checked':ccSelectedList.indexOf(m.columnName)>-1}">
+                <span :class="['ksd-nobr-text', {'checkbox-text-overflow': isShowCCCheckbox}]">
+                  <el-checkbox v-model="ccSelectedList" v-if="isShowCCCheckbox" :label="m.columnName" class="text">{{m.columnName}}</el-checkbox>
+                  <span v-else class="text">{{m.columnName}}</span>
+                  <span class="icon-group">
+                    <span class="icon-span"><i class="el-icon-ksd-table_delete" @click="delCC(m.columnName)"></i></span>
+                    <span class="icon-span"><i class="el-icon-ksd-table_edit" @click="editCC(m)"></i></span>
+                    <span class="li-type ky-option-sub-info">{{m.datatype && m.datatype.toLocaleLowerCase()}}</span>
+                  </span>
+                </span>
+              </li>
+            </ul>
+          </div>
+          <kylin-nodata v-if="!modelRender.computed_columns.length"></kylin-nodata>
+          <!-- 拖动操纵 -->
+          <DragBar :dragData="panelAppear.cc"/>
+          <!-- 拖动操纵 -->
         </div>
-      </div>
-      <span slot="footer" class="dialog-footer" v-if="gotoIndexdialogVisible">
-        <el-button plain @click="ignoreAddIndex">{{getBaseIndexCount(saveModelResponse).createBaseIndexNum > 0 ? $t('kylinLang.common.cancel') : $t('ignoreaddIndexTip')}}</el-button>
-        <el-button type="primary" @click="willAddIndex">{{getBaseIndexCount(saveModelResponse).createBaseIndexNum > 0 ? $t('viewIndexes') : $t('addIndex')}}</el-button>
-      </span>
-    </el-dialog>
+      </transition>
+      <!-- 搜索面板 -->
+      <!-- <transition name="bouncecenter">
+        <div class="panel-search-box panel-box" :class="{'full-screen': isFullScreen}"  v-event-stop :style="panelStyle('search')" v-if="panelAppear.search.display">
+          <el-row :gutter="20">
+            <el-col :span="18">
+              <el-alert class="search-action-result" v-if="modelSearchActionSuccessTip" v-timer-hide:2
+                :title="modelSearchActionSuccessTip"
+                type="success"
+                :closable="false"
+                show-icon>
+              </el-alert>
+              <el-input @input="searchModelEverything"  clearable class="search-input" :placeholder="$t('searchInputPlaceHolder')" v-model="modelGlobalSearch" prefix-icon="el-ksd-icon-search_22"></el-input>
+              <transition name="bounceleft">
+                <div v-scroll.reactive class="search-result-box" v-keyborad-select="{scope:'.search-content', searchKey: modelGlobalSearch}" v-if="modelGlobalSearch && showSearchResult" v-search-highlight="{scope:'.search-name', hightlight: modelGlobalSearch}">
+                  <div>
+                  <div class="search-group" v-for="(k,v) in searchResultData" :key="v">
+                    <ul>
+                      <li class="search-content" v-for="(x, i) in k" @click="(e) => {selectResult(e, x)}" :key="x.action + x.name + i"><span class="search-category">[{{$t(x.i18n)}}]</span> <span class="search-name">{{x.name}}</span><span v-html="x.extraInfo"></span></li>
+                    </ul>
+                    <div class="ky-line"></div>
+                  </div>
+                  <div v-show="Object.keys(searchResultData).length === 0" class="search-noresult">{{$t('kylinLang.common.noResults')}}</div>
+                </div>
+              </div>
+              </transition>
+            </el-col>
+            <el-col :span="6">
+              <div class="search-action-list" v-if="modelSearchActionHistoryList && modelSearchActionHistoryList.length">
+                <div class="action-list-title">{{$t('searchHistory')}}</div>
+                <div class="action-content" v-for="(item, index) in modelSearchActionHistoryList" :key="index">
+                  <div class="action-title">
+                    <i :class="item.icon" class="ksd-mr-6 search-list-icon"></i>
+                    <div class="action-desc" v-html="item.title"></div>
+                  </div>
+                  <div class="action-detail"></div>
+                </div>
+              </div>
+            </el-col>
+          </el-row>
+          <div class="close" @click="toggleMenu('search')" v-global-key-event.esc="() => {toggleMenu('search')}">
+            <i class="el-icon-ksd-close ksd-mt-12"></i><br/>
+            <span>ESC</span>
+          </div>
+        </div>
+      </transition> -->
+
+
+      <ModelSaveConfig/>
+      <DimensionModal/>
+      <BatchMeasureModal @betchMeasures="updateBetchMeasure"/>
+      <TableJoinModal/>
+      <AddMeasure
+        v-if="measureVisible"
+        :isEditMeasure="isEditMeasure"
+        :measureObj="measureObj"
+        :modelInstance="modelInstance"
+        :isHybridModel="isHybridModel"
+        v-on:closeAddMeasureDia="closeAddMeasureDia">
+      </AddMeasure>
+      <SingleDimensionModal/>
+      <AddCC/>
+      <ShowCC/>
+      <ActionUpdateGuide v-if="showModelGuide" @close-guide="showModelGuide = false" />
+
+      <el-dialog
+        :title="$t('kylinLang.common.tip')"
+        :visible.sync="gotoIndexdialogVisible"
+        width="30%"
+        append-to-body
+        limited-area
+        class="add-index-confirm-dialog"
+        :close-on-click-modal="false"
+        :show-close="false">
+        <i class="el-icon-success ksd-mr-10 ky-dialog-icon"></i>
+        <div class="ksd-pl-26">
+          <div>{{$t('saveSuccessTip')}}</div>
+          <div>
+            <span v-if="getBaseIndexCount(saveModelResponse).createBaseIndexNum > 0">{{$t('createAndBuildBaseIndexTips', {createBaseIndexNum: getBaseIndexCount(saveModelResponse).createBaseIndexNum})}}</span>
+            <span v-if="getBaseIndexCount(saveModelResponse).createBaseIndexNum === 0">{{$t('addIndexTips')}}</span>
+            <span v-else>{{$t('addIndexAndBaseIndex')}}</span>
+          </div>
+        </div>
+        <span slot="footer" class="dialog-footer" v-if="gotoIndexdialogVisible">
+          <el-button plain @click="ignoreAddIndex">{{getBaseIndexCount(saveModelResponse).createBaseIndexNum > 0 ? $t('kylinLang.common.cancel') : $t('ignoreaddIndexTip')}}</el-button>
+          <el-button type="primary" @click="willAddIndex">{{getBaseIndexCount(saveModelResponse).createBaseIndexNum > 0 ? $t('viewIndexes') : $t('addIndex')}}</el-button>
+        </span>
+      </el-dialog>
+    </div>
   </div>
 </template>
 <script>
@@ -474,8 +538,8 @@ import { Component, Watch } from 'vue-property-decorator'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 import locales from './locales'
 import DataSourceBar from '../../../common/DataSourceBar'
-import { handleSuccess, handleError, loadingBox, kylinMessage, kylinConfirm } from 'util/business'
-import { isIE, isFireFox, groupData, objectClone, filterObjectArray, handleSuccessAsync, indexOfObjWithSomeKey } from 'util'
+import { handleSuccess, handleError, loadingBox, kylinMessage, kylinConfirm } from '../../../../util/business'
+import { isIE, groupData, objectClone, filterObjectArray, handleSuccessAsync, getQueryString, indexOfObjWithSomeKey } from '../../../../util'
 import $ from 'jquery'
 import DimensionModal from '../DimensionsModal/index.vue'
 import BatchMeasureModal from '../BatchMeasureModal/index.vue'
@@ -488,15 +552,66 @@ import AddCC from '../AddCCModal/addcc.vue'
 import ShowCC from '../ShowCC/showcc.vue'
 import NModel from './model.js'
 import ActionUpdateGuide from '../../../guide/modelEditPage/ActionUpdateGuide.vue'
+import ModelTitleDescription from '../ModelList/Components/ModelTitleDescription'
 import { modelRenderConfig, modelErrorMsg } from './config'
 import { NamedRegex, columnTypeIcon } from '../../../../config'
 @Component({
-  props: ['extraoption'],
+  beforeRouteEnter (to, from, next) {
+    next(vm => {
+      vm.fromRoute = from
+      vm.extraoption = {
+        project: vm.currentSelectedProject,
+        modelName: to.params.modelName,
+        action: to.params.action
+      }
+      // 在添加模型页面刷新，跳转到列表页面
+      if (to.name === 'ModelEdit' && to.params.action === 'add' && from.name === null) {
+        vm.$router.replace({name: 'ModelList', params: { ignoreIntercept: true }})
+        return
+      }
+      vm.initEditModel()
+    })
+  },
+  beforeRouteLeave (to, from, next) {
+    if (this.$store.state.config.platform === 'iframe') {
+      next()
+    } else {
+      if (!to.params.ignoreIntercept) {
+        next(false)
+        setTimeout(() => {
+          this.$confirm(this.$t('kylinLang.common.willGo'), this.$t('kylinLang.common.notice'), {
+            confirmButtonText: this.$t('discardChange'),
+            cancelButtonText: this.$t('continueEditing'),
+            type: 'warning'
+          }).then(() => {
+            if (to.name === 'refresh') { // 刷新逻辑下要手动重定向
+              next()
+              this.$nextTick(() => {
+                this.$router.replace({name: 'ModelList', params: { refresh: true }})
+              })
+              return
+            }
+            next()
+          }).catch(() => {
+            if (to.name === 'refresh') { // 取消刷新逻辑，所有上一个project相关的要撤回
+              let preProject = cacheSessionStorage('preProjectName') // 恢复上一次的project
+              this.setProject(preProject)
+              this.getUserAccess({project: preProject})
+            }
+            next(false)
+          })
+        })
+      } else {
+        next()
+      }
+    }
+  },
   computed: {
     ...mapGetters([
       'currentSelectedProject',
       'isFullScreen',
-      'datasourceActions'
+      'datasourceActions',
+      'supportUrl'
     ]),
     ...mapState('TableJoinModal', {
       tableJoinDialogShow: state => state.isShow
@@ -568,11 +683,14 @@ import { NamedRegex, columnTypeIcon } from '../../../../config'
     ModelSaveConfig,
     AddCC,
     ShowCC,
-    ActionUpdateGuide
+    ActionUpdateGuide,
+    ModelTitleDescription
   },
   locales
 })
 export default class ModelEdit extends Vue {
+  extraoption = null
+  fromRoute = null
   datasource = []
   modelRender = {tables: {}}
   dimensionSelectedList = []
@@ -588,7 +706,7 @@ export default class ModelEdit extends Vue {
   modelGlobalSearch = '' // model全局搜索信息
   showSearchResult = true
   modelGlobalSearchResult = []
-  modelData = {}
+  modelData = null
   columnTypeIconMap = columnTypeIcon
   modelSearchActionSuccessTip = ''
   modelSearchActionHistoryList = []
@@ -648,6 +766,9 @@ export default class ModelEdit extends Vue {
   currentPot = { x: 0, y: 0 }
   linkLineFocus = []
   showModelGuide = false
+  saveBtnLoading = false
+  showOnlyConnectedColumn = false
+  collapseAllTables = false
   get disableDelDimTips () {
     if (this.isHybridModel) {
       return this.$t('streamTips')
@@ -658,26 +779,77 @@ export default class ModelEdit extends Vue {
   get isHybridModel () {
     return this.modelInstance.getFactTable() && this.modelInstance.getFactTable().batch_table_identity || this.modelInstance.model_type === 'HYBRID'
   }
+  get allDimension () {
+    return this.modelRender.dimensions.slice(0, this.boardPager.dimension.pageOffset * this.boardPager.dimension.pageSize) || []
+  }
+  get allMeasure () {
+    return this.modelRender.all_measures.slice(0, this.boardPager.measure.pageOffset * this.boardPager.measure.pageSize) || []
+  }
+  get canDelMeasureAll () { // 控制批量删除按钮的 disable 状态
+    let flag = true // 默认不可点
+    if (this.modelRender.all_measures.length === 0) {
+      flag = true
+    } else {
+      let temp = this.modelRender.all_measures.filter((item) => {
+        return item.name === 'COUNT_ALL'
+      })
+      if (temp.length > 0) { // 如果有count all 这个度量，则批量删除按钮不可用
+        flag = this.modelRender.all_measures.length === temp.length
+      } else {
+        flag = this.modelRender.all_measures.length === 0
+      }
+    }
+    return flag
+  }
+  get toggleMeasureStatus () { // 控制批量删除度量的全选切换按钮的状态
+    let temp = this.modelRender.all_measures.filter((item) => {
+      return item.name === 'COUNT_ALL'
+    })
+    if (temp.length > 0) { // 如果有count all 全选文案的切换要去掉count all 后
+      return this.modelRender.all_measures.length - 1
+    } else {
+      return this.modelRender.all_measures.length
+    }
+  }
+  get isSchemaBrokenModel () {
+    return this.modelRender.broken_reason === 'SCHEMA'
+  }
+  get isDisableBatchCheck () {
+    if (this.allDimension.length === 1 && (this.modelInstance.second_storage_enabled || this.isHybridModel) && this.modelInstance.partition_desc && this.modelInstance.partition_desc.partition_date_column === this.allDimension[0].column) {
+      return true
+    } else {
+      return false
+    }
+  }
+  get tableBoxStyleNoZoom () {
+    return (drawSize) => {
+      if (drawSize) {
+        // let zoom = this.modelRender.zoom / 10
+        return {'z-index': drawSize.zIndex, width: drawSize.width + 'px', height: drawSize.height + 'px', left: drawSize.left + 'px', top: drawSize.top + 'px'}
+      }
+    }
+  }
+  get searchResultData () {
+    return groupData(this.modelGlobalSearchResult, 'kind')
+  }
   // 是否展示缺失事实表提醒
   get showFactTableAlert () {
     return Object.values(this.modelRender.tables).filter(table => table.kind === 'FACT').length > 0
   }
-  // 维度、度量滚动到底部
-  boardScrollBottom (name) {
-    switch (name) {
-      case 'dimension':
-        const { dimension } = this.boardPager
-        const dimensionTotalSize = this.modelRender.dimensions.length
-        if (dimension.pageOffset <= Math.ceil(dimensionTotalSize / dimension.pageSize)) {
-          this.$set(dimension, 'pageOffset', dimension.pageOffset + 1)
-        }
-      case 'measure':
-        const { measure } = this.boardPager
-        const measureTotalSize = this.modelRender.all_measures.length
-        if (measure.pageOffset <= Math.ceil(measureTotalSize / measure.pageSize)) {
-          this.$set(measure, 'pageOffset', measure.pageOffset + 1)
-        }
-    }
+  // 画布位置调整
+  get getModelEditStyles () {
+    if (!this.modelRender || !this.modelRender.marginClient) return {marginLeft: 0, marginTop: 0}
+    const { left, top } = this.modelRender.marginClient
+    return {marginLeft: `${left}px`, marginTop: `${top}px`}
+  }
+  // 获取当前展示的列
+  getCurrentColumns (t, type) {
+    const columns = type === 'cc' ? t.computed_columns : t.showColumns
+    return this.showOnlyConnectedColumn ? columns.filter(it => it.isPK || it.isFK) : columns
+  }
+  @Watch('modelGlobalSearch')
+  watchSearch (v) {
+    this.showSearchResult = v
   }
   // 当维度或度量高度改变时，需要增加页码以填充多余的空白区域
   changePageOfBround (obj) {
@@ -806,6 +978,47 @@ export default class ModelEdit extends Vue {
       })
     })
   }
+  // 增加连接线的 hover 热区
+  handleListenEvents () {
+    setTimeout(() => {
+      const { allConnInfo } = this.modelInstance
+      const connections = Object.values(allConnInfo)
+      connections.forEach(conn => {
+        this.drawAssistLine(conn)
+      })
+    }, 1000)
+  }
+  drawAssistLine (conn) {
+    const { sourceId, targetId } = conn
+    const dom = document.getElementsByClassName(`jtk-connector ${sourceId}&${targetId}`) || document.getElementsByClassName(`jtk-connector ${targetId}&${sourceId}`)
+    dom[0] && dom[0].addEventListener('mouseenter', () => {
+      const isBroken = conn.isBroken
+      const sign = 'http://www.w3.org/2000/svg'
+      const path = dom[0].firstChild
+      if (!path) return
+      if (dom[0].querySelector('g')) return
+      const newPath = path.cloneNode(true)
+      const group = document.createElementNS(sign, 'g')
+      const d = path.getAttribute('d')
+      group.id = isBroken ? 'broken-use-group' : 'use-group'
+      newPath.setAttribute('d', d)
+      newPath.setAttribute('stroke-width', 20)
+      newPath.setAttribute('stroke', 'transparent')
+      newPath.setAttribute('id', 'use')
+      group.appendChild(path)
+      group.appendChild(newPath)
+      dom[0].appendChild(group)
+      document.getElementById(sourceId).className += ' is-hover'
+      document.getElementById(targetId).className += ' is-hover'
+    })
+    dom[0].addEventListener('mouseleave', () => {
+      const path = dom[0].querySelector('path')
+      dom[0].innerHTML = ''
+      dom[0].appendChild(path)
+      document.getElementById(sourceId).classList.remove('is-hover')
+      document.getElementById(targetId).classList.remove('is-hover')
+    })
+  }
   // table columns 上显示连接点
   handleMouseEnterColumn (_, table, column) {
     this.displayLinkColumn(table, column)
@@ -852,6 +1065,8 @@ export default class ModelEdit extends Vue {
       path.setAttribute('stroke', '#0875DA')
       path.setAttribute('stroke-width', 2)
       path.setAttribute('fill', 'none')
+      // svg.appendChild(path)
+      // svg.innerHTML = path
       svg.appendChild(path)
       modelEdit.appendChild(svg)
     } else {
@@ -911,9 +1126,13 @@ export default class ModelEdit extends Vue {
       }
     }
   }
-  async showGuide () {
-    this.showModelGuide = true
+  async showFistAddModelGuide () {
+    await this.callGuideModal({ isShowDimAndMeasGuide: true })
     localStorage.setItem('isFirstAddModel', 'false')
+  }
+  async showUpdateGuide () {
+    this.showModelGuide = true
+    localStorage.setItem('isFirstUpdateModel', 'false')
   }
   initAllPanels () {
     if (!this.isSchemaBrokenModel) {
@@ -932,44 +1151,6 @@ export default class ModelEdit extends Vue {
       this.panelAppear[i].icon_display = false
     }
     this.panelAppear.brokenFocus.icon_display = true
-  }
-  get allDimension () {
-    return this.modelRender.dimensions.slice(0, this.boardPager.dimension.pageOffset * this.boardPager.dimension.pageSize) || []
-  }
-  get allMeasure () {
-    return this.modelRender.all_measures.slice(0, this.boardPager.measure.pageOffset * this.boardPager.measure.pageSize) || []
-  }
-  get canDelMeasureAll () { // 控制批量删除按钮的 disable 状态
-    let flag = true // 默认不可点
-    if (this.modelRender.all_measures.length === 0) {
-      flag = true
-    } else {
-      let temp = this.modelRender.all_measures.filter((item) => {
-        return item.name === 'COUNT_ALL'
-      })
-      if (temp.length > 0) { // 如果有count all 这个度量，则批量删除按钮不可用
-        flag = this.modelRender.all_measures.length === temp.length
-      } else {
-        flag = this.modelRender.all_measures.length === 0
-      }
-    }
-    return flag
-  }
-  get toggleMeasureStatus () { // 控制批量删除度量的全选切换按钮的状态
-    let temp = this.modelRender.all_measures.filter((item) => {
-      return item.name === 'COUNT_ALL'
-    })
-    if (temp.length > 0) { // 如果有count all 全选文案的切换要去掉count all 后
-      return this.modelRender.all_measures.length - 1
-    } else {
-      return this.modelRender.all_measures.length
-    }
-  }
-  query (className) {
-    return $(this.$el.querySelector(className))
-  }
-  get isSchemaBrokenModel () {
-    return this.modelRender.broken_reason === 'SCHEMA'
   }
   // 定位含有broken连线的table
   focusBrokenLinkedTable () {
@@ -993,45 +1174,6 @@ export default class ModelEdit extends Vue {
       }
     }
   }
-  guideActions (obj) {
-    let data = obj.data
-    if (obj.action === 'addTable') {
-      let { left, top } = this.modelInstance.renderDom.getBoundingClientRect()
-      this.modelInstance.addTable({
-        table: data.tableName,
-        alias: data.tableName.split('.')[1],
-        guid: data.guid,
-        isSecStorageEnabled: this.modelInstance.second_storage_enabled,
-        drawSize: {
-          left: data.x - left - this.modelRender.zoomXSpace,
-          top: data.y - top - this.modelRender.zoomYSpace
-        }
-      })
-    } else if (obj.action === 'link') {
-      let fTable = this.modelInstance.getTableByGuid(data.fguid)
-      let pTable = this.modelInstance.getTableByGuid(data.pguid)
-      let joinDialogOption = {
-        fid: data.fguid,
-        pid: data.pguid,
-        joinType: data.joinType,
-        fColumnName: fTable.alias + '.' + data.fColumnName,
-        pColumnName: pTable.alias + '.' + data.pColumnName,
-        tables: this.modelRender.tables
-      }
-      this.callJoinDialog(joinDialogOption)
-    }
-  }
-  // 取消table编辑
-  cancelTableEdit () {
-    this.showTableCoverDiv = false
-    this.currentEditTable = null
-    this.showEditAliasForm = false
-    this.formTableAlias.currentEditAlias = ''
-    this.delTipVisible = false
-  }
-  showDelTableTip () {
-    this.delTipVisible = true
-  }
   // 维度、度量滚动到底部
   boardScrollBottom (name) {
     switch (name) {
@@ -1049,25 +1191,6 @@ export default class ModelEdit extends Vue {
         }
     }
   }
-  // 当维度或度量高度改变时，需要增加页码以填充多余的空白区域
-  changePageOfBround (obj) {
-    switch (obj) {
-      case 'dimension':
-        const scrollContent = this.$el.querySelector('.panel-dimension .content-scroll-layout')
-        const dimensionDom = this.$el.querySelector('.panel-dimension .dimension-list')
-        if (!scrollContent || !dimensionDom) return
-        if (dimensionDom.offsetHeight < scrollContent.offsetHeight) {
-          this.boardScrollBottom('dimension')
-        }
-      case 'measure':
-        const measureScrollContent = this.$el.querySelector('.panel-measure .content-scroll-layout')
-        const measureDom = this.$el.querySelector('.panel-measure .measure-list')
-        if (!measureScrollContent || !measureDom) return
-        if (measureDom.offsetHeight < measureScrollContent.offsetHeight) {
-          this.boardScrollBottom('measure')
-        }
-    }
-  }
   toggleCheckbox () {
     if (this.allDimension.length === 0 && !this.isShowCheckbox) {
       return
@@ -1075,13 +1198,6 @@ export default class ModelEdit extends Vue {
       this.dimensionSelectedList = []
     }
     this.isShowCheckbox = !this.isShowCheckbox
-  }
-  get translate () {
-    if (this.isShowCheckbox) {
-      return 0 - this.panelAppear.dimension.width
-    } else {
-      return 0
-    }
   }
   toggleMeaCheckbox () {
     if (this.modelRender.all_measures.length === 1 && !this.isShowMeaCheckbox) {
@@ -1091,13 +1207,6 @@ export default class ModelEdit extends Vue {
     }
     this.isShowMeaCheckbox = !this.isShowMeaCheckbox
   }
-  get translateMea () {
-    if (this.isShowMeaCheckbox) {
-      return 0 - this.panelAppear.measure.width
-    } else {
-      return 0
-    }
-  }
   toggleCCCheckbox () {
     if (this.modelRender.computed_columns.length === 0 && !this.isShowCCCheckbox) {
       return
@@ -1105,13 +1214,6 @@ export default class ModelEdit extends Vue {
       this.ccSelectedList = []
     }
     this.isShowCCCheckbox = !this.isShowCCCheckbox
-  }
-  get translateCC () {
-    if (this.isShowCCCheckbox) {
-      return 0 - this.panelAppear.cc.width
-    } else {
-      return 0
-    }
   }
   async delTable (table) {
     if (!this.modelInstance.checkTableCanDel(table.guid)) {
@@ -1124,7 +1226,6 @@ export default class ModelEdit extends Vue {
       })
     }
     this.modelInstance.delTable(table.guid).then(() => {
-      // this.cancelTableEdit()
       if (this.modelData.available_indexes_count > 0 && !this.isIgnore) {
         this.showChangeTips()
       }
@@ -1181,6 +1282,11 @@ export default class ModelEdit extends Vue {
         item.setAttribute('class', `${item.className.baseVal.replace(/is-focus|is-broken/g, '')}`)
       })
     }
+    if (this.$refs.tableActionsDropdown) {
+      this.$refs.tableActionsDropdown.forEach(it => {
+        it.visible && it.hide()
+      })
+    }
   }
   closeAddMeasureDia ({isSubmit, data, isEdit, fromSearch}) {
     if (isSubmit) {
@@ -1198,7 +1304,6 @@ export default class ModelEdit extends Vue {
     if (this._checkTableType(t)) {
       let joinT = Object.keys(this.modelInstance.linkUsedColumns).filter(it => it.indexOf(t.guid) === 0)
       if (joinT.length && joinT.some(it => this.modelInstance.linkUsedColumns[it].length)) {
-        // this.cancelTableEdit()
         this.$message({
           message: this.$t('changeTableJoinCondition'),
           type: 'warning'
@@ -1213,7 +1318,6 @@ export default class ModelEdit extends Vue {
         confirmButtonText: this.$t('switchReplace')
       })
       this.modelInstance.changeTableType(t)
-      // this.cancelTableEdit()
       if (this.modelData.available_indexes_count > 0 && !this.isIgnore) {
         this.showChangeTips()
       }
@@ -1241,6 +1345,53 @@ export default class ModelEdit extends Vue {
   // 自动布局
   autoLayout () {
     this.modelInstance.renderPosition()
+  }
+  // 额外功能
+  handleActionsCommand (command) {
+    if (command === 'collapseAllTables') {
+      this.collapseAllTables = true
+      for (let item in this.modelRender.tables) {
+        const { spreadOut } = this.modelRender.tables[item]
+        if (spreadOut) {
+          this.handleDBClick(this.modelRender.tables[item])
+        }
+      }
+    } else if (command === 'expandAllTables') {
+      this.collapseAllTables = false
+      for (let item in this.modelRender.tables) {
+        const { spreadOut } = this.modelRender.tables[item]
+        if (!spreadOut) {
+          this.handleDBClick(this.modelRender.tables[item])
+        }
+      }
+    } else if (command === 'showOnlyConnectedColumn') {
+      if (!this.showOnlyConnectedColumn) {
+        this.collapseAllTables = false
+        this.showOnlyConnectedColumn = true
+        for (let item in this.modelRender.tables) {
+          const { columns } = this.modelRender.tables[item]
+          const len = columns.filter(it => it.isFK || it.isPK).length
+          const columnHeight = document.querySelector('.column-li').offsetHeight
+          const tableTitleHeight = document.querySelector('.table-title').offsetHeight
+          const sumHeight = columnHeight * len
+          this.$set(this.modelRender.tables[item], 'spreadOut', true)
+          this.$set(this.modelRender.tables[item].drawSize, 'height', tableTitleHeight + sumHeight + 2)
+          this.$set(this.modelRender.tables[item], 'spreadHeight', tableTitleHeight + sumHeight + 2)
+        }
+      } else {
+        this.showOnlyConnectedColumn = false
+        for (let item in this.modelRender.tables) {
+          if (!this.modelRender.tables[item].spreadOut) {
+            this.$set(this.modelRender.tables[item], 'spreadHeight', modelRenderConfig.tableBoxHeight)
+          } else {
+            this.$set(this.modelRender.tables[item].drawSize, 'height', modelRenderConfig.tableBoxHeight)
+          }
+        }
+      }
+      this.$nextTick(() => {
+        this.modelInstance.plumbTool.refreshPlumbInstance()
+      })
+    }
   }
   async initModelDesc (cb) {
     if (this.extraoption.modelName && this.extraoption.action === 'edit') {
@@ -1319,13 +1470,6 @@ export default class ModelEdit extends Vue {
     }
     this.modelInstance.delDimension(d.name)
   }
-  get isDisableBatchCheck () {
-    if (this.allDimension.length === 1 && (this.modelInstance.second_storage_enabled || this.isHybridModel) && this.modelInstance.partition_desc && this.modelInstance.partition_desc.partition_date_column === this.allDimension[0].column) {
-      return true
-    } else {
-      return false
-    }
-  }
   toggleCheckAllDimension () {
     if (this.dimensionSelectedList.length === this.modelRender.dimensions.length || (this.modelInstance.second_storage_enabled || this.isHybridModel) && this.dimensionSelectedList.length + 1 === this.modelRender.dimensions.length) {
       this.dimensionSelectedList = []
@@ -1383,9 +1527,6 @@ export default class ModelEdit extends Vue {
     this.modelInstance.delCC(name)
   }
   editCC (cc) {
-    // this.showCCDetailDialog({
-    //   ccDetail: cc
-    // })
     this.showAddCCDialog({
       modelInstance: this.modelInstance,
       ccForm: cc,
@@ -1448,16 +1589,8 @@ export default class ModelEdit extends Vue {
   }
   // 拖动画布
   dragBox (x, y, boxW, boxH, info, oDiv) {
-    const child = oDiv.querySelector('.model-edit')
-    if (child) {
-      const mL = child.offsetLeft ?? 0
-      const mT = child.offsetTop ?? 0
-      child.style.cssText += `margin-left: ${mL + x}px; margin-top: ${mT + y}px`
-    }
-    this.$nextTick(() => {
-      this.modelInstance.getSysInfo()
-      this.modelInstance.moveModelPosition(x, y)
-    })
+    this.modelInstance.getSysInfo()
+    this.modelInstance.moveModelPosition(x, y)
   }
   // 拖动tree-table
   dragTable (node) {
@@ -1733,6 +1866,9 @@ export default class ModelEdit extends Vue {
         })
         // this.$set(this.modelRender, 'tables', cloneTables)
         this.$set(this.modelInstance, 'tables', this.modelRender.tables)
+        console.log(this.modelInstance.allConnInfo)
+        const [currentConnector] = Object.values(this.modelInstance.allConnInfo).slice(-1)
+        this.drawAssistLine(currentConnector)
       }, 500)
     }
     // 同步因为预计算被禁用的表
@@ -1761,7 +1897,6 @@ export default class ModelEdit extends Vue {
       if (this.currentDragColumnData.guid === guid) {
         return
       }
-      // $(target).parents('.column-list-box').addClass('drag-in')
     }
   }
   allowDropColumnToPanle (e) {
@@ -1815,6 +1950,7 @@ export default class ModelEdit extends Vue {
   selectResult (e, select) {
     this.modelSearchActionSuccessTip = ''
     this.searchHandleStart = true
+    this.modelGlobalSearch = ''
     var moreInfo = select.more
     if (select.action === 'showtable') {
       if (select.more) {
@@ -1939,28 +2075,13 @@ export default class ModelEdit extends Vue {
     }
     this.panelAppear.search.display = false
   }
-  @Watch('dimensionDialogShow')
-  @Watch('singleDimensionDialogShow')
-  @Watch('tableJoinDialogShow')
-  @Watch('measureVisible')
-  tableJoinDialogClose (val) {
-    if (!val) {
-      if (this.searchHandleStart) {
-        this.searchHandleStart = false
-        this.panelAppear.search.display = true
-      }
-    }
-  }
   searchModelEverything (val) {
     this.modelGlobalSearchResult = this.modelInstance.search(val)
+    console.log(this.modelSearchActionHistoryList, 2222)
   }
   getColumnType (tableName, column) {
     var ntable = this.modelInstance.getTable('alias', tableName)
     return ntable && ntable.getColumnType(column)
-  }
-  @Watch('modelGlobalSearch')
-  watchSearch (v) {
-    this.showSearchResult = v
   }
   panelStyle (k) {
     // return (k) => {
@@ -1980,28 +2101,6 @@ export default class ModelEdit extends Vue {
   tableBoxStyle (drawSize) {
     return {'z-index': drawSize.zIndex, width: drawSize.width + 'px', height: drawSize.height + 'px', left: drawSize.left + 'px', top: drawSize.top + 'px'}
   }
-  get tableBoxStyleNoZoom () {
-    return (drawSize) => {
-      if (drawSize) {
-        // let zoom = this.modelRender.zoom / 10
-        return {'z-index': drawSize.zIndex, width: drawSize.width + 'px', height: drawSize.height + 'px', left: drawSize.left + 'px', top: drawSize.top + 'px'}
-      }
-    }
-  }
-  // get tableBoxToolStyleNoZoom () {
-  //   return (drawSize) => {
-  //     if (drawSize) {
-  //       let zoom = this.modelRender.zoom / 10
-  //       if (drawSize.isInRightEdge) {
-  //         return {left: drawSize.left - 230 + 'px', top: drawSize.top + 'px'}
-  //       }
-  //       return {left: this.currentEditTable.drawSize.width + drawSize.left + 'px', top: drawSize.top + 'px'}
-  //     }
-  //   }
-  // }
-  get searchResultData () {
-    return groupData(this.modelGlobalSearchResult, 'kind')
-  }
   // 判断是否添加分区列方法
   addPartitionFunc (data) {
     data.available_indexes_count = this.modelData.available_indexes_count
@@ -2020,7 +2119,7 @@ export default class ModelEdit extends Vue {
         if (res.isSubmit) {
           this.handleSaveModel({data, modelSaveConfigData: res.data, createBaseIndex: this.modelInstance.has_base_table_index && this.modelInstance.has_base_agg_index ? false : res.with_base_index})
         } else {
-          this.$emit('saveRequestEnd')
+          this.saveBtnLoading = false
         }
       })
     } else {
@@ -2035,7 +2134,7 @@ export default class ModelEdit extends Vue {
           await this.checkMeasureWithCC(data)
           this.addPartitionFunc(data)
         }).catch(() => {
-          this.$emit('saveRequestEnd')
+          this.saveBtnLoading = false
         })
       } else {
         await this.checkMeasureWithCC(data)
@@ -2046,14 +2145,14 @@ export default class ModelEdit extends Vue {
         this._tipHasAloneTable(err.aloneCount).then(() => {
           this.generateModelData(true)
         }).catch(() => {
-          this.$emit('saveRequestEnd')
+          this.saveBtnLoading = false
         })
       } else {
         kylinMessage(this.$t(modelErrorMsg[err.errorKey], {tableName: err.tableName}), {type: 'warning'})
       }
-      this.$emit('saveRequestEnd')
+      this.saveBtnLoading = false
     }).catch(() => {
-      this.$emit('saveRequestEnd')
+      this.saveBtnLoading = false
     })
   }
   // 对于老数据检测 SUM 或 PERCENTILE_APPROX 度量中是否使用 varchar cc 列
@@ -2083,21 +2182,29 @@ export default class ModelEdit extends Vue {
       }
     })
   }
-  setModelBoundStyle () {
-    const { left, top } = this.modelRender.marginClient ?? {left: 0, top: 0}
-    const dom = this.$el.querySelector('.model-edit')
-    if (!dom) return
-    dom.style.cssText += `margin-left: ${left}px; margin-top: ${top}px`
+  // 保存模型
+  saveModelEvent () {
+    this.saveBtnLoading = true
+    this.generateModelData()
   }
-  async mounted () {
+  // 返回上级页面
+  goModelList () {
+    this.toggleFullScreen(false)
+    if (this.fromRoute && this.fromRoute.name) {
+      this.$router.push({name: this.fromRoute.name, params: {modelName: this.currentModel}})
+      return
+    }
+    this.$router.push({name: 'ModelList'})
+  }
+  async initEditModel () {
     this.globalLoading.show()
     this.$el.onselectstart = function (e) {
       return false
     }
     // 注册保存事件
-    this.$on('saveModel', () => {
-      this.generateModelData()
-    })
+    // this.$on('saveModel', () => {
+    //   this.generateModelData()
+    // })
     this.clearDatasourceCache(this.currentSelectedProject) // 清空 当前project下的 datasource缓存
     // 如果是 edit 需要获取模型使用的 table 信息
     try {
@@ -2150,6 +2257,7 @@ export default class ModelEdit extends Vue {
         })
         this.$nextTick(() => {
           this.checkInvalidIndex()
+          this.handleListenEvents()
         })
       } catch (e) {
         this.globalLoading.hide()
@@ -2162,10 +2270,12 @@ export default class ModelEdit extends Vue {
         })
       }
     })
-    
-    this.setModelBoundStyle()
-    if (localStorage.getItem('isFirstAddModel') === 'true' || !localStorage.getItem('isFirstAddModel')) {
-      await this.showGuide()
+    if (localStorage.getItem('isFirstAddModel') === 'true') {
+      await this.showFistAddModelGuide()
+    }
+    const keVersion = this.$store.state.system.serverAboutKap['ke.version']?.match(/Kyligence Enterprise (\d+.\d+.\d+.\d+)-\w+/)[1]
+    if ((localStorage.getItem('isFirstUpdateModel') === 'true' || !localStorage.getItem('isFirstUpdateModel')) && (keVersion && +keVersion.split('.').join('') >= 45160)) {
+      await this.showUpdateGuide()
     }
   }
   // 更新 model.js 里的 tables 数据
@@ -2179,6 +2289,11 @@ export default class ModelEdit extends Vue {
   async checkInvalidIndex () {
     if (this.extraoption.action === 'edit') {
       const res = await this.modelInstance.generateMetadata(true)
+      // const _data = {
+      //   project: this.currentSelectedProject,
+      //   model_id: res.uuid,
+      //   join_tables: res.join_tables
+      // }
       const response = await this.invalidIndexes(res)
       const result = await handleSuccessAsync(response)
       const { computed_columns, anti_flatten_lookups } = result
@@ -2315,21 +2430,11 @@ export default class ModelEdit extends Vue {
           } else {
             this.gotoIndexdialogVisible = true
           }
-          // kylinConfirm(this.$t('saveSuccessTip'), {
-          //   confirmButtonText: this.$t('addIndexTip'),
-          //   cancelButtonText: this.$t('ignoreaddIndexTip'),
-          //   type: 'success',
-          //   confirmButtonClass: 'guide-gotoindex-btn'
-          // }, this.$t('addIndexTip')).then(() => {
-          //   this.$router.replace({name: 'ModelList', params: { ignoreIntercept: true, addIndex: true }})
-          // }).catch(() => {
-          //   this.$router.replace({name: 'ModelList', params: { ignoreIntercept: true }})
-          // })
-          this.$emit('saveRequestEnd')
+          this.saveBtnLoading = false
         }, 1000)
       })
     }).catch((res) => {
-      this.$emit('saveRequestEnd')
+      this.saveBtnLoading = false
       handleError(res)
     })
   }
@@ -2407,7 +2512,7 @@ export default class ModelEdit extends Vue {
   cursor: pointer;
   border-radius: 10px;
   text-align: center;
-  background: @grey-3;
+  background: @ke-background-color-secondary;
   padding: 0 10px;
   &.is-hide {
     font-size: 0;
@@ -2420,7 +2525,6 @@ export default class ModelEdit extends Vue {
     }
   }
   &.is-hide.jtk-hover {
-    // background: #0875DA;
     .join-type {
       display: inline-block;
     }
@@ -2465,7 +2569,10 @@ export default class ModelEdit extends Vue {
   }
   &.jtk-hover:not(.link-label-broken):not(.is-focus) {
     .join-type {
-      color: #9DCEFB;
+      color: @base-color-6;
+      &:hover {
+        color: @ke-color-primary;
+      }
     }
     
   }
@@ -2491,19 +2598,9 @@ export default class ModelEdit extends Vue {
     right: -13px;
     font-size: 16px;
   }
-  // .close {
-  //   display: none;
-  //   .ky-square-box(14px, 14px);
-  //   line-height: 14px;
-  //   font-size:12px;
-  //   float:right;
-  //   border-radius: 7px;
-  //   margin-left:8px;
-  //   margin-top:3px;
-  // }
 }
 .drag-column-li-in {
-  background-color: #CEE6FD;
+  background-color: @base-color-8;
   border: 2px solid @line-border-drag !important;
 }
 .box-css() {
@@ -2520,12 +2617,176 @@ export default class ModelEdit extends Vue {
 .search-position() {
   position:relative;
 }
-.model-edit-outer {
-  border-top:@text-placeholder-color;
-  user-select:none;
-  overflow:hidden;
-  .box-css();
+.model-edit-layout {
+  width: 100%;
   height: 100%;
+  .model-edit-header {
+    width: 100%;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    border-bottom: 1px solid @ke-border-secondary;
+    box-sizing: border-box;
+    .model-title {
+      // height: 100%;
+      padding: 0 16px;
+      line-height: 72px;
+      box-sizing: border-box;
+      max-width: 240px;
+      .model-alias-title {
+        max-width: 90%;
+      }
+      .model-alias-label {
+        cursor: pointer;
+        .filter-status {
+          top: -4px;
+          margin-right: 2px;
+        }
+      }
+    }
+    .model-search-layout {
+      flex: 1;
+      position: relative;
+      .el-input {
+        width: 100%;
+        .el-input__inner {
+          border: 0;
+          outline: none;
+          &:focus {
+            border: 1px solid #0875DA;
+            box-shadow: 0px 0px 0px 1px #0875DA;
+          }
+        }
+      }
+      .search-board {
+        width: 100%;
+        position: absolute;
+        // box-shadow: 0 0px 2px 0 @color-text-placeholder;
+        background-color: rgba(255, 255, 255, 1);
+        box-shadow: 0px 2px 8px rgba(50, 73, 107, 0.24);
+        border-radius: 6px;
+        height:calc(~'100vh - 464px')!important;
+        min-height: 250px;
+        z-index: 101;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        .search-footer {
+          background-color: @ke-border-divider-color;
+          height: 36px;
+          line-height: 36px;
+          text-align: right;
+          padding: 0 8px;
+          box-sizing: border-box;
+          > span {
+            font-size: 12px;
+          }
+          .feedback-btn {
+            color: @ke-color-primary;
+          }
+        }
+      }
+      .el-row {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        padding: 12px 10px 0 10px;
+        box-sizing: border-box;
+        .search-content-col {
+          padding-right: 8px;
+          height: 100%;
+        }
+        .search-history {
+          border-left: 1px solid @ke-border-divider-color;
+          padding-left: 16px;
+          height: 100%;
+        }
+        .search-action-list {
+          font-size:12px;
+          .action-list-title {
+            height:30px;
+            line-height:30px;
+            font-weight: @font-medium;
+            border-bottom: solid 1px @line-split-color;
+          }
+          .search-list-icon {
+            width:16px;
+            height:16px;
+            position:absolute;
+            .ky-square-box(16px, 16px);
+            border-radius: 50%;
+          }
+          .action-content {
+            border-bottom: dashed 1px @line-split-color;
+            .action-title {
+              padding:10px 0;
+            }
+            .action-desc {
+              margin-left:26px;
+              word-break: break-all;
+              i {
+                font-weight: @font-medium;
+                font-style: normal;
+              }
+            }
+          }
+        }
+      }
+      .search-result-box {
+        width: 100%;
+        height: 100%;
+        .search-noresult {
+          font-size:20px;
+          text-align: center;
+          margin-top:100px;
+          color:@text-placeholder-color;
+        }
+        .search-group {
+          padding-top: 5px;
+          padding-bottom: 5px;
+        }
+        .search-content {
+          cursor:pointer;
+          height: 32px;
+          line-height: 32px;
+          padding-left: 8px;
+          &.active,&:hover{
+            background-color:@base-color-9;
+          }
+          .search-category {
+            font-size:12px;
+            color:@text-normal-color;
+          }
+          .search-name {
+            font-size:14px;
+            color:@text-title-color;
+            i {
+              color:@base-color;
+              font-style: normal;
+            }
+          }
+        }
+      }
+    }
+    .model-actions {
+      height: 100%;
+      // width: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: right;
+      padding: 0 16px;
+      box-sizing: border-box;
+    }
+  }
+}
+.model-edit-outer {
+  border-top: @text-placeholder-color;
+  user-select: none;
+  overflow: hidden;
+  .box-css();
+  height: calc(~'100% - 72px');
+  background-color: @ke-background-color-secondary;
   .lose-fact-table-alert {
     position: absolute;
     z-index: 1;
@@ -2612,12 +2873,12 @@ export default class ModelEdit extends Vue {
     box-shadow: 0 2px 4px 0 @color-text-placeholder;
     position:relative;
     width:250px;
-    background:#fff;
+    background: @fff;
     position:absolute;
       .panel-title {
         background:@text-normal-color;
         height:28px;
-        color:#fff;
+        color: @fff;
         font-size:14px;
         line-height:28px;
         padding-left: 10px;
@@ -2933,44 +3194,7 @@ export default class ModelEdit extends Vue {
         background: @grey-2;
       }
     }
-    .search-result-box {
-      box-shadow: 0 0px 2px 0 @color-text-placeholder;
-      background-color: rgba(255, 255, 255, 1);
-      height:calc(~'100vh - 464px')!important;
-      min-height:250px;
-      .search-position();
-      .search-noresult {
-        font-size:20px;
-        text-align: center;
-        margin-top:100px;
-        color:@text-placeholder-color;
-      }
-      .search-group {
-        padding-top: 5px;
-        padding-bottom: 5px;
-      }
-      .search-content {
-        &.active,&:hover{
-          background-color:@base-color-9;
-        }
-        cursor:pointer;
-        height:32px;
-        line-height:32px;
-        padding-left: 20px;
-        .search-category {
-          font-size:12px;
-          color:@text-normal-color;
-        }
-        .search-name {
-          i {
-            color:@base-color;
-            font-style: normal;
-          }
-          font-size:14px;
-          color:@text-title-color;
-        }
-      }
-    }
+    
     .search-action-result {
       width:620px;
       // margin: 0 auto;
@@ -3038,38 +3262,84 @@ export default class ModelEdit extends Vue {
       }
     }
   }
-  .sub-tool-icon-group {
-    position:absolute;
-    right:10px;
-    top:258px;
-    width:32px;
-    .tool-icon{
-      &.broken-location i{
-        color:@error-color-1;
+  .shortcuts-group {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    // top: 70%;
+    background-color: @fff;
+    border: 1px solid @ke-border-secondary;
+    box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.04);
+    border-radius: 6px;
+    padding: 7px;
+    box-sizing: border-box;
+    display: flex;
+    // flex-direction: column;
+    align-items: center;
+    color: @text-normal-color;
+    > div {
+      margin-right: 8px;
+      &:last-child {
+        margin-right: 0;
       }
-      position:relative;
-      height:30px;
-      line-height:30px;
-      i {
-        color:@text-normal-color;
-        font-size:18px;
-        &:hover{
-          color:@base-color;
-        }
+    }
+    .zoom-tools {
+      display: flex;
+      // flex-direction: column;
+      align-items: center;
+      .reduce-zoom {
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .zoom-num {
+        margin-left: 8px;
+        margin-right: 8px;
+      }
+      .add-zoom {
+        cursor: pointer;
+        font-size: 16px;
+      }
+    }
+    .divide-line {
+      border: 0;
+      // border-left: 1px solid @ke-border-secondary;
+      // margin: 4px 0 20px 0;
+      color: @ke-border-secondary;
+      width: 1px;
+      height: 70%;
+      margin-right: 8px;
+    }
+    .full-screen {
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .auto-layout {
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .action-dropdown {
+      margin-top: -3px;
+      .el-ksd-n-icon-column-3-outlined {
+        font-size: 16px;
+        color: @text-normal-color;
+      }
+      .el-ksd-n-icon-arrow-table-down-filled {
+        font-size: 12px;
+        color: @text-normal-color;
       }
     }
   }
   .icon-ds {
-    top:10px;
-    left:10px;
-    background:@text-normal-color;
-    color:#fff;
+    top: 10px;
+    left: 10px;
+    background: @text-normal-color;
+    color: @fff;
     box-shadow: @box-shadow;
     &.active{
-      background:@base-color;
+      background: @base-color;
     }
     &:hover{
-      background:@base-color;
+      background: @base-color;
     }
   }
   .icon-lock-status {
@@ -3081,26 +3351,38 @@ export default class ModelEdit extends Vue {
     }
     border:solid 1px @text-normal-color;
     &:hover{
-      color: #fff;
-      background-color:@normal-color-1;
+      color: @fff;
+      background-color: @normal-color-1;
       border:solid 1px @normal-color-1;
     }
   }
   .unlock-icon {
     &:hover{
       color: @fff;
-      background-color:@base-color;
+      background-color: @base-color;
       border:solid 1px @base-color;
     }
   }
   .model-edit {
     height: 100%;
-    position:relative;
+    position: relative;
     .drag-svg {
       z-index: 50;
     }
     svg.jtk-connector {
       cursor: pointer;
+      &.jtk-hover:not(.is-broken) {
+        > path {
+          stroke: @base-color-6;
+          stroke-width: 2;
+        }
+      }
+      &.jtk-hover.is-broken {
+        > path {
+          stroke: @ke-color-danger;
+          stroke-width: 2;
+        }
+      }
     }
   }
   .edit-table-layout {
@@ -3116,12 +3398,12 @@ export default class ModelEdit extends Vue {
     position: absolute;
     // box-shadow: @fact-shadow;
     border-radius: 6px;
-    border: 2px solid #E6EBF4;
+    border: 2px solid @ke-border-secondary;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     &.is-focus {
-      border: 2px solid #0867BF;
+      border: 2px solid @line-border-focus;
       .column-list-box {
         .column-li.drag-column-li-in {
           border: 0 !important;
@@ -3134,17 +3416,17 @@ export default class ModelEdit extends Vue {
       border: 2px solid @ke-color-danger;
     }
     &.link-hover:not(.is-focus) {
-      border: 2px solid #9DCEFB;
+      border: 2px solid @base-color-6;
     }
     &:hover:not(.is-focus) {
       // box-shadow: @fact-hover-shadow;
-      border: 2px solid #9DCEFB;
+      border: 2px solid @base-color-6;
       .scrollbar-track-y{
         opacity: 1;
       }
     }
     &.is-hover:not(.is-focus) {
-      border: 2px solid #9DCEFB;
+      border: 2px solid @base-color-6;
     }
     &:focus {
       border: 2px solid @line-border-focus;
@@ -3167,13 +3449,15 @@ export default class ModelEdit extends Vue {
     &:not(.is-focus) .column-list-box {
       &.ksd-drag-box *[draggable="true"].is-link:hover {
         border: 0 !important;
-        border: 2px solid #0875DA !important;
+        border-top: 2px solid @ke-color-primary !important;
+        border-bottom: 2px solid @ke-color-primary !important;
       }
       .column-li {
         &.is-link {
           &.is-hover {
-            background-color: #CEE6FD;
-            border: 2px solid @line-border-drag;
+            background-color: @base-color-8;
+            border-top: 2px solid @line-border-drag;
+            border-bottom: 2px solid @line-border-drag;
           }
         }
       }
@@ -3181,13 +3465,13 @@ export default class ModelEdit extends Vue {
     &.is-focus .column-list-box {
       &.ksd-drag-box *[draggable="true"].is-link:hover {
         border: 0 !important;
-        border-top: 2px solid #0875DA !important;
-        border-bottom: 2px solid #0875DA !important;
+        border-top: 2px solid @ke-color-primary !important;
+        border-bottom: 2px solid @ke-color-primary !important;
       }
       .column-li {
         &.is-link {
           &.is-hover {
-            background-color: #CEE6FD;
+            background-color: @base-color-8;
             border-top: 2px solid @line-border-drag;
             border-bottom: 2px solid @line-border-drag;
           }
@@ -3201,7 +3485,7 @@ export default class ModelEdit extends Vue {
     // overflow: hidden;
     .table-title {
       background-color: @fact-title-color;
-      color:#fff;
+      color:@fff;
       line-height: 38px;
       border-radius: 4px 4px 0 0;
       height: 38px;
@@ -3214,7 +3498,7 @@ export default class ModelEdit extends Vue {
       .table-sign {
         display: inline-block;
         font-size: 0;
-        // cursor: pointer;
+        cursor: default;
       }
       .table-column-nums {
         font-size: 12px;
@@ -3239,15 +3523,20 @@ export default class ModelEdit extends Vue {
       .table-dropdown {
         font-size: 0;
       }
+      .custom-tooltip-layout {
+        height: 100%;
+        cursor: default;
+      }
       .name {
-        text-overflow: ellipsis;
-        overflow: hidden;
+        // text-overflow: ellipsis;
+        // overflow: hidden;
         line-height: 29px\0;
         width: calc(~"100% - 50px");
-        display: inline-block;
+        // display: inline-block;
         margin-left: 4px;
         font-weight: bold;
         &.tip_box {
+          cursor: default;
           .alias-span {
             font-size: 14px;
             font-weight: @font-medium;
@@ -3292,12 +3581,12 @@ export default class ModelEdit extends Vue {
       flex: 1;
       &.ksd-drag-box *[draggable="true"]:not(.is-link):hover {
         border: 0 !important;
-        border-top: 2px solid #9DCEFB !important;
-        border-bottom: 2px solid #9DCEFB !important;
+        border-top: 2px solid @base-color-6 !important;
+        border-bottom: 2px solid @base-color-6 !important;
       }
       // &.ksd-drag-box *[draggable="true"].is-link:hover {
       //   border: 0 !important;
-      //   border: 2px solid #0875DA !important;
+      //   border: 2px solid @ke-color-primary !important;
       // }
       .column-li {
         cursor: default;
@@ -3314,17 +3603,17 @@ export default class ModelEdit extends Vue {
           position: relative;
           &.is-hover {
             background-color: @ke-background-color-secondary;
-            border-top: 2px solid #9DCEFB;
-            border-bottom: 2px solid #9DCEFB;
+            border-top: 2px solid @base-color-6;
+            border-bottom: 2px solid @base-color-6;
           }
           &.is-focus {
-            background-color: #CEE6FD;
+            background-color: @base-color-8;
             border-top: 2px solid @line-border-drag;
             border-bottom: 2px solid @line-border-drag;
           }
           &:hover{
-            border-top: 2px solid #9DCEFB;
-            border-bottom: 2px solid #9DCEFB;
+            border-top: 2px solid @base-color-6;
+            border-bottom: 2px solid @base-color-6;
             background-color: @ke-color-info-bg;
           }
           &.is-link {
@@ -3334,14 +3623,14 @@ export default class ModelEdit extends Vue {
               font-weight: @font-medium;
             }
             // &.is-hover {
-            //   background-color: #CEE6FD;
+            //   background-color: @base-color-8;
             //   border: 2px solid @line-border-drag;
             // }
             &.is-focus {
-              background: #CEE6FD;
+              background: @base-color-8;
             }
             &:hover {
-              background: #CEE6FD;
+              background: @base-color-8;
             }
           }
           .ksd-nobr-text {
@@ -3393,14 +3682,14 @@ export default class ModelEdit extends Vue {
         margin-right: 2px;
         .scrollbar-thumb-y {
           width: 4px;
-          background: #ECF0F8;
+          background: @ke-background-color-hover;
         }
       }
     }
   }
   .column-point-dot {
     z-index: 100;
-    border: 2px solid #9DCEFB;
+    border: 2px solid @base-color-6;
     border-radius: 100%;
     height: 8px !important;
     width: 8px !important;
@@ -3413,7 +3702,7 @@ export default class ModelEdit extends Vue {
     }
     .add-point {
       position: absolute;
-      color: #9DCEFB;
+      color: @base-color-6;
       z-index: 20;
       cursor: pointer;
       width: 100%;
@@ -3424,9 +3713,9 @@ export default class ModelEdit extends Vue {
       font-size: 16px;
     }
     &.is-focus {
-      border: 3px solid #0875DA;
+      border: 3px solid @ke-color-primary;
       .add-point {
-        color: #0875DA;
+        color: @ke-color-primary;
       }
     }
   }
@@ -3435,9 +3724,9 @@ export default class ModelEdit extends Vue {
     z-index: 100;
     .line-end-pointer {
       font-size: 20px;
-      color: #9DCEFB;
+      color: @base-color-6;
       &:hover {
-        color: #0875DA;
+        color: @ke-color-primary;
       }
     }
   }
@@ -3461,13 +3750,35 @@ export default class ModelEdit extends Vue {
   }
 }
 .model-alias-tooltip {
-  margin-top: -10px !important;
+  margin-top: -5px !important;
 }
 #custom-drag-image {
-  color: #0875DA;
+  color: @ke-color-primary;
   font-size: 18px;
   position: absolute;
   background: transparent;
   opacity: 0;
+}
+#broken-use-group:hover{
+  > path:not(#use) {
+    stroke: @ke-color-danger;
+    stroke-width: 2;
+  }
+}
+#use-group:hover {
+  > path:not(#use) {
+    stroke: @base-color-6;
+    stroke-width: 2;
+  }
+}
+.model-action-tools {
+  .el-dropdown-menu__item {
+    i {
+      margin-top: -2px;
+    }
+    &.is-active {
+      color: @ke-color-primary;
+    }
+  }
 }
 </style>

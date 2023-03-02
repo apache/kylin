@@ -45,13 +45,17 @@ function addPlumbPoints (plumbTool, guid) {
 }
 
 // 根据树形结构自定义表的位置
-export function customCanvasPosition (renderDom, model, zoom) {
-  const { tables } = model
+export function customCanvasPosition (vm, renderDom, model, zoom) {
+  const { tables, canvas: currentCanvas } = model
   const canvas = {
     coordinate: {},
     zoom: zoom
   }
-  const layers = autoCalcLayer(tables)
+  const layersRoot = autoCalcLayer(tables, model)
+  let layers = layersRoot?.rightNodes?.db
+  if (layersRoot?.leftNodes) {
+    layers = [...layers, ...layersRoot.leftNodes.db]
+  }
   if (layers && layers.length > 0) {
     const baseL = modelRenderConfig.baseLeft
     const baseT = modelRenderConfig.baseTop
@@ -59,12 +63,15 @@ export function customCanvasPosition (renderDom, model, zoom) {
     const centerL = renderDomBound.width / 2 - modelRenderConfig.tableBoxWidth / 2
     const moveL = layers[0].X - centerL
     for (let k = 0; k < layers.length; k++) {
+      const currentT = layers[k].tree.tables[layers[k].guid]
+      const centerT = renderDomBound.height / 3 - (currentT?.drawSize?.height ?? modelRenderConfig.tableBoxHeight) / 2
+      const moveT = layers[0].Y - centerT
       let [currentTable] = tables.filter(item => item.guid === layers[k].guid)
       canvas.coordinate[`${currentTable.alias}`] = {
         x: baseL - moveL + layers[k].X,
-        y: baseT + layers[k].Y,
+        y: baseT - moveT + layers[k].Y,
         width: modelRenderConfig.tableBoxWidth,
-        height: modelRenderConfig.tableBoxHeight
+        height: currentCanvas?.coordinate?.[`${currentTable.alias}`]?.height ?? modelRenderConfig.tableBoxHeight
       }
     }
   }
@@ -72,13 +79,21 @@ export function customCanvasPosition (renderDom, model, zoom) {
 }
 
 // 获取树形结构
-function autoCalcLayer (tables) {
+function autoCalcLayer (tables, model) {
+  const { canvas: currentCanvas } = model
   const [factTable] = tables.filter(it => it.type === 'FACT')
   if (!factTable) {
     return
   }
+  const tbs = {}
+  tables.forEach(it => {
+    tbs[it.guid] = {
+      ...it,
+      drawSize: {...currentCanvas.coordinate[`${it.alias}`]}
+    }
+  })
   const rootGuid = factTable.guid
-  const tree = new ModelTree({rootGuid: rootGuid, showLinkCons: allConnectList})
+  const tree = new ModelTree({rootGuid: rootGuid, showLinkCons: allConnectList, tables: tbs})
   tree.positionTree()
-  return tree.nodeDB.db
+  return tree.nodeDB.rootNode
 }
