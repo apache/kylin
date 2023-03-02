@@ -10,12 +10,9 @@
               <i v-else class="el-ksd-n-icon-dimention-table-filled kind"></i>
             </el-tooltip>
           </span>
-          <el-tooltip :content="t.alias" :visible-arrow="false" popper-class="popper--small model-alias-tooltip" effect="dark">
-            <span class="table-alias">{{t.alias}}</span>
-          </el-tooltip>
-          <!-- <el-tooltip :content="$t('tableColumnNum', {'all': getColumnNums(t), 'len': t.spreadOut ? getColumnNumInView(t) : 0})" placement="top">
-            <span class="table-column-nums"><i class="el-ksd-n-icon-eye-open-outlined ksd-mr-4 ksd-fs-16"></i>{{getColumnNumInView(t)}}</span>
-          </el-tooltip> -->
+          <span class="table-alias">
+            <span v-custom-tooltip="{text: t.alias, w: 10, effect: 'dark', 'popper-class': 'popper--small model-alias-tooltip', 'visible-arrow': false, position: 'bottom-start'}">{{t.alias}}</span>
+          </span>
           <el-tooltip :content="`${t.columns.length}`" placement="top" :disabled="typeof getColumnNums(t) === 'number'">
             <span class="table-column-nums">{{getColumnNums(t)}}</span>
           </el-tooltip>
@@ -159,6 +156,7 @@ export default class ModelERDiagram extends Vue {
         })
       }
       this.defaultCanvasBackup = this.currentModel.canvas
+      this.exchangeTableData()
     })
   }
   // 获取 table 位置信息
@@ -245,9 +243,11 @@ export default class ModelERDiagram extends Vue {
       if (item.guid === t.guid) {
         linkList.push(...item.joins.filter(it => it.primaryKey === `${t.alias}.${col.name}`).map(it => ({table_guid: it.guid, linked_column: it.foreignKey})))
       } else if (item.joins.filter(it => it.guid === t.guid).length > 0) {
-        const [linkJoin] = item.joins.filter(it => it.guid === t.guid && it.foreignKey === `${t.alias}.${col.name}`)
-        if (!linkJoin) return
-        linkList.push({table_guid: item.guid, linked_column: linkJoin.primaryKey})
+        const linkJoin = item.joins.filter(it => it.guid === t.guid && it.foreignKey === `${t.alias}.${col.name}`)
+        if (!linkJoin.length) return
+        linkJoin.forEach(it => {
+          linkList.push({table_guid: item.guid, linked_column: it.primaryKey})
+        })
       }
     })
     linkList.forEach(lk => {
@@ -333,6 +333,18 @@ export default class ModelERDiagram extends Vue {
       this.$nextTick(() => {
         this.plumbTool.refreshPlumbInstance()
       })
+    }
+  }
+  exchangeTableData () {
+    const currentTableTitle = this.$el.querySelector('.table-title')
+    const modelTableBoxBorder = +window.getComputedStyle(currentTableTitle)['borderWidth'].replace(/px/, '')
+    for (let item in this.currentModel.tables) {
+      const t = this.currentModel.tables[item]
+      const canvasHeight = this.currentModel.canvas.coordinate[`${t.alias}`].height
+      if (canvasHeight === currentTableTitle.offsetHeight + modelTableBoxBorder * 2 + 4) {
+        this.$set(t, 'spreadOut', false)
+        this.$set(t, 'spreadHeight', modelRenderConfig.tableBoxHeight)
+      }
     }
   }
   resetERDiagram () {
@@ -476,10 +488,9 @@ export default class ModelERDiagram extends Vue {
         }
       }
       .table-alias {
-        text-overflow: ellipsis;
-        overflow: hidden;
         line-height: 29px\0;
         width: calc(~"100% - 50px");
+        height: 100%;
         display: inline-block;
         margin-left: 4px;
         font-weight: bold;

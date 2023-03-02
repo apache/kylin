@@ -537,7 +537,7 @@ class NModel extends Schama {
     }
     for (let t in this.tables) {
       let ntable = this.tables[t]
-      canvasInfo.coordinate[ntable.alias] = ntable.getMetaCanvasInfo()
+      canvasInfo.coordinate[ntable.alias] = { ...ntable.getMetaCanvasInfo(), isSpread: true }
     }
     canvasInfo.zoom = this._mount.zoom
     canvasInfo.marginClient = this._mount.marginClient

@@ -77,9 +77,9 @@
                 <i v-else class="el-ksd-n-icon-dimention-table-filled kind"></i>
               </el-tooltip>
             </span>
-            <!-- <el-tooltip :visible-arrow="false" popper-class="popper--small model-alias-tooltip" effect="dark" class="name" :content="t.alias"> -->
-            <span class="alias-span name" v-custom-tooltip="{text: t.alias, w: 20, effect: 'dark', 'popper-class': 'popper--small model-alias-tooltip', 'visible-arrow': false, position: 'bottom-start'}">{{t.alias}}</span>
-            <!-- </el-tooltip> -->
+            <span class="alias-span name">
+              <span v-custom-tooltip="{text: t.alias, w: 10, effect: 'dark', 'popper-class': 'popper--small model-alias-tooltip', 'visible-arrow': false, position: 'bottom-start'}">{{t.alias}}</span>
+            </span>
             <el-tooltip :content="`${t.columns.length}`" placement="top" :disabled="typeof getColumnNums(t) === 'number'">
               <span class="table-column-nums">{{getColumnNums(t)}}</span>
             </el-tooltip>
@@ -1864,7 +1864,6 @@ export default class ModelEdit extends Vue {
           t._cache_search_columns = t.columns
           t.showColumns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns].slice(0, t.columnPerSize)
         })
-        // this.$set(this.modelRender, 'tables', cloneTables)
         this.$set(this.modelInstance, 'tables', this.modelRender.tables)
         console.log(this.modelInstance.allConnInfo)
         const [currentConnector] = Object.values(this.modelInstance.allConnInfo).slice(-1)
@@ -2258,6 +2257,7 @@ export default class ModelEdit extends Vue {
         this.$nextTick(() => {
           this.checkInvalidIndex()
           this.handleListenEvents()
+          this.exchangeModelTable()
         })
       } catch (e) {
         this.globalLoading.hide()
@@ -2276,6 +2276,19 @@ export default class ModelEdit extends Vue {
     const keVersion = this.$store.state.system.serverAboutKap['ke.version']?.match(/Kyligence Enterprise (\d+.\d+.\d+.\d+)-\w+/)[1]
     if ((localStorage.getItem('isFirstUpdateModel') === 'true' || !localStorage.getItem('isFirstUpdateModel')) && (keVersion && +keVersion.split('.').join('') >= 45160)) {
       await this.showUpdateGuide()
+    }
+  }
+  // table drawSize 数据更新
+  exchangeModelTable () {
+    if (!Object.values(this.modelRender.tables).length) return
+    const modelTableTitle = this.$el.querySelector('.table-title')
+    const modelTableBoxBorder = +window.getComputedStyle(modelTableTitle)['borderWidth'].replace(/px/, '')
+    for (let item in this.modelRender.tables) {
+      const { drawSize } = this.modelRender.tables[item]
+      if (drawSize.height === modelTableTitle.offsetHeight + modelTableBoxBorder * 2 + 4) {
+        this.modelRender.tables[item].spreadOut = false
+        this.modelRender.tables[item].spreadHeight = modelRenderConfig.tableBoxHeight
+      }
     }
   }
   // 更新 model.js 里的 tables 数据
@@ -3528,11 +3541,10 @@ export default class ModelEdit extends Vue {
         cursor: default;
       }
       .name {
-        // text-overflow: ellipsis;
-        // overflow: hidden;
         line-height: 29px\0;
         width: calc(~"100% - 50px");
-        // display: inline-block;
+        height: 100%;
+        display: inline-block;
         margin-left: 4px;
         font-weight: bold;
         &.tip_box {
@@ -3544,9 +3556,6 @@ export default class ModelEdit extends Vue {
         }
       }
       span {
-        // width:24px;
-        // height:24px;
-        // float:left;
         line-height: 30px\0;
       }
       .kind {
@@ -3554,7 +3563,6 @@ export default class ModelEdit extends Vue {
         margin: 0;
       }
       .kind:hover {
-        // background-color:@base-color;
         color:@grey-3;
       }
       i {
@@ -3576,7 +3584,6 @@ export default class ModelEdit extends Vue {
     }
     .column-list-box {
       overflow: auto;
-      // border-top: solid 1px @line-border-color;
       overflow-x: hidden;
       flex: 1;
       &.ksd-drag-box *[draggable="true"]:not(.is-link):hover {
@@ -3584,10 +3591,6 @@ export default class ModelEdit extends Vue {
         border-top: 2px solid @base-color-6 !important;
         border-bottom: 2px solid @base-color-6 !important;
       }
-      // &.ksd-drag-box *[draggable="true"].is-link:hover {
-      //   border: 0 !important;
-      //   border: 2px solid @ke-color-primary !important;
-      // }
       .column-li {
         cursor: default;
       }
@@ -3622,10 +3625,6 @@ export default class ModelEdit extends Vue {
               color: @ke-color-primary;
               font-weight: @font-medium;
             }
-            // &.is-hover {
-            //   background-color: @base-color-8;
-            //   border: 2px solid @line-border-drag;
-            // }
             &.is-focus {
               background: @base-color-8;
             }
