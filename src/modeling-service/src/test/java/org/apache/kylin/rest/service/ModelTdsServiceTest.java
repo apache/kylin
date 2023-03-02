@@ -161,21 +161,34 @@ public class ModelTdsServiceTest extends SourceTestCase {
         syncContext.setAdmin(true);
         syncContext.setDataflow(NDataflowManager.getInstance(getTestConfig(), projectName).getDataflow(modelId));
         syncContext.setKylinConfig(getTestConfig());
-        SyncModel syncModel = tdsService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, ImmutableList.of(),
-                ImmutableList.of());
+        SyncModel syncModel = tdsService.exportModel(syncContext);
+        overwriteSystemProp("kylin.model.skip-check-tds", "false");
         Assert.assertThrows(
                 "There are duplicated names among dimension column LO_LINENUMBER and measure name LO_LINENUMBER. Cannot export a valid TDS file. Please correct the duplicated names and try again.",
                 KylinException.class, () -> tdsService.preCheckNameConflict(syncModel));
 
         syncContext.setAdmin(false);
         prepareBasicPermissionByModel(projectName, syncContext.getDataflow().getModel());
+        Mockito.when(accessService.getGroupsOfExecuteUser(Mockito.any(String.class)))
+                .thenReturn(Sets.newHashSet("ROLE_ANALYST"));
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
-        SyncModel syncModel2 = tdsService.exportTDSDimensionsAndMeasuresByNormalUser(syncContext, ImmutableList.of(),
-                ImmutableList.of());
+        SyncModel syncModel2 = tdsService.exportModel(syncContext);
         Assert.assertThrows(
                 "There are duplicated names among dimension column LO_LINENUMBER and measure name LO_LINENUMBER. Cannot export a valid TDS file. Please correct the duplicated names and try again.",
                 KylinException.class, () -> tdsService.preCheckNameConflict(syncModel2));
+
+        overwriteSystemProp("kylin.model.skip-check-tds", "true");
+        Assert.assertTrue(tdsService.preCheckNameConflict(syncModel));
+
+        syncContext.setAdmin(false);
+        prepareBasicPermissionByModel(projectName, syncContext.getDataflow().getModel());
+        Mockito.when(accessService.getGroupsOfExecuteUser(Mockito.any(String.class)))
+                .thenReturn(Sets.newHashSet("ROLE_ANALYST"));
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
+        SyncModel syncModel3 = tdsService.exportModel(syncContext);
+        Assert.assertTrue(tdsService.preCheckNameConflict(syncModel3));
     }
 
     @Test
@@ -199,16 +212,16 @@ public class ModelTdsServiceTest extends SourceTestCase {
         syncContext.setAdmin(true);
         syncContext.setDataflow(NDataflowManager.getInstance(getTestConfig(), projectName).getDataflow(modelId));
         syncContext.setKylinConfig(getTestConfig());
-        SyncModel syncModel = tdsService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, ImmutableList.of(),
-                ImmutableList.of());
+        SyncModel syncModel = tdsService.exportModel(syncContext);
         Assert.assertTrue(tdsService.preCheckNameConflict(syncModel));
 
         syncContext.setAdmin(false);
         prepareBasicPermissionByModel(projectName, syncContext.getDataflow().getModel());
+        Mockito.when(accessService.getGroupsOfExecuteUser(Mockito.any(String.class)))
+                .thenReturn(Sets.newHashSet("ROLE_ANALYST"));
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
-        syncModel = tdsService.exportTDSDimensionsAndMeasuresByNormalUser(syncContext, ImmutableList.of(),
-                ImmutableList.of());
+        syncModel = tdsService.exportModel(syncContext);
         Assert.assertTrue(tdsService.preCheckNameConflict(syncModel));
     }
 
@@ -233,18 +246,19 @@ public class ModelTdsServiceTest extends SourceTestCase {
         syncContext.setDataflow(NDataflowManager.getInstance(getTestConfig(), projectName).getDataflow(modelId));
         syncContext.setKylinConfig(getTestConfig());
         syncContext.setAdmin(true);
-        SyncModel syncModel = tdsService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, ImmutableList.of(),
-                ImmutableList.of());
+        overwriteSystemProp("kylin.model.skip-check-tds", "false");
+        SyncModel syncModel = tdsService.exportModel(syncContext);
         Assert.assertThrows(
                 "There are duplicated names among model column LO_LINENUMBER and measure name LO_LINENUMBER. Cannot export a valid TDS file. Please correct the duplicated names and try again.",
                 KylinException.class, () -> tdsService.preCheckNameConflict(syncModel));
 
         syncContext.setAdmin(false);
         prepareBasicPermissionByModel(projectName, syncContext.getDataflow().getModel());
+        Mockito.when(accessService.getGroupsOfExecuteUser(Mockito.any(String.class)))
+                .thenReturn(Sets.newHashSet("ROLE_ANALYST"));
         SecurityContextHolder.getContext()
                 .setAuthentication(new TestingAuthenticationToken("u1", "ANALYST", Constant.ROLE_ANALYST));
-        SyncModel syncModel2 = tdsService.exportTDSDimensionsAndMeasuresByNormalUser(syncContext, ImmutableList.of(),
-                ImmutableList.of());
+        SyncModel syncModel2 = tdsService.exportModel(syncContext);
         Assert.assertThrows(
                 "There are duplicated names among model column LO_LINENUMBER and measure name LO_LINENUMBER. Cannot export a valid TDS file. Please correct the duplicated names and try again.",
                 KylinException.class, () -> tdsService.preCheckNameConflict(syncModel2));
@@ -344,7 +358,7 @@ public class ModelTdsServiceTest extends SourceTestCase {
             thrown.expectMessage("current user does not have full permission on requesting model");
             SyncContext syncContext = tdsService.prepareSyncContext(project, modelId,
                     SyncContext.BI.TABLEAU_CONNECTOR_TDS, SyncContext.ModelElement.AGG_INDEX_COL, "localhost", 8080);
-            tdsService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, ImmutableList.of(), ImmutableList.of());
+            tdsService.exportModel(syncContext);
         } finally {
             SecurityContextHolder.getContext()
                     .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
@@ -393,7 +407,7 @@ public class ModelTdsServiceTest extends SourceTestCase {
                 SyncContext syncContext = tdsService.prepareSyncContext(project, modelId,
                         SyncContext.BI.TABLEAU_CONNECTOR_TDS, SyncContext.ModelElement.AGG_INDEX_COL, "localhost",
                         8080);
-                tdsService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, ImmutableList.of(), ImmutableList.of());
+                tdsService.exportModel(syncContext);
             } finally {
                 SecurityContextHolder.getContext()
                         .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
@@ -483,8 +497,7 @@ public class ModelTdsServiceTest extends SourceTestCase {
         prepareBasic(project);
         SyncContext syncContext = tdsService.prepareSyncContext(project, modelId, SyncContext.BI.TABLEAU_CONNECTOR_TDS,
                 SyncContext.ModelElement.AGG_INDEX_AND_TABLE_INDEX_COL, "localhost", 7070);
-        SyncModel syncModel = tdsService.exportTDSDimensionsAndMeasuresByAdmin(syncContext, ImmutableList.of(),
-                ImmutableList.of());
+        SyncModel syncModel = tdsService.exportModel(syncContext);
         TableauDatasourceModel datasource1 = (TableauDatasourceModel) BISyncTool.getBISyncModel(syncContext, syncModel);
         ByteArrayOutputStream outStream4 = new ByteArrayOutputStream();
         datasource1.dump(outStream4);

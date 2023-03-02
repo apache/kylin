@@ -129,9 +129,15 @@ public class ModelTdsService extends AbstractModelService {
     }
 
     public SyncModel exportModel(SyncContext syncContext) {
-        return AclPermissionUtil.isAdmin()
-                ? exportTDSDimensionsAndMeasuresByAdmin(syncContext, ImmutableList.of(), ImmutableList.of())
-                : exportTDSDimensionsAndMeasuresByNormalUser(syncContext, ImmutableList.of(), ImmutableList.of());
+        if (AclPermissionUtil.isAdmin()) {
+            return exportTDSDimensionsAndMeasuresByAdmin(syncContext, ImmutableList.of(), ImmutableList.of());
+        }
+
+        String projectName = syncContext.getProjectName();
+        String modelId = syncContext.getModelId();
+        checkModelExportPermission(projectName, modelId);
+        checkModelPermission(projectName, modelId);
+        return exportTDSDimensionsAndMeasuresByNormalUser(syncContext, ImmutableList.of(), ImmutableList.of());
     }
 
     public SyncModel exportTDSDimensionsAndMeasuresByNormalUser(SyncContext syncContext, List<String> dimensions,
@@ -168,10 +174,6 @@ public class ModelTdsService extends AbstractModelService {
 
     public SyncModel exportTDSDimensionsAndMeasuresByAdmin(SyncContext syncContext, List<String> dimensions,
             List<String> measures) {
-        String projectName = syncContext.getProjectName();
-        String modelId = syncContext.getModelId();
-        checkModelExportPermission(projectName, modelId);
-        checkModelPermission(projectName, modelId);
         return new SyncModelBuilder(syncContext).buildSourceSyncModel(dimensions, measures);
     }
 
