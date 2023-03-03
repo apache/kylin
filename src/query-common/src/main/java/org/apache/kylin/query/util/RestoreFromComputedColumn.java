@@ -81,7 +81,7 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
         int maxRecursionTimes = KapConfig.getInstanceFromEnv().getComputedColumnMaxRecursionTimes();
 
         while (recursionTimes < maxRecursionTimes) {
-            QueryUtil.checkThreadInterrupted("Interrupted sql transformation at the stage of RestoreFromComputedColumn",
+            QueryInterruptChecker.checkThreadInterrupted("Interrupted sql transformation at the stage of RestoreFromComputedColumn",
                     "Current step: SQL transformation");
             recursionTimes++;
             boolean recursionCompleted = true;
@@ -181,7 +181,7 @@ public class RestoreFromComputedColumn implements IPushDownConverter {
         for (NDataModel model : modelMap.values()) {
             QueryAliasMatchInfo info = model.getComputedColumnDescs().isEmpty() ? null
                     : queryAliasMatcher.match(model, sqlSelect);
-            QueryUtil.checkThreadInterrupted("Interrupted sql transformation at the stage of RestoreFromComputedColumn",
+            QueryInterruptChecker.checkThreadInterrupted("Interrupted sql transformation at the stage of RestoreFromComputedColumn",
                     "Current step: SQL transformation");
             if (info == null) {
                 continue;

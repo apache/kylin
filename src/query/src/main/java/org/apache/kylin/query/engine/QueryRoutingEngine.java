@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.prepare.CalcitePrepareImpl;
@@ -50,10 +52,13 @@ import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
 import org.apache.kylin.query.engine.data.QueryResult;
+import org.apache.kylin.query.exception.BusyQueryException;
 import org.apache.kylin.query.exception.NotSupportedSQLException;
 import org.apache.kylin.query.mask.QueryResultMasks;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.util.PushDownQueryRequestLimits;
 import org.apache.kylin.query.util.PushDownUtil;
+import org.apache.kylin.query.util.QueryInterruptChecker;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.source.adhocquery.PushdownResult;
@@ -261,24 +266,55 @@ public class QueryRoutingEngine {
     public PushdownResult tryPushDownSelectQuery(QueryParams queryParams, SQLException sqlException, boolean isPrepare)
             throws Exception {
         QueryContext.currentTrace().startSpan(QueryTrace.SQL_PUSHDOWN_TRANSFORMATION);
-        String sqlString = queryParams.getSql();
-        if (isPrepareStatementWithParams(queryParams)) {
-            sqlString = queryParams.getPrepareSql();
-        }
+        Semaphore semaphore = PushDownQueryRequestLimits.getSingletonInstance();
+        logger.info("Query: {} Before the current push down counter {}.", QueryContext.current().getQueryId(),
+                semaphore.availablePermits());
+        boolean acquired = false;
+        boolean asyncQuery = QueryContext.current().getQueryTagInfo().isAsyncQuery();
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(queryParams.getProject());
+        try {
+            //SlowQueryDetector query timeout period is system-level
+            int queryTimeout = KylinConfig.getInstanceFromEnv().getQueryTimeoutSeconds();
+            if (!asyncQuery && projectConfig.isPushDownEnabled()) {
+                acquired = semaphore.tryAcquire(queryTimeout, TimeUnit.SECONDS);
+                if (!acquired) {
+                    logger.info("query: {} failed to get acquire.", QueryContext.current().getQueryId());
+                    throw new BusyQueryException("Query rejected. Caused by PushDown query server is too busy.");
+                } else {
+                    logger.info("query: {} success to get acquire.", QueryContext.current().getQueryId());
+                }
+            }
+            String sqlString = queryParams.getSql();
+            if (isPrepareStatementWithParams(queryParams)) {
+                sqlString = queryParams.getPrepareSql();
+            }
 
-        if (BackdoorToggles.getPrepareOnly()) {
-            sqlString = QueryUtil.addLimit(sqlString);
-        }
+            if (BackdoorToggles.getPrepareOnly()) {
+                sqlString = QueryUtil.addLimit(sqlString);
+            }
 
-        String massagedSql = QueryUtil.appendLimitOffset(queryParams.getProject(), sqlString, queryParams.getLimit(),
-                queryParams.getOffset());
-        if (isPrepareStatementWithParams(queryParams)) {
-            QueryContext.current().getMetrics().setCorrectedSql(massagedSql);
+            String massagedSql = QueryUtil.appendLimitOffset(queryParams.getProject(), sqlString,
+                    queryParams.getLimit(), queryParams.getOffset());
+            if (isPrepareStatementWithParams(queryParams)) {
+                QueryContext.current().getMetrics().setCorrectedSql(massagedSql);
+            }
+            queryParams.setSql(massagedSql);
+            queryParams.setSqlException(sqlException);
+            queryParams.setPrepare(isPrepare);
+            return PushDownUtil.tryIterQuery(queryParams);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            QueryInterruptChecker.checkThreadInterrupted("Interrupted sql push down at the stage of QueryRoutingEngine",
+                    "Current step: try push down select query");
+            throw e;
+        } finally {
+            if (acquired) {
+                semaphore.release();
+                logger.info("Query: {} success to release acquire", QueryContext.current().getQueryId());
+            }
+            logger.info("Query: {} After the current push down counter {}.", QueryContext.current().getQueryId(),
+                    semaphore.availablePermits());
         }
-        queryParams.setSql(massagedSql);
-        queryParams.setSqlException(sqlException);
-        queryParams.setPrepare(isPrepare);
-        return PushDownUtil.tryIterQuery(queryParams);
     }
 
     private boolean isPrepareStatementWithParams(QueryParams queryParams) {

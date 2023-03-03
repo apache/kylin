@@ -68,6 +68,7 @@ import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.query.util.CalcitePlanRouterVisitor;
 import org.apache.kylin.query.util.HepUtils;
+import org.apache.kylin.query.util.QueryInterruptChecker;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.util.RelAggPushDownUtil;
 import org.slf4j.Logger;
@@ -410,12 +411,13 @@ public class QueryExec {
             RelAggPushDownUtil.clearUnmatchedJoinDigest();
             return new SparderQueryPlanExec().executeToIterable(transformed, dataContext);
         } catch (NoRealizationFoundException e) {
-            QueryUtil.checkThreadInterrupted("Interrupted SparderQueryOptimized NoRealizationFoundException",
+            QueryInterruptChecker.checkThreadInterrupted(
+                    "Interrupted SparderQueryOptimized NoRealizationFoundException",
                     "Current step: TableIndex join snapshot aggPushDown");
             tryTimes = tryTimes + 1;
             return sparderQueryOptimized(transformed, tryTimes, postOptRules);
         } catch (Exception e) {
-            QueryUtil.checkThreadInterrupted("Interrupted SparderQueryOptimized error",
+            QueryInterruptChecker.checkThreadInterrupted("Interrupted SparderQueryOptimized error",
                     "Current step: Table Index join snapshot aggPushDown");
             setSparderQueryOptimizedExceptionMsg(e.getMessage());
             return null;

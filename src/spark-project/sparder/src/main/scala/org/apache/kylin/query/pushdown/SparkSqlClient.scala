@@ -18,8 +18,10 @@
 
 package org.apache.kylin.query.pushdown
 
-import com.google.common.collect.ImmutableList
-import io.kyligence.kap.guava20.shaded.common.collect.Lists
+import java.sql.Timestamp
+import java.util
+import java.util.{UUID, List => JList}
+
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.util.{DateFormat, HadoopUtil, Pair}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
@@ -28,7 +30,7 @@ import org.apache.kylin.metadata.query.StructField
 import org.apache.kylin.query.mask.QueryResultMasks
 import org.apache.kylin.query.runtime.plan.QueryToExecutionIDCache
 import org.apache.kylin.query.runtime.plan.ResultPlan.saveAsyncQueryResult
-import org.apache.kylin.query.util.{QueryUtil, SparkJobTrace}
+import org.apache.kylin.query.util.{QueryInterruptChecker, SparkJobTrace}
 import org.apache.spark.network.util.JavaUtils
 import org.apache.spark.sql.hive.QueryMetricUtils
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
@@ -36,11 +38,12 @@ import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql.{DataFrame, Row, SparderEnv, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
 
-import java.sql.Timestamp
-import java.util
-import java.util.{UUID, List => JList}
 import scala.collection.JavaConverters._
 import scala.collection.{immutable, mutable}
+
+import com.google.common.collect.ImmutableList
+
+import io.kyligence.kap.guava20.shaded.common.collect.Lists
 
 object SparkSqlClient {
   val DEFAULT_DB: String = "spark.sql.default.database"
@@ -138,7 +141,7 @@ object SparkSqlClient {
         if (e.isInstanceOf[InterruptedException]) {
           Thread.currentThread.interrupt()
           ss.sparkContext.cancelJobGroup(jobGroup)
-          QueryUtil.checkThreadInterrupted("Interrupted at the stage of collecting result in SparkSqlClient.",
+          QueryInterruptChecker.checkThreadInterrupted("Interrupted at the stage of collecting result in SparkSqlClient.",
             "Current step: Collecting dataset of push-down.")
         }
         throw e
@@ -164,7 +167,7 @@ object SparkSqlClient {
           val row = resultRows.next()
           readRowSize += 1;
           if (checkInterrupt && readRowSize % checkInterruptSize == 0) {
-            QueryUtil.checkThreadInterrupted("Interrupted at the stage of collecting result in SparkSqlClient.",
+            QueryInterruptChecker.checkThreadInterrupted("Interrupted at the stage of collecting result in SparkSqlClient.",
               "Current step: Collecting dataset of push-down.")
           }
           row.toSeq.map(rawValueToString(_)).asJava

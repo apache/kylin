@@ -18,8 +18,11 @@
 
 package org.apache.kylin.query.runtime.plan
 
-import com.google.common.cache.{Cache, CacheBuilder}
-import io.kyligence.kap.secondstorage.SecondStorageUtil
+import java.io.{File, FileOutputStream, OutputStreamWriter}
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.atomic.AtomicLong
+import java.{lang, util}
+
 import org.apache.calcite.rel.`type`.{RelDataType, RelDataTypeField}
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.fs.Path
@@ -33,7 +36,7 @@ import org.apache.kylin.query.engine.RelColumnMetaDataExtractor
 import org.apache.kylin.query.engine.exec.ExecuteResult
 import org.apache.kylin.query.pushdown.SparkSqlClient.readPushDownResultRow
 import org.apache.kylin.query.relnode.OLAPContext
-import org.apache.kylin.query.util.{AsyncQueryUtil, QueryUtil, SparkJobTrace, SparkQueryJobManager}
+import org.apache.kylin.query.util.{AsyncQueryUtil, QueryInterruptChecker, SparkJobTrace, SparkQueryJobManager}
 import org.apache.poi.xssf.usermodel.{XSSFSheet, XSSFWorkbook}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.execution._
@@ -41,13 +44,13 @@ import org.apache.spark.sql.hive.QueryMetricUtils
 import org.apache.spark.sql.util.SparderTypeUtil
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparderEnv}
 
-import java.io.{File, FileOutputStream, OutputStreamWriter}
-import java.nio.charset.StandardCharsets
-import java.util.concurrent.atomic.AtomicLong
-import java.{lang, util}
 import scala.collection.JavaConverters._
 import scala.collection.convert.ImplicitConversions.`iterator asScala`
 import scala.collection.mutable
+
+import com.google.common.cache.{Cache, CacheBuilder}
+
+import io.kyligence.kap.secondstorage.SecondStorageUtil
 
 // scalastyle:off
 object ResultType extends Enumeration {
@@ -153,7 +156,7 @@ object ResultPlan extends LogEx {
         if (e.isInstanceOf[InterruptedException]) {
           Thread.currentThread.interrupt()
           sparkContext.cancelJobGroup(jobGroup)
-          QueryUtil.checkThreadInterrupted("Interrupted at the stage of collecting result in ResultPlan.",
+          QueryInterruptChecker.checkThreadInterrupted("Interrupted at the stage of collecting result in ResultPlan.",
             "Current step: Collecting dataset for sparder.")
         }
         throw e

@@ -20,6 +20,7 @@ package org.apache.kylin.query;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.kylin.query.util.SlowQueryDetector;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
