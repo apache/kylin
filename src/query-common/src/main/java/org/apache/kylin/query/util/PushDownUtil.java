@@ -244,7 +244,8 @@ public class PushDownUtil {
             sqlBuilder.append(allColStr);
         }
 
-        sqlBuilder.append("FROM ").append(model.getRootFactTable().getTableDesc().getDoubleQuoteIdentity());
+        sqlBuilder.append("FROM ").append(model.getRootFactTable().getTableDesc().getDoubleQuoteIdentity())
+                .append(" as ").append(StringHelper.doubleQuote(model.getRootFactTable().getAlias()));
         appendJoinStatement(model, sqlBuilder, singleLine);
 
         sqlBuilder.append("WHERE ").append(sep);

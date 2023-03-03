@@ -162,7 +162,7 @@ public class PushDownUtilTest extends NLocalFileMetadataTestCase {
                 + ", \"TEST_BANK_LOCATION\".\"COUNTRY\" as \"TEST_BANK_LOCATION_COUNTRY\"\n"
                 + ", \"TEST_BANK_LOCATION\".\"OWNER\" as \"TEST_BANK_LOCATION_OWNER\"\n"
                 + ", \"TEST_BANK_LOCATION\".\"LOCATION\" as \"TEST_BANK_LOCATION_LOCATION\"\n"
-                + "FROM \"DEFAULT\".\"TEST_BANK_INCOME\"\n"
+                + "FROM \"DEFAULT\".\"TEST_BANK_INCOME\" as \"TEST_BANK_INCOME\"\n"
                 + "INNER JOIN \"DEFAULT\".\"TEST_BANK_LOCATION\" as \"TEST_BANK_LOCATION\"\n"
                 + "ON \"TEST_BANK_INCOME\".\"COUNTRY\" = \"TEST_BANK_LOCATION\".\"COUNTRY\"\n" //
                 + "WHERE\n" //
@@ -198,7 +198,7 @@ public class PushDownUtilTest extends NLocalFileMetadataTestCase {
                 + ", \"TEST_BANK_LOCATION\".\"COUNTRY\" as \"TEST_BANK_LOCATION_COUNTRY\"\n"
                 + ", \"TEST_BANK_LOCATION\".\"OWNER\" as \"TEST_BANK_LOCATION_OWNER\"\n"
                 + ", \"TEST_BANK_LOCATION\".\"LOCATION\" as \"TEST_BANK_LOCATION_LOCATION\"\n"
-                + "FROM \"DEFAULT\".\"TEST_BANK_INCOME\"\n"
+                + "FROM \"DEFAULT\".\"TEST_BANK_INCOME\" as \"TEST_BANK_INCOME\"\n"
                 + "INNER JOIN \"DEFAULT\".\"TEST_BANK_LOCATION\" as \"TEST_BANK_LOCATION\"\n"
                 + "ON SUBSTRING(\"TEST_BANK_INCOME\".\"COUNTRY\", 0, 4) = \"TEST_BANK_LOCATION\".\"COUNTRY\"\n"
                 + "WHERE\n" //
@@ -232,7 +232,7 @@ public class PushDownUtilTest extends NLocalFileMetadataTestCase {
                 + ", \"TEST_BANK_LOCATION\".\"COUNTRY\" as \"TEST_BANK_LOCATION_COUNTRY\"\n"
                 + ", \"TEST_BANK_LOCATION\".\"OWNER\" as \"TEST_BANK_LOCATION_OWNER\"\n"
                 + ", \"TEST_BANK_LOCATION\".\"LOCATION\" as \"TEST_BANK_LOCATION_LOCATION\"\n"
-                + "FROM \"DEFAULT\".\"TEST_BANK_INCOME\"\n"
+                + "FROM \"DEFAULT\".\"TEST_BANK_INCOME\" as \"TEST_BANK_INCOME\"\n"
                 + "INNER JOIN \"DEFAULT\".\"TEST_BANK_LOCATION\" as \"TEST_BANK_LOCATION\"\n"
                 + "ON \"TEST_BANK_INCOME\".\"COUNTRY\" = \"TEST_BANK_LOCATION\".\"COUNTRY\"\n" //
                 + "WHERE\n" //
@@ -265,7 +265,7 @@ public class PushDownUtilTest extends NLocalFileMetadataTestCase {
                 + ", \"TEST_BANK_LOCATION\".\"COUNTRY\" as \"TEST_BANK_LOCATION_COUNTRY\"\n"
                 + ", \"TEST_BANK_LOCATION\".\"OWNER\" as \"TEST_BANK_LOCATION_OWNER\"\n"
                 + ", \"TEST_BANK_LOCATION\".\"LOCATION\" as \"TEST_BANK_LOCATION_LOCATION\"\n"
-                + "FROM \"DEFAULT\".\"TEST_BANK_INCOME\"\n"
+                + "FROM \"DEFAULT\".\"TEST_BANK_INCOME\" as \"TEST_BANK_INCOME\"\n"
                 + "INNER JOIN \"DEFAULT\".\"TEST_BANK_LOCATION\" as \"TEST_BANK_LOCATION\"\n"
                 + "ON \"TEST_BANK_INCOME\".\"COUNTRY\" = \"TEST_BANK_LOCATION\".\"COUNTRY\"\n" //
                 + "WHERE\n" //
