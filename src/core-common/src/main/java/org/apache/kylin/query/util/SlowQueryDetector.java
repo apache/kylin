@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.query;
+package org.apache.kylin.query.util;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.calcite.util.CancelFlag;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.slf4j.Logger;

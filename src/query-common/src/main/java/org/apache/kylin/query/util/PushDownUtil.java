@@ -200,7 +200,7 @@ public class PushDownUtil {
                     .map(c -> c.getClass().getCanonicalName()).collect(Collectors.joining(",")));
         }
         for (IPushDownConverter converter : pushDownConverters) {
-            QueryUtil.checkThreadInterrupted("Interrupted sql transformation at the stage of " + converter.getClass(),
+            QueryInterruptChecker.checkThreadInterrupted("Interrupted sql transformation at the stage of " + converter.getClass(),
                     "Current step: Massage push-down sql. ");
             sql = converter.convert(sql, queryParams.getProject(), queryParams.getDefaultSchema());
         }

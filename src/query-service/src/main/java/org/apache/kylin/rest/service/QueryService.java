@@ -108,7 +108,6 @@ import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.metadata.realization.RoutingIndicatorException;
-import org.apache.kylin.query.SlowQueryDetector;
 import org.apache.kylin.query.blacklist.SQLBlacklistItem;
 import org.apache.kylin.query.blacklist.SQLBlacklistManager;
 import org.apache.kylin.query.calcite.KEDialect;
@@ -128,6 +127,7 @@ import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.util.RawSql;
 import org.apache.kylin.query.util.RawSqlParser;
+import org.apache.kylin.query.util.SlowQueryDetector;
 import org.apache.kylin.query.util.TokenMgrError;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.cluster.ClusterManager;
@@ -930,7 +930,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
     private int getSqlConcurrentCount(SQLBlacklistItem sqlBlacklistItem) {
         int concurrentCount = 0;
-        Collection<SlowQueryDetector.QueryEntry> runningQueries = slowQueryDetector.getRunningQueries().values();
+        Collection<SlowQueryDetector.QueryEntry> runningQueries = SlowQueryDetector.getRunningQueries().values();
         for (SlowQueryDetector.QueryEntry query : runningQueries) {
             if (sqlBlacklistItem.match(query.getSql())) {
                 concurrentCount++;

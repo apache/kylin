@@ -22,10 +22,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.query.SlowQueryDetector;
-import org.apache.kylin.query.exception.UserStopQueryException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.query.exception.UserStopQueryException;
+import org.apache.kylin.query.util.SlowQueryDetector;
 import org.apache.spark.scheduler.JobFailed;
 import org.apache.spark.scheduler.SparkListener;
 import org.apache.spark.scheduler.SparkListenerJobEnd;

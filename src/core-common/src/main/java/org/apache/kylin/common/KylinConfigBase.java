@@ -3842,6 +3842,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.query.max-measure-segment-pruner-before-days", "-1"));
     }
 
+    public int getQueryConcurrentRunningThresholdForPushDown() {
+        return Integer.parseInt(getOptional("kylin.query.pushdown-concurrent-running-threshold", "10"));
+    }
+
     // ============================================================================
     // Cost based index Planner
     // ============================================================================
