@@ -32,14 +32,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.common.exception.KylinTimeoutException;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater;
 import org.apache.kylin.query.IQueryTransformer;
-import org.apache.kylin.query.SlowQueryDetector;
-import org.apache.kylin.query.exception.UserStopQueryException;
 import org.apache.kylin.query.security.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -218,7 +215,8 @@ public class QueryUtil {
         }
 
         for (IQueryTransformer t : transformers) {
-            QueryUtil.checkThreadInterrupted("Interrupted sql transformation at the stage of " + t.getClass(),
+            QueryInterruptChecker.checkThreadInterrupted(
+                    "Interrupted sql transformation at the stage of " + t.getClass(),
                     "Current step: SQL transformation.");
             sql = t.transform(sql, queryParams.getProject(), queryParams.getDefaultSchema());
         }
@@ -316,17 +314,5 @@ public class QueryUtil {
             }
         }
         return sqlSelect;
-    }
-
-    public static void checkThreadInterrupted(String errorMsgLog, String stepInfo) {
-        if (Thread.currentThread().isInterrupted()) {
-            log.error("{} {}", QueryContext.current().getQueryId(), errorMsgLog);
-            if (SlowQueryDetector.getRunningQueries().get(Thread.currentThread()).isStopByUser()) {
-                throw new UserStopQueryException("");
-            }
-            QueryContext.current().getQueryTagInfo().setTimeout(true);
-            throw new KylinTimeoutException("The query exceeds the set time limit of "
-                    + KylinConfig.getInstanceFromEnv().getQueryTimeoutSeconds() + "s. " + stepInfo);
-        }
     }
 }

@@ -24,18 +24,18 @@ import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.atomic.AtomicLong
 import java.util.{Map => JMap}
 
-import com.google.common.collect.Maps
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import org.apache.hadoop.conf.Configuration
-import org.apache.kylin.metadata.cube.model.{DimensionRangeInfo, LayoutEntity}
 import org.apache.hadoop.fs._
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.metadata.cube.model.{DimensionRangeInfo, LayoutEntity}
+import org.apache.kylin.query.util.QueryInterruptChecker
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.execution.columnar.InMemoryTableScanExec
-import org.apache.spark.sql.execution.exchange.{BroadcastExchangeExec, ReusedExchangeExec}
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.execution._
+import org.apache.spark.sql.execution.columnar.InMemoryTableScanExec
+import org.apache.spark.sql.execution.datasources.FileIndex
+import org.apache.spark.sql.execution.exchange.{BroadcastExchangeExec, ReusedExchangeExec}
 import org.apache.spark.sql.hive.execution.HiveTableScanExec
 import org.apache.spark.sql.sources.NBaseRelation
 
@@ -43,36 +43,32 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
 
+import com.google.common.collect.Maps
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+
 object ResourceDetectUtils extends Logging {
   private val json = new Gson()
+
+  private val errorMsgLog: String = "Interrupted at the stage of get paths in ResourceDetectUtils."
 
   def getPaths(plan: SparkPlan): Seq[Path] = {
     var paths = Seq.empty[Path]
     plan.foreach {
       case plan: FileSourceScanExec =>
-        if (plan.relation.location.partitionSchema.nonEmpty) {
-          val selectedPartitions = plan.relation.location.listFiles(plan.partitionFilters, plan.dataFilters)
-          selectedPartitions.flatMap(partition => partition.files).foreach(file => {
-            paths :+= file.getPath
-          })
-        } else {
-          paths ++= plan.relation.location.rootPaths
-        }
+        val info = "Current step: get Partition file status of FileSourceScanExec."
+        paths ++= getFilePaths(plan.relation.location, plan.partitionFilters, plan.dataFilters, info)
       case plan: LayoutFileSourceScanExec =>
-        if (plan.relation.location.partitionSchema.nonEmpty) {
-          val selectedPartitions = plan.relation.location.listFiles(plan.partitionFilters, plan.dataFilters)
-          selectedPartitions.flatMap(partition => partition.files).foreach(file => {
-            paths :+= file.getPath
-          })
-        } else {
-          paths ++= plan.relation.location.rootPaths
-        }
+        val info = "Current step: get Partition file status of LayoutFileSourceScanExec."
+        paths ++= getFilePaths(plan.relation.location, plan.partitionFilters, plan.dataFilters, info)
       case plan: InMemoryTableScanExec =>
         val _plan = plan.relation.cachedPlan
         paths ++= getPaths(_plan)
       case plan: HiveTableScanExec =>
         if (plan.relation.isPartitioned) {
           plan.rawPartitions.foreach { partition =>
+            QueryInterruptChecker.checkThreadInterrupted(errorMsgLog,
+              "Current step: get Partition file status of HiveTableScanExec.")
             paths ++= partition.getPath
           }
         } else {
@@ -85,6 +81,22 @@ object ResourceDetectUtils extends Logging {
           case _ =>
         }
       case _ =>
+    }
+    paths
+  }
+
+  def getFilePaths(fileIndex: FileIndex, partitionFilters: Seq[Expression], dataFilters: Seq[Expression], info: String): Seq[Path] = {
+    var paths = Seq.empty[Path]
+    if (fileIndex.partitionSchema.nonEmpty) {
+      val selectedPartitions = fileIndex.listFiles(partitionFilters, dataFilters)
+      selectedPartitions.flatMap(partition => {
+        QueryInterruptChecker.checkThreadInterrupted(errorMsgLog, info)
+        partition.files
+      }).foreach(file => {
+        paths :+= file.getPath
+      })
+    } else {
+      paths ++= fileIndex.rootPaths
     }
     paths
   }

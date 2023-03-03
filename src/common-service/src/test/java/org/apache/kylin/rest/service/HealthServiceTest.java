@@ -20,7 +20,7 @@ package org.apache.kylin.rest.service;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.kylin.query.SlowQueryDetector;
+import org.apache.kylin.query.util.SlowQueryDetector;
 import org.apache.kylin.rest.response.HealthResponse;
 import org.apache.spark.sql.SparderEnv;
 import org.junit.After;

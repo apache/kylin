@@ -21,7 +21,7 @@ package org.apache.spark.sql.hive.utils
 import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.common.SharedSparkSession
-import org.apache.spark.sql.execution.FileSourceScanExec
+import org.apache.spark.sql.execution.{FileSourceScanExec, LayoutFileSourceScanExec}
 import org.apache.spark.sql.execution.datasources.{FileIndex, HadoopFsRelation, PartitionDirectory}
 import org.apache.spark.sql.types.{IntegerType, StructField, StructType}
 import org.scalamock.scalatest.MockFactory
@@ -51,6 +51,38 @@ class TestResourceDetectUtilsByMock extends AnyWordSpec with MockFactory with Sh
         val fileIndex = mock[FileIndex]
         val relation = HadoopFsRelation(fileIndex, new StructType(), new StructType(), null, null, null)(spark)
         val sparkPlan = FileSourceScanExec(relation, null, null, null, null, null, Seq.empty, Option(new TableIdentifier("table")), false)
+        val dataFilters = Seq.empty
+        val fileStatus = new FileStatus()
+        fileStatus.setPath(path)
+        (fileIndex.partitionSchema _).expects().returning(StructType(StructField("f1", IntegerType, true) :: Nil)).anyNumberOfTimes()
+        (fileIndex.listFiles _).expects(null, dataFilters).returning(Seq(PartitionDirectory(null, Seq(fileStatus)))).anyNumberOfTimes()
+        assert(paths == ResourceDetectUtils.getPaths(sparkPlan))
+      }
+    }
+  }
+
+  "getPaths" when {
+    "LayoutFileSourceScanExec" should {
+      "get root paths" in {
+        val paths = Seq(new Path("test"))
+        val fileIndex = mock[FileIndex]
+        (fileIndex.rootPaths _).expects().returning(paths).anyNumberOfTimes()
+        (fileIndex.partitionSchema _).expects().returning(new StructType()).anyNumberOfTimes()
+        val relation = HadoopFsRelation(fileIndex, new StructType(), new StructType(), null, null, null)(spark)
+        val sparkPlan = LayoutFileSourceScanExec(relation, Nil, relation.schema, Nil, None, None, Nil, None)
+        assert(paths == ResourceDetectUtils.getPaths(sparkPlan))
+      }
+    }
+  }
+
+  "getPaths" when {
+    "LayoutFileSourceScanExec" should {
+      "get partition paths" in {
+        val path = new Path("test")
+        val paths = Seq(path)
+        val fileIndex = mock[FileIndex]
+        val relation = HadoopFsRelation(fileIndex, new StructType(), new StructType(), null, null, null)(spark)
+        val sparkPlan = LayoutFileSourceScanExec(relation, Nil, relation.schema, null, None, None, Nil, None)
         val dataFilters = Seq.empty
         val fileStatus = new FileStatus()
         fileStatus.setPath(path)
