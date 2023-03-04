@@ -424,6 +424,16 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testAdaptCalciteSyntax() {
+        Assert.assertEquals("a\"b(", QueryUtil.adaptCalciteSyntax("a\"b("));
+        Assert.assertEquals("  ", QueryUtil.adaptCalciteSyntax("  "));
+        Assert.assertEquals("", QueryUtil.adaptCalciteSyntax(""));
+        Assert.assertEquals("CEIL(col to year)", QueryUtil.adaptCalciteSyntax("ceil_datetime(col, 'year')"));
+        Assert.assertEquals("CEIL(\"t\".\"col\" to year)",
+                QueryUtil.adaptCalciteSyntax("ceil_datetime(`t`.`col`, 'year')"));
+    }
+
+    @Test
     public void testLimitOffsetMatch() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         String sql1 = "select TRANS_ID as test_limit, ORDER_ID as test_offset from TEST_KYLIN_FACT group by TRANS_ID, ORDER_ID";

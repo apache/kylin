@@ -199,6 +199,7 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.request.ModelConfigRequest;
@@ -1305,7 +1306,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     public String getModelSql(String modelId, String project) {
         aclEvaluate.checkProjectReadPermission(project);
         NDataModel model = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
-        return PushDownUtil.generateFlatTableSql(model, project, false);
+        return PushDownUtil.generateFlatTableSql(model, false);
     }
 
     public List<RelatedModelResponse> getRelateModels(String project, String table, String modelId) {
@@ -1742,7 +1743,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             if (prjInstance.getSourceType() == ISourceAware.ID_SPARK
                     && model.getModelType() == NDataModel.ModelType.BATCH) {
                 SparkSession ss = SparderEnv.getSparkSession();
-                String flatTableSql = PushDownUtil.generateFlatTableSql(model, project, false);
+                String flatTableSql = PushDownUtil.generateFlatTableSql(model, false);
                 QueryParams queryParams = new QueryParams(project, flatTableSql, "default", false);
                 queryParams.setKylinConfig(prjInstance.getConfig());
                 queryParams.setAclInfo(AclPermissionUtil.createAclInfo(project, getCurrentUserGroups()));
@@ -3622,23 +3623,23 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     }
 
     /**
-     * massage and update model filter condition
-     * 1. expand computed columns
-     * 2. add missing identifier quotes
-     * 3. add missing table identifiers
-     *
-     * @param model
+     * Convert model filter condition:
+     * 1. transform special function and backtick
+     * 2. use Calcite to add table name
+     * 3. massage for push-down
+     * 4. update the filter condition
      */
     void massageModelFilterCondition(final NDataModel model) {
-        if (StringUtils.isEmpty(model.getFilterCondition())) {
+        String filterCondition = model.getFilterCondition();
+        if (StringUtils.isBlank(filterCondition)) {
             return;
         }
 
-        String filterConditionWithTableName = addTableNameIfNotExist(model.getFilterCondition(), model);
+        filterCondition = QueryUtil.adaptCalciteSyntax(filterCondition);
+        String newFilterCondition = addTableNameIfNotExist(filterCondition, model);
         QueryContext.AclInfo aclInfo = AclPermissionUtil.createAclInfo(model.getProject(), getCurrentUserGroups());
-        // validate as soon as possible
-        PushDownUtil.massageExpression(model, model.getProject(), model.getFilterCondition(), aclInfo);
-        model.setFilterCondition(filterConditionWithTableName);
+        String massaged = PushDownUtil.massageExpression(model, model.getProject(), newFilterCondition, aclInfo);
+        model.setFilterCondition(massaged);
     }
 
     @VisibleForTesting

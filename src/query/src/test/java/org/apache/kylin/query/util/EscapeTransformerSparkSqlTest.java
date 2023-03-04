@@ -158,6 +158,17 @@ public class EscapeTransformerSparkSqlTest {
     }
 
     @Test
+    public void ceilFloorDtTest() {
+        // The case ceil(floor_datetime(col, 'hour') to day) won't happen, 
+        // so just give follow example to illustrate the normal case won't be replaced.
+        String originSQL = "select ceil_datetime('2012-02-02 00:23:23',    'year'), ceil_datetime(floor_datetime(col, 'hour'),  'day')";
+        String expectedSQL = "select ceil_datetime('2012-02-02 00:23:23', 'year'), ceil_datetime(floor_datetime(col, 'hour'), 'day')";
+
+        String transformedSQL = transformer.transform(originSQL);
+        Assert.assertEquals(expectedSQL, transformedSQL);
+    }
+
+    @Test
     public void testCeilFloorQuery() {
         String originSql = "SELECT {FN WEEK(CEIL( FLOOR(\t  TIME2 TO HOUR  ) TO DAY    )) }, FLOOR(SELLER_ID), CEIL(SELLER_ID) FROM TEST_MEASURE";
         String expectedSql = "SELECT WEEKOFYEAR(CEIL_DATETIME(FLOOR_DATETIME(TIME2, 'HOUR'), 'DAY')), FLOOR(SELLER_ID), CEIL(SELLER_ID) FROM TEST_MEASURE";

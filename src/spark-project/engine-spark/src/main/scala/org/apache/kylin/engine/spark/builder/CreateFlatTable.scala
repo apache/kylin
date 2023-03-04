@@ -18,27 +18,26 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import java.util
-import com.google.common.collect.Sets
-import org.apache.kylin.engine.spark.builder.DFBuilderHelper.{ENCODE_SUFFIX, _}
+import java.util.Locale
+
+import org.apache.commons.lang3.StringUtils
+import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
 import org.apache.kylin.engine.spark.job.{FlatTableHelper, TableMetaManager}
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.engine.spark.utils.{LogEx, LogUtils}
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTree
 import org.apache.kylin.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataSegment}
-import org.apache.kylin.metadata.model.NDataModel
-import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.metadata.model._
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
-import java.util.Locale
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.collection.parallel.ForkJoinTaskSupport
 import scala.concurrent.forkjoin.ForkJoinPool
+
+import com.google.common.collect.Sets
 
 
 @Deprecated
@@ -323,116 +322,6 @@ object CreateFlatTable extends LogEx {
     newdf
   }
 
-  /*
-   * Convert IJoinedFlatTableDesc to SQL statement
-   */
-  def generateSelectDataStatement(flatDesc: IJoinedFlatTableDesc,
-                                  singleLine: Boolean,
-                                  skipAs: Array[String]): String = {
-    val sep: String = {
-      if (singleLine) " "
-      else "\n"
-    }
-    val skipAsList = {
-      if (skipAs == null) ListBuffer.empty[String]
-      else skipAs.toList
-    }
-    val sql: StringBuilder = new StringBuilder
-    sql.append("SELECT" + sep)
-    for (i <- 0 until flatDesc.getAllColumns.size()) {
-      val col: TblColRef = flatDesc.getAllColumns.get(i)
-      sql.append(",")
-      val colTotalName: String =
-        String.format(Locale.ROOT, "%s.%s", col.getTableRef.getTableName, col.getName)
-      if (skipAsList.contains(colTotalName)) {
-        sql.append(col.getExpressionInSourceDB + sep)
-      } else {
-        sql.append(col.getExpressionInSourceDB + " as " + colName(col) + sep)
-      }
-    }
-    appendJoinStatement(flatDesc, sql, singleLine)
-    appendWhereStatement(flatDesc, sql, singleLine)
-    sql.toString
-  }
-
-  def appendJoinStatement(flatDesc: IJoinedFlatTableDesc,
-                          sql: StringBuilder,
-                          singleLine: Boolean): Unit = {
-    val sep: String =
-      if (singleLine) " "
-      else "\n"
-    val dimTableCache: util.Set[TableRef] = Sets.newHashSet[TableRef]
-    val model: NDataModel = flatDesc.getDataModel
-    val rootTable: TableRef = model.getRootFactTable
-    sql.append(
-      "FROM " + flatDesc.getDataModel.getRootFactTable.getTableIdentity + " as " + rootTable.getAlias + " " + sep)
-    for (lookupDesc <- model.getJoinTables.asScala) {
-      val join: JoinDesc = lookupDesc.getJoin
-      if (join != null && join.getType == "" == false) {
-        val joinType: String = join.getType.toUpperCase(Locale.ROOT)
-        val dimTable: TableRef = lookupDesc.getTableRef
-        if (!dimTableCache.contains(dimTable)) {
-          val pk: Array[TblColRef] = join.getPrimaryKeyColumns
-          val fk: Array[TblColRef] = join.getForeignKeyColumns
-          if (pk.length != fk.length) {
-            throw new RuntimeException(
-              "Invalid join condition of lookup table:" + lookupDesc)
-          }
-          sql.append(
-            joinType + " JOIN " + dimTable.getTableIdentity + " as " + dimTable.getAlias + sep)
-          sql.append("ON ")
-          var i: Int = 0
-          while ( {
-            i < pk.length
-          }) {
-            if (i > 0) sql.append(" AND ")
-            sql.append(
-              fk(i).getExpressionInSourceDB + " = " + pk(i).getExpressionInSourceDB)
-
-            {
-              i += 1
-              i - 1
-            }
-          }
-          sql.append(sep)
-          dimTableCache.add(dimTable)
-        }
-      }
-    }
-  }
-
-  private def appendWhereStatement(flatDesc: IJoinedFlatTableDesc,
-                                   sql: StringBuilder,
-                                   singleLine: Boolean): Unit = {
-    val sep: String =
-      if (singleLine) " "
-      else "\n"
-    val whereBuilder: StringBuilder = new StringBuilder
-    whereBuilder.append("WHERE 1=1")
-    val model: NDataModel = flatDesc.getDataModel
-    if (StringUtils.isNotEmpty(model.getFilterCondition)) {
-      whereBuilder
-        .append(" AND (")
-        .append(model.getFilterCondition)
-        .append(") ")
-    }
-    val partDesc: PartitionDesc = model.getPartitionDesc
-    val segRange: SegmentRange[_ <: Comparable[_]] = flatDesc.getSegRange
-    if (flatDesc.getSegment != null && partDesc != null
-      && partDesc.getPartitionDateColumn != null && segRange != null && !segRange.isInfinite) {
-      val builder =
-        flatDesc.getDataModel.getPartitionDesc.getPartitionConditionBuilder
-      if (builder != null) {
-        whereBuilder.append(" AND (")
-        whereBuilder.append(
-          builder
-            .buildDateRangeCondition(partDesc, flatDesc.getSegment, segRange))
-        whereBuilder.append(")" + sep)
-      }
-
-      sql.append(whereBuilder.toString)
-    }
-  }
 
   def colName(col: TblColRef): String = {
     col.getTableAlias + "_" + col.getName

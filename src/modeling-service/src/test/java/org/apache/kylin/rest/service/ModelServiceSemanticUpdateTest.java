@@ -21,6 +21,8 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.SIMPLIFIED_
 import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -38,6 +40,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.cube.model.SelectRule;
 import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
@@ -1659,17 +1662,47 @@ public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testIsFilterConditonNotChange() {
-        Assert.assertTrue(semanticService.isFilterConditonNotChange(null, null));
-        Assert.assertTrue(semanticService.isFilterConditonNotChange("", null));
-        Assert.assertTrue(semanticService.isFilterConditonNotChange(null, "    "));
-        Assert.assertTrue(semanticService.isFilterConditonNotChange("  ", ""));
-        Assert.assertTrue(semanticService.isFilterConditonNotChange("", "         "));
-        Assert.assertTrue(semanticService.isFilterConditonNotChange("A=8", " A=8   "));
+    public void testUpdateModelColumnForTableAliasModify()
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        NDataModel testModel = getTestModel();
+        Map<String, String> map = Maps.newHashMap();
+        map.put("TEST_ORDER", "TEST_ORDER1");
+        testModel.setFilterCondition("`TEST_ORDER`.`ORDER_ID` > 1");
+        ModelSemanticHelper semanticHelper = new ModelSemanticHelper();
+        Class<? extends ModelSemanticHelper> clazz = semanticHelper.getClass();
+        Method method = clazz.getDeclaredMethod("updateModelColumnForTableAliasModify", NDataModel.class, Map.class);
+        Unsafe.changeAccessibleObject(method, true);
+        method.invoke(semanticHelper, testModel, map);
+        Assert.assertEquals("`TEST_ORDER1`.`ORDER_ID` > 1", testModel.getFilterCondition());
+        Unsafe.changeAccessibleObject(method, false);
+    }
 
-        Assert.assertFalse(semanticService.isFilterConditonNotChange(null, "null"));
-        Assert.assertFalse(semanticService.isFilterConditonNotChange("", "null"));
-        Assert.assertFalse(semanticService.isFilterConditonNotChange("A=8", "A=9"));
+    @Test
+    public void testChangeTableAlias() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        ComputedColumnDesc cc = new ComputedColumnDesc();
+        cc.setExpression("\"TEST_ORDER\".\"ORDER_ID\" + 1");
+        ModelSemanticHelper semanticHelper = new ModelSemanticHelper();
+        Class<? extends ModelSemanticHelper> clazz = semanticHelper.getClass();
+        Method method = clazz.getDeclaredMethod("changeTableAlias", ComputedColumnDesc.class, String.class,
+                String.class);
+        Unsafe.changeAccessibleObject(method, true);
+        method.invoke(semanticHelper, cc, "TEST_ORDER", "TEST_ORDER1");
+        Assert.assertEquals("\"TEST_ORDER1\".\"ORDER_ID\" + 1", cc.getExpression());
+        Unsafe.changeAccessibleObject(method, false);
+    }
+
+    @Test
+    public void testIsFilterConditionNotChange() {
+        Assert.assertTrue(semanticService.isFilterConditionNotChange(null, null));
+        Assert.assertTrue(semanticService.isFilterConditionNotChange("", null));
+        Assert.assertTrue(semanticService.isFilterConditionNotChange(null, "    "));
+        Assert.assertTrue(semanticService.isFilterConditionNotChange("  ", ""));
+        Assert.assertTrue(semanticService.isFilterConditionNotChange("", "         "));
+        Assert.assertTrue(semanticService.isFilterConditionNotChange("A=8", " A=8   "));
+
+        Assert.assertFalse(semanticService.isFilterConditionNotChange(null, "null"));
+        Assert.assertFalse(semanticService.isFilterConditionNotChange("", "null"));
+        Assert.assertFalse(semanticService.isFilterConditionNotChange("A=8", "A=9"));
     }
 
     @Test

@@ -180,6 +180,28 @@ public class EscapeTransformerCalciteTest {
     }
 
     @Test
+    public void ceilFloorDtTest() {
+        String originSQL = "select ceil_datetime('2012-02-02 00:23:23', 'year'), ceil(floor_datetime(col, 'hour') to day)";
+        String expectedSQL = "select CEIL('2012-02-02 00:23:23' to year), CEIL(FLOOR(col to hour) to day)";
+
+        String transformedSQL = transformer.transform(originSQL);
+        Assert.assertEquals(expectedSQL, transformedSQL);
+    }
+
+    @Test
+    public void testFailToTransformCeilFloorDt() {
+        {
+            String origin = "select ceil_datetime('2012-02-02 00:23:23')";
+            Assert.assertEquals(origin, transformer.transform(origin));
+        }
+
+        {
+            String origin = "select floor_datetime('2012-02-02 00:23:23')";
+            Assert.assertEquals(origin, transformer.transform(origin));
+        }
+    }
+
+    @Test
     public void testCeilFloorQuery() {
         String originSql = "SELECT {FN WEEK(CEIL( FLOOR(\t  TIME2 TO HOUR  ) TO DAY    )) }, FLOOR(SELLER_ID), CEIL(SELLER_ID) FROM TEST_MEASURE";
         String expectedSql = "SELECT WEEK(CEIL(FLOOR(TIME2 to HOUR) to DAY)), FLOOR(SELLER_ID), CEIL(SELLER_ID) FROM TEST_MEASURE";

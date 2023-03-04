@@ -21,6 +21,8 @@ package org.apache.kylin.query.util;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -324,6 +326,20 @@ public class EscapeFunction {
         FLOOR(args -> {
             Preconditions.checkArgument(args.length == 1 || args.length == 2, EscapeFunction.FLOOR_EXCEPTION_MSG);
             String[] newArgs = args.length == 1 ? args : new String[] { args[0] + " to " + args[1] };
+            return normalFN("FLOOR", newArgs);
+        }),
+
+        // such as: ceil_datetime(col, 'year') => ceil(col to year)
+        CEIL_DT(args -> {
+            Preconditions.checkArgument(args.length == 2, EscapeFunction.CEIL_EXCEPTION_MSG);
+            String[] newArgs = new String[] { args[0] + " to " + StringUtils.remove(args[1], '\'') };
+            return normalFN("CEIL", newArgs);
+        }),
+
+        // such as: floor_datetime(col, 'year') => floor(col to year)
+        FLOOR_DT(args -> {
+            Preconditions.checkArgument(args.length == 2, EscapeFunction.FLOOR_EXCEPTION_MSG);
+            String[] newArgs = new String[] { args[0] + " to " + StringUtils.remove(args[1], '\'') };
             return normalFN("FLOOR", newArgs);
         }),
 

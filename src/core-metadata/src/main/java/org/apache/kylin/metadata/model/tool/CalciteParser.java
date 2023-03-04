@@ -29,11 +29,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.avatica.util.Quoting;
+import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.dialect.HiveSqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserPos;
@@ -57,6 +59,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CalciteParser {
+
+    /**
+     * Overwrite {@link HiveSqlDialect#DEFAULT} with backtick quote. 
+     */
+    public static final HiveSqlDialect HIVE_SQL_DIALECT = new HiveSqlDialect(
+            EMPTY_CONTEXT.withDatabaseProduct(SqlDialect.DatabaseProduct.HIVE) //
+                    .withNullCollation(NullCollation.LOW) //
+                    .withIdentifierQuoteString(Quoting.BACK_TICK.string));
 
     private CalciteParser() {
     }

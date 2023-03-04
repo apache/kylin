@@ -3266,8 +3266,8 @@ public class ModelServiceTest extends SourceTestCase {
         modelRequest.getPartitionDesc().setPartitionDateFormat("yyyy-MM-dd");
 
         String filterCond = "trans_id = 0 and TEST_KYLIN_FACT.order_id < 100 and DEAL_AMOUNT > 123";
-        String expectedFilterCond = "(((\"TEST_KYLIN_FACT\".\"TRANS_ID\" = 0) "
-                + "AND (\"TEST_KYLIN_FACT\".\"ORDER_ID\" < 100)) AND (\"TEST_KYLIN_FACT\".\"DEAL_AMOUNT\" > 123))";
+        String expectedFilterCond = "(((`TEST_KYLIN_FACT`.`TRANS_ID` = 0) AND (`TEST_KYLIN_FACT`.`ORDER_ID` < 100)) "
+                + "AND ((`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`) > 123))";
         modelRequest.setFilterCondition(filterCond);
 
         val newModel = modelService.createModel(modelRequest.getProject(), modelRequest);
@@ -3291,7 +3291,7 @@ public class ModelServiceTest extends SourceTestCase {
         modelRequest.setUuid(null);
 
         String filterCond = "\"day\" = 0 and \"123TABLE\".\"day#\" = 1 and \"中文列\" = 1";
-        String expectedFilterCond = "(((\"123TABLE\".\"DAY\" = 0) AND (\"123TABLE\".\"day#\" = 1)) AND (\"123TABLE\".\"中文列\" = 1))";
+        String expectedFilterCond = "(((`123TABLE`.`DAY` = 0) AND (`123TABLE`.`day#` = 1)) AND (`123TABLE`.`中文列` = 1))";
         modelRequest.setFilterCondition(filterCond);
 
         val newModel = modelService.createModel(modelRequest.getProject(), modelRequest);
@@ -3540,8 +3540,9 @@ public class ModelServiceTest extends SourceTestCase {
         String originSql = "trans_id = 0 and TEST_KYLIN_FACT.order_id < 100 and DEAL_AMOUNT > 123";
         model.setFilterCondition(originSql);
         modelService.massageModelFilterCondition(model);
-        Assert.assertEquals("(((\"TEST_KYLIN_FACT\".\"TRANS_ID\" = 0) AND (\"TEST_KYLIN_FACT\".\"ORDER_ID\" < 100)) "
-                + "AND (\"TEST_KYLIN_FACT\".\"DEAL_AMOUNT\" > 123))", model.getFilterCondition());
+        Assert.assertEquals("(((`TEST_KYLIN_FACT`.`TRANS_ID` = 0) "
+                + "AND (`TEST_KYLIN_FACT`.`ORDER_ID` < 100)) AND ((`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`) > 123))",
+                model.getFilterCondition());
     }
 
     @Test
@@ -3573,7 +3574,7 @@ public class ModelServiceTest extends SourceTestCase {
         final NDataModel model1 = modelManager.getDataModelDesc(modelId);
         model1.setFilterCondition("TIMESTAMPDIFF(DAY, CURRENT_DATE, TEST_KYLIN_FACT.\"CURRENT_DATE\") >= 0");
         modelService.massageModelFilterCondition(model1);
-        Assert.assertEquals("(TIMESTAMPDIFF(DAY, CURRENT_DATE(), \"TEST_KYLIN_FACT\".\"CURRENT_DATE\") >= 0)",
+        Assert.assertEquals("(TIMESTAMPDIFF('DAY', CURRENT_DATE(), `TEST_KYLIN_FACT`.`CURRENT_DATE`) >= 0)",
                 model1.getFilterCondition());
 
     }
@@ -3589,8 +3590,9 @@ public class ModelServiceTest extends SourceTestCase {
         String originSql = "trans_id = 0 and TEST_ORDER.order_id < 100 and DEAL_AMOUNT > 123";
         model.setFilterCondition(originSql);
         modelService.massageModelFilterCondition(model);
-        Assert.assertEquals("(((\"TEST_KYLIN_FACT\".\"TRANS_ID\" = 0) AND (\"TEST_ORDER\".\"ORDER_ID\" < 100)) "
-                + "AND (\"TEST_KYLIN_FACT\".\"DEAL_AMOUNT\" > 123))", model.getFilterCondition());
+        Assert.assertEquals("(((`TEST_KYLIN_FACT`.`TRANS_ID` = 0) "
+                + "AND (`TEST_ORDER`.`ORDER_ID` < 100)) AND ((`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`) > 123))",
+                model.getFilterCondition());
     }
 
     @Test

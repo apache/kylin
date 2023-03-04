@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -127,6 +127,8 @@ TOKEN :
 | < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
 | < DOT : "." >
 | < CEIL : "CEIL" >
+| < CEIL_DATETIME : "CEIL_DATETIME" >
+| < FLOOR_DATETIME : "FLOOR_DATETIME" >
 | < FLOOR : "FLOOR" >
 | < TO : "TO" >
 | < SUBSTRING : "SUBSTRING" >
@@ -237,6 +239,7 @@ String Expression() :
     | innerString = CastExpression()
     | innerString = ExtractExpression()
     | innerString = CeilFloorExpress()
+    | innerString = CeilFloorDatetimeExpress()
     | innerString = ParenExpress()
     | innerString = QuotedString()
     | innerString = DoubleQuotedString()
@@ -662,6 +665,42 @@ String CeilFloorExpress() :
     }
 }
 
+String CeilFloorDatetimeExpress() :
+{
+    String functionName;
+    List <String> parameters = Lists.newArrayList();
+    ImmutableSet<String> timeunitSet = ImmutableSet.of("YEAR", "QUARTER", "MONTH", "WEEK",
+                       "DAY", "HOUR", "MINUTE", "SECOND");
+}
+{
+    ( < CEIL_DATETIME> | < FLOOR_DATETIME> )
+    {
+        functionName = getToken(0).image;
+    }
+    (< SPACE >)* <LPAREN> (< SPACE >)*
+    {
+       parameters.add(ParameterExpression().trim());
+    }
+     (< SPACE >)*
+     (
+         <COMMA> (<SPACE>)*
+         {
+             String timeUnit = StringUtils.trim(ParameterExpression());
+             String unitToValidate = StringUtils.remove(timeUnit, '\'');
+             if (!timeunitSet.contains(StringUtils.upperCase(unitToValidate))) {
+                 throw new IllegalStateException(String.format(Locale.ROOT, CEIL_FLOOR_EXCEPTION_MSG,
+                     functionName, unitToValidate, String.join(", ", timeunitSet)));
+             }
+             parameters.add(timeUnit);
+         }
+         (<SPACE>)*
+     )?
+     <RPAREN>
+    {
+        return dialect.transformFN(functionName, parameters.toArray(new String [ 0 ]));
+    }
+}
+
 String PiFunction() :
 {
     String function;
@@ -766,6 +805,7 @@ String ParameterExpression() :
     | innerString = TsDiffOrAddExpression()
     | innerString = ExtractExpression()
     | innerString = CeilFloorExpress()
+    | innerString = CeilFloorDatetimeExpress()
     | innerString = Numeric()
     | innerString = Hint()
     | innerString = CubePriority()
