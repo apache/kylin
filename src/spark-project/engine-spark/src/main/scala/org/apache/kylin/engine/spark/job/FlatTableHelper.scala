@@ -21,7 +21,6 @@ package org.apache.kylin.engine.spark.job
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.builder.CreateFlatTable.replaceDot
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc
-import org.apache.kylin.query.util.PushDownUtil
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Dataset, Row}
 
@@ -56,7 +55,6 @@ object FlatTableHelper extends Logging {
 
     if (StringUtils.isNotBlank(model.getFilterCondition)) {
       var filterCond = model.getFilterCondition
-      filterCond = PushDownUtil.massageExpression(model, model.getProject, filterCond, null);
       if (needReplaceDot) filterCond = replaceDot(filterCond, model)
       filterCond = s" (1=1) AND (" + filterCond + s")"
       logInfo(s"Filter condition is $filterCond")

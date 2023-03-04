@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.dialect.CalciteSqlDialect;
-import org.apache.calcite.sql.dialect.HiveSqlDialect;
 import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -97,6 +96,7 @@ import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinTableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.query.util.PushDownUtil;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.response.BuildIndexResponse;
 import org.apache.kylin.rest.response.SimplifiedMeasure;
@@ -436,12 +436,12 @@ public class ModelSemanticHelper extends BasicService {
                     .forEach(x -> x.changeTableAlias(oldAliasName, newAliasName));
             model.getComputedColumnDescs().forEach(x -> changeTableAlias(x, oldAliasName, newAliasName));
 
-            String filterCondition = model.getFilterCondition();
-            if (StringUtils.isNotEmpty(filterCondition)) {
-                SqlVisitor<Object> modifyAlias = new ModifyTableNameSqlVisitor(oldAliasName, newAliasName);
-                SqlNode sqlNode = CalciteParser.getExpNode(filterCondition);
-                sqlNode.accept(modifyAlias);
-                String newFilterCondition = sqlNode.toSqlString(CalciteSqlDialect.DEFAULT, true).toString();
+            if (StringUtils.isNotBlank(model.getFilterCondition())) {
+                String expr = QueryUtil.adaptCalciteSyntax(model.getFilterCondition());
+                SqlNode sqlNode = CalciteParser.getExpNode(expr);
+                sqlNode.accept(new ModifyTableNameSqlVisitor(oldAliasName, newAliasName));
+
+                String newFilterCondition = sqlNode.toSqlString(CalciteParser.HIVE_SQL_DIALECT).toString();
                 model.setFilterCondition(newFilterCondition);
             }
         }
@@ -451,7 +451,7 @@ public class ModelSemanticHelper extends BasicService {
         SqlVisitor<Object> modifyAlias = new ModifyTableNameSqlVisitor(oldAlias, newAlias);
         SqlNode sqlNode = CalciteParser.getExpNode(computedColumnDesc.getExpression());
         sqlNode.accept(modifyAlias);
-        computedColumnDesc.setExpression(sqlNode.toSqlString(HiveSqlDialect.DEFAULT).toString());
+        computedColumnDesc.setExpression(sqlNode.toSqlString(CalciteSqlDialect.DEFAULT).toString());
     }
 
     private Map<String, String> getAliasTransformMap(NDataModel originModel, NDataModel expectModel) {
@@ -868,7 +868,7 @@ public class ModelSemanticHelper extends BasicService {
                 originModel.getEffectiveMeasures().keySet());
     }
 
-    public boolean isFilterConditonNotChange(String oldFilterCondition, String newFilterCondition) {
+    public boolean isFilterConditionNotChange(String oldFilterCondition, String newFilterCondition) {
         oldFilterCondition = oldFilterCondition == null ? "" : oldFilterCondition;
         newFilterCondition = newFilterCondition == null ? "" : newFilterCondition;
         return StringUtils.trim(oldFilterCondition).equals(StringUtils.trim(newFilterCondition));
@@ -903,7 +903,7 @@ public class ModelSemanticHelper extends BasicService {
         return isDifferent(originModel.getPartitionDesc(), newModel.getPartitionDesc())
                 || !Objects.equals(originModel.getRootFactTable(), newModel.getRootFactTable())
                 || !originModel.getJoinsGraph().match(newModel.getJoinsGraph(), Maps.newHashMap())
-                || !isFilterConditonNotChange(originModel.getFilterCondition(), newModel.getFilterCondition())
+                || !isFilterConditionNotChange(originModel.getFilterCondition(), newModel.getFilterCondition())
                 || !isMultiPartitionDescSame(originModel.getMultiPartitionDesc(), newModel.getMultiPartitionDesc())
                 || !isAntiFlattenableSame(originModel.getJoinTables(), newModel.getJoinTables());
     }
@@ -977,7 +977,6 @@ public class ModelSemanticHelper extends BasicService {
         return SourceFactory.getSource(tableDesc).getSegmentRange(start, end);
     }
 
-
     private void handleDatePartitionColumn(NDataModel newModel, NDataflowManager dataflowManager, NDataflow df,
             String modelId, String project, String start, String end) {
         // from having partition to no partition
@@ -986,7 +985,7 @@ public class ModelSemanticHelper extends BasicService {
                     Lists.newArrayList(SegmentRange.TimePartitionedSegmentRange.createInfinite()));
             return;
         }
-            // change partition column and from no partition to having partition
+        // change partition column and from no partition to having partition
         if (StringUtils.isNotEmpty(start) && StringUtils.isNotEmpty(end)) {
             dataflowManager.fillDfManually(df,
                     Lists.newArrayList(getSegmentRangeByModel(project, modelId, start, end)));

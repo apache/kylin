@@ -18,7 +18,9 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import com.google.common.collect.Sets
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+import java.util.{Locale, Objects, Timer, TimerTask}
+
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.util.HadoopUtil
@@ -40,7 +42,6 @@ import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBu
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.kylin.metadata.cube.planner.CostBasePlannerUtils
 import org.apache.kylin.metadata.model._
-import org.apache.kylin.query.util.PushDownUtil
 import org.apache.spark.sql.KapFunctions.dict_encode_v3
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{col, expr}
@@ -63,6 +64,8 @@ import scala.collection.parallel.ForkJoinTaskSupport
 import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.util.{Failure, Success, Try}
+
+import com.google.common.collect.Sets
 
 abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
                                     private val dataSegment: NDataSegment,
@@ -318,12 +321,12 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
   }
 
   private def applyFilterCondition(originDS: Dataset[Row]): Dataset[Row] = {
-    if (StringUtils.isBlank(dataModel.getFilterCondition)) {
+    val filterCondition = dataModel.getFilterCondition
+    if (StringUtils.isBlank(filterCondition)) {
       logInfo(s"No available FILTER-CONDITION segment $segmentId")
       return originDS
     }
-    val expression = PushDownUtil.massageExpression(dataModel, project, dataModel.getFilterCondition, null)
-    val converted = replaceDot(expression, dataModel)
+    val converted = replaceDot(filterCondition, dataModel)
     val condition = s" (1=1) AND ($converted)"
     logInfo(s"Apply FILTER-CONDITION: $condition segment $segmentId")
     originDS.where(condition)

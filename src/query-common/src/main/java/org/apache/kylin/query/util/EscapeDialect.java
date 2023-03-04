@@ -32,6 +32,8 @@ public abstract class EscapeDialect {
     private static final String FN_WEEK = "WEEK";
     private static final String FN_CEIL = "CEIL";
     private static final String FN_FLOOR = "FLOOR";
+    private static final String FN_CEIL_DT = "CEIL_DATETIME";
+    private static final String FN_FLOOR_DT = "FLOOR_DATETIME";
     private static final String FN_SUBSTR = "SUBSTR";
     private static final String FN_SUBSTRING = "SUBSTRING";
     private static final String FN_ASCII = "ASCII";
@@ -74,6 +76,8 @@ public abstract class EscapeDialect {
             register(FN_WEEK, FnConversion.WEEK_CALCITE);
             register(FN_CEIL, FnConversion.CEIL);
             register(FN_FLOOR, FnConversion.FLOOR);
+            register(FN_CEIL_DT, FnConversion.CEIL_DT);
+            register(FN_FLOOR_DT, FnConversion.FLOOR_DT);
             register(FN_SUBSTR, FnConversion.SUSTR);
             register(FN_SUBSTRING, FnConversion.SUSTRING);
 

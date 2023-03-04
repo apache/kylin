@@ -17,7 +17,9 @@
  */
 package org.apache.kylin.engine.spark.smarter
 
-import com.google.common.collect.{Lists, Maps, Sets}
+import java.util
+import java.util.Collections
+
 import org.apache.commons.collections.CollectionUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
@@ -29,10 +31,10 @@ import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.{Dataset, Row, SparderEnv, SparkSession}
 
-import java.util
-import java.util.Collections
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+
+import com.google.common.collect.{Lists, Maps, Sets}
 
 class IndexDependencyParser(val model: NDataModel) {
 
@@ -95,7 +97,7 @@ class IndexDependencyParser(val model: NDataModel) {
       model.getEffectiveMeasures.get(id).getFunction.getParameters == null)
   }
 
-  private def getTableIdentitiesFromColumn(ref: TblColRef) = {
+  private def getTableIdentitiesFromColumn(ref: TblColRef): util.HashSet[String] = {
     val desc = ref.getColumnDesc
     if (desc.isComputedColumn) {
       Sets.newHashSet(ccTableNameAliasMap.get(ref.getName))
@@ -172,18 +174,20 @@ class IndexDependencyParser(val model: NDataModel) {
     result
   }
 
-  private def initFilterConditionTableNames(originDf: Dataset[Row], colFields: Array[StructField]): Unit =
-    if (StringUtils.isNotEmpty(model.getFilterCondition)) {
-      val whereDs = originDf.selectExpr(NSparkCubingUtil.convertFromDotWithBackTick(model.getFilterCondition.replace("\"", "`")))
-      whereDs.schema.fields.foreach(whereField => {
-        colFields.foreach(colField => {
-          if (whereField.name.contains(colField.name)) {
-            val tableName = colField.name.substring(0, colField.name.indexOf(NSparkCubingUtil.SEPARATOR))
-            allTablesAlias.add(model.getTableNameMap.get(tableName).getAlias)
-          }
-        })
-      })
+  private def initFilterConditionTableNames(originDf: Dataset[Row], colFields: Array[StructField]): Unit = {
+    if (StringUtils.isBlank(model.getFilterCondition)) {
+      return
     }
+    val whereDs = originDf.selectExpr(NSparkCubingUtil.convertFromDotWithBackTick(model.getFilterCondition))
+    whereDs.schema.fields.foreach(whereField => {
+      colFields.foreach(colField => {
+        if (whereField.name.contains(colField.name)) {
+          val tableName = colField.name.substring(0, colField.name.indexOf(NSparkCubingUtil.SEPARATOR))
+          allTablesAlias.add(model.getTableNameMap.get(tableName).getAlias)
+        }
+      })
+    })
+  }
 
   private def initPartitionColumnTableNames(): Unit = {
     if (model.getPartitionDesc != null && model.getPartitionDesc.getPartitionDateColumnRef != null) {

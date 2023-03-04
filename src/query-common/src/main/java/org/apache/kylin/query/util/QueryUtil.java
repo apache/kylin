@@ -34,6 +34,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinTimeoutException;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater;
 import org.apache.kylin.query.IQueryTransformer;
@@ -60,6 +61,7 @@ public class QueryUtil {
     private static final String SEMI_COLON = ";";
     public static final String JDBC = "jdbc";
     private static final Map<String, IQueryTransformer> QUERY_TRANSFORMER_MAP = Maps.newConcurrentMap();
+    private static final EscapeTransformer ESCAPE_TRANSFORMER = new EscapeTransformer();
 
     static {
         String[] classNames = KylinConfig.getInstanceFromEnv().getQueryTransformers();
@@ -74,6 +76,19 @@ public class QueryUtil {
     }
 
     private QueryUtil() {
+    }
+
+    /**
+     * Convert special functions in the input string into the counterpart
+     * which can be parsed by Apache Calcite.
+     */
+    public static String adaptCalciteSyntax(String str) {
+        if (StringUtils.isBlank(str)) {
+            return str;
+        }
+        String transformed = ESCAPE_TRANSFORMER.transform(str);
+        transformed = StringHelper.backtickToDoubleQuote(transformed);
+        return transformed;
     }
 
     public static boolean isSelectStatement(String sql) {
