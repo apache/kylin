@@ -657,14 +657,15 @@ public class IndexPlan extends RootPersistentEntity implements Serializable, IEn
 
         NDataflow df = NDataflowManager.getInstance(config, project).getDataflow(indexPlanId);
         val readySegs = df.getSegments(SegmentStatusEnum.READY, SegmentStatusEnum.WARNING);
-        NDataSegment lastReadySegment = readySegs.getLatestReadySegment();
-        if (null == lastReadySegment) {
+        if (readySegs.isEmpty()) {
             return;
         }
 
+        Set<Long> effectiveLayouts = readySegs.stream().flatMap(seg -> seg.getLayoutIds().stream())
+                .collect(Collectors.toSet());
         val toBeDeletedMap = getToBeDeletedIndexesMap();
         for (LayoutEntity layoutEntity : toBeDeletedSet) {
-            if (null == lastReadySegment.getLayout(layoutEntity.getId())
+            if (!effectiveLayouts.contains(layoutEntity.getId())
                     && !secondStorageLayoutStatus.getOrDefault(layoutEntity.getId(), false)) {
                 continue;
             }
