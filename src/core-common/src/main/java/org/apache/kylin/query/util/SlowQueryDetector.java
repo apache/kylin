@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,18 +77,41 @@ public class SlowQueryDetector extends Thread {
     }
 
     public void queryStart(String stopId) {
-        if (QueryContext.current().getQueryTagInfo().isAsyncQuery()) {
-            return;
+        runningQueries.put(currentThread(), new QueryEntry(System.currentTimeMillis(), currentThread(),
+                QueryContext.current().getQueryId(), QueryContext.current().getUserSQL(), stopId, false,
+                QueryContext.current().getQueryTagInfo().isAsyncQuery(), null, CancelFlag.getContextCancelFlag()));
+    }
+
+    public void addJobIdForAsyncQueryJob(String jobId) {
+        QueryEntry queryEntry = runningQueries.get(currentThread());
+        if (queryEntry != null) {
+            queryEntry.setJobId(jobId);
         }
-        runningQueries.put(currentThread(),
-                new QueryEntry(System.currentTimeMillis(), currentThread(), QueryContext.current().getQueryId(),
-                        QueryContext.current().getUserSQL(), stopId, false, CancelFlag.getContextCancelFlag()));
+
+    }
+
+    public void stopQuery(String id) {
+        for (SlowQueryDetector.QueryEntry e : SlowQueryDetector.getRunningQueries().values()) {
+            if ((e.isAsyncQuery() && id.equals(e.getQueryId())) || (!e.isAsyncQuery() && id.equals(e.getStopId()))) {
+                e.setStopByUser(true);
+                doStopQuery(e);
+                break;
+            }
+        }
+    }
+
+    private void doStopQuery(QueryEntry e) {
+        if (e.getJobId() == null) {
+            e.getPlannerCancelFlag().requestCancel();
+            logger.error("Trying to cancel query: {}", e.getThread().getName());
+            e.getThread().interrupt();
+        } else {
+            logger.error("Trying to cancel query job : {},{}", e.getThread().getName(), e.getJobId());
+            EventBusFactory.getInstance().postSync(new CliCommandExecutor.JobKilled(e.getJobId()));
+        }
     }
 
     public void queryEnd() {
-        if (QueryContext.current().getQueryTagInfo().isAsyncQuery()) {
-            return;
-        }
         QueryEntry entry = runningQueries.remove(currentThread());
         if (null != entry && null != canceledSlowQueriesStatus.get(entry.queryId)) {
             canceledSlowQueriesStatus.remove(entry.queryId);
@@ -113,9 +138,7 @@ public class SlowQueryDetector extends Thread {
         // interrupt query thread if Stop By User but running
         for (QueryEntry e : runningQueries.values()) {
             if (e.isStopByUser) {
-                e.getPlannerCancelFlag().requestCancel();
-                e.getThread().interrupt();
-                logger.error("Trying to cancel query: {}", e.getThread().getName());
+                doStopQuery(e);
             }
         }
     }
@@ -164,6 +187,8 @@ public class SlowQueryDetector extends Thread {
         final String sql;
         final String stopId;
         boolean isStopByUser;
+        final boolean isAsyncQuery;
+        String jobId;
         final CancelFlag plannerCancelFlag;
 
         public long getRunningTime() {
@@ -171,6 +196,9 @@ public class SlowQueryDetector extends Thread {
         }
 
         private boolean setInterruptIfTimeout() {
+            if (isAsyncQuery) {
+                return false;
+            }
             long runningMs = System.currentTimeMillis() - startTime;
             if (runningMs >= queryTimeoutMs) {
                 plannerCancelFlag.requestCancel();

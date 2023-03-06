@@ -170,6 +170,73 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testStopByQueryId() throws Exception {
+        String queryId = "123XXX";
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query/stop/{query_id}", "123")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+
+        Mockito.doThrow(new KylinException(ACCESS_DENIED, "Access is denied")).when(aclEvaluate)
+                .checkProjectAdminPermission(PROJECT);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query/stop/{query_id}?project=default", queryId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+
+        Mockito.doNothing().when(aclEvaluate).checkProjectAdminPermission(PROJECT);
+
+        Mockito.doReturn(false).when(asyncQueryService).hasPermission(queryId, PROJECT);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query/stop/{query_id}?project=default", queryId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andExpect(result -> {
+                    result.getResponse().getContentAsString()
+                            .contains("Access denied. Only admin users can stop the query");
+
+                });
+
+        Mockito.doReturn(true).when(asyncQueryService).hasPermission(queryId, PROJECT);
+        Mockito.doReturn(MISS).when(asyncQueryService).queryStatus(PROJECT, queryId);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query/stop/{query_id}?project=default", queryId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andExpect(result -> {
+                    result.getResponse().getContentAsString()
+                            .contains("Can’t find the query by this query ID in this project");
+
+                });
+
+        Mockito.doReturn(SUCCESS).when(asyncQueryService).queryStatus(PROJECT, queryId);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query/stop/{query_id}?project=default", queryId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andExpect(result -> {
+                    result.getResponse().getContentAsString().contains("Query is not running");
+
+                });
+
+        Mockito.doReturn(RUNNING).when(asyncQueryService).queryStatus(PROJECT, queryId);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query/stop/{query_id}?project=default", queryId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValueAsString(mockAsyncQuerySQLRequest()))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andExpect(result -> {
+                    result.getResponse().getContentAsString().contains("000");
+
+                });
+        Mockito.verify(kapQueryService).stopQuery(queryId);
+
+    }
+
+    @Test
     public void testQueryStatusNoProjectPermission() throws Exception {
         Mockito.doThrow(new KylinException(ACCESS_DENIED, "Access is denied")).when(aclEvaluate)
                 .checkProjectQueryPermission(PROJECT);

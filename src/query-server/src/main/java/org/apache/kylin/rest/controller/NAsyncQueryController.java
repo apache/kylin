@@ -22,7 +22,9 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_INCLUDE_HEADER_NOT_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_PROJECT_NAME_EMPTY;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_RESULT_NOT_FOUND;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.ASYNC_QUERY_TIME_FORMAT_ERROR;
+import static org.apache.kylin.rest.service.AsyncQueryService.QueryStatus.RUNNING;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -43,6 +45,8 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.transaction.StopQueryBroadcastEventNotifier;
+import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.rest.exception.ForbiddenException;
@@ -243,6 +247,33 @@ public class NAsyncQueryController extends NBasicController {
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, true, "");
         else
             return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, false, MsgPicker.getMsg().getCleanFolderFail());
+    }
+
+    @ApiOperation(value = "stopQuery", tags = { "QE" })
+    @DeleteMapping(value = "/async_query/stop/{query_id:.+}")
+    @ResponseBody
+    public EnvelopeResponse<String> stopAsyncQuery(@PathVariable("query_id") String queryId,
+            @RequestParam(value = "project", required = false) String project) throws IOException {
+        if (project == null) {
+            throw new KylinException(ASYNC_QUERY_PROJECT_NAME_EMPTY);
+        }
+        aclEvaluate.checkProjectAdminPermission(project);
+        checkProjectName(project);
+        if (!asyncQueryService.hasPermission(queryId, project)) {
+            return new EnvelopeResponse<>(KylinException.CODE_UNAUTHORIZED, "Access denied.",
+                    "Access denied. Only admin users can stop the query");
+        }
+        AsyncQueryService.QueryStatus queryStatus = asyncQueryService.queryStatus(project, queryId);
+        if (queryStatus == AsyncQueryService.QueryStatus.MISS) {
+            throw new KylinException(ASYNC_QUERY_RESULT_NOT_FOUND);
+        }
+        if (queryStatus != RUNNING) {
+            return new EnvelopeResponse<>(KylinException.CODE_UNDEFINED, "Query is not running",
+                    "Query is not running. please check");
+        }
+        queryService.stopQuery(queryId);
+        EventBusFactory.getInstance().postAsync(new StopQueryBroadcastEventNotifier(queryId));
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
     @ApiOperation(value = "query", tags = { "QE" }, notes = "Update Response: query_id")
