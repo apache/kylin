@@ -80,6 +80,7 @@ import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.acl.AclTCR;
 import org.apache.kylin.metadata.acl.AclTCRManager;
@@ -260,7 +261,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         }
     }
 
-    public SQLResponse query(SQLRequest sqlRequest) throws Exception {
+    public SQLResponse query(SQLRequest sqlRequest) throws Throwable {
         try {
             slowQueryDetector.queryStart(sqlRequest.getStopId());
             markHighPriorityQueryIfNeeded();
@@ -305,7 +306,12 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 }
                 AsyncQueryJob asyncQueryJob = new AsyncQueryJob();
                 asyncQueryJob.setProject(queryParams.getProject());
-                asyncQueryJob.submit(queryParams);
+                slowQueryDetector.addJobIdForAsyncQueryJob(asyncQueryJob.getId());
+                ExecuteResult result = asyncQueryJob.submit(queryParams);
+                if (!result.succeed()) {
+                    throw result.getThrowable();
+
+                }
                 return buildSqlResponse(false, Collections.emptyList(), 0, Lists.newArrayList(),
                         sqlRequest.getProject());
             }
@@ -332,15 +338,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     }
 
     public void stopQuery(String id) {
-        for (SlowQueryDetector.QueryEntry e : SlowQueryDetector.getRunningQueries().values()) {
-            if (e.getStopId().equals(id)) {
-                logger.error("Trying to cancel query: {}", e.getThread().getName());
-                e.setStopByUser(true);
-                e.getPlannerCancelFlag().requestCancel();
-                e.getThread().interrupt();
-                break;
-            }
-        }
+        slowQueryDetector.stopQuery(id);
     }
 
     private void markHighPriorityQueryIfNeeded() {

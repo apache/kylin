@@ -249,31 +249,31 @@ public class NBuildAndQueryMetricsTest extends AbstractMVCIntegrationTestCase {
     }
 
     @Test
-    public void testMetricsScanForPushDown() throws Exception {
+    public void testMetricsScanForPushDown() throws Throwable {
         String sql = "select account_id from test_account limit 30";
         assertMetric(sql, 30);
     }
 
     @Test
-    public void testMetricsScanForTableIndex() throws Exception {
+    public void testMetricsScanForTableIndex() throws Throwable {
         String sql = "select count(distinct case when trans_id > 100 then order_id else 0 end),"
                 + "sum(case when trans_id > 100 then price else 0 end), price from test_kylin_fact group by price limit 20";
         assertMetric(sql, 10000);
     }
 
     @Test
-    public void testMetricsScanForTableIndex2() throws Exception {
+    public void testMetricsScanForTableIndex2() throws Throwable {
         String sql = "select trans_id from test_kylin_fact limit 20";
         assertMetric(sql, 4096);
     }
 
     @Test
-    public void testMetricsScanForAggIndex() throws Exception {
+    public void testMetricsScanForAggIndex() throws Throwable {
         String sql = "select trans_id from test_kylin_fact group by trans_id limit 20";
         assertMetric(sql, 10000);
     }
 
-    private void assertMetric(String sql, long scanRowsExpect) throws Exception {
+    private void assertMetric(String sql, long scanRowsExpect) throws Throwable {
         val req = new SQLRequest();
         req.setSql(sql);
         req.setProject(getProject());

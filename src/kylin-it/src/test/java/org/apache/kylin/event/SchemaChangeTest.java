@@ -231,21 +231,21 @@ public class SchemaChangeTest extends AbstractMVCIntegrationTestCase {
     }
 
     @Test
-    public void testAddColumn() throws Exception {
+    public void testAddColumn() throws Throwable {
         addColumn(TABLE_IDENTITY, new ColumnDesc("", "tmp1", "bigint", "", "", "", null));
         tableService.reloadTable(getProject(), TABLE_IDENTITY, false, -1, true);
         assertSqls();
     }
 
     @Test
-    public void testRemoveColumn() throws Exception {
+    public void testRemoveColumn() throws Throwable {
         removeColumn(TABLE_IDENTITY, "SRC_ID");
         tableService.reloadTable(getProject(), TABLE_IDENTITY, false, -1, true);
         assertSqls();
     }
 
     @Test
-    public void testChangeColumnType() throws Exception {
+    public void testChangeColumnType() throws Throwable {
         changeColumns(TABLE_IDENTITY, Sets.newHashSet("SRC_ID"), columnDesc -> columnDesc.setDatatype("string"));
         tableService.reloadTable(getProject(), TABLE_IDENTITY, false, -1, true);
         assertSqls();
@@ -265,7 +265,7 @@ public class SchemaChangeTest extends AbstractMVCIntegrationTestCase {
         Assert.assertEquals(0, pair.getSecond().size());
     }
 
-    private void assertSqls() throws Exception {
+    private void assertSqls() throws Throwable {
         for (Pair<String, Boolean> pair : Arrays.asList(Pair.newPair(SQL_LOOKUP, false),
                 Pair.newPair(SQL_DERIVED, false), Pair.newPair(SQL_LOOKUP2, true), Pair.newPair(SQL_DERIVED2, true))) {
             val req = new SQLRequest();
