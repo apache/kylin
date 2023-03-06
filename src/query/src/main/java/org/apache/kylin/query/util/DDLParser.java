@@ -119,7 +119,7 @@ public class DDLParser {
             throw new ParseException(emptyJoinConditionErr);
         } else {
             SqlCall cond = (SqlCall) sqlJoin.getCondition();
-            if (cond.toString().contains(">") || cond.toString().contains(">")) {
+            if (cond.toString().contains(">") || cond.toString().contains("<")) {
                 throw new ParseException(joinConditionErr);
             }
         }

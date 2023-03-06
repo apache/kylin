@@ -70,6 +70,7 @@ import static org.apache.kylin.job.execution.JobTypeEnum.INDEX_BUILD;
 import static org.apache.kylin.job.execution.JobTypeEnum.INDEX_MERGE;
 import static org.apache.kylin.job.execution.JobTypeEnum.INDEX_REFRESH;
 import static org.apache.kylin.metadata.model.FunctionDesc.PARAMETER_TYPE_COLUMN;
+import static org.apache.kylin.query.util.DDLParser.UNDEFINED_TYPE;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -198,6 +199,8 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
+import org.apache.kylin.query.engine.KECalciteConfig;
+import org.apache.kylin.query.util.DDLParser;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
@@ -232,6 +235,7 @@ import org.apache.kylin.rest.response.NDataModelOldParams;
 import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.apache.kylin.rest.response.NModelDescResponse;
+import org.apache.kylin.rest.response.ParameterResponse;
 import org.apache.kylin.rest.response.PurgeModelAffectedResponse;
 import org.apache.kylin.rest.response.RefreshAffectedSegmentsResponse;
 import org.apache.kylin.rest.response.RelatedModelResponse;
@@ -330,6 +334,9 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     @Setter
     @Autowired
     private IndexPlanService indexPlanService;
+
+    @Autowired
+    private TableService tableService;
 
     @Autowired(required = false)
     @Qualifier("modelBuildService")
@@ -2001,6 +2008,93 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             }
             return getManager(NDataModelManager.class, project).getDataModelDesc(model.getUuid());
         }, project);
+    }
+
+    public NDataModel createModelByDDl(String sql) throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String convertedSql = QueryUtil.normalMassageSql(config, sql, 0, 0);
+        DDLParser ddlParser = DDLParser.CreateParser(KECalciteConfig.fromKapConfig(config));
+        DDLParser.DDLParserResult ddlResult = ddlParser.parseSQL(convertedSql);
+        String project = ddlResult.getProjectName();
+        ModelRequest modelRequest = convertToRequest(ddlResult);
+        aclEvaluate.checkProjectOperationPermission(modelRequest.getProject());
+
+        return createModel(project, modelRequest);
+    }
+
+    private ModelRequest convertToRequest(DDLParser.DDLParserResult ddlResult) {
+        val request = new ModelRequest();
+        request.setProject(ddlResult.getProjectName());
+        request.setAlias(ddlResult.getModelName());
+
+        //join relations
+        request.setJoinTables(ddlResult.getJoinTables());
+        request.setRootFactTableName(ddlResult.getFactTable());
+
+        // set partitionCol
+        PartitionDesc desc = new PartitionDesc();
+        if (ddlResult.getPartitionColName() != null) {
+            desc.setPartitionDateColumn(ddlResult.getPartitionColName());
+            desc.setPartitionDateFormat(setPartitionColType(ddlResult));
+        }
+        request.setPartitionDesc(desc);
+
+        // set dimensions and measures
+        request.setSimplifiedDimensions(ddlResult.getSimplifiedDimensions());
+        request.setSimplifiedMeasures(convertToSimplifiedMeasure(ddlResult.getProjectName(),
+                ddlResult.getSimplifiedMeasures(), ddlResult.getFactTable()));
+
+        // Default add base index
+        request.setWithBaseIndex(true);
+        return request;
+    }
+
+    private String setPartitionColType(DDLParser.DDLParserResult ddlResult) {
+        NTableMetadataManager tableManager = tableService.getManager(NTableMetadataManager.class,
+                ddlResult.getProjectName());
+        ColumnDesc col = tableManager
+                .getTableDesc(ddlResult.getFactTable().split("\\.")[0] + "."
+                        + ddlResult.getPartitionColName().split("\\.")[0])
+                .findColumnByName(ddlResult.getPartitionColName());
+        if (col == null) {
+            throw new KylinException(INVALID_PARAMETER, "Can not find partition col" + ddlResult.getPartitionColName());
+        }
+        if (col.getDatatype().toLowerCase().contains("int")) {
+            return "yyyyMMdd";
+        } else {
+            return "yyyy-MM-dd";
+        }
+    }
+
+    private List<SimplifiedMeasure> convertToSimplifiedMeasure(String project,
+            List<DDLParser.InnerMeasure> innerMeasures, String factTable) {
+        int id = 100000;
+        List<SimplifiedMeasure> result = Lists.newArrayList();
+        NTableMetadataManager tableManager = tableService.getManager(NTableMetadataManager.class, project);
+        for (DDLParser.InnerMeasure innerMeasure : innerMeasures) {
+            SimplifiedMeasure simplifiedMeasure = new SimplifiedMeasure();
+            simplifiedMeasure.setExpression(innerMeasure.getExpression());
+            simplifiedMeasure.setId(id++);
+            simplifiedMeasure.setParameterValue(innerMeasure.getParameterValues().stream().map(pair ->
+            // Fist is type, second is colName
+            new ParameterResponse(pair.getFirst(), pair.getSecond())).collect(Collectors.toList()));
+            //Must at least have on args
+            String colNameWithTable = innerMeasure.getParameterValues().get(0).getSecond();
+            simplifiedMeasure.setName(colNameWithTable.toUpperCase(Locale.ROOT) + '_'
+                    + innerMeasure.getExpression().toUpperCase(Locale.ROOT));
+            if (innerMeasure.getReturnType() != UNDEFINED_TYPE) {
+                simplifiedMeasure.setReturnType(innerMeasure.getReturnType());
+            } else {
+                // Simple measure like min,max,sum need infer col type
+                // use tableManager should pass db_name.
+                String datatype = tableManager
+                        .getTableDesc(factTable.split("\\.")[0] + "." + colNameWithTable.split("\\.")[0])
+                        .findColumnByName(colNameWithTable).getDatatype();
+                simplifiedMeasure.setReturnType(datatype);
+            }
+            result.add(simplifiedMeasure);
+        }
+        return result;
     }
 
     private NDataModel doCheckBeforeModelSave(String project, ModelRequest modelRequest) {
