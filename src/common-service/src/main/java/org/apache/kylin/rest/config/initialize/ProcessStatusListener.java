@@ -33,6 +33,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.cluster.ClusterManagerFactory;
+import org.apache.kylin.cluster.IClusterManager;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -105,6 +107,12 @@ public class ProcessStatusListener {
     @Subscribe
     public void destroyProcessByJobId(CliCommandExecutor.JobKilled jobKilled) {
         val jobId = jobKilled.getJobId();
+
+        IClusterManager clusterManager = ClusterManagerFactory.create(KylinConfig.getInstanceFromEnv());
+        if (clusterManager.applicationExisted(jobId)) {
+            clusterManager.killApplication(jobId);
+        }
+
         final Map<Integer, String> children;
         fileLock.lock();
         try {

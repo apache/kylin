@@ -21,7 +21,9 @@ package org.apache.kylin.newten;
 import static org.awaitility.Awaitility.await;
 
 import java.io.File;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -96,6 +98,139 @@ public class SlowQueryDetectorTest extends NLocalWithSparkSessionTest {
         }
 
         slowQueryDetector.queryEnd();
+    }
+
+    @Test
+    public void testStopQuery() throws Exception {
+        AtomicReference<InterruptedException> exception = new AtomicReference<>();
+        Semaphore semaphore = new Semaphore(1);
+        semaphore.acquire();
+        Thread query = new Thread(() -> {
+            slowQueryDetector.queryStart("stopId");
+            try {
+                semaphore.acquire();
+                Assert.fail();
+            } catch (InterruptedException e) {
+                exception.set(e);
+            } finally {
+                slowQueryDetector.queryEnd();
+
+            }
+
+        });
+        query.start();
+        await().atMost(2, TimeUnit.SECONDS).until(() -> slowQueryDetector.getRunningQueries().size() > 0);
+        slowQueryDetector.stopQuery("stopId");
+        semaphore.release();
+        query.join();
+        assert exception.get() != null;
+
+    }
+
+    @Test
+    public void testStopQueryWrong() throws Exception {
+        AtomicReference<InterruptedException> exception = new AtomicReference<>();
+        Semaphore semaphore = new Semaphore(1);
+        semaphore.acquire();
+        Thread query = new Thread(() -> {
+            slowQueryDetector.queryStart("stopId");
+            try {
+                semaphore.acquire();
+            } catch (InterruptedException e) {
+                exception.set(e);
+            } finally {
+                slowQueryDetector.queryEnd();
+            }
+
+        });
+        query.start();
+        await().atMost(2, TimeUnit.SECONDS).until(() -> slowQueryDetector.getRunningQueries().size() > 0);
+        slowQueryDetector.stopQuery("stopId-wrong");
+        semaphore.release();
+        query.join();
+        Assert.assertEquals(null, exception.get());
+
+    }
+
+    @Test
+    public void testStopAsyncQuery() throws Exception {
+        AtomicReference<InterruptedException> exception = new AtomicReference<>();
+        Semaphore semaphore = new Semaphore(1);
+        semaphore.acquire();
+        Thread asyncQuery = new Thread(() -> {
+            try {
+                QueryContext.current().getQueryTagInfo().setAsyncQuery(true);
+                QueryContext.current().setQueryId("queryId-async");
+                slowQueryDetector.queryStart("");
+                semaphore.acquire();
+                Assert.fail();
+            } catch (InterruptedException e) {
+                exception.set(e);
+            } finally {
+                slowQueryDetector.queryEnd();
+            }
+
+        });
+        asyncQuery.start();
+        await().atMost(2, TimeUnit.SECONDS).until(() -> slowQueryDetector.getRunningQueries().size() > 0);
+        slowQueryDetector.stopQuery("queryId-async");
+        semaphore.release();
+        asyncQuery.join();
+        assert exception.get() != null;
+
+    }
+
+    @Test
+    public void testStopAsyncQueryWrong() throws Exception {
+        AtomicReference<InterruptedException> exception = new AtomicReference<>();
+        Semaphore semaphore = new Semaphore(1);
+        semaphore.acquire();
+        Thread asyncQuery = new Thread(() -> {
+            try {
+                QueryContext.current().getQueryTagInfo().setAsyncQuery(true);
+                QueryContext.current().setQueryId("queryId");
+                slowQueryDetector.queryStart("");
+                semaphore.acquire();
+            } catch (InterruptedException e) {
+                exception.set(e);
+
+            }
+            slowQueryDetector.queryEnd();
+        });
+        asyncQuery.start();
+        await().atMost(2, TimeUnit.SECONDS).until(() -> slowQueryDetector.getRunningQueries().size() > 0);
+        slowQueryDetector.stopQuery("queryId-error");
+        semaphore.release();
+        asyncQuery.join();
+        Assert.assertEquals(null, exception.get());
+
+    }
+
+    @Test
+    public void testStopAsyncQueryJob() throws Exception {
+        AtomicReference<Exception> exception = new AtomicReference<>();
+        Semaphore semaphore = new Semaphore(1);
+        semaphore.acquire();
+        Thread asyncQuery = new Thread(() -> {
+            try {
+                QueryContext.current().getQueryTagInfo().setAsyncQuery(true);
+                QueryContext.current().setQueryId("queryId");
+                slowQueryDetector.addJobIdForAsyncQueryJob("jobId2");
+                slowQueryDetector.queryStart("");
+                slowQueryDetector.addJobIdForAsyncQueryJob("jobId");
+                semaphore.acquire();
+            } catch (InterruptedException e) {
+                exception.set(e);
+            }
+            slowQueryDetector.queryEnd();
+        });
+        asyncQuery.start();
+        await().atMost(2, TimeUnit.SECONDS).until(() -> slowQueryDetector.getRunningQueries().size() > 0);
+        slowQueryDetector.stopQuery("queryId");
+        semaphore.release();
+        asyncQuery.join();
+        Assert.assertEquals(null, exception.get());
+
     }
 
     @Test
