@@ -38,6 +38,9 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
     public static final String FUNC_PERCENTILE = "PERCENTILE";
     public static final String FUNC_PERCENTILE_APPROX = "PERCENTILE_APPROX";
     public static final String DATATYPE_PERCENTILE = "percentile";
+    public static final String FUNC_PERCENTILE_100 = "PERCENTILE_100";
+    public static final String FUNC_PERCENTILE_1000 = "PERCENTILE_1000";
+    public static final String FUNC_PERCENTILE_10000 = "PERCENTILE_10000";
 
     public PercentileMeasureType(String funcName, DataType dataType) {
         this.dataType = dataType;
