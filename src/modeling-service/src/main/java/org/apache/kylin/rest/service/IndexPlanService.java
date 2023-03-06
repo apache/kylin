@@ -1215,12 +1215,11 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         if (readySegs.isEmpty()) {
             removeIndexes(project, modelId, needDelete);
         } else {
-            NDataSegment segment = readySegs.getLatestReadySegment();
+            Set<Long> effectiveLayouts = readySegs.stream().flatMap(seg -> seg.getLayoutIds().stream())
+                    .collect(Collectors.toSet());
 
             for (long layoutId : needDelete) {
-                NDataLayout dataLayout = segment.getLayout(layoutId);
-                // may no data before the last ready segments but have a add cuboid job.
-                if (null == dataLayout && !isSecondStorageLayoutReady(project, modelId, layoutId)) {
+                if (!effectiveLayouts.contains(layoutId) && !isSecondStorageLayoutReady(project, modelId, layoutId)) {
                     removeIndex(project, modelId, layoutId);
                 } else {
                     addIndexToBeDeleted(project, modelId, Sets.newHashSet(layoutId));
