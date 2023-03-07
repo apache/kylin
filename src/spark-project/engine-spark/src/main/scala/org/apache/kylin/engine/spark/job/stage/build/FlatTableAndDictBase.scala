@@ -435,7 +435,7 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     val fs = HadoopUtil.getWorkingFileSystem
     if (snapshotResPath == null
       || !fs.exists(snapshotResFilePath)
-      || config.isPersistFlatUseSnapshotEnabled) {
+      || !config.isPersistFlatUseSnapshotEnabled) {
       newTableDS(tableRef)
     } else {
       sparkSession.read.parquet(snapshotResFilePath.toString).alias(tableRef.getAlias)
