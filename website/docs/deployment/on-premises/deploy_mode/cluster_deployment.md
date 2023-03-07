@@ -15,14 +15,13 @@ last_update:
     date: 09/13/2022
 ---
 
-All Kylin state information instance is stored in a RDBMS database, so running Kylin on multiple nodes in a cluster is good practice for better load balance and higher availability. Currently, we only support deployment with one `all` node and multiple `query` nodes.
+All Kylin state information instance is stored in a RDBMS database, so running Kylin on multiple nodes in a cluster is good practice for better load balance and higher availability.
 
 ![Deployment Architecture](images/cluster_20220913.png)
 
 In the above diagram, the components which require user deployment are below:
 
 - RDBMS as Metastore（PostgreSQL/MySQL）
-- Time-Series Database (InfluxDB)
 - Kylin nodes
 - Load Balancer
 
@@ -47,7 +46,7 @@ Currently, Kylin supports multiple nodes deployment. Queries will be distributed
 **Note**: 
 
 - Please deploy Kylin nodes in the same Hadoop cluster. If you need to deploy a read/write separation environment, please refer to [Read/Write Separation Deployment](rw_separation.md) chapter.
-- It is recommended not to start multiple `all` nodes at the same time.
+- It is recommended not to start multiple `all`/`job` nodes at the same time(because the former will block the start-up process of the latter).
 
 ### Kylin Multi-Active Job Engines
 
