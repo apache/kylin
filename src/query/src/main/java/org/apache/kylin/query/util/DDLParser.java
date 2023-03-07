@@ -57,6 +57,7 @@ import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.kylin.query.exception.UnsupportedQueryException;
 
 public class DDLParser {
     private final SqlParser.Config config;
@@ -206,7 +207,7 @@ public class DDLParser {
             try {
                 checkMeasure(measureName);
             } catch (ParseException e) {
-                throw new RuntimeException(e);
+                throw new UnsupportedQueryException(e.toString());
             }
             measure.setExpression(getMeasureExprInner(measureName));
 
@@ -217,7 +218,7 @@ public class DDLParser {
                 try {
                     pair.setSecond(getColNameWithTable(((SqlIdentifier) operand).names));
                 } catch (ParseException e) {
-                    throw new RuntimeException(e);
+                    throw new UnsupportedQueryException(e.toString());
                 }
                 return pair;
             }).collect(Collectors.toList());
@@ -245,7 +246,7 @@ public class DDLParser {
                 col.setAliasDotColumn(getColNameWithTable(d.names));
                 col.setName(getColNameWithTable(d.names).replace('.', '_'));
             } catch (ParseException e) {
-                throw new RuntimeException(e);
+                throw new UnsupportedQueryException(e.toString());
             }
             return col;
         }).collect(Collectors.toList());
@@ -335,61 +336,61 @@ public class DDLParser {
 
     private String getMeasureTypeInner(String measureName) {
         switch (measureName) {
-            case "COUNT":
-                return "bigint";
+        case "COUNT":
+            return "bigint";
 
-            case FUNC_PERCENTILE:
-            case FUNC_PERCENTILE_APPROX:
-                return PERCENTILE_TYPE;
+        case FUNC_PERCENTILE:
+        case FUNC_PERCENTILE_APPROX:
+            return PERCENTILE_TYPE;
 
-            case FUNC_HLL_COUNT:
-                return HLL_COUNT_TYPE;
+        case FUNC_HLL_COUNT:
+            return HLL_COUNT_TYPE;
 
-            case FUNC_BITMAP_COUNT:
-                return BITMAP_COUNT_TYPE;
-            // Support diff precise hll
-            case FUNC_HLL_COUNT_10:
-                return HLL_COUNT_TYPE_10;
-            case FUNC_HLL_COUNT_12:
-                return HLL_COUNT_TYPE_12;
-            case FUNC_HLL_COUNT_14:
-                return HLL_COUNT_TYPE_14;
-            case FUNC_HLL_COUNT_15:
-                return HLL_COUNT_TYPE_15;
-            case FUNC_HLL_COUNT_16:
-                return HLL_COUNT_TYPE_16;
-            // Support diff precise percentile
-            case FUNC_PERCENTILE_100:
-                return PERCENTILE_TYPE_100;
-            case FUNC_PERCENTILE_1000:
-                return PERCENTILE_TYPE_1000;
-            case FUNC_PERCENTILE_10000:
-                return PERCENTILE_TYPE_10000;
-            default:
-                return UNDEFINED_TYPE;
+        case FUNC_BITMAP_COUNT:
+            return BITMAP_COUNT_TYPE;
+        // Support diff precise hll
+        case FUNC_HLL_COUNT_10:
+            return HLL_COUNT_TYPE_10;
+        case FUNC_HLL_COUNT_12:
+            return HLL_COUNT_TYPE_12;
+        case FUNC_HLL_COUNT_14:
+            return HLL_COUNT_TYPE_14;
+        case FUNC_HLL_COUNT_15:
+            return HLL_COUNT_TYPE_15;
+        case FUNC_HLL_COUNT_16:
+            return HLL_COUNT_TYPE_16;
+        // Support diff precise percentile
+        case FUNC_PERCENTILE_100:
+            return PERCENTILE_TYPE_100;
+        case FUNC_PERCENTILE_1000:
+            return PERCENTILE_TYPE_1000;
+        case FUNC_PERCENTILE_10000:
+            return PERCENTILE_TYPE_10000;
+        default:
+            return UNDEFINED_TYPE;
         }
     }
 
     private String getMeasureExprInner(String measureName) {
         switch (measureName) {
-            case FUNC_PERCENTILE:
-            case FUNC_PERCENTILE_APPROX:
-            case FUNC_PERCENTILE_100:
-            case FUNC_PERCENTILE_1000:
-            case FUNC_PERCENTILE_10000:
-                return PERCENTILE_EXPR;
+        case FUNC_PERCENTILE:
+        case FUNC_PERCENTILE_APPROX:
+        case FUNC_PERCENTILE_100:
+        case FUNC_PERCENTILE_1000:
+        case FUNC_PERCENTILE_10000:
+            return PERCENTILE_EXPR;
 
-            case FUNC_HLL_COUNT:
-            case FUNC_BITMAP_COUNT:
-            case FUNC_HLL_COUNT_10:
-            case FUNC_HLL_COUNT_12:
-            case FUNC_HLL_COUNT_14:
-            case FUNC_HLL_COUNT_15:
-            case FUNC_HLL_COUNT_16:
-                return COUNT_DISTINCT_EXPR;
+        case FUNC_HLL_COUNT:
+        case FUNC_BITMAP_COUNT:
+        case FUNC_HLL_COUNT_10:
+        case FUNC_HLL_COUNT_12:
+        case FUNC_HLL_COUNT_14:
+        case FUNC_HLL_COUNT_15:
+        case FUNC_HLL_COUNT_16:
+            return COUNT_DISTINCT_EXPR;
 
-            default:
-                return measureName.toUpperCase();
+        default:
+            return measureName.toUpperCase();
         }
     }
 

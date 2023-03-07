@@ -46,33 +46,39 @@ public class DDLParserTest {
         DDLParser ddlParser = DDLParser.CreateParser(config);
         DDLParser.DDLParserResult result = ddlParser.parseSQL(sql1);
 
-        Assert.assertEquals(result.getProjectName(), "project");
-        Assert.assertEquals(result.getModelName(), "test_model");
-        Assert.assertEquals(result.getPartitionColName(), "table1.c1_1".toUpperCase());
+        Assert.assertEquals("project", result.getProjectName());
+        Assert.assertEquals("test_model", result.getModelName());
+        Assert.assertEquals("table1.c1_1".toUpperCase(), result.getPartitionColName());
 
         List<NDataModel.NamedColumn> simplifiedDimensions = result.getSimplifiedDimensions();
-        Assert.assertEquals(simplifiedDimensions.size(), 2);
+        Assert.assertEquals(2, simplifiedDimensions.size());
         //Not use id info
-        Assert.assertEquals(simplifiedDimensions.toString(),
-                "[NDataModel.NamedColumn(id=0, name=TABLE1_C1_1, aliasDotColumn=TABLE1.C1_1, status=EXIST), NDataModel.NamedColumn(id=0, name=TABLE2_C2_2, aliasDotColumn=TABLE2.C2_2, status=EXIST)]");
+        Assert.assertEquals(
+                "[NDataModel.NamedColumn(id=0, name=TABLE1_C1_1, aliasDotColumn=TABLE1.C1_1, status=EXIST), NDataModel.NamedColumn(id=0, name=TABLE2_C2_2, aliasDotColumn=TABLE2.C2_2, status=EXIST)]",
+                simplifiedDimensions.toString());
 
         List<DDLParser.InnerMeasure> simplifiedMeasures = result.getSimplifiedMeasures();
-        Assert.assertEquals(simplifiedMeasures.size(), 3);
-        Assert.assertEquals(simplifiedMeasures.get(0).toString(),
-                "DDLParser.InnerMeasure(expression=MAX, returnType=UNDEFINED, parameterValues=[{column,TABLE1.C3}])");
-        Assert.assertEquals(simplifiedMeasures.get(1).toString(),
-                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(14), parameterValues=[{column,TABLE1.C4}])");
-        Assert.assertEquals(simplifiedMeasures.get(2).toString(),
-                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=bitmap, parameterValues=[{column,TABLE1.C5}])");
+        Assert.assertEquals(3, simplifiedMeasures.size());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=MAX, returnType=UNDEFINED, parameterValues=[{column,TABLE1.C3}])",
+                simplifiedMeasures.get(0).toString());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(14), parameterValues=[{column,TABLE1.C4}])",
+                simplifiedMeasures.get(1).toString());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=bitmap, parameterValues=[{column,TABLE1.C5}])",
+                simplifiedMeasures.get(2).toString());
 
-        Assert.assertEquals(result.getFactTable(), "db.table1".toUpperCase());
+        Assert.assertEquals("db.table1".toUpperCase(), result.getFactTable());
 
         List<JoinTableDesc> joinTables = result.getJoinTables();
-        Assert.assertEquals(joinTables.size(), 2);
-        Assert.assertEquals(joinTables.get(0).toString(),
-                "JoinTableDesc(table=DB.TABLE3, kind=LOOKUP, alias=TABLE3, join=JoinDesc [type=INNER, primary_key=[TABLE2.C2_2], foreign_key=[TABLE1.C1_2]], flattenable=null, joinRelationTypeEnum=MANY_TO_ONE, tableRef=null)");
-        Assert.assertEquals(joinTables.get(1).toString(),
-                "JoinTableDesc(table=DB.TABLE2, kind=LOOKUP, alias=TABLE2, join=JoinDesc [type=INNER, primary_key=[TABLE2.C2_1, TABLE2.C2_3], foreign_key=[TABLE1.C1_1, TABLE1.C1_3]], flattenable=null, joinRelationTypeEnum=MANY_TO_ONE, tableRef=null)");
+        Assert.assertEquals(2, joinTables.size());
+        Assert.assertEquals(
+                "JoinTableDesc(table=DB.TABLE3, kind=LOOKUP, alias=TABLE3, join=JoinDesc [type=INNER, primary_key=[TABLE2.C2_2], foreign_key=[TABLE1.C1_2]], flattenable=null, joinRelationTypeEnum=MANY_TO_ONE, tableRef=null)",
+                joinTables.get(0).toString());
+        Assert.assertEquals(
+                "JoinTableDesc(table=DB.TABLE2, kind=LOOKUP, alias=TABLE2, join=JoinDesc [type=INNER, primary_key=[TABLE2.C2_1, TABLE2.C2_3], foreign_key=[TABLE1.C1_1, TABLE1.C1_3]], flattenable=null, joinRelationTypeEnum=MANY_TO_ONE, tableRef=null)",
+                joinTables.get(1).toString());
 
     }
 
@@ -88,23 +94,25 @@ public class DDLParserTest {
         DDLParser ddlParser = DDLParser.CreateParser(config);
         DDLParser.DDLParserResult result = ddlParser.parseSQL(sql1);
 
-        Assert.assertEquals(result.getProjectName(), "project");
-        Assert.assertEquals(result.getModelName(), "test_model");
+        Assert.assertEquals("project", result.getProjectName());
+        Assert.assertEquals("test_model", result.getModelName());
         Assert.assertNull(result.getPartitionColName());
 
         List<NDataModel.NamedColumn> simplifiedDimensions = result.getSimplifiedDimensions();
-        Assert.assertEquals(simplifiedDimensions.size(), 2);
-        Assert.assertEquals(simplifiedDimensions.toString(),
-                "[NDataModel.NamedColumn(id=0, name=TABLE1_C1, aliasDotColumn=TABLE1.C1, status=EXIST), NDataModel.NamedColumn(id=0, name=TABLE1_C2, aliasDotColumn=TABLE1.C2, status=EXIST)]");
+        Assert.assertEquals(2, simplifiedDimensions.size());
+        Assert.assertEquals(
+                "[NDataModel.NamedColumn(id=0, name=TABLE1_C1, aliasDotColumn=TABLE1.C1, status=EXIST), NDataModel.NamedColumn(id=0, name=TABLE1_C2, aliasDotColumn=TABLE1.C2, status=EXIST)]",
+                simplifiedDimensions.toString());
 
         List<DDLParser.InnerMeasure> simplifiedMeasures = result.getSimplifiedMeasures();
-        Assert.assertEquals(simplifiedMeasures.size(), 1);
-        Assert.assertEquals(simplifiedMeasures.get(0).toString(),
-                "DDLParser.InnerMeasure(expression=PERCENTILE_APPROX, returnType=percentile(100), parameterValues=[{column,TABLE1.C3}])");
+        Assert.assertEquals(1, simplifiedMeasures.size());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=PERCENTILE_APPROX, returnType=percentile(100), parameterValues=[{column,TABLE1.C3}])",
+                simplifiedMeasures.get(0).toString());
         Assert.assertEquals(result.getFactTable(), "db.table1".toUpperCase());
 
         List<JoinTableDesc> joinTables = result.getJoinTables();
-        Assert.assertEquals(joinTables.size(), 0);
+        Assert.assertEquals(0, joinTables.size());
 
     }
 
@@ -122,27 +130,30 @@ public class DDLParserTest {
         DDLParser ddlParser = DDLParser.CreateParser(config);
         DDLParser.DDLParserResult result = ddlParser.parseSQL(sql1);
 
-        Assert.assertEquals(result.getProjectName(), "project");
-        Assert.assertEquals(result.getModelName(), "test_model");
-        Assert.assertEquals(result.getPartitionColName(), "table1.c1_1".toUpperCase());
+        Assert.assertEquals("project", result.getProjectName());
+        Assert.assertEquals("test_model", result.getModelName());
+        Assert.assertEquals("table1.c1_1".toUpperCase(), result.getPartitionColName());
 
         List<NDataModel.NamedColumn> simplifiedDimensions = result.getSimplifiedDimensions();
         Assert.assertEquals(simplifiedDimensions.size(), 2);
         //Not use id info
-        Assert.assertEquals(simplifiedDimensions.toString(),
-                "[NDataModel.NamedColumn(id=0, name=TABLE1_C1_1, aliasDotColumn=TABLE1.C1_1, status=EXIST), NDataModel.NamedColumn(id=0, name=TABLE2_C2_2, aliasDotColumn=TABLE2.C2_2, status=EXIST)]");
+        Assert.assertEquals(
+                "[NDataModel.NamedColumn(id=0, name=TABLE1_C1_1, aliasDotColumn=TABLE1.C1_1, status=EXIST), NDataModel.NamedColumn(id=0, name=TABLE2_C2_2, aliasDotColumn=TABLE2.C2_2, status=EXIST)]",
+                simplifiedDimensions.toString());
 
         List<DDLParser.InnerMeasure> simplifiedMeasures = result.getSimplifiedMeasures();
-        Assert.assertEquals(simplifiedMeasures.size(), 1);
-        Assert.assertEquals(simplifiedMeasures.get(0).toString(),
-                "DDLParser.InnerMeasure(expression=MAX, returnType=UNDEFINED, parameterValues=[{column,TABLE1.C3}])");
+        Assert.assertEquals(1, simplifiedMeasures.size());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=MAX, returnType=UNDEFINED, parameterValues=[{column,TABLE1.C3}])",
+                simplifiedMeasures.get(0).toString());
 
-        Assert.assertEquals(result.getFactTable(), "db.table1".toUpperCase());
+        Assert.assertEquals("db.table1".toUpperCase(), result.getFactTable());
 
         List<JoinTableDesc> joinTables = result.getJoinTables();
-        Assert.assertEquals(joinTables.size(), 1);
-        Assert.assertEquals(joinTables.get(0).toString(),
-                "JoinTableDesc(table=DB.TABLE2, kind=LOOKUP, alias=TABLE2, join=JoinDesc [type=INNER, primary_key=[TABLE2.C2_1, TABLE2.C2_3], foreign_key=[TABLE1.C1_1, TABLE1.C1_3]], flattenable=null, joinRelationTypeEnum=MANY_TO_ONE, tableRef=null)");
+        Assert.assertEquals(1, joinTables.size());
+        Assert.assertEquals(
+                "JoinTableDesc(table=DB.TABLE2, kind=LOOKUP, alias=TABLE2, join=JoinDesc [type=INNER, primary_key=[TABLE2.C2_1, TABLE2.C2_3], foreign_key=[TABLE1.C1_1, TABLE1.C1_3]], flattenable=null, joinRelationTypeEnum=MANY_TO_ONE, tableRef=null)",
+                joinTables.get(0).toString());
     }
 
     @Test
@@ -159,9 +170,9 @@ public class DDLParserTest {
         DDLParser ddlParser = DDLParser.CreateParser(config);
         DDLParser.DDLParserResult result = ddlParser.parseSQL(sql1);
 
-        Assert.assertEquals(result.getProjectName(), "proJect_Name");
-        Assert.assertEquals(result.getModelName(), "tesT_model");
-        Assert.assertEquals(result.getPartitionColName(), "table1.c1_1".toUpperCase());
+        Assert.assertEquals("proJect_Name", result.getProjectName());
+        Assert.assertEquals("tesT_model", result.getModelName());
+        Assert.assertEquals("table1.c1_1".toUpperCase(), result.getPartitionColName());
     }
 
     @Test
@@ -215,32 +226,41 @@ public class DDLParserTest {
         DDLParser.DDLParserResult result = ddlParser.parseSQL(sql1);
 
         List<NDataModel.NamedColumn> simplifiedDimensions = result.getSimplifiedDimensions();
-        Assert.assertEquals(simplifiedDimensions.size(), 2);
-        Assert.assertEquals(simplifiedDimensions.toString(),
-                "[NDataModel.NamedColumn(id=0, name=TABLE1_C1, aliasDotColumn=TABLE1.C1, status=EXIST), NDataModel.NamedColumn(id=0, name=TABLE1_C2, aliasDotColumn=TABLE1.C2, status=EXIST)]");
+        Assert.assertEquals(2, simplifiedDimensions.size());
+        Assert.assertEquals(
+                "[NDataModel.NamedColumn(id=0, name=TABLE1_C1, aliasDotColumn=TABLE1.C1, status=EXIST), NDataModel.NamedColumn(id=0, name=TABLE1_C2, aliasDotColumn=TABLE1.C2, status=EXIST)]",
+                simplifiedDimensions.toString());
 
         List<DDLParser.InnerMeasure> simplifiedMeasures = result.getSimplifiedMeasures();
-        Assert.assertEquals(simplifiedMeasures.size(), 8);
-        Assert.assertEquals(simplifiedMeasures.get(0).toString(),
-                "DDLParser.InnerMeasure(expression=PERCENTILE_APPROX, returnType=percentile(100), parameterValues=[{column,TABLE1.C3}])");
-        Assert.assertEquals(result.getFactTable(), "db.table1".toUpperCase());
-        Assert.assertEquals(simplifiedMeasures.get(1).toString(),
-                "DDLParser.InnerMeasure(expression=PERCENTILE_APPROX, returnType=percentile(1000), parameterValues=[{column,TABLE1.C3}])");
-        Assert.assertEquals(result.getFactTable(), "db.table1".toUpperCase());
-        Assert.assertEquals(simplifiedMeasures.get(2).toString(),
-                "DDLParser.InnerMeasure(expression=PERCENTILE_APPROX, returnType=percentile(10000), parameterValues=[{column,TABLE1.C3}])");
-        Assert.assertEquals(result.getFactTable(), "db.table1".toUpperCase());
+        Assert.assertEquals(8, simplifiedMeasures.size());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=PERCENTILE_APPROX, returnType=percentile(100), parameterValues=[{column,TABLE1.C3}])",
+                simplifiedMeasures.get(0).toString());
+        Assert.assertEquals("db.table1".toUpperCase(), result.getFactTable());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=PERCENTILE_APPROX, returnType=percentile(1000), parameterValues=[{column,TABLE1.C3}])",
+                simplifiedMeasures.get(1).toString());
+        Assert.assertEquals("db.table1".toUpperCase(), result.getFactTable());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=PERCENTILE_APPROX, returnType=percentile(10000), parameterValues=[{column,TABLE1.C3}])",
+                simplifiedMeasures.get(2).toString());
+        Assert.assertEquals("db.table1".toUpperCase(), result.getFactTable());
 
-        Assert.assertEquals(simplifiedMeasures.get(3).toString(),
-                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(10), parameterValues=[{column,TABLE1.C4}])");
-        Assert.assertEquals(simplifiedMeasures.get(4).toString(),
-                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(12), parameterValues=[{column,TABLE1.C4}])");
-        Assert.assertEquals(simplifiedMeasures.get(5).toString(),
-                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(14), parameterValues=[{column,TABLE1.C4}])");
-        Assert.assertEquals(simplifiedMeasures.get(6).toString(),
-                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(15), parameterValues=[{column,TABLE1.C4}])");
-        Assert.assertEquals(simplifiedMeasures.get(7).toString(),
-                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(16), parameterValues=[{column,TABLE1.C4}])");
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(10), parameterValues=[{column,TABLE1.C4}])",
+                simplifiedMeasures.get(3).toString());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(12), parameterValues=[{column,TABLE1.C4}])",
+                simplifiedMeasures.get(4).toString());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(14), parameterValues=[{column,TABLE1.C4}])",
+                simplifiedMeasures.get(5).toString());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(15), parameterValues=[{column,TABLE1.C4}])",
+                simplifiedMeasures.get(6).toString());
+        Assert.assertEquals(
+                "DDLParser.InnerMeasure(expression=COUNT_DISTINCT, returnType=hllc(16), parameterValues=[{column,TABLE1.C4}])",
+                simplifiedMeasures.get(7).toString());
 
     }
 
