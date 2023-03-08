@@ -1,0 +1,152 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+options {
+    IGNORE_CASE = true;
+    STATIC = false;
+    UNICODE_INPUT=true;
+}
+
+PARSER_BEGIN(ManipulationSqlParser)
+package org.apache.kylin.query.util;
+
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.io.Reader;
+import org.apache.kylin.query.util.DMLParserResult;
+
+
+public class ManipulationSqlParser {
+    public static DMLParserResult evaluate(String src) throws ParseException {
+    		Reader reader = new StringReader(src);
+    		return new ManipulationSqlParser(reader).parse();
+    	}
+}
+
+PARSER_END(ManipulationSqlParser)
+
+// Operator type
+< DEFAULT >
+TOKEN :
+{
+  < SHOW : "SHOW" > |
+  < LOAD : "LOAD"> |
+  < DELETE: "DELETE" > |
+  < CANCEL: "CANCEL" >
+}
+
+// Operator unit
+< DEFAULT >
+TOKEN :
+{
+  < JOB : "JOB" > |
+  < PARTITION : "PARTITION"> |
+  < MODEL: "MODEL" >
+}
+
+< DEFAULT >
+TOKEN: {
+	// identifier
+      < DATE:
+        (["0"-"9"]){4}
+        "-"
+        (["0"-"9"]){2}
+        "-"
+        (["0"-"9"]){2}
+      > |
+	 < DEFINENAME: (["a"-"z","A"-"Z","0"-"9"])
+        (["a"-"z","A"-"Z","0"-"9","_"])*
+     > |
+     < JOBID: (["a"-"z","A"-"Z","0"-"9"])
+        (["a"-"z","A"-"Z","0"-"9","-"])*
+        >
+}
+
+<DEFAULT> SKIP :
+{
+    " "
+|   "\t"
+|   "\n"
+|   "\r"
+|   "\f"
+}
+
+DMLParserResult parse():
+{
+ 	DMLParserResult res = new DMLParserResult();
+	List<String> argList = new ArrayList<String>();
+    Token x, y, sta, end;
+}
+{
+  // SHOW JOB job_id
+   <SHOW> <JOB> x = <JOBID> <EOF>
+	{
+       argList.add(x.image);
+       res.setOperator(DMLParserResult.OPERATOR.SHOW);
+       res.setUnit(DMLParserResult.UNIT.JOB);
+       res.setArg(argList);
+	return res;
+} |
+  // LOAD PARTITION poject_name.model_test (2023-01-01, 2023-02-10)
+   LOOKAHEAD(2) <LOAD>  <PARTITION> x = <DEFINENAME> "." y = <DEFINENAME> "(" sta = <DATE> "," end = <DATE> ")" <EOF>
+   {
+         argList.add(x.image);
+         argList.add(y.image);
+         argList.add(sta.image);
+         argList.add(end.image);
+         res.setOperator(DMLParserResult.OPERATOR.LOAD);
+         res.setUnit(DMLParserResult.UNIT.PARTITION);
+         res.setArg(argList);
+         return res;
+   } |
+   // LOAD MODEL poject_name.model_test
+   <LOAD> <MODEL> x = <DEFINENAME> "." y = <DEFINENAME> <EOF>
+      {
+          argList.add(x.image);
+          argList.add(y.image);
+          res.setOperator(DMLParserResult.OPERATOR.LOAD);
+          res.setUnit(DMLParserResult.UNIT.MODEL);
+          res.setArg(argList);
+          return res;
+      } |
+   // DELETE MODEL poject_name.model_name
+   <DELETE> <MODEL> x = <DEFINENAME> "." y = <DEFINENAME> <EOF>
+    {
+         argList.add(x.image);
+         argList.add(y.image);
+         res.setOperator(DMLParserResult.OPERATOR.DELETE);
+         res.setUnit(DMLParserResult.UNIT.MODEL);
+         res.setArg(argList);
+         return res;
+    } |
+   // CANCEL JOB job_id
+   <CANCEL> <JOB> x = <JOBID> <EOF>
+    {
+        argList.add(x.image);
+        res.setOperator(DMLParserResult.OPERATOR.CANCEL);
+        res.setUnit(DMLParserResult.UNIT.JOB);
+        res.setArg(argList);
+        return res;
+    }
+
+   {
+     return res;
+   }
+
+}
