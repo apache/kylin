@@ -46,7 +46,6 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.AWSTableLoadRequest;
 import org.apache.kylin.rest.request.AutoMergeRequest;
@@ -474,7 +473,7 @@ public class NTableController extends NBasicController {
             throws IOException {
         try {
             tableService.updateHiveTable(project, request.getMapping(), request.getCubeSetToAffect(), request.isUseExisting());
-        } catch (BadRequestException e) {
+        } catch (KylinException e) {
             log.error("Failed to update Hive Table", e);
             throw e;
         } catch (Throwable e) {

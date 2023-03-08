@@ -23,9 +23,12 @@ import static org.apache.kylin.common.exception.ServerErrorCode.COLUMN_NOT_EXIST
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATED_COLUMN_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_IMPORT_SSB_DATA;
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_REFRESH_CATALOG_CACHE;
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_UPDATE_MODEL;
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_UPDATE_TABLE_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.FILE_NOT_EXIST;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_COMPUTED_COLUMN_EXPRESSION;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARTITION_COLUMN;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PROJECT_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.common.exception.ServerErrorCode.TABLE_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
@@ -139,7 +142,6 @@ import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.constant.JobInfoEnum;
-import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.request.AutoMergeRequest;
 import org.apache.kylin.rest.request.DateRangeRequest;
 import org.apache.kylin.rest.request.S3TableExtInfo;
@@ -2097,7 +2099,7 @@ public class TableService extends BasicService {
         final ProjectInstance prjInstance = getProjectManager().getProject(projectName);
         val kylinConfig = KylinConfig.getInstanceFromEnv();
         if (prjInstance == null) {
-            throw new BadRequestException("Project " + projectName + " does not exist");
+            throw new KylinException(INVALID_PROJECT_NAME, "Project " + projectName + " does not exist");
         }
         // To deal with case-sensitive issue for table resource path
         final String project = prjInstance.getName();
@@ -2124,7 +2126,7 @@ public class TableService extends BasicService {
         ifAllModelUpdate = (ifAllModelUpdate && offlineModelSet.size() == infModels.size());
         // At least 1 model should be update here, otherwise it will throw BadRequestException.
         if (offlineModelSet.isEmpty()) {
-            throw new BadRequestException("Affected models " + infModels + " should be OFFLINE");
+            throw new KylinException(FAILED_UPDATE_MODEL, "Affected models " + infModels + " should be OFFLINE");
         }
         logger.info("Should affected models {}", infModels);
         logger.info("Actually affected offline models {}", offlineModelSet);
@@ -2142,7 +2144,7 @@ public class TableService extends BasicService {
             if (isUseExisting) {
                 logger.info("Will use existing tables {}", existingTables.values());
             } else {
-                throw new BadRequestException("Tables " + existingTables.values() + " already exist");
+                throw new KylinException(FAILED_UPDATE_TABLE_NAME, "Tables " + existingTables.values() + " already exist");
             }
         }
         // -- 2. model
