@@ -73,6 +73,7 @@ public class NSparkSnapshotBuildingStep extends NSparkExecutable {
         }
         dumpList.add(tableDesc.getResourcePath());
         dumpList.add(projectInstance.getResourcePath());
+        dumpList.addAll(getLogicalViewMetaDumpList(config));
 
         return dumpList;
     }

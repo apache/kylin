@@ -18,23 +18,24 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.FileInputStream;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.helper.UpdateUserAclToolHelper;
 import org.apache.kylin.rest.config.initialize.UserAclListener;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AdminUserAspect;
 import org.apache.kylin.rest.security.UserAclManager;
 import org.apache.kylin.rest.util.SpringContext;
-import org.apache.kylin.tool.upgrade.UpdateUserAclTool;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -96,7 +97,8 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
     public static void setupResource() throws Exception {
         staticCreateTestMetadata();
         Properties ldapConfig = new Properties();
-        ldapConfig.load(new FileInputStream(new ClassPathResource("ut_custom/custom-config.properties").getFile()));
+        ldapConfig.load(
+                Files.newInputStream(new ClassPathResource("ut_custom/custom-config.properties").getFile().toPath()));
         final KylinConfig kylinConfig = getTestConfig();
         ldapConfig.forEach((k, v) -> kylinConfig.setProperty(k.toString(), v.toString()));
 
@@ -143,9 +145,8 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
         //test list admin
         getTestConfig().setProperty("kylin.security.profile", "custom");
         val adminUserAspect = SpringContext.getBean(AdminUserAspect.class);
-        ReflectionTestUtils.setField(adminUserAspect, "tool", Mockito.spy(new UpdateUserAclTool()));
-        val tool = (UpdateUserAclTool) ReflectionTestUtils.getField(adminUserAspect, "tool");
-        Mockito.when(tool.isUpgraded()).thenReturn(true);
+        UpdateUserAclToolHelper helper = Mockito.spy(UpdateUserAclToolHelper.getInstance());
+        Mockito.when(helper.isUpgraded()).thenReturn(true);
         adminUserAspect.doAfterListAdminUsers(Collections.emptyList());
         Assert.assertFalse((Boolean) ReflectionTestUtils.getField(adminUserAspect, "superAdminInitialized"));
         List<String> admins = userService.listAdminUsers();
@@ -248,7 +249,7 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testDoAfterListAdminUsers() {
-        List adminUserList = Arrays.asList("admin", "sunny");
+        List<String> adminUserList = Arrays.asList("admin", "sunny");
         val adminUserAspect = SpringContext.getBean(AdminUserAspect.class);
         adminUserAspect.doAfterListAdminUsers(adminUserList);
         Assert.assertTrue(((List) ReflectionTestUtils.getField(adminUserAspect, "adminUserList")).contains("sunny"));
@@ -276,5 +277,22 @@ public class OpenUserServiceTest extends NLocalFileMetadataTestCase {
         epochManager.tryUpdateEpoch(EpochManager.GLOBAL, true);
         userAclService.syncAdminUserAcl();
         Assert.assertTrue(userAclService.hasUserAclPermission("admin", AclPermission.DATA_QUERY));
+    }
+
+    @Test
+    public void testUserGroupExists() {
+        Assert.assertTrue(userGroupService.exists("ROLE_ADMIN"));
+        Assert.assertFalse(userGroupService.exists("not_exist_group"));
+    }
+
+    @Test
+    public void testListUserGroupsByUsername() {
+        Assert.assertTrue(userService.userExists("test"));
+        Set<String> testGroups = userGroupService.listUserGroups("test");
+        Assert.assertFalse(testGroups.isEmpty());
+
+        Assert.assertFalse(userService.userExists("not_exist_user"));
+        Set<String> notExistUser = userGroupService.listUserGroups("not_exist_user");
+        Assert.assertTrue(notExistUser.isEmpty());
     }
 }

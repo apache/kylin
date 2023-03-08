@@ -33,10 +33,11 @@ import org.apache.spark.network.util.JavaUtils
 import org.apache.spark.sql.hive.QueryMetricUtils
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 import org.apache.spark.sql.util.SparderTypeUtil
-import org.apache.spark.sql.{DataFrame, SparderEnv, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SparderEnv, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.sql.Timestamp
+import java.util
 import java.util.{UUID, List => JList}
 import scala.collection.JavaConverters._
 import scala.collection.{immutable, mutable}
@@ -130,29 +131,8 @@ object SparkSqlClient {
       QueryContext.current().getMetrics.setQueryJobCount(jobCount)
       QueryContext.current().getMetrics.setQueryStageCount(stageCount)
       QueryContext.current().getMetrics.setQueryTaskCount(taskCount)
-      (
-        () => new java.util.Iterator[JList[String]] {
-          /*
-           * After fetching a batch of 1000, checks whether the query thread is interrupted.
-           */
-          val checkInterruptSize = 1000;
-          var readRowSize = 0;
-
-          override def hasNext: Boolean = resultRows.hasNext
-
-          override def next(): JList[String] = {
-            val row = resultRows.next()
-            readRowSize += 1;
-            if (readRowSize % checkInterruptSize == 0) {
-              QueryUtil.checkThreadInterrupted("Interrupted at the stage of collecting result in SparkSqlClient.",
-                "Current step: Collecting dataset of push-down.")
-            }
-            row.toSeq.map(rawValueToString(_)).asJava
-          }
-        },
-        resultSize,
-        fieldList
-      )
+      // return result
+      (readPushDownResultRow(resultRows, true), resultSize, fieldList)
     } catch {
       case e: Throwable =>
         if (e.isInstanceOf[InterruptedException]) {
@@ -167,6 +147,29 @@ object SparkSqlClient {
       df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
       HadoopUtil.setCurrentConfiguration(null)
     }
+  }
+
+  def readPushDownResultRow(resultRows: util.Iterator[Row], checkInterrupt: Boolean): java.lang.Iterable[JList[String]] = {
+    () =>
+      new java.util.Iterator[JList[String]] {
+        /*
+         * After fetching a batch of 1000, checks whether the query thread is interrupted.
+         */
+        val checkInterruptSize = 1000;
+        var readRowSize = 0;
+
+        override def hasNext: Boolean = resultRows.hasNext
+
+        override def next(): JList[String] = {
+          val row = resultRows.next()
+          readRowSize += 1;
+          if (checkInterrupt && readRowSize % checkInterruptSize == 0) {
+            QueryUtil.checkThreadInterrupted("Interrupted at the stage of collecting result in SparkSqlClient.",
+              "Current step: Collecting dataset of push-down.")
+          }
+          row.toSeq.map(rawValueToString(_)).asJava
+        }
+      }
   }
 
   private def rawValueToString(value: Any, wrapped: Boolean = false): String = value match {

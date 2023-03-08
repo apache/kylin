@@ -25,14 +25,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import javax.naming.directory.SearchControls;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -41,14 +37,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.ExecutableApplication;
 import org.apache.kylin.common.util.OptionBuilder;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.ShellException;
+import org.apache.kylin.helper.UpdateUserAclToolHelper;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.upgrade.GlobalAclVersion;
 import org.apache.kylin.metadata.upgrade.GlobalAclVersionManager;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.security.AclManager;
@@ -59,13 +56,10 @@ import org.apache.kylin.rest.security.UserAcl;
 import org.apache.kylin.rest.security.UserAclManager;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.tool.MaintainModeTool;
-import org.apache.kylin.tool.util.LdapUtils;
 import org.springframework.security.acls.domain.ConsoleAuditLogger;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
-import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -168,7 +162,7 @@ public class UpdateUserAclTool extends ExecutableApplication {
 
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
-        if (isUpgraded() && !optionsHelper.hasOption(OPTION_ROLLBACK)
+        if (UpdateUserAclToolHelper.getInstance().isUpgraded() && !optionsHelper.hasOption(OPTION_ROLLBACK)
                 && !optionsHelper.hasOption(OPTION_FORCE_UPGRADE)) {
             log.info("The acl related metadata have been upgraded.");
             return;
@@ -195,11 +189,6 @@ public class UpdateUserAclTool extends ExecutableApplication {
     public boolean isAdminUserUpgraded() {
         val userAclManager = UserAclManager.getInstance(KylinConfig.getInstanceFromEnv());
         return userAclManager.listAclUsernames().size() > 0;
-    }
-
-    public boolean isUpgraded() {
-        val versionManager = GlobalAclVersionManager.getInstance(KylinConfig.getInstanceFromEnv());
-        return versionManager.exists();
     }
 
     private Set<String> getAdminUsers() {
@@ -249,41 +238,11 @@ public class UpdateUserAclTool extends ExecutableApplication {
         val userManager = NKylinUserManager.getInstance(KylinConfig.getInstanceFromEnv());
         return userManager.list().stream()
                 .filter(user -> user.getAuthorities().contains(new SimpleGrantedAuthority(Constant.ROLE_ADMIN)))
-                .map(user -> user.getUsername()).collect(Collectors.toList());
+                .map(ManagedUser::getUsername).collect(Collectors.toList());
     }
 
     public Set<String> getLdapAdminUsers() {
-        val ldapTemplate = createLdapTemplate();
-        val ldapUserDNs = LdapUtils.getAllGroupMembers(ldapTemplate,
-                KylinConfig.getInstanceFromEnv().getLDAPAdminRole());
-        val searchControls = new SearchControls();
-        searchControls.setSearchScope(2);
-        Map<String, String> dnMapperMap = LdapUtils.getAllValidUserDnMap(ldapTemplate, searchControls);
-        val users = new HashSet<String>();
-        for (String u : ldapUserDNs) {
-            Optional.ofNullable(dnMapperMap.get(u)).ifPresent(users::add);
-        }
-        return users;
-    }
-
-    public static boolean isCustomProfile() {
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
-        return "custom".equals(kylinConfig.getSecurityProfile());
-    }
-
-    private SpringSecurityLdapTemplate createLdapTemplate() {
-        val properties = KylinConfig.getInstanceFromEnv().exportToProperties();
-        val contextSource = new DefaultSpringSecurityContextSource(
-                properties.getProperty("kylin.security.ldap.connection-server"));
-        contextSource.setUserDn(properties.getProperty("kylin.security.ldap.connection-username"));
-        contextSource.setPassword(getPassword(properties));
-        contextSource.afterPropertiesSet();
-        return new SpringSecurityLdapTemplate(contextSource);
-    }
-
-    public String getPassword(Properties properties) {
-        val password = properties.getProperty("kylin.security.ldap.connection-password");
-        return EncryptUtil.decrypt(password);
+        return UpdateUserAclToolHelper.getInstance().getLdapAdminUsers();
     }
 
     public void updateProjectAcl(String operation) {
@@ -305,7 +264,7 @@ public class UpdateUserAclTool extends ExecutableApplication {
                                 AclPermissionUtil.convertToBasePermission(ace.getPermission()));
                     }
                 });
-                val mutableAclRecord = aclManager.readAcl(aclRecord.getDomainObjectInfo());
+                val mutableAclRecord = aclManager.readAcl(aclRecord.getObjectIdentity());
                 aclManager.batchUpsertAce(mutableAclRecord, sidPermissionMap);
                 log.info("{} query permission for _global/acl/{} successfully.", StringUtils.capitalize(operation),
                         aclRecord.getUuid());

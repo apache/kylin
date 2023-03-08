@@ -20,15 +20,16 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
 
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.response.DiffRuleBasedIndexResponse;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.CreateBaseIndexRequest;
+import org.apache.kylin.rest.request.CreateTableIndexRequest;
 import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
 import org.apache.kylin.rest.response.BuildIndexResponse;
+import org.apache.kylin.rest.response.DiffRuleBasedIndexResponse;
 import org.apache.kylin.rest.service.FusionIndexService;
 import org.apache.kylin.rest.service.IndexPlanService;
 import org.apache.kylin.rest.service.ModelService;
@@ -153,6 +154,20 @@ public class IndexPlanControllerTest extends NLocalFileMetadataTestCase {
         Mockito.doReturn(null).when(indexPlanService).getStat("default", "abc");
         mockMvc.perform(MockMvcRequestBuilders.get("/api/index_plans/index_stat")
                 .contentType(MediaType.APPLICATION_JSON).param("project", "default").param("model_id", "abc")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testUpdateTableIndex() throws Exception {
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project("default")
+                .modelId("89af4ee2-2cdb-4b07-b39e-4c29856309aa").id(20000010001L).colOrder(Lists
+                        .newArrayList("TEST_KYLIN_FACT.TRANS_ID", "TEST_SITES.SITE_NAME", "TEST_KYLIN_FACT.CAL_DT"))
+                .sortByColumns(Lists.newArrayList()).build();
+        Mockito.when(indexPlanService.updateTableIndex(Mockito.anyString(), Mockito.any(CreateTableIndexRequest.class)))
+                .thenReturn(new BuildIndexResponse());
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/index_plans/table_index")
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(tableIndexRequest))
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }

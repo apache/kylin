@@ -23,9 +23,9 @@ import javax.sql.DataSource;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
+import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.junit.annotation.OverwriteProp;
-import org.apache.kylin.tool.util.MetadataUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,11 +48,13 @@ class HAConfigurationTest {
     @Mock
     SessionProperties sessionProperties;
 
+    MetadataToolHelper metadataToolHelper = new MetadataToolHelper();
+
     DataSource dataSource;
 
     @BeforeEach
     public void setup() throws Exception {
-        dataSource = Mockito.spy(MetadataUtil.getDataSource(getTestConfig()));
+        dataSource = Mockito.spy(metadataToolHelper.getDataSource(getTestConfig()));
         ReflectionTestUtils.setField(configuration, "dataSource", dataSource);
     }
 

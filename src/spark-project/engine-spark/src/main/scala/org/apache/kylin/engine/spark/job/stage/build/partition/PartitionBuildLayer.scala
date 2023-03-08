@@ -30,4 +30,6 @@ class PartitionBuildLayer(jobContext: SegmentJob, dataSegment: NDataSegment, bui
     // Drain results immediately after building.
     drain()
   }
+
+  override def getStageName: String = "PartitionBuildLayer"
 }

@@ -29,22 +29,25 @@ import static org.apache.kylin.rest.constant.Constant.ROLE_ADMIN;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.user.ManagedUser;
+import org.apache.kylin.metadata.user.NKylinUserManager;
 import org.apache.kylin.metadata.usergroup.NUserGroupManager;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.aspect.Transaction;
@@ -54,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
@@ -102,16 +106,15 @@ public class NUserGroupService implements IUserGroupService {
         aclEvaluate.checkIsGlobalAdmin();
         checkGroupCanBeDeleted(name);
         // remove retained user group in all users
-        List<ManagedUser> managedUsers = userService.listUsers();
-        for (ManagedUser managedUser : managedUsers) {
-            if (managedUser.getAuthorities().contains(new SimpleGrantedAuthority(name))) {
-                managedUser.removeAuthorities(name);
-                userService.updateUser(managedUser);
-            }
-        }
+        SimpleGrantedAuthority simpleAuthority = new SimpleGrantedAuthority(name);
+        userService.listUsers(false).stream().filter(
+                user -> user.getAuthorities().parallelStream().anyMatch(authority -> authority.equals(simpleAuthority)))
+                .forEach(user -> {
+                    user.removeAuthorities(name);
+                    userService.updateUser(user);
+                });
         //delete group's project ACL
         accessService.revokeProjectPermission(name, MetadataConstants.TYPE_GROUP);
-
         getUserGroupManager().delete(name);
     }
 
@@ -122,10 +125,8 @@ public class NUserGroupService implements IUserGroupService {
         aclEvaluate.checkIsGlobalAdmin();
         checkGroupNameExist(groupName);
 
-        List<String> groupUsers = new ArrayList<>();
-        for (ManagedUser user : getGroupMembersByName(groupName)) {
-            groupUsers.add(user.getUsername());
-        }
+        List<String> groupUsers = getGroupMembersByName(groupName).stream().map(ManagedUser::getUsername)
+                .collect(Collectors.toList());
         List<String> moveInUsers = Lists.newArrayList(users);
         List<String> moveOutUsers = Lists.newArrayList(groupUsers);
         moveInUsers.removeAll(groupUsers);
@@ -135,7 +136,7 @@ public class NUserGroupService implements IUserGroupService {
 
         String currentUser = aclEvaluate.getCurrentUserName();
 
-        List<String> moveList = new ArrayList<String>();
+        List<String> moveList = Lists.newArrayList();
         moveList.addAll(moveInUsers);
         moveList.addAll(moveOutUsers);
         val superAdminList = userService.listSuperAdminUsers();
@@ -173,8 +174,9 @@ public class NUserGroupService implements IUserGroupService {
     public List<String> getAuthoritiesFilterByGroupName(String userGroupName) {
         aclEvaluate.checkIsGlobalAdmin();
         return StringUtils.isEmpty(userGroupName) ? getAllUserGroups()
-                : getAllUserGroups().stream().filter(userGroup -> userGroup.toUpperCase(Locale.ROOT)
-                        .contains(userGroupName.toUpperCase(Locale.ROOT))).collect(Collectors.toList());
+                : getAllUserGroups().stream()
+                        .filter(userGroup -> StringUtils.containsIgnoreCase(userGroup, userGroupName))
+                        .collect(Collectors.toList());
     }
 
     @Override
@@ -185,10 +187,14 @@ public class NUserGroupService implements IUserGroupService {
     @Override
     public List<UserGroup> getUserGroupsFilterByGroupName(String userGroupName) {
         aclEvaluate.checkIsGlobalAdmin();
-        return StringUtils.isEmpty(userGroupName) ? listUserGroups()
-                : getUserGroupManager().getAllGroups().stream().filter(userGroup -> userGroup.getGroupName()
-                        .toUpperCase(Locale.ROOT).contains(userGroupName.toUpperCase(Locale.ROOT)))
-                        .collect(Collectors.toList());
+        if (StringUtils.isEmpty(userGroupName)) {
+            return listUserGroups();
+        }
+        return getUserGroupManager().getAllGroups(path -> {
+            val pathPair = StringUtils.split(path, "/");
+            String groupName = pathPair[pathPair.length - 1];
+            return StringUtils.containsIgnoreCase(groupName, userGroupName);
+        });
     }
 
     @Override
@@ -205,18 +211,21 @@ public class NUserGroupService implements IUserGroupService {
 
     @Override
     public String getUuidByGroupName(String groupName) {
-        val groups = getUserGroupManager().getAllGroups();
-        for (val group : groups) {
-            if (StringUtils.equalsIgnoreCase(groupName, group.getGroupName())) {
-                return group.getUuid();
-            }
+        if (StringUtils.isEmpty(groupName)) {
+            throw new KylinException(USERGROUP_NOT_EXIST,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupNotExist(), groupName));
         }
-        throw new KylinException(USERGROUP_NOT_EXIST,
-                String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupNotExist(), groupName));
+        val optional = getUserGroupManager().getAllGroups(path -> StringUtils.endsWithIgnoreCase(path, groupName))
+                .stream().filter(group -> StringUtils.equalsIgnoreCase(group.getGroupName(), groupName)).findFirst();
+        if (!optional.isPresent()) {
+            throw new KylinException(USERGROUP_NOT_EXIST,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getUserGroupNotExist(), groupName));
+        }
+        return optional.get().getUuid();
     }
 
     public boolean exists(String name) {
-        return getAllUserGroups().contains(name);
+        return getUserGroupManager().exists(name);
     }
 
     public ResourceStore getStore() {
@@ -244,23 +253,12 @@ public class NUserGroupService implements IUserGroupService {
     }
 
     public Set<String> listUserGroups(String username) {
-        try {
-            List<String> groups = getAllUserGroups();
-            Set<String> result = new HashSet<>();
-            for (String group : groups) {
-                val users = getGroupMembersByName(group);
-                for (val user : users) {
-                    if (StringUtils.equalsIgnoreCase(username, user.getUsername())) {
-                        result.add(group);
-                        break;
-                    }
-                }
-            }
-            return result;
-        } catch (IOException e) {
-            logger.error("List user groups failed...", e);
-            throw new RuntimeException(e);
+        ManagedUser user = NKylinUserManager.getInstance(KylinConfig.getInstanceFromEnv()).get(username);
+        if (Objects.isNull(user)) {
+            return Collections.emptySet();
         }
+        return user.getAuthorities().stream().map(GrantedAuthority::getAuthority).filter(this::exists)
+                .collect(Collectors.toSet());
     }
 
     private NUserGroupManager getUserGroupManager() {

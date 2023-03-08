@@ -60,15 +60,21 @@ public class Message {
     private static final String LICENSE_MISMATCH_LICENSE = "The license doesn’t match the current cluster information. Please upload a new license, or contact Kyligence.";
     private static final String LICENSE_NOT_EFFECTIVE = "License is not effective yet, please apply for a new license.";
     private static final String LICENSE_EXPIRED = "The license has expired. Please upload a new license, or contact Kyligence.";
-    private static final String DDL_UNSUPPORTED = "Unsupported DDL syntax, only support single `create view`, `drop "
-        + "view`,  `alter view`, `show create table`";
+    private static final String DDL_UNSUPPORTED = "Unsupported DDL syntax, only support single `create view`, `drop view`,  `alter view`, `show create table`";
     private static final String DDL_VIEW_NAME_ERROR = "View names need to start with KE_";
+    private static final String DDL_VIEW_NAME_DUPLICATE_ERROR = "Logical View names is duplicate";
     private static final String DDL_DROP_ERROR = "Only support drop view";
     private static final String DDL_TABLE_NOT_LOADED = "Table '%s' is not loaded into the data source ";
     private static final String DDL_TABLE_NOT_SUPPORT = "Only support hive table, but '%s' is not hive table";
-    private static final String DDL_PERMISSION_DENIED = "Only Administrator or Project Administrator can do DDL operations";
     private static final String DDL_DATABASE_ACCESSN_DENIED = "The user does not have the database permission to "
         + "which the view belongs.";
+    private static final String DDL_LOGICAL_VIEW_HAS_USED = "Table %s has already been loaded in project %s, please "
+        + "unload it before deleting this table.";
+    private static final String DDL_LOGICAL_VIEW_SOURCETABLE_ERROR = "Source table %s is a logical view and is not "
+        + "allowed to be used in SQL";
+    private static final String DDL_RESTRICT = "Only support %s syntax";
+    private static final String LOAD_LOGICAL_VIEW_ERROR = "Can't load table %s, table can only be loaded in "
+        + "project %s";
 
     protected Message() {
 
@@ -513,14 +519,6 @@ public class Message {
 
     public String getCleanFolderFail() {
         return "Can’t clean file folder at the moment. Please ensure that the related file on HDFS could be accessed.";
-    }
-
-    public String getAsyncQueryTimeFormatError() {
-        return "The time format is invalid. Please enter the date in the format “yyyy-MM-dd HH:mm:ss”.";
-    }
-
-    public String getAsyncQueryProjectNameEmpty() {
-        return "The project name can’t be empty. Please check and try again.";
     }
 
     public String getUserNotFound() {
@@ -1600,6 +1598,10 @@ public class Message {
         return DDL_VIEW_NAME_ERROR;
     }
 
+    public String getDDLViewNameDuplicateError() {
+        return DDL_VIEW_NAME_DUPLICATE_ERROR;
+    }
+
     public String getDDLDropError() {
         return DDL_DROP_ERROR;
     }
@@ -1612,11 +1614,23 @@ public class Message {
         return String.format(Locale.ROOT, DDL_TABLE_NOT_SUPPORT, table);
     }
 
-    public String getDDLPermissionDenied() {
-        return DDL_PERMISSION_DENIED;
-    }
-
     public String getDDLDatabaseAccessnDenied() {
         return DDL_DATABASE_ACCESSN_DENIED;
+    }
+
+    public String getDDLLogicalViewHasUsed(String table, String project) {
+        return String.format(Locale.ROOT, DDL_LOGICAL_VIEW_HAS_USED, table, project);
+    }
+
+    public String getDDLLogicalViewSourceTableError(String table) {
+        return String.format(Locale.ROOT, DDL_LOGICAL_VIEW_SOURCETABLE_ERROR, table);
+    }
+
+    public String getDDLRestrictError(String syntax) {
+        return String.format(Locale.ROOT, DDL_RESTRICT, syntax);
+    }
+
+    public String getLoadLogicalViewError(String tableName, String project) {
+        return String.format(Locale.ROOT, LOAD_LOGICAL_VIEW_ERROR, tableName, project);
     }
 }

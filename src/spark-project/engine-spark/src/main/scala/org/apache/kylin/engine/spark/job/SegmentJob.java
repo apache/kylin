@@ -149,6 +149,7 @@ public abstract class SegmentJob extends SparkApplication {
 
     @Override
     protected void extraInit() {
+        super.extraInit();
         partialBuild = Boolean.parseBoolean(getParam(NBatchConstants.P_PARTIAL_BUILD));
         Set<String> segmentIDs = Arrays.stream(getParam(NBatchConstants.P_SEGMENT_IDS).split(COMMA))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -217,7 +218,8 @@ public abstract class SegmentJob extends SparkApplication {
     }
 
     protected boolean isPartitioned() {
-        return Objects.nonNull(indexPlan.getModel().getMultiPartitionDesc());
+        return Objects.nonNull(indexPlan.getModel().getPartitionDesc())
+                && Objects.nonNull(indexPlan.getModel().getMultiPartitionDesc());
     }
 
     private boolean needSkipSegment(NDataSegment dataSegment) {

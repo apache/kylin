@@ -56,6 +56,7 @@ import org.apache.kylin.rest.service.ModelBuildService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.params.MergeSegmentParams;
 import org.apache.kylin.rest.service.params.RefreshSegmentParams;
+import org.apache.kylin.util.DataRangeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -142,7 +143,7 @@ public class SegmentControllerV2 extends BaseController {
         }
         String partitionColumnFormat = modelService.getPartitionColumnFormatByAlias(dataModelResponse.getProject(),
                 modelAlias);
-        validateDataRange(startTime, endTime, partitionColumnFormat);
+        DataRangeUtils.validateDataRange(startTime, endTime, partitionColumnFormat);
         JobInfoResponseV2 result = null;
         switch (request.getBuildType()) {
         case "BUILD":

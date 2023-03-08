@@ -19,13 +19,15 @@
 package org.apache.kylin.engine.spark.job.exec
 
 import org.apache.kylin.engine.spark.job.stage.StageExec
-
 import java.io.IOException
 import java.util
 import java.util.Locale
+
+import org.apache.spark.internal.Logging
+
 import scala.collection.JavaConverters._
 
-class BuildExec(var id: String) {
+class BuildExec(var id: String) extends Logging{
   protected var subStages = new util.ArrayList[StageExec]
 
   def getId: String = {
@@ -35,7 +37,9 @@ class BuildExec(var id: String) {
   @throws(classOf[IOException])
   def buildSegment(): Unit = {
     for (stage <- subStages.asScala) {
+      logInfo(s"Start sub stage ${stage.getStageName}")
       stage.toWork()
+      logInfo(s"End sub stage ${stage.getStageName}")
     }
   }
 

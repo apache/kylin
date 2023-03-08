@@ -23,8 +23,10 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.code.ErrorCodeSystem;
+import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.persistence.InMemResourceStore;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -111,11 +113,13 @@ public class UnitOfWork {
         try {
             T ret;
 
-            if (retry != 1) {
-                log.debug("UnitOfWork {} in project {} is retrying for {}th time", traceId, params.getUnitName(),
-                        retry);
-            } else {
-                log.debug("UnitOfWork {} started on project {}", traceId, params.getUnitName());
+            try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+                if (retry != 1) {
+                    log.debug("UnitOfWork {} in project {} is retrying for {}th time", traceId, params.getUnitName(),
+                            retry);
+                } else {
+                    log.debug("UnitOfWork {} started on project {}", traceId, params.getUnitName());
+                }
             }
 
             long startTime = System.currentTimeMillis();
@@ -124,7 +128,9 @@ public class UnitOfWork {
             long startTransactionTime = System.currentTimeMillis();
             val waitForLockTime = startTransactionTime - startTime;
             if (waitForLockTime > 3000) {
-                log.warn("UnitOfWork {} takes too long time {}ms to start", traceId, waitForLockTime);
+                try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+                    log.warn("UnitOfWork {} takes too long time {}ms to start", traceId, waitForLockTime);
+                }
             }
 
             ret = params.getProcessor().process();
@@ -137,7 +143,7 @@ public class UnitOfWork {
             handleError(throwable, params, retry, traceId);
         } finally {
             if (isAlreadyInTransaction()) {
-                try {
+                try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
                     val unitOfWork = UnitOfWork.get();
                     unitOfWork.getCurrentLock().unlock();
                     unitOfWork.cleanResource();
@@ -161,13 +167,15 @@ public class UnitOfWork {
     }
 
     private static void logIfLongTransaction(long duration, String traceId) {
-        if (duration > 3000) {
-            log.warn("UnitOfWork {} takes too long time {}ms to complete", traceId, duration);
-            if (duration > 10000) {
-                log.warn("current stack: ", new Throwable());
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+            if (duration > 3000) {
+                log.warn("UnitOfWork {} takes too long time {}ms to complete", traceId, duration);
+                if (duration > 10000) {
+                    log.warn("current stack: ", new Throwable());
+                }
+            } else {
+                log.debug("UnitOfWork {} takes {}ms to complete", traceId, duration);
             }
-        } else {
-            log.debug("UnitOfWork {} takes {}ms to complete", traceId, duration);
         }
     }
 
@@ -178,7 +186,9 @@ public class UnitOfWork {
         val lock = params.getTempLockName() == null ? TransactionLock.getLock(project, readonly)
                 : TransactionLock.getLock(params.getTempLockName(), readonly);
 
-        log.trace("get lock for project {}, lock is held by current thread: {}", project, lock.isHeldByCurrentThread());
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+            log.trace("get lock for project {}, lock is held by current thread: {}", project, lock.isHeldByCurrentThread());
+        }
         //re-entry is not encouraged (because it indicates complex handling logic, bad smell), let's abandon it first
         Preconditions.checkState(!lock.isHeldByCurrentThread());
         lock.lock();
@@ -202,7 +212,9 @@ public class UnitOfWork {
         ResourceStore.setRS(configCopy, rs);
         unitOfWork.setLocalConfig(KylinConfig.setAndUnsetThreadLocalConfig(configCopy));
 
-        log.trace("sandbox RS {} now takes place for main RS {}", rs, underlying);
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+            log.trace("sandbox RS {} now takes place for main RS {}", rs, underlying);
+        }
 
         return unitOfWork;
     }
@@ -248,14 +260,16 @@ public class UnitOfWork {
         val unitMessages = packageEvents(eventList, get().getProject(), traceId, writeInterceptor);
         long entitiesSize = unitMessages.getMessages().stream().filter(event -> event instanceof ResourceRelatedEvent)
                 .count();
-        log.debug("transaction {} updates {} metadata items", traceId, entitiesSize);
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+            log.debug("transaction {} updates {} metadata items", traceId, entitiesSize);
+        }
         checkEpoch(params);
         val unitName = params.getUnitName();
         metadataStore.batchUpdate(unitMessages, get().getParams().isSkipAuditLog(), unitName, params.getEpochId());
         if (entitiesSize != 0 && !params.isReadonly() && !params.isSkipAuditLog() && !config.isUTEnv()) {
             factory.postAsync(new AuditLogBroadcastEventNotifier());
         }
-        try {
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
             // replayInTransaction in leader before release lock
             val replayer = MessageSynchronization.getInstance(originConfig);
             replayer.replayInTransaction(unitMessages);
@@ -284,7 +298,9 @@ public class UnitOfWork {
         }
 
         if (retry == 1) {
-            log.warn("transaction failed at first time, traceId:" + traceId, throwable);
+            try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+                log.warn("transaction failed at first time, traceId:" + traceId, throwable);
+            }
         }
     }
 

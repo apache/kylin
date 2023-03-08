@@ -30,7 +30,9 @@ import java.util.function.Predicate;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.constant.LogConstant;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.persistence.AuditLog;
 import org.apache.kylin.common.persistence.UnitMessages;
 import org.apache.kylin.common.persistence.event.Event;
@@ -116,9 +118,11 @@ public abstract class AbstractAuditLogReplayWorker {
             }
         }
 
-        for (UnitMessages message : messagesMap.values()) {
-            log.debug("replay {} event for project:{}", message.getMessages().size(), message.getKey());
-            replayer.replay(message);
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+            for (UnitMessages message : messagesMap.values()) {
+                log.debug("replay {} event for project:{}", message.getMessages().size(), message.getKey());
+                replayer.replay(message);
+            }
         }
     }
 

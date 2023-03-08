@@ -19,6 +19,8 @@
 package org.apache.kylin.rest.service;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.constant.LogConstant;
+import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +33,10 @@ public class AuditLogService {
 
     public void notifyCatchUp() {
         ResourceStore store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-        logger.info("Start to catchup manually");
-        store.getAuditLogStore().catchup();
-        logger.info("End to catchup manually");
+        try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
+            logger.info("Start to catchup manually");
+            store.getAuditLogStore().catchup();
+            logger.info("End to catchup manually");
+        }
     }
 }

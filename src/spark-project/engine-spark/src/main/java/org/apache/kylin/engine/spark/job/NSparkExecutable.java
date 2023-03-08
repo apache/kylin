@@ -71,6 +71,8 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin;
+import org.apache.kylin.metadata.view.LogicalView;
+import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -468,6 +470,30 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
 
     protected Set<String> getMetadataDumpList(KylinConfig config) {
         return Collections.emptySet();
+    }
+
+    protected Set<String> getLogicalViewMetaDumpList(KylinConfig config) {
+        Set<String> dumpList = new LinkedHashSet<>();
+        if (!config.isDDLLogicalViewEnabled()) {
+            return dumpList;
+        }
+        String table = getParam(NBatchConstants.P_TABLE_NAME);
+        String dataflowId = getDataflowId();
+        LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
+        if (StringUtils.isNotBlank(dataflowId)) {
+            Set<String> viewsMeta = viewManager
+                .findLogicalViewsInModel(getProject(), getDataflowId())
+                .stream().map(LogicalView::getResourcePath)
+                .collect(Collectors.toSet());
+            dumpList.addAll(viewsMeta);
+        }
+        if (StringUtils.isNotBlank(table)) {
+            LogicalView logicalView = viewManager.findLogicalViewInProject(getProject(), table);
+            if (logicalView != null) {
+                dumpList.add(logicalView.getResourcePath());
+            }
+        }
+        return dumpList;
     }
 
     void attachMetadataAndKylinProps(KylinConfig config) throws IOException {

@@ -34,4 +34,6 @@ class PartitionRefreshColumnBytes(jobContext: SegmentJob, dataSegment: NDataSegm
     cleanup()
     logInfo(s"Finished SEGMENT $segmentId")
   }
+
+  override def getStageName: String = "PartitionRefreshColumnBytes"
 }

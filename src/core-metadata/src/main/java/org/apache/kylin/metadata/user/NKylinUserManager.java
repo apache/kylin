@@ -23,13 +23,16 @@ import static org.apache.kylin.common.persistence.ResourceStore.USER_ROOT;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -81,12 +84,15 @@ public class NKylinUserManager {
     }
 
     public ManagedUser get(String name) {
-        if (getConfig().isMetadataKeyCaseInSensitiveEnabled()) {
-            return crud.get(name);
-        } else {
-            return crud.listAll().stream().filter(managedUser -> managedUser.getUsername().equalsIgnoreCase(name))
-                    .findAny().orElse(null);
+        if (StringUtils.isEmpty(name)) {
+            return null;
         }
+        ManagedUser user = crud.get(name);
+        if (getConfig().isMetadataKeyCaseInSensitiveEnabled()) {
+            return user;
+        }
+        return Objects.nonNull(user) ? user
+                : crud.listPartial(path -> StringUtils.endsWithIgnoreCase(path, name)).stream().findAny().orElse(null);
     }
 
     public List<ManagedUser> list() {
@@ -116,7 +122,21 @@ public class NKylinUserManager {
     }
 
     public boolean exists(String username) {
-        return get(username) != null;
+        if (StringUtils.isEmpty(username)) {
+            return false;
+        }
+        ManagedUser user = crud.get(username);
+        if (getConfig().isMetadataKeyCaseInSensitiveEnabled()) {
+            return Objects.nonNull(user);
+        }
+        if (Objects.nonNull(user)) {
+            return true;
+        }
+        NavigableSet<String> users = getStore().listResources(USER_ROOT);
+        if (Objects.isNull(users)) {
+            return false;
+        }
+        return users.stream().anyMatch(path -> StringUtils.endsWithIgnoreCase(path, username));
     }
 
     public Set<String> getUserGroups(String userName) {

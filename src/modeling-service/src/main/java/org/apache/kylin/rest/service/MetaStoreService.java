@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.constant.Constants.KE_VERSION;
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CREATE_MODEL;
 import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_EXPORT_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_IMPORT_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_METADATA_FILE_ERROR;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -72,6 +74,8 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.MetadataChecker;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.helper.MetadataToolHelper;
+import org.apache.kylin.helper.RoutineToolHelper;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -94,6 +98,8 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.util.QueryHisStoreUtil;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.view.LogicalView;
+import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.request.ModelImportRequest;
@@ -106,7 +112,6 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceFactory;
-import org.apache.kylin.tool.routine.RoutineTool;
 import org.apache.kylin.tool.util.HashFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,6 +156,8 @@ public class MetaStoreService extends BasicService {
     @Setter
     @Autowired(required = false)
     private List<ModelChangeSupporter> modelChangeSupporters = Lists.newArrayList();
+
+    MetadataToolHelper metadataToolHelper = new MetadataToolHelper();
 
     public List<ModelPreviewResponse> getPreviewModels(String project, List<String> ids) {
         aclEvaluate.checkProjectWritePermission(project);
@@ -436,7 +443,7 @@ public class MetaStoreService extends BasicService {
         ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(targetProject);
         ISourceMetadataExplorer explorer = SourceFactory.getSource(projectInstance).getSourceMetadataExplorer();
-
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
         List<TableDesc> existTableSet = Lists.newArrayList();
         for (TableDesc missTableDesc : missTableList) {
             try {
@@ -449,6 +456,14 @@ public class MetaStoreService extends BasicService {
                 existTableSet.add(newTableDesc);
             } catch (Exception e) {
                 logger.warn("try load table: {} failed.", missTableDesc.getIdentity(), e);
+            }
+            if (config.isDDLLogicalViewEnabled() && missTableDesc.isLogicalView()) {
+                LogicalView logicalView = LogicalViewManager.getInstance(config).get(missTableDesc.getName());
+                if (logicalView != null && !targetProject.equalsIgnoreCase(logicalView.getCreatedProject())) {
+                    throw new KylinException(FAILED_CREATE_MODEL, String.format(Locale.ROOT,
+                        " Logical View %s can only add in project %s",
+                        missTableDesc.getName(), logicalView.getCreatedProject()));
+                }
             }
         }
         return existTableSet;
@@ -706,8 +721,7 @@ public class MetaStoreService extends BasicService {
                     updateIndexPlan(project, nDataModel, targetIndexPlan, hasModelOverrideProps);
                     addWhiteListIndex(project, modelSchemaChange, targetIndexPlan);
 
-                    importRecommendations(project, nDataModel.getUuid(), importDataModel.getUuid(),
-                            targetKylinConfig);
+                    importRecommendations(project, nDataModel.getUuid(), importDataModel.getUuid(), targetKylinConfig);
                 }
             } catch (Exception e) {
                 logger.warn("Import model {} exception", modelImport.getOriginalName(), e);
@@ -787,17 +801,14 @@ public class MetaStoreService extends BasicService {
 
     public void cleanupMeta(String project) {
         if (project.equals(UnitOfWork.GLOBAL_UNIT)) {
-            RoutineTool.cleanGlobalSourceUsage();
+            RoutineToolHelper.cleanGlobalSourceUsage();
             QueryHisStoreUtil.cleanQueryHistory();
         } else {
-            RoutineTool.cleanMetaByProject(project);
+            RoutineToolHelper.cleanMetaByProject(project);
         }
     }
 
     public void cleanupStorage(String[] projectsToClean, boolean cleanupStorage) {
-        RoutineTool routineTool = new RoutineTool();
-        routineTool.setProjects(projectsToClean);
-        routineTool.setStorageCleanup(cleanupStorage);
-        routineTool.cleanStorage();
+        metadataToolHelper.cleanStorage(cleanupStorage, Arrays.asList(projectsToClean), 0D, 0);
     }
 }

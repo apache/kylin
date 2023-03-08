@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.cube.storage;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +30,8 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
@@ -68,19 +69,12 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
     private static final String GC_MODEL_ID = "e0e90065-e7c3-49a0-a801-20465ca64799";
     private static final String DEFAULT_PROJECT = "default";
     private static final String DEFAULT_MODEL_BASIC_ID = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
-    private JdbcRawRecStore jdbcRawRecStore;
-
     private static final long DAY_IN_MILLIS = 24 * 60 * 60 * 1000L;
 
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
         overwriteSystemProp("kylin.cube.low-frequency-threshold", "5");
-        try {
-            jdbcRawRecStore = new JdbcRawRecStore(getTestConfig());
-        } catch (Exception e) {
-            log.error("initialize rec store failed.");
-        }
     }
 
     @After
@@ -94,9 +88,8 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
         getTestConfig().setProperty("kylin.metadata.semi-automatic-mode", "true");
         initTestData();
 
-        val storageInfoEnumList = Lists.newArrayList(StorageInfoEnum.GARBAGE_STORAGE, StorageInfoEnum.STORAGE_QUOTA,
-                StorageInfoEnum.TOTAL_STORAGE);
-        val collector = new ProjectStorageInfoCollector(storageInfoEnumList);
+        val collector = new ProjectStorageInfoCollector(Lists.newArrayList(StorageInfoEnum.GARBAGE_STORAGE, StorageInfoEnum.STORAGE_QUOTA,
+                StorageInfoEnum.TOTAL_STORAGE));
         val volumeInfo = collector.getStorageVolumeInfo(getTestConfig(), DEFAULT_PROJECT);
 
         Assert.assertEquals(10240L * 1024 * 1024 * 1024, volumeInfo.getStorageQuotaSize());
@@ -428,8 +421,7 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
 
     @Test
     public void testGetStorageVolumeInfoEmpty() {
-        List<StorageInfoEnum> storageInfoEnumList = Lists.newArrayList();
-        val collector = new ProjectStorageInfoCollector(storageInfoEnumList);
+        val collector = new ProjectStorageInfoCollector(Collections.emptyList());
         val storageVolumeInfo = collector.getStorageVolumeInfo(getTestConfig(), DEFAULT_PROJECT);
 
         Assert.assertEquals(-1L, storageVolumeInfo.getStorageQuotaSize());
@@ -440,9 +432,8 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
 
     @Test
     public void testGetStorageVolumeException() throws NoSuchFieldException, IllegalAccessException, IOException {
-        List<StorageInfoEnum> storageInfoEnumList = Lists.newArrayList();
         TotalStorageCollector totalStorageCollector = Mockito.spy(TotalStorageCollector.class);
-        ProjectStorageInfoCollector collector = new ProjectStorageInfoCollector(storageInfoEnumList);
+        ProjectStorageInfoCollector collector = new ProjectStorageInfoCollector(Collections.emptyList());
         Field field = collector.getClass().getDeclaredField("collectors");
         Unsafe.changeAccessibleObject(field, true);
         List<StorageInfoCollector> collectors = (List<StorageInfoCollector>) field.get(collector);
@@ -476,7 +467,6 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
         overwriteSystemProp("kylin.storage.check-quota-enabled", "true");
         KylinConfig testConfig = getTestConfig();
         overwriteSystemProp("kylin.metrics.hdfs-periodic-calculation-enabled", "true");
-        HdfsCapacityMetrics.registerHdfsMetrics();
         StorageVolumeInfo storageVolumeInfo = Mockito.spy(StorageVolumeInfo.class);
         TotalStorageCollector totalStorageCollector = new TotalStorageCollector();
         totalStorageCollector.collect(testConfig, DEFAULT_PROJECT, storageVolumeInfo);
@@ -487,7 +477,6 @@ public class ProjectStorageInfoCollectorTest extends NLocalFileMetadataTestCase 
     public void testGetStorageVolumeQuotaStorageEnabledFalse() throws IOException {
         overwriteSystemProp("kylin.storage.check-quota-enabled", "false");
         KylinConfig testConfig = getTestConfig();
-        HdfsCapacityMetrics.registerHdfsMetrics();
         StorageVolumeInfo storageVolumeInfo = Mockito.spy(StorageVolumeInfo.class);
         TotalStorageCollector totalStorageCollector = new TotalStorageCollector();
         totalStorageCollector.collect(testConfig, DEFAULT_PROJECT, storageVolumeInfo);

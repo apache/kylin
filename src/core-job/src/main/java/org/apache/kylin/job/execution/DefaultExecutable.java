@@ -71,10 +71,12 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         List<Executable> executables = getTasks().stream().map(Executable.class::cast).collect(Collectors.toList());
         switch (getJobSchedulerMode()) {
         case DAG:
+            logger.info("Execute in DAG mode.");
             dagSchedule(executables, context);
             break;
         case CHAIN:
         default:
+            logger.info("Execute in CHAIN mode.");
             chainedSchedule(executables, context);
             break;
         }

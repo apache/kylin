@@ -21,6 +21,7 @@ import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIE
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.INDEX_DUPLICATE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_LIST_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_NOT_EXISTS;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SHARD_BY_COLUMN_NOT_IN_INDEX;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -235,6 +236,9 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
         newLayout.setOwner(BasicService.getUsername());
         newLayout.setManual(true);
         newLayout.setIndexRange(request.getIndexRange());
+        if (!newLayout.getColOrder().containsAll(newLayout.getShardByColumns())) {
+            throw new KylinException(SHARD_BY_COLUMN_NOT_IN_INDEX);
+        }
 
         Map<Integer, String> layoutOverride = Maps.newHashMap();
         if (request.getLayoutOverrideIndexes() != null) {

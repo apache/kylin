@@ -53,6 +53,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import lombok.SneakyThrows;
+
 public class UserAclServiceTest extends ServiceTestBase {
 
     @Mock
@@ -121,8 +123,9 @@ public class UserAclServiceTest extends ServiceTestBase {
     @Test
     public void testGetAllUsersHasGlobalPermission() {
         KylinUserService kylinUserService = new KylinUserService() {
+            @SneakyThrows
             @Override
-            public List<String> listAdminUsers() throws IOException {
+            public List<String> listAdminUsers() {
                 throw new IOException("test");
             }
         };

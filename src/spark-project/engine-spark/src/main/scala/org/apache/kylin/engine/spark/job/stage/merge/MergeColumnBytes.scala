@@ -29,4 +29,6 @@ class MergeColumnBytes(jobContext: SegmentJob, dataSegment: NDataSegment)
 
     cleanup()
   }
+
+  override def getStageName: String = "MergeColumnBytes"
 }

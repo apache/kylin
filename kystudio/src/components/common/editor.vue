@@ -26,7 +26,6 @@
   </div>
 </template>
 <script>
-import $ from 'jquery'
 import sqlFormatter from 'sql-formatter'
 import { sqlRowsLimit, sqlStrLenLimit } from '../../config/index'
 import { mapState } from 'vuex'
@@ -267,36 +266,6 @@ export default class KapEditor extends Vue {
       })
     })
     this.getAbridgeType()
-
-    // this.$el.querySelector('.smyles_dragbar').onmousedown = (e) => {
-    //   e.preventDefault()
-    //   this.dragging = true
-    //   var oldTop = 0
-    //   var topOffset = $(smylesEditor).offset().top
-    //   // handle mouse movement
-    //   $(document).mousemove((e) => {
-    //     if (e.pageY - oldTop > 4 || oldTop - e.pageY > 4) {
-    //       oldTop = e.pageY
-    //       var eheight = e.pageY - topOffset
-    //       // Set wrapper height
-    //       editorWrap.style.height = eheight + 'px'
-    //       smylesEditor.style.height = eheight + 'px'
-    //       editor.resize()
-    //     }
-    //   })
-    // }
-    // $(document).mouseup((e) => {
-    //   if (this.dragging) {
-    //     $(document).unbind('mousemove')
-    //     // Trigger ace editor resize()
-    //     editor.resize()
-    //     this.dragging = false
-    //   }
-    // })
-  }
-  destroyed () {
-    $(document).unbind('mouseup')
-    $(document).unbind('mousemove')
   }
 }
 </script>

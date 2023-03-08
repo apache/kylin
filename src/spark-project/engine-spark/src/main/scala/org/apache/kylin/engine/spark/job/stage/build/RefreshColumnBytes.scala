@@ -35,4 +35,6 @@ class RefreshColumnBytes(jobContext: SegmentJob, dataSegment: NDataSegment, buil
     cleanup()
     logInfo(s"Finished SEGMENT $segmentId")
   }
+
+  override def getStageName: String = "RefreshColumnBytes"
 }

@@ -25,8 +25,8 @@ import static org.springframework.security.test.web.servlet.response.SecurityMoc
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,6 +40,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.helper.UpdateUserAclToolHelper;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.response.UserGroupResponseKI;
 import org.apache.kylin.rest.security.AclPermission;
@@ -47,15 +48,12 @@ import org.apache.kylin.rest.security.UserAclManager;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.rest.util.SpringContext;
-import org.apache.kylin.tool.upgrade.UpdateUserAclTool;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -79,7 +77,6 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.google.common.cache.Cache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.unboundid.ldap.listener.InMemoryDirectoryServer;
 import com.unboundid.ldap.listener.InMemoryDirectoryServerConfig;
 import com.unboundid.ldap.listener.InMemoryListenerConfig;
@@ -119,14 +116,11 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     @Qualifier("userGroupService")
     LdapUserGroupService userGroupService;
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @BeforeClass
     public static void setupResource() throws Exception {
         staticCreateTestMetadata();
         Properties ldapConfig = new Properties();
-        ldapConfig.load(new FileInputStream(new ClassPathResource(LDAP_CONFIG).getFile()));
+        ldapConfig.load(Files.newInputStream(new ClassPathResource(LDAP_CONFIG).getFile().toPath()));
         final KylinConfig kylinConfig = getTestConfig();
         overwriteSystemPropBeforeClass("kylin.security.ldap.max-page-size", "1");
         ldapConfig.forEach((k, v) -> kylinConfig.setProperty(k.toString(), v.toString()));
@@ -146,7 +140,7 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @AfterClass
-    public static void cleanupResource() throws Exception {
+    public static void cleanupResource() {
         directoryServer.shutDown(true);
         staticCleanupTestMetadata();
     }
@@ -181,26 +175,22 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testCreateUser() {
-        thrown.expect(UnsupportedOperationException.class);
-        ldapUserService.createUser(null);
+        Assert.assertThrows(UnsupportedOperationException.class, () -> ldapUserService.createUser(null));
     }
 
     @Test
     public void testUpdateUser() {
-        thrown.expect(UnsupportedOperationException.class);
-        ldapUserService.updateUser(null);
+        Assert.assertThrows(UnsupportedOperationException.class, () -> ldapUserService.updateUser(null));
     }
 
     @Test
     public void testDeleteUser() {
-        thrown.expect(UnsupportedOperationException.class);
-        ldapUserService.deleteUser("ben");
+        Assert.assertThrows(UnsupportedOperationException.class, () -> ldapUserService.deleteUser("ben"));
     }
 
     @Test
     public void testChangePassword() {
-        thrown.expect(UnsupportedOperationException.class);
-        ldapUserService.changePassword("old", "new");
+        Assert.assertThrows(UnsupportedOperationException.class, () -> ldapUserService.changePassword("old", "new"));
     }
 
     @Test
@@ -216,8 +206,8 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testListUsers() throws Exception {
-        Set<String> users = ldapUserService.listUsers().stream().map(x -> x.getUsername()).collect(toSet());
+    public void testListUsers() {
+        Set<String> users = ldapUserService.listUsers().stream().map(ManagedUser::getUsername).collect(toSet());
         Assert.assertEquals(6, users.size());
         List<ManagedUser> managedUserList = ldapUserService.listUsers();
         for (val user : managedUserList) {
@@ -231,7 +221,7 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testListSuperAdminUsers() throws Exception {
+    public void testListSuperAdminUsers() {
         getTestConfig().setProperty("kylin.security.acl.super-admin-username", "jenny");
         Assert.assertEquals("jenny", ldapUserService.listSuperAdminUsers().get(0));
     }
@@ -239,14 +229,15 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testLoadUserByUsername() {
         Assert.assertTrue(ldapUserService.loadUserByUsername("jenny").getAuthorities().stream()
-                .map(x -> x.getAuthority()).collect(toSet()).contains("ROLE_ADMIN"));
+                .map(GrantedAuthority::getAuthority).collect(toSet()).contains("ROLE_ADMIN"));
     }
 
     @Test
     public void testCompleteUserInfoInternal() {
         ManagedUser user = new ManagedUser("oliver", "", false);
         ldapUserService.completeUserInfoInternal(user);
-        Set<String> authorities = user.getAuthorities().stream().map(x -> x.getAuthority()).collect(toSet());
+        Set<String> authorities = user.getAuthorities().stream().map(SimpleGrantedAuthority::getAuthority)
+                .collect(toSet());
         Assert.assertFalse(authorities.contains("ROLE_ADMIN"));
         Assert.assertTrue(authorities.contains("itpeople"));
     }
@@ -255,37 +246,39 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     public void testCompleteUserInfoWithNotExistUser() {
         ManagedUser user = new ManagedUser("NotExist", "", false);
         ldapUserService.completeUserInfo(user);
+        Assert.assertEquals("NotExist", user.getUsername());
+        Assert.assertEquals("", user.getPassword());
+        Assert.assertFalse(user.isDefaultPassword());
     }
 
     @Test
-    public void testOnNewUserAdded() throws Exception {
+    public void testOnNewUserAdded() {
         Assert.assertTrue(ldapUserService.userExists("rick"));
         ldapUserService.onUserAuthenticated("rick");
         Assert.assertTrue(ldapUserService.userExists("rick"));
     }
 
     @Test
-    public void testOnUserWithoutPassword() throws Exception {
+    public void testOnUserWithoutPassword() {
         ldapUserService.onUserAuthenticated("ricky");
         Assert.assertTrue(ldapUserService.userExists("ricky"));
     }
 
     @Test
     public void testAddGroup() {
-        thrown.expect(UnsupportedOperationException.class);
-        userGroupService.addGroup("gg");
+        Assert.assertThrows(UnsupportedOperationException.class, () -> userGroupService.addGroup("gg"));
     }
 
     @Test
     public void testUpdateUserGroup() {
-        thrown.expect(UnsupportedOperationException.class);
-        userGroupService.modifyGroupUsers("gg", Lists.newArrayList());
+        List<String> emptyUserGroup = Collections.emptyList();
+        Assert.assertThrows(UnsupportedOperationException.class,
+                () -> userGroupService.modifyGroupUsers("gg", emptyUserGroup));
     }
 
     @Test
     public void testDeleteUserGroup() {
-        thrown.expect(UnsupportedOperationException.class);
-        userGroupService.deleteGroup("gg");
+        Assert.assertThrows(UnsupportedOperationException.class, () -> userGroupService.deleteGroup("gg"));
     }
 
     @Test
@@ -357,7 +350,7 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     public void testGroupNameByUuidAndUuidByGroupName() throws IOException {
         List<UserGroupResponseKI> userGroupResponse = userGroupService.getUserGroupResponse(
                 userGroupService.getAllUserGroups().stream().map(UserGroup::new).collect(Collectors.toList()));
-        userGroupResponse.stream().forEach(response -> {
+        userGroupResponse.forEach(response -> {
             String groupName = response.getGroupName();
             String uuidByGroupName = userGroupService.getUuidByGroupName(response.getGroupName());
             Assert.assertEquals(groupName, uuidByGroupName);
@@ -369,7 +362,7 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetDnMapperMap() throws Exception {
+    public void testGetDnMapperMap() {
         String cacheKey = ReflectionTestUtils.getField(LdapUserService.class, "LDAP_VALID_DN_MAP_KEY").toString();
         Cache cache = (Cache) ReflectionTestUtils.getField(LdapUserService.class, "LDAP_VALID_DN_MAP_CACHE");
         cache.invalidate(cacheKey);
@@ -381,8 +374,8 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
     public void testSameNameUserInvalidation() {
         Assert.assertFalse(
                 ldapUserService.listUsers().stream().map(ManagedUser::getUsername).collect(toSet()).contains("user"));
-        Assert.assertFalse(userGroupService.getUserAndUserGroup().entrySet().stream().map(Map.Entry::getValue)
-                .map(HashSet::new).map(set -> set.contains("user")).reduce(Boolean::logicalOr).get().booleanValue());
+        Assert.assertFalse(userGroupService.getUserAndUserGroup().values().stream().map(HashSet::new)
+                .map(set -> set.contains("user")).reduce(Boolean::logicalOr).get());
     }
 
     @Test
@@ -395,11 +388,11 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testGetLdapAdminUsers() {
-        UpdateUserAclTool tool = Mockito.spy(new UpdateUserAclTool());
         val properties = getTestConfig().exportToProperties();
         val password = properties.getProperty("kylin.security.ldap.connection-password");
-        Mockito.when(tool.getPassword(properties)).thenReturn(EncryptUtil.decrypt(password));
-        Assert.assertNotNull(tool.getLdapAdminUsers());
+        UpdateUserAclToolHelper helper = Mockito.spy(UpdateUserAclToolHelper.getInstance());
+        Mockito.when(helper.getPassword(properties)).thenReturn(EncryptUtil.decrypt(password));
+        Assert.assertNotNull(helper.getLdapAdminUsers());
     }
 
     @Test
@@ -426,12 +419,29 @@ public class LdapUserServiceTest extends NLocalFileMetadataTestCase {
         getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "false");
         userAclService.syncAdminUserAcl(Collections.emptyList(), false);
         Assert.assertNull(userAclManager.get("jenny"));
-        userAclService.syncAdminUserAcl(Arrays.asList("jenny"), true);
+        userAclService.syncAdminUserAcl(Collections.singletonList("jenny"), true);
         Assert.assertTrue(userAclManager.get("jenny").hasPermission(AclPermission.DATA_QUERY));
 
         getTestConfig().setProperty("kylin.security.acl.super-admin-username", "");
         userAclManager.delete("jenny");
-        userAclService.syncAdminUserAcl(Arrays.asList("jenny"), true);
+        userAclService.syncAdminUserAcl(Collections.singletonList("jenny"), true);
         Assert.assertFalse(userAclManager.get("jenny").hasPermission(AclPermission.DATA_QUERY));
+    }
+
+    @Test
+    public void testUserGroupExists() {
+        Assert.assertTrue(userGroupService.exists("admin"));
+        Assert.assertFalse(userGroupService.exists("not_exist_group"));
+    }
+
+    @Test
+    public void testListUserGroupsByUsername() {
+        Assert.assertTrue(ldapUserService.userExists("johnny"));
+        Set<String> johnnyGroups = userGroupService.listUserGroups("johnny");
+        Assert.assertFalse(johnnyGroups.isEmpty());
+
+        Assert.assertFalse(ldapUserService.userExists("not_exist_user"));
+        Set<String> notExistUser = userGroupService.listUserGroups("not_exist_user");
+        Assert.assertTrue(notExistUser.isEmpty());
     }
 }

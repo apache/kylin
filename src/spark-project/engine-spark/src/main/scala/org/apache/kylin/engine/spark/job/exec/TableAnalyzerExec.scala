@@ -27,7 +27,9 @@ class TableAnalyzerExec(id: String) extends BuildExec(id) {
 
   def analyzerTable(): Unit = {
     for (stage <- subStages.asScala) {
+      logInfo(s"Start sub stage ${stage.getStageName}")
       stage.toWorkWithoutFinally()
+      logInfo(s"End sub stage ${stage.getStageName}")
     }
   }
 

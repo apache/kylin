@@ -4550,7 +4550,7 @@ public class ModelServiceTest extends SourceTestCase {
         Assert.assertEquals(3, model.getMultiPartitionDesc().getPartitions().size());
 
         // PartitionDesc change
-        modelService.updatePartitionColumn(getProject(), modelId, null, model.getMultiPartitionDesc());
+        modelService.updatePartitionColumn(getProject(), modelId, new PartitionDesc(), model.getMultiPartitionDesc());
         val df1 = dfm.getDataflow(modelId);
         val model1 = modelManager.getDataModelDesc(modelId);
         Assert.assertEquals(0, df1.getSegments().getSegments().size());

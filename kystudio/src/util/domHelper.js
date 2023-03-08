@@ -1,3 +1,6 @@
+import Vue from 'vue'
+import ElementUI from 'kyligence-kylin-ui'
+
 export const download = {
   post (url, data) {
     const $form = document.createElement('form')
@@ -35,4 +38,35 @@ export const download = {
       document.body.removeChild($form)
     })
   }
+}
+
+export function createToolTipDom (el, options = {}) {
+  const customLayout = document.createElement('span')
+  const renderer = Vue.compile(el)
+  let createCommonTip = (propsData) => {
+    let Dom = Vue.extend(ElementUI.Tooltip)
+    // let Dom = Vue.extend(commonTip)
+    return new Dom({
+      propsData
+    })
+  }
+  let t = createCommonTip({
+    placement: options.position ?? 'top',
+    effect: 'dark',
+    visibleArrow: options['visible-arrow'] ?? true,
+    content: options.text,
+    popperClass: options['popper-class'] ?? ''
+  })
+  t.$slots.default = [t.$createElement(renderer)]
+  t.$mount()
+  customLayout.appendChild(t.$el)
+  if (Array.isArray(options.children)) {
+    options.children.forEach(item => {
+      customLayout.appendChild(item)
+    })
+  } else {
+    options.children && customLayout.appendChild(options.children)
+  }
+  customLayout.className = `${customLayout.className} ${options.className || ''}`
+  return customLayout
 }

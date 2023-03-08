@@ -39,6 +39,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.CaseInsensitiveStringSet;
+import org.apache.kylin.constants.AclConstants;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.Constant;
@@ -51,7 +52,6 @@ import org.apache.kylin.rest.security.AdminUserSyncEventNotifier;
 import org.apache.kylin.rest.security.ExternalAclProvider;
 import org.apache.kylin.rest.security.UserAcl;
 import org.apache.kylin.rest.security.UserAclManager;
-import org.apache.kylin.tool.upgrade.UpdateUserAclTool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
@@ -97,7 +97,7 @@ public class UserAclService extends BasicService implements UserAclServiceSuppor
     }
 
     private void checkAclPermission(String sid, String permissionType) {
-        Preconditions.checkArgument(ExternalAclProvider.DATA_QUERY.equalsIgnoreCase(permissionType),
+        Preconditions.checkArgument(AclConstants.DATA_QUERY.equalsIgnoreCase(permissionType),
                 "unknown PermissionType " + permissionType);
         if (isSuperAdmin(sid)) {
             throw new KylinException(PERMISSION_DENIED, MsgPicker.getMsg().getModifyPermissionOfSuperAdminFailed());
@@ -290,10 +290,15 @@ public class UserAclService extends BasicService implements UserAclServiceSuppor
         remoteRequest(eventNotifier, StringUtils.EMPTY);
     }
 
+    private static boolean isCustomProfile() {
+        val kylinConfig = KylinConfig.getInstanceFromEnv();
+        return "custom".equals(kylinConfig.getSecurityProfile());
+    }
+
     @SneakyThrows(IOException.class)
     public void syncAdminUserAcl() {
         val config = KylinConfig.getInstanceFromEnv();
-        if (UpdateUserAclTool.isCustomProfile()) {
+        if (isCustomProfile()) {
             // invoke the AdminUserAspect
             userService.listAdminUsers();
         } else if ("ldap".equals(config.getSecurityProfile())) {

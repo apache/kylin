@@ -17,19 +17,34 @@
  */
 package org.apache.kylin.rest.service;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import lombok.var;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.INDEX_DUPLICATE;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_NOT_EXISTS;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SHARD_BY_COLUMN_NOT_IN_INDEX;
+import static org.apache.kylin.metadata.cube.model.IndexEntity.Source.CUSTOM_TABLE_INDEX;
+import static org.apache.kylin.metadata.cube.model.IndexEntity.Source.RECOMMENDED_TABLE_INDEX;
+import static org.apache.kylin.metadata.model.SegmentStatusEnum.READY;
+import static org.apache.kylin.metadata.model.SegmentStatusEnum.WARNING;
+import static org.hamcrest.Matchers.is;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections.ListUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
@@ -69,24 +84,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.INDEX_DUPLICATE;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_NOT_EXISTS;
-import static org.apache.kylin.metadata.cube.model.IndexEntity.Source.CUSTOM_TABLE_INDEX;
-import static org.apache.kylin.metadata.cube.model.IndexEntity.Source.RECOMMENDED_TABLE_INDEX;
-import static org.apache.kylin.metadata.model.SegmentStatusEnum.READY;
-import static org.apache.kylin.metadata.model.SegmentStatusEnum.WARNING;
-import static org.hamcrest.Matchers.is;
+import lombok.val;
+import lombok.var;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class IndexPlanServiceTest extends SourceTestCase {
@@ -1258,8 +1261,8 @@ public class IndexPlanServiceTest extends SourceTestCase {
                 indexPlanService.getIndexGraph(getProject(), modelId, 100).getSegmentToComplementCount());
 
         // mark a layout tobedelete
-        indexManager.updateIndexPlan(modelId,
-                copyForWrite -> copyForWrite.markWhiteIndexToBeDelete(modelId, Sets.newHashSet(tobeDeleteLayoutId), Collections.emptyMap()));
+        indexManager.updateIndexPlan(modelId, copyForWrite -> copyForWrite.markWhiteIndexToBeDelete(modelId,
+                Sets.newHashSet(tobeDeleteLayoutId), Collections.emptyMap()));
 
         //remove tobedelete layout from seg1
         val newDf = dfManager.getDataflow(modelId);
@@ -1323,12 +1326,12 @@ public class IndexPlanServiceTest extends SourceTestCase {
     }
 
     @Test
-    public void testCalculateAggIndexCountWhenTotalCuboidsOutOfMaxComb() throws Exception {
+    public void testCalculateAggIndexCountWhenTotalCuboidsOutOfMaxComb() {
         testOutOfCombination(1);
     }
 
     @Test
-    public void testCalculateAggIndexCountWhenTotalCuboidsOutOfMaxComb_WithSchedulerV2() throws Exception {
+    public void testCalculateAggIndexCountWhenTotalCuboidsOutOfMaxComb_WithSchedulerV2() {
         testOutOfCombination(2);
     }
 
@@ -1444,5 +1447,94 @@ public class IndexPlanServiceTest extends SourceTestCase {
 
         val response2 = indexPlanService.getShardByColumns("default", modelId);
         Assert.assertFalse(response2.isShowLoadData());
+    }
+
+    @Test
+    public void testCheckShardByColumns() {
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project("default")
+                .modelId("89af4ee2-2cdb-4b07-b39e-4c29856309aa").id(20000010000L)
+                .colOrder(Lists.newArrayList("TEST_KYLIN_FACT.TRANS_ID", "TEST_SITES.SITE_NAME",
+                        "TEST_KYLIN_FACT.CAL_DT"))
+                .shardByColumns(Lists.newArrayList("TEST_KYLIN_FACT.LSTG_SITE_ID")).sortByColumns(Lists.newArrayList())
+                .build();
+
+        Assert.assertThrows(SHARD_BY_COLUMN_NOT_IN_INDEX.getMsg(), KylinException.class, () -> {
+            indexPlanService.updateTableIndex("default", tableIndexRequest);
+        });
+    }
+
+    @Test
+    public void testUpdateTableIndexWithNullColOrder() {
+        String project = "default";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        long layoutId = 20000010001L;
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project(project).modelId(modelId)
+                .id(layoutId).shardByColumns(Lists.newArrayList()).sortByColumns(Lists.newArrayList()).build();
+        BuildIndexResponse response = indexPlanService.updateTableIndex(project, tableIndexRequest);
+        Assert.assertEquals(BuildIndexResponse.BuildIndexType.NORM_BUILD, response.getType());
+        LayoutEntity layoutEntity = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getIndexPlan(modelId).getLayoutEntity(layoutId);
+        Assert.assertEquals(Lists.newArrayList(1, 0, 2), layoutEntity.getColOrder());
+    }
+
+    @Test
+    public void testUpdateTableIndexWithNullColOrderThrowsException() {
+        String project = "default";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        long layoutId = 20000010001L;
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project(project).modelId(modelId)
+                .id(layoutId).shardByColumns(Lists.newArrayList("TEST_KYLIN_FACT.TRANS_ID"))
+                .sortByColumns(Lists.newArrayList()).build();
+        Assert.assertThrows(SHARD_BY_COLUMN_NOT_IN_INDEX.getMsg(), KylinException.class, () -> {
+            indexPlanService.updateTableIndex("default", tableIndexRequest);
+        });
+    }
+
+    @Test
+    public void testUpdateTableIndexWithNullShardByCols() {
+        String project = "default";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        long layoutId = 20000010001L;
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest
+                .builder().project(project).modelId(modelId).id(layoutId).colOrder(Lists
+                        .newArrayList("TEST_KYLIN_FACT.TRANS_ID", "TEST_SITES.SITE_NAME", "TEST_KYLIN_FACT.CAL_DT"))
+                .sortByColumns(Lists.newArrayList()).build();
+        BuildIndexResponse response = indexPlanService.updateTableIndex(project, tableIndexRequest);
+        Assert.assertEquals(BuildIndexResponse.BuildIndexType.NORM_BUILD, response.getType());
+        LayoutEntity layoutEntity = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getIndexPlan(modelId).getLayoutEntity(layoutId);
+        Assert.assertEquals(Lists.newArrayList(1, 0, 2), layoutEntity.getColOrder());
+    }
+
+    @Test
+    public void testUpdateTableIndexWithCreateEmptyIndex() {
+        String project = "default";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        long layoutId = 20000180001L;
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project(project).modelId(modelId)
+                .id(layoutId).colOrder(Lists.newArrayList()).sortByColumns(Lists.newArrayList()).build();
+        BuildIndexResponse response = indexPlanService.updateTableIndex(project, tableIndexRequest);
+        Assert.assertEquals(BuildIndexResponse.BuildIndexType.NORM_BUILD, response.getType());
+        IndexPlan indexPlan = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getIndexPlan(modelId);
+        Assert.assertTrue(
+                indexPlan.getAllLayouts().stream().anyMatch(layoutEntity -> layoutEntity.getColOrder().size() == 0));
+    }
+
+    @Test
+    public void testUpdateTableIndexWithUpdateEmptyIndex() {
+        String project = "default";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        long layoutId = 20000010001L;
+        CreateTableIndexRequest tableIndexRequest = CreateTableIndexRequest.builder().project("default")
+                .modelId(modelId).id(layoutId).colOrder(Lists.newArrayList()).sortByColumns(Lists.newArrayList())
+                .build();
+        BuildIndexResponse response = indexPlanService.updateTableIndex("default", tableIndexRequest);
+        Assert.assertEquals(BuildIndexResponse.BuildIndexType.NORM_BUILD, response.getType());
+        IndexPlan indexPlan = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getIndexPlan(modelId);
+        Assert.assertTrue(indexPlan.getLayoutEntity(layoutId).isToBeDeleted());
+        Assert.assertTrue(
+                indexPlan.getAllLayouts().stream().anyMatch(layoutEntity -> layoutEntity.getColOrder().size() == 0));
     }
 }

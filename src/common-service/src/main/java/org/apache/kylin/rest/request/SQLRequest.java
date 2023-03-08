@@ -69,6 +69,8 @@ public class SQLRequest implements Serializable, ProjectInsensitiveRequest, Vali
     @JsonProperty("file_name")
     private String fileName = "result";
     private Integer forcedToTieredStorage;  //0:CH->DFS; 1:CH->pushDown; 2:CH->return error
+    @JsonProperty("include_header")
+    private boolean includeHeader;
 
     private Map<String, String> backdoorToggles;
 

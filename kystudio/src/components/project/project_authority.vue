@@ -223,13 +223,6 @@ export default class ProjectAuthority extends Vue {
   authorizationVisible = false
   authorForm = {name: [], editName: '', role: 'Admin'}
   isEditAuthor = false
-  authorOptions = [{
-    label: this.$t('userGroups'),
-    options: []
-  }, {
-    label: this.$t('users'),
-    options: []
-  }]
   showMask = {
     1: 'Query',
     16: 'Admin',
@@ -489,7 +482,10 @@ export default class ProjectAuthority extends Vue {
   }
   loadAccess () {
     const para = {
-      data: this.pagination,
+      data: {
+        ...this.pagination,
+        name: ''
+      },
       project_id: this.currentProjectId
     }
     para.data.name = this.serarchChar

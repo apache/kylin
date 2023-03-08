@@ -424,16 +424,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getAsyncQueryTimeFormatError() {
-        return "无效的时间格式。请按 “yyyy-MM-dd HH:mm:ss” 格式填写。";
-    }
-
-    @Override
-    public String getAsyncQueryProjectNameEmpty() {
-        return "项目名称不能为空。请检查后重试。";
-    }
-
-    @Override
     public String getUserNotFound() {
         return "找不到用户 '%s'";
     }
@@ -1766,6 +1756,11 @@ public class CnMessage extends Message {
     }
 
     @Override
+    public String getDDLViewNameDuplicateError() {
+        return "逻辑视图名称和已有视图重复";
+    }
+
+    @Override
     public String getDDLDropError() {
         return "仅支持删除 view 类型表且 view 名称需要以 KE_ 开头";
     }
@@ -1781,12 +1776,28 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getDDLPermissionDenied() {
-        return "只有系统或者项目管理员可以进行 DDL 操作";
+    public String getDDLDatabaseAccessnDenied() {
+        return "用户没有视图所在数据库的权限";
     }
 
     @Override
-    public String getDDLDatabaseAccessnDenied() {
-        return "用户没有视图所在数据库的权限";
+    public String getDDLLogicalViewHasUsed(String table, String project) {
+        return String.format(Locale.ROOT, "表 %s 已经在项目 %s 中加载过，请先卸载后再删除该表.", table, project);
+    }
+
+    @Override
+    public String getDDLLogicalViewSourceTableError(String table) {
+        return String.format(Locale.ROOT, "来源表 %s 是 Logical View，不能在 SQL 中使用", table);
+    }
+
+    @Override
+    public String getDDLRestrictError(String syntax) {
+        return String.format(Locale.ROOT, "仅支持 %s 语法", syntax);
+    }
+
+    @Override
+    public String getLoadLogicalViewError(String tableName, String project) {
+        return String.format(Locale.ROOT,
+            "无法加载表: %s , 仅支持在项目 %s 中加载此表", tableName, project);
     }
 }

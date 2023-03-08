@@ -1,6 +1,7 @@
 import Schama from './schama'
 import NTable from './table.js'
-import { parsePath, sampleGuid, indexOfObjWithSomeKey, indexOfObjWithSomeKeys, objectClone } from '../../../../util'
+import { parsePath, sampleGuid, indexOfObjWithSomeKey, indexOfObjWithSomeKeys, objectClone } from 'util'
+import { createToolTipDom } from 'util/domHelper'
 import { modelRenderConfig } from './config'
 import { kylinConfirm } from 'util/business'
 import ModelTree from './layout'
@@ -13,6 +14,7 @@ class NModel extends Schama {
       return null
     }
     super(options, _mount, _)
+    this.plumbTool && this.plumbTool.bindConnectionEvent(this.handleEvents.bind(this))
     this.getSysInfo()
     this.render()
     this.getZoomSpace()
@@ -85,7 +87,7 @@ class NModel extends Schama {
         currentTable.drawSize.top = baseT + layers[k].Y
         currentTable.drawSize.width = modelRenderConfig.tableBoxWidth
         currentTable.drawSize.height = modelRenderConfig.tableBoxHeight
-        currentTable.checkIsOutOfView(this._mount, currentTable.drawSize, this._mount.windowWidth, this._mount.windowHeight)
+        currentTable.checkIsOutOfView(this._mount, currentTable.drawSize, this._mount.windowWidth, this._mount.windowHeight, layers[k].guid)
       }
       this.vm.$nextTick(() => {
         this.plumbTool.refreshPlumbInstance()
@@ -97,6 +99,42 @@ class NModel extends Schama {
       let boxDom = $(this.renderDom).parents(modelRenderConfig.rootBox).eq(0)
       this._mount.windowWidth = boxDom.width()
       this._mount.windowHeight = boxDom.height()
+    }
+  }
+  handleEvents (info, event, type) {
+    if (type === 'dragPoint') {
+      this._mount.endPointDragging = true
+      // _.currentDragColumnData = {
+      //   guid: table.guid,
+      //   columnName: col.name,
+      //   btype: col.btype
+      // }
+    } else if (type === 'lineClick') {
+      const { source, target, sourceId, targetId } = info
+      const joinInfo = this.tables[targetId].getJoinInfoByFGuid(sourceId)
+      const primaryKeys = joinInfo && joinInfo.join.primary_key
+      const foreignKeys = joinInfo && joinInfo.join.foreign_key
+      const isBrokenLine = this.checkIsBrokenModelLink(targetId, sourceId, primaryKeys, foreignKeys)
+
+      this.vm.listenTableLink(info)
+
+      setTimeout(() => {
+        source && (source.className += isBrokenLine ? ' is-broken is-focus' : ' is-focus')
+        target && (target.className += isBrokenLine ? ' is-broken is-focus' : ' is-focus')
+        const canvas = info.canvas
+        if (canvas) {
+          canvas.setAttribute('class', isBrokenLine ? `${canvas.className.baseVal} is-broken is-focus` : `${canvas.className.baseVal} is-focus`)
+          canvas.nextElementSibling.className += isBrokenLine ? ' is-broken is-focus' : ' is-focus'
+        }
+      }, 500)
+    } else if (type === 'connectionAborted') {
+      this._mount.endPointDragging = false
+      const columnListDoms = document.querySelectorAll('.column-li')
+      if (columnListDoms.length > 0) {
+        columnListDoms.forEach(item => item.classList.remove('is-hover'))
+      }
+      document.removeEventListener('mousemove', this.vm.handleDragPointMove)
+      ([...document.getElementsByClassName('column-point-dot')]).forEach(item => item.remove())
     }
   }
   getConn (pid, fid) {
@@ -116,66 +154,83 @@ class NModel extends Schama {
   }
   clearPFMark () {
     for (let i in this.linkUsedColumns) {
-      this.linkUsedColumns[i].forEach((col) => {
+      this.linkUsedColumns[i].forEach((col, index) => {
         let nameList = col.split('.')
         let alias = nameList[0]
         let columnName = nameList[1]
         let ntable = this.getTableByAlias(alias)
         if (ntable) {
-          ntable.changeColumnProperty(columnName, 'isPFK', false, this)
+          if (index === 0) {
+            ntable.changeColumnProperty(columnName, 'isPK', false, this)
+          } else {
+            ntable.changeColumnProperty(columnName, 'isFK', false, this)
+          }
         }
       })
     }
   }
   renderPFMark () {
     for (let i in this.linkUsedColumns) {
-      this.linkUsedColumns[i].forEach((col) => {
+      this.linkUsedColumns[i].forEach((col, index) => {
         let nameList = col.split('.')
         let alias = nameList[0]
         let columnName = nameList[1]
         let ntable = this.getTableByAlias(alias)
         if (ntable) {
-          ntable.changeColumnProperty(columnName, 'isPFK', true, this)
+          if (index === 0) {
+            ntable.changeColumnProperty(columnName, 'isPK', true, this)
+          } else {
+            ntable.changeColumnProperty(columnName, 'isFK', true, this)
+          }
         }
       })
     }
   }
   // 连线
   renderLink (pid, fid) {
-    var hasConn = this.getConn(pid, fid)
-    let joinInfo = this.tables[pid].getJoinInfoByFGuid(fid)
-    var primaryKeys = joinInfo && joinInfo.join.primary_key
-    var foreignKeys = joinInfo && joinInfo.join.foreign_key
-    let isBrokenLine = this.checkIsBrokenModelLink(pid, fid, primaryKeys, foreignKeys)
-    if (hasConn) {
-      // 如果渲染的时候发现连接关系都没有了，直接删除
-      if (!primaryKeys || primaryKeys && primaryKeys.length === 1 && primaryKeys[0] === '') {
-        this.removeRenderLink(hasConn)
-      } else {
-        this.setOverLayLabel(hasConn, isBrokenLine)
-        this.plumbTool.refreshPlumbInstance()
-      }
-    } else {
-      this.addPlumbPoints(pid, '', '', isBrokenLine)
-      this.addPlumbPoints(fid, '', '', isBrokenLine)
-      var conn = this.plumbTool.connect(pid, fid, (pid, fid, e) => {
-        if (e.target && /close/.test(e.target.className)) {
-          // 调用删除
-          kylinConfirm(this.vm.$t('delConnTip'), null, this.vm.$t('delConnTitle')).then(() => {
-            this.removeRenderLink(conn)
-            if (this.vm.modelData.available_indexes_count > 0 && !this.vm.isIgnore) {
-              this.vm.showChangeTips()
-            }
-          })
+    return new Promise((resolve, reject) => {
+      var hasConn = this.getConn(pid, fid)
+      let joinInfo = this.tables[pid].getJoinInfoByFGuid(fid)
+      var primaryKeys = joinInfo && joinInfo.join.primary_key
+      var foreignKeys = joinInfo && joinInfo.join.foreign_key
+      let isBrokenLine = this.checkIsBrokenModelLink(pid, fid, primaryKeys, foreignKeys)
+      if (hasConn) {
+        // 如果渲染的时候发现连接关系都没有了，直接删除
+        if (!primaryKeys || primaryKeys && primaryKeys.length === 1 && primaryKeys[0] === '') {
+          this.removeRenderLink(hasConn)
         } else {
-          this.connClick(pid, fid)
+          !isBrokenLine && this.plumbTool.setLineStyle('default')
+          this.setOverLayLabel(hasConn, isBrokenLine)
+          this.plumbTool.refreshPlumbInstance()
         }
-      }, {})
-      this.setOverLayLabel(conn, isBrokenLine)
-      this.plumbTool.refreshPlumbInstance()
-      this.allConnInfo[pid + '$' + fid] = conn
-    }
-    this.collectLinkedColumn(pid, fid, primaryKeys, foreignKeys)
+      } else {
+        this.addPlumbPoints(pid, '', '', isBrokenLine)
+        this.addPlumbPoints(fid, '', '', isBrokenLine)
+        var conn = this.plumbTool.connect(pid, fid, (pid, fid, e) => {
+          if (e.target && /close/.test(e.target.className)) {
+            // 调用删除
+            kylinConfirm(this.vm.$t('delConnTip'), null, this.vm.$t('delConnTitle')).then(() => {
+              this.removeRenderLink(conn)
+              if (this.vm.modelData.available_indexes_count > 0 && !this.vm.isIgnore) {
+                this.vm.showChangeTips()
+              }
+            })
+          } else {
+            $(`#${fid}`).addClass('is-focus')
+            $(`#${pid}`).addClass('is-focus')
+            this.connClick(pid, fid)
+          }
+        }, {
+          joinType: joinInfo?.join?.type ?? '',
+          brokenLine: isBrokenLine
+        })
+        this.setOverLayLabel(conn, isBrokenLine)
+        this.plumbTool.refreshPlumbInstance()
+        this.allConnInfo[pid + '$' + fid] = conn
+      }
+      this.collectLinkedColumn(pid, fid, primaryKeys, foreignKeys)
+      resolve()
+    })
   }
   // 检测是否连接关系的列已经不在table里
   checkIsBrokenModelLink (pid, fid, primaryKeys, foreignKeys) {
@@ -303,15 +358,27 @@ class NModel extends Schama {
   }
   // 批量连线
   _renderLinks () {
-    this.plumbTool.lazyRender(() => {
+    this.plumbTool.lazyRender(async () => {
       for (var guid in this.tables) {
         var curNT = this.tables[guid]
         for (var i in curNT.joinInfo) {
           var primaryGuid = guid
           var foreignGuid = curNT.joinInfo[i].foreignTable.guid
-          this.renderLink(primaryGuid, foreignGuid)
+          await this.renderLink(primaryGuid, foreignGuid)
         }
       }
+      setTimeout(() => {
+        Object.values(this.tables).forEach(t => {
+          const pfkLinkColumns = t.columns.filter(it => it.isPK && it.isFK).sort((a, b) => a - b)
+          const pkLinkColumns = t.columns.filter(it => it.isPK && !it.isFK).sort((a, b) => a - b)
+          const fkLinkColumns = t.columns.filter(it => it.isFK && !it.isPK).sort((a, b) => a - b)
+          const unlinkColumns = t.columns.filter(it => !it.isPK && !it.isFK)
+          t.columns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns]
+          t.showColumns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns].slice(0, t.columnPerSize)
+          t._cache_search_columns = t.columns
+          this.$set(this._mount, 'tables', this.tables)
+        })
+      }, 0)
     })
   }
   /*
@@ -901,22 +968,23 @@ class NModel extends Schama {
       }
     }
   }
-  setUniqueAlias (table) {
+  setUniqueAlias (table, newAlias) {
     // fact情况的特殊处理
     // fact的别名只能使用默认的自己的 table 名
+    const _alias = newAlias ?? table.alias
     let pureTableName = table.name.split('.')[1]
-    if (table.kind === modelRenderConfig.tableKind.fact && pureTableName !== table.alias) {
+    if (table.kind === modelRenderConfig.tableKind.fact && pureTableName !== _alias) {
       let sameTable = this.getTables('alias', pureTableName)
       for (let i = 0; i < sameTable.length; i++) {
         const t = sameTable[i]
         if (t.guid !== table.guid) {
-          t.alias = table.alias
+          t.alias = _alias
           break
         }
       }
       table.alias = pureTableName
     } else {
-      var uniqueName = this._createUniqueName(table.guid, table.alias)
+      var uniqueName = this._createUniqueName(table.guid, _alias)
       this.$set(table, 'alias', uniqueName)
     }
   }
@@ -973,7 +1041,8 @@ class NModel extends Schama {
       var curTable = this.tables[i]
       // curTable.drawSize.left += x
       // curTable.drawSize.top += y
-      curTable.checkIsOutOfView(this._mount, curTable.drawSize, this._mount.windowWidth, this._mount.windowHeight)
+      curTable.checkIsOutOfView(this._mount, curTable.drawSize, this._mount.windowWidth, this._mount.windowHeight, i)
+      this.vm.hideLinkLabel(this.getAllConnectsByGuid(curTable.guid), curTable)
     }
     this.vm.$nextTick(() => {
       this.plumbTool.refreshPlumbInstance()
@@ -1004,6 +1073,9 @@ class NModel extends Schama {
       options.source_type = tableInfo.source_type
       options.fact = tableInfo.fact
       options.batch_table_identity = tableInfo.batch_table_identity
+      options.modelEvents = {
+        getAllConnectsByGuid: this.getAllConnectsByGuid.bind(this)
+      }
       if (tableInfo.source_type === 1 && !options.isSecStorageEnabled) {
         if (!this.getFactTable()) {
           options.kind = modelRenderConfig.tableKind.fact
@@ -1332,15 +1404,7 @@ class NModel extends Schama {
     var anchor = modelRenderConfig.jsPlumbAnchor
     var scope = 'showlink'
     if (isBroken) {
-      this.plumbTool.setLineStyle({
-        color: '#e73371',
-        strokeWidth: 2
-      })
-    } else {
-      this.plumbTool.setLineStyle({
-        color: '#0988de',
-        strokeWidth: 1
-      })
+      this.plumbTool.setLineStyle('broken')
     }
     var endPointConfig = Object.assign({}, this.plumbTool.endpointConfig, {
       scope: scope,
@@ -1356,6 +1420,23 @@ class NModel extends Schama {
     })
     this.plumbTool.addEndpoint(guid, {anchor: anchor}, endPointConfig)
   }
+  addColumnPlumbPoints (tableGuid, column, anchors) {
+    const randomNum = Date.now().toString(32)
+    const endPoint = this.plumbTool.addEndpoint(tableGuid, {anchors}, {
+      ...this.plumbTool.columnEndPointConfig,
+      parameters: {
+        data: {
+          guid: tableGuid,
+          column: {
+            columnName: column.columnn ?? column.columnName,
+            columnType: column.datatype
+          }
+        }
+      },
+      scope: 'showColumnlink',
+      uuid: `${tableGuid}_${column.column}`
+    })
+  }
   // 添加连线上的图标（连接类型Left/Inner）
   setOverLayLabel (conn, isBroken) {
     var fid = conn.sourceId
@@ -1367,12 +1448,41 @@ class NModel extends Schama {
     }
     var joinType = joinInfo.join.type
     var labelCanvas = $(labelObj.canvas)
+    const fKeys = joinInfo.join.foreign_key.map(it => it.split('.')[1])
+    const pKeys = joinInfo.join.primary_key.map(it => it.split('.')[1])
+    // let tooltipId = labelCanvas?.find('.el-tooltip')?.eq(0)?.attr('aria-describedby')
     labelCanvas.removeClass('link-label-broken')
     conn.setType(isBroken ? 'broken' : 'normal')
     conn.isBroken = isBroken
     this.getBrokenLinkedTable()
-    labelCanvas.addClass(isBroken ? 'link-label link-label-broken' : 'link-label')
-    labelCanvas && labelCanvas.find('.label').eq(0).text(joinType)
+    labelCanvas.addClass(isBroken ? 'link-label link-label-broken' : `link-label ${fid}&${pid}`)
+
+    const child = document.createElement('i')
+    child.className = 'close-icon el-ksd-n-icon-close-outlined'
+    const hideNode = document.createElement('span')
+    hideNode.className = 'join-type-hide'
+    // labelCanvas && labelCanvas.find('.label').eq(0).text(joinType)
+    // tooltipId && $(`#${tooltipId}`)
+    let dom = !isBroken ? createToolTipDom(`<span class="join-type ${joinType === 'INNER' ? 'el-ksd-n-icon-inner-join-filled' : joinType === 'LEFT' ? 'el-ksd-n-icon-left-join-filled' : 'el-ksd-n-icon-right-join-filled'}"></span>`, {
+      text: joinType,
+      children: [hideNode, child]
+    }) : createToolTipDom(`<span class="join-type el-ksd-icon-wrong_fill_16"></span>`, {
+      text: joinType,
+      children: [hideNode, child]
+    })
+    dom.onmouseenter = function () {
+      $(`#${fid}`).addClass('link-hover')
+      $(`#${pid}`).addClass('link-hover')
+      fKeys.forEach(item => $(`#${fid}_${item}`).addClass('is-hover'))
+      pKeys.forEach(item => $(`#${pid}_${item}`).addClass('is-hover'))
+    }
+    dom.onmouseleave = function () {
+      $(`#${fid}`).removeClass('link-hover')
+      $(`#${pid}`).removeClass('link-hover')
+      fKeys.forEach(item => $(`#${fid}_${item}`).removeClass('is-hover'))
+      pKeys.forEach(item => $(`#${pid}_${item}`).removeClass('is-hover'))
+    }
+    labelCanvas.empty().append(dom)
   }
   getBrokenLinkedTable () {
     for (let i in this.allConnInfo) {

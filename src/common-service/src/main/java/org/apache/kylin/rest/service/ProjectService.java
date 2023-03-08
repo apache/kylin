@@ -330,9 +330,8 @@ public class ProjectService extends BasicService {
 
     public StorageVolumeInfoResponse getStorageVolumeInfoResponse(String project) {
         val response = new StorageVolumeInfoResponse();
-        val storageInfoEnumList = Lists.newArrayList(StorageInfoEnum.GARBAGE_STORAGE, StorageInfoEnum.STORAGE_QUOTA,
-                StorageInfoEnum.TOTAL_STORAGE);
-        val collector = new ProjectStorageInfoCollector(storageInfoEnumList);
+        val collector = new ProjectStorageInfoCollector(Lists.newArrayList(StorageInfoEnum.GARBAGE_STORAGE, StorageInfoEnum.STORAGE_QUOTA,
+                StorageInfoEnum.TOTAL_STORAGE));
         val storageVolumeInfo = collector.getStorageVolumeInfo(getConfig(), project);
         response.setGarbageStorageSize(storageVolumeInfo.getGarbageStorageSize());
         response.setStorageQuotaSize(storageVolumeInfo.getStorageQuotaSize());
@@ -948,7 +947,7 @@ public class ProjectService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION')")
-    public String backupProject(String project) throws IOException {
+    public String backupProject(String project) throws Exception {
         return metadataBackupService.backupProject(project);
     }
 

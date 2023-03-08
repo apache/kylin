@@ -29,4 +29,6 @@ class PartitionMergeIndices(jobContext: SegmentJob, dataSegment: NDataSegment)
     // Drain results immediately after merging.
     drain()
   }
+
+  override def getStageName: String = "PartitionMergeIndices"
 }

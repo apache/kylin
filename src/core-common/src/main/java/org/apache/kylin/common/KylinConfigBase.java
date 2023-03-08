@@ -1958,6 +1958,31 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cache.redis.batch-count", ONE_HUNDRED_THOUSAND));
     }
 
+    // Memcached
+    public boolean isMemcachedEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.cache.memcached.enabled", FALSE));
+    }
+
+    public String getMemcachedHosts() {
+        return getOptional("kylin.cache.memcached.hosts", "localhost:11211");
+    }
+
+    public long getMemcachedOpTimeout() {
+        return Long.parseLong(getOptional("kylin.cache.memcached.option.timeout", "500"));
+    }
+
+    public int getMaxChunkSize() {
+        return Integer.parseInt(getOptional("kylin.cache.memcached.max-chunk-size", "1024"));
+    }
+
+    public int getMaxObjectSize() {
+        return Integer.parseInt(getOptional("kylin.cache.memcached.max-object-size", "1048576"));
+    }
+
+    public boolean isEnableCompression() {
+        return Boolean.parseBoolean((getOptional("kylin.cache.memcached.is-enable-compression", TRUE)));
+    }
+
     public long getMaxWaitMillis() {
         return Long.parseLong(getOptional("kylin.cache.redis.max-wait", "300000"));
     }
@@ -2471,6 +2496,13 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isAggregatePushdownEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.calcite.aggregate-pushdown-enabled", FALSE));
+    }
+
+    public int getCalciteBindableCacheSize() {
+        return Integer.parseInt(getOptional("kylin.query.calcite.bindable.cache.maxSize", "10"));
+    }
+    public int getCalciteBindableCacheConcurrencyLevel() {
+        return Integer.parseInt(getOptional("kylin.query.calcite.bindable.cache.concurrencyLevel", "5"));
     }
 
     public int getEventPollIntervalSecond() {
@@ -3730,10 +3762,6 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.second-storage.wait-lock-timeout", "180"));
     }
 
-    public boolean getDDLEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.source.ddl.enabled", FALSE));
-    }
-
     public boolean isBuildSegmentOverlapEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.build.segment-overlap-enabled", FALSE));
     }
@@ -3752,6 +3780,26 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean skipShardPruningForInExpr() {
         return Boolean.parseBoolean(getOptional("kylin.query.skip-shard-pruning-for-in", FALSE));
+    }
+
+    public boolean isDDLEnabled() {
+        return isDDLLogicalViewEnabled() || isDDLHiveEnabled();
+    }
+
+    public boolean isDDLLogicalViewEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.source.ddl.logical-view.enabled", FALSE));
+    }
+
+    public boolean isDDLHiveEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.source.ddl.hive.enabled", FALSE));
+    }
+
+    public String getDDLLogicalViewDB() {
+        return getOptional("kylin.source.ddl.logical-view.database", "KYLIN_LOGICAL_VIEW");
+    }
+
+    public int getDDLLogicalViewCatchupInterval() {
+        return Integer.parseInt(getOptional("kylin.source.ddl.logical-view-catchup-interval", "60"));
     }
 
     // ============================================================================

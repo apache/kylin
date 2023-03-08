@@ -17,6 +17,8 @@
  */
 package org.apache.kylin.engine.spark.source;
 
+import static org.apache.kylin.common.exception.ServerErrorCode.DDL_CHECK_ERROR;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -35,16 +37,18 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
+
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -53,6 +57,7 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalog.Database;
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType;
 import org.apache.spark.sql.internal.SQLConf;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +102,22 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
     @Override
     public List<String> listDatabases() throws Exception {
         Dataset<Row> dataset = SparderEnv.getSparkSession().sql("show databases").select("namespace");
-        return dataset.collectAsList().stream().map(row -> row.getString(0)).collect(Collectors.toList());
+        List<String> databases =
+            dataset.collectAsList().stream().map(row -> row.getString(0)).collect(Collectors.toList());
+        if (KylinConfig.getInstanceFromEnv().isDDLLogicalViewEnabled()) {
+            String logicalViewDB = KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB();
+            databases.forEach(db -> {
+                if (db.equalsIgnoreCase(logicalViewDB)) {
+                    throw new KylinException(DDL_CHECK_ERROR, "Logical view database should not be duplicated "
+                        + "with normal hive database!!!");
+                }
+            });
+            List<String> databasesWithLogicalDB = Lists.newArrayList();
+            databasesWithLogicalDB.add(logicalViewDB);
+            databasesWithLogicalDB.addAll(databases);
+            databases = databasesWithLogicalDB;
+        }
+        return databases;
     }
 
     @Override
@@ -297,13 +317,17 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
     @Override
     public boolean checkDatabaseAccess(String database) throws Exception {
         boolean hiveDBAccessFilterEnable = KapConfig.getInstanceFromEnv().getDBAccessFilterEnable();
+        String viewDB = KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB();
+        if(viewDB.equalsIgnoreCase(database)){
+            return true;
+        }
         if (hiveDBAccessFilterEnable) {
             logger.info("Check database {} access start.", database);
             try {
                 Database db = SparderEnv.getSparkSession().catalog().getDatabase(database);
             } catch (AnalysisException e) {
                 UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-                logger.info("The current user: {} does not have permission to access database {}", ugi.getUserName(),
+                logger.error("The current user: {} does not have permission to access database {}", ugi.getUserName(),
                         database);
                 return false;
             }

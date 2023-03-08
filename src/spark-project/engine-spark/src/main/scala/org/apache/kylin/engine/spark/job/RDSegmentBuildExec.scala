@@ -80,11 +80,10 @@ class RDSegmentBuildExec(private val jobContext: RDSegmentBuildJob, //
       val paths = ResourceDetectUtils.getPaths(execution.sparkPlan).map(_.toString).asJava
       logInfo(s"Detected source: $sourceName $leaves ${paths.asScala.mkString(",")}")
       val startTime = System.currentTimeMillis()
-      logInfo(s"Detect source size start time is $startTime")
-      val resourceSize = ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(),config.isConcurrencyFetchDataSourceSize,
+      val resourceSize = ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(), config.isConcurrencyFetchDataSourceSize,
         paths.asScala.map(path => new Path(path)): _*)
       val endTime = System.currentTimeMillis()
-      logInfo(s"Detect source size end time is $endTime")
+      logInfo(s"Detect source size cost time is ${endTime - startTime} ms.")
 
       logInfo(s"Detect source size $resourceSize")
       sourceSize.put(sourceName, resourceSize)

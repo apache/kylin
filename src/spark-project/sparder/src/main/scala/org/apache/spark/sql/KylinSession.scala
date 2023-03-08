@@ -22,23 +22,24 @@ import java.io._
 import java.net.URI
 import java.nio.file.Paths
 
+import scala.collection.JavaConverters._
+
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.security.UserGroupInformation
-import org.apache.kylin.common.util.{HadoopUtil, Unsafe}
 import org.apache.kylin.common.{KapConfig, KylinConfig}
+import org.apache.kylin.common.util.{HadoopUtil, Unsafe}
 import org.apache.kylin.metadata.query.BigQueryThresholdUpdater
 import org.apache.kylin.query.util.ExtractFactory
-import org.apache.spark.internal.Logging
-import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd}
-import org.apache.spark.sql.SparkSession.Builder
-import org.apache.spark.sql.internal.{SQLConf, SessionState, SharedState, StaticSQLConf}
-import org.apache.spark.sql.udf.UdfManager
-import org.apache.spark.util.{KylinReflectUtils, Utils}
-import org.apache.spark.{SparkConf, SparkContext}
 import org.springframework.expression.common.TemplateParserContext
 import org.springframework.expression.spel.standard.SpelExpressionParser
 
-import scala.collection.JavaConverters._
+import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.internal.Logging
+import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd}
+import org.apache.spark.sql.SparkSession.Builder
+import org.apache.spark.sql.internal.{SessionState, SharedState, SQLConf, StaticSQLConf}
+import org.apache.spark.sql.udf.UdfManager
+import org.apache.spark.util.{KylinReflectUtils, Utils}
 
 class KylinSession(
                     @transient val sc: SparkContext,
@@ -174,6 +175,7 @@ object KylinSession extends Logging {
           } else {
             conf
           }
+          initLogicalViewConfig(conf)
           val sc = SparkContext.getOrCreate(sparkConf)
           // maybe this is an existing SparkContext, update its SparkConf which maybe used
           // by SparkSession
@@ -432,6 +434,12 @@ object KylinSession extends Logging {
       case _: ClassNotFoundException | _: NoClassDefFoundError =>
         logWarning(s"Can't load Kylin external $className, use Spark default instead")
         false
+    }
+  }
+
+  def initLogicalViewConfig(sparkConf: SparkConf): Unit = {
+    if (KylinConfig.getInstanceFromEnv.isDDLLogicalViewEnabled) {
+      sparkConf.set("spark.sql.globalTempDatabase", KylinConfig.getInstanceFromEnv.getDDLLogicalViewDB)
     }
   }
 }

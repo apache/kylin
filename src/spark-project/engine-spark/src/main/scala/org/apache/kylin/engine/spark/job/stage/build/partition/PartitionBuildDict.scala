@@ -30,4 +30,6 @@ class PartitionBuildDict(jobContext: SegmentJob, dataSegment: NDataSegment, buil
     val dict: Dataset[Row] = buildDictIfNeed()
     buildParam.setDict(dict)
   }
+
+  override def getStageName: String = "PartitionBuildDict"
 }

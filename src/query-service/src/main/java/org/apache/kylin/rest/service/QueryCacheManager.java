@@ -34,6 +34,7 @@ import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.cache.KylinCache;
 import org.apache.kylin.rest.cache.KylinEhCache;
+import org.apache.kylin.rest.cache.memcached.CompositeMemcachedCache;
 import org.apache.kylin.rest.cache.RedisCache;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
@@ -73,6 +74,8 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         if (kylinConfig.isRedisEnabled()) {
             kylinCache = RedisCache.getInstance();
+        } else if (kylinConfig.isMemcachedEnabled()) {
+            kylinCache = CompositeMemcachedCache.getInstance();
         } else {
             kylinCache = KylinEhCache.getInstance();
         }
@@ -162,7 +165,7 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
 
     public SQLResponse doSearchQuery(QueryCacheManager.Type type, SQLRequest sqlRequest) {
         Object response = kylinCache.get(type.rootCacheName, sqlRequest.getProject(), sqlRequest.getCacheKey());
-        logger.info("[query cache log] The cache key is: {}", sqlRequest.getCacheKey());
+        logger.debug("[query cache log] The cache key is: {}", sqlRequest.getCacheKey());
         if (response == null) {
             return null;
         }
@@ -178,14 +181,14 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
 
         // check signature for success query resp in case the datasource is changed
         if (QueryCacheSignatureUtil.checkCacheExpired(cached, sqlRequest.getProject())) {
-            logger.info("[query cache log] cache has expired, cache key is {}", sqlRequest.getCacheKey());
+            logger.debug("[query cache log] cache has expired, cache key is {}", sqlRequest.getCacheKey());
             clearQueryCache(sqlRequest);
             return null;
         }
 
         cached.setStorageCacheUsed(true);
         QueryContext.current().getQueryTagInfo().setStorageCacheUsed(true);
-        String cacheType = KylinConfig.getInstanceFromEnv().isRedisEnabled() ? "Redis" : "Ehcache";
+        String cacheType = getCacheType();
         cached.setStorageCacheType(cacheType);
         QueryContext.current().getQueryTagInfo().setStorageCacheType(cacheType);
 
@@ -198,6 +201,16 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
         }
 
         return cached;
+    }
+
+    private String getCacheType() {
+        if (KylinConfig.getInstanceFromEnv().isRedisEnabled()) {
+            return "Redis";
+        } else if (KylinConfig.getInstanceFromEnv().isMemcachedEnabled()) {
+            return "Memcached";
+        } else {
+            return "Ehcache";
+        }
     }
 
     public SQLResponse searchFailedCache(SQLRequest sqlRequest) {
@@ -315,10 +328,10 @@ public class QueryCacheManager implements CommonQueryCacheSupporter {
 
     public void clearProjectCache(String project) {
         if (project == null) {
-            logger.debug("[query cache log] clear query cache for all projects.");
+            logger.info("[query cache log] clear query cache for all projects.");
             kylinCache.clearAll();
         } else {
-            logger.debug("[query cache log] clear query cache for {}", project);
+            logger.info("[query cache log] clear query cache for {}", project);
             kylinCache.clearByType(Type.SUCCESS_QUERY_CACHE.rootCacheName, project);
             kylinCache.clearByType(Type.EXCEPTION_QUERY_CACHE.rootCacheName, project);
             kylinCache.clearByType(Type.SCHEMA_CACHE.rootCacheName, project);

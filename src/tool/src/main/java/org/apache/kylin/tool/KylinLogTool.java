@@ -93,7 +93,7 @@ public class KylinLogTool {
     private static final String SYSTEM_PROPERTIES = "System Properties";
 
     private static final Set<String> kylinLogPrefix = Sets.newHashSet("kylin.log", "kylin.schedule.log",
-            "kylin.query.log", "kylin.smart.log", "kylin.build.log", "kylin.security.log");
+            "kylin.query.log", "kylin.smart.log", "kylin.build.log", "kylin.security.log", "kylin.metadata.log");
 
     private static final Set<String> queryDiagExcludedLogs = Sets.newHashSet("kylin.log", "kylin.schedule.log",
             "kylin.smart.log", "kylin.build.log", "kylin.security.log");

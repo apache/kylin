@@ -66,7 +66,7 @@ public class AsyncProfilerUtils {
         if (!cachedResult.await(resultCollectionTimeout, TimeUnit.MILLISECONDS)) {
             logger.warn("timeout while waiting for profile result");
         }
-        logger.debug("profiler stopped and result dumped to $localCacheDir");
+        logger.debug("profiler stopped and result dumped to {}", localCacheDir);
         ZipFileUtils.compressZipFile(localCacheDir.getAbsolutePath(), outStream);
     }
 

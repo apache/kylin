@@ -18,9 +18,28 @@
 
 package org.apache.kylin.engine.spark.application;
 
-import com.google.common.collect.Maps;
-import org.apache.kylin.engine.spark.job.SegmentBuildJob;
-import lombok.val;
+import static org.apache.kylin.engine.spark.job.StageType.WAITE_FOR_RESOURCE;
+import static org.apache.kylin.engine.spark.utils.SparkConfHelper.COUNT_DISTICT;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.nio.charset.Charset;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -57,14 +76,18 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.view.LogicalView;
+import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.query.pushdown.SparkSubmitter;
 import org.apache.kylin.query.util.PushDownUtil;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkException;
 import org.apache.spark.application.NoRetryException;
 import org.apache.spark.launcher.SparkLauncher;
 import org.apache.spark.sql.KylinSession;
 import org.apache.spark.sql.KylinSession$;
+import org.apache.spark.sql.LogicalViewLoader;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.SparkSessionExtensions;
@@ -74,32 +97,18 @@ import org.apache.spark.sql.catalyst.rules.Rule;
 import org.apache.spark.sql.execution.datasource.AlignmentTableStats;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.apache.spark.util.Utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
+
+import org.apache.kylin.engine.spark.job.SegmentBuildJob;
+import lombok.val;
+
 import scala.runtime.AbstractFunction1;
 import scala.runtime.BoxedUnit;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.nio.charset.Charset;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.apache.kylin.engine.spark.job.StageType.WAITE_FOR_RESOURCE;
-import static org.apache.kylin.engine.spark.utils.SparkConfHelper.COUNT_DISTICT;
 
 public abstract class SparkApplication implements Application {
     private static final Logger logger = LoggerFactory.getLogger(SparkApplication.class);
@@ -392,6 +401,7 @@ public abstract class SparkApplication implements Application {
     }
 
     protected void extraInit() {
+        loadLogicalView();
     }
 
     public void extraDestroy() {
@@ -645,4 +655,25 @@ public abstract class SparkApplication implements Application {
                 atomicUnreachableSparkMaster);
     }
 
+    @VisibleForTesting
+    public void loadLogicalView() {
+        if (!config.isDDLLogicalViewEnabled()) {
+            return;
+        }
+        String dataflowId = getParam(NBatchConstants.P_DATAFLOW_ID);
+        String tableName = getParam(NBatchConstants.P_TABLE_NAME);
+        LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
+
+        if (StringUtils.isNotBlank(dataflowId)) {
+            viewManager
+                .findLogicalViewsInModel(project, dataflowId)
+                .forEach(view -> LogicalViewLoader.loadView(view.getTableName(), true, ss));
+        }
+        if (StringUtils.isNotBlank(tableName)) {
+            LogicalView view = viewManager.findLogicalViewInProject(getProject(), tableName);
+            if (view != null) {
+                LogicalViewLoader.loadView(view.getTableName(), true, ss);
+            }
+        }
+    }
 }
