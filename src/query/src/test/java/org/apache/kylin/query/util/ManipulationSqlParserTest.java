@@ -27,59 +27,76 @@ public class ManipulationSqlParserTest {
     public void showJob() throws ParseException {
         String sql = "SHOW JOB 70ba0c50-15b1-a40c-39a9-5f67f0f813c7-713ab396-1038-eecd-824f-3da66d531db6";
         DMLParserResult evaluate = ManipulationSqlParser.evaluate(sql);
-        Assert.assertEquals(evaluate.operator, DMLParserResult.OPERATOR.SHOW);
-        Assert.assertEquals(evaluate.unit, DMLParserResult.UNIT.JOB);
-        Assert.assertEquals(evaluate.arg.size(), 1);
-        Assert.assertEquals(evaluate.arg.get(0),
-                "70ba0c50-15b1-a40c-39a9-5f67f0f813c7-713ab396-1038-eecd-824f-3da66d531db6");
+        Assert.assertEquals(DMLParserResult.OPERATOR.SHOW, evaluate.operator);
+        Assert.assertEquals(DMLParserResult.UNIT.JOB, evaluate.unit);
+        Assert.assertEquals(1, evaluate.arg.size());
+        Assert.assertEquals("70ba0c50-15b1-a40c-39a9-5f67f0f813c7-713ab396-1038-eecd-824f-3da66d531db6",
+                evaluate.arg.get(0));
     }
 
     @Test
     public void triggerJob() throws ParseException {
+        // 1. trigger partial build job with partition col
         String sql = "LOAD PARTITION project_name.model_test (2023-01-01, 2023-02-10)";
         DMLParserResult evaluate = ManipulationSqlParser.evaluate(sql);
-        Assert.assertEquals(evaluate.operator, DMLParserResult.OPERATOR.LOAD);
-        Assert.assertEquals(evaluate.unit, DMLParserResult.UNIT.PARTITION);
-        Assert.assertEquals(evaluate.arg.size(), 4);
-        Assert.assertEquals(evaluate.arg.get(0), "project_name");
-        Assert.assertEquals(evaluate.arg.get(1), "model_test");
-        Assert.assertEquals(evaluate.arg.get(2), "2023-01-01");
-        Assert.assertEquals(evaluate.arg.get(3), "2023-02-10");
 
+        Assert.assertEquals(DMLParserResult.OPERATOR.LOAD, evaluate.operator);
+        Assert.assertEquals(DMLParserResult.UNIT.PARTITION, evaluate.unit);
+        Assert.assertEquals(4, evaluate.arg.size());
+        Assert.assertEquals("project_name", evaluate.arg.get(0));
+        Assert.assertEquals("model_test", evaluate.arg.get(1));
+        Assert.assertEquals("2023-01-01", evaluate.arg.get(2));
+        Assert.assertEquals("2023-02-10", evaluate.arg.get(3));
+
+        // 2. trigger full build job
         String sql2 = "LOAD MODEL project_name.model_test2";
         DMLParserResult evaluate2 = ManipulationSqlParser.evaluate(sql2);
+
         Assert.assertEquals(evaluate2.operator, DMLParserResult.OPERATOR.LOAD);
         Assert.assertEquals(evaluate2.unit, DMLParserResult.UNIT.MODEL);
-        Assert.assertEquals(evaluate2.arg.size(), 2);
-        Assert.assertEquals(evaluate2.arg.get(0), "project_name");
-        Assert.assertEquals(evaluate2.arg.get(1), "model_test2");
+        Assert.assertEquals(2, evaluate2.arg.size());
+        Assert.assertEquals("project_name", evaluate2.arg.get(0));
+        Assert.assertEquals("model_test2", evaluate2.arg.get(1));
+
     }
 
     @Test
     public void cancelJob() throws ParseException {
         String sql = "CANCEL JOB 70ba0c50-15b1-a40c-39a9-5f67f0f813c7-713ab396-1038-eecd-824f-3da66d531db6";
         DMLParserResult evaluate = ManipulationSqlParser.evaluate(sql);
-        Assert.assertEquals(evaluate.operator, DMLParserResult.OPERATOR.CANCEL);
-        Assert.assertEquals(evaluate.unit, DMLParserResult.UNIT.JOB);
-        Assert.assertEquals(evaluate.arg.size(), 1);
-        Assert.assertEquals(evaluate.arg.get(0),
-                "70ba0c50-15b1-a40c-39a9-5f67f0f813c7-713ab396-1038-eecd-824f-3da66d531db6");
+
+        Assert.assertEquals(DMLParserResult.OPERATOR.CANCEL, evaluate.operator);
+        Assert.assertEquals(DMLParserResult.UNIT.JOB, evaluate.unit);
+        Assert.assertEquals(1, evaluate.arg.size());
+        Assert.assertEquals("70ba0c50-15b1-a40c-39a9-5f67f0f813c7-713ab396-1038-eecd-824f-3da66d531db6",
+                evaluate.arg.get(0));
     }
 
     @Test
     public void deleteModel() throws ParseException {
         String sql = "DELETE MODEL project_name.model_test";
         DMLParserResult evaluate = ManipulationSqlParser.evaluate(sql);
-        Assert.assertEquals(evaluate.operator, DMLParserResult.OPERATOR.DELETE);
-        Assert.assertEquals(evaluate.unit, DMLParserResult.UNIT.MODEL);
-        Assert.assertEquals(evaluate.arg.size(), 2);
-        Assert.assertEquals(evaluate.arg.get(0), "project_name");
-        Assert.assertEquals(evaluate.arg.get(1), "model_test");
+
+        Assert.assertEquals(DMLParserResult.OPERATOR.DELETE, evaluate.operator);
+        Assert.assertEquals(DMLParserResult.UNIT.MODEL, evaluate.unit);
+        Assert.assertEquals(2, evaluate.arg.size());
+        Assert.assertEquals("project_name", evaluate.arg.get(0));
+        Assert.assertEquals("model_test", evaluate.arg.get(1));
     }
 
     @Test
     public void testError() {
         String sql = "DELETE MODELs model_test";
         Assert.assertThrows(ParseException.class, () -> ManipulationSqlParser.evaluate(sql));
+    }
+
+    @Test
+    public void validDMLParserResult() {
+        DMLParserResult test = new DMLParserResult();
+        test.unit = DMLParserResult.UNIT.JOB;
+        Assert.assertFalse(test.isValid());
+
+        test.operator = DMLParserResult.OPERATOR.SHOW;
+        Assert.assertTrue(test.isValid());
     }
 }
