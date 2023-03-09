@@ -139,6 +139,7 @@ class TestQueryAndBuildFunSuite
     // test for snapshot cleanup
     KylinConfig.getInstanceFromEnv.setProperty("kylin.snapshot.version-ttl", "0")
     KylinConfig.getInstanceFromEnv.setProperty("kylin.snapshot.max-versions", "1")
+    KylinConfig.getInstanceFromEnv.setProperty("kylin.engine.persist-flat-use-snapshot-enabled", "false")
     build()
   }
 
