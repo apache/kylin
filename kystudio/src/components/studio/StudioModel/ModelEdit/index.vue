@@ -406,6 +406,7 @@
             </ul>
           </div>
           <kylin-nodata v-if="!modelRender.computed_columns.length"></kylin-nodata>
+          <p class="has-no-connected-column" v-if="t.spreadOut && showOnlyConnectedColumn && getCurrentColumns(t).length === 0 && getCurrentColumns(modelRender, 'cc').length === 0">{{$t('noConnectedColumn')}}</p>
           <!-- 拖动操纵 -->
           <DragBar :dragData="panelAppear.cc"/>
           <!-- 拖动操纵 -->
@@ -1496,7 +1497,7 @@ export default class ModelEdit extends Vue {
     }
     this.currentDragColumnData = {
       guid: table.guid,
-      columnName: col.name,
+      columnName: col.name || col.columnName,
       btype: col.btype
     }
     return true
@@ -3260,6 +3261,15 @@ export default class ModelEdit extends Vue {
           }
         }
       }
+    }
+    .has-no-connected-column {
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -30%);
+      color: @text-placeholder-color;
+      white-space: pre;
     }
     .no-data {
       position: initial;
