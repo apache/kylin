@@ -4,12 +4,14 @@
 
 <script>
 import * as echarts from 'echarts'
+import {Component, Watch} from 'vue-property-decorator'
+import Vue from 'vue'
 
 const idGen = () => {
   return new Date().getTime() - 1
 }
 
-export default {
+@Component({
   props: {
     height: {
       type: String,
@@ -24,48 +26,43 @@ export default {
       type: Object,
       default: null
     }
+  }
+})
 
-  },
-  data () {
+export default class LineEcharts extends Vue {
+  @Watch('width')
+  onWithChange () {
+    if (this.myChart) {
+      setTimeout(() => {
+        this.myChart.resize({
+          animation: {
+            duration: 300
+          }
+        })
+      }, 0)
+    }
+  }
+
+  @Watch('options', {deep: true})
+  onOptionChange () {
+    if (this.myChart) {
+      this.myChart.dispose()
+      this.myChart = echarts.init(document.getElementById(this.uuid))
+      this.myChart.setOption(this.options, {notMerge: true})
+    }
+  }
+
+  get style () {
     return {
-      uuid: null,
-      myChart: null
+      height: this.height,
+      width: this.width
     }
-  },
-  watch: {
-    width (a, b) {
-      if (this.myChart) {
-        setTimeout(() => {
-          this.myChart.resize({
-            animation: {
-              duration: 300
-            }
-          })
-        }, 0)
-      }
-    },
-    options: {
-      handler (newValue, oldValue) {
-        if (this.myChart) {
-          this.myChart.dispose()
-          this.myChart = echarts.init(document.getElementById(this.uuid))
-          this.myChart.setOption(this.options, {notMerge: true})
-        }
-      },
-      deep: true
-    }
-  },
-  computed: {
-    style () {
-      return {
-        height: this.height,
-        width: this.width
-      }
-    }
-  },
+  }
+
   created () {
     this.uuid = idGen()
-  },
+  }
+
   mounted () {
     this.myChart = echarts.init(document.getElementById(this.uuid))
     this.myChart.setOption(this.options)

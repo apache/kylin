@@ -455,13 +455,13 @@ export default class Dashboard extends Vue {
   determineAvgJobBuildTime (data) {
     return this.jobTimeUnit === 'sec' ? data * 1024 * 1024 / 1000 : data * 1024 * 1024 / 1000 / 60
   }
-  async getChartDataResult (category, dimension, metric, projectName, cubeName, startTime, endTime) {
+  async getChartDataResult (category, dimension, metric, projectName, modelName, startTime, endTime) {
     const res = await this.getChartData({
       category: category,
       dimension: dimension,
       metric: metric,
       projectName: projectName,
-      cubeName: cubeName,
+      modelName: modelName,
       startTime: startTime,
       endTime: endTime
     })
