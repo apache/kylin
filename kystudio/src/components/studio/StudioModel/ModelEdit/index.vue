@@ -85,7 +85,7 @@
             </el-tooltip>
             <el-dropdown ref="tableActionsDropdown" class="table-dropdown" trigger="click" :disabled="isSchemaBrokenModel">
               <span class="setting-icon" @click.stop v-if="!isSchemaBrokenModel"><i class="el-ksd-n-icon-more-vertical-filled"></i></span>
-              <el-dropdown-menu class="table-actions" slot="dropdown">
+              <el-dropdown-menu class="table-actions-dropdown" slot="dropdown">
                 <el-dropdown-item>
                   <div v-if="t.kind === 'FACT' || modelInstance.checkTableCanSwitchFact(t.guid)">
                     <div class="action switch" :class="{'disabled': t.source_type === 1}" v-if="t.kind === 'FACT'" @click.stop="changeTableType(t)">
@@ -917,6 +917,7 @@ export default class ModelEdit extends Vue {
       }
     })
     this.linkLineFocus.splice(0, this.linkLineFocus.length)
+    this.removeCustomHoverStatus()
   }
   handleMouseLeave (event, table, column) {
     this.cancelLinkLineFocus()
@@ -3502,10 +3503,9 @@ export default class ModelEdit extends Vue {
 .error-font {
   color: @error-color-1;
 }
-.table-actions {
+.table-actions-dropdown {
   transform: translate(106%, 0);
   margin-top: -38px !important;
-  // margin-left: 26px;
   width: 200px;
   .spread-or-expand-table {
     display: flex;

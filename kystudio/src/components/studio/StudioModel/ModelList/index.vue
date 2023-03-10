@@ -124,7 +124,7 @@
                 @after-enter="(e) => afterPoppoverEnter(e, scope.row)"
                 popper-class="er-popover-layout"
               >
-              <div class="model-ER-layout"><ModelERDiagram v-if="scope.row.showER" :show-shortcuts-group="false" :model="dataGenerator.generateModel(scope.row)" /></div>
+              <div class="model-ER-layout"><ModelERDiagram v-if="scope.row.showER" :show-shortcuts-group="false" :show-change-alert="false" :model="dataGenerator.generateModel(scope.row)" /></div>
               </el-popover>
               <span class="model-ER" v-popover="`${scope.row.alias}-ERPopover`">
                 <el-icon name="el-ksd-icon-table_er_diagram_22" class="ksd-fs-22" type="mult"></el-icon>
@@ -1200,10 +1200,20 @@ export default class ModelList extends Vue {
     }
   }
 }
-.model-alias-label {
-  .alias {
-    height: 20px;
-    margin-top: 0;
+.model_list_table{
+  .model-alias-label {
+    cursor: pointer;
+    .alias {
+      height: 20px;
+      margin-top: 0;
+      cursor: pointer;
+      .filter-status {
+        cursor: pointer;
+      }
+    }
+    .last-modified-tooltip {
+      cursor: pointer;
+    }
   }
 }
 .filter-button {
@@ -1264,6 +1274,7 @@ export default class ModelList extends Vue {
   width: 400px;
   height: 300px;
   position: relative;
+  background-color: @ke-background-color-secondary;
   .model-ER-layout {
     width: 100%;
     height: 100%;

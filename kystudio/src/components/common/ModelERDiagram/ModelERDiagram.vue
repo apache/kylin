@@ -1,6 +1,6 @@
 <template>
   <div :class="['model-er-diagram', {'is-full-screen': isFullScreen}]" v-drag="{sizeChangeCb:dragBox}" v-loading="loadingER">
-    <el-alert class="alertChangeER" :title="$t('changeERTips')" type="warning" show-icon :closable="false" v-if="changeER"></el-alert>
+    <el-alert class="alertChangeER" :title="$t('changeERTips')" type="warning" show-icon :closable="false" v-if="changeER && showChangeAlert"></el-alert>
     <div class="er-layout" ref="el-draw-layout" v-if="currentModel" :style="{'transform': `scale(${currentModel.canvas.zoom / 10})`}">
       <div :class="['table-box', {'is-lookup': t.type !== 'FACT'}]" :id="t.guid" v-for="t in currentModel.tables" :key="t.guid" :style="getTableStyles(t)">
         <div :class="['table-title', {'table-spread-out': !t.spreadOut}]" @dblclick="handleDBClick(t)">
@@ -39,7 +39,7 @@
         </div>
       </div>
     </div>
-    <ModelNavigationTools v-if="currentModel && currentModel.canvas" :showReset="changeER" :zoom="currentModel.canvas.zoom" @command="handleActionsCommand" @addZoom="handleZoom('up')" @reduceZoom="handleZoom('down')" @autoLayout="autoLayout" @reset="resetERDiagram" />
+    <ModelNavigationTools v-if="showShortcutsGroup && currentModel && currentModel.canvas" :showReset="changeER" :zoom="currentModel.canvas.zoom" @command="handleActionsCommand" @addZoom="handleZoom('up')" @reduceZoom="handleZoom('down')" @autoLayout="autoLayout" @reset="resetERDiagram" />
   </div>
 </template>
 <script>
@@ -61,6 +61,10 @@ import locales from './locales'
       }
     },
     showShortcutsGroup: {
+      type: Boolean,
+      default: true
+    },
+    showChangeAlert: {
       type: Boolean,
       default: true
     }

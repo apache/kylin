@@ -2,7 +2,7 @@
   <div class="update-model-actions-mask" @mousedown.stop>
     <div class="guide-step1" v-show="step === 1">
       <div :class="['model-edit-title', {'has-global-alert': hasGlobalAlert}]"></div>
-      <div class="title-tip">
+      <div :class="['title-tip', {'has-global-alert': hasGlobalAlert}]">
         <div class="title">
           <i class="info-icon el-ksd-n-icon-info-circle-filled"></i>
           <span>{{$t('actionGuideTitle')}}</span>
@@ -15,7 +15,7 @@
         </div>
       </div>
     </div>
-    <div class="guide-step5" v-show="step === 5">
+    <div class="guide-step5" v-show="step === 2">
       <div class="model-actions"></div>
       <div class="title-tip">
         <div class="title">
@@ -23,7 +23,7 @@
           <span>{{$t('actionGuideTitle')}}</span>
           <i class="close el-ksd-n-icon-close-outlined" @click="closeGuide"></i>
         </div>
-        <p class="content">{{$t('step5Msg')}}</p>
+        <p class="content">{{$t('step2Msg')}}</p>
         <div class="footer">
           <span class="step-num">{{`${step}/5`}}</span>
           <div>
@@ -38,20 +38,21 @@
       class="guide-layout"
       :visible="showDialog"
       width="600px"
+      :modal="false"
       status-icon="el-ksd-n-icon-info-color-filled"
       :close-on-click-modal="false"
       :before-close="closeGuide">
       <span slot="title" class="guide-title">{{$t('actionGuideTitle')}}</span>
-      <div class="step guide-step2" v-if="step === 2">
-        <p class="content">{{$t('step2Msg')}}</p>
+      <div class="step guide-step2" v-if="step === 3">
+        <p class="content">{{$t('step3Msg')}}</p>
         <img src="../../../assets/img/guide/model_edit_step1.jpg" width="200px" alt="guid_1">
       </div>
-      <div class="step guide-step3" v-if="step === 3">
-        <p class="content">{{$t('step3Msg')}}</p>
+      <div class="step guide-step3" v-if="step === 4">
+        <p class="content">{{$t('step4Msg')}}</p>
         <img src="../../../assets/img/guide/model_edit_step3.jpg" width="396px" alt="guid_2">
       </div>
-      <div class="step guide-step4" v-if="step === 4">
-        <p class="content">{{$t('step4Msg')}}</p>
+      <div class="step guide-step4" v-if="step === 5">
+        <p class="content">{{$t('step5Msg')}}</p>
         <img src="../../../assets/img/guide/model_edit_step2.png" width="450px" alt="guid_3">
       </div>
       <span slot="footer" class="guide-footer">
@@ -69,12 +70,12 @@ import { Component } from 'vue-property-decorator'
 @Component({
   locales: {
     'en': {
-      actionGuideTitle: 'Welcome to our new table for modeling canvas!',
+      actionGuideTitle: 'Welcome to our new modeling canvas!',
       step1Msg: 'You can now get a quick overview of the model\'s basic information, search content, and operations here.',
-      step2Msg: 'You can have an overview of the number of columns included in each table, and which column is used as the primary key (PK) and foreign key (FK).',
-      step3Msg: 'You can expand or collapse a table by selecting the respective option on the menu, or double-clicking on the header.',
-      step4Msg: 'All columns used for relation are pinned at the top. By hovering on the column, the associated tables and columns will be highlighted.',
-      step5Msg: 'Here you can control the size, the full screen, and the view of the canvas.'
+      step2Msg: 'Here you can control the size, the full screen, and the view of the canvas.',
+      step3Msg: 'You can have an overview of the number of columns included in each table, and which column is used as the primary key (PK) and foreign key (FK).',
+      step4Msg: 'You can expand or collapse a table by selecting the respective option on the menu, or double-clicking on the header.',
+      step5Msg: 'All columns used for relation are pinned at the top. By hovering on the column, the associated tables and columns will be highlighted.'
     }
   }
 })
@@ -102,7 +103,7 @@ export default class ActionUpdateGuide extends Vue {
   nextStep () {
     if (this.step < 5) {
       ++this.step
-      if (this.step >= 2 && this.step < 5) {
+      if (this.step > 2) {
         this.showDialog = true
       } else {
         this.showDialog = false
@@ -114,7 +115,7 @@ export default class ActionUpdateGuide extends Vue {
   // 上一步
   prevStep () {
     this.step -= 1
-    if (this.step >= 2 && this.step < 5) {
+    if (this.step > 2) {
       this.showDialog = true
     } else {
       this.showDialog = false
@@ -147,10 +148,10 @@ export default class ActionUpdateGuide extends Vue {
     pointer-events: none;
     &.has-global-alert {
       top: 90px;
-      .title-tip {
-        top: 200px;
-      }
     }
+  }
+  .title-tip.has-global-alert {
+    top: 200px;
   }
   .model-actions {
     pointer-events: none;
