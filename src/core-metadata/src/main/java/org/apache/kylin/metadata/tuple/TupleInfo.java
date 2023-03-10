@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.Getter;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
@@ -33,6 +34,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 public class TupleInfo {
 
     private final Map<String, Integer> fieldMap;
+    @Getter
     private final Map<TblColRef, Integer> columnMap;
 
     private final List<String> fields;

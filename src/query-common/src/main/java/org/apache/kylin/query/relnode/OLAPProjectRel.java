@@ -283,6 +283,19 @@ public class OLAPProjectRel extends Project implements OLAPRel {
                 pw.item(fieldName, rewriteProjects.get(field.i));
             }
         }
-        return pw.item("ctx", context == null ? "" : String.valueOf(context.id) + "@" + context.realization);
+
+        if (context != null) {
+            pw.item("ctx", String.valueOf(context.id) + "@" + context.realization);
+            if (context.getGroupByColumns() != null && context.returnTupleInfo != null
+                    && context.returnTupleInfo.getColumnMap() != null) {
+                context.getGroupByColumns().forEach(colRef -> {
+                    Integer colId = context.returnTupleInfo.getColumnMap().get(colRef);
+                    pw.item("groupByColumns", String.valueOf(colId));
+                });
+            }
+        } else {
+            pw.item("ctx", "");
+        }
+        return pw;
     }
 }
