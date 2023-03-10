@@ -809,17 +809,10 @@ export default class ModelEdit extends Vue {
       clearTimeout(this.debounceTimer.expand)
     }
     this.debounceTimer.expand = setTimeout(() => {
-      if (!t.spreadOut) {
-        if (t.spreadHeight < 140) {
-          this.$set(t, 'spreadHeight', 140)
-        }
-      } else {
-        this.$set(t, 'spreadHeight', t.drawSize.height)
-      }
+      const boxH = t.spreadOut ? this.$el.querySelector('.table-title').offsetHeight + 4 : t.spreadHeight
+      this.$set(t, 'spreadHeight', t.drawSize.height)
       this.$set(t, 'spreadOut', !t.spreadOut)
-      const boxH = !t.spreadOut ? this.$el.querySelector('.table-title').offsetHeight + 4 : t.spreadHeight
       this.$set(t.drawSize, 'height', boxH)
-      // this.$refs[`table_${t.guid}`].length && (this.$refs[`table_${t.guid}`][0].style.cssText += `height: ${boxH}px;`)
       this.$nextTick(() => {
         this.modelInstance.plumbTool.refreshPlumbInstance()
       })
@@ -1264,14 +1257,9 @@ export default class ModelEdit extends Vue {
       }
     } else if (command === 'expandAllTables') {
       for (let item in this.modelRender.tables) {
-        if (this.modelRender.tables[item].spreadHeight < 140) {
-          this.$set(this.modelRender.tables[item], 'spreadOut', true)
-          this.$set(this.modelRender.tables[item].drawSize, 'height', 140)
-          this.$set(this.modelRender.tables[item], 'spreadHeight', 140)
-        } else {
-          this.$set(this.modelRender.tables[item], 'spreadOut', true)
-          this.$set(this.modelRender.tables[item].drawSize, 'height', this.modelRender.tables[item].spreadHeight)
-        }
+        this.$set(this.modelRender.tables[item], 'spreadOut', true)
+        this.$set(this.modelRender.tables[item].drawSize, 'height', modelRenderConfig.tableBoxHeight)
+        this.$set(this.modelRender.tables[item], 'spreadHeight', modelRenderConfig.tableBoxHeight)
       }
     } else if (command === 'showOnlyConnectedColumn') {
       for (let item in this.modelRender.tables) {
@@ -2183,7 +2171,7 @@ export default class ModelEdit extends Vue {
         this.modelRender.tables[item].spreadHeight = modelRenderConfig.tableBoxHeight
       } else if (drawSize.height < 140) {
         this.$set(this.modelRender.tables[item].drawSize, 'height', 140)
-        this.modelRender.tables[item].spreadHeight = 140
+        this.modelRender.tables[item].spreadHeight = modelRenderConfig.tableBoxHeight
       } else {
         this.modelRender.tables[item].spreadHeight = this.modelRender.tables[item].drawSize.height
       }

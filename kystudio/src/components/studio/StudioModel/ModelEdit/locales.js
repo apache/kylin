@@ -100,7 +100,7 @@ export default {
     expandTableColumns: 'Expand',
     noResults: 'No result',
     searchResults: '{number} results',
-    doubleClick: 'Double Click',
+    doubleClick: 'Double Click Header',
     loseFactTableAlert: 'The current model is missing a fact table, please set up a fact table.',
     discardChange: 'Discard Changes',
     continueEditing: 'Continue Editing',

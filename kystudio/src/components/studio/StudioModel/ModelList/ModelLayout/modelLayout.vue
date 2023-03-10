@@ -507,7 +507,7 @@ export default class ModelLayout extends Vue {
         height: 100%;
         margin-top: 10px;
         margin-left: 8px;
-        max-width: 260px;
+        max-width: 270px;
         .alias {
           margin-top: 1px;
           max-width: 300px;
