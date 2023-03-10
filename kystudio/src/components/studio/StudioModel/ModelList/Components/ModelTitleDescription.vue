@@ -106,7 +106,7 @@
     transToGmtTime = transToGmtTime
 
     get getLastTime () {
-      return `${this.$t('lastUpdate')}${this.transToGmtTime(this.modelData.last_modified || Date.now())}`
+      return this.source !== 'modelList' ? `${this.$t('lastUpdate')}${this.transToGmtTime(this.modelData.last_modified || Date.now())}` : this.transToGmtTime(this.modelData.last_modified)
     }
     openComplementSegment (model, status) {
       this.$emit('openSegment', model, status)

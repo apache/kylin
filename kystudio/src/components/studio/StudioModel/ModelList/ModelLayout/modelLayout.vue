@@ -521,6 +521,7 @@ export default class ModelLayout extends Vue {
         }
         .last-modified-tooltip {
           margin-top: -4px;
+          font-weight: initial;
         }
       }
       .title {
