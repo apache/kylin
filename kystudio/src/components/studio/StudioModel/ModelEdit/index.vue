@@ -78,7 +78,7 @@
               </el-tooltip>
             </span>
             <span class="alias-span name">
-              <span v-custom-tooltip="{text: t.alias, w: 10, effect: 'dark', 'popper-class': 'popper--small model-alias-tooltip', 'visible-arrow': false, position: 'bottom-start'}">{{t.alias}}</span>
+              <span v-custom-tooltip="{text: t.alias, w: 10, effect: 'dark', 'popper-class': 'popper--small model-alias-tooltip', 'visible-arrow': false, position: 'bottom-start', observerId: t.guid}">{{t.alias}}</span>
             </span>
             <el-tooltip :content="`${t.columns.length}`" placement="top" :disabled="typeof getColumnNums(t) === 'number'">
               <span class="table-column-nums">{{getColumnNums(t)}}</span>
@@ -108,7 +108,7 @@
               </el-dropdown-menu>
             </el-dropdown>
           </div>
-          <div class="column-search-box" v-show="t.spreadOut && !showOnlyConnectedColumn"><el-input prefix-icon="el-ksd-icon-search_22" v-model="t.filterColumnChar" @input="t.filterColumns()" size="small" :placeholder="$t('kylinLang.common.search')"></el-input></div>
+          <div class="column-search-box" v-show="t.spreadOut && !showOnlyConnectedColumn" @click.stop><el-input prefix-icon="el-ksd-icon-search_22" v-model="t.filterColumnChar" @input="t.filterColumns()" size="small" :placeholder="$t('kylinLang.common.search')"></el-input></div>
           <div class="column-list-box ksd-drag-box" :ref="`${t.guid}_column_box`" v-if="!t.drawSize.isOutOfView && t.showColumns.length" v-scroll.observe.reactive @scroll-bottom="handleScrollBottom(t)">
             <ul>
               <li class="column-search-results" v-if="t.filterColumnChar && t._cache_search_columns.length > 0"><span>{{$t('searchResults', {number: t._cache_search_columns.length})}}</span></li>
@@ -130,9 +130,7 @@
                   <span class="col-type-icon">
                     <span class="is-pfk" v-show="col.isPK || col.isFK">{{`${col.isFK && col.isPK ? 'FK PK' : col.isFK ? 'FK' : 'PK'}`}}</span><i :class="columnTypeIconMap(col.datatype)"></i>
                   </span>
-                  <el-tooltip :visible-arrow="false" popper-class="popper--small" effect="dark" :content="col.name" placement="bottom-start">
-                    <span :class="['col-name']">{{col.name}}</span>
-                  </el-tooltip>
+                  <span :class="['col-name']" v-custom-tooltip="{text: col.name, w: 30, effect: 'dark', 'popper-class': 'popper--small', 'visible-arrow': false, position: 'bottom-start', observerId: t.guid}">{{col.name}}</span>
                 </span>
               </li>
               <!-- 渲染可计算列 -->
@@ -152,16 +150,14 @@
                     <span class="col-type-icon">
                       <span class="is-pfk" v-show="col.isPK || col.isFK">{{`${col.isFK && col.isPK ? 'FK PK' : col.isFK ? 'FK' : 'PK'}`}}</span><i :class="columnTypeIconMap(col.datatype)"></i>
                     </span>
-                    <el-tooltip :visible-arrow="false" popper-class="popper--small" effect="dark" :content="col.columnName" placement="bottom-start">
-                      <span :class="['col-name']">{{col.columnName}}</span>
-                    </el-tooltip>
+                    <span :class="['col-name']" v-custom-tooltip="{text: col.columnName, w: 30, effect: 'dark', 'popper-class': 'popper--small', 'visible-arrow': false, position: 'bottom-start', observerId: t.guid}">{{col.columnName}}</span>
                   </span>
                 </li>
               </template>
               <li class="li-load-more" v-if="t.hasMoreColumns && t.hasScrollEnd && !showOnlyConnectedColumn"><i class="el-ksd-icon-loading_16"></i></li>
             </ul>
           </div>
-          <!-- <kylin-nodata v-else :content="$t('noResults')"></kylin-nodata> -->
+          <kylin-nodata v-show="t.showColumns.length === 0 && t.filterColumnChar" :content="$t('noResults')"></kylin-nodata>
           <!-- 拖动操纵 -->
           <DragBar :dragData="t.drawSize" :dragZoom="modelRender.zoom"/>
           <!-- 拖动操纵 -->
@@ -211,34 +207,7 @@
           <span class="new-icon">New</span>
         </div> -->
       </div>
-      <!-- 快捷操作 -->
-      <!-- <div class="sub-tool-icon-group" v-event-stop>
-        <div class="tool-icon" @click="reduceZoom"><i class="el-icon-ksd-shrink" ></i></div>
-        <div class="tool-icon" @click="addZoom"><i class="el-icon-ksd-enlarge"></i></div> -->
-        <!-- <div class="tool-icon" v-event-stop>{{modelRender.zoom}}0%</div> -->
-        <!-- <div class="tool-icon tool-full-screen" @click="fullScreen"><i class="el-icon-ksd-full_screen_2" v-if="!isFullScreen"></i><i class="el-icon-ksd-collapse_2" v-if="isFullScreen"></i></div>
-        <div class="tool-icon" @click="autoLayout"><i class="el-icon-ksd-auto"></i></div>
-      </div> -->
-
-      <div class="shortcuts-group">
-        <el-tooltip :content="isFullScreen ? $t('cancelFullScreen') : $t('fullScreen')" placement="top" >
-          <div :class="['full-screen', !isFullScreen ? 'el-ksd-n-icon-arrows-alt-outlined' : 'el-ksd-n-icon-shrink-exit-outlined']" @click="fullScreen"></div>
-        </el-tooltip>
-        <el-tooltip :content="$t('autoLayout')" placement="top" >
-          <div class="auto-layout el-ksd-n-icon-map-outlined" @click="autoLayout"></div>
-        </el-tooltip>
-        <span class="divide-line">|</span>
-        <el-dropdown class="action-dropdown" @command="handleActionsCommand">
-          <el-button icon="el-ksd-n-icon-column-3-outlined" iconr="el-ksd-n-icon-arrow-table-down-filled" nobg-text></el-button>
-          <el-dropdown-menu slot="dropdown" class="model-action-tools">
-            <el-dropdown-item command="expandAllTables"><i class="el-ksd-n-icon-column-3-outlined ksd-mr-8"></i>{{$t('expandAllTables')}}</el-dropdown-item>
-            <el-dropdown-item command="collapseAllTables" :class="{'is-active': collapseAllTables}"><i class="el-ksd-n-icon-workflow-outlined ksd-mr-8"></i>{{$t('collapseAllTables')}}</el-dropdown-item>
-            <el-dropdown-item command="showOnlyConnectedColumn"  :class="{'is-active': showOnlyConnectedColumn}"><i class="el-ksd-n-icon-workspace-outlined ksd-mr-8"></i>{{$t('showOnlyConnectedColumn')}}</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
-        <span class="divide-line">|</span>
-        <div class="zoom-tools"><span class="reduce-zoom el-ksd-n-icon-minus-outlined" @click="reduceZoom"></span><span class="zoom-num">{{modelRender.zoom / 10 * 100}}%</span><span class="add-zoom el-ksd-n-icon-plus-outlined" @click="addZoom"></span></div>
-      </div>
+      <ModelNavigationTools :zoom="modelRender.zoom" @command="handleActionsCommand" @addZoom="addZoom" @reduceZoom="reduceZoom" @autoLayout="autoLayout"/>
       <!-- 右侧面板组 -->
       <!-- dimension面板  index 0-->
       <transition name="bounceright">
@@ -443,51 +412,6 @@
         </div>
       </transition>
       <!-- 搜索面板 -->
-      <!-- <transition name="bouncecenter">
-        <div class="panel-search-box panel-box" :class="{'full-screen': isFullScreen}"  v-event-stop :style="panelStyle('search')" v-if="panelAppear.search.display">
-          <el-row :gutter="20">
-            <el-col :span="18">
-              <el-alert class="search-action-result" v-if="modelSearchActionSuccessTip" v-timer-hide:2
-                :title="modelSearchActionSuccessTip"
-                type="success"
-                :closable="false"
-                show-icon>
-              </el-alert>
-              <el-input @input="searchModelEverything"  clearable class="search-input" :placeholder="$t('searchInputPlaceHolder')" v-model="modelGlobalSearch" prefix-icon="el-ksd-icon-search_22"></el-input>
-              <transition name="bounceleft">
-                <div v-scroll.reactive class="search-result-box" v-keyborad-select="{scope:'.search-content', searchKey: modelGlobalSearch}" v-if="modelGlobalSearch && showSearchResult" v-search-highlight="{scope:'.search-name', hightlight: modelGlobalSearch}">
-                  <div>
-                  <div class="search-group" v-for="(k,v) in searchResultData" :key="v">
-                    <ul>
-                      <li class="search-content" v-for="(x, i) in k" @click="(e) => {selectResult(e, x)}" :key="x.action + x.name + i"><span class="search-category">[{{$t(x.i18n)}}]</span> <span class="search-name">{{x.name}}</span><span v-html="x.extraInfo"></span></li>
-                    </ul>
-                    <div class="ky-line"></div>
-                  </div>
-                  <div v-show="Object.keys(searchResultData).length === 0" class="search-noresult">{{$t('kylinLang.common.noResults')}}</div>
-                </div>
-              </div>
-              </transition>
-            </el-col>
-            <el-col :span="6">
-              <div class="search-action-list" v-if="modelSearchActionHistoryList && modelSearchActionHistoryList.length">
-                <div class="action-list-title">{{$t('searchHistory')}}</div>
-                <div class="action-content" v-for="(item, index) in modelSearchActionHistoryList" :key="index">
-                  <div class="action-title">
-                    <i :class="item.icon" class="ksd-mr-6 search-list-icon"></i>
-                    <div class="action-desc" v-html="item.title"></div>
-                  </div>
-                  <div class="action-detail"></div>
-                </div>
-              </div>
-            </el-col>
-          </el-row>
-          <div class="close" @click="toggleMenu('search')" v-global-key-event.esc="() => {toggleMenu('search')}">
-            <i class="el-icon-ksd-close ksd-mt-12"></i><br/>
-            <span>ESC</span>
-          </div>
-        </div>
-      </transition> -->
-
 
       <ModelSaveConfig/>
       <DimensionModal/>
@@ -551,8 +475,9 @@ import DragBar from './dragbar.vue'
 import AddCC from '../AddCCModal/addcc.vue'
 import ShowCC from '../ShowCC/showcc.vue'
 import NModel from './model.js'
-import ActionUpdateGuide from '../../../guide/modelEditPage/ActionUpdateGuide.vue'
+import ActionUpdateGuide from '../../../guide/modelEditPage/ActionUpdateGuide'
 import ModelTitleDescription from '../ModelList/Components/ModelTitleDescription'
+import ModelNavigationTools from '../../../common/ModelTools/ModelNavigationTools'
 import { modelRenderConfig, modelErrorMsg } from './config'
 import { NamedRegex, columnTypeIcon } from '../../../../config'
 @Component({
@@ -684,7 +609,8 @@ import { NamedRegex, columnTypeIcon } from '../../../../config'
     AddCC,
     ShowCC,
     ActionUpdateGuide,
-    ModelTitleDescription
+    ModelTitleDescription,
+    ModelNavigationTools
   },
   locales
 })
@@ -768,7 +694,6 @@ export default class ModelEdit extends Vue {
   showModelGuide = false
   saveBtnLoading = false
   showOnlyConnectedColumn = false
-  collapseAllTables = false
   get disableDelDimTips () {
     if (this.isHybridModel) {
       return this.$t('streamTips')
@@ -976,47 +901,6 @@ export default class ModelEdit extends Vue {
           item.className += ' is-focus'
         }
       })
-    })
-  }
-  // 增加连接线的 hover 热区
-  handleListenEvents () {
-    setTimeout(() => {
-      const { allConnInfo } = this.modelInstance
-      const connections = Object.values(allConnInfo)
-      connections.forEach(conn => {
-        this.drawAssistLine(conn)
-      })
-    }, 1000)
-  }
-  drawAssistLine (conn) {
-    const { sourceId, targetId } = conn
-    const dom = document.getElementsByClassName(`jtk-connector ${sourceId}&${targetId}`) || document.getElementsByClassName(`jtk-connector ${targetId}&${sourceId}`)
-    dom[0] && dom[0].addEventListener('mouseenter', () => {
-      const isBroken = conn.isBroken
-      const sign = 'http://www.w3.org/2000/svg'
-      const path = dom[0].firstChild
-      if (!path) return
-      if (dom[0].querySelector('g')) return
-      const newPath = path.cloneNode(true)
-      const group = document.createElementNS(sign, 'g')
-      const d = path.getAttribute('d')
-      group.id = isBroken ? 'broken-use-group' : 'use-group'
-      newPath.setAttribute('d', d)
-      newPath.setAttribute('stroke-width', 20)
-      newPath.setAttribute('stroke', 'transparent')
-      newPath.setAttribute('id', 'use')
-      group.appendChild(path)
-      group.appendChild(newPath)
-      dom[0].appendChild(group)
-      document.getElementById(sourceId).className += ' is-hover'
-      document.getElementById(targetId).className += ' is-hover'
-    })
-    dom[0].addEventListener('mouseleave', () => {
-      const path = dom[0].querySelector('path')
-      dom[0].innerHTML = ''
-      dom[0].appendChild(path)
-      document.getElementById(sourceId).classList.remove('is-hover')
-      document.getElementById(targetId).classList.remove('is-hover')
     })
   }
   // table columns 上显示连接点
@@ -1287,6 +1171,7 @@ export default class ModelEdit extends Vue {
         it.visible && it.hide()
       })
     }
+    document.activeElement && document.activeElement.blur()
   }
   closeAddMeasureDia ({isSubmit, data, isEdit, fromSearch}) {
     if (isSubmit) {
@@ -1347,9 +1232,9 @@ export default class ModelEdit extends Vue {
     this.modelInstance.renderPosition()
   }
   // 额外功能
-  handleActionsCommand (command) {
+  handleActionsCommand (command, showOnlyConnectedColumn) {
+    this.showOnlyConnectedColumn = showOnlyConnectedColumn
     if (command === 'collapseAllTables') {
-      this.collapseAllTables = true
       for (let item in this.modelRender.tables) {
         const { spreadOut } = this.modelRender.tables[item]
         if (spreadOut) {
@@ -1357,7 +1242,6 @@ export default class ModelEdit extends Vue {
         }
       }
     } else if (command === 'expandAllTables') {
-      this.collapseAllTables = false
       for (let item in this.modelRender.tables) {
         const { spreadOut } = this.modelRender.tables[item]
         if (!spreadOut) {
@@ -1365,32 +1249,27 @@ export default class ModelEdit extends Vue {
         }
       }
     } else if (command === 'showOnlyConnectedColumn') {
-      if (!this.showOnlyConnectedColumn) {
-        this.collapseAllTables = false
-        this.showOnlyConnectedColumn = true
-        for (let item in this.modelRender.tables) {
-          const { columns } = this.modelRender.tables[item]
-          const len = columns.filter(it => it.isFK || it.isPK).length
-          const columnHeight = document.querySelector('.column-li').offsetHeight
-          const tableTitleHeight = document.querySelector('.table-title').offsetHeight
-          const sumHeight = columnHeight * len
-          this.$set(this.modelRender.tables[item], 'spreadOut', true)
-          this.$set(this.modelRender.tables[item].drawSize, 'height', tableTitleHeight + sumHeight + 2)
-          this.$set(this.modelRender.tables[item], 'spreadHeight', tableTitleHeight + sumHeight + 2)
-        }
-      } else {
-        this.showOnlyConnectedColumn = false
-        for (let item in this.modelRender.tables) {
-          if (!this.modelRender.tables[item].spreadOut) {
-            this.$set(this.modelRender.tables[item], 'spreadHeight', modelRenderConfig.tableBoxHeight)
-          } else {
-            this.$set(this.modelRender.tables[item].drawSize, 'height', modelRenderConfig.tableBoxHeight)
-          }
-        }
+      for (let item in this.modelRender.tables) {
+        const { columns } = this.modelRender.tables[item]
+        const len = columns.filter(it => it.isFK || it.isPK).length
+        const columnHeight = document.querySelector('.column-li').offsetHeight
+        const tableTitleHeight = document.querySelector('.table-title').offsetHeight
+        const sumHeight = columnHeight * len
+        this.$set(this.modelRender.tables[item], 'spreadOut', true)
+        this.$set(this.modelRender.tables[item].drawSize, 'height', tableTitleHeight + sumHeight + 4)
+        this.$set(this.modelRender.tables[item], 'spreadHeight', tableTitleHeight + sumHeight + 4)
       }
       this.$nextTick(() => {
         this.modelInstance.plumbTool.refreshPlumbInstance()
       })
+    } else if (command === 'resetOnlyConnectedColumn') {
+      for (let item in this.modelRender.tables) {
+        if (!this.modelRender.tables[item].spreadOut) {
+          this.$set(this.modelRender.tables[item], 'spreadHeight', modelRenderConfig.tableBoxHeight)
+        } else {
+          this.$set(this.modelRender.tables[item].drawSize, 'height', modelRenderConfig.tableBoxHeight)
+        }
+      }
     }
   }
   async initModelDesc (cb) {
@@ -1867,7 +1746,6 @@ export default class ModelEdit extends Vue {
         this.$set(this.modelInstance, 'tables', this.modelRender.tables)
         console.log(this.modelInstance.allConnInfo)
         const [currentConnector] = Object.values(this.modelInstance.allConnInfo).slice(-1)
-        this.drawAssistLine(currentConnector)
       }, 500)
     }
     // 同步因为预计算被禁用的表
@@ -2256,7 +2134,6 @@ export default class ModelEdit extends Vue {
         })
         this.$nextTick(() => {
           this.checkInvalidIndex()
-          this.handleListenEvents()
           this.exchangeModelTable()
         })
       } catch (e) {
@@ -2274,7 +2151,7 @@ export default class ModelEdit extends Vue {
       await this.showFistAddModelGuide()
     }
     const keVersion = this.$store.state.system.serverAboutKap['ke.version']?.match(/Kyligence Enterprise (\d+.\d+.\d+.\d+)-\w+/)[1]
-    if ((localStorage.getItem('isFirstUpdateModel') === 'true' || !localStorage.getItem('isFirstUpdateModel')) && (keVersion && +keVersion.split('.').join('') >= 45160)) {
+    if ((localStorage.getItem('isFirstUpdateModel') === 'true' || !localStorage.getItem('isFirstUpdateModel')) && (keVersion && +keVersion.split('.').join('') >= 45160) && this.extraoption.action === 'edit') {
       await this.showUpdateGuide()
     }
   }
@@ -2511,14 +2388,14 @@ export default class ModelEdit extends Vue {
   z-index:100001 !important;
 }
 .jtk-connector.is-focus {
-  path {
-    stroke: @ke-color-primary;
+  path:not(#use) {
+    stroke: @ke-color-primary !important;
     stroke-width: 2;
   }
 }
 .jtk-connector.is-broken.is-focus {
-  path {
-    stroke: @ke-color-danger;
+  path:not(#use) {
+    stroke: @ke-color-danger !important;
     stroke-width: 2;
   }
 }
@@ -2577,11 +2454,6 @@ export default class ModelEdit extends Vue {
       background: @ke-color-danger;
     }
   }
-  &.jtk-hover {
-    .close-icon {
-      display: inline-block;
-    }
-  }
   &.jtk-hover:not(.link-label-broken):not(.is-focus) {
     .join-type {
       color: @base-color-6;
@@ -2597,6 +2469,13 @@ export default class ModelEdit extends Vue {
     height: 6px;
     border-radius: 100%;
     background: @text-placeholder-color;
+  }
+  .line-label-bar {
+    &:hover {
+      .close-icon {
+        display: inline-block;
+      }
+    }
   }
   .join-type {
     color: @text-placeholder-color;
@@ -2653,7 +2532,6 @@ export default class ModelEdit extends Vue {
         max-width: 90%;
       }
       .model-alias-label {
-        cursor: pointer;
         .filter-status {
           top: -4px;
           margin-right: 2px;
@@ -2826,62 +2704,10 @@ export default class ModelEdit extends Vue {
     z-index: 99999;
     background-color: rgba(24, 32, 36, 0.7);
   }
-  .fast-action-box {
-    width: 210px;
-    left: 215px;
-    color: #fff;
+  .shortcuts-group {
     position: absolute;
-    z-index: 100001;
-    margin-left: 10px;
-    background: #fff;
-    border: 1px solid #ECF0F8;
-    border-radius: 6px;
-    .el-form-item__content {
-      line-height: 0;
-    }
-    &.edge-right {
-      text-align: right;
-      left: -230px;
-      .el-form-item__error {
-        text-align: left;
-      }
-    }
-    div {
-      margin-bottom:5px;
-    }
-    div.alias-form{
-      .el-input {
-        width:140px;
-      }
-      .el-button+.el-button {
-        margin-left:5px;
-        color: @fff;
-      }
-    }
-    div.action {
-      display: inline-block;
-      border-radius: 2px;
-      background:black;
-      color:@fff;
-      height:24px;
-      padding-left:5px;
-      padding-right:6px;
-      font-size:12px;
-      line-height:25px;
-      cursor:pointer;
-      margin-left:0;
-      transform: margin-left ease;
-      &:hover {
-        margin-left: 4px;
-      }
-      &.disabled {
-        opacity: 0.375;
-        cursor: not-allowed;
-      }
-    }
-  }
-  .fast-action-temp-table {
-    z-index:100000!important;
+    right: 20px;
+    bottom: 20px;
   }
   
   .panel-box{
@@ -3277,73 +3103,6 @@ export default class ModelEdit extends Vue {
       }
     }
   }
-  .shortcuts-group {
-    position: absolute;
-    right: 20px;
-    bottom: 20px;
-    // top: 70%;
-    background-color: @fff;
-    border: 1px solid @ke-border-secondary;
-    box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.04);
-    border-radius: 6px;
-    padding: 7px;
-    box-sizing: border-box;
-    display: flex;
-    // flex-direction: column;
-    align-items: center;
-    color: @text-normal-color;
-    > div {
-      margin-right: 8px;
-      &:last-child {
-        margin-right: 0;
-      }
-    }
-    .zoom-tools {
-      display: flex;
-      // flex-direction: column;
-      align-items: center;
-      .reduce-zoom {
-        cursor: pointer;
-        font-size: 16px;
-      }
-      .zoom-num {
-        margin-left: 8px;
-        margin-right: 8px;
-      }
-      .add-zoom {
-        cursor: pointer;
-        font-size: 16px;
-      }
-    }
-    .divide-line {
-      border: 0;
-      // border-left: 1px solid @ke-border-secondary;
-      // margin: 4px 0 20px 0;
-      color: @ke-border-secondary;
-      width: 1px;
-      height: 70%;
-      margin-right: 8px;
-    }
-    .full-screen {
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .auto-layout {
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .action-dropdown {
-      margin-top: -3px;
-      .el-ksd-n-icon-column-3-outlined {
-        font-size: 16px;
-        color: @text-normal-color;
-      }
-      .el-ksd-n-icon-arrow-table-down-filled {
-        font-size: 12px;
-        color: @text-normal-color;
-      }
-    }
-  }
   .icon-ds {
     top: 10px;
     left: 10px;
@@ -3386,7 +3145,7 @@ export default class ModelEdit extends Vue {
     }
     svg.jtk-connector {
       cursor: pointer;
-      &.jtk-hover:not(.is-broken) {
+      &.jtk-hover:not(.is-broken):not(.is-focus) {
         > path {
           stroke: @base-color-6;
           stroke-width: 2;
@@ -3507,13 +3266,13 @@ export default class ModelEdit extends Vue {
       padding: 0 8px 0 12px;
       display: flex;
       align-items: center;
+      cursor: move;
       &.table-spread-out {
         border-radius: 4px;
       }
       .table-sign {
         display: inline-block;
         font-size: 0;
-        cursor: default;
       }
       .table-column-nums {
         font-size: 12px;
@@ -3549,8 +3308,8 @@ export default class ModelEdit extends Vue {
         display: inline-block;
         margin-left: 4px;
         font-weight: bold;
-        &.tip_box {
-          cursor: default;
+        .tip_box {
+          cursor: move;
           .alias-span {
             font-size: 14px;
             font-weight: @font-medium;
@@ -3598,13 +3357,13 @@ export default class ModelEdit extends Vue {
       }
       ul {
         li {       
-          padding-left:5px;
+          padding-left: 5px;
           cursor: move;
           border-top: solid 2px transparent;
           border-bottom: 2px solid transparent;
           height: 32px;
           line-height: 32px;
-          font-size:14px;
+          font-size: 14px;
           position: relative;
           &.is-hover {
             background-color: @ke-background-color-secondary;
@@ -3636,10 +3395,17 @@ export default class ModelEdit extends Vue {
           }
           .ksd-nobr-text {
             width: calc(~'100% - 25px');
+            display: flex;
+            align-items: center;
+            .tip_box {
+              height: 32px;
+              line-height: 30px;
+            }
           }
           .col-type-icon {
-            color:@text-disabled-color;
-            font-size:12px;
+            color: @text-disabled-color;
+            font-size: 12px;
+            margin-right: 5px;
             .is-pfk{
               color: @text-placeholder-color;
               position: absolute;
@@ -3675,6 +3441,7 @@ export default class ModelEdit extends Vue {
           padding-left: 0;
           &:hover{
             background-color: transparent;
+            border: 2px solid transparent;
           }
         }
       }

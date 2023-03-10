@@ -99,6 +99,7 @@ class NModel extends Schama {
       }
       this.vm.$nextTick(() => {
         this.plumbTool.refreshPlumbInstance()
+        this.createAndUpdateSvgGroup(null, {type: 'update'})
       })
     }
   }
@@ -1085,7 +1086,8 @@ class NModel extends Schama {
       options.fact = tableInfo.fact
       options.batch_table_identity = tableInfo.batch_table_identity
       options.modelEvents = {
-        getAllConnectsByGuid: this.getAllConnectsByGuid.bind(this)
+        getAllConnectsByGuid: this.getAllConnectsByGuid.bind(this),
+        createAndUpdateSvgGroup: this.createAndUpdateSvgGroup.bind(this)
       }
       if (tableInfo.source_type === 1 && !options.isSecStorageEnabled) {
         if (!this.getFactTable()) {
@@ -1454,15 +1456,12 @@ class NModel extends Schama {
     var pid = conn.targetId
     var labelObj = conn.getOverlay(pid + (fid + 'label'))
     var joinInfo = this.tables[pid].getJoinInfoByFGuid(fid)
-    if (!joinInfo) {
-      return
-    }
+    if (!joinInfo) return
     var joinType = joinInfo.join.type
     var labelCanvas = $(labelObj.canvas)
     const [lineCanvas] = $(conn.canvas)
     const fKeys = joinInfo.join.foreign_key.map(it => it.split('.')[1])
     const pKeys = joinInfo.join.primary_key.map(it => it.split('.')[1])
-    // let tooltipId = labelCanvas?.find('.el-tooltip')?.eq(0)?.attr('aria-describedby')
     lineCanvas.setAttribute('class', `${lineCanvas.className.baseVal.replace(/is-broken/g, '')}`)
     labelCanvas.removeClass('link-label-broken')
     conn.setType(isBroken ? 'broken' : 'normal')
@@ -1470,18 +1469,19 @@ class NModel extends Schama {
     this.getBrokenLinkedTable()
     labelCanvas.addClass(isBroken ? 'link-label link-label-broken' : `link-label ${fid}&${pid}`)
     isBroken && lineCanvas.setAttribute('class', `${lineCanvas.className.baseVal} is-broken`)
+    this.createAndUpdateSvgGroup(lineCanvas, {type: 'create', isBroken, fKeys, pKeys, fid, pid})
 
     const child = document.createElement('i')
     child.className = 'close-icon el-ksd-n-icon-close-outlined'
     const hideNode = document.createElement('span')
     hideNode.className = 'join-type-hide'
-    // labelCanvas && labelCanvas.find('.label').eq(0).text(joinType)
-    // tooltipId && $(`#${tooltipId}`)
     let dom = !isBroken ? createToolTipDom(`<span class="join-type ${joinType === 'INNER' ? 'el-ksd-n-icon-inner-join-filled' : joinType === 'LEFT' ? 'el-ksd-n-icon-left-join-filled' : 'el-ksd-n-icon-right-join-filled'}"></span>`, {
       text: joinType,
+      className: 'line-label-bar',
       children: [hideNode, child]
     }) : createToolTipDom(`<span class="join-type el-ksd-icon-wrong_fill_16"></span>`, {
       text: joinType,
+      className: 'line-label-bar',
       children: [hideNode, child]
     })
     dom.onmouseenter = function () {
@@ -1534,6 +1534,53 @@ class NModel extends Schama {
 
     const currentJoin = joinColumns.foreign_key.map((f, index) => `${f}/${joinColumns.op[index]}/${joinColumns.primary_key[index]}/${joinColumns.type}`).sort().join('&')
     return linkList.includes(currentJoin)
+  }
+
+  // 自定义扩大 line svg hover 热区
+  createAndUpdateSvgGroup (lineCanvas, conn, guid) {
+    if (conn.type === 'create') {
+      const sign = 'http://www.w3.org/2000/svg'
+      const path = lineCanvas.firstChild
+      if (!path) return
+      if (lineCanvas.querySelector('g')) return
+      const newPath = path.cloneNode(true)
+      const group = document.createElementNS(sign, 'g')
+      const d = path.getAttribute('d')
+
+      group.id = conn.isBroken ? 'broken-use-group' : 'use-group'
+      newPath.setAttribute('d', d)
+      newPath.setAttribute('stroke-width', 20)
+      newPath.setAttribute('stroke', 'transparent')
+      newPath.setAttribute('id', 'use')
+      group.appendChild(path)
+      group.appendChild(newPath)
+      lineCanvas.appendChild(group)
+
+      group.onmouseenter = function () {
+        $(`#${conn.fid}`).addClass('link-hover')
+        $(`#${conn.pid}`).addClass('link-hover')
+        conn.fKeys.forEach(item => $(`#${conn.fid}_${item}`).addClass('is-hover'))
+        conn.pKeys.forEach(item => $(`#${conn.pid}_${item}`).addClass('is-hover'))
+      }
+      group.onmouseleave = function () {
+        $(`#${conn.fid}`).removeClass('link-hover')
+        $(`#${conn.pid}`).removeClass('link-hover')
+        conn.fKeys.forEach(item => $(`#${conn.fid}_${item}`).removeClass('is-hover'))
+        conn.pKeys.forEach(item => $(`#${conn.pid}_${item}`).removeClass('is-hover'))
+      }
+    } else {
+      const lineGroups = !guid ? Object.keys(this.allConnInfo): Object.keys(this.allConnInfo).filter(it => it.split('$').includes(guid))
+      lineGroups.forEach(item => {
+        const line = this.allConnInfo[item].canvas
+        if (line.querySelector('g')) {
+          const paths = line.querySelectorAll('path')
+          const firstPathLine = paths[0].getAttribute('d')
+          paths[1].setAttribute('d', firstPathLine)
+        } else {
+          this.createAndUpdateSvgGroup(line, this.allConnInfo[item].isBroken, 'create')
+        }
+      })
+    }
   }
 }
 

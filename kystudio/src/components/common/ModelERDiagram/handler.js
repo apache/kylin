@@ -17,17 +17,28 @@ export function initPlumb (renderDom, zoom) {
 export function drawLines (that, plumbTool, joints) {
   plumbTool.lazyRender(() => {
     joints.forEach(v => {
+      const [firstJoin] =  v.joins.slice(0, 1)
+      const primaryKey = []
+      const foreignKey = []
       v.joins.forEach(item => {
+        primaryKey.push(item.primaryKey.split('.')[1])
+        foreignKey.push(item.foreignKey.split('.')[1])
         that.primaryKeys.push(item.primaryKey)
         that.foreignKeys.push(item.foreignKey)
-        addPlumbPoints(plumbTool, v.guid)
-        addPlumbPoints(plumbTool, item.guid)
-        const conn = plumbTool.connect(v.guid, item.guid, () => {}, {
-          joinType: v.type ?? '',
-          brokenLine: false
-        })
-        allConnectList[`${v.guid}$${item.guid}`] = conn
       })
+      addPlumbPoints(plumbTool, v.guid)
+      addPlumbPoints(plumbTool, firstJoin.guid)
+      const conn = plumbTool.connect(v.guid, firstJoin.guid, () => {}, {
+        joinType: v.type ?? '',
+        brokenLine: false
+      })
+      const labelLayout = conn.getOverlay(v.guid + (firstJoin.guid + 'label'))
+      const labelCanvas = labelLayout.canvas
+      const lineCanvas = conn.canvas
+
+      allConnectList[`${v.guid}$${firstJoin.guid}`] = conn
+      handleHoverLinks(labelCanvas, {fKeys: foreignKey, pKeys: primaryKey, fid: firstJoin.guid, pid: v.guid})
+      createAndUpdateSvgGroup(lineCanvas, {type: 'create', isBroken: false, fKeys: foreignKey, pKeys: primaryKey, fid: firstJoin.guid, pid: v.guid})
     })
   })
 }
@@ -96,4 +107,55 @@ function autoCalcLayer (tables, model) {
   const tree = new ModelTree({rootGuid: rootGuid, showLinkCons: allConnectList, tables: tbs})
   tree.positionTree()
   return tree.nodeDB.rootNode
+}
+
+// 自定义扩大 line svg hover 热区
+export function createAndUpdateSvgGroup (lineCanvas, conn, guid) {
+  if (conn.type === 'create') {
+    const sign = 'http://www.w3.org/2000/svg'
+    const path = lineCanvas.firstChild
+    if (!path) return
+    if (lineCanvas.querySelector('g')) return
+    const newPath = path.cloneNode(true)
+    const group = document.createElementNS(sign, 'g')
+    const d = path.getAttribute('d')
+
+    group.id = conn.isBroken ? 'broken-use-group' : 'use-group'
+    newPath.setAttribute('d', d)
+    newPath.setAttribute('stroke-width', 10)
+    newPath.setAttribute('stroke', 'transparent')
+    newPath.setAttribute('id', 'use')
+    group.appendChild(path)
+    group.appendChild(newPath)
+    lineCanvas.appendChild(group)
+
+    handleHoverLinks(group, conn)
+  } else {
+    const lineGroups = !guid ? Object.keys(allConnectList): Object.keys(allConnectList).filter(it => it.split('$').includes(guid))
+    lineGroups.forEach(item => {
+      const line = allConnectList[item].canvas
+      if (line.querySelector('g')) {
+        const paths = line.querySelectorAll('path')
+        const firstPathLine = paths[0].getAttribute('d')
+        paths[1].setAttribute('d', firstPathLine)
+      } else {
+        // createAndUpdateSvgGroup(line, allConnectList[item].isBroken, 'create')
+      }
+    })
+  }
+}
+
+function handleHoverLinks (element, conn) {
+  element.onmouseenter = function () {
+    document.getElementById(`${conn.fid}`).className += ' link-hover'
+    document.getElementById(`${conn.pid}`).className += ' link-hover'
+    conn.fKeys.forEach(item => document.getElementById(`${conn.fid}_${item}`).className += ' is-hover')
+    conn.pKeys.forEach(item => document.getElementById(`${conn.pid}_${item}`).className += ' is-hover')
+  }
+  element.onmouseleave = function () {
+    document.getElementById(`${conn.fid}`).classList.remove('link-hover')
+    document.getElementById(`${conn.pid}`).classList.remove('link-hover')
+    conn.fKeys.forEach(item => document.getElementById(`${conn.fid}_${item}`).classList.remove('is-hover'))
+    conn.pKeys.forEach(item => document.getElementById(`${conn.pid}_${item}`).classList.remove('is-hover'))
+  }
 }

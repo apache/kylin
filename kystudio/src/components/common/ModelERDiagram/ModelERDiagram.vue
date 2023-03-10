@@ -32,45 +32,25 @@
                 <span class="col-type-icon">
                   <span class="pfk-sign">{{isPFK(col.name, t).isPK ? 'PK' : isPFK(col.name, t).isFK ? 'FK' : ''}}</span><i :class="columnTypeIconMap(col.datatype)"></i>
                 </span>
-                <span :class="['col-name', {'is-link': col.isPFK}]">{{col.name}}</span>
+                <span :class="['col-name', {'is-link': col.isPFK}]" v-custom-tooltip="{text: col.name, w: 30, effect: 'dark', 'popper-class': 'popper--small', 'visible-arrow': false, position: 'bottom-start', observerId: t.guid}">{{col.name}}</span>
               </span>
             </li>
           </ul>
         </div>
       </div>
     </div>
-    <div class="shortcuts-group" v-if="showShortcutsGroup">
-      <el-tooltip :content="$t('reset')" placement="top" >
-        <div class="resetER el-ksd-n-icon-resure-outlined" @click="resetERDiagram"></div>
-      </el-tooltip>
-      <el-tooltip :content="isFullScreen ? $t('cancelFullScreen') : $t('fullScreen')" placement="top" >
-        <div :class="['full-screen', !isFullScreen ? 'el-ksd-n-icon-arrows-alt-outlined' : 'el-ksd-n-icon-shrink-exit-outlined']" @click="fullScreen"></div>
-      </el-tooltip>
-      <el-tooltip :content="$t('autoLayout')" placement="top" >
-        <div class="auto-layout el-ksd-n-icon-map-outlined" @click="autoLayout"></div>
-      </el-tooltip>
-      <span class="divide-line">|</span>
-      <el-dropdown class="action-dropdown" @command="handleActionsCommand">
-        <el-button icon="el-ksd-n-icon-column-3-outlined" iconr="el-ksd-n-icon-arrow-table-down-filled" nobg-text></el-button>
-        <el-dropdown-menu slot="dropdown" class="model-action-tools">
-          <el-dropdown-item command="expandAllTables"><i class="el-ksd-n-icon-column-3-outlined ksd-mr-8"></i>{{$t('expandAllTables')}}</el-dropdown-item>
-          <el-dropdown-item command="collapseAllTables" :class="{'is-active': collapseAllTables}"><i class="el-ksd-n-icon-workflow-outlined ksd-mr-8"></i>{{$t('collapseAllTables')}}</el-dropdown-item>
-          <el-dropdown-item command="showOnlyConnectedColumn" :class="{'is-active': showOnlyConnectedColumn}"><i class="el-ksd-n-icon-workspace-outlined ksd-mr-8"></i>{{$t('showOnlyConnectedColumn')}}</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
-      <span class="divide-line">|</span>
-      <div class="zoom-tools" v-if="currentModel && currentModel.canvas"><span class="reduce-zoom el-ksd-n-icon-minus-outlined" @click="handleZoom('down')"></span><span class="zoom-num">{{currentModel.canvas.zoom / 10 * 100}}%</span><span class="add-zoom el-ksd-n-icon-plus-outlined" @click="handleZoom('up')"></span></div>
-    </div>
+    <ModelNavigationTools v-if="currentModel && currentModel.canvas" :showReset="changeER" :zoom="currentModel.canvas.zoom" @command="handleActionsCommand" @addZoom="handleZoom('up')" @reduceZoom="handleZoom('down')" @autoLayout="autoLayout" @reset="resetERDiagram" />
   </div>
 </template>
 <script>
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator'
-import { handleSuccessAsync } from 'util'
+import { handleSuccessAsync, objectClone } from 'util'
 import { columnTypeIcon } from '../../../config'
 import { mapActions, mapGetters, mapState, mapMutations } from 'vuex'
-import { initPlumb, drawLines, customCanvasPosition } from './handler'
+import { initPlumb, drawLines, customCanvasPosition, createAndUpdateSvgGroup } from './handler'
 import { modelRenderConfig } from '../../studio/StudioModel/ModelEdit/config'
+import ModelNavigationTools from '../ModelTools/ModelNavigationTools'
 import locales from './locales'
 @Component({
   props: {
@@ -102,7 +82,10 @@ import locales from './locales'
       toggleFullScreen: 'TOGGLE_SCREEN'
     })
   },
-  locales
+  locales,
+  components: {
+    ModelNavigationTools
+  }
 })
 export default class ModelERDiagram extends Vue {
   currentModel = null
@@ -116,7 +99,6 @@ export default class ModelERDiagram extends Vue {
   primaryKeys = []
   linkFocus = []
   showOnlyConnectedColumn = false
-  collapseAllTables = false
   changeER = false
   // 判断是否为主外键
   isPFK (column, table) {
@@ -155,7 +137,7 @@ export default class ModelERDiagram extends Vue {
           this.plumbTool.refreshPlumbInstance()
         })
       }
-      this.defaultCanvasBackup = this.currentModel.canvas
+      this.defaultCanvasBackup = objectClone(this.currentModel.canvas)
       this.exchangeTableData()
     })
   }
@@ -229,12 +211,14 @@ export default class ModelERDiagram extends Vue {
     }
     this.changeER = true
   }
+  // 自动布局
   autoLayout () {
     const cv = customCanvasPosition(this, this.$el.querySelector('.er-layout'), this.currentModel, this.currentModel.canvas.zoom)
     this.$set(this.currentModel, 'canvas', cv)
     this.changeER = true
     this.$nextTick(() => {
       this.plumbTool.refreshPlumbInstance()
+      createAndUpdateSvgGroup(null, { type: 'update' })
     })
   }
   handleMouseEnterColumn (e, t, col) {
@@ -289,10 +273,10 @@ export default class ModelERDiagram extends Vue {
     }
   }
   // 额外功能
-  handleActionsCommand (command) {
+  handleActionsCommand (command, showOnlyConnectedColumn) {
     this.changeER = true
+    this.showOnlyConnectedColumn = showOnlyConnectedColumn
     if (command === 'collapseAllTables') {
-      this.collapseAllTables = true
       for (let item in this.currentModel.tables) {
         const { spreadOut } = this.currentModel.tables[item]
         if (spreadOut) {
@@ -300,7 +284,6 @@ export default class ModelERDiagram extends Vue {
         }
       }
     } else if (command === 'expandAllTables') {
-      this.collapseAllTables = false
       for (let item in this.currentModel.tables) {
         const { spreadOut } = this.currentModel.tables[item]
         if (!spreadOut) {
@@ -308,32 +291,29 @@ export default class ModelERDiagram extends Vue {
         }
       }
     } else if (command === 'showOnlyConnectedColumn') {
-      if (!this.showOnlyConnectedColumn) {
-        this.showOnlyConnectedColumn = true
-        this.currentModel.tables.forEach(item => {
-          const { columns } = item
-          const len = columns.filter(it => this.isPFK(it.name, item).isFK || this.isPFK(it.name, item).isPK).length
-          const columnHeight = document.querySelector('.column-li').offsetHeight
-          const tableTitleHeight = document.querySelector('.table-title').offsetHeight
-          const sumHeight = columnHeight * len
-          this.$set(item, 'spreadOut', true)
-          this.$set(item, 'spreadHeight', tableTitleHeight + sumHeight + 2)
-          this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', tableTitleHeight + sumHeight + 5)
-        })
-      } else {
-        this.showOnlyConnectedColumn = false
-        this.currentModel.tables.forEach(item => {
-          if (!item.spreadOut) {
-            this.$set(item, 'spreadHeight', modelRenderConfig.tableBoxHeight)
-          } else {
-            this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', modelRenderConfig.tableBoxHeight)
-          }
-        })
-      }
-      this.$nextTick(() => {
-        this.plumbTool.refreshPlumbInstance()
+      this.currentModel.tables.forEach(item => {
+        const { columns } = item
+        const len = columns.filter(it => this.isPFK(it.name, item).isFK || this.isPFK(it.name, item).isPK).length
+        const columnHeight = document.querySelector('.column-li').offsetHeight
+        const tableTitleHeight = document.querySelector('.table-title').offsetHeight
+        const sumHeight = columnHeight * len
+        this.$set(item, 'spreadOut', true)
+        this.$set(item, 'spreadHeight', tableTitleHeight + sumHeight + 2)
+        this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', tableTitleHeight + sumHeight + 5)
+      })
+    } else if (command === 'resetOnlyConnectedColumn') {
+      this.currentModel.tables.forEach(item => {
+        if (!item.spreadOut) {
+          this.$set(item, 'spreadHeight', modelRenderConfig.tableBoxHeight)
+        } else {
+          this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', modelRenderConfig.tableBoxHeight)
+        }
       })
     }
+    this.$nextTick(() => {
+      this.plumbTool.refreshPlumbInstance()
+      createAndUpdateSvgGroup(null, { type: 'update' })
+    })
   }
   exchangeTableData () {
     const currentTableTitle = this.$el.querySelector('.table-title')
@@ -347,9 +327,9 @@ export default class ModelERDiagram extends Vue {
       }
     }
   }
+  // 重置 ER 图
   resetERDiagram () {
     this.changeER = false
-    this.collapseAllTables = false
     this.showOnlyConnectedColumn = false
     this.currentModel.canvas.zoom = 9
     this.currentModel.tables.forEach(item => {
@@ -357,11 +337,12 @@ export default class ModelERDiagram extends Vue {
       this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', modelRenderConfig.tableBoxHeight)
     })
     this.toggleFullScreen(false)
-    this.$set(this.currentModel, 'canvas', this.defaultCanvasBackup)
+    this.$set(this.currentModel, 'canvas', objectClone(this.defaultCanvasBackup))
     const drawBoard = this.$el.querySelector('.er-layout')
     drawBoard.style.cssText += `margin-left: 0; margin-top: 0`
     this.$nextTick(() => {
       this.plumbTool.refreshPlumbInstance()
+      createAndUpdateSvgGroup(null, { type: 'update' })
     })
   }
   fullScreen () {
@@ -393,12 +374,6 @@ export default class ModelERDiagram extends Vue {
     width: 100%;
     height: 100%;
     user-select: none;
-    .jtk-connector.jtk-hover {
-      path {
-        stroke: @ke-border-secondary-active;
-        stroke-width: 1;
-      }
-    }
     .jtk-connector.is-focus {
       path {
         stroke: @ke-color-primary;
@@ -411,6 +386,14 @@ export default class ModelERDiagram extends Vue {
         color: @ke-border-secondary-active;
         font-size: 30px;
         cursor: grab;
+      }
+      &.jtk-hover {
+        .join-type {
+          color: #9DCEFB;
+          &:hover {
+            color: @ke-color-primary;
+          }
+        }
       }
       .close-icon {
         display: none;
@@ -509,7 +492,6 @@ export default class ModelERDiagram extends Vue {
     }
     .column-list-box {
       overflow: hidden;
-      border-top: solid 1px @line-border-color;
       flex: 1;
       ul {
         li {       
@@ -536,10 +518,17 @@ export default class ModelERDiagram extends Vue {
           }
           .ksd-nobr-text {
             width: calc(~'100% - 25px');
+            display: flex;
+            align-items: center;
+            .tip_box {
+              height: 32px;
+              line-height: 32px;
+            }
           }
           .col-type-icon {
             color: @text-disabled-color;
             font-size: 12px;
+            margin-right: 5px;
             .pfk-sign{
               color: @text-placeholder-color;
               position: absolute;
@@ -572,70 +561,12 @@ export default class ModelERDiagram extends Vue {
     position: absolute;
     right: 20px;
     bottom: 20px;
-    background-color: #fff;
-    border: 1px solid #E6EBF4;
-    box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.04);
-    border-radius: 6px;
-    padding: 7px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    color: @text-normal-color;
-    > div {
-      margin-right: 8px;
-      &:last-child {
-        margin-right: 0;
-      }
-    }
-    .resetER {
-      position: absolute;
-      left: -25px;
-      top: 10px\0;
-      cursor: pointer;
-    }
-    .zoom-tools {
-      display: flex;
-      // flex-direction: column;
-      align-items: center;
-      .reduce-zoom {
-        cursor: pointer;
-        font-size: 16px;
-      }
-      .zoom-num {
-        margin-left: 8px;
-        margin-right: 8px;
-      }
-      .add-zoom {
-        cursor: pointer;
-        font-size: 16px;
-      }
-    }
-    .divide-line {
-      border: 0;
-      color: @ke-color-secondary-hover;
-      width: 1px;
-      height: 70%;
-      margin-right: 8px;
-    }
-    .full-screen {
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .auto-layout {
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .action-dropdown {
-      margin-top: -3px;
-      .el-ksd-n-icon-column-3-outlined {
-        font-size: 16px;
-        color: @text-normal-color;
-      }
-      .el-ksd-n-icon-arrow-table-down-filled {
-        font-size: 12px;
-        color: @text-normal-color;
-      }
-    }
+  }
+}
+#use-group:hover {
+  > path:not(#use) {
+    stroke: #9DCEFB;
+    stroke-width: 2;
   }
 }
 .model-action-tools {

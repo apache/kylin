@@ -40,9 +40,12 @@ export const download = {
   }
 }
 
-export function createToolTipDom (el, options = {}) {
+export function createToolTipDom (el, options = {}, className) {
   const customLayout = document.createElement('span')
   const renderer = Vue.compile(el)
+
+  className && (customLayout.className += ` ${className}`)
+  
   let createCommonTip = (propsData) => {
     let Dom = Vue.extend(ElementUI.Tooltip)
     // let Dom = Vue.extend(commonTip)

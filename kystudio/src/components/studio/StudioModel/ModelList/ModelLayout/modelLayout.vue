@@ -499,15 +499,12 @@ export default class ModelLayout extends Vue {
       padding: 0 14px;
       box-sizing: border-box;
       line-height: 56px;
-      // box-shadow: 1px 1px 4px #ccc;
       border-bottom: 1px solid #ECF0F8;
       background-color: @fff;
       position: relative;
       .model-alias-label {
         display: inline-block;
-        // height: 100%;
         height: 100%;
-        cursor: pointer;
         margin-top: 10px;
         margin-left: 8px;
         max-width: 240px;

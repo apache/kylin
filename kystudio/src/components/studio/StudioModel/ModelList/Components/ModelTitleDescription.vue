@@ -112,14 +112,15 @@
   
   <style lang="less">
   @import '../../../../../assets/styles/variables.less';
+  .model-alias-label {
+    cursor: default;
+  }
   .alias {
     font-weight: bold;
     line-height: 20px;
     width: 100%;
     margin-top: 6px;
-    // height: 20px;
-    // margin-bottom: 5px;
-    // float: left;
+    cursor: default;
     .filter-status {
       position: relative;
       top: 6px;
@@ -128,6 +129,7 @@
       height: 10px;
       display: inline-block;
       margin-right: 10px;
+      cursor: default;
       &.ONLINE {
         background-color: @color-success;
       }
@@ -147,10 +149,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      // -webkit-line-clamp: 1;
-      // /*! autoprefixer: off */
-      // -webkit-box-orient: vertical;
-      // /* autoprefixer: on */
       white-space: nowrap\0 !important;
     }
   }
@@ -201,13 +199,13 @@
   }
   .last-modified-tooltip {
     min-width: unset;
-    // transform: translate(-5px, 0);
     margin-top: 3px;
     margin-left: 15px;
     color: #8B99AE;
     font-size: 12px;
     line-height: 20px;
     display: block;
+    cursor: default;
     .popper__arrow {
       left: 5px !important;
     }
