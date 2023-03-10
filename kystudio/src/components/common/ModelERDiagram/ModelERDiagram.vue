@@ -1,7 +1,7 @@
 <template>
   <div :class="['model-er-diagram', {'is-full-screen': isFullScreen}]" v-drag="{sizeChangeCb:dragBox}" v-loading="loadingER">
     <el-alert class="alertChangeER" :title="$t('changeERTips')" type="warning" show-icon :closable="false" v-if="changeER && showChangeAlert"></el-alert>
-    <div class="er-layout" ref="el-draw-layout" v-if="currentModel" :style="{'transform': `scale(${currentModel.canvas.zoom / 10})`}">
+    <div class="er-layout" ref="el-draw-layout" v-if="currentModel" :style="getErLayoutStyle">
       <div :class="['table-box', {'is-lookup': t.type !== 'FACT'}]" :id="t.guid" v-for="t in currentModel.tables" :key="t.guid" :style="getTableStyles(t)">
         <div :class="['table-title', {'table-spread-out': !t.spreadOut}]" @dblclick="handleDBClick(t)">
           <span class="table-sign">
@@ -99,11 +99,16 @@ export default class ModelERDiagram extends Vue {
   loadingER = false
   defaultZoom = 9
   defaultCanvasBackup = null
+  defaultTableBackup = null
   foreignKeys = []
   primaryKeys = []
   linkFocus = []
   showOnlyConnectedColumn = false
   changeER = false
+
+  get getErLayoutStyle () {
+    return {'transform': `scale(${(this.currentModel?.canvas?.zoom ?? 9) / 10})`}
+  }
   // 判断是否为主外键
   isPFK (column, table) {
     return {
@@ -141,8 +146,10 @@ export default class ModelERDiagram extends Vue {
           this.plumbTool.refreshPlumbInstance()
         })
       }
-      this.defaultCanvasBackup = objectClone(this.currentModel.canvas)
       this.exchangeTableData()
+      this.defaultCanvasBackup = objectClone(this.currentModel.canvas)
+      this.defaultTableBackup = objectClone(this.currentModel.tables)
+
     })
   }
   // 获取 table 位置信息
@@ -281,19 +288,16 @@ export default class ModelERDiagram extends Vue {
     this.changeER = true
     this.showOnlyConnectedColumn = showOnlyConnectedColumn
     if (command === 'collapseAllTables') {
-      for (let item in this.currentModel.tables) {
-        const { spreadOut } = this.currentModel.tables[item]
-        if (spreadOut) {
-          this.handleDBClick(this.currentModel.tables[item])
-        }
-      }
+      const tableTitleHeight = document.querySelector('.table-title').offsetHeight
+      this.currentModel.tables.forEach((item) => {
+        this.$set(item, 'spreadOut', false)
+        this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', tableTitleHeight + 4)
+      })
     } else if (command === 'expandAllTables') {
-      for (let item in this.currentModel.tables) {
-        const { spreadOut } = this.currentModel.tables[item]
-        if (!spreadOut) {
-          this.handleDBClick(this.currentModel.tables[item])
-        }
-      }
+      this.currentModel.tables.forEach((item) => {
+        this.$set(item, 'spreadOut', true)
+        this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', item.spreadHeight)
+      })
     } else if (command === 'showOnlyConnectedColumn') {
       this.currentModel.tables.forEach(item => {
         const { columns } = item
@@ -301,16 +305,12 @@ export default class ModelERDiagram extends Vue {
         const columnHeight = document.querySelector('.column-li').offsetHeight
         const tableTitleHeight = document.querySelector('.table-title').offsetHeight
         const sumHeight = columnHeight * len
-        this.$set(item, 'spreadOut', true)
-        this.$set(item, 'spreadHeight', tableTitleHeight + sumHeight + 2)
-        this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', tableTitleHeight + sumHeight + 5)
-      })
-    } else if (command === 'resetOnlyConnectedColumn') {
-      this.currentModel.tables.forEach(item => {
-        if (!item.spreadOut) {
-          this.$set(item, 'spreadHeight', modelRenderConfig.tableBoxHeight)
+        if (sumHeight !== 0) {
+          this.$set(item, 'spreadOut', true)
+          this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', tableTitleHeight + sumHeight + 5)
         } else {
-          this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', modelRenderConfig.tableBoxHeight)
+          this.$set(item, 'spreadOut', false)
+          this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', tableTitleHeight + 4)
         }
       })
     }
@@ -328,6 +328,8 @@ export default class ModelERDiagram extends Vue {
       if (canvasHeight === currentTableTitle.offsetHeight + modelTableBoxBorder * 2 + 4) {
         this.$set(t, 'spreadOut', false)
         this.$set(t, 'spreadHeight', modelRenderConfig.tableBoxHeight)
+      } else {
+        this.$set(t, 'spreadHeight', canvasHeight || modelRenderConfig.tableBoxHeight)
       }
     }
   }
@@ -336,10 +338,12 @@ export default class ModelERDiagram extends Vue {
     this.changeER = false
     this.showOnlyConnectedColumn = false
     this.currentModel.canvas.zoom = 9
-    this.currentModel.tables.forEach(item => {
-      this.$set(item, 'spreadOut', true)
-      this.$set(this.currentModel.canvas.coordinate[`${item.alias}`], 'height', modelRenderConfig.tableBoxHeight)
-    })
+    if (this.defaultTableBackup) {
+      this.currentModel.tables.forEach((item, index) => {
+        this.$set(item, 'spreadOut', this.defaultTableBackup[index].spreadOut)
+        this.$set(item, 'spreadHeight', this.defaultTableBackup[index].spreadHeight)
+      })
+    }
     this.toggleFullScreen(false)
     this.$set(this.currentModel, 'canvas', objectClone(this.defaultCanvasBackup))
     const drawBoard = this.$el.querySelector('.er-layout')

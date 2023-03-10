@@ -100,7 +100,7 @@ function autoCalcLayer (tables, model) {
   tables.forEach(it => {
     tbs[it.guid] = {
       ...it,
-      drawSize: {...currentCanvas.coordinate[`${it.alias}`]}
+      drawSize: {...(currentCanvas?.coordinate[`${it.alias}`] ?? {})}
     }
   })
   const rootGuid = factTable.guid

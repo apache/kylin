@@ -97,24 +97,17 @@
       switch (command) {
         case 'collapseAllTables':
           this.collapseAllTables = true
+          this.showOnlyConnectedColumn = false
           break
         case 'expandAllTables':
           this.collapseAllTables = false
+          this.showOnlyConnectedColumn = false
           break
         case 'showOnlyConnectedColumn':
-          if (!this.showOnlyConnectedColumn) {
-            this.collapseAllTables = false
-            this.showOnlyConnectedColumn = true
-          } else {
-            this.showOnlyConnectedColumn = false
-          }
+          this.collapseAllTables = false
+          this.showOnlyConnectedColumn = true
       }
-      if (command === 'expandAllTables' && this.showOnlyConnectedColumn) {
-        this.showOnlyConnectedColumn = false
-        this.$emit('command', 'resetOnlyConnectedColumn', this.showOnlyConnectedColumn)
-      } else {
-        this.$emit('command', command, this.showOnlyConnectedColumn)
-      }
+      this.$emit('command', command, this.showOnlyConnectedColumn)
     }
   }
   </script>
@@ -192,4 +185,3 @@
     }
   }
   </style>
-  

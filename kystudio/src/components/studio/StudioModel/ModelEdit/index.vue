@@ -167,7 +167,7 @@
       <!-- datasource面板  index 3-->
       <div class="tool-icon icon-ds" v-if="panelAppear.datasource.icon_display" :class="{active: panelAppear.datasource.display}" v-event-stop @click="toggleMenu('datasource')"><i class="el-icon-ksd-data_source"></i></div>
       <transition name="bounceleft">
-        <div class="panel-box panel-datasource"  v-show="panelAppear.datasource.display" :style="panelStyle('datasource')" v-event-stop>
+        <div class="panel-box panel-datasource"  v-show="panelAppear.datasource.display" :style="panelStyle('datasource')" v-event-stop  @click.stop>
           <div class="panel-title" v-drag:change.left.top="panelAppear.datasource"><span class="title">{{$t('kylinLang.common.dataSource')}}</span><span class="close" @click="toggleMenu('datasource')"><i class="el-icon-ksd-close"></i></span></div>
           <DataSourceBar
             :ignore-node-types="['column']"
@@ -463,7 +463,7 @@ import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 import locales from './locales'
 import DataSourceBar from '../../../common/DataSourceBar'
 import { handleSuccess, handleError, loadingBox, kylinMessage, kylinConfirm } from '../../../../util/business'
-import { isIE, groupData, objectClone, filterObjectArray, handleSuccessAsync, getQueryString, indexOfObjWithSomeKey } from '../../../../util'
+import { isIE, groupData, objectClone, filterObjectArray, handleSuccessAsync, indexOfObjWithSomeKey, debounceEvent } from '../../../../util'
 import $ from 'jquery'
 import DimensionModal from '../DimensionsModal/index.vue'
 import BatchMeasureModal from '../BatchMeasureModal/index.vue'
@@ -694,6 +694,10 @@ export default class ModelEdit extends Vue {
   showModelGuide = false
   saveBtnLoading = false
   showOnlyConnectedColumn = false
+  debounceTimer = {
+    tableType: null,
+    expand: null
+  }
   get disableDelDimTips () {
     if (this.isHybridModel) {
       return this.$t('streamTips')
@@ -801,14 +805,25 @@ export default class ModelEdit extends Vue {
   }
   // 双击表头 - 展开或收起
   handleDBClick (t) {
-    this.$set(t, 'spreadOut', !t.spreadOut)
-    !t.spreadOut && this.$set(t, 'spreadHeight', t.drawSize.height)
-    const boxH = !t.spreadOut ? this.$el.querySelector('.table-title').offsetHeight + 4 : t.spreadHeight
-    this.$set(t.drawSize, 'height', boxH)
-    // this.$refs[`table_${t.guid}`].length && (this.$refs[`table_${t.guid}`][0].style.cssText += `height: ${boxH}px;`)
-    this.$nextTick(() => {
-      this.modelInstance.plumbTool.refreshPlumbInstance()
-    })
+    if (this.debounceTimer.expand) {
+      clearTimeout(this.debounceTimer.expand)
+    }
+    this.debounceTimer.expand = setTimeout(() => {
+      if (!t.spreadOut) {
+        if (t.spreadHeight < 140) {
+          this.$set(t, 'spreadHeight', 140)
+        }
+      } else {
+        this.$set(t, 'spreadHeight', t.drawSize.height)
+      }
+      this.$set(t, 'spreadOut', !t.spreadOut)
+      const boxH = !t.spreadOut ? this.$el.querySelector('.table-title').offsetHeight + 4 : t.spreadHeight
+      this.$set(t.drawSize, 'height', boxH)
+      // this.$refs[`table_${t.guid}`].length && (this.$refs[`table_${t.guid}`][0].style.cssText += `height: ${boxH}px;`)
+      this.$nextTick(() => {
+        this.modelInstance.plumbTool.refreshPlumbInstance()
+      })
+    }, 300)
   }
   // 滚动加载 columns
   handleScrollBottom (table) {
@@ -1101,13 +1116,15 @@ export default class ModelEdit extends Vue {
     this.isShowCCCheckbox = !this.isShowCCCheckbox
   }
   async delTable (table) {
+    this.blurTableActionDropdown()
     if (!this.modelInstance.checkTableCanDel(table.guid)) {
       await this.$msgbox({
         title: this.$t('kylinLang.common.delete'),
         message: this.$t('delTableTip'),
         type: 'warning',
         showCancelButton: true,
-        confirmButtonText: this.$t('kylinLang.common.delete')
+        confirmButtonText: this.$t('kylinLang.common.delete'),
+        closeOnClickModal: false
       })
     }
     this.modelInstance.delTable(table.guid).then(() => {
@@ -1167,12 +1184,16 @@ export default class ModelEdit extends Vue {
         item.setAttribute('class', `${item.className.baseVal.replace(/is-focus|is-broken/g, '')}`)
       })
     }
+    this.blurTableActionDropdown()
+    document.activeElement && document.activeElement.blur()
+  }
+  // 隐藏下拉框
+  blurTableActionDropdown () {
     if (this.$refs.tableActionsDropdown) {
       this.$refs.tableActionsDropdown.forEach(it => {
         it.visible && it.hide()
       })
     }
-    document.activeElement && document.activeElement.blur()
   }
   closeAddMeasureDia ({isSubmit, data, isEdit, fromSearch}) {
     if (isSubmit) {
@@ -1183,31 +1204,30 @@ export default class ModelEdit extends Vue {
     }
     this.measureVisible = false
   }
-  async changeTableType (t) {
-    if (t.kind === 'FACT' && t.source_type === 1) {
-      return
+  changeTableType (t) {
+    if (this.debounceTimer.tableType) {
+      clearTimeout(this.debounceTimer.tableType)
     }
-    if (this._checkTableType(t)) {
-      let joinT = Object.keys(this.modelInstance.linkUsedColumns).filter(it => it.indexOf(t.guid) === 0)
-      if (joinT.length && joinT.some(it => this.modelInstance.linkUsedColumns[it].length)) {
-        this.$message({
-          message: this.$t('changeTableJoinCondition'),
-          type: 'warning'
-        })
+    this.debounceTimer.tableType = setTimeout(() => {
+      if (t.kind === 'FACT' && t.source_type === 1) {
         return
       }
-      t.kind !== 'FACT' && await this.$msgbox({
-        title: t.kind !== 'FACT' ? this.$t('switchFact') : this.$t('switchLookup'),
-        type: 'warning',
-        message: this.$t('switchTableTypeTips'),
-        showCancelButton: true,
-        confirmButtonText: this.$t('switchReplace')
-      })
-      this.modelInstance.changeTableType(t)
-      if (this.modelData.available_indexes_count > 0 && !this.isIgnore) {
-        this.showChangeTips()
+      if (this._checkTableType(t)) {
+        let joinT = Object.keys(this.modelInstance.linkUsedColumns).filter(it => it.indexOf(t.guid) === 0)
+        if (joinT.length && joinT.some(it => this.modelInstance.linkUsedColumns[it].length)) {
+          this.$message({
+            message: this.$t('changeTableJoinCondition'),
+            type: 'warning'
+          })
+          return
+        }
+        this.modelInstance.changeTableType(t)
+        if (this.modelData.available_indexes_count > 0 && !this.isIgnore) {
+          this.showChangeTips()
+        }
+        this.blurTableActionDropdown()
       }
-    }
+    }, 300)
   }
   _checkTableType (t) {
     if (t.fact) {
@@ -1236,17 +1256,21 @@ export default class ModelEdit extends Vue {
   handleActionsCommand (command, showOnlyConnectedColumn) {
     this.showOnlyConnectedColumn = showOnlyConnectedColumn
     if (command === 'collapseAllTables') {
+      const tableTitleHeight = document.querySelector('.table-title').offsetHeight
       for (let item in this.modelRender.tables) {
-        const { spreadOut } = this.modelRender.tables[item]
-        if (spreadOut) {
-          this.handleDBClick(this.modelRender.tables[item])
-        }
+        this.$set(this.modelRender.tables[item], 'spreadOut', false)
+        this.$set(this.modelRender.tables[item], 'spreadHeight', this.modelRender.tables[item].drawSize.height)
+        this.$set(this.modelRender.tables[item].drawSize, 'height', tableTitleHeight + 4)
       }
     } else if (command === 'expandAllTables') {
       for (let item in this.modelRender.tables) {
-        const { spreadOut } = this.modelRender.tables[item]
-        if (!spreadOut) {
-          this.handleDBClick(this.modelRender.tables[item])
+        if (this.modelRender.tables[item].spreadHeight < 140) {
+          this.$set(this.modelRender.tables[item], 'spreadOut', true)
+          this.$set(this.modelRender.tables[item].drawSize, 'height', 140)
+          this.$set(this.modelRender.tables[item], 'spreadHeight', 140)
+        } else {
+          this.$set(this.modelRender.tables[item], 'spreadOut', true)
+          this.$set(this.modelRender.tables[item].drawSize, 'height', this.modelRender.tables[item].spreadHeight)
         }
       }
     } else if (command === 'showOnlyConnectedColumn') {
@@ -1256,22 +1280,18 @@ export default class ModelEdit extends Vue {
         const columnHeight = document.querySelector('.column-li').offsetHeight
         const tableTitleHeight = document.querySelector('.table-title').offsetHeight
         const sumHeight = columnHeight * len
-        this.$set(this.modelRender.tables[item], 'spreadOut', true)
-        this.$set(this.modelRender.tables[item].drawSize, 'height', tableTitleHeight + sumHeight + 4)
-        this.$set(this.modelRender.tables[item], 'spreadHeight', tableTitleHeight + sumHeight + 4)
-      }
-      this.$nextTick(() => {
-        this.modelInstance.plumbTool.refreshPlumbInstance()
-      })
-    } else if (command === 'resetOnlyConnectedColumn') {
-      for (let item in this.modelRender.tables) {
-        if (!this.modelRender.tables[item].spreadOut) {
-          this.$set(this.modelRender.tables[item], 'spreadHeight', modelRenderConfig.tableBoxHeight)
+        if (sumHeight !== 0) {
+          this.$set(this.modelRender.tables[item], 'spreadOut', true)
+          this.$set(this.modelRender.tables[item].drawSize, 'height', tableTitleHeight + sumHeight + 4)
         } else {
-          this.$set(this.modelRender.tables[item].drawSize, 'height', modelRenderConfig.tableBoxHeight)
+          this.$set(this.modelRender.tables[item], 'spreadOut', false)
+          this.$set(this.modelRender.tables[item].drawSize, 'height', tableTitleHeight + 4)
         }
       }
     }
+    this.$nextTick(() => {
+      this.modelInstance.plumbTool.refreshPlumbInstance()
+    })
   }
   async initModelDesc (cb) {
     if (this.extraoption.modelName && this.extraoption.action === 'edit') {
@@ -1443,7 +1463,7 @@ export default class ModelEdit extends Vue {
     this.showEditAliasForm = false
   }
   openEditAliasForm (table) {
-    // this.showEditAliasForm = true
+    this.blurTableActionDropdown()
     this.$prompt(null, this.$t('rename'), {
       type: 'info',
       inputValue: table.alias,
@@ -1451,9 +1471,9 @@ export default class ModelEdit extends Vue {
       inputErrorMessage: this.$t('kylinLang.common.nameFormatValidTip'),
       inputPlaceholder: this.$t('kylinLang.common.pleaseInput'),
       confirmButtonText: this.$t('kylinLang.common.save'),
-      cancelButtonText: this.$t('kylinLang.common.cancel')
+      cancelButtonText: this.$t('kylinLang.common.cancel'),
+      closeOnClickModal: false
     }).then(({ value }) => {
-      // table.alias = value
       this.saveNewAlias(table, value)
     })
   }
@@ -1462,7 +1482,6 @@ export default class ModelEdit extends Vue {
     columns.forEach((col) => {
       this.$set(col, 'isHidden', filterVal ? !reg.test(col.name) : false)
     })
-    // t.columns = filterObjectArray(columns, 'isfiltered', true)
   }
   getFilteredColumns (columns) {
     return filterObjectArray(columns, 'isHidden', false)
@@ -1500,10 +1519,7 @@ export default class ModelEdit extends Vue {
       return
     }
     var target = event.currentTarget
-    // const dom = document.getElementById(`${t.guid}_${col.column}`)
     $(target).addClass('drag-column-li-in')
-    // if (dom.className.indexOf('drag-column-in') >= 0) return
-    // dom.className += ' drag-column-li-in'
   }
   dragColumnLeave (event) {
     var target = event.currentTarget
@@ -1548,7 +1564,6 @@ export default class ModelEdit extends Vue {
     this.removeDragInClass()
     this.$nextTick(() => {
       if (Object.keys(this.modelInstance.tables).length === 1 && !(!currentTablesIncludeFact.length && tableIsFact)) {
-        // this.editTable(Object.keys(this.modelInstance.tables)[0])
         const guid = Object.keys(this.modelInstance.tables)[0]
         this.$refs[`table_${guid}`]?.[0].querySelector('.table-dropdown .setting-icon')?.click()
       }
@@ -2168,6 +2183,9 @@ export default class ModelEdit extends Vue {
         this.modelRender.tables[item].spreadHeight = modelRenderConfig.tableBoxHeight
       } else if (drawSize.height < 140) {
         this.$set(this.modelRender.tables[item].drawSize, 'height', 140)
+        this.modelRender.tables[item].spreadHeight = 140
+      } else {
+        this.modelRender.tables[item].spreadHeight = this.modelRender.tables[item].drawSize.height
       }
     }
   }
@@ -2724,6 +2742,7 @@ export default class ModelEdit extends Vue {
         font-size:14px;
         line-height:28px;
         padding-left: 10px;
+        cursor: move;
         .title{
           margin-left:4px;
           font-weight: @font-medium;
@@ -2750,8 +2769,6 @@ export default class ModelEdit extends Vue {
             height: 100%;
             .el-checkbox {
               width: 100%;
-              // overflow: hidden;
-              // text-overflow: ellipsis;
               display: inline-block;
               .el-checkbox__label {
                 width: calc(~'100% - 20px');
@@ -3348,6 +3365,7 @@ export default class ModelEdit extends Vue {
       overflow: auto;
       overflow-x: hidden;
       flex: 1;
+      border-radius: 0 0 5px 5px;
       &.ksd-drag-box *[draggable="true"]:not(.is-link):hover {
         border: 0 !important;
         border-top: 2px solid @base-color-6 !important;
