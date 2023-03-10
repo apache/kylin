@@ -67,6 +67,10 @@ import locales from './locales'
     showChangeAlert: {
       type: Boolean,
       default: true
+    },
+    source: {
+      type: String,
+      default: 'overview'
     }
   },
   computed: {
@@ -132,6 +136,7 @@ export default class ModelERDiagram extends Vue {
     return this.showOnlyConnectedColumn ? t.columns.filter(it => this.isPFK(it.name, t).isPK || this.isPFK(it.name, t).isFK) : t.columns
   }
   async created () {
+    this.loadingER = true
     await this.getTableColumns()
     this.$nextTick(() => {
       const { plumbInstance, plumbTool } = initPlumb(this.$el.querySelector('.er-layout'), this.currentModel.canvas ?? this.defaultZoom)
@@ -146,9 +151,11 @@ export default class ModelERDiagram extends Vue {
           this.plumbTool.refreshPlumbInstance()
         })
       }
+      this.loadingER = false
       this.exchangeTableData()
       this.defaultCanvasBackup = objectClone(this.currentModel.canvas)
       this.defaultTableBackup = objectClone(this.currentModel.tables)
+      this.exchangePosition()
 
     })
   }
@@ -170,13 +177,11 @@ export default class ModelERDiagram extends Vue {
     })
   }
   getTableColumns () {
-    this.loadingER = true
     return new Promise((resolve, reject) => {
       const { name } = this.currentProjectData
       const [{ canvas }] = this.modelList.filter(item => item.alias === this.model.name)
       this.loadColumnOfModel({project: name, model_name: this.model.name}).then(async (result) => {
         const values = await handleSuccessAsync(result)
-        this.loadingER = false
         this.currentModel = {
           ...this.model,
           tables: this.model.tables.map(table => {
@@ -357,6 +362,14 @@ export default class ModelERDiagram extends Vue {
     this.changeER = true
     this.toggleFullScreen(!this.isFullScreen)
   }
+  exchangePosition () {
+    if (this.source === 'modelList') {
+      if (!(this.currentModel && this.currentModel.tables)) return
+      const [factTable] = this.currentModel.tables.filter(it => it.type === 'FACT')
+      const factGuid = factTable.guid
+      document.getElementById(factGuid).scrollIntoView()
+    }
+  }
 }
 </script>
 <style lang="less">
@@ -434,7 +447,6 @@ export default class ModelERDiagram extends Vue {
       border: 2px solid #9DCEFB;
     }
     &:hover {
-      // box-shadow: @fact-hover-shadow;
       border: 2px solid #9DCEFB;
       .scrollbar-track-y{
         opacity: 1;
@@ -453,7 +465,6 @@ export default class ModelERDiagram extends Vue {
       position: initial;
       margin-top: 32px;
     }
-    // overflow: hidden;
     .table-title {
       background-color: @base-color;
       color: @fff;

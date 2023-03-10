@@ -30,7 +30,8 @@ export function drawLines (that, plumbTool, joints) {
       addPlumbPoints(plumbTool, firstJoin.guid)
       const conn = plumbTool.connect(v.guid, firstJoin.guid, () => {}, {
         joinType: v.type ?? '',
-        brokenLine: false
+        brokenLine: false,
+        cancelBubble: false
       })
       const labelLayout = conn.getOverlay(v.guid + (firstJoin.guid + 'label'))
       const labelCanvas = labelLayout.canvas
@@ -92,6 +93,12 @@ export function customCanvasPosition (vm, renderDom, model, zoom) {
 // 获取树形结构
 function autoCalcLayer (tables, model) {
   const { canvas: currentCanvas } = model
+  const defaultSize = {
+    x: 0,
+    y: 0,
+    height: 230,
+    width: 200
+  }
   const [factTable] = tables.filter(it => it.type === 'FACT')
   if (!factTable) {
     return
@@ -100,7 +107,7 @@ function autoCalcLayer (tables, model) {
   tables.forEach(it => {
     tbs[it.guid] = {
       ...it,
-      drawSize: {...(currentCanvas?.coordinate[`${it.alias}`] ?? {})}
+      drawSize: {...(currentCanvas?.coordinate[`${it.alias}`] ?? defaultSize)}
     }
   })
   const rootGuid = factTable.guid

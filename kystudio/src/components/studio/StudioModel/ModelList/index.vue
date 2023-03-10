@@ -124,7 +124,7 @@
                 @after-enter="(e) => afterPoppoverEnter(e, scope.row)"
                 popper-class="er-popover-layout"
               >
-              <div class="model-ER-layout"><ModelERDiagram v-if="scope.row.showER" :show-shortcuts-group="false" :show-change-alert="false" :model="dataGenerator.generateModel(scope.row)" /></div>
+              <div class="model-ER-layout"><ModelERDiagram v-if="scope.row.showER" ref="erDiagram" source="modelList"  :show-shortcuts-group="false" :show-change-alert="false" :model="dataGenerator.generateModel(scope.row)" /></div>
               </el-popover>
               <span class="model-ER" v-popover="`${scope.row.alias}-ERPopover`">
                 <el-icon name="el-ksd-icon-table_er_diagram_22" class="ksd-fs-22" type="mult"></el-icon>
@@ -875,6 +875,9 @@ export default class ModelList extends Vue {
   afterPoppoverEnter (e, row) {
     this.$nextTick(() => {
       this.$set(row, 'showER', true)
+      this.$nextTick(() => {
+        this.$refs.erDiagram && this.$refs.erDiagram.exchangePosition()
+      })
     })
   }
 }

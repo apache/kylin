@@ -231,7 +231,8 @@ class NModel extends Schama {
           }
         }, {
           joinType: joinInfo?.join?.type ?? '',
-          brokenLine: isBrokenLine
+          brokenLine: isBrokenLine,
+          cancelBubble: true
         })
         this.setOverLayLabel(conn, isBrokenLine)
         this.plumbTool.refreshPlumbInstance()

@@ -136,24 +136,6 @@ export function jsPlumbTool () {
         DragOptions: { cursor: 'pointer', zIndex: 2000 },
         HoverPaintStyle: this.endpointConfig.connectorStyle,
         ConnectionOverlays: [
-          // [ 'Arrow', {
-          //   location: 1,
-          //   visible: true,
-          //   width: 11,
-          //   length: 11,
-          //   id: 'ARROW',
-          //   foldback: 2
-          // } ],
-          // [ 'Custom', {
-          //   location: 1,
-          //   create: (component) => {
-          //     const dom = document.createElement('span')
-          //     dom.innerHTML = '<span class="line-end-pointer">&bull;</span>'
-          //     return dom
-          //   },
-          //   id: 'customPoint',
-          //   cssClass: 'line-end'
-          // }]
         ],
         Container: el
       })
@@ -211,7 +193,7 @@ export function jsPlumbTool () {
             id: pid + (fid + 'label'),
             events: {
               mousedown: function (_, e) {
-                stopPropagation(e)
+                otherProper.cancelBubble && stopPropagation(e)
                 return false
               },
               click: function (_, e) {
