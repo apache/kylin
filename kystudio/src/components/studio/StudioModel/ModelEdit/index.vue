@@ -2167,7 +2167,7 @@ export default class ModelEdit extends Vue {
       await this.showFistAddModelGuide()
     }
     const keVersion = this.$store.state.system.serverAboutKap['ke.version']?.match(/Kyligence Enterprise (\d+.\d+.\d+.\d+)-\w+/)[1]
-    if ((localStorage.getItem('isFirstUpdateModel') === 'true' || !localStorage.getItem('isFirstUpdateModel')) && (keVersion && +keVersion.split('.').join('') >= 45160) && this.extraoption.action === 'edit') {
+    if ((localStorage.getItem('isFirstUpdateModel') === 'true' || !localStorage.getItem('isFirstUpdateModel')) && (keVersion && +keVersion.split('.').join('') >= 45160) && localStorage.getItem('isFirstAddModel') === 'false') {
       await this.showUpdateGuide()
     }
   }
