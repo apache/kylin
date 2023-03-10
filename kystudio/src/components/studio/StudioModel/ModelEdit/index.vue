@@ -1252,7 +1252,7 @@ export default class ModelEdit extends Vue {
       const tableTitleHeight = document.querySelector('.table-title').offsetHeight
       for (let item in this.modelRender.tables) {
         this.$set(this.modelRender.tables[item], 'spreadOut', false)
-        this.$set(this.modelRender.tables[item], 'spreadHeight', this.modelRender.tables[item].drawSize.height)
+        this.$set(this.modelRender.tables[item], 'spreadHeight', this.modelRender.tables[item].drawSize.height < 140 ? modelRenderConfig.tableBoxHeight : this.modelRender.tables[item].drawSize.height)
         this.$set(this.modelRender.tables[item].drawSize, 'height', tableTitleHeight + 4)
       }
     } else if (command === 'expandAllTables') {

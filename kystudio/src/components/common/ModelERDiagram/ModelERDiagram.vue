@@ -149,6 +149,7 @@ export default class ModelERDiagram extends Vue {
         this.$set(this.currentModel, 'canvas', cv)
         this.$nextTick(() => {
           this.plumbTool.refreshPlumbInstance()
+          createAndUpdateSvgGroup(null, { type: 'update' })
         })
       }
       this.loadingER = false
@@ -174,6 +175,7 @@ export default class ModelERDiagram extends Vue {
     this.$set(this.currentModel.canvas.coordinate[`${t.alias}`], 'height', boxH)
     this.$nextTick(() => {
       this.plumbTool.refreshPlumbInstance()
+      createAndUpdateSvgGroup(null, { type: 'update' })
     })
   }
   getTableColumns () {
