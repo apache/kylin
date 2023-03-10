@@ -5,10 +5,9 @@
           ref="statusPopover"
           popper-class="status-tooltip"
           placement="top-start"
-          trigger="hover">
-          <!-- <template slot="reference">
-            
-          </template> -->
+          trigger="hover"
+          :disabled="!modelData.status"
+        >
           <span v-html="$t('modelStatus_c')" />
           <span>{{modelData.status}}</span>
           <div v-if="modelData.status === 'WARNING' && modelData.empty_indexes_count">{{$t('emptyIndexTips')}}</div>
@@ -51,11 +50,11 @@
             </div>
           </div>
         </el-popover>
-        <span :class="['filter-status', modelData.status]" v-popover:statusPopover v-if="!onlyShowModelName"></span>
+        <span :class="['filter-status', (modelData.status || 'OFFLINE')]" v-popover:statusPopover v-if="!onlyShowModelName"></span>
         <span class="model-alias-title" @mouseenter.prevent v-popover:titlePopover>{{modelData.alias || modelData.name}}</span>
       </div>
       <el-tooltip class="last-modified-tooltip" effect="dark" :content="`${$t('dataLoadTime')}${modelData.gmtTime}`" placement="bottom" :disabled="hideTimeTooltip" v-if="!onlyShowModelName">
-        <span>{{transToGmtTime(modelData.last_modified)}}</span>
+        <span>{{getLastTime}}</span>
       </el-tooltip>
     </div>
   </template>
@@ -98,12 +97,17 @@
         dataLoadTime: 'Last Updated Time: ',
         SCD2ModalOfflineTip: 'This model includes non-equal join conditions (≥, <), which are not supported at the moment. Please delete those join conditions, or turn on `Support History table` in project settings.',
         noSegmentOnlineTip: 'This model can\'t go online as it doesn\'t have segments. Models with no segment couldn\'t serve queries. Please add a segment.',
-        multilParTip: 'This model used multilevel partitioning, which are not supported at the moment. Please set subpartition as \'None\' in model partition dialog, or turn on \'Multilevel Partitioning\' in project settings.'
+        multilParTip: 'This model used multilevel partitioning, which are not supported at the moment. Please set subpartition as \'None\' in model partition dialog, or turn on \'Multilevel Partitioning\' in project settings.',
+        lastUpdate: 'Last Updated: '
       }
     }
   })
   export default class ModelTitleDescription extends Vue {
     transToGmtTime = transToGmtTime
+
+    get getLastTime () {
+      return `${this.$t('lastUpdate')}${this.transToGmtTime(this.modelData.last_modified || Date.now())}`
+    }
     openComplementSegment (model, status) {
       this.$emit('openSegment', model, status)
     }

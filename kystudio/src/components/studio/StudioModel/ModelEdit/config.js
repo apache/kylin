@@ -120,7 +120,7 @@ export const modelRenderConfig = {
         box: rootBox
       },
       datasource: {
-        top: 52,
+        top: 82,
         left: 10,
         width: 250,
         height: 420,

@@ -2,7 +2,7 @@
   <div class="model-edit-layout">
     <div class="model-edit-header">
       <div class="model-title">
-        <model-title-description :modelData="modelData" source="modelEdit" v-if="modelData" hideTimeTooltip :onlyShowModelName="extraoption.action === 'add'" />
+        <model-title-description :modelData="modelData" source="modelEdit" v-if="modelData" hideTimeTooltip />
       </div>
       <div class="model-search-layout">
         <el-input
@@ -2546,7 +2546,7 @@ export default class ModelEdit extends Vue {
       padding: 0 16px;
       line-height: 72px;
       box-sizing: border-box;
-      max-width: 240px;
+      max-width: 290px;
       .model-alias-title {
         max-width: 90%;
       }
@@ -2554,6 +2554,9 @@ export default class ModelEdit extends Vue {
         .filter-status {
           top: -4px;
           margin-right: 2px;
+        }
+        .last-modified-tooltip {
+          margin-top: 0;
         }
       }
     }
@@ -3105,9 +3108,9 @@ export default class ModelEdit extends Vue {
   }
   .tool-icon-group {
     position:absolute;
-    width:32px;
-    top:12px;
-    right:10px;
+    width: 32px;
+    top: 42px;
+    right: 10px;
     .tool-icon {
       box-shadow: @box-shadow;
       background:@text-normal-color;
@@ -3122,7 +3125,7 @@ export default class ModelEdit extends Vue {
     }
   }
   .icon-ds {
-    top: 10px;
+    top: 40px;
     left: 10px;
     background: @text-normal-color;
     color: @fff;

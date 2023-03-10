@@ -507,7 +507,7 @@ export default class ModelLayout extends Vue {
         height: 100%;
         margin-top: 10px;
         margin-left: 8px;
-        max-width: 240px;
+        max-width: 260px;
         .alias {
           margin-top: 1px;
           max-width: 300px;
@@ -520,7 +520,7 @@ export default class ModelLayout extends Vue {
           }
         }
         .last-modified-tooltip {
-          margin-top: 0;
+          margin-top: -4px;
         }
       }
       .title {
@@ -638,7 +638,7 @@ export default class ModelLayout extends Vue {
       border: 1px solid @ke-border-divider-color;
       max-width: 240px;
       top: 56px;
-      left: 25px;
+      left: 100px;
       .search-bar {
         padding: 0 16px;
         box-sizing: border-box;
