@@ -42,7 +42,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.request.AWSTableLoadRequest;
@@ -230,26 +229,11 @@ public class NTableController extends NBasicController {
             throw new KylinException(EMPTY_PARAMETER, "You should select at least one table or database to load!!");
         }
 
-        LoadTableResponse loadTableResponse = new LoadTableResponse();
-        if (ArrayUtils.isNotEmpty(tableLoadRequest.getTables())) {
-            StringHelper.toUpperCaseArray(tableLoadRequest.getTables(), tableLoadRequest.getTables());
-            LoadTableResponse loadByTable = tableExtService.loadDbTables(tableLoadRequest.getTables(),
-                    tableLoadRequest.getProject(), false);
-            loadTableResponse.getFailed().addAll(loadByTable.getFailed());
-            loadTableResponse.getLoaded().addAll(loadByTable.getLoaded());
-        }
+        LoadTableResponse loadTableResponse = tableExtService.loadTablesWithShortCircuit(tableLoadRequest);
 
-        if (ArrayUtils.isNotEmpty(tableLoadRequest.getDatabases())) {
-            StringHelper.toUpperCaseArray(tableLoadRequest.getDatabases(), tableLoadRequest.getDatabases());
-            LoadTableResponse loadByDb = tableExtService.loadDbTables(tableLoadRequest.getDatabases(),
-                    tableLoadRequest.getProject(), true);
-            loadTableResponse.getFailed().addAll(loadByDb.getFailed());
-            loadTableResponse.getLoaded().addAll(loadByDb.getLoaded());
-        }
-
-        if (!loadTableResponse.getLoaded().isEmpty() && Boolean.TRUE.equals(tableLoadRequest.getNeedSampling())) {
+        if (!loadTableResponse.getNeedRealSampling().isEmpty() && Boolean.TRUE.equals(tableLoadRequest.getNeedSampling())) {
             TableSamplingService.checkSamplingRows(tableLoadRequest.getSamplingRows());
-            tableSamplingService.sampling(loadTableResponse.getLoaded(), tableLoadRequest.getProject(),
+            tableSamplingService.sampling(loadTableResponse.getNeedRealSampling(), tableLoadRequest.getProject(),
                     tableLoadRequest.getSamplingRows(), tableLoadRequest.getPriority(), tableLoadRequest.getYarnQueue(),
                     tableLoadRequest.getTag());
         }

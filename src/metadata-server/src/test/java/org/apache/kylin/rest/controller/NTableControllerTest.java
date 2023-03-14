@@ -300,6 +300,8 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
                 .thenReturn(loadTableResponse);
         Mockito.when(tableExtService.loadDbTables(tableLoadRequest.getDatabases(), "default", true))
                 .thenReturn(loadTableResponse);
+        Mockito.when(tableExtService.loadTablesWithShortCircuit(tableLoadRequest))
+                .thenReturn(loadTableResponse);
     }
 
     @Test
@@ -313,6 +315,8 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
         {
             final TableLoadRequest tableLoadRequest = mockLoadTableRequest();
             initMockito(loadTableResponse, tableLoadRequest);
+            tableLoadRequest.setNeedSampling(false);
+            tableLoadRequest.setSamplingRows(0);
             mockMvc.perform(MockMvcRequestBuilders.post("/api/tables") //
                     .contentType(MediaType.APPLICATION_JSON) //
                     .content(JsonUtil.writeValueAsString(tableLoadRequest)) //
@@ -333,9 +337,10 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
             TableLoadRequest request = new TableLoadRequest();
             request.setDatabases(databasesUppercase);
             request.setTables(tablesUppercase);
-            request.setNeedSampling(false);
             request.setProject(project);
             initMockito(loadTableResponse, request);
+            request.setNeedSampling(false);
+            request.setSamplingRows(0);
 
             request.setDatabases(databasesMixTure);
             request.setTables(tablesMixTure);
@@ -344,8 +349,7 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
                     .content(JsonUtil.writeValueAsString(request)) //
                     .accept(MediaType.parseMediaType(APPLICATION_JSON)))
                     .andExpect(MockMvcResultMatchers.status().isOk());
-            Mockito.verify(tableExtService, Mockito.times(1)).loadDbTables(tablesUppercase, project, false);
-            Mockito.verify(tableExtService, Mockito.times(1)).loadDbTables(databasesUppercase, project, true);
+            Mockito.verify(tableExtService, Mockito.times(1)).loadTablesWithShortCircuit(request);
 
             request.setDatabases(databasesLowercase);
             request.setTables(tablesLowercase);
@@ -354,8 +358,7 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
                     .content(JsonUtil.writeValueAsString(request)) //
                     .accept(MediaType.parseMediaType(APPLICATION_JSON)))
                     .andExpect(MockMvcResultMatchers.status().isOk());
-            Mockito.verify(tableExtService, Mockito.times(2)).loadDbTables(tablesUppercase, project, false);
-            Mockito.verify(tableExtService, Mockito.times(2)).loadDbTables(databasesUppercase, project, true);
+            Mockito.verify(tableExtService, Mockito.times(1)).loadTablesWithShortCircuit(request);
 
             request.setDatabases(databasesUppercase);
             request.setTables(tablesUppercase);
@@ -364,8 +367,7 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
                     .content(JsonUtil.writeValueAsString(request)) //
                     .accept(MediaType.parseMediaType(APPLICATION_JSON)))
                     .andExpect(MockMvcResultMatchers.status().isOk());
-            Mockito.verify(tableExtService, Mockito.times(3)).loadDbTables(tablesUppercase, project, false);
-            Mockito.verify(tableExtService, Mockito.times(3)).loadDbTables(databasesUppercase, project, true);
+            Mockito.verify(tableExtService, Mockito.times(1)).loadTablesWithShortCircuit(request);
         }
     }
 
@@ -649,6 +651,7 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
         Set<String> loaded = Sets.newHashSet("default.test_kylin_fact");
         LoadTableResponse loadTableResponse = new LoadTableResponse();
         loadTableResponse.setLoaded(loaded);
+        loadTableResponse.setNeedRealSampling(loaded);
         final TableLoadRequest tableLoadRequest = mockLoadTableRequest();
         tableLoadRequest.setNeedSampling(true);
         tableLoadRequest.setSamplingRows(200);
@@ -670,6 +673,7 @@ public class NTableControllerTest extends NLocalFileMetadataTestCase {
         Set<String> loaded = Sets.newHashSet("default.test_kylin_fact");
         LoadTableResponse loadTableResponse = new LoadTableResponse();
         loadTableResponse.setLoaded(loaded);
+        loadTableResponse.setNeedRealSampling(loaded);
         final TableLoadRequest tableLoadRequest = mockLoadTableRequest();
         tableLoadRequest.setNeedSampling(true);
         tableLoadRequest.setSamplingRows(30_000_000);

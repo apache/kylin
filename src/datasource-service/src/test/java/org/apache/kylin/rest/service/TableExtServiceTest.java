@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
@@ -36,6 +37,7 @@ import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.S3TableExtInfo;
 import org.apache.kylin.rest.request.TableExclusionRequest;
+import org.apache.kylin.rest.request.TableLoadRequest;
 import org.apache.kylin.rest.request.UpdateAWSTableExtDescRequest;
 import org.apache.kylin.rest.response.ExcludedColumnResponse;
 import org.apache.kylin.rest.response.ExcludedTableDetailResponse;
@@ -537,6 +539,49 @@ public class TableExtServiceTest extends NLocalFileMetadataTestCase {
             List<ExcludedTableResponse> excludedTables = tableExtService.getExcludedTables(project, false, "");
             Assert.assertTrue(excludedTables.isEmpty());
         }
+    }
+
+    @Test
+    public void testLoadTablesWithShortCircuit() throws Exception {
+        List<Pair<TableDesc, TableExtDesc>> lt1000 = mockTablePair(8, "TB");
+        Mockito.doReturn(lt1000).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        TableLoadRequest request = new TableLoadRequest();
+        request.setDatabases(new String[]{"DEFAULT"});
+        request.setProject("default");
+        LoadTableResponse lt1000response = tableExtService.loadTablesWithShortCircuit(request);
+        Assert.assertEquals(8, lt1000response.getFailed().size());
+
+        List<Pair<TableDesc, TableExtDesc>> gt1000 = mockTablePair(1001, "TB");
+        Mockito.doReturn(gt1000).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        Assert.assertThrows(KylinException.class, () -> tableExtService.loadTablesWithShortCircuit(request));
+
+        request.setTables(mockInputDBOrTable());
+        Assert.assertThrows(KylinException.class, () -> tableExtService.loadTablesWithShortCircuit(request));
+
+        request.setTables(new String[]{"TEST_KYLIN_FACT"});
+        Assert.assertThrows(KylinException.class, () -> tableExtService.loadTablesWithShortCircuit(request));
+
+        request.setDatabases(null);
+        gt1000.forEach(t -> Mockito.doNothing().when(tableExtService).loadTable(t.getFirst(), t.getSecond(),
+                "default"));
+        Mockito.doReturn(gt1000).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        Assert.assertThrows(KylinException.class, () -> tableExtService.loadTablesWithShortCircuit(request));
+
+        request.setDatabases(null);
+        request.setTables(new String[]{"TEST_KYLIN_FACT"});
+        List<Pair<TableDesc, TableExtDesc>> table8 = mockTablePair(8, "TB");
+        Mockito.doReturn(table8).when(tableService).extractTableMeta(Mockito.any(), Mockito.any());
+        LoadTableResponse response1 = tableExtService.loadTablesWithShortCircuit(request);
+        Assert.assertEquals(8, response1.getFailed().size());
+
+        request.setDatabases(new String[]{"DEFAULT"});
+        request.setTables(new String[]{"TEST_KYLIN_FACT"});
+        LoadTableResponse response2 = tableExtService.loadTablesWithShortCircuit(request);
+        Assert.assertEquals(8, response2.getFailed().size());
+    }
+
+    private String[] mockInputDBOrTable() {
+        return IntStream.range(0, 1000).mapToObj(t -> "TB" + t).toArray(String[]::new);
     }
 
     private List<Pair<TableDesc, TableExtDesc>> mockTablePair(int size, String tableName) {

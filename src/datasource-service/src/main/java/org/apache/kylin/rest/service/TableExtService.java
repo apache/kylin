@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_TABLE_NAME;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.EXCLUDED_TABLE_REQUEST_NOT_ALLOWED;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.ONCE_LOAD_TABLE_LIMIT;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -34,6 +35,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.KylinConfig;
@@ -41,6 +43,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
@@ -54,12 +57,14 @@ import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.S3TableExtInfo;
 import org.apache.kylin.rest.request.TableExclusionRequest;
+import org.apache.kylin.rest.request.TableLoadRequest;
 import org.apache.kylin.rest.request.UpdateAWSTableExtDescRequest;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.ExcludedColumnResponse;
 import org.apache.kylin.rest.response.ExcludedTableDetailResponse;
 import org.apache.kylin.rest.response.ExcludedTableResponse;
 import org.apache.kylin.rest.response.LoadTableResponse;
+import org.apache.kylin.rest.response.TableNameResponse;
 import org.apache.kylin.rest.response.UpdateAWSTableExtDescResponse;
 import org.apache.kylin.rest.security.KerberosLoginManager;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -82,6 +87,8 @@ public class TableExtService extends BasicService {
 
     public static final int DEFAULT_EXCLUDED_COLUMN_SIZE = 15;
 
+    public static final int ONCE_LOAD_TABLE_LIMIT_COUNT = 1000;
+
     @Autowired
     @Qualifier("tableService")
     private TableService tableService;
@@ -89,13 +96,79 @@ public class TableExtService extends BasicService {
     @Autowired
     private AclEvaluate aclEvaluate;
 
-    public LoadTableResponse loadDbTables(String[] dbTables, String project, boolean isDb) throws Exception {
+    public LoadTableResponse loadTablesWithShortCircuit(TableLoadRequest request) throws Exception {
+        String project = request.getProject();
         aclEvaluate.checkProjectWritePermission(project);
-        Map<String, Set<String>> dbTableMap = classifyDbTables(dbTables, isDb);
         Set<String> existDbs = Sets.newHashSet(tableService.getSourceDbNames(project));
-        LoadTableResponse tableResponse = new LoadTableResponse();
+        int count = 0;
+        int dbSize = ArrayUtils.isNotEmpty(request.getDatabases()) ? request.getDatabases().length : 0;
+        int tableSize = ArrayUtils.isNotEmpty(request.getTables()) ? request.getTables().length : 0;
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        boolean thresholdEnabled = kylinConfig.isTableLoadThresholdEnabled();
+        checkThreshold(thresholdEnabled, tableSize);
+
+        LoadTableResponse tableResponseFromDB = null;
+        List<Pair<TableDesc, TableExtDesc>> canLoadTablesFromDB = null;
+        Map<String, Set<String>> dbs = new HashMap<>();
+        if (dbSize > 0) {
+            tableResponseFromDB = new LoadTableResponse();
+            StringHelper.toUpperCaseArray(request.getDatabases(), request.getDatabases());
+            dbs = classifyDbTables(request.getDatabases(), true);
+            Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> pair = findCanLoadTables(dbs, project,
+                    true, tableResponseFromDB, existDbs);
+            canLoadTablesFromDB = pair.getFirst();
+            count = pair.getSecond();
+            checkThreshold(thresholdEnabled, count);
+        }
+
+        LoadTableResponse tableResponse = null;
+        List<Pair<TableDesc, TableExtDesc>> canLoadTables = null;
+        if (tableSize > 0) {
+            StringHelper.toUpperCaseArray(request.getTables(), request.getTables());
+            Map<String, Set<String>> tables = classifyDbTables(request.getTables(), false);
+            excludeTableFromFormalDB(dbs, tables);
+            tableResponse = new LoadTableResponse();
+            Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> pair = findCanLoadTables(tables, project,
+                    false, tableResponse, existDbs);
+            canLoadTables = pair.getFirst();
+            count = pair.getSecond() + count;
+            checkThreshold(thresholdEnabled, count);
+        }
+
+        LoadTableResponse loadTableResponse = new LoadTableResponse();
+        if (tableResponseFromDB != null && !canLoadTablesFromDB.isEmpty()) {
+            innerLoadTables(project, tableResponseFromDB, canLoadTablesFromDB);
+            loadTableResponse.getFailed().addAll(tableResponseFromDB.getFailed());
+            loadTableResponse.getLoaded().addAll(tableResponseFromDB.getLoaded());
+            loadTableResponse.getNeedRealSampling().addAll(tableResponseFromDB.getNeedRealSampling());
+        }
+
+        if (tableResponse != null && !canLoadTables.isEmpty()) {
+            innerLoadTables(project, tableResponse, canLoadTables);
+            loadTableResponse.getFailed().addAll(tableResponse.getFailed());
+            loadTableResponse.getLoaded().addAll(tableResponse.getLoaded());
+            loadTableResponse.getNeedRealSampling().addAll(tableResponse.getNeedRealSampling());
+        }
+        return loadTableResponse;
+    }
+
+    private void checkThreshold(boolean thresholdEnabled, int count) {
+        if (thresholdEnabled && count > ONCE_LOAD_TABLE_LIMIT_COUNT) {
+            throw new KylinException(ONCE_LOAD_TABLE_LIMIT);
+        }
+    }
+
+    private void excludeTableFromFormalDB(Map<String, Set<String>> dbs, Map<String, Set<String>> tables) {
+        if (dbs.size() > 0) {
+            tables.entrySet().removeIf(entry -> dbs.containsKey(entry.getKey()));
+        }
+    }
+
+    public Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> findCanLoadTables(Map<String, Set<String>> dbTables, String project,
+            boolean isDb, LoadTableResponse tableResponse, Set<String> existDbs) throws Exception {
         List<Pair<TableDesc, TableExtDesc>> canLoadTables = Lists.newArrayList();
-        for (Map.Entry<String, Set<String>> entry : dbTableMap.entrySet()) {
+        List<TableNameResponse> responseAll = Lists.newArrayList();
+        for (Map.Entry<String, Set<String>> entry : dbTables.entrySet()) {
             String db = entry.getKey();
             Set<String> tableSet = entry.getValue();
             if (!existDbs.contains(db)) {
@@ -117,10 +190,31 @@ public class TableExtService extends BasicService {
             }
 
             String[] tables = existTables.stream().map(table -> db + "." + table).toArray(String[]::new);
-            if (tables.length > 0){
+            if (tables.length > 0) {
                 filterAccessTables(tables, canLoadTables, tableResponse, project);
             }
+
+            List<TableNameResponse> response = tableService.getHiveTableNameResponses(project, db, "");
+            response.forEach(t -> t.setTableName(db + "." + t.getTableName()));
+            responseAll.addAll(response);
         }
+        return new Pair<>(canLoadTables, getTableCount(responseAll, canLoadTables));
+    }
+
+    private int getTableCount(List<TableNameResponse> responseAll,
+            List<Pair<TableDesc, TableExtDesc>> canLoadTables) {
+        List<String> loaded = responseAll.stream().filter(TableNameResponse::isLoaded)
+                .map(TableNameResponse::getTableName).collect(Collectors.toList());
+        return (int) canLoadTables.stream().filter(t -> !loaded.contains(t.getFirst().getIdentity())).count();
+    }
+
+    public LoadTableResponse loadDbTables(String[] dbTables, String project, boolean isDb) throws Exception {
+        aclEvaluate.checkProjectWritePermission(project);
+        Set<String> existDbs = Sets.newHashSet(tableService.getSourceDbNames(project));
+        LoadTableResponse tableResponse = new LoadTableResponse();
+        Map<String, Set<String>> tables = classifyDbTables(dbTables, isDb);
+        List<Pair<TableDesc, TableExtDesc>> canLoadTables = findCanLoadTables(tables, project, isDb, tableResponse,
+                existDbs).getFirst();
         if (!canLoadTables.isEmpty()) {
             return innerLoadTables(project, tableResponse, canLoadTables);
         }
@@ -260,7 +354,9 @@ public class TableExtService extends BasicService {
             loadTables.forEach(pair -> {
                 String tableName = pair.getFirst().getIdentity();
                 boolean success = true;
+                boolean realLoaded = false;
                 if (tableManager.getTableDesc(tableName) == null) {
+                    realLoaded = true;
                     try {
                         loadTable(pair.getFirst(), pair.getSecond(), project);
                     } catch (Exception ex) {
@@ -270,6 +366,9 @@ public class TableExtService extends BasicService {
                 }
                 Set<String> targetSet = success ? tableResponse.getLoaded() : tableResponse.getFailed();
                 targetSet.add(tableName);
+                if (success && realLoaded) {
+                    tableResponse.getNeedRealSampling().add(tableName);
+                }
             });
             return tableResponse;
         }, project, 1);

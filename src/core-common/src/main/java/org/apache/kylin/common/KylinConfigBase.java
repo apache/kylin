@@ -3894,4 +3894,8 @@ public abstract class KylinConfigBase implements Serializable {
     public int getJobHLLMaxReducerNumber() {
         return Integer.parseInt(getOptional("kylin.index.costbased.hll-max-reducer-number", "1"));
     }
+
+    public boolean isTableLoadThresholdEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.table.load-threshold-enabled", TRUE));
+    }
 }
