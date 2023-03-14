@@ -78,6 +78,7 @@ public class NAdminController extends NBasicController {
         propertyKeys.add("kylin.source.ddl.hive.enabled");
         propertyKeys.add("kylin.source.ddl.logical-view.database");
         propertyKeys.add("kylin.storage.check-quota-enabled");
+        propertyKeys.add("kylin.table.load-threshold-enabled");
 
         // add second storage
         if (StringUtils.isNotEmpty(KylinConfig.getInstanceFromEnv().getSecondStorage())) {
