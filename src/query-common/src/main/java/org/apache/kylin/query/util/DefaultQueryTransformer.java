@@ -29,7 +29,7 @@ import org.apache.kylin.query.IQueryTransformer;
  */
 public class DefaultQueryTransformer implements IQueryTransformer {
 
-    private static final String S0 = "\\s*";
+    public static final String S0 = "\\s*";
     private static final String SM = "\\s+";
     private static final String ONE = "1";
 
