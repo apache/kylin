@@ -1699,4 +1699,15 @@ public class CnMessage extends Message {
     public String getLoadLogicalViewError(String tableName, String project) {
         return String.format(Locale.ROOT, "无法加载表: %s , 仅支持在项目 %s 中加载此表", tableName, project);
     }
+
+    @Override
+    public String getAsyncQueryCancel(String queryId) {
+        return String.format(Locale.ROOT, "ID为%s的异步查询正被执行取消。", queryId);
+
+    }
+
+    @Override
+    public String getQueryNotRunningError() {
+        return "该查询没有在运行，请检查";
+    }
 }

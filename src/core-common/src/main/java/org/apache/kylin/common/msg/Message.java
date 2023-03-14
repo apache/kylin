@@ -1604,4 +1604,14 @@ public class Message {
     public String getLoadLogicalViewError(String tableName, String project) {
         return String.format(Locale.ROOT, LOAD_LOGICAL_VIEW_ERROR, tableName, project);
     }
+
+    public String getAsyncQueryCancel(String queryId) {
+        return String.format(Locale.ROOT, "Async Query（id=%s） will be canceled", queryId);
+
+    }
+
+    public String getQueryNotRunningError() {
+        return "Query is not running, please check.";
+    }
+
 }
