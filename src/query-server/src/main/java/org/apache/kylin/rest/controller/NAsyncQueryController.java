@@ -273,7 +273,7 @@ public class NAsyncQueryController extends NBasicController {
         }
         queryService.stopQuery(queryId);
         EventBusFactory.getInstance().postAsync(new StopQueryBroadcastEventNotifier(queryId));
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", MsgPicker.getMsg().getAsyncQueryCancel(queryId));
     }
 
     @ApiOperation(value = "query", tags = { "QE" }, notes = "Update Response: query_id")
