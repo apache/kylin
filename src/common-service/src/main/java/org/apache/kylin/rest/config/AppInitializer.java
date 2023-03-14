@@ -111,7 +111,6 @@ public class AppInitializer {
             EventBusFactory.getInstance().register(new JobSchedulerListener(), false);
             EventBusFactory.getInstance().register(new ModelBrokenListener(), false);
             EventBusFactory.getInstance().register(epochChangedListener, false);
-            EventBusFactory.getInstance().register(new ProcessStatusListener(), true);
             EventBusFactory.getInstance().register(new StreamingJobListener(), true);
 
             SparkJobFactoryUtils.initJobFactory();
@@ -140,6 +139,7 @@ public class AppInitializer {
                 context.publishEvent(new SparderStartEvent.SyncEvent(context));
             }
         }
+        EventBusFactory.getInstance().register(new ProcessStatusListener(), true);
         // register acl update listener
         EventListenerRegistry.getInstance(kylinConfig).register(new AclTCRListener(queryCacheManager), "acl");
         // register schema change listener
