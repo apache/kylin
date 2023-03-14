@@ -25,7 +25,7 @@
                             logPath="${sys:spark.driver.log4j.appender.hdfs.File}"
                             logQueueCapacity="5000"
                             flushInterval="5000">
-            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+            <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
         </DriverHdfsAppender>
     </Appenders>
     <Loggers>

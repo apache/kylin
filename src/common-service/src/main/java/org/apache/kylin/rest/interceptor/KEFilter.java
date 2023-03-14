@@ -33,6 +33,8 @@ import org.apache.kylin.common.exception.ExceptionResolve;
 import org.apache.kylin.common.exception.code.ErrorMsg;
 import org.apache.kylin.common.exception.code.ErrorSuggestion;
 import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.logging.log4j.ThreadContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -59,7 +61,16 @@ public class KEFilter extends OncePerRequestFilter {
             QueryContext.currentTrace().startSpan(QueryTrace.HTTP_RECEPTION);
         }
 
+        // Set traceId for KE
+        String traceId = RandomUtil.randomUUIDStr();
+        ThreadContext.put("traceId", String.format("traceId: %s ", traceId));
+
         filterChain.doFilter(request, response);
+
+        // clean ThreadContext
+        ThreadContext.clearAll();
+        // set `traceId` attribute for accesslog
+        request.setAttribute("traceId", traceId);
     }
 
 }

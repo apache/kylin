@@ -21,7 +21,7 @@ server:
     max-http-form-post-size: 10485760
     accesslog:
       enabled: true
-      pattern: '%h %l %u %{User-Agent}i %t "%r" %s %b %D'
+      pattern: 'traceId: %{traceId}r %h %l %u %{User-Agent}i %t "%r" %s %b %D'
       max-days: ${kylin.server.accesslog-max-days:10}
   compression:
     enabled: true

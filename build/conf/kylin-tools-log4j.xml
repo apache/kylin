@@ -18,7 +18,7 @@
 <Configuration name="Log4j1">
     <Appenders>
         <Console name="stderr" target="SYSTEM_ERR">
-            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+            <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
         </Console>
     </Appenders>
     <Loggers>

@@ -25,7 +25,7 @@
             </Policies>
             <DefaultRolloverStrategy max="10"/>
         </RollingFile>
-        <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+        <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
     </Appenders>
     <Loggers>
         <Root level="INFO">
