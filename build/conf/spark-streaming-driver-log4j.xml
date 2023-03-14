@@ -26,7 +26,7 @@
                                    rollingByteSize="${sys:kap.spark.log4j.appender.rolling.size}"
                                    logQueueCapacity="5000"
                                    flushInterval="5000">
-            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+            <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
         </DriverHdfsRollingAppender>
     </Appenders>
     <Loggers>

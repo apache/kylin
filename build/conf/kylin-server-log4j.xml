@@ -23,7 +23,7 @@
                 <SizeBasedTriggeringPolicy size="268435456"/>
             </Policies>
             <DefaultRolloverStrategy max="10"/>
-            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+            <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
         </RollingRandomAccessFile>
         <Routing name="routing">
             <Routes pattern="$${ctx:logCategory}">
@@ -35,7 +35,7 @@
                             <SizeBasedTriggeringPolicy size="268435456"/>
                         </Policies>
                         <DefaultRolloverStrategy max="10"/>
-                        <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+                        <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
                     </RollingFile>
                 </Route>
 
@@ -48,7 +48,7 @@
                 <SizeBasedTriggeringPolicy size="268435456"/>
             </Policies>
             <DefaultRolloverStrategy max="10"/>
-            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+            <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
         </RollingFile>
         <RollingFile name="spark-history-server" fileName="${env:KYLIN_HOME}/logs/kylin.history_server.log"
                      append="true"
@@ -57,7 +57,7 @@
                 <SizeBasedTriggeringPolicy size="268435456"/>
             </Policies>
             <DefaultRolloverStrategy max="10"/>
-            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+            <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
         </RollingFile>
         <RollingFile name="build-log-spark" fileName="${env:KYLIN_HOME}/logs/kylin.build.log" append="true"
                      filePattern="${env:KYLIN_HOME}/logs/kylin.build.log.%i">
@@ -65,7 +65,7 @@
                 <SizeBasedTriggeringPolicy size="268435456"/>
             </Policies>
             <DefaultRolloverStrategy max="10"/>
-            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+            <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
         </RollingFile>
         <RollingFile name="metadata-log-spark" fileName="${env:KYLIN_HOME}/logs/kylin.metadata.log" append="true"
                      filePattern="${env:KYLIN_HOME}/logs/kylin.metadata.log.%i">
@@ -73,7 +73,7 @@
                 <SizeBasedTriggeringPolicy size="268435456"/>
             </Policies>
             <DefaultRolloverStrategy max="10"/>
-            <PatternLayout pattern="%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
+            <PatternLayout pattern="%X{traceId}%d{ISO8601} %-5p %X{request.project}[%t] %c{2} : %mask{%m}%n"/>
         </RollingFile>
     </Appenders>
     <Loggers>
@@ -110,7 +110,7 @@
         <Logger name="org.apache.kylin.engine.spark.utils.LogEx" level="INFO" />
         <Logger name="org.apache.kylin.rest.service.QueryCacheManager" level="INFO"/>
         <!-- Kerberos log -->
-        <Logger name="io.kyligence.kap.tool.kerberos" level="INFO"/>
+        <Logger name="org.apache.kylin.tool.kerberos" level="INFO"/>
         <!-- Other log -->
         <Logger name="org.apache.kylin.metadata.cube.storage.TotalStorageCollector" level="INFO" />
         <Logger name="org.apache.kylin.common.metrics.MetricsInfluxdbReporter" level="INFO" />
