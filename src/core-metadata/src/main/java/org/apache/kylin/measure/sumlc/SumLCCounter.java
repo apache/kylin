@@ -85,6 +85,24 @@ public class SumLCCounter implements Serializable {
         }
     }
 
+    public void update(Number sumLC, Long timestamp) {
+        if (timestamp == null) {
+            return;
+        }
+        Number typeConvertInput = numericTypeConversion(sumLC);
+        if (this.timestamp == null || this.timestamp < timestamp) {
+            this.sumLC = typeConvertInput;
+            this.timestamp = timestamp;
+        } else if (this.timestamp.equals(timestamp)) {
+            if (this.sumLC == null) {
+                this.sumLC = typeConvertInput;
+            } else if (typeConvertInput != null) {
+                String sumLCTypeName = this.sumLC.getClass().getSimpleName();
+                this.sumLC = MERGE_FUNC_MAP.get(sumLCTypeName).apply(this.sumLC, typeConvertInput);
+            }
+        }
+    }
+
     public Number getSumLC() {
         return sumLC;
     }

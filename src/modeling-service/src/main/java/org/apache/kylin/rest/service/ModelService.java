@@ -3575,6 +3575,10 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         validateFusionModelDimension(modelRequest);
         NDataModel model = semanticUpdater.convertToDataModel(modelRequest);
 
+        for(NDataModel.Measure measure : model.getAllMeasures()) {
+            measure.getFunction().init(model);
+        }
+
         if (modelRequest.getPartitionDesc() != null
                 && !KylinConfig.getInstanceFromEnv().isUseBigIntAsTimestampForPartitionColumn()) {
             PartitionDesc partitionDesc = modelRequest.getPartitionDesc();

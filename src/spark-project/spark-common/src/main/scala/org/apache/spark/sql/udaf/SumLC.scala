@@ -18,7 +18,6 @@
 
 package org.apache.spark.sql.udaf
 
-import com.esotericsoftware.kryo.KryoException
 import com.esotericsoftware.kryo.io.{Input, KryoDataInput, KryoDataOutput, Output}
 import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.measure.sumlc.SumLCCounter
@@ -43,6 +42,9 @@ sealed abstract class BaseSumLC(wrapDataType: DataType,
                                 mutableAggBufferOffset: Int = 0,
                                 inputAggBufferOffset: Int = 0)
   extends TypedImperativeAggregate[SumLCCounter] with Serializable with Logging {
+  private val INIT_ARRAY_BUFFER_LENGTH = 32;
+  private val MAX_ARRAY_BUFFER_LENGTH = 256;
+
   lazy val serializer: NullSafeValueSerializer = SumLCUtil.getNumericNullSafeSerializerByDataType(wrapDataType)
 
   override def prettyName: String = "sum_lc"
@@ -52,49 +54,38 @@ sealed abstract class BaseSumLC(wrapDataType: DataType,
       case BinaryType =>
         serialize(buffer)
       case DecimalType() =>
-        if (buffer.getSumLC != null) {
-          Decimal.fromDecimal(buffer.getSumLC.asInstanceOf[java.math.BigDecimal])
-        } else {
-          Decimal.ZERO
-        }
+        if (buffer == null || buffer.getSumLC == null) return null;
+        Decimal.fromDecimal(buffer.getSumLC.asInstanceOf[java.math.BigDecimal])
       case _ =>
+        if (buffer == null) return null;
         buffer.getSumLC
     }
   }
 
-  override def createAggregationBuffer(): SumLCCounter = new SumLCCounter()
+  override def createAggregationBuffer(): SumLCCounter = null
 
   override def merge(buffer: SumLCCounter, input: SumLCCounter): SumLCCounter = {
     SumLCCounter.merge(buffer, input)
   }
 
   override def serialize(buffer: SumLCCounter): Array[Byte] = {
-    val array: Array[Byte] = new Array[Byte](1024 * 1024)
-    val output: Output = new Output(array)
-    serialize(buffer, array, output)
-  }
-
-  private def serialize(buffer: SumLCCounter, array: Array[Byte], output: Output): Array[Byte] = {
-    try {
-      if (buffer == null) {
-        Array.empty[Byte]
-      } else {
-        output.clear()
-        val out = new KryoDataOutput(output)
-        serializer.serialize(out, buffer.getSumLC)
-        out.writeLong(buffer.getTimestamp)
+    if (buffer == null) {
+      Array.empty[Byte]
+    } else {
+      val output: Output = new Output(INIT_ARRAY_BUFFER_LENGTH, MAX_ARRAY_BUFFER_LENGTH)
+      try {
+        val dataOutput = new KryoDataOutput(output)
+        serializer.serialize(dataOutput, buffer.getSumLC)
+        dataOutput.writeLong(buffer.getTimestamp)
         val mark = output.position()
+        val bufferArray = output.getBuffer
+        bufferArray.slice(0, mark)
+      } catch {
+        case th: Throwable =>
+          throw th
+      } finally if (output != null) {
         output.close()
-        array.slice(0, mark)
       }
-    } catch {
-      case th: KryoException if th.getMessage.contains("Buffer overflow") =>
-        logWarning(s"Resize buffer size to ${array.length * 2}")
-        val updateArray = new Array[Byte](array.length * 2)
-        output.setBuffer(updateArray)
-        serialize(buffer, updateArray, output)
-      case th =>
-        throw th
     }
   }
 
@@ -102,9 +93,18 @@ sealed abstract class BaseSumLC(wrapDataType: DataType,
     SumLCUtil.decodeToSumLCCounter(bytes, serializer)
   }
 
-  override def nullable: Boolean = false
+  override def nullable: Boolean = true
 
   override def dataType: DataType = outputDataType
+
+  protected def sumLCUpdateInternal(buffer: SumLCCounter, columnVal: Number, timestampVal: Long): SumLCCounter = {
+    if (buffer == null) {
+      new SumLCCounter(columnVal, timestampVal)
+    } else {
+      buffer.update(columnVal, timestampVal)
+      buffer
+    }
+  }
 }
 
 case class EncodeSumLC(
@@ -124,9 +124,14 @@ case class EncodeSumLC(
       case _ =>
         columnEvalVal.asInstanceOf[Number]
     }
-    val dateValStr = String.valueOf(dateCol.eval(input)).trim
-    val timestampVal = DateFormat.stringToMillis(dateValStr)
-    SumLCCounter.merge(buffer, columnVal, timestampVal)
+    val dateEvalVal = dateCol.eval(input)
+    if (dateEvalVal == null || dateEvalVal.toString.toUpperCase().equals("NULL")) {
+      buffer
+    } else {
+      val dateValStr = String.valueOf(dateEvalVal).trim
+      val timestampVal = DateFormat.stringToMillis(dateValStr)
+      sumLCUpdateInternal(buffer, columnVal, timestampVal)
+    }
   }
 
   override def withNewMutableAggBufferOffset(newMutableAggBufferOffset: Int): ImperativeAggregate =
@@ -149,8 +154,14 @@ case class ReuseSumLC(measure: Expression,
   extends BaseSumLC(wrapDataType, outputDataType, mutableAggBufferOffset, inputAggBufferOffset) {
 
   override def update(buffer: SumLCCounter, input: InternalRow): SumLCCounter = {
-    val evalCounter = deserialize(measure.eval(input).asInstanceOf[Array[Byte]])
-    SumLCCounter.merge(buffer, evalCounter)
+    val valAndTsPair = SumLCUtil.decodeToValAndTs(measure.eval(input).asInstanceOf[Array[Byte]], serializer)
+    if (valAndTsPair == null) {
+      buffer
+    } else {
+      val columnVal = valAndTsPair._1
+      val timestampVal = valAndTsPair._2
+      sumLCUpdateInternal(buffer, columnVal, timestampVal)
+    }
   }
 
   override def withNewMutableAggBufferOffset(newMutableAggBufferOffset: Int): ImperativeAggregate =
@@ -168,14 +179,23 @@ case class ReuseSumLC(measure: Expression,
 
 object SumLCUtil extends Logging {
 
-  def decodeToSumLCCounter(bytes: Array[Byte], codec: NullSafeValueSerializer): SumLCCounter = {
-    if (bytes.nonEmpty) {
+  def decodeToValAndTs(bytes: Array[Byte], codec: NullSafeValueSerializer): (Number, Long) = {
+    if (bytes.isEmpty) {
+      null
+    } else {
       val in = new KryoDataInput(new Input(bytes))
       val sumLC = codec.deserialize(in).asInstanceOf[Number]
       val timestamp = in.readLong()
-      new SumLCCounter(sumLC, timestamp)
+      (sumLC, timestamp)
+    }
+  }
+
+  def decodeToSumLCCounter(bytes: Array[Byte], codec: NullSafeValueSerializer): SumLCCounter = {
+    val valAndTsPair = decodeToValAndTs(bytes, codec)
+    if (valAndTsPair == null) {
+      null
     } else {
-      new SumLCCounter()
+      new SumLCCounter(valAndTsPair._1, valAndTsPair._2)
     }
   }
 
