@@ -43,24 +43,20 @@ public class Constant {
 
     public final static String ACCESS_HAS_ROLE_ADMIN = "hasRole('ROLE_ADMIN')";
 
-    public static final String ACCESS_POST_FILTER_READ = "hasRole('ROLE_ADMIN') " + //
-            " or hasPermission(#project, 'ADMINISTRATION')" + //
-            " or hasPermission(#project, 'MANAGEMENT')" + //
-            " or hasPermission(#project, 'OPERATION')" + //
+    public static final String ACCESS_CAN_PROJECT_ADMIN = "hasRole('ROLE_ADMIN') " + //
+            " or hasPermission(#project, 'ADMINISTRATION')";
+
+    public static final String ACCESS_CAN_PROJECT_WRITE = ACCESS_CAN_PROJECT_ADMIN + //
+            " or hasPermission(#project, 'MANAGEMENT')";
+
+    public static final String ACCESS_CAN_PROJECT_OPERATION = ACCESS_CAN_PROJECT_WRITE + //
+            " or hasPermission(#project, 'OPERATION')";
+
+    public static final String ACCESS_POST_FILTER_READ = ACCESS_CAN_PROJECT_OPERATION + //
             " or hasPermission(#project, 'READ')";
 
     public static final String ACCESS_POST_FILTER_READ_FOR_DATA_PERMISSION_SEPARATE = "hasPermission(#project, 'DATA_QUERY')";
 
-    public static final String ACCESS_CAN_PROJECT_OPERATION = "hasRole('ROLE_ADMIN') " + //
-            " or hasPermission(#project, 'ADMINISTRATION')" + //
-            " or hasPermission(#project, 'MANAGEMENT')" + //
-            " or hasPermission(#project, 'OPERATION')";
-
-    public static final String ACCESS_CAN_PROJECT_WRITE = "hasRole('ROLE_ADMIN') " + //
-            " or hasPermission(#project, 'ADMINISTRATION')" + //
-            " or hasPermission(#project, 'MANAGEMENT')";
-
-    public static final String ACCESS_CAN_PROJECT_ADMIN = "hasRole('ROLE_ADMIN') " + //
-            " or hasPermission(#project, 'ADMINISTRATION')";
-
+    public static final String ACCESS_CAN_PROJECT_OPERATION_DESIGN = ACCESS_CAN_PROJECT_WRITE + //
+            " or (hasPermission(#project, 'OPERATION') and #isIndexEnableOperatorDesign)";
 }
