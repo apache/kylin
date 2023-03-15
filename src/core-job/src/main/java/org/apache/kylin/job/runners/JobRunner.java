@@ -50,7 +50,6 @@ public class JobRunner extends AbstractDefaultSchedulerRunner {
         val jobIdSimple = executable.getId().substring(0, 8);
         try (SetThreadName ignored = new SetThreadName("JobWorker(project:%s,jobid:%s)", project, jobIdSimple);
                 SetLogCategory logCategory = new SetLogCategory("schedule")) {
-            context.addRunningJob(executable);
             executable.execute(context);
             // trigger the next step asap
             fetcherRunner.scheduleNext();
