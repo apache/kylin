@@ -219,6 +219,7 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
             if (memoryLock) {
                 jobDesc = executable.toString();
                 logger.info("{} prepare to schedule", jobDesc);
+                context.addRunningJob(executable);
                 jobPool.execute(new JobRunner(nDefaultScheduler, executable, this));
                 logger.info("{} scheduled", jobDesc);
             } else {

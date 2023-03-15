@@ -66,12 +66,14 @@ public class ExecutableContext {
         return kylinConfig;
     }
 
+    // Only used when the job starts scheduling
     public void addRunningJob(Executable executable) {
         runningJobThreads.put(executable.getId(), Thread.currentThread());
         runningJobs.put(executable.getId(), executable);
         runningJobInfos.put(executable.getId(), System.currentTimeMillis());
     }
 
+    // Only used when the job is completed
     public void removeRunningJob(Executable executable) {
         runningJobThreads.remove(executable.getId());
         runningJobs.remove(executable.getId());
