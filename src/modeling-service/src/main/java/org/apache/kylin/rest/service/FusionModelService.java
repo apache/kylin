@@ -253,6 +253,7 @@ public class FusionModelService extends AbstractModelService implements TableFus
     }
 
     public boolean modelExists(String modelAlias, String project) {
-        return getManager(NDataModelManager.class, project).listAllModelAlias().contains(modelAlias);
+        return getManager(NDataModelManager.class, project).listAllModelAlias()
+                .contains(modelAlias.toLowerCase(Locale.ROOT));
     }
 }

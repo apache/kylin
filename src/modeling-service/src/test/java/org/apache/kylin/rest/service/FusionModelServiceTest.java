@@ -200,8 +200,8 @@ public class FusionModelServiceTest extends SourceTestCase {
         Assert.assertFalse(fusionModel.isHasBaseAggIndex());
         request.setWithBaseIndex(true);
         fusionModelService.updateDataModelSemantic("streaming_test", request);
-        fusionModel = modelService.getModels("stream_merge", "streaming_test", false, null, Lists.newArrayList(),
-                null, false, null, null, null, true).get(0);
+        fusionModel = modelService.getModels("stream_merge", "streaming_test", false, null, Lists.newArrayList(), null,
+                false, null, null, null, true).get(0);
         Assert.assertFalse(fusionModel.isHasBaseAggIndex());
         Assert.assertFalse(fusionModel.isHasBaseTableIndex());
     }
@@ -462,5 +462,10 @@ public class FusionModelServiceTest extends SourceTestCase {
     @Test
     public void testModelExists() {
         Assert.assertTrue(fusionModelService.modelExists("stream_merge1", "streaming_test"));
+    }
+
+    @Test
+    public void testModelExistsIgnoreCase() {
+        Assert.assertTrue(fusionModelService.modelExists("Stream_Merge1", "streaming_test"));
     }
 }
