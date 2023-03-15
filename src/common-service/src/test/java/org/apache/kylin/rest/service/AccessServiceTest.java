@@ -901,4 +901,28 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         List<String> existed = Arrays.asList("group1", "group2");
         accessService.batchCheckSid("nogroup", false, existed);
     }
+
+    @Test
+    public void testCheckProjectOperationDesignPermission() {
+        getTestConfig().setProperty("kylin.index.enable-operator-design", "true");
+        String username = "OPERATION1";
+        ManagedUser managedUser = new ManagedUser(username, username, false, Arrays.asList(//
+                new SimpleGrantedAuthority(Constant.GROUP_ALL_USERS)));
+        if (!userService.userExists(username)) {
+            userService.createUser(managedUser);
+        }
+
+        ProjectInstance projectInstance = NProjectManager.getInstance(getTestConfig()).getProject("default");
+        AclEntity ae = accessService.getAclEntity(AclEntityType.PROJECT_INSTANCE, projectInstance.getUuid());
+        Sid sid = accessService.getSid(username, false);
+        accessService.grant(ae, AclPermission.OPERATION, sid);
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken(username, username, Constant.GROUP_ALL_USERS));
+
+        aclEvaluate.checkProjectOperationDesignPermission("default");
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN));
+    }
 }

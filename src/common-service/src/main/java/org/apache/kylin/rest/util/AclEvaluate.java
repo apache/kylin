@@ -135,4 +135,8 @@ public class AclEvaluate {
         aclUtil.checkIsGlobalAdmin();
     }
 
+    public void checkProjectOperationDesignPermission(String projectName) {
+        boolean indexEnableOperatorDesign = KylinConfig.getInstanceFromEnv().isIndexEnableOperatorDesign();
+        aclUtil.hasProjectOperationDesignPermission(getProjectInstance(projectName), indexEnableOperatorDesign);
+    }
 }

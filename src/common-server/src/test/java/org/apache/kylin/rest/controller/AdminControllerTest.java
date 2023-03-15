@@ -20,9 +20,12 @@ package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 
-import org.apache.kylin.rest.constant.Constant;
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.rest.constant.Constant;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -33,9 +36,12 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class AdminControllerTest extends NLocalFileMetadataTestCase {
     private MockMvc mockMvc;
@@ -87,6 +93,17 @@ public class AdminControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
         Mockito.verify(adminController).getPublicConfig();
+    }
+
+    @Test
+    public void testGetPublicConfigKylinIndexEnableOperatorDesign() throws Exception {
+        MvcResult mvcResult = mockMvc
+                .perform(MockMvcRequestBuilders.get("/api/admin/public_config").contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        Mockito.verify(adminController).getPublicConfig();
+        final JsonNode jsonNode = JsonUtil.readValueAsTree(mvcResult.getResponse().getContentAsString());
+        Assert.assertTrue(StringUtils.contains(jsonNode.get("data").textValue(), "kylin.index.enable-operator-design"));
     }
 
 }

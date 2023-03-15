@@ -64,4 +64,8 @@ public class AclUtil {
         return true;
     }
 
+    @PreAuthorize(Constant.ACCESS_CAN_PROJECT_OPERATION_DESIGN)
+    public boolean hasProjectOperationDesignPermission(ProjectInstance project, boolean isIndexEnableOperatorDesign) {
+        return true;
+    }
 }
