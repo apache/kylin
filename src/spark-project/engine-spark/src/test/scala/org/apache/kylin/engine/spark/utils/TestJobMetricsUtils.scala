@@ -20,7 +20,7 @@ package org.apache.kylin.engine.spark.utils
 
 import org.apache.commons.io.FileUtils
 import org.apache.kylin.common.util.RandomUtil
-import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
+import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StringType, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SaveMode}
@@ -30,7 +30,8 @@ import java.io.File
 import java.util.concurrent.{Executors, TimeUnit}
 
 
-class TestJobMetricsUtils extends SparderBaseFunSuite with SharedSparkSession with BeforeAndAfterAll {
+class TestJobMetricsUtils extends SparderBaseFunSuite with SharedSparkSession with BeforeAndAfterAll
+  with LocalMetadata {
 
   private val path1 = "./temp1"
   private val id1 = RandomUtil.randomUUIDStr

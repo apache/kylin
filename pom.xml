@@ -314,7 +314,7 @@
         <zkclient.version>0.8</zkclient.version>
         <grpc.version>1.0.2</grpc.version>
         <fastPFOR.version>0.0.13</fastPFOR.version>
-        <parquet.version>1.12.2-kylin-r1</parquet.version>
+        <parquet.version>1.12.2-kylin-r3</parquet.version>
         <quartz.version>2.1.1</quartz.version>
         <janino.version>3.0.9</janino.version>
 

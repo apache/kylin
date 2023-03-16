@@ -3902,4 +3902,32 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isIndexEnableOperatorDesign() {
         return Boolean.parseBoolean(getOptional("kylin.index.enable-operator-design", FALSE));
     }
+
+    public int getQueryFilterCollectInterval() {
+        return Integer.parseInt(getOptional("kylin.query.filter.collect-interval", "1800"));
+    }
+
+    public boolean isBloomCollectFilterEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.bloom.collect-filter.enabled", TRUE));
+    }
+
+    public boolean isCollectQueryMetricsEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.collect-metrics.enabled", TRUE));
+    }
+
+    public boolean isBloomBuildEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.bloom.build.enabled", FALSE));
+    }
+
+    public int getBloomBuildColumnMaxNum() {
+        return Integer.parseInt(getOptional("kylin.bloom.build.column.max-size", "3"));
+    }
+
+    public String getBloomBuildColumn() {
+        return getOptional("kylin.bloom.build.column", "");
+    }
+
+    public int getBloomBuildColumnNvd() {
+        return Integer.parseInt(getOptional("kylin.bloom.build.column.nvd", "200000"));
+    }
 }

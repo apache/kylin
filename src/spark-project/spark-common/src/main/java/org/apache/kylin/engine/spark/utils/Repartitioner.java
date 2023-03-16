@@ -24,10 +24,13 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.spark.sql.Column;
+import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+
+import org.apache.kylin.engine.spark.filter.ParquetBloomFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,8 +151,9 @@ public class Repartitioner {
                 data = ss.read().parquet(inputPath).repartition(repartitionNum)
                         .sortWithinPartitions(convertIntegerToColumns(sortByColumns));
             }
-
-            data.write().mode(SaveMode.Overwrite).parquet(outputPath);
+            DataFrameWriter<Row> writer = data.write().mode(SaveMode.Overwrite);
+            ParquetBloomFilter.configBloomColumnIfNeed(data, writer);
+            writer.parquet(outputPath);
             if (needRepartitionForShardByColumns()) {
                 if (optimizeShardEnabled)
                     ss.sessionState().conf().setLocalProperty("spark.sql.adaptive.skewRepartition.enabled", null);

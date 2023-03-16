@@ -45,4 +45,5 @@ object SparderConstants {
   val KYLIN_CONF = "kylin_conf"
   val PARQUET_FILE_CUBE_TYPE = "cube"
   val DATE_DICT = "date_dict"
+  val KYLIN_QUERY_ID_KEY = "kylin.query.id"
 }

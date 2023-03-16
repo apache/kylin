@@ -80,6 +80,7 @@ import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.engine.spark.filter.BloomFilterSkipCollector;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.acl.AclTCR;
@@ -428,6 +429,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             errorMsg = errorMsg.length() > maxLength ? errorMsg.substring(0, maxLength) : errorMsg;
         }
 
+        BloomFilterSkipCollector.logAndCleanStatus(QueryContext.current().getQueryId());
         LogReport report = new LogReport().put(LogReport.QUERY_ID, QueryContext.current().getQueryId())
                 .put(LogReport.SQL, sql).put(LogReport.USER, user)
                 .put(LogReport.SUCCESS, null == response.getExceptionMessage()).put(LogReport.DURATION, duration)

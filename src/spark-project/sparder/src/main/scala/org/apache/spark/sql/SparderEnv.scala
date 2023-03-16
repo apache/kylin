@@ -23,17 +23,20 @@ import java.security.PrivilegedAction
 import java.util.Map
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.{Callable, ExecutorService}
+
+import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.security.UserGroupInformation
 import org.apache.kylin.common.exception.{KylinException, KylinTimeoutException, ServerErrorCode}
 import org.apache.kylin.common.msg.MsgPicker
 import org.apache.kylin.common.util.{DefaultHostInfoFetcher, HadoopUtil, S3AUtil}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
+import org.apache.kylin.engine.spark.filter.BloomFilterSkipCollector
 import org.apache.kylin.metadata.model.{NTableMetadataManager, TableExtDesc}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.query.runtime.plan.QueryToExecutionIDCache
 import org.apache.spark.internal.Logging
-import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent, SparkListenerLogRollUp}
+import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent, SparkListenerLogRollUp, SparkListenerTaskEnd}
 import org.apache.spark.sql.KylinSession._
 import org.apache.spark.sql.catalyst.optimizer.ConvertInnerJoinToSemiJoin
 import org.apache.spark.sql.catalyst.parser.ParseException
@@ -242,6 +245,7 @@ object SparderEnv extends Logging {
           .getContextClassLoader
           .toString)
       registerListener(sparkSession.sparkContext)
+      registerQueryMetrics(sparkSession.sparkContext)
       APP_MASTER_TRACK_URL = null
       startSparkFailureTimes = 0
       lastStartSparkFailureTime = 0
@@ -287,6 +291,28 @@ object SparderEnv extends Logging {
       }
     }
     sc.addSparkListener(sparkListener)
+  }
+
+  def registerQueryMetrics(sc: SparkContext): Unit = {
+    if (!KylinConfig.getInstanceFromEnv.isCollectQueryMetricsEnabled) {
+      return
+    }
+    val taskListener = new SparkListener {
+      override def onTaskEnd(taskEnd: SparkListenerTaskEnd): Unit = {
+        try {
+          if (StringUtils.isNotBlank(taskEnd.queryId)) {
+            val inputMetrics = taskEnd.taskMetrics.inputMetrics
+            BloomFilterSkipCollector.addQueryMetrics(taskEnd.queryId,
+              inputMetrics.totalBloomBlocks, inputMetrics.totalSkipBloomBlocks,
+              inputMetrics.totalSkipBloomRows, inputMetrics.footerReadTime,
+              inputMetrics.footerReadNumber)
+          }
+        } catch {
+          case e: Throwable => logWarning("error when add metrics for query", e)
+        }
+      }
+    }
+    sc.addSparkListener(taskListener)
   }
 
   /**

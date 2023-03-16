@@ -32,10 +32,12 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.datasource.storage.{StorageListener, StorageStoreFactory, WriteTaskStats}
 import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
 import org.apache.spark.tracker.BuildContext
-
 import java.util
 import java.util.Objects
 import java.util.concurrent.{BlockingQueue, ForkJoinPool, LinkedBlockingQueue, TimeUnit}
+
+import org.apache.kylin.engine.spark.filter.ParquetBloomFilter
+
 import scala.collection.JavaConverters._
 import scala.collection.parallel.ForkJoinTaskSupport
 
@@ -325,7 +327,7 @@ trait SegmentExec extends Logging {
       case Some(x) => store.setStorageListener(x)
       case None =>
     }
-
+    ParquetBloomFilter.registerBloomColumnIfNeed(project, dataflowId);
     val stats = store.save(layout, new Path(storagePath), KapConfig.wrap(config), layoutDS)
     sparkSession.sparkContext.setJobDescription(null)
     stats
