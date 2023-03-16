@@ -25,7 +25,7 @@ import java.util.Objects;
 
 import org.apache.kylin.common.util.DateFormat;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class TimeRange implements Serializable {
     long start;

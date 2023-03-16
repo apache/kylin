@@ -22,7 +22,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.extern.slf4j.Slf4j;
 

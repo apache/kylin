@@ -38,8 +38,8 @@
             <artifactId>kylin-core-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-external-curator</artifactId>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-external-curator</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.integration</groupId>

@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public interface IPushDownRunner {
 

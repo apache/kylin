@@ -71,12 +71,12 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.util.ProjectTemporaryTableCleanerHelper;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
-import io.kyligence.kap.guava20.shaded.common.util.concurrent.RateLimiter;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.RateLimiter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

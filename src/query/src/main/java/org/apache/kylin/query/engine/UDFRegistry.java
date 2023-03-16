@@ -43,7 +43,7 @@ import org.apache.kylin.measure.MeasureTypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.HashMultimap;
+import org.apache.kylin.guava30.shaded.common.collect.HashMultimap;
 
 /**
  * Registry for all UDFs.

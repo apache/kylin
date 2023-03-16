@@ -42,9 +42,9 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import io.kyligence.kap.secondstorage.config.Node;
 import io.kyligence.kap.secondstorage.response.SecondStorageInfo;

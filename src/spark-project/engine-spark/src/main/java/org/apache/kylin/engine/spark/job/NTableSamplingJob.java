@@ -18,8 +18,8 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.kylin.common.KylinConfig;

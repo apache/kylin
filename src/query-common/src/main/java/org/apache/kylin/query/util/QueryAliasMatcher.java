@@ -45,6 +45,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.Iterables;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.ColExcludedChecker;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -61,14 +67,6 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.relnode.ColumnRowType;
 import org.apache.kylin.query.schema.KapOLAPSchema;
 import org.apache.kylin.query.schema.OLAPTable;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -100,7 +98,7 @@ public class QueryAliasMatcher {
      */
     static TblColRef resolveTblColRef(SqlIdentifier sqlIdentifier, LinkedHashMap<String, ColumnRowType> alias2CRT) {
         TblColRef ret = null;
-        ImmutableList<String> namesOfIdentifier = sqlIdentifier.names;
+        List<String> namesOfIdentifier = sqlIdentifier.names;
         if (namesOfIdentifier.size() == 3) {
             // db.tableAlias.colName
             String tableAlias = namesOfIdentifier.get(1);

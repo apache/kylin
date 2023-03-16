@@ -18,7 +18,7 @@
 package org.apache.kylin.engine.spark.utils
 
 
-import com.google.common.io.Files
+import org.apache.kylin.guava30.shaded.common.io.Files
 import org.apache.kylin.engine.spark.cleanup.SnapshotChecker
 import org.apache.commons.lang.time.DateUtils
 import org.apache.hadoop.fs.{FileSystem, Path}

@@ -19,8 +19,8 @@ package org.apache.kylin.metadata.model.alias;
 
 import java.util.Set;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 

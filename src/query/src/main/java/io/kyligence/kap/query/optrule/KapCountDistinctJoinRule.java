@@ -37,8 +37,8 @@ import org.apache.kylin.query.relnode.KapProjectRel;
 import org.apache.kylin.query.relnode.KapRel;
 import org.apache.kylin.query.util.RuleUtils;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 /**
  * agg-join  ->  agg(CD)-agg(other-agg)-join

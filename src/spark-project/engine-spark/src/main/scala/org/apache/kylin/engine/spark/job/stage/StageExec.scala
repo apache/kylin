@@ -18,8 +18,8 @@
 
 package org.apache.kylin.engine.spark.job.stage
 
-import com.google.common.base.Throwables
-import io.kyligence.kap.guava20.shaded.common.util.concurrent.RateLimiter
+import org.apache.kylin.guava30.shaded.common.base.Throwables
+import org.apache.kylin.guava30.shaded.common.util.concurrent.RateLimiter
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.JsonUtil
 import org.apache.kylin.job.execution.ExecutableState

@@ -40,8 +40,8 @@ import org.apache.kylin.query.schema.OLAPTable;
 import org.apache.kylin.query.engine.KECalciteConfig;
 import org.apache.kylin.query.util.ICutContextStrategy;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 /**
  */

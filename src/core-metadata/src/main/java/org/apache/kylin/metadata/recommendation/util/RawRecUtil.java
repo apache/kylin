@@ -37,8 +37,8 @@ import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class RawRecUtil {
 

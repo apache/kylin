@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 class NQueryMetaControllerTest {
     private MockMvc mockMvc;

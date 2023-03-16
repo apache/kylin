@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public enum BuiltInMethod {
     UPPER(BuiltInMethod.class, "upper", String.class), LOWER(BuiltInMethod.class, "lower", String.class), SUBSTRING(

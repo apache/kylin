@@ -29,7 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.slf4j.LoggerFactory;
 
-import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

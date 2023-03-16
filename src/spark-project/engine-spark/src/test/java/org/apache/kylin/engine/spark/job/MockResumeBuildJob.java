@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class MockResumeBuildJob extends DFBuildJob {
     // for ut only

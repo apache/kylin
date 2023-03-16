@@ -35,7 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @RunWith(TimeZoneTestRunner.class)
 public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {

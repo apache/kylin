@@ -20,7 +20,7 @@ package org.apache.kylin.metadata.model;
 import java.io.Serializable;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

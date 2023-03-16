@@ -37,9 +37,9 @@ import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.RetryingTest;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.CuratorFramework;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.state.ConnectionState;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionState;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionStateListener;
 
 @Disabled("TODO: re-run to check.")
 @MetadataInfo(onlyProps = true)

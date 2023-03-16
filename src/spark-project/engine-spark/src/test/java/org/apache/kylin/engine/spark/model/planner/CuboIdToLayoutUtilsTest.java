@@ -29,10 +29,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.planner.CostBasePlannerUtils;
 import org.junit.Test;
-
-import com.google.common.collect.Lists;
 
 public class CuboIdToLayoutUtilsTest {
 

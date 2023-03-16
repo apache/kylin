@@ -25,11 +25,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AutoReadWriteLock;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 
 public class BloomFilterSkipCollector {
     public static final Logger LOGGER = LoggerFactory.getLogger(BloomFilterSkipCollector.class);

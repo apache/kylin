@@ -37,8 +37,8 @@ import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.OptionBuilder;
 import org.apache.kylin.metadata.project.ProjectInstance;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -52,8 +52,8 @@ import org.apache.kylin.tool.metrics.MetricsInfo;
 import org.apache.kylin.tool.util.ToolMainWrapper;
 import org.joda.time.format.DateTimeFormat;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

@@ -17,7 +17,7 @@
  */
 package io.kyligence.kap.clickhouse.job;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Test;
 

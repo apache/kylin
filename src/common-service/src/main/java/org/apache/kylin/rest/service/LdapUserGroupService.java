@@ -38,6 +38,10 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 import org.apache.kylin.rest.response.UserGroupResponseKI;
@@ -54,10 +58,6 @@ import org.springframework.ldap.core.support.SingleContextSource;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
 public class LdapUserGroupService extends NUserGroupService {
 
     private static final Logger logger = LoggerFactory.getLogger(LdapUserGroupService.class);
@@ -66,17 +66,17 @@ public class LdapUserGroupService extends NUserGroupService {
 
     private static final String SKIPPED_LDAP = "skipped-ldap";
 
-    private static final com.google.common.cache.Cache<String, Set<String>> ldapGroupsCache = CacheBuilder.newBuilder()
+    private static final Cache<String, Set<String>> ldapGroupsCache = CacheBuilder.newBuilder()
             .maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .build();
 
-    private static final com.google.common.cache.Cache<String, List<ManagedUser>> ldapGroupsMembersCache = CacheBuilder
+    private static final Cache<String, List<ManagedUser>> ldapGroupsMembersCache = CacheBuilder
             .newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .build();
 
-    private static final com.google.common.cache.Cache<String, List<String>> ldapGroupsAndMembersCache = CacheBuilder
+    private static final Cache<String, List<String>> ldapGroupsAndMembersCache = CacheBuilder
             .newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .build();

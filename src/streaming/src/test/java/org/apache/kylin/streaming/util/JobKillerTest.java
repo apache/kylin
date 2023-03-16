@@ -30,7 +30,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.kyligence.kap.guava20.shaded.common.util.concurrent.UncheckedTimeoutException;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.UncheckedTimeoutException;
 import lombok.val;
 
 public class JobKillerTest extends StreamingTestCase {

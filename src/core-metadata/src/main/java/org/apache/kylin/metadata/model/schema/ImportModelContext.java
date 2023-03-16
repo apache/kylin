@@ -44,6 +44,10 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
@@ -65,10 +69,6 @@ import org.apache.kylin.metadata.recommendation.entity.RecItemV2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
 import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

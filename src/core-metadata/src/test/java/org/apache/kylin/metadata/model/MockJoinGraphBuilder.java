@@ -26,7 +26,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.junit.Assert;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class MockJoinGraphBuilder {
     private NDataModel modelDesc;

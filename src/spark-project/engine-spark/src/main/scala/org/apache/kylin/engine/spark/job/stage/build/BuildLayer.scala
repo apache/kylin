@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import io.kyligence.kap.guava20.shaded.common.util.concurrent.RateLimiter
+import org.apache.kylin.guava30.shaded.common.util.concurrent.RateLimiter
 import org.apache.kylin.engine.spark.job.stage.BuildParam
 import org.apache.kylin.engine.spark.job.{KylinBuildEnv, SegmentJob}
 import org.apache.kylin.metadata.cube.model.{NBatchConstants, NDataSegment}

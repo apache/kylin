@@ -18,14 +18,11 @@
 
 package io.kyligence.kap.query.optrule;
 
-import java.util.List;
-
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
@@ -33,8 +30,6 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.metadata.RelMdCollation;
 import org.apache.kylin.query.relnode.OLAPProjectRel;
 import org.apache.kylin.query.relnode.OLAPRel;
-
-import com.google.common.base.Supplier;
 
 /**
  */
@@ -57,12 +52,9 @@ public class OLAPProjectRule extends ConverterRule {
                 project.getInput().getTraitSet().replace(OLAPRel.CONVENTION));
         final RelOptCluster cluster = convertChild.getCluster();
         final RelTraitSet traitSet = cluster.traitSet().replace(OLAPRel.CONVENTION)
-                .replaceIfs(RelCollationTraitDef.INSTANCE, new Supplier<List<RelCollation>>() {
-                    public List<RelCollation> get() {
-                        //  CALCITE-88
-                        return RelMdCollation.project(cluster.getMetadataQuery(), convertChild, project.getProjects());
-                    }
-                });
+                .replaceIfs(RelCollationTraitDef.INSTANCE, () -> //  CALCITE-88
+                        RelMdCollation.project(cluster.getMetadataQuery(), convertChild, project.getProjects())
+                );
         return new OLAPProjectRel(convertChild.getCluster(), traitSet, convertChild, project.getProjects(),
                 project.getRowType());
     }

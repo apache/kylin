@@ -18,8 +18,8 @@
 
 package org.apache.kylin.tool.kerberos;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -102,9 +102,9 @@ public class DelegationTokenManager {
             doLogin();
         } catch (IOException ioe) {
             long retryInterval = kapConf.getKerberosTGTRetryInterval();
-            logger.error("Failed to login kerberos from principal: {}, keytab: {}," + //
-                    " will try again in {} minutes." + //
-                    " If this happens too often tasks will fail.", principal, keytab, retryInterval, ioe);
+            logger.error("Failed to login kerberos from principal: {}, keytab: {}," //
+                    + " will try again in {} minutes." //
+                    + " If this happens too often tasks will fail.", principal, keytab, retryInterval, ioe);
             renewalExecutor.schedule(this::tryLogin, Math.max(0, retryInterval), TimeUnit.MINUTES);
         }
     }

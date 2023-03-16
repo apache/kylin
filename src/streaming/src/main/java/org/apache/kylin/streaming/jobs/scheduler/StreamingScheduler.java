@@ -61,10 +61,10 @@ import org.apache.kylin.streaming.util.JobKiller;
 import org.apache.kylin.streaming.util.MetaInfoUpdater;
 import org.springframework.util.CollectionUtils;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Predicate;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.val;

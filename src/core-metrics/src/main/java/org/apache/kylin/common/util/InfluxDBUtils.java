@@ -24,9 +24,9 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.net.util.TrustManagerUtils;
 
-import io.kyligence.kap.shaded.influxdb.okhttp3.OkHttpClient;
-import io.kyligence.kap.shaded.influxdb.org.influxdb.InfluxDB;
-import io.kyligence.kap.shaded.influxdb.org.influxdb.InfluxDBFactory;
+import org.apache.kylin.shaded.influxdb.okhttp3.OkHttpClient;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDBFactory;
 
 public class InfluxDBUtils {
 

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import com.google.common.collect.Queues
+import org.apache.kylin.guava30.shaded.common.collect.Queues
 import org.apache.commons.math3.ml.clustering.{Clusterable, KMeansPlusPlusClusterer}
 import org.apache.commons.math3.ml.distance.EarthMoversDistance
 import org.apache.kylin.common.persistence.transaction.UnitOfWork

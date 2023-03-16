@@ -18,7 +18,7 @@
 
 package io.kyligence.kap.secondstorage;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import io.kyligence.kap.secondstorage.metadata.NodeGroup;
 import io.kyligence.kap.secondstorage.metadata.TablePartition;
 import org.apache.kylin.common.KylinConfig;

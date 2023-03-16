@@ -60,9 +60,9 @@ import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.service.QuerySmartSupporter;
 import org.apache.kylin.rest.util.SpringContext;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Data;
 import lombok.Getter;

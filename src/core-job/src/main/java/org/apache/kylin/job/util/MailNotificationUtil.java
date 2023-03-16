@@ -18,8 +18,8 @@
 
 package org.apache.kylin.job.util;
 
-import com.google.common.base.Joiner;
 import org.apache.kylin.common.util.MailTemplateProvider;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
 import org.apache.kylin.job.constant.JobIssueEnum;
 import org.apache.kylin.job.execution.ExecutableState;
 

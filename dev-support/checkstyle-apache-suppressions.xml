@@ -75,4 +75,6 @@
     <suppress checks="WhitespaceAfter" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
     <suppress checks="EmptyStatement" files="(RawSqlParserTokenManager|EscapeParserTokenManager|EscapeParserConstants|Token|SimpleCharStream|RawSqlParser|TokenMgrError|ParseException|RawSqlParserConstants|EscapeParser).java"  />
 
+    <!-- suppress "import sun.security.krb5.internal.ktab.KeyTab;" -->
+    <suppress checks="IllegalImport" files="KerberosLoginUtil.java"/>
 </suppressions>

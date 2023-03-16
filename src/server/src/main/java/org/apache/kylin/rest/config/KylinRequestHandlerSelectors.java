@@ -19,9 +19,9 @@ package org.apache.kylin.rest.config;
 
 import org.springframework.util.ClassUtils;
 
-import io.kyligence.kap.guava20.shaded.common.base.Function;
-import io.kyligence.kap.guava20.shaded.common.base.Optional;
-import io.kyligence.kap.guava20.shaded.common.base.Predicate;
+import org.apache.kylin.guava30.shaded.common.base.Function;
+import org.apache.kylin.guava30.shaded.common.base.Optional;
+import org.apache.kylin.guava30.shaded.common.base.Predicate;
 import springfox.documentation.RequestHandler;
 
 public class KylinRequestHandlerSelectors {

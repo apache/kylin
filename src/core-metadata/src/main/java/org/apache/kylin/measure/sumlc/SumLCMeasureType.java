@@ -31,7 +31,7 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public class SumLCMeasureType extends MeasureType<SumLCCounter> {
     public static final String FUNC_SUM_LC = "SUM_LC";

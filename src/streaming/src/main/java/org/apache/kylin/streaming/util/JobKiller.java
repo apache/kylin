@@ -37,7 +37,7 @@ import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kyligence.kap.guava20.shaded.common.util.concurrent.UncheckedTimeoutException;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.UncheckedTimeoutException;
 import lombok.val;
 
 public class JobKiller {

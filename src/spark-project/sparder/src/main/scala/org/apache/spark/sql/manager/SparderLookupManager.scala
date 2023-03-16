@@ -18,7 +18,7 @@
 package org.apache.spark.sql.manager
 
 import java.util.concurrent.TimeUnit
-import com.google.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
+import org.apache.kylin.guava30.shaded.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
 import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.metadata.model.NTableMetadataManager
 import org.apache.kylin.metadata.model.ColumnDesc

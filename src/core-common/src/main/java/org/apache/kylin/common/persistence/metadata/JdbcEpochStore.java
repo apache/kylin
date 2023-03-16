@@ -45,7 +45,7 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
-import com.google.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
 
 import lombok.Getter;
 import lombok.val;

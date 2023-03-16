@@ -25,8 +25,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.util.Pair;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMultimap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -66,8 +66,8 @@ public class NSparkCleanupAfterMergeStep extends NSparkExecutable {
                         logger.info("The segment {} in dataflow {} has been successfully deleted, path : {}", //
                                 segmentId, name, path);
                     } catch (IOException e) {
-                        logger.warn("Can not delete segment {} in dataflow {}." + //
-                                " Please try workaround thru garbage clean manually.", segmentId, name, e);
+                        logger.warn("Can not delete segment {} in dataflow {}." //
+                                + " Please try workaround thru garbage clean manually.", segmentId, name, e);
                     }
                 }
             } else {

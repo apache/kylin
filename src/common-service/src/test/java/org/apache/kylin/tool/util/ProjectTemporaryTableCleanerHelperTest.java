@@ -31,7 +31,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class ProjectTemporaryTableCleanerHelperTest extends NLocalFileMetadataTestCase {
     private final String TRANSACTIONAL_TABLE_NAME_SUFFIX = "_hive_tx_intermediate";

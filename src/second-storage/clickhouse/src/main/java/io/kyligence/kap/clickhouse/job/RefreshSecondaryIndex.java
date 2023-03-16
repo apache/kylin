@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.kyligence.kap.clickhouse.ClickHouseNameUtil;
 import io.kyligence.kap.clickhouse.ddl.ClickHouseRender;
 import io.kyligence.kap.clickhouse.parser.ExistsQueryParser;
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
 import io.kyligence.kap.secondstorage.ddl.AlterTable;
 import io.kyligence.kap.secondstorage.ddl.ExistsTable;

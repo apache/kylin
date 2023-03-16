@@ -19,7 +19,7 @@
 package org.apache.kylin.engine.spark.job
 
 import com.esotericsoftware.kryo.io.{Input, KryoDataInput}
-import com.google.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
+import org.apache.kylin.guava30.shaded.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.types.StructType

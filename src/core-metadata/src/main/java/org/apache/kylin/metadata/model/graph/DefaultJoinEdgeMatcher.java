@@ -21,7 +21,7 @@ package org.apache.kylin.metadata.model.graph;
 import java.util.List;
 import java.util.Objects;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.ColumnDesc;
 
 import lombok.NonNull;

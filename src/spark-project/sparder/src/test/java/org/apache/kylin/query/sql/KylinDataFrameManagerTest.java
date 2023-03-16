@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.util.ReflectionUtils;
 
-import com.google.common.collect.ImmutableBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
 
 import lombok.val;
 import lombok.var;

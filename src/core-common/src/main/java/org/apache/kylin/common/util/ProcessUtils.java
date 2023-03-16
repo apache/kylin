@@ -25,9 +25,9 @@ import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
 
-import io.kyligence.kap.guava20.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

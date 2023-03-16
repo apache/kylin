@@ -35,8 +35,8 @@ import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class LogicalViewLoader {
   public static final Logger LOGGER = LoggerFactory.getLogger(LogicalViewLoader.class);

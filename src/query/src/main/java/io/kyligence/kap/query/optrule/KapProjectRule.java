@@ -18,15 +18,12 @@
 
 package io.kyligence.kap.query.optrule;
 
-import java.util.List;
-
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.hep.HepRelVertex;
-import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
@@ -35,8 +32,6 @@ import org.apache.calcite.rel.metadata.RelMdCollation;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.kylin.query.relnode.KapProjectRel;
 import org.apache.kylin.query.relnode.KapRel;
-
-import com.google.common.base.Supplier;
 
 /**
  */
@@ -58,11 +53,8 @@ public class KapProjectRule extends ConverterRule {
         final RelOptCluster cluster = convertedInput.getCluster();
         final RelMetadataQuery mq = cluster.getMetadataQuery();
         final RelTraitSet traitSet = cluster.traitSet().replace(KapRel.CONVENTION)
-                .replaceIfs(RelCollationTraitDef.INSTANCE, new Supplier<List<RelCollation>>() {
-                    public List<RelCollation> get() {
-                        return RelMdCollation.project(mq, convertedInput, project.getProjects());
-                    }
-                });
+                .replaceIfs(RelCollationTraitDef.INSTANCE,
+                        () -> RelMdCollation.project(mq, convertedInput, project.getProjects()));
 
         KapProjectRel kapProjectRel = new KapProjectRel(convertedInput.getCluster(), traitSet, convertedInput,
                 project.getProjects(), project.getRowType());

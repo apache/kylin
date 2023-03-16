@@ -43,9 +43,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
-import io.kyligence.kap.shaded.influxdb.org.influxdb.InfluxDBIOException;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDBIOException;
 import io.swagger.annotations.ApiOperation;
 
 @Controller

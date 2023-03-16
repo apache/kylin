@@ -42,9 +42,9 @@ import org.apache.kylin.cache.utils.ReflectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
+import org.apache.kylin.guava30.shaded.common.cache.CacheLoader;
+import org.apache.kylin.guava30.shaded.common.cache.LoadingCache;
 
 import alluxio.client.file.CacheContext;
 import alluxio.client.file.URIStatus;

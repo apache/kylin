@@ -47,7 +47,7 @@ import org.apache.spark.sql.types.StructType;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import scala.Tuple2;

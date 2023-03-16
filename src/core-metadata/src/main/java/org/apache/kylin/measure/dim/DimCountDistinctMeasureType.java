@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public class DimCountDistinctMeasureType extends MeasureType<Object> {
     public static final String DATATYPE_DIM_DC = "dim_dc";

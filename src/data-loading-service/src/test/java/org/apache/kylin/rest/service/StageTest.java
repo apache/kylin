@@ -18,12 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.apache.kylin.engine.spark.job.step.NStageForBuild;
-import org.apache.kylin.engine.spark.job.step.NStageForMerge;
-import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
 import lombok.val;
 import lombok.var;
 import org.apache.commons.collections4.CollectionUtils;
@@ -32,6 +26,12 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.job.NSparkExecutable;
+import org.apache.kylin.engine.spark.job.step.NStageForBuild;
+import org.apache.kylin.engine.spark.job.step.NStageForMerge;
+import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.exception.ExecuteException;

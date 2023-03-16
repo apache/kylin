@@ -36,7 +36,7 @@ import org.apache.kylin.metadata.streaming.StreamingJobRecordManager;
 import org.apache.kylin.streaming.constants.StreamingConstants;
 import org.apache.kylin.streaming.manager.StreamingJobManager;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.val;
 
 public class MetaInfoUpdater {

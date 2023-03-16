@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

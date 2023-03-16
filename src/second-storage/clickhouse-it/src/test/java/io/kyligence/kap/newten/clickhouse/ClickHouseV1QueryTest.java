@@ -32,7 +32,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import lombok.extern.slf4j.Slf4j;
 import scala.collection.JavaConversions;

@@ -29,7 +29,7 @@ import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.spark.sql.common.SparderQueryTest;
 import org.junit.Assert;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

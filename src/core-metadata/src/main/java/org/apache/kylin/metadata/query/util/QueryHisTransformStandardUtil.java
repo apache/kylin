@@ -31,7 +31,7 @@ import org.apache.kylin.metadata.query.QueryHistoryResponse;
 import org.apache.kylin.metadata.query.QueryHistorySql;
 import org.apache.kylin.metadata.query.QueryRealization;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class QueryHisTransformStandardUtil {
 

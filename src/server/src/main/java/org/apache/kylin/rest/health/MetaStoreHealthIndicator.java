@@ -38,7 +38,7 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 @Component
 public class MetaStoreHealthIndicator implements HealthIndicator, ApplicationListener<AfterMetadataReadyEvent> {

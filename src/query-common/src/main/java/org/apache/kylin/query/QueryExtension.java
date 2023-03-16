@@ -29,7 +29,7 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.query.engine.SchemaMapExtension;
 import org.apache.kylin.query.engine.TableColumnAuthExtension;
 
-import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 public class QueryExtension {
 

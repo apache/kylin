@@ -35,7 +35,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
 
@@ -82,21 +82,19 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
         queries.add("SELECT cast(LSTG_SITE_ID as short) FROM TEST_KYLIN_FACT limit 10");
         queries.add("SELECT CAST(ORDER_ID AS VARCHAR) FROM TEST_KYLIN_FACT limit 10");
         queries.add("SELECT CAST(ORDER_ID AS char) FROM TEST_KYLIN_FACT limit 10");
-        queries.add("select SELLER_ID,ITEM_COUNT,sum(price)\n" + //
-                "from (\n" + //
-                "SELECT SELLER_ID, ITEM_COUNT,price\n" + //
-                "\t, concat(concat(CAST(year(CAST(CAL_DT AS date)) AS varchar), '-'), CAST(month(CAST(CAL_DT AS date)) AS varchar)) AS prt_mth\n"
-                + //
-                "FROM TEST_KYLIN_FACT) \n" + //
-                "group by SELLER_ID,ITEM_COUNT,price limit 10"); //
+        queries.add("select SELLER_ID,ITEM_COUNT,sum(price)\n" //
+                + "from (\n" //
+                + "SELECT SELLER_ID, ITEM_COUNT,price\n" //
+                + "\t, concat(concat(CAST(year(CAST(CAL_DT AS date)) AS varchar), '-'), CAST(month(CAST(CAL_DT AS date)) AS varchar)) AS prt_mth\n"
+                + "FROM TEST_KYLIN_FACT) \n" //
+                + "group by SELLER_ID,ITEM_COUNT,price limit 10"); //
 
-        queries.add("select SELLER_ID,ITEM_COUNT,sum(price)\n" + //
-                "from (\n" + //
-                "SELECT SELLER_ID, ITEM_COUNT,price\n" + //
-                "\t, concat(concat(CAST(year(CAST(CAL_DT AS date)) AS char), '-'), CAST(month(CAST(CAL_DT AS date)) AS varchar)) AS prt_mth\n"
-                + //
-                "FROM TEST_KYLIN_FACT) \n" + //
-                "group by SELLER_ID,ITEM_COUNT,price limit 10");
+        queries.add("select SELLER_ID,ITEM_COUNT,sum(price)\n" //
+                + "from (\n" //
+                + "SELECT SELLER_ID, ITEM_COUNT,price\n" //
+                + "\t, concat(concat(CAST(year(CAST(CAL_DT AS date)) AS char), '-'), CAST(month(CAST(CAL_DT AS date)) AS varchar)) AS prt_mth\n"
+                + "FROM TEST_KYLIN_FACT) \n" //
+                + "group by SELLER_ID,ITEM_COUNT,price limit 10");
 
         queries.forEach(q -> {
             returnRows.clear();

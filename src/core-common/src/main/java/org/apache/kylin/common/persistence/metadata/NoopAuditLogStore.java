@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.kylin.common.persistence.AuditLog;
 import org.apache.kylin.common.persistence.UnitMessages;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class NoopAuditLogStore implements AuditLogStore {
     @Override

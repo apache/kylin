@@ -30,9 +30,9 @@ import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import io.kyligence.kap.guava20.shaded.common.base.Throwables;
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 
 @MetadataInfo(onlyProps = true)

@@ -35,6 +35,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.query.relnode.KapAggregateRel;
 import org.apache.kylin.query.relnode.KapFilterRel;
 import org.apache.kylin.query.relnode.KapJoinRel;
@@ -42,7 +43,6 @@ import org.apache.kylin.query.relnode.KapProjectRel;
 import org.apache.kylin.query.util.RuleUtils;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public class KapAggProjectMergeRule extends RelOptRule {
     public static final KapAggProjectMergeRule AGG_PROJECT_JOIN = new KapAggProjectMergeRule(

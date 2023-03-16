@@ -18,7 +18,7 @@
 
 package io.kyligence.kap.secondstorage.util;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.JobErrorCode;

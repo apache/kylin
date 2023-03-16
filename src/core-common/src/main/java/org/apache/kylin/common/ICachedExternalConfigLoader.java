@@ -18,7 +18,7 @@
 
 package org.apache.kylin.common;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 import io.kyligence.config.core.loader.IExternalConfigLoader;
 

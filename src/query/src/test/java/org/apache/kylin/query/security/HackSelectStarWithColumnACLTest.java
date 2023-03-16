@@ -38,8 +38,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class HackSelectStarWithColumnACLTest extends NLocalFileMetadataTestCase {
     private final static String PROJECT = "default";

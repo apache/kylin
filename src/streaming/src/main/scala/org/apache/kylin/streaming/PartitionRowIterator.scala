@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.streaming
 
-import com.google.common.base.{Preconditions, Throwables}
+import org.apache.kylin.guava30.shaded.common.base.{Preconditions, Throwables}
 import org.apache.commons.lang.time.DateUtils
 import org.apache.commons.lang3.{ObjectUtils, StringUtils}
 import org.apache.kylin.common.util.DateFormat

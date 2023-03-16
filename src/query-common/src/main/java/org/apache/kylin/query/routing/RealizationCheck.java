@@ -30,8 +30,8 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.metadata.model.NDataModel;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class RealizationCheck {
     private Map<NDataModel, List<IncapableReason>> modelIncapableReasons = Maps.newHashMap();

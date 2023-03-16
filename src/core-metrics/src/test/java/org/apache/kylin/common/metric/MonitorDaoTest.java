@@ -32,7 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import io.kyligence.kap.shaded.influxdb.org.influxdb.dto.QueryResult;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 
 public class MonitorDaoTest {
 

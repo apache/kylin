@@ -18,7 +18,7 @@
 
 package io.kyligence.kap.clickhouse.management;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import io.kyligence.kap.secondstorage.SecondStorageConfigLoader;
 import io.kyligence.kap.secondstorage.config.ClusterInfo;
 import io.kyligence.kap.secondstorage.config.Node;

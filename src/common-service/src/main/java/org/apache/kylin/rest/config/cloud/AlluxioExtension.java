@@ -39,12 +39,12 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.model.SnapshotBuildFinishedEvent;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
-import io.kyligence.kap.guava20.shaded.common.eventbus.KylinEventException;
-import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.CuratorFramework;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory;
-import io.kyligence.kap.shaded.curator.org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.eventbus.KylinEventException;
+import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.kylin.shaded.curator.org.apache.curator.retry.ExponentialBackoffRetry;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

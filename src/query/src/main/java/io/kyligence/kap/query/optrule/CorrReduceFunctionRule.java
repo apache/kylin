@@ -48,9 +48,9 @@ import org.apache.calcite.util.CompositeList;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.kylin.measure.corr.CorrMeasureType;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class CorrReduceFunctionRule extends RelOptRule {
     public static final CorrReduceFunctionRule INSTANCE = new CorrReduceFunctionRule(operand(Aggregate.class, any()),

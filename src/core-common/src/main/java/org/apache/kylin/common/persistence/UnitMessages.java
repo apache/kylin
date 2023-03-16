@@ -24,7 +24,7 @@ import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.event.StartUnit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

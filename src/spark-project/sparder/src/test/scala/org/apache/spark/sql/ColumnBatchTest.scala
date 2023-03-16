@@ -20,7 +20,7 @@ package org.apache.spark.sql
 
 import java.sql.{Date, Timestamp}
 
-import com.google.common.collect.Lists
+import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.calcite.avatica.util.DateTimeUtils.ymdToUnixDate
 import org.apache.spark.sql.catalyst.expressions.KapSubtractMonths
 import org.apache.spark.sql.catalyst.util.KapDateTimeUtils

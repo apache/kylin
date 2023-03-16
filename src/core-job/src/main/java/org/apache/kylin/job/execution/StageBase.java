@@ -22,7 +22,7 @@ import static org.apache.kylin.job.execution.JobTypeEnum.STAGE;
 
 import org.apache.kylin.job.exception.ExecuteException;
 
-import io.kyligence.kap.guava20.shaded.common.base.MoreObjects;
+import org.apache.kylin.guava30.shaded.common.base.MoreObjects;
 
 public class StageBase extends AbstractExecutable {
 

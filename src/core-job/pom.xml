@@ -73,8 +73,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-external-curator-test</artifactId>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-external-curator-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

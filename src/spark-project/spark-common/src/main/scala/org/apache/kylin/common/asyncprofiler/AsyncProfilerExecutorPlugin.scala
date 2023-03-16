@@ -18,7 +18,7 @@
 
 package org.apache.kylin.common.asyncprofiler
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder
 import org.apache.kylin.common.asyncprofiler.Message._
 import org.apache.kylin.common.util.ExecutorServiceUtil
 import org.apache.spark.api.plugin.{ExecutorPlugin, PluginContext}

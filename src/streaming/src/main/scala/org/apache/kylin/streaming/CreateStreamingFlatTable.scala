@@ -40,7 +40,7 @@ import org.apache.spark.storage.StorageLevel
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-import com.google.common.base.Preconditions
+import org.apache.kylin.guava30.shaded.common.base.Preconditions
 
 class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
   CreateFlatTable(entry.flatTable, entry.seg, entry.toBuildTree, entry.ss, entry.sourceInfo) {

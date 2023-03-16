@@ -29,7 +29,7 @@ import org.apache.kylin.rest.request.SQLBlacklistRequest;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @Component("querySQLBlacklistService")
 public class QuerySQLBlacklistService extends BasicService {

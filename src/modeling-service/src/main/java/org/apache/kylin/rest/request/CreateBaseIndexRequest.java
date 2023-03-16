@@ -24,7 +24,7 @@ import org.apache.kylin.metadata.cube.model.IndexEntity.Source;
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

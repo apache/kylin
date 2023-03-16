@@ -21,7 +21,7 @@ import java.lang.{Long => JLong}
 import java.util
 import java.util.function.Function
 import java.util.{Arrays, Map => JMap}
-import com.google.common.collect.{Lists, Sets}
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.engine.spark.builder.NBuildSourceInfo
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil.{getColumns, str2Longs, toLayouts}
 import org.apache.kylin.engine.spark.job._

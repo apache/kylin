@@ -17,8 +17,8 @@
  */
 package org.apache.kylin.tool.constant;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class SensitiveConfigKeysConstant {
     public static final ImmutableSet<String> DEFAULT_SENSITIVE_CONF_BLACKLIST = ImmutableSet.copyOf(

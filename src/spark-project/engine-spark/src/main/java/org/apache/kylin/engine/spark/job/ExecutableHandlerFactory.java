@@ -18,9 +18,9 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.base.Preconditions;
 import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.job.execution.DefaultExecutableOnModel;
 import org.apache.kylin.job.execution.ExecutableHandler;
 

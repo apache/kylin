@@ -39,8 +39,8 @@
             <artifactId>freemarker</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-external-guava20</artifactId>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-external-guava30</artifactId>
         </dependency>
         <dependency>
             <groupId>io.kyligence</groupId>

@@ -44,7 +44,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class HiveTransactionTableHelperTest extends NLocalWithSparkSessionTest {
     private final ColumnDesc[] COLUMN_DESCS = new ColumnDesc[2];

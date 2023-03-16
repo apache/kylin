@@ -48,8 +48,8 @@ import org.apache.kylin.query.exception.NoAuthorizedColsError;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.source.adhocquery.IPushDownConverter;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class HackSelectStarWithColumnACL implements IQueryTransformer, IPushDownConverter {
 

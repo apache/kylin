@@ -35,9 +35,9 @@ import org.apache.kylin.rest.util.ModelUtils;
 import org.springframework.stereotype.Component;
 
 import com.codahale.metrics.Gauge;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
-import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
+import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

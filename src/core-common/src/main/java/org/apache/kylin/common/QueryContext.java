@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.kylin.common.util.RandomUtil;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

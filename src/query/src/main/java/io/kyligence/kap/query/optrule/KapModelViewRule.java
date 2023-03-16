@@ -27,7 +27,7 @@ import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.kylin.query.relnode.KapModelViewRel;
 import org.apache.kylin.query.relnode.KapRel;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 /**
  */

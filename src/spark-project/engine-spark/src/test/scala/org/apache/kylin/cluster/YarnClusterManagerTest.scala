@@ -17,7 +17,7 @@
 
 package org.apache.kylin.cluster
 
-import com.google.common.collect.Sets
+import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.hadoop.yarn.api.records.{ApplicationId, ApplicationReport, QueueInfo, YarnApplicationState}
 import org.apache.hadoop.yarn.client.api.YarnClient
 import org.apache.hadoop.yarn.conf.YarnConfiguration
@@ -135,7 +135,7 @@ class YarnClusterManagerTest extends AnyFunSuite with LocalMetadata {
       val ycm = new YarnClusterManager
       val jobStepId = "job_step_fakeStepId"
       val queue = "queue"
-      val queues = io.kyligence.kap.guava20.shaded.common.collect.Sets.newHashSet(queue)
+      val queues = org.apache.kylin.guava30.shaded.common.collect.Sets.newHashSet(queue)
       val yarnClient = mock(classOf[YarnClient])
       val applicationId = mock(classOf[ApplicationId])
       val queueInfo = mock(classOf[QueueInfo])

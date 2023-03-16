@@ -24,7 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.tool.constant.SensitiveConfigKeysConstant;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class KylinConfObfuscator extends PropertiesFileObfuscator {
 

@@ -52,7 +52,7 @@ import org.apache.kylin.query.util.AggExpressionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 /**
  * sum(cast(expr as double))  ->  cast(sum(expr) as double)

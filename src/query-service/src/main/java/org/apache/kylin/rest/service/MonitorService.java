@@ -66,10 +66,10 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -193,10 +193,10 @@ public class MonitorService extends BasicService implements ApplicationListener<
         return MonitorDao.getInstance();
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + //
-            " or hasPermission(#project, 'ADMINISTRATION')" + //
-            " or hasPermission(#project, 'MANAGEMENT')" + //
-            " or hasPermission(#project, 'OPERATION')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN //
+            + " or hasPermission(#project, 'ADMINISTRATION')" //
+            + " or hasPermission(#project, 'MANAGEMENT')" //
+            + " or hasPermission(#project, 'OPERATION')")
     public ClusterStatusResponse timeClusterStatus(final long time) {
         val queryServers = clusterManager.getQueryServers().stream().map(ServerInfoResponse::getHost)
                 .collect(Collectors.toList());
@@ -417,10 +417,10 @@ public class MonitorService extends BasicService implements ApplicationListener<
         return statisticCluster(floorTime(start), floorTime(end));
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + //
-            " or hasPermission(#project, 'ADMINISTRATION')" + //
-            " or hasPermission(#project, 'MANAGEMENT')" + //
-            " or hasPermission(#project, 'OPERATION')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN //
+            + " or hasPermission(#project, 'ADMINISTRATION')" //
+            + " or hasPermission(#project, 'MANAGEMENT')" //
+            + " or hasPermission(#project, 'OPERATION')")
     // /monitor/status/statistic
     public ClusterStatisticStatusResponse statisticCluster(final long start, final long end) {
         val jobs = clusterManager.getJobServers().stream().map(ServerInfoResponse::getHost)

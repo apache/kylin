@@ -21,7 +21,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.kyligence.kap.shaded.influxdb.org.influxdb.annotation.Column;
+import org.apache.kylin.shaded.influxdb.org.influxdb.annotation.Column;
 import lombok.Getter;
 import lombok.Setter;
 

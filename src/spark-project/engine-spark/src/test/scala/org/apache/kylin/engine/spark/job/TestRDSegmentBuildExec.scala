@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job
 
-import com.google.common.collect.Lists
+import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.kylin.common.util.TestUtils.getTestConfig
 import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.job.stage.BuildParam

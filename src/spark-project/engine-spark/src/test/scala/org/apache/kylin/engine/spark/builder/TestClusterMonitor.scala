@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import io.kyligence.kap.guava20.shaded.common.collect.Sets
+import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 import org.apache.kylin.engine.spark.scheduler.ClusterMonitor

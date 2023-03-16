@@ -26,8 +26,8 @@ import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
 import org.apache.kylin.rest.aspect.TransactionProjectUnit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

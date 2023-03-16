@@ -161,14 +161,14 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.SetMultimap;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.collect.Collections2;
+import org.apache.kylin.guava30.shaded.common.collect.HashMultimap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.SetMultimap;
 import com.google.gson.Gson;
 
 import lombok.AllArgsConstructor;
@@ -887,14 +887,14 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
     }
 
     private boolean isQueryCacheEnabled(KylinConfig kylinConfig) {
-        return checkCondition(kylinConfig.isQueryCacheEnabled(), "query cache disabled in KylinConfig") && //
-                checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
+        return checkCondition(kylinConfig.isQueryCacheEnabled(), "query cache disabled in KylinConfig") //
+                && checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
     }
 
     private boolean isQueryExceptionCacheEnabled(KylinConfig kylinConfig) {
         return checkCondition(kylinConfig.isQueryExceptionCacheEnabled(),
-                "query exception cache disabled in KylinConfig") && //
-                checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
+                "query exception cache disabled in KylinConfig") //
+                && checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
     }
 
     private void applyQuerySqlBlacklist(String project, String sql) {

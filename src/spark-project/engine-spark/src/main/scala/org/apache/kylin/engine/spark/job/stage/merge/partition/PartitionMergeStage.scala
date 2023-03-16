@@ -20,7 +20,7 @@ package org.apache.kylin.engine.spark.job.stage.merge.partition
 
 import java.util.Objects
 
-import com.google.common.collect.Lists
+import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.kylin.engine.spark.job.stage.merge.MergeStage
 import org.apache.kylin.engine.spark.job.{PartitionExec, SegmentJob}
 import org.apache.kylin.metadata.cube.model._

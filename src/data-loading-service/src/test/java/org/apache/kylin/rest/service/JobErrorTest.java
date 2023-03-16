@@ -19,10 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.Maps;
-import org.apache.kylin.engine.spark.job.step.NStageForBuild;
-import org.apache.kylin.engine.spark.job.step.NStageForMerge;
-import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
 import lombok.val;
 import lombok.var;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -37,6 +33,10 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.job.NSparkExecutable;
+import org.apache.kylin.engine.spark.job.step.NStageForBuild;
+import org.apache.kylin.engine.spark.job.step.NStageForMerge;
+import org.apache.kylin.engine.spark.job.step.NStageForSnapshot;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ChainedExecutable;

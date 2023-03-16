@@ -38,10 +38,10 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexLiteral;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public class OLAPValuesRel extends Values implements OLAPRel {
     protected OLAPContext context;

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job.step;
 
-import io.kyligence.kap.guava20.shaded.common.base.MoreObjects;
+import org.apache.kylin.guava30.shaded.common.base.MoreObjects;
 import org.apache.kylin.job.execution.StageBase;
 
 public class NStageForSnapshot extends StageBase {

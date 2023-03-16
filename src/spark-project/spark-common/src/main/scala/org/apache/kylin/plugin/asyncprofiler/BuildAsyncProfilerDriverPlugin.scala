@@ -18,7 +18,7 @@
 
 package org.apache.kylin.plugin.asyncprofiler
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder
 import org.apache.hadoop.fs.{FSDataOutputStream, FileSystem, Path}
 import org.apache.kylin.common.asyncprofiler.Message._
 import org.apache.kylin.common.asyncprofiler.{AsyncProfilerTool, AsyncProfilerUtils}

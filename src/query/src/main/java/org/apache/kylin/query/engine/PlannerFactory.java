@@ -89,8 +89,8 @@ import io.kyligence.kap.query.optrule.KapWindowRule;
 import io.kyligence.kap.query.optrule.RightJoinToLeftJoinRule;
 import io.kyligence.kap.query.optrule.SumConstantConvertRule;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.base.Function;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 /**
  * factory that create optimizers and register opt rules

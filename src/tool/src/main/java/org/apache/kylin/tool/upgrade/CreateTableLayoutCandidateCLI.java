@@ -36,7 +36,7 @@ import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.recommendation.util.RawRecStoreUtil;
 import org.apache.kylin.tool.util.MetadataUtil;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.extern.slf4j.Slf4j;
 

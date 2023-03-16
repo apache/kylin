@@ -23,7 +23,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class SumLCCounter implements Serializable {
     private static final Map<String, BiFunction<Number, Number, Number>> MERGE_FUNC_MAP = Maps.newHashMap();

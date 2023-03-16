@@ -99,15 +99,15 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import com.amazonaws.util.EC2MetadataUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import io.kyligence.kap.clickhouse.ClickHouseStorage;
 import io.kyligence.kap.clickhouse.job.ClickHouseLoad;
 import io.kyligence.kap.clickhouse.job.ClickHouseRefreshSecondaryIndexJob;
-import io.kyligence.kap.guava20.shaded.common.collect.ImmutableSet;
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import io.kyligence.kap.newten.clickhouse.ClickHouseUtils;
 import io.kyligence.kap.newten.clickhouse.EmbeddedHttpServer;
 import io.kyligence.kap.secondstorage.ddl.InsertInto;

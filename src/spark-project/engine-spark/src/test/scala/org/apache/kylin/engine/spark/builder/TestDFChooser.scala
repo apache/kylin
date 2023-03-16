@@ -18,8 +18,8 @@
 package org.apache.kylin.engine.spark.builder
 
 import java.util
-import com.google.common.collect.Lists.newArrayList
-import com.google.common.collect.{Lists, Sets}
+import org.apache.kylin.guava30.shaded.common.collect.Lists.newArrayList
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
 import org.apache.kylin.engine.spark.job.{CuboidAggregator, UdfManager}
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory

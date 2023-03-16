@@ -17,7 +17,7 @@
  */
 package io.kyligence.kap.clickhouse.management;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import io.kyligence.kap.secondstorage.config.ClusterInfo;
 import io.kyligence.kap.secondstorage.config.Node;

@@ -24,7 +24,7 @@ import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.persistence.AuditLog;
 import org.springframework.jdbc.core.RowMapper;
 
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.SneakyThrows;
 import lombok.val;
 

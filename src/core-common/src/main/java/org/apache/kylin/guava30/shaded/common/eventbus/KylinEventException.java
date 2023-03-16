@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.kyligence.kap.guava20.shaded.common.eventbus;
+package org.apache.kylin.guava30.shaded.common.eventbus;
 
 import static org.apache.kylin.common.exception.ServerErrorCode.EVENT_HANDLE;
 

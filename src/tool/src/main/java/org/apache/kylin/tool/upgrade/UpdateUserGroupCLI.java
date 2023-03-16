@@ -38,7 +38,7 @@ import org.apache.kylin.common.util.OptionBuilder;
 import org.apache.kylin.metadata.usergroup.UserGroup;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

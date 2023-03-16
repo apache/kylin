@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.planner.algorithm.AlgorithmTestBase;
 import org.apache.kylin.metadata.cube.planner.algorithm.BPUSCalculator;
 import org.apache.kylin.metadata.cube.planner.algorithm.BenefitPolicy;

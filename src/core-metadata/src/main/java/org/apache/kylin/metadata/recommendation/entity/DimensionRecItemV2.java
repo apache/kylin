@@ -29,7 +29,7 @@ import org.apache.kylin.metadata.recommendation.util.RawRecUtil;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.Getter;
 import lombok.Setter;

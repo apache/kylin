@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.base.Throwables;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;

@@ -41,9 +41,9 @@ import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
 import org.apache.kylin.metadata.sourceusage.SourceUsageManager;
 import org.springframework.util.CollectionUtils;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
-import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
+import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

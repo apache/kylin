@@ -38,8 +38,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.mockito.Mockito;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import lombok.val;
 
 @Deprecated

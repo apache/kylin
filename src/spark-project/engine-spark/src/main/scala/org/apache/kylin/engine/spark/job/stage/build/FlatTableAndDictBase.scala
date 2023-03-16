@@ -65,7 +65,7 @@ import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.util.{Failure, Success, Try}
 
-import com.google.common.collect.Sets
+import org.apache.kylin.guava30.shaded.common.collect.Sets
 
 abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
                                     private val dataSegment: NDataSegment,

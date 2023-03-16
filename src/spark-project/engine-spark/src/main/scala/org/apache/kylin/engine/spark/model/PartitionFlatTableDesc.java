@@ -27,7 +27,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class PartitionFlatTableDesc extends SegmentFlatTableDesc {
 

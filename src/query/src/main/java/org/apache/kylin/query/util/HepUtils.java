@@ -28,7 +28,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.FilterMergeRule;
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import io.kyligence.kap.query.optrule.CountDistinctCaseWhenFunctionRule;
 import io.kyligence.kap.query.optrule.FilterJoinConditionMergeRule;

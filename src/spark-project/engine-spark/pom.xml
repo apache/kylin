@@ -72,8 +72,8 @@
         </dependency>
 
         <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-external-commons-jnet</artifactId>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-external-commons-jnet</artifactId>
         </dependency>
 
         <dependency>

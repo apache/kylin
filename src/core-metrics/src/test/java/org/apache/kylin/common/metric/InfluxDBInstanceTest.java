@@ -27,18 +27,18 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
-import io.kyligence.kap.shaded.influxdb.okhttp3.Interceptor;
-import io.kyligence.kap.shaded.influxdb.okhttp3.MediaType;
-import io.kyligence.kap.shaded.influxdb.okhttp3.OkHttpClient;
-import io.kyligence.kap.shaded.influxdb.okhttp3.Protocol;
-import io.kyligence.kap.shaded.influxdb.okhttp3.Request;
-import io.kyligence.kap.shaded.influxdb.okhttp3.Response;
-import io.kyligence.kap.shaded.influxdb.okhttp3.ResponseBody;
-import io.kyligence.kap.shaded.influxdb.org.influxdb.InfluxDB;
-import io.kyligence.kap.shaded.influxdb.org.influxdb.InfluxDBFactory;
-import io.kyligence.kap.shaded.influxdb.org.influxdb.dto.QueryResult;
+import org.apache.kylin.shaded.influxdb.okhttp3.Interceptor;
+import org.apache.kylin.shaded.influxdb.okhttp3.MediaType;
+import org.apache.kylin.shaded.influxdb.okhttp3.OkHttpClient;
+import org.apache.kylin.shaded.influxdb.okhttp3.Protocol;
+import org.apache.kylin.shaded.influxdb.okhttp3.Request;
+import org.apache.kylin.shaded.influxdb.okhttp3.Response;
+import org.apache.kylin.shaded.influxdb.okhttp3.ResponseBody;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDBFactory;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 
 @MetadataInfo(onlyProps = true)
 public class InfluxDBInstanceTest {

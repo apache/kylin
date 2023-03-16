@@ -28,7 +28,7 @@ import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
 import org.apache.kylin.common.persistence.event.ResourceDeleteEvent;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Setter;
 import lombok.val;

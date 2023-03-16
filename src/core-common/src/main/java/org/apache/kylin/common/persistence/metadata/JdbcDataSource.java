@@ -26,7 +26,7 @@ import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.apache.kylin.common.KylinConfig;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class JdbcDataSource {
     private JdbcDataSource() {

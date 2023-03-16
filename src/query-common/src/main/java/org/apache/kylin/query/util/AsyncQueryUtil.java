@@ -38,7 +38,7 @@ import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class AsyncQueryUtil {
     public static final String ASYNC_QUERY_JOB_ID_PRE = "ASYNC-QUERY-";

@@ -19,7 +19,7 @@ package org.apache.kylin.common.util;
 
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class MapUtil<K, V> {
     public static <K, V> V getOrElse(Map<K, V> map, K key, V defaultValue) {

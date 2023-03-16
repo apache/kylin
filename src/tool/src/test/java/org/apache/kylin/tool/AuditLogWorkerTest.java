@@ -45,10 +45,10 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import com.google.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 
 @Ignore("Only for Developer")

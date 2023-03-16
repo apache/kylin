@@ -43,7 +43,7 @@ import org.apache.kylin.common.util.ShellException;
 import org.apache.kylin.query.util.ExtractFactory;
 import org.apache.spark.sql.SparderEnv;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

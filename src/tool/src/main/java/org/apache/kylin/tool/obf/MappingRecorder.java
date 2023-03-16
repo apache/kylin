@@ -26,8 +26,8 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.JsonUtil;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class MappingRecorder implements Closeable {
     private boolean isClosed = false;

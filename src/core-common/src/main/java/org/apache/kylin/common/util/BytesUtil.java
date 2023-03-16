@@ -22,7 +22,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Locale;
 
-import com.google.common.primitives.Shorts;
+import org.apache.kylin.guava30.shaded.common.primitives.Shorts;
 
 public class BytesUtil {
 

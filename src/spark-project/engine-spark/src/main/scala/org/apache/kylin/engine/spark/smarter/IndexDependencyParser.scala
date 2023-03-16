@@ -34,7 +34,7 @@ import org.apache.spark.sql.{Dataset, Row, SparderEnv, SparkSession}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-import com.google.common.collect.{Lists, Maps, Sets}
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps, Sets}
 
 class IndexDependencyParser(val model: NDataModel) {
 

@@ -20,7 +20,7 @@ package org.apache.kylin.job.handler;
 
 import org.apache.kylin.job.model.JobParam;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.guava30.shaded.common.base.Preconditions.checkNotNull;
 
 public abstract class AbstractSecondStorageJobHanlder extends AbstractJobHandler {
 

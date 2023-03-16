@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
-import static io.kyligence.kap.guava20.shaded.common.net.HttpHeaders.ACCEPT_ENCODING;
+import static org.apache.kylin.guava30.shaded.common.net.HttpHeaders.ACCEPT_ENCODING;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -51,7 +51,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
 
-import com.google.common.base.CaseFormat;
+import org.apache.kylin.guava30.shaded.common.base.CaseFormat;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

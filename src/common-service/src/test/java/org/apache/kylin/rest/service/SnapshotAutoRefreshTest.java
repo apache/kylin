@@ -39,7 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import lombok.val;
 import lombok.var;
 

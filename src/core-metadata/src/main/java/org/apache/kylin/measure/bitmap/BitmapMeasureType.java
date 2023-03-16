@@ -18,7 +18,7 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.kylin.guava30.shaded.common.base.Preconditions.checkArgument;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
@@ -39,8 +40,6 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
-
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Created by sunyerui on 15/12/10.

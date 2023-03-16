@@ -20,7 +20,7 @@ package org.apache.kylin.rest.scheduler;
 
 import java.util.Set;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.Data;
 
 @Data

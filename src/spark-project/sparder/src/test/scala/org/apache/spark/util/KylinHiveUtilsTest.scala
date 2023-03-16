@@ -18,7 +18,7 @@
 
 package org.apache.spark.util
 
-import com.google.common.io.Files
+import org.apache.kylin.guava30.shaded.common.io.Files
 import org.apache.commons.io.FileUtils
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.Unsafe.overwriteSystemProp

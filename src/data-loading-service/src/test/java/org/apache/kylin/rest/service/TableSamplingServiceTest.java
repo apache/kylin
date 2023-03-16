@@ -18,14 +18,14 @@
 
 package org.apache.kylin.rest.service;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.apache.kylin.engine.spark.job.NResourceDetectStep;
-import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import lombok.val;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.engine.spark.job.NResourceDetectStep;
+import org.apache.kylin.engine.spark.job.NTableSamplingJob;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;

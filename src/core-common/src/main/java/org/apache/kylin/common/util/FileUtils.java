@@ -32,8 +32,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 

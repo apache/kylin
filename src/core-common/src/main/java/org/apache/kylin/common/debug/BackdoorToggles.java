@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.Pair;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 /**
  * BackdoorToggles and QueryContext are similar because they're both hosting per-query thread local variables.

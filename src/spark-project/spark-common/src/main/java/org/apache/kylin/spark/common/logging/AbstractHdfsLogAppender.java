@@ -50,8 +50,8 @@ import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.spark.utils.SparkHadoopUtils;
 
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder;
 
 import lombok.Getter;
 import lombok.Setter;

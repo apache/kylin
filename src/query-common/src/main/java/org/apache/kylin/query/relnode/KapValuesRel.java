@@ -29,10 +29,10 @@ import org.apache.calcite.rel.metadata.RelMdDistribution;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.query.util.ICutContextStrategy;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 
 public class KapValuesRel extends OLAPValuesRel implements KapRel {
     private Set<OLAPContext> subContexts = Sets.newHashSet();

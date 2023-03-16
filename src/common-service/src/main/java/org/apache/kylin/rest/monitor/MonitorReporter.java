@@ -39,8 +39,8 @@ import org.apache.kylin.common.util.AddressUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class MonitorReporter {
     private static final Logger logger = LoggerFactory.getLogger(MonitorReporter.class);

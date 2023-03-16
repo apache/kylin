@@ -50,12 +50,12 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
-import io.kyligence.kap.shaded.influxdb.org.influxdb.InfluxDB;
-import io.kyligence.kap.shaded.influxdb.org.influxdb.dto.Query;
-import io.kyligence.kap.shaded.influxdb.org.influxdb.dto.QueryResult;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.Query;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 
 public class MetricsGroup {
 

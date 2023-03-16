@@ -33,9 +33,9 @@ import org.apache.kylin.metadata.model.schema.SchemaNode;
 import org.apache.kylin.metadata.model.schema.SchemaNodeType;
 import org.apache.kylin.metadata.model.schema.SchemaUtil;
 
-import com.google.common.base.Objects;
+import org.apache.kylin.guava30.shaded.common.base.Objects;
 
-import io.kyligence.kap.guava20.shaded.common.collect.MapDifference;
+import org.apache.kylin.guava30.shaded.common.collect.MapDifference;
 import lombok.val;
 
 public class ComputedColumnStrategy implements SchemaChangeStrategy {

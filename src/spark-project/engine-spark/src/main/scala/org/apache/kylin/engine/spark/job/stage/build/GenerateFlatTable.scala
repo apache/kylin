@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import com.google.common.collect.{Maps, Queues}
+import org.apache.kylin.guava30.shaded.common.collect.{Maps, Queues}
 import org.apache.kylin.engine.spark.job.stage.BuildParam
 import org.apache.kylin.engine.spark.job.stage.build.GenerateFlatTable._
 import org.apache.kylin.engine.spark.job.{SanityChecker, SegmentJob}

@@ -18,7 +18,7 @@
 
 package org.apache.spark.sql.udf
 
-import com.google.common.collect.Maps
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.measure.MeasureAggregator
 import org.apache.kylin.measure.bitmap.BitmapCounter
 import org.apache.kylin.measure.dim.DimCountDistinctCounter

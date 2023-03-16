@@ -39,7 +39,7 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.kylin.query.relnode.KapFilterRel;
 import org.apache.kylin.query.relnode.KapJoinRel;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 
 public class FilterJoinConditionMergeRule extends RelOptRule {

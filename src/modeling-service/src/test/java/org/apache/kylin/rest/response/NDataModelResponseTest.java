@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.response;
 
-import static com.google.common.collect.Lists.newArrayList;
+import static org.apache.kylin.guava30.shaded.common.collect.Lists.newArrayList;
 import static org.apache.kylin.common.util.TestUtils.getTestConfig;
 import static org.apache.kylin.metadata.model.FunctionDesc.FUNC_COUNT;
 import static org.apache.kylin.metadata.model.FunctionDesc.FUNC_MIN;
@@ -39,8 +39,8 @@ import org.apache.kylin.util.MetadataTestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 @MetadataInfo(project = "default")
 class NDataModelResponseTest {

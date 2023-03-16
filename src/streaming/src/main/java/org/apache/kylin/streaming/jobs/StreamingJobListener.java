@@ -37,9 +37,9 @@ import org.apache.spark.launcher.SparkAppHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
-import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
+import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import lombok.val;
 
 public class StreamingJobListener implements SparkAppHandle.Listener {

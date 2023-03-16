@@ -65,9 +65,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Throwables;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
 
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 
 public class AuditLogToolTest extends NLocalFileMetadataTestCase {

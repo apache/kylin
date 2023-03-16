@@ -49,7 +49,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
 

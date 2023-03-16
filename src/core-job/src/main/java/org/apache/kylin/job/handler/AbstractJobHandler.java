@@ -17,8 +17,8 @@
  */
 package org.apache.kylin.job.handler;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_CHECK_FAIL;
+import static org.apache.kylin.guava30.shaded.common.base.Preconditions.checkNotNull;
 import static org.apache.kylin.job.execution.AbstractExecutable.DEPENDENT_FILES;
 
 import java.util.HashMap;
@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.TimeUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.common.ExecutableUtil;
 import org.apache.kylin.job.dao.JobStatisticsManager;
 import org.apache.kylin.job.exception.JobSubmissionException;
@@ -43,8 +44,6 @@ import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
-
-import com.google.common.collect.Maps;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
