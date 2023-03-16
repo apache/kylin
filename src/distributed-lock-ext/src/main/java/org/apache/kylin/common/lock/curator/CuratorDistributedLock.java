@@ -30,10 +30,10 @@ import org.apache.kylin.common.util.ThrowableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.CuratorFramework;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.recipes.locks.InterProcessMutex;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.recipes.locks.InterProcessMutex;
 
 public class CuratorDistributedLock implements Lock {
     private static final Logger logger = LoggerFactory.getLogger(CuratorDistributedLock.class);

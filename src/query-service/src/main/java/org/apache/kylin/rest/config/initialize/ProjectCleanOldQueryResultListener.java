@@ -25,7 +25,7 @@ import org.apache.kylin.rest.service.AsyncQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
+import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 
 @Component
 public class ProjectCleanOldQueryResultListener {

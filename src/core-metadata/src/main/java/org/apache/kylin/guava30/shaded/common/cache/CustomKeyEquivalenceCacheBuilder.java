@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-package com.google.common.cache;
+package org.apache.kylin.guava30.shaded.common.cache;
 
 import java.util.Locale;
 import java.util.Objects;
 
 import org.apache.kylin.common.KylinConfig;
 
-import com.google.common.base.Equivalence;
+import org.apache.kylin.guava30.shaded.common.base.Equivalence;
 
 import lombok.experimental.UtilityClass;
 

@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.kylin.common.util.JsonUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.NoArgsConstructor;
 

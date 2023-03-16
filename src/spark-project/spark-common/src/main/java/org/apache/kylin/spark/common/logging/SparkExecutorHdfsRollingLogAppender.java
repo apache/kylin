@@ -42,7 +42,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.spark.SparkEnv;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 import lombok.Getter;
 import lombok.Setter;

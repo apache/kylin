@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import io.kyligence.kap.query.optrule.KapAggFilterTransposeRule;
 import io.kyligence.kap.query.optrule.KapAggJoinTransposeRule;

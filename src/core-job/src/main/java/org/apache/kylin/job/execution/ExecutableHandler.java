@@ -26,7 +26,7 @@ import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

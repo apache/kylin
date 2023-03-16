@@ -50,7 +50,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 
 @Component

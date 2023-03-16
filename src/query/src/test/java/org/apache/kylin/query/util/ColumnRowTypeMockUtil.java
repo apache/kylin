@@ -27,7 +27,7 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.relnode.ColumnRowType;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class ColumnRowTypeMockUtil {
     public static ColumnRowType mock(String tableName, String tableAlias,

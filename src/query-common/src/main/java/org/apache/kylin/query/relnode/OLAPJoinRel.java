@@ -59,7 +59,7 @@ import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.schema.OLAPTable;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 /**
  *

@@ -20,7 +20,7 @@ package org.apache.kylin.metadata.cube.storage;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.Setter;

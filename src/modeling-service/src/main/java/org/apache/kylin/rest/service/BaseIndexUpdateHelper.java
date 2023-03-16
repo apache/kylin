@@ -29,7 +29,7 @@ import org.apache.kylin.rest.request.CreateBaseIndexRequest;
 import org.apache.kylin.rest.response.BuildBaseIndexResponse;
 import org.apache.kylin.rest.util.SpringContext;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import io.kyligence.kap.secondstorage.SecondStorageUpdater;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;

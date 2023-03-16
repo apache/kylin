@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.controller;
 
-import static io.kyligence.kap.guava20.shaded.common.net.HttpHeaders.CONTENT_DISPOSITION;
+import static org.apache.kylin.guava30.shaded.common.net.HttpHeaders.CONTENT_DISPOSITION;
 import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_PROJECT_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CONNECT_CATALOG;
@@ -90,7 +90,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.SneakyThrows;
 import lombok.val;

@@ -30,8 +30,8 @@ import org.apache.kylin.metadata.recommendation.ref.OptRecV2;
 import org.apache.kylin.metadata.recommendation.ref.RecommendationRef;
 import org.apache.kylin.metadata.recommendation.util.RawRecUtil;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class FuzzyKeySearcher {
 

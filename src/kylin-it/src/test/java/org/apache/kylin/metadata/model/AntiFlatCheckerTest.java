@@ -27,7 +27,7 @@ import org.apache.kylin.query.util.PushDownUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @MetadataInfo
 class AntiFlatCheckerTest {

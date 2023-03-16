@@ -30,9 +30,9 @@ import org.apache.kylin.common.util.ZKUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.CuratorFramework;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.state.ConnectionState;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionState;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionStateListener;
 
 @SuppressWarnings({ "WeakerAccess" })
 public class CuratorDistributedLockFactory extends DistributedLockFactory {

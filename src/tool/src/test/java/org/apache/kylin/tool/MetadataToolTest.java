@@ -82,9 +82,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 import lombok.var;
 

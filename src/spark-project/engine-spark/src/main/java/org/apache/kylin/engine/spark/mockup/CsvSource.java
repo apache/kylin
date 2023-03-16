@@ -50,8 +50,8 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.execution.utils.SchemaProcessor;
 import org.apache.spark.sql.types.StructType;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class CsvSource implements ISource {
 

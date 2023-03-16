@@ -42,9 +42,9 @@ import org.awaitility.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.val;
 import lombok.var;
 

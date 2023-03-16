@@ -23,8 +23,8 @@ import org.apache.kylin.query.relnode.ColumnRowType;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.alias.AliasMapping;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
 
 public class QueryAliasMatchInfo extends AliasMapping {
     // each alias's ColumnRowType

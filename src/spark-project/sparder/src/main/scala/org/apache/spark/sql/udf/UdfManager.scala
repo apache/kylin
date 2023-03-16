@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 import com.esotericsoftware.kryo.io.{Input, KryoDataInput}
-import com.google.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
+import org.apache.kylin.guava30.shaded.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
 import org.apache.kylin.measure.hllc.HLLCounter
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.spark.internal.Logging

@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 

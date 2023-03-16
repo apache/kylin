@@ -26,7 +26,7 @@ import org.junit.Assert
 import org.mockito.Mockito
 import org.scalatest.funsuite.AnyFunSuite
 
-import com.google.common.collect.ImmutableBiMap
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap
 
 class RefreshColumnBytesTest extends AnyFunSuite {
 

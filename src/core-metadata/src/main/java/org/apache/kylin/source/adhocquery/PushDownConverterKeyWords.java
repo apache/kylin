@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.source.adhocquery;
 
-import com.google.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 
 public class PushDownConverterKeyWords {
 

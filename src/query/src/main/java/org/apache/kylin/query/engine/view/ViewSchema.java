@@ -34,7 +34,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.QueryErrorCode;
 import org.apache.kylin.metadata.model.NDataModel;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 /**
  * A schema with no concrete tables

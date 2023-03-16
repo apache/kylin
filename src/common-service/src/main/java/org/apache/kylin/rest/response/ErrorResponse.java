@@ -25,7 +25,7 @@ import org.apache.kylin.common.exception.KylinException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.google.common.base.Throwables;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
 
 import lombok.Data;
 

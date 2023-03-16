@@ -39,7 +39,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 /**
  */

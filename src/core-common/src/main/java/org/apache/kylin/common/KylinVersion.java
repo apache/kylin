@@ -27,8 +27,8 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Iterables;
 
 public class KylinVersion implements Comparable {
     private static final String COMMIT_SHA1_v15 = "commit_SHA1";

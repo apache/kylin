@@ -47,10 +47,10 @@ import org.apache.kylin.source.adhocquery.IPushDownConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Iterables;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 //very similar to ConvertToComputedColumn in structure, maybe we should extract a common base class?
 public class RestoreFromComputedColumn implements IPushDownConverter {

@@ -25,7 +25,7 @@ import java.util.Set;
 
 import org.apache.kylin.common.exception.KylinException;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public enum StreamingJobActionEnum {
 

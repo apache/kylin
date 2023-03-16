@@ -18,7 +18,7 @@
 
 package io.kyligence.kap.secondstorage.management;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import io.kyligence.kap.secondstorage.metadata.TableEntity;
 import io.kyligence.kap.secondstorage.metadata.TablePlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;

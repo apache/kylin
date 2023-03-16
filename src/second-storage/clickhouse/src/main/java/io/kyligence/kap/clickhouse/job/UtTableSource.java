@@ -18,7 +18,7 @@
 
 package io.kyligence.kap.clickhouse.job;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import java.io.File;
 import java.net.URI;

@@ -70,7 +70,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import lombok.var;
@@ -218,16 +218,16 @@ public class ModelSemanticTest extends AbstractMVCIntegrationTestCase {
         executableManager.getJobs().forEach(jobId -> waitForJobFinish(jobId, 600 * 1000));
 
         // init agg group
-        val group1 = JsonUtil.readValue("{\n" + //
-                "        \"includes\": [1,2,3,4],\n" + //
-                "        \"select_rule\": {\n" + //
-                "          \"hierarchy_dims\": [],\n" + //
-                "          \"mandatory_dims\": [3],\n" + //
-                "          \"joint_dims\": [\n" + //
-                "            [1,2]\n" + //
-                "          ]\n" + //
-                "        }\n" + //
-                "}", NAggregationGroup.class);
+        val group1 = JsonUtil.readValue("{\n" //
+                + "        \"includes\": [1,2,3,4],\n" //
+                + "        \"select_rule\": {\n" //
+                + "          \"hierarchy_dims\": [],\n" //
+                + "          \"mandatory_dims\": [3],\n" //
+                + "          \"joint_dims\": [\n" //
+                + "            [1,2]\n" //
+                + "          ]\n" //
+                + "        }\n" //
+                + "}", NAggregationGroup.class);
         val request = UpdateRuleBasedCuboidRequest.builder().project(getProject()).modelId(MODEL_ID)
                 .aggregationGroups(Lists.newArrayList(group1)).build();
         mockMvc.perform(MockMvcRequestBuilders.put("/api/index_plans/rule").contentType(MediaType.APPLICATION_JSON)

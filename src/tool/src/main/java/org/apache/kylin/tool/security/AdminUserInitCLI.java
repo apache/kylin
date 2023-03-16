@@ -41,7 +41,7 @@ import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 
 public class AdminUserInitCLI {

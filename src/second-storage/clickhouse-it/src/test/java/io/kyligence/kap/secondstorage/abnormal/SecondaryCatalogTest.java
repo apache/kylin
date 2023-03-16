@@ -42,7 +42,7 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 import io.kyligence.kap.newten.clickhouse.ClickHouseUtils;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;

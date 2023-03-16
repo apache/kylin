@@ -29,7 +29,7 @@ import java.util.Map;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 /**
  * Encoding Boolean values to bytes

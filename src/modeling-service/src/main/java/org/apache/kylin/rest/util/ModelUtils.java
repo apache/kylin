@@ -36,7 +36,7 @@ import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.rest.constant.ModelAttributeEnum;
 import org.apache.kylin.rest.response.NDataModelResponse;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;

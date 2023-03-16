@@ -27,7 +27,7 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;

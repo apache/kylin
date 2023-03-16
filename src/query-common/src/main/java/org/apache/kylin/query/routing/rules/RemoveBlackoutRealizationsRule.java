@@ -29,7 +29,7 @@ import org.apache.kylin.metadata.realization.IRealizationFilter;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.RoutingRule;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 /**
  */

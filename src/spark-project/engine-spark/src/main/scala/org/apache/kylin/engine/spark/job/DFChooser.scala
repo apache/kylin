@@ -18,8 +18,8 @@
 
 package org.apache.kylin.engine.spark.job
 
-import com.google.common.base.Preconditions
-import com.google.common.collect.{Lists, Maps}
+import org.apache.kylin.guava30.shaded.common.base.Preconditions
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps}
 import org.apache.kylin.engine.spark.builder._
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.metadata.cube.cuboid.{NCuboidLayoutChooser, NSpanningTree}

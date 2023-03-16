@@ -99,9 +99,9 @@ import org.apache.kylin.streaming.jobs.StreamingJobUtils;
 import org.apache.kylin.streaming.util.MetaInfoUpdater;
 import org.apache.spark.launcher.SparkLauncher;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

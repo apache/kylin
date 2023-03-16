@@ -20,7 +20,7 @@ package org.apache.spark.sql.hive.utils
 
 import java.io.FileOutputStream
 import java.util.{List => JList, Map => JMap}
-import com.google.common.collect.{Lists, Maps}
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps}
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase

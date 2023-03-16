@@ -25,7 +25,7 @@ import org.apache.kylin.rest.response.HealthResponse;
 import org.apache.spark.sql.SparderEnv;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @Component("healthService")
 public class HealthService extends BasicService {

@@ -35,7 +35,7 @@ import org.apache.kylin.job.factory.JobFactory;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import lombok.val;
 
 public class ClickHouseRefreshSecondaryIndexJob extends DefaultExecutable {

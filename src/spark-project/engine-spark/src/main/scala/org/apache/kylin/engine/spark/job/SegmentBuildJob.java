@@ -18,8 +18,8 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;

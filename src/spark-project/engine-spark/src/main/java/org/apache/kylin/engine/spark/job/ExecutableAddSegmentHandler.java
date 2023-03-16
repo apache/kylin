@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import lombok.val;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.merger.AfterBuildResourceMerger;

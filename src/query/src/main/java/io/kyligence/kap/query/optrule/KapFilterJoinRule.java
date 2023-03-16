@@ -23,8 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -47,12 +45,10 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.mapping.Mappings;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.query.util.RexUtils;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
  *  Planner rule that push filters above join node into the join node,
@@ -64,26 +60,15 @@ public class KapFilterJoinRule extends RelOptRule {
             operand(Join.class,
                     operand(Join.class, operand(RelNode.class, RelOptRule.any()),
                             operand(RelNode.class, RelOptRule.any())),
-                    operand(RelNode.class, null, new Predicate<RelNode>() {
-                        @Override
-                        public boolean apply(@Nullable RelNode input) {
-                            return !(input instanceof Join);
-                        }
-                    }, RelOptRule.any()))),
+                    operand(RelNode.class, null, input -> !(input instanceof Join), RelOptRule.any()))),
             RelFactories.LOGICAL_BUILDER, true, "KapFilterJoinRule:filter-join-join");
 
     public static final KapFilterJoinRule KAP_FILTER_ON_JOIN_SCAN = new KapFilterJoinRule(
-            operand(Filter.class, operand(Join.class, operand(RelNode.class, null, new Predicate<RelNode>() {
-                @Override
-                public boolean apply(@Nullable RelNode input) {
-                    return !(input instanceof Join);
-                }
-            }, RelOptRule.any()), operand(RelNode.class, null, new Predicate<RelNode>() {
-                @Override
-                public boolean apply(@Nullable RelNode input) {
-                    return !(input instanceof Join);
-                }
-            }, RelOptRule.any()))), RelFactories.LOGICAL_BUILDER, false, "KapFilterJoinRule:filter-join-scan");
+            operand(Filter.class,
+                    operand(Join.class,
+                            operand(RelNode.class, null, input -> !(input instanceof Join), RelOptRule.any()),
+                            operand(RelNode.class, null, input -> !(input instanceof Join), RelOptRule.any()))),
+            RelFactories.LOGICAL_BUILDER, false, "KapFilterJoinRule:filter-join-scan");
 
     private boolean needTranspose;
 

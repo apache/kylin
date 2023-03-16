@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.utils;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

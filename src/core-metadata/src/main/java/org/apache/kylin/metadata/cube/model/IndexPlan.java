@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metadata.cube.model;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.guava30.shaded.common.base.Preconditions.checkNotNull;
 import static org.apache.kylin.metadata.cube.model.IndexEntity.INDEX_ID_STEP;
 import static org.apache.kylin.metadata.cube.model.IndexEntity.isAggIndex;
 import static org.apache.kylin.metadata.cube.model.IndexEntity.isTableIndex;
@@ -64,18 +64,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
-import io.kyligence.kap.guava20.shaded.common.collect.ImmutableSortedSet;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSortedSet;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;

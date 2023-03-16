@@ -40,10 +40,10 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
-import io.kyligence.kap.guava20.shaded.common.base.Strings;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

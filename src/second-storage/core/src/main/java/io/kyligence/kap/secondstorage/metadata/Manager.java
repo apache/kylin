@@ -30,7 +30,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 

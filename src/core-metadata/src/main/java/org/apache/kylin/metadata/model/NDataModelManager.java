@@ -44,11 +44,11 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.exception.ModelBrokenException;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.model.NDataModel;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import io.kyligence.kap.secondstorage.metadata.PartitionType;
 import io.kyligence.kap.secondstorage.metadata.SegmentFileStatus;

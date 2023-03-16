@@ -18,7 +18,7 @@
 
 package io.kyligence.kap.clickhouse.job;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
 import io.kyligence.kap.secondstorage.SecondStorageQueryRouteUtil;
 import io.kyligence.kap.secondstorage.util.SecondStorageDateUtils;

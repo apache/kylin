@@ -38,7 +38,7 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.NoArgsConstructor;
 import lombok.val;

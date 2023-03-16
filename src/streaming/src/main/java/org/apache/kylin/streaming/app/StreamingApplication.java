@@ -68,7 +68,7 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.catalyst.rules.Rule;
 import org.apache.spark.sql.execution.datasource.AlignmentTableStats;
 
-import io.kyligence.kap.guava20.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import lombok.Getter;
 import lombok.val;
 import lombok.var;

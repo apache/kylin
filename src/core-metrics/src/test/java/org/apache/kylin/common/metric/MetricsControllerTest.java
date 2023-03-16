@@ -39,7 +39,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import io.kyligence.kap.shaded.influxdb.org.influxdb.InfluxDB;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({ "javax.net.ssl.*", "javax.management.*", "org.apache.hadoop.*", "javax.security.*", "javax.crypto.*",

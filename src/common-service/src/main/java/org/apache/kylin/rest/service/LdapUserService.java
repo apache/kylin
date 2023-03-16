@@ -40,6 +40,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.tool.util.LdapUtils;
@@ -53,11 +58,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 import org.springframework.util.CollectionUtils;
-
-import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 public class LdapUserService implements UserService {
 
@@ -75,12 +75,12 @@ public class LdapUserService implements UserService {
             new ArrayBlockingQueue<>(1), Executors.defaultThreadFactory(), (r, e) -> {
             });
 
-    private static final com.google.common.cache.Cache<String, Map<String, ManagedUser>> ldapUsersCache = CacheBuilder
+    private static final Cache<String, Map<String, ManagedUser>> ldapUsersCache = CacheBuilder
             .newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .build();
 
-    private static final com.google.common.cache.Cache<String, Map<String, String>> LDAP_VALID_DN_MAP_CACHE = CacheBuilder
+    private static final Cache<String, Map<String, String>> LDAP_VALID_DN_MAP_CACHE = CacheBuilder
             .newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .build();

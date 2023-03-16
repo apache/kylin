@@ -32,7 +32,7 @@ import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 import org.apache.kylin.sdk.datasource.framework.def.TypeDef;
 import org.apache.kylin.metadata.model.alias.ExpressionComparator;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class ConvMaster {
     private final DataSourceDef sourceDS;

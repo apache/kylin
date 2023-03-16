@@ -21,7 +21,7 @@ import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class DimCountDistinctCounter {
     private final Set container;

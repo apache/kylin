@@ -26,8 +26,8 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class StaticUserGroupService extends OpenUserGroupService {
     @Override

@@ -39,7 +39,7 @@ import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.apache.kylin.streaming.util.JobKiller;
 import org.apache.kylin.streaming.util.MetaInfoUpdater;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

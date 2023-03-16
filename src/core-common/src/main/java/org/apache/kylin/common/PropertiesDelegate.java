@@ -33,7 +33,7 @@ import javax.validation.constraints.NotNull;
 
 import org.apache.kylin.common.util.CompositeMapView;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import io.kyligence.config.core.loader.IExternalConfigLoader;
 import lombok.EqualsAndHashCode;

@@ -47,9 +47,9 @@ import org.apache.kylin.metadata.sourceusage.SourceUsageRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
-import io.kyligence.kap.guava20.shaded.common.base.MoreObjects;
+import org.apache.kylin.guava30.shaded.common.base.MoreObjects;
 
 public class SystemUsageTool {
     private SystemUsageTool() {

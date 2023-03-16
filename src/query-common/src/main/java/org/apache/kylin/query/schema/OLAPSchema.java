@@ -29,7 +29,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 /**
  * all schema info is in KapOLAPSchema, not used anymore

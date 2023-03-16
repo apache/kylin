@@ -18,7 +18,7 @@
 
 package org.apache.spark.sql.execution.datasource
 
-import io.kyligence.kap.guava20.shaded.common.collect.Sets
+import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.kylin.common.exception.TargetSegmentNotFoundException
 import org.apache.kylin.metadata.cube.model.{NDataSegment, NDataflow}
 import org.apache.kylin.metadata.model.{SegmentStatusEnum, Segments}

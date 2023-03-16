@@ -44,7 +44,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
+import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

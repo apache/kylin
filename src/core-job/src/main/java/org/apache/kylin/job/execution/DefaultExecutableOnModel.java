@@ -36,8 +36,8 @@ import org.apache.kylin.metadata.cube.model.SegmentPartition;
 import org.apache.kylin.metadata.model.ManagementType;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;

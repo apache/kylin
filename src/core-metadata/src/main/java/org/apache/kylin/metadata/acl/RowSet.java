@@ -21,7 +21,7 @@ package org.apache.kylin.metadata.acl;
 import java.util.Objects;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 

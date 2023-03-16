@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job.stage.build.partition
 
-import com.google.common.collect.{Lists, Queues, Sets}
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Queues, Sets}
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.common.persistence.transaction.UnitOfWork.Callback
 import org.apache.kylin.common.util.HadoopUtil

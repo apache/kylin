@@ -46,7 +46,7 @@ import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.spark.SparkEnv;
 import org.apache.spark.utils.SparkHadoopUtils;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 import lombok.Getter;
 import lombok.Setter;

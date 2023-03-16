@@ -40,8 +40,8 @@
             <artifactId>kylin-core-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-external-influxdb</artifactId>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-external-influxdb</artifactId>
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>

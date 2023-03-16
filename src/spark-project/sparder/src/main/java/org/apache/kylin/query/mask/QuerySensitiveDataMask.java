@@ -53,8 +53,8 @@ import org.apache.spark.sql.catalyst.expressions.Literal;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.unsafe.types.UTF8String;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import scala.Option;
 

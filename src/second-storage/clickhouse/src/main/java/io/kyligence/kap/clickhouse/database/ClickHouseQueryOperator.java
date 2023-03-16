@@ -37,15 +37,15 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.query.QueryMetrics;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import io.kyligence.kap.clickhouse.ddl.ClickHouseRender;
 import io.kyligence.kap.clickhouse.job.ClickHouse;
 import io.kyligence.kap.clickhouse.job.ClickHouseSystemQuery;
 import io.kyligence.kap.clickhouse.parser.DescQueryParser;
 import io.kyligence.kap.clickhouse.parser.ExistsQueryParser;
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
 import io.kyligence.kap.secondstorage.SecondStorageQueryRouteUtil;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;

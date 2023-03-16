@@ -36,7 +36,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class QuerySensitiveDataMaskTest extends NLocalFileMetadataTestCase {
 

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.service
 
-import io.kyligence.kap.guava20.shaded.common.collect.{Lists, Maps, Sets}
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps, Sets}
 import org.apache.commons.collections4.{CollectionUtils, MapUtils}
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.{FileStatus, Path}

@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.kylin.metadata.insensitive.ProjectInsensitiveRequest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Data;
 

@@ -39,7 +39,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class SparkConfHelperTest extends NLocalFileMetadataTestCase {
 

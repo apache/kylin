@@ -37,11 +37,11 @@ import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
-import io.kyligence.kap.guava20.shaded.common.graph.Graph;
-import io.kyligence.kap.guava20.shaded.common.graph.MutableGraph;
+import org.apache.kylin.guava30.shaded.common.graph.Graph;
+import org.apache.kylin.guava30.shaded.common.graph.MutableGraph;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;

@@ -36,6 +36,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.metadata.PersistException;
 import org.apache.kylin.common.util.EncryptUtil;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -44,7 +45,6 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

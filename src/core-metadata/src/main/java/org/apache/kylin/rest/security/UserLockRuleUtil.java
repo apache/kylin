@@ -20,9 +20,8 @@ package org.apache.kylin.rest.security;
 
 import java.util.Map;
 
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.user.ManagedUser;
-
-import com.google.common.collect.Maps;
 
 public class UserLockRuleUtil {
 

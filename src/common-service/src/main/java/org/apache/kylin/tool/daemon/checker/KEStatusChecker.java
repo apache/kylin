@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

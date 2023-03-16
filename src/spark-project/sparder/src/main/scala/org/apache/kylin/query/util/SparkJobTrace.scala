@@ -19,7 +19,7 @@
 package org.apache.kylin.query.util
 
 import java.util.concurrent._
-import com.google.common.cache.{Cache, CacheBuilder}
+import org.apache.kylin.guava30.shaded.common.cache.{Cache, CacheBuilder}
 import org.apache.kylin.common.util.DaemonThreadFactory
 import org.apache.kylin.common.{KapConfig, QueryTrace}
 import org.apache.kylin.engine.spark.utils.LogEx

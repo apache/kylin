@@ -26,7 +26,7 @@ import org.apache.kylin.metadata.model.RetentionRange;
 import org.apache.kylin.metadata.model.VolatileRange;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.Setter;

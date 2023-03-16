@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.security.acls.model.Permission;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class UserAclManagerTest extends NLocalFileMetadataTestCase {
 

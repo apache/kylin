@@ -64,11 +64,11 @@ import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.Getter;
 import lombok.Synchronized;
 import lombok.val;

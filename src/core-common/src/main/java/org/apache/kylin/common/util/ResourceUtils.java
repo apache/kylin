@@ -24,7 +24,7 @@ import java.net.URL;
 
 import org.apache.kylin.common.KylinConfigBase;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class ResourceUtils {
 

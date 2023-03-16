@@ -46,7 +46,7 @@ import org.apache.spark.sql.util.SparderTypeUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 @SuppressWarnings("serial")
 public class CsvSourceTest extends NLocalWithSparkSessionTest {

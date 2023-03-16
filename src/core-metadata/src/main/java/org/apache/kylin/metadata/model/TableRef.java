@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.NDataModel;
 import lombok.Getter;
 import lombok.val;

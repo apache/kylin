@@ -32,7 +32,7 @@ import org.apache.calcite.rel.core.SetOp;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.util.ICutContextStrategy;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class KapMinusRel extends Minus implements KapRel {
 

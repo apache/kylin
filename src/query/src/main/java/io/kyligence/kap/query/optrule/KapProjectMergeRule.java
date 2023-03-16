@@ -38,7 +38,7 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Permutation;
 import org.apache.kylin.common.KylinConfig;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 /**
  * Introduce KapProjectMergeRule in replacement of Calcite's ProjectMergeRule to fix OOM issue: KAP-4899

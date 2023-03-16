@@ -33,7 +33,7 @@ import org.apache.kylin.metadata.model.util.scd2.SCD2NonEquiCondSimplification;
 import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinDesc;
 import org.apache.kylin.metadata.model.util.scd2.SimplifiedJoinTableDesc;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class SCD2SimplificationConvertUtil {
 

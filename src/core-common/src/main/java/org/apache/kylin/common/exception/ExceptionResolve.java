@@ -27,8 +27,8 @@ import org.apache.kylin.common.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public class ExceptionResolve implements Serializable {
     public static final Logger logger = LoggerFactory.getLogger(ExceptionResolve.class);

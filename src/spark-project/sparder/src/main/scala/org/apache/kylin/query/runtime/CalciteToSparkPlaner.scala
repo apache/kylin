@@ -19,7 +19,7 @@
 package org.apache.kylin.query.runtime
 
 import java.util
-import com.google.common.collect.Lists
+import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.calcite.DataContext
 import org.apache.calcite.rel.{RelNode, RelVisitor}

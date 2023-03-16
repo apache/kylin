@@ -40,9 +40,9 @@ import org.apache.kylin.common.persistence.event.ResourceCreateOrUpdateEvent;
 import org.apache.kylin.common.persistence.event.ResourceDeleteEvent;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;

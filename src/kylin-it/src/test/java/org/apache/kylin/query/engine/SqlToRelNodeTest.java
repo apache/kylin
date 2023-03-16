@@ -38,7 +38,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 
 public class SqlToRelNodeTest extends CalciteRuleTestBase {
 

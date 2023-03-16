@@ -20,7 +20,7 @@ package org.apache.kylin.metadata.recommendation.ref;
 
 import org.apache.kylin.metadata.model.NDataModel;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.NoArgsConstructor;
 

@@ -19,6 +19,11 @@
 <!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
         "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 <module name="Checker">
+    <module name="LineLength">
+        <property name="max" value="1000"/>
+        <property name="ignorePattern"
+                  value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    </module>
 
     <module name="Header">
         <property name="headerFile" value="dev-support/checkstyle-apache-header.txt"/>
@@ -33,10 +38,9 @@
         <module name="UnusedImports">
             <property name="processJavadoc" value="true"/>
         </module>
-        <module name="LineLength">
-            <property name="max" value="1000"/>
-            <property name="ignorePattern"
-                      value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+        <module name="IllegalImport">
+            <property name="regexp" value="true"/>
+            <property name="illegalClasses" value="com\.google\.common\.(?!collect\.ImmutableList).*"/>
         </module>
         <module name="MethodLength"/>
         <module name="MethodParamPad"/>

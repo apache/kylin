@@ -74,12 +74,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ListenableFuture;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ListeningExecutorService;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.MoreExecutors;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder;
 
 import lombok.val;
 

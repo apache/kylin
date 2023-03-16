@@ -19,7 +19,7 @@ package org.apache.kylin.cluster
 
 import java.util
 
-import com.google.common.collect.Lists
+import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 

@@ -26,7 +26,7 @@ import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.kyligence.kap.guava20.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class GlobalAclVersionManager {
     private static final Logger logger = LoggerFactory.getLogger(GlobalAclVersionManager.class);

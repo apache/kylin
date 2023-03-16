@@ -26,8 +26,8 @@ import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Iterables;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public abstract class DimensionEncodingFactory {
 
@@ -85,8 +85,8 @@ public abstract class DimensionEncodingFactory {
             initFactoryMap();
 
         // note dictionary is a special case
-        return DictionaryDimEnc.ENCODING_NAME.equals(encodingName) || //
-                Iterables.any(factoryMap.keySet(), input -> input != null && input.getFirst().equals(encodingName));
+        return DictionaryDimEnc.ENCODING_NAME.equals(encodingName) //
+            || Iterables.any(factoryMap.keySet(), input -> input != null && input.getFirst().equals(encodingName));
     }
 
     private synchronized static void initFactoryMap() {

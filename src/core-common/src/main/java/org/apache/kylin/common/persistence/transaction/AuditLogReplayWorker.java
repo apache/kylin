@@ -43,9 +43,9 @@ import org.apache.kylin.common.persistence.event.Event;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.springframework.transaction.TransactionException;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Getter;
 import lombok.NonNull;

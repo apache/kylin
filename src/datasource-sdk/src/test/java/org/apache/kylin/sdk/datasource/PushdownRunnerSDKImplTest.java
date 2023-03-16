@@ -27,7 +27,7 @@ import org.apache.kylin.sdk.datasource.framework.JdbcConnectorTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class PushdownRunnerSDKImplTest extends JdbcConnectorTest {
     @Test

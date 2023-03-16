@@ -24,8 +24,8 @@ import java.util.Set;
 import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.apache.kylin.tool.bisync.tableau.TableauDataSourceConverter;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 public class BISyncTool {
 

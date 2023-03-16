@@ -27,8 +27,8 @@ import java.util.TreeSet;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Range;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 /**
  */

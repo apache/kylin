@@ -18,16 +18,12 @@
 
 package org.apache.kylin.job.execution;
 
-import java.util.Collection;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Multimap;
+import org.apache.kylin.guava30.shaded.common.collect.Multimaps;
 import org.apache.kylin.job.constant.JobStatusEnum;
-
-import com.google.common.base.Supplier;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 
 /**
  */
@@ -39,13 +35,8 @@ public enum ExecutableState {
 
     static {
         VALID_STATE_TRANSFER = Multimaps.newSetMultimap(
-                Maps.<ExecutableState, Collection<ExecutableState>> newEnumMap(ExecutableState.class),
-                new Supplier<Set<ExecutableState>>() {
-                    @Override
-                    public Set<ExecutableState> get() {
-                        return new CopyOnWriteArraySet<ExecutableState>();
-                    }
-                });
+                Maps.newEnumMap(ExecutableState.class),
+                () -> new CopyOnWriteArraySet<>());
 
         VALID_STATE_TRANSFER.put(ExecutableState.READY, ExecutableState.RUNNING);
         VALID_STATE_TRANSFER.put(ExecutableState.READY, ExecutableState.ERROR);
@@ -91,8 +82,8 @@ public enum ExecutableState {
     }
 
     public boolean isStoppedNonVoluntarily() {
-        return this == DISCARDED || this == PAUSED || //
-                this == READY;//restart case
+        return this == DISCARDED || this == PAUSED //
+                || this == READY;//restart case
     }
 
     public boolean isNotBad() {

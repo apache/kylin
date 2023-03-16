@@ -18,7 +18,7 @@
 
 package org.apache.kylin.query.util
 
-import com.google.common.collect.Maps
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.kylin.metadata.model.{NDataModel, NTableMetadataManager}

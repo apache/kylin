@@ -44,7 +44,7 @@ import org.apache.spark.sql.SparkSession;
 import org.awaitility.Awaitility;
 import org.junit.Assert;
 
-import com.google.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
 
 import lombok.val;
 

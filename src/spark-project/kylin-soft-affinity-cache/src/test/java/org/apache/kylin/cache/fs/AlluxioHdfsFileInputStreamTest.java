@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.io.ByteStreams;
+import org.apache.kylin.guava30.shaded.common.io.ByteStreams;
 
 import alluxio.AlluxioURI;
 import alluxio.client.file.cache.CacheManager;

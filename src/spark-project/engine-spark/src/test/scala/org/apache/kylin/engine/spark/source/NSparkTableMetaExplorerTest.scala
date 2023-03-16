@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.engine.spark.source
 
-import com.google.common.collect.Sets
+import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.kylin.common.util.{TempMetadataBuilder, Unsafe}
 import org.apache.spark.sql.SparderEnv
 import org.apache.spark.sql.catalyst.TableIdentifier

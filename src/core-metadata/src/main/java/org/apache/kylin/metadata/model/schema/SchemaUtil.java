@@ -35,14 +35,14 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
-import io.kyligence.kap.guava20.shaded.common.base.Preconditions;
-import io.kyligence.kap.guava20.shaded.common.collect.MapDifference;
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
-import io.kyligence.kap.guava20.shaded.common.graph.Graph;
-import io.kyligence.kap.guava20.shaded.common.graph.GraphBuilder;
-import io.kyligence.kap.guava20.shaded.common.graph.MutableGraph;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.MapDifference;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.graph.Graph;
+import org.apache.kylin.guava30.shaded.common.graph.GraphBuilder;
+import org.apache.kylin.guava30.shaded.common.graph.MutableGraph;
 import lombok.Data;
 import lombok.val;
 

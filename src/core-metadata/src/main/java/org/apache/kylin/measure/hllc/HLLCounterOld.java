@@ -26,8 +26,8 @@ import java.util.Arrays;
 
 import org.apache.kylin.common.util.BytesUtil;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
+import org.apache.kylin.guava30.shaded.common.hash.HashFunction;
+import org.apache.kylin.guava30.shaded.common.hash.Hashing;
 
 /**
  * Deprecated, use HLLCounter instead.

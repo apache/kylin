@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public class PercentileMeasureType extends MeasureType<PercentileCounter> {
     // compression ratio saved in DataType.precision

@@ -71,9 +71,9 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.general.RollbackStatusEnum;
 import org.joda.time.format.DateTimeFormat;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.var;

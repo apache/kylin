@@ -17,7 +17,7 @@
  */
 package org.apache.spark.sql.execution.datasources.jdbc.v2
 
-import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
+import org.apache.kylin.guava30.shaded.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
 import io.kyligence.kap.secondstorage.ColumnMapping.secondStorageColumnToKapColumn
 import io.kyligence.kap.secondstorage.NameUtil
 import io.kyligence.kap.secondstorage.SecondStorage.tableFlowManager

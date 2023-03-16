@@ -33,7 +33,7 @@ import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession}
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.scalatest.Suite
 
-import com.google.common.base.Preconditions
+import org.apache.kylin.guava30.shaded.common.base.Preconditions
 
 trait SSSource extends SharedSparkSession with LocalMetadata {
   self: Suite =>

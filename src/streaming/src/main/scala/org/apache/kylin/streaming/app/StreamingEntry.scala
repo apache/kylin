@@ -19,7 +19,7 @@
 package org.apache.kylin.streaming.app
 
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
-import io.kyligence.kap.guava20.shaded.common.base.Preconditions
+import org.apache.kylin.guava30.shaded.common.base.Preconditions
 import org.apache.kylin.metadata.cube.cuboid.{NSpanningTree, NSpanningTreeFactory}
 import org.apache.kylin.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataflow, NDataflowManager}
 import org.apache.kylin.metadata.cube.utils.StreamingUtils

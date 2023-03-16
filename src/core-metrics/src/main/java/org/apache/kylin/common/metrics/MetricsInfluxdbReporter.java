@@ -38,11 +38,11 @@ import org.apache.kylin.common.util.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
-import io.kyligence.kap.shaded.influxdb.org.influxdb.dto.Query;
-import io.kyligence.kap.shaded.influxdb.org.influxdb.dto.QueryResult;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.Query;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 import lombok.Getter;
 
 public class MetricsInfluxdbReporter implements MetricsReporter {

@@ -69,8 +69,8 @@ import org.apache.kylin.tool.bisync.model.MeasureDef;
 import org.apache.kylin.tool.bisync.model.SyncModel;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
 

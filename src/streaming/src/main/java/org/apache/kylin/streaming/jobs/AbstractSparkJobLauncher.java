@@ -36,8 +36,8 @@ import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.extern.slf4j.Slf4j;
 

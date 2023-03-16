@@ -17,7 +17,7 @@
  */
 package org.apache.spark.sql.execution.datasource
 
-import com.google.common.cache.{Cache, CacheBuilder}
+import org.apache.kylin.guava30.shaded.common.cache.{Cache, CacheBuilder}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.datasources.FileStatusCache
 

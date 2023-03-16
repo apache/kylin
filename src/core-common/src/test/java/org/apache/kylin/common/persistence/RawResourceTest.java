@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

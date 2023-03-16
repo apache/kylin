@@ -28,7 +28,7 @@ import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class ConfTool {
     private static final Logger logger = LoggerFactory.getLogger("diag");

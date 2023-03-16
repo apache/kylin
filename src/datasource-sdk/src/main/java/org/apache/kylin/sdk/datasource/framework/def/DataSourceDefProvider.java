@@ -29,7 +29,7 @@ import org.apache.kylin.sdk.datasource.framework.utils.XmlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class DataSourceDefProvider {
     private static final Logger logger = LoggerFactory.getLogger(DataSourceDefProvider.class);

@@ -18,7 +18,7 @@
 
 package io.kyligence.kap.secondstorage;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.common.KylinConfig;
 
 import java.util.Map;

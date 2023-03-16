@@ -46,7 +46,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import io.kyligence.kap.secondstorage.management.request.ModelEnableRequest;
 import io.kyligence.kap.secondstorage.management.request.ModelModifyRequest;

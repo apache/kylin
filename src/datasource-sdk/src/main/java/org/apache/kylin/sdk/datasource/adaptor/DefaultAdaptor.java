@@ -32,7 +32,7 @@ import javax.sql.rowset.CachedRowSet;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
 
 /**
  * A default implementation for <C>AbstractJdbcAdaptor</C>. By default, this adaptor supposed to support most cases.

@@ -31,8 +31,8 @@ import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Iterators;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

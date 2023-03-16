@@ -24,7 +24,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class CompositeQueryResultMasks implements QueryResultMask {
 

@@ -26,8 +26,8 @@ import org.apache.kylin.common.exception.ErrorCodeException;
 import org.apache.kylin.common.util.FileUtils;
 import org.apache.kylin.common.util.ResourceUtils;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 
 import lombok.extern.slf4j.Slf4j;
 

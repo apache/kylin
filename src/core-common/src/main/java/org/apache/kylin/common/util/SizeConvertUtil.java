@@ -25,7 +25,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public class SizeConvertUtil {
 

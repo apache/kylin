@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class ParserClassLoader extends URLClassLoader {
 

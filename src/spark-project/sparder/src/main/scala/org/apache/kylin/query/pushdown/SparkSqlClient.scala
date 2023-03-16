@@ -25,6 +25,8 @@ import java.util.{UUID, List => JList}
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.util.{DateFormat, HadoopUtil, Pair}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList
+import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.metadata.query.StructField
 import org.apache.kylin.query.mask.QueryResultMasks
@@ -40,10 +42,6 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
 import scala.collection.{immutable, mutable}
-
-import com.google.common.collect.ImmutableList
-
-import io.kyligence.kap.guava20.shaded.common.collect.Lists
 
 object SparkSqlClient {
   val DEFAULT_DB: String = "spark.sql.default.database"

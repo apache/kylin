@@ -17,7 +17,7 @@
  */
 package io.kyligence.kap.secondstorage.config;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.junit.Assert;
 import org.junit.Test;

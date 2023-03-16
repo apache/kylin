@@ -49,11 +49,11 @@ import org.apache.kylin.common.util.Unsafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import io.kyligence.config.core.loader.IExternalConfigLoader;
-import io.kyligence.kap.guava20.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import lombok.Setter;
 
 /**

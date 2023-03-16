@@ -47,12 +47,12 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Ordering;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;

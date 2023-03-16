@@ -30,7 +30,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 @Ignore("TODO: Expected to remove this MonitorReporter.")
 public class MonitorReporterTest extends NLocalFileMetadataTestCase {

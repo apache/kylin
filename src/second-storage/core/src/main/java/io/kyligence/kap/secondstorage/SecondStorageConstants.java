@@ -20,7 +20,7 @@ package io.kyligence.kap.secondstorage;
 
 import java.util.Set;
 
-import io.kyligence.kap.guava20.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 
 public class SecondStorageConstants {
     public static final String P_OLD_SEGMENT_IDS = "oldSegmentIds";

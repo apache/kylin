@@ -24,7 +24,7 @@ import org.apache.kylin.rest.util.PagingUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class PagingUtilTest {
     @Test

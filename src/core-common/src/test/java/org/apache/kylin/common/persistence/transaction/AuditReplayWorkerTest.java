@@ -47,7 +47,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.InvalidTimeoutException;
 import org.springframework.transaction.TransactionUsageException;
 
-import io.kyligence.kap.guava20.shaded.common.io.ByteSource;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

@@ -24,7 +24,7 @@ import org.awaitility.Awaitility;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

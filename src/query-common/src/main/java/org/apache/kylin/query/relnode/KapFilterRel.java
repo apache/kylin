@@ -53,7 +53,7 @@ import org.apache.kylin.query.util.ICutContextStrategy;
 import org.apache.kylin.query.util.RexUtils;
 import org.apache.kylin.util.FilterConditionExpander;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class KapFilterRel extends OLAPFilterRel implements KapRel {
     private Set<OLAPContext> subContexts = Sets.newHashSet();
@@ -211,9 +211,9 @@ public class KapFilterRel extends OLAPFilterRel implements KapRel {
             // for comparison operators, continue with its operands
             // otherwise, try translating rexCall into inner column
             SqlKind sqlKind = rexCall.getOperator().kind;
-            if (sqlKind == SqlKind.AND || sqlKind == SqlKind.OR || // AND, OR
-                    SqlKind.COMPARISON.contains(sqlKind) || sqlKind == SqlKind.NOT_IN || // COMPARISON
-                    sqlKind == SqlKind.LIKE || sqlKind == SqlKind.SIMILAR || sqlKind == SqlKind.BETWEEN
+            if (sqlKind == SqlKind.AND || sqlKind == SqlKind.OR // AND, OR
+                    || SqlKind.COMPARISON.contains(sqlKind) || sqlKind == SqlKind.NOT_IN // COMPARISON
+                    || sqlKind == SqlKind.LIKE || sqlKind == SqlKind.SIMILAR || sqlKind == SqlKind.BETWEEN
                     || sqlKind.name().startsWith("IS_") // IS_TRUE, IS_FALSE, iS_NOT_TRUE...
             ) {
                 rexCall.getOperands().forEach(childRexNode -> doCollectInnerColumnInFilter(childRexNode, resultSet));

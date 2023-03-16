@@ -44,7 +44,7 @@ import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.hive.HiveCmdBuilder;
 
-import com.google.common.base.Throwables;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -39,7 +39,7 @@ import org.apache.kylin.tool.util.ToolMainWrapper;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

@@ -37,7 +37,7 @@ import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
 import scala.concurrent.forkjoin.ForkJoinPool
 
-import com.google.common.collect.Sets
+import org.apache.kylin.guava30.shaded.common.collect.Sets
 
 
 @Deprecated

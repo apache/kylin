@@ -19,7 +19,7 @@
 package org.apache.kylin.engine.spark.builder
 
 import java.util.Objects
-import com.google.common.collect.Maps
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 
 import javax.security.auth.login.AppConfigurationEntry
 import org.apache.hadoop.security.authentication.util.KerberosUtil

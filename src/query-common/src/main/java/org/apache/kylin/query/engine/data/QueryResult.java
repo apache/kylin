@@ -25,7 +25,7 @@ import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.query.engine.exec.ExecuteResult;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 public class QueryResult {
 

@@ -55,7 +55,7 @@ import io.kyligence.kap.clickhouse.management.ClickHouseConfigLoader;
 import io.kyligence.kap.clickhouse.metadata.ClickHouseFlowManager;
 import io.kyligence.kap.clickhouse.metadata.ClickHouseManager;
 import io.kyligence.kap.clickhouse.metadata.ClickHouseNodeGroupManager;
-import io.kyligence.kap.guava20.shaded.common.base.Strings;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
 import io.kyligence.kap.secondstorage.SecondStorageConfigLoader;
 import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;
 import io.kyligence.kap.secondstorage.SecondStoragePlugin;

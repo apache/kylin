@@ -19,13 +19,13 @@
 package org.apache.kylin.rest.config.initialize;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.rest.security.AdminUserSyncEventNotifier;
 import org.apache.kylin.rest.service.UserAclService;
 import org.apache.kylin.rest.util.SpringContext;
 
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import io.kyligence.kap.guava20.shaded.common.eventbus.Subscribe;
-import org.apache.kylin.metadata.epoch.EpochManager;
+import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

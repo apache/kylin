@@ -18,11 +18,10 @@
 
 package org.apache.kylin.engine.spark.job
 
-import io.kyligence.kap.guava20.shaded.common.collect.{Maps, Sets}
-import io.kyligence.kap.guava20.shaded.common.collect.Maps
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.engine.spark.job.stage.BuildParam
 import org.apache.kylin.engine.spark.job.stage.build.partition.PartitionFlatTableAndDictBase
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.metadata.cube.cuboid.PartitionSpanningTree.PartitionTreeNode
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.spark.sql.SparderEnv

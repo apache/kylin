@@ -32,8 +32,8 @@ import java.util.stream.Collectors;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.datatype.DataType;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import io.kyligence.kap.secondstorage.ColumnMapping;
 import io.kyligence.kap.secondstorage.SecondStorageNodeHelper;

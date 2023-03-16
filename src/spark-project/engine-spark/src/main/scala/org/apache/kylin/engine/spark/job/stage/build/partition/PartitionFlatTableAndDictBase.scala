@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job.stage.build.partition
 
-import io.kyligence.kap.guava20.shaded.common.collect.Sets
+import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.builder.{DictionaryBuilderHelper, PartitionDictionaryBuilderHelper}
 import org.apache.kylin.engine.spark.job.stage.BuildParam

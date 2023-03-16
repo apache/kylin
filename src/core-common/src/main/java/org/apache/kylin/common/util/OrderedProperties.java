@@ -45,7 +45,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 /**
  * Modified from the etiennestuder/java-ordered-properties in https://github.com/etiennestuder/java-ordered-properties

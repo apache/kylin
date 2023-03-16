@@ -18,7 +18,7 @@
 
 package org.apache.kylin.cluster
 
-import com.google.common.collect.{Lists, Sets}
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.cluster.parser.SchedulerParserFactory
 import org.apache.kylin.engine.spark.utils.StorageUtils
 import org.apache.commons.collections.CollectionUtils

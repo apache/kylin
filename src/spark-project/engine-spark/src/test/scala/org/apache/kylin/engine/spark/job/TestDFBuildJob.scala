@@ -20,7 +20,7 @@ package org.apache.kylin.engine.spark.job
 
 import java.io.File
 import java.util
-import com.google.common.collect.Lists
+import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.kylin.engine.spark.storage.ParquetStorage
 import org.apache.kylin.engine.spark.utils.{Repartitioner, StorageUtils}
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager

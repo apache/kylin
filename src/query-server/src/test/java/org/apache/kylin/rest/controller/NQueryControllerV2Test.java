@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.rest.controller;
 
-import io.kyligence.kap.shaded.curator.org.apache.curator.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.constant.Constant;

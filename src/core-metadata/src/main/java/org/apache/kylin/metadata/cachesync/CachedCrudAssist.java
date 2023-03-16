@@ -35,10 +35,10 @@ import org.apache.kylin.common.util.ThreadUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.util.BrokenEntityProxy;
 
-import com.google.common.base.Preconditions;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CustomKeyEquivalenceCacheBuilder;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.CustomKeyEquivalenceCacheBuilder;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AccessLevel;
 import lombok.Getter;

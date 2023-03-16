@@ -54,11 +54,11 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Snapshot;
 import com.codahale.metrics.Timer;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 
-import io.kyligence.kap.shaded.influxdb.org.influxdb.InfluxDB;
+import org.apache.kylin.shaded.influxdb.org.influxdb.InfluxDB;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -386,8 +386,8 @@ public class InfluxdbReporter extends ScheduledReporter {
             private TimeUnit precision;
             private Map<String, Object> fields;
 
-            public io.kyligence.kap.shaded.influxdb.org.influxdb.dto.Point convert() {
-                return io.kyligence.kap.shaded.influxdb.org.influxdb.dto.Point.measurement(this.measurement)
+            public org.apache.kylin.shaded.influxdb.org.influxdb.dto.Point convert() {
+                return org.apache.kylin.shaded.influxdb.org.influxdb.dto.Point.measurement(this.measurement)
                         .time(this.time, this.precision).tag(this.tags).fields(this.fields).build();
             }
 

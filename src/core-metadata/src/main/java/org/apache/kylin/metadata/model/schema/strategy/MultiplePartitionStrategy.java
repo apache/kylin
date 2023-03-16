@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.model.schema.SchemaNodeType;
 import org.apache.kylin.metadata.model.schema.SchemaUtil;
 import org.apache.kylin.metadata.model.util.MultiPartitionUtil;
 
-import io.kyligence.kap.guava20.shaded.common.collect.MapDifference;
+import org.apache.kylin.guava30.shaded.common.collect.MapDifference;
 import lombok.val;
 
 public class MultiplePartitionStrategy extends UnOverWritableStrategy {

@@ -29,7 +29,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.datatype.DataType;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.Getter;
 import lombok.Setter;

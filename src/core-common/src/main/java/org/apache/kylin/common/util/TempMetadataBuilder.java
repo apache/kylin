@@ -26,7 +26,7 @@ import java.util.UUID;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

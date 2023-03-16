@@ -17,8 +17,8 @@
  */
 package org.apache.kylin.engine.spark.stats.analyzer;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import lombok.val;
 import lombok.var;
 import org.apache.commons.lang3.StringUtils;

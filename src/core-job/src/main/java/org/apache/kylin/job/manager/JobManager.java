@@ -18,7 +18,7 @@
 
 package org.apache.kylin.job.manager;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.guava30.shaded.common.base.Preconditions.checkNotNull;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_CREATE_ABANDON;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_STORAGE_QUOTA_LIMIT;
 

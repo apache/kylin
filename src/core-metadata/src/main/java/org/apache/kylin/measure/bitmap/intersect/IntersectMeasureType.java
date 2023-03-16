@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 public class IntersectMeasureType extends MeasureType<IntersectBitmapCounter> {
     public static final String FUNC_INTERSECT_COUNT_DISTINCT = FunctionDesc.FUNC_INTERSECT_COUNT;

@@ -42,8 +42,8 @@ import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
-import io.kyligence.kap.guava20.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import io.kyligence.kap.secondstorage.NameUtil;
 import io.kyligence.kap.secondstorage.SecondStorage;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;

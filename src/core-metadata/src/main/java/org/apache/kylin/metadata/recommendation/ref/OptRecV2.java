@@ -51,12 +51,12 @@ import org.apache.kylin.metadata.recommendation.entity.DimensionRecItemV2;
 import org.apache.kylin.metadata.recommendation.entity.MeasureRecItemV2;
 import org.apache.kylin.metadata.recommendation.util.RawRecUtil;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

@@ -25,7 +25,7 @@ import java.util.Properties;
 import lombok.val;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 /**
  * Extends a KylinConfig with additional overrides.

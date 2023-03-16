@@ -31,7 +31,7 @@ import org.apache.kylin.common.util.Unsafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 /**
  * KE-Process kerberos long-running scenario.

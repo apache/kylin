@@ -33,9 +33,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import lombok.val;
 
 public class ComputedColumnUtilTest extends NLocalFileMetadataTestCase {

@@ -18,8 +18,8 @@
 
 package org.apache.kylin.rest.controller;
 
-import static io.kyligence.kap.guava20.shaded.common.net.HttpHeaders.ACCEPT_ENCODING;
-import static io.kyligence.kap.guava20.shaded.common.net.HttpHeaders.CONTENT_DISPOSITION;
+import static org.apache.kylin.guava30.shaded.common.net.HttpHeaders.ACCEPT_ENCODING;
+import static org.apache.kylin.guava30.shaded.common.net.HttpHeaders.CONTENT_DISPOSITION;
 import static org.apache.kylin.common.exception.ServerErrorCode.ACCESS_DENIED;
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_ID;
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_PROJECT_NAME;
@@ -131,8 +131,8 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.SneakyThrows;
 import lombok.val;

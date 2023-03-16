@@ -24,12 +24,15 @@ import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.atomic.AtomicLong
 import java.util.{Map => JMap}
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs._
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.metadata.cube.model.{DimensionRangeInfo, LayoutEntity}
 import org.apache.kylin.query.util.QueryInterruptChecker
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.execution._
@@ -42,10 +45,6 @@ import org.apache.spark.sql.sources.NBaseRelation
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
-
-import com.google.common.collect.Maps
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 
 object ResourceDetectUtils extends Logging {
   private val json = new Gson()

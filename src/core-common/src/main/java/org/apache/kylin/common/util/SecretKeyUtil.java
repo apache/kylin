@@ -36,7 +36,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.kylin.common.KylinConfig;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 public class SecretKeyUtil {
     private static final String STRING_ENCODE = "UTF-8";

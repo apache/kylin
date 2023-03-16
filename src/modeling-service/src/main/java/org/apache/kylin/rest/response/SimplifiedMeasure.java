@@ -31,7 +31,7 @@ import org.apache.kylin.metadata.model.NDataModel;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -22,7 +22,7 @@ import java.io.{File, FileOutputStream, OutputStreamWriter}
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicLong
 import java.{lang, util}
-import com.google.common.cache.{Cache, CacheBuilder}
+
 import io.kyligence.kap.secondstorage.SecondStorageUtil
 import org.apache.calcite.rel.`type`.{RelDataType, RelDataTypeField}
 import org.apache.commons.io.IOUtils
@@ -31,6 +31,7 @@ import org.apache.kylin.common.exception.NewQueryRefuseException
 import org.apache.kylin.common.util.{HadoopUtil, RandomUtil}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
 import org.apache.kylin.engine.spark.utils.LogEx
+import org.apache.kylin.guava30.shaded.common.cache.{Cache, CacheBuilder}
 import org.apache.kylin.metadata.query.{BigQueryThresholdUpdater, StructField}
 import org.apache.kylin.metadata.state.QueryShareStateManager
 import org.apache.kylin.query.engine.RelColumnMetaDataExtractor

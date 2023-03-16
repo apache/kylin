@@ -17,8 +17,8 @@
  */
 package org.apache.kylin.query.runtime.plan
 
-import com.google.common.base.Joiner
-import com.google.common.collect.{Lists, Sets}
+import org.apache.kylin.guava30.shaded.common.base.Joiner
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
 import org.apache.kylin.engine.spark.utils.{LogEx, LogUtils}
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate

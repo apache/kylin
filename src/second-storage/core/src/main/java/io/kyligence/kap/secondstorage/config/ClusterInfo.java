@@ -20,7 +20,7 @@ package io.kyligence.kap.secondstorage.config;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.JsonUtil;
 

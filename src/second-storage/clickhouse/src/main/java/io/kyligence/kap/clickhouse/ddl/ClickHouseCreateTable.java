@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import io.kyligence.kap.secondstorage.ddl.CreateTable;
 import io.kyligence.kap.secondstorage.ddl.exp.TableIdentifier;
 

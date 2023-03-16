@@ -42,9 +42,9 @@ import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
 
 /**
  * Extends this Abstract class to create Adaptors for new jdbc data source.

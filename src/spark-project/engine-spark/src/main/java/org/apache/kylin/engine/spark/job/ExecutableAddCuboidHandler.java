@@ -33,7 +33,7 @@ import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.val;
 

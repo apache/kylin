@@ -38,7 +38,7 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Pair;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 /**
  * Reduce project under aggregate which has unused input ref.

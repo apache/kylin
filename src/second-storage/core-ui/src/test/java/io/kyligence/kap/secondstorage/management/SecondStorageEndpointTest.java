@@ -18,7 +18,7 @@
 
 package io.kyligence.kap.secondstorage.management;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.service.ModelService;
 import io.kyligence.kap.secondstorage.management.request.StorageRequest;

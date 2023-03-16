@@ -20,7 +20,6 @@ package org.apache.kylin.common
 import java.io.File
 import java.util.Objects
 
-import com.google.common.collect.{Lists, Maps, Sets}
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
@@ -31,6 +30,7 @@ import org.apache.kylin.engine.spark.ExecutableUtils
 import org.apache.kylin.engine.spark.job.{NSparkCubingJob, NSparkCubingStep, NSparkMergingJob, NSparkMergingStep}
 import org.apache.kylin.engine.spark.merger.{AfterBuildResourceMerger, AfterMergeOrRefreshResourceMerger}
 import org.apache.kylin.engine.spark.utils.{FileNames, HDFSUtils}
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps, Sets}
 import org.apache.kylin.job.engine.JobEngineConfig
 import org.apache.kylin.job.execution.{AbstractExecutable, ExecutableState, NExecutableManager}
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler

@@ -18,9 +18,6 @@
 
 package org.apache.kylin.tool;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import lombok.val;
 import lombok.var;
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
@@ -32,9 +29,12 @@ import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.favorite.FavoriteRule;
 import org.apache.kylin.metadata.favorite.FavoriteRule.AbstractCondition;

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job
 
-import com.google.common.collect.{Lists, Queues}
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Queues}
 import org.apache.hadoop.fs.{Path, PathFilter}
 import org.apache.kylin.common.persistence.transaction.UnitOfWork
 import org.apache.kylin.common.{KapConfig, KylinConfig}

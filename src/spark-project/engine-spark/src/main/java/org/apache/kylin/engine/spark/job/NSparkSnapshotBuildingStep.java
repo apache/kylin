@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.NoArgsConstructor;
 import lombok.val;
 import org.apache.hadoop.fs.Path;

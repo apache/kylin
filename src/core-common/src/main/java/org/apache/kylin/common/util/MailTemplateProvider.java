@@ -18,7 +18,6 @@
 
 package org.apache.kylin.common.util;
 
-
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.apache.kylin.common.KylinConfig;

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.query.plugin.diagnose
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.kylin.common.util.ExecutorServiceUtil

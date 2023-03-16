@@ -29,7 +29,7 @@ import org.apache.kylin.metadata.model.schema.SchemaNode;
 import org.apache.kylin.metadata.model.schema.SchemaNodeType;
 import org.apache.kylin.metadata.model.schema.SchemaUtil;
 
-import io.kyligence.kap.guava20.shaded.common.collect.MapDifference;
+import org.apache.kylin.guava30.shaded.common.collect.MapDifference;
 import lombok.val;
 
 public class UnOverWritableStrategy implements SchemaChangeStrategy {

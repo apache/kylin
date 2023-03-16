@@ -29,7 +29,7 @@ import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;

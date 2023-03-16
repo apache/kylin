@@ -55,6 +55,12 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.ThreadUtil;
+import org.apache.kylin.guava30.shaded.common.base.Function;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
+import org.apache.kylin.guava30.shaded.common.cache.CacheLoader;
+import org.apache.kylin.guava30.shaded.common.cache.LoadingCache;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Ordering;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -63,14 +69,6 @@ import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.IQueryTransformer;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-
-import io.kyligence.kap.guava20.shaded.common.cache.CacheBuilder;
-import io.kyligence.kap.guava20.shaded.common.cache.CacheLoader;
-import io.kyligence.kap.guava20.shaded.common.cache.LoadingCache;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -205,7 +203,7 @@ public class ConvertToComputedColumn implements IQueryTransformer {
         }
         if (node instanceof SqlIdentifier) {
             StringBuilder alias = new StringBuilder();
-            ImmutableList<String> names = ((SqlIdentifier) node).names;
+            List<String> names = ((SqlIdentifier) node).names;
             if (names.size() >= 2) {
                 for (int i = 0; i < names.size() - 1; i++) {
                     alias.append(names.get(i)).append(".");

@@ -28,7 +28,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.springframework.util.CollectionUtils;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import io.kyligence.kap.secondstorage.metadata.annotation.DataDefinition;
 

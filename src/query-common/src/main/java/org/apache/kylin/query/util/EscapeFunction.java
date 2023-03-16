@@ -23,8 +23,8 @@ import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 public class EscapeFunction {
 

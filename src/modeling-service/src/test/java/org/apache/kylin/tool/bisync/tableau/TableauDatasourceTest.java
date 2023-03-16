@@ -35,9 +35,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.CharStreams;
+import org.apache.kylin.guava30.shaded.common.base.Charsets;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.io.CharStreams;
 
 import lombok.val;
 

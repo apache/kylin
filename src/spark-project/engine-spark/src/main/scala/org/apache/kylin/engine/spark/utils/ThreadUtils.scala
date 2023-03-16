@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.utils
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder
 
 import java.util.concurrent._
 

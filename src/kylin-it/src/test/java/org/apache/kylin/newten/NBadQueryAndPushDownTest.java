@@ -46,7 +46,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.base.Throwables;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
 
 import lombok.val;
 

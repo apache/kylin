@@ -24,8 +24,8 @@ import org.apache.kylin.metadata.model.TableExtDesc.ColumnStats;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.FilterColEnum;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Ordering;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Ordering;
 
 /**
  * Used for select the best-cost candidate for query or auto-modeling

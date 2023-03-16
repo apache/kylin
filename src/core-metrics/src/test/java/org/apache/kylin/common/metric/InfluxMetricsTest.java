@@ -48,7 +48,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 
-import io.kyligence.kap.shaded.influxdb.org.influxdb.dto.QueryResult;
+import org.apache.kylin.shaded.influxdb.org.influxdb.dto.QueryResult;
 
 public class InfluxMetricsTest extends NLocalFileMetadataTestCase {
 

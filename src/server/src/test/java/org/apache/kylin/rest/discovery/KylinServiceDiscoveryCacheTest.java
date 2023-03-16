@@ -43,7 +43,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

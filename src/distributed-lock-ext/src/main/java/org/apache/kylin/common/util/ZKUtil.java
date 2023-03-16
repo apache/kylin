@@ -30,18 +30,18 @@ import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalNotification;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
+import org.apache.kylin.guava30.shaded.common.cache.Cache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
+import org.apache.kylin.guava30.shaded.common.cache.RemovalNotification;
 
-import io.kyligence.kap.shaded.curator.org.apache.curator.RetryPolicy;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.CuratorFramework;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.imps.CuratorFrameworkState;
-import io.kyligence.kap.shaded.curator.org.apache.curator.framework.state.ConnectionStateListener;
-import io.kyligence.kap.shaded.curator.org.apache.curator.retry.ExponentialBackoffRetry;
-import io.kyligence.kap.shaded.curator.org.apache.curator.utils.ZKPaths;
+import org.apache.kylin.shaded.curator.org.apache.curator.RetryPolicy;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFramework;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.imps.CuratorFrameworkState;
+import org.apache.kylin.shaded.curator.org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.kylin.shaded.curator.org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.kylin.shaded.curator.org.apache.curator.utils.ZKPaths;
 
 public class ZKUtil {
     private static final Logger logger = LoggerFactory.getLogger(ZKUtil.class);

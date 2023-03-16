@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.NavigableMap;
 import java.util.SortedSet;
 
-import com.google.common.collect.BoundType;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
+import org.apache.kylin.guava30.shaded.common.collect.BoundType;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Range;
 
 /**
  */

@@ -38,9 +38,9 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.platform.commons.support.AnnotationSupport;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
-import io.kyligence.kap.guava20.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
