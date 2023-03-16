@@ -35,6 +35,7 @@ import org.apache.kylin.common.persistence.transaction.EventListenerRegistry;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HostInfoFetcher;
+import org.apache.kylin.engine.spark.filter.QueryFiltersCollector;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.metadata.epoch.EpochOrchestrator;
 import org.apache.kylin.metadata.project.NProjectLoader;
@@ -137,6 +138,9 @@ public class AppInitializer {
                 context.publishEvent(new SparderStartEvent.AsyncEvent(context));
             } else {
                 context.publishEvent(new SparderStartEvent.SyncEvent(context));
+            }
+            if (kylinConfig.isBloomCollectFilterEnabled()) {
+                QueryFiltersCollector.initScheduler();
             }
         }
         EventBusFactory.getInstance().register(new ProcessStatusListener(), true);

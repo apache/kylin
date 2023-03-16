@@ -86,6 +86,6 @@ public class LogicalViewTest extends NLocalWithSparkSessionTest {
         + " INNER JOIN SSB.CUSTOMER t2 on t1.C_CUSTKEY = t2.C_CUSTKEY ";
     query.add(Pair.newPair("logical_view", sql1));
     ExecAndComp.execAndCompare(
-        query, getProject(), ExecAndComp.CompareLevel.NONE, "inner");
+        query, getProject(), ExecAndComp.CompareLevel.SAME, "inner");
   }
 }
