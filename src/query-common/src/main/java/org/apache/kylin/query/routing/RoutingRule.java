@@ -18,8 +18,6 @@
 
 package org.apache.kylin.query.routing;
 
-import java.util.List;
-
 /**
  */
 public abstract class RoutingRule {
@@ -29,6 +27,6 @@ public abstract class RoutingRule {
         return this.getClass().toString();
     }
 
-    public abstract void apply(List<Candidate> candidates);
+    public abstract void apply(Candidate candidate);
 
 }

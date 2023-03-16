@@ -54,6 +54,12 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.scheduler.SchedulerEventNotifier;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringHelper;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
@@ -68,12 +74,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableBiMap;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -651,8 +651,8 @@ public class NDataModel extends RootPersistentEntity {
         return result;
     }
 
-    // find by unique name, that must uniquely identifies a table in the model
-    public TableRef findTable(String table) throws IllegalArgumentException {
+    // find by unique name, that must uniquely identify a table in the model
+    public TableRef findTable(String table) {
         TableRef result = tableNameMap.get(table.toUpperCase(Locale.ROOT));
         if (result == null) {
             int endOfDatabaseName = table.indexOf(".");
@@ -1456,6 +1456,11 @@ public class NDataModel extends RootPersistentEntity {
         // a multi-partition model can be determined only if neither partitionDesc nor multiPartitionDesc is null
         return partitionDesc != null && multiPartitionDesc != null
                 && CollectionUtils.isNotEmpty(multiPartitionDesc.getColumns());
+    }
+
+    public boolean isEmptyMultiPartitionKeyMapping() {
+        return multiPartitionKeyMapping == null
+                || CollectionUtils.isEmpty(multiPartitionKeyMapping.getMultiPartitionCols());
     }
 
     public List<Integer> getMeasureRelatedCols() {

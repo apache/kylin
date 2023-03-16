@@ -18,17 +18,13 @@
 
 package org.apache.kylin.query.routing.rules;
 
-import java.util.Iterator;
-import java.util.List;
-
+import org.apache.kylin.guava30.shaded.common.collect.BiMap;
+import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.RoutingRule;
 import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.query.util.QueryAliasMatchInfo;
-
-import org.apache.kylin.guava30.shaded.common.collect.BiMap;
-import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,34 +33,28 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RemoveUncapableRealizationsRule extends RoutingRule {
     @Override
-    public void apply(List<Candidate> candidates) {
-        for (Iterator<Candidate> iterator = candidates.iterator(); iterator.hasNext();) {
-            Candidate candidate = iterator.next();
-            if (candidate.getCapability() != null) {
-                continue;
-            }
-            candidate.getCtx().resetSQLDigest();
-            CapabilityResult capability = candidate.getRealization().isCapable(candidate.getCtx().getSQLDigest(),
-                    candidate.getPrunedSegments(), candidate.getPrunedStreamingSegments(),
-                    candidate.getSecondStorageSegmentLayoutMap());
-
-            if (!capability.capable && !candidate.getRealization().getModel().getComputedColumnDescs().isEmpty()) {
-                BiMap<String, String> aliasMapping = HashBiMap.create();
-                aliasMapping.putAll(candidate.getAliasMap());
-                ComputedColumnRewriter.rewriteCcInnerCol(candidate.getCtx(), candidate.getRealization().getModel(),
-                        new QueryAliasMatchInfo(aliasMapping, null));
-                candidate.getCtx().resetSQLDigest();
-                capability = candidate.getRealization().isCapable(candidate.getCtx().getSQLDigest(),
-                        candidate.getPrunedSegments(), candidate.getPrunedStreamingSegments(),
-                        candidate.getSecondStorageSegmentLayoutMap());
-            }
-
-            candidate.setCapability(capability);
-            if (!capability.capable) {
-                iterator.remove();
-            }
-
+    public void apply(Candidate candidate) {
+        if (candidate.getCapability() != null) {
+            return;
         }
+        candidate.getCtx().resetSQLDigest();
+        CapabilityResult capability = candidate.getRealization().isCapable(candidate.getCtx().getSQLDigest(),
+                candidate.getQueryableSeg());
+
+        if (!capability.isCapable() && !candidate.getRealization().getModel().getComputedColumnDescs().isEmpty()) {
+            log.info("{}({}/{}): try rewrite computed column and then check whether the realization is capable.",
+                    this.getClass().getName(), candidate.getRealization().getProject(),
+                    candidate.getRealization().getCanonicalName());
+            BiMap<String, String> aliasMapping = HashBiMap.create();
+            aliasMapping.putAll(candidate.getMatchedJoinsGraphAliasMap());
+            ComputedColumnRewriter.rewriteCcInnerCol(candidate.getCtx(), candidate.getRealization().getModel(),
+                    new QueryAliasMatchInfo(aliasMapping, null));
+            candidate.getCtx().resetSQLDigest();
+            capability = candidate.getRealization().isCapable(candidate.getCtx().getSQLDigest(),
+                    candidate.getQueryableSeg());
+        }
+
+        candidate.setCapability(capability);
     }
 
 }

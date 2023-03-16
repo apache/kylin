@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
 import org.apache.kylin.metadata.cube.cuboid.NQueryLayoutChooser;
@@ -38,8 +39,6 @@ import org.apache.kylin.metadata.realization.IRealizationCandidate;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 public class NDataflowCapabilityChecker {
     private static final Logger logger = LoggerFactory.getLogger(NDataflowCapabilityChecker.class);
@@ -72,15 +71,15 @@ public class NDataflowCapabilityChecker {
                 logger.info("Matched table {} snapshot in dataflow {} ", digest.factTable, dataflow);
             }
         } else {
-            // for query-on-facttable
+            // for query-on-fact-table
             logger.trace("Normal dataflow matching");
             boolean partialMatchIndex = QueryContext.current().isPartialMatchIndex();
-            NLayoutCandidate candidateAndInfluence = NQueryLayoutChooser
-                    .selectLayoutCandidate(dataflow, prunedSegments, digest, secondStorageSegmentLayoutMap);
+            NLayoutCandidate candidateAndInfluence = NQueryLayoutChooser.selectLayoutCandidate(dataflow, prunedSegments,
+                    digest, secondStorageSegmentLayoutMap);
             if (partialMatchIndex && candidateAndInfluence == null) {
                 logger.trace("Partial dataflow matching");
-                candidateAndInfluence = NQueryLayoutChooser.selectPartialLayoutCandidate(dataflow, prunedSegments, digest,
-                        secondStorageSegmentLayoutMap);
+                candidateAndInfluence = NQueryLayoutChooser.selectPartialLayoutCandidate(dataflow, prunedSegments,
+                        digest, secondStorageSegmentLayoutMap);
             }
             if (candidateAndInfluence != null) {
                 chosenCandidate = candidateAndInfluence;
@@ -90,7 +89,7 @@ public class NDataflowCapabilityChecker {
             }
         }
         if (chosenCandidate != null) {
-            result.capable = true;
+            result.setCapable(true);
             if (dataflow.isStreaming()) {
                 result.setSelectedStreamingCandidate(chosenCandidate);
             } else {
@@ -98,7 +97,7 @@ public class NDataflowCapabilityChecker {
             }
             result.cost = (int) chosenCandidate.getCost();
         } else {
-            result.capable = false;
+            result.setCapable(false);
         }
         return result;
     }
@@ -114,7 +113,7 @@ public class NDataflowCapabilityChecker {
             logger.info("Exclude NDataflow {} because snapshot of table {} does not exist", dataflow, digest.factTable);
             result.incapableCause = CapabilityResult.IncapableCause
                     .create(CapabilityResult.IncapableType.NOT_EXIST_SNAPSHOT);
-            result.capable = false;
+            result.setCapable(false);
             return null;
         }
 

@@ -21,12 +21,11 @@ package org.apache.kylin.query.util;
 import java.util.List;
 
 import org.apache.calcite.rel.RelNode;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPRel;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.relnode.KapRel;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OLAPRel;
 
 import lombok.extern.slf4j.Slf4j;
 

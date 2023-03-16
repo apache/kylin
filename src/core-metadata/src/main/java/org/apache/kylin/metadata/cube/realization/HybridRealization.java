@@ -19,7 +19,6 @@
 package org.apache.kylin.metadata.cube.realization;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +26,8 @@ import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -38,24 +39,22 @@ import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.QueryableSeg;
 import org.apache.kylin.metadata.realization.SQLDigest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class HybridRealization implements IRealization {
 
     public static final String REALIZATION_TYPE = "HYBRID";
-
-    private final static Logger logger = LoggerFactory.getLogger(HybridRealization.class);
+    public static final String HYBRID_CAPABLE_ERROR_MSG = "The fusion model can only execute this method separately "
+            + "for the batch model and the stream model it contains.";
 
     @Getter
     private String uuid;
-    private int cost = 50;
-    private volatile List<IRealization> realizations = new ArrayList<>();
+    private final List<IRealization> realizations = new ArrayList<>();
     private volatile IRealization batchRealization;
     private volatile IRealization streamingRealization;
     private String project;
@@ -104,8 +103,11 @@ public class HybridRealization implements IRealization {
         allDimensions = Lists.newArrayList(dimensions);
         allColumns = columns;
         uuid = streamingRealization.getUuid();
+        sortRealizations();
+    }
 
-        Collections.sort(realizations, (realization1, realization2) -> {
+    private void sortRealizations() {
+        realizations.sort((realization1, realization2) -> {
             long dateRangeStart1 = realization1.getDateRangeStart();
             long dateRangeStart2 = realization2.getDateRangeStart();
             long comp = dateRangeStart1 - dateRangeStart2;
@@ -126,32 +128,32 @@ public class HybridRealization implements IRealization {
 
     @Override
     public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
-        return new CapabilityResult();
+            Map<String, Set<Long>> chSegToLayoutsMap) {
+        throw new IllegalStateException(HYBRID_CAPABLE_ERROR_MSG);
     }
 
-    public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            List<NDataSegment> prunedStreamingSegments, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
+    public CapabilityResult isCapable(SQLDigest digest, QueryableSeg queryableSeg) {
         CapabilityResult result = new CapabilityResult();
 
-        resolveSegmentsOverlap(prunedStreamingSegments);
+        resolveSegmentsOverlap(queryableSeg.getStreamingSegments());
         for (IRealization realization : getRealizations()) {
             CapabilityResult child;
             if (realization.isStreaming()) {
-                child = realization.isCapable(digest, prunedStreamingSegments, secondStorageSegmentLayoutMap);
+                child = realization.isCapable(digest, queryableSeg.getStreamingSegments(), Maps.newHashMap());
                 result.setSelectedStreamingCandidate(child.getSelectedStreamingCandidate());
-                if (child.capable) {
+                if (child.isCapable()) {
                     result.cost = Math.min(result.cost, (int) child.getSelectedStreamingCandidate().getCost());
                 }
             } else {
-                child = realization.isCapable(digest, prunedSegments, secondStorageSegmentLayoutMap);
+                child = realization.isCapable(digest, queryableSeg.getBatchSegments(),
+                        queryableSeg.getChSegToLayoutsMap());
                 result.setSelectedCandidate(child.getSelectedCandidate());
-                if (child.capable) {
+                if (child.isCapable()) {
                     result.cost = Math.min(result.cost, (int) child.getSelectedCandidate().getCost());
                 }
             }
-            if (child.capable) {
-                result.capable = true;
+            if (child.isCapable()) {
+                result.setCapable(true);
                 result.influences.addAll(child.influences);
             } else {
                 result.incapableCause = child.incapableCause;
@@ -171,13 +173,13 @@ public class HybridRealization implements IRealization {
         long end = batchRealization.getDateRangeEnd();
         if (end != Long.MIN_VALUE) {
             String segments = prunedStreamingSegments.toString();
-            logger.info("Before resolve segments overlap between batch and stream of fusion model: {}", segments);
+            log.info("Before resolve segments overlap between batch and stream of fusion model: {}", segments);
             SegmentRange.BasicSegmentRange range = new SegmentRange.KafkaOffsetPartitionedSegmentRange(end,
                     Long.MAX_VALUE);
             List<NDataSegment> list = ((NDataflow) streamingRealization).getQueryableSegmentsByRange(range);
             prunedStreamingSegments.removeIf(seg -> !list.contains(seg));
             segments = prunedStreamingSegments.toString();
-            logger.info("After resolve segments overlap between batch and stream of fusion model: {}", segments);
+            log.info("After resolve segments overlap between batch and stream of fusion model: {}", segments);
         }
     }
 
@@ -188,8 +190,7 @@ public class HybridRealization implements IRealization {
             c = Math.min(realization.getCost(), c);
         }
         // let hybrid cost win its children
-        cost = --c;
-        return cost;
+        return --c;
     }
 
     public List<IRealization> getRealizations() {
