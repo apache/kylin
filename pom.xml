@@ -359,9 +359,9 @@
         <derby.version>10.14.2.0</derby.version>
         <jcommander.version>1.75</jcommander.version>
         <ant.version>1.10.11</ant.version>
-        <netty-all.version>4.1.73.Final</netty-all.version>
+        <netty-all.version>4.1.89.Final</netty-all.version>
         <netty.version>3.10.6.Final</netty.version>
-        <netty-codec.version>4.1.86.Final</netty-codec.version>
+        <netty-codec.version>4.1.89.Final</netty-codec.version>
         <servo-core.version>0.13.2</servo-core.version>
         <apache-api.version>1.0.3</apache-api.version>
         <saas.nacos.discovery.starter.version>2.6.2</saas.nacos.discovery.starter.version>
