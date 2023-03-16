@@ -30,14 +30,12 @@ import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
+import org.apache.kylin.query.relnode.ContextUtil;
+import org.apache.kylin.query.relnode.KapRel;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPRel;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.query.routing.RealizationChooser;
-import org.apache.kylin.query.relnode.ContextUtil;
-import org.apache.kylin.query.relnode.KapRel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,7 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 public class QueryContextCutter {
     private static final int MAX_RETRY_TIMES_OF_CONTEXT_CUT = 10;
 
-    private static final Logger logger = LoggerFactory.getLogger(QueryContextCutter.class);
+    private QueryContextCutter() {
+    }
 
     /**
      * For a parser tree of one query, there are 3 steps to get it matched with pre-calculated realizations
@@ -55,49 +54,37 @@ public class QueryContextCutter {
      *
      * @return The cut OLAPContext with selected realizations, which is a subset of OLAPContext.getThreadLocalContexts().
      */
-    public static List<OLAPContext> selectRealization(RelNode root, boolean isForAutoModeling) {
+    public static List<OLAPContext> selectRealization(RelNode root, boolean isReCutBanned) {
         FirstRoundContextCutStrategy firstRoundStrategy = new FirstRoundContextCutStrategy();
-        QueryReCutContextStrategy reCutContextStrategy = null;
+        QueryReCutContextStrategy reCutStrategy = new QueryReCutContextStrategy();
 
-        new QueryContextCutter(firstRoundStrategy).cutContext((KapRel) root.getInput(0), root);
+        QueryContextCutter.cutContext(firstRoundStrategy, (KapRel) root.getInput(0), root);
         int retryCutTimes = 0;
         while (retryCutTimes++ < MAX_RETRY_TIMES_OF_CONTEXT_CUT) {
             try {
                 return collectContextInfoAndSelectRealization(root);
-            } catch (NoStreamingRealizationFoundException e) {
-                if (isForAutoModeling) {
+            } catch (NoRealizationFoundException | NoStreamingRealizationFoundException e) {
+                if (isReCutBanned && e instanceof NoStreamingRealizationFoundException) {
                     checkStreamingTableWithAutoModeling();
-                } else {
+                } else if (isReCutBanned) {
                     throw e;
                 }
-            } catch (NoRealizationFoundException e) {
-                if (isForAutoModeling) {
-                    throw e;
-                }
-
-                int ctxSeq = reCutContextStrategy == null ? OLAPContext.getThreadLocalContexts().size()
-                        : reCutContextStrategy.getRecutContextImplementor().getCtxSeq();
-                reCutContextStrategy = new QueryReCutContextStrategy(
-                        new ICutContextStrategy.CutContextImplementor(ctxSeq));
-                for (OLAPContext context : ContextUtil.listContextsHavingScan()) {
-                    if (context.isHasSelected() && context.realization == null
-                            && (!context.isHasPreCalcJoin() || context.getModelAlias() != null)) {
-                        throw e;
-                    } else if (context.isHasSelected() && context.realization == null) {
-                        new QueryContextCutter(reCutContextStrategy).cutContext(context.getTopNode(), root);
-                        ContextUtil.setSubContexts(root.getInput(0));
-                        continue;
-                    } else if (context.realization != null) {
-                        context.unfixModel();
-                    }
-                    context.clearCtxInfo();
+                reCutStrategy.tryCutToSmallerContexts(root, e);
+            } finally {
+                // auto-modeling should invoke unfixModel() because it may select some realizations.
+                if (isReCutBanned) {
+                    ContextUtil.listContextsHavingScan().forEach(olapContext -> {
+                        if (olapContext.realization != null) {
+                            olapContext.unfixModel();
+                        }
+                    });
                 }
             }
         }
 
         ContextUtil.dumpCalcitePlan(
                 "cannot find proper realizations After re-cut " + MAX_RETRY_TIMES_OF_CONTEXT_CUT + " times", root, log);
-        logger.error("too many unmatched join in this query, please check it or create correspond realization");
+        log.error("too many unmatched join in this query, please check it or create correspond realization");
         throw new NoRealizationFoundException(
                 "too many unmatched join in this query, please check it or create correspond realization");
     }
@@ -111,7 +98,8 @@ public class QueryContextCutter {
         List<OLAPContext> contexts = ContextUtil.listContextsHavingScan();
 
         for (OLAPContext olapContext : contexts) {
-            logger.info("Context for realization matching: {}", olapContext);
+            olapContext.setHasSelected(true);
+            log.info("Context for realization matching: {}", olapContext);
         }
 
         long selectLayoutStartTime = System.currentTimeMillis();
@@ -120,7 +108,7 @@ public class QueryContextCutter {
         } else {
             RealizationChooser.selectLayoutCandidate(contexts);
         }
-        logger.info("select layout candidate for {} olapContext cost {} ms", contexts.size(),
+        log.info("select layout candidate for {} olapContext cost {} ms", contexts.size(),
                 System.currentTimeMillis() - selectLayoutStartTime);
         QueryContext.current().record("end select realization");
         return contexts;
@@ -128,13 +116,7 @@ public class QueryContextCutter {
 
     // ============================================================================
 
-    private ICutContextStrategy strategy;
-
-    private QueryContextCutter(ICutContextStrategy cutContextStrategy) {
-        this.strategy = cutContextStrategy;
-    }
-
-    private void cutContext(OLAPRel rootOfSubCtxTree, RelNode queryRoot) {
+    static void cutContext(ICutContextStrategy strategy, OLAPRel rootOfSubCtxTree, RelNode queryRoot) {
         if (strategy.needCutOff(rootOfSubCtxTree)) {
             strategy.cutOffContext(rootOfSubCtxTree, queryRoot);
         }
@@ -151,8 +133,8 @@ public class QueryContextCutter {
                 TableDesc tableDesc = tableScan.getTableRef().getTableDesc();
                 if (ISourceAware.ID_STREAMING == tableDesc.getSourceType()
                         && tableDesc.getKafkaConfig().hasBatchTable()) {
-                    throw new NoStreamingRealizationFoundException(STREAMING_TABLE_NOT_SUPPORT_AUTO_MODELING, String
-                            .format(Locale.ROOT, MsgPicker.getMsg().getStreamingTableNotSupportAutoModeling()));
+                    throw new NoStreamingRealizationFoundException(STREAMING_TABLE_NOT_SUPPORT_AUTO_MODELING,
+                            String.format(Locale.ROOT, MsgPicker.getMsg().getStreamingTableNotSupportAutoModeling()));
                 }
             }
         }

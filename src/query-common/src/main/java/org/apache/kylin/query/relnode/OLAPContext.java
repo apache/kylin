@@ -112,6 +112,7 @@ public class OLAPContext {
     protected boolean hasBitmapMeasure = false;
     protected boolean isExactlyFastBitmap = false;
     boolean afterTopJoin = false;
+    @Getter
     boolean fixedModel;
     List<SQLDigest.OrderEnum> sortOrders;
     SQLDigest sqlDigest;

@@ -19,7 +19,6 @@
 package org.apache.kylin.metadata.cube.model;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -35,6 +34,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.MissingRootPersistentEntity;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cube.optimization.FrequencyMap;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -50,6 +53,7 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.QueryableSeg;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
@@ -57,10 +61,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -208,17 +208,16 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
 
     @Override
     public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
-        return NDataflowCapabilityChecker.check(this, prunedSegments, digest, secondStorageSegmentLayoutMap);
+            Map<String, Set<Long>> chSegToLayoutsMap) {
+        return NDataflowCapabilityChecker.check(this, prunedSegments, digest, chSegToLayoutsMap);
     }
 
     @Override
-    public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            List<NDataSegment> prunedStreamingSegments, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
+    public CapabilityResult isCapable(SQLDigest digest, QueryableSeg queryableSeg) {
         if (isStreaming()) {
-            return isCapable(digest, prunedStreamingSegments, secondStorageSegmentLayoutMap);
+            return isCapable(digest, queryableSeg.getStreamingSegments(), Maps.newHashMap());
         } else {
-            return isCapable(digest, prunedSegments, secondStorageSegmentLayoutMap);
+            return isCapable(digest, queryableSeg.getBatchSegments(), queryableSeg.getChSegToLayoutsMap());
         }
     }
 
@@ -271,7 +270,7 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
 
     @Override
     public List<IRealization> getRealizations() {
-        return Arrays.asList(this);
+        return Collections.singletonList(this);
     }
 
     @Override
@@ -356,15 +355,7 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
     }
 
     public Segments<NDataSegment> getQueryableSegments() {
-        val loadingRangeManager = NDataLoadingRangeManager.getInstance(config, project);
-        val loadingRange = loadingRangeManager.getDataLoadingRange(getModel().getRootFactTableName());
-        if (loadingRange == null) {
-            return getSegments(SegmentStatusEnum.READY, SegmentStatusEnum.WARNING);
-        } else {
-            val querableRange = loadingRangeManager.getQuerableSegmentRange(loadingRange);
-            return segments.getSegments(SegmentStatusEnum.READY, SegmentStatusEnum.WARNING)
-                    .getSegmentsByRange(querableRange);
-        }
+        return getSegments(SegmentStatusEnum.READY, SegmentStatusEnum.WARNING);
     }
 
     public Segments<NDataSegment> getSegments(SegmentStatusEnum... statusLst) {
@@ -377,10 +368,6 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
 
     public Segments<NDataSegment> calculateToBeSegments(NDataSegment newSegment) {
         return segments.calculateToBeSegments(newSegment);
-    }
-
-    public Segments<NDataSegment> getBuildingSegments() {
-        return segments.getBuildingSegments();
     }
 
     public NDataSegment getFirstSegment() {

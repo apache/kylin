@@ -36,10 +36,9 @@ public interface IRealization extends IStorageAware {
      * Given the features of a query, check how capable the realization is to answer the query.
      */
     CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            Map<String, Set<Long>> secondStorageSegmentLayoutMap);
+            Map<String, Set<Long>> chSegToLayoutsMap);
 
-    CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            List<NDataSegment> prunedStreamingSegments, Map<String, Set<Long>> secondStorageSegmentLayoutMap);
+    CapabilityResult isCapable(SQLDigest digest, QueryableSeg queryableSeg);
 
     /**
      * Get whether this specific realization is a cube or InvertedIndex

@@ -21,21 +21,27 @@ package org.apache.kylin.query.routing;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.realization.QueryableSeg;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPContextProp;
 
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter
 public class Candidate {
 
     public static final CandidateComparator COMPARATOR = new CandidateComparator();
@@ -44,61 +50,51 @@ public class Candidate {
     // ============================================================================
 
     IRealization realization;
-    @Getter
     OLAPContext ctx;
-    SQLDigest sqlDigest;
+
+    @Setter
     CapabilityResult capability;
-    @Getter
     @Setter
     OLAPContextProp rewrittenCtx;
-    @Getter
     @Setter
-    Map<String, String> aliasMap;
+    Map<String, String> matchedJoinsGraphAliasMap;
 
-    @Getter
-    @Setter
-    private List<NDataSegment> prunedSegments;
-
-    @Getter
-    @Setter
-    private List<NDataSegment> prunedStreamingSegments;
-
-    @Getter
-    @Setter
-    private Map<String, Set<Long>> secondStorageSegmentLayoutMap;
-
-    public void setPrunedSegments(List<NDataSegment> prunedSegments, boolean isStreaming) {
-        if (isStreaming) {
-            this.prunedStreamingSegments = prunedSegments;
-        } else {
-            this.prunedSegments = prunedSegments;
-        }
-    }
-
-    @Getter
     @Setter
     private Map<String, List<Long>> prunedPartitions;
 
-    public Candidate(IRealization realization, OLAPContext ctx, Map<String, String> aliasMap) {
+    private final QueryableSeg queryableSeg = new QueryableSeg();
+
+    public void setPrunedSegments(Segments<NDataSegment> prunedSegments, NDataflow df) {
+        if (df.isStreaming()) {
+            queryableSeg.setStreamingSegments(prunedSegments);
+        } else {
+            queryableSeg.setBatchSegments(prunedSegments);
+            fillSecondStorageLayouts(df);
+        }
+    }
+
+    private void fillSecondStorageLayouts(NDataflow df) {
+        Map<String, Set<Long>> secondStorageSegmentLayoutMap = Maps.newHashMap();
+        if (SecondStorageUtil.isModelEnable(df.getProject(), df.getId())) {
+            for (NDataSegment segment : queryableSeg.getBatchSegments()) {
+                Set<Long> chEnableLayoutIds = SecondStorageUtil.listEnableLayoutBySegment(df.getProject(), df.getId(),
+                        segment.getId());
+                if (CollectionUtils.isNotEmpty(chEnableLayoutIds)) {
+                    secondStorageSegmentLayoutMap.put(segment.getId(), chEnableLayoutIds);
+                }
+            }
+        }
+        queryableSeg.setChSegToLayoutsMap(secondStorageSegmentLayoutMap);
+    }
+
+    public Candidate(IRealization realization, OLAPContext ctx, Map<String, String> matchedJoinsGraphAliasMap) {
         this.realization = realization;
         this.ctx = ctx;
-        this.aliasMap = aliasMap;
+        this.matchedJoinsGraphAliasMap = matchedJoinsGraphAliasMap;
     }
 
     // for testing only
     Candidate() {
-    }
-
-    public IRealization getRealization() {
-        return realization;
-    }
-
-    public CapabilityResult getCapability() {
-        return capability;
-    }
-
-    public void setCapability(CapabilityResult capability) {
-        this.capability = capability;
     }
 
     @Override
@@ -138,10 +134,8 @@ public class Candidate {
                 priorities.put(QueryContext.current().getModelPriorities()[i], i);
             }
 
-            int comp = priorities.getOrDefault(real1.getModel().getAlias().toUpperCase(Locale.ROOT),
-                    Integer.MAX_VALUE)
-                    - priorities.getOrDefault(real2.getModel().getAlias().toUpperCase(Locale.ROOT),
-                    Integer.MAX_VALUE);
+            int comp = priorities.getOrDefault(StringUtils.upperCase(real1.getModel().getAlias()), Integer.MAX_VALUE)
+                    - priorities.getOrDefault(StringUtils.upperCase(real2.getModel().getAlias()), Integer.MAX_VALUE);
             if (comp != 0) {
                 return comp;
             }

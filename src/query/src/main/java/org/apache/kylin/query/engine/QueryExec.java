@@ -230,7 +230,7 @@ public class QueryExec {
     /**
      * Apply post optimization rules and produce a list of alternative transformed nodes
      */
-    private List<RelNode> postOptimize(RelNode node) {
+    public List<RelNode> postOptimize(RelNode node) {
         Collection<RelOptRule> postOptRules = new LinkedHashSet<>();
         if (kylinConfig.isConvertSumExpressionEnabled()) {
             postOptRules.addAll(HepUtils.SumExprRules);

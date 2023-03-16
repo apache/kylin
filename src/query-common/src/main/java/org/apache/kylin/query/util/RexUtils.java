@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Values;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
@@ -38,11 +40,20 @@ import org.apache.calcite.rex.RexVisitor;
 import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.util.DateString;
+import org.apache.calcite.util.TimestampString;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.relnode.KapAggregateRel;
 import org.apache.kylin.query.relnode.KapJoinRel;
 import org.apache.kylin.query.relnode.KapProjectRel;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OLAPTableScan;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import lombok.val;
+import lombok.var;
 
 public class RexUtils {
 
@@ -246,5 +257,44 @@ public class RexUtils {
         }
 
         return predicate;
+    }
+
+    public static RexNode transformValue2RexLiteral(RexBuilder rexBuilder, String value, DataType colType) {
+        switch (colType.getName()) {
+        case DataType.DATE:
+            return rexBuilder.makeDateLiteral(new DateString(value));
+        case DataType.TIMESTAMP:
+            var relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.TIMESTAMP);
+            return rexBuilder.makeTimestampLiteral(new TimestampString(value), relDataType.getPrecision());
+        case DataType.VARCHAR:
+        case DataType.STRING:
+            return rexBuilder.makeLiteral(value);
+        case DataType.INTEGER:
+            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.INTEGER);
+            return rexBuilder.makeLiteral(Integer.parseInt(value), relDataType, false);
+        case DataType.BIGINT:
+            relDataType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.BIGINT);
+            return rexBuilder.makeLiteral(Long.parseLong(value), relDataType, false);
+        default:
+            throw new IllegalArgumentException(
+                    String.format(Locale.ROOT, "%s data type is not supported for partition column", colType));
+        }
+    }
+
+    public static RexInputRef transformColumn2RexInputRef(TblColRef partitionCol, Set<OLAPTableScan> tableScans) {
+        for (OLAPTableScan tableScan : tableScans) {
+            val tableIdentity = tableScan.getTableName();
+            if (tableIdentity.equals(partitionCol.getTable())) {
+                val index = tableScan.getColumnRowType().getAllColumns().indexOf(partitionCol);
+                if (index >= 0) {
+                    return OLAPContext.createUniqueInputRefAmongTables(tableScan, index, tableScans);
+                }
+                throw new IllegalStateException(String.format(Locale.ROOT, "Cannot find column %s in all tableScans",
+                        partitionCol.getIdentity()));
+            }
+        }
+
+        throw new IllegalStateException(
+                String.format(Locale.ROOT, "Cannot find column %s in all tableScans", partitionCol.getIdentity()));
     }
 }

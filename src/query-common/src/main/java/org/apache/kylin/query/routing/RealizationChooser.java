@@ -36,9 +36,6 @@
 
 package org.apache.kylin.query.routing;
 
-import static org.apache.kylin.common.exception.ServerErrorCode.STREAMING_MODEL_NOT_FOUND;
-
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,7 +52,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -63,10 +59,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinTimeoutException;
+import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.logging.SetLogCategory;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.HashMultimap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Multimap;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
@@ -90,7 +95,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.project.NProjectLoader;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
@@ -106,21 +110,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.ttl.TtlRunnable;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.HashMultimap;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Multimap;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 
 public class RealizationChooser {
 
     private static final Logger logger = LoggerFactory.getLogger(RealizationChooser.class);
-    private static ExecutorService selectCandidateService = new ThreadPoolExecutor(
+    private static final ExecutorService selectCandidateService = new ThreadPoolExecutor(
             KylinConfig.getInstanceFromEnv().getQueryRealizationChooserThreadCoreNum(),
             KylinConfig.getInstanceFromEnv().getQueryRealizationChooserThreadMaxNum(), 60L, TimeUnit.SECONDS,
             new SynchronousQueue<>(), new NamedThreadFactory("RealChooser"), new ThreadPoolExecutor.CallerRunsPolicy());
@@ -135,46 +131,19 @@ public class RealizationChooser {
             if (ctx.isConstantQueryWithAggregations()) {
                 continue;
             }
-            ctx.realizationCheck = new RealizationCheck();
             attemptSelectCandidate(ctx);
             Preconditions.checkNotNull(ctx.realization);
         }
     }
 
     public static void multiThreadSelectLayoutCandidate(List<OLAPContext> contexts) {
-        ArrayList<Future<?>> futureList = Lists.newArrayList();
+        List<Future<?>> futureList = Lists.newArrayList();
         try {
-            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            String project = QueryContext.current().getProject();
-            String queryId = QueryContext.current().getQueryId();
             // try different model for different context
             CountDownLatch latch = new CountDownLatch(contexts.size());
             for (OLAPContext ctx : contexts) {
-                Future<?> future = selectCandidateService.submit(Objects.requireNonNull(TtlRunnable.get(() -> {
-                    try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
-                            .setAndUnsetThreadLocalConfig(kylinConfig);
-                            SetThreadName ignored = new SetThreadName(Thread.currentThread().getName() + " QueryId %s",
-                                    queryId);
-                            SetLogCategory logCategory = new SetLogCategory("query")) {
-                        if (project != null) {
-                            NTableMetadataManager.getInstance(kylinConfig, project);
-                            NDataModelManager.getInstance(kylinConfig, project);
-                            NDataflowManager.getInstance(kylinConfig, project);
-                            NIndexPlanManager.getInstance(kylinConfig, project);
-                            NProjectLoader.updateCache(project);
-                        }
-                        if (!ctx.isConstantQueryWithAggregations()) {
-                            ctx.realizationCheck = new RealizationCheck();
-                            attemptSelectCandidate(ctx);
-                            Preconditions.checkNotNull(ctx.realization);
-                        }
-                    } catch (KylinTimeoutException e) {
-                        logger.error("realization chooser thread task interrupted due to query [{}] timeout", queryId);
-                    } finally {
-                        NProjectLoader.removeCache();
-                        latch.countDown();
-                    }
-                })));
+                TtlRunnable r = Objects.requireNonNull(TtlRunnable.get(() -> selectCandidate0(latch, ctx)));
+                Future<?> future = selectCandidateService.submit(r);
                 futureList.add(future);
             }
             latch.await();
@@ -201,88 +170,125 @@ public class RealizationChooser {
         }
     }
 
+    private static void selectCandidate0(CountDownLatch latch, OLAPContext ctx) {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String queryId = QueryContext.current().getQueryId();
+        try (KylinConfig.SetAndUnsetThreadLocalConfig ignored0 = KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
+                SetThreadName ignored1 = new SetThreadName(Thread.currentThread().getName() + " QueryId %s", queryId);
+                SetLogCategory ignored2 = new SetLogCategory("query")) {
+
+            String project = ctx.olapSchema.getProjectName();
+            NTableMetadataManager.getInstance(kylinConfig, project);
+            NDataModelManager.getInstance(kylinConfig, project);
+            NDataflowManager.getInstance(kylinConfig, project);
+            NIndexPlanManager.getInstance(kylinConfig, project);
+            NProjectLoader.updateCache(project);
+
+            if (!ctx.isConstantQueryWithAggregations()) {
+                ctx.realizationCheck = new RealizationCheck();
+                attemptSelectCandidate(ctx);
+                Preconditions.checkNotNull(ctx.realization);
+            }
+        } catch (KylinTimeoutException e) {
+            logger.error("realization chooser thread task interrupted due to query [{}] timeout", queryId);
+        } finally {
+            NProjectLoader.removeCache();
+            latch.countDown();
+        }
+    }
+
     @VisibleForTesting
     public static void attemptSelectCandidate(OLAPContext context) {
-        if (context.getModelAlias() != null) {
-            logger.info("context is bound to model {}", context.getModelAlias());
-        }
-        context.setHasSelected(true);
         // Step 1. get model through matching fact table with query
         Multimap<NDataModel, IRealization> modelMap = makeOrderedModelMap(context);
-        if (modelMap.size() == 0) {
-            checkNoRealizationWithStreaming(context);
-            RelAggPushDownUtil.registerUnmatchedJoinDigest(context.getTopNode());
-            throw new NoRealizationFoundException("No model found for " + toErrorMsg(context));
-        }
-        logger.trace("Models matched fact table {}: {}", context.firstTableScan.getTableName(), modelMap.values());
-        List<Candidate> candidates = Lists.newArrayList();
-        Map<NDataModel, Map<String, String>> model2AliasMap = Maps.newHashMap();
+        checkNoRealizationFound(context, modelMap);
+
+        logger.info("Context join graph: {}", context.getJoinsGraph());
 
         // Step 2.1 try to exactly match model
-        logger.info("Context join graph: {}", context.getJoinsGraph());
-        for (NDataModel model : modelMap.keySet()) {
-            OLAPContextProp preservedOLAPContext = QueryRouter.preservePropsBeforeRewrite(context);
-            List<Candidate> candidate = selectRealizationFromModel(model, context, false, false, modelMap,
-                    model2AliasMap);
-            if (candidate != null && !candidate.isEmpty()) {
-                candidates.addAll(candidate);
-                logger.info("context & model({}, {}) match info: {}", model.getUuid(), model.getAlias(), true);
+        List<Candidate> candidates = trySelectCandidates(context, modelMap, false, false);
+
+        // Step 2.2 try to partial match model
+        if (CollectionUtils.isEmpty(candidates)) {
+            String project = context.olapSchema.getProjectName();
+            KylinConfig projectConfig = NProjectManager.getProjectConfig(project);
+            boolean partialMatch = projectConfig.isQueryMatchPartialInnerJoinModel();
+            boolean nonEquiPartialMatch = projectConfig.partialMatchNonEquiJoins();
+            if (partialMatch || nonEquiPartialMatch) {
+                candidates = trySelectCandidates(context, modelMap, partialMatch, nonEquiPartialMatch);
+                context.storageContext.setPartialMatchModel(CollectionUtils.isNotEmpty(candidates));
             }
-            // discard the props of OLAPContext modified by rewriteCcInnerCol
-            QueryRouter.restoreOLAPContextProps(context, preservedOLAPContext);
         }
 
-        // Step 2.2 if no exactly model and user config to try partial model match, then try partial match model
-        if (CollectionUtils.isEmpty(candidates) && (partialMatchInnerJoin() || partialMatchNonEquiJoin())) {
-            for (NDataModel model : modelMap.keySet()) {
-                OLAPContextProp preservedOLAPContext = QueryRouter.preservePropsBeforeRewrite(context);
-                List<Candidate> candidate = selectRealizationFromModel(model, context, partialMatchInnerJoin(),
-                        partialMatchNonEquiJoin(), modelMap, model2AliasMap);
-                if (candidate != null) {
-                    candidates.addAll(candidate);
-                }
-                // discard the props of OLAPContext modified by rewriteCcInnerCol
-                QueryRouter.restoreOLAPContextProps(context, preservedOLAPContext);
-            }
-            context.storageContext.setPartialMatchModel(CollectionUtils.isNotEmpty(candidates));
+        if (candidates.isEmpty()) {
+            checkNoRealizationWithStreaming(context);
+            RelAggPushDownUtil.registerUnmatchedJoinDigest(context.getTopNode());
+            throw new NoRealizationFoundException("No realization found for " + toErrorMsg(context));
         }
 
         // Step 3. find the lowest-cost candidate
         sortCandidate(context, candidates);
         logger.trace("Cost Sorted Realizations {}", candidates);
-        if (!candidates.isEmpty()) {
-            Candidate selectedCandidate = candidates.get(0);
-            QueryRouter.restoreOLAPContextProps(context, selectedCandidate.getRewrittenCtx());
-            context.fixModel(selectedCandidate.getRealization().getModel(),
-                    model2AliasMap.get(selectedCandidate.getRealization().getModel()));
-            adjustForCapabilityInfluence(selectedCandidate, context);
+        Candidate candidate = candidates.get(0);
+        restoreOLAPContextProps(context, candidate.getRewrittenCtx());
+        context.fixModel(candidate.getRealization().getModel(), candidate.getMatchedJoinsGraphAliasMap());
+        adjustForCapabilityInfluence(candidate, context);
 
-            context.realization = selectedCandidate.realization;
-            if (selectedCandidate.capability.getSelectedCandidate() instanceof NLookupCandidate) {
-                context.storageContext
-                        .setUseSnapshot(context.isFirstTableLookupTableInModel(context.realization.getModel()));
-            } else {
-                Set<TblColRef> dimensions = Sets.newHashSet();
-                Set<FunctionDesc> metrics = Sets.newHashSet();
-                boolean isBatchQuery = !(context.realization instanceof HybridRealization)
-                        && !context.realization.isStreaming();
-                buildDimensionsAndMetrics(context.getSQLDigest(), dimensions, metrics, context.realization);
-                buildStorageContext(context.storageContext, dimensions, metrics, selectedCandidate, isBatchQuery);
-                buildSecondStorageEnabled(context.getSQLDigest());
-                fixContextForTableIndexAnswerNonRawQuery(context);
-            }
+        context.realization = candidate.realization;
+        if (candidate.capability.getSelectedCandidate() instanceof NLookupCandidate) {
+            boolean useSnapshot = context.isFirstTableLookupTableInModel(context.realization.getModel());
+            context.storageContext.setUseSnapshot(useSnapshot);
+        } else {
+            Set<TblColRef> dimensions = Sets.newHashSet();
+            Set<FunctionDesc> metrics = Sets.newHashSet();
+            buildDimensionsAndMetrics(context, dimensions, metrics);
+            buildStorageContext(context, dimensions, metrics, candidate);
+            buildSecondStorageEnabled(context.getSQLDigest());
+            fixContextForTableIndexAnswerNonRawQuery(context);
+        }
+    }
+
+    private static void checkNoRealizationFound(OLAPContext context, Multimap<NDataModel, IRealization> modelMap) {
+        if (!modelMap.isEmpty()) {
             return;
         }
-
         checkNoRealizationWithStreaming(context);
         RelAggPushDownUtil.registerUnmatchedJoinDigest(context.getTopNode());
-        throw new NoRealizationFoundException("No realization found for " + toErrorMsg(context));
+        throw new NoRealizationFoundException("No model found for " + toErrorMsg(context));
+    }
+
+    private static List<Candidate> trySelectCandidates(OLAPContext context, Multimap<NDataModel, IRealization> modelMap,
+            boolean partialMatch, boolean nonEquiPartialMatch) {
+        List<Candidate> candidates = Lists.newArrayList();
+        for (NDataModel model : modelMap.keySet()) {
+            // preserve the props of OLAPContext may be modified
+            OLAPContextProp preservedOlapProps = preservePropsBeforeRewrite(context);
+            Map<String, String> matchedAliasMap = matchJoins(model, context, partialMatch, nonEquiPartialMatch);
+            Set<IRealization> realizations = Sets.newHashSet(modelMap.get(model));
+            List<Candidate> list = selectRealizations(model, context, matchedAliasMap, realizations);
+
+            // discard the props of OLAPContext modified by rewriteCcInnerCol
+            restoreOLAPContextProps(context, preservedOlapProps);
+
+            // The matchJoin() method has the potential to optimize the JoinsGraph, 
+            // therefore we perform a check on ready segments at this point.
+            if (!hasReadySegments(model)) {
+                logger.info("Exclude this model {} because there are no ready segments", model.getAlias());
+                continue;
+            }
+
+            if (CollectionUtils.isNotEmpty(list)) {
+                candidates.addAll(list);
+                logger.info("context & model({}/{}/{}) match info: {}", context.olapSchema.getProjectName(),
+                        model.getUuid(), model.getAlias(), true);
+            }
+        }
+        return candidates;
     }
 
     private static void sortCandidate(OLAPContext context, List<Candidate> candidates) {
-        ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(context.olapSchema.getProjectName());
-        if (projectInstance.getConfig().useTableIndexAnswerSelectStarEnabled() && context.getSQLDigest().isRawQuery) {
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(context.olapSchema.getProjectName());
+        if (projectConfig.useTableIndexAnswerSelectStarEnabled() && context.getSQLDigest().isRawQuery) {
             candidates.sort(Candidate.COMPARATOR_TABLE_INDEX);
         } else {
             candidates.sort(Candidate.COMPARATOR);
@@ -297,34 +303,24 @@ public class RealizationChooser {
         for (OLAPTableScan tableScan : context.allTableScans) {
             TableDesc tableDesc = tableManager.getTableDesc(tableScan.getTableName());
             if (tableDesc.getSourceType() == ISourceAware.ID_STREAMING) {
-                throw new NoStreamingRealizationFoundException(STREAMING_MODEL_NOT_FOUND,
+                throw new NoStreamingRealizationFoundException(ServerErrorCode.STREAMING_MODEL_NOT_FOUND,
                         MsgPicker.getMsg().getNoStreamingModelFound());
             }
         }
     }
 
-    private static List<Candidate> selectRealizationFromModel(NDataModel model, OLAPContext context,
-            boolean isPartialMatch, boolean isPartialMatchNonEquiJoin, Multimap<NDataModel, IRealization> modelMap,
-            Map<NDataModel, Map<String, String>> model2AliasMap) {
-        final Map<String, String> map = matchJoins(model, context, isPartialMatch, isPartialMatchNonEquiJoin);
-        if (MapUtils.isEmpty(map)) {
-            return new ArrayList<>();
-        }
-        context.fixModel(model, map);
-        model2AliasMap.put(model, map);
-
-        preprocessOlapCtx(context);
-        // check ready segments
-        if (!hasReadySegments(model)) {
-            context.unfixModel();
-            logger.info("Exclude this model {} because there are no ready segments", model.getAlias());
-            return new ArrayList<>();
+    private static List<Candidate> selectRealizations(NDataModel model, OLAPContext context,
+            Map<String, String> matchedGraphAliasMap, Set<IRealization> realizations) {
+        // skip selection
+        if (MapUtils.isEmpty(matchedGraphAliasMap)) {
+            return Lists.newArrayList();
         }
 
-        Set<IRealization> realizations = Sets.newHashSet(modelMap.get(model));
+        context.fixModel(model, matchedGraphAliasMap);
+        preprocessSpecialAggregations(context);
         List<Candidate> candidates = Lists.newArrayListWithCapacity(realizations.size());
         for (IRealization real : realizations) {
-            Candidate candidate = QueryRouter.selectRealization(context, real, model2AliasMap.get(model));
+            Candidate candidate = selectRealization(context, real, matchedGraphAliasMap);
             if (candidate != null) {
                 candidates.add(candidate);
                 logger.trace("Model {} QueryRouter matched", model);
@@ -335,6 +331,65 @@ public class RealizationChooser {
         context.setNeedToManyDerived(needToManyDerived(model));
         context.unfixModel();
         return candidates;
+    }
+
+    public static Candidate selectRealization(OLAPContext olapContext, IRealization realization,
+            Map<String, String> matchedJoinGraphAliasMap) {
+        if (!realization.isReady()) {
+            logger.warn("Realization {} is not ready", realization);
+            return null;
+        }
+
+        Candidate candidate = new Candidate(realization, olapContext, matchedJoinGraphAliasMap);
+        logger.info("Find candidates by table {} and project={} : {}", olapContext.firstTableScan.getTableName(),
+                olapContext.olapSchema.getProjectName(), candidate);
+
+        QueryRouter.applyRules(candidate);
+
+        if (!candidate.getCapability().isCapable()) {
+            return null;
+        }
+
+        candidate.setRewrittenCtx(preserveRewriteProps(olapContext));
+        logger.info("The realizations remaining: {}, and the final chosen one for current olap context {} is {}",
+                candidate.realization.getCanonicalName(), olapContext.id, candidate.realization.getCanonicalName());
+        return candidate;
+    }
+
+    static OLAPContextProp preserveRewriteProps(OLAPContext rewrittenOLAContext) {
+        return preservePropsBeforeRewrite(rewrittenOLAContext);
+    }
+
+    static OLAPContextProp preservePropsBeforeRewrite(OLAPContext oriOLAPContext) {
+        OLAPContextProp preserved = new OLAPContextProp(-1);
+        preserved.allColumns = Sets.newHashSet(oriOLAPContext.allColumns);
+        preserved.setSortColumns(Lists.newArrayList(oriOLAPContext.getSortColumns()));
+        preserved.setInnerGroupByColumns(Sets.newHashSet(oriOLAPContext.getInnerGroupByColumns()));
+        preserved.setGroupByColumns(Sets.newLinkedHashSet(oriOLAPContext.getGroupByColumns()));
+        preserved.setInnerFilterColumns(Sets.newHashSet(oriOLAPContext.getInnerFilterColumns()));
+        for (FunctionDesc agg : oriOLAPContext.aggregations) {
+            preserved.getReservedMap().put(agg,
+                    FunctionDesc.newInstance(agg.getExpression(), agg.getParameters(), agg.getReturnType()));
+        }
+
+        return preserved;
+    }
+
+    static void restoreOLAPContextProps(OLAPContext oriOLAPContext, OLAPContextProp preservedOLAPContext) {
+        oriOLAPContext.allColumns = preservedOLAPContext.allColumns;
+        oriOLAPContext.setSortColumns(preservedOLAPContext.getSortColumns());
+        oriOLAPContext.aggregations.forEach(agg -> {
+            if (preservedOLAPContext.getReservedMap().containsKey(agg)) {
+                final FunctionDesc functionDesc = preservedOLAPContext.getReservedMap().get(agg);
+                agg.setExpression(functionDesc.getExpression());
+                agg.setParameters(functionDesc.getParameters());
+                agg.setReturnType(functionDesc.getReturnType());
+            }
+        });
+        oriOLAPContext.setGroupByColumns(preservedOLAPContext.getGroupByColumns());
+        oriOLAPContext.setInnerGroupByColumns(preservedOLAPContext.getInnerGroupByColumns());
+        oriOLAPContext.setInnerFilterColumns(preservedOLAPContext.getInnerFilterColumns());
+        oriOLAPContext.resetSQLDigest();
     }
 
     private static boolean needToManyDerived(NDataModel model) {
@@ -410,7 +465,7 @@ public class RealizationChooser {
         }
     }
 
-    private static void preprocessOlapCtx(OLAPContext context) {
+    private static void preprocessSpecialAggregations(OLAPContext context) {
         if (CollectionUtils.isEmpty(context.aggregations))
             return;
         Iterator<FunctionDesc> it = context.aggregations.iterator();
@@ -435,107 +490,103 @@ public class RealizationChooser {
         }
     }
 
-    private static void buildStorageContext(StorageContext context, Set<TblColRef> dimensions,
-            Set<FunctionDesc> metrics, Candidate candidate, boolean isBatchQuery) {
+    private static void buildStorageContext(OLAPContext olapContext, Set<TblColRef> dimensions,
+            Set<FunctionDesc> metrics, Candidate candidate) {
+        boolean isBatchQuery = !(olapContext.realization instanceof HybridRealization)
+                && !olapContext.realization.isStreaming();
         if (isBatchQuery) {
-            buildBatchStorageContext(context, dimensions, metrics, candidate);
+            buildBatchStorageContext(olapContext.storageContext, dimensions, metrics, candidate);
         } else {
-            buildStreamingStorageContext(context, dimensions, metrics, candidate);
+            buildHybridStorageContext(olapContext.storageContext, dimensions, metrics, candidate);
         }
     }
 
-    private static void buildBatchStorageContext(StorageContext context, Set<TblColRef> dimensions,
+    private static void buildBatchStorageContext(StorageContext storageContext, Set<TblColRef> dimensions,
             Set<FunctionDesc> metrics, Candidate candidate) {
         val layoutCandidate = (NLayoutCandidate) candidate.getCapability().getSelectedCandidate();
-        val prunedSegments = candidate.getPrunedSegments();
+        val prunedSegments = candidate.getQueryableSeg().getBatchSegments();
         val prunedPartitions = candidate.getPrunedPartitions();
         if (layoutCandidate.isEmptyCandidate()) {
-            context.setLayoutId(-1L);
-            context.setEmptyLayout(true);
-            logger.info("for context {}, chose empty layout", context.getCtxId());
+            storageContext.setLayoutId(-1L);
+            storageContext.setEmptyLayout(true);
+            logger.info("The context {}, chose empty layout", storageContext.getCtxId());
             return;
         }
-        LayoutEntity cuboidLayout = layoutCandidate.getLayoutEntity();
-        context.setCandidate(layoutCandidate);
-        context.setDimensions(dimensions);
-        context.setMetrics(metrics);
-        context.setLayoutId(cuboidLayout.getId());
-        context.setPrunedSegments(prunedSegments);
-        context.setPrunedPartitions(prunedPartitions);
-        val segmentIds = prunedSegments.stream().map(NDataSegment::getId).collect(Collectors.toList());
-        logger.info(
-                "for context {}, chosen model: {}, its join: {}, layout: {}, dimensions: {}, measures: {}, segments: {}",
-                context.getCtxId(), cuboidLayout.getModel().getAlias(), cuboidLayout.getModel().getJoinsGraph(),
-                cuboidLayout.getId(), cuboidLayout.getOrderedDimensions(), cuboidLayout.getOrderedMeasures(),
-                segmentIds);
-
+        LayoutEntity layout = layoutCandidate.getLayoutEntity();
+        storageContext.setCandidate(layoutCandidate);
+        storageContext.setDimensions(dimensions);
+        storageContext.setMetrics(metrics);
+        storageContext.setLayoutId(layout.getId());
+        storageContext.setPrunedSegments(prunedSegments);
+        storageContext.setPrunedPartitions(prunedPartitions);
+        logger.info("The context {}, chosen model: {}, its join: {}, layout: {}, dimensions: {}, measures: {}, " //
+                + "segments: {}", storageContext.getCtxId(), layout.getModel().getAlias(),
+                layout.getModel().getJoinsGraph(), layout.getId(), layout.getOrderedDimensions(),
+                layout.getOrderedMeasures(), candidate.getQueryableSeg().getPrunedSegmentIds(true));
     }
 
-    private static void buildStreamingStorageContext(StorageContext context, Set<TblColRef> dimensions,
+    private static void buildHybridStorageContext(StorageContext context, Set<TblColRef> dimensions,
             Set<FunctionDesc> metrics, Candidate candidate) {
-        context.setPrunedStreamingSegments(candidate.getPrunedStreamingSegments());
-        val layoutStreamingCandidate = (NLayoutCandidate) candidate.getCapability().getSelectedStreamingCandidate();
-        context.setStreamingCandidate(layoutStreamingCandidate);
-        if (layoutStreamingCandidate == null || layoutStreamingCandidate.isEmptyCandidate()) {
+        context.setPrunedStreamingSegments(candidate.getQueryableSeg().getStreamingSegments());
+        NLayoutCandidate streamingCandidate = (NLayoutCandidate) candidate.getCapability()
+                .getSelectedStreamingCandidate();
+        context.setStreamingCandidate(streamingCandidate);
+        if (streamingCandidate == null || streamingCandidate.isEmptyCandidate()) {
             context.setStreamingLayoutId(-1L);
         } else {
-            context.setStreamingLayoutId(layoutStreamingCandidate.getLayoutEntity().getId());
+            context.setStreamingLayoutId(streamingCandidate.getLayoutEntity().getId());
         }
 
-        List<NDataSegment> prunedSegments = candidate.getPrunedSegments();
-        NLayoutCandidate layoutCandidate = (NLayoutCandidate) candidate.getCapability().getSelectedCandidate();
-
-        val prunedPartitions = candidate.getPrunedPartitions();
-        if ((layoutCandidate == null && layoutStreamingCandidate == NLayoutCandidate.EMPTY)
-                || (layoutStreamingCandidate == null && layoutCandidate == NLayoutCandidate.EMPTY)) {
-            throw new NoStreamingRealizationFoundException(STREAMING_MODEL_NOT_FOUND,
+        List<NDataSegment> prunedSegments = candidate.getQueryableSeg().getBatchSegments();
+        NLayoutCandidate batchCandidate = (NLayoutCandidate) candidate.getCapability().getSelectedCandidate();
+        if ((batchCandidate == null && streamingCandidate == NLayoutCandidate.EMPTY)
+                || (streamingCandidate == null && batchCandidate == NLayoutCandidate.EMPTY)) {
+            throw new NoStreamingRealizationFoundException(ServerErrorCode.STREAMING_MODEL_NOT_FOUND,
                     String.format(Locale.ROOT, MsgPicker.getMsg().getNoStreamingModelFound()));
         }
 
-        if (layoutCandidate == NLayoutCandidate.EMPTY && layoutStreamingCandidate == NLayoutCandidate.EMPTY) {
+        if (batchCandidate == NLayoutCandidate.EMPTY && streamingCandidate == NLayoutCandidate.EMPTY) {
             context.setLayoutId(-1L);
             context.setStreamingLayoutId(-1L);
             context.setEmptyLayout(true);
-            logger.info("for context {}, chose empty layout", context.getCtxId());
+            logger.info("The context {}, chose empty layout", context.getCtxId());
             return;
         }
 
-        // TODO: support the case when the type of streaming index and batch index is different
-        if (differentTypeofIndex(layoutCandidate, layoutStreamingCandidate)) {
+        if (differentTypeofIndex(batchCandidate, streamingCandidate)) {
             context.setLayoutId(null);
             context.setStreamingLayoutId(null);
             context.setEmptyLayout(true);
-            logger.error("The case when the type of stream and batch index different is not supported yet.");
-            throw new NoStreamingRealizationFoundException(STREAMING_MODEL_NOT_FOUND,
+            logger.error("The index types of streaming model and batch model are different, "
+                    + "and this situation is not supported yet.");
+            throw new NoStreamingRealizationFoundException(ServerErrorCode.STREAMING_MODEL_NOT_FOUND,
                     String.format(Locale.ROOT, MsgPicker.getMsg().getNoStreamingModelFound()));
         }
 
         NDataModel model = candidate.getRealization().getModel();
 
-        context.setCandidate(layoutCandidate);
+        context.setCandidate(batchCandidate);
         context.setDimensions(dimensions);
         context.setMetrics(metrics);
-        context.setLayoutId(layoutCandidate == null ? -1L : layoutCandidate.getLayoutEntity().getId());
+        context.setLayoutId(batchCandidate == null ? -1L : batchCandidate.getLayoutEntity().getId());
         context.setPrunedSegments(prunedSegments);
-        context.setPrunedPartitions(prunedPartitions);
-        if (layoutCandidate != null && !layoutCandidate.isEmptyCandidate()) {
-            LayoutEntity cuboidLayout = layoutCandidate.getLayoutEntity();
-            val segmentIds = prunedSegments.stream().map(NDataSegment::getId).collect(Collectors.toList());
-            logger.info(
-                    "for context {}, chosen model: {}, its join: {}, batch layout: {}, batch layout dimensions: {}, "
-                            + "batch layout measures: {}, batch segments: {}",
-                    context.getCtxId(), model.getAlias(), model.getJoinsGraph(), cuboidLayout.getId(),
-                    cuboidLayout.getOrderedDimensions(), cuboidLayout.getOrderedMeasures(), segmentIds);
+        context.setPrunedPartitions(candidate.getPrunedPartitions());
+        if (batchCandidate != null && !batchCandidate.isEmptyCandidate()) {
+            LayoutEntity layout = batchCandidate.getLayoutEntity();
+            logger.info("The context {}, chosen model: {}, its join: {}, " //
+                    + "batch layout: {}, batch layout dimensions: {}, " //
+                    + "batch layout measures: {}, batch segments: {}", context.getCtxId(), model.getAlias(),
+                    model.getJoinsGraph(), layout.getId(), layout.getOrderedDimensions(), layout.getOrderedMeasures(),
+                    candidate.getQueryableSeg().getPrunedSegmentIds(true));
         }
-        if (layoutStreamingCandidate != null && !layoutStreamingCandidate.isEmptyCandidate()) {
-            LayoutEntity cuboidLayout = layoutStreamingCandidate.getLayoutEntity();
-            val segmentIds = candidate.getPrunedStreamingSegments().stream().map(NDataSegment::getId)
-                    .collect(Collectors.toList());
-            logger.info(
-                    "for context {}, chosen model: {}, its join: {}, streaming layout: {}, streaming layout dimensions: {}, "
-                            + "streaming layout measures: {}, streaming segments: {}",
-                    context.getCtxId(), model.getAlias(), model.getJoinsGraph(), cuboidLayout.getId(),
-                    cuboidLayout.getOrderedDimensions(), cuboidLayout.getOrderedMeasures(), segmentIds);
+
+        if (streamingCandidate != null && !streamingCandidate.isEmptyCandidate()) {
+            LayoutEntity cuboidLayout = streamingCandidate.getLayoutEntity();
+            logger.info("The context {}, chosen model: {}, its join: {}, " //
+                    + "streaming layout: {}, streaming layout dimensions: {},  " //
+                    + "streaming layout measures: {}, streaming segments: {}", context.getCtxId(), model.getAlias(),
+                    model.getJoinsGraph(), cuboidLayout.getId(), cuboidLayout.getOrderedDimensions(),
+                    cuboidLayout.getOrderedMeasures(), candidate.getQueryableSeg().getPrunedSegmentIds(false));
         }
     }
 
@@ -546,15 +597,14 @@ public class RealizationChooser {
         if (streamLayout == null || streamLayout.isEmptyCandidate()) {
             return false;
         }
-        if (batchLayout.getLayoutEntity().getIndex().isTableIndex() != streamLayout.getLayoutEntity().getIndex()
-                .isTableIndex()) {
-            return true;
-        }
-        return false;
+        return batchLayout.getLayoutEntity().getIndex().isTableIndex() != streamLayout.getLayoutEntity().getIndex()
+                .isTableIndex();
     }
 
-    private static void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions,
-            Collection<FunctionDesc> metrics, IRealization realization) {
+    private static void buildDimensionsAndMetrics(OLAPContext context, Collection<TblColRef> dimensions,
+            Collection<FunctionDesc> metrics) {
+        SQLDigest sqlDigest = context.getSQLDigest();
+        IRealization realization = context.realization;
         for (FunctionDesc func : sqlDigest.aggregations) {
             if (!func.isDimensionAsMetric() && !func.isGrouping()) {
                 // use the FunctionDesc from cube desc as much as possible, that has more info such as HLLC precision
@@ -615,30 +665,31 @@ public class RealizationChooser {
         return buf.toString();
     }
 
-    public static Map<String, String> matchJoins(NDataModel model, OLAPContext ctx, boolean partialMatch,
+    public static Map<String, String> matchJoins(NDataModel model, OLAPContext ctx, boolean partialMatchInnerJoin,
             boolean partialMatchNonEquiJoin) {
-        Map<String, String> matchUp = Maps.newHashMap();
+        Map<String, String> matchedAliasMap = Maps.newHashMap();
         TableRef firstTable = ctx.firstTableScan.getTableRef();
         boolean matched;
 
         if (ctx.isFirstTableLookupTableInModel(model)) {
-            // one lookup table
+            // one lookup table, the matchedAliasMap was set to the mapping of tableAlias => modelAlias
             String modelAlias = model.findFirstTable(firstTable.getTableIdentity()).getAlias();
-            matchUp = ImmutableMap.of(firstTable.getAlias(), modelAlias);
+            matchedAliasMap = ImmutableMap.of(firstTable.getAlias(), modelAlias);
             matched = true;
             logger.info("Context fact table {} matched lookup table in model {}", ctx.firstTableScan.getTableName(),
                     model);
         } else if (ctx.joins.size() != ctx.allTableScans.size() - 1) {
             // has hanging tables
             ctx.realizationCheck.addModelIncapableReason(model,
-                    RealizationCheck.IncapableReason.create(RealizationCheck.IncapableType.MODEL_BAD_JOIN_SEQUENCE));
+                    RealizationCheck.IncapableReason.MODEL_BAD_JOIN_SEQUENCE);
             return new HashMap<>();
         } else {
-            // normal big joins
+            // normal join graph match
             if (ctx.getJoinsGraph() == null) {
                 ctx.setJoinsGraph(new JoinsGraph(firstTable, ctx.joins));
             }
-            matched = ctx.getJoinsGraph().match(model.getJoinsGraph(), matchUp, partialMatch, partialMatchNonEquiJoin);
+            matched = ctx.getJoinsGraph().match(model.getJoinsGraph(), matchedAliasMap, partialMatchInnerJoin,
+                    partialMatchNonEquiJoin);
             if (!matched) {
                 KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
                 if (kylinConfig.isJoinMatchOptimizationEnabled()) {
@@ -646,7 +697,7 @@ public class RealizationChooser {
                             "Query match join with join match optimization mode, trying to match with newly rewrite join graph.");
                     ctx.matchJoinWithFilterTransformation();
                     ctx.matchJoinWithEnhancementTransformation();
-                    matched = ctx.getJoinsGraph().match(model.getJoinsGraph(), matchUp, partialMatch,
+                    matched = ctx.getJoinsGraph().match(model.getJoinsGraph(), matchedAliasMap, partialMatchInnerJoin,
                             partialMatchNonEquiJoin);
                     logger.info("Match result for match join with join match optimization mode is: {}", matched);
                 }
@@ -658,42 +709,46 @@ public class RealizationChooser {
         }
 
         if (!matched) {
-            ctx.realizationCheck.addModelIncapableReason(model,
-                    RealizationCheck.IncapableReason.create(RealizationCheck.IncapableType.MODEL_UNMATCHED_JOIN));
+            ctx.realizationCheck.addModelIncapableReason(model, RealizationCheck.IncapableReason.MODEL_UNMATCHED_JOIN);
             return new HashMap<>();
         }
-        ctx.realizationCheck.addCapableModel(model, matchUp);
-        return matchUp;
-    }
-
-    public static Map<String, String> matchJoins(NDataModel model, OLAPContext ctx) {
-        return matchJoins(model, ctx, partialMatchInnerJoin(), partialMatchNonEquiJoin());
+        ctx.realizationCheck.addCapableModel(model, matchedAliasMap);
+        return matchedAliasMap;
     }
 
     private static Multimap<NDataModel, IRealization> makeOrderedModelMap(OLAPContext context) {
+        if (context.getModelAlias() != null) {
+            logger.info("The query is bounded to a certain model({}/{}).", context.olapSchema.getProjectName(),
+                    context.getModelAlias());
+        }
+
         KylinConfig kylinConfig = context.olapSchema.getConfig();
-        String projectName = context.olapSchema.getProjectName();
-        String factTableName = context.firstTableScan.getOlapTable().getTableName();
-        Set<IRealization> realizations = NProjectManager.getInstance(kylinConfig).getRealizationsByTable(projectName,
-                factTableName);
+        String project = context.olapSchema.getProjectName();
+        String factTable = context.firstTableScan.getOlapTable().getTableName();
+        Set<IRealization> realizations = NProjectManager.getInstance(kylinConfig).getRealizationsByTable(project,
+                factTable);
 
         final Multimap<NDataModel, IRealization> mapModelToRealizations = HashMultimap.create();
         boolean streamingEnabled = kylinConfig.streamingEnabled();
         for (IRealization real : realizations) {
-            if (!real.isReady() || isModelViewBounded(context, real) || omitFusionModel(streamingEnabled, real)) {
-                if (!real.isReady()) {
-                    context.realizationCheck.addIncapableCube(real,
-                            RealizationCheck.IncapableReason.create(RealizationCheck.IncapableType.CUBE_NOT_READY));
-                    logger.warn("Realization {} is not ready for project {} with fact table {}", real, projectName,
-                            factTableName);
-                }
+            boolean skip = false;
+            if (!real.isReady()) {
+                skip = true;
+                logger.warn("Offline model({}/{}) with fact table {} cannot be queried.", project, real, factTable);
+            } else if (isModelViewBounded(context, real)) {
+                skip = true;
+            } else if (omitFusionModel(streamingEnabled, real)) {
+                skip = true;
+                logger.info("Fusion model({}/{}) is skipped.", project, real.getUuid());
+            }
+            if (skip) {
                 continue;
             }
             mapModelToRealizations.put(real.getModel(), real);
         }
 
         if (mapModelToRealizations.isEmpty()) {
-            logger.error("No realization found for project {} with fact table {}", projectName, factTableName);
+            logger.error("No realization found for project {} with fact table {}", project, factTable);
         }
 
         return mapModelToRealizations;
@@ -711,25 +766,10 @@ public class RealizationChooser {
         return !turnOnStreaming && real.getModel().isFusionModel();
     }
 
-    private static boolean partialMatchInnerJoin() {
-        return getProjectConfig().isQueryMatchPartialInnerJoinModel();
+    public static Map<String, String> matchJoins(NDataModel model, OLAPContext ctx) {
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(ctx.olapSchema.getProjectName());
+        boolean isPartialInnerJoin = projectConfig.isQueryMatchPartialInnerJoinModel();
+        boolean isPartialNonEquiJoin = projectConfig.partialMatchNonEquiJoins();
+        return matchJoins(model, ctx, isPartialInnerJoin, isPartialNonEquiJoin);
     }
-
-    private static boolean partialMatchNonEquiJoin() {
-        return getProjectConfig().partialMatchNonEquiJoins();
-    }
-
-    private static KylinConfig getProjectConfig() {
-        String project = QueryContext.current().getProject();
-        try {
-            if (project != null) {
-                return NProjectManager.getProjectConfig(project);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to get config of project<{}> when matching partial inner join model. {}", //
-                    project, e.getMessage());
-        }
-        return KylinConfig.getInstanceFromEnv();
-    }
-
 }
