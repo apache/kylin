@@ -64,6 +64,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
+import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.ProcessUtils;
 import org.apache.kylin.common.util.TimeZoneUtils;
 import org.apache.kylin.junit.annotation.MetadataInfo;
@@ -1436,6 +1437,22 @@ class KylinConfigBaseTest {
         config.setProperty("kylin.query.max-measure-segment-pruner-before-days", "1");
         assertEquals(1, config.getMaxMeasureSegmentPrunerBeforeDays());
     }
+
+    @Test
+    void testRemoteSSHPassword() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+
+        String password = "hadoop";
+        String encPassword = "ENC('KotkDR//FvNP+8x+G5G93g==')";
+        assertEquals(encPassword, EncryptUtil.encryptWithPrefix(password));
+
+        config.setProperty("kylin.job.ssh-password", password);
+        assertEquals(password, config.getRemoteSSHPassword());
+
+        config.setProperty("kylin.job.ssh-password", encPassword);
+        assertEquals(password, config.getRemoteSSHPassword());
+    }
+
 }
 
 class EnvironmentUpdateUtils {
