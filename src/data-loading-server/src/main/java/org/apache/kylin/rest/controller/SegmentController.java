@@ -22,6 +22,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_EMPTY_ID;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_MERGE_LESS_THAN_TWO;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_REFRESH_SELECT_EMPTY;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_SINGLE_JOB_THRESHOLD;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -323,6 +324,10 @@ public class SegmentController extends BaseController {
         ProjectInstance prjInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getProject(buildSegmentsRequest.getProject());
         checkParamLength("tag", buildSegmentsRequest.getTag(), prjInstance.getConfig().getJobTagMaxSize());
+        if (!buildSegmentsRequest.isParallelBuildBySegment() && buildSegmentsRequest.getSegmentIds() != null
+                && buildSegmentsRequest.getSegmentIds().size() > 100) {
+            throw new KylinException(SEGMENT_SINGLE_JOB_THRESHOLD);
+        }
         val response = fusionModelService.addIndexesToSegments(modelId, buildSegmentsRequest);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
     }

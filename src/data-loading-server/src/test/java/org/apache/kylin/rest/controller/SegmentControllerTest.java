@@ -24,17 +24,20 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.rest.request.BuildIndexRequest;
 import org.apache.kylin.rest.request.BuildSegmentsRequest;
 import org.apache.kylin.rest.request.IncrementBuildSegmentsRequest;
+import org.apache.kylin.rest.request.IndexesToSegmentsRequest;
 import org.apache.kylin.rest.request.PartitionsBuildRequest;
 import org.apache.kylin.rest.request.PartitionsRefreshRequest;
 import org.apache.kylin.rest.request.SegmentFixRequest;
@@ -422,6 +425,39 @@ public class SegmentControllerTest extends NLocalFileMetadataTestCase {
                 .get("/api/models/{model}/model_segments/multi_partition", "89af4ee2-2cdb-4b07-b39e-4c29856309aa")
                 .param("project", "default").param("model", "89af4ee2-2cdb-4b07-b39e-4c29856309aa")
                 .param("segment_id", "73570f31-05a5-448f-973c-44209830dd01")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testAddIndexToSegment() throws Exception {
+        IndexesToSegmentsRequest request = new IndexesToSegmentsRequest();
+        request.setSegmentIds(IntStream.rangeClosed(1, 101).mapToObj(t -> t + "").collect(Collectors.toList()));
+        request.setProject("default");
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/api/models/{model}/model_segments/indexes", "89af4ee2-2cdb-4b07-b39e-4c29856309aa")
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+
+        request.setParallelBuildBySegment(true);
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/api/models/{model}/model_segments/indexes", "89af4ee2-2cdb-4b07-b39e-4c29856309aa")
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        request.setSegmentIds(IntStream.rangeClosed(1, 10).mapToObj(t -> t + "").collect(Collectors.toList()));
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/api/models/{model}/model_segments/indexes", "89af4ee2-2cdb-4b07-b39e-4c29856309aa")
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        request.setParallelBuildBySegment(false);
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/api/models/{model}/model_segments/indexes", "89af4ee2-2cdb-4b07-b39e-4c29856309aa")
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(request))
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }

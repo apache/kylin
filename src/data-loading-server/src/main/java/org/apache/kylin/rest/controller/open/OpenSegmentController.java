@@ -22,15 +22,24 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARAMETER;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_MULTI_PARTITION_DISABLE;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_INDEX_CONFLICT_PARAMETER;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_INDEX_STATUS_INVALID;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.project.NProjectManager;
@@ -48,12 +57,16 @@ import org.apache.kylin.rest.response.BuildIndexResponse;
 import org.apache.kylin.rest.response.CheckSegmentResponse;
 import org.apache.kylin.rest.response.DataResult;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.IndexResponse;
 import org.apache.kylin.rest.response.JobInfoResponse;
 import org.apache.kylin.rest.response.JobInfoResponseWithFailure;
 import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.apache.kylin.rest.response.SegmentPartitionResponse;
+import org.apache.kylin.rest.service.FusionIndexService;
 import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.service.params.IndexPlanParams;
+import org.apache.kylin.rest.service.params.PaginationParams;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.util.DataRangeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,6 +102,9 @@ public class OpenSegmentController extends BaseController {
 
     @Autowired
     private AclEvaluate aclEvaluate;
+
+    @Autowired
+    private FusionIndexService fusionIndexService;
 
     @VisibleForTesting
     public NDataModel getModel(String modelAlias, String project) {
@@ -203,9 +219,10 @@ public class OpenSegmentController extends BaseController {
             @RequestParam(value = "partial_build", required = false, defaultValue = "false") boolean partialBuild,
             @RequestParam(value = "priority", required = false, defaultValue = "3") Integer priority,
             @RequestParam(value = "yarn_queue", required = false) String yarnQueue,
-            @RequestParam(value = "tag", required = false) Object tag) {
+            @RequestParam(value = "tag", required = false) Object tag,
+            @RequestParam(value = "index_status", required = false) List<String> indexStatusStr) {
         String projectName = checkProjectName(project);
-        checkSegmentParams(ids, names);
+        checkParams(ids, names, batchIndexIds, indexStatusStr);
         String modelId = getModel(modelAlias, projectName).getUuid();
         Pair<String, String[]> pair = fusionModelService.convertSegmentIdWithName(modelId, projectName, ids, names);
         IndexesToSegmentsRequest req = new IndexesToSegmentsRequest();
@@ -213,11 +230,49 @@ public class OpenSegmentController extends BaseController {
         req.setParallelBuildBySegment(parallel);
         req.setSegmentIds(Lists.newArrayList(pair.getSecond()));
         req.setPartialBuild(partialBuild);
+        if (CollectionUtils.isNotEmpty(indexStatusStr)) {
+            List<IndexEntity.Status> indexStatus = formatStatus(indexStatusStr);
+            IndexPlanParams indexPlanParams = new IndexPlanParams(project, modelId, null, null, Collections.emptyList(),
+                    indexStatus, null);
+            PaginationParams paginationParams = new PaginationParams(null, null, null, false);
+            val indexes = fusionIndexService.getIndexes(indexPlanParams, paginationParams, null);
+            if (indexes.isEmpty()) {
+                JobInfoResponseWithFailure result = new JobInfoResponseWithFailure();
+                List<JobInfoResponse.JobInfo> jobs = new LinkedList<>();
+                jobs.add(new JobInfoResponse.JobInfo(JobTypeEnum.INDEX_BUILD.toString(), null));
+                result.setJobs(jobs);
+                return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, result, "");
+            }
+            batchIndexIds = indexes.stream().map(IndexResponse::getId).collect(Collectors.toList());
+        }
         req.setIndexIds(batchIndexIds);
         req.setPriority(priority);
         req.setYarnQueue(yarnQueue);
         req.setTag(tag);
         return segmentController.addIndexesToSegments(pair.getFirst(), req);
+    }
+
+    private void checkParams(String[] ids, String[] names, List<Long> batchIndexIds, List<String> indexStatus) {
+        checkSegmentParams(ids, names);
+        if (CollectionUtils.isNotEmpty(batchIndexIds) && CollectionUtils.isNotEmpty(indexStatus)) {
+            throw new KylinException(SEGMENT_INDEX_CONFLICT_PARAMETER);
+        }
+    }
+
+    private List<IndexEntity.Status> formatStatus(List<String> indexStatus) {
+        List<IndexEntity.Status> result = new ArrayList<>();
+        indexStatus.forEach(str -> {
+            try {
+                IndexEntity.Status status = IndexEntity.Status.valueOf(str.toUpperCase(Locale.ROOT));
+                if (status == IndexEntity.Status.LOCKED) {
+                    throw new KylinException(SEGMENT_INDEX_STATUS_INVALID);
+                }
+                result.add(status);
+            } catch (Exception e) {
+                throw new KylinException(SEGMENT_INDEX_STATUS_INVALID);
+            }
+        });
+        return result;
     }
 
     @ApiOperation(value = "buildIndicesManually", tags = { "AI" })
