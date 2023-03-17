@@ -116,6 +116,7 @@ public class SourceFactory {
         builder.append(config.getJdbcDriver()).append('|');
         builder.append(config.getJdbcDialect()).append('|');
         builder.append(config.getJdbcAdaptorClass()).append('|');
+        builder.append(config.getJdbcConvertToLowerCase()).append('|');
         return builder.toString();
     }
 

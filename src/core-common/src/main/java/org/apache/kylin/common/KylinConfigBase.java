@@ -1414,6 +1414,10 @@ public abstract class KylinConfigBase implements Serializable {
                 "org.apache.kylin.source.jdbc.DefaultSourceConnector");
     }
 
+    public String getJdbcConvertToLowerCase() {
+        return getOptional("kylin.source.jdbc.convert-to-lowercase", FALSE);
+    }
+
     // ============================================================================
     // STORAGE.PARQUET
     // ============================================================================

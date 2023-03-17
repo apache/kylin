@@ -20,7 +20,9 @@ package org.apache.kylin.source.jdbc;
 import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.NSparkCubingEngine;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
@@ -28,8 +30,6 @@ import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceFactory;
-import org.apache.kylin.engine.spark.NSparkCubingEngine;
-import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -80,5 +80,29 @@ public class JdbcSourceTest extends JdbcTestBase {
                 && segmentRange2.getStart().equals(0L) && segmentRange2.getEnd().equals(Long.MAX_VALUE));
         assert !source.supportBuildSnapShotByPartition();
         source.close();
+    }
+
+    @Test
+    public void testNeedToLowerCase() {
+        ISourceAware aware = new ISourceAware() {
+            @Override
+            public int getSourceType() {
+                return ISourceAware.ID_JDBC;
+            }
+
+            @Override
+            public KylinConfig getConfig() {
+                return getTestConfig();
+            }
+        };
+        ISource source = SourceFactory.getSource(aware);
+        aware.getConfig().setProperty("kylin.source.jdbc.convert-to-lowercase", "false");
+        ISource defaultSource = SourceFactory.getSource(aware);
+
+        Assert.assertEquals(source, defaultSource);
+
+        aware.getConfig().setProperty("kylin.source.jdbc.convert-to-lowercase", "true");
+        ISource lowerCaseSource = SourceFactory.getSource(aware);
+        Assert.assertNotEquals(source, lowerCaseSource);
     }
 }
