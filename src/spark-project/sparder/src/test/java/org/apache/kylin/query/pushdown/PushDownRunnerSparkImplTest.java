@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -188,5 +189,62 @@ public class PushDownRunnerSparkImplTest extends NLocalFileMetadataTestCase {
         queryContext.getQueryTagInfo().setFileEncode("utf-8");
         String sql = "select * from TEST_KYLIN_FACT";
         SparkSqlClient.executeSql(ss, sql, UUID.randomUUID(), "tpch");
+    }
+
+    @Test
+    public void testAutoSetShufflePartitionConcurrency() throws Exception {
+        try (SparkSubmitter.OverriddenSparkSession ignored = SparkSubmitter.getInstance().overrideSparkSession(ss)) {
+            ss.sql("DROP TABLE if exists mypartitionedtable");
+            ss.sql("CREATE TABLE mypartitionedtable (col1 INT, col2 INT) USING PARQUET PARTITIONED BY (col3 STRING)");
+            ss.sql("INSERT INTO mypartitionedtable PARTITION (col3='partitionvalue') SELECT TRANS_ID, ORDER_ID FROM test_kylin_fact");
+            ss.sql("REFRESH TABLE mypartitionedtable");
+            KylinConfig kylinconfig = KylinConfig.getInstanceFromEnv();
+            kylinconfig.setProperty("kylin.query.pushdown.auto-set-shuffle-partitions-timeout", "0");
+            PushdownResponse timeoutRes = SparkSubmitter.getInstance().submitPushDownTask(
+                    "select col1 from mypartitionedtable where col3='partitionvalue' limit 1", "tpch");
+            Assert.assertEquals(1, timeoutRes.getColumns().size());
+            Assert.assertEquals(1, timeoutRes.getSize());
+            kylinconfig.setProperty("kylin.query.pushdown.auto-set-shuffle-partitions-timeout", "30");
+            PushdownResponse successRes = SparkSubmitter.getInstance().submitPushDownTask(
+                    "select col1 from mypartitionedtable where col3='partitionvalue' limit 1", "tpch");
+            Assert.assertEquals(1, successRes.getColumns().size());
+            Assert.assertEquals(1, successRes.getSize());
+            ss.sql("DROP TABLE mypartitionedtable");
+        }
+    }
+
+    @Test
+    public void testAutoSetShufflePartition() throws Exception {
+        try (SparkSubmitter.OverriddenSparkSession ignored = SparkSubmitter.getInstance().overrideSparkSession(ss)) {
+            ss.sql("DROP TABLE if exists mypartitionedtable");
+            ss.sql("CREATE TABLE mypartitionedtable (col1 INT, col2 INT) USING PARQUET PARTITIONED BY (col3 STRING)");
+            ss.sql("INSERT INTO mypartitionedtable PARTITION (col3='partitionvalue') SELECT TRANS_ID, ORDER_ID FROM test_kylin_fact");
+            ss.sql("REFRESH TABLE mypartitionedtable");
+            KylinConfig kylinconfig = KylinConfig.getInstanceFromEnv();
+            kylinconfig.setProperty("kylin.job.concurrency-fetch-datasource-size-enabled", "false");
+            PushdownResponse timeoutRes = SparkSubmitter.getInstance().submitPushDownTask(
+                    "select col1 from mypartitionedtable where col3='partitionvalue' limit 1", "tpch");
+            Assert.assertEquals(1, timeoutRes.getColumns().size());
+            Assert.assertEquals(1, timeoutRes.getSize());
+            kylinconfig.setProperty("kylin.job.concurrency-fetch-datasource-size-enabled", "true");
+            PushdownResponse successRes = SparkSubmitter.getInstance().submitPushDownTask(
+                    "select col1 from mypartitionedtable where col3='partitionvalue' limit 1", "tpch");
+            Assert.assertEquals(1, successRes.getColumns().size());
+            Assert.assertEquals(1, successRes.getSize());
+            ss.sql("DROP TABLE mypartitionedtable");
+        }
+    }
+
+    @Test
+    public void testAutoSetShufflePartitionOff() throws Exception {
+        try (SparkSubmitter.OverriddenSparkSession ignored = SparkSubmitter.getInstance().overrideSparkSession(ss)) {
+            KylinConfig kylinconfig = KylinConfig.getInstanceFromEnv();
+            kylinconfig.setProperty("kylin.query.pushdown.auto-set-shuffle-partitions-enabled", "false");
+            PushdownResponse resp = SparkSubmitter.getInstance()
+                    .submitPushDownTask("select count(order_id) from test_kylin_fact limit 1", "tpch");
+            Assert.assertEquals(1, resp.getColumns().size());
+            Assert.assertEquals(1, resp.getSize());
+            kylinconfig.setProperty("kylin.query.pushdown.auto-set-shuffle-partitions-enabled", "true");
+        }
     }
 }
