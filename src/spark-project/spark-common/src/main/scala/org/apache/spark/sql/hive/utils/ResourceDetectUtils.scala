@@ -18,21 +18,15 @@
 
 package org.apache.spark.sql.hive.utils
 
-import java.io.IOException
-import java.nio.charset.Charset
-import java.util.concurrent.ForkJoinPool
-import java.util.concurrent.atomic.AtomicLong
-import java.util.{Map => JMap}
-
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs._
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.metadata.cube.model.{DimensionRangeInfo, LayoutEntity}
 import org.apache.kylin.query.util.QueryInterruptChecker
-import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.execution._
@@ -41,10 +35,16 @@ import org.apache.spark.sql.execution.datasources.FileIndex
 import org.apache.spark.sql.execution.exchange.{BroadcastExchangeExec, ReusedExchangeExec}
 import org.apache.spark.sql.hive.execution.HiveTableScanExec
 import org.apache.spark.sql.sources.NBaseRelation
+import org.apache.spark.util.ThreadUtils
 
+import java.io.IOException
+import java.nio.charset.Charset
+import java.util.concurrent.Executors
+import java.util.{Map => JMap}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.collection.parallel.ForkJoinTaskSupport
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
 object ResourceDetectUtils extends Logging {
   private val json = new Gson()
@@ -100,6 +100,22 @@ object ResourceDetectUtils extends Logging {
     paths
   }
 
+  def checkPartitionFilter(plan: SparkPlan): Boolean = {
+    var isIncludeFilter = false
+    plan.foreach {
+      case plan: FileSourceScanExec =>
+        isIncludeFilter ||= plan.partitionFilters.nonEmpty
+      case plan: LayoutFileSourceScanExec =>
+        isIncludeFilter ||= plan.partitionFilters.nonEmpty
+      case plan: HiveTableScanExec =>
+        if (plan.relation.isPartitioned) {
+          isIncludeFilter ||= plan.rawPartitions.nonEmpty
+        }
+      case _ =>
+    }
+    isIncludeFilter
+  }
+
   def getPartitions(plan: SparkPlan): String = {
     val leafNodePartitionsLengthMap: mutable.Map[String, Int] = mutable.Map()
     var pNum = 0
@@ -147,47 +163,57 @@ object ResourceDetectUtils extends Logging {
     false
   }
 
-  def getResourceSizeConcurrency(configuration: Configuration, paths: Path*): Long = {
-    val kylinConfig = KylinConfig.getInstanceFromEnv
-    val threadNumber = kylinConfig.getConcurrencyFetchDataSourceSizeThreadNumber
-    logInfo(s"Get resource size concurrency, thread number is $threadNumber")
-    val forkJoinPool = new ForkJoinPool(threadNumber)
-    val parallel = paths.par
-    val sum = new AtomicLong()
-    try {
-      parallel.tasksupport = new ForkJoinTaskSupport(forkJoinPool)
-      parallel.foreach {
-        path => {
-          val fs = path.getFileSystem(configuration)
-          if (fs.exists(path)) {
-            sum.addAndGet(HadoopUtil.getContentSummaryFromHdfsKylinConfig(fs, path, kylinConfig).getLength)
-          }
-        }
-      }
-    }
-    finally {
-      forkJoinPool.shutdownNow()
-    }
-    sum.get()
-  }
-
-
   def getResourceSize(configuration: Configuration, isConcurrencyFetchDataSourceSize: Boolean, paths: Path*): Long = {
     val resourceSize = {
       if (isConcurrencyFetchDataSourceSize) {
-        getResourceSizeConcurrency(configuration, paths: _*)
+        getResourceSizeWithTimeoutByConcurrency(Duration.Inf, configuration, paths: _*)
       } else {
-        paths.map(path => {
-          val fs = path.getFileSystem(configuration)
-          if (fs.exists(path)) {
-            HadoopUtil.getContentSummary(fs, path).getLength
-          } else {
-            0L
-          }
-        }).sum
+        getResourceSizBySerial(configuration, paths: _*)
       }
     }
     resourceSize
+  }
+
+  def getResourceSizBySerial(configuration: Configuration, paths: Path*): Long = {
+    paths.map(path => {
+      QueryInterruptChecker.checkThreadInterrupted(errorMsgLog, "Current step: get resource size.")
+      val fs = path.getFileSystem(configuration)
+      if (fs.exists(path)) {
+        HadoopUtil.getContentSummary(fs, path).getLength
+      } else {
+        0L
+      }
+    }).sum
+  }
+
+  def getResourceSizeWithTimeoutByConcurrency(timeout: Duration, configuration: Configuration, paths: Path*): Long = {
+    val kylinConfig = KylinConfig.getInstanceFromEnv
+    val threadNumber = kylinConfig.getConcurrencyFetchDataSourceSizeThreadNumber
+    logInfo(s"Get resource size concurrency, thread number is $threadNumber")
+    val executor = Executors.newFixedThreadPool(threadNumber)
+    implicit val executionContext: ExecutionContextExecutor = ExecutionContext.fromExecutor(executor)
+    val futures: Seq[Future[Long]] = getResourceSize(configuration, executionContext, paths: _*)
+    try {
+      val combinedFuture = Future.sequence(futures)
+      val results: Seq[Long] = ThreadUtils.awaitResult(combinedFuture, timeout)
+      results.sum
+    } finally {
+      executor.shutdownNow()
+    }
+  }
+
+  def getResourceSize(configuration: Configuration, executionContext: ExecutionContextExecutor, paths: Path*): Seq[Future[Long]] = {
+    val kylinConfig = KylinConfig.getInstanceFromEnv
+    paths.map { path =>
+      Future {
+        val fs = path.getFileSystem(configuration)
+        if (fs.exists(path)) {
+          HadoopUtil.getContentSummaryFromHdfsKylinConfig(fs, path, kylinConfig).getLength
+        } else {
+          0L
+        }
+      }(executionContext)
+    }
   }
 
   def getResourceSize(isConcurrencyFetchDataSourceSize: Boolean, paths: Path*): Long = {

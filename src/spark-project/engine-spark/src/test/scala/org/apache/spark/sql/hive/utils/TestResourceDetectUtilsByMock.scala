@@ -21,8 +21,8 @@ package org.apache.spark.sql.hive.utils
 import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.common.SharedSparkSession
-import org.apache.spark.sql.execution.{FileSourceScanExec, LayoutFileSourceScanExec}
 import org.apache.spark.sql.execution.datasources.{FileIndex, HadoopFsRelation, PartitionDirectory}
+import org.apache.spark.sql.execution.{FileSourceScanExec, LayoutFileSourceScanExec}
 import org.apache.spark.sql.types.{IntegerType, StructField, StructType}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.wordspec.AnyWordSpec

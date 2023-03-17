@@ -20,6 +20,7 @@ package org.apache.kylin.query.pushdown
 
 import java.sql.Timestamp
 import java.util
+import java.util.concurrent.{Callable, Executors, TimeUnit, TimeoutException}
 import java.util.{UUID, List => JList}
 
 import org.apache.commons.lang3.StringUtils
@@ -42,9 +43,12 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
 import scala.collection.{immutable, mutable}
+import scala.concurrent.duration.Duration
 
 object SparkSqlClient {
   val DEFAULT_DB: String = "spark.sql.default.database"
+
+  val SHUFFLE_PARTITION: String = "spark.sql.shuffle.partitions"
 
   val logger: Logger = LoggerFactory.getLogger(classOf[SparkSqlClient])
 
@@ -83,23 +87,49 @@ object SparkSqlClient {
     }
   }
 
-  private def autoSetShufflePartitions(df: DataFrame) = {
+  def autoSetShufflePartitions(df: DataFrame): Unit = {
     val config = KylinConfig.getInstanceFromEnv
-    if (config.isAutoSetPushDownPartitions) {
-      try {
+    val oriShufflePartition = df.sparkSession.sessionState.conf.getConfString(SHUFFLE_PARTITION).toInt
+    val isSkip = !config.isAutoSetPushDownPartitions || !ResourceDetectUtils.checkPartitionFilter(df.queryExecution.sparkPlan)
+    if (isSkip) {
+      logger.info(s"Skip auto set $SHUFFLE_PARTITION, use origin value $oriShufflePartition")
+      return
+    }
+    val isConcurrency = config.isConcurrencyFetchDataSourceSize
+    val executor = Executors.newSingleThreadExecutor()
+    val timeOut = config.getAutoShufflePartitionTimeOut
+    val future = executor.submit(new Callable[Unit] {
+      override def call(): Unit = {
         val basePartitionSize = config.getBaseShufflePartitionSize
         val paths = ResourceDetectUtils.getPaths(df.queryExecution.sparkPlan)
-        val sourceTableSize = ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(),
-          config.isConcurrencyFetchDataSourceSize, paths: _*) + "b"
+        var sourceTableSize: String = ""
+        if (isConcurrency) {
+          sourceTableSize = ResourceDetectUtils.getResourceSizeWithTimeoutByConcurrency(
+            Duration(timeOut, TimeUnit.SECONDS), SparderEnv.getHadoopConfiguration(), paths: _*) + "b"
+        } else {
+          sourceTableSize = ResourceDetectUtils.getResourceSizBySerial(SparderEnv.getHadoopConfiguration(), paths: _*) + "b"
+        }
         val partitions = Math.max(1, JavaUtils.byteStringAsMb(sourceTableSize) / basePartitionSize).toString
-        df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", partitions)
+        df.sparkSession.sessionState.conf.setLocalProperty(SHUFFLE_PARTITION, partitions)
         QueryContext.current().setShufflePartitions(partitions.toInt)
-        logger.info(s"Auto set spark.sql.shuffle.partitions $partitions, " +
+        logger.info(s"Auto set $SHUFFLE_PARTITION $partitions, " +
           s"sourceTableSize $sourceTableSize, basePartitionSize $basePartitionSize")
-      } catch {
-        case e: Throwable =>
-          logger.error("Auto set spark.sql.shuffle.partitions failed.", e)
       }
+    })
+    try {
+      future.get(timeOut, TimeUnit.SECONDS)
+    } catch {
+      case e: TimeoutException =>
+        val oriShufflePartition = df.sparkSession.sessionState.conf.getConfString(SHUFFLE_PARTITION).toInt
+        val partitions = oriShufflePartition * config.getAutoShufflePartitionMultiple
+        df.sparkSession.sessionState.conf.setLocalProperty(SHUFFLE_PARTITION, partitions.toString)
+        QueryContext.current().setShufflePartitions(partitions)
+        logger.info(s"Auto set shuffle partitions timeout. set $SHUFFLE_PARTITION $partitions.")
+      case e: Exception =>
+        logger.error(s"Auto set $SHUFFLE_PARTITION failed.", e)
+        throw e
+    } finally {
+      executor.shutdownNow()
     }
   }
 
@@ -145,7 +175,7 @@ object SparkSqlClient {
         throw e
     } finally {
       QueryContext.current().setExecutionID(QueryToExecutionIDCache.getQueryExecutionID(QueryContext.current().getQueryId))
-      df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
+      df.sparkSession.sessionState.conf.setLocalProperty(SHUFFLE_PARTITION, null)
       HadoopUtil.setCurrentConfiguration(null)
     }
   }
