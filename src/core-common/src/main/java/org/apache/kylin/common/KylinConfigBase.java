@@ -1079,7 +1079,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getRemoteSSHPassword() {
-        return getOptional("kylin.job.ssh-password");
+        return EncryptUtil.getDecryptedValue(getOptional("kylin.job.ssh-password"));
     }
 
     public String getCliWorkingDir() {
