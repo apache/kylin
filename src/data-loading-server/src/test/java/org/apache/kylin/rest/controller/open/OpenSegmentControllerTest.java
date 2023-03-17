@@ -22,6 +22,8 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_MULTI_PARTITION_DISABLE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_CONFLICT_PARAMETER;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_INDEX_CONFLICT_PARAMETER;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_INDEX_STATUS_INVALID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -33,8 +35,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
@@ -44,6 +48,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.Segments;
@@ -64,8 +69,11 @@ import org.apache.kylin.rest.response.IndexResponse;
 import org.apache.kylin.rest.response.NDataModelResponse;
 import org.apache.kylin.rest.response.NDataSegmentResponse;
 import org.apache.kylin.rest.response.SegmentPartitionResponse;
+import org.apache.kylin.rest.service.FusionIndexService;
 import org.apache.kylin.rest.service.FusionModelService;
 import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.service.params.IndexPlanParams;
+import org.apache.kylin.rest.service.params.PaginationParams;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.junit.After;
 import org.junit.Assert;
@@ -92,6 +100,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
+import shaded.parquet.com.fasterxml.jackson.core.JsonProcessingException;
+import shaded.parquet.com.fasterxml.jackson.databind.ObjectMapper;
+
 @RunWith(MockitoJUnitRunner.class)
 public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
 
@@ -109,10 +120,15 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
     @Mock
     private AclEvaluate aclEvaluate;
 
+    @Mock
+    private FusionIndexService fusionIndexService;
+
     @InjectMocks
     private final OpenSegmentController openSegmentController = Mockito.spy(new OpenSegmentController());
 
     private final Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Before
     public void setup() {
@@ -285,7 +301,7 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openSegmentController).completeSegments(modelName, project, false, ids, null, null, false, 3,
-                null, null);
+                null, null, null);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/models/{model_name}/segments/completion", modelName)
                 .param("project", "default") //
                 .param("parallel", "false") //
@@ -294,7 +310,7 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
                 .param("priority", "0").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openSegmentController).completeSegments(modelName, project, false, ids, null, null, false, 0,
-                null, null);
+                null, null, null);
     }
 
     @Test
@@ -323,7 +339,7 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(openSegmentController).completeSegments(modelName, project, false, ids, null, batchIndexIds,
-                true, 3, null, null);
+                true, 3, null, null, null);
     }
 
     @Test
@@ -370,6 +386,86 @@ public class OpenSegmentControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andReturn();
         String contentAsString = result.getResponse().getContentAsString();
         Assert.assertTrue(contentAsString.contains(SEGMENT_CONFLICT_PARAMETER.getMsg()));
+    }
+
+    @Test
+    public void testCompleteSegmentsByIndexStatus() throws Exception {
+        String modelName = "default_model_name";
+        String modelId = "89af4ee2-2cdb-4b07-b39e-4c29856309aa";
+        String project = "default";
+        String[] ids = { "ef5e0663-feba-4ed2-b71c-21958122bbff" };
+        Pair<String, String[]> pair = new Pair<>(modelId, ids);
+        IndexesToSegmentsRequest req = new IndexesToSegmentsRequest();
+        req.setProject(project);
+        req.setParallelBuildBySegment(false);
+        req.setSegmentIds(Lists.newArrayList(ids));
+        mockGetModelName(modelName, project, modelId);
+        lenient().doReturn(new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "")).when(nModelController)
+                .addIndexesToSegments(modelId, req);
+        Mockito.doReturn(pair).when(fusionModelService).convertSegmentIdWithName(modelId, project, ids, null);
+        MvcResult result = mockMvc
+                .perform(MockMvcRequestBuilders.post("/api/models/{model_name}/segments/completion", modelName)
+                        .param("project", "default") //
+                        .param("parallel", "false") //
+                        .param("ids", ids) //
+                        .param("names", (String) null) //
+                        .param("batch_index_ids", "1,2") //
+                        .param("index_status", "NO_BUILD")
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andReturn();
+        String contentAsString = result.getResponse().getContentAsString();
+        Assert.assertTrue(contentAsString.contains(SEGMENT_INDEX_CONFLICT_PARAMETER.getMsg()));
+
+        MvcResult result1 = mockMvc.perform(MockMvcRequestBuilders
+                .post("/api/models/{model_name}/segments/completion", modelName).param("project", "default") //
+                .param("parallel", "false") //
+                .param("ids", ids) //
+                .param("names", (String) null) //
+                .param("index_status", "LOCKED").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andReturn();
+        String content1 = result1.getResponse().getContentAsString();
+        Assert.assertTrue(content1.contains(SEGMENT_INDEX_STATUS_INVALID.getMsg()));
+
+        IndexPlanParams indexPlanParams = new IndexPlanParams(project, modelId, null, null, Collections.emptyList(),
+                Collections.singletonList(IndexEntity.Status.NO_BUILD), null);
+        PaginationParams paginationParams = new PaginationParams(null, null, null, false);
+        List<IndexResponse> emptyIndex = new ArrayList<>();
+        Mockito.doReturn(emptyIndex).when(fusionIndexService).getIndexes(indexPlanParams, paginationParams, null);
+        MvcResult result2 = mockMvc
+                .perform(MockMvcRequestBuilders.post("/api/models/{model_name}/segments/completion", modelName)
+                        .param("project", "default") //
+                        .param("parallel", "false") //
+                        .param("ids", ids) //
+                        .param("names", (String) null) //
+                        .param("index_status", "NO_BUILD")
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        String content2 = result2.getResponse().getContentAsString();
+        Assert.assertNull(getJobId(content2));
+
+        List<IndexResponse> indexResponseList = new ArrayList<>();
+        IndexResponse indexResponse = new IndexResponse();
+        indexResponse.setId(1L);
+        indexResponseList.add(indexResponse);
+        Mockito.doReturn(indexResponseList).when(fusionIndexService).getIndexes(indexPlanParams, paginationParams,
+                null);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/models/{model_name}/segments/completion", modelName)
+                .param("project", "default") //
+                .param("parallel", "false") //
+                .param("ids", ids) //
+                .param("names", (String) null) //
+                .param("index_status", "NO_BUILD")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @SuppressWarnings("unchecked")
+    private String getJobId(String content) throws JsonProcessingException {
+        LinkedHashMap<String, Object> envelopeResponse = objectMapper.readValue(content, LinkedHashMap.class);
+        Map<String, Object> data = (Map<String, Object>) envelopeResponse.get("data");
+        List<?> list = (List<?>) data.get("jobs");
+        Map<String, String> map = (Map<String, String>) list.get(0);
+        return map.get("job_id");
     }
 
     @Test
