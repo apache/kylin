@@ -97,6 +97,8 @@ public class TableSchemaUpdater {
         for (int i = 0; i < computedColumns.size(); i++) {
             ComputedColumnDesc columnDesc = computedColumns.get(i);
             computedColumnsCopy.add(ComputedColumnDesc.getCopyOf(columnDesc));
+            // computed column will not copy tableAlias, so we need do an extra alias copy here.
+            computedColumnsCopy.get(i).setTableAlias(columnDesc.getTableAlias());
             String tableIdentity = columnDesc.getTableIdentity();
             TableSchemaUpdateMapping mapping = getTableSchemaUpdateMapping(mappings, tableIdentity);
             if (mapping != null && mapping.isTableIdentityChanged()) {
