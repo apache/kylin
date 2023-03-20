@@ -88,20 +88,6 @@
             </el-alert>
           </div>
           <div :class="['grid-content', 'bg-purple-light']" id="scrollContent">
-            <!-- <el-col :span="24" v-show="gloalProjectSelectShow" class="bread-box"> -->
-              <!-- 面包屑在dashboard页面不显示 -->
-              <!-- <el-breadcrumb separator="/" class="ksd-ml-30">
-                <el-breadcrumb-item>
-                  <span>{{$t('kylinLang.menu.' + currentRouterNameArr[0])}}</span>
-                </el-breadcrumb-item>
-                <el-breadcrumb-item v-if="currentRouterNameArr[1]" :to="{ path: '/' + currentRouterNameArr[0] + '/' + currentRouterNameArr[1]}">
-                  <span>{{$t('kylinLang.menu.' + currentRouterNameArr[1])}}</span>
-                </el-breadcrumb-item>
-                <el-breadcrumb-item v-if="currentRouterNameArr[2]" >
-                  {{currentRouterNameArr[2]}}
-                </el-breadcrumb-item>
-              </el-breadcrumb> -->
-            <!-- </el-col> -->
             <el-col :span="24" class="main-content">
               <transition :name="isAnimation ? 'slide' : null" v-bind:css="isAnimation">
                 <router-view v-on:addProject="addProject" v-if="isShowRouterView"></router-view>

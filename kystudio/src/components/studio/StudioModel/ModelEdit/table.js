@@ -70,6 +70,7 @@ class NTable {
         this.exchangeMoreTableColumns()
         options.plumbTool.lazyRender(() => {
           options.plumbTool.refreshPlumbInstance()
+          this.modelEvents.createAndUpdateSvgGroup(null, {type: 'update'}, this.guid)
         })
       }
     }, options.drawSize)

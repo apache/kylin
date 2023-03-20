@@ -100,7 +100,13 @@ export default {
     expandTableColumns: 'Expand',
     noResults: 'No result',
     searchResults: '{number} results',
-    doubleClick: 'Double Click',
-    loseFactTableAlert: 'The current model is missing a fact table, please set up a fact table.'
+    doubleClick: 'Double Click Header',
+    loseFactTableAlert: 'The current model is missing a fact table, please set up a fact table.',
+    discardChange: 'Discard Changes',
+    continueEditing: 'Continue Editing',
+    betaSearchTips: 'The current search is beta version. Having search problems? ',
+    feedback: 'Go to feedback',
+    introductionUrl: 'http://kyligence.io/enterprise/#analytics',
+    noConnectedColumn: 'No Connected Column'
   }
 }

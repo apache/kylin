@@ -11,12 +11,6 @@ export default {
   getJobDetail: (para) => {
     return Vue.resource(apiUrl + 'jobs/' + para.job_id + '/detail').get(para)
   },
-  losdWaittingJobModels: (para) => {
-    return Vue.resource(apiUrl + 'jobs/waiting_jobs/models').get(para)
-  },
-  laodWaittingJobsByModel: (para) => {
-    return Vue.resource(apiUrl + 'jobs/waiting_jobs').get(para)
-  },
   getSlowQueries: (para) => {
     return Vue.resource(apiUrl + 'diag/slow_query').get(para.page)
   },

@@ -72,25 +72,34 @@ class NModel extends Schama {
   renderPosition () {
     // 自动布局前先理顺链表方向
     // this._arrangeLinks()
-    const layers = this.autoCalcLayer()
+    const layersRoot = this.autoCalcLayer()
+    let layers = layersRoot?.rightNodes?.db
+    if (layersRoot?.leftNodes) {
+      layers = [...layers, ...layersRoot.leftNodes.db]
+    }
     if (layers && layers.length > 0) {
       const baseL = modelRenderConfig.baseLeft
       const baseT = modelRenderConfig.baseTop
       const centerL = $(this.renderDom).width() / 2 - modelRenderConfig.tableBoxWidth / 2
-      const moveL = layers[0].X - centerL
+      const centerLeft = $(this.renderDom).width() / 4 - modelRenderConfig.tableBoxWidth / 2
+
+      const moveL = layersRoot.leftNodes ? layers[0].X - centerL : layers[0].X - centerLeft
       this.renderDom.style.cssText += `margin-left: 0; margin-top: 0;`
       this._mount.marginClient.top = 0
       this._mount.marginClient.left = 0
       for (let k = 0; k < layers.length; k++) {
+        const centerT = $(this.renderDom).height() / 3 - this.tables[layers[k].guid].drawSize.height / 2
+        const moveT = layers[0].Y - centerT
         var currentTable = this.getTableByGuid(layers[k].guid)
         currentTable.drawSize.left = baseL - moveL + layers[k].X
-        currentTable.drawSize.top = baseT + layers[k].Y
+        currentTable.drawSize.top = baseT - moveT + layers[k].Y
         currentTable.drawSize.width = modelRenderConfig.tableBoxWidth
-        currentTable.drawSize.height = modelRenderConfig.tableBoxHeight
+         // !this.vm.showOnlyConnectedColumn && (currentTable.drawSize.height = modelRenderConfig.tableBoxHeight)
         currentTable.checkIsOutOfView(this._mount, currentTable.drawSize, this._mount.windowWidth, this._mount.windowHeight, layers[k].guid)
       }
       this.vm.$nextTick(() => {
         this.plumbTool.refreshPlumbInstance()
+        this.createAndUpdateSvgGroup(null, {type: 'update'})
       })
     }
   }
@@ -222,7 +231,8 @@ class NModel extends Schama {
           }
         }, {
           joinType: joinInfo?.join?.type ?? '',
-          brokenLine: isBrokenLine
+          brokenLine: isBrokenLine,
+          cancelBubble: true
         })
         this.setOverLayLabel(conn, isBrokenLine)
         this.plumbTool.refreshPlumbInstance()
@@ -529,7 +539,7 @@ class NModel extends Schama {
     }
     for (let t in this.tables) {
       let ntable = this.tables[t]
-      canvasInfo.coordinate[ntable.alias] = ntable.getMetaCanvasInfo()
+      canvasInfo.coordinate[ntable.alias] = { ...ntable.getMetaCanvasInfo(), isSpread: true }
     }
     canvasInfo.zoom = this._mount.zoom
     canvasInfo.marginClient = this._mount.marginClient
@@ -649,7 +659,7 @@ class NModel extends Schama {
   }
   search (keywords) {
     var stables = this.searchTable(keywords)
-    var smeasures = this.searchMeasure(keywords)
+    var smeasures = this.searchMeasure(keywords).filter(it => it.name !== 'COUNT_ALL') // COUNT_ALL 度量不允许编辑
     var sdimensions = this.searchDimension(keywords)
     var sjoins = this.searchJoin(keywords)
     var scolumns = this.searchColumn(keywords)
@@ -1002,6 +1012,13 @@ class NModel extends Schama {
     })
     pathObj(t).zIndex = maxZindex
   }
+  checkOutsideByTables () {
+    for (var i in this.tables) {
+      var curTable = this.tables[i]
+      curTable.checkIsOutOfView(this._mount, curTable.drawSize, this._mount.windowWidth, this._mount.windowHeight, i)
+      this.vm.hideLinkLabel(this.getAllConnectsByGuid(curTable.guid), curTable)
+    }
+  }
   setZoom (zoom) {
     this.plumbTool.setZoom(zoom / 10)
     this.getZoomSpace()
@@ -1011,12 +1028,14 @@ class NModel extends Schama {
     var nextZoom = this._mount.zoom + 1 > 10 ? 10 : this._mount.zoom += 1
     this.plumbTool.setZoom(nextZoom / 10)
     this.getZoomSpace()
+    this.checkOutsideByTables()
   }
   // 缩小视图
   reduceZoom () {
     var nextZoom = this._mount.zoom - 1 < 4 ? 4 : this._mount.zoom -= 1
     this.plumbTool.setZoom(nextZoom / 10)
     this.getZoomSpace()
+    this.checkOutsideByTables()
   }
   getZoomSpace () {
     if (this.renderDom) {
@@ -1037,13 +1056,7 @@ class NModel extends Schama {
     }
     this._mount.marginClient.left += x
     this._mount.marginClient.top += y
-    for (var i in this.tables) {
-      var curTable = this.tables[i]
-      // curTable.drawSize.left += x
-      // curTable.drawSize.top += y
-      curTable.checkIsOutOfView(this._mount, curTable.drawSize, this._mount.windowWidth, this._mount.windowHeight, i)
-      this.vm.hideLinkLabel(this.getAllConnectsByGuid(curTable.guid), curTable)
-    }
+    this.checkOutsideByTables()
     this.vm.$nextTick(() => {
       this.plumbTool.refreshPlumbInstance()
     })
@@ -1074,7 +1087,8 @@ class NModel extends Schama {
       options.fact = tableInfo.fact
       options.batch_table_identity = tableInfo.batch_table_identity
       options.modelEvents = {
-        getAllConnectsByGuid: this.getAllConnectsByGuid.bind(this)
+        getAllConnectsByGuid: this.getAllConnectsByGuid.bind(this),
+        createAndUpdateSvgGroup: this.createAndUpdateSvgGroup.bind(this)
       }
       if (tableInfo.source_type === 1 && !options.isSecStorageEnabled) {
         if (!this.getFactTable()) {
@@ -1395,9 +1409,9 @@ class NModel extends Schama {
       return
     }
     const rootGuid = factTable.guid
-    const tree = new ModelTree({rootGuid: rootGuid, showLinkCons: this.allConnInfo})
+    const tree = new ModelTree({rootGuid: rootGuid, showLinkCons: this.allConnInfo, tables: this.tables})
     tree.positionTree()
-    return tree.nodeDB.db
+    return tree.nodeDB.rootNode
   }
   // 添加连接点
   addPlumbPoints (guid, columnName, columnType, isBroken) {
@@ -1443,31 +1457,32 @@ class NModel extends Schama {
     var pid = conn.targetId
     var labelObj = conn.getOverlay(pid + (fid + 'label'))
     var joinInfo = this.tables[pid].getJoinInfoByFGuid(fid)
-    if (!joinInfo) {
-      return
-    }
+    if (!joinInfo) return
     var joinType = joinInfo.join.type
     var labelCanvas = $(labelObj.canvas)
+    const [lineCanvas] = $(conn.canvas)
     const fKeys = joinInfo.join.foreign_key.map(it => it.split('.')[1])
     const pKeys = joinInfo.join.primary_key.map(it => it.split('.')[1])
-    // let tooltipId = labelCanvas?.find('.el-tooltip')?.eq(0)?.attr('aria-describedby')
+    lineCanvas.setAttribute('class', `${lineCanvas.className.baseVal.replace(/is-broken/g, '')}`)
     labelCanvas.removeClass('link-label-broken')
     conn.setType(isBroken ? 'broken' : 'normal')
     conn.isBroken = isBroken
     this.getBrokenLinkedTable()
     labelCanvas.addClass(isBroken ? 'link-label link-label-broken' : `link-label ${fid}&${pid}`)
+    isBroken && lineCanvas.setAttribute('class', `${lineCanvas.className.baseVal} is-broken`)
+    this.createAndUpdateSvgGroup(lineCanvas, {type: 'create', isBroken, fKeys, pKeys, fid, pid})
 
     const child = document.createElement('i')
     child.className = 'close-icon el-ksd-n-icon-close-outlined'
     const hideNode = document.createElement('span')
     hideNode.className = 'join-type-hide'
-    // labelCanvas && labelCanvas.find('.label').eq(0).text(joinType)
-    // tooltipId && $(`#${tooltipId}`)
     let dom = !isBroken ? createToolTipDom(`<span class="join-type ${joinType === 'INNER' ? 'el-ksd-n-icon-inner-join-filled' : joinType === 'LEFT' ? 'el-ksd-n-icon-left-join-filled' : 'el-ksd-n-icon-right-join-filled'}"></span>`, {
       text: joinType,
+      className: 'line-label-bar',
       children: [hideNode, child]
     }) : createToolTipDom(`<span class="join-type el-ksd-icon-wrong_fill_16"></span>`, {
       text: joinType,
+      className: 'line-label-bar',
       children: [hideNode, child]
     })
     dom.onmouseenter = function () {
@@ -1520,6 +1535,53 @@ class NModel extends Schama {
 
     const currentJoin = joinColumns.foreign_key.map((f, index) => `${f}/${joinColumns.op[index]}/${joinColumns.primary_key[index]}/${joinColumns.type}`).sort().join('&')
     return linkList.includes(currentJoin)
+  }
+
+  // 自定义扩大 line svg hover 热区
+  createAndUpdateSvgGroup (lineCanvas, conn, guid) {
+    if (conn.type === 'create') {
+      const sign = 'http://www.w3.org/2000/svg'
+      const path = lineCanvas.firstChild
+      if (!path) return
+      if (lineCanvas.querySelector('g')) return
+      const newPath = path.cloneNode(true)
+      const group = document.createElementNS(sign, 'g')
+      const d = path.getAttribute('d')
+
+      group.id = conn.isBroken ? 'broken-use-group' : 'use-group'
+      newPath.setAttribute('d', d)
+      newPath.setAttribute('stroke-width', 20)
+      newPath.setAttribute('stroke', 'transparent')
+      newPath.setAttribute('id', 'use')
+      group.appendChild(path)
+      group.appendChild(newPath)
+      lineCanvas.appendChild(group)
+
+      group.onmouseenter = function () {
+        $(`#${conn.fid}`).addClass('link-hover')
+        $(`#${conn.pid}`).addClass('link-hover')
+        conn.fKeys.forEach(item => $(`#${conn.fid}_${item}`).addClass('is-hover'))
+        conn.pKeys.forEach(item => $(`#${conn.pid}_${item}`).addClass('is-hover'))
+      }
+      group.onmouseleave = function () {
+        $(`#${conn.fid}`).removeClass('link-hover')
+        $(`#${conn.pid}`).removeClass('link-hover')
+        conn.fKeys.forEach(item => $(`#${conn.fid}_${item}`).removeClass('is-hover'))
+        conn.pKeys.forEach(item => $(`#${conn.pid}_${item}`).removeClass('is-hover'))
+      }
+    } else {
+      const lineGroups = !guid ? Object.keys(this.allConnInfo): Object.keys(this.allConnInfo).filter(it => it.split('$').includes(guid))
+      lineGroups.forEach(item => {
+        const line = this.allConnInfo[item].canvas
+        if (line.querySelector('g')) {
+          const paths = line.querySelectorAll('path')
+          const firstPathLine = paths[0].getAttribute('d')
+          paths[1].setAttribute('d', firstPathLine)
+        } else {
+          this.createAndUpdateSvgGroup(line, this.allConnInfo[item].isBroken, 'create')
+        }
+      })
+    }
   }
 }
 

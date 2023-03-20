@@ -20,15 +20,6 @@
           show-icon>
         </el-alert>
         <div class="ksd-title-label-small ksd-mb-10">{{$t('chooseBuildType')}}</div>
-        <!-- <div>
-          <el-radio-group v-model="buildOrComplete" class="ksd-mb-10">
-            <el-radio label="build">{{$t('build')}}</el-radio>
-            <common-tip :content="$t('unableComplete')" v-if="!modelDesc.empty_indexes_count">
-              <el-radio :disabled="!modelDesc.empty_indexes_count" class="ksd-ml-10" label="complete">{{$t('complete')}}</el-radio>
-            </common-tip>
-            <el-radio v-else label="complete">{{$t('complete')}}</el-radio>
-          </el-radio-group>
-        </div> -->
         <el-select v-model="buildType" class="ksd-mb-5" @change="handChangeBuildType" v-if="buildOrComplete == 'build'" :disabled="!datasourceActions.includes('changeBuildType')">
           <el-option :label="$t('incremental')" value="incremental"></el-option>
           <el-option :label="$t('fullLoad')" v-if="!isStreamModel" value="fullLoad"></el-option>
@@ -54,7 +45,6 @@
               <el-col :span="12">
                 <el-tooltip effect="dark" :content="$t('disableChangePartitionTips')" :disabled="!isNotBatchModel" placement="bottom">
                   <el-select :disabled="isLoadingNewRange || !datasourceActions.includes('changePartition') || isNotBatchModel" v-model="partitionMeta.table" @change="partitionTableChange" :placeholder="$t('kylinLang.common.pleaseSelectOrSearch')" style="width:100%">
-                    <!-- <el-option :label="$t('noPartition')" value=""></el-option> -->
                     <el-option :label="t.alias" :value="t.alias" v-for="t in partitionTables" :key="t.alias">{{t.alias}}</el-option>
                   </el-select>
                 </el-tooltip>
@@ -91,11 +81,7 @@
                     <el-option-group>
                       <el-option v-if="prevPartitionMeta.format.indexOf(dateFormatsOptions) === -1&&prevPartitionMeta.format" :label="prevPartitionMeta.format" :value="prevPartitionMeta.format"></el-option>
                       <el-option :label="f.label" :value="f.value" v-for="f in dateFormatsOptions" :key="f.label"></el-option>
-                      <!-- <el-option label="" value="" v-if="partitionMeta.column && timeDataType.indexOf(getColumnInfo(partitionMeta.column).datatype)===-1"></el-option> -->
                     </el-option-group>
-                    <!-- <el-option-group>
-                      <el-option :label="f.label" :value="f.value" v-for="f in dateTimestampFormats" :key="f.label"></el-option>
-                    </el-option-group> -->
                   </el-select>
                 </el-tooltip>
               </el-col>
@@ -165,18 +151,7 @@
           </div>
           <div class="ksd-title-label-small ksd-mb-10">{{$t('addRangeTitle')}}</div>
           <el-form :model="modelBuildMeta" ref="buildForm" :rules="rules" label-position="top">
-            <!-- <div class="ky-list-title ksd-mt-14">{{$t('buildRange')}}</div> -->
-            <!-- <el-form-item prop="isLoadExisted" class="ksd-mt-10 ksd-mb-2">
-              <el-radio class="font-medium" v-model="modelBuildMeta.isLoadExisted" :label="true">
-                {{$t('loadExistingData')}}
-              </el-radio>
-              <div class="item-desc">{{$t('loadExistingDataDesc')}}</div>
-            </el-form-item> -->
             <el-form-item :class="{'is-error': isShowErrorSegments}" :rule="modelBuildMeta.isLoadExisted ? [] : [{required: true, trigger: 'blur', message: this.$t('dataRangeValValid')}]">
-              <!-- <el-radio class="font-medium" v-model="modelBuildMeta.isLoadExisted" :label="false">
-                {{$t('customLoadRange')}}
-              </el-radio>
-              <br/> -->
               <p class="ksd-pt-0 ksd-fs-12 segment-tips"><i class="el-icon-ksd-alert ksd-mr-5 alert-icon"></i>{{$t('segmentTips')}}</p>
               <div class="ky-no-br-space" style="height:32px;">
                 <el-date-picker
@@ -289,9 +264,9 @@
         </div> -->
         <el-button @click="closeModal(false)" size="medium">{{$t('kylinLang.common.cancel')}}</el-button>
         <template v-if="isAddSegment">
-          <el-button type="primary" :loading="btnLoading" @click="setbuildModel(false, 'onlySave')" :disabled="incrementalDisabled || disableFullLoad" size="medium">{{$t('kylinLang.common.save')}}</el-button>
-          <el-button type="primary" :loading="btnLoading" v-if="modelDesc.total_indexes && !multiPartitionEnabled" @click="setbuildModel(true)" :disabled="incrementalDisabled || disableFullLoad" size="medium">{{$t('saveAndBuild')}}</el-button>
-          <el-button type="primary" :loading="btnLoading" v-else-if="!multiPartitionEnabled" @click="saveAndAddIndex" :disabled="incrementalDisabled || disableFullLoad" size="medium">{{$t('saveAndAddIndex')}}</el-button>
+          <el-button type="primary" :loading="btnLoading&&!isBuildLoading&&!isWillAddIndex" @click="setbuildModel(false, 'onlySave')" :disabled="incrementalDisabled || disableFullLoad || btnLoading&&(isBuildLoading || isWillAddIndex)" size="medium">{{$t('kylinLang.common.save')}}</el-button>
+          <el-button type="primary" :loading="btnLoading&&isBuildLoading&&!isWillAddIndex" v-if="modelDesc.total_indexes && !multiPartitionEnabled" @click="setbuildModel(true)" :disabled="incrementalDisabled || disableFullLoad || btnLoading&&!isBuildLoading" size="medium">{{$t('saveAndBuild')}}</el-button>
+          <el-button type="primary" :loading="btnLoading&&!isBuildLoading&&isWillAddIndex" v-else-if="!multiPartitionEnabled" @click="saveAndAddIndex" :disabled="incrementalDisabled || disableFullLoad || btnLoading&&!isWillAddIndex" size="medium">{{$t('saveAndAddIndex')}}</el-button>
         </template>
         <template v-else>
           <el-button type="primary" :loading="btnLoading" @click="setbuildModel(true)" :disabled="incrementalDisabled || disableFullLoad || duplicateValueError" size="medium">{{$t(buildType)}}</el-button>
@@ -376,11 +351,7 @@
       dataRangeVal: [],
       isLoadExisted: false
     }
-    rules = {
-      // dataRangeVal: [{
-      //   validator: this.validateRange, trigger: 'blur'
-      // }]
-    }
+    rules = {}
     loadRangeDateError = ''
     isShowRangeDateError = false
     isShowErrorSegments = false
@@ -426,6 +397,7 @@
     isExpandFormatRule = false
     timestamp = Date.now().toString(32)
     secondStoragePartitionTips = false
+    isBuildLoading = false
 
     @Watch('buildType')
     changeBuildType (newVal, oldVal) {
@@ -484,7 +456,7 @@
       return !(this.partitionMeta.table && this.partitionMeta.column && this.partitionMeta.format)
     }
     get incrementalDisabled () {
-      return !(this.partitionMeta.table && this.partitionMeta.column && this.partitionMeta.format && this.modelBuildMeta.dataRangeVal.length) && this.buildType === 'incremental'
+      return !(this.partitionMeta.table && this.partitionMeta.column && this.partitionMeta.format && this.modelBuildMeta.dataRangeVal.length && this.modelBuildMeta.dataRangeVal[0] && this.modelBuildMeta.dataRangeVal[1]) && this.buildType === 'incremental'
     }
     get partitionFormat () {
       if (this.partitionMeta.format === 'TIMESTAMP SECOND') {
@@ -907,6 +879,7 @@
       this.setbuildModel(false)
     }
     async setbuildModel (isBuild, type) {
+      this.isBuildLoading = isBuild
       this.btnLoading = true
       try {
         if (this.buildType === 'incremental' && this.buildOrComplete === 'build') {
@@ -940,7 +913,6 @@
             const partition_desc = {}
             if (typeof this.modelDesc.available_indexes_count === 'number' && this.modelDesc.available_indexes_count > 0) {
               if (this.prevPartitionMeta.table !== this.partitionMeta.table || this.prevPartitionMeta.column !== this.partitionMeta.column || this.prevPartitionMeta.format !== this.partitionMeta.format || this.prevPartitionMeta.multiPartition !== this.partitionMeta.multiPartition) {
-                // await kylinConfirm(this.$t('changeSegmentTip1', {tableColumn: `${this.partitionMeta.table}.${this.partitionMeta.column}`, dateType: this.partitionMeta.format, modelName: this.modelDesc.name}), '', this.$t('kylinLang.common.tip'))
                 try {
                   await kylinConfirm(this.$t('changeSegmentTips'), {confirmButtonText: this.$t('kylinLang.common.save'), type: 'warning', dangerouslyUseHTMLString: true}, this.$t('kylinLang.common.tip'))
                 } catch (e) {
@@ -1036,7 +1008,6 @@
           })
         } else if (this.buildType === 'fullLoad' && this.buildOrComplete === 'build') {
           if (this.modelDesc && this.modelDesc.partition_desc && this.modelDesc.partition_desc.partition_date_column) {
-            // await kylinConfirm(this.$t('changeBuildTypeTipsConfirm', {modelName: this.modelDesc.name}), '', this.$t('kylinLang.common.tip'))
             try {
               await kylinConfirm(this.$t('changeSegmentTips'), {confirmButtonText: this.$t('kylinLang.common.save'), type: 'warning', dangerouslyUseHTMLString: true}, this.$t('kylinLang.common.tip'))
             } catch (e) {
@@ -1054,7 +1025,6 @@
             project: this.currentSelectedProject
           }).then(async () => {
             this.btnLoading = false
-            // await this.$emit('refreshModelList')
             if (this.isWillAddIndex) {
               this.$emit('isWillAddIndex')
             } else {
@@ -1147,7 +1117,6 @@
         let data = await handleSuccessAsync(res)
         this.handleBuildIndexTip(data)
         this.closeModal(true)
-        // this.$emit('refreshModelList')
       } catch (e) {
         handleError(e)
       } finally {

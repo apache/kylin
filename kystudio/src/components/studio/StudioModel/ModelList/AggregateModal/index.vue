@@ -13,7 +13,6 @@
           show-icon>
         </el-alert>
       </div>
-      <!-- <div class="loading" v-if="isLoading" v-loading="isLoading"></div> -->
       <div class="agg-group-layout">
         <div v-if="model" class="agg-list" ref="aggListLayout">
           <!-- 聚合组按钮 -->
@@ -244,7 +243,6 @@
                         <div class="ksd-mb-10">
                           <span class="title font-medium measure-title">{{$t('includeMeasure')}}</span>
                           <div class="row ksd-mb-10 ksd-fright ky-no-br-space">
-                            <!-- <el-button plain size="mini" class="add-all-item" type="primary" @click="handleAddAllMeasure(aggregateIdx, aggregate.id)">{{$t('selectAllMeasure')}}<el-tooltip class="item tip-item" popper-class='aggregate-tip' effect="dark" :content="$t('measureTabTip')" placement="bottom"><i class="el-icon-ksd-what"></i></el-tooltip></el-button> -->
                             <common-tip placement="top" :content="$t('refuseAddIndexTip')"
                               :disabled="!(!indexUpdateEnabled && ['HYBRID', 'STREAMING'].includes(aggregate.index_range))">
                               <el-button plain size="mini" class="ksd-ml-10"
@@ -259,25 +257,6 @@
                             </common-tip>
                           </div>
                         </div>
-                        <!-- <el-select
-                          multiple
-                          filterable
-                          class="mul-filter-select"
-                          :class="{'reset-padding': aggregate.measures.length}"
-                          :ref="`aggregate.measures.${aggregateIdx}`"
-                          :value="aggregate.measures"
-                          :placeholder="$t('kylinLang.common.pleaseSelectOrSearch')"
-                          @input="value => handleInput(`aggregateArray.${aggregateIdx}.measures`, value, aggregate.id)"
-                          @remove-tag="value => handleRemoveMeasureRules(value, aggregateIdx, aggregate.id)">
-                          <i slot="prefix" v-show="!aggregate.measures.length" class="el-input__icon el-ksd-icon-search_22"></i>
-                          <el-option
-                            v-for="measure in measures"
-                            :key="measure.value"
-                            :label="measure.label"
-                            :disabled="measure.value === 'COUNT_ALL'"
-                            :value="measure.value">
-                          </el-option>
-                        </el-select> -->
                         <div class="include-measure">
                           <el-tag :class="{'is-active': currentSelectedTag.ctx === item && currentSelectedTag.aggregateIdx === aggregateIdx}" size="small" v-for="(item, index) in aggregate.measures" :key="index" @click.native="handleClickTag(item, aggregate.activeTab, aggregateIdx)">{{item}}</el-tag>
                         </div>
@@ -294,7 +273,6 @@
         </div>
         <div class="metadata-detail">
           <template v-if="currentSelectedTag.type === 'dimension'">
-            <!-- && currentSelectedTag.data.sample -->
             <template v-if="currentSelectedTag.ctx && currentSelectedTag.data.simple">
               <p class="title">{{$t('statistics')}}</p>
               <el-table class="statistics_list_table"
@@ -437,8 +415,8 @@
         </div>
         <div class="right ksd-fs-0">
           <el-button :type="!onlyRealTimeType ? 'primary' : ''" :text="!onlyRealTimeType" size="medium" @click="handleClose(false)">{{$t('kylinLang.common.cancel')}}</el-button>
-          <el-button :type="onlyRealTimeType ? 'primary' : ''" size="medium" class="ksd-ml-10" :disabled="isDisabledSaveBtn" v-if="isShow" :loading="isSubmit" @click="handleSubmit(false)">{{$t('kylinLang.common.save')}}</el-button>
-          <el-button v-if="isShow && !onlyRealTimeType" type="primary" size="medium" class="ksd-ml-10" :disabled="isDisabledSaveBtn" :loading="isSubmit" @click="handleSubmit(true)">{{$t('saveAndBuild')}}</el-button>
+          <el-button :type="onlyRealTimeType ? 'primary' : ''" size="medium" class="ksd-ml-10" :disabled="isDisabledSaveBtn || isSubmit&&isCatchUpLoading" v-if="isShow" :loading="isSubmit&&!isCatchUpLoading" @click="handleSubmit(false)">{{$t('kylinLang.common.save')}}</el-button>
+          <el-button v-if="isShow && !onlyRealTimeType" type="primary" size="medium" class="ksd-ml-10" :disabled="isDisabledSaveBtn || isSubmit&&!isCatchUpLoading" :loading="isSubmit&&isCatchUpLoading" @click="handleSubmit(true)">{{$t('saveAndBuild')}}</el-button>
         </div>
       </div>
     </div>
@@ -467,10 +445,6 @@
           show-icon>
         </el-alert>
         <div class="filter-dimension">
-          <!-- <el-tooltip effect="dark" placement="bottom">
-            <div slot="content" v-html="$t('excludeTableCheckboxTip')"></div>
-            <el-checkbox class="ksd-mr-5" v-model="displayExcludedTables" @change="changeExcludedTables" v-if="showExcludedTableCheckBox">{{$t('excludeTableCheckbox')}}</el-checkbox>
-          </el-tooltip> -->
           <el-input v-model="searchName" v-global-key-event.enter.debounce="filterChange" @clear="clearFilter" size="medium" prefix-icon="el-ksd-icon-search_22" style="width:240px" :placeholder="$t('kylinLang.common.pleaseFilter')"></el-input>
         </div>
       </div>
@@ -504,15 +478,6 @@
                 <span :class="['icon', 'el-icon-ksd-move_to_top', {'is-disabled': index === 0 && !searchName}]" @click="moveTo('top', item)"></span>
                 <span :class="['icon', 'el-icon-ksd-move_up', {'is-disabled': index === 0}]" @click="moveTo('up', item)"></span>
                 <span :class="['icon', 'el-icon-ksd-move_down', {'is-disabled': !includeDimensions[index + 1] || !includeDimensions[index + 1].isCheck}]" @click="moveTo('down', item)"></span>
-                <!-- <el-tooltip :content="$t('moveTop')" effect="dark" placement="top">
-                  <span :class="['icon', 'el-icon-ksd-move_to_top', {'is-disabled': index === 0}]" @click="moveTo('top', item)"></span>
-                </el-tooltip>
-                <el-tooltip :content="$t('moveUp')" effect="dark" placement="top">
-                  <span :class="['icon', 'el-icon-ksd-move_up', {'is-disabled': index === 0}]" @click="moveTo('up', item)"></span>
-                </el-tooltip>
-                <el-tooltip :content="$t('moveDown')" effect="dark" placement="top">
-                  <span :class="['icon', 'el-icon-ksd-move_down', {'is-disabled': !includeDimensions[index + 1] || !includeDimensions[index + 1].isCheck}]" @click="moveTo('down', item)"></span>
-                </el-tooltip> -->
               </template>
             </el-col>
           </el-row>
@@ -676,6 +641,7 @@ export default class AggregateModal extends Vue {
   pageSize = 50
   generateDeletedIndexes = true
   displayExcludedTables = false
+  isCatchUpLoading = false
   dataDragData = {
     width: 238,
     limit: {
@@ -737,11 +703,6 @@ export default class AggregateModal extends Vue {
   get getSelectedMeasures () {
     return this.selectedMeasures
   }
-
-  // 是否展示屏蔽表 checkbox
-  // get showExcludedTableCheckBox () {
-  //   return this.backUpDimensions.length ? this.backUpDimensions.filter(it => typeof it.excluded !== 'undefined' && it.excluded).length > 0 : false
-  // }
 
   // 是否存在多对多且被屏蔽的表
   get hasManyToManyAndAntiTable () {
@@ -822,7 +783,6 @@ export default class AggregateModal extends Vue {
       this.isWaitingCheckCuboids[prop] = false
     }
     this.calcLoading = true
-    // this.showLoading()
     let paramsData = this.getSubmitData()
     if (paramsData.dimensions.length <= 0) {
       this.calcLoading = false
@@ -834,7 +794,6 @@ export default class AggregateModal extends Vue {
       handleSuccess(res, (data) => {
         if (data) {
           this.cuboidsInfo = objectClone(data)
-          // this.cuboidsInfo.agg_index_counts = data.agg_index_counts.reverse()
           let resultData = objectClone(data.agg_index_counts)
           // 用聚合组的唯一id 做标识
           this.cuboidsInfo.agg_index_counts = {}
@@ -860,7 +819,6 @@ export default class AggregateModal extends Vue {
         }
         this.calcLoading = false
         this.isNeedCheck = false
-        // this.hideLoading()
       })
     }, (res) => {
       this.maxCombinationNum = 0
@@ -987,7 +945,6 @@ export default class AggregateModal extends Vue {
     const aggregateData = {
       ...JSON.parse(initialAggregateData),
       ...{ measures: this.reorganizedMeasures() },
-      // id: aggregateArray.length
       id: sampleGuid()
     }
     this.aggregateStyle = []
@@ -995,7 +952,6 @@ export default class AggregateModal extends Vue {
     this.isWaitingCheckCuboids[aggregateData.id] = true
     this.isWaitingCheckAllCuboids = true
     this.aggregateStyle = []
-    // this.calcCuboids()
     this.$nextTick(() => {
       const scrollTop = this.$el.querySelector('.aggregate-modal .aggregate-dialog').parentElement.scrollTop
       this.$el.querySelector('.aggregate-modal .aggregate-dialog').parentElement.scrollTop = scrollTop + 370
@@ -1023,7 +979,6 @@ export default class AggregateModal extends Vue {
     const aggregateArray = get(this.form, 'aggregateArray')
     const copyedAggregate = {
       ...aggregateArray[aggregateIdx],
-      // id: aggregateArray.length
       id: sampleGuid()
     }
     this.setModalForm({ aggregateArray: [...aggregateArray, copyedAggregate] })
@@ -1033,7 +988,6 @@ export default class AggregateModal extends Vue {
     this.isWaitingCheckCuboids[copyedAggregate.id] = true
     this.isWaitingCheckAllCuboids = true
     this.aggregateStyle = []
-    // this.calcCuboids()
     this.$nextTick(() => {
       const detailContents = this.$el.querySelectorAll('.aggregate-modal .aggregate-dialog .aggregate-group')
       this.$el.querySelector('.aggregate-modal .aggregate-dialog').parentElement.scrollTop = detailContents[this.form.aggregateArray.length - 1].offsetTop - 100
@@ -1044,10 +998,8 @@ export default class AggregateModal extends Vue {
       const aggregateArray = get(this.form, 'aggregateArray')
       aggregateArray.splice(aggregateIdx, 1)
       this.setModalForm({ aggregateArray })
-      // this.isWaitingCheckCuboids = true
       this.isWaitingCheckAllCuboids = true
       this.aggregateStyle = []
-      // this.calcCuboids()
     })
   }
   handleAddDimensionRow (path, id) {
@@ -1058,7 +1010,6 @@ export default class AggregateModal extends Vue {
     this.setModalForm({[rootKey]: push(this.form, path, newDimensionRow)[rootKey]})
     this.isWaitingCheckCuboids[id] = true
     this.isWaitingCheckAllCuboids = true
-    // this.calcCuboids()
   }
   handleRemoveDimensionRow (path, aggregateIdx, dimensionRowIndex, id) {
     const rootKey = path.split('.')[0]
@@ -1069,7 +1020,6 @@ export default class AggregateModal extends Vue {
     }
     this.isWaitingCheckCuboids[id] = true
     this.isWaitingCheckAllCuboids = true
-    // this.calcCuboids()
   }
   beforeDestroy () {
     // 销毁组件前需要重置组件里的相关信息，以防切换模型，展开聚合组时，信息混乱
@@ -1110,7 +1060,6 @@ export default class AggregateModal extends Vue {
     if (key !== 'isCatchUp') {
       this.isWaitingCheckCuboids[id] = true
       this.isWaitingCheckAllCuboids = true
-      // this.calcCuboids()
     }
     const rootKey = key.split('.')[0]
     this.setModalForm({[rootKey]: set(this.form, key, value)[rootKey]})
@@ -1146,10 +1095,6 @@ export default class AggregateModal extends Vue {
       }
     })
   }
-  // handleAddAllIncludes (aggregateIdx, id) {
-  //   const allDimensions = this.dimensions.map(dimension => dimension.label)
-  //   this.handleInput(`aggregateArray.${aggregateIdx}.includes`, allDimensions, id)
-  // }
   handleRemoveAllIncludes (aggregateIdx, titleId, id) {
     kylinConfirm(this.$t('clearAllAggregateTip', {aggId: titleId}), {type: 'warning'}, this.$t('clearAggregateTitle')).then(() => {
       const { aggregateArray = [] } = this.form
@@ -1210,6 +1155,7 @@ export default class AggregateModal extends Vue {
     })
   }
   async handleSubmit (isCatchUp) {
+    this.isCatchUpLoading = isCatchUp
     // 该字段只有在保存并构建时才会用到，纯流模型是屏蔽保存并构建的
     const isHaveBatchSegment = this.model.model_type === 'HYBRID' ? this.model.batch_segments.length > 0 : this.model.segments.length > 0
     // 保存并全量构建时，可以直接提交构建任务，保存并增量构建时，需弹出segment list选择构建区域
@@ -1217,7 +1163,6 @@ export default class AggregateModal extends Vue {
       this.setModalForm({isCatchUp: set(this.form, 'isCatchUp', isCatchUp)['isCatchUp']})
     }
     this.isSubmit = true
-    // this.showLoading()
     try {
       if (this.checkFormVaild()) {
         const data = this.getSubmitData()
@@ -1237,7 +1182,6 @@ export default class AggregateModal extends Vue {
         if (cuboidsResult) {
           this.maxCombinationNum = cuboidsResult.max_combination_num
           this.cuboidsInfo = objectClone(cuboidsResult)
-          // this.cuboidsInfo.agg_index_counts = cuboidsResult.agg_index_counts.reverse()
           let resultData = objectClone(cuboidsResult.agg_index_counts)
           // 用聚合组的唯一id 做标识
           this.cuboidsInfo.agg_index_counts = {}
@@ -1253,7 +1197,6 @@ export default class AggregateModal extends Vue {
             this.$message.error(this.$t('maxCombinationTip'))
             this.calcLoading = false
             this.isSubmit = false
-            // this.hideLoading()
             // 操作滚动
             this.dealScrollToFirstError()
             return false
@@ -1262,7 +1205,6 @@ export default class AggregateModal extends Vue {
             this.$message.error(this.$t('maxTotalCombinationTip'))
             this.calcLoading = false
             this.isSubmit = false
-            // this.hideLoading()
             return false
           }
         }
@@ -1272,9 +1214,6 @@ export default class AggregateModal extends Vue {
         // 获取数字正常的情况下，才进行 submit
         let res = await this.submit({...data, restoreDeletedIndex: !this.generateDeletedIndexes})
         let result = await handleSuccessAsync(res)
-        // if (!isCatchUp && !this.model.segments.length) {
-        //   this.$emit('needShowBuildTips', this.model.uuid)
-        // }
         if (isCatchUp && !isHaveBatchSegment) {
           this.$emit('openBuildDialog', this.model, true)
         }
@@ -1289,10 +1228,8 @@ export default class AggregateModal extends Vue {
         }
         this.isSubmit = false
         this.handleClose(true)
-        // this.hideLoading()
       } else {
         this.isSubmit = false
-        // this.hideLoading()
       }
     } catch (e) {
       this.calcLoading = false
@@ -1301,7 +1238,6 @@ export default class AggregateModal extends Vue {
       }
       e && handleError(e)
       this.isSubmit = false
-      // this.hideLoading()
     }
   }
   confirmBuildIndexTip () {
@@ -1350,7 +1286,6 @@ export default class AggregateModal extends Vue {
     const saveText = isCatchUp ? `${this.$t('confirmTextBySaveAndBuild')}${this.model.model_type === 'HYBRID' ? this.$t('habirdModelBuildTips') : ''}` : this.$t('confirmTextBySave')
     const saveBtnText = isCatchUp ? this.$t('bulidAndSubmit') : this.$t('kylinLang.common.save')
     const ctx = this.$createElement
-    // this.generateDeletedIndexes = true // 默认 checkbox 勾选状态
     this.$nextTick(() => {
       this.chengeGenerateDeletedIndexesStatus('init', this.generateDeletedIndexes, diffResult)
     })
@@ -1376,13 +1311,11 @@ export default class AggregateModal extends Vue {
       showClose: false,
       closeOnPressEscape: false,
       showCancelButton: true,
-      // customClass: diffResult.increase_layouts > 0 && diffResult.decrease_layouts > 0 ? 'aggBuildChangeMessageAll' : 'aggBuildChangeMessageSinger',
       title: this.$t('kylinLang.common.tip')
     })
   }
   chengeGenerateDeletedIndexesStatus (type, v, diffResult) {
     this.generateDeletedIndexes = type === 'init' ? v : v.target.checked
-    // this.$set(this, 'generateDeletedIndexes', v.target.checked)
     this.$nextTick(() => {
       if (document.body.getElementsByClassName('agg-build-message-all_title').length || document.body.getElementsByClassName('agg-build-message-single_title').length) {
         if (diffResult.increase_layouts > 0 && diffResult.decrease_layouts > 0) {

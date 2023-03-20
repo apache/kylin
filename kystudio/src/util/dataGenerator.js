@@ -38,7 +38,7 @@ function getTablesData (modelData) {
 
   try {
     // lookups和join_tables任选其一，组合成维度表集合
-    const lookupsInfo = modelData.lookups || modelData.join_tables || []
+    const lookupsInfo = modelData.join_tables || []
     const factAlias = modelData.fact_table.split('.')[1]
     const factInfo = { table: modelData.fact_table, alias: factAlias, kind: 'FACT' }
     const tableColumnDataMap = modelData.simplified_tables.reduce((map, tableData) => ({
@@ -82,7 +82,7 @@ function formatJoinsData (jointData, tablesData) {
   let joinsData = []
 
   try {
-    const { primary_key: pKeys, foreign_key: fKeys } = jointData
+    const { primary_key: pKeys, foreign_key: fKeys, simplified_non_equi_join_conditions } = jointData
     joinsData = pKeys.map((pKey, index) => {
       const [tb] = tablesData.filter(it => it.alias === fKeys[index].split('.')[0])
       return {
@@ -91,6 +91,17 @@ function formatJoinsData (jointData, tablesData) {
         foreignKey: fKeys[index]
       }
     })
+    // no equal joins
+    if (simplified_non_equi_join_conditions) {
+      simplified_non_equi_join_conditions.forEach(item => {
+        const [tb] = tablesData.filter(it => it.alias === item.foreign_key.split('.')[0])
+        joinsData.push({
+          guid: tb ? tb.guid : sampleGuid(),
+          primaryKey: item.primary_key,
+          foreignKey: item.foreign_key
+        })
+      })
+    }
     // 模型数据结构不严谨，防错用
     if (pKeys.length !== fKeys.length) {
       throw new Error('The length of primary keys isn\'t the same as foreign keys.')

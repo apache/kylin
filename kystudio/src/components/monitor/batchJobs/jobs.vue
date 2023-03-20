@@ -1192,6 +1192,10 @@ export default class JobsList extends Vue {
           this.filter.status = []
         }
       }
+      if (this.selectedJob.id && jobIds.indexOf(this.selectedJob.id) !== -1) { // 展示的详情job 被删除了
+        this.selectedJob = {}
+        this.showStep = false
+      }
       this.manualRefreshJobs()
       this.$message({
         type: 'success',

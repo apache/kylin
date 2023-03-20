@@ -58,20 +58,13 @@
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
-              <!-- <el-tooltip :content="$t('disabledBuildIndexTips')" :disabled="checkedList.length==0 || (checkedList.length>0&&!isHaveLockedIndex)">
-                <div class="ksd-fleft"> -->
                 <el-button icon="el-ksd-icon-build_index_22" :disabled="!checkedList.length || isHaveLockedIndex" text type="primary" class="ksd-ml-2 ksd-fleft" v-if="datasourceActions.includes('buildIndex') && !isRealTimeMode" @click="complementedIndexes('batchIndexes')">{{$t('buildIndex')}}</el-button>
-                <!-- </div>
-              </el-tooltip> -->
               <template v-if="isRealTimeMode">
                 <el-tooltip placement="top" :content="!indexUpdateEnabled ? $t('refuseRemoveIndexTip') : $t('disabledDelBaseIndexTips')" v-if="datasourceActions.includes('delAggIdx') && (isDisableDelBaseIndex || !indexUpdateEnabled)">
                   <div class="ksd-fleft">
                     <el-button v-if="datasourceActions.includes('delAggIdx') && (isDisableDelBaseIndex || !indexUpdateEnabled)" :disabled="isDisableDelBaseIndex || !indexUpdateEnabled" type="primary" icon="el-ksd-icon-table_delete_22" @click="removeIndexes" text>{{$t('kylinLang.common.delete')}}</el-button>
                   </div>
                 </el-tooltip>
-                <!-- <common-tip :content="$t('refuseRemoveIndexTip')" v-if="datasourceActions.includes('delAggIdx') && !indexUpdateEnabled&&checkedList.length>0">
-                  <el-button v-if="datasourceActions.includes('delAggIdx') && !indexUpdateEnabled" :disabled="!indexUpdateEnabled" type="primary" icon="el-ksd-icon-table_delete_22" @click="removeIndexes" class="ksd-fleft" text>{{$t('kylinLang.common.delete')}}</el-button>
-                </common-tip> -->
                 <el-button v-if="datasourceActions.includes('delAggIdx') && !isDisableDelBaseIndex &&  indexUpdateEnabled" :disabled="!checkedList.length" type="primary" icon="el-ksd-icon-table_delete_22" class="ksd-fleft" @click="removeIndexes" text>{{$t('kylinLang.common.delete')}}</el-button>
               </template>
               <template v-else>
@@ -124,7 +117,7 @@
               <div class="filter-tags-layout"><el-tag size="mini" closable v-for="(item, index) in filterTags" :key="index" @close="handleClose(item)">{{`${$t(item.source)}：${$t(item.label)}`}}</el-tag></div>
               <span class="clear-all-filters" @click="clearAllTags">{{$t('clearAll')}}</span>
             </div>
-            <div class="index-table-list" :class="{'is-show-tips' :isRealTimeMode&&isShowRealTimeModelActionTips, 'is-show-tab-button': showModelTypeSwitch, 'is-show-tips--tab-button': isRealTimeMode&&isShowRealTimeModelActionTips&&showModelTypeSwitch}">
+            <div class="index-table-list" :class="{'is-show-filter': filterTags.length, 'is-show-tips' :isRealTimeMode&&isShowRealTimeModelActionTips, 'is-show-tab-button': showModelTypeSwitch, 'is-show-tips--tab-button': isRealTimeMode&&isShowRealTimeModelActionTips&&showModelTypeSwitch}">
               <el-table
                 ref="indexesTable"
                 :data="indexDatas"
@@ -941,6 +934,9 @@ export default class ModelAggregate extends Vue {
   .index-table-list {
     max-height: 90%;
     overflow: auto;
+    &.is-show-filter {
+      max-height: calc(~'90% - 36px');
+    }
     &.is-show-tips {
       max-height: calc(~'90% - 45px');
     }
@@ -949,6 +945,15 @@ export default class ModelAggregate extends Vue {
     }
     &.is-show-tips--tab-button {
       max-height: calc(~'90% - 45px - 36px');
+    }
+    &.is-show-filter.is-show-tips {
+      max-height: calc(~'90% - 36px - 45px');
+    }
+    &.is-show-filter.is-show-tab-button {
+      max-height: calc(~'90% - 36px - 36px');
+    }
+    &.is-show-filter.is-show-tips--tab-button {
+      max-height: calc(~'90% - 36px - 45px - 36px');
     }
   }
   .indexes-table {

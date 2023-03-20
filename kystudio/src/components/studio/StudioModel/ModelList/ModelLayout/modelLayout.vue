@@ -2,7 +2,8 @@
   <div class="model-layout" :key="randomKey">
     <div class="header-layout">
       <div class="title"><el-button type="primary" text icon-button-mini icon="el-ksd-icon-arrow_left_16" size="small" @click="jumpBack"></el-button>
-        <span class="model-name"><span class="name ksd-fs-16">{{modelName}}</span><el-button class="ksd-ml-2" type="primary" text @click.stop="showModelList = !showModelList" icon-button-mini icon="el-ksd-icon-arrow_down_16" size="small"></el-button></span>
+        <model-title-description :modelData="currentModelRow" source="modelLayout" v-if="currentModelRow" hideTimeTooltip />
+        <el-button class="ksd-ml-8" type="primary" text @click.stop="showModelList = !showModelList" icon-button-mini icon="el-ksd-icon-arrow_down_16" size="small"></el-button>
         <div class="model-filter-list" v-if="showModelList">
           <div class="search-bar"><el-input class="search-model-input" v-model="searchModelName" size="small" :placeholder="$t('kylinLang.common.pleaseInput')" prefix-icon="el-ksd-icon-search_22" v-global-key-event.enter.debounce="searchModel" @clear="searchModel()"></el-input></div>
           <div class="model-list" v-loading="showSearchResult">
@@ -28,11 +29,11 @@
         :editText="$t('modelEditAction')"
         :buildText="$t('modelBuildAction')"
         :moreText="$t('moreAction')"
-        other-icon="el-ksd-icon-more_with_border_22"
+        other-icon="el-ksd-n-icon-more-outlined"
       />
     </div>
     <el-tabs class="el-tabs--default model-detail-tabs" tab-position="left" v-if="currentModelRow" v-model="currentModelRow.tabTypes" :key="$lang">
-      <el-tab-pane class="tab-pane-item" :label="$t('overview')" name="overview">
+      <el-tab-pane :class="['tab-pane-item']" :label="$t('overview')" name="overview">
         <ModelOverview
           v-if="currentModelRow.tabTypes === 'overview'"
           :ref="`$model-overview-${currentModelRow.uuid}`"
@@ -154,6 +155,7 @@ import ModelRenameModal from '../ModelRenameModal/rename.vue'
 import ModelCloneModal from '../ModelCloneModal/clone.vue'
 import ModelPartition from '../ModelPartition/index.vue'
 import ModelStreamingJob from '../ModelStreamingJob/ModelStreamingJob.vue'
+import ModelTitleDescription from '../Components/ModelTitleDescription'
 
 @Component({
   beforeRouteEnter (to, from, next) {
@@ -222,7 +224,8 @@ import ModelStreamingJob from '../ModelStreamingJob/ModelStreamingJob.vue'
     ModelRenameModal,
     ModelCloneModal,
     ModelPartition,
-    ModelStreamingJob
+    ModelStreamingJob,
+    ModelTitleDescription
   },
   locales
 })
@@ -287,15 +290,6 @@ export default class ModelLayout extends Vue {
   }
 
   selectModel ({model, ...args}) {
-    // this.$router.replace({name: 'ModelDetails', params: {modelName: model.alias, searchModelName: this.searchModelName, ...args}})
-    // this.$nextTick(() => {
-    //   this.forceUpdateRoute()
-    // })
-    // if (model.status && model.status === 'BROKEN') return
-    // this.$router.push({name: 'refresh'})
-    // this.$nextTick(() => {
-    //   this.$router.replace({name: 'ModelDetails', params: {modelName: model.alias, searchModelName: this.searchModelName, ...args}, query: {modelPageOffest: this.modelPageOffest}})
-    // })
     let data = {searchModelName: this.searchModelName, ...args}
     let modelData = this.modelList.filter(it => it.alias === this.modelName)
     this.modelName = model.alias
@@ -505,15 +499,37 @@ export default class ModelLayout extends Vue {
       padding: 0 14px;
       box-sizing: border-box;
       line-height: 56px;
-      // box-shadow: 1px 1px 4px #ccc;
       border-bottom: 1px solid #ECF0F8;
-      background-color: @ke-background-color-secondary;
+      background-color: @fff;
       position: relative;
-      .title {
+      .model-alias-label {
         display: inline-block;
-        // height: 100%;
+        height: 100%;
+        margin-top: 10px;
+        margin-left: 8px;
+        max-width: 270px;
+        .alias {
+          margin-top: 1px;
+          max-width: 300px;
+          .model-alias-title {
+            max-width: 90%;
+          }
+          .filter-status {
+            top: -4px;
+            margin-right: 2px;
+          }
+        }
+        .last-modified-tooltip {
+          margin-top: -4px;
+          font-weight: initial;
+        }
+      }
+      .title {
         font-weight: 600;
         line-height: 23px\0;
+        display: flex;
+        align-items: center;
+        height: 100%;
         .el-button {
           vertical-align: middle;
         }
@@ -533,6 +549,8 @@ export default class ModelLayout extends Vue {
         right: 10px;
         transform: translate(0, -50%);
         line-height: 23px;
+        display: flex;
+        align-items: center;
         .el-dropdown {
           position: inherit;
         }
@@ -545,7 +563,7 @@ export default class ModelLayout extends Vue {
       .el-tabs__item.is-left {
         padding: 0 20px;
       }
-      .el-tabs__nav-wrap {
+      .el-tabs__nav-wrap:not(.is-top) {
         border-right: 1px solid @ke-border-divider-color;
       }
       .segment-actions {
@@ -567,7 +585,7 @@ export default class ModelLayout extends Vue {
     .el-tabs--default {
       height: calc(~'100% - 56px');
       .el-tabs__header {
-        margin: 0 0 16px;
+        margin: 0 1px 16px;
         .el-tabs__nav-wrap {
           width: 144px;
         }
@@ -577,6 +595,9 @@ export default class ModelLayout extends Vue {
         .tab-pane-item:not(.data-features) {
           padding: 24px;
           box-sizing: border-box;
+        }
+        #pane-overview {
+          padding: 24px 0 0 0;
         }
         .el-tab-pane {
           height: 100%;
@@ -610,13 +631,15 @@ export default class ModelLayout extends Vue {
       position: absolute;
       padding: 0 0 14px 0;
       box-sizing: border-box;
-      z-index: 10;
+      z-index: 11;
       line-height: 56px;
       background: @ke-background-color-white;
       box-shadow: 0px 2px 8px rgba(50, 73, 107, 24%);
       border-radius: 6px;
       border: 1px solid @ke-border-divider-color;
       max-width: 240px;
+      top: 56px;
+      left: 100px;
       .search-bar {
         padding: 0 16px;
         box-sizing: border-box;

@@ -47,6 +47,7 @@
           type="primary"
           text>{{buildText}}</el-button>
       </common-tip>
+      <span class="divide-line" v-if="buildText">|</span>
       <common-tip :content="$t('kylinLang.common.moreActions')" :disabled="!!moreText" v-if="datasourceActions.includes('modelActions') || modelActions.includes('purge') || modelActions.includes('exportTDS')">
         <el-dropdown @command="(command) => {handleCommand(command, currentModel)}" :id="currentModel.name" trigger="click" >
           <span class="el-dropdown-link" >
@@ -270,7 +271,8 @@ import locales from './locales'
       purgeModel: 'PURGE_MODEL',
       disableModel: 'DISABLE_MODEL',
       enableModel: 'ENABLE_MODEL',
-      delModel: 'DELETE_MODEL'
+      delModel: 'DELETE_MODEL',
+      exportValidation: 'VALIDATE_EXPORT_TDS'
     }),
     ...mapActions('DetailDialogModal', {
       callGlobalDetailDialog: 'CALL_MODAL'
@@ -641,24 +643,34 @@ export default class ModelActions extends Vue {
 
   handlerExportTDS () {
     const { uuid, model_id = uuid } = this.currentExportTDSModel
-    const data = {
-      project: this.currentSelectedProject,
-      export_as: this.exportTDSConnectionType,
-      element: this.exportTDSType,
-      server_host: window.location.hostname,
-      server_port: window.location.port
-    }
-    let params = ''
-    Object.keys(data).forEach(item => {
-      params += `${item}=${data[item]}&`
+    this.exportValidation({modelId: model_id, project: this.currentSelectedProject}).then(async (res) => {
+      try {
+        const value = await handleSuccessAsync(res)
+        if (!value) return
+        const data = {
+          project: this.currentSelectedProject,
+          export_as: this.exportTDSConnectionType,
+          element: this.exportTDSType,
+          server_host: window.location.hostname,
+          server_port: window.location.port
+        }
+        let params = ''
+        Object.keys(data).forEach(item => {
+          params += `${item}=${data[item]}&`
+        })
+        const dom = document.createElement('a')
+        dom.href = `${location.protocol}//${location.host}${apiUrl}models/${model_id}/export?${params}`
+        dom.download = true
+        document.body.appendChild(dom)
+        dom.click()
+        document.body.removeChild(dom)
+        this.closeExportTDSDialog()
+      } catch (e) {
+        handleError(e)
+      }
+    }).catch((e) => {
+      handleError(e)
     })
-    const dom = document.createElement('a')
-    dom.href = `${location.protocol}//${location.host}${apiUrl}models/${model_id}/export?${params}`
-    dom.download = true
-    document.body.appendChild(dom)
-    dom.click()
-    document.body.removeChild(dom)
-    this.closeExportTDSDialog()
   }
 
   // 关闭导出 TDS 弹窗
@@ -682,9 +694,16 @@ export default class ModelActions extends Vue {
   .tip_box {
     line-height: inherit !important;
     vertical-align: inherit !important;
+    display: inline-block;
   }
   .item {
     cursor: pointer;
+  }
+  .divide-line {
+    display: inline-block;
+    width: 1px;
+    background: #E6EBF4;
+    margin-right: 8px;
   }
   .icon-item {
     font-size: 22px;

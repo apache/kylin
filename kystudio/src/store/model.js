@@ -407,6 +407,9 @@ export default {
     },
     [types.CHECK_INTERNAL_MEASURE] (_, params) {
       return api.model.checkInternalMeasure(params)
+    },
+    [types.VALIDATE_EXPORT_TDS] (_, params) {
+      return api.model.validateExportTds(params)
     }
   },
   getters: {

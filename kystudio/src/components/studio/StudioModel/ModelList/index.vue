@@ -106,61 +106,7 @@
           prop="alias"
           :label="modelTableTitle">
           <template slot-scope="scope">
-            <div class="alias">
-              <el-popover
-                popper-class="status-tooltip"
-                placement="top-start"
-                trigger="hover">
-                <template slot="reference">
-                  <span :class="['filter-status', scope.row.status]"></span>
-                </template>
-                <span v-html="$t('modelStatus_c')" />
-                <span>{{scope.row.status}}</span>
-                <div v-if="scope.row.status === 'WARNING' && scope.row.empty_indexes_count">{{$t('emptyIndexTips')}}</div>
-                <div v-if="scope.row.status === 'WARNING' && (scope.row.segment_holes && scope.row.segment_holes.length && scope.row.model_type === 'BATCH') || (scope.row.batch_segment_holes && scope.row.batch_segment_holes.length && scope.row.model_type === 'HYBRID')">
-                  <span>{{scope.row.model_type === 'HYBRID' ? $t('modelSegmentHoleTips1') : $t('modelSegmentHoleTips')}}</span><span
-                    style="color:#0988DE;cursor: pointer;"
-                    @click="autoFix(scope.row.alias, scope.row.model_type === 'HYBRID' ? scope.row.batch_id : scope.row.uuid, scope.row.model_type === 'HYBRID' ? scope.row.batch_segment_holes : scope.row.segment_holes)">{{$t('seeDetail')}}</span>
-                </div>
-                <div v-if="scope.row.status === 'WARNING' && (scope.row.segment_holes && scope.row.segment_holes.length && scope.row.model_type !== 'BATCH')">
-                  <span>{{$t('modelSegmentHoleTips2')}}</span>
-                </div>
-                <div v-if="scope.row.status === 'WARNING' && scope.row.inconsistent_segment_count">
-                  <span>{{$t('modelMetadataChangedTips')}}</span><span
-                    style="color:#0988DE;cursor: pointer;"
-                    @click="openComplementSegment(scope.row, true)">{{$t('seeDetail')}}</span>
-                </div>
-                <div v-if="scope.row.status === 'OFFLINE' && scope.row.forbidden_online">
-                  <span>{{$t('SCD2ModalOfflineTip')}}</span>
-                </div>
-                <div v-if="scope.row.status === 'OFFLINE' && !scope.row.has_segments">
-                  <span>{{$t('noSegmentOnlineTip')}}</span>
-                </div>
-                <div v-if="scope.row.status === 'OFFLINE' && !$store.state.project.multi_partition_enabled && scope.row.multi_partition_desc">
-                  <span>{{$t('multilParTip')}}</span>
-                </div>
-              </el-popover>
-              <el-popover
-                ref="titlePopover"
-                placement="top-start"
-                width="250"
-                trigger="hover"
-                popper-class="title-popover-layout"
-              >
-                <div class="title-popover">
-                  <p class="title ksd-mb-20">{{scope.row.alias}}</p>
-                  <div :class="['label', {'en': $lang === 'en'}]">
-                    <div class="group ksd-mb-8"><span class="title">{{$t('kylinLang.model.ownerGrid')}}</span><span class="item">{{scope.row.owner}}</span></div>
-                    <div class="group"><span class="title">{{$t('description')}}</span><span class="item">{{scope.row.description || '-'}}</span></div>
-                  </div>
-                </div>
-              </el-popover>
-              <span class="model-alias-title" @mouseenter.prevent v-popover:titlePopover>{{scope.row.alias}}</span>
-            </div>
-            <el-tooltip class="last-modified-tooltip" effect="dark" :content="`${$t('dataLoadTime')}${scope.row.gmtTime}`" placement="bottom">
-              <span>{{scope.row.gmtTime}}</span>
-            </el-tooltip>
-
+            <model-title-description :modelData="scope.row" @openSegment="openComplementSegment" source="modelList" />
             <!-- 工具栏 -->
             <model-actions :currentModel="scope.row" @loadModelsList="loadModelsList"/>
 
@@ -178,7 +124,7 @@
                 @after-enter="(e) => afterPoppoverEnter(e, scope.row)"
                 popper-class="er-popover-layout"
               >
-                <div class="model-ER-layout"><ModelERDiagram v-if="scope.row.showER" :model="dataGenerator.generateModel(scope.row)" /></div>
+              <div class="model-ER-layout"><ModelERDiagram v-if="scope.row.showER" ref="erDiagram" source="modelList"  :show-shortcuts-group="false" :show-change-alert="false" :model="dataGenerator.generateModel(scope.row)" /></div>
               </el-popover>
               <span class="model-ER" v-popover="`${scope.row.alias}-ERPopover`">
                 <el-icon name="el-ksd-icon-table_er_diagram_22" class="ksd-fs-22" type="mult"></el-icon>
@@ -305,6 +251,7 @@ import AggregateModal from './AggregateModal/index.vue'
 import TableIndexEdit from '../TableIndexEdit/tableindex_edit'
 import ModelActions from './ModelActions/modelActions'
 import ModelERDiagram from '../../../common/ModelERDiagram/ModelERDiagram'
+import ModelTitleDescription from './Components/ModelTitleDescription'
 
 function getDefaultFilters (that) {
   return {
@@ -421,7 +368,8 @@ function getDefaultFilters (that) {
     TableIndexEdit,
     ModelOverview,
     ModelActions,
-    ModelERDiagram
+    ModelERDiagram,
+    ModelTitleDescription
   },
   locales
 })
@@ -927,6 +875,9 @@ export default class ModelList extends Vue {
   afterPoppoverEnter (e, row) {
     this.$nextTick(() => {
       this.$set(row, 'showER', true)
+      this.$nextTick(() => {
+        this.$refs.erDiagram && this.$refs.erDiagram.exchangePosition()
+      })
     })
   }
 }
@@ -1106,11 +1057,6 @@ export default class ModelList extends Vue {
     }
     .model-alias-title {
       max-width: calc(~'100% - 30px');
-      display: inline-block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      white-space: nowrap\0 !important;
     }
     .model-alias-item {
       .action-items {
@@ -1216,14 +1162,6 @@ export default class ModelList extends Vue {
       }
     }
   }
-  .alias {
-    font-weight: bold;
-    line-height: 20px;
-    width: 100%;
-    height: 20px;
-    // margin-bottom: 5px;
-    float: left;
-  }
   .last-modified {
     font-size: 12px;
     line-height: 18px;
@@ -1262,6 +1200,22 @@ export default class ModelList extends Vue {
   .dialog-detail {
     .dialog-detail-scroll {
       max-height: 200px;
+    }
+  }
+}
+.model_list_table{
+  .model-alias-label {
+    cursor: pointer;
+    .alias {
+      height: 20px;
+      margin-top: 0;
+      cursor: pointer;
+      .filter-status {
+        cursor: pointer;
+      }
+    }
+    .last-modified-tooltip {
+      cursor: pointer;
     }
   }
 }
@@ -1315,69 +1269,15 @@ export default class ModelList extends Vue {
     }
   }
 }
-.last-modified-tooltip {
-  min-width: unset;
-  transform: translate(-5px, 5px);
-  margin-left: 15px;
-  color: #8B99AE;
-  font-size: 12px;
-  .popper__arrow {
-    left: 5px !important;
-  }
-}
-.status-tooltip {
-  min-width: unset;
-  transform: translate(-3px, 0);
-  .popper__arrow {
-    left: 8px !important;
-  }
-}
 .model-actions-dropdown {
   text-align: left;
   min-width: 95px;
-}
-.title-popover-layout {
-  font-size: 14px;
-  word-break: break-all;
-  .title {
-    color: @text-title-color;
-    font-weight: bold;
-  }
-  .label {
-    display: inline-block;
-    .group {
-      color: @text-disabled-color;
-      // text-align: right;
-      margin-right: 15px;
-      .title {
-        color: @text-disabled-color;
-        display: inline-block;
-        min-width: 40px;
-        word-break: break-all;
-        text-align: right;
-        margin-right: 10px;
-      }
-      .item {
-        display: inline-block;
-        max-width: 180px;
-        word-break: break-all;
-        vertical-align: top;
-      }
-    }
-    &.en {
-      .title {
-        min-width: 80px;
-      }
-      .item {
-        max-width: 140px;
-      }
-    }
-  }
 }
 .er-popover-layout {
   width: 400px;
   height: 300px;
   position: relative;
+  background-color: @ke-background-color-secondary;
   .model-ER-layout {
     width: 100%;
     height: 100%;

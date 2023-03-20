@@ -657,9 +657,16 @@ Vue.directive('custom-tooltip', {
       textWidth: currentElWidth,
       binding,
       timer: null,
-      [`resizeFn-${id}`]: function () {
-        const { parent } = parentList[id]
+      [`resizeFn-${id}`]: function (e) {
+        const { parent } = parentList[id] ?? {}
         if (!parent) return
+        // 监听盒子 style 里 width 的变化
+        if (binding.value.observerId) {
+          const [mutationRecord] = e.slice(-1)
+          const oldValue = mutationRecord.oldValue.match(/(width: [\w.]+);/g)
+          const newValue = mutationRecord.target.style.cssText.match(/(width: [\w.]+);/g)
+          if (oldValue.join('') === newValue.join('')) return
+        }
         let textNode = parent.querySelector('.custom-tooltip-text')
         setTimeout(() => {
           // 此方法的调用需要等待 dom 被更新完成
@@ -702,13 +709,17 @@ Vue.directive('custom-tooltip', {
 
 // MutationObserver 方式监听 dom attrs 的改变
 function licenseDom (id) {
-  if (!parentList[id]) {
-    return
-  }
+  if (!parentList[id]) return
   const { binding } = parentList[id]
   // 当元素在table中，使用 MutationObserver 方法监听 table 宽度 style 的改变（这里监听的是 el-table__body dom 的宽度）
-  if (binding.value.tableClassName) {
-    let element = document.querySelector(`.${binding.value.tableClassName}`) && document.querySelector(`.${binding.value.tableClassName}`).querySelector('.el-table__body')
+  const observerElementName = binding.value.tableClassName || binding.value.observerId
+  if (observerElementName) {
+    let element = ''
+    if (binding.value.tableClassName) {
+      element = document.querySelector(`.${observerElementName}`) && document.querySelector(`.${observerElementName}`).querySelector('.el-table__body')
+    } else {
+      element = document.getElementById(`${observerElementName}`)
+    }
     let MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver
     if (parentList[id]) {
       let observer = new MutationObserver(
@@ -717,7 +728,8 @@ function licenseDom (id) {
       parentList[id].observer = observer
       observer.observe(element, {
         attributes: true, // 监听 table 的 attributes 的改变
-        attributeFilter: ['drag-count']
+        attributeFilter: ['drag-count', 'style'],
+        attributeOldValue: true
       })
     }
   } else {
