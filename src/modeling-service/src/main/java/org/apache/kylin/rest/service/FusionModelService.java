@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -253,7 +254,12 @@ public class FusionModelService extends AbstractModelService implements TableFus
     }
 
     public boolean modelExists(String modelAlias, String project) {
-        return getManager(NDataModelManager.class, project).listAllModelAlias()
-                .contains(modelAlias.toLowerCase(Locale.ROOT));
+        Set<String> allModelAlias = getManager(NDataModelManager.class, project).listAllModelAlias();
+        for (String alias : allModelAlias) {
+            if (alias.equalsIgnoreCase(modelAlias)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

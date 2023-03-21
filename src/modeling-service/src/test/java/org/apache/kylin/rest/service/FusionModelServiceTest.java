@@ -32,6 +32,8 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -68,9 +70,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.var;
@@ -466,6 +465,8 @@ public class FusionModelServiceTest extends SourceTestCase {
 
     @Test
     public void testModelExistsIgnoreCase() {
-        Assert.assertTrue(fusionModelService.modelExists("Stream_Merge1", "streaming_test"));
+        String project = "streaming_test";
+        Assert.assertTrue(fusionModelService.modelExists("Stream_Merge1", project));
+        Assert.assertTrue(fusionModelService.modelExists("auto_model_p_lineorder_0", project));
     }
 }
