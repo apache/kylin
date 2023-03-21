@@ -73,8 +73,8 @@ public class CsvSource implements ISource {
 
                 @Override
                 public Dataset<Row> getSourceData(TableDesc table, SparkSession ss, Map<String, String> parameters) {
-                    if (KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB()
-                        .equalsIgnoreCase(table.getDatabase())) {
+                    if ("null".equalsIgnoreCase(table.getDatabase())
+                            || KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB().equalsIgnoreCase(table.getDatabase())) {
                       return new NSparkCubingSourceInput().getSourceData(table, ss, parameters);
                     }
                     String path = new File(getUtMetaDir(), "data/" + table.getIdentity() + ".csv").getAbsolutePath();

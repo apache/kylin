@@ -21,6 +21,7 @@ package org.apache.spark.application
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 import org.apache.kylin.engine.spark.scheduler._
 import io.netty.util.internal.ThrowableUtil
+import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.common.util.Unsafe
 import org.apache.spark.autoheal.ExceptionTerminator
 import org.apache.spark.internal.Logging
@@ -80,7 +81,11 @@ class JobMonitor(eventLoop: KylinJobEventLoop) extends Logging {
   }
 
   def handleUnknownThrowable(ur: UnknownThrowable): Unit = {
-    eventLoop.post(JobFailed("Unknown error occurred during the job.", ur.throwable))
+    var msg = "Unknown error occurred during the job."
+    if (ur.throwable != null && StringUtils.isNotBlank(ur.throwable.getMessage)) {
+      msg = ur.throwable.getMessage
+    }
+    eventLoop.post(JobFailed(msg, ur.throwable))
   }
 }
 

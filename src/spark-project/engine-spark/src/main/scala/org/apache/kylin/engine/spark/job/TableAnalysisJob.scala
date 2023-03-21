@@ -27,6 +27,7 @@ import org.apache.kylin.engine.spark.utils.SparkConfHelper
 import org.apache.kylin.metadata.model.TableDesc
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.source.SourceFactory
+import org.apache.spark.application.NoRetryException
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DataFrameEnhancement._
 import org.apache.spark.sql._
@@ -34,6 +35,7 @@ import org.apache.spark.sql.catalyst.catalog.CatalogTableType
 import org.apache.spark.sql.functions._
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class TableAnalysisJob(tableDesc: TableDesc,
                        project: String,
@@ -59,6 +61,10 @@ class TableAnalysisJob(tableDesc: TableDesc,
       .createEngineAdapter(tableDesc, classOf[NSparkCubingEngine.NSparkCubingSource])
       .getSourceData(tableDesc, ss, params)
       .coalesce(numPartitions)
+
+    if (!checkColumns(tableDesc, dataFrame)) {
+      throw new NoRetryException("Source table missing columns. Please reload table before sampling.")
+    }
 
     calculateViewMetasIfNeeded(tableDesc.getBackTickIdentity)
 
@@ -112,6 +118,23 @@ class TableAnalysisJob(tableDesc: TableDesc,
               s"""Unsupported metric in TableSampling """)
         }
     ).toList
+  }
+
+  def checkColumns(tableDesc: TableDesc, ds: Dataset[Row]): Boolean = {
+    logInfo(s"Check columns for table ${tableDesc.getIdentity}")
+    val sourceColumnSet: Set[String] = ds.columns.map(col => col.toUpperCase).toSet
+    val nonExistColumns: mutable.Set[String] = mutable.Set()
+    for (col <- tableDesc.getColumns) {
+      if (!col.isComputedColumn && !sourceColumnSet.contains(col.getName)) {
+        nonExistColumns.add(col.getName)
+      }
+    }
+    if (nonExistColumns.nonEmpty) {
+      logError(s"Check columns for table ${tableDesc.getIdentity} failed, missing following columns: ${nonExistColumns}")
+    } else {
+      logInfo(s"Check columns for table ${tableDesc.getIdentity} good")
+    }
+    nonExistColumns.isEmpty
   }
 
 }
