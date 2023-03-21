@@ -18,9 +18,6 @@
 
 package org.apache.kylin.engine.spark.job.stage.build
 
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.{Locale, Objects, Timer, TimerTask}
-
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.util.HadoopUtil
@@ -33,10 +30,11 @@ import org.apache.kylin.engine.spark.job.NSparkCubingUtil.convertFromDot
 import org.apache.kylin.engine.spark.job.stage.{BuildParam, StageExec}
 import org.apache.kylin.engine.spark.job.{FiltersUtil, SegmentJob, TableMetaManager}
 import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
-import org.apache.kylin.engine.spark.smarter.IndexDependencyParser
 import org.apache.kylin.engine.spark.model.planner.{CuboIdToLayoutUtils, FlatTableToCostUtils}
+import org.apache.kylin.engine.spark.smarter.IndexDependencyParser
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
+import org.apache.kylin.guava30.shaded.common.collect.Sets
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree
 import org.apache.kylin.metadata.cube.cuboid.AdaptiveSpanningTree.AdaptiveTreeBuilder
 import org.apache.kylin.metadata.cube.model.NDataSegment
@@ -52,20 +50,12 @@ import org.apache.spark.utils.ProxyThreadUtils
 import java.math.BigInteger
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 import java.util.{Locale, Objects, Timer, TimerTask}
-
-import org.apache.kylin.common.constant.LogConstant
-import org.apache.kylin.common.logging.SetLogCategory
-
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.{Locale, Objects, Timer, TimerTask}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel.ForkJoinTaskSupport
 import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.util.{Failure, Success, Try}
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets
 
 abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
                                     private val dataSegment: NDataSegment,
