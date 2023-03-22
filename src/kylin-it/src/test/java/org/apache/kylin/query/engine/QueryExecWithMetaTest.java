@@ -221,6 +221,19 @@ public class QueryExecWithMetaTest extends NLocalWithSparkSessionTest {
         Assert.assertEquals("1001", thirdRow.get(2));
     }
 
+    @Test
+    public void testAllType() throws IOException, SQLException {
+        String sql = getSql("/query/sql_min_max/query08.sql");
+        QueryResult queryResult = queryExec.executeQuery(sql);
+        Assert.assertEquals(1, queryResult.getSize());
+        Iterator<List<String>> iterator = queryResult.getRowsIterable().iterator();
+        List<String> result = iterator.next();
+        Assert.assertEquals("2147483648,21474836483289,2132,2147483647,-128,127,0,9,0.0,10000.0,"
+                + "0.3255242,85208.3241,10.0000,201.3235,abc,xyz,aaaaaaaa,xxxxxxxxxxxxxxxxxxxxx,abcd,zzzz,"
+                + "2000-12-31,2004-04-16,2004-04-01 00:00:00,2004-04-17 00:32:23.032,false,true,"
+                + "null,null,null,null,null,null,null,null,null,null,null,null", String.join(",", result));
+    }
+
     private String getSql(String path) throws IOException {
         String sql = CharStreams.toString(
                 new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream(path)), Charsets.UTF_8));

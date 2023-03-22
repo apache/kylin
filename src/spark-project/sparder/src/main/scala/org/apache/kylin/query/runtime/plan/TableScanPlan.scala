@@ -31,12 +31,12 @@ import org.apache.kylin.metadata.tuple.TupleInfo
 import org.apache.kylin.query.implicits.sessionToQueryContext
 import org.apache.kylin.query.relnode.{KapRel, OLAPContext}
 import org.apache.kylin.query.util.{RuntimeHelper, SparderDerivedUtil}
+import org.apache.spark.sql.{Column, DataFrame, Row, SparderEnv, SparkOperation, SparkSession}
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.manager.SparderLookupManager
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.{ArrayType, DataTypes, DoubleType, StringType, StructField, StructType}
 import org.apache.spark.sql.util.SparderTypeUtil
-import org.apache.spark.sql._
 
 import java.util.concurrent.ConcurrentHashMap
 import java.{lang, util}
@@ -103,7 +103,13 @@ object TableScanPlan extends LogEx {
     allFields.forEach(col => {
       try {
         val dataType = col.getColumnDesc.getUpgradedType
-        val spaType = SparderTypeUtil.kylinTypeToSparkResultType(dataType)
+        val spaType = if (dataType.isDate) {
+          DataTypes.DateType
+        } else if (dataType.isDateTimeFamily) {
+          DataTypes.TimestampType
+        } else {
+          SparderTypeUtil.kylinTypeToSparkResultType(dataType)
+        }
         structTypes.add(StructField(col.getIdentity.replace(".", "_"), spaType))
       } catch {
         // some dataTypes are not support in sparder, such as 'any',
