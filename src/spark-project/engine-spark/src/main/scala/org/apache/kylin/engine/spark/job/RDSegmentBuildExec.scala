@@ -61,7 +61,7 @@ class RDSegmentBuildExec(private val jobContext: SegmentJob, //
       val sourceName = String.valueOf(parentId)
       val leaves = Integer.parseInt(ResourceDetectUtils.getPartitions(execution.executedPlan))
       logInfo(s"Leaf nodes: $leaves")
-      val paths = ResourceDetectUtils.getPaths(execution.sparkPlan).map(_.toString).asJava
+      val paths = ResourceDetectUtils.getPaths(execution.sparkPlan, true).map(_.toString).asJava
       logInfo(s"Detected source: $sourceName $leaves ${paths.asScala.mkString(",")}")
       val startTime = System.currentTimeMillis()
       val resourceSize = ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(), config.isConcurrencyFetchDataSourceSize,
