@@ -129,9 +129,9 @@ object SparderTypeUtil extends Logging {
       dataTp.getName match {
         case "decimal" => new java.math.BigDecimal(s.toString)
         case "date" => new java.sql.Date(DateFormat.stringToMillis(s.toString))
-        case "time" => new Timestamp(DateFormat.stringToMillis(s.toString))
-        case "timestamp" => new Timestamp(DateFormat.stringToMillis(s.toString))
-        case "datetime" => new java.sql.Date(DateFormat.stringToMillis(s.toString))
+        case "time" | "timestamp" | "datetime" =>
+          val l = java.lang.Long.parseLong(s.toString)
+          Timestamp.valueOf(DateFormat.castTimestampToString(l))
         case "tinyint" => s.toString.toByte
         case "smallint" => s.toString.toShort
         case "integer" => s.toString.toInt

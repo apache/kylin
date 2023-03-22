@@ -653,8 +653,14 @@ public class OLAPContext {
                 String dataType = col.getColumnDesc().getUpgradedType().getName();
                 int colId = allFields.indexOf(col);
                 String tblColRefIndex = getTblColRefIndex(col, realization);
-                minList[colId] = Tuple.convertOptiqCellValue(infoMap.get(tblColRefIndex).getMin(), dataType);
-                maxList[colId] = Tuple.convertOptiqCellValue(infoMap.get(tblColRefIndex).getMax(), dataType);
+                DimensionRangeInfo dimensionRangeInfo = infoMap.get(tblColRefIndex);
+                if (dimensionRangeInfo == null) {
+                    minList[colId] = null;
+                    maxList[colId] = null;
+                } else {
+                    minList[colId] = Tuple.convertOptiqCellValue(dimensionRangeInfo.getMin(), dataType);
+                    maxList[colId] = Tuple.convertOptiqCellValue(dimensionRangeInfo.getMax(), dataType);
+                }
             }
 
             result.add(minList);
