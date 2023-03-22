@@ -65,7 +65,7 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication implements 
             Dataset<Row> afterMerge = entry.getValue().merge();
             infos.recordSparkPlan(afterMerge.queryExecution().sparkPlan());
             List<Path> paths = JavaConversions
-                    .seqAsJavaList(ResourceDetectUtils.getPaths(afterMerge.queryExecution().sparkPlan()));
+                    .seqAsJavaList(ResourceDetectUtils.getPaths(afterMerge.queryExecution().sparkPlan(), true));
             resourceSize.put(String.valueOf(entry.getKey()),
                     ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(), config.isConcurrencyFetchDataSourceSize(),
                             JavaConverters.asScalaIteratorConverter(paths.iterator()).asScala().toSeq()));

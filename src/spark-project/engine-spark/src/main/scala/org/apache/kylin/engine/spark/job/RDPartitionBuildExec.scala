@@ -65,7 +65,7 @@ class RDPartitionBuildExec(private val jobContext: SegmentJob, //
         Integer.parseInt(ResourceDetectUtils.getPartitions(execution.executedPlan))).sum
 
       val paths = executions.flatMap(execution => //
-        ResourceDetectUtils.getPaths(execution.sparkPlan).map(_.toString)
+        ResourceDetectUtils.getPaths(execution.sparkPlan, true).map(_.toString)
       ).asJava
 
       logInfo(s"Detected source: $sourceName $leaves ${paths.asScala.mkString(",")}")

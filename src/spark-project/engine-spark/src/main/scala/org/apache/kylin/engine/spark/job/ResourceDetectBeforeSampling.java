@@ -56,7 +56,7 @@ public class ResourceDetectBeforeSampling extends SparkApplication implements Re
                 .createEngineAdapter(tableDesc, NSparkCubingEngine.NSparkCubingSource.class)
                 .getSourceData(tableDesc, ss, params);
         final List<Path> paths = JavaConversions
-                .seqAsJavaList(ResourceDetectUtils.getPaths(dataset.queryExecution().sparkPlan()));
+                .seqAsJavaList(ResourceDetectUtils.getPaths(dataset.queryExecution().sparkPlan(), true));
 
         Map<String, Long> resourceSize = Maps.newHashMap();
         resourceSize.put(String.valueOf(tableName),
