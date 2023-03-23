@@ -50,8 +50,9 @@ public class QueryFiltersCollector {
 
     public static final String SERVER_HOST = AddressUtil.getLocalServerInfo();
 
+    // path should start with `_` to avoid being cleaned in storage
     public static final String FILTER_STORAGE_PATH =
-            KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/query_filter/";
+            KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/_query_filter/";
 
 
     public static void increaseHit(String project, String modelId, String columnId) {

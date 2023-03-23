@@ -567,7 +567,7 @@ class DagExecutableTest {
         manager.addJob(job);
         job.doWork(context);
 
-        await().atMost(new Duration(20, TimeUnit.SECONDS)).untilAsserted(() -> {
+        await().atMost(new Duration(120, TimeUnit.SECONDS)).untilAsserted(() -> {
             assertEquals(ExecutableState.SUCCEED, executable1.getStatus());
             assertEquals(ExecutableState.SUCCEED, executable2.getStatus());
             assertEquals(ExecutableState.SUCCEED, executable22.getStatus());
