@@ -35,6 +35,7 @@ import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.ModelImportRequest;
 import org.apache.kylin.rest.request.ModelPreviewRequest;
+import org.apache.kylin.rest.request.StorageCleanupRequest;
 import org.apache.kylin.rest.service.MetaStoreService;
 import org.junit.After;
 import org.junit.Before;
@@ -151,6 +152,22 @@ public class NMetaStoreControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         Mockito.verify(nModelController).importModelMetadata("default", multipartFile, request);
+    }
+
+    @Test
+    public void testCleanupStorageForTenantMode() throws Exception {
+        Mockito.doNothing().when(metaStoreService).cleanupStorage(Mockito.any(String[].class), Mockito.anyBoolean());
+
+        final StorageCleanupRequest request = new StorageCleanupRequest();
+        request.setCleanupStorage(false);
+        request.setProjectsToClean(new String[] { "default", "project" });
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/metastore/cleanup_storage/tenant_node")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE).content(JsonUtil.writeValueAsString(request))
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.verify(nModelController).cleanupStorageForTenantMode(request);
     }
 
     private ModelPreviewRequest mockModelPreviewRequest() {

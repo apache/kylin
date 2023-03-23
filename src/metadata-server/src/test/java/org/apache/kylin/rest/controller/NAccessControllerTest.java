@@ -153,6 +153,23 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testGrantPermissionForValidUserWithProject() throws Exception {
+        AccessRequest accessRequest = new AccessRequest();
+        accessRequest.setSid(sid);
+        accessRequest.setPrincipal(true);
+        accessRequest.setProject(uuid);
+        AclEntity ae = accessService.getAclEntity(type, uuid);
+        Mockito.doReturn(true).when(userService).userExists(sid);
+        Mockito.doNothing().when(aclTCRService).updateAclTCR(uuid, null);
+        Mockito.doNothing().when(accessService).grant(uuid, ae, "1", true, "ADMIN");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/access/{type}/{uuid}", type, uuid)
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(accessRequest))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nAccessController).grant(type, uuid, accessRequest);
+    }
+
+    @Test
     @Ignore
     public void testGrantPermissionForInvalidUser() throws Exception {
         String sid = "1/";
@@ -178,6 +195,24 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
+    public void testUpdateAclWithProject() throws Exception {
+        AccessRequest accessRequest = new AccessRequest();
+        accessRequest.setSid(sid);
+        accessRequest.setPrincipal(true);
+        accessRequest.setPermission("OPERATION");
+        accessRequest.setAccessEntryId(0);
+        accessRequest.setProject(uuid);
+
+        Mockito.doReturn(true).when(userService).userExists(sid);
+        Mockito.doNothing().when(aclTCRService).updateAclTCR(uuid, null);
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/access/{type}/{uuid}", type, uuid)
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(accessRequest))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nAccessController).updateAcl(type, uuid, accessRequest);
+    }
+
+    @Test
     public void testRevokeAcl() throws Exception {
         Mockito.doReturn(true).when(userService).userExists(sid);
         Mockito.doNothing().when(aclTCRService).revokeAclTCR(uuid, true);
@@ -185,7 +220,19 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).param("access_entry_id", "1").param("sid", sid)
                 .param("principal", "true").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nAccessController).revokeAcl(type, uuid, 1, sid, true);
+        Mockito.verify(nAccessController).revokeAcl(type, uuid, 1, sid, true, null);
+    }
+
+    @Test
+    public void testRevokeAclWithProject() throws Exception {
+        Mockito.doReturn(true).when(userService).userExists(sid);
+        Mockito.doNothing().when(aclTCRService).revokeAclTCR(uuid, true);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/access/{type}/{uuid}", type, uuid)
+                .contentType(MediaType.APPLICATION_JSON).param("project", uuid).param("access_entry_id", "1")
+                .param("sid", sid).param("principal", "true")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nAccessController).revokeAcl(type, uuid, 1, sid, true, uuid);
     }
 
     @Test
@@ -195,7 +242,18 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).param("access_entry_id", "1").param("sid", "NotExist")
                 .param("principal", "false").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nAccessController).revokeAcl(type, uuid, 1, "NotExist", false);
+        Mockito.verify(nAccessController).revokeAcl(type, uuid, 1, "NotExist", false, null);
+    }
+
+    @Test
+    public void testRevokeAclWithNotExistSidWithProject() throws Exception {
+        Mockito.doNothing().when(aclTCRService).revokeAclTCR(uuid, false);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/access/{type}/{uuid}", type, uuid)
+                .contentType(MediaType.APPLICATION_JSON).param("project", uuid).param("access_entry_id", "1")
+                .param("sid", "NotExist").param("principal", "false")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nAccessController).revokeAcl(type, uuid, 1, "NotExist", false, uuid);
     }
 
     @Test
@@ -391,7 +449,22 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(requests))
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-        Mockito.verify(nAccessController).batchGrant(type, uuid, true, requests);
+        Mockito.verify(nAccessController).batchGrant(type, uuid, null, true, requests);
+    }
+
+    @Test
+    public void testBatchGrantWithProject() throws Exception {
+        BatchAccessRequest accessRequest = new BatchAccessRequest();
+        List<String> sids = Lists.newArrayList(sid);
+        accessRequest.setSids(sids);
+        accessRequest.setPrincipal(true);
+        List<BatchAccessRequest> requests = Lists.newArrayList(accessRequest);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/access/batch/{type}/{uuid}", type, uuid)
+                .contentType(MediaType.APPLICATION_JSON).param("project", uuid)
+                .content(JsonUtil.writeValueAsString(requests))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nAccessController).batchGrant(type, uuid, uuid, true, requests);
     }
 
     @Test
@@ -405,11 +478,25 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
                 .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(requests))
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError());
-        Mockito.verify(nAccessController).batchGrant(type, uuid, true, requests);
+        Mockito.verify(nAccessController).batchGrant(type, uuid, null, true, requests);
     }
 
     @Test
-    public void testupdateExtensionAcl() throws Exception {
+    public void testBatchGrantDuplicateNameWithProject() throws Exception {
+        BatchAccessRequest accessRequest = new BatchAccessRequest();
+        List<String> sids = Lists.newArrayList(sid, sid);
+        accessRequest.setSids(sids);
+        accessRequest.setPrincipal(true);
+        List<BatchAccessRequest> requests = Lists.newArrayList(accessRequest);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/access/batch/{type}/{uuid}", type, uuid)
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(requests))
+                .param("project", uuid).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+        Mockito.verify(nAccessController).batchGrant(type, uuid, uuid, true, requests);
+    }
+
+    @Test
+    public void testUpdateExtensionAcl() throws Exception {
         AccessRequest accessRequest = new AccessRequest();
         accessRequest.setSid(sid);
         accessRequest.setPrincipal(true);
@@ -424,4 +511,20 @@ public class NAccessControllerTest extends NLocalFileMetadataTestCase {
         Mockito.verify(nAccessController).updateExtensionAcl(type, uuid, accessRequest);
     }
 
+    @Test
+    public void testUpdateExtensionAclWithProject() throws Exception {
+        AccessRequest accessRequest = new AccessRequest();
+        accessRequest.setSid(sid);
+        accessRequest.setPrincipal(true);
+        accessRequest.setExtPermissions(Collections.singletonList("DATA_QUERY"));
+        accessRequest.setProject(uuid);
+
+        Mockito.doReturn(true).when(userService).userExists(sid);
+        Mockito.doNothing().when(aclTCRService).updateAclTCR(uuid, null);
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/access/extension/{type}/{uuid}", type, uuid)
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(accessRequest))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nAccessController).updateExtensionAcl(type, uuid, accessRequest);
+    }
 }

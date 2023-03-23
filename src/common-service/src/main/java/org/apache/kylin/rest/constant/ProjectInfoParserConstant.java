@@ -31,6 +31,8 @@ public class ProjectInfoParserConstant {
     public static final ProjectInfoParserConstant INSTANCE = new ProjectInfoParserConstant();
     public final List<String> PROJECT_PARSER_URI_LIST;
     public final List<String> PROJECT_PARSER_URI_EXCLUDED_LIST;
+    public final List<String> PROJECT_PARSER_URI_V2_LIST;
+    public final List<String> PROJECT_PARSER_URI_V2_EXCLUDED_LIST;
 
     private ProjectInfoParserConstant() {
         ImmutableList.Builder<String> urisBuilder = ImmutableList.builder();
@@ -40,6 +42,19 @@ public class ProjectInfoParserConstant {
         ImmutableList.Builder<String> uriExcludedBuilder = ImmutableList.builder();
         constructExcludeUris(uriExcludedBuilder);
         PROJECT_PARSER_URI_EXCLUDED_LIST = uriExcludedBuilder.build();
+
+        ImmutableList.Builder<String> uriV2Builder = ImmutableList.builder();
+        constructV2Uris(uriV2Builder);
+        PROJECT_PARSER_URI_V2_LIST = uriV2Builder.build();
+
+        ImmutableList.Builder<String> uriV2ExcludedBuilder = ImmutableList.builder();
+        constructV2ExcludeUris(uriV2ExcludedBuilder);
+        PROJECT_PARSER_URI_V2_EXCLUDED_LIST = uriV2ExcludedBuilder.build();
+    }
+
+    private void constructV2ExcludeUris(final ImmutableList.Builder<String> uriExcludedBuilder) {
+        uriExcludedBuilder.add("/kylin/api/access/all/users");
+        uriExcludedBuilder.add("/kylin/api/access/all/groups");
     }
 
     private void constructExcludeUris(final ImmutableList.Builder<String> uriExcludedBuilder) {
@@ -47,6 +62,11 @@ public class ProjectInfoParserConstant {
                 "config/deletion", "default_configs");
         projectsSubUris.forEach(projectsSubUri -> uriExcludedBuilder
                 .add(format(Locale.ROOT, "/kylin/api/projects/%s", projectsSubUri)));
+    }
+
+    private void constructV2Uris(final ImmutableList.Builder<String> urisBuilder) {
+        urisBuilder.add("/kylin/api/access/{type}/{project}");
+        urisBuilder.add("/kylin/api/cube_desc/{projectName}/{cubeName}");
     }
 
     private void constructUris(final ImmutableList.Builder<String> urisBuilder) {

@@ -40,6 +40,8 @@ public class UnitOfWorkParams<T> {
     @Builder.Default
     private String unitName = UnitOfWork.GLOBAL_UNIT;
 
+    private String projectId = "";
+
     @Builder.Default
     private long epochId = UnitOfWork.DEFAULT_EPOCH_ID;
 

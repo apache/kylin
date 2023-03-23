@@ -26,6 +26,9 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class EncryptUtil {
     /**
      * thisIsAsecretKey
@@ -77,10 +80,15 @@ public class EncryptUtil {
     }
 
     public static String getDecryptedValue(String value) {
-        if (isEncrypted(value)) {
-            return decryptPassInKylin(value);
+        try {
+            if (isEncrypted(value)) {
+                return decryptPassInKylin(value);
+            }
+            return value;
+        } catch (Exception e) {
+            log.error("Get decrypted value failed, {}", value, e);
+            return null;
         }
-        return value;
     }
 
     public static void main(String[] args) {

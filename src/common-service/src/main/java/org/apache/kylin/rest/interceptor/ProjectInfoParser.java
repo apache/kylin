@@ -17,12 +17,15 @@
  */
 package org.apache.kylin.rest.interceptor;
 
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.Objects;
 
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
@@ -46,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProjectInfoParser {
 
     private static final String PROJECT_PARAM = "project";
+    private static final String PROJECT_NAME_PARAM = "projectName";
 
     private ProjectInfoParser() {
         throw new IllegalStateException("Utility class");
@@ -63,6 +67,9 @@ public class ProjectInfoParser {
 
             requestWrapper = new RepeatableBodyRequestWrapper(request);
             project = requestWrapper.getParameter(PROJECT_PARAM);
+            if (StringUtils.isEmpty(project)) {
+                project = requestWrapper.getParameter(PROJECT_NAME_PARAM);
+            }
             if (StringUtils.isEmpty(project) && contentType != null && contentType.contains("json")) {
                 val projectRequest = JsonUtil.readValue(((RepeatableBodyRequestWrapper) requestWrapper).getBody(),
                         ProjectRequest.class);
@@ -77,6 +84,14 @@ public class ProjectInfoParser {
 
         if (StringUtils.isEmpty(project)) {
             project = extractProject((request).getRequestURI());
+        }
+
+        if (StringUtils.isEmpty(project)) {
+            project = extractUrlV2Project((request).getRequestURI(), requestWrapper);
+        }
+
+        if (StringUtils.isEmpty(project) && Objects.nonNull(request.getAttribute(PROJECT_PARAM))) {
+            project = String.valueOf(request.getAttribute(PROJECT_PARAM));
         }
 
         if (StringUtils.isEmpty(project)) {
@@ -149,7 +164,33 @@ public class ProjectInfoParser {
             val kvMap = new HashMap<String, String>();
 
             if (uriTemplate.match(url, kvMap)) {
-                return kvMap.get(PROJECT_PARAM);
+                String project = kvMap.get(PROJECT_PARAM);
+                if (StringUtils.isEmpty(project)) {
+                    project = kvMap.get(PROJECT_NAME_PARAM);
+                }
+                return project;
+            }
+        }
+
+        return null;
+    }
+
+    static String extractUrlV2Project(String url, HttpServletRequest requestWrapper) {
+        val accept = requestWrapper.getHeader("Accept");
+        if (!StringUtils.equals(accept, HTTP_VND_APACHE_KYLIN_V2_JSON)
+                || ProjectInfoParserConstant.INSTANCE.PROJECT_PARSER_URI_V2_EXCLUDED_LIST.contains(url)) {
+            return null;
+        }
+        for (String needParserURI : ProjectInfoParserConstant.INSTANCE.PROJECT_PARSER_URI_V2_LIST) {
+            val uriTemplate = new UriTemplate(needParserURI);
+            val kvMap = new HashMap<String, String>();
+
+            if (uriTemplate.match(url, kvMap)) {
+                String project = kvMap.get(PROJECT_PARAM);
+                if (StringUtils.isEmpty(project)) {
+                    project = kvMap.get(PROJECT_NAME_PARAM);
+                }
+                return project;
             }
         }
 

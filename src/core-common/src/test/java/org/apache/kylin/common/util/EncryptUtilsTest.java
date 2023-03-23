@@ -17,25 +17,34 @@
  */
 package org.apache.kylin.common.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import org.junit.jupiter.api.Test;
 
-public class EncryptUtilsTest {
+class EncryptUtilsTest {
 
     @Test
-    public void testEncryptWithPrefix() {
+    void testEncryptWithPrefix() {
         String text = "kylin";
-        assert EncryptUtil.encryptWithPrefix(text).equals("ENC('YeqVr9MakSFbgxEec9sBwg==')");
+        assertEquals("ENC('YeqVr9MakSFbgxEec9sBwg==')", EncryptUtil.encryptWithPrefix(text));
     }
 
     @Test
-    public void testGetDecryptedValue() {
+    void testGetDecryptedValue() {
         String text = "ENC('YeqVr9MakSFbgxEec9sBwg==')";
-        assert EncryptUtil.getDecryptedValue(text).equals("kylin");
+        assertEquals("kylin", EncryptUtil.getDecryptedValue(text));
     }
 
     @Test
-    public void testGetDecryptedValueCase2() {
+    void testGetDecryptedValueCase2() {
         String text = "kylin";
-        assert EncryptUtil.getDecryptedValue(text).equals("kylin");
+        assertEquals("kylin", EncryptUtil.getDecryptedValue(text));
+    }
+
+    @Test
+    void testGetDecryptedValueError() {
+        String text = "ENC('1YeqVr9MakSFbgxEec9sBwg==')";
+        assertNull(EncryptUtil.getDecryptedValue(text));
     }
 }

@@ -36,14 +36,26 @@
 
 package org.apache.kylin.common;
 
-import static org.apache.kylin.common.KylinConfigBase.PATH_DELIMITER;
-import static org.apache.kylin.common.KylinConfigBase.WRITING_CLUSTER_WORKING_DIR;
-import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_ENABLE_KEY;
-import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_NAME_KEY;
-import static org.apache.kylin.common.constant.Constants.SNAPSHOT_AUTO_REFRESH;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import lombok.val;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.Shell;
+import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
+import org.apache.kylin.common.util.EncryptUtil;
+import org.apache.kylin.common.util.ProcessUtils;
+import org.apache.kylin.common.util.TimeZoneUtils;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ListenableFuture;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ListeningExecutorService;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.MoreExecutors;
+import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.kylin.junit.annotation.MetadataInfo;
+import org.apache.kylin.junit.annotation.OverwriteProp;
+import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -61,28 +73,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.util.Shell;
-import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
-import org.apache.kylin.common.util.EncryptUtil;
-import org.apache.kylin.common.util.ProcessUtils;
-import org.apache.kylin.common.util.TimeZoneUtils;
-import org.apache.kylin.junit.annotation.MetadataInfo;
-import org.apache.kylin.junit.annotation.OverwriteProp;
-import org.junit.Assert;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-import org.junitpioneer.jupiter.SetSystemProperty;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.util.concurrent.ListenableFuture;
-import org.apache.kylin.guava30.shaded.common.util.concurrent.ListeningExecutorService;
-import org.apache.kylin.guava30.shaded.common.util.concurrent.MoreExecutors;
-import org.apache.kylin.guava30.shaded.common.util.concurrent.ThreadFactoryBuilder;
-
-import lombok.val;
+import static org.apache.kylin.common.KylinConfigBase.PATH_DELIMITER;
+import static org.apache.kylin.common.KylinConfigBase.WRITING_CLUSTER_WORKING_DIR;
+import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_ENABLE_KEY;
+import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_NAME_KEY;
+import static org.apache.kylin.common.constant.Constants.SNAPSHOT_AUTO_REFRESH;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @MetadataInfo(onlyProps = true)
 class KylinConfigBaseTest {
@@ -1414,6 +1412,7 @@ class KylinConfigBaseTest {
         config.setProperty("kylin.storage.check-quota-enabled", "true");
         assertTrue(config.isStorageQuotaEnabled());
     }
+
     @Test
     void testCalciteBindableCacheSize() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -1421,6 +1420,7 @@ class KylinConfigBaseTest {
         config.setProperty("kylin.query.calcite.bindable.cache.maxSize", "7");
         assertEquals(7, config.getCalciteBindableCacheSize());
     }
+
     @Test
     void testCalciteBindableCacheConcurrencyLevel() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -1451,6 +1451,18 @@ class KylinConfigBaseTest {
 
         config.setProperty("kylin.job.ssh-password", encPassword);
         assertEquals(password, config.getRemoteSSHPassword());
+    }
+
+    @Test
+    void testMultiTenantMode() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertFalse(config.isKylinMultiTenantEnabled());
+        config.setProperty("kylin.multi-tenant.enabled", "true");
+        assertTrue(config.isKylinMultiTenantEnabled());
+
+        assertEquals(30 * 60 * 1000, config.getKylinMultiTenantRouteTaskTimeOut());
+        config.setProperty("kylin.multi-tenant.route-task-timeout", "10min");
+        assertEquals(10 * 60 * 1000, config.getKylinMultiTenantRouteTaskTimeOut());
     }
 
 }

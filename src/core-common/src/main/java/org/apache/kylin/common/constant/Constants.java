@@ -57,4 +57,6 @@ public class Constants {
     public static final String SNAPSHOT_JOB = "snapshot_job";
     public static final String MARK = "_mark";
     public static final String BACKSLASH = "/";
+
+    public static final String METADATA_FILE = "metadata.zip";
 }

@@ -197,7 +197,7 @@ public class NAsyncQueryControllerV2Test extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(nAsyncQueryControllerV2).inqueryStatus(Mockito.anyString());
+        Mockito.verify(nAsyncQueryControllerV2).inqueryStatus(Mockito.anyString(), Mockito.any());
     }
 
     @Test
@@ -210,7 +210,7 @@ public class NAsyncQueryControllerV2Test extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(nAsyncQueryControllerV2).fileStatus(Mockito.anyString());
+        Mockito.verify(nAsyncQueryControllerV2).fileStatus(Mockito.anyString(), Mockito.any());
     }
 
     @Test
@@ -223,7 +223,7 @@ public class NAsyncQueryControllerV2Test extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(nAsyncQueryControllerV2).metadata(Mockito.anyString());
+        Mockito.verify(nAsyncQueryControllerV2).metadata(Mockito.anyString(), Mockito.any());
     }
 
     @Test
@@ -239,7 +239,8 @@ public class NAsyncQueryControllerV2Test extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V2_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(nAsyncQueryControllerV2).downloadQueryResult(Mockito.anyString(), Mockito.any(), Mockito.any());
+        Mockito.verify(nAsyncQueryControllerV2).downloadQueryResult(Mockito.anyString(), Mockito.any(), Mockito.any(),
+                Mockito.any());
     }
 
     @Test
@@ -259,7 +260,8 @@ public class NAsyncQueryControllerV2Test extends NLocalFileMetadataTestCase {
                             result.getResolvedException().getMessage());
                 });
 
-        Mockito.verify(nAsyncQueryControllerV2).downloadQueryResult(Mockito.anyString(), Mockito.any(), Mockito.any());
+        Mockito.verify(nAsyncQueryControllerV2).downloadQueryResult(Mockito.anyString(), Mockito.any(), Mockito.any(),
+                Mockito.any());
     }
 
 }

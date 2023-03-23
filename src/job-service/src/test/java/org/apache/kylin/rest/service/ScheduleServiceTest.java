@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.junit.annotation.OverwriteProp;
 import org.apache.kylin.rest.constant.Constant;
 import org.junit.After;
@@ -80,7 +81,7 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
         getTestConfig().setProperty("kylin.metadata.ops-cron-timeout", "300000ms");
         ReflectionTestUtils.setField(scheduleService, "backupService", new MetadataBackupService() {
             @SneakyThrows(IOException.class)
-            public void backupAll() {
+            public Pair<String, String> backupAll() {
                 throw new IOException("backup exception");
             }
         });
@@ -103,10 +104,11 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
         getTestConfig().setProperty("kylin.metadata.ops-cron-timeout", "1000ms");
         ReflectionTestUtils.setField(scheduleService, "backupService", new MetadataBackupService() {
             @SneakyThrows(Exception.class)
-            public void backupAll() {
+            public Pair<String, String> backupAll() {
                 synchronized (this) {
                     wait(2000);
                 }
+                return null;
             }
         });
         EpochManager epochManager = EpochManager.getInstance();
@@ -120,10 +122,11 @@ public class ScheduleServiceTest extends NLocalFileMetadataTestCase {
         getTestConfig().setProperty("kylin.metadata.ops-cron-timeout", "1000ms");
         ReflectionTestUtils.setField(scheduleService, "backupService", new MetadataBackupService() {
             @SneakyThrows(Exception.class)
-            public void backupAll() {
+            public Pair<String, String> backupAll() {
                 synchronized (this) {
                     wait(2000);
                 }
+                return null;
             }
         });
         EpochManager epochManager = EpochManager.getInstance();

@@ -18,24 +18,18 @@
 
 package org.apache.kylin.rest.request;
 
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 
 @Data
-public class AccessRequest {
-
-    @JsonProperty("access_entry_id")
-    private Integer accessEntryId;
-    private String permission;
-    @JsonProperty("permissions")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<String> extPermissions;
-    private String sid;
-    private boolean principal;
-
-    private String project;
+public class MetadataBackupRequest {
+    @JsonProperty("resource_group_id")
+    private String resourceGroupId;
+    @JsonProperty("tmp_file_path")
+    private String tmpFilePath;
+    @JsonProperty("tmp_file_size")
+    private Long tmpFileSize;
+    @JsonProperty("backup_dir")
+    private String backupDir;
 }

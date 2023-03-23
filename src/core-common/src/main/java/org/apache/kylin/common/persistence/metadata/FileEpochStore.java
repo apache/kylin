@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.Singletons;
@@ -50,9 +51,10 @@ public class FileEpochStore extends EpochStore {
     }
 
     private FileEpochStore(KylinConfig kylinConfig) {
-        root = Paths
-                .get(Paths.get(kylinConfig.getMetadataUrlPrefix()).getParent().toFile().getAbsolutePath(), EPOCH_SUFFIX)
-                .toFile().getAbsoluteFile();
+        val metadataUrlPrefix = kylinConfig.isDevOrUT() ? Paths.get(kylinConfig.getMetadataUrlPrefix()).toAbsolutePath()
+                : Paths.get(kylinConfig.getMetadataUrlPrefix());
+        root = Paths.get(metadataUrlPrefix.getParent().toFile().getAbsolutePath(), EPOCH_SUFFIX).toFile()
+                .getAbsoluteFile();
     }
 
     @Override

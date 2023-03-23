@@ -21,6 +21,8 @@ package org.apache.kylin.common.util;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+
 public class RandomUtil {
 
     public static UUID randomUUID() {
@@ -29,5 +31,21 @@ public class RandomUtil {
 
     public static String randomUUIDStr() {
         return randomUUID().toString();
+    }
+
+    public static int nextInt(final int startInclusive, final int endExclusive) {
+        Preconditions.checkArgument(endExclusive >= startInclusive,
+                "Start value must be smaller or equal to end value.");
+        Preconditions.checkArgument(startInclusive >= 0, "Both range values must be non-negative.");
+
+        if (startInclusive == endExclusive) {
+            return startInclusive;
+        }
+
+        return startInclusive + ThreadLocalRandom.current().nextInt(endExclusive - startInclusive);
+    }
+
+    public static int nextInt(final int endExclusive) {
+        return nextInt(0, endExclusive);
     }
 }

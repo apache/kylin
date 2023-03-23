@@ -18,16 +18,17 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.kylin.rest.service.SparderUIService;
 import org.apache.kylin.rest.util.SparderUIUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
@@ -37,14 +38,23 @@ import io.swagger.annotations.ApiOperation;
 public class SparderUIController {
 
     @Autowired
-    @Qualifier("sparderUIUtil")
-    private SparderUIUtil sparderUIUtil;
+    @Qualifier("sparderUIService")
+    private SparderUIService sparderUIService;
 
     @ApiOperation(value = "proxy", tags = { "QE" })
     @RequestMapping(value = "/**")
     @ResponseBody
-    public void proxy(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void proxy(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        sparderUIService.proxy(request, response);
+    }
 
-        sparderUIUtil.proxy(request, response);
+    @ApiOperation(value = "proxy", tags = { "QE" })
+    @GetMapping(value = "SQL/execution")
+    @ResponseBody
+    public void proxyInClickUI(@RequestParam(value = "id", required = false) String id,
+            @RequestParam(value = "query_id", required = false) String queryId,
+            @RequestParam(value = "server", required = false) String server, HttpServletRequest httpServletRequest,
+            HttpServletResponse httpServletResponse) throws Exception {
+        sparderUIService.proxy(id, queryId, server, httpServletRequest, httpServletResponse);
     }
 }

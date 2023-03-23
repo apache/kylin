@@ -39,7 +39,7 @@ public class SparderUIUtil {
 
     public static final String UI_BASE = "/sparder";
     public static final String PROXY_LOCATION_BASE = KylinConfig.getInstanceFromEnv().getUIProxyLocation() + UI_BASE;
-    private static final String KYLIN_UI_BASE = "/kylin" + UI_BASE;
+    public static final String KYLIN_UI_BASE = "/kylin" + UI_BASE;
     private static final String SQL_EXECUTION_PAGE = "/SQL/execution/";
     private volatile String webUrl;
     private volatile String amSQLBase;

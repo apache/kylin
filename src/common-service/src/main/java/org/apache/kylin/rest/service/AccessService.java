@@ -63,8 +63,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.Message;
@@ -78,6 +78,9 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.constants.AclConstants;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -121,9 +124,6 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import org.apache.kylin.metadata.user.ManagedUser;
 import lombok.SneakyThrows;
@@ -174,7 +174,12 @@ public class AccessService extends BasicService {
     @Transaction
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
     public void batchGrant(List<AccessRequest> requests, AclEntity ae) {
-        Map<Sid, Permission> sid2perm = requests.stream().map(r -> {
+        Map<Sid, Permission> sid2perm = convertToPermission(requests);
+        batchGrant(ae, sid2perm);
+    }
+
+    private Map<Sid, Permission> convertToPermission(List<AccessRequest> requests) {
+        return requests.stream().map(r -> {
             Sid sid = getSid(r.getSid(), r.isPrincipal());
             Permission permission = AclPermissionFactory.getPermission(r.getPermission());
             if (Objects.nonNull(sid) && ObjectUtils.isNotEmpty(permission)) {
@@ -183,7 +188,13 @@ public class AccessService extends BasicService {
                 return null;
             }
         }).filter(Objects::nonNull).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        batchGrant(ae, sid2perm);
+    }
+
+    @Transaction(project = 0)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
+    public void batchGrant(String project, List<AccessRequest> requests, AclEntity ae) {
+        Map<Sid, Permission> sid2perm = convertToPermission(requests);
+        batchGrant(project, ae, sid2perm);
     }
 
     private Permission convertToCompositeAclPermission(Permission permission) {
@@ -193,8 +204,12 @@ public class AccessService extends BasicService {
                 : permission;
     }
 
-    @Transaction
-    void batchGrant(AclEntity ae, Map<Sid, Permission> sidToPerm) {
+    @Transaction(project = 0)
+    void batchGrant(String project, AclEntity ae, Map<Sid, Permission> sidToPerm) {
+        innerBatchGrant(ae, sidToPerm);
+    }
+
+    void innerBatchGrant(AclEntity ae, Map<Sid, Permission> sidToPerm) {
         Message msg = MsgPicker.getMsg();
 
         if (ae == null)
@@ -214,7 +229,16 @@ public class AccessService extends BasicService {
     }
 
     @Transaction
+    void batchGrant(AclEntity ae, Map<Sid, Permission> sidToPerm) {
+        innerBatchGrant(ae, sidToPerm);
+    }
+
+    @Transaction
     MutableAclRecord grant(AclEntity ae, Permission permission, Sid sid) {
+        return innerGrant(ae, permission, sid);
+    }
+
+    MutableAclRecord innerGrant(AclEntity ae, Permission permission, Sid sid) {
         Message msg = MsgPicker.getMsg();
         if (ae == null)
             throw new KylinException(INVALID_PARAMETER, msg.getAclDomainNotFound());
@@ -232,6 +256,11 @@ public class AccessService extends BasicService {
         return aclService.upsertAce(acl, sid, convertToCompositeAclPermission(permission));
     }
 
+    @Transaction(project = 0)
+    MutableAclRecord grant(String project, AclEntity ae, Permission permission, Sid sid) {
+        return innerGrant(ae, permission, sid);
+    }
+
     @Transaction
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
     public void grant(AclEntity ae, String identifier, Boolean isPrincipal, String permission) {
@@ -239,9 +268,20 @@ public class AccessService extends BasicService {
         grant(ae, AclPermissionFactory.getPermission(permission), sid);
     }
 
-    @Transaction
+    @Transaction(project = 0)
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
-    public MutableAclRecord update(AclEntity ae, int accessEntryIndex, Permission newPermission) {
+    public void grant(String project, AclEntity ae, String identifier, Boolean isPrincipal, String permission) {
+        Sid sid = getSid(identifier, isPrincipal);
+        grant(ae, AclPermissionFactory.getPermission(permission), sid);
+    }
+
+    @Transaction(project = 0)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
+    public MutableAclRecord update(String project, AclEntity ae, int accessEntryIndex, Permission newPermission) {
+        return innerUpdate(ae, accessEntryIndex, newPermission);
+    }
+
+    public MutableAclRecord innerUpdate(AclEntity ae, int accessEntryIndex, Permission newPermission) {
         Message msg = MsgPicker.getMsg();
 
         if (ae == null)
@@ -258,9 +298,19 @@ public class AccessService extends BasicService {
     }
 
     @Transaction
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
+    public MutableAclRecord update(AclEntity ae, int accessEntryIndex, Permission newPermission) {
+        return innerUpdate(ae, accessEntryIndex, newPermission);
+    }
+
+    @Transaction(project = 0)
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN //
             + " or (hasPermission(#ae, 'DATA_QUERY') and hasPermission(#ae, 'ADMINISTRATION'))")
-    public MutableAclRecord updateExtensionPermission(AclEntity ae, AccessRequest accessRequest) {
+    public MutableAclRecord updateExtensionPermission(String project, AclEntity ae, AccessRequest accessRequest) {
+        return innerUpdateExtensionPermission(ae, accessRequest);
+    }
+
+    public MutableAclRecord innerUpdateExtensionPermission(AclEntity ae, AccessRequest accessRequest) {
         Message msg = MsgPicker.getMsg();
         if (ae == null)
             throw new KylinException(INVALID_PARAMETER, msg.getAclDomainNotFound());
@@ -286,6 +336,13 @@ public class AccessService extends BasicService {
         return aclService.upsertAce(acl, sid, newPermission);
     }
 
+    @Transaction
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN //
+            + " or (hasPermission(#ae, 'DATA_QUERY') and hasPermission(#ae, 'ADMINISTRATION'))")
+    public MutableAclRecord updateExtensionPermission(AclEntity ae, AccessRequest accessRequest) {
+        return innerUpdateExtensionPermission(ae, accessRequest);
+    }
+
     private Permission getPermission(AccessRequest accessRequest, MutableAclRecord acl) {
         Sid sid = getSid(accessRequest.getSid(), accessRequest.isPrincipal());
         if (accessRequest.getAccessEntryId() != null) {
@@ -299,6 +356,10 @@ public class AccessService extends BasicService {
     @Transaction
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
     public MutableAclRecord revoke(AclEntity ae, int accessEntryIndex) {
+        return innerRevoke(ae, accessEntryIndex);
+    }
+
+    public MutableAclRecord innerRevoke(AclEntity ae, int accessEntryIndex) {
         Message msg = MsgPicker.getMsg();
 
         if (ae == null)
@@ -310,6 +371,12 @@ public class AccessService extends BasicService {
         secureOwner(acl, sid);
 
         return aclService.upsertAce(acl, sid, null);
+    }
+
+    @Transaction(project = 0)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
+    public MutableAclRecord revoke(String project, AclEntity ae, int accessEntryIndex) {
+        return innerRevoke(ae, accessEntryIndex);
     }
 
     @Transaction

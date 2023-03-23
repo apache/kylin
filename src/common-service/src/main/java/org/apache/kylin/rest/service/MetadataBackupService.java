@@ -20,9 +20,11 @@ package org.apache.kylin.rest.service;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
+import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.tool.HDFSMetadataTool;
@@ -37,16 +39,17 @@ public class MetadataBackupService {
     private final MetadataToolHelper helper = new MetadataToolHelper();
 
     @SneakyThrows(Exception.class)
-    public void backupAll() {
-
+    public Pair<String, String> backupAll() {
+        var backupPath = Pair.newPair("", "");
         try (SetThreadName ignored = new SetThreadName("MetadataBackupWorker")) {
             val kylinConfig = KylinConfig.getInstanceFromEnv();
             HDFSMetadataTool.cleanBeforeBackup(kylinConfig);
             val backupConfig = kylinConfig.getMetadataBackupFromSystem() ? kylinConfig
                     : KylinConfig.createKylinConfig(kylinConfig);
-            helper.backup(backupConfig, null, getBackupDir(kylinConfig), null, true, false);
+            backupPath = helper.backup(backupConfig, null, getBackupDir(kylinConfig), null, true, false);
             helper.rotateAuditLog();
         }
+        return backupPath;
     }
 
     public String backupProject(String project) throws Exception {

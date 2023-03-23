@@ -3945,4 +3945,13 @@ public abstract class KylinConfigBase implements Serializable {
     public int getAutoShufflePartitionTimeOut() {
         return Integer.parseInt(getOptional("kylin.query.pushdown.auto-set-shuffle-partitions-timeout", "30"));
     }
+
+    public boolean isKylinMultiTenantEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.multi-tenant.enabled", FALSE));
+    }
+
+    public long getKylinMultiTenantRouteTaskTimeOut() {
+        return TimeUtil.timeStringAs(getOptional("kylin.multi-tenant.route-task-timeout", "30min"),
+                TimeUnit.MILLISECONDS);
+    }
 }

@@ -17,21 +17,17 @@
  */
 package org.apache.kylin.rest;
 
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CONNECT_CATALOG;
 import static org.apache.kylin.common.exception.ServerErrorCode.NO_ACTIVE_ALL_NODE;
-import static org.apache.kylin.common.exception.ServerErrorCode.PROJECT_WITHOUT_RESOURCE_GROUP;
-import static org.apache.kylin.common.exception.ServerErrorCode.SYSTEM_IS_RECOVER;
-import static org.apache.kylin.common.exception.ServerErrorCode.TRANSFER_FAILED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeSystem.MAINTENANCE_MODE_WRITE_FAILED;
 import static org.apache.kylin.common.exception.code.ErrorCodeSystem.QUERY_NODE_API_INVALID;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.HashMap;
 import java.util.Set;
 
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
@@ -41,40 +37,31 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.exception.ErrorCode;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.interceptor.ProjectInfoParser;
 import org.apache.kylin.rest.response.ErrorResponse;
+import org.apache.kylin.rest.service.RouteService;
+import org.glassfish.jersey.uri.UriTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.CannotCreateTransactionException;
-import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -82,20 +69,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 3)
-public class QueryNodeFilter implements Filter {
-
-    private static final String API_PREFIX = "/kylin/api";
-    private static final String ROUTED = "routed";
-    private static final String ERROR = "error";
-    private static final String API_ERROR = "/api/error";
-    private static final String FILTER_PASS = "filter_pass";
+public class QueryNodeFilter extends BaseFilter {
 
     private static Set<String> routeGetApiSet = Sets.newHashSet();
     private static Set<String> notRoutePostApiSet = Sets.newHashSet();
     private static Set<String> notRouteDeleteApiSet = Sets.newHashSet();
     private static Set<String> notRoutePutApiSet = Sets.newHashSet();
-
-    private static final String ERROR_REQUEST_URL = "/kylin/api/error";
+    private static Set<String> routeMultiTenantModeFilterApiSet = Sets.newHashSet();
 
     static {
         // data source
@@ -156,6 +136,19 @@ public class QueryNodeFilter implements Filter {
 
         // custom parse
         routeGetApiSet.add("/kylin/api/kafka/parsers");
+        // tenant node metadata backup
+        notRoutePostApiSet.add("/kylin/api/system/metadata_backup");
+        notRoutePostApiSet.add("/kylin/api/system/broadcast_metadata_backup");
+
+        // metastore cleanup
+        notRoutePostApiSet.add("/kylin/api/metastore/cleanup_storage/tenant_node");
+        notRoutePostApiSet.add("/kylin/api/metastore/cleanup_storage");
+
+        notRouteDeleteApiSet.add("/kylin/api/async_query/tenant_node");
+
+        routeMultiTenantModeFilterApiSet.add("/kylin/api/jobs/{jobId}/resume");
+        routeMultiTenantModeFilterApiSet.add("/kylin/api/cubes/{cubeName}/rebuild");
+        routeMultiTenantModeFilterApiSet.add("/kylin/api/cubes/{cubeName}/segments");
     }
 
     @Autowired
@@ -163,6 +156,9 @@ public class QueryNodeFilter implements Filter {
 
     @Autowired
     ClusterManager clusterManager;
+
+    @Autowired
+    RouteService routeService;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -207,58 +203,18 @@ public class QueryNodeFilter implements Filter {
 
                 if (checkServer(request, response, chain, servletRequest, kylinConfig, project, contentType))
                     return;
+
+                if (checkNeedToMultiTenantFilter(servletRequest)) {
+                    chain.doFilter(request, response);
+                    return;
+                }
             } catch (CannotCreateTransactionException e) {
                 writeConnectionErrorResponse(servletRequest, servletResponse);
                 return;
             }
 
-            ServletRequestAttributes attributes = new ServletRequestAttributes((HttpServletRequest) request);
-            RequestContextHolder.setRequestAttributes(attributes);
-
             log.debug("proxy {} {} to all", servletRequest.getMethod(), servletRequest.getRequestURI());
-            val body = IOUtils.toByteArray(request.getInputStream());
-            HttpHeaders headers = new HttpHeaders();
-            Collections.list(servletRequest.getHeaderNames())
-                    .forEach(k -> headers.put(k, Collections.list(servletRequest.getHeaders(k))));
-            headers.add(ROUTED, "true");
-            byte[] responseBody;
-            int responseStatus;
-            HttpHeaders responseHeaders;
-            MsgPicker.setMsg(servletRequest.getHeader(HttpHeaders.ACCEPT_LANGUAGE));
-            ErrorCode.setMsg(servletRequest.getHeader(HttpHeaders.ACCEPT_LANGUAGE));
-            try {
-                val exchange = restTemplate.exchange(
-                        "http://all" + servletRequest.getRequestURI() + "?" + servletRequest.getQueryString(),
-                        HttpMethod.valueOf(servletRequest.getMethod()), new HttpEntity<>(body, headers), byte[].class);
-                tryCatchUp();
-                responseHeaders = exchange.getHeaders();
-                responseBody = Optional.ofNullable(exchange.getBody()).orElse(new byte[0]);
-                responseStatus = exchange.getStatusCodeValue();
-            } catch (IllegalStateException | ResourceAccessException e) {
-                responseStatus = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-                Message msg = MsgPicker.getMsg();
-                KylinException exception = getKylinException(project, msg);
-                ErrorResponse errorResponse = new ErrorResponse(servletRequest.getRequestURL().toString(),
-                        exception);
-                responseBody = JsonUtil.writeValueAsBytes(errorResponse);
-                responseHeaders = new HttpHeaders();
-                responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-                log.error("no job node", e);
-            } catch (HttpStatusCodeException e) {
-                responseStatus = e.getRawStatusCode();
-                responseBody = e.getResponseBodyAsByteArray();
-                responseHeaders = Optional.ofNullable(e.getResponseHeaders()).orElse(new HttpHeaders());
-                log.warn("code {}, error {}", e.getStatusCode(), e.getMessage());
-            } catch (Exception e) {
-                log.error("transfer failed", e);
-                servletRequest.setAttribute(ERROR,
-                        new KylinException(TRANSFER_FAILED, MsgPicker.getMsg().getTransferFailed()));
-                servletRequest.getRequestDispatcher(API_ERROR).forward(servletRequest, response);
-                return;
-            }
-            servletResponse.setStatus(responseStatus);
-            setResponseHeaders(responseHeaders, servletResponse);
-            servletResponse.getOutputStream().write(responseBody);
+            routeAPI(restTemplate, request, servletResponse, project);
             return;
         }
         throw new KylinRuntimeException("unknown status");
@@ -287,37 +243,6 @@ public class QueryNodeFilter implements Filter {
         return false;
     }
 
-    private static KylinException getKylinException(String project, Message msg) {
-        KylinException exception;
-        val manager = ResourceGroupManager.getInstance(KylinConfig.getInstanceFromEnv());
-        if (manager.isResourceGroupEnabled() && !manager.isProjectBindToResourceGroup(project)) {
-            exception = new KylinException(PROJECT_WITHOUT_RESOURCE_GROUP, msg.getProjectWithoutResourceGroup());
-        } else {
-            exception = new KylinException(SYSTEM_IS_RECOVER, msg.getLeadersHandleOver());
-        }
-        return exception;
-    }
-
-    private void setResponseHeaders(HttpHeaders responseHeaders, HttpServletResponse servletResponse) {
-        responseHeaders.forEach((k, v) -> {
-            if (k.equals(HttpHeaders.TRANSFER_ENCODING)) {
-                return;
-            }
-            for (String headerValue : v) {
-                servletResponse.setHeader(k, headerValue);
-            }
-        });
-    }
-
-    private void tryCatchUp() {
-        try {
-            ResourceStore store = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
-            store.getAuditLogStore().catchupWithTimeout();
-        } catch (Exception e) {
-            log.error("Failed to catchup manually.", e);
-        }
-    }
-
     @Override
     public void destroy() {
         // just override it
@@ -331,9 +256,27 @@ public class QueryNodeFilter implements Filter {
                 || (method.equals("POST") && notRoutePostApiSet.contains(uri))
                 || (method.equals("PUT") && notRoutePutApiSet.contains(uri))
                 || (method.equals("DELETE") && notRouteDeleteApiSet.contains(uri))
-                || "true".equalsIgnoreCase(servletRequest.getHeader(ROUTED))
-                || "true".equals(servletRequest.getAttribute(FILTER_PASS))
+                || TRUE.equalsIgnoreCase(servletRequest.getHeader(ROUTED))
+                || TRUE.equals(servletRequest.getAttribute(FILTER_PASS))
                 || KylinConfig.getInstanceFromEnv().isUTEnv();
+    }
+
+    /**
+     * when api is not get method, and need use MultiTenantFilter route API
+     */
+    private boolean checkNeedToMultiTenantFilter(HttpServletRequest servletRequest) {
+        String uri = StringUtils.stripEnd(servletRequest.getRequestURI(), "/");
+        val accept = servletRequest.getHeader("Accept");
+        if (StringUtils.equals(accept, HTTP_VND_APACHE_KYLIN_V2_JSON) && routeService.needRoute()) {
+            for (String needParserUrl : routeMultiTenantModeFilterApiSet) {
+                val uriTemplate = new UriTemplate(needParserUrl);
+                val kvMap = new HashMap<String, String>();
+                if (uriTemplate.match(uri, kvMap)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean checkProcessLocal(KylinConfig kylinConfig, String project, String contentType) {

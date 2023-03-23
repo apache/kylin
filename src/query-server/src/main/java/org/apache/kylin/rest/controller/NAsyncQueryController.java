@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -203,7 +204,8 @@ public class NAsyncQueryController extends NBasicController {
     @DeleteMapping(value = "/async_query")
     @ResponseBody
     public EnvelopeResponse<Boolean> batchDelete(@RequestParam(value = "project", required = false) String project,
-            @RequestParam(value = "older_than", required = false) String time) throws Exception {
+            @RequestParam(value = "older_than", required = false) String time, HttpServletRequest request)
+            throws Exception {
         if (!isAdmin()) {
             throw new KylinException(ACCESS_DENIED, "Access denied. Only admin users can delete the query results");
         }
@@ -212,7 +214,7 @@ public class NAsyncQueryController extends NBasicController {
             checkProjectName(project);
         }
         try {
-            if (asyncQueryService.batchDelete(project, time)) {
+            if (asyncQueryService.batchDelete(project, time, request)) {
                 return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, true, "");
             } else {
                 return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, false,
@@ -221,6 +223,17 @@ public class NAsyncQueryController extends NBasicController {
         } catch (ParseException e) {
             logger.error(ASYNC_QUERY_TIME_FORMAT_ERROR.getMsg(), e);
             throw new KylinException(ASYNC_QUERY_TIME_FORMAT_ERROR);
+        }
+    }
+
+    @ApiOperation(value = "delete all folder", tags = { "QE" })
+    @DeleteMapping(value = "/async_query/tenant_node")
+    @ResponseBody
+    public EnvelopeResponse<Boolean> deleteAllFolder() throws Exception {
+        if (asyncQueryService.deleteAllFolder()) {
+            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, true, "");
+        } else {
+            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, false, MsgPicker.getMsg().getCleanFolderFail());
         }
     }
 
