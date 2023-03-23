@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.adapter.enumerable.EnumerableCalc;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
@@ -46,12 +47,11 @@ import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexProgram;
 import org.apache.calcite.sql.fun.SqlCaseOperator;
 import org.apache.calcite.tools.RelUtils;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.query.util.RexToTblColRefTranslator;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.query.util.RexToTblColRefTranslator;
 
 /**
  */
@@ -288,10 +288,9 @@ public class OLAPProjectRel extends Project implements OLAPRel {
             pw.item("ctx", String.valueOf(context.id) + "@" + context.realization);
             if (context.getGroupByColumns() != null && context.returnTupleInfo != null
                     && context.returnTupleInfo.getColumnMap() != null) {
-                context.getGroupByColumns().forEach(colRef -> {
-                    Integer colId = context.returnTupleInfo.getColumnMap().get(colRef);
-                    pw.item("groupByColumns", String.valueOf(colId));
-                });
+                List<Integer> colIds = context.getGroupByColumns().stream()
+                        .map(colRef -> context.returnTupleInfo.getColumnMap().get(colRef)).collect(Collectors.toList());
+                pw.item("groupByColumns", colIds);
             }
         } else {
             pw.item("ctx", "");
