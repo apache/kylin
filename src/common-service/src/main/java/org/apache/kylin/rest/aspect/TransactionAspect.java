@@ -24,12 +24,12 @@ import java.util.Objects;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkParams;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -60,16 +60,18 @@ public class TransactionAspect {
             }
         }
 
+        String projectId = "";
         if (!Objects.equals(UnitOfWork.GLOBAL_UNIT, unitName)) {
             ProjectInstance projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
                     .getProject(unitName);
             if (projectInstance == null) {
                 throw new KylinException(PROJECT_NOT_EXIST, unitName);
             }
+            projectId = projectInstance.getId();
         }
 
         return EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(UnitOfWorkParams.builder().unitName(unitName)
-                .readonly(transaction.readonly()).maxRetry(transaction.retry()).processor(() -> {
+                .projectId(projectId).readonly(transaction.readonly()).maxRetry(transaction.retry()).processor(() -> {
                     try {
                         return pjp.proceed();
                     } catch (Throwable throwable) {

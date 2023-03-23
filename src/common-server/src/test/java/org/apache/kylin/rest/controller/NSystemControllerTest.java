@@ -33,12 +33,12 @@ import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.DiagPackageRequest;
 import org.apache.kylin.rest.request.DiagProgressRequest;
+import org.apache.kylin.rest.request.MetadataBackupRequest;
 import org.apache.kylin.rest.response.MaintenanceModeResponse;
 import org.apache.kylin.rest.response.ServerInfoResponse;
 import org.apache.kylin.rest.service.MaintenanceModeService;
 import org.apache.kylin.rest.service.SystemService;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -187,15 +187,6 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Mockito.verify(nSystemController).getRemotePackageStatus(Mockito.anyString(), Mockito.anyString(),
                 Mockito.anyString(), Mockito.any());
-        NBasicController controller = new NBasicController();
-        String encodeHost = controller.encodeHost("quickstart.cloudera:8088");
-        String decodeHost = controller.decodeHost(encodeHost);
-        controller.encodeHost("");
-        controller.decodeHost("");
-        Assert.assertTrue(decodeHost.equalsIgnoreCase("http://quickstart.cloudera:8088"));
-        Assert.assertEquals(
-            "http://quickstart.cloudera:8088",
-            controller.decodeHost("http://quickstart.cloudera:8088"));
     }
 
     @Test
@@ -308,5 +299,26 @@ public class NSystemControllerTest extends NLocalFileMetadataTestCase {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/system/servers")
             .param("ext", "true").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
             .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void broadcastMetadataBackup() throws Exception {
+        MetadataBackupRequest request = new MetadataBackupRequest();
+        Mockito.doAnswer(x -> null).when(nSystemController).broadcastMetadataBackup(Mockito.any());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/broadcast_metadata_backup")
+                .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
+                .content(JsonUtil.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nSystemController).broadcastMetadataBackup(Mockito.any(MetadataBackupRequest.class));
+    }
+
+    @Test
+    public void downloadMetadataBackTmpFile() throws Exception {
+        MetadataBackupRequest request = new MetadataBackupRequest();
+        Mockito.doAnswer(x -> null).when(nSystemController).downloadMetadataBackTmpFile(Mockito.any(), Mockito.any());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/system/metadata_backup_tmp_file")
+                .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON))
+                .content(JsonUtil.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.verify(nSystemController).downloadMetadataBackTmpFile(Mockito.any(MetadataBackupRequest.class),
+                Mockito.any());
     }
 }

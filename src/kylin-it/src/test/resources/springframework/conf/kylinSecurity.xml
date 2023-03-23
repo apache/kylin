@@ -269,6 +269,8 @@
             <scr:intercept-url pattern="/api/system/license" access="permitAll"/>
             <scr:intercept-url pattern="/api/system/diag/progress" access="permitAll"/>
             <scr:intercept-url pattern="/api/system/roll_event_log" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/broadcast_metadata_backup" access="permitAll"/>
+            <scr:intercept-url pattern="/api/system/metadata_backup_tmp_file" access="permitAll"/>
             <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/query/history_queries/table_names" access="permitAll"/>
             <scr:intercept-url pattern="/api/models/model_info" access="permitAll"/>

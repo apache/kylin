@@ -25,10 +25,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @NoArgsConstructor
 @Getter
 @EqualsAndHashCode
+@ToString
 public class KylinInstance implements Serializable {
     private static final long serialVersionUID = 1L;
     @JsonProperty("instance")

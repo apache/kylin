@@ -18,12 +18,16 @@
 
 package org.apache.kylin.rest.interceptor;
 
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
+import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V2_JSON;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.Pair;
 import org.junit.Assert;
 import org.junit.Test;
@@ -184,5 +188,26 @@ public class ProjectInfoParserTest {
 
         Pair<String, HttpServletRequest> pair = ProjectInfoParser.parseProjectInfo(request);
         Assert.assertEquals("AAA", pair.getFirst());
+    }
+
+    @Test
+    public void testPROJECT_PARSER_URI_V2_LIST() {
+        testPROJECT_PARSER_URI_V2_LIST("/kylin/api/cube_desc/%s/t1", project);
+        testPROJECT_PARSER_URI_V2_LIST("/kylin/api/access/t1/%s", project);
+        testPROJECT_PARSER_URI_V2_LIST("/kylin/api/cube_desc/%s/t1", UnitOfWork.GLOBAL_UNIT);
+        testPROJECT_PARSER_URI_V2_LIST("/kylin/api/access/t1/%s", UnitOfWork.GLOBAL_UNIT);
+    }
+
+    private void testPROJECT_PARSER_URI_V2_LIST(String url, String excepted) {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        if (excepted.equals(project)) {
+            request.addHeader("Accept", HTTP_VND_APACHE_KYLIN_V2_JSON);
+        } else {
+            request.addHeader("Accept", HTTP_VND_APACHE_KYLIN_JSON);
+        }
+
+        request.setRequestURI(String.format(Locale.ROOT, url, project));
+        Pair<String, HttpServletRequest> pair = ProjectInfoParser.parseProjectInfo(request);
+        Assert.assertEquals(excepted, pair.getFirst());
     }
 }

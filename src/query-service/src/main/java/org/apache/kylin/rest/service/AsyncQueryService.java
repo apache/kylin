@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
@@ -58,6 +59,7 @@ import org.apache.kylin.query.util.AsyncQueryUtil;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -71,6 +73,8 @@ import lombok.Setter;
 public class AsyncQueryService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger("query");
+    @Autowired
+    private RouteService routeService;
 
     public void saveQueryUsername(String project, String queryId) throws IOException {
         FileSystem fileSystem = AsyncQueryUtil.getFileSystem();
@@ -223,12 +227,20 @@ public class AsyncQueryService extends BasicService {
         }
     }
 
-    public boolean batchDelete(String project, String time) throws IOException, ParseException {
+    public boolean batchDelete(String project, String time, HttpServletRequest request)
+            throws IOException, ParseException {
         if (project == null && time == null) {
-            return deleteAllFolder();
+            return deleteAllFolder(request);
         } else {
             return deleteOldQueryResult(project, time);
         }
+    }
+
+    public boolean deleteAllFolder(HttpServletRequest request) throws IOException {
+        if (routeService.needRoute()) {
+            return routeService.deleteAllFolderMultiTenantMode(request);
+        }
+        return deleteAllFolder();
     }
 
     public boolean deleteAllFolder() throws IOException {

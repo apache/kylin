@@ -66,6 +66,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import lombok.val;
+
 public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
 
     private static final String PROJECT = "default";
@@ -139,7 +141,7 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError());
 
-        Mockito.verify(nAsyncQueryController).batchDelete(Mockito.any(), Mockito.any());
+        Mockito.verify(nAsyncQueryController).batchDelete(Mockito.any(), Mockito.any(), Mockito.any());
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
@@ -152,7 +154,7 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError());
 
-        Mockito.verify(nAsyncQueryController).batchDelete(Mockito.any(), Mockito.any());
+        Mockito.verify(nAsyncQueryController).batchDelete(Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -528,23 +530,49 @@ public class NAsyncQueryControllerTest extends NLocalFileMetadataTestCase {
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        Mockito.verify(nAsyncQueryController).batchDelete(null, null);
+        Mockito.verify(nAsyncQueryController).batchDelete(Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
     public void testBatchDeleteOldResult() throws Exception {
-        Mockito.doReturn(true).when(asyncQueryService).batchDelete(Mockito.anyString(), Mockito.anyString());
+        Mockito.doReturn(true).when(asyncQueryService).batchDelete(Mockito.anyString(), Mockito.anyString(),
+                Mockito.any());
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query")
                 .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        nAsyncQueryController.batchDelete(PROJECT, "2011-11-11 11:11:11");
+        nAsyncQueryController.batchDelete(PROJECT, "2011-11-11 11:11:11", null);
+    }
+
+    @Test
+    public void deleteAllFolder() throws Exception {
+        Mockito.doReturn(true).when(asyncQueryService).deleteAllFolder();
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query/tenant_node")
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        val response = nAsyncQueryController.deleteAllFolder();
+        Assert.assertTrue(response.getData());
+    }
+
+    @Test
+    public void deleteAllFolderFailed() throws Exception {
+        Mockito.doReturn(false).when(asyncQueryService).deleteAllFolder();
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query/tenant_node")
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        val response = nAsyncQueryController.deleteAllFolder();
+        Assert.assertFalse(response.getData());
     }
 
     @Test
     public void testBatchDeleteOldResultWhenTimeFormatError() throws Exception {
-        Mockito.doThrow(new ParseException("", 0)).when(asyncQueryService).batchDelete(PROJECT, "2011-11/11 11:11:11");
+        Mockito.doThrow(new ParseException("", 0)).when(asyncQueryService).batchDelete(Mockito.any(), Mockito.any(),
+                Mockito.any());
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/async_query").param("project", PROJECT)
                 .param("older_than", "2011-11/11 11:11:11")

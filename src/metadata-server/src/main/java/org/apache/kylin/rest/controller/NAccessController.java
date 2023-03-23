@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -334,7 +335,12 @@ public class NAccessController extends NBasicController {
             accessService.checkGlobalAdmin(accessRequest.getSid());
         }
         AclEntity ae = accessService.getAclEntity(entityType, uuid);
-        accessService.grant(ae, accessRequest.getSid(), accessRequest.isPrincipal(), accessRequest.getPermission());
+        if (StringUtils.isBlank(accessRequest.getProject())) {
+            accessService.grant(ae, accessRequest.getSid(), accessRequest.isPrincipal(), accessRequest.getPermission());
+        } else {
+            accessService.grant(accessRequest.getProject(), ae, accessRequest.getSid(), accessRequest.isPrincipal(),
+                    accessRequest.getPermission());
+        }
         if (AclEntityType.PROJECT_INSTANCE.equals(entityType)) {
             aclTCRService.remoteGrantACL(uuid, Lists.newArrayList(accessRequest));
         }
@@ -347,14 +353,18 @@ public class NAccessController extends NBasicController {
             HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON })
     @ResponseBody
     public EnvelopeResponse<String> batchGrant(@PathVariable("entity_type") String entityType,
-            @PathVariable("uuid") String uuid,
+            @PathVariable("uuid") String uuid, @RequestParam(value = "project", required = false) String project,
             @RequestParam(value = "init_acl", required = false, defaultValue = "true") boolean initAcl,
             @RequestBody List<BatchAccessRequest> batchAccessRequests) throws IOException {
         List<AccessRequest> requests = transform(batchAccessRequests);
         accessService.checkAccessRequestList(requests);
 
         AclEntity ae = accessService.getAclEntity(entityType, uuid);
-        accessService.batchGrant(requests, ae);
+        if (StringUtils.isBlank(project)) {
+            accessService.batchGrant(requests, ae);
+        } else {
+            accessService.batchGrant(project, requests, ae);
+        }
         if (AclEntityType.PROJECT_INSTANCE.equals(entityType) && initAcl) {
             aclTCRService.remoteGrantACL(uuid, requests);
         }
@@ -382,8 +392,11 @@ public class NAccessController extends NBasicController {
         if (accessRequest.isPrincipal()) {
             accessService.checkGlobalAdmin(accessRequest.getSid());
         }
-
-        accessService.update(ae, accessRequest.getAccessEntryId(), permission);
+        if (StringUtils.isBlank(accessRequest.getProject())) {
+            accessService.update(ae, accessRequest.getAccessEntryId(), permission);
+        } else {
+            accessService.update(accessRequest.getProject(), ae, accessRequest.getAccessEntryId(), permission);
+        }
         boolean hasAdminProject = CollectionUtils.isNotEmpty(projectService.getAdminProjects());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, hasAdminProject, "");
     }
@@ -396,13 +409,18 @@ public class NAccessController extends NBasicController {
             @PathVariable("uuid") String uuid, //
             @RequestParam("access_entry_id") Integer accessEntryId, //
             @RequestParam("sid") String sid, //
-            @RequestParam("principal") boolean principal) throws IOException {
+            @RequestParam("principal") boolean principal,
+            @RequestParam(value = "project", required = false) String project) throws IOException {
         accessService.checkSidNotEmpty(sid, principal);
         if (principal) {
             accessService.checkGlobalAdmin(sid);
         }
         AclEntity ae = accessService.getAclEntity(entityType, uuid);
-        accessService.revoke(ae, accessEntryId);
+        if (StringUtils.isBlank(project)) {
+            accessService.revoke(ae, accessEntryId);
+        } else {
+            accessService.revoke(project, ae, accessEntryId);
+        }
         if (AclEntityType.PROJECT_INSTANCE.equals(entityType)) {
             aclTCRService.remoteRevokeACL(uuid, sid, principal);
         }
@@ -439,7 +457,11 @@ public class NAccessController extends NBasicController {
         if (accessRequest.isPrincipal()) {
             accessService.checkGlobalAdmin(accessRequest.getSid());
         }
-        accessService.updateExtensionPermission(ae, accessRequest);
+        if (StringUtils.isBlank(accessRequest.getProject())) {
+            accessService.updateExtensionPermission(ae, accessRequest);
+        } else {
+            accessService.updateExtensionPermission(accessRequest.getProject(), ae, accessRequest);
+        }
         boolean hasAdminProject = CollectionUtils.isNotEmpty(projectService.getAdminProjects());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, hasAdminProject, "");
     }

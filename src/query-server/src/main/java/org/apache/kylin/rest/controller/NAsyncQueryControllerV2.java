@@ -47,7 +47,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.ApiOperation;
 
-
 @RestController
 @RequestMapping(value = "/api", produces = { HTTP_VND_APACHE_KYLIN_V2_JSON })
 public class NAsyncQueryControllerV2 extends NBasicController {
@@ -63,7 +62,8 @@ public class NAsyncQueryControllerV2 extends NBasicController {
             "QE" }, notes = "Update Param: query_id, accept_partial, backdoor_toggles, cache_key; Update Response: query_id")
     @PostMapping(value = "/async_query")
     @ResponseBody
-    public EnvelopeResponse<AsyncQueryResponseV2> query(@Valid @RequestBody final AsyncQuerySQLRequestV2 asyncQuerySQLRequest)
+    public EnvelopeResponse<AsyncQueryResponseV2> query(
+            @Valid @RequestBody final AsyncQuerySQLRequestV2 asyncQuerySQLRequest)
             throws InterruptedException, IOException {
         AsyncQuerySQLRequest sqlRequest = new AsyncQuerySQLRequest();
         sqlRequest.setProject(asyncQuerySQLRequest.getProject());
@@ -84,29 +84,30 @@ public class NAsyncQueryControllerV2 extends NBasicController {
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, AsyncQueryResponseV2.from(resp), "");
     }
 
-
     @ApiOperation(value = "async query status", tags = { "QE" })
     @GetMapping(value = "/async_query/{query_id:.+}/metadata")
     @ResponseBody
-    public EnvelopeResponse<List<List<String>>> metadata(@PathVariable("query_id") String queryId) throws IOException {
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, asyncQueryService.getMetaData(searchProject(queryId), queryId), "");
+    public EnvelopeResponse<List<List<String>>> metadata(@PathVariable("query_id") String queryId,
+            @RequestParam(value = "project", required = false) String project) throws IOException {
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                asyncQueryService.getMetaData(searchProject(project, queryId), queryId), "");
     }
 
     @ApiOperation(value = "fileStatus", tags = { "QE" }, notes = "Update URL: file_status")
     @GetMapping(value = "/async_query/{query_id:.+}/filestatus")
     @ResponseBody
-    public EnvelopeResponse<Long> fileStatus(@PathVariable("query_id") String queryId) throws IOException {
-        return asyncQueryController.fileStatus(queryId, null, searchProject(queryId));
+    public EnvelopeResponse<Long> fileStatus(@PathVariable("query_id") String queryId,
+            @RequestParam(value = "project", required = false) String project) throws IOException {
+        return asyncQueryController.fileStatus(queryId, null, searchProject(project, queryId));
     }
-
-
 
     @ApiOperation(value = "query", tags = { "QE" }, notes = "Update Response: query_id")
     @GetMapping(value = "/async_query/{query_id:.+}/status")
     @ResponseBody
-    public EnvelopeResponse<AsyncQueryResponseV2> inqueryStatus(@PathVariable("query_id") String queryId)
-            throws IOException {
-        AsyncQueryResponse resp = asyncQueryController.inqueryStatus(null, queryId, searchProject(queryId)).getData();
+    public EnvelopeResponse<AsyncQueryResponseV2> inqueryStatus(@PathVariable("query_id") String queryId,
+            @RequestParam(value = "project", required = false) String project) throws IOException {
+        AsyncQueryResponse resp = asyncQueryController.inqueryStatus(null, queryId, searchProject(project, queryId))
+                .getData();
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, AsyncQueryResponseV2.from(resp), "");
     }
 
@@ -114,13 +115,19 @@ public class NAsyncQueryControllerV2 extends NBasicController {
     @GetMapping(value = "/async_query/{query_id:.+}/result_download")
     @ResponseBody
     public void downloadQueryResult(@PathVariable("query_id") String queryId,
-                                    @RequestParam(value = "includeHeader", required = false) Boolean includeHeader,
-                                    HttpServletResponse response) throws IOException {
-        asyncQueryController.downloadQueryResult(queryId, includeHeader, includeHeader, null, response, searchProject(queryId));
+            @RequestParam(value = "includeHeader", required = false) Boolean includeHeader,
+            HttpServletResponse response, @RequestParam(value = "project", required = false) String project)
+            throws IOException {
+        asyncQueryController.downloadQueryResult(queryId, includeHeader, includeHeader, null, response,
+                searchProject(project, queryId));
     }
 
-    private String searchProject(String queryId) throws IOException {
-        String project = asyncQueryService.searchQueryResultProject(queryId);
+    private String searchProject(String project, String queryId) throws IOException {
+        if (project != null) {
+            return project;
+        }
+
+        project = asyncQueryService.searchQueryResultProject(queryId);
         if (project == null) {
             throw new KylinException(ASYNC_QUERY_RESULT_NOT_FOUND);
         }

@@ -56,6 +56,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -104,6 +105,7 @@ import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
 import org.apache.kylin.rest.request.ModelImportRequest;
 import org.apache.kylin.rest.request.ModelImportRequest.ImportType;
+import org.apache.kylin.rest.request.StorageCleanupRequest;
 import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
 import org.apache.kylin.rest.response.LoadTableResponse;
 import org.apache.kylin.rest.response.ModelPreviewResponse;
@@ -153,6 +155,9 @@ public class MetaStoreService extends BasicService {
 
     @Autowired
     public TableExtService tableExtService;
+
+    @Autowired
+    private RouteService routeService;
 
     @Setter
     @Autowired(required = false)
@@ -811,5 +816,14 @@ public class MetaStoreService extends BasicService {
 
     public void cleanupStorage(String[] projectsToClean, boolean cleanupStorage) {
         metadataToolHelper.cleanStorage(cleanupStorage, Arrays.asList(projectsToClean), 0D, 0);
+    }
+
+    public void cleanupStorage(StorageCleanupRequest request, HttpServletRequest servletRequest) {
+        if (routeService.needRoute()) {
+            String url = StringUtils.stripEnd(servletRequest.getRequestURI(), "/") + "/tenant_node";
+            routeService.asyncRouteForMultiTenantMode(servletRequest, url);
+            return;
+        }
+        cleanupStorage(request.getProjectsToClean(), request.isCleanupStorage());
     }
 }

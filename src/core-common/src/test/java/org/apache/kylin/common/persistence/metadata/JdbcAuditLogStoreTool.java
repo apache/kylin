@@ -20,28 +20,21 @@ package org.apache.kylin.common.persistence.metadata;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.AddressUtil;
+import org.apache.kylin.common.util.RandomUtil;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import lombok.val;
 
 public class JdbcAuditLogStoreTool {
 
-    public static JdbcAuditLogStore prepareJdbcAuditLogStore(KylinConfig config) throws Exception {
-
-        val url = config.getMetadataUrl();
-        val auditLogStore = new JdbcAuditLogStore(config);
-
-        val jdbcTemplate = auditLogStore.getJdbcTemplate();
+    public static void prepareJdbcAuditLogStore(String table, JdbcTemplate jdbcTemplate) {
         for (int i = 0; i < 100; i++) {
             val projectName = "p" + i;
             String unitId = RandomUtil.randomUUIDStr();
-            jdbcTemplate.update(String.format(Locale.ROOT, JdbcAuditLogStore.INSERT_SQL, "test_audit_log"),
+            jdbcTemplate.update(String.format(Locale.ROOT, JdbcAuditLogStore.INSERT_SQL, table),
                     "/" + projectName + "/aa", "aa".getBytes(StandardCharsets.UTF_8), System.currentTimeMillis(), 0,
                     unitId, null, AddressUtil.getLocalInstance());
         }
-
-        return auditLogStore;
     }
 }

@@ -87,6 +87,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
 import org.supercsv.prefs.CsvPreference;
@@ -638,6 +639,17 @@ public class AysncQueryServiceTest extends ServiceTestBase {
     }
 
     @Test
+    public void deleteAllFolderMultiTenantMode() throws IOException, InterruptedException {
+        String queryId = RandomUtil.randomUUIDStr();
+        mockResultFile(queryId, false, true);
+        Path resultPath = new Path(asyncQueryService.asyncQueryResultPath(PROJECT, queryId));
+        assertTrue(AsyncQueryUtil.getFileSystem().exists(resultPath));
+        val request = new MockHttpServletRequest();
+        asyncQueryService.deleteAllFolder(request);
+        assertFalse(AsyncQueryUtil.getFileSystem().exists(resultPath));
+    }
+
+    @Test
     public void testDeleteByQueryId() throws IOException, InterruptedException {
         String queryId = RandomUtil.randomUUIDStr();
         mockResultFile(queryId, false, true);
@@ -860,22 +872,22 @@ public class AysncQueryServiceTest extends ServiceTestBase {
 
     @Test
     public void testBatchDeleteAll() throws Exception {
-        Assert.assertEquals(true, asyncQueryService.batchDelete(null, null));
+        Assert.assertEquals(true, asyncQueryService.batchDelete(null, null, null));
     }
 
     @Test
     public void testBatchDeleteOlderResult() throws Exception {
         String queryId = RandomUtil.randomUUIDStr();
         asyncQueryService.saveQueryUsername(PROJECT, queryId);
-        Assert.assertEquals(true, asyncQueryService.batchDelete(PROJECT, "2011-11-11 11:11:11"));
+        Assert.assertEquals(true, asyncQueryService.batchDelete(PROJECT, "2011-11-11 11:11:11", null));
     }
 
     @Test
     public void testBatchDeleteOlderFalse() throws Exception {
         String queryId = RandomUtil.randomUUIDStr();
         asyncQueryService.saveQueryUsername(PROJECT, queryId);
-        Assert.assertEquals(false, asyncQueryService.batchDelete(PROJECT, null));
-        Assert.assertEquals(false, asyncQueryService.batchDelete(null, "2011-11-11 11:11:11"));
+        Assert.assertEquals(false, asyncQueryService.batchDelete(PROJECT, null, null));
+        Assert.assertEquals(false, asyncQueryService.batchDelete(null, "2011-11-11 11:11:11", null));
     }
 
     @Test

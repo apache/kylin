@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 
@@ -138,8 +139,7 @@ public class NMetaStoreController extends NBasicController {
             throws Exception {
         checkProjectName(project);
         checkUploadFile(metadataFile);
-        if (request.getModels().stream()
-                .noneMatch(modelImport -> IMPORT_TYPE.contains(modelImport.getImportType()))) {
+        if (request.getModels().stream().noneMatch(modelImport -> IMPORT_TYPE.contains(modelImport.getImportType()))) {
             throw new KylinException(EMPTY_MODEL_ID, "At least one model should be selected to import!");
         }
         metaStoreService.importModelMetadata(project, metadataFile, request);
@@ -161,7 +161,16 @@ public class NMetaStoreController extends NBasicController {
     @ApiOperation(value = "cleanupStorage", tags = { "SM" })
     @PostMapping(value = "/cleanup_storage")
     @ResponseBody
-    public EnvelopeResponse<String> cleanupStorage(@RequestBody StorageCleanupRequest request) {
+    public EnvelopeResponse<String> cleanupStorage(@RequestBody StorageCleanupRequest request,
+            HttpServletRequest servletRequest) {
+        metaStoreService.cleanupStorage(request, servletRequest);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
+    }
+
+    @ApiOperation(value = "cleanupStorageForTenantMode", tags = { "SM" })
+    @PostMapping(value = "/cleanup_storage/tenant_node")
+    @ResponseBody
+    public EnvelopeResponse<String> cleanupStorageForTenantMode(@RequestBody StorageCleanupRequest request) {
         metaStoreService.cleanupStorage(request.getProjectsToClean(), request.isCleanupStorage());
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
