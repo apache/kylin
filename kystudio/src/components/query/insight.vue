@@ -471,14 +471,6 @@ export default class NewQuery extends Vue {
         line-height: 21px;
       }
     }
-    // .nodata {
-    //   text-align: center;
-    //   color: @text-disabled-color;
-    //   position: absolute;
-    //   top: 50%;
-    //   left: 50%;
-    //   transform: translate(-50%, -50%);
-    // }
     .form_block {
       .query_check {
         display: flex;
@@ -603,13 +595,6 @@ export default class NewQuery extends Vue {
         margin: 20px;
       }
       .el-tabs{
-        // margin-top: 3px;
-        // .el-tabs__nav-wrap {
-        //   width: calc(~'100% - 250px');
-        //   &::after {
-        //     background-color: transparent;
-        //   }
-        // }
         .el-tabs__content{
           padding: 0px;
           .el-tab-pane{
@@ -619,14 +604,6 @@ export default class NewQuery extends Vue {
         &.el-tabs--button {
           .el-tab-pane{
             padding-top: 8px;
-          }
-          .el-tabs__header {
-            width: 136px;
-          }
-        }
-        &.en-model {
-          .el-tabs__header {
-            width: 174px !important;
           }
         }
       }
