@@ -721,4 +721,11 @@ export const getAffectedModelsType = {
   RELOAD_ROOT_FACT: 'RELOAD_ROOT_FACT'
 }
 
+export const formatSQLConfig = {
+  language: 'sql',
+  tabWidth: 2,
+  // keywordCase: 'upper',
+  linesBetweenQueries: 2
+}
+
 export { projectCfgs } from './projectCfgs'

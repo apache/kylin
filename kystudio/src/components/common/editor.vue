@@ -26,8 +26,8 @@
   </div>
 </template>
 <script>
-import sqlFormatter from 'sql-formatter'
-import { sqlRowsLimit, sqlStrLenLimit } from '../../config/index'
+import { format } from 'sql-formatter'
+import { sqlRowsLimit, sqlStrLenLimit, formatSQLConfig } from '../../config/index'
 import { mapState } from 'vuex'
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator'
@@ -145,8 +145,8 @@ import { Component } from 'vue-property-decorator'
         const data = this.editorData.length > sqlStrLenLimit ? `${this.editorData.slice(0, sqlStrLenLimit)}...` : this.editorData
         // 是否显示 tips 取决于填入的 sql 字符数是否超过全局配置的
         this.showLimitTip = this.editorData.length > sqlStrLenLimit
-        this.formatData = sqlFormatter.format(data)
-        this.fullFormatData = sqlFormatter.format(this.editorData)
+        this.formatData = format(data, formatSQLConfig)
+        this.fullFormatData = format(this.editorData, formatSQLConfig)
       } else {
         const data = this.editorData.split('\n')
         // 是否显示 tips 取决于填入的 sql 行数是否超过全局配置的
