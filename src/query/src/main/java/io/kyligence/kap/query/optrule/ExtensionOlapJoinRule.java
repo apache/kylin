@@ -66,7 +66,6 @@ public class ExtensionOlapJoinRule extends ConverterRule {
 
         final JoinInfo info = JoinInfo.of(left, right, join.getCondition());
 
-        // handle powerbi inner join, see https://github.com/Kyligence/KAP/issues/1823
         Join tmpJoin = transformJoinCondition(join, info, traitSet, left, right);
         if (tmpJoin instanceof OLAPJoinRel) {
             return tmpJoin;

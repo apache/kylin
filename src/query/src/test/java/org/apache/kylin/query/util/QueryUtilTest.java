@@ -264,10 +264,10 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
 
         final Exception exception = new IllegalStateException(
                 "\tThere is no column\t'age' in table 'test_kylin_fact'.\n"
-                        + "Please contact Kyligence Enterprise technical support for more details.\n");
+                        + "Please contact Kylin 5.0 technical support for more details.\n");
         final String errorMsg = QueryUtil.makeErrorMsgUserFriendly(exception);
         Assert.assertEquals("There is no column\t'age' in table 'test_kylin_fact'.\n"
-                + "Please contact Kyligence Enterprise technical support for more details.", errorMsg);
+                + "Please contact Kylin 5.0 technical support for more details.", errorMsg);
     }
 
     @Test

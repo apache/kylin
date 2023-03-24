@@ -92,7 +92,7 @@ public class KylinVersion implements Comparable {
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("4.0.0");
+    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("5.0.0");
 
     private static final KylinVersion VERSION_200 = new KylinVersion("2.0.0");
 

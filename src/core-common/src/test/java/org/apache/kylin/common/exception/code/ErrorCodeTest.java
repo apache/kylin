@@ -29,12 +29,12 @@ public class ErrorCodeTest {
         Assert.assertEquals("KE-060100201", nonKeException.getErrorCode().getCode());
         Assert.assertEquals("Please check whether the external environment(other systems, components, etc.) is normal.",
                 nonKeException.getErrorSuggest().getLocalizedString());
-        Assert.assertEquals("An Exception occurred outside Kyligence Enterprise.", nonKeException.getMsg());
-        Assert.assertEquals("An Exception occurred outside Kyligence Enterprise.",
+        Assert.assertEquals("An Exception occurred outside Kylin 5.0.", nonKeException.getMsg());
+        Assert.assertEquals("An Exception occurred outside Kylin 5.0.",
                 nonKeException.getErrorMsg().getLocalizedString());
         Assert.assertEquals("Please check whether the external environment(other systems, components, etc.) is normal.",
                 nonKeException.getErrorSuggestion().getLocalizedString());
-        Assert.assertEquals("KE-060100201: An Exception occurred outside Kyligence Enterprise.",
+        Assert.assertEquals("KE-060100201: An Exception occurred outside Kylin 5.0.",
                 nonKeException.getCodeMsg());
     }
 }

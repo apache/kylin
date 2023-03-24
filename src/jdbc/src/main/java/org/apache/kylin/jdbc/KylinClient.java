@@ -633,7 +633,7 @@ public class KylinClient implements IRemoteClient {
         String responseStr = EntityUtils.toString(response.getEntity());
         if (responseStr.contains("Error occured while trying to proxy to")) {
             return new IOException("FAILED!\n"
-                    + "[Kyligence][JDBCDriver]  Unsupported Apache Kylin instance, please contact Apache Kylin Community.");
+                    + "[Kylin 5][JDBCDriver]  Unsupported Apache Kylin instance, please contact Apache Kylin Community.");
         } else {
             return new IOException(
                     request.getMethod() + " failed, error code " + statusCode + " and response: " + responseStr);

@@ -130,7 +130,7 @@ public class BootstrapServer implements ISmartApplicationListenerForSystem {
         if (event instanceof ApplicationReadyEvent) {
             logger.info("init backend end...");
         } else if (event instanceof ContextClosedEvent) {
-            logger.info("Stop Kyligence node...");
+            logger.info("Stop Kylin 5 node...");
             EpochManager.getInstance().releaseOwnedEpochs();
         }
     }

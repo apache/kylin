@@ -38,10 +38,11 @@ if [[ "${current_branch}" = "" ]]; then
     current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 fi
 echo "${kylin_commit_sha1}@${current_branch}" > build/commit_SHA1
-if [ -z "$BUILD_SYSTEM" ]; then
-    BUILD_SYSTEM="MANUAL"
+if [ -z "$ASF_USERNAME" ]; then
+    ASF_USERNAME="SOMEONE"
 fi
-echo "Build with ${BUILD_SYSTEM} at" `date "+%Y-%m-%d %H:%M:%S"` >> build/commit_SHA1
+echo "Build by ${ASF_USERNAME} at" `date "+%Y-%m-%d %H:%M:%S"` >> build/commit_SHA1
+echo "OS  : `uname -a`" >> build/commit_SHA1
 
 KYLIN_VERSION_NAME="Apache Kylin ${release_version}"
 
@@ -49,24 +50,24 @@ echo "${KYLIN_VERSION_NAME}" > build/VERSION
 echo "VERSION file content:" ${KYLIN_VERSION_NAME}
 
 echo "BUILD STAGE 2 - Build binaries..."
-sh build/release/build.sh $@             || { exit 1; }
+bash build/release/build.sh $@             || { exit 1; }
 
 if [[ "${WITH_SPARK}" = "1" ]]; then
     echo "BUILD STAGE 3 - Prepare spark..."
-    sh -x build/release/download-spark.sh      || { exit 1; }
+    bash -x build/release/download-spark.sh      || { exit 1; }
 else
     rm -rf build/spark
 fi
 
 if [[ "${WITH_THIRDPARTY}" = "1" ]]; then
     echo "BUILD STAGE 4 - Prepare influxdb..."
-    sh build/release/download-influxdb.sh      || { exit 1; }
+    bash build/release/download-influxdb.sh      || { exit 1; }
 
     echo "BUILD STAGE 5 - Prepare grafana..."
-    sh build/release/download-grafana.sh      || { exit 1; }
+    bash build/release/download-grafana.sh      || { exit 1; }
 
     echo "BUILD STAGE 6 - Prepare postgresql..."
-    sh build/release/download-postgresql.sh      || { exit 1; }
+    bash build/release/download-postgresql.sh      || { exit 1; }
 else
     echo "BUILD STAGE 4-6 is skipped ..."
     rm -rf build/influxdb
@@ -75,8 +76,8 @@ else
 fi
 
 echo "BUILD STAGE 7 - Prepare and compress package..."
-sh build/release/prepare.sh                || { exit 1; }
-sh build/release/compress.sh               || { exit 1; }
+bash build/release/prepare.sh                || { exit 1; }
+bash build/release/compress.sh               || { exit 1; }
 
 echo "BUILD STAGE 8 - Clean up..."
 

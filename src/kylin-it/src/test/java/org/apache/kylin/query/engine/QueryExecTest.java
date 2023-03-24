@@ -75,8 +75,6 @@ public class QueryExecTest extends NLocalFileMetadataTestCase {
      */
     @Test
     public void testWorkWithoutKapAggregateReduceFunctionsRule() throws SQLException {
-        // Can not reproduce https://github.com/Kyligence/KAP/issues/15261 at 4.x
-        // we needn't introduce KapAggregateReduceFunctionsRule as we did in 3.x
         overwriteSystemProp("kylin.query.convert-sum-expression-enabled", "true");
         String SQL = "select sum(t.a1 * 2)  from ("
                 + "select sum(price/2) as a1, sum(ITEM_COUNT) as a2 from TEST_KYLIN_FACT group by LSTG_FORMAT_NAME"

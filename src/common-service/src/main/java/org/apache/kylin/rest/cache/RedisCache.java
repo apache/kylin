@@ -64,7 +64,7 @@ public class RedisCache implements KylinCache {
 
     private static final String NX = "NX";
     private static final String XX = "XX";
-    private static final String PREFIX = "Kyligence-";
+    private static final String PREFIX = "Kylin5-";
     private static final String CHARSET_NAME = "UTF-8";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final String SCAN_POINTER_START_STR = new String(ScanParams.SCAN_POINTER_START_BINARY, CHARSET);

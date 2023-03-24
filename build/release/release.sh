@@ -76,13 +76,13 @@ if [[ "${PACKAGE_OFFICIAL}" = "0" ]]; then
     timestamp=`date '+%Y%m%d%H%M%S'`
     export release_version=${release_version}.${timestamp}
 fi
-export package_name="apache-kylin-${release_version}"
+export package_name="apache-kylin-${release_version}-bin"
 
-sh build/release/package.sh $@ || { echo "package failed!"; exit 1; }
+bash build/release/package.sh $@ || { echo "package failed!"; exit 1; }
 
 echo "Release Version: ${release_version}"
 
-package_name="apache-kylin-${release_version}.tar.gz"
+package_name="apache-kylin-${release_version}-bin.tar.gz"
 sha256sum dist/$package_name > dist/${package_name}.sha256sum
 
 echo "sha256: `cat dist/${package_name}.sha256sum`"

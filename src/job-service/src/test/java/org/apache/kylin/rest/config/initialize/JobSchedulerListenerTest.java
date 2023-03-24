@@ -430,7 +430,7 @@ public class JobSchedulerListenerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals("KE-060100201", jobInfo.getErrorCode());
         Assert.assertEquals("Please check whether the external environment(other systems, components, etc.) is normal.",
                 jobInfo.getSuggestion());
-        Assert.assertEquals("KE-060100201: An Exception occurred outside Kyligence Enterprise.", jobInfo.getMsg());
+        Assert.assertEquals("KE-060100201: An Exception occurred outside Kylin 5.0.", jobInfo.getMsg());
         Assert.assertTrue(jobInfo.getStacktrace().startsWith("java.lang.RuntimeException"));
     }
 

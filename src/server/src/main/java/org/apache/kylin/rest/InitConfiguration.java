@@ -46,7 +46,7 @@ public class InitConfiguration {
     public void init() {
         if (KylinConfig.getInstanceFromEnv().isCheckHostname() && hostInfoFetcher.getHostname().indexOf("_") != -1) {
             throw new KylinRuntimeException("The hostname does not support containing '_' characters,"
-                    + " please modify the hostname of Kyligence Enterprise nodes.");
+                    + " please modify the hostname of Kylin 5.0 nodes.");
         }
     }
 

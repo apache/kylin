@@ -117,10 +117,10 @@ public class UpdateUserAclToolTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testParseVersion() {
-        Assert.assertEquals("4.5.9", tool.parseVersion("Kyligence Enterprise 4.5.9"));
-        Assert.assertEquals("4.5.9", tool.parseVersion("Kyligence Enterprise 4.5.9-dev"));
-        Assert.assertEquals("4.5.9.0", tool.parseVersion("Kyligence Enterprise 4.5.9.0"));
-        Assert.assertEquals("4.5.9.3299", tool.parseVersion("Kyligence Enterprise 4.5.9.3299"));
+        Assert.assertEquals("4.5.9", tool.parseVersion("Kylin 5.0 4.5.9"));
+        Assert.assertEquals("4.5.9", tool.parseVersion("Kylin 5.0 4.5.9-dev"));
+        Assert.assertEquals("4.5.9.0", tool.parseVersion("Kylin 5.0 4.5.9.0"));
+        Assert.assertEquals("4.5.9.3299", tool.parseVersion("Kylin 5.0 4.5.9.3299"));
     }
 
     @Test

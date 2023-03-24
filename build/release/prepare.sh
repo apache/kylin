@@ -24,7 +24,7 @@ cd ${dir}/../..
 source build/release/functions.sh
 exportProjectVersions
 
-sh build/release/prepare-libs.sh || { exit 1; }
+bash build/release/prepare-libs.sh || { exit 1; }
 
 #create ext dir
 mkdir -p build/ext

@@ -149,7 +149,6 @@ public class ContextUtil {
                     hasCountConstant);
 
         } else {
-            //https://github.com/Kyligence/KAP/issues/9952
             //do not support agg pushdown if WindowRel, SortRel, LimitRel, ValueRel is met
             return false;
         }

@@ -19,7 +19,7 @@
             <div class="ky-line"></div>
             <ul>
               <li><i class="el-icon-ksd-login_intro ksd-fs-12"></i><a :href="$t('introductionUrl')" target="_blank">{{$t('introduction')}}</a></li>
-              <li><i class="el-icon-ksd-details ksd-fs-12"></i><a :href="'https://kylin.apache.org/docs/'" target="_blank">{{$t('manual')}}</a></li>
+              <li><i class="el-icon-ksd-details ksd-fs-12"></i><a :href="'https://kylin.apache.org/5.0/docs/quickstart/overview'" target="_blank">{{$t('manual')}}</a></li>
               <li><i class="el-icon-ksd-login_email ksd-fs-12"></i><a href="mailto:user@kylin.apache.org">{{$t('contactKylin')}}</a></li>
             </ul>
           </div>
@@ -53,8 +53,8 @@
       <p class="text">{{$t('accessForbidden')}}</p>
     </div>
     <p class="login-footer">
-      <a href="http://kylin.apache.org" style="color:#808080;">Apache Kylin</a> | 
-      <a href="http://kylin.apache.org/community/" style="color:#808080;"> Apache Kylin Community</a>
+      <a href="http://kylin.apache.org/5.0" style="color:#808080;">Apache Kylin 5.0</a> |
+      <a href="http://kylin.apache.org/5.0/community/" style="color:#808080;">Apache Kylin Community</a>
     </p>
   </div>
 </template>
@@ -117,7 +117,7 @@ import { Base64 } from 'js-base64'
   },
   locales: {
     'en': {
-      welcome: 'Welcome to Kylin',
+      welcome: 'Welcome to Kylin 5.0',
       kylinMsg: 'Analytic Data Warehouse for Big Data',
       loginIn: 'Login',
       userName: 'Username',
@@ -126,8 +126,8 @@ import { Base64 } from 'js-base64'
       noUserName: 'Please enter your username.',
       noUserPwd: 'Please enter your password.',
       adminTip: 'Please run the reset password command "bin/admin-tool.sh admin-password-reset" under the "$KYLIN_HOME", <br/>After that, the ADMIN password will be reset to the default password, <br/>and the other accounts will not be influenced.',
-      introduction: 'Introduction',
-      introductionUrl: 'https://kylin.apache.org/',
+      introduction: 'Tutorial',
+      introductionUrl: 'https://kylin.apache.org/5.0/docs/quickstart/tutorial',
       manual: 'Manual',
       contactKylin: 'Contact Kylin',
       accessForbidden: 'Access denied'
@@ -247,7 +247,7 @@ export default class Login extends Vue {
           a:hover {
             color: @base-color-1;
           }
-        }        
+        }
         li:hover {
           color: @base-color-1;
         }

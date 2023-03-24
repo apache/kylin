@@ -155,7 +155,7 @@ function fetchKylinHadoopConf() {
           then
               echo "Hadoop conf directory currently generated based on manual mode."
           else
-              echo "Missing hadoop conf files. Please contact Kyligence technical support for more details."
+              echo "Missing hadoop conf files. Please contact Community support for more details."
               exit 1
           fi
         fi
