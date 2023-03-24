@@ -577,23 +577,6 @@ export default class ModelPartitionModal extends Vue {
     // })
     return result
   }
-  // get formatList () {
-  //   if (!this.partitionMeta.column) {
-  //     return []
-  //   }
-  //   let partitionColumn = this.getColumnInfo(this.partitionMeta.column)
-  //   if (!partitionColumn) {
-  //     return []
-  //   } else {
-  //     if (timeDataType.indexOf(partitionColumn.datatype) === -1) {
-  //       this.partitionMeta.format = 'yyyy-MM-dd'
-  //       return this.integerFormat
-  //     } else {
-  //       this.partitionMeta.format = ''
-  //       return this.dateFormat
-  //     }
-  //   }
-  // }
   getColumnInfo (column) {
     if (this.selectedTable) {
       let len = this.selectedTable.columns && this.selectedTable.columns.length || 0
@@ -631,6 +614,9 @@ export default class ModelPartitionModal extends Vue {
       }
       this.filterCondition = this.modelDesc.filter_condition
       this.originFilterCondition = this.modelDesc.filter_condition
+      this.$nextTick(() => {
+        this.setAutoCompleteData()
+      })
     } else {
       this.resetForm()
     }
@@ -882,6 +868,19 @@ export default class ModelPartitionModal extends Vue {
       }
     })
     return others
+  }
+  setAutoCompleteData () {
+    const columnList = this.modelInstance.getTableColumns()
+    let ad = columnList.map((col) => {
+      return {
+        meta: col.datatype,
+        caption: col.full_colname,
+        value: col.full_colname,
+        id: col.id,
+        scope: 1
+      }
+    })
+    this.$refs.dataFilterCond.$emit('setAutoCompleteData', ad)
   }
 }
 </script>
