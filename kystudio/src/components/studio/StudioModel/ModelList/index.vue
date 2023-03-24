@@ -106,7 +106,7 @@
           prop="alias"
           :label="modelTableTitle">
           <template slot-scope="scope">
-            <model-title-description :modelData="scope.row" @openSegment="openComplementSegment" source="modelList" />
+            <model-title-description :modelData="scope.row" @openSegment="openComplementSegment" @autoFix="autoFix" source="modelList" />
             <!-- 工具栏 -->
             <model-actions :currentModel="scope.row" @loadModelsList="loadModelsList"/>
 

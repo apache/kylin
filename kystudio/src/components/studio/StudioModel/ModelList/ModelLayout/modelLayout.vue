@@ -2,7 +2,7 @@
   <div class="model-layout" :key="randomKey">
     <div class="header-layout">
       <div class="title"><el-button type="primary" text icon-button-mini icon="el-ksd-icon-arrow_left_16" size="small" @click="jumpBack"></el-button>
-        <model-title-description :modelData="currentModelRow" source="modelLayout" v-if="currentModelRow" hideTimeTooltip />
+        <model-title-description :modelData="currentModelRow" @autoFix="autoFix" @openSegment="openComplementSegment" source="modelLayout" v-if="currentModelRow" hideTimeTooltip />
         <el-button class="ksd-ml-8" type="primary" text @click.stop="showModelList = !showModelList" icon-button-mini icon="el-ksd-icon-arrow_down_16" size="small"></el-button>
         <div class="model-filter-list" v-if="showModelList">
           <div class="search-bar"><el-input class="search-model-input" v-model="searchModelName" size="small" :placeholder="$t('kylinLang.common.pleaseInput')" prefix-icon="el-ksd-icon-search_22" v-global-key-event.enter.debounce="searchModel" @clear="searchModel()"></el-input></div>
