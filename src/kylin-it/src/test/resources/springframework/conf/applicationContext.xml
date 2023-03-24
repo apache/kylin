@@ -34,12 +34,12 @@
     <context:component-scan base-package="org.apache.kylin">
         <!--
         WORKAROUND: KY-1265 introduced SecurityConfig which will cause test case failure:
-        * io.kyligence.kap.rest.controller.NModelControllerTest
-        * io.kyligence.kap.server.NModelControllerWithRealServiceTest
-        * io.kyligence.kap.rest.controller.NProjectControllerTest
-        * io.kyligence.kap.rest.controller.NQueryControllerTest
-        * io.kyligence.kap.rest.controller.NUserControllerTest
-        * io.kyligence.kap.event.ModelSemanticTest
+        * org.apache.kylin.rest.controller.NModelControllerTest
+        * org.apache.kylin.server.NModelControllerWithRealServiceTest
+        * org.apache.kylin.rest.controller.NProjectControllerTest
+        * org.apache.kylin.rest.controller.NQueryControllerTest
+        * org.apache.kylin.rest.controller.NUserControllerTest
+        * org.apache.kylin.event.ModelSemanticTest
         -->
         <context:exclude-filter type="aspectj" expression="org.apache.kylin.rest.config.SecurityConfig"/>
     </context:component-scan>

@@ -20,7 +20,7 @@
 function help() {
     echo "Usage: upgrade.sh <OLD_KYLIN_HOME> [--silent]"
     echo
-    echo "<OLD_KYLIN_HOME>    Specify the old version of the Kyligence Enterprise"
+    echo "<OLD_KYLIN_HOME>    Specify the old version of the Kylin 5.0"
     echo "                    installation directory."
     echo
     echo "--silent            Optional, don't enter interactive mode, automatically complete the upgrade."
@@ -52,7 +52,7 @@ function logging() {
 
 function fail() {
     error "...................................................[FAIL]"
-    error "Upgrade Kyligence Enterprise failed."
+    error "Upgrade Kylin 5.0 failed."
     recordKylinUpgradeResult "${START_TIME}" "false" "${NEW_KYLIN_HOME}"
     exit 1
 }
@@ -94,7 +94,7 @@ function upgrade() {
     if [[ -f ${OLD_KYLIN_HOME}/pid ]]; then
         PID=`cat ${OLD_KYLIN_HOME}/pid`
         if ps -p $PID > /dev/null; then
-          error "Please stop the Kyligence Enterprise during the upgrade process."
+          error "Please stop the Kylin 5.0 during the upgrade process."
           exit 1
         fi
     fi
@@ -111,7 +111,7 @@ function upgrade() {
     origin_version=$(awk '{print $NF}' ${OLD_KYLIN_HOME}/VERSION)
     target_version=$(awk '{print $NF}' ${NEW_KYLIN_HOME}/VERSION)
     echo
-    logging "warn" "Upgrade Kyligence Enterprise from ${origin_version} to ${target_version}"
+    logging "warn" "Upgrade Kylin 5.0 from ${origin_version} to ${target_version}"
     warn "Old KYLIN_HOME is ${OLD_KYLIN_HOME}, log is at ${upgrade_log}"
     echo
 
@@ -307,7 +307,7 @@ if [[ -z $OLD_KYLIN_HOME ]] || [[ ! -d $OLD_KYLIN_HOME ]]; then
 fi
 
 if [[ $OLD_KYLIN_HOME == $NEW_KYLIN_HOME ]]; then
-    error "Please specify the old version of the Kyligence Enterprise installation directory."
+    error "Please specify the old version of the Kylin 5.0 installation directory."
     help
 fi
 

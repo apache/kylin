@@ -361,7 +361,6 @@ public class SumBasicOperatorRule extends RelOptRule {
 
     private void verifyPlusOrMinus(RexCall exprCall) {
         // plus or minus does not support SUM EXPRESSION caused by null values
-        // please see https://github.com/Kyligence/KAP/issues/14627
         throw new SumExprUnSupportException("That PLUS/MINUS of the columns is not supported for sum expression");
     }
 

@@ -205,7 +205,7 @@ public class StorageCleaner {
     }
 
     public void printConsole(boolean success, long duration) {
-        System.out.println(ANSI_BLUE + "Kyligence Enterprise garbage report: (cleanup=" + cleanup + ")" + ANSI_RESET);
+        System.out.println(ANSI_BLUE + "Kylin 5.0 garbage report: (cleanup=" + cleanup + ")" + ANSI_RESET);
         for (StorageItem item : outdatedItems) {
             System.out.println("  Storage File: " + item.getPath());
         }

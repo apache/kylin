@@ -139,7 +139,6 @@ class ExpressionComparatorTest {
 
     @Test
     void testNoNPE() {
-        //https://github.com/Kyligence/KAP/issues/10934
         String sql0 = "select a.a + a.b + a.c from t as a";
         String sql1 = "select a.a + a.b + a.c from t as a";
         String sql2 = "select 1";

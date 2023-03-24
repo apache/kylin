@@ -22,10 +22,9 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.kylin.common.Singletons;
-import org.apache.kylin.common.annotation.Clarification;
 
-@Clarification(priority = Clarification.Priority.MAJOR, msg = "Part message is for enterprise.")
 public class Message {
+    private static final String UNKNOWN_ERROR = "UNKNOWN ERROR";
     private static final String SECOND_STORAGE_PROJECT_ENABLED = "The project %s does not have tiered storage enabled.";
     private static final String SECOND_STORAGE_MODEL_ENABLED = "The model %s does not have tiered storage enabled.";
     private static final String SECOND_STORAGE_SEGMENT_WITHOUT_BASE_INDEX = "The base table index is missing in the segments, please add and try again.";
@@ -48,18 +47,6 @@ public class Message {
     private static final String PROFILING_COLLECT_TIMEOUT = "Async profiler timeout";
 
     private static final String PARAMETER_EMPTY = "Please enter the value for the parameter '%s'.";
-
-    private static final String LICENSE_ERROR_PRE = "The license couldn’t be updated:\n";
-    private static final String LICENSE_ERROR_SUFF = "\nPlease upload a new license, or contact Kyligence.";
-    private static final String LICENSE_OVERDUE_TRIAL = "The license has expired and the validity period is [%s - %s]. Please upload a new license or contact Kyligence.";
-    private static final String LICENSE_NODES_EXCEED = "The number of nodes which you are using is higher than the allowable number. Please contact your Kyligence account manager.";
-    private static final String LICENSE_NODES_NOT_MATCH = "The cluster information dose not match the license. Please upload a new license or contact Kyligence.";
-    private static final String LICENSE_OVER_VOLUME = "The current used system capacity exceeds the license’s limit. Please upload a new license, or contact Kyligence.";
-    private static final String LICENSE_NO_LICENSE = "No license file. Please contact Kyligence.";
-    private static final String LICENSE_WRONG_CATEGORY = "The current version of Kyligence Enterprise does not match the license. Please upload a new license or contact Kyligence.";
-    private static final String LICENSE_MISMATCH_LICENSE = "The license doesn’t match the current cluster information. Please upload a new license, or contact Kyligence.";
-    private static final String LICENSE_NOT_EFFECTIVE = "License is not effective yet, please apply for a new license.";
-    private static final String LICENSE_EXPIRED = "The license has expired. Please upload a new license, or contact Kyligence.";
     private static final String DDL_UNSUPPORTED = "Unsupported DDL syntax, only support single `create view`, `drop view`,  `alter view`, `show create table`";
     private static final String DDL_VIEW_NAME_ERROR = "View names need to start with KE_";
     private static final String DDL_VIEW_NAME_DUPLICATE_ERROR = "Logical View names is duplicate";
@@ -574,78 +561,71 @@ public class Message {
 
     // License
     public String getLicenseErrorPre() {
-        return LICENSE_ERROR_PRE;
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseErrorSuff() {
-        return LICENSE_ERROR_SUFF;
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseOverdueTrial() {
-        return LICENSE_OVERDUE_TRIAL;
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseNodesExceed() {
-        return LICENSE_NODES_EXCEED;
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseNodesNotMatch() {
-        return LICENSE_NODES_NOT_MATCH;
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseOverVolume() {
-        return LICENSE_OVER_VOLUME;
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseNoLicense() {
-        return LICENSE_NO_LICENSE;
+        return UNKNOWN_ERROR;
     }
 
     public String getlicenseWrongCategory() {
-        return LICENSE_WRONG_CATEGORY;
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseInvalidLicense() {
-        return "The license is invalid. Please upload a new license, or contact Kyligence.";
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseMismatchLicense() {
-        return LICENSE_MISMATCH_LICENSE;
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseNotEffective() {
-        return LICENSE_NOT_EFFECTIVE;
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseExpired() {
-        return LICENSE_EXPIRED;
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseSourceOverCapacity() {
-        return "The amount of data volume used（%s/%s) exceeds the license’s limit. Build index and load data is unavailable.\n"
-                + "Please contact Kyligence, or try deleting some segments.";
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseProjectSourceOverCapacity() {
-        return "The amount of data volume used（%s/%s) exceeds the project’s limit. Build index and load data is unavailable.\n"
-                + "Please contact Kyligence, or try deleting some segments.";
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseNodesOverCapacity() {
-        return "The amount of nodes used (%s/%s) exceeds the license’s limit. Build index and load data is unavailable.\n"
-                + "Please contact Kyligence, or try stopping some nodes.";
+        return UNKNOWN_ERROR;
     }
 
     public String getLicenseSourceNodesOverCapacity() {
-        return "The amount of data volume used (%s/%s)  and nodes used (%s/%s) exceeds license’s limit.\n"
-                + "Build index and load data is unavailable.\n"
-                + "Please contact Kyligence, or try deleting some segments and stopping some nodes.";
+        return UNKNOWN_ERROR;
     }
 
     public String getlicenseProjectSourceNodesOverCapacity() {
-        return "The amount of data volume used (%s/%s)  and nodes used (%s/%s) exceeds project’s limit.\n"
-                + "Build index and load data is unavailable.\n"
-                + "Please contact Kyligence, or try deleting some segments and stopping some nodes.";
+        return UNKNOWN_ERROR;
     }
 
     public String saveModelFail() {
@@ -846,18 +826,6 @@ public class Message {
         return "Please enter segment ID or name.";
     }
 
-    public String getContentIsEmpty() {
-        return "license content is empty";
-    }
-
-    public String getIllegalEmail() {
-        return "A personal email or illegal email is not allowed";
-    }
-
-    public String getLicenseError() {
-        return "Get license error";
-    }
-
     public String getEmailUsernameCompanyCanNotEmpty() {
         return "Email, username, company can not be empty";
     }
@@ -961,7 +929,7 @@ public class Message {
     }
 
     public String getDefaultSuggest() {
-        return "Please contact Kyligence technical support for more details.";
+        return "Please contact Community support for more details.";
     }
 
     public String getUnexpectedToken() {
@@ -1417,8 +1385,7 @@ public class Message {
     }
 
     public String getStreamingDisabled() {
-        return "The Real-time functions can only be used under Kyligence Premium Version, "
-                + "please contact Kyligence customer manager to upgrade your license.";
+        return "The Real-time functions is under development.";
     }
 
     public String getNoStreamingModelFound() {

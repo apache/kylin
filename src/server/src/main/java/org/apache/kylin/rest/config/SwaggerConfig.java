@@ -37,7 +37,7 @@ public class SwaggerConfig {
 
     public static final String LICENSE = "Apache 2.0";
     public static final String SWAGGER_LICENSE_URL = "http://www.apache.org/licenses/LICENSE-2.0.html";
-    public static final String TITLE = "Kyligence Enterprise API";
+    public static final String TITLE = "Kylin 5.0 API";
 
     @Order(2)
     @Bean(value = "v4 public")

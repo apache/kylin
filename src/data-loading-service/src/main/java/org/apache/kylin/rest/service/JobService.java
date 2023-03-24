@@ -1381,7 +1381,7 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
     public void onApplicationEvent(ApplicationEvent event) {
         if (event instanceof ContextClosedEvent) {
             try (SetLogCategory ignored = new SetLogCategory(LogConstant.BUILD_CATEGORY)) {
-                logger.info("Stop kyligence node, kill job on yarn for yarn cluster mode");
+                logger.info("Stop Kylin node, kill job on yarn for yarn cluster mode");
             }
             EpochManager epochManager = EpochManager.getInstance();
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();

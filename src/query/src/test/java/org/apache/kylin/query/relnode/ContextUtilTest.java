@@ -30,7 +30,6 @@ import org.mockito.Mockito;
 
 public class ContextUtilTest {
 
-    //https://github.com/Kyligence/KAP/issues/9952
     //do not support agg pushdown if WindowRel, SortRel, LimitRel, ValueRel is met
     @Test
     public void testDerivedFromSameContextWhenMetWindowOrSort() throws Exception {

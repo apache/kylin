@@ -540,96 +540,6 @@ public class CnMessage extends Message {
         return "配置列表不能为空。请检查后重试。";
     }
 
-    // Query statistics
-
-    //license
-    @Override
-    public String getLicenseErrorPre() {
-        return "无法更新许可证：\n";
-    }
-
-    @Override
-    public String getLicenseErrorSuff() {
-        return "\n请重新上传新的许可证或联系 Kyligence 销售人员。";
-    }
-
-    @Override
-    public String getLicenseOverdueTrial() {
-        return "许可证已过期，当前有效期为[%s - %s]。请重新上传新的许可证或联系 Kyligence 销售人员。";
-    }
-
-    @Override
-    public String getLicenseNodesExceed() {
-        return "您使用的节点数已超过许可证范围，请联系您的客户经理。";
-    }
-
-    @Override
-    public String getLicenseNodesNotMatch() {
-        return "当前许可证的节点数与集群信息不匹配，请重新上传新的许可证或联系 Kyligence 销售人员。";
-    }
-
-    @Override
-    public String getlicenseWrongCategory() {
-        return "当前许可证的版本与产品不匹配，请重新上传新的许可证或联系 Kyligence 销售人员。";
-    }
-
-    @Override
-    public String getLicenseNoLicense() {
-        return "没有许可证文件。请联系 Kyligence 销售人员。";
-    }
-
-    @Override
-    public String getLicenseMismatchLicense() {
-        return "该许可证适用的集群信息与当前不符。请上传新的许可证或联系 Kyligence 销售人员。";
-    }
-
-    @Override
-    public String getLicenseNotEffective() {
-        return "许可证尚未生效，请重新申请。";
-    }
-
-    @Override
-    public String getLicenseExpired() {
-        return "该许可证已过期。请上传新的许可证或联系 Kyligence 销售人员。";
-    }
-
-    @Override
-    public String getLicenseOverVolume() {
-        return "当前系统已使用容量超过该许可证允许的容量。请上传新的许可证或联系 Kyligence 销售人员。";
-    }
-
-    @Override
-    public String getLicenseInvalidLicense() {
-        return "无效许可证。请上传新的许可证或联系 Kyligence 销售人员。";
-    }
-
-    @Override
-    public String getLicenseSourceOverCapacity() {
-        return "当前已使用数据量（%s/%s）超过许可证上限。系统无法进行构建或数据加载任务。\n" + "请联系 Kyligence 销售人员，或尝试删除一些 Segment 以解除限制。";
-    }
-
-    @Override
-    public String getLicenseProjectSourceOverCapacity() {
-        return "当前项目已使用数据量（%s/%s）超过配置上限。系统无法进行构建或数据加载任务。\n" + "请联系 Kyligence 销售人员，或尝试删除一些 Segment 以解除限制。";
-    }
-
-    @Override
-    public String getLicenseNodesOverCapacity() {
-        return "当前已使用节点数（%s/%s）超过许可证上限。系统无法进行构建或数据加载任务。\n" + "请联系 Kyligence 销售人员，或尝试停止部分节点以解除限制。";
-    }
-
-    @Override
-    public String getLicenseSourceNodesOverCapacity() {
-        return "当前已使用数据量（%s/%s）和节点数（%s/%s）均超过许可证上限。\n" + "系统无法进行构建或数据加载任务。\n"
-                + "请联系 Kyligence 销售人员，或尝试删除一些 segments 并停止部分节点以解除限制。";
-    }
-
-    @Override
-    public String getlicenseProjectSourceNodesOverCapacity() {
-        return "当前项目已使用数据量（%s/%s）和节点数（%s/%s）均超过配置上限。\n" + "系统无法进行构建或数据加载任务。\n"
-                + "请联系 Kyligence 销售人员，或尝试删除一些 segments 并停止部分节点以解除限制。";
-    }
-
     @Override
     public String saveModelFail() {
         return "模型 “%s” 保存失败。请确保模型中使用的列 “%s” 在源表 “%s” 中存在。";
@@ -916,21 +826,6 @@ public class CnMessage extends Message {
     }
 
     @Override
-    public String getContentIsEmpty() {
-        return "许可证内容为空";
-    }
-
-    @Override
-    public String getIllegalEmail() {
-        return "不允许使用个人电子邮件或非法电子邮件";
-    }
-
-    @Override
-    public String getLicenseError() {
-        return "获取许可证失败";
-    }
-
-    @Override
     public String getEmailUsernameCompanyCanNotEmpty() {
         return "邮箱, 用户名, 公司不能为空";
     }
@@ -1067,7 +962,7 @@ public class CnMessage extends Message {
 
     @Override
     public String getDefaultSuggest() {
-        return "更多详情请联系 Kyligence 技术支持。";
+        return "更多详情请联系 Kylin 5 技术支持。";
     }
 
     @Override
@@ -1551,7 +1446,7 @@ public class CnMessage extends Message {
 
     @Override
     public String getStreamingDisabled() {
-        return "只有 Kyligence 高级版才能使用批流一体功能，请联系 Kyligence 客户经理升级 License。";
+        return "开发中。";
     }
 
     @Override

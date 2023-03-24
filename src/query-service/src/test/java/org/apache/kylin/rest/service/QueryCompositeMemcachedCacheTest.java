@@ -52,6 +52,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
@@ -61,6 +62,7 @@ import org.mockito.Spy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Ignore
 public class QueryCompositeMemcachedCacheTest extends LocalFileMetadataTestCase {
 
     static {

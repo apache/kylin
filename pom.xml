@@ -17,6 +17,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <parent>
+        <!-- https://infra.apache.org/publishing-maven-artifacts.html -->
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>23</version>
+    </parent>
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.apache.kylin</groupId>
@@ -35,10 +43,10 @@
     </organization>
 
     <scm>
-        <connection>scm:git:git://github.com/apache/kylin.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/apache/kylin.git
-        </developerConnection>
-        <url>https://github.com/apache/kylin</url>
+        <connection>scm:git:https://gitbox.apache.org/repos/asf/kylin.git</connection>
+        <!-- developerConnection is using in maven-release-plugin  https://maven.apache.org/guides/mini/guide-releasing.html-->
+        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/kylin.git</developerConnection>
+        <url>scm:git:https://gitbox.apache.org/repos/asf/kylin.git</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -2922,21 +2930,6 @@
         </dependency>
     </dependencies>
 
-    <distributionManagement>
-        <repository>
-            <id>${repository.id}</id>
-            <url>${repository.url}</url>
-            <name>${repository.name}</name>
-            <layout>default</layout>
-        </repository>
-        <snapshotRepository>
-            <id>${repository.id.snapshots}</id>
-            <url>${repository.url.snapshots}</url>
-            <name>${repository.name.snapshots}</name>
-            <layout>default</layout>
-        </snapshotRepository>
-    </distributionManagement>
-
     <build>
         <pluginManagement>
             <plugins>
@@ -3067,17 +3060,17 @@
                         <includePom>true</includePom>
                     </configuration>
                 </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.3.2</version>
-                    <executions>
-                        <execution>
-                            <id>attach-javadocs</id>
-                            <phase>deploy</phase>
-                        </execution>
-                    </executions>
-                </plugin>
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-javadoc-plugin</artifactId>-->
+<!--                    <version>3.3.2</version>-->
+<!--                    <executions>-->
+<!--                        <execution>-->
+<!--                            <id>attach-javadocs</id>-->
+<!--                            <phase>deploy</phase>-->
+<!--                        </execution>-->
+<!--                    </executions>-->
+<!--                </plugin>-->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
@@ -3562,6 +3555,13 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <configuration>
+                            <dryRun>false</dryRun>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
                         <configuration>
                             <skip>false</skip>
@@ -3579,12 +3579,12 @@
                                     <goal>single</goal>
                                 </goals>
                                 <configuration>
-                                    <tarLongFileMode>posix</tarLongFileMode>
+                                    <tarLongFileMode>gnu</tarLongFileMode>
                                     <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
                                     <appendAssemblyId>true</appendAssemblyId>
                                     <descriptors>
                                         <descriptor>
-                                            assembly/src/main/config/assemblies/source-assembly.xml
+                                            src/assembly/source-assembly.xml
                                         </descriptor>
                                     </descriptors>
                                     <finalName>apache-kylin-${project.version}</finalName>

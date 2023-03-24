@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ /*
+  ~  * Licensed to the Apache Software Foundation (ASF) under one
+  ~  * or more contributor license agreements.  See the NOTICE file
+  ~  * distributed with this work for additional information
+  ~  * regarding copyright ownership.  The ASF licenses this file
+  ~  * to you under the Apache License, Version 2.0 (the
+  ~  * "License"); you may not use this file except in compliance
+  ~  * with the License.  You may obtain a copy of the License at
+  ~  *
+  ~  *     http://www.apache.org/licenses/LICENSE-2.0
+  ~  *
+  ~  * Unless required by applicable law or agreed to in writing, software
+  ~  * distributed under the License is distributed on an "AS IS" BASIS,
+  ~  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~  * See the License for the specific language governing permissions and
+  ~  * limitations under the License.
+  ~  */
+  -->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+    <mirrors>
+        <mirror>
+            <id>nexus-aliyun</id>
+            <mirrorOf>central</mirrorOf>
+            <name>Nexus Aliyun</name>
+            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+        </mirror>
+    </mirrors>
+
+    <servers>
+        <!-- To publish a snapshot of some part of Maven -->
+        <server>
+            <id>apache.snapshots.https</id>
+            <username>APACHE_ID</username>
+            <password>APACHE_PASSWORD</password>
+        </server>
+        <!-- To stage a release of some part of Maven -->
+        <server>
+            <id>apache.releases.https</id>
+            <username>APACHE_ID</username>
+            <password>APACHE_PASSWORD</password>
+        </server>
+
+        <!-- To publish a website of some part of Maven -->
+        <server>
+            <id>apache.website</id>
+            <username>APACHE_ID</username>
+            <password>APACHE_PASSWORD</password>
+            <filePermissions>664</filePermissions>
+            <directoryPermissions>775</directoryPermissions>
+        </server>
+
+        <!-- To stage a website of some part of Maven -->
+        <server>
+            <id>stagingSite</id>
+            <!-- must match hard-coded repository identifier in site:stage-deploy -->
+            <username>APACHE_ID</username>
+            <filePermissions>664</filePermissions>
+            <directoryPermissions>775</directoryPermissions>
+        </server>
+        <server>
+            <id>gpg.passphrase</id>
+            <passphrase>SOME_PASSPHRASE</passphrase>
+        </server>
+    </servers>
+
+    <profiles>
+        <profile>
+            <repositories>
+                <repository>
+                    <id>nexus</id>
+                    <name>local private nexus</name>
+                    <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>nexus</id>
+                    <name>local private nexus</name>
+                    <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+</settings>

@@ -52,7 +52,7 @@ export default {
     sparkShuffle: 'The number of partitions to use when shuffling data for joins or aggregations.',
     baseCuboidConfig: 'According to your business scenario, you can decide whether to add an index that contains dimensions and measures defined in all aggregate groups. The index can answer queries across multiple aggregate groups, but this will impact query performance. In addition to this, there are some storage and building costs by adding this index.',
     customSettings: 'Custom Settings',
-    customOptions: 'Besides the defined configurations, you can also add some advanced settings.<br/><i class="el-icon-ksd-alert"></i>Note: It\'s highly recommended to use this feature with the support of Kyligence Service Team.',
+    customOptions: 'Besides the defined configurations, you can also add some advanced settings.<br/><i class="el-icon-ksd-alert"></i>Note: It\'s highly recommended to use this feature with the support of Kylin 5 Team.',
     customSettingKeyPlaceholder: 'Configuration Name',
     customSettingValuePlaceholder: 'Value',
     delCustomConfigTip: 'Are you sure you want to delete custom setting item {name}？'

@@ -51,9 +51,9 @@ public class ServerInfoUtil {
                 kapVersion = FileUtils.readFileToString(versionFile).trim();
             }
         } catch (Exception e) {
-            logger.error("Failed to get kap.version. ", e);
+            logger.error("Failed to get kylin.version. ", e);
         }
-        buf.append("kap.version:").append(kapVersion == null ? UNKNOWN : kapVersion).append("\n");
+        buf.append("kylin.version:").append(kapVersion == null ? UNKNOWN : kapVersion).append("\n");
 
         // others
         buf.append("commit:").append(gitCommit).append("\n");

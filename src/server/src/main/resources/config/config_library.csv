@@ -120,7 +120,7 @@ kylin.engine.streaming-segment-merge-ratio,Double,流式 segment 合并比率,St
 kylin.engine.streaming-segment-merge-threshold,Int,实时OLAP构建触发合并segment的条件,Real -time OLAP constructs the condition for triggering the combination of segment,TRUE,TRUE
 kylin.engine.streaming-trigger-once,boolean,实时OLAP构建仅触发一次,Real -time OLAP construction only triggers once,TRUE,TRUE
 kylin.engine.submit-hadoop-conf-dir,String,hadoop conf 目录,Hadoop Conf directory,TRUE,TRUE
-kylin.env,String,Kyligence Enterprise 部署模式,Kyligence Enterprise deployment mode,TRUE,TRUE
+kylin.env,String,Kylin 5.0 部署模式,Kylin 5.0 deployment mode,TRUE,TRUE
 kylin.env.channel,String,判断当前部署环境,Determine the current deployment environment,TRUE,TRUE
 kylin.env.engine-write-fs,String,配置构建写集群,Configuration Construction Writing Cluster,TRUE,TRUE
 kylin.env.hdfs-data-working-dir,String,数据存储路径，可以和working-dir分开,Data storage paths can be separated from Working-DIR,TRUE,TRUE
@@ -256,7 +256,7 @@ kylin.metadata.key-case-insensitive,boolean,当本地用户、用户组较多影
 kylin.metadata.ops-cron,boolean,定时备份元数据、垃圾清理的定时任务 cron 表达式，默认值是 0 0 0 * * *,"Timing backup metad data, the timing task of garbage clearance CRON expression, the default value is 0 0 0 * * * *",TRUE,TRUE
 kylin.metadata.random-admin-password.enabled,boolean,admin使用随机密码,admin uses random passwords,TRUE,TRUE
 kylin.metadata.semi-automatic-mode,boolean,前端：当前project 是否含有半自动的标志；后端：是否默认使用半自动档,Front end: whether the current Project contains semi -automatic signs; back -end: Whether the semi -automatic file is used by default,TRUE,TRUE
-kylin.metadata.url,String,Kyligence Enterprise 元数据库路径。,Kyligence Enterprise metad database path.,TRUE,TRUE
+kylin.metadata.url,String,Kylin 5.0 元数据库路径。,Kylin 5.0 metad database path.,TRUE,TRUE
 kylin.metadata.validate-computed-column,boolean,是否检验可计算列,Whether to test can be calculated,TRUE,TRUE
 kylin.metrics.daily-influx-db,String,按天归档influxdb数据的数据库,Database of InfluxDB data by the day,TRUE,TRUE
 kylin.metrics.daily-max-retry-times,Int,按天归档influxdb数据时异常后重试次数,Archive by the day when INFLUXDB data is abnormal,TRUE,TRUE
@@ -323,7 +323,7 @@ kylin.query.engine.sparder-enabled,boolean,是否启用sparder引擎,Whether to 
 kylin.query.engine.spark-scheduler-mode,String,spark 调度模式,spark scheduling mode,TRUE,TRUE
 kylin.query.engine.spark-sql-shuffle-partitions,Int,spark sql 中 join 或 aggregations 时的分区数,The number of partitions in spark sql when join or aggregations,TRUE,TRUE
 kylin.query.engine.split-group-sets-into-union,boolean,是否对 grouping sets 进行拆开处理,Whether the Grouping Sets is disassembled and processed,TRUE,TRUE
-kylin.query.escape-default-keyword,boolean,"Kyligence Enterprise 会自动为 default 转为""DEFAULT""。","Kyligence Enterprise will automatically convert to ""Default"" for Default.",TRUE,TRUE
+kylin.query.escape-default-keyword,boolean,"Kylin 5.0 会自动为 default 转为""DEFAULT""。","Kylin 5.0 will automatically convert to ""Default"" for Default.",TRUE,TRUE
 kylin.query.exception-cache-enabled,boolean,是否缓存失败的查询,Whether to cache failure query,TRUE,TRUE
 kylin.query.exception-cache-threshold-duration,Int,需要缓存异常查询的最小查询时间,The minimum query time that needs to be cached abnormal query,TRUE,TRUE
 kylin.query.exception-cache-threshold-times,Int,需要缓存异常查询的最大失败次数,The maximum failure of cache abnormal query,TRUE,TRUE
@@ -447,7 +447,7 @@ kylin.server.https.port,Int,https端口号,https port number,TRUE,TRUE
 kylin.server.leader-race.enabled,boolean,是否打开HA开关,Whether to turn on the HA switch,TRUE,TRUE
 kylin.server.leader-race.heart-beat-interval,Int,HA更新心跳频率，单位s,"HA update heartbeat frequency, unit S",TRUE,TRUE
 kylin.server.leader-race.heart-beat-timeout,Int,HA心跳超时时长，单位s,"HA's heartbeat time timeout, unit S",TRUE,TRUE
-kylin.server.mode,String,Kyligence Enterprise 实例的运行模式，参数值可以是 all 或 query 中的一个，默认值为 all。,"The running mode of the Kyligence Enterprise instance can be one of the parameter values ​​in ALL or Query, and the default value is ALL.",TRUE,TRUE
+kylin.server.mode,String,Kylin 5.0 实例的运行模式，参数值可以是 all 或 query 中的一个，默认值为 all。,"The running mode of the Kylin 5.0 instance can be one of the parameter values ​​in ALL or Query, and the default value is ALL.",TRUE,TRUE
 kylin.server.renew-batch-size,Int,epoch renew批量更新一次最多更新的个数,EPOCH Renew Batch Update Most Updated Number,TRUE,TRUE
 kylin.server.renew-epoch-pool-size,Int,renew epoch 的线程池大小,Renew epoch's thread pool size,TRUE,TRUE
 kylin.server.streaming-change-meta,boolean,流式事务可以修改元数据,Streaming transactions can modify metadata data,TRUE,TRUE
@@ -540,7 +540,7 @@ kylin.web.export-allow-other,boolean,是否允许非 Admin 用户导出查询结
 kylin.web.properties.whitelist,String,提供给前端使用的配置项列表,Configuration items provided to the front -end use,TRUE,TRUE
 kylin.web.session.jdbc-encode-enabled,boolean,session id存入数据库中是否加密,Session ID is encrypted into the database,TRUE,TRUE
 kylin.web.session.secure-random-create-enabled,boolean,session id存入数据库中是否加密,Session ID is encrypted into the database,TRUE,TRUE
-kylin.web.timezone,String,Kyligence Enterprise 的 REST 服务所使用的时区。默认值为本地机器的系统的时区。,The time zone used by Kyligence Enterprise's REST service. The default value is the time zone of the system of the local machine.,TRUE,TRUE
+kylin.web.timezone,String,Kylin 5.0 的 REST 服务所使用的时区。默认值为本地机器的系统的时区。,The time zone used by Kylin 5.0's REST service. The default value is the time zone of the system of the local machine.,TRUE,TRUE
 server.port,Int,服务启动的端口,The port of the service start,TRUE,TRUE
 spring.session.store-type,String,spring session 存储类型,Spring session storage type,TRUE,TRUE
 kylin.engine.dynamic-resource-plan-enabled,boolean,在FI平台使用动态资源计划时候，有可能导致无法分配资源，从而构建失败,"When using a dynamic resource plan on the FI platform, it may lead to the failure to allocate resources and build a failure",TRUE,TRUE

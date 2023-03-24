@@ -558,7 +558,6 @@ public class NDataflowManagerTest extends NLocalFileMetadataTestCase {
     @Test
     @Ignore
     public void testConcurrency() throws IOException, InterruptedException {
-        // this test case merge from PR <https://github.com/Kyligence/KAP/pull/4744>
         final KylinConfig testConfig = getTestConfig();
         final NDataflowManager mgr = NDataflowManager.getInstance(testConfig, projectDefault);
         NIndexPlanManager indePlanMgr = NIndexPlanManager.getInstance(testConfig, projectDefault);

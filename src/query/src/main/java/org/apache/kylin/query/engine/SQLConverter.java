@@ -184,7 +184,6 @@ public class SQLConverter {
         }
 
         /* OVERRIDE POINT */
-        // https://github.com/Kyligence/KAP/issues/10964
         RelNode rel = root.rel;
         if (connectionConfig.projectUnderRelRoot() && !root.isRefTrivial()) {
             final List<RexNode> projects = new ArrayList<>();

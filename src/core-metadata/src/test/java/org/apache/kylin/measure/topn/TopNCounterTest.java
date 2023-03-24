@@ -196,7 +196,7 @@ public class TopNCounterTest {
     }
 
     /**
-     * https://github.com/Kyligence/KAP/issues/16933
+     *
      *
      * the error of “Comparison method violates its general contract!”
      * are deep in the timsort algorithm and there are two necessary

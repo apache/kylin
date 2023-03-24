@@ -81,7 +81,7 @@ public class KapJoinRule extends ConverterRule {
 
         final JoinInfo info = JoinInfo.of(left, right, join.getCondition());
 
-        // handle powerbi inner join, see https://github.com/Kyligence/KAP/issues/1823
+        // handle powerbi inner join
         Join tmpJoin = transformJoinCondition(join, info, traitSet, left, right);
         if (tmpJoin instanceof KapJoinRel) {
             return tmpJoin;

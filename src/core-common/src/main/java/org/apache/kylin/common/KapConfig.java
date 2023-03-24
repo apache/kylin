@@ -203,29 +203,6 @@ public class KapConfig {
         return Integer.parseInt(config.getOptional("kylin.diag.extraction.start-time-days", "3"));
     }
 
-    /**
-     * Online service
-     */
-    public String getKyAccountUsename() {
-        return config.getOptional("kylin.kyaccount.username");
-    }
-
-    public String getKyAccountPassword() {
-        return config.getOptional("kylin.kyaccount.password");
-    }
-
-    public String getKyAccountToken() {
-        return config.getOptional("kylin.kyaccount.token");
-    }
-
-    public String getKyAccountSSOUrl() {
-        return config.getOptional("kylin.kyaccount.url", "https://sso.kyligence.com");
-    }
-
-    public String getKyAccountSiteUrl() {
-        return config.getOptional("kylin.kyaccount.site-url", "https://account.kyligence.io");
-    }
-
     public String getChannelUser() {
         return config.getOptional("kylin.env.channel", "on-premises");
     }

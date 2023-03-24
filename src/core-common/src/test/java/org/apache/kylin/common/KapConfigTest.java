@@ -68,16 +68,6 @@ public class KapConfigTest {
 
         map.put("getExtractionStartTimeDays", new PropertiesEntity("kylin.diag.extraction.start-time-days", "3", 3));
 
-        map.put("getKyAccountUsename", new PropertiesEntity("kylin.kyaccount.username", "ADMIN", "ADMIN"));
-        map.put("getKyAccountPassword", new PropertiesEntity("kylin.kyaccount.password", "KYLIN", "KYLIN"));
-        map.put("getKyAccountToken", new PropertiesEntity("kylin.kyaccount.token", "ADMIN", "ADMIN"));
-
-        map.put("getKyAccountSSOUrl",
-                new PropertiesEntity("kylin.kyaccount.url", "https://sso.kyligence.com", "https://sso.kyligence.com"));
-
-        map.put("getKyAccountSiteUrl", new PropertiesEntity("kylin.kyaccount.site-url", "https://account.kyligence.io",
-                "https://account.kyligence.io"));
-
         map.put("getChannelUser", new PropertiesEntity("kylin.env.channel", "on-premises", "on-premises"));
 
         map.put("isImplicitComputedColumnConvertEnabled",
