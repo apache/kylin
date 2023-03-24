@@ -262,7 +262,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         }
     }
 
-    public SQLResponse query(SQLRequest sqlRequest) throws Throwable {
+    public SQLResponse query(SQLRequest sqlRequest) throws Exception {
         try {
             slowQueryDetector.queryStart(sqlRequest.getStopId());
             markHighPriorityQueryIfNeeded();
@@ -310,7 +310,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 slowQueryDetector.addJobIdForAsyncQueryJob(asyncQueryJob.getId());
                 ExecuteResult result = asyncQueryJob.submit(queryParams);
                 if (!result.succeed()) {
-                    throw result.getThrowable();
+                    throw (Exception) result.getThrowable();
 
                 }
                 return buildSqlResponse(false, Collections.emptyList(), 0, Lists.newArrayList(),
