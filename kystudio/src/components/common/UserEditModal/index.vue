@@ -410,6 +410,11 @@ export default class UserEditModal extends Vue {
   .el-transfer-panel {
     width: 250px;
   }
+  .el-transfer__buttons {
+    .button-text {
+      min-width: initial;
+    }
+  }
   .change-system-password-tip {
     margin-bottom: 15px;
     font-size: 14px;
