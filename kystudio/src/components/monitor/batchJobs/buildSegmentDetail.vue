@@ -46,7 +46,7 @@
           <li>
             <!-- 当 job 主步骤为暂停状态时，所有的未完成的子步骤都变更为 STOP 状态 -->
             <el-tooltip placement="bottom" :content="getStepStatusTips(jobStatus === 'STOPPED' && sub.step_status !== 'SKIP' ? 'STOPPED' : sub.step_status)">
-              <span :class="[jobStatus === 'STOPPED' && sub.step_status !== 'FINISHED' && sub.step_status !== 'SKIP' ? 'sub-tasks-status is-stop' : getSubTaskStatus(sub)]"></span>
+              <span :class="[jobStatus === 'STOPPED' && sub.step_status !== 'FINISHED' && sub.step_status !== 'SKIP' ? 'sub-tasks-status is-stop' : getSubTaskStatus(sub)]"><i class="el-icon-loading" v-if="jobStatus !== 'STOPPED' && sub.step_status === 'RUNNING'"></i></span>
             </el-tooltip>
             <span class="sub-tasks-name">{{getTaskName(sub.name)}}</span>
             <span class="sub-tasks-layouts" v-if="sub.name === 'Build indexes by layer'"><span class="success-layout-count">{{sub.success_index_count}}</span>{{`/${sub.index_count}`}}</span>
@@ -155,7 +155,7 @@ export default class BuildSegmentDetail extends Vue {
         color: @text-placeholder-color;
       }
       .mutiple-color-icon {
-        font-size: 16px;
+        font-size: 15px;
         vertical-align: middle;
         margin-top: -3px;
         &.is-running {
