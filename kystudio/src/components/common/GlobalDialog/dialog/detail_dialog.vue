@@ -330,7 +330,8 @@ export default class DetailDialogModal extends Vue {
     .dialog-detail-scroll{
       max-height:95px;
       ul {
-        margin:10px;
+        padding: 10px;
+        box-sizing: border-box;
         li {
           font-size: 12px;
         }
