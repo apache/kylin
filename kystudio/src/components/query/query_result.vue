@@ -126,7 +126,7 @@
             </form>
           </el-tab-pane>
           <el-tab-pane :label="$t('visualizationBtn')" name="visualization">
-            <div class="chart-headers" v-if="charts.dimension && charts.measure">
+            <div class="chart-headers" v-if="charts.dimension && charts.measure && activeResultType === 'visualization'">
               <el-row class="ksd-mt-10" :gutter="5">
                 <el-col :span="4" class="title">{{$t('chartType')}}</el-col>
                 <el-col :span="10" class="title">{{$t('chartDimension')}}</el-col>
@@ -836,15 +836,6 @@ export default class queryResult extends Vue {
         width: 245px;
       }
     }
-    // .result-layout-btns {
-    //   margin-top: 16px;
-    //   .el-button.active {
-    //     color: #5c5c5c;
-    //     background: #f4f4f4;
-    //     border: 1px solid #cccccc;
-    //     box-shadow: inset 1px 1px 2px 0 #ddd;
-    //   }
-    // }
     .chart-headers {
       .title {
         font-weight: bold;
@@ -879,8 +870,6 @@ export default class queryResult extends Vue {
     }
   }
   .table-cell-text{
-    // word-wrap: break-word;
-    // word-break: break-all;
     white-space: pre;
     color: @text-normal-color;
     font-family: Lato,"Noto Sans S Chinese",sans-serif;
