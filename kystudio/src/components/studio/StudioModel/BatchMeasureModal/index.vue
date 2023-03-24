@@ -197,8 +197,8 @@ import { mapState, mapGetters, mapMutations } from 'vuex'
 import vuex from '../../../../store'
 import locales from './locales'
 import store, { types } from './store'
-import { objectClone, sampleGuid } from '../../../../util'
-import { pageCount, measuresDataType, measureSumAndTopNDataType, pageRefTags } from '../../../../config'
+import { objectClone, sampleGuid, indexOfObjWithSomeKey, getObjectBySomeKeys } from '../../../../util'
+import { pageCount, measuresDataType, measureSumAndTopNDataType, pageRefTags, unIncludedNameRegex } from '../../../../config'
 vuex.registerModule(['modals', 'BatchMeasureModal'], store)
 @Component({
   computed: {
@@ -258,14 +258,22 @@ export default class BatchMeasureModal extends Vue {
   }
 
   checkHasSameName (arr, val, column) {
-    let flag = false
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i].name === val && (arr[i].table_guid || arr[i].guid) !== column.table_guid) {
-        flag = true
-        break
+    const arrrReverse = objectClone(arr).reverse()
+    let uniqueName = val
+    while(indexOfObjWithSomeKey(arrrReverse, 'name' ,uniqueName) !== -1) {
+      const lastIndex = uniqueName.lastIndexOf('_')
+      let sameCount = +uniqueName.substring(lastIndex + 1)
+      const sameNameMes = getObjectBySomeKeys(arrrReverse, 'name' ,uniqueName)
+      if ((sameNameMes.table_guid || sameNameMes.guid) !== column.table_guid) {
+        uniqueName = uniqueName + '_' + column.table_alias
+      } else if (!isNaN(parseFloat(sameCount))) { // 是数字
+        sameCount++
+        uniqueName = uniqueName.substring(0, lastIndex + 1) + sameCount
+      } else {
+        uniqueName = uniqueName + '_1'
       }
     }
-    return flag
+    return uniqueName
   }
   submit () {
     let allMeasureArr = [...this.modelDesc.all_measures]
@@ -287,10 +295,11 @@ export default class BatchMeasureModal extends Vue {
     }
     columns.forEach((column) => {
       if (column.isMeasureCol) {
+        const colName = column.name.replace(unIncludedNameRegex, '') // 去除不符合度量命名的字符
         if (column.SUM.value && !column.SUM.isShouldDisable) {
           // 如果存在同名的，添加上表别名，如果不同名，就是列名+函数
           const measure = {
-            name: this.checkHasSameName(allMeasureArr, column.name + '_SUM', column) ? column.name + '_SUM_' + column.table_alias : column.name + '_SUM',
+            name: this.checkHasSameName(allMeasureArr, colName + '_SUM', column),
             guid: sampleGuid(),
             expression: 'SUM',
             parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName), table_guid: column.table_guid}],
@@ -301,7 +310,7 @@ export default class BatchMeasureModal extends Vue {
         }
         if (column.MIN.value && !column.MIN.isShouldDisable) {
           const measure = {
-            name: this.checkHasSameName(allMeasureArr, column.name + '_MIN', column) ? column.name + '_MIN_' + column.table_alias : column.name + '_MIN',
+            name: this.checkHasSameName(allMeasureArr, colName + '_MIN', column),
             guid: sampleGuid(),
             expression: 'MIN',
             parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName), table_guid: column.table_guid}],
@@ -312,7 +321,7 @@ export default class BatchMeasureModal extends Vue {
         }
         if (column.MAX.value && !column.MAX.isShouldDisable) {
           const measure = {
-            name: this.checkHasSameName(allMeasureArr, column.name + '_MAX', column) ? column.name + '_MAX_' + column.table_alias : column.name + '_MAX',
+            name: this.checkHasSameName(allMeasureArr, colName + '_MAX', column),
             guid: sampleGuid(),
             expression: 'MAX',
             parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName), table_guid: column.table_guid}],
@@ -323,7 +332,7 @@ export default class BatchMeasureModal extends Vue {
         }
         if (column.COUNT.value && !column.COUNT.isShouldDisable) {
           const measure = {
-            name: this.checkHasSameName(allMeasureArr, column.name + '_COUNT', column) ? column.name + '_COUNT_' + column.table_alias : column.name + '_COUNT',
+            name: this.checkHasSameName(allMeasureArr, colName + '_COUNT', column),
             guid: sampleGuid(),
             expression: 'COUNT',
             parameter_value: [{type: 'column', value: column.table_alias + '.' + (column.column ?? column.columnName), table_guid: column.table_guid}],

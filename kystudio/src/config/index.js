@@ -183,6 +183,7 @@ export const SystemPwdRegex = /^(?=.*\d)(?=.*[a-zA-Z])(?=.*[~!@#$%^&*(){}|:"<>?[
 export const NamedRegex = /^\w+$/
 export const NamedRegex1 = /^[\u4e00-\u9fa5_\-（()%?）a-zA-Z0-9\s]+$/
 export const measureNameRegex = /^[\u4e00-\u9fa5_\-（()%?）.a-zA-Z0-9\s]+$/
+export const unIncludedNameRegex = /[^\u4e00-\u9fa5_\-（()%?）.a-zA-Z0-9\s]/g
 export const positiveNumberRegex = /^[1-9][0-9]*$/ // 的正整数
 export const DatePartitionRule = [/^date$/, /^timestamp$/, /^string$/, /^bigint$/, /^int$/, /^integer$/, /^varchar/]
 export const TimePartitionRule = [/^long$/, /^bigint$/, /^int$/, /^short$/, /^integer$/, /^tinyint$/, /^string$/, /^varchar/, /^char/]

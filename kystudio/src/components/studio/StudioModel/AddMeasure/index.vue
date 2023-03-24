@@ -280,19 +280,6 @@ export default class AddMeasure extends Vue {
   ccGroups = []
   newCCList = []
   allTableColumns = []
-  // expressionsConf = [
-  //   {label: 'SUM (column)', value: 'SUM(column)'},
-  //   {label: 'SUM (constant)', value: 'SUM(constant)'},
-  //   {label: 'MIN', value: 'MIN'},
-  //   {label: 'MAX', value: 'MAX'},
-  //   {label: 'TOP_N', value: 'TOP_N'},
-  //   {label: 'COUNT (column)', value: 'COUNT(column)'},
-  //   // {label: 'COUNT (constant)', value: 'COUNT(constant)'}, 去除 count(constant) 函数，默认添加 count_all 度量
-  //   {label: 'COUNT_DISTINCT', value: 'COUNT_DISTINCT'},
-  //   {label: 'CORR (column1, column2)', value: 'CORR'},
-  //   {label: 'PERCENTILE_APPROX', value: 'PERCENTILE_APPROX'},
-  //   {label: 'COLLECT_SET', value: 'COLLECT_SET'}
-  // ]
   topNTypes = [
     {name: 'Top 10', value: 'topn(10)'},
     {name: 'Top 100', value: 'topn(100)'},

@@ -94,7 +94,6 @@
                   </el-table-column>
                 </el-table>
               </div>
-              <!-- <div class="same-name-tip" v-if="filterErrorContent(table)">{{$t('sameNameTip')}}</div> -->
             </div>
             <!-- 维度表 -->
             <div v-for="(table, index) in lookupTable" class="ksd-mb-10" :key="index">
@@ -174,7 +173,6 @@
                   </el-table-column>
                 </el-table>
               </div>
-              <!-- <div class="same-name-tip" v-if="filterErrorContent(table)">{{$t('sameNameTip')}}</div> -->
             </div>
             <!-- 可计算列 -->
             <template v-if="ccTable.columns.length">
@@ -237,7 +235,6 @@
                     </el-table-column>
                   </el-table>
                 </div>
-                <!-- <div class="same-name-tip" v-if="filterErrorContent(ccTable)">{{$t('sameNameTip')}}</div> -->
               </div>
             </template>
           </div>
@@ -307,8 +304,8 @@ import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
 import vuex from '../../../../store'
 import locales from './locales'
 import store, { types } from './store'
-import { NamedRegex1, pageCount, pageRefTags } from '../../../../config'
-import { objectClone, sampleGuid, filterObjectArray, countObjWithSomeKey } from '../../../../util'
+import { NamedRegex1, pageCount, pageRefTags, unIncludedNameRegex } from '../../../../config'
+import { objectClone, sampleGuid, filterObjectArray, countObjWithSomeKey, indexOfObjWithSomeKey, indexOfObjWithSomeKeys } from '../../../../util'
 vuex.registerModule(['modals', 'DimensionsModal'], store)
 @Component({
   computed: {
@@ -372,6 +369,8 @@ export default class DimensionsModal extends Vue {
   }
   isClickSubmit = false
   errorGuidList = []
+  uniqueAliasObj = {}
+  uniqueAliasCommentObj = {}
 
   filterErrorContent (table) {
     return this.isClickSubmit && table.columns.filter(item => item.validateSameName || item.validateNameRule || item.validateNameMaxLen).length
@@ -430,18 +429,13 @@ export default class DimensionsModal extends Vue {
   }
 
   syncCommentName () {
-    let tempArr = [];
+    this.uniqueAliasCommentObj = {};
     [...this.factTable, ...this.lookupTable].forEach((item, index, self) => {
       for (let it of item.columns) {
-        if ('comment' in it && it.comment && it.comment.trim() && this.checkDimensionNameRegex(it.comment)) {
-          let name = it.comment.slice(0, 100)
+        if ('comment' in it && it.comment && it.comment.trim()) {
+          let name = it.comment.replace(unIncludedNameRegex, '').slice(0, 100)
           it.oldName = it.alias
-          if (tempArr.includes(name)) {
-            this.$set(it, 'alias', `${it.name}_${name}`.slice(0, 100))
-          } else {
-            tempArr.push(name)
-            this.$set(it, 'alias', name)
-          }
+          this.$set(it, 'alias', this.getUniqueAlias(this.uniqueAliasCommentObj, name))
         } else {
           continue
         }
@@ -457,33 +451,6 @@ export default class DimensionsModal extends Vue {
       }
     })
   }
-
-  // renderNameHeader (h, { column, $index }) {
-  //   return (<span class="ky-hover-icon" onClick={e => (e.stopPropagation())}>
-  //     <span>{this.$t('name')}</span>&nbsp;
-  //     <common-tip placement="top" content={this.$t('nameTip')}>
-  //      <span class='el-icon-ksd-what'></span>
-  //     </common-tip>
-  //   </span>)
-  // }
-
-  // renderCardinalityHeader (h, { column, $index }) {
-  //   return (<span class="ky-hover-icon" onClick={e => (e.stopPropagation())}>
-  //     <span>{this.$t('cardinality')}</span>&nbsp;
-  //     <common-tip placement="top" content={this.$t('cardinalityTip')}>
-  //      <span class='el-icon-ksd-what'></span>
-  //     </common-tip>
-  //   </span>)
-  // }
-
-  // renderCommentHeader (h, { column, $index }) {
-  //   return (<span class="ky-hover-icon" onClick={e => (e.stopPropagation())}>
-  //     <span>{this.$t('comment')}</span>&nbsp;
-  //     <common-tip placement="top" content={this.$t('commentTip')}>
-  //      <span class='el-icon-ksd-what'></span>
-  //     </common-tip>
-  //   </span>)
-  // }
 
   changeSearchVal (val) {
     clearTimeout(this.ST)
@@ -577,6 +544,15 @@ export default class DimensionsModal extends Vue {
     })
     this.renderTableColumnSelected(this.ccTable)
   }
+  getUniqueAlias (obj, name) {
+    if (obj[name] === undefined) {
+      obj[name] = 0
+      return name
+    } else {
+      obj[name]++
+      return name + '_' + obj[name]
+    }
+  }
   // 获取所有的table columns，并渲染已经选择过的dimension
   getRenderDimensionData () {
     this.getRenderCCData()
@@ -601,27 +577,21 @@ export default class DimensionsModal extends Vue {
       // 将已经选上的dimension回显到界面上
       table.columns && table.columns.forEach((col, index) => {
         this.$set(col, 'tableName', table.alias)
-        this.$set(col, 'alias', col.name)
+        this.$set(col, 'alias', this.getUniqueAlias(this.uniqueAliasObj, col.name.replace(unIncludedNameRegex, ''))) // 去除不符合维度命名的字符)
         this.$set(col, 'isSelected', false)
         this.$set(col, 'guid', null)
-        let len = this.usedColumns.length
-        for (let i = 0; i < len; i++) {
-          let d = this.usedColumns[i]
-          if (table.alias + '.' + col.name === d.column && d.status === 'DIMENSION') {
-            col.alias = d.name
-            col.isSelected = true
-            col.guid = d.guid
-            break
-          }
+        const selectedColIndex = indexOfObjWithSomeKeys(this.usedColumns, 'column', table.alias + '.' + col.name, 'status', 'DIMENSION' )
+        if (selectedColIndex !== -1) {
+          col.alias = col.name.replace(unIncludedNameRegex, '') !== this.usedColumns[selectedColIndex].name.replace(unIncludedNameRegex, '') ? this.getUniqueAlias(this.uniqueAliasObj, this.usedColumns[selectedColIndex].name.replace(unIncludedNameRegex, '')) : col.alias
+          col.isSelected = true
+          col.guid = this.usedColumns[selectedColIndex].guid
         }
-        for (let it of others) {
-          if (`${table.alias}.${col.name}` === it.column && !selectedColumns.includes(it.column)) {
-            this.$set(col, 'alias', it.name)
-            break
-          }
+        const otherColIndex = indexOfObjWithSomeKey(others, 'column', `${table.alias}.${col.name}`)
+        if (otherColIndex !== -1 && !selectedColumns.includes(others[otherColIndex].column) && others[otherColIndex].name.replace(unIncludedNameRegex, '') !== col.name.replace(unIncludedNameRegex, '')) {
+          this.$set(col, 'alias', this.getUniqueAlias(this.uniqueAliasObj, others[otherColIndex].name.replace(unIncludedNameRegex, ''))) // 去除不符合维度命名的字符)
         }
         if (names.indexOf(col.name) !== names.lastIndexOf(col.name) && !col.isSelected) {
-          this.$set(col, 'alias', col.name + '_' + table.alias)
+          this.$set(col, 'alias', this.getUniqueAlias(this.uniqueAliasObj, col.name.replace(unIncludedNameRegex, '') + '_' + table.alias))// 去除不符合维度命名的字符)
         }
       })
       this.renderTableColumnSelected(table)
@@ -718,10 +688,9 @@ export default class DimensionsModal extends Vue {
       }, 200)
     }
   }
-  mounted () {
-  }
   handleClose (isSubmit, data) {
     this.hideModal()
+    this.uniqueAliasObj = {}
     setTimeout(() => {
       this.resetModalForm()
       this.callback && this.callback({
