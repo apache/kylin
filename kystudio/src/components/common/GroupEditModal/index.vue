@@ -159,9 +159,9 @@ export default class GroupEditModal extends Vue {
     const that = this
     return new Promise(async (resolve, reject) => {
       if (title === that.$t('willCheckGroup')) {
+        this.page_offset = 0
         clearTimeout(this.timer)
         this.timer = setTimeout(async function () {
-          this.page_offset = 0
           await that.setModal({totalUsers: []})
           await that.fetchUsers(query)
           resolve()
@@ -292,6 +292,11 @@ export default class GroupEditModal extends Vue {
   }
   .el-transfer-panel {
     width: 250px;
+  }
+  .el-transfer__buttons {
+    .button-text {
+      min-width: initial;
+    }
   }
   .load-more-uers {
     color: @text-title-color;
