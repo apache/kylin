@@ -16,7 +16,7 @@
       <span><el-tooltip :content="$t('modifiedTime')" placement="top"><i class="el-icon-ksd-type_time"></i></el-tooltip> {{cuboidDetail.modifiedTime || showTableIndexDetail.modifiedTime}}</span>
     </div>
     <template v-if="detailType === 'aggDetail'">
-      <el-table class="cuboid-content" :data="cuboidDetail.cuboidContent" size="small" border>
+      <el-table ref="aggTableDetails" class="cuboid-content" :data="cuboidDetail.cuboidContent" size="small" border>
         <el-table-column type="index" :label="$t('order')" width="64">
         </el-table-column>
         <el-table-column prop="content" show-overflow-tooltip :label="$t('content')">
@@ -49,6 +49,7 @@
     <div v-else>
         <el-table
         size="small"
+        ref="indexTableDetails"
         :data="showTableIndexDetail.renderData"
         border class="table-index-detail">
         <!-- <el-table-column
@@ -173,6 +174,16 @@ export default class indexDetails extends Vue {
   closeIndexDetailsDialog () {
     // this.$emit('close')
     this.resetDetail()
+  }
+
+  mounted () {
+    this.$nextTick(() => {
+      if (this.detailType === 'aggDetail') {
+        this.$refs.aggTableDetails && this.$refs.aggTableDetails.doLayout()
+      } else {
+        this.$refs.indexTableDetails && this.$refs.indexTableDetails.doLayout()
+      }
+    })
   }
 }
 </script>
