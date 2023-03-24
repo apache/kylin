@@ -302,7 +302,8 @@ import Vue from 'vue'
 import { mapActions, mapGetters } from 'vuex'
 import { Component, Watch } from 'vue-property-decorator'
 // import $ from 'jquery'
-import { sqlRowsLimit, sqlStrLenLimit } from '../../config/index'
+import { sqlRowsLimit, sqlStrLenLimit , formatSQLConfig} from '../../config/index'
+import { format } from 'sql-formatter'
 import sqlFormatter from 'sql-formatter'
 import IndexDetails from '../studio/StudioModel/ModelList/ModelAggregate/indexDetails'
 import Diagnostic from 'components/admin/Diagnostic/index'
@@ -434,7 +435,7 @@ export default class QueryHistoryTable extends Vue {
       const sql = element.sql_text
       const sql_limit = this.sqlOverLimit(sql) ? `${sql.slice(0, this.sqlLimitRows)}...` : sql
       const sqlTextArr = sql.split('\n') // 换行符超过一个，说明用户查询行自定义过format格式，则保留
-      element['sql_limit'] = sqlTextArr.length > 1 ? sql_limit : sqlFormatter.format(sql_limit)
+      element['sql_limit'] = sqlTextArr.length > 1 ? sql_limit : format(sql_limit, formatSQLConfig)
       element['server'] = [element['server']]
       element['flexHeight'] = 0
       element['editorH'] = 0
