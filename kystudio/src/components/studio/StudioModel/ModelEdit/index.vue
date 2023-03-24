@@ -1283,6 +1283,7 @@ export default class ModelEdit extends Vue {
     })
   }
   async initModelDesc (cb) {
+    this.resetOtherColumns()
     if (this.extraoption.modelName && this.extraoption.action === 'edit') {
       this.getModelByModelName({model_name: this.extraoption.modelName, project: this.extraoption.project}).then((response) => {
         handleSuccess(response, (data) => {
@@ -1290,7 +1291,6 @@ export default class ModelEdit extends Vue {
             this.modelData = data.value[0]
             this.modelData.project = this.currentSelectedProject
             this.modelData.anti_flatten_lookups = []
-            this.resetOtherColumns()
             cb(this.modelData)
           } else {
             kylinMessage(this.$t('modelDataNullTip'), {type: 'warning'})

@@ -264,7 +264,7 @@ export default class BatchMeasureModal extends Vue {
       const lastIndex = uniqueName.lastIndexOf('_')
       let sameCount = +uniqueName.substring(lastIndex + 1)
       const sameNameMes = getObjectBySomeKeys(arrrReverse, 'name' ,uniqueName)
-      if ((sameNameMes.table_guid || sameNameMes.guid) !== column.table_guid) {
+      if (sameNameMes.parameter_value.length && sameNameMes.parameter_value[0].table_guid !== column.table_guid) {
         uniqueName = uniqueName + '_' + column.table_alias
       } else if (!isNaN(parseFloat(sameCount))) { // 是数字
         sameCount++
@@ -288,7 +288,7 @@ export default class BatchMeasureModal extends Vue {
     if (this.syncComment) {
       allMeasureArr.forEach(item => {
         if (item.parameter_value.length > 0) {
-          const column = columns.filter(it => it.full_colname === item.parameter_value[0].value)
+          const column = columns.filter(it => (it.full_colname || `${it.table_alias}.${it.column}`) === item.parameter_value[0].value)
           column.length > 0 && column[0].comment && (item.comment = column[0].comment)
         }
       })
@@ -542,12 +542,11 @@ export default class BatchMeasureModal extends Vue {
           this.$set(col, 'table_guid', table.guid)
           this.$set(col, 'table_alias', table.alias)
           const len = this.usedColumns.length
-          const selectedColumns = this.usedColumns.filter(it => this.expressions.indexOf(it.expression) !== -1).map(item => item.parameter_value[0].value)
-          let others = this.otherColumns.length ? this.otherColumns : this.modelDesc.all_named_columns.filter(item => !selectedColumns.includes(item.column))
+          let others = this.otherColumns.length ? [...this.otherColumns, ...this.modelDesc.dimensions] : this.modelDesc.all_named_columns
           for (let i = 0; i < len; i++) {
             let d = this.usedColumns[i]
             if (this.expressions.indexOf(d.expression) !== -1 && d.parameter_value[0].value === table.alias + '.' + col.column) {
-              let regxt = new RegExp(`\\_${d.expression}$`)
+              let regxt = new RegExp(`\\_${d.expression}(\\_\\d+)?$`)
               let name = d.name.trim() ? d.name.replace(regxt, '') : col.name
               col[d.expression].value = true
               col[d.expression].isShouldDisable = true
@@ -557,7 +556,7 @@ export default class BatchMeasureModal extends Vue {
             }
           }
           for (let it of others) {
-            if (`${col.table_alias}.${col.column}` === it.column && !selectedColumns.includes(it.column)) {
+            if (`${col.table_alias}.${col.column}` === it.column) {
               this.$set(col, 'name', it.name.trim() ? it.name : col.column)
               break
             }
