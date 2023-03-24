@@ -390,7 +390,7 @@ export default class UserEditModal extends Vue {
     // const project = this.currentSelectedProject // 处理资源组时，发现这个接口不用传 project 参数
     const { data: { data: totalGroups } } = await this.getGroupList()
 
-    this.setModal({ totalGroups })
+    this.setModal({ totalGroups: totalGroups.value })
   }
 }
 </script>
