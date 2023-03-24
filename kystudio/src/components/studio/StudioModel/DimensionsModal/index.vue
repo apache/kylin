@@ -114,9 +114,10 @@
                 </div>
                 <el-table
                   v-if="table.show || isGuideMode"
+                  :ref="table.guid"
                   :class="[flattenLookupTables.includes(table.alias) && 'is-disabled']"
                   :row-class-name="(para) => tableRowClassName(para, table)"
-                  :data="table.columns" :ref="table.guid"
+                  :data="table.columns"
                   @row-click="(row) => {rowClick(row, table.guid)}"
                   @select-all="(selection) => {selectionAllChange(selection, table.guid)}"
                   @select="(selection, row) => {selectionChange(selection, row, table.guid)}">
@@ -762,6 +763,9 @@ export default class DimensionsModal extends Vue {
   toggleTableShow (table) {
     table.show = !table.show
     this.renderTableColumnSelected(table)
+    this.$nextTick(() => {
+      this.$refs[table.guid] && this.$refs[table.guid][0].doLayout()
+    })
   }
   // 单个表渲染已选择的行
   renderTableColumnSelected (table) {
