@@ -13,6 +13,7 @@
           <div v-if="modelData.status === 'WARNING' && modelData.empty_indexes_count">{{$t('emptyIndexTips')}}</div>
           <div v-if="modelData.status === 'WARNING' && (modelData.segment_holes && modelData.segment_holes.length && modelData.model_type === 'BATCH') || (modelData.batch_segment_holes && modelData.batch_segment_holes.length && modelData.model_type === 'HYBRID')">
             <span>{{modelData.model_type === 'HYBRID' ? $t('modelSegmentHoleTips1') : $t('modelSegmentHoleTips')}}</span><span
+              v-if="!['modelEdit'].includes(source)"
               style="color:#0988DE;cursor: pointer;"
               @click="autoFix(modelData.alias, modelData.model_type === 'HYBRID' ? modelData.batch_id : modelData.uuid, modelData.model_type === 'HYBRID' ? modelData.batch_segment_holes : modelData.segment_holes)">{{$t('seeDetail')}}</span>
           </div>
@@ -21,7 +22,7 @@
           </div>
           <div v-if="modelData.status === 'WARNING' && modelData.inconsistent_segment_count">
             <span>{{$t('modelMetadataChangedTips')}}</span><span
-              v-if="!['modelLayout', 'modelEdit'].includes(source)"
+              v-if="!['modelEdit'].includes(source)"
               style="color:#0988DE;cursor: pointer;"
               @click="openComplementSegment(model, true)">{{$t('seeDetail')}}</span>
           </div>
@@ -110,6 +111,9 @@
     }
     openComplementSegment (model, status) {
       this.$emit('openSegment', model, status)
+    }
+    autoFix (...args) {
+      this.$emit('autoFix', ...args)
     }
   }
   </script>
