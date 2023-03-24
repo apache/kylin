@@ -65,7 +65,7 @@
               @change="val => changePartitionSetting('format', val)"
               :placeholder="$t('pleaseInputColumn')">
               <el-option-group>
-                <el-option v-if="prevPartitionMeta.format.indexOf(dateFormatsOptions) === -1&&prevPartitionMeta.format" :label="prevPartitionMeta.format" :value="prevPartitionMeta.format"></el-option>
+                <el-option v-if="dateFormatsOptions.map(it => it.value).indexOf(prevPartitionMeta.format) === -1 && prevPartitionMeta.format" :label="prevPartitionMeta.format" :value="prevPartitionMeta.format"></el-option>
                 <el-option :label="f.label" :value="f.value" v-for="f in dateFormatsOptions" :key="f.label"></el-option>
                 <!-- <el-option label="" value="" v-if="partitionMeta.column && timeDataType.indexOf(getColumnInfo(partitionMeta.column).datatype)===-1"></el-option> -->
               </el-option-group>
