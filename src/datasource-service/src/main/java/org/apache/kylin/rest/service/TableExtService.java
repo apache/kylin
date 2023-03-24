@@ -115,7 +115,7 @@ public class TableExtService extends BasicService {
             StringHelper.toUpperCaseArray(request.getDatabases(), request.getDatabases());
             dbs = classifyDbTables(request.getDatabases(), true);
             Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> pair = findCanLoadTables(dbs, project,
-                    true, tableResponseFromDB, existDbs);
+                    true, tableResponseFromDB, existDbs, Maps.newHashMap());
             canLoadTablesFromDB = pair.getFirst();
             count = pair.getSecond();
             checkThreshold(thresholdEnabled, count);
@@ -126,25 +126,28 @@ public class TableExtService extends BasicService {
         if (tableSize > 0) {
             StringHelper.toUpperCaseArray(request.getTables(), request.getTables());
             Map<String, Set<String>> tables = classifyDbTables(request.getTables(), false);
-            excludeTableFromFormalDB(dbs, tables);
             tableResponse = new LoadTableResponse();
             Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> pair = findCanLoadTables(tables, project,
-                    false, tableResponse, existDbs);
+                    false, tableResponse, existDbs, dbs);
             canLoadTables = pair.getFirst();
             count = pair.getSecond() + count;
             checkThreshold(thresholdEnabled, count);
         }
 
         LoadTableResponse loadTableResponse = new LoadTableResponse();
-        if (tableResponseFromDB != null && !canLoadTablesFromDB.isEmpty()) {
-            innerLoadTables(project, tableResponseFromDB, canLoadTablesFromDB);
+        if (tableResponseFromDB != null) {
+            if (!canLoadTablesFromDB.isEmpty()) {
+                innerLoadTables(project, tableResponseFromDB, canLoadTablesFromDB);
+            }
             loadTableResponse.getFailed().addAll(tableResponseFromDB.getFailed());
             loadTableResponse.getLoaded().addAll(tableResponseFromDB.getLoaded());
             loadTableResponse.getNeedRealSampling().addAll(tableResponseFromDB.getNeedRealSampling());
         }
 
-        if (tableResponse != null && !canLoadTables.isEmpty()) {
-            innerLoadTables(project, tableResponse, canLoadTables);
+        if (tableResponse != null) {
+            if (!canLoadTables.isEmpty()) {
+                innerLoadTables(project, tableResponse, canLoadTables);
+            }
             loadTableResponse.getFailed().addAll(tableResponse.getFailed());
             loadTableResponse.getLoaded().addAll(tableResponse.getLoaded());
             loadTableResponse.getNeedRealSampling().addAll(tableResponse.getNeedRealSampling());
@@ -158,14 +161,8 @@ public class TableExtService extends BasicService {
         }
     }
 
-    private void excludeTableFromFormalDB(Map<String, Set<String>> dbs, Map<String, Set<String>> tables) {
-        if (dbs.size() > 0) {
-            tables.entrySet().removeIf(entry -> dbs.containsKey(entry.getKey()));
-        }
-    }
-
     public Pair<List<Pair<TableDesc, TableExtDesc>>, Integer> findCanLoadTables(Map<String, Set<String>> dbTables, String project,
-            boolean isDb, LoadTableResponse tableResponse, Set<String> existDbs) throws Exception {
+            boolean isDb, LoadTableResponse tableResponse, Set<String> existDbs, Map<String, Set<String>> formalDbs) throws Exception {
         List<Pair<TableDesc, TableExtDesc>> canLoadTables = Lists.newArrayList();
         List<TableNameResponse> responseAll = Lists.newArrayList();
         for (Map.Entry<String, Set<String>> entry : dbTables.entrySet()) {
@@ -189,14 +186,16 @@ public class TableExtService extends BasicService {
                 tableResponse.getFailed().addAll(tables);
             }
 
-            String[] tables = existTables.stream().map(table -> db + "." + table).toArray(String[]::new);
-            if (tables.length > 0) {
-                filterAccessTables(tables, canLoadTables, tableResponse, project);
-            }
+            if (formalDbs.size() == 0 || formalDbs.get(db) == null) {
+                String[] tables = existTables.stream().map(table -> db + "." + table).toArray(String[]::new);
+                if (tables.length > 0) {
+                    filterAccessTables(tables, canLoadTables, tableResponse, project);
+                }
 
-            List<TableNameResponse> response = tableService.getHiveTableNameResponses(project, db, "");
-            response.forEach(t -> t.setTableName(db + "." + t.getTableName()));
-            responseAll.addAll(response);
+                List<TableNameResponse> response = tableService.getHiveTableNameResponses(project, db, "");
+                response.forEach(t -> t.setTableName(db + "." + t.getTableName()));
+                responseAll.addAll(response);
+            }
         }
         return new Pair<>(canLoadTables, getTableCount(responseAll, canLoadTables));
     }
@@ -214,7 +213,7 @@ public class TableExtService extends BasicService {
         LoadTableResponse tableResponse = new LoadTableResponse();
         Map<String, Set<String>> tables = classifyDbTables(dbTables, isDb);
         List<Pair<TableDesc, TableExtDesc>> canLoadTables = findCanLoadTables(tables, project, isDb, tableResponse,
-                existDbs).getFirst();
+                existDbs, Maps.newHashMap()).getFirst();
         if (!canLoadTables.isEmpty()) {
             return innerLoadTables(project, tableResponse, canLoadTables);
         }
