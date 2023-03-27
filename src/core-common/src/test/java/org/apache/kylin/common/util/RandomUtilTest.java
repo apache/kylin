@@ -22,8 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.junit.jupiter.api.Test;
 
 import lombok.val;
@@ -62,6 +68,35 @@ public class RandomUtilTest {
             } else {
                 assertTrue(randomInt < endExclusive);
             }
+        }
+    }
+
+    @Test
+    void nextIntMultithreading() throws Exception {
+        concurrentTest(10, 30);
+    }
+
+    public static void concurrentTest(long concurrentThreads, int times) throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool((int) concurrentThreads);
+        List<Future<Integer>> results = Lists.newArrayList();
+
+        for (int i = 1; i < times; i++) {
+            int finalI = i;
+            Callable<Integer> callable1 = () -> RandomUtil.nextInt(100 * finalI, 200 * finalI);
+            Callable<Integer> callable2 = () -> RandomUtil.nextInt(200000 * finalI, 300000 * finalI);
+            results.add(executor.submit(callable1));
+            results.add(executor.submit(callable2));
+        }
+        executor.shutdown();
+
+        for (int i = 0; i < times - 1; i++) {
+            Integer result1 = results.get(2 * i).get();
+            assertTrue(result1 < 200 * (i + 1));
+            assertTrue(result1 >= 100 * (i + 1));
+
+            Integer result2 = results.get(2 * i + 1).get();
+            assertTrue(result2 < 300000 * (i + 1));
+            assertTrue(result2 >= 200000 * (i + 1));
         }
     }
 }
