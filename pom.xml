@@ -217,6 +217,7 @@
         <spring-boot-admin.version>2.6.10</spring-boot-admin.version>
         <spring-session.version>2.6.1-kylin-r4</spring-session.version>
         <spring.framework.security.extensions.version>1.0.10.RELEASE</spring.framework.security.extensions.version>
+        <spring-webmvc.version>5.3.26</spring-webmvc.version>
         <opensaml.version>2.6.6</opensaml.version>
         <aspectj.version>1.8.9</aspectj.version>
         <unboundid-ldapsdk.version>3.1.1</unboundid-ldapsdk.version>
@@ -2367,6 +2368,11 @@
                 <version>9.0.71</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>${spring-webmvc.version}</version>
+            </dependency>
 
             <!-- Spring Security -->
             <dependency>
