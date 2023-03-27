@@ -18,12 +18,17 @@
 
 package org.apache.kylin.common.util;
 
+import java.security.SecureRandom;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class RandomUtil {
+    private static final SecureRandom random = new SecureRandom();
 
     public static UUID randomUUID() {
         return new UUID(ThreadLocalRandom.current().nextLong(), ThreadLocalRandom.current().nextLong());
@@ -42,7 +47,7 @@ public class RandomUtil {
             return startInclusive;
         }
 
-        return startInclusive + ThreadLocalRandom.current().nextInt(endExclusive - startInclusive);
+        return startInclusive + random.nextInt(endExclusive - startInclusive);
     }
 
     public static int nextInt(final int endExclusive) {
