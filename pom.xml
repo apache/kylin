@@ -352,7 +352,7 @@
         <external.version>5.0.0</external.version>
         <iam-user-manager.version>1.1</iam-user-manager.version>
 
-        <json-smart.version>2.4.7</json-smart.version>
+        <json-smart.version>2.4.9</json-smart.version>
         <xmlsec.version>2.1.7</xmlsec.version>
         <derby.version>10.14.2.0</derby.version>
         <jcommander.version>1.75</jcommander.version>
