@@ -33,28 +33,29 @@ class PreCountDistinctTransformer(spark: SparkSession) extends Rule[LogicalPlan]
     case project@ Project(_, child) =>
       val relatedFields = scala.collection.mutable.Queue[CountDistExprInfo]()
       project.transformExpressions {
-        case DictEncodeV3(child) =>
+        case DictEncodeV3(child, dbName) =>
           val deAttr = AttributeReference("dict_encoded_" + child.prettyName, LongType,
             nullable = false)(NamedExpression.newExprId, Seq.empty[String])
-          relatedFields += CountDistExprInfo(child, deAttr)
+          relatedFields += CountDistExprInfo(child, deAttr, dbName)
           createColumn(deAttr).expr
       }.withNewChildren {
         val dictionaries = relatedFields.map {
-          case CountDistExprInfo(childExpr, encodedAttr) =>
+          case CountDistExprInfo(childExpr, encodedAttr, dbName) =>
             val windowSpec = Window.orderBy(createColumn(childExpr))
             val exprName = childExpr match {
               case ne: NamedExpression => ne.name
               case _ => childExpr.prettyName
             }
+            logInfo(s"Count distinct expr name $exprName")
             val dictPlan = GlobalDictionaryPlaceHolder(exprName, getLogicalPlan(
               getDataFrame(spark, child).groupBy(createColumn(childExpr)).agg(
                 createColumn(childExpr)).select(
                 createColumn(childExpr).cast(StringType) as "dict_key",
-                row_number().over(windowSpec).cast(LongType) as "dict_value")))
+                row_number().over(windowSpec).cast(LongType) as "dict_value")), dbName)
             val key = dictPlan.output.head
             val value = dictPlan.output(1)
             val valueAlias = Alias(value, encodedAttr.name)(encodedAttr.exprId)
-            (Project(Seq(key, valueAlias), dictPlan), (childExpr, encodedAttr))
+            (Project(Seq(key, valueAlias), dictPlan), (childExpr, encodedAttr), dbName)
         }
 
         val result = dictionaries.foldLeft(child) {
@@ -75,4 +76,4 @@ class PreCountDistinctTransformer(spark: SparkSession) extends Rule[LogicalPlan]
   }
 }
 
-case class CountDistExprInfo(childExpr: Expression, encodedAttr: AttributeReference)
+case class CountDistExprInfo(childExpr: Expression, encodedAttr: AttributeReference, dbName: String)

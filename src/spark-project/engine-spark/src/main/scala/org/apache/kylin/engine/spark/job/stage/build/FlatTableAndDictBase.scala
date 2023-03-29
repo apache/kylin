@@ -577,7 +577,8 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     val matchedCols = selectColumnsInTable(table, dictCols)
     val cols = matchedCols.map { dictColumn =>
       val wrapDictCol = DictionaryBuilder.wrapCol(dictColumn)
-      dict_encode_v3(col(wrapDictCol)).alias(wrapDictCol + "_KE_ENCODE")
+      val dbName = dictColumn.getTableRef.getTableDesc.getDatabase
+      dict_encode_v3(col(wrapDictCol), dbName).alias(wrapDictCol + "_KE_ENCODE")
     }.toSeq
     val dictPlan = table
       .select(table.schema.map(ty => col(ty.name)) ++ cols: _*)

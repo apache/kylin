@@ -44,14 +44,14 @@ object GlobalDictionaryBuilderHelper {
         .map(_ => Row(RandomStringUtils.randomAlphabetic(length)))), schema)
   }
 
-  def genDataWithWrapEncodeCol(colName: String, df: Dataset[Row]): Dataset[Row] = {
-    val dictCol = dict_encode_v3(col(colName))
+  def genDataWithWrapEncodeCol(dbName: String, colName: String, df: Dataset[Row]): Dataset[Row] = {
+    val dictCol = dict_encode_v3(col(colName), dbName)
     df.select(df.schema.map(ty => col(ty.name)) ++ Seq(dictCol): _*)
   }
 
-  def genDataWithWrapEncodeCol(spark: SparkSession, colName: String, count: Int, length: Int): Dataset[Row] = {
+  def genDataWithWrapEncodeCol(spark: SparkSession, dbName: String, colName: String, count: Int, length: Int): Dataset[Row] = {
     val df = genRandomData(spark, colName, count, length)
-    val dictCol = dict_encode_v3(col(colName))
+    val dictCol = dict_encode_v3(col(colName), dbName)
     df.select(df.schema.map(ty => col(ty.name)) ++ Seq(dictCol): _*)
   }
 }

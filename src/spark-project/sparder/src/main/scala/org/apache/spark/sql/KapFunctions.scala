@@ -251,8 +251,8 @@ object KapFunctions {
     Column(DictEncode(column.expr, dictParams.expr, bucketSize.expr))
   }
 
-  def dict_encode_v3(column: Column): Column = {
-    Column(DictEncodeV3(column.expr))
+  def dict_encode_v3(column: Column, colName: String): Column = {
+    Column(DictEncodeV3(column.expr, colName))
   }
 
   val builtin: Seq[FunctionEntity] = Seq(

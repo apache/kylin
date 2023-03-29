@@ -21,6 +21,7 @@ import io.delta.tables.DeltaTable
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.engine.spark.builder.v3dict.DictBuildMode.{V2UPGRADE, V3APPEND, V3INIT, V3UPGRADE}
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.dict.{NBucketDictionary, NGlobalDictionaryV2}
@@ -35,6 +36,7 @@ import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
 import util.retry.blocking.RetryStrategy.RetryStrategyProducer
 import util.retry.blocking.{Failure, Retry, RetryStrategy, Success}
 
+import java.nio.file.Paths
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.DurationInt
 
@@ -43,18 +45,17 @@ object DictionaryBuilder extends Logging {
   implicit val retryStrategy: RetryStrategyProducer =
     RetryStrategy.fixedBackOff(retryDuration = 10.seconds, maxAttempts = 5)
 
-  private val config = KylinConfig.getInstanceFromEnv
-
   def buildGlobalDict(
-                       project: String,
-                       spark: SparkSession,
-                       plan: LogicalPlan): LogicalPlan = transformCountDistinct(spark, plan) transform {
+     project: String,
+     spark: SparkSession,
+     plan: LogicalPlan): LogicalPlan = transformCountDistinct(spark, plan) transform {
 
-    case GlobalDictionaryPlaceHolder(expr: String, child: LogicalPlan) =>
+    case GlobalDictionaryPlaceHolder(expr: String, child: LogicalPlan, dbName: String) =>
       spark.sparkContext.setJobDescription(s"Build v3 dict $expr")
-      val tableName = expr.split(NSparkCubingUtil.SEPARATOR).apply(0)
-      val columnName = expr.split(NSparkCubingUtil.SEPARATOR).apply(1)
-      val context = new DictionaryContext(project, tableName, columnName, expr)
+      val catalog = expr.split(NSparkCubingUtil.SEPARATOR)
+      val tableName = catalog.apply(0)
+      val columnName = catalog.apply(1)
+      val context = new DictionaryContext(project, dbName, tableName, columnName, expr)
 
       // concurrent commit may cause delta ConcurrentAppendException.
       // so need retry commit incremental dict to delta table.
@@ -78,9 +79,9 @@ object DictionaryBuilder extends Logging {
    * Use Left anti join to process raw data and dictionary tables.
    */
   private def transformerDictPlan(
-                                   spark: SparkSession,
-                                   context: DictionaryContext,
-                                   plan: LogicalPlan): LogicalPlan = {
+     spark: SparkSession,
+     context: DictionaryContext,
+     plan: LogicalPlan): LogicalPlan = {
 
     val dictPath = getDictionaryPath(context)
     val dictTable: DeltaTable = DeltaTable.forPath(dictPath)
@@ -105,32 +106,47 @@ object DictionaryBuilder extends Logging {
     }
   }
 
+  private def chooseDictBuildMode(context: DictionaryContext): DictBuildMode.Value = {
+    val config = KylinConfig.getInstanceFromEnv
+    if (isExistsV3Dict(context)) {
+      V3APPEND
+    } else if (isExistsOriginalV3Dict(context)) {
+      V3UPGRADE
+    } else if (config.isConvertV3DictEnable && isExistsV2Dict(context)) {
+      V2UPGRADE
+    } else V3INIT
+  }
+
   /**
    * Build an incremental dictionary
    */
   private def incrementBuildDict(
-                                  spark: SparkSession,
-                                  plan: LogicalPlan,
-                                  context: DictionaryContext): Unit = {
-    val config = KylinConfig.getInstanceFromEnv
-    val dictPath = getDictionaryPath(context)
-    if(DeltaTable.isDeltaTable(spark, dictPath)) {
-      mergeIncrementDict(spark, context, plan)
-    } else if (config.isConvertV3DictEnable
-      && isExistsV2Dict(context)
-      && !isExistsV3Dict(context)) {
-      val existsV2DictDF = fetchExistsV2Dict(spark, context)
-      appendDictDF(existsV2DictDF, context)
-      mergeIncrementDict(spark, context, plan)
-    } else {
-      val incrementDictDF = getDataFrame(spark, plan)
-      appendDictDF(incrementDictDF, context)
+    spark: SparkSession,
+    plan: LogicalPlan,
+    context: DictionaryContext): Unit = {
+    val dictMode = chooseDictBuildMode(context)
+    logInfo(s"V3 Dict build mode is $dictMode")
+    dictMode match {
+      case V3INIT =>
+        val dictDF = getDataFrame(spark, plan)
+        initAndSaveDictDF(dictDF, context)
+      case V3APPEND =>
+        mergeIncrementDict(spark, context, plan)
+      // To be delete
+      case V3UPGRADE =>
+        val v3OrigDict = upgradeFromOriginalV3(spark, context)
+        initAndSaveDictDF(v3OrigDict, context)
+        mergeIncrementDict(spark, context, plan)
+      case V2UPGRADE =>
+        val v2Dict = upgradeFromV2(spark, context)
+        initAndSaveDictDF(v2Dict, context)
+        mergeIncrementDict(spark, context, plan)
     }
   }
 
-  private def appendDictDF(dictDF: Dataset[Row], context: DictionaryContext): Unit = {
+  private def initAndSaveDictDF(dictDF: Dataset[Row], context: DictionaryContext): Unit = {
     val dictPath = getDictionaryPath(context)
-    logInfo(s"Append dict values into path $dictPath.")
+    logInfo(s"Save dict values into path $dictPath.")
     dictDF.write.mode(SaveMode.Overwrite).format("delta").save(dictPath)
   }
 
@@ -149,10 +165,17 @@ object DictionaryBuilder extends Logging {
   }
 
   private def isExistsV2Dict(context: DictionaryContext): Boolean = {
+    val config = KylinConfig.getInstanceFromEnv
     val globalDict = new NGlobalDictionaryV2(context.project,
-      context.tableName, context.columnName, config.getHdfsWorkingDirectory)
+      context.dbName + "." + context.tableName, context.columnName, config.getHdfsWorkingDirectory)
     val dictV2Meta = globalDict.getMetaInfo
-    dictV2Meta != null
+    if (dictV2Meta != null) {
+      logInfo(s"Exists V2 dict ${globalDict.getResourceDir}")
+      true
+    } else {
+      logInfo(s"Not exists V2 dict ${globalDict.getResourceDir}")
+      false
+    }
   }
 
   private def isExistsV3Dict(context: DictionaryContext): Boolean = {
@@ -160,10 +183,28 @@ object DictionaryBuilder extends Logging {
     HadoopUtil.getWorkingFileSystem.exists(new Path(dictPath))
   }
 
-  private def fetchExistsV2Dict(spark: SparkSession, context: DictionaryContext): Dataset[Row] = {
+  private def isExistsOriginalV3Dict(context: DictionaryContext): Boolean = {
+    val dictPath = getOriginalDictionaryPath(context)
+    HadoopUtil.getWorkingFileSystem.exists(new Path(dictPath))
+  }
+
+  private def fetchExistsOriginalV3Dict(context: DictionaryContext): Dataset[Row] = {
+    val originalV3DictPath = getOriginalDictionaryPath(context)
+    val v3dictTable = DeltaTable.forPath(originalV3DictPath)
+    v3dictTable.toDF
+  }
+
+  private def transformCountDistinct(session: SparkSession, plan: LogicalPlan): LogicalPlan = {
+    val transformer = new PreCountDistinctTransformer(session)
+    transformer.apply(plan)
+  }
+
+  private def upgradeFromV2(spark: SparkSession, context: DictionaryContext): Dataset[Row] = {
+    val config = KylinConfig.getInstanceFromEnv
     val globalDict = new NGlobalDictionaryV2(context.project,
-      context.tableName, context.columnName, config.getHdfsWorkingDirectory)
+      context.dbName + "." + context.tableName, context.columnName, config.getHdfsWorkingDirectory)
     val dictV2Meta = globalDict.getMetaInfo
+    logInfo(s"Exists V2 dict ${globalDict.getResourceDir} num ${dictV2Meta.getDictCount}")
     val broadcastDict = spark.sparkContext.broadcast(globalDict)
     val dictSchema = new StructType(Array(StructField("dict_key", StringType),
       StructField("dict_value", LongType)))
@@ -186,12 +227,15 @@ object DictionaryBuilder extends Logging {
     }
   }
 
-  private def transformCountDistinct(session: SparkSession, plan: LogicalPlan): LogicalPlan = {
-    val transformer = new PreCountDistinctTransformer(session)
-    transformer.apply(plan)
+  private def upgradeFromOriginalV3(spark: SparkSession, context: DictionaryContext): Dataset[Row] = {
+    if (isExistsOriginalV3Dict(context)) {
+      fetchExistsOriginalV3Dict(context)
+    } else {
+      spark.emptyDataFrame
+    }
   }
 
-  def getDictionaryPath(context: DictionaryContext): String = {
+  private def getOriginalDictionaryPath(context: DictionaryContext): String = {
     val config = KylinConfig.getInstanceFromEnv
     val workingDir = config.getHdfsWorkingDirectory()
     val dictDir = new Path(context.project, new Path(HadoopUtil.GLOBAL_DICT_V3_STORAGE_ROOT,
@@ -199,9 +243,31 @@ object DictionaryBuilder extends Logging {
     workingDir + dictDir
   }
 
+  def getDictionaryPath(context: DictionaryContext): String = {
+    val config = KylinConfig.getInstanceFromEnv
+    val workingDir = config.getHdfsWorkingDirectory()
+    val dictDir = Paths.get(context.project,
+      HadoopUtil.GLOBAL_DICT_V3_STORAGE_ROOT,
+      context.dbName,
+      context.tableName,
+      context.columnName)
+    workingDir + dictDir
+  }
+
   def wrapCol(ref: TblColRef): String = {
-    NSparkCubingUtil.convertFromDot(ref.getColumnDesc.getBackTickIdentity)
+    NSparkCubingUtil.convertFromDot(ref.getBackTickIdentity)
   }
 }
 
-class DictionaryContext(val project: String, val tableName: String, val columnName: String, val expr: String)
+class DictionaryContext(
+   val project: String,
+   val dbName: String,
+   val tableName: String,
+   val columnName: String,
+   val expr: String)
+
+object DictBuildMode extends Enumeration {
+
+  val V3UPGRADE, V2UPGRADE, V3APPEND, V3INIT = Value
+
+}
