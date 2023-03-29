@@ -348,7 +348,7 @@ case class Truncate(_left: Expression, _right: Expression) extends BinaryExpress
   }
 }
 
-case class DictEncodeV3(child: Expression) extends UnaryExpression {
+case class DictEncodeV3(child: Expression, col: String) extends UnaryExpression {
   override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = defineCodeGen(ctx, ev, c => c)
 
   override def dataType: DataType = StringType

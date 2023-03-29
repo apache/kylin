@@ -26,7 +26,7 @@ import org.apache.kylin.engine.spark.builder.{DFDictionaryBuilder, DictionaryBui
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory
 import org.apache.kylin.metadata.cube.model.{NDataSegment, NDataflow, NDataflowManager}
-import org.apache.kylin.metadata.model.{TableDesc, TblColRef}
+import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.dict.{NGlobalDictMetaInfo, NGlobalDictionaryV2}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.functions.{col, count, countDistinct}
@@ -70,10 +70,11 @@ class GlobalDictionaryUpdateSuite extends SparderBaseFunSuite with LocalMetadata
 
   private def buildV3Dict(dictCol: TblColRef): Unit = {
     val tableName = StringUtils.split(dictCol.getTable, ".").apply(1)
+    val dbName = dictCol.getTableRef.getTableDesc.getDatabase
     val encodeColName: String = tableName + NSparkCubingUtil.SEPARATOR + dictCol.getName
-    val context = new DictionaryContext(DEFAULT_PROJECT, tableName, dictCol.getName, null)
+    val context = new DictionaryContext(DEFAULT_PROJECT, dbName, tableName, dictCol.getName, null)
     val df = genRandomData(spark, encodeColName, 100, 10)
-    val dictDF = genDataWithWrapEncodeCol(encodeColName, df)
+    val dictDF = genDataWithWrapEncodeCol(dbName, encodeColName, df)
     DictionaryBuilder.buildGlobalDict(DEFAULT_PROJECT, spark, dictDF.queryExecution.analyzed)
 
     val originalDF = df.agg(countDistinct(encodeColName))
@@ -85,15 +86,11 @@ class GlobalDictionaryUpdateSuite extends SparderBaseFunSuite with LocalMetadata
   def prepareV2Dict(seg: NDataSegment, randomDataSet: Dataset[Row], dictColSet: util.Set[TblColRef]): NGlobalDictMetaInfo = {
     val dictionaryBuilder = new DFDictionaryBuilder(randomDataSet, seg, randomDataSet.sparkSession, dictColSet)
     val colName = dictColSet.iterator().next()
-    val dictCol = TblColRef.mockup(TableDesc.mockup(colName.getTableRef.getTableDesc.getName),
-      1,
-      colName.getName,
-      "string")
     val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, colName, randomDataSet)
-    dictionaryBuilder.build(dictCol, bucketPartitionSize, randomDataSet)
+    dictionaryBuilder.build(colName, bucketPartitionSize, randomDataSet)
     val dict = new NGlobalDictionaryV2(seg.getProject,
-      dictCol.getTable,
-      dictCol.getName,
+      colName.getTable,
+      colName.getName,
       seg.getConfig.getHdfsWorkingDirectory)
     dict.getMetaInfo
   }

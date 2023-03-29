@@ -23,7 +23,8 @@ import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, UnaryNode}
 
 case class GlobalDictionaryPlaceHolder(
     exprName: String,
-    child: LogicalPlan) extends UnaryNode {
+    child: LogicalPlan,
+    dbName: String) extends UnaryNode {
 
   override def output: Seq[Attribute] = child.output
 

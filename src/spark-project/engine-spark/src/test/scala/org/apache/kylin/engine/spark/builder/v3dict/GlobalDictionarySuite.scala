@@ -34,16 +34,17 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
 
   test("KE-35145 Test Continuously Build Dictionary") {
     val project = "p1"
-    val tableName = "t1"
+    val dbName = "db1"
+    val tableName = "t2"
     val colName = "c1"
     val encodeColName: String = tableName + NSparkCubingUtil.SEPARATOR + colName
-    val context = new DictionaryContext(project, tableName, colName, null)
+    val context = new DictionaryContext(project, dbName, tableName, colName, null)
     DeltaTable.createIfNotExists()
       .tableName("original_c1")
       .addColumn(encodeColName, StringType).execute()
     for (_ <- 0 until 10) {
       val originalDF = genRandomData(spark, encodeColName, 100, 1)
-      val df = genDataWithWrapEncodeCol(encodeColName, originalDF)
+      val df = genDataWithWrapEncodeCol(dbName, encodeColName, originalDF)
       DeltaTable.forName("original_c1")
         .merge(originalDF, "1 != 1")
         .whenNotMatched()
@@ -56,7 +57,7 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
     val dictDF = DeltaTable.forPath(dictPath).toDF.agg(count(col("dict_key")))
     val originalDF = spark.sql(
       """
-        |SELECT count(DISTINCT t1_0_DOT_0_c1)
+        |SELECT count(DISTINCT t2_0_DOT_0_c1)
         |   FROM default.original_c1
       """.stripMargin)
     checkAnswer(originalDF, dictDF)
@@ -64,10 +65,11 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
 
   test("KE-35145 Test Concurrent Build Dictionary") {
     val project = "p1"
+    val dbName = "db1"
     val tableName = "t1"
     val colName = "c2"
     val encodeColName: String = tableName + NSparkCubingUtil.SEPARATOR + colName
-    val context = new DictionaryContext(project, tableName, colName, null)
+    val context = new DictionaryContext(project, dbName, tableName, colName, null)
     val pool = Executors.newFixedThreadPool(10)
     implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(pool)
 
@@ -78,7 +80,7 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
     val buildDictTask = new Runnable {
       override def run(): Unit = {
         val originalDF = genRandomData(spark, encodeColName, 100, 1)
-        val dictDF = genDataWithWrapEncodeCol(encodeColName, originalDF)
+        val dictDF = genDataWithWrapEncodeCol(dbName, encodeColName, originalDF)
         DeltaTable.forName("original_c2")
           .merge(originalDF, "1 != 1")
           .whenNotMatched()
@@ -104,12 +106,13 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
 
   test("KE-35145 Test the v3 dictionary with random data") {
     val project = "p1"
+    val dbName = "db1"
     val tableName = "t1"
     val colName = "c3"
     val encodeColName: String = tableName + NSparkCubingUtil.SEPARATOR + colName
-    val context = new DictionaryContext(project, tableName, colName, null)
+    val context = new DictionaryContext(project, dbName, tableName, colName, null)
     val df = genRandomData(spark, encodeColName, 1000, 2)
-    val dictDF = genDataWithWrapEncodeCol(encodeColName, df)
+    val dictDF = genDataWithWrapEncodeCol(dbName, encodeColName, df)
     DictionaryBuilder.buildGlobalDict(project, spark, dictDF.queryExecution.analyzed)
 
     val originalDF = df.agg(countDistinct(encodeColName))
@@ -120,10 +123,11 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
 
   test("KE-35145 With null dict value") {
     val project = "p1"
+    val dbName = "db1"
     val tableName = "t1"
     val colName = "c4"
     val encodeColName: String = tableName + NSparkCubingUtil.SEPARATOR + colName
-    val context = new DictionaryContext(project, tableName, colName, null)
+    val context = new DictionaryContext(project, dbName, tableName, colName, null)
     var schema = new StructType
     schema = schema.add(encodeColName, StringType)
     val data = Seq(
@@ -141,7 +145,7 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
       Row("a"),
       Row("b"))
 
-    val dictCol = Seq(dict_encode_v3(col(encodeColName)).alias(colName + "_KE_ENCODE"))
+    val dictCol = Seq(dict_encode_v3(col(encodeColName), dbName).alias(colName + "_KE_ENCODE"))
 
     val df = spark.createDataFrame(spark.sparkContext.parallelize(data), schema)
     val dictDfPlan = df
@@ -157,22 +161,23 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
 
   test("KE-35145 Build dict with null value") {
     val project = "p1"
+    val dbName = "db1"
     val tableName = "t1"
     val colName = "c5"
     val encodeColName: String = tableName + NSparkCubingUtil.SEPARATOR + colName
-    val context = new DictionaryContext(project, tableName, colName, null)
+    val context = new DictionaryContext(project, dbName, tableName, colName, null)
     var schema = new StructType
     schema = schema.add(encodeColName, StringType)
     val data = Seq.empty[Row]
 
-    val dictCol = Seq(dict_encode_v3(col(encodeColName)).alias(encodeColName + "_KE_ENCODE"))
+    val dictCol = Seq(dict_encode_v3(col(encodeColName), dbName).alias(encodeColName + "_KE_ENCODE"))
 
     val df = spark.createDataFrame(spark.sparkContext.parallelize(data), schema)
     val dictDfPlan = df
       .select(df.schema.map(ty => col(ty.name)) ++ dictCol: _*)
       .queryExecution
       .analyzed
-    DictionaryBuilder.buildGlobalDict("p2", spark, dictDfPlan)
+    DictionaryBuilder.buildGlobalDict(project, spark, dictDfPlan)
     val originalDF = df.agg(countDistinct(encodeColName))
     val dictPath: String = DictionaryBuilder.getDictionaryPath(context)
     val dictResultDF = DeltaTable.forPath(dictPath).toDF.agg(count(col("dict_key")))
