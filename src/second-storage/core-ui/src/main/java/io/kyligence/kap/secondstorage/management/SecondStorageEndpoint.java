@@ -147,8 +147,8 @@ public class SecondStorageEndpoint extends NBasicController {
     @ApiOperation(value = "enableProject")
     @PostMapping(value = "/project/state", produces = {HTTP_VND_APACHE_KYLIN_JSON, HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON})
     public EnvelopeResponse<JobInfoResponse> enableProjectStorage(@RequestBody ProjectEnableRequest projectEnableRequest) {
-        checkProjectName(projectEnableRequest.getProject());
-        val jobInfo = secondStorageService.changeProjectSecondStorageState(projectEnableRequest.getProject(),
+        String projectName = checkProjectName(projectEnableRequest.getProject());
+        val jobInfo = secondStorageService.changeProjectSecondStorageState(projectName,
                 projectEnableRequest.getNewNodes(),
                 projectEnableRequest.isEnabled());
         JobInfoResponse jobInfoResponse = new JobInfoResponse();

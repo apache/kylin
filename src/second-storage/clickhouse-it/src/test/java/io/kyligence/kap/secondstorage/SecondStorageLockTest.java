@@ -1001,7 +1001,7 @@ public class SecondStorageLockTest implements JobWaiter {
 
                 buildIncrementalLoadQuery("2012-01-01", "2012-01-02");
                 val request = new ProjectEnableRequest();
-                request.setProject(getProject());
+                request.setProject(getProject().toUpperCase(Locale.ROOT));
                 request.setEnabled(false);
                 request.setNewNodes(null);
                 val jobInfo = secondStorageEndpoint.enableProjectStorage(request);
