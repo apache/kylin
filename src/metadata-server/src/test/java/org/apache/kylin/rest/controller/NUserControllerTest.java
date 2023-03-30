@@ -711,4 +711,15 @@ public class NUserControllerTest extends NLocalFileMetadataTestCase {
         Assert.assertThrows(REQUEST_PARAMETER_EMPTY_OR_VALUE_EMPTY.getMsg("disabled"), KylinException.class,
                 () -> nUserController.createUser(user));
     }
+
+    @Test
+    public void testListUnassignedUser() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/unassigned_users").contentType(MediaType.APPLICATION_JSON)
+                .param("name", "KYLIN").param("group_name", "AAA")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Mockito.verify(nUserController).listGroupUnassignedUsers(Mockito.anyString(), Mockito.anyString(),
+                Mockito.anyBoolean(), Mockito.anyInt(), Mockito.anyInt());
+    }
 }

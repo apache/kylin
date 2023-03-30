@@ -53,6 +53,8 @@ import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.AclTCRRevokeEventNotifier;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.config.initialize.AfterMetadataReadyEvent;
@@ -98,15 +100,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import io.swagger.annotations.ApiOperation;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -377,8 +376,37 @@ public class NUserController extends NBasicController implements ApplicationList
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer pageSize)
             throws IOException {
         List<ManagedUser> usersByFuzzyMatching = userService.getManagedUsersByFuzzMatching(nameSeg, isCaseSensitive);
+        List<ManagedUserResponse> userList = getUserListResponsePage(pageOffset, pageSize, usersByFuzzyMatching);
+        val userSize = usersByFuzzyMatching == null ? 0 : usersByFuzzyMatching.size();
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                new DataResult<>(userList, userSize, pageOffset, pageSize), "");
+    }
+
+    @ApiOperation(value = "listUnassignedUsers", tags = { "MID" })
+    @GetMapping(value = "/unassigned_users")
+    @ResponseBody
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public EnvelopeResponse<DataResult<List<ManagedUserResponse>>> listGroupUnassignedUsers(
+            @RequestParam(value = "group_name") String groupName,
+            @RequestParam(value = "name", required = false) String nameSeg,
+            @RequestParam(value = "is_case_sensitive", required = false) boolean isCaseSensitive,
+            @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer pageOffset,
+            @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer pageSize)
+            throws IOException {
+        List<ManagedUser> unassignedUsers = userService
+                .getManagedUsersByFuzzMatching(nameSeg, isCaseSensitive).stream().filter(user -> user.getAuthorities()
+                        .stream().noneMatch(auth -> auth.getAuthority().contains(groupName)))
+                .collect(Collectors.toList());
+        List<ManagedUserResponse> userList = getUserListResponsePage(pageOffset, pageSize, unassignedUsers);
+        val userSize = unassignedUsers.size();
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
+                new DataResult<>(userList, userSize, pageOffset, pageSize), "");
+    }
+
+    private List<ManagedUserResponse> getUserListResponsePage(Integer pageOffset, Integer pageSize,
+            List<ManagedUser> usersByFuzzyMatching) throws IOException {
         List<ManagedUser> subList = PagingUtil.cutPage(usersByFuzzyMatching, pageOffset, pageSize);
-        //LDAP users dose not have authorities
+        // LDAP users dose not have authorities
         if (userService instanceof OpenUserService) {
             // invoke AdminUserAspect
             userService.listAdminUsers();
@@ -399,9 +427,8 @@ public class NUserController extends NBasicController implements ApplicationList
             }
             userList.add(managedUserResponse);
         }
-        val userSize = usersByFuzzyMatching == null ? 0 : usersByFuzzyMatching.size();
-        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS,
-                new DataResult<>(userList, userSize, pageOffset, pageSize), "");
+
+        return userList;
     }
 
     @ApiOperation(value = "listSuperAdmin", tags = { "MID" })
@@ -432,7 +459,8 @@ public class NUserController extends NBasicController implements ApplicationList
             throw new KylinException(USER_NOT_EXIST, String.format(Locale.ROOT, msg.getUserNotFound(), username));
         }
         val actualOldPassword = existingUser.getPassword();
-        val oldPassword = pwdBase64Decode(StringUtils.isEmpty(user.getPassword()) ? StringUtils.EMPTY : user.getPassword());
+        val oldPassword = pwdBase64Decode(
+                StringUtils.isEmpty(user.getPassword()) ? StringUtils.EMPTY : user.getPassword());
         // when reset oneself's password (includes ADMIN users), check old password
         if (StringUtils.equals(getPrincipal(), username)) {
             checkRequiredArg("password", user.getPassword());
@@ -442,7 +470,8 @@ public class NUserController extends NBasicController implements ApplicationList
         }
 
         checkRequiredArg("new_password", user.getNewPassword());
-        val newPassword = pwdBase64Decode(StringUtils.isEmpty(user.getNewPassword()) ? StringUtils.EMPTY : user.getNewPassword());
+        val newPassword = pwdBase64Decode(
+                StringUtils.isEmpty(user.getNewPassword()) ? StringUtils.EMPTY : user.getNewPassword());
         checkPasswordLength(newPassword);
         checkPasswordCharacter(newPassword);
 
