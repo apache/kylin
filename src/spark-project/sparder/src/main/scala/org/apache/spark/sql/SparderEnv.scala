@@ -36,7 +36,7 @@ import org.apache.kylin.metadata.model.{NTableMetadataManager, TableExtDesc}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.query.runtime.plan.QueryToExecutionIDCache
 import org.apache.spark.internal.Logging
-import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent, SparkListenerLogRollUp, SparkListenerTaskEnd}
+import org.apache.spark.scheduler._
 import org.apache.spark.sql.KylinSession._
 import org.apache.spark.sql.catalyst.optimizer.ConvertInnerJoinToSemiJoin
 import org.apache.spark.sql.catalyst.parser.ParseException
@@ -46,7 +46,7 @@ import org.apache.spark.sql.execution.ui.PostQueryExecutionForKylin
 import org.apache.spark.sql.hive.ReplaceLocationRule
 import org.apache.spark.sql.udf.UdfManager
 import org.apache.spark.util.{ThreadUtils, Utils}
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{ExecutorAllocationClient, SparkConf, SparkContext}
 
 // scalastyle:off
 object SparderEnv extends Logging {
@@ -67,6 +67,8 @@ object SparderEnv extends Logging {
 
   @volatile
   var lastStartSparkFailureTime: Long = 0
+
+  private var _executorAllocationClient: Option[ExecutorAllocationClient] = None
 
   def getSparkSession: SparkSession = {
     if (spark == null || spark.sparkContext.isStopped) {
@@ -244,6 +246,7 @@ object SparderEnv extends Logging {
           .currentThread()
           .getContextClassLoader
           .toString)
+      setExecutorAllocationClient(sparkSession.sparkContext)
       registerListener(sparkSession.sparkContext)
       registerQueryMetrics(sparkSession.sparkContext)
       APP_MASTER_TRACK_URL = null
@@ -275,6 +278,22 @@ object SparderEnv extends Logging {
     sse.injectOptimizerRule(_ => new ConvertInnerJoinToSemiJoin())
     if (KapConfig.getInstanceFromEnv.isConstraintPropagationEnabled) {
       sse.injectOptimizerRule(_ => RewriteInferFiltersFromConstraints)
+    }
+  }
+
+  //for test
+  def setExecutorAllocationClient(client: ExecutorAllocationClient): Unit = {
+    _executorAllocationClient = Some(client)
+  }
+
+  def executorAllocationClient: Option[ExecutorAllocationClient] = _executorAllocationClient
+
+  def setExecutorAllocationClient(sc: SparkContext): Unit = {
+    _executorAllocationClient = sc.schedulerBackend match {
+      case client: ExecutorAllocationClient =>
+        Some(client)
+      case _ =>
+        None
     }
   }
 
