@@ -20,7 +20,11 @@ package org.apache.kylin.metadata.cube.model;
 
 import java.io.IOException;
 
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.junit.After;
@@ -29,7 +33,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.val;
 import lombok.var;
 
@@ -199,6 +202,81 @@ public class NDataflowTest extends NLocalFileMetadataTestCase {
             val layoutInfo = ReflectionTestUtils.getField(segmentAfter, fieldName);
             Assert.assertNotNull(layoutInfo);
         }
+    }
+
+    @Test
+    public void testGetQueryableSegmentRange() {
+        removeAllSegments(projectDefault);
+        NDataflowManager dfManager = NDataflowManager.getInstance(getTestConfig(), projectDefault);
+
+        // add two queryable segments
+        {
+            NDataflow df = dfManager.getDataflowByModelAlias("nmodel_basic");
+            Segments<NDataSegment> segments = new Segments<>();
+
+            // segment1～1
+            String start = "2010-12-24 20:33:39.000";
+            String end = "2011-05-18 09:00:19.000";
+            NDataSegment dataSegment = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    DateFormat.stringToMillis(start), DateFormat.stringToMillis(end)));
+            dataSegment.setStatus(SegmentStatusEnum.READY);
+            segments.add(dataSegment);
+
+            // segment1~2
+            start = end;
+            end = "2012-01-04 20:33:39.000";
+            dataSegment = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    DateFormat.stringToMillis(start), DateFormat.stringToMillis(end)));
+            dataSegment.setStatus(SegmentStatusEnum.NEW);
+            segments.add(dataSegment);
+
+            // segment1~3
+            start = end;
+            end = "2013-01-04 20:33:39.000";
+            dataSegment = dfManager.appendSegment(df, new SegmentRange.TimePartitionedSegmentRange(
+                    DateFormat.stringToMillis(start), DateFormat.stringToMillis(end)));
+            dataSegment.setStatus(SegmentStatusEnum.WARNING);
+            segments.add(dataSegment);
+
+            NDataflowUpdate update = new NDataflowUpdate(dfManager.getDataflowByModelAlias("nmodel_basic").getUuid());
+            update.setToUpdateSegs(segments.toArray(new NDataSegment[0]));
+            update.setStatus(RealizationStatusEnum.ONLINE);
+            dfManager.updateDataflow(update);
+        }
+
+        // validation
+        NDataflow df = dfManager.getDataflowByModelAlias("nmodel_basic");
+        Segments<NDataSegment> queryableSegments = df.getQueryableSegments();
+        Assert.assertEquals(2, queryableSegments.size());
+
+        NDataSegment segment1 = queryableSegments.get(0);
+        Assert.assertEquals("2010-12-24 20:33:39.000",
+                DateFormat.formatToTimeStr(Long.parseLong(segment1.getSegRange().getStart().toString())));
+        Assert.assertEquals("2011-05-18 09:00:19.000",
+                DateFormat.formatToTimeStr(Long.parseLong(segment1.getSegRange().getEnd().toString())));
+        Assert.assertEquals(SegmentStatusEnum.READY, segment1.getStatus());
+
+        NDataSegment segment2 = queryableSegments.get(1);
+        Assert.assertEquals("2010-12-24 20:33:39.000",
+                DateFormat.formatToTimeStr(Long.parseLong(segment1.getSegRange().getStart().toString())));
+        Assert.assertEquals("2011-05-18 09:00:19.000",
+                DateFormat.formatToTimeStr(Long.parseLong(segment1.getSegRange().getEnd().toString())));
+        Assert.assertEquals(SegmentStatusEnum.READY, segment2.getStatus());
+    }
+
+    private void removeAllSegments(String project) {
+        NDataflowManager dataflowManager = NDataflowManager.getInstance(getTestConfig(), project);
+        NDataflow df = dataflowManager.getDataflowByModelAlias("nmodel_basic");
+        // remove the existed seg
+        NDataflowUpdate update = new NDataflowUpdate(df.getUuid());
+        update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
+        dataflowManager.updateDataflow(update);
+
+        df = dataflowManager.getDataflowByModelAlias("nmodel_basic_inner");
+        // remove the existed seg
+        update = new NDataflowUpdate(df.getUuid());
+        update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
+        dataflowManager.updateDataflow(update);
     }
 
 }

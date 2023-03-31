@@ -23,55 +23,55 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-class RealizationPrunerTest {
+class SegmentPruningRuleTest {
 
     @Test
     void testCheckAndReformatDateType() {
         long segmentTs = 1675396800000L;
         {
-            String formattedValue = ReflectionTestUtils.invokeMethod(RealizationPruner.class,
+            String formattedValue = ReflectionTestUtils.invokeMethod(SegmentPruningRule.class,
                     "checkAndReformatDateType", "2023-02-03", segmentTs, new DataType("date", 0, 0));
             Assertions.assertEquals("2023-02-03", formattedValue);
         }
 
         {
-            String formattedValue = ReflectionTestUtils.invokeMethod(RealizationPruner.class,
+            String formattedValue = ReflectionTestUtils.invokeMethod(SegmentPruningRule.class,
                     "checkAndReformatDateType", "2023-02-03 12:00:00", segmentTs, new DataType("date", 0, 0));
             Assertions.assertEquals("2023-02-03", formattedValue);
         }
 
         {
-            String formattedValue = ReflectionTestUtils.invokeMethod(RealizationPruner.class,
+            String formattedValue = ReflectionTestUtils.invokeMethod(SegmentPruningRule.class,
                     "checkAndReformatDateType", "2023-02-03", segmentTs, new DataType("timestamp", 0, 0));
             Assertions.assertEquals("2023-02-03 12:00:00", formattedValue);
         }
 
         {
-            String formattedValue = ReflectionTestUtils.invokeMethod(RealizationPruner.class,
+            String formattedValue = ReflectionTestUtils.invokeMethod(SegmentPruningRule.class,
                     "checkAndReformatDateType", "2023-02-03 12:00:00", segmentTs, new DataType("timestamp", 0, 0));
             Assertions.assertEquals("2023-02-03 12:00:00", formattedValue);
         }
 
         {
-            String formattedValue = ReflectionTestUtils.invokeMethod(RealizationPruner.class,
+            String formattedValue = ReflectionTestUtils.invokeMethod(SegmentPruningRule.class,
                     "checkAndReformatDateType", "2023-02-03 12:00:00", segmentTs, new DataType("varchar", 0, 0));
             Assertions.assertEquals("2023-02-03 12:00:00", formattedValue);
         }
 
         {
-            String formattedValue = ReflectionTestUtils.invokeMethod(RealizationPruner.class,
+            String formattedValue = ReflectionTestUtils.invokeMethod(SegmentPruningRule.class,
                     "checkAndReformatDateType", "2023-02-03 12:00:00", segmentTs, new DataType("string", 0, 0));
             Assertions.assertEquals("2023-02-03 12:00:00", formattedValue);
         }
 
         {
-            String formattedValue = ReflectionTestUtils.invokeMethod(RealizationPruner.class,
+            String formattedValue = ReflectionTestUtils.invokeMethod(SegmentPruningRule.class,
                     "checkAndReformatDateType", "2023-02-03 12:00:00", segmentTs, new DataType("integer", 0, 0));
             Assertions.assertEquals("2023-02-03 12:00:00", formattedValue);
         }
 
         {
-            String formattedValue = ReflectionTestUtils.invokeMethod(RealizationPruner.class,
+            String formattedValue = ReflectionTestUtils.invokeMethod(SegmentPruningRule.class,
                     "checkAndReformatDateType", "2023-02-03 12:00:00", segmentTs, new DataType("bigint", 0, 0));
             Assertions.assertEquals("2023-02-03 12:00:00", formattedValue);
         }
@@ -79,7 +79,7 @@ class RealizationPrunerTest {
         {
             DataType errorType = new DataType("error_type", 0, 0);
             Assertions.assertThrows(IllegalArgumentException.class,
-                    () -> ReflectionTestUtils.invokeMethod(RealizationPruner.class, "checkAndReformatDateType",
+                    () -> ReflectionTestUtils.invokeMethod(SegmentPruningRule.class, "checkAndReformatDateType",
                             "2023-02-03 12:00:00", segmentTs, errorType));
         }
     }

@@ -1,0 +1,845 @@
+{
+  "uuid" : "cdf17c7b-18e3-9a09-23d1-4e82b7bc9123",
+  "last_modified" : 1641870189231,
+  "create_time" : 1641870188052,
+  "version" : "4.0.0.0",
+  "alias" : "test_cube_04_date_str2_partition",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "TEST_DB.TEST_FACT_30_3W",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "TEST_FACT_30_3W.STRING_DATE2_24",
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyyMMdd",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "BIGINT_29",
+    "column" : "TEST_FACT_30_3W.BIGINT_29",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "DECIMAL_19",
+    "column" : "TEST_FACT_30_3W.DECIMAL_19",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "DOUBLE_5",
+    "column" : "TEST_FACT_30_3W.DOUBLE_5",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "INT_1",
+    "column" : "TEST_FACT_30_3W.INT_1",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "BIGINT_13",
+    "column" : "TEST_FACT_30_3W.BIGINT_13",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "STRING_DATE2_25",
+    "column" : "TEST_FACT_30_3W.STRING_DATE2_25",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "DATE_7",
+    "column" : "TEST_FACT_30_3W.DATE_7",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "STRING_9",
+    "column" : "TEST_FACT_30_3W.STRING_9",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "STRING_DATE2_24",
+    "column" : "TEST_FACT_30_3W.STRING_DATE2_24",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "BIGINT_3",
+    "column" : "TEST_FACT_30_3W.BIGINT_3",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "STRING_NUM_16",
+    "column" : "TEST_FACT_30_3W.STRING_NUM_16",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "STRING_DECIMAL_23",
+    "column" : "TEST_FACT_30_3W.STRING_DECIMAL_23",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "STRING_DATE_20",
+    "column" : "TEST_FACT_30_3W.STRING_DATE_20",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "INT_27",
+    "column" : "TEST_FACT_30_3W.INT_27",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 14,
+    "name" : "INT_15",
+    "column" : "TEST_FACT_30_3W.INT_15",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 15,
+    "name" : "TIMESTAMP_10",
+    "column" : "TEST_FACT_30_3W.TIMESTAMP_10",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 16,
+    "name" : "BIGINT_28",
+    "column" : "TEST_FACT_30_3W.BIGINT_28",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 17,
+    "name" : "DECIMAL_18",
+    "column" : "TEST_FACT_30_3W.DECIMAL_18",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 18,
+    "name" : "DOUBLE_4",
+    "column" : "TEST_FACT_30_3W.DOUBLE_4",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 19,
+    "name" : "INT_0",
+    "column" : "TEST_FACT_30_3W.INT_0",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 20,
+    "name" : "BIGINT_12",
+    "column" : "TEST_FACT_30_3W.BIGINT_12",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 21,
+    "name" : "ID",
+    "column" : "TEST_FACT_30_3W.ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 22,
+    "name" : "BIGINT_2",
+    "column" : "TEST_FACT_30_3W.BIGINT_2",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 23,
+    "name" : "STRING_NUM_17",
+    "column" : "TEST_FACT_30_3W.STRING_NUM_17",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 24,
+    "name" : "DATE_6",
+    "column" : "TEST_FACT_30_3W.DATE_6",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 25,
+    "name" : "STRING_8",
+    "column" : "TEST_FACT_30_3W.STRING_8",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 26,
+    "name" : "STRING_DECIMAL_22",
+    "column" : "TEST_FACT_30_3W.STRING_DECIMAL_22",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 27,
+    "name" : "INT_14",
+    "column" : "TEST_FACT_30_3W.INT_14",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 28,
+    "name" : "INT_26",
+    "column" : "TEST_FACT_30_3W.INT_26",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 29,
+    "name" : "STRING_DATE_21",
+    "column" : "TEST_FACT_30_3W.STRING_DATE_21",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 30,
+    "name" : "TIMESTAMP_11",
+    "column" : "TEST_FACT_30_3W.TIMESTAMP_11",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000
+  }, {
+    "name" : "ID",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100001
+  }, {
+    "name" : "ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100002
+  }, {
+    "name" : "INT_0",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_0"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100003
+  }, {
+    "name" : "INT_0_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_0"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100004
+  }, {
+    "name" : "INT_1",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100005
+  }, {
+    "name" : "INT_1_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100006
+  }, {
+    "name" : "BIGINT_2",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_2"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100007
+  }, {
+    "name" : "BIGINT_2_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_2"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100008
+  }, {
+    "name" : "BIGINT_3",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_3"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100009
+  }, {
+    "name" : "BIGINT_3_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_3"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100010
+  }, {
+    "name" : "DOUBLE_4",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.DOUBLE_4"
+      } ],
+      "returntype" : "double"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100011
+  }, {
+    "name" : "DOUBLE_4_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.DOUBLE_4"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100012
+  }, {
+    "name" : "DOUBLE_5",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.DOUBLE_5"
+      } ],
+      "returntype" : "double"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100013
+  }, {
+    "name" : "DOUBLE_5_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.DOUBLE_5"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100014
+  }, {
+    "name" : "DATE_6_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.DATE_6"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100015
+  }, {
+    "name" : "DATE_7_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.DATE_7"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100016
+  }, {
+    "name" : "STRING_8_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.STRING_8"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100017
+  }, {
+    "name" : "STRING_9_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.STRING_9"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100018
+  }, {
+    "name" : "TIMESTAMP_10_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.TIMESTAMP_10"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100019
+  }, {
+    "name" : "TIMESTAMP_11_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.TIMESTAMP_11"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100020
+  }, {
+    "name" : "BIGINT_12",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_12"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100021
+  }, {
+    "name" : "BIGINT_12_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_12"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100022
+  }, {
+    "name" : "BIGINT_13",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_13"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100023
+  }, {
+    "name" : "BIGINT_13_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_13"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100024
+  }, {
+    "name" : "INT_14",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_14"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100025
+  }, {
+    "name" : "INT_14_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_14"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100026
+  }, {
+    "name" : "INT_15",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_15"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100027
+  }, {
+    "name" : "INT_15_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_15"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100028
+  }, {
+    "name" : "STRING_NUM_16_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.STRING_NUM_16"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100029
+  }, {
+    "name" : "STRING_NUM_17_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.STRING_NUM_17"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100030
+  }, {
+    "name" : "DECIMAL_18",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.DECIMAL_18"
+      } ],
+      "returntype" : "decimal(24,2)"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100031
+  }, {
+    "name" : "DECIMAL_18_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.DECIMAL_18"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100032
+  }, {
+    "name" : "DECIMAL_19",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.DECIMAL_19"
+      } ],
+      "returntype" : "decimal(24,2)"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100033
+  }, {
+    "name" : "DECIMAL_19_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.DECIMAL_19"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100034
+  }, {
+    "name" : "STRING_DATE_20_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.STRING_DATE_20"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100035
+  }, {
+    "name" : "STRING_DATE_21_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.STRING_DATE_21"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100036
+  }, {
+    "name" : "STRING_DECIMAL_22_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.STRING_DECIMAL_22"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100037
+  }, {
+    "name" : "STRING_DECIMAL_23_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.STRING_DECIMAL_23"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100038
+  }, {
+    "name" : "STRING_DATE2_24_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.STRING_DATE2_24"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100039
+  }, {
+    "name" : "STRING_DATE2_25_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.STRING_DATE2_25"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100040
+  }, {
+    "name" : "INT_26",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_26"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100041
+  }, {
+    "name" : "INT_26_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_26"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100042
+  }, {
+    "name" : "INT_27",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_27"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100043
+  }, {
+    "name" : "INT_27_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.INT_27"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100044
+  }, {
+    "name" : "BIGINT_28",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_28"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100045
+  }, {
+    "name" : "BIGINT_28_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_28"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100046
+  }, {
+    "name" : "BIGINT_29",
+    "function" : {
+      "expression" : "SUM",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_29"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100047
+  }, {
+    "name" : "BIGINT_29_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "TEST_FACT_30_3W.BIGINT_29"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100048
+  } ],
+  "recommendations_count" : 0,
+  "computed_columns" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "TEST_FACT_30_3W" : {
+        "x" : 690.5555555555555,
+        "y" : 258.1666734483507,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null
+}

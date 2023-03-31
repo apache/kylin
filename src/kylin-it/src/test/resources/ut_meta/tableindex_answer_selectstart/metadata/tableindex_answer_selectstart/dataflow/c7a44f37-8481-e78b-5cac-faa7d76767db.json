@@ -1,0 +1,87 @@
+{
+  "uuid" : "c7a44f37-8481-e78b-5cac-faa7d76767db",
+  "last_modified" : 1664535264194,
+  "create_time" : 1664533572952,
+  "version" : "4.0.0.0",
+  "status" : "ONLINE",
+  "last_status" : null,
+  "cost" : 50,
+  "query_hit_count" : 2,
+  "last_query_time" : 1664534845361,
+  "layout_query_hit_count" : {
+    "20000010001" : {
+      "1664467200000" : 2
+    }
+  },
+  "segments" : [ {
+    "id" : "87d65498-b922-225c-1db7-13de001beba8",
+    "name" : "FULL_BUILD",
+    "create_time_utc" : 1664533681635,
+    "status" : "READY",
+    "segRange" : {
+      "@class" : "org.apache.kylin.metadata.model.SegmentRange$TimePartitionedSegmentRange",
+      "date_range_start" : 0,
+      "date_range_end" : 9223372036854775807
+    },
+    "timeRange" : null,
+    "dimension_range_info_map" : {
+      "0" : {
+        "min" : "0",
+        "max" : "9999"
+      },
+      "1" : {
+        "min" : "0",
+        "max" : "175750"
+      },
+      "2" : {
+        "min" : "0",
+        "max" : "211"
+      },
+      "3" : {
+        "min" : "0",
+        "max" : "999"
+      },
+      "4" : {
+        "min" : "0",
+        "max" : "4999"
+      },
+      "5" : {
+        "min" : "2012-01-01",
+        "max" : "2014-01-01"
+      },
+      "6" : {
+        "min" : "ABIN",
+        "max" : "Others"
+      }
+    },
+    "parameters" : null,
+    "dictionaries" : null,
+    "snapshots" : null,
+    "last_build_time" : 1664534384336,
+    "source_count" : 10000,
+    "source_bytes_size" : 1093073,
+    "column_source_bytes" : {
+      "DEFAULT.TEST_KYLIN_FACT.PRICE" : 78870,
+      "DEFAULT.TEST_KYLIN_FACT.LEAF_CATEG_ID" : 50040,
+      "DEFAULT.TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP" : 69010,
+      "DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID" : 12510,
+      "DEFAULT.TEST_KYLIN_FACT.LSTG_FORMAT_NAME" : 65900,
+      "DEFAULT.TEST_KYLIN_FACT.TRANS_ID" : 28900,
+      "DEFAULT.TEST_KYLIN_FACT.SELLER_ID" : 80000,
+      "DEFAULT.TEST_KYLIN_FACT.IS_EFFECTUAL" : 0,
+      "DEFAULT.TEST_KYLIN_FACT.ORDER_ID" : 37540,
+      "DEFAULT.TEST_KYLIN_FACT.ITEM_COUNT" : 28860,
+      "DEFAULT.TEST_KYLIN_FACT.SLR_SEGMENT_CD" : 20150,
+      "DEFAULT.TEST_KYLIN_FACT.CAL_DT" : 100000
+    },
+    "ori_snapshot_size" : { },
+    "additionalInfo" : { },
+    "is_realtime_segment" : false,
+    "is_snapshot_ready" : false,
+    "is_dict_ready" : true,
+    "is_flat_table_ready" : true,
+    "is_fact_view_ready" : false,
+    "multi_partitions" : [ ],
+    "max_bucket_id" : -1
+  } ]
+}

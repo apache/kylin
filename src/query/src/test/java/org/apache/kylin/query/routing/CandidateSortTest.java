@@ -33,6 +33,7 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.QueryableSeg;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.junit.Assert;
 import org.junit.Test;
@@ -187,13 +188,12 @@ public class CandidateSortTest {
         return new IRealization() {
             @Override
             public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-                    Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
+                    Map<String, Set<Long>> chSegToLayoutsMap) {
                 return null;
             }
 
             @Override
-            public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-                    List<NDataSegment> prunedStreamingSegments, Map<String, Set<Long>> secondStorageSegmentLayoutMap) {
+            public CapabilityResult isCapable(SQLDigest digest, QueryableSeg queryableSeg) {
                 return null;
             }
 
@@ -241,7 +241,7 @@ public class CandidateSortTest {
             }
 
             @Override
-            public boolean isReady() {
+            public boolean isOnline() {
                 return true;
             }
 

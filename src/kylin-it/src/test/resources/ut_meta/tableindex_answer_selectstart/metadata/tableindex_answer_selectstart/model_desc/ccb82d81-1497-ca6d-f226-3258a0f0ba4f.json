@@ -1,0 +1,342 @@
+{
+  "uuid" : "ccb82d81-1497-ca6d-f226-3258a0f0ba4f",
+  "last_modified" : 1664530743516,
+  "create_time" : 1664530454079,
+  "version" : "4.0.0.0",
+  "alias" : "kylin_sales_model",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "DEFAULT.KYLIN_SALES",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 1,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "LSTG_SITE_ID",
+    "column" : "KYLIN_SALES.LSTG_SITE_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 1,
+    "name" : "OPS_USER_ID",
+    "column" : "KYLIN_SALES.OPS_USER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 2,
+    "name" : "VARCHAR_INT",
+    "column" : "KYLIN_SALES.VARCHAR_INT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 3,
+    "name" : "PRICE",
+    "column" : "KYLIN_SALES.PRICE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "LEAF_CATEG_ID",
+    "column" : "KYLIN_SALES.LEAF_CATEG_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 5,
+    "name" : "VARCHAR_DOUBLE",
+    "column" : "KYLIN_SALES.VARCHAR_DOUBLE",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 6,
+    "name" : "ITEM_COUNT",
+    "column" : "KYLIN_SALES.ITEM_COUNT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 7,
+    "name" : "PART_DT",
+    "column" : "KYLIN_SALES.PART_DT",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 8,
+    "name" : "BUYER_ID",
+    "column" : "KYLIN_SALES.BUYER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 9,
+    "name" : "SELLER_ID",
+    "column" : "KYLIN_SALES.SELLER_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 10,
+    "name" : "TRANS_ID",
+    "column" : "KYLIN_SALES.TRANS_ID",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "VARCHAR_DECIMAL",
+    "column" : "KYLIN_SALES.VARCHAR_DECIMAL",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 12,
+    "name" : "LSTG_FORMAT_NAME",
+    "column" : "KYLIN_SALES.LSTG_FORMAT_NAME",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 13,
+    "name" : "OPS_REGION",
+    "column" : "KYLIN_SALES.OPS_REGION",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "TRANS_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.TRANS_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "PART_DT_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.PART_DT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100002,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "LSTG_FORMAT_NAME_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.LSTG_FORMAT_NAME"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100003,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "LEAF_CATEG_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.LEAF_CATEG_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100004,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "LSTG_SITE_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.LSTG_SITE_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100005,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "PRICE_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.PRICE"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100006,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "ITEM_COUNT_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.ITEM_COUNT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100007,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "SELLER_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.SELLER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100008,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "BUYER_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.BUYER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100009,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "OPS_USER_ID_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.OPS_USER_ID"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100010,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "OPS_REGION_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.OPS_REGION"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100011,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "VARCHAR_INT_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.VARCHAR_INT"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100012,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "VARCHAR_DOUBLE_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.VARCHAR_DOUBLE"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100013,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "VARCHAR_DECIMAL_COUNT",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "KYLIN_SALES.VARCHAR_DECIMAL"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100014,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "computed_columns" : [ ],
+  "canvas" : {
+    "coordinate" : {
+      "KYLIN_SALES" : {
+        "x" : 563.7222290039062,
+        "y" : 213.77777099609375,
+        "width" : 220.0,
+        "height" : 200.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null
+}
