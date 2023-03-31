@@ -33,7 +33,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class QueryReCutContextStrategy implements ICutContextStrategy {
+public class ContextReCutStrategy implements ICutContextStrategy {
 
     private CutContextImplementor reCutter;
 

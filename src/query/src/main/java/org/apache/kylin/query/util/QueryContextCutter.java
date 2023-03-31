@@ -55,8 +55,8 @@ public class QueryContextCutter {
      * @return The cut OLAPContext with selected realizations, which is a subset of OLAPContext.getThreadLocalContexts().
      */
     public static List<OLAPContext> selectRealization(RelNode root, boolean isReCutBanned) {
-        FirstRoundContextCutStrategy firstRoundStrategy = new FirstRoundContextCutStrategy();
-        QueryReCutContextStrategy reCutStrategy = new QueryReCutContextStrategy();
+        ContextInitialCutStrategy firstRoundStrategy = new ContextInitialCutStrategy();
+        ContextReCutStrategy reCutStrategy = new ContextReCutStrategy();
 
         QueryContextCutter.cutContext(firstRoundStrategy, (KapRel) root.getInput(0), root);
         int retryCutTimes = 0;
@@ -120,7 +120,7 @@ public class QueryContextCutter {
         if (strategy.needCutOff(rootOfSubCtxTree)) {
             strategy.cutOffContext(rootOfSubCtxTree, queryRoot);
         }
-        if (strategy instanceof FirstRoundContextCutStrategy) {
+        if (strategy instanceof ContextInitialCutStrategy) {
             ContextUtil.dumpCalcitePlan("EXECUTION PLAN AFTER OLAPCONTEXT IS SET IN FIRST ROUND", queryRoot, log);
         } else {
             ContextUtil.dumpCalcitePlan("EXECUTION PLAN AFTER OLAPCONTEXT IS RE-CUT OFF ", queryRoot, log);

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.metadata.cube.realization;
+package org.apache.kylin.metadata.realization;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -37,10 +37,6 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.QueryableSeg;
-import org.apache.kylin.metadata.realization.SQLDigest;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -86,7 +82,7 @@ public class HybridRealization implements IRealization {
             columns.addAll(realization.getAllColumns());
             dimensions.addAll(realization.getAllDimensions());
             allMeasures.addAll(realization.getMeasures());
-            if (realization.isReady())
+            if (realization.isOnline())
                 isReady = true;
 
             if (dateRangeStart == 0 || realization.getDateRangeStart() < dateRangeStart)
@@ -253,7 +249,7 @@ public class HybridRealization implements IRealization {
     }
 
     @Override
-    public boolean isReady() {
+    public boolean isOnline() {
         return isReady;
     }
 

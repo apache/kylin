@@ -21,9 +21,9 @@ package org.apache.kylin.query.util;
 import java.util.List;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.kylin.query.relnode.KapRel;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPRel;
-import org.apache.kylin.query.relnode.KapRel;
 
 public interface ICutContextStrategy {
 

@@ -78,7 +78,6 @@ import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
-import org.apache.kylin.metadata.cube.realization.HybridRealization;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -96,6 +95,7 @@ import org.apache.kylin.metadata.model.graph.JoinsGraph;
 import org.apache.kylin.metadata.project.NProjectLoader;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.HybridRealization;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
@@ -335,7 +335,7 @@ public class RealizationChooser {
 
     public static Candidate selectRealization(OLAPContext olapContext, IRealization realization,
             Map<String, String> matchedJoinGraphAliasMap) {
-        if (!realization.isReady()) {
+        if (!realization.isOnline()) {
             logger.warn("Realization {} is not ready", realization);
             return null;
         }
@@ -732,7 +732,7 @@ public class RealizationChooser {
         boolean streamingEnabled = kylinConfig.streamingEnabled();
         for (IRealization real : realizations) {
             boolean skip = false;
-            if (!real.isReady()) {
+            if (!real.isOnline()) {
                 skip = true;
                 logger.warn("Offline model({}/{}) with fact table {} cannot be queried.", project, real, factTable);
             } else if (isModelViewBounded(context, real)) {
@@ -764,12 +764,5 @@ public class RealizationChooser {
 
     private static boolean omitFusionModel(boolean turnOnStreaming, IRealization real) {
         return !turnOnStreaming && real.getModel().isFusionModel();
-    }
-
-    public static Map<String, String> matchJoins(NDataModel model, OLAPContext ctx) {
-        KylinConfig projectConfig = NProjectManager.getProjectConfig(ctx.olapSchema.getProjectName());
-        boolean isPartialInnerJoin = projectConfig.isQueryMatchPartialInnerJoinModel();
-        boolean isPartialNonEquiJoin = projectConfig.partialMatchNonEquiJoins();
-        return matchJoins(model, ctx, isPartialInnerJoin, isPartialNonEquiJoin);
     }
 }

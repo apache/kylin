@@ -32,13 +32,12 @@ import java.util.stream.Collectors;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import lombok.val;
 import lombok.var;
@@ -246,11 +245,9 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
 
     public Segments<T> getBuildingSegments() {
         Segments<T> buildingSegments = new Segments();
-        if (null != this) {
-            for (T segment : this) {
-                if (SegmentStatusEnum.NEW == segment.getStatus()) {
-                    buildingSegments.add(segment);
-                }
+        for (T segment : this) {
+            if (SegmentStatusEnum.NEW == segment.getStatus()) {
+                buildingSegments.add(segment);
             }
         }
         return buildingSegments;

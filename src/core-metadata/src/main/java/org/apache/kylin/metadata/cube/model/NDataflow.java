@@ -301,7 +301,7 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
     }
 
     @Override
-    public boolean isReady() {
+    public boolean isOnline() {
         return getStatus() == RealizationStatusEnum.ONLINE;
     }
 
@@ -579,7 +579,7 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
     }
 
     public boolean hasReadySegments() {
-        return isReady() && CollectionUtils.isNotEmpty(getQueryableSegments());
+        return isOnline() && CollectionUtils.isNotEmpty(getQueryableSegments());
     }
 
     public void initAllSegLayoutInfo() {

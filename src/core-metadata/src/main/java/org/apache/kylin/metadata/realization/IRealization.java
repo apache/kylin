@@ -61,7 +61,7 @@ public interface IRealization extends IStorageAware {
 
     String getProject();
 
-    boolean isReady();
+    boolean isOnline();
 
     String getUuid();
 
