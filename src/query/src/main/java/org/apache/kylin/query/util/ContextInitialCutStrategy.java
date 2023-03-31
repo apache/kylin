@@ -30,7 +30,7 @@ import org.apache.kylin.query.relnode.OLAPRel;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class FirstRoundContextCutStrategy implements ICutContextStrategy {
+public class ContextInitialCutStrategy implements ICutContextStrategy {
 
     @Override
     public List<OLAPRel> cutOffContext(OLAPRel rootRel, RelNode parentOfRoot) {

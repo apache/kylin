@@ -21,9 +21,6 @@ package org.apache.kylin.query.routing;
 import java.util.List;
 
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.query.routing.rules.PartitionPruningRule;
-import org.apache.kylin.query.routing.rules.RemoveUncapableRealizationsRule;
-import org.apache.kylin.query.routing.rules.SegmentPruningRule;
 
 /**
  * @author xjiang
@@ -38,7 +35,7 @@ public class QueryRouter {
     static {
         LAYOUT_CHOOSING_RULES.add(new SegmentPruningRule());
         LAYOUT_CHOOSING_RULES.add(new PartitionPruningRule());
-        LAYOUT_CHOOSING_RULES.add(new RemoveUncapableRealizationsRule());
+        LAYOUT_CHOOSING_RULES.add(new RemoveIncapableRealizationsRule());
     }
 
     public static void applyRules(Candidate candidate) {
@@ -46,4 +43,5 @@ public class QueryRouter {
             rule.apply(candidate);
         }
     }
+
 }

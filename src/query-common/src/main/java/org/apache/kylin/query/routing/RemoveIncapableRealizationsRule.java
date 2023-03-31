@@ -16,13 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.query.routing.rules;
+package org.apache.kylin.query.routing;
 
 import org.apache.kylin.guava30.shaded.common.collect.BiMap;
 import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
 import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.query.routing.Candidate;
-import org.apache.kylin.query.routing.RoutingRule;
 import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.query.util.QueryAliasMatchInfo;
 
@@ -31,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  */
 @Slf4j
-public class RemoveUncapableRealizationsRule extends RoutingRule {
+public class RemoveIncapableRealizationsRule extends RoutingRule {
     @Override
     public void apply(Candidate candidate) {
         if (candidate.getCapability() != null) {

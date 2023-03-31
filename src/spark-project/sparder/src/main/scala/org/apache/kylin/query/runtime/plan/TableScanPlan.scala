@@ -17,6 +17,9 @@
  */
 package org.apache.kylin.query.runtime.plan
 
+import java.util.concurrent.ConcurrentHashMap
+import java.{lang, util}
+
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
 import org.apache.kylin.engine.spark.utils.{LogEx, LogUtils}
 import org.apache.kylin.guava30.shaded.common.base.Joiner
@@ -24,22 +27,19 @@ import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate
 import org.apache.kylin.metadata.cube.gridtable.NLayoutToGridTableMapping
 import org.apache.kylin.metadata.cube.model.{LayoutEntity, NDataSegment, NDataflow}
-import org.apache.kylin.metadata.cube.realization.HybridRealization
 import org.apache.kylin.metadata.model._
-import org.apache.kylin.metadata.realization.IRealization
+import org.apache.kylin.metadata.realization.{HybridRealization, IRealization}
 import org.apache.kylin.metadata.tuple.TupleInfo
 import org.apache.kylin.query.implicits.sessionToQueryContext
 import org.apache.kylin.query.relnode.{KapRel, OLAPContext}
 import org.apache.kylin.query.util.{RuntimeHelper, SparderDerivedUtil}
-import org.apache.spark.sql.{Column, DataFrame, Row, SparderEnv, SparkOperation, SparkSession}
+import org.apache.spark.sql._
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.manager.SparderLookupManager
-import org.apache.spark.sql.types.{ArrayType, DataTypes, DoubleType, StringType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.util.SparderTypeUtil
 
-import java.util.concurrent.ConcurrentHashMap
-import java.{lang, util}
 import scala.collection.JavaConverters._
 
 

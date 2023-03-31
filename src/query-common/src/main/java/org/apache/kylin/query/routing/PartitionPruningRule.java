@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.query.routing.rules;
+package org.apache.kylin.query.routing;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -49,8 +49,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPTableScan;
-import org.apache.kylin.query.routing.Candidate;
-import org.apache.kylin.query.routing.RoutingRule;
 import org.apache.kylin.query.util.RexUtils;
 
 import lombok.extern.slf4j.Slf4j;

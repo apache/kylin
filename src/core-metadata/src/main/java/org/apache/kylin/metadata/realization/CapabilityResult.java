@@ -21,11 +21,10 @@ package org.apache.kylin.metadata.realization;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -35,7 +34,9 @@ public class CapabilityResult {
     /**
      * Is capable or not
      */
-    public boolean capable = false;
+    @Getter
+    @Setter
+    private boolean capable = false;
 
     /**
      * selected capable candidate, like Lookup or layout
@@ -68,7 +69,7 @@ public class CapabilityResult {
      */
     public List<CapabilityInfluence> influences = Lists.newArrayListWithCapacity(1);
 
-    public static interface CapabilityInfluence {
+    public interface CapabilityInfluence {
         /**
          * Suggest a multiplier to influence query cost
          */
@@ -100,11 +101,20 @@ public class CapabilityResult {
         }
     }
 
-    public static enum IncapableType {
-        UNMATCHED_DIMENSION, UNMATCHED_AGGREGATION, UNSUPPORT_MASSIN, UNSUPPORT_RAWQUERY, LIMIT_PRECEDE_AGGR, II_UNMATCHED_FACT_TABLE, TABLE_INDEX_MISSING_COLS, NOT_EXIST_SNAPSHOT
+    public enum IncapableType {
+        UNMATCHED_DIMENSION,
+
+        LIMIT_PRECEDE_AGGR,
+
+        TABLE_INDEX_MISSING_COLS,
+
+        NOT_EXIST_SNAPSHOT
     }
 
+    @Getter
+    @Setter
     public static class IncapableCause {
+
         private IncapableType incapableType;
         private Collection<TblColRef> unmatchedDimensions;
         private Collection<FunctionDesc> unmatchedAggregations;
@@ -116,41 +126,10 @@ public class CapabilityResult {
             return incapableCause;
         }
 
-        public static IncapableCause unmatchedAggregations(Collection<FunctionDesc> unmatchedAggregations) {
-            IncapableCause incapableCause = new IncapableCause();
-            incapableCause.setIncapableType(IncapableType.UNMATCHED_AGGREGATION);
-            incapableCause.setUnmatchedAggregations(unmatchedAggregations);
-            return incapableCause;
-        }
-
         public static IncapableCause create(IncapableType incapableType) {
             IncapableCause incapableCause = new IncapableCause();
             incapableCause.setIncapableType(incapableType);
             return incapableCause;
-        }
-
-        public IncapableType getIncapableType() {
-            return incapableType;
-        }
-
-        public void setIncapableType(IncapableType incapableType) {
-            this.incapableType = incapableType;
-        }
-
-        public Collection<TblColRef> getUnmatchedDimensions() {
-            return unmatchedDimensions;
-        }
-
-        public void setUnmatchedDimensions(Collection<TblColRef> unmatchedDimensions) {
-            this.unmatchedDimensions = unmatchedDimensions;
-        }
-
-        public Collection<FunctionDesc> getUnmatchedAggregations() {
-            return unmatchedAggregations;
-        }
-
-        public void setUnmatchedAggregations(Collection<FunctionDesc> unmatchedAggregations) {
-            this.unmatchedAggregations = unmatchedAggregations;
         }
     }
 }
