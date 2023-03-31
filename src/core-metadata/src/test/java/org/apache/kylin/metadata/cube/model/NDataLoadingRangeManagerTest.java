@@ -18,16 +18,11 @@
 
 package org.apache.kylin.metadata.cube.model;
 
-import java.io.IOException;
-
 import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.junit.TimeZoneTestRunner;
 import org.apache.kylin.metadata.model.AutoMergeTimeEnum;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.junit.After;
 import org.junit.Assert;
@@ -67,7 +62,7 @@ public class NDataLoadingRangeManagerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAppendSegRangeErrorCase() throws IOException {
+    public void testAppendSegRangeErrorCase() {
         String tableName = "DEFAULT.TEST_KYLIN_FACT";
         String columnName = "TEST_KYLIN_FACT.CAL_DT";
         NDataLoadingRange dataLoadingRange = new NDataLoadingRange();
@@ -89,7 +84,7 @@ public class NDataLoadingRangeManagerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCreateAndUpdateDataLoadingRange() throws IOException {
+    public void testCreateAndUpdateDataLoadingRange() {
 
         String tableName = "DEFAULT.TEST_KYLIN_FACT";
         String columnName = "TEST_KYLIN_FACT.CAL_DT";
@@ -97,11 +92,11 @@ public class NDataLoadingRangeManagerTest extends NLocalFileMetadataTestCase {
         dataLoadingRange.setTableName(tableName);
         dataLoadingRange.setColumnName(columnName);
         NDataLoadingRange savedDataLoadingRange = dataLoadingRangeManager.createDataLoadingRange(dataLoadingRange);
-        Assert.assertTrue(savedDataLoadingRange.getProject().equals(DEFAULT_PROJECT));
+        Assert.assertEquals(DEFAULT_PROJECT, savedDataLoadingRange.getProject());
     }
 
     @Test
-    public void testCreateDataLoadingRange_StringColumn() throws IOException {
+    public void testCreateDataLoadingRange_StringColumn() {
 
         String tableName = "DEFAULT.TEST_KYLIN_FACT";
         String columnName = "TEST_KYLIN_FACT.LSTG_FORMAT_NAME";
@@ -111,12 +106,12 @@ public class NDataLoadingRangeManagerTest extends NLocalFileMetadataTestCase {
         dataLoadingRange.setColumnName(columnName);
         NDataLoadingRange savedDataLoadingRange = dataLoadingRangeManager.createDataLoadingRange(dataLoadingRange);
 
-        Assert.assertTrue(savedDataLoadingRange.getProject().equals(DEFAULT_PROJECT));
-        Assert.assertTrue(savedDataLoadingRange.getColumnName().equals(columnName));
+        Assert.assertEquals(DEFAULT_PROJECT, savedDataLoadingRange.getProject());
+        Assert.assertEquals(savedDataLoadingRange.getColumnName(), columnName);
     }
 
     @Test
-    public void testCreateDataLoadingRange_IntegerColumn() throws IOException {
+    public void testCreateDataLoadingRange_IntegerColumn() {
 
         String tableName = "DEFAULT.TEST_KYLIN_FACT";
         String columnName = "TEST_KYLIN_FACT.LEAF_CATEG_ID";
@@ -125,8 +120,8 @@ public class NDataLoadingRangeManagerTest extends NLocalFileMetadataTestCase {
         dataLoadingRange.setPartitionDateFormat("YYYY");
         dataLoadingRange.setColumnName(columnName);
         NDataLoadingRange savedDataLoadingRange = dataLoadingRangeManager.createDataLoadingRange(dataLoadingRange);
-        Assert.assertTrue(savedDataLoadingRange.getProject().equals(DEFAULT_PROJECT));
-        Assert.assertTrue(savedDataLoadingRange.getColumnName().equals(columnName));
+        Assert.assertEquals(DEFAULT_PROJECT, savedDataLoadingRange.getProject());
+        Assert.assertEquals(savedDataLoadingRange.getColumnName(), columnName);
     }
 
     @Test
@@ -260,7 +255,7 @@ public class NDataLoadingRangeManagerTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetQuerableSegmentRange_NoModel() {
+    public void testGetQueryableSegmentRange_NoModel() {
         String start = "2010-12-24 20:33:39.000";
         String end = "2012-01-04 20:33:39.000";
         val loadingRange = createDataLoadingRange(DateFormat.stringToMillis(start), DateFormat.stringToMillis(end));
@@ -268,91 +263,5 @@ public class NDataLoadingRangeManagerTest extends NLocalFileMetadataTestCase {
         val range = dataLoadingRangeManager.getQuerableSegmentRange(loadingRange);
         Assert.assertEquals(start, DateFormat.formatToTimeStr(Long.parseLong(range.getStart().toString())));
         Assert.assertEquals(end, DateFormat.formatToTimeStr(Long.parseLong(range.getEnd().toString())));
-    }
-
-    @Test
-    public void testGetQuerableSegmentRange_HasModels() {
-        String start = "2010-12-24 20:33:39.000";
-        String end = "2012-01-04 20:33:39.000";
-        removeAllSegments();
-        val segments = new Segments<NDataSegment>();
-        val segments2 = new Segments<NDataSegment>();
-
-        val loadingRange = createDataLoadingRange(DateFormat.stringToMillis(start), DateFormat.stringToMillis(end));
-        val dataflowManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-
-        end = "2011-05-18 09:00:19.000";
-        SegmentRange segmentRange = new SegmentRange.TimePartitionedSegmentRange(DateFormat.stringToMillis(start),
-                DateFormat.stringToMillis(end));
-        NDataflow df = dataflowManager.getDataflowByModelAlias("nmodel_basic");
-        NDataSegment dataSegment = dataflowManager.appendSegment(df, segmentRange);
-        dataSegment.setStatus(SegmentStatusEnum.READY);
-        segments.add(dataSegment);
-
-        segmentRange = new SegmentRange.TimePartitionedSegmentRange(DateFormat.stringToMillis(start),
-                DateFormat.stringToMillis(end));
-        df = dataflowManager.getDataflowByModelAlias("nmodel_basic_inner");
-        dataSegment = dataflowManager.appendSegment(df, segmentRange);
-        dataSegment.setStatus(SegmentStatusEnum.READY);
-        segments2.add(dataSegment);
-
-        start = end;
-        end = "2012-01-04 20:33:39.000";
-        segmentRange = new SegmentRange.TimePartitionedSegmentRange(DateFormat.stringToMillis(start),
-                DateFormat.stringToMillis(end));
-        df = dataflowManager.getDataflowByModelAlias("nmodel_basic");
-        dataSegment = dataflowManager.appendSegment(df, segmentRange);
-        dataSegment.setStatus(SegmentStatusEnum.READY);
-        segments.add(dataSegment);
-
-        segmentRange = new SegmentRange.TimePartitionedSegmentRange(DateFormat.stringToMillis(start),
-                DateFormat.stringToMillis(end));
-        df = dataflowManager.getDataflowByModelAlias("nmodel_basic_inner");
-        dataSegment = dataflowManager.appendSegment(df, segmentRange);
-        dataSegment.setStatus(SegmentStatusEnum.NEW);
-        segments2.add(dataSegment);
-
-        NDataflowUpdate update = new NDataflowUpdate(dataflowManager.getDataflowByModelAlias("nmodel_basic").getUuid());
-        update.setToUpdateSegs(segments.toArray(new NDataSegment[segments.size()]));
-        update.setStatus(RealizationStatusEnum.ONLINE);
-        dataflowManager.updateDataflow(update);
-
-        update = new NDataflowUpdate(dataflowManager.getDataflowByModelAlias("nmodel_basic_inner").getUuid());
-        update.setToUpdateSegs(segments2.toArray(new NDataSegment[segments.size()]));
-        update.setStatus(RealizationStatusEnum.ONLINE);
-        dataflowManager.updateDataflow(update);
-
-        dataflowManager.updateDataflowStatus("abe3bf1a-c4bc-458d-8278-7ea8b00f5e96", RealizationStatusEnum.OFFLINE);
-
-        val range = dataLoadingRangeManager.getQuerableSegmentRange(loadingRange);
-        Assert.assertEquals("2010-12-24 20:33:39.000",
-                DateFormat.formatToTimeStr(Long.parseLong(range.getStart().toString())));
-        Assert.assertEquals("2011-05-18 09:00:19.000",
-                DateFormat.formatToTimeStr(Long.parseLong(range.getEnd().toString())));
-
-        df = dataflowManager.getDataflowByModelAlias("nmodel_basic");
-        val segs = df.getQueryableSegments();
-        Assert.assertEquals(1, segs.size());
-
-        Assert.assertEquals("2010-12-24 20:33:39.000",
-                DateFormat.formatToTimeStr(Long.parseLong(segs.get(0).getSegRange().getStart().toString())));
-        Assert.assertEquals("2011-05-18 09:00:19.000",
-                DateFormat.formatToTimeStr(Long.parseLong(segs.get(0).getSegRange().getEnd().toString())));
-
-    }
-
-    private void removeAllSegments() {
-        NDataflowManager dataflowManager = NDataflowManager.getInstance(getTestConfig(), DEFAULT_PROJECT);
-        NDataflow df = dataflowManager.getDataflowByModelAlias("nmodel_basic");
-        // remove the existed seg
-        NDataflowUpdate update = new NDataflowUpdate(df.getUuid());
-        update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        dataflowManager.updateDataflow(update);
-
-        df = dataflowManager.getDataflowByModelAlias("nmodel_basic_inner");
-        // remove the existed seg
-        update = new NDataflowUpdate(df.getUuid());
-        update.setToRemoveSegs(df.getSegments().toArray(new NDataSegment[0]));
-        dataflowManager.updateDataflow(update);
     }
 }

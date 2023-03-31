@@ -1,0 +1,88 @@
+{
+  "uuid" : "bb9fa337-ccb4-779f-613c-da300b1bc90d",
+  "last_modified" : 0,
+  "create_time" : 1664530330434,
+  "version" : "4.0.0.0",
+  "name" : "TEST_KYLIN_FACT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "TRANS_ID",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "trans_id"
+  }, {
+    "id" : "2",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "order_id"
+  }, {
+    "id" : "3",
+    "name" : "CAL_DT",
+    "datatype" : "date",
+    "case_sensitive_name" : "cal_dt"
+  }, {
+    "id" : "4",
+    "name" : "LSTG_FORMAT_NAME",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "lstg_format_name"
+  }, {
+    "id" : "5",
+    "name" : "LEAF_CATEG_ID",
+    "datatype" : "bigint",
+    "case_sensitive_name" : "leaf_categ_id"
+  }, {
+    "id" : "6",
+    "name" : "LSTG_SITE_ID",
+    "datatype" : "integer",
+    "case_sensitive_name" : "lstg_site_id"
+  }, {
+    "id" : "7",
+    "name" : "SLR_SEGMENT_CD",
+    "datatype" : "smallint",
+    "case_sensitive_name" : "slr_segment_cd"
+  }, {
+    "id" : "8",
+    "name" : "SELLER_ID",
+    "datatype" : "integer",
+    "case_sensitive_name" : "seller_id"
+  }, {
+    "id" : "9",
+    "name" : "PRICE",
+    "datatype" : "decimal(19,4)",
+    "case_sensitive_name" : "price"
+  }, {
+    "id" : "10",
+    "name" : "ITEM_COUNT",
+    "datatype" : "integer",
+    "case_sensitive_name" : "item_count"
+  }, {
+    "id" : "11",
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "datatype" : "varchar(4096)",
+    "case_sensitive_name" : "test_count_distinct_bitmap"
+  }, {
+    "id" : "12",
+    "name" : "IS_EFFECTUAL",
+    "datatype" : "boolean",
+    "case_sensitive_name" : "is_effectual"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "last_snapshot_size" : 0,
+  "snapshot_last_modified" : 0,
+  "query_hit_count" : 0,
+  "partition_column" : null,
+  "snapshot_partitions" : { },
+  "snapshot_partitions_info" : { },
+  "snapshot_total_rows" : 0,
+  "snapshot_partition_col" : null,
+  "selected_snapshot_partition_col" : null,
+  "temp_snapshot_path" : null,
+  "snapshot_has_broken" : false,
+  "database" : "DEFAULT",
+  "transactional" : false,
+  "rangePartition" : false,
+  "partition_desc" : null
+}

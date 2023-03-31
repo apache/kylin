@@ -17,16 +17,18 @@
  */
 package io.kyligence.kap.secondstorage
 
-import io.kyligence.kap.secondstorage.enums.LockTypeEnum
+import java.lang.reflect.InvocationTargetException
+import java.util.ArrayList
+
 import org.apache.kylin.common.{ForceToTieredStorage, QueryContext}
 import org.apache.kylin.metadata.cube.model.NDataflow
 import org.apache.kylin.metadata.model.NDataModel
 import org.apache.spark.sql.common.{LocalMetadata, SparderBaseFunSuite}
 import org.mockito.Mockito
 
-import java.lang.reflect.InvocationTargetException
-import java.util.ArrayList
 import scala.reflect.runtime.{universe => ru}
+
+import io.kyligence.kap.secondstorage.enums.LockTypeEnum
 
 class SecondStorageTest extends SparderBaseFunSuite with LocalMetadata {
 

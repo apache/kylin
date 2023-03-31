@@ -18,10 +18,12 @@
 
 package org.apache.kylin.engine.spark.job
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists
+import java.util
+
 import org.apache.kylin.common.util.TestUtils.getTestConfig
 import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.engine.spark.job.stage.BuildParam
+import org.apache.kylin.guava30.shaded.common.collect.Lists
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.model.{NTableMetadataManager, SegmentRange, TableDesc, TableExtDesc}
 import org.apache.spark.sql.SaveMode
@@ -31,7 +33,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.mockito.Mockito
 import org.scalatest.PrivateMethodTester
 
-import java.util
 import scala.collection.JavaConverters._
 
 class TestRDSegmentBuildExec extends SparderBaseFunSuite with PrivateMethodTester

@@ -17,19 +17,19 @@
  */
 package org.apache.kylin.engine.spark.builder
 
+import java.text.SimpleDateFormat
+import java.util.{Locale, TimeZone}
+
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
 import org.apache.kylin.engine.spark.job.DFChooser
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory
 import org.apache.kylin.metadata.cube.model._
-import org.apache.kylin.metadata.model.{NDataModel, NDataModelManager}
-import org.apache.kylin.metadata.model.SegmentRange
+import org.apache.kylin.metadata.model.{NDataModel, NDataModelManager, SegmentRange}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.{Dataset, Row}
 import org.junit.Assert
 
-import java.text.SimpleDateFormat
-import java.util.{Locale, TimeZone}
 import scala.collection.JavaConverters._
 
 // scalastyle:off

@@ -18,18 +18,18 @@
 package org.apache.kylin.engine.spark.builder
 
 import java.util
-import org.apache.kylin.guava30.shaded.common.collect.Lists.newArrayList
-import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
+
+import org.apache.commons.lang3.StringUtils
+import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
 import org.apache.kylin.engine.spark.job.{CuboidAggregator, UdfManager}
+import org.apache.kylin.guava30.shaded.common.collect.Lists.newArrayList
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Sets}
 import org.apache.kylin.metadata.cube.cuboid.NSpanningTreeFactory
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager.NIndexPlanUpdater
 import org.apache.kylin.metadata.cube.model._
 import org.apache.kylin.metadata.model.NDataModel.Measure
-import org.apache.kylin.metadata.model.{ManagementType, NDataModel, NDataModelManager}
-import org.apache.commons.lang3.StringUtils
-import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.metadata.model.{FunctionDesc, ParameterDesc, SegmentRange, TblColRef}
+import org.apache.kylin.metadata.model.{FunctionDesc, ManagementType, NDataModel, NDataModelManager, ParameterDesc, SegmentRange, TblColRef}
 import org.apache.spark.dict.{NGlobalDictBuilderAssist, NGlobalDictionaryV2}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.{Dataset, Row}
