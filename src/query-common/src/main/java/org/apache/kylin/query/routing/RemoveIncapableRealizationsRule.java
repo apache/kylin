@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  */
 @Slf4j
-public class RemoveIncapableRealizationsRule extends RoutingRule {
+public class RemoveIncapableRealizationsRule extends PruningRule {
     @Override
     public void apply(Candidate candidate) {
         if (candidate.getCapability() != null) {

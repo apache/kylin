@@ -19,12 +19,15 @@
 package org.apache.kylin.query.routing;
 
 /**
+ * The pruning rule is responsible for matching the indexes that can be used for querying. 
+ * Classes extend this class do not have any attributes and only needs to implement 
+ * the {@link PruningRule#apply(Candidate)} method.
  */
-public abstract class RoutingRule {
+public abstract class PruningRule {
 
     @Override
     public String toString() {
-        return this.getClass().toString();
+        return this.getClass().getName();
     }
 
     public abstract void apply(Candidate candidate);

@@ -54,7 +54,7 @@ import org.apache.kylin.query.util.RexUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PartitionPruningRule extends RoutingRule {
+public class PartitionPruningRule extends PruningRule {
 
     private static final String NEED_PUSH_DOWN = "NULL";
 
