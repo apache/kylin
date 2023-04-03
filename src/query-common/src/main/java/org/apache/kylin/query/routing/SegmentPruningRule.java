@@ -74,7 +74,7 @@ import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SegmentPruningRule extends RoutingRule {
+public class SegmentPruningRule extends PruningRule {
 
     private static final TimeZone UTC_ZONE = TimeZone.getTimeZone("UTC");
 

@@ -19,12 +19,15 @@
 package org.apache.kylin.query.routing;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Ordering;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -135,8 +138,14 @@ public class CandidateSortTest {
     }
 
     private SortedCandidate sort(Candidate... candidates) {
+        List<Comparator<Candidate>> sorters = Lists.newArrayList();
+        sorters.add(Candidate.modelPrioritySorter());
+        sorters.add(Candidate.realizationCostSorter());
+        sorters.add(Candidate.realizationCapabilityCostSorter());
+        sorters.add(Candidate.modelUuidSorter());
+
         return candidate -> {
-            Arrays.sort(candidates, Candidate.COMPARATOR);
+            Arrays.sort(candidates, Ordering.compound(sorters));
             Assert.assertEquals(candidate.getRealization().getModel().getAlias(),
                     candidates[0].getRealization().getModel().getAlias());
         };

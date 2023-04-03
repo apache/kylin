@@ -29,6 +29,9 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
@@ -44,10 +47,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,7 +84,7 @@ public class AggIndexMatcher extends IndexMatcher {
     }
 
     @Override
-    MatchResult match(LayoutEntity layout) {
+    public MatchResult match(LayoutEntity layout) {
         if (canSkipIndexMatch(layout.getIndex()) || !isValid()) {
             return new MatchResult();
         }

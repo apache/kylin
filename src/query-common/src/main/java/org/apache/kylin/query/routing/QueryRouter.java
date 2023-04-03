@@ -18,30 +18,69 @@
 
 package org.apache.kylin.query.routing;
 
+import java.util.Comparator;
 import java.util.List;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Ordering;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.query.relnode.OLAPContext;
 
-/**
- * @author xjiang
- */
+import lombok.Getter;
+
 public class QueryRouter {
 
     private QueryRouter() {
     }
 
-    private static final List<RoutingRule> LAYOUT_CHOOSING_RULES = Lists.newLinkedList();
-
-    static {
-        LAYOUT_CHOOSING_RULES.add(new SegmentPruningRule());
-        LAYOUT_CHOOSING_RULES.add(new PartitionPruningRule());
-        LAYOUT_CHOOSING_RULES.add(new RemoveIncapableRealizationsRule());
-    }
-
     public static void applyRules(Candidate candidate) {
-        for (RoutingRule rule : LAYOUT_CHOOSING_RULES) {
-            rule.apply(candidate);
+        Strategy pruningStrategy = getStrategy(candidate.getCtx());
+        for (PruningRule r : pruningStrategy.getRules()) {
+            r.apply(candidate);
         }
     }
 
+    public static void sortCandidates(OLAPContext context, List<Candidate> candidates) {
+        Strategy strategy = getStrategy(context);
+        candidates.sort(strategy.getSorter());
+    }
+
+    private static Strategy getStrategy(OLAPContext context) {
+        String project = context.olapSchema.getProjectName();
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(project);
+        return new Strategy(projectConfig);
+    }
+
+    public static class Strategy {
+        private static final PruningRule SEGMENT_PRUNING = new SegmentPruningRule();
+        private static final PruningRule PARTITION_PRUNING = new PartitionPruningRule();
+        private static final PruningRule REMOVE_INCAPABLE_REALIZATIONS = new RemoveIncapableRealizationsRule();
+
+        @Getter
+        List<PruningRule> rules = Lists.newArrayList();
+
+        private final List<Comparator<Candidate>> sorters = Lists.newArrayList();
+
+        public Comparator<Candidate> getSorter() {
+            return Ordering.compound(sorters);
+        }
+
+        public Strategy(KylinConfig config) {
+
+            // add all rules
+            rules.add(SEGMENT_PRUNING);
+            rules.add(PARTITION_PRUNING);
+            rules.add(REMOVE_INCAPABLE_REALIZATIONS);
+
+            // add all sorters
+            if (config.useTableIndexAnswerSelectStarEnabled()) {
+                sorters.add(Candidate.tableIndexUnmatchedColSizeSorter());
+            }
+            sorters.add(Candidate.modelPrioritySorter());
+            sorters.add(Candidate.realizationCostSorter());
+            sorters.add(Candidate.realizationCapabilityCostSorter());
+            sorters.add(Candidate.modelUuidSorter());
+        }
+    }
 }

@@ -227,7 +227,7 @@ public class RealizationChooser {
         }
 
         // Step 3. find the lowest-cost candidate
-        sortCandidate(context, candidates);
+        QueryRouter.sortCandidates(context, candidates);
         logger.trace("Cost Sorted Realizations {}", candidates);
         Candidate candidate = candidates.get(0);
         restoreOLAPContextProps(context, candidate.getRewrittenCtx());
@@ -284,15 +284,6 @@ public class RealizationChooser {
             }
         }
         return candidates;
-    }
-
-    private static void sortCandidate(OLAPContext context, List<Candidate> candidates) {
-        KylinConfig projectConfig = NProjectManager.getProjectConfig(context.olapSchema.getProjectName());
-        if (projectConfig.useTableIndexAnswerSelectStarEnabled() && context.getSQLDigest().isRawQuery) {
-            candidates.sort(Candidate.COMPARATOR_TABLE_INDEX);
-        } else {
-            candidates.sort(Candidate.COMPARATOR);
-        }
     }
 
     private static void checkNoRealizationWithStreaming(OLAPContext context) {
