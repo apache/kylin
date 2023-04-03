@@ -43,8 +43,10 @@ import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.shaded.com.google.common.base.Strings;
@@ -73,6 +75,8 @@ public class KylinConfig extends KylinConfigBase {
     // thread-local instances, will override SYS_ENV_INSTANCE
     private static transient InternalThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new InternalThreadLocal<>();
 
+    public static final Set<String> BLACK_LIST = new HashSet<>();
+
     static {
         /*
          * Make Calcite to work with Unicode.
@@ -92,6 +96,7 @@ public class KylinConfig extends KylinConfigBase {
         System.setProperty("saffron.default.nationalcharset", NATIVE_UTF16_CHARSET_NAME);
         System.setProperty("saffron.default.collation.name", NATIVE_UTF16_CHARSET_NAME + "$en_US");
 
+        BLACK_LIST.add("kylin.metadata.url");
     }
 
     public static File getKylinHomeAtBestEffort() {
@@ -540,7 +545,7 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public String exportAllToString() {
-        final Properties allProps = getProperties(null);
+        final Properties allProps = getAllProperties();
         final OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
 
         for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
@@ -559,7 +564,9 @@ public class KylinConfig extends KylinConfigBase {
 
         final StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
-            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+            if (BLACK_LIST.contains(entry.getKey()) == false) {
+                sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+            }
         }
         return sb.toString();
 
