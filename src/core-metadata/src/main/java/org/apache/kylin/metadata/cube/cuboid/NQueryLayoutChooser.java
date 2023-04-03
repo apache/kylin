@@ -18,7 +18,6 @@
 
 package org.apache.kylin.metadata.cube.cuboid;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -31,28 +30,23 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.SegmentOnlineMode;
-import org.apache.kylin.common.exception.KylinTimeoutException;
-import org.apache.kylin.metadata.cube.model.IndexEntity;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Ordering;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
-import org.apache.kylin.metadata.model.AntiFlatChecker;
-import org.apache.kylin.metadata.model.ColExcludedChecker;
 import org.apache.kylin.metadata.model.DeriveInfo;
-import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.query.util.QueryInterruptChecker;
 
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Ordering;
-
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.val;
 import lombok.var;
 import lombok.extern.slf4j.Slf4j;
@@ -91,85 +85,61 @@ public class NQueryLayoutChooser {
             return NLayoutCandidate.EMPTY;
         }
 
-        String project = dataflow.getProject();
-        NDataModel model = dataflow.getModel();
-        KylinConfig projectConfig = NProjectManager.getProjectConfig(project);
-        ChooserContext chooserContext = new ChooserContext(model);
-        ColExcludedChecker excludedChecker = new ColExcludedChecker(projectConfig, project, model);
-        if (log.isDebugEnabled()) {
-            log.debug("When matching layouts, all deduced excluded columns are: {}",
-                    excludedChecker.getExcludedColNames());
-        }
-        AntiFlatChecker antiFlatChecker = new AntiFlatChecker(model.getJoinTables(), model);
-        if (log.isDebugEnabled()) {
-            log.debug("When matching layouts, all deduced anti-flatten lookup tables are: {}",
-                    antiFlatChecker.getAntiFlattenLookups());
-        }
-
-        AggIndexMatcher aggIndexMatcher = new AggIndexMatcher(sqlDigest, chooserContext, dataflow, excludedChecker,
-                antiFlatChecker);
-        TableIndexMatcher tableIndexMatcher = new TableIndexMatcher(sqlDigest, chooserContext, dataflow,
-                excludedChecker, antiFlatChecker);
-
-        // bail out if both agg index are invalid
-        //  matcher may be caused by
-        // 1. cc col is not present in the model
-        // 2. dynamic params ? present in query like select sum(col/?) from ...,
-        //    see org.apache.kylin.query.DynamicQueryTest.testDynamicParamOnAgg
-        if (!aggIndexMatcher.isValid() && !tableIndexMatcher.isValid()) {
+        ChooserContext chooserContext = new ChooserContext(sqlDigest, dataflow);
+        if (chooserContext.isIndexMatchersInvalid()) {
             return null;
         }
 
-        IndexPlan indexPlan = dataflow.getIndexPlan();
-        List<NLayoutCandidate> candidates = new ArrayList<>();
-        Collection<NDataLayout> commonLayouts = getLayoutsFromSegments(prunedSegments, dataflow, chSegmentToLayoutsMap);
+        Collection<NDataLayout> commonLayouts = getCommonLayouts(prunedSegments, dataflow, chSegmentToLayoutsMap);
         log.info("Matching dataflow with seg num: {} layout num: {}", prunedSegments.size(), commonLayouts.size());
-        for (NDataLayout dataLayout : commonLayouts) {
-            log.trace("Matching layout {}", dataLayout);
-            IndexEntity indexEntity = indexPlan.getIndexEntity(dataLayout.getIndexId());
-            log.trace("Matching indexEntity {}", indexEntity);
+        Map<Long, List<NDataLayout>> commonLayoutsMap = commonLayouts.stream()
+                .collect(Collectors.toMap(NDataLayout::getLayoutId, Lists::newArrayList));
+        List<NLayoutCandidate> candidates = collectAllLayoutCandidates(dataflow, chooserContext, commonLayoutsMap);
 
-            LayoutEntity layout = indexPlan.getLayoutEntity(dataLayout.getLayoutId());
-            NLayoutCandidate candidate = new NLayoutCandidate(layout);
-            IndexMatcher.MatchResult matchResult = tableIndexMatcher.match(layout);
-            double influenceFactor = 1.0;
+        QueryInterruptChecker.checkThreadInterrupted("Interrupted exception occurs.",
+                "Current step involves gathering all the layouts that "
+                        + "can potentially provide a response to this query.");
+
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        log.info("Matched candidates num : {}", candidates.size());
+        sortCandidates(candidates, chooserContext, sqlDigest);
+        return candidates.get(0);
+    }
+
+    public static List<NLayoutCandidate> collectAllLayoutCandidates(NDataflow dataflow, ChooserContext chooserContext,
+            Map<Long, List<NDataLayout>> commonLayoutsMap) {
+        List<NLayoutCandidate> candidates = Lists.newArrayList();
+        for (Map.Entry<Long, List<NDataLayout>> entry : commonLayoutsMap.entrySet()) {
+            LayoutEntity layout = dataflow.getIndexPlan().getLayoutEntity(entry.getKey());
+            log.trace("Matching index: id = {}", entry.getKey());
+            IndexMatcher.MatchResult matchResult = chooserContext.getTableIndexMatcher().match(layout);
             if (!matchResult.isMatched()) {
-                matchResult = aggIndexMatcher.match(layout);
-            } else if (projectConfig.useTableIndexAnswerSelectStarEnabled()) {
-                influenceFactor += tableIndexMatcher.getLayoutUnmatchedColsSize();
-                candidate.setLayoutUnmatchedColsSize(tableIndexMatcher.getLayoutUnmatchedColsSize());
+                matchResult = chooserContext.getAggIndexMatcher().match(layout);
             }
+
             if (!matchResult.isMatched()) {
                 log.trace("Matching failed");
                 continue;
             }
 
-            CapabilityResult tempResult = new CapabilityResult();
-            tempResult.influences = matchResult.getInfluences();
-            candidate.setCost(dataLayout.getRows() * (tempResult.influences.size() + influenceFactor));
+            NLayoutCandidate candidate = new NLayoutCandidate(layout);
+            CapabilityResult tempResult = new CapabilityResult(matchResult);
             if (!matchResult.getNeedDerive().isEmpty()) {
                 candidate.setDerivedToHostMap(matchResult.getNeedDerive());
                 candidate.setDerivedTableSnapshots(candidate.getDerivedToHostMap().keySet().stream()
                         .map(i -> chooserContext.convertToRef(i).getTable()).collect(Collectors.toSet()));
             }
+            long allRows = entry.getValue().stream().mapToLong(NDataLayout::getRows).sum();
+            candidate.setCost(allRows * (tempResult.influences.size() + matchResult.getInfluenceFactor()));
             candidate.setCapabilityResult(tempResult);
             candidates.add(candidate);
         }
-
-        if (Thread.interrupted()) {
-            throw new KylinTimeoutException("The query exceeds the set time limit of "
-                    + KylinConfig.getInstanceFromEnv().getQueryTimeoutSeconds() + "s. Current step: Layout chooser. ");
-        }
-
-        log.info("Matched candidates num : {}", candidates.size());
-        if (candidates.isEmpty()) {
-            return null;
-        }
-        sortCandidates(candidates, chooserContext, sqlDigest);
-        return candidates.get(0);
+        return candidates;
     }
 
-    private static Collection<NDataLayout> getLayoutsFromSegments(List<NDataSegment> segments, NDataflow dataflow,
+    private static Collection<NDataLayout> getCommonLayouts(List<NDataSegment> segments, NDataflow dataflow,
             Map<String, Set<Long>> chSegmentToLayoutsMap) {
         KylinConfig projectConfig = NProjectManager.getProjectConfig(dataflow.getProject());
         if (!projectConfig.isHeterogeneousSegmentEnabled()) {

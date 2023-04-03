@@ -27,6 +27,13 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableCollection;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMultimap;
+import org.apache.kylin.guava30.shaded.common.collect.Iterables;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -41,15 +48,6 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableCollection;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMultimap;
-import org.apache.kylin.guava30.shaded.common.collect.Iterables;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -235,7 +233,6 @@ public abstract class IndexMatcher {
     }
 
     @Getter
-    @AllArgsConstructor
     @RequiredArgsConstructor
     public static class MatchResult {
 
@@ -243,13 +240,27 @@ public abstract class IndexMatcher {
 
         Map<Integer, DeriveInfo> needDerive = Maps.newHashMap();
 
-        CapabilityResult.IncapableCause cases;
+        CapabilityResult.IncapableCause incapableCause;
+
+        private int penalty = 0;
+
+        private double influenceFactor = 1.0;
 
         public List<CapabilityResult.CapabilityInfluence> influences = Lists.newArrayList();
 
-        public MatchResult(boolean isMatched, Map<Integer, DeriveInfo> needDerive) {
+        public MatchResult(boolean isMatched, int penalty, Map<Integer, DeriveInfo> needDerive) {
             this.isMatched = isMatched;
             this.needDerive = needDerive;
+            this.penalty = penalty;
+            this.influenceFactor += penalty;
+        }
+
+        public MatchResult(boolean isMatched, Map<Integer, DeriveInfo> needDerive,
+                CapabilityResult.IncapableCause reason, List<CapabilityResult.CapabilityInfluence> influences) {
+            this.isMatched = isMatched;
+            this.needDerive = needDerive;
+            this.incapableCause = reason;
+            this.influences = influences;
         }
     }
 }
