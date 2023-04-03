@@ -25,19 +25,25 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMultimap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.model.AntiFlatChecker;
+import org.apache.kylin.metadata.model.ColExcludedChecker;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMultimap;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.realization.SQLDigest;
 
 import lombok.Getter;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 public class ChooserContext {
 
@@ -49,8 +55,14 @@ public class ChooserContext {
     final Map<String, List<Integer>> foreignKeyColumnIds = Maps.newHashMap();
     final Map<Integer, TableExtDesc.ColumnStats> columnStatMap = Maps.newHashMap();
 
+    final KylinConfig kylinConfig;
+
+    AggIndexMatcher aggIndexMatcher;
+    TableIndexMatcher tableIndexMatcher;
+
     public ChooserContext(NDataModel model) {
         this.model = model;
+        this.kylinConfig = NProjectManager.getProjectConfig(model.getProject());
 
         ImmutableMultimap.Builder<Integer, Integer> fk2PkBuilder = ImmutableMultimap.builder();
 
@@ -63,7 +75,38 @@ public class ChooserContext {
         }
 
         this.fk2Pk = fk2PkBuilder.build();
+    }
 
+    public ChooserContext(SQLDigest sqlDigest, NDataflow dataflow) {
+        this(dataflow.getModel());
+        prepareIndexMatchers(sqlDigest, dataflow);
+    }
+
+    private void prepareIndexMatchers(SQLDigest sqlDigest, NDataflow dataflow) {
+        String project = dataflow.getProject();
+        ColExcludedChecker excludedChecker = new ColExcludedChecker(kylinConfig, project, model);
+        if (log.isDebugEnabled()) {
+            log.debug("When matching layouts, all deduced excluded columns are: {}",
+                    excludedChecker.getExcludedColNames());
+        }
+        AntiFlatChecker antiFlatChecker = new AntiFlatChecker(model.getJoinTables(), model);
+        if (log.isDebugEnabled()) {
+            log.debug("When matching layouts, all deduced anti-flatten lookup tables are: {}",
+                    antiFlatChecker.getAntiFlattenLookups());
+        }
+
+        aggIndexMatcher = new AggIndexMatcher(sqlDigest, this, dataflow, excludedChecker, antiFlatChecker);
+        tableIndexMatcher = new TableIndexMatcher(sqlDigest, this, dataflow, excludedChecker, antiFlatChecker);
+    }
+
+    /**
+     * Bail out if both AggIndex and TableIndex are invalid. This may be caused by:
+     * 1. cc col is not present in the model;
+     * 2. dynamic params ? present in query like select sum(col/?) from ...,
+     *    see org.apache.kylin.query.DynamicQueryTest.testDynamicParamOnAgg.
+     */
+    public boolean isIndexMatchersInvalid() {
+        return !getAggIndexMatcher().isValid() && !getTableIndexMatcher().isValid();
     }
 
     public TableExtDesc.ColumnStats getColumnStats(TblColRef ref) {

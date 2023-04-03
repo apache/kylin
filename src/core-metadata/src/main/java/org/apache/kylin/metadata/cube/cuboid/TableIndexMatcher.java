@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -33,20 +35,14 @@ import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TableIndexMatcher extends IndexMatcher {
 
-    private int layoutUnmatchedColsSize;
-
     public TableIndexMatcher(SQLDigest sqlDigest, ChooserContext chooserContext, NDataflow dataflow,
             ColExcludedChecker excludedChecker, AntiFlatChecker antiFlatChecker) {
         super(sqlDigest, chooserContext, dataflow, excludedChecker, antiFlatChecker);
-        this.layoutUnmatchedColsSize = 0;
         this.valid = fastValidCheckBeforeMatch();
     }
 
@@ -66,8 +62,9 @@ public class TableIndexMatcher extends IndexMatcher {
         log.trace("Matching table index");
         final Map<Integer, DeriveInfo> needDerive = Maps.newHashMap();
         Set<Integer> unmatchedCols = initUnmatchedColumnIds(layout);
+        int penaltyFactor = 0;
         if (NProjectManager.getProjectConfig(project).useTableIndexAnswerSelectStarEnabled()) {
-            layoutUnmatchedColsSize = unmatchedCols.size();
+            penaltyFactor = unmatchedCols.size();
             unmatchedCols.removeAll(dataflow.getAllColumnsIndex());
         }
         goThruDerivedDims(layout.getIndex(), needDerive, unmatchedCols);
@@ -85,7 +82,7 @@ public class TableIndexMatcher extends IndexMatcher {
                     CapabilityResult.IncapableCause.create(CapabilityResult.IncapableType.TABLE_INDEX_MISSING_COLS),
                     Lists.newArrayList());
         }
-        return new MatchResult(true, needDerive);
+        return new MatchResult(true, penaltyFactor, needDerive);
     }
 
     @Override
@@ -93,9 +90,5 @@ public class TableIndexMatcher extends IndexMatcher {
         boolean isUseTableIndex = dataflow.getConfig().isUseTableIndexAnswerNonRawQuery()
                 && !nonSupportFunTableIndex(sqlDigest.aggregations);
         return !index.isTableIndex() || (!sqlDigest.isRawQuery && !isUseTableIndex);
-    }
-
-    public int getLayoutUnmatchedColsSize() {
-        return layoutUnmatchedColsSize;
     }
 }

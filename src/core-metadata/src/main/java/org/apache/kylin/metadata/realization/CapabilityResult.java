@@ -22,14 +22,23 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.metadata.cube.cuboid.IndexMatcher;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@NoArgsConstructor
 public class CapabilityResult {
+
+    public CapabilityResult(IndexMatcher.MatchResult matchResult) {
+        this.layoutUnmatchedColsSize = matchResult.getPenalty();
+        this.influences = matchResult.getInfluences();
+        this.capable = matchResult.isMatched();
+    }
 
     /**
      * Is capable or not

@@ -84,7 +84,6 @@ public class NDataflowCapabilityChecker {
             if (candidateAndInfluence != null) {
                 chosenCandidate = candidateAndInfluence;
                 result.influences.addAll(candidateAndInfluence.getCapabilityResult().influences);
-                result.setLayoutUnmatchedColsSize(candidateAndInfluence.getLayoutUnmatchedColsSize());
                 logger.info("Matched layout {} snapshot in dataflow {} ", chosenCandidate, dataflow);
             }
         }

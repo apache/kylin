@@ -25,14 +25,13 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.model.DeriveInfo;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealizationCandidate;
-import org.apache.kylin.metadata.cube.model.LayoutEntity;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -41,10 +40,6 @@ public class NLayoutCandidate implements IRealizationCandidate {
     private @Nonnull LayoutEntity layoutEntity;
     @Setter
     private double cost;
-
-    @Getter
-    @Setter
-    private int layoutUnmatchedColsSize;
 
     @Setter
     @Getter
