@@ -158,6 +158,7 @@
             </ul>
           </div>
           <kylin-nodata v-show="t.showColumns.length === 0 && t.filterColumnChar" :content="$t('noResults')"></kylin-nodata>
+          <p class="has-no-connected-column" v-if="t.spreadOut && showOnlyConnectedColumn && getCurrentColumns(t).length === 0 && getCurrentColumns(modelRender, 'cc').length === 0">{{$t('noConnectedColumn')}}</p>
           <!-- 拖动操纵 -->
           <DragBar :dragData="t.drawSize" :dragZoom="modelRender.zoom"/>
           <!-- 拖动操纵 -->
@@ -406,7 +407,6 @@
             </ul>
           </div>
           <kylin-nodata v-if="!modelRender.computed_columns.length"></kylin-nodata>
-          <p class="has-no-connected-column" v-if="t.spreadOut && showOnlyConnectedColumn && getCurrentColumns(t).length === 0 && getCurrentColumns(modelRender, 'cc').length === 0">{{$t('noConnectedColumn')}}</p>
           <!-- 拖动操纵 -->
           <DragBar :dragData="panelAppear.cc"/>
           <!-- 拖动操纵 -->
