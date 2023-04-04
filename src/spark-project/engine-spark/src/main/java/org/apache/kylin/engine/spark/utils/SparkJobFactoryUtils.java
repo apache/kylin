@@ -19,17 +19,17 @@
 package org.apache.kylin.engine.spark.utils;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
+import org.apache.kylin.engine.spark.job.NSparkCubingStep;
+import org.apache.kylin.engine.spark.job.NSparkMergingJob;
+import org.apache.kylin.engine.spark.job.NSparkSnapshotJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 
-import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
-import io.kyligence.kap.engine.spark.job.NSparkCubingStep;
-import io.kyligence.kap.engine.spark.job.NSparkMergingJob;
-import io.kyligence.kap.engine.spark.job.NSparkSnapshotJob;
-
 public class SparkJobFactoryUtils {
 
-    private SparkJobFactoryUtils() {}
+    private SparkJobFactoryUtils() {
+    }
 
     public static void initJobFactory() {
         // register jobFactory in static function
