@@ -23,7 +23,7 @@ cd ${dir}/../..
 mvn versions:set -DnewVersion=${RELEASE_VERSION}
 RELEASE_VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
 
-mvn clean install -e -DskipTests -pl src/jdbc
+mvn install -DskipTests -pl src/jdbc
 
 if [[ -d jdbc_dist ]]; then
     rm -rf jdbc_dist/*
@@ -32,7 +32,7 @@ mkdir -p jdbc_dist
 
 cp src/jdbc/target/kylin-*.jar jdbc_dist/
 cp src/jdbc/target/kylin-jdbc.properties jdbc_dist/
-cp src/jdbc/libs/*.jar jdbc_dist/
+#cp src/jdbc/libs/*.jar jdbc_dist/
 rm -f jdbc_dist/*-tests.jar
 cd jdbc_dist
 tar -zcvf kylin-jdbc-${RELEASE_VERSION}.tar.gz ./*

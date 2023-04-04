@@ -46,10 +46,12 @@ if [[ -d "influxdb" ]]; then
     cp -rf postgresql ${package_name}/
 fi
 
-# copy async profiler native files
-cp -rf async-profiler-lib/libasyncProfiler-mac.so "${package_name}"/lib/libasyncProfiler-mac.so
-cp -rf async-profiler-lib/libasyncProfiler-linux-x64.so "${package_name}"/lib/libasyncProfiler-linux-x64.so
-cp -rf async-profiler-lib/libasyncProfiler-linux-arm64.so "${package_name}"/lib/libasyncProfiler-linux-arm64.so
+## copy async profiler native files
+bash async-profiler-lib/download-async-profiler.sh
+cp -rf async-profiler-2.9-linux-x64.tar.gz "${package_name}"/lib/libasyncProfiler-linux-x64.so
+#cp -rf async-profiler-lib/libasyncProfiler-mac.so "${package_name}"/lib/libasyncProfiler-mac.so
+#cp -rf async-profiler-lib/libasyncProfiler-linux-x64.so "${package_name}"/lib/libasyncProfiler-linux-x64.so
+#cp -rf async-profiler-lib/libasyncProfiler-linux-arm64.so "${package_name}"/lib/libasyncProfiler-linux-arm64.so
 
 # Add ssb data preparation files
 mkdir -p ${package_name}/tool/ssb
@@ -61,6 +63,10 @@ mkdir -p ${package_name}/tool/grafana
 cp -rf ../build/deploy/grafana/dashboards   ${package_name}/tool/grafana/
 cp -rf ../build/deploy/grafana/provisioning ${package_name}/tool/grafana/
 cp -rf ../build/deploy/grafana/custom.ini   ${package_name}/tool/grafana/
+
+# Add JDBC Driver
+bash release/jdbc_package.sh
+cp ../jdbc_dist/kylin-jdbc-${RELEASE_VERSION}.tar.gz "${package_name}"/lib
 
 # Add conf profiles
 mkdir -p ${package_name}/conf
