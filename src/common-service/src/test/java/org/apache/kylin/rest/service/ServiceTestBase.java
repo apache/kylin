@@ -23,6 +23,7 @@ import java.util.Arrays;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -48,7 +49,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
-import io.kyligence.kap.metadata.user.ManagedUser;
 import io.kyligence.kap.secondstorage.SecondStorageUpdater;
 
 @RunWith(SpringJUnit4ClassRunner.class)

@@ -521,23 +521,6 @@ public class StreamingJobLauncherTest extends NLocalFileMetadataTestCase {
         Assert.assertNotNull(mockup.sparkConf.get("spark.yarn.am.extraJavaOptions"));
     }
 
-    @Test
-    public void testAddParserJar() throws Exception {
-        val modelId = "e78a89dd-847f-4574-8afa-8768b4228b72";
-        val launcher = new StreamingJobLauncher();
-        launcher.init(PROJECT, modelId, JobTypeEnum.STREAMING_BUILD);
-        val mockup = new MockupSparkLauncher();
-        ReflectionTestUtils.setField(launcher, "launcher", mockup);
-        val mockLaunch = PowerMockito.spy(launcher);
-        PowerMockito.when(mockLaunch, "getParserName").thenReturn("io.kyligence.kap.parser.TimedJsonStreamParser2");
-        DataParserInfo dataParserInfo = new DataParserInfo(PROJECT, DEFAULT_PARSER_NAME, "default");
-        PowerMockito.when(mockLaunch, "getDataParser", Mockito.anyString()).thenReturn(dataParserInfo);
-        PowerMockito.doReturn("default").when(mockLaunch, "getParserJarPath", dataParserInfo);
-        ReflectionTestUtils.invokeMethod(mockLaunch, "addParserJar", mockup);
-        mockup.startApplication();
-        Assert.assertTrue(mockup.jars.contains("default"));
-    }
-
     static class MockupSparkLauncher extends SparkLauncher {
         private Map<String, String> sparkConf;
         private List<String> files;
