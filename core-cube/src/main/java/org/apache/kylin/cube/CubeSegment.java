@@ -23,7 +23,9 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -40,6 +42,7 @@ import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.ShardingHash;
+import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.kv.RowConstants;
@@ -200,6 +203,89 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         } catch (ParseException e) {
             throw new IllegalArgumentException("Invalid segmentName for CubeSegment, segmentName = " + segmentName);
         }
+    }
+
+    public static List<TSRange> splitRangeByMergeInterval(long startTime, long endTime, List<Long> mergeInterval) {
+        List<SegmentRange.TSRange> batchRange = new ArrayList<>();
+        long indexTime = startTime;
+        while (indexTime < endTime) {
+            long curMaxInterval = Long.MIN_VALUE;
+            for (Long splitRange : mergeInterval) {
+                if (splitRange <= (endTime - indexTime)) {
+                    curMaxInterval = Math.max(splitRange, curMaxInterval);
+                }
+            }
+            if (curMaxInterval == Long.MIN_VALUE) {
+                batchRange.add(new SegmentRange.TSRange(indexTime, endTime));
+                break;
+            }
+            batchRange.add(new SegmentRange.TSRange(indexTime, indexTime + curMaxInterval));
+            indexTime = indexTime + curMaxInterval;
+        }
+        return batchRange;
+    }
+
+    public static List<TSRange> splitRangeByMonth(long startTime, long endTime) {
+        List<TSRange> result = new ArrayList<>();
+
+        long startOfNextMonth = TimeUtil.getNextMonthStart(startTime);
+        while (startOfNextMonth < endTime) {
+            result.add(new TSRange(startTime, startOfNextMonth));
+            startTime = startOfNextMonth;
+            startOfNextMonth = TimeUtil.getNextMonthStart(startTime);
+        }
+        result.add(new TSRange(startTime, endTime));
+        return result;
+    }
+
+    /**
+     * Find overlapping segment TSRange in the specified time range
+     */
+    public static List<TSRange> getOverlapsRange(Segments<CubeSegment> readySegments, Long startTime, Long endTime, boolean refreshOverlaps) {
+        List<TSRange> batchRange = new ArrayList<>();
+        TSRange needRefreshTsRange = new TSRange(startTime, endTime);
+        for (CubeSegment readySegment : readySegments) {
+            TSRange tsRange = readySegment.getTSRange();
+            if (refreshOverlaps && needRefreshTsRange.overlaps(tsRange)) {
+                batchRange.add(new TSRange(tsRange.startValue(), tsRange.endValue()));
+            } else if (!refreshOverlaps && needRefreshTsRange.contains(tsRange)) {
+                batchRange.add(new TSRange(tsRange.startValue(), tsRange.endValue()));
+            }
+        }
+        return batchRange;
+    }
+
+    /**
+     * Get the segment TSRange that does not overlap within the specified time range
+     */
+    public static List<TSRange> getNotOverlapsRange(Long startTime, Long endTime, List<TSRange> overlapsRange) {
+        List<TSRange> missingRanges = new ArrayList<>();
+        overlapsRange.sort(Comparator.comparing(TSRange::startValue));
+        if (overlapsRange.isEmpty()) {
+            // no overlapping ranges
+            missingRanges.add(new TSRange(startTime, endTime));
+        } else {
+            // handle missing ranges preceding the first range
+            TSRange firstRange = overlapsRange.get(0);
+            if (startTime < firstRange.startValue()) {
+                missingRanges.add(new TSRange(startTime, firstRange.startValue()));
+            }
+            // Handle missing ranges between two adjacent ranges in a range list
+            for (int i = 0; i < overlapsRange.size() - 1; i++) {
+                TSRange currRange = overlapsRange.get(i);
+                TSRange nextRange = overlapsRange.get(i + 1);
+                if (currRange.endValue() < nextRange.startValue()) {
+                    missingRanges.add(new TSRange(currRange.endValue(), nextRange.startValue()));
+                }
+            }
+
+            // handle missing ranges after the last range
+            TSRange lastRange = overlapsRange.get(overlapsRange.size() - 1);
+            if (endTime > lastRange.endValue()) {
+                missingRanges.add(new TSRange(lastRange.endValue(), endTime));
+            }
+        }
+        return missingRanges;
     }
 
     // ============================================================================

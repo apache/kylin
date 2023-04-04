@@ -423,6 +423,24 @@ public class CubeController extends BasicController {
                 req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment(), req.getPriorityOffset());
     }
 
+
+    @RequestMapping(value = "/{cubeName}/batchRebuild", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @ResponseBody
+    public List<JobInstance> batchBuild(@PathVariable String cubeName, @RequestBody JobBuildRequest req,
+                                        @RequestParam(defaultValue = "false") boolean refreshOverlaps) {
+        try {
+            String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+            CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
+
+            checkBuildingSegment(cube);
+            return jobService.batchSubmitJob(cube, req.getStartTime(), req.getEndTime(), submitter, req.getPriorityOffset(),
+                    JobTypeEnum.valueOf(req.getBuildType()), req.isForce(), refreshOverlaps);
+        } catch (Throwable e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
     /**
      * Build/Rebuild a cube segment by source offset
      */

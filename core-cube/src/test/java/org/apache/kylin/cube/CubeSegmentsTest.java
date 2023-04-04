@@ -22,6 +22,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.PartitionDesc;
@@ -154,6 +157,76 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         assertEquals(3, cube.getSegments().size());
         assertEquals(new TSRange(0L, 2000L), merge2.getTSRange());
         assertEquals(new TSRange(0L, 2000L), merge2.getSegRange());
+    }
+
+    @Test
+    public void testSplitRangeByMergeRange(){
+        long startTime = 1672588800000L; // 2023-01-02 00:00:00
+        long endTime = 1675094400000L; // 2023-01-31 00:00:00
+        long endTime2 = 1673280000000L; // 2023-01-10 00:00:00
+
+        List<Long> mergeInternal = Arrays.asList(86400000L, 86400000L * 7, 86400000L * 28);
+
+        List<SegmentRange.TSRange> expected = Arrays.asList(
+                new SegmentRange.TSRange(1672588800000L, 1675008000000L),
+                new SegmentRange.TSRange(1675008000000L, 1675094400000L)
+        );
+        List<SegmentRange.TSRange> expected2 = Arrays.asList(
+                new SegmentRange.TSRange(1672588800000L, 1673193600000L),
+                new SegmentRange.TSRange(1673193600000L, 1673280000000L)
+        );
+
+        List<SegmentRange.TSRange> actual = CubeSegment.splitRangeByMergeInterval(startTime, endTime, mergeInternal);
+        List<SegmentRange.TSRange> actual2 = CubeSegment.splitRangeByMergeInterval(startTime, endTime2, mergeInternal);
+
+        assertEquals(expected, actual);
+        assertEquals(expected2, actual2);
+    }
+
+    @Test
+    public void testSplitRangeByMonth(){
+        long startTime = 1667347200000L; // 2022-11-02 00:00:00 (GMT)
+        long endTime = 1675987200000L; // 2023-02-10 00:00:00 (GMT)
+
+        List<SegmentRange.TSRange> expected = Arrays.asList(
+                new SegmentRange.TSRange(1667347200000L, 1669852800000L),
+                new SegmentRange.TSRange(1669852800000L, 1672531200000L),
+                new SegmentRange.TSRange(1672531200000L, 1675209600000L),
+                new SegmentRange.TSRange(1675209600000L, 1675987200000L)
+        );
+
+        List<SegmentRange.TSRange> actual = CubeSegment.splitRangeByMonth(startTime, endTime);
+        assertEquals(expected, actual);
+
+        long startTime2 = 1667347200000L; // 2022-11-02 00:00:00 (GMT)
+        long endTime2 = 1669852800000L; // 2022-12-01 00:00:00 (GMT)
+        List<SegmentRange.TSRange> expected2 = Collections.singletonList(
+                new TSRange(1667347200000L, 1669852800000L)
+        );
+
+        List<SegmentRange.TSRange> actual2 = CubeSegment.splitRangeByMonth(startTime2, endTime2);
+        assertEquals(expected2, actual2);
+    }
+
+    @Test
+    public void testGetNotOverlapsRange() {
+        Long startTime = 0L;
+        Long endTime = 100L;
+        List<TSRange> overlapsRange = Arrays.asList(
+                new TSRange(20L, 30L),
+                new TSRange(40L, 50L),
+                new TSRange(70L, 80L)
+        );
+
+        List<TSRange> expectedMissingRanges = Arrays.asList(
+                new TSRange(0L, 20L),
+                new TSRange(30L, 40L),
+                new TSRange(50L, 70L),
+                new TSRange(80L, 100L)
+        );
+
+        List<TSRange> missingRanges = CubeSegment.getNotOverlapsRange(startTime, endTime, overlapsRange);
+        assertEquals(expectedMissingRanges, missingRanges);
     }
 
     @Test

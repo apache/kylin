@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -227,6 +228,105 @@ public class JobService extends BasicService implements InitializingBean {
                 sourcePartitionOffsetEnd, buildType, force, submitter, priorityOffset);
 
         return jobInstance;
+    }
+
+    public List<JobInstance> batchSubmitJob(CubeInstance cube, Long startTime, Long endTime, String submitter, Integer priorityOffset,
+            JobTypeEnum buildType, boolean force, boolean refreshOverlaps) throws IOException {
+        logger.info("batchSubmitJob, cube:{}, startTime:{}, endTime:{}, submitter:{}, priorityOffset:{}, buildType:{}, force:{}, refreshOverlaps:{}",
+                cube, startTime, endTime, submitter, priorityOffset, buildType, force, refreshOverlaps);
+        aclEvaluate.checkProjectOperationPermission(cube);
+        List<JobInstance> jobInstances = new ArrayList<>();
+        if (!cube.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
+            try {
+                jobInstances.add(submitJobInternal(cube, null, new SegmentRange(startTime, endTime),
+                        null, null, buildType, force, submitter, priorityOffset));
+                return jobInstances;
+            } catch (Exception e) {
+                logger.error("Job submission might failed, cube:{}, start:{}, end:{}", cube, startTime, endTime);
+                throw e;
+            }
+        }
+
+        Segments<CubeSegment> segments = cube.getSegments();
+        Segments<CubeSegment> readySegments = segments.getSegments(SegmentStatusEnum.READY);
+
+        Map<JobTypeEnum, List<TSRange>> jobsMap = new HashMap<>();
+
+        if (buildType == JobTypeEnum.BUILD) {
+
+            jobsMap.put(JobTypeEnum.BUILD, getBatchBuildCubeRange(cube, startTime, endTime));
+        } else if (buildType == JobTypeEnum.REFRESH) {
+
+            jobsMap.put(JobTypeEnum.REFRESH, CubeSegment.getOverlapsRange(readySegments, startTime, endTime, refreshOverlaps));
+        } else if (buildType == JobTypeEnum.BUILD_OR_REFRESH) {
+            List<TSRange> overlapsRange;
+            List<TSRange> notOverlapRange;
+
+            if (refreshOverlaps) {
+                // 1. Find all existing ready segments within the time range
+                overlapsRange = CubeSegment.getOverlapsRange(readySegments, startTime, endTime, true);
+                // 2. Find all missing segments
+                notOverlapRange = CubeSegment.getNotOverlapsRange(startTime, endTime, overlapsRange);
+            } else {
+                List<TSRange> containsRange = CubeSegment.getOverlapsRange(readySegments, startTime, endTime, false);
+                overlapsRange = CubeSegment.getOverlapsRange(readySegments, startTime, endTime, true);
+                //1. fina all missing segments
+                notOverlapRange = CubeSegment.getNotOverlapsRange(startTime, endTime, overlapsRange);
+                //2. only refresh contains segments
+                overlapsRange = containsRange;
+            }
+
+            //Divide the missing segments according to the natural month
+            List<TSRange> needBuildRange = new ArrayList<>();
+            notOverlapRange.forEach(x -> needBuildRange.addAll(CubeSegment.splitRangeByMonth(x.startValue(), x.endValue())));
+            //3. Cube build for missing ones, and refresh for existing ones
+            jobsMap.put(JobTypeEnum.BUILD, needBuildRange);
+            jobsMap.put(JobTypeEnum.REFRESH, overlapsRange);
+        }
+        Segments<CubeSegment> buildingSegments = segments.getBuildingSegments();
+
+        for (JobTypeEnum cubeBuildType : jobsMap.keySet()) {
+            // Exclude the range being built from the list of jobs ready to be built
+            List<TSRange> batchRange = jobsMap.get(cubeBuildType);
+            List<TSRange> invalidRange = buildingSegments.stream()
+                    .flatMap(segment -> batchRange.stream().filter(segment.getSegRange()::contains))
+                    .collect(Collectors.toList());
+
+            batchRange.removeAll(invalidRange);
+
+            logger.info("batch buildType: {} , batchRange:{}", cubeBuildType.name(), batchRange);
+            for (TSRange tsRange : batchRange) {
+                try {
+                    jobInstances.add(submitJobInternal(cube, tsRange, null, null, null,
+                            cubeBuildType, force, submitter, priorityOffset));
+                } catch (IOException e) {
+                    logger.error("Job submission might failed, cube:{}, start:{}, end:{}", cube, tsRange.start, tsRange.end);
+                    throw e;
+                }
+            }
+        }
+        return jobInstances;
+    }
+
+
+    /**
+     * Divide the specified time range into segment TSRange
+     * @param cube
+     * @param startTime
+     * @param endTime
+     * @return
+     */
+    private List<TSRange> getBatchBuildCubeRange(CubeInstance cube, Long startTime, Long endTime) {
+        List<TSRange> batchRange = new ArrayList<>();
+        if (cube.getDescriptor().getConfig().isBatchBuildCubeByMonthEnabled()) {
+            batchRange.addAll(CubeSegment.splitRangeByMonth(startTime, endTime));
+        } else {
+            List<Long> mergeInternal = Arrays.stream(cube.getDescriptor().getAutoMergeTimeRanges()).boxed().collect(Collectors.toList());
+            // Add minimum time range, day level
+            mergeInternal.add(86400000L);
+            batchRange.addAll(CubeSegment.splitRangeByMergeInterval(startTime, endTime, mergeInternal));
+        }
+        return batchRange;
     }
 
     public JobInstance submitJobInternal(CubeInstance cube, TSRange tsRange, SegmentRange segRange, //

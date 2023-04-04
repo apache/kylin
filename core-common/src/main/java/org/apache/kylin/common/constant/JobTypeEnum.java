@@ -50,5 +50,10 @@ public enum JobTypeEnum {
     /**
      *  job of sampling table
      */
-    TABLE_SAMPLING
+    TABLE_SAMPLING,
+
+    /**
+     * batch build or refresh, refresh if segment exists, build if not
+     */
+    BUILD_OR_REFRESH
 }

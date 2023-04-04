@@ -30,7 +30,7 @@ public class TimeUtil {
         throw new IllegalStateException("Class TimeUtil is an utility class !");
     }
 
-    private static TimeZone gmt = TimeZone.getTimeZone("GMT");
+    public static TimeZone gmt = TimeZone.getTimeZone("GMT");
     public static final long ONE_MINUTE_TS = 60 * 1000L;
     public static final long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;
     public static final long ONE_DAY_TS = 24 * ONE_HOUR_TS;
@@ -76,6 +76,21 @@ public class TimeUtil {
     public static long getMonthStartWithTimeZone(TimeZone timeZone, long ts){
         Calendar calendar = Calendar.getInstance(timeZone, Locale.ROOT);
         calendar.setTimeInMillis(ts);
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        calendar.clear();
+        calendar.set(year, month, 1);
+        return calendar.getTimeInMillis();
+    }
+
+    public static long getNextMonthStart(long ts) {
+        return getNextMonthStartWithTimeZone(gmt, ts);
+    }
+
+    public static long getNextMonthStartWithTimeZone(TimeZone timeZone, long ts) {
+        Calendar calendar = Calendar.getInstance(timeZone, Locale.ROOT);
+        calendar.setTimeInMillis(ts);
+        calendar.add(Calendar.MONTH, 1);
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         calendar.clear();

@@ -505,6 +505,34 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
     };
 
+    $scope.startBatchRebuild = function (cube) {
+
+      $scope.metaModel={
+        model:cube.model
+      };
+      //for partition cube build tip
+      if ($scope.metaModel.model.partition_desc.partition_date_column) {
+        $modal.open({
+          templateUrl: 'jobBatchBuild.html',
+          controller: jobSubmitCtrl,
+          resolve: {
+            cube: function () {
+              return cube;
+            },
+            metaModel:function(){
+              return $scope.metaModel;
+            },
+            buildType: function () {
+              return 'REFRESH';
+            },
+            scope:function(){
+              return $scope;
+            }
+          }
+        });
+      }
+    };
+
     $scope.startRefresh = function (cube) {
 
       $scope.metaModel={
@@ -842,10 +870,12 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   $scope.cubeList = CubeList;
   $scope.cube = cube;
   $scope.metaModel = metaModel;
+  $scope.refreshOverlaps = {value: 'FALSE'};
   $scope.jobBuildRequest = {
     buildType: buildType,
     startTime: 0,
-    endTime: 0
+    endTime: 0,
+    priorityOffset: (buildType === 'BUILD') ? 0 : -10000
   };
   $scope.message = "";
   $scope.refreshType = 'normal';
@@ -914,6 +944,68 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
       }
     });
   };
+
+  // batch rebuild
+  $scope.batchRebuild = function (isForce) {
+      $scope.message = null;
+      if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
+        $scope.message = "WARNING: End time should be later than the start time.";
+        return;
+      }
+      $scope.jobBuildRequest.forceMergeEmptySegment = !!isForce;
+      loadingRequest.show();
+      var refreshOverlapsBool = ($scope.refreshOverlaps.value === 'TRUE');
+      var request = {...$scope.jobBuildRequest, refreshOverlaps: refreshOverlapsBool};
+      CubeService.batchRebuildCube({cubeId: cube.name}, request, function (job) {
+        loadingRequest.hide();
+        $modalInstance.dismiss('cancel');
+        MessageBox.successNotify('batchRebuild job was submitted successfully');
+        scope.refreshCube(cube).then(function(_cube){
+            $scope.cubeList.cubes[$scope.cubeList.cubes.indexOf(cube)] = _cube;
+          });
+      }, function (e) {
+        loadingRequest.hide();
+        if (e.data && e.data.exception) {
+          var message = e.data.exception;
+
+          if(message.indexOf("Empty cube segment found")!=-1){
+            var _segment = message.substring(message.indexOf(":")+1,message.length-1);
+            SweetAlert.swal({
+              title:'',
+              type:'info',
+              text: 'Empty cube segment found'+':'+_segment+', do you want to merge segments forcely ?',
+              showCancelButton: true,
+              confirmButtonColor: '#DD6B55',
+              closeOnConfirm: true
+            }, function (isConfirm) {
+              if (isConfirm) {
+                $scope.batchRebuild(true);
+              }
+            });
+            return;
+          }
+          if(message.indexOf("Merging segments must not have gaps between")!=-1){
+            SweetAlert.swal({
+              title:'',
+              type:'info',
+              text: 'There ares gaps between segments, do you want to merge segments forcely ?',
+              showCancelButton: true,
+              confirmButtonColor: '#DD6B55',
+              closeOnConfirm: true
+            }, function (isConfirm) {
+              if (isConfirm) {
+                $scope.batchRebuild(true);
+              }
+            });
+            return;
+          }
+          var msg = !!(message) ? message : 'Failed to take action.';
+          SweetAlert.swal('Oops...', msg, 'error');
+        } else {
+          SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+        }
+      });
+    };
 
   // used by cube segment refresh
   $scope.segmentSelected = function (selectedSegment) {

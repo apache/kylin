@@ -98,6 +98,7 @@
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startJobSubmit(cube);">Build</a></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startRefresh(cube)">Refresh</a></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startMerge(cube)">Merge</a></li>
+                        <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startBatchRebuild(cube)">BatchBuild</a></li>
 <!--                        <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startLookupRefresh(cube);">Lookup Refresh</a></li>-->
                         <li ng-if="cube.status=='READY' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="disable(cube)">Disable</a></li>
                         <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="enable(cube)">Enable</a></li>
@@ -156,6 +157,7 @@
 </div>
 
 <div ng-include="'partials/jobs/job_submit.html'"></div>
+<div ng-include="'partials/jobs/job_batchBuild.html'"></div>
 <div ng-include="'partials/cubes/streaming_build_tip.html'"></div>
 <div ng-include="'partials/jobs/job_refresh.html'"></div>
 <div ng-include="'partials/jobs/job_merge.html'"></div>
