@@ -46,6 +46,12 @@ function run_command {
 #### Release Configuration
 
 source /root/scripts/setenv.sh
+if [ $# -eq 0 ]; then
+  RELEASE_STEP="publish-rc"
+else
+  RELEASE_STEP=$1
+fi
+echo "==> Running step : $RELEASE_STEP"
 
 GIT_BRANCH=${GIT_BRANCH:-kylin5}
 ASF_USERNAME=${ASF_USERNAME:-xxyu}
@@ -111,6 +117,15 @@ if [[ "$RELEASE_STEP" == "publish-rc" ]]; then
   fi
 fi
 
+if [[ "$RELEASE_STEP" == "reset" ]]; then
+  echo "==> reset release folder"
+  cd ${source_code_folder}
+  git reset --hard HEAD~5
+  git pull -r origin "$GIT_BRANCH"
+  mvn clean
+  mvn release:clean
+fi
+
 ####################################################
 ####################################################
 #### Publish maven artifact and source package
@@ -141,7 +156,7 @@ if [[ "$RELEASE_STEP" == "publish-rc" ]]; then
 
   # Create a directory for this release candidate
   mkdir -p ${release_candidate_folder}
-  # rm -rf target/apache-kylin-*ource-release.zip.asc.sha256
+  rm -rf target/apache-kylin-*ource-release.zip.asc.sha256
 
   # Move source code and signture of source code to release candidate directory
   cp target/apache-kylin-*source-release.zip* "${release_candidate_folder}"

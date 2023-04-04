@@ -3633,8 +3633,8 @@
                                 <exclude>src/examples/sample_cube/template/**</exclude>
                                 <exclude>src/examples/test_case_data/localmeta/**</exclude>
                                 <exclude>src/examples/test_case_data/parquet_test/**</exclude>
-                                <exclude>**/src/spark-project/engine-spark/metastore_db/db.lck</exclude>
-                                <exclude>**/src/spark-project/engine-spark/metastore_db/service.properties</exclude>
+                                <exclude>**/metastore_db/*.lck</exclude>
+                                <exclude>**/metastore_db/*.properties</exclude>
 
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
