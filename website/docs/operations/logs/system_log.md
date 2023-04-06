@@ -62,6 +62,12 @@ This file records logs related to task scheduling, whose default logging level i
 #### `kylin.query.log`
 This file records query related logs, whose default logging level is DEBUG.
 
+#### `kylin.build.log`
+This file records build-related logs, whose default logging level is DEBUG.
+
+#### `kylin.metadata.log`
+This file records metadata and transaction operations related logs, whose default logging level is DEBUG.
+
 #### `dump.hprof`
 When Out of Memory (OOM) occurs in Kylin, it will dump the entire heap, which is convenient for checking the cause.
 > Note: When you have a large memory setting and Out of Memory OOM occurs, the file dump.hprof will occupy a large storage space, which may cause your disk space to be insufficient and the node to be abnormal. You can manually clean up the historical file.
