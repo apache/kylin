@@ -124,23 +124,12 @@ public class FusionModelService extends AbstractModelService implements TableFus
             copy.setRootFactTableName(tableName);
             copy.setUuid(batchId);
 
-            String tableAlias = model.getRootFactTableRef().getTableDesc().getKafkaConfig().getBatchTableAlias();
-            String oldAliasName = model.getRootFactTableRef().getTableName();
-            convertModel(copy, tableAlias, oldAliasName);
             modelService.updateDataModelSemantic(project, copy);
         }
         if (model.isStreaming()) {
             request.setWithBaseIndex(false);
         }
         return modelService.updateDataModelSemantic(project, request);
-    }
-
-    private void convertModel(ModelRequest copy, String tableName, String oldAliasName) {
-        copy.getSimplifiedJoinTableDescs().stream()
-                .forEach(x -> x.getSimplifiedJoinDesc().changeFKTableAlias(oldAliasName, tableName));
-        copy.getSimplifiedDimensions().stream().forEach(x -> x.changeTableAlias(oldAliasName, tableName));
-        copy.getSimplifiedMeasures().stream().forEach(x -> x.changeTableAlias(oldAliasName, tableName));
-        copy.getPartitionDesc().changeTableAlias(oldAliasName, tableName);
     }
 
     @Transaction(project = 0)

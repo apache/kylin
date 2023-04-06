@@ -1072,8 +1072,11 @@ public class ModelSemanticHelper extends BasicService {
         NTableMetadataManager tableMetadataManager = getManager(NTableMetadataManager.class, project);
         Set<String> aliasDotColSet = new HashSet<>();
         TableDesc rootFactTableDesc = tableMetadataManager.getTableDesc(model.getRootFactTableName());
+        String factTableAlias = model.getRootFactTableAlias();
         Arrays.stream(rootFactTableDesc.getColumns()).forEach(columnDesc -> {
-            String aliasDotCol = rootFactTableDesc.getName() + "." + columnDesc.getName();
+            // if the factTableAlias is not null, we should always use factTableAlias instead of rootFactTableDesc.getName().
+            String aliasDotCol = factTableAlias == null ? rootFactTableDesc.getName() : factTableAlias
+                    + "." + columnDesc.getName();
             aliasDotColSet.add(aliasDotCol);
         });
         List<JoinTableDesc> joinTables = model.getJoinTables();
