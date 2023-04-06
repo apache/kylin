@@ -34,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class KylinPropertySourceConfiguration implements EnvironmentPostProcessor, Ordered {
 
+    private static final String SYSTEM_PROPERTY_PREFIX = "kylin.system.property.";
+
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 
@@ -57,7 +59,18 @@ public class KylinPropertySourceConfiguration implements EnvironmentPostProcesso
                 return properties.getProperty(name);
             }
         };
+
+        setSystemProperty(kylinConfig.exportToProperties());
         propertySources.addAfter("systemProperties", source);
+    }
+
+    public void setSystemProperty(Properties properties) {
+        for (String propertyName : properties.stringPropertyNames()) {
+            if (propertyName.startsWith(SYSTEM_PROPERTY_PREFIX)) {
+                String propertyValue = properties.getProperty(propertyName);
+                System.setProperty(propertyName.replaceFirst(SYSTEM_PROPERTY_PREFIX, ""), propertyValue);
+            }
+        }
     }
 
     @Override
