@@ -19,6 +19,7 @@ package org.apache.kylin.rest;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.rest.config.KylinPropertySourceConfiguration;
@@ -73,6 +74,16 @@ class KylinPrepareEnvListenerTest {
             Assertions.assertTrue(configDataEnvIndex < kylinPrepareEnvIndex);
             Assertions.assertTrue(kylinPrepareEnvIndex < kylinPropertySourceIndex);
         }
+    }
+
+    @Test
+    void testSystemProperty() {
+        KylinPropertySourceConfiguration configuration = new KylinPropertySourceConfiguration();
+        Properties properties = new Properties();
+        properties.setProperty("kylin.system.property.org.springframework.ldap.core.keyCaseFold", "none");
+        configuration.setSystemProperty(properties);
+        String property = System.getProperty("org.springframework.ldap.core.keyCaseFold");
+        Assertions.assertEquals("none", property);
     }
 
     @Configuration
