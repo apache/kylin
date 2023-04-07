@@ -21,7 +21,7 @@ package org.apache.spark.sql.execution.datasource
 import org.apache.kylin.common.QueryContext
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.spark.sql.catalyst.expressions
-import org.apache.spark.sql.catalyst.expressions.{AttributeReference, AttributeSet, ExpressionSet, NamedExpression, SubqueryExpression}
+import org.apache.spark.sql.catalyst.expressions.{AttributeReference, AttributeSet, Expression, ExpressionSet, NamedExpression, SubqueryExpression}
 import org.apache.spark.sql.catalyst.planning.PhysicalOperation
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.datasources.{HadoopFsRelation, LogicalRelation}
@@ -48,8 +48,8 @@ import org.apache.spark.sql.{Strategy, execution}
  *   - If any file is larger than the threshold, split it into pieces based on that threshold
  *   - Sort the files by decreasing file size.
  *   - Assign the ordered files to buckets using the following algorithm.  If the current partition
- * is under the threshold with the addition of the next file, add it.  If not, open a new bucket
- * and add it.  Proceed to the next file.
+ *     is under the threshold with the addition of the next file, add it.  If not, open a new bucket
+ *     and add it.  Proceed to the next file.
  */
 object KylinSourceStrategy extends Strategy with LogEx {
 
@@ -122,7 +122,8 @@ object KylinSourceStrategy extends Strategy with LogEx {
       logTime("listFiles", debug = true) {
         filePruner.listFiles(partitionKeyFilters.iterator.toSeq, dataFilters.iterator.toSeq)
       }
-      val sourceScanRows = filePruner.cached.get((partitionKeyFilters.iterator.toSeq, dataFilters.iterator.toSeq))._2
+      val sourceScanRows = filePruner.cached.get((partitionKeyFilters.iterator.toSeq,
+        dataFilters.iterator.toSeq, Seq.empty[Expression]))._2
       QueryContext.current().getMetrics.addAccumSourceScanRows(sourceScanRows)
       val scan =
         new KylinFileSourceScanExec(

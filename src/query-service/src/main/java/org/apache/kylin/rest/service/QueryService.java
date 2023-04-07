@@ -122,6 +122,7 @@ import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.kylin.query.engine.data.TableSchema;
 import org.apache.kylin.query.exception.NotSupportedSQLException;
 import org.apache.kylin.query.exception.UserStopQueryException;
+import org.apache.kylin.query.relnode.ContextUtil;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.QueryLimiter;
 import org.apache.kylin.query.util.QueryModelPriorities;
@@ -415,13 +416,20 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
             sql = request.getSql();
 
         Collection<String> snapShots;
+        Collection<String> snapShotFilters;
         if (response.getNativeRealizations() == null) {
             snapShots = Lists.newArrayList();
+            snapShotFilters = Lists.newArrayList();
         } else {
             snapShots = response.getNativeRealizations().stream()
                     .flatMap(nativeQueryRealization -> nativeQueryRealization.getSnapshots().stream()).distinct()
                     .collect(Collectors.toList());
+            snapShotFilters = ContextUtil
+                    .listContexts().stream().flatMap(ctx -> ctx.filterColumns.stream()
+                            .filter(col -> snapShots.contains(col.getTable())).map(TblColRef::getCanonicalName))
+                    .collect(Collectors.toList());
         }
+        boolean isDerived = !snapShots.isEmpty() && layoutIds.stream().anyMatch(id -> !StringUtils.equals("-1", id));
 
         String errorMsg = response.getExceptionMessage();
         if (StringUtils.isNotBlank(errorMsg)) {
@@ -436,7 +444,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                 .put(LogReport.PROJECT, request.getProject()).put(LogReport.REALIZATION_NAMES, modelNames)
                 .put(LogReport.INDEX_LAYOUT_IDS, layoutIds).put(LogReport.IS_PARTIAL_MATCH_MODEL, isPartialMatchModel)
                 .put(LogReport.SCAN_ROWS, response.getScanRows())
-                .put(LogReport.TOTAL_SCAN_ROWS, response.getTotalScanRows()).put(LogReport.SNAPSHOTS, snapShots)
+                .put(LogReport.TOTAL_SCAN_ROWS, response.getTotalScanRows()).put(LogReport.IS_DERIVED, isDerived)
+                .put(LogReport.SNAPSHOTS, snapShots).put(LogReport.SNAPSHOT_FILTERS, snapShotFilters)
                 .put(LogReport.SCAN_BYTES, response.getScanBytes())
                 .put(LogReport.TOTAL_SCAN_BYTES, response.getTotalScanBytes())
                 .put(LogReport.RESULT_ROW_COUNT, resultRowCount)
@@ -1461,6 +1470,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         static final String REALIZATION_NAMES = "realization";
         static final String INDEX_LAYOUT_IDS = "layout";
         static final String SNAPSHOTS = "snapshots";
+        static final String IS_DERIVED = "is_derived";
+        static final String SNAPSHOT_FILTERS = "snapshot_filters";
+
         static final String IS_PARTIAL_MATCH_MODEL = "is_partial_match";
         static final String SCAN_ROWS = "scan_rows";
         static final String TOTAL_SCAN_ROWS = "total_scan_rows";
@@ -1492,7 +1504,8 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         static final ImmutableMap<String, String> O2N = new ImmutableMap.Builder<String, String>()
                 .put(QUERY_ID, "Query Id: ").put(SQL, "SQL: ").put(USER, "User: ").put(SUCCESS, "Success: ")
                 .put(DURATION, "Duration: ").put(PROJECT, "Project: ").put(REALIZATION_NAMES, "Realization Names: ")
-                .put(INDEX_LAYOUT_IDS, "Index Layout Ids: ").put(SNAPSHOTS, "Snapshot Names: ")
+                .put(INDEX_LAYOUT_IDS, "Index Layout Ids: ").put(IS_DERIVED, "Is Dervied: ")
+                .put(SNAPSHOTS, "Snapshot Names: ").put(SNAPSHOT_FILTERS, "Snapshot Filter: ")
                 .put(IS_PARTIAL_MATCH_MODEL, "Is Partial Match Model: ").put(SCAN_ROWS, "Scan rows: ")
                 .put(TOTAL_SCAN_ROWS, "Total Scan rows: ").put(SCAN_BYTES, "Scan bytes: ")
                 .put(TOTAL_SCAN_BYTES, "Total Scan Bytes: ").put(RESULT_ROW_COUNT, "Result Row Count: ")
@@ -1540,7 +1553,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
                     + O2N.get(PROJECT) + get(PROJECT) + newLine //
                     + O2N.get(REALIZATION_NAMES) + get(REALIZATION_NAMES) + newLine //
                     + O2N.get(INDEX_LAYOUT_IDS) + get(INDEX_LAYOUT_IDS) + newLine //
+                    + O2N.get(IS_DERIVED) + get(IS_DERIVED) + newLine //
                     + O2N.get(SNAPSHOTS) + get(SNAPSHOTS) + newLine //
+                    + O2N.get(SNAPSHOT_FILTERS) + get(SNAPSHOT_FILTERS) + newLine //
                     + O2N.get(IS_PARTIAL_MATCH_MODEL) + get(IS_PARTIAL_MATCH_MODEL) + newLine //
                     + O2N.get(SCAN_ROWS) + get(SCAN_ROWS) + newLine //
                     + O2N.get(TOTAL_SCAN_ROWS) + get(TOTAL_SCAN_ROWS) + newLine //

@@ -214,16 +214,22 @@ class FilePruner(val session: SparkSession,
     }
   }
 
-  var cached = new java.util.HashMap[(Seq[Expression], Seq[Expression]), (Seq[PartitionDirectory], Long)]()
+  var cached = new java.util.HashMap[(Seq[Expression], Seq[Expression], Seq[Expression]), (Seq[PartitionDirectory], Long)]()
 
   override def listFiles(partitionFilters: Seq[Expression], dataFilters: Seq[Expression]): Seq[PartitionDirectory] = {
-    if (cached.containsKey((partitionFilters, dataFilters))) {
-      return cached.get((partitionFilters, dataFilters))._1
+    listFiles(partitionFilters, dataFilters, Seq.empty[Expression]);
+  }
+
+  def listFiles(partitionFilters: Seq[Expression], dataFilters: Seq[Expression],
+                derivedFilters: Seq[Expression]): Seq[PartitionDirectory] = {
+    if (cached.containsKey((partitionFilters, dataFilters, derivedFilters))) {
+      return cached.get((partitionFilters, dataFilters, derivedFilters))._1
     }
 
     require(isResolved)
     val timePartitionFilters = getSpecFilter(dataFilters, timePartitionColumn)
     val dimFilters = getDimFilter(dataFilters, timePartitionColumn, shardByColumn)
+    val derivedDimFilters = getDimFilter(derivedFilters, timePartitionColumn, shardByColumn)
     logInfoIf(timePartitionFilters.nonEmpty)(s"Applying time partition filters: ${timePartitionFilters.mkString(",")}")
 
     // segment pruning
@@ -241,9 +247,14 @@ class FilePruner(val session: SparkSession,
       pruneSegments
     }
     val filteredSizeAfterTimePartition = selected.size
+    var filteredSizeAfterDimensionFilter = selected.size
 
     if (projectKylinConfig.isDimensionRangeFilterEnabled) {
       selected = afterPruning("pruning segment with dimension range", dimFilters, selected) {
+        pruneSegmentsDimRange
+      }
+      filteredSizeAfterDimensionFilter = selected.size
+      selected = afterPruning("pruning segment with derived dimension range", derivedDimFilters, selected) {
         pruneSegmentsDimRange
       }
     }
@@ -252,7 +263,8 @@ class FilePruner(val session: SparkSession,
     QueryContext.current().getMetrics.setSegCount(selected.size)
 
     logInfo(s"Segment Num: Before filter: ${prunedSegmentDirs.size}, After time partition filter: " +
-      s"$filteredSizeAfterTimePartition, After dimension filter: ${selected.size}.")
+      s"$filteredSizeAfterTimePartition, After dimension filter: ${filteredSizeAfterDimensionFilter}, " +
+      s"After derived dimension filter: ${selected.size}.")
     selected = selected.par.map { e =>
       val logString = s"[fetch file status for Segment ID: ${e.segmentID}; Partition Num: ${e.partitions.size}]"
       logTime(logString, true) {
@@ -288,11 +300,11 @@ class FilePruner(val session: SparkSession,
     setShufflePartitions(totalFileSize, sourceRows, session)
     if (selected.isEmpty) {
       val value = Seq.empty[PartitionDirectory]
-      cached.put((partitionFilters, dataFilters), (value, sourceRows))
+      cached.put((partitionFilters, dataFilters, derivedFilters), (value, sourceRows))
       value
     } else {
       val value = Seq(PartitionDirectory(InternalRow.empty, selected.flatMap(_.files)))
-      cached.put((partitionFilters, dataFilters), (value, sourceRows))
+      cached.put((partitionFilters, dataFilters, derivedFilters), (value, sourceRows))
       value
     }
 
