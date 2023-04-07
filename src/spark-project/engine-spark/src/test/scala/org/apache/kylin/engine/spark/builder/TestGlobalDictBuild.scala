@@ -164,6 +164,47 @@ class TestGlobalDictBuild extends SparderBaseFunSuite with SharedSparkSession wi
     Assert.assertEquals(shufflePartitionSizeInt, dictDirSize)
   }
 
+
+  test("global dict build and close aqe") {
+    val dsMgr: NDataflowManager = NDataflowManager.getInstance(getTestConfig, DEFAULT_PROJECT)
+    val df: NDataflow = dsMgr.getDataflow(CUBE_NAME)
+    val seg = df.getLastSegment
+    val nSpanningTree = NSpanningTreeFactory.fromLayouts(seg.getIndexPlan.getAllLayouts, df.getUuid)
+    val dictColSet = DictionaryBuilderHelper.extractTreeRelatedGlobalDicts(seg, nSpanningTree.getAllIndexEntities)
+    val randomDataSet = generateOriginData(200, 10)
+
+    val dictionaryBuilder = new DFDictionaryBuilder(randomDataSet, seg, spark, dictColSet)
+    val col = dictColSet.iterator().next()
+    val ds = randomDataSet.select("26").distinct()
+    val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, col, ds)
+
+    val originalAQE = spark.conf.get("spark.sql.adaptive.enabled")
+
+    // false false
+    seg.getConfig.setProperty("kylin.engine.global-dict-aqe-enabled", "FALSE")
+    dictionaryBuilder.changeAQEConfig(false)
+    Assert.assertFalse(spark.conf.get("spark.sql.adaptive.enabled").toBoolean)
+    dictionaryBuilder.build(col, bucketPartitionSize, ds)
+    Assert.assertTrue(spark.conf.get("spark.sql.adaptive.enabled").equals(originalAQE))
+
+    // false true
+    dictionaryBuilder.changeAQEConfig(true)
+    Assert.assertTrue(spark.conf.get("spark.sql.adaptive.enabled").equals(originalAQE))
+
+    // true false
+    seg.getConfig.setProperty("kylin.engine.global-dict-aqe-enabled", "TRUE")
+    dictionaryBuilder.changeAQEConfig(false)
+    Assert.assertTrue(spark.conf.get("spark.sql.adaptive.enabled").equals(originalAQE))
+
+    dictionaryBuilder.build(col, bucketPartitionSize, ds)
+    Assert.assertTrue(spark.conf.get("spark.sql.adaptive.enabled").equals(originalAQE))
+
+    // true true
+    dictionaryBuilder.changeAQEConfig(true)
+    Assert.assertTrue(spark.conf.get("spark.sql.adaptive.enabled").equals(originalAQE))
+
+  }
+
   def buildDict(seg: NDataSegment, randomDataSet: Dataset[Row], dictColSet: Set[TblColRef]): NGlobalDictMetaInfo = {
     val dictionaryBuilder = new DFDictionaryBuilder(randomDataSet, seg, randomDataSet.sparkSession, dictColSet)
     val col = dictColSet.iterator().next()

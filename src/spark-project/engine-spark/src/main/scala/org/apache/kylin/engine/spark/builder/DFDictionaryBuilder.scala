@@ -44,9 +44,12 @@ class DFDictionaryBuilder(
   @throws[IOException]
   def buildDictSet(): Unit = {
     colRefSet.asScala.foreach(col => safeBuild(col))
+    changeAQEConfig(true)
   }
 
   private val YARN_CLUSTER: String = "cluster"
+  private val AQE = "spark.sql.adaptive.enabled";
+  private val originalAQE = ss.conf.get(AQE)
 
   private def tryZKJaasConfiguration(): Unit = {
     val config = KylinConfig.getInstanceFromEnv
@@ -79,6 +82,18 @@ class DFDictionaryBuilder(
     } finally lock.unlock()
   }
 
+  // Workaround: https://olapio.atlassian.net/browse/KE-41645
+  private[builder] def changeAQEConfig(isDictBuildFinished: Boolean = false) : Boolean = {
+    if (!seg.getConfig.isGlobalDictAQEEnabled && !isDictBuildFinished) {
+      logInfo("Temporarily Close AQE for dict build job")
+      ss.conf.set(AQE, false)
+      return false
+    }
+    logInfo(s"Restore AQE to its initial config: $originalAQE")
+    ss.conf.set(AQE, originalAQE)
+    originalAQE.toBoolean
+  }
+
   @throws[IOException]
   private[builder] def build(ref: TblColRef, bucketPartitionSize: Int,
                              afterDistinct: Dataset[Row]): Unit = logTime(s"building global dictionaries V2 for ${ref.getIdentity}") {
@@ -86,7 +101,9 @@ class DFDictionaryBuilder(
     globalDict.prepareWrite()
     val broadcastDict = ss.sparkContext.broadcast(globalDict)
 
+    changeAQEConfig(false)
     ss.sparkContext.setJobDescription("Build dict " + ref.getIdentity)
+
     val dictCol = col(afterDistinct.schema.fields.head.name)
     afterDistinct.filter(dictCol.isNotNull)
       .repartition(bucketPartitionSize, dictCol)
@@ -118,6 +135,7 @@ class DFDictionaryBuilder(
       }
       logInfo(s"Global dict correctness check completed, table: ${ref.getTableAlias}, col: ${ref.getName}")
     }
+    changeAQEConfig(true)
   }
 
   private def getLockPath(pathName: String) = s"/${seg.getProject}${HadoopUtil.GLOBAL_DICT_STORAGE_ROOT}/$pathName/lock"
