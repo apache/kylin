@@ -18,287 +18,107 @@
 
 package org.apache.kylin.query.routing;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Ordering;
-import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.QueryableSeg;
-import org.apache.kylin.metadata.realization.SQLDigest;
-import org.junit.Assert;
-import org.junit.Test;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
-import lombok.val;
-
-public class CandidateSortTest {
+class CandidateSortTest {
 
     @Test
-    public void testModelHintCandidateSort() {
+    void testModelPrioritySorter() {
         try (QueryContext queryContext = QueryContext.current()) {
+            Comparator<Candidate> sorter = Candidate.modelPrioritySorter();
+
+            // assert that c1 is more prioritary than c2
+            {
+                String[] modelPriorities = CandidateTestUtils
+                        .mockModelPriorityValues(new String[] { "modelA", "modelB" });
+                queryContext.setModelPriorities(modelPriorities);
+                Candidate c1 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 1);
+                Candidate c2 = CandidateTestUtils.mockCandidate("model0001", "modelB", 1, 1);
+
+                Assertions.assertEquals(-1, sorter.compare(c1, c2));
+                Assertions.assertEquals(1, sorter.compare(c2, c1));
+                assertSortResult(c1, sorter, Lists.newArrayList(c1, c2));
+            }
+
+            // with empty model priorities, c1 and c2 has the same priority
             {
                 queryContext.setModelPriorities(new String[] {});
-                val model1 = mockCandidate("model0001", "modelA", 1, 1);
-                val model2 = mockCandidate("model0002", "modelB", 2, 2);
-                sort(model1, model2).assertFirst(model1);
+                Candidate c1 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 1);
+                Candidate c2 = CandidateTestUtils.mockCandidate("model0002", "modelB", 2, 2);
+                assertSortResult(c1, sorter, Lists.newArrayList(c1, c2));
             }
 
             {
-                queryContext.setModelPriorities(new String[] { "MODELB" });
-                val model1 = mockCandidate("model0001", "modelA", 1, 1);
-                val model2 = mockCandidate("model0002", "modelB", 2, 2);
-                sort(model1, model2).assertFirst(model2);
+                queryContext.setModelPriorities(CandidateTestUtils.mockModelPriorityValues(new String[] { "modelB" }));
+                Candidate c1 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 1);
+                Candidate c2 = CandidateTestUtils.mockCandidate("model0002", "modelB", 2, 2);
+                Assertions.assertEquals(Integer.MAX_VALUE, sorter.compare(c1, c2));
+                assertSortResult(c2, sorter, Lists.newArrayList(c1, c2));
             }
 
             {
                 queryContext.setModelPriorities(new String[] { "MODELB", "MODELA" });
-                val model1 = mockCandidate("model0001", "modelA", 1, 1);
-                val model2 = mockCandidate("model0002", "modelB", 2, 2);
-                sort(model1, model2).assertFirst(model2);
-            }
-
-            {
-                queryContext.setModelPriorities(new String[] { "MODELC", "MODELA" });
-                val model1 = mockCandidate("model0001", "modelA", 1, 1);
-                val model2 = mockCandidate("model0002", "modelB", 2, 2);
-                val model3 = mockCandidate("model0003", "modelC", 4, 4);
-                sort(model1, model2, model3).assertFirst(model3);
+                Candidate c1 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 1);
+                Candidate c2 = CandidateTestUtils.mockCandidate("model0002", "modelB", 2, 2);
+                Assertions.assertEquals(1, sorter.compare(c1, c2));
+                assertSortResult(c2, sorter, Lists.newArrayList(c1, c2));
             }
         }
     }
 
     @Test
-    public void testSort() {
-        {
-            val model1 = mockCandidate("model0001", "modelA", 1, 1);
-            val model2 = mockCandidate("model0002", "modelB", 2, 2);
-            sort(model1, model2).assertFirst(model1);
-        }
+    void realizationCostSorterTest() {
+        Comparator<Candidate> comparator = Candidate.realizationCostSorter();
+        NDataflow df1 = Mockito.mock(NDataflow.class);
+        NDataflow df2 = Mockito.mock(NDataflow.class);
+        OLAPContext olapContext = Mockito.mock(OLAPContext.class);
+        Candidate c1 = new Candidate(df1, olapContext, Maps.newHashMap());
+        Candidate c2 = new Candidate(df2, olapContext, Maps.newHashMap());
+        Mockito.when(c1.getRealization().getCost()).thenReturn(1);
+        Mockito.when(c2.getRealization().getCost()).thenReturn(2);
 
-        {
-            val model1 = mockCandidate("model0001", "modelA", 2, 1);
-            val model2 = mockCandidate("model0002", "modelB", 2, 2);
-            sort(model1, model2).assertFirst(model1);
-        }
-
-        {
-            val model1 = mockCandidate("model0001", "modelA", 2, 2);
-            val model2 = mockCandidate("model0002", "modelB", 2, 2);
-            sort(model1, model2).assertFirst(model1);
-        }
-
-        {
-            val model1 = mockCandidate("model0001", "modelA", 1, 1);
-            val model2 = mockCandidate("model0002", "modelB", 2, 2);
-            val model3 = mockCandidate("model0003", "modelC", 4, 4);
-            sort(model1, model2, model3).assertFirst(model1);
-        }
-
-        {
-            val model1 = mockCandidate("model0001", "modelA", 1, 1);
-            val model2 = mockEmptyCandidate("model0002", "modelB", 1);
-            sort(model1, model2).assertFirst(model1);
-        }
-
-        {
-            val model1 = mockStreamingCandidate("model0001", "modelA", 1, 1);
-            val model2 = mockEmptyCandidate("model0002", "modelB", 1);
-            sort(model1, model2).assertFirst(model1);
-        }
-
-        {
-            val model1 = mockHybridCandidate("model0001", "modelA", 1, 1, 2);
-            val model2 = mockEmptyCandidate("model0002", "modelB", 1);
-            sort(model1, model2).assertFirst(model1);
-        }
-
-        {
-            val model1 = mockCandidate("model0001", "modelA", 1, 3);
-            val model2 = mockStreamingCandidate("model0002", "modelB", 1, 2);
-            val model3 = mockHybridCandidate("model0003", "modelC", 1, 4, 2);
-            sort(model1, model2, model3).assertFirst(model2);
-        }
+        // Assert that the Comparator sorts the Candidates correctly
+        assertSortResult(c1, comparator, Lists.newArrayList(c1, c2));
     }
 
-    private interface SortedCandidate {
-
-        void assertFirst(Candidate candidate);
+    @Test
+    void realizationCapabilityCostSorter() {
+        Candidate c1 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 1);
+        Candidate c2 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 2);
+        Candidate c3 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 2);
+        Comparator<Candidate> comparator = Candidate.realizationCapabilityCostSorter();
+        assertSortResult(c1, comparator, Lists.newArrayList(c1, c2));
+        assertSortResult(c2, comparator, Lists.newArrayList(c2, c3));
     }
 
-    private SortedCandidate sort(Candidate... candidates) {
-        List<Comparator<Candidate>> sorters = Lists.newArrayList();
-        sorters.add(Candidate.modelPrioritySorter());
-        sorters.add(Candidate.realizationCostSorter());
-        sorters.add(Candidate.realizationCapabilityCostSorter());
-        sorters.add(Candidate.modelUuidSorter());
-
-        return candidate -> {
-            Arrays.sort(candidates, Ordering.compound(sorters));
-            Assert.assertEquals(candidate.getRealization().getModel().getAlias(),
-                    candidates[0].getRealization().getModel().getAlias());
-        };
+    @Test
+    void testModelUuidSorter() {
+        Candidate c1 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 1);
+        Candidate c2 = CandidateTestUtils.mockCandidate("model0002", "modelB", 1, 1);
+        Comparator<Candidate> comparator = Candidate.modelUuidSorter();
+        assertSortResult(c1, comparator, Lists.newArrayList(c1, c2));
     }
 
-    private Candidate mockCandidate(String modelId, String modelName, int modelCost, double candidateCost) {
-        val candidate = new Candidate();
-        candidate.realization = mockRealization(modelId, modelName, modelCost);
-        val cap = new CapabilityResult();
-        cap.setSelectedCandidate(() -> candidateCost);
-        cap.cost = (int) cap.getSelectedCandidate().getCost();
-        candidate.setCapability(cap);
-        return candidate;
+    @Test
+    void testTableIndexUnmatchedColSizeComparator() {
+        Comparator<Candidate> comparator = Candidate.tableIndexUnmatchedColSizeSorter();
+        Candidate c1 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 1, 1);
+        Candidate c2 = CandidateTestUtils.mockCandidate("model0002", "modelB", 1, 2, 2);
+        assertSortResult(c1, comparator, Lists.newArrayList(c2, c1));
     }
 
-    private Candidate mockStreamingCandidate(String modelId, String modelName, int modelCost, double candidateCost) {
-        val candidate = new Candidate();
-        candidate.realization = mockRealization(modelId, modelName, modelCost);
-        val cap = new CapabilityResult();
-        cap.setSelectedStreamingCandidate(() -> candidateCost);
-        cap.cost = (int) cap.getSelectedStreamingCandidate().getCost();
-        candidate.setCapability(cap);
-        return candidate;
+    private void assertSortResult(Candidate expected, Comparator<Candidate> comparator, List<Candidate> candidates) {
+        candidates.sort(comparator);
+        Assertions.assertEquals(expected, candidates.get(0));
     }
-
-    private Candidate mockHybridCandidate(String modelId, String modelName, int modelCost, double candidateCost,
-            double streamingCandidateCost) {
-        val candidate = new Candidate();
-        candidate.realization = mockRealization(modelId, modelName, modelCost);
-        val cap = new CapabilityResult();
-        cap.setSelectedCandidate(() -> candidateCost);
-        cap.setSelectedStreamingCandidate(() -> streamingCandidateCost);
-        cap.cost = (int) Math.min(cap.getSelectedCandidate().getCost(), cap.getSelectedStreamingCandidate().getCost());
-        candidate.setCapability(cap);
-        return candidate;
-    }
-
-    private Candidate mockEmptyCandidate(String modelId, String modelName, int modelCost) {
-        val candidate = new Candidate();
-        candidate.realization = mockRealization(modelId, modelName, modelCost);
-        val cap = new CapabilityResult();
-        cap.setSelectedCandidate(NLayoutCandidate.EMPTY);
-        cap.setSelectedStreamingCandidate(NLayoutCandidate.EMPTY);
-        candidate.setCapability(cap);
-        return candidate;
-    }
-
-    private IRealization mockRealization(String modelId, String modelName, int cost) {
-        return new IRealization() {
-            @Override
-            public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-                    Map<String, Set<Long>> chSegToLayoutsMap) {
-                return null;
-            }
-
-            @Override
-            public CapabilityResult isCapable(SQLDigest digest, QueryableSeg queryableSeg) {
-                return null;
-            }
-
-            @Override
-            public String getType() {
-                return null;
-            }
-
-            @Override
-            public KylinConfig getConfig() {
-                return null;
-            }
-
-            @Override
-            public NDataModel getModel() {
-                val model = new NDataModel();
-                model.setAlias(modelName);
-                model.setUuid(modelId);
-                return model;
-            }
-
-            @Override
-            public Set<TblColRef> getAllColumns() {
-                return null;
-            }
-
-            @Override
-            public List<TblColRef> getAllDimensions() {
-                return null;
-            }
-
-            @Override
-            public List<MeasureDesc> getMeasures() {
-                return null;
-            }
-
-            @Override
-            public List<IRealization> getRealizations() {
-                return null;
-            }
-
-            @Override
-            public FunctionDesc findAggrFunc(FunctionDesc aggrFunc) {
-                return null;
-            }
-
-            @Override
-            public boolean isOnline() {
-                return true;
-            }
-
-            @Override
-            public String getUuid() {
-                return null;
-            }
-
-            @Override
-            public String getCanonicalName() {
-                return null;
-            }
-
-            @Override
-            public long getDateRangeStart() {
-                return 0;
-            }
-
-            @Override
-            public long getDateRangeEnd() {
-                return 0;
-            }
-
-            @Override
-            public int getCost() {
-                return cost;
-            }
-
-            @Override
-            public boolean hasPrecalculatedFields() {
-                return false;
-            }
-
-            @Override
-            public int getStorageType() {
-                return 0;
-            }
-
-            @Override
-            public boolean isStreaming() {
-                return false;
-            }
-
-            @Override
-            public String getProject() {
-                return null;
-            }
-        };
-    }
-
 }

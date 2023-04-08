@@ -24,10 +24,10 @@ import lombok.Getter;
 
 public class NLookupCandidate implements IRealizationCandidate {
     @Getter
-    private String tableRef;
+    private final String tableRef;
 
     @Getter
-    private boolean isUsingSnapShot;
+    private final boolean isUsingSnapShot;
 
     public NLookupCandidate(String tableRef, boolean isUsingSnapShot) {
         this.tableRef = tableRef;

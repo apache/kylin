@@ -292,7 +292,9 @@ class FilePruner(val session: SparkSession,
     QueryContext.current().getMetrics.setFileCount(totalFileCount)
     val totalFileSize = selected.flatMap(partition => partition.files).map(_.getLen).sum
     val sourceRows = selected.map(seg => {
-      val layoutRows = dataflow.getSegment(seg.segmentID).getLayout(layout.getId).getRows
+      val segment = dataflow.getSegment(seg.segmentID)
+      val dataLayout = segment.getLayout(layout.getId)
+      val layoutRows = if (dataLayout == null) 0 else dataLayout.getRows
       logInfo(s"Source scan rows: Query Id: ${QueryContext.current().getQueryId}, Segment Id: ${seg.segmentID}, " +
         s"Layout Id: ${layout.getId}, rows: $layoutRows.")
       layoutRows
@@ -361,7 +363,9 @@ class FilePruner(val session: SparkSession,
 
   private def pruneEmptySegments(segDirs: Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
     segDirs.filter(seg => {
-      if (dataflow.getSegment(seg.segmentID).getLayout(layout.getId).isEmpty) {
+      val segment = dataflow.getSegment(seg.segmentID)
+      val dataLayout = segment.getLayout(layout.getId)
+      if (dataLayout == null || dataLayout.isEmpty) {
         logDebug(s"pruning empty segment: segment ${seg.segmentID} ${layout.getId} is empty.")
         false
       } else {

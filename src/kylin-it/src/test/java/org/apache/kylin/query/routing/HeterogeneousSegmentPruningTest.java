@@ -26,18 +26,28 @@ import java.util.stream.Collectors;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigBase;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.LayoutPartition;
+import org.apache.kylin.metadata.cube.model.NDataLayout;
+import org.apache.kylin.metadata.cube.model.NDataSegDetails;
+import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.Segments;
+import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.storage.StorageContext;
+import org.apache.kylin.util.MetadataTestUtils;
 import org.apache.kylin.util.OlapContextUtil;
 import org.junit.Assert;
 import org.junit.Test;
@@ -389,7 +399,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
         { // composite filters
             val sqlFilter = sql + "select * from T1\n"
                     + "where (cal_dt = DATE'2012-01-01' or (cast(cal_dt as date) = '2012-01-02' or cal_dt = '2012-01-03')) and (cal_dt is not null or cal_dt in ('2012-01-01', '2012-01-02'))";
-            val context = getMatchedContexts(project, sqlFilter).get(0);
+            val context = OlapContextUtil.getOlapContexts(project, sqlFilter).get(0);
             assertFiltersAndLayout(context, null,
                     ">=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01),<=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-03),"
                             + "OR(=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01), =(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-02), =(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-03)),"
@@ -399,7 +409,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
         { // invalid filters with or
             val sqlFilter = sql + "select * from T1\n"
                     + "where trans_id = 123  or trans_id + 1 = 123 or (trans_id + 2 = 234 and trans_id = 345)";
-            val context = getMatchedContexts(project, sqlFilter).get(0);
+            val context = OlapContextUtil.getOlapContexts(project, sqlFilter).get(0);
             assertFiltersAndLayout(context, null,
                     ">=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01),<=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-03)");
         }
@@ -407,7 +417,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
         { // invalid filters with and
             val sqlFilter = sql + "select * from T1\n"
                     + "where trans_id = 123 and (trans_id + 2 = 234 or trans_id = 345)";
-            val context = getMatchedContexts(project, sqlFilter).get(0);
+            val context = OlapContextUtil.getOlapContexts(project, sqlFilter).get(0);
             assertFiltersAndLayout(context, null,
                     ">=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01),<=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-03),"
                             + "=(DEFAULT.TEST_KYLIN_FACT.TRANS_ID, 123)");
@@ -416,7 +426,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
         { // invalid filters with not
             val sqlFilter = sql + "select * from T1\n"
                     + "where trans_id = 123 and (not(trans_id = 234) or trans_id = 345) and (not(trans_id + 1 = 132))";
-            val context = getMatchedContexts(project, sqlFilter).get(0);
+            val context = OlapContextUtil.getOlapContexts(project, sqlFilter).get(0);
             assertFiltersAndLayout(context, null,
                     ">=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01),<=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-03),"
                             + "=(DEFAULT.TEST_KYLIN_FACT.TRANS_ID, 123),OR(<>(DEFAULT.TEST_KYLIN_FACT.TRANS_ID, 234), =(DEFAULT.TEST_KYLIN_FACT.TRANS_ID, 345))");
@@ -455,7 +465,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
         { // inner join
             val sqlInnerJoin = sql + " select * from T1 inner join T2 on T1.cal_dt = T2.cal_dt \n"
                     + " where T1.cal_dt = '2012-01-01' and T2.cal_dt = DATE '2012-01-02'";
-            val contexts = getMatchedContexts(project, sqlInnerJoin);
+            val contexts = OlapContextUtil.getOlapContexts(project, sqlInnerJoin);
             assertFiltersAndLayout(contexts.get(0), seg1Id,
                     ">=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01),<=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-03),=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01)");
             assertFiltersAndLayout(contexts.get(1), seg2Id,
@@ -465,7 +475,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
         { // left join
             val sqlLeftJoin = sql + " select * from T1 left join T2 on T1.cal_dt = T2.cal_dt \n"
                     + " where T1.cal_dt = DATE '2012-01-01' and T2.cal_dt = DATE '2012-01-02'";
-            val contexts = getMatchedContexts(project, sqlLeftJoin);
+            val contexts = OlapContextUtil.getOlapContexts(project, sqlLeftJoin);
             assertFiltersAndLayout(contexts.get(0), seg1Id,
                     ">=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01),<=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-03),=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01)");
             assertFiltersAndLayout(contexts.get(1), null,
@@ -475,7 +485,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
         { // right join
             val sqlRightJoin = sql + " select * from T1 right join T2 on T1.cal_dt = T2.cal_dt \n"
                     + " where T1.cal_dt = DATE '2012-01-01' and T2.cal_dt = DATE '2012-01-02'";
-            val contexts = getMatchedContexts(project, sqlRightJoin);
+            val contexts = OlapContextUtil.getOlapContexts(project, sqlRightJoin);
             assertFiltersAndLayout(contexts.get(0), seg2Id,
                     ">=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01),<=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-02),=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-02)");
             assertFiltersAndLayout(contexts.get(1), null,
@@ -485,7 +495,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
         { // full join
             val sqlFullJoin = sql + " select * from T1 full join T2 on T1.cal_dt = T2.cal_dt \n"
                     + " where T1.cal_dt = DATE '2012-01-01' and T2.cal_dt = DATE '2012-01-02'";
-            val contexts = getMatchedContexts(project, sqlFullJoin);
+            val contexts = OlapContextUtil.getOlapContexts(project, sqlFullJoin);
             assertFiltersAndLayout(contexts.get(0), null,
                     ">=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01),<=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-03)");
             assertFiltersAndLayout(contexts.get(1), null,
@@ -529,7 +539,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
                     + "(cal_dt='2012-01-01' and trans_id = 15) or\n" + "(cal_dt='2012-01-01' and trans_id = 16) or\n"
                     + "(cal_dt='2012-01-01' and trans_id = 17) or\n" + "(cal_dt='2012-01-01' and trans_id = 18) or\n"
                     + "(cal_dt='2012-01-01' and trans_id = 19) or\n" + "(cal_dt='2012-01-01' and trans_id = 20)";
-            val contexts = getMatchedContexts(project, sqlWithTooManyOrs);
+            val contexts = OlapContextUtil.getOlapContexts(project, sqlWithTooManyOrs);
             Assert.assertEquals(
                     ">=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01),<=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-03)",
                     contexts.get(0).getExpandedFilterConditions().stream().map(RexNode::toString)
@@ -543,7 +553,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
                     + "(cal_dt='2012-01-01' and trans_id = 6) or\n" + "(cal_dt='2012-01-01' and trans_id = 7) or\n"
                     + "(cal_dt='2012-01-01' and trans_id = 8) or\n" + "(cal_dt='2012-01-01' and trans_id = 9) or\n"
                     + "(cal_dt='2012-01-01' and trans_id = 10)";
-            val contexts = getMatchedContexts(project, sqlWithFilter);
+            val contexts = OlapContextUtil.getOlapContexts(project, sqlWithFilter);
             Assert.assertNotEquals(
                     ">=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-01),<=(DEFAULT.TEST_KYLIN_FACT.CAL_DT, 2012-01-03)",
                     contexts.get(0).getExpandedFilterConditions().stream().map(RexNode::toString)
@@ -552,8 +562,113 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
 
     }
 
-    private List<OLAPContext> getMatchedContexts(String project, String sql) throws SqlParseException {
-        return OlapContextUtil.getOlapContexts(project, sql);
+    @Test
+    public void testQueryWithEmptySegment() throws SqlParseException {
+        // layout 20000000001, tableindex
+        // layout 20001, cal_dt & trans_id
+        // layout 10001, cal_dt
+        // layout 1, trans_id
+
+        // segment1 [2012-01-01, 2012-01-02] layout 20000000001, 20001
+        // segment2 [2012-01-02, 2012-01-03] layout 20000000001, 20001, 10001
+        // segment3 [2012-01-03, 2012-01-04] layout 20001, 10001, 1
+        // segment4 [2012-01-04, 2012-01-05] layout 10001, 1
+        // segment5 [2012-01-05, 2012-01-06] layout 20000000001, 20001, 10001, 1
+
+        val project = "heterogeneous_segment";
+        val dfId = "747f864b-9721-4b97-acde-0aa8e8656cba";
+        // val seg1Id = "8892fa3f-f607-4eec-8159-7c5ae2f16942"   [20120101000000_20120102000000]
+        // val seg2Id = "d75a822c-788a-4592-a500-cf20186dded1"   [20120102000000_20120103000000]
+        val seg3Id = "54eaf96d-6146-45d2-b94e-d5d187f89919"; // [20120103000000_20120104000000]
+        // val seg4Id = "411f40b9-a80a-4453-90a9-409aac6f7632"   [20120104000000_20120105000000]
+        // val seg5Id = "a8318597-cb75-416f-8eb8-96ea285dd2b4"   [20120105000000_20120106000000]
+
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager dfMgr = NDataflowManager.getInstance(getTestConfig(), project);
+            NDataflow dataflow = dfMgr.getDataflow(dfId);
+            NDataSegment latestReadySegment = dataflow.getSegment(seg3Id);
+            if (latestReadySegment != null) {
+                NDataSegDetails segDetails = latestReadySegment.getSegDetails();
+                List<NDataLayout> allLayouts = segDetails.getAllLayouts();
+
+                // update
+                NDataflowUpdate dataflowUpdate = new NDataflowUpdate(dfId);
+                NDataLayout[] toRemoveLayouts = allLayouts.stream()
+                        .filter(dataLayout -> dataLayout.getLayoutId() == 20001).toArray(NDataLayout[]::new);
+                dataflowUpdate.setToRemoveLayouts(toRemoveLayouts);
+                dfMgr.updateDataflow(dataflowUpdate);
+            }
+            return null;
+        }, project);
+
+        val sql = "select cal_dt, sum(price), count(*) from test_kylin_fact inner join test_account \n"
+                + "on test_kylin_fact.seller_id = test_account.account_id \n"
+                + "where cal_dt between date'2012-01-01' and date'2012-01-03'\n" //
+                + "group by cal_dt\n";
+        // can not query
+        {
+            OLAPContext olapContext = OlapContextUtil.getOlapContexts(project, sql).get(0);
+            StorageContext storageContext = olapContext.storageContext;
+            Assert.assertEquals(-1L, storageContext.getLayoutId().longValue());
+        }
+
+        {
+            MetadataTestUtils.updateProjectConfig(project, "kylin.query.index-match-rules",
+                    KylinConfigBase.USE_VACANT_INDEXES);
+            try (QueryContext queryContext = QueryContext.current()) {
+                OLAPContext olapContext = OlapContextUtil.getOlapContexts(project, sql).get(0);
+                StorageContext storageContext = olapContext.storageContext;
+                Assert.assertEquals(10001L, storageContext.getLayoutId().longValue());
+                Assert.assertFalse(queryContext.getQueryTagInfo().isVacant());
+            }
+        }
+    }
+
+    @Test
+    public void testQueryWithAllSegmentsAreEmpty() throws SqlParseException {
+        // layout 20000000001, tableindex
+        // layout 20001, cal_dt & trans_id
+        // layout 10001, cal_dt
+        // layout 1, trans_id
+
+        // segment1 [2012-01-01, 2012-01-02] layout 20000000001, 20001
+        // segment2 [2012-01-02, 2012-01-03] layout 20000000001, 20001, 10001
+        // segment3 [2012-01-03, 2012-01-04] layout 20001, 10001, 1
+        // segment4 [2012-01-04, 2012-01-05] layout 10001, 1
+        // segment5 [2012-01-05, 2012-01-06] layout 20000000001, 20001, 10001, 1
+
+        val project = "heterogeneous_segment";
+        val dfId = "747f864b-9721-4b97-acde-0aa8e8656cba";
+        // val seg1Id = "8892fa3f-f607-4eec-8159-7c5ae2f16942"   [20120101000000_20120102000000]
+        // val seg2Id = "d75a822c-788a-4592-a500-cf20186dded1"   [20120102000000_20120103000000]
+        // val seg3Id = "54eaf96d-6146-45d2-b94e-d5d187f89919"   [20120103000000_20120104000000]
+        // val seg4Id = "411f40b9-a80a-4453-90a9-409aac6f7632"   [20120104000000_20120105000000]
+        // val seg5Id = "a8318597-cb75-416f-8eb8-96ea285dd2b4"   [20120105000000_20120106000000]
+
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            NDataflowManager dfMgr = NDataflowManager.getInstance(getTestConfig(), project);
+            NDataflow dataflow = dfMgr.getDataflow(dfId);
+            Segments<NDataSegment> segments = dataflow.getSegments();
+            // update
+            NDataflowUpdate dataflowUpdate = new NDataflowUpdate(dfId);
+            dataflowUpdate.setToRemoveSegs(segments.toArray(new NDataSegment[0]));
+            dfMgr.updateDataflow(dataflowUpdate);
+            return null;
+        }, project);
+
+        val sql = "select cal_dt, sum(price), count(*) from test_kylin_fact inner join test_account \n"
+                + "on test_kylin_fact.seller_id = test_account.account_id \n"
+                + "where cal_dt between date'2012-01-01' and date'2012-01-03'\n" //
+                + "group by cal_dt\n";
+
+        MetadataTestUtils.updateProjectConfig(project, "kylin.query.index-match-rules",
+                KylinConfigBase.USE_VACANT_INDEXES);
+        try (QueryContext queryContext = QueryContext.current()) {
+            OLAPContext olapContext = OlapContextUtil.getOlapContexts(project, sql).get(0);
+            StorageContext storageContext = olapContext.storageContext;
+            Assert.assertEquals(-1L, storageContext.getLayoutId().longValue());
+            Assert.assertFalse(queryContext.getQueryTagInfo().isVacant());
+        }
     }
 
     private void assertFiltersAndLayout(OLAPContext context, String segId, String expectedFilterCond) {
@@ -567,7 +682,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
     }
 
     private void assertNoRealizationFound(String project, String sql) throws SqlParseException {
-        val context = getMatchedContexts(project, sql).get(0);
+        val context = OlapContextUtil.getOlapContexts(project, sql).get(0);
         Assert.assertNull(context.realization);
     }
 
@@ -580,7 +695,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
     private void assertPrunedSegmentsRange(String project, String sql, String dfId,
             List<Pair<String, String>> expectedRanges, long expectedLayoutId,
             Map<String, List<Long>> expectedPartitions, String expectedFilterCond) throws SqlParseException {
-        val context = getMatchedContexts(project, sql).get(0);
+        val context = OlapContextUtil.getOlapContexts(project, sql).get(0);
 
         if (expectedLayoutId == -1L) {
             Assert.assertTrue(context.storageContext.isEmptyLayout());

@@ -90,10 +90,6 @@ public class Candidate {
         this.matchedJoinsGraphAliasMap = matchedJoinsGraphAliasMap;
     }
 
-    // for testing only
-    Candidate() {
-    }
-
     @Override
     public String toString() {
         return realization.toString();
@@ -125,7 +121,7 @@ public class Candidate {
     }
 
     public static Comparator<Candidate> realizationCapabilityCostSorter() {
-        return Comparator.comparingDouble(c -> c.getCapability().cost);
+        return Comparator.comparingDouble(c -> c.getCapability().getCost());
     }
 
     public static Comparator<Candidate> modelUuidSorter() {

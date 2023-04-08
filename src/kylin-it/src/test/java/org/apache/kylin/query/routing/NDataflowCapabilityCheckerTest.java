@@ -49,7 +49,7 @@ public class NDataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
         CapabilityResult result = NDataflowCapabilityChecker.check(dataflow, dataflow.getQueryableSegments(),
                 olapContext.getSQLDigest(), null);
         Assert.assertNotNull(result);
-        Assert.assertEquals((int) result.getSelectedCandidate().getCost(), result.cost);
+        Assert.assertEquals(result.getSelectedCandidate().getCost(), result.getCost(), 0.001);
     }
 
     @Test

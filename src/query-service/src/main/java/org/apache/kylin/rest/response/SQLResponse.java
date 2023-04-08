@@ -25,6 +25,8 @@ import java.util.List;
 
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.metadata.query.NativeQueryRealization;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.slf4j.Logger;
@@ -32,8 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -67,6 +67,9 @@ public class SQLResponse implements Serializable {
     protected long duration;
 
     protected boolean isPartial = false;
+
+    @JsonProperty("vacant")
+    private boolean isVacant;
 
     private List<Long> scanRows;
 
@@ -148,9 +151,8 @@ public class SQLResponse implements Serializable {
         }
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results,
-            int affectedRowCount, boolean isException, String exceptionMessage,
-            boolean isPartial, boolean isPushDown) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, int affectedRowCount,
+            boolean isException, String exceptionMessage, boolean isPartial, boolean isPushDown) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.affectedRowCount = affectedRowCount;
@@ -165,8 +167,7 @@ public class SQLResponse implements Serializable {
     }
 
     public SQLResponse(List<SelectedColumnMeta> columnMetas, Iterable<List<String>> results, int resultSize,
-            int affectedRowCount, boolean isException, String exceptionMessage,
-            boolean isPartial, boolean isPushDown) {
+            int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial, boolean isPushDown) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.affectedRowCount = affectedRowCount;

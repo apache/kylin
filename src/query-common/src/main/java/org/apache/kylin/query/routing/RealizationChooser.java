@@ -227,7 +227,7 @@ public class RealizationChooser {
         }
 
         // Step 3. find the lowest-cost candidate
-        QueryRouter.sortCandidates(context, candidates);
+        QueryRouter.sortCandidates(context.olapSchema.getProjectName(), candidates);
         logger.trace("Cost Sorted Realizations {}", candidates);
         Candidate candidate = candidates.get(0);
         restoreOLAPContextProps(context, candidate.getRewrittenCtx());
@@ -235,6 +235,15 @@ public class RealizationChooser {
         adjustForCapabilityInfluence(candidate, context);
 
         context.realization = candidate.realization;
+        if (candidate.getCapability().isVacant()) {
+            QueryContext.current().getQueryTagInfo().setVacant(true);
+            NLayoutCandidate layoutCandidate = (NLayoutCandidate) candidate.capability.getSelectedCandidate();
+            context.storageContext.setCandidate(layoutCandidate);
+            context.storageContext.setLayoutId(layoutCandidate.getLayoutEntity().getId());
+            context.storageContext.setEmptyLayout(true);
+            return;
+        }
+
         if (candidate.capability.getSelectedCandidate() instanceof NLookupCandidate) {
             boolean useSnapshot = context.isFirstTableLookupTableInModel(context.realization.getModel());
             context.storageContext.setUseSnapshot(useSnapshot);

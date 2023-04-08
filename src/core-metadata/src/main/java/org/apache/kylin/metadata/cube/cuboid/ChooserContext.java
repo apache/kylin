@@ -56,7 +56,7 @@ public class ChooserContext {
     final Map<Integer, TableExtDesc.ColumnStats> columnStatMap = Maps.newHashMap();
 
     final KylinConfig kylinConfig;
-
+    SQLDigest sqlDigest;
     AggIndexMatcher aggIndexMatcher;
     TableIndexMatcher tableIndexMatcher;
 
@@ -79,6 +79,7 @@ public class ChooserContext {
 
     public ChooserContext(SQLDigest sqlDigest, NDataflow dataflow) {
         this(dataflow.getModel());
+        this.sqlDigest = sqlDigest;
         prepareIndexMatchers(sqlDigest, dataflow);
     }
 
@@ -106,7 +107,13 @@ public class ChooserContext {
      *    see org.apache.kylin.query.DynamicQueryTest.testDynamicParamOnAgg.
      */
     public boolean isIndexMatchersInvalid() {
-        return !getAggIndexMatcher().isValid() && !getTableIndexMatcher().isValid();
+        boolean invalid = !getAggIndexMatcher().isValid() && !getTableIndexMatcher().isValid();
+        if (invalid) {
+            log.warn("Unfortunately, the fast check has failed. "
+                    + "It's possible that the queried columns contain null values, "
+                    + "which could be due to the computed column not being present in the model.");
+        }
+        return invalid;
     }
 
     public TableExtDesc.ColumnStats getColumnStats(TblColRef ref) {

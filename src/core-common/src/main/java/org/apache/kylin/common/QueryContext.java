@@ -30,9 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -361,6 +361,7 @@ public class QueryContext implements Closeable {
         private String separator;
         private boolean isRefused;
         private boolean includeHeader;
+        private boolean isVacant;
     }
 
     @Getter

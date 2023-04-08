@@ -2308,6 +2308,34 @@ public abstract class KylinConfigBase implements Serializable {
                         "org.apache.kylin.query.util.SparkSQLFunctionConverter" });
     }
 
+    public static final String USE_VACANT_INDEXES = "use-vacant-indexes";
+    public static final String USE_TABLE_INDEX_ANSWER_SELECT_STAR = "use-table-index-answer-select-star";
+
+    public String getQueryIndexMatchRules() {
+        return getOptional("kylin.query.index-match-rules", "");
+    }
+
+    private Set<String> getPruningRules() {
+        String queryIndexMatchRules = getQueryIndexMatchRules();
+        String[] splitRules = queryIndexMatchRules.split(",");
+        Set<String> configRules = Sets.newHashSet();
+        for (String splitRule : splitRules) {
+            if (StringUtils.isNotBlank(splitRule)) {
+                configRules.add(StringUtils.lowerCase(splitRule));
+            }
+        }
+        return configRules;
+    }
+
+    public boolean isVacantIndexPruningEnabled() {
+        return getPruningRules().contains(KylinConfigBase.USE_VACANT_INDEXES);
+    }
+
+    public boolean useTableIndexAnswerSelectStarEnabled() {
+        return getPruningRules().contains(KylinConfigBase.USE_TABLE_INDEX_ANSWER_SELECT_STAR)
+                || Boolean.parseBoolean(getOptional("kylin.query.use-tableindex-answer-select-star.enabled", FALSE));
+    }
+
     @ThirdPartyDependencies({
             @ThirdPartyDependencies.ThirdPartyDependent(repository = "static-user-manager", classes = {
                     "StaticAuthenticationProvider", "StaticUserGroupService", "StaticUserService" }) })
@@ -3759,10 +3787,6 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isSkipResourceCheck() {
         return Boolean.parseBoolean(getOptional("kylin.build.resource.skip-resource-check", FALSE));
-    }
-
-    public boolean useTableIndexAnswerSelectStarEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.use-tableindex-answer-select-star.enabled", FALSE));
     }
 
     public int getSecondStorageSkippingIndexGranularity() {

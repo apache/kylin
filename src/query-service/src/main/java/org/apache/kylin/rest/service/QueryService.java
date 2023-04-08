@@ -81,6 +81,14 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.engine.spark.filter.BloomFilterSkipCollector;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.collect.Collections2;
+import org.apache.kylin.guava30.shaded.common.collect.HashMultimap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.SetMultimap;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.acl.AclTCR;
@@ -162,14 +170,6 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.base.Joiner;
-import org.apache.kylin.guava30.shaded.common.collect.Collections2;
-import org.apache.kylin.guava30.shaded.common.collect.HashMultimap;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.SetMultimap;
 import com.google.gson.Gson;
 
 import lombok.AllArgsConstructor;
@@ -1364,7 +1364,9 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
         response.setNativeRealizations(OLAPContext.getNativeRealizations());
 
-        setAppMaterURL(response);
+        if (!queryContext.getQueryTagInfo().isVacant()) {
+            setAppMaterURL(response);
+        }
 
         if (isPushDown) {
             response.setNativeRealizations(Lists.newArrayList());
@@ -1381,6 +1383,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
 
         response.setEngineType(QueryHistory.EngineType.NATIVE.name());
         response.setSignature(QueryCacheSignatureUtil.createCacheSignature(response, project));
+        response.setVacant(QueryContext.current().getQueryTagInfo().isVacant());
 
         if (QueryContext.current().getMetrics().getQueryExecutedPlan() != null) {
             response.setExecutedPlan(QueryContext.current().getMetrics().getQueryExecutedPlan());
