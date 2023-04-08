@@ -82,11 +82,10 @@ public class QueryContextCutter {
             }
         }
 
-        ContextUtil.dumpCalcitePlan(
-                "cannot find proper realizations After re-cut " + MAX_RETRY_TIMES_OF_CONTEXT_CUT + " times", root, log);
-        log.error("too many unmatched join in this query, please check it or create correspond realization");
-        throw new NoRealizationFoundException(
-                "too many unmatched join in this query, please check it or create correspond realization");
+        String errorMsg = "too many unmatched joins in this query, please check it or create corresponding realization.";
+        ContextUtil.dumpCalcitePlan("cannot find proper realizations After re-cut " + MAX_RETRY_TIMES_OF_CONTEXT_CUT
+                + " times. \nError: " + errorMsg, root, log);
+        throw new NoRealizationFoundException(errorMsg);
     }
 
     private static List<OLAPContext> collectContextInfoAndSelectRealization(RelNode queryRoot) {

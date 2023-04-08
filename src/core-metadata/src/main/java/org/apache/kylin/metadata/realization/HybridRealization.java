@@ -138,14 +138,14 @@ public class HybridRealization implements IRealization {
                 child = realization.isCapable(digest, queryableSeg.getStreamingSegments(), Maps.newHashMap());
                 result.setSelectedStreamingCandidate(child.getSelectedStreamingCandidate());
                 if (child.isCapable()) {
-                    result.cost = Math.min(result.cost, (int) child.getSelectedStreamingCandidate().getCost());
+                    result.setCost(Math.min(result.getCost(), child.getSelectedStreamingCandidate().getCost()));
                 }
             } else {
                 child = realization.isCapable(digest, queryableSeg.getBatchSegments(),
                         queryableSeg.getChSegToLayoutsMap());
                 result.setSelectedCandidate(child.getSelectedCandidate());
                 if (child.isCapable()) {
-                    result.cost = Math.min(result.cost, (int) child.getSelectedCandidate().getCost());
+                    result.setCost(Math.min(result.getCost(), child.getSelectedCandidate().getCost()));
                 }
             }
             if (child.isCapable()) {
@@ -156,7 +156,7 @@ public class HybridRealization implements IRealization {
             }
         }
 
-        result.cost--; // let hybrid win its children
+        result.setCost(result.getCost() - 1); // let hybrid win its children
 
         return result;
     }

@@ -17,50 +17,44 @@
  */
 package org.apache.kylin.metadata.cube.cuboid;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.model.DeriveInfo;
-import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealizationCandidate;
 
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter
+@Setter
 public class NLayoutCandidate implements IRealizationCandidate {
-    private @Nonnull LayoutEntity layoutEntity;
-    @Setter
-    private double cost;
-
-    @Setter
-    @Getter
-    private CapabilityResult capabilityResult;
 
     public static final NLayoutCandidate EMPTY = new NLayoutCandidate(new LayoutEntity(), Double.MAX_VALUE,
             new CapabilityResult());
 
-    // derived
-    private @Nonnull Map<Integer, DeriveInfo> derivedToHostMap = Maps.newHashMap();
+    private LayoutEntity layoutEntity;
+    private double cost;
+    private CapabilityResult capabilityResult;
+    private long range;
+    private long maxSegEnd;
+    private Map<Integer, DeriveInfo> derivedToHostMap = Maps.newHashMap();
+    Set<String> derivedTableSnapshots = Sets.newHashSet();
 
-    @Getter
-    @Setter
-    Set<String> derivedTableSnapshots = new HashSet<>();
-
-    public NLayoutCandidate(@Nonnull LayoutEntity layoutEntity) {
+    public NLayoutCandidate(LayoutEntity layoutEntity) {
+        Preconditions.checkNotNull(layoutEntity);
         this.layoutEntity = layoutEntity;
     }
 
-    public NLayoutCandidate(@Nonnull LayoutEntity layoutEntity, double cost, CapabilityResult result) {
-        this.layoutEntity = layoutEntity;
+    public NLayoutCandidate(LayoutEntity layoutEntity, double cost, CapabilityResult result) {
+        this(layoutEntity);
         this.cost = cost;
         this.capabilityResult = result;
     }
@@ -69,66 +63,57 @@ public class NLayoutCandidate implements IRealizationCandidate {
         return this.getLayoutEntity().getIndex() == null;
     }
 
-    @Nonnull
-    public LayoutEntity getLayoutEntity() {
-        return layoutEntity;
-    }
-
-    public void setLayoutEntity(@Nonnull LayoutEntity cuboidLayout) {
-        this.layoutEntity = cuboidLayout;
-    }
-
-    @Nonnull
-    public Map<Integer, DeriveInfo> getDerivedToHostMap() {
-        return derivedToHostMap;
-    }
-
-    public void setDerivedToHostMap(@Nonnull Map<Integer, DeriveInfo> derivedToHostMap) {
-        this.derivedToHostMap = derivedToHostMap;
-    }
-
     public Map<List<Integer>, List<DeriveInfo>> makeHostToDerivedMap() {
         Map<List<Integer>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
-
-        for (Map.Entry<Integer, DeriveInfo> entry : derivedToHostMap.entrySet()) {
-
-            Integer derCol = entry.getKey();
-            List<Integer> hostCols = entry.getValue().columns;
-            DeriveInfo.DeriveType type = entry.getValue().type;
-            JoinDesc join = entry.getValue().join;
-
-            List<DeriveInfo> infoList = hostToDerivedMap.computeIfAbsent(hostCols, k -> new ArrayList<>());
-
-            // Merged duplicated derived column
-            boolean merged = false;
-            for (DeriveInfo existing : infoList) {
-                if (existing.type == type && existing.join.getPKSide().equals(join.getPKSide())) {
-                    if (existing.columns.contains(derCol)) {
-                        merged = true;
-                        break;
-                    }
-                    if (type == DeriveInfo.DeriveType.LOOKUP || type == DeriveInfo.DeriveType.LOOKUP_NON_EQUI) {
-                        existing.columns.add(derCol);
-                        merged = true;
-                        break;
-                    }
-                }
+        derivedToHostMap.forEach((derivedColId, deriveInfo) -> {
+            DeriveInfo.DeriveType type = deriveInfo.type;
+            List<Integer> columns = deriveInfo.columns;
+            List<DeriveInfo> infoList = hostToDerivedMap.computeIfAbsent(columns, k -> Lists.newArrayList());
+            if (!isMerged(derivedColId, deriveInfo, infoList)) {
+                infoList.add(new DeriveInfo(type, deriveInfo.join, Lists.newArrayList(derivedColId), false));
             }
-            if (!merged)
-                infoList.add(new DeriveInfo(type, join, Lists.newArrayList(derCol), false));
-        }
-
+        });
         return hostToDerivedMap;
     }
 
-    @Override
-    public double getCost() {
-        return this.cost;
+    // Merged duplicated derived column
+    private static boolean isMerged(Integer derCol, DeriveInfo deriveInfo, List<DeriveInfo> infoList) {
+        DeriveInfo.DeriveType type = deriveInfo.type;
+        boolean merged = false;
+        for (DeriveInfo existing : infoList) {
+            if (existing.type == type && existing.join.getPKSide().equals(deriveInfo.join.getPKSide())) {
+                if (existing.columns.contains(derCol)) {
+                    merged = true;
+                }
+                if (type == DeriveInfo.DeriveType.LOOKUP || type == DeriveInfo.DeriveType.LOOKUP_NON_EQUI) {
+                    existing.columns.add(derCol);
+                    merged = true;
+                }
+            }
+            if (merged) {
+                break;
+            }
+        }
+        return merged;
     }
 
     @Override
     public String toString() {
-        return "LayoutCandidate{" + "cuboidLayout=" + layoutEntity + ", indexEntity=" + layoutEntity.getIndex()
-                + ", cost=" + cost + '}';
+        String type = "";
+        if (layoutEntity.isManual()) {
+            type += "manual";
+        } else if (layoutEntity.isAuto()) {
+            type += "auto";
+        }
+        if (layoutEntity.isBase()) {
+            type += type.isEmpty() ? "base" : ",base";
+        }
+        if (type.isEmpty()) {
+            type = "unknown";
+        }
+        return "LayoutCandidate{" + "layout=" + layoutEntity //
+                + ", type=" + type //
+                + ", cost=" + cost //
+                + "}";
     }
 }

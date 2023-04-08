@@ -25,7 +25,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Ordering;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.query.relnode.OLAPContext;
 
 import lombok.Getter;
 
@@ -35,27 +34,26 @@ public class QueryRouter {
     }
 
     public static void applyRules(Candidate candidate) {
-        Strategy pruningStrategy = getStrategy(candidate.getCtx());
+        Strategy pruningStrategy = getStrategy(candidate.getCtx().olapSchema.getProjectName());
         for (PruningRule r : pruningStrategy.getRules()) {
             r.apply(candidate);
         }
     }
 
-    public static void sortCandidates(OLAPContext context, List<Candidate> candidates) {
-        Strategy strategy = getStrategy(context);
+    public static void sortCandidates(String project, List<Candidate> candidates) {
+        Strategy strategy = getStrategy(project);
         candidates.sort(strategy.getSorter());
     }
 
-    private static Strategy getStrategy(OLAPContext context) {
-        String project = context.olapSchema.getProjectName();
-        KylinConfig projectConfig = NProjectManager.getProjectConfig(project);
-        return new Strategy(projectConfig);
+    private static Strategy getStrategy(String project) {
+        return new Strategy(NProjectManager.getProjectConfig(project));
     }
 
     public static class Strategy {
         private static final PruningRule SEGMENT_PRUNING = new SegmentPruningRule();
         private static final PruningRule PARTITION_PRUNING = new PartitionPruningRule();
         private static final PruningRule REMOVE_INCAPABLE_REALIZATIONS = new RemoveIncapableRealizationsRule();
+        private static final PruningRule VACANT_INDEX_PRUNING = new VacantIndexPruningRule();
 
         @Getter
         List<PruningRule> rules = Lists.newArrayList();
@@ -72,6 +70,9 @@ public class QueryRouter {
             rules.add(SEGMENT_PRUNING);
             rules.add(PARTITION_PRUNING);
             rules.add(REMOVE_INCAPABLE_REALIZATIONS);
+            if (config.isVacantIndexPruningEnabled()) {
+                rules.add(VACANT_INDEX_PRUNING);
+            }
 
             // add all sorters
             if (config.useTableIndexAnswerSelectStarEnabled()) {

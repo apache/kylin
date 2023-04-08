@@ -95,23 +95,13 @@ public class NQueryLayoutChooser {
         Map<Long, List<NDataLayout>> commonLayoutsMap = commonLayouts.stream()
                 .collect(Collectors.toMap(NDataLayout::getLayoutId, Lists::newArrayList));
         List<NLayoutCandidate> candidates = collectAllLayoutCandidates(dataflow, chooserContext, commonLayoutsMap);
-
-        QueryInterruptChecker.checkThreadInterrupted("Interrupted exception occurs.",
-                "Current step involves gathering all the layouts that "
-                        + "can potentially provide a response to this query.");
-
-        if (candidates.isEmpty()) {
-            return null;
-        }
-        log.info("Matched candidates num : {}", candidates.size());
-        sortCandidates(candidates, chooserContext, sqlDigest);
-        return candidates.get(0);
+        return chooseBestLayoutCandidate(dataflow, sqlDigest, chooserContext, candidates, "selectLayoutCandidate");
     }
 
     public static List<NLayoutCandidate> collectAllLayoutCandidates(NDataflow dataflow, ChooserContext chooserContext,
-            Map<Long, List<NDataLayout>> commonLayoutsMap) {
+            Map<Long, List<NDataLayout>> dataLayoutMap) {
         List<NLayoutCandidate> candidates = Lists.newArrayList();
-        for (Map.Entry<Long, List<NDataLayout>> entry : commonLayoutsMap.entrySet()) {
+        for (Map.Entry<Long, List<NDataLayout>> entry : dataLayoutMap.entrySet()) {
             LayoutEntity layout = dataflow.getIndexPlan().getLayoutEntity(entry.getKey());
             log.trace("Matching index: id = {}", entry.getKey());
             IndexMatcher.MatchResult matchResult = chooserContext.getTableIndexMatcher().match(layout);
@@ -120,7 +110,7 @@ public class NQueryLayoutChooser {
             }
 
             if (!matchResult.isMatched()) {
-                log.trace("Matching failed");
+                log.trace("The [{}] cannot match with the {}", chooserContext.sqlDigest.toString(), layout);
                 continue;
             }
 
@@ -131,12 +121,82 @@ public class NQueryLayoutChooser {
                 candidate.setDerivedTableSnapshots(candidate.getDerivedToHostMap().keySet().stream()
                         .map(i -> chooserContext.convertToRef(i).getTable()).collect(Collectors.toSet()));
             }
-            long allRows = entry.getValue().stream().mapToLong(NDataLayout::getRows).sum();
+            List<NDataLayout> dataLayouts = entry.getValue();
+            long allRows = dataLayouts.stream().mapToLong(NDataLayout::getRows).sum();
             candidate.setCost(allRows * (tempResult.influences.size() + matchResult.getInfluenceFactor()));
             candidate.setCapabilityResult(tempResult);
+
+            long[] rangeAndLatest = calcSegRangeAndMaxEnd(chooserContext, dataflow, dataLayouts);
+            candidate.setRange(rangeAndLatest[0]);
+            candidate.setMaxSegEnd(rangeAndLatest[1]);
             candidates.add(candidate);
         }
         return candidates;
+    }
+
+    private static long[] calcSegRangeAndMaxEnd(ChooserContext chooserContext, NDataflow df,
+            List<NDataLayout> dataLayouts) {
+        long[] rangeAndLatest = new long[2];
+        if (!chooserContext.getKylinConfig().isVacantIndexPruningEnabled()) {
+            return rangeAndLatest;
+        }
+        List<String> segmentNameList = Lists.newArrayList();
+        for (NDataLayout dataLayout : dataLayouts) {
+            NDataSegment segment = df.getSegment(dataLayout.getSegDetails().getId());
+            Long end = (Long) segment.getSegRange().getEnd();
+            Long start = (Long) segment.getSegRange().getStart();
+            rangeAndLatest[0] += (end - start);
+            rangeAndLatest[1] = Math.max(rangeAndLatest[1], end);
+            segmentNameList.add(segment.getName());
+        }
+        log.trace("All available segments are: {}", segmentNameList);
+        return rangeAndLatest;
+    }
+
+    public static NLayoutCandidate selectHighIntegrityCandidate(NDataflow dataflow, List<NDataSegment> prunedSegments,
+            SQLDigest digest) {
+        if (!NProjectManager.getProjectConfig(dataflow.getProject()).isVacantIndexPruningEnabled()) {
+            return null;
+        }
+        if (CollectionUtils.isEmpty(prunedSegments)) {
+            log.info("There is no segment to answer sql");
+            return NLayoutCandidate.EMPTY;
+        }
+
+        ChooserContext chooserContext = new ChooserContext(digest, dataflow);
+        if (chooserContext.isIndexMatchersInvalid()) {
+            return null;
+        }
+
+        Map<Long, List<NDataLayout>> idToDataLayoutsMap = Maps.newHashMap();
+        for (NDataSegment segment : prunedSegments) {
+            segment.getLayoutsMap().forEach((id, dataLayout) -> {
+                idToDataLayoutsMap.putIfAbsent(id, Lists.newArrayList());
+                idToDataLayoutsMap.get(id).add(dataLayout);
+            });
+        }
+
+        List<NLayoutCandidate> allLayoutCandidates = NQueryLayoutChooser.collectAllLayoutCandidates(dataflow,
+                chooserContext, idToDataLayoutsMap);
+        return chooseBestLayoutCandidate(dataflow, digest, chooserContext, allLayoutCandidates,
+                "selectHighIntegrityCandidate");
+    }
+
+    private static NLayoutCandidate chooseBestLayoutCandidate(NDataflow dataflow, SQLDigest digest,
+            ChooserContext chooserContext, List<NLayoutCandidate> allLayoutCandidates, String invokedByMethod) {
+        QueryInterruptChecker.checkThreadInterrupted("Interrupted exception occurs.",
+                "Current step involves gathering all the layouts that "
+                        + "can potentially provide a response to this query.");
+
+        if (allLayoutCandidates.isEmpty()) {
+            log.info("There is no layouts can match with the [{}]", digest.toString());
+            return null;
+        }
+        sortCandidates(allLayoutCandidates, chooserContext, digest);
+        log.debug("Invoked by method {}. Successfully matched {} candidates within the model ({}/{}), " //
+                + "and {} has been selected.", invokedByMethod, allLayoutCandidates.size(), dataflow.getProject(),
+                dataflow.getId(), allLayoutCandidates.get(0).toString());
+        return allLayoutCandidates.get(0);
     }
 
     private static Collection<NDataLayout> getCommonLayouts(List<NDataSegment> segments, NDataflow dataflow,
@@ -174,35 +234,75 @@ public class NQueryLayoutChooser {
         return commonLayouts.values();
     }
 
-    private static void sortCandidates(List<NLayoutCandidate> candidates, ChooserContext chooserContext,
+    public static void sortCandidates(List<NLayoutCandidate> candidates, ChooserContext chooserContext,
             SQLDigest sqlDigest) {
-        final Set<TblColRef> filterColSet = ImmutableSet.copyOf(sqlDigest.filterColumns);
-        final List<TblColRef> filterCols = Lists.newArrayList(filterColSet);
-        val filterColIds = filterCols.stream().sorted(ComparatorUtils.filterColComparator(chooserContext))
-                .map(col -> chooserContext.getTblColMap().get(col)).collect(Collectors.toList());
+        List<Integer> filterColIds = getFilterColIds(chooserContext, sqlDigest);
+        List<Integer> nonFilterColIds = getNonFilterColIds(chooserContext, sqlDigest);
+        Ordering<NLayoutCandidate> ordering = chooserContext.getKylinConfig().isVacantIndexPruningEnabled()
+                ? getEnhancedSorter(filterColIds, nonFilterColIds)
+                : getDefaultSorter(filterColIds, nonFilterColIds);
+        candidates.sort(ordering);
+    }
 
-        final Set<TblColRef> nonFilterColSet = sqlDigest.isRawQuery ? sqlDigest.allColumns.stream()
-                .filter(colRef -> colRef.getFilterLevel() == TblColRef.FilterColEnum.NONE).collect(Collectors.toSet())
-                : sqlDigest.groupbyColumns.stream()
-                        .filter(colRef -> colRef.getFilterLevel() == TblColRef.FilterColEnum.NONE)
-                        .collect(Collectors.toSet());
-        final List<TblColRef> nonFilterColumns = Lists.newArrayList(nonFilterColSet);
-        nonFilterColumns.sort(ComparatorUtils.nonFilterColComparator());
-        val nonFilterColIds = nonFilterColumns.stream().map(col -> chooserContext.getTblColMap().get(col))
-                .collect(Collectors.toList());
+    private static Ordering<NLayoutCandidate> getEnhancedSorter(List<Integer> filterColIds,
+            List<Integer> nonFilterColIds) {
+        return Ordering.from(segmentRangeComparator()) // high data integrity
+                .compound(preferAggComparator()) //
+                .compound(derivedLayoutComparator()) //
+                .compound(rowSizeComparator()) // lower cost
+                .compound(filterColumnComparator(filterColIds)) //
+                .compound(dimensionSizeComparator()) //
+                .compound(measureSizeComparator()) //
+                .compound(nonFilterColumnComparator(nonFilterColIds)) //
+                .compound(segmentEffectivenessComparator()); // the latest segment
+    }
 
-        Ordering<NLayoutCandidate> ordering = Ordering //
-                .from(priorityLayoutComparator()) //
+    private static Ordering<NLayoutCandidate> getDefaultSorter(List<Integer> filterColIds,
+            List<Integer> nonFilterColIds) {
+        return Ordering //
+                .from(preferAggComparator()) //
                 .compound(derivedLayoutComparator()) //
                 .compound(rowSizeComparator()) // L1 comparator, compare cuboid rows
                 .compound(filterColumnComparator(filterColIds)) // L2 comparator, order filter columns
                 .compound(dimensionSizeComparator()) // the lower dimension the best
                 .compound(measureSizeComparator()) // L3 comparator, order size of cuboid columns
-                .compound(nonFilterColumnComparator(nonFilterColIds)); // L4 comparator, order non-filter columns
-        candidates.sort(ordering);
+                .compound(nonFilterColumnComparator(nonFilterColIds));
     }
 
-    private static Comparator<NLayoutCandidate> priorityLayoutComparator() {
+    private static List<Integer> getFilterColIds(ChooserContext chooserContext, SQLDigest sqlDigest) {
+        Set<TblColRef> filterColSet = ImmutableSet.copyOf(sqlDigest.filterColumns);
+        List<TblColRef> filterCols = Lists.newArrayList(filterColSet);
+        return filterCols.stream().sorted(ComparatorUtils.filterColComparator(chooserContext))
+                .map(col -> chooserContext.getTblColMap().get(col)).collect(Collectors.toList());
+    }
+
+    private static List<Integer> getNonFilterColIds(ChooserContext chooserContext, SQLDigest sqlDigest) {
+
+        Set<TblColRef> nonFilterColSet;
+        if (sqlDigest.isRawQuery) {
+            nonFilterColSet = sqlDigest.allColumns.stream()
+                    .filter(colRef -> colRef.getFilterLevel() == TblColRef.FilterColEnum.NONE)
+                    .collect(Collectors.toSet());
+        } else {
+            nonFilterColSet = sqlDigest.groupbyColumns.stream()
+                    .filter(colRef -> colRef.getFilterLevel() == TblColRef.FilterColEnum.NONE)
+                    .collect(Collectors.toSet());
+        }
+        List<TblColRef> nonFilterColumns = Lists.newArrayList(nonFilterColSet);
+        nonFilterColumns.sort(ComparatorUtils.nonFilterColComparator());
+        return nonFilterColumns.stream().map(col -> chooserContext.getTblColMap().get(col))
+                .collect(Collectors.toList());
+    }
+
+    public static Comparator<NLayoutCandidate> segmentRangeComparator() {
+        return (c1, c2) -> Long.compare(c2.getRange(), c1.getRange());
+    }
+
+    public static Comparator<NLayoutCandidate> segmentEffectivenessComparator() {
+        return (c1, c2) -> Long.compare(c2.getMaxSegEnd(), c1.getMaxSegEnd());
+    }
+
+    public static Comparator<NLayoutCandidate> preferAggComparator() {
         return (layoutCandidate1, layoutCandidate2) -> {
             if (!KylinConfig.getInstanceFromEnv().isPreferAggIndex()) {
                 return 0;
@@ -218,7 +318,7 @@ public class NQueryLayoutChooser {
         };
     }
 
-    private static Comparator<NLayoutCandidate> derivedLayoutComparator() {
+    public static Comparator<NLayoutCandidate> derivedLayoutComparator() {
         return (candidate1, candidate2) -> {
             int result = 0;
             if (candidate1.getDerivedToHostMap().isEmpty() && !candidate2.getDerivedToHostMap().isEmpty()) {
@@ -236,15 +336,15 @@ public class NQueryLayoutChooser {
         };
     }
 
-    private static Comparator<NLayoutCandidate> rowSizeComparator() {
+    public static Comparator<NLayoutCandidate> rowSizeComparator() {
         return Comparator.comparingDouble(NLayoutCandidate::getCost);
     }
 
-    private static Comparator<NLayoutCandidate> dimensionSizeComparator() {
+    public static Comparator<NLayoutCandidate> dimensionSizeComparator() {
         return Comparator.comparingInt(candidate -> candidate.getLayoutEntity().getOrderedDimensions().size());
     }
 
-    private static Comparator<NLayoutCandidate> measureSizeComparator() {
+    public static Comparator<NLayoutCandidate> measureSizeComparator() {
         return Comparator.comparingInt(candidate -> candidate.getLayoutEntity().getOrderedMeasures().size());
     }
 
@@ -253,18 +353,18 @@ public class NQueryLayoutChooser {
      * 1. choose the layout if its shardby column is found in filters
      * 2. otherwise, compare position of filter columns appear in the layout dims
      */
-    private static Comparator<NLayoutCandidate> filterColumnComparator(List<Integer> sortedFilters) {
+    public static Comparator<NLayoutCandidate> filterColumnComparator(List<Integer> sortedFilters) {
         return Ordering.from(shardByComparator(sortedFilters)).compound(colComparator(sortedFilters));
     }
 
-    private static Comparator<NLayoutCandidate> nonFilterColumnComparator(List<Integer> sortedNonFilters) {
+    public static Comparator<NLayoutCandidate> nonFilterColumnComparator(List<Integer> sortedNonFilters) {
         return colComparator(sortedNonFilters);
     }
 
     /**
      * compare filters with dim pos in layout, filter columns are sorted by filter type and selectivity (cardinality)
      */
-    private static Comparator<NLayoutCandidate> colComparator(List<Integer> sortedCols) {
+    public static Comparator<NLayoutCandidate> colComparator(List<Integer> sortedCols) {
         return (layoutCandidate1, layoutCandidate2) -> {
             List<Integer> position1 = getColumnsPos(layoutCandidate1, sortedCols);
             List<Integer> position2 = getColumnsPos(layoutCandidate2, sortedCols);
@@ -289,7 +389,7 @@ public class NQueryLayoutChooser {
      * 1. check if shardby columns appears in filters
      * 2. if both layout has shardy columns in filters, compare the filter type and selectivity (cardinality)
      */
-    private static Comparator<NLayoutCandidate> shardByComparator(List<Integer> columns) {
+    public static Comparator<NLayoutCandidate> shardByComparator(List<Integer> columns) {
         return (candidate1, candidate2) -> {
             int shardByCol1Idx = getShardByColIndex(candidate1, columns);
             int shardByCol2Idx = getShardByColIndex(candidate2, columns);

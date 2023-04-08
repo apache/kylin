@@ -73,13 +73,17 @@ public class NDataflowCapabilityChecker {
         } else {
             // for query-on-fact-table
             logger.trace("Normal dataflow matching");
-            boolean partialMatchIndex = QueryContext.current().isPartialMatchIndex();
             NLayoutCandidate candidateAndInfluence = NQueryLayoutChooser.selectLayoutCandidate(dataflow, prunedSegments,
                     digest, secondStorageSegmentLayoutMap);
-            if (partialMatchIndex && candidateAndInfluence == null) {
+            if (candidateAndInfluence == null && QueryContext.current().isPartialMatchIndex()) {
+                // This branch is customized requirements
                 logger.trace("Partial dataflow matching");
                 candidateAndInfluence = NQueryLayoutChooser.selectPartialLayoutCandidate(dataflow, prunedSegments,
                         digest, secondStorageSegmentLayoutMap);
+            } else if (candidateAndInfluence == null) {
+                logger.debug("select the layout candidate with high data integrity.");
+                candidateAndInfluence = NQueryLayoutChooser.selectHighIntegrityCandidate(dataflow, prunedSegments,
+                        digest);
             }
             if (candidateAndInfluence != null) {
                 chosenCandidate = candidateAndInfluence;
@@ -94,7 +98,7 @@ public class NDataflowCapabilityChecker {
             } else {
                 result.setSelectedCandidate(chosenCandidate);
             }
-            result.cost = (int) chosenCandidate.getCost();
+            result.setCost(chosenCandidate.getCost());
         } else {
             result.setCapable(false);
         }

@@ -31,6 +31,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Getter
+@Setter
 @NoArgsConstructor
 public class CapabilityResult {
 
@@ -43,34 +45,31 @@ public class CapabilityResult {
     /**
      * Is capable or not
      */
-    @Getter
-    @Setter
     private boolean capable = false;
 
     /**
      * selected capable candidate, like Lookup or layout
      */
-    @Getter
-    @Setter
     private IRealizationCandidate selectedCandidate;
 
-    @Getter
-    @Setter
     private IRealizationCandidate selectedStreamingCandidate;
 
-    @Getter
-    @Setter
     private int layoutUnmatchedColsSize;
 
     /**
      * The smaller the cost, the more capable the realization
      */
-    public int cost = Integer.MAX_VALUE;
+    private double cost = Integer.MAX_VALUE;
 
     /**
      * reason of incapable
      */
     public IncapableCause incapableCause;
+
+    /**
+     * The layout has not yet been built in any segment or is currently under building.
+     */
+    private boolean isVacant;
 
     /**
      * Marker objects to indicate all special features
