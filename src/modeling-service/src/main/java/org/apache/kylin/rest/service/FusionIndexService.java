@@ -18,20 +18,35 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.INTEGER_POSITIVE_CHECK;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
+import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
@@ -50,6 +65,7 @@ import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.rest.aspect.Transaction;
 import org.apache.kylin.rest.request.AggShardByColumnsRequest;
 import org.apache.kylin.rest.request.CreateTableIndexRequest;
+import org.apache.kylin.rest.request.OpenUpdateRuleBasedCuboidRequest;
 import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
 import org.apache.kylin.rest.response.AggIndexResponse;
 import org.apache.kylin.rest.response.BuildIndexResponse;
@@ -62,8 +78,6 @@ import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,6 +86,8 @@ import lombok.extern.slf4j.Slf4j;
 public class FusionIndexService extends BasicService {
     private static final List<JobStatusEnum> runningStatus = Arrays.asList(JobStatusEnum.STARTING,
             JobStatusEnum.RUNNING, JobStatusEnum.STOPPING);
+
+    private static final String COUNT_ALL_MEASURE = "COUNT_ALL";
 
     @Autowired
     private IndexPlanService indexPlanService;
@@ -421,6 +437,127 @@ public class FusionIndexService extends BasicService {
         }
         return indexPlanService.getIndexesWithRelatedTables(project, modelId, key, status, orderBy, desc, sources,
                 batchIndexIds);
+    }
+
+    public UpdateRuleBasedCuboidRequest convertOpenToInternal(OpenUpdateRuleBasedCuboidRequest request,
+            NDataModel model) {
+        checkParamPositive(request.getGlobalDimCap());
+        val dimMap = model.getEffectiveDimensions().entrySet().stream().collect(Collectors
+                .toMap(e -> e.getValue().getAliasDotName(), Map.Entry::getKey, (u, v) -> v, LinkedHashMap::new));
+        val meaMap = model.getEffectiveMeasures().entrySet().stream().collect(
+                Collectors.toMap(e -> e.getValue().getName(), Map.Entry::getKey, (u, v) -> v, LinkedHashMap::new));
+
+        List<NAggregationGroup> newAdded = request.getAggregationGroups().stream().map(aggGroup -> {
+            NAggregationGroup group = new NAggregationGroup();
+            Preconditions.checkNotNull(aggGroup.getDimensions(), "dimension should not null");
+            checkParamPositive(aggGroup.getDimCap());
+            val selectedDimMap = extractIds(aggGroup.getDimensions(), dimMap, AggGroupParams.DIMENSION);
+            group.setIncludes(selectedDimMap.values().toArray(new Integer[0]));
+            String[] measures = extractMeasures(aggGroup.getMeasures());
+            val selectedMeaMap = extractIds(measures, meaMap, AggGroupParams.MEASURE);
+            group.setMeasures(selectedMeaMap.values().toArray(new Integer[0]));
+            SelectRule selectRule = new SelectRule();
+            val mandatoryDimMap = extractIds(aggGroup.getMandatoryDims(), selectedDimMap, AggGroupParams.MANDATORY);
+            Set<String> allDims = new HashSet<>(mandatoryDimMap.keySet());
+            selectRule.setMandatoryDims(mandatoryDimMap.values().toArray(new Integer[0]));
+            selectRule.setHierarchyDims(extractJointOrHierarchyIds(aggGroup.getHierarchyDims(), selectedDimMap, allDims,
+                    AggGroupParams.HIERARCHY));
+            selectRule.setJointDims(
+                    extractJointOrHierarchyIds(aggGroup.getJointDims(), selectedDimMap, allDims, AggGroupParams.JOINT));
+            selectRule.setDimCap(aggGroup.getDimCap() != null ? aggGroup.getDimCap() : request.getGlobalDimCap());
+            group.setSelectRule(selectRule);
+            return group;
+        }).collect(Collectors.toList());
+
+        RuleBasedIndex ruleBasedIndex = getRule(request.getProject(), model.getUuid());
+        List<NAggregationGroup> groups = ruleBasedIndex.getAggregationGroups();
+        groups.addAll(newAdded);
+
+        UpdateRuleBasedCuboidRequest result = new UpdateRuleBasedCuboidRequest();
+        result.setModelId(model.getUuid());
+        result.setProject(request.getProject());
+        result.setLoadData(false);
+        result.setRestoreDeletedIndex(request.isRestoreDeletedIndex());
+        result.setAggregationGroups(groups);
+        return result;
+    }
+
+    private String[] extractMeasures(String[] measures) {
+        if (ArrayUtils.isEmpty(measures)) {
+            return new String[] { COUNT_ALL_MEASURE };
+        } else {
+            List<String> list = Arrays.stream(measures).filter(m -> !m.equals(COUNT_ALL_MEASURE))
+                    .collect(Collectors.toList());
+            list.add(0, COUNT_ALL_MEASURE);
+            return list.toArray(new String[0]);
+        }
+    }
+
+    private void checkParamPositive(Integer dimCap) {
+        if (dimCap != null && dimCap <= 0) {
+            throw new KylinException(INTEGER_POSITIVE_CHECK);
+        }
+    }
+
+    private Map<String, Integer> extractIds(String[] dimOrMeaNames, Map<String, Integer> nameIdMap,
+            AggGroupParams aggGroupParams) {
+        if (dimOrMeaNames == null || dimOrMeaNames.length == 0) {
+            return new HashMap<>();
+        }
+        Set<String> set = Arrays.stream(dimOrMeaNames)
+                .map(str -> aggGroupParams == AggGroupParams.MEASURE ? str : StringUtils.upperCase(str, Locale.ROOT))
+                .collect(Collectors.toCollection(TreeSet::new));
+        if (set.size() < dimOrMeaNames.length) {
+            throw new IllegalStateException(
+                    "Dimension or measure in agg group must not contain duplication: " + Arrays.asList(dimOrMeaNames));
+        }
+
+        Map<String, Integer> upperCaseMap = nameIdMap.entrySet().stream()
+                .collect(Collectors.toMap(entry -> aggGroupParams == AggGroupParams.MEASURE ? entry.getKey()
+                        : StringUtils.upperCase(entry.getKey(), Locale.ROOT), Map.Entry::getValue));
+        if (!upperCaseMap.keySet().containsAll(set)) {
+            switch (aggGroupParams) {
+            case DIMENSION:
+                throw new KylinException(ErrorCodeServer.DIMENSION_NOT_IN_MODEL);
+            case MEASURE:
+                throw new KylinException(ErrorCodeServer.MEASURE_NOT_IN_MODEL);
+            case MANDATORY:
+                throw new KylinException(ErrorCodeServer.MANDATORY_NOT_IN_DIMENSION);
+            case HIERARCHY:
+                throw new KylinException(ErrorCodeServer.HIERARCHY_NOT_IN_DIMENSION);
+            case JOINT:
+                throw new KylinException(ErrorCodeServer.JOINT_NOT_IN_DIMENSION);
+            default:
+                throw new IllegalStateException("this should not happen");
+            }
+        }
+        return set.stream()
+                .collect(Collectors.toMap(Function.identity(), upperCaseMap::get, (v1, v2) -> v1, LinkedHashMap::new));
+    }
+
+    private Integer[][] extractJointOrHierarchyIds(String[][] origins, Map<String, Integer> selectedDimMap, Set<String> allDims,
+            AggGroupParams aggGroupParams) {
+        if (origins == null || origins.length == 0) {
+            return new Integer[0][];
+        }
+        Integer[][] result = new Integer[origins.length][];
+        for (int i = 0; i < origins.length; i++) {
+            if (ArrayUtils.isEmpty(origins[i])) {
+                continue;
+            }
+            Map<String, Integer> tmp = extractIds(origins[i], selectedDimMap, aggGroupParams);
+            if (Sets.intersection(tmp.keySet(), allDims).isEmpty()) {
+                allDims.addAll(tmp.keySet());
+                result[i] = tmp.values().toArray(new Integer[0]);
+            } else {
+                throw new KylinException(ErrorCodeServer.DIMENSION_ONLY_SET_ONCE);
+            }
+        }
+        return result;
+    }
+
+    enum AggGroupParams {
+        DIMENSION, MEASURE, MANDATORY, HIERARCHY, JOINT
     }
 
     private String getBatchModel(String project, String modelId) {

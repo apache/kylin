@@ -25,13 +25,10 @@ import java.util.Collections;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
+import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.model.SelectRule;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.response.AggIndexResponse;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.AclUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexEntity.Range;
@@ -40,9 +37,17 @@ import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.CreateTableIndexRequest;
+import org.apache.kylin.rest.request.OpenUpdateRuleBasedCuboidRequest;
 import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
+import org.apache.kylin.rest.response.AggIndexResponse;
 import org.apache.kylin.rest.response.FusionRuleDataResult;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclUtil;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Assert;
@@ -56,8 +61,6 @@ import org.mockito.Mockito;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import lombok.var;
@@ -859,5 +862,152 @@ public class FusionIndexServiceTest extends SourceTestCase {
         var indexResponses2 = fusionIndexService.getAllIndexes("streaming_test", modelId2, "", Lists.newArrayList(),
                 "data_size", true, Lists.newArrayList());
         Assert.assertEquals(64, indexResponses2.size());
+    }
+
+    @Test
+    public void testNormalConvertOpenToInternal() {
+        OpenUpdateRuleBasedCuboidRequest request = new OpenUpdateRuleBasedCuboidRequest();
+        request.setProject("default");
+        request.setModelAlias("test_bank");
+        val modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), request.getProject());
+        NDataModel model = modelManager.getDataModelDescByAlias(request.getModelAlias());
+        val aggGroup = new OpenUpdateRuleBasedCuboidRequest.OpenAggGroupRequest();
+        request.setAggregationGroups(Collections.singletonList(aggGroup));
+
+        {
+            aggGroup.setDimensions(new String[]{"TEST_BANK_INCOME.NAME", "TEST_BANK_INCOME.DT"});
+            aggGroup.setMeasures(new String[]{"SUM_INCOME"});
+            String[][] jointDims = new String[][]{{"TEST_BANK_INCOME.DT"}, {}};
+            aggGroup.setJointDims(jointDims);
+            UpdateRuleBasedCuboidRequest internal = fusionIndexService.convertOpenToInternal(request, model);
+            Assert.assertEquals(2, internal.getAggregationGroups().size());
+        }
+
+        {
+            aggGroup.setDimensions(new String[]{"TEST_BANK_INCOME.NAME", "TEST_BANK_INCOME.DT"});
+            aggGroup.setMeasures(null);
+            String[][] hierarchyDims = { { "TEST_BANK_INCOME.NAME" } };
+            aggGroup.setHierarchyDims(hierarchyDims);
+            String[][] jointDims = new String[][]{{"TEST_BANK_INCOME.DT"}, {}};
+            aggGroup.setJointDims(jointDims);
+            UpdateRuleBasedCuboidRequest internal = fusionIndexService.convertOpenToInternal(request, model);
+            Assert.assertEquals(2, internal.getAggregationGroups().size());
+        }
+
+        {
+            aggGroup.setDimensions(new String[]{"TEST_BANK_INCOME.NAME", "TEST_BANK_INCOME.DT"});
+            aggGroup.setMeasures(new String[]{"SUM_INCOME"});
+            aggGroup.setHierarchyDims(null);
+            aggGroup.setJointDims(new String[][]{});
+            aggGroup.setMandatoryDims(new String[] {"TEST_BANK_INCOME.NAME"});
+            UpdateRuleBasedCuboidRequest internal = fusionIndexService.convertOpenToInternal(request, model);
+            Assert.assertEquals(2, internal.getAggregationGroups().size());
+        }
+    }
+
+    @Test
+    public void testIllegalConvertOpenToInternal() {
+        OpenUpdateRuleBasedCuboidRequest request = new OpenUpdateRuleBasedCuboidRequest();
+        request.setProject("default");
+        request.setModelAlias("test_bank");
+        val modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), request.getProject());
+        NDataModel model = modelManager.getDataModelDescByAlias(request.getModelAlias());
+        val aggGroup = new OpenUpdateRuleBasedCuboidRequest.OpenAggGroupRequest();
+        request.setAggregationGroups(Collections.singletonList(aggGroup));
+
+        request.setGlobalDimCap(-1);
+        try {
+            fusionIndexService.convertOpenToInternal(request, model);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(ErrorCodeServer.INTEGER_POSITIVE_CHECK.getMsg(), e.getMessage());
+        }
+
+        checkDimAndMeas(aggGroup, request, model);
+
+        checkSelectRuleDims(aggGroup, request, model);
+    }
+
+    private void checkDimAndMeas(OpenUpdateRuleBasedCuboidRequest.OpenAggGroupRequest aggGroup,
+            OpenUpdateRuleBasedCuboidRequest request, NDataModel model) {
+        request.setGlobalDimCap(null);
+        aggGroup.setDimensions(null);
+        try {
+            fusionIndexService.convertOpenToInternal(request, model);
+            Assert.fail();
+        } catch (NullPointerException e) {
+            Assert.assertEquals("dimension should not null", e.getMessage());
+        }
+
+        aggGroup.setDimCap(1);
+        aggGroup.setDimensions(new String[] { "TEST_BANK_INCOME.NAME", "TEST_BANK_INCOME.NAME" });
+        try {
+            fusionIndexService.convertOpenToInternal(request, model);
+            Assert.fail();
+        } catch (IllegalStateException e) {
+            Assert.assertTrue(
+                    e.getMessage().startsWith("Dimension or measure in agg group must not contain duplication"));
+        }
+
+        aggGroup.setDimensions(new String[] { "TEST_KYLIN_FACT.LSTG_SITE_ID1", "TEST_KYLIN_FACT.LSTG_SITE_ID" });
+        try {
+            fusionIndexService.convertOpenToInternal(request, model);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(ErrorCodeServer.DIMENSION_NOT_IN_MODEL.getMsg(), e.getMessage());
+        }
+
+        aggGroup.setDimensions(new String[] { "TEST_BANK_INCOME.NAME", "TEST_BANK_INCOME.DT" });
+        aggGroup.setMeasures(new String[] { "TRANS_CNT1" });
+        try {
+            fusionIndexService.convertOpenToInternal(request, model);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(ErrorCodeServer.MEASURE_NOT_IN_MODEL.getMsg(), e.getMessage());
+        }
+    }
+
+    private void checkSelectRuleDims(OpenUpdateRuleBasedCuboidRequest.OpenAggGroupRequest aggGroup,
+            OpenUpdateRuleBasedCuboidRequest request, NDataModel model) {
+        aggGroup.setMeasures(new String[] { "SUM_INCOME" });
+        aggGroup.setMandatoryDims(new String[] { "TEST_KYLIN_FACT.LSTG_FORMAT_NAME" });
+        try {
+            fusionIndexService.convertOpenToInternal(request, model);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(ErrorCodeServer.MANDATORY_NOT_IN_DIMENSION.getMsg(), e.getMessage());
+        }
+
+        aggGroup.setMandatoryDims(new String[] {});
+        String[][] hierarchyDims = { { "TEST_KYLIN_FACT.LSTG_FORMAT_NAME" } };
+        aggGroup.setHierarchyDims(hierarchyDims);
+        try {
+            fusionIndexService.convertOpenToInternal(request, model);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(ErrorCodeServer.HIERARCHY_NOT_IN_DIMENSION.getMsg(), e.getMessage());
+        }
+
+        aggGroup.setMeasures(null);
+        aggGroup.setHierarchyDims(null);
+        String[][] jointDims = { { "TEST_KYLIN_FACT.LSTG_FORMAT_NAME" }, {} };
+        aggGroup.setJointDims(jointDims);
+        try {
+            fusionIndexService.convertOpenToInternal(request, model);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(ErrorCodeServer.JOINT_NOT_IN_DIMENSION.getMsg(), e.getMessage());
+        }
+
+        hierarchyDims = new String[][] { { "TEST_BANK_INCOME.NAME" } };
+        jointDims = new String[][] { { "TEST_BANK_INCOME.NAME" } };
+        aggGroup.setHierarchyDims(hierarchyDims);
+        aggGroup.setJointDims(jointDims);
+        try {
+            fusionIndexService.convertOpenToInternal(request, model);
+            Assert.fail();
+        } catch (KylinException e) {
+            Assert.assertEquals(ErrorCodeServer.DIMENSION_ONLY_SET_ONCE.getMsg(), e.getMessage());
+        }
     }
 }
