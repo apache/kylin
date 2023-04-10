@@ -32,7 +32,6 @@ import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
-import org.apache.kylin.metadata.cube.cuboid.NQueryLayoutChooser;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -137,7 +136,7 @@ public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
         Assert.assertEquals(dataflow.getAllColumns().size(), context.allColumns.size());
         Map<String, String> sqlAlias2ModelName = OlapContextUtil.matchJoins(dataflow.getModel(), context);
         context.fixModel(dataflow.getModel(), sqlAlias2ModelName);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), context.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertEquals(20000000001L, layoutCandidate.getLayoutEntity().getId());
@@ -153,7 +152,7 @@ public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
         Assert.assertEquals(dataflow.getAllColumns().size(), context.allColumns.size());
         Map<String, String> sqlAlias2ModelName = OlapContextUtil.matchJoins(dataflow.getModel(), context);
         context.fixModel(dataflow.getModel(), sqlAlias2ModelName);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), context.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertEquals(20000010001L, layoutCandidate.getLayoutEntity().getId());
@@ -214,7 +213,7 @@ public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
 
         Map<String, String> sqlAlias2ModelName = OlapContextUtil.matchJoins(dataflow.getModel(), context);
         context.fixModel(dataflow.getModel(), sqlAlias2ModelName);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), context.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertEquals(20000010001L, layoutCandidate.getLayoutEntity().getId());

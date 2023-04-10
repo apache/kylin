@@ -30,7 +30,6 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
-import org.apache.kylin.metadata.cube.cuboid.NQueryLayoutChooser;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
@@ -51,7 +50,7 @@ class LayoutCandidateSortTest {
     void testPreferAggComparator() {
         MockEntity mock1 = new MockEntity(IndexEntity.TABLE_INDEX_START_ID + 1, ImmutableList.of(1), 2);
         MockEntity mock2 = new MockEntity(1L, ImmutableList.of(1), 3);
-        assertSortedResult(1L, NQueryLayoutChooser.preferAggComparator(), mock1, mock2);
+        assertSortedResult(1L, QueryLayoutChooser.preferAggComparator(), mock1, mock2);
     }
 
     @Test
@@ -59,7 +58,7 @@ class LayoutCandidateSortTest {
         MockEntity mock1 = new MockEntity(IndexEntity.TABLE_INDEX_START_ID + 1, ImmutableList.of(1, 2), 5000, 2000);
         MockEntity mock2 = new MockEntity(IndexEntity.TABLE_INDEX_START_ID + IndexEntity.INDEX_ID_STEP + 1,
                 ImmutableList.of(1, 3), 2000, 2000);
-        assertSortedResult(IndexEntity.TABLE_INDEX_START_ID + 1, NQueryLayoutChooser.segmentRangeComparator(), mock1,
+        assertSortedResult(IndexEntity.TABLE_INDEX_START_ID + 1, QueryLayoutChooser.segmentRangeComparator(), mock1,
                 mock2);
     }
 
@@ -68,7 +67,7 @@ class LayoutCandidateSortTest {
         MockEntity mock1 = new MockEntity(IndexEntity.TABLE_INDEX_START_ID + 1, ImmutableList.of(1, 2), 1000, 3000);
         MockEntity mock2 = new MockEntity(IndexEntity.TABLE_INDEX_START_ID + IndexEntity.INDEX_ID_STEP + 1,
                 ImmutableList.of(1, 3), 1000, 2000);
-        assertSortedResult(IndexEntity.TABLE_INDEX_START_ID + 1, NQueryLayoutChooser.segmentEffectivenessComparator(),
+        assertSortedResult(IndexEntity.TABLE_INDEX_START_ID + 1, QueryLayoutChooser.segmentEffectivenessComparator(),
                 mock1, mock2);
     }
 
@@ -77,7 +76,7 @@ class LayoutCandidateSortTest {
         MockEntity mock1 = new MockEntity(1L, ImmutableList.of(1, 2), 90);
         MockEntity mock2 = new MockEntity(IndexEntity.INDEX_ID_STEP + 1L, ImmutableList.of(1, 4), 30);
         MockEntity mock3 = new MockEntity(2 * IndexEntity.INDEX_ID_STEP + 1L, ImmutableList.of(1, 5), 10);
-        assertSortedResult(2 * IndexEntity.INDEX_ID_STEP + 1L, NQueryLayoutChooser.rowSizeComparator(), mock1, mock2,
+        assertSortedResult(2 * IndexEntity.INDEX_ID_STEP + 1L, QueryLayoutChooser.rowSizeComparator(), mock1, mock2,
                 mock3);
     }
 
@@ -89,7 +88,7 @@ class LayoutCandidateSortTest {
                 ImmutableMap.of(3, mockDeriveInfo));
         MockEntity mock3 = new MockEntity(IndexEntity.INDEX_ID_STEP + 1L, ImmutableList.of(1, 3), ImmutableMap.of());
 
-        Comparator<NLayoutCandidate> comparator = NQueryLayoutChooser.derivedLayoutComparator();
+        Comparator<NLayoutCandidate> comparator = QueryLayoutChooser.derivedLayoutComparator();
 
         // both not empty, choose the first one
         assertSortedResult(1L, comparator, mock1, mock2);
@@ -117,10 +116,10 @@ class LayoutCandidateSortTest {
 
             // all layout candidates have shardBy column
             List<Integer> sortedFilters = Lists.newArrayList(2, 1, 0);
-            assertSortedResult(2L, NQueryLayoutChooser.shardByComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(2L, QueryLayoutChooser.shardByComparator(sortedFilters), mock1, mock2);
 
             sortedFilters = Lists.newArrayList(2, 0, 1);
-            assertSortedResult(1L, NQueryLayoutChooser.shardByComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(1L, QueryLayoutChooser.shardByComparator(sortedFilters), mock1, mock2);
         }
 
         {
@@ -129,7 +128,7 @@ class LayoutCandidateSortTest {
             MockEntity mock2 = new MockEntity(2L, ImmutableList.of(1, 0, 2), ImmutableList.of(), ImmutableList.of(1));
 
             List<Integer> sortedFilters = Lists.newArrayList(2, 1, 0);
-            assertSortedResult(2L, NQueryLayoutChooser.shardByComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(2L, QueryLayoutChooser.shardByComparator(sortedFilters), mock1, mock2);
         }
 
         {
@@ -138,7 +137,7 @@ class LayoutCandidateSortTest {
             MockEntity mock2 = new MockEntity(2L, ImmutableList.of(1, 0, 2), ImmutableList.of(), ImmutableList.of());
 
             List<Integer> sortedFilters = Lists.newArrayList(2, 1, 0);
-            assertSortedResult(1L, NQueryLayoutChooser.shardByComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(1L, QueryLayoutChooser.shardByComparator(sortedFilters), mock1, mock2);
         }
     }
 
@@ -149,10 +148,10 @@ class LayoutCandidateSortTest {
             MockEntity mock1 = new MockEntity(1L, ImmutableList.of(1, 2, 3), ImmutableList.of(), ImmutableList.of(1));
             MockEntity mock2 = new MockEntity(2L, ImmutableList.of(2, 1, 3), ImmutableList.of(), ImmutableList.of(2));
             List<Integer> sortedFilters = Lists.newArrayList(1, 2, 3);
-            assertSortedResult(1L, NQueryLayoutChooser.filterColumnComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(1L, QueryLayoutChooser.filterColumnComparator(sortedFilters), mock1, mock2);
 
             sortedFilters = Lists.newArrayList(3, 2, 1);
-            assertSortedResult(2L, NQueryLayoutChooser.filterColumnComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(2L, QueryLayoutChooser.filterColumnComparator(sortedFilters), mock1, mock2);
         }
 
         {
@@ -160,7 +159,7 @@ class LayoutCandidateSortTest {
             MockEntity mock1 = new MockEntity(1L, ImmutableList.of(2, 1, 3), ImmutableList.of(), ImmutableList.of());
             MockEntity mock2 = new MockEntity(2L, ImmutableList.of(1, 2, 3), ImmutableList.of(), ImmutableList.of(1));
             List<Integer> sortedFilters = Lists.newArrayList(1, 2, 3);
-            assertSortedResult(2L, NQueryLayoutChooser.filterColumnComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(2L, QueryLayoutChooser.filterColumnComparator(sortedFilters), mock1, mock2);
         }
 
         {
@@ -168,7 +167,7 @@ class LayoutCandidateSortTest {
             MockEntity mock1 = new MockEntity(1L, ImmutableList.of(2, 1, 3), ImmutableList.of(), ImmutableList.of(2));
             MockEntity mock2 = new MockEntity(2L, ImmutableList.of(1, 2, 3), ImmutableList.of(), ImmutableList.of());
             List<Integer> sortedFilters = Lists.newArrayList(1, 2, 3);
-            assertSortedResult(1L, NQueryLayoutChooser.filterColumnComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(1L, QueryLayoutChooser.filterColumnComparator(sortedFilters), mock1, mock2);
         }
 
         {
@@ -176,7 +175,7 @@ class LayoutCandidateSortTest {
             MockEntity mock1 = new MockEntity(1L, ImmutableList.of(2, 1, 3), ImmutableMap.of());
             MockEntity mock2 = new MockEntity(2L, ImmutableList.of(1, 2, 3), ImmutableMap.of());
             List<Integer> sortedFilters = Lists.newArrayList(1, 2, 3);
-            assertSortedResult(2L, NQueryLayoutChooser.filterColumnComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(2L, QueryLayoutChooser.filterColumnComparator(sortedFilters), mock1, mock2);
         }
     }
 
@@ -186,14 +185,14 @@ class LayoutCandidateSortTest {
             MockEntity mock1 = new MockEntity(1L, ImmutableList.of(2, 1, 3), ImmutableMap.of());
             MockEntity mock2 = new MockEntity(2L, ImmutableList.of(1, 2, 3), ImmutableMap.of());
             List<Integer> sortedFilters = Lists.newArrayList(1, 2, 3);
-            assertSortedResult(2L, NQueryLayoutChooser.nonFilterColumnComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(2L, QueryLayoutChooser.nonFilterColumnComparator(sortedFilters), mock1, mock2);
         }
 
         {
             MockEntity mock1 = new MockEntity(1L, ImmutableList.of(2, 1, 3), ImmutableMap.of());
             MockEntity mock2 = new MockEntity(2L, ImmutableList.of(1, 2, 3), ImmutableMap.of());
             List<Integer> sortedFilters = Lists.newArrayList(2, 1, 3);
-            assertSortedResult(1L, NQueryLayoutChooser.nonFilterColumnComparator(sortedFilters), mock1, mock2);
+            assertSortedResult(1L, QueryLayoutChooser.nonFilterColumnComparator(sortedFilters), mock1, mock2);
         }
     }
 
@@ -202,7 +201,7 @@ class LayoutCandidateSortTest {
         MockEntity mock1 = new MockEntity(1L, ImmutableList.of(0), ImmutableList.of(100_000, 100_001));
         MockEntity mock2 = new MockEntity(10_001, ImmutableList.of(0), ImmutableList.of(100_000));
         List<NLayoutCandidate> layoutCandidates = mockLayouts(mock1, mock2);
-        layoutCandidates.sort(NQueryLayoutChooser.measureSizeComparator());
+        layoutCandidates.sort(QueryLayoutChooser.measureSizeComparator());
         Assertions.assertEquals(10_001L, layoutCandidates.get(0).getLayoutEntity().getId());
     }
 
@@ -211,7 +210,7 @@ class LayoutCandidateSortTest {
         MockEntity mock1 = new MockEntity(1L, ImmutableList.of(0, 1, 2), ImmutableList.of());
         MockEntity mock2 = new MockEntity(10_001L, ImmutableList.of(0, 1, 2, 3), ImmutableList.of());
         List<NLayoutCandidate> layoutCandidates = mockLayouts(mock1, mock2);
-        layoutCandidates.sort(NQueryLayoutChooser.dimensionSizeComparator());
+        layoutCandidates.sort(QueryLayoutChooser.dimensionSizeComparator());
         Assertions.assertEquals(1L, layoutCandidates.get(0).getLayoutEntity().getId());
     }
 

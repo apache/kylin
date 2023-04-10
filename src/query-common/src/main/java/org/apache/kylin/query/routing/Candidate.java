@@ -61,6 +61,18 @@ public class Candidate {
 
     private final QueryableSeg queryableSeg = new QueryableSeg();
 
+    public List<NDataSegment> getPrunedSegments(NDataflow df) {
+        if (df.isStreaming()) {
+            return queryableSeg.getStreamingSegments();
+        } else {
+            return queryableSeg.getBatchSegments();
+        }
+    }
+
+    public Map<String, Set<Long>> getChSegToLayoutsMap(NDataflow df) {
+        return df.isStreaming() ? Maps.newHashMap() : queryableSeg.getChSegToLayoutsMap();
+    }
+
     public void setPrunedSegments(Segments<NDataSegment> prunedSegments, NDataflow df) {
         if (df.isStreaming()) {
             queryableSeg.setStreamingSegments(prunedSegments);

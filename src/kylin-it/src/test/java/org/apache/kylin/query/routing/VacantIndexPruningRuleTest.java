@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.junit.annotation.MetadataInfo;
@@ -71,7 +70,7 @@ class VacantIndexPruningRuleTest extends NLocalWithSparkSessionTest {
                 .forEach(model -> cleanAlreadyExistingLayoutsInSegments(model.getId()));
 
         MetadataTestUtils.updateProjectConfig(getProject(), "kylin.query.index-match-rules",
-                KylinConfigBase.USE_VACANT_INDEXES);
+                QueryRouter.USE_VACANT_INDEXES);
         try (QueryContext queryContext = QueryContext.current()) {
             String sql = "select max(LO_ORDERDATE) from ssb.lineorder";
             List<OLAPContext> olapContexts = OlapContextUtil.getOlapContexts(getProject(), sql);

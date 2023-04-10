@@ -51,11 +51,8 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.QueryableSeg;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metadata.realization.SQLDigest;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -204,21 +201,6 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
 
     public IndexPlan getIndexPlan() {
         return NIndexPlanManager.getInstance(config, project).getIndexPlan(uuid);
-    }
-
-    @Override
-    public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            Map<String, Set<Long>> chSegToLayoutsMap) {
-        return NDataflowCapabilityChecker.check(this, prunedSegments, digest, chSegToLayoutsMap);
-    }
-
-    @Override
-    public CapabilityResult isCapable(SQLDigest digest, QueryableSeg queryableSeg) {
-        if (isStreaming()) {
-            return isCapable(digest, queryableSeg.getStreamingSegments(), Maps.newHashMap());
-        } else {
-            return isCapable(digest, queryableSeg.getBatchSegments(), queryableSeg.getChSegToLayoutsMap());
-        }
     }
 
     @Override

@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
@@ -614,7 +613,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
 
         {
             MetadataTestUtils.updateProjectConfig(project, "kylin.query.index-match-rules",
-                    KylinConfigBase.USE_VACANT_INDEXES);
+                    QueryRouter.USE_VACANT_INDEXES);
             try (QueryContext queryContext = QueryContext.current()) {
                 OLAPContext olapContext = OlapContextUtil.getOlapContexts(project, sql).get(0);
                 StorageContext storageContext = olapContext.storageContext;
@@ -661,8 +660,7 @@ public class HeterogeneousSegmentPruningTest extends NLocalWithSparkSessionTest 
                 + "where cal_dt between date'2012-01-01' and date'2012-01-03'\n" //
                 + "group by cal_dt\n";
 
-        MetadataTestUtils.updateProjectConfig(project, "kylin.query.index-match-rules",
-                KylinConfigBase.USE_VACANT_INDEXES);
+        MetadataTestUtils.updateProjectConfig(project, "kylin.query.index-match-rules", QueryRouter.USE_VACANT_INDEXES);
         try (QueryContext queryContext = QueryContext.current()) {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(project, sql).get(0);
             StorageContext storageContext = olapContext.storageContext;

@@ -19,11 +19,9 @@
 package org.apache.kylin.metadata.realization;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -31,14 +29,6 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TblColRef;
 
 public interface IRealization extends IStorageAware {
-
-    /**
-     * Given the features of a query, check how capable the realization is to answer the query.
-     */
-    CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            Map<String, Set<Long>> chSegToLayoutsMap);
-
-    CapabilityResult isCapable(SQLDigest digest, QueryableSeg queryableSeg);
 
     /**
      * Get whether this specific realization is a cube or InvertedIndex

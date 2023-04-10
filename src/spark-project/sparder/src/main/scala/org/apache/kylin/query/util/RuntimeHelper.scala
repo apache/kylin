@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.util
 
-import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.ImmutableBitSet
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.kylin.metadata.model.DeriveInfo.DeriveType
@@ -97,8 +96,7 @@ object RuntimeHelper extends Logging {
       }.toMap
     }
 
-    val projectInstance = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv)
-      .getProject(derivedUtil.model.getProject)
+    val projectConfig = NProjectManager.getProjectConfig(derivedUtil.model.getProject)
     // may have multi TopN measures.
     val topNIndexs = sourceSchema.fields.map(_.dataType).zipWithIndex.filter(_._1.isInstanceOf[ArrayType])
     allColumns.indices
@@ -120,8 +118,7 @@ object RuntimeHelper extends Logging {
               if (hasTopN && topNIndexs.map(_._2).contains(gTInfoIndex)) {
                 // topn measure will be erase when calling inline
                 literalOne.as(s"${factTableName}_${columnName}")
-              } else if (projectInstance.getConfig.useTableIndexAnswerSelectStarEnabled()
-                && gTInfoIndex < 0) {
+              } else if (projectConfig.useTableIndexAnswerSelectStarEnabled() && gTInfoIndex < 0) {
                 if (column.getColumnDesc.getType.isNumberFamily) {
                   literalZero.as(s"${factTableName}_${columnName}")
                 } else {
