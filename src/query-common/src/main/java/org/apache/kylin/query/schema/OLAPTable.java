@@ -55,6 +55,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.CollectionUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Iterables;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -67,7 +69,6 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.QueryExtension;
 import org.apache.kylin.query.enumerator.OLAPQuery;
@@ -75,9 +76,6 @@ import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.rest.constant.Constant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Iterables;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 
@@ -194,25 +192,23 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         return this.rowType;
     }
 
-    @SuppressWarnings("deprecation")
     private RelDataType deriveRowType(RelDataTypeFactory typeFactory) {
-        //TODO Add Fluid API to build a list of fields, TypeFactory.Builder
         KylinRelDataTypeFactoryImpl kylinRelDataTypeFactory = new KylinRelDataTypeFactoryImpl(typeFactory);
         List<String> fieldNameList = Lists.newArrayList();
         List<RelDataType> typeList = Lists.newArrayList();
         List<KylinRelDataTypeFieldImpl.ColumnType> colTypes = Lists.newArrayList();
+        KylinConfig config = this.sourceTable != null //
+                ? NProjectManager.getProjectConfig(this.sourceTable.getProject())
+                : KylinConfig.getInstanceFromEnv();
         for (ColumnDesc column : sourceColumns) {
             RelDataType sqlType = createSqlType(kylinRelDataTypeFactory, column.getUpgradedType(), column.isNullable());
             sqlType = SqlTypeUtil.addCharsetAndCollation(sqlType, kylinRelDataTypeFactory);
             typeList.add(sqlType);
-            String project = this.sourceTable != null ? this.sourceTable.getProject() : null;
-            KylinConfig projectKylinConfig = StringUtils.isNotEmpty(project)
-                    ? NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project).getConfig()
-                    : KylinConfig.getInstanceFromEnv();
-            String columnName = projectKylinConfig.getSourceNameCaseSensitiveEnabled()
-                    ? StringUtils.isNotEmpty(column.getCaseSensitiveName()) ? column.getCaseSensitiveName()
-                            : column.getName()
-                    : column.getName();
+
+            String columnName = config.getSourceNameCaseSensitiveEnabled()
+                    && StringUtils.isNotBlank(column.getCaseSensitiveName()) //
+                            ? column.getCaseSensitiveName()
+                            : column.getName();
             if (column.isComputedColumn()) {
                 fieldNameList.add(columnName);
                 colTypes.add(KylinRelDataTypeFieldImpl.ColumnType.CC_FIELD);
@@ -260,11 +256,10 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             return allColumns;
         }
 
-        ProjectInstance projectInstance = NProjectManager.getInstance(olapSchema.getConfig())
-                .getProject(sourceTable.getProject());
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(sourceTable.getProject());
         NDataflowManager dataflowManager = NDataflowManager.getInstance(olapSchema.getConfig(),
                 sourceTable.getProject());
-        if (projectInstance.getConfig().useTableIndexAnswerSelectStarEnabled()) {
+        if (projectConfig.useTableIndexAnswerSelectStarEnabled()) {
             Set<ColumnDesc> exposeColumnDescSet = new HashSet<>();
             String tableName = sourceTable.getIdentity();
             List<NDataModel> modelList = modelsMap.get(tableName);

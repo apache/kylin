@@ -20,17 +20,38 @@ package org.apache.kylin.query.routing;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Ordering;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.project.NProjectManager;
 
 import lombok.Getter;
 
 public class QueryRouter {
 
+    public static final String USE_VACANT_INDEXES = "use-vacant-indexes";
+
     private QueryRouter() {
+    }
+
+    private static Set<String> getPruningRules(KylinConfig config) {
+        String queryIndexMatchRules = config.getQueryIndexMatchRules();
+        String[] splitRules = queryIndexMatchRules.split(",");
+        Set<String> configRules = Sets.newHashSet();
+        for (String splitRule : splitRules) {
+            if (StringUtils.isNotBlank(splitRule)) {
+                configRules.add(StringUtils.lowerCase(splitRule.trim()));
+            }
+        }
+        return configRules;
+    }
+
+    public static boolean isVacantIndexPruningEnabled(KylinConfig config) {
+        return getPruningRules(config).contains(USE_VACANT_INDEXES);
     }
 
     public static void applyRules(Candidate candidate) {
@@ -70,7 +91,7 @@ public class QueryRouter {
             rules.add(SEGMENT_PRUNING);
             rules.add(PARTITION_PRUNING);
             rules.add(REMOVE_INCAPABLE_REALIZATIONS);
-            if (config.isVacantIndexPruningEnabled()) {
+            if (QueryRouter.isVacantIndexPruningEnabled(config)) {
                 rules.add(VACANT_INDEX_PRUNING);
             }
 

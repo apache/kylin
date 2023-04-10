@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.metadata.cube.cuboid;
+package org.apache.kylin.query.routing;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -35,6 +35,10 @@ import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Ordering;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.cube.cuboid.ChooserContext;
+import org.apache.kylin.metadata.cube.cuboid.ComparatorUtils;
+import org.apache.kylin.metadata.cube.cuboid.IndexMatcher;
+import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
@@ -52,9 +56,9 @@ import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class NQueryLayoutChooser {
+public class QueryLayoutChooser {
 
-    private NQueryLayoutChooser() {
+    private QueryLayoutChooser() {
     }
 
     public static NLayoutCandidate selectPartialLayoutCandidate(NDataflow dataflow, List<NDataSegment> prunedSegments,
@@ -66,10 +70,10 @@ public class NQueryLayoutChooser {
             if (candidate == null) {
                 candidate = selectLayoutCandidate(dataflow, Lists.newArrayList(segment), sqlDigest,
                         chSegmentToLayoutsMap);
-                if (candidate == null) {
-                    toRemovedSegments.add(segment);
-                }
-            } else if (segment.getSegDetails().getLayoutById(candidate.getLayoutEntity().getId()) == null) {
+            }
+
+            long layoutId = candidate == null ? -1L : candidate.getLayoutEntity().getId();
+            if (segment.getSegDetails().getLayoutById(layoutId) == null) {
                 toRemovedSegments.add(segment);
             }
         }
@@ -110,7 +114,7 @@ public class NQueryLayoutChooser {
             }
 
             if (!matchResult.isMatched()) {
-                log.trace("The [{}] cannot match with the {}", chooserContext.sqlDigest.toString(), layout);
+                log.trace("The [{}] cannot match with the {}", chooserContext.getSqlDigest().toString(), layout);
                 continue;
             }
 
@@ -137,7 +141,7 @@ public class NQueryLayoutChooser {
     private static long[] calcSegRangeAndMaxEnd(ChooserContext chooserContext, NDataflow df,
             List<NDataLayout> dataLayouts) {
         long[] rangeAndLatest = new long[2];
-        if (!chooserContext.getKylinConfig().isVacantIndexPruningEnabled()) {
+        if (!QueryRouter.isVacantIndexPruningEnabled(chooserContext.getKylinConfig())) {
             return rangeAndLatest;
         }
         List<String> segmentNameList = Lists.newArrayList();
@@ -155,7 +159,7 @@ public class NQueryLayoutChooser {
 
     public static NLayoutCandidate selectHighIntegrityCandidate(NDataflow dataflow, List<NDataSegment> prunedSegments,
             SQLDigest digest) {
-        if (!NProjectManager.getProjectConfig(dataflow.getProject()).isVacantIndexPruningEnabled()) {
+        if (!QueryRouter.isVacantIndexPruningEnabled(NProjectManager.getProjectConfig(dataflow.getProject()))) {
             return null;
         }
         if (CollectionUtils.isEmpty(prunedSegments)) {
@@ -176,7 +180,7 @@ public class NQueryLayoutChooser {
             });
         }
 
-        List<NLayoutCandidate> allLayoutCandidates = NQueryLayoutChooser.collectAllLayoutCandidates(dataflow,
+        List<NLayoutCandidate> allLayoutCandidates = QueryLayoutChooser.collectAllLayoutCandidates(dataflow,
                 chooserContext, idToDataLayoutsMap);
         return chooseBestLayoutCandidate(dataflow, digest, chooserContext, allLayoutCandidates,
                 "selectHighIntegrityCandidate");
@@ -238,7 +242,7 @@ public class NQueryLayoutChooser {
             SQLDigest sqlDigest) {
         List<Integer> filterColIds = getFilterColIds(chooserContext, sqlDigest);
         List<Integer> nonFilterColIds = getNonFilterColIds(chooserContext, sqlDigest);
-        Ordering<NLayoutCandidate> ordering = chooserContext.getKylinConfig().isVacantIndexPruningEnabled()
+        Ordering<NLayoutCandidate> ordering = QueryRouter.isVacantIndexPruningEnabled(chooserContext.getKylinConfig())
                 ? getEnhancedSorter(filterColIds, nonFilterColIds)
                 : getDefaultSorter(filterColIds, nonFilterColIds);
         candidates.sort(ordering);

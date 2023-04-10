@@ -23,10 +23,10 @@ import java.util.Map;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.cuboid.NLookupCandidate;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
-import org.apache.kylin.metadata.cube.model.NDataflowCapabilityChecker;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
@@ -36,7 +36,7 @@ import org.apache.kylin.util.OlapContextUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class NDataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
+public class DataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
 
     @Test
     public void testCapabilityResult() throws SqlParseException {
@@ -46,8 +46,8 @@ public class NDataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
         OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
         Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
         olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-        CapabilityResult result = NDataflowCapabilityChecker.check(dataflow, dataflow.getQueryableSegments(),
-                olapContext.getSQLDigest(), null);
+        Candidate candidate = new Candidate(dataflow, olapContext, sqlAlias2ModelNameMap);
+        CapabilityResult result = DataflowCapabilityChecker.check(dataflow, candidate, olapContext.getSQLDigest());
         Assert.assertNotNull(result);
         Assert.assertEquals(result.getSelectedCandidate().getCost(), result.getCost(), 0.001);
     }
@@ -67,8 +67,8 @@ public class NDataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            CapabilityResult result = NDataflowCapabilityChecker.check(dataflow, dataflow.getQueryableSegments(),
-                    olapContext.getSQLDigest(), null);
+            Candidate candidate = new Candidate(dataflow, olapContext, sqlAlias2ModelNameMap);
+            CapabilityResult result = DataflowCapabilityChecker.check(dataflow, candidate, olapContext.getSQLDigest());
             Assert.assertNotNull(result);
             Assert.assertTrue(result.getSelectedCandidate() instanceof NLookupCandidate);
             Assert.assertFalse(olapContext.getSQLDigest().allColumns.isEmpty());
@@ -81,8 +81,8 @@ public class NDataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            CapabilityResult result = NDataflowCapabilityChecker.check(dataflow, dataflow.getQueryableSegments(),
-                    olapContext.getSQLDigest(), null);
+            Candidate candidate = new Candidate(dataflow, olapContext, sqlAlias2ModelNameMap);
+            CapabilityResult result = DataflowCapabilityChecker.check(dataflow, candidate, olapContext.getSQLDigest());
             Assert.assertNotNull(result);
             Assert.assertTrue(result.getSelectedCandidate() instanceof NLookupCandidate);
             Assert.assertFalse(olapContext.getSQLDigest().allColumns.isEmpty());
@@ -96,8 +96,8 @@ public class NDataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
             removeAllSegments(dataflow);
             dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject())
                     .getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
-            CapabilityResult result = NDataflowCapabilityChecker.check(dataflow, dataflow.getQueryableSegments(),
-                    olapContext.getSQLDigest(), null);
+            Candidate candidate = new Candidate(dataflow, olapContext, Maps.newHashMap());
+            CapabilityResult result = DataflowCapabilityChecker.check(dataflow, candidate, olapContext.getSQLDigest());
             Assert.assertFalse(result.isCapable());
         }
     }

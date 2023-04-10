@@ -28,7 +28,7 @@
         <Logger name="io.kyligence" level="INFO"/>
         <Logger name="org.springframework" level="INFO"/>
         <Logger name="org.apache.kylin" level="DEBUG"/>
-        <Logger name="org.apache.kylin.metadata.cube.cuboid.NQueryLayoutChooser" level="INFO"/>
+        <Logger name="org.apache.kylin.query.routing.QueryLayoutChooser" level="INFO"/>
         <Logger name="org.apache.spark.ui" level="WARN"/>
         <Logger name="org.apache.spark.sql.execution.ui" level="WARN"/>
         <Logger name="org.springframework.security" level="WARN"/>

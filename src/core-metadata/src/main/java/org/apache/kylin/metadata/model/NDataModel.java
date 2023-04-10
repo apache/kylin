@@ -1488,12 +1488,26 @@ public class NDataModel extends RootPersistentEntity {
         return StringUtils.isNotEmpty(fusionId) && ModelType.HYBRID == getModelType();
     }
 
+    /**
+     * Used for checking this model belongs to a fusion model.
+     */
     public boolean isFusionModel() {
         return StringUtils.isNotEmpty(fusionId);
     }
 
     public boolean isStreaming() {
         return getModelType() == ModelType.STREAMING || getModelType() == ModelType.HYBRID;
+    }
+
+    public String getQueryCompatibleFactTable(String factTableOfQuery) {
+        String rootFactTable = this.getRootFactTableName();
+        if (!rootFactTable.equals(factTableOfQuery) && this.isFusionModel() && !this.isStreaming()) {
+            NDataModel streamingModel = NDataModelManager
+                    .getInstance(KylinConfig.getInstanceFromEnv(), this.getProject())
+                    .getDataModelDesc(this.getFusionId());
+            rootFactTable = streamingModel.getRootFactTableName();
+        }
+        return rootFactTable;
     }
 
     public boolean isAccessible(boolean turnOnStreaming) {

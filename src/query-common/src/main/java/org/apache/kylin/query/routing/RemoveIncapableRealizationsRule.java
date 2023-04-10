@@ -20,7 +20,11 @@ package org.apache.kylin.query.routing;
 
 import org.apache.kylin.guava30.shaded.common.collect.BiMap;
 import org.apache.kylin.guava30.shaded.common.collect.HashBiMap;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.HybridRealization;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.query.util.QueryAliasMatchInfo;
 
@@ -36,23 +40,33 @@ public class RemoveIncapableRealizationsRule extends PruningRule {
             return;
         }
         candidate.getCtx().resetSQLDigest();
-        CapabilityResult capability = candidate.getRealization().isCapable(candidate.getCtx().getSQLDigest(),
-                candidate.getQueryableSeg());
+        CapabilityResult capability = getCapabilityResult(candidate);
 
-        if (!capability.isCapable() && !candidate.getRealization().getModel().getComputedColumnDescs().isEmpty()) {
+        IRealization realization = candidate.getRealization();
+        if (!capability.isCapable() && !realization.getModel().getComputedColumnDescs().isEmpty()) {
             log.info("{}({}/{}): try rewrite computed column and then check whether the realization is capable.",
-                    this.getClass().getName(), candidate.getRealization().getProject(),
-                    candidate.getRealization().getCanonicalName());
+                    this.getClass().getName(), realization.getProject(), realization.getCanonicalName());
             BiMap<String, String> aliasMapping = HashBiMap.create();
             aliasMapping.putAll(candidate.getMatchedJoinsGraphAliasMap());
-            ComputedColumnRewriter.rewriteCcInnerCol(candidate.getCtx(), candidate.getRealization().getModel(),
+            ComputedColumnRewriter.rewriteCcInnerCol(candidate.getCtx(), realization.getModel(),
                     new QueryAliasMatchInfo(aliasMapping, null));
             candidate.getCtx().resetSQLDigest();
-            capability = candidate.getRealization().isCapable(candidate.getCtx().getSQLDigest(),
-                    candidate.getQueryableSeg());
+            capability = getCapabilityResult(candidate);
         }
 
         candidate.setCapability(capability);
     }
 
+    private CapabilityResult getCapabilityResult(Candidate candidate) {
+        IRealization realization = candidate.getRealization();
+        SQLDigest sqlDigest = candidate.getCtx().getSQLDigest();
+        CapabilityResult capability;
+        if (realization instanceof HybridRealization) {
+            capability = DataflowCapabilityChecker.hybridRealizationCheck((HybridRealization) realization, candidate,
+                    sqlDigest);
+        } else {
+            capability = DataflowCapabilityChecker.check((NDataflow) realization, candidate, sqlDigest);
+        }
+        return capability;
+    }
 }

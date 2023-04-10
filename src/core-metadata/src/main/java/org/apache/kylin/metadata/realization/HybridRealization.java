@@ -21,21 +21,16 @@ package org.apache.kylin.metadata.realization;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.metadata.cube.model.NDataSegment;
-import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import lombok.Getter;
@@ -45,8 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 public class HybridRealization implements IRealization {
 
     public static final String REALIZATION_TYPE = "HYBRID";
-    public static final String HYBRID_CAPABLE_ERROR_MSG = "The fusion model can only execute this method separately "
-            + "for the batch model and the stream model it contains.";
 
     @Getter
     private String uuid;
@@ -120,63 +113,6 @@ public class HybridRealization implements IRealization {
 
             return 0;
         });
-    }
-
-    @Override
-    public CapabilityResult isCapable(SQLDigest digest, List<NDataSegment> prunedSegments,
-            Map<String, Set<Long>> chSegToLayoutsMap) {
-        throw new IllegalStateException(HYBRID_CAPABLE_ERROR_MSG);
-    }
-
-    public CapabilityResult isCapable(SQLDigest digest, QueryableSeg queryableSeg) {
-        CapabilityResult result = new CapabilityResult();
-
-        resolveSegmentsOverlap(queryableSeg.getStreamingSegments());
-        for (IRealization realization : getRealizations()) {
-            CapabilityResult child;
-            if (realization.isStreaming()) {
-                child = realization.isCapable(digest, queryableSeg.getStreamingSegments(), Maps.newHashMap());
-                result.setSelectedStreamingCandidate(child.getSelectedStreamingCandidate());
-                if (child.isCapable()) {
-                    result.setCost(Math.min(result.getCost(), child.getSelectedStreamingCandidate().getCost()));
-                }
-            } else {
-                child = realization.isCapable(digest, queryableSeg.getBatchSegments(),
-                        queryableSeg.getChSegToLayoutsMap());
-                result.setSelectedCandidate(child.getSelectedCandidate());
-                if (child.isCapable()) {
-                    result.setCost(Math.min(result.getCost(), child.getSelectedCandidate().getCost()));
-                }
-            }
-            if (child.isCapable()) {
-                result.setCapable(true);
-                result.influences.addAll(child.influences);
-            } else {
-                result.incapableCause = child.incapableCause;
-            }
-        }
-
-        result.setCost(result.getCost() - 1); // let hybrid win its children
-
-        return result;
-    }
-
-    // Use batch segment when there's overlap of batch and stream segments, like follows
-    // batch segments:seg1['2012-01-01', '2012-02-01'], seg2['2012-02-01', '2012-03-01'],
-    // stream segments:seg3['2012-02-01', '2012-03-01'], seg4['2012-03-01', '2012-04-01']
-    // the chosen segments is: [seg1, seg2, seg4]
-    private void resolveSegmentsOverlap(List<NDataSegment> prunedStreamingSegments) {
-        long end = batchRealization.getDateRangeEnd();
-        if (end != Long.MIN_VALUE) {
-            String segments = prunedStreamingSegments.toString();
-            log.info("Before resolve segments overlap between batch and stream of fusion model: {}", segments);
-            SegmentRange.BasicSegmentRange range = new SegmentRange.KafkaOffsetPartitionedSegmentRange(end,
-                    Long.MAX_VALUE);
-            List<NDataSegment> list = ((NDataflow) streamingRealization).getQueryableSegmentsByRange(range);
-            prunedStreamingSegments.removeIf(seg -> !list.contains(seg));
-            segments = prunedStreamingSegments.toString();
-            log.info("After resolve segments overlap between batch and stream of fusion model: {}", segments);
-        }
     }
 
     @Override

@@ -20,7 +20,6 @@ package org.apache.kylin.query.routing;
 
 import java.util.List;
 
-import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.junit.annotation.MetadataInfo;
@@ -106,19 +105,19 @@ class QueryRouterTest {
     void testSortWithVacantPruningRule() {
         // This property does affect the sorting of candidates in different models.
         MetadataTestUtils.updateProjectConfig("default", "kylin.query.index-match-rules",
-                KylinConfigBase.USE_VACANT_INDEXES);
+                QueryRouter.USE_VACANT_INDEXES);
         testSort();
     }
 
     @Test
     void testTableIndexAnswerSelectStar() {
-        MetadataTestUtils.updateProjectConfig("default", "kylin.query.index-match-rules",
-                KylinConfigBase.USE_TABLE_INDEX_ANSWER_SELECT_STAR);
+        String useTableIndexAnswerSelectStar = "kylin.query.use-tableindex-answer-select-star.enabled";
+        MetadataTestUtils.updateProjectConfig("default", useTableIndexAnswerSelectStar, "true");
         Candidate c1 = CandidateTestUtils.mockCandidate("model0001", "modelA", 2, 1, 1);
         Candidate c2 = CandidateTestUtils.mockCandidate("model0002", "modelB", 1, 1, 2);
         assertSortedResults(c1, Lists.newArrayList(c1, c2));
 
-        MetadataTestUtils.updateProjectConfig("default", "kylin.query.index-match-rules", "");
+        MetadataTestUtils.updateProjectConfig("default", useTableIndexAnswerSelectStar, "false");
         assertSortedResults(c2, Lists.newArrayList(c1, c2));
     }
 

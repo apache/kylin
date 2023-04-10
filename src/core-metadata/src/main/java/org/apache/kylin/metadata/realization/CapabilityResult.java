@@ -77,6 +77,26 @@ public class CapabilityResult {
      */
     public List<CapabilityInfluence> influences = Lists.newArrayListWithCapacity(1);
 
+    public double getCost(boolean isStreaming) {
+        return isStreaming ? selectedStreamingCandidate.getCost() : selectedCandidate.getCost();
+    }
+
+    public void setCandidate(boolean isStreaming, CapabilityResult result) {
+        if (isStreaming) {
+            setSelectedStreamingCandidate(result.getSelectedStreamingCandidate());
+        } else {
+            setSelectedCandidate(result.getSelectedCandidate());
+        }
+    }
+
+    public void setCandidate(boolean isStreaming, IRealizationCandidate candidate) {
+        if (isStreaming) {
+            setSelectedStreamingCandidate(candidate);
+        } else {
+            setSelectedCandidate(candidate);
+        }
+    }
+
     public interface CapabilityInfluence {
         /**
          * Suggest a multiplier to influence query cost

@@ -28,7 +28,6 @@ import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
-import org.apache.kylin.metadata.cube.cuboid.NQueryLayoutChooser;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
@@ -81,7 +80,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             // model without computedColumns
             String modelWithNoCCId = "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96";
             NDataflow dataflowNoCC = dataflowManager.getDataflow(modelWithNoCCId);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflowNoCC,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflowNoCC,
                     dataflowNoCC.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNull(layoutCandidate);
         }
@@ -100,7 +99,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             // model without computedColumns
             String modelWithNoCCId = "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96";
             NDataflow dataflowNoCC = dataflowManager.getDataflow(modelWithNoCCId);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflowNoCC,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflowNoCC,
                     dataflowNoCC.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNull(layoutCandidate);
         }
@@ -119,7 +118,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             // model without computedColumns
             String modelWithNoCCId = "abe3bf1a-c4bc-458d-8278-7ea8b00f5e96";
             NDataflow dataflowNoCC = dataflowManager.getDataflow(modelWithNoCCId);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflowNoCC,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflowNoCC,
                     dataflowNoCC.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNull(layoutCandidate);
         }
@@ -150,7 +149,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertEquals(10001L, layoutCandidate.getLayoutEntity().getId());
@@ -164,7 +163,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertTrue(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -188,7 +187,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertEquals(1010001, layoutCandidate.getLayoutEntity().getId());
@@ -200,7 +199,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertEquals(1010002, layoutCandidate.getLayoutEntity().getId());
@@ -214,7 +213,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertEquals(1010002, layoutCandidate.getLayoutEntity().getId());
@@ -291,7 +290,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
         OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
         Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
         olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertEquals(1010001L, layoutCandidate.getLayoutEntity().getId());
@@ -359,7 +358,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
         OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
         Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
         olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertEquals(20000000001L, layoutCandidate.getLayoutEntity().getId());
@@ -387,7 +386,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
         OLAPContext oneOlapContext = olapContexts.get(0);
         Map<String, String> oneMap = OlapContextUtil.matchJoins(dataflow.getModel(), oneOlapContext);
         oneOlapContext.fixModel(dataflow.getModel(), oneMap);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), oneOlapContext.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertEquals(1L, layoutCandidate.getLayoutEntity().getId());
@@ -396,7 +395,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
         OLAPContext anotherOlapContext = olapContexts.get(1);
         Map<String, String> anotherMap = OlapContextUtil.matchJoins(dataflow.getModel(), anotherOlapContext);
         anotherOlapContext.fixModel(dataflow.getModel(), anotherMap);
-        NLayoutCandidate anotherCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate anotherCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), anotherOlapContext.getSQLDigest(), null);
         Assert.assertNotNull(anotherCandidate);
         Assert.assertEquals(1L, anotherCandidate.getLayoutEntity().getId());
@@ -425,7 +424,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
         OLAPContext oneOlapContext = olapContexts.get(0);
         Map<String, String> oneMap = OlapContextUtil.matchJoins(dataflow.getModel(), oneOlapContext);
         oneOlapContext.fixModel(dataflow.getModel(), oneMap);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), oneOlapContext.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertEquals(1L, layoutCandidate.getLayoutEntity().getId());
@@ -434,7 +433,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
         OLAPContext anotherOlapContext = olapContexts.get(1);
         Map<String, String> anotherMap = OlapContextUtil.matchJoins(dataflow.getModel(), anotherOlapContext);
         anotherOlapContext.fixModel(dataflow.getModel(), anotherMap);
-        NLayoutCandidate anotherCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate anotherCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), anotherOlapContext.getSQLDigest(), null);
         Assert.assertNotNull(anotherCandidate);
         Assert.assertEquals(20000000001L, anotherCandidate.getLayoutEntity().getId());
@@ -466,7 +465,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             // so 1010001 is skipped, although it has a better dim order
             // 2. trans_id has a higher cardinality, so 1010002 with shard on trans_id 
             // is preferred over 1010003 with shard on cal_dt
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertEquals(1010002, layoutCandidate.getLayoutEntity().getId());
@@ -478,7 +477,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertEquals(1010003, layoutCandidate.getLayoutEntity().getId());
@@ -537,7 +536,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
         OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
         Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
         olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
 
         Assert.assertNotNull(layoutCandidate);
@@ -563,7 +562,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(emptyProject, sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertFalse(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -574,7 +573,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(emptyProject, sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertFalse(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -585,7 +584,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(emptyProject, sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertFalse(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -596,7 +595,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(emptyProject, sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertFalse(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -607,7 +606,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(emptyProject, sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertFalse(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -618,7 +617,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(emptyProject, sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNull(layoutCandidate);
         }
@@ -629,7 +628,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(emptyProject, sql).get(0);
             Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertTrue(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -665,7 +664,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> tableAlias2ModelAliasMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), tableAlias2ModelAliasMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertFalse(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -676,7 +675,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> tableAlias2ModelAliasMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), tableAlias2ModelAliasMap);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertTrue(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -694,7 +693,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
         NDataflow dataflow = NDataflowManager.getInstance(getTestConfig(), project).getDataflow(modelId);
         Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
         olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertTrue(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -717,7 +716,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
 
         Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
         olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertTrue(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
@@ -743,7 +742,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
             Map<String, String> sqlAlias2ModelName = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelName);
-            NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertEquals(20000010001L, layoutCandidate.getLayoutEntity().getId());
@@ -780,7 +779,7 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
         OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
         Map<String, String> sqlAlias2ModelName = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
         olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelName);
-        NLayoutCandidate layoutCandidate = NQueryLayoutChooser.selectLayoutCandidate(dataflow,
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertEquals(1L, layoutCandidate.getLayoutEntity().getId());
