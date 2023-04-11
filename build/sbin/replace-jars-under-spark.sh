@@ -23,6 +23,26 @@ BYPASS=${SPARK_HOME}/jars/replace-jars-bypass
 
 # replace when has Kerberos, or can't get the value (eg: in FI platform)
 kerberosEnabled=`${KYLIN_HOME}/bin/get-properties.sh kylin.kerberos.enabled`
+
+function get_config_from_props_file() {
+  configKey=$1
+  configValue=
+  if [ -f ${KYLIN_HOME}/conf/kylin.properties.override ]; then
+      configValue=$(grep -Ev '^$|^\s*#' ${KYLIN_HOME}/conf/kylin.properties.override | grep -E ''"${configKey}"'' | awk -F= '/^'"${configKey}"'=/ { val=$2 } END { print val }')
+  fi
+
+  if [[ -z "${configValue}" && -f ${KYLIN_HOME}/conf/kylin.properties ]]; then
+      configValue=$(grep -Ev '^$|^\s*#' ${KYLIN_HOME}/conf/kylin.properties | grep -E ''"${configKey}"'' | awk -F= '/^'"${configKey}"'=/ { val=$2 } END { print val }')
+  fi
+
+  echo "${configValue}"
+  return 1
+}
+
+if [ -z "${kerberosEnabled}" ]; then
+  kerberosEnabled=$(get_config_from_props_file '(kylin|kap).kerberos.enabled')
+fi
+
 if [[ "${kerberosEnabled}" != "true" || -f ${BYPASS} ]]
 then
     return
