@@ -393,9 +393,9 @@ public class NUserController extends NBasicController implements ApplicationList
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer pageOffset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer pageSize)
             throws IOException {
-        List<ManagedUser> unassignedUsers = userService
-                .getManagedUsersByFuzzMatching(nameSeg, isCaseSensitive).stream().filter(user -> user.getAuthorities()
-                        .stream().noneMatch(auth -> auth.getAuthority().contains(groupName)))
+        List<ManagedUser> unassignedUsers = userService.getManagedUsersByFuzzMatching(nameSeg, isCaseSensitive).stream()
+                .filter(user -> user.getAuthorities().stream()
+                        .noneMatch(auth -> auth.getAuthority().equalsIgnoreCase(groupName)))
                 .collect(Collectors.toList());
         List<ManagedUserResponse> userList = getUserListResponsePage(pageOffset, pageSize, unassignedUsers);
         val userSize = unassignedUsers.size();
