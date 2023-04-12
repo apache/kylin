@@ -835,10 +835,18 @@ class NModel extends Schama {
       // 删除对应的 tableindex
       this._delTableIndexByAlias(alias)
       // 删除对应的 cc
-      // this._delCCByAlias(alias)
+      this._delCCByAlias(alias)
       // 删除对应的partition
       this._delTableRelatedPartitionInfo(ntable)
     }
+  }
+  _delCCByAlias (tableAlias) {
+    const ccList = this._mount.computed_columns.filter(it => it.tableAlias !== tableAlias)
+    this._mount.computed_columns = ccList
+    ccList.forEach(cc => {
+      let ccColumnName = typeof cc === 'object' ? cc.columnName : cc
+      this._delCCRelated(tableAlias, ccColumnName)
+    })
   }
   getTable (key, val) {
     for (var i in this.tables) {
