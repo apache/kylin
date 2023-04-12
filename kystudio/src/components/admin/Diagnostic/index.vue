@@ -349,7 +349,7 @@ export default class Diagnostic extends Vue {
         this.dateTime.prev = new Date(t)
         this.dateTime.next = date
         break
-        case 'lastThirtyDay':
+      case 'lastThirtyDay':
         t = dt - 30 * 24 * 60 * 60 * 1000
         this.dateTime.prev = new Date(t)
         this.dateTime.next = date

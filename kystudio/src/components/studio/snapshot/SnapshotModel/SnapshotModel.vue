@@ -134,6 +134,9 @@
                 multiple
                 collapse-tags
                 filterable
+                remote
+                :remote-method="query => filterPartitionValues(item, query)"
+                @blur="filterPartitionValues(item, '')"
                 :loading="item.loadPatitionValues"
                 @change="changePartitionValues(item)"
                 :disabled="!item.partition_column"
@@ -141,26 +144,26 @@
                 <el-option-group
                   class="group-partitions"
                   :label="$t('readyPartitions')">
-                  <span class="partition-count">{{item.readyPartitions.length}}</span>
+                  <span class="partition-count">{{item.readyPartitionsFilter.length}}</span>
                   <el-option
-                    v-for="item in item.readyPartitions.slice(0, item.pageSize * item.pageReadyPartitionsSize)"
+                    v-for="item in item.readyPartitionsFilter.slice(0, item.pageSize * item.pageReadyPartitionsSize)"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value">
                   </el-option>
-                  <p class="page-value-more" v-show="item.pageReadyPartitionsSize * item.pageSize < item.readyPartitions.length" @click.stop="item.pageReadyPartitionsSize += 1">{{$t('kylinLang.common.loadMore')}}</p>
+                  <p class="page-value-more" v-show="item.pageReadyPartitionsSize * item.pageSize < item.readyPartitionsFilter.length" @click.stop="item.pageReadyPartitionsSize += 1">{{$t('kylinLang.common.loadMore')}}</p>
                 </el-option-group>
                 <el-option-group
                   class="group-partitions"
                   :label="$t('notReadyPartitions')">
-                  <span class="partition-count">{{item.notReadyPartitions.length}}</span>
+                  <span class="partition-count">{{item.notReadyPartitionsFilter.length}}</span>
                   <el-option
-                    v-for="item in item.notReadyPartitions.slice(0, item.pageSize * item.pageNotReadyPartitions)"
+                    v-for="item in item.notReadyPartitionsFilter.slice(0, item.pageSize * item.pageNotReadyPartitions)"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value">
                   </el-option>
-                  <p class="page-value-more" v-show="item.pageNotReadyPartitions * item.pageSize < item.notReadyPartitions.length" @click.stop="item.pageNotReadyPartitions += 1">{{$t('kylinLang.common.loadMore')}}</p>
+                  <p class="page-value-more" v-show="item.pageNotReadyPartitions * item.pageSize < item.notReadyPartitionsFilter.length" @click.stop="item.pageNotReadyPartitions += 1">{{$t('kylinLang.common.loadMore')}}</p>
                 </el-option-group>
               </el-select>
               <p class="error-tip" v-if="incrementalBuildErrorList.includes(`${item.database}.${item.table}`)">{{$t('noPartitionValuesError')}}</p>
@@ -214,6 +217,7 @@ import TreeList from '../../../common/TreeList'
 import arealabel from '../../../common/area_label.vue'
 import { getTableTree, getDatabaseTablesTree } from './handler'
 import Scrollbar from 'smooth-scrollbar'
+import { objectClone } from '../../../../util'
 
 vuex.registerModule(['modals', 'SnapshotModel'], store)
 @Component({
@@ -610,8 +614,8 @@ export default class SnapshotModel extends Vue {
           const values = partitionValues[`${item.database}.${item.table}`]
           self.readyPartitions = values.ready_partitions.map(it => ({label: it, value: it}))
           self.notReadyPartitions = values.not_ready_partitions.map(it => ({label: it, value: it}))
-          // this.$set(item, 'readyPartitions', values.ready_partitions.map(it => ({label: it, value: it})))
-          // this.$set(item, 'notReadyPartitions', values.not_ready_partitions.map(it => ({label: it, value: it})))
+          self.readyPartitionsFilter = objectClone(self.readyPartitions)
+          self.notReadyPartitionsFilter = objectClone(self.notReadyPartitions)
           this.refreshSelectValue = false
           this.$nextTick(() => {
             this.refreshSelectValue = true
@@ -620,12 +624,16 @@ export default class SnapshotModel extends Vue {
           item.partition_values = []
           item.readyPartitions = []
           item.notReadyPartitions = []
+          item.readyPartitionsFilter = []
+          item.notReadyPartitionsFilter = []
         }
         self.loadPatitionValues = false
       } else {
         item.partition_values = []
         item.readyPartitions = []
         item.notReadyPartitions = []
+        item.readyPartitionsFilter = []
+        item.notReadyPartitionsFilter = []
       }
 
       this.partitionOptions[`${item.database}.${item.table}`] = {
@@ -674,7 +682,9 @@ export default class SnapshotModel extends Vue {
             fetchError: false,
             undefinedPartitionColErrorTip: false,
             notReadyPartitions: [],
+            notReadyPartitionsFilter: [],
             readyPartitions: [],
+            readyPartitionsFilter: [],
             loadPatitionValues: false,
             pageReadyPartitionsSize: 1,
             pageNotReadyPartitions: 1,
@@ -762,6 +772,24 @@ export default class SnapshotModel extends Vue {
     this.step = 'one'
     this.partitionOptions = {}
     this.searchDBOrTableName = ''
+  }
+
+  filterPartitionValues (item, query) {
+    if (query !== '') {
+      item.loadPatitionValues = true
+      this.$nextTick(() => {
+        item.readyPartitionsFilter = item.readyPartitions.filter(p => {
+          return p.value.indexOf(query) !== -1
+        })
+        item.notReadyPartitionsFilter = item.notReadyPartitions.filter(p => {
+          return p.value.indexOf(query) !== -1
+        })
+        item.loadPatitionValues = false
+      })
+    } else {
+      item.readyPartitionsFilter = objectClone(item.readyPartitions)
+      item.notReadyPartitionsFilter = objectClone(item.notReadyPartitions)
+    }
   }
 
   // 改变分区列的值
