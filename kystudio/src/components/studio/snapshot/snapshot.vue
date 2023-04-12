@@ -778,6 +778,7 @@ export default class Snapshot extends Vue {
     }
   }
   async getSnapshotList () {
+    if (!this.currentSelectedProject) return
     try {
       this.loadingSnapshotTable = true
       this.filter.project = this.currentSelectedProject

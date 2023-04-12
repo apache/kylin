@@ -208,7 +208,7 @@ export default class DataSourceBar extends Vue {
   treeKey = 'pagetree' + Number(new Date())
   filterText = ''
   isSearchIng = false
-  isLoadingTreeData = true // 用于处理查询搜索时loading 效果
+  isLoadingTreeData = false // 用于处理查询搜索时loading 效果
   datasources = []
   sourceTypes = sourceTypes
   allWords = []
@@ -310,10 +310,12 @@ export default class DataSourceBar extends Vue {
     this.$on('filter', (event) => {
       this.$refs.treeList && this.$refs.treeList.$emit('filter', event)
     })
-    this.initTree()
-    const tableLayout = document.getElementsByClassName('table-layout')
-    if (tableLayout && tableLayout.length) {
-      this.dataSourceDragData.limit.width[1] = tableLayout[0].offsetWidth - 60
+    if (this.projectName) {
+      this.initTree()
+      const tableLayout = document.getElementsByClassName('table-layout')
+      if (tableLayout && tableLayout.length) {
+        this.dataSourceDragData.limit.width[1] = tableLayout[0].offsetWidth - 60
+      }
     }
   }
   addPagination (data) {
@@ -343,7 +345,7 @@ export default class DataSourceBar extends Vue {
       // }
       // freshTreeOrder(this)
       // this.selectFirstTable()
-      this.isLoadingTreeData = false
+      // this.isLoadingTreeData = false
       await this.loadTreeData()
     } catch (e) {
       handleError(e)

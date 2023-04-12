@@ -398,7 +398,7 @@ exports.default = {
     type: 'Type',
     original: 'Original',
     startTime_th: 'Start Time',
-    latency_th: 'Duration',
+    latency_th: 'Query Time',
     realization_th: 'Answered By',
     acceleration_th: 'Acceleration',
     sqlContent_th: ' SQL Statement',

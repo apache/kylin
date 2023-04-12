@@ -745,6 +745,7 @@ export default class ModelList extends Vue {
   }
   // 加载模型列表
   loadModelsList () {
+    if (!this.currentSelectedProject) return
     this.prevExpendContent = this.modelArray.filter(item => this.expandedRows.includes(item.alias))
     this.loadingModels = true
     this.$el.click()
