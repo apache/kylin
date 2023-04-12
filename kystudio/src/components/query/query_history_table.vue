@@ -72,7 +72,7 @@
                     <span class="text">{{props.row.query_id}}</span>
                   </p>
                   <p class="list">
-                    <span class="label">{{$t('kylinLang.query.duration')}}:</span>
+                    <span class="label">{{$t('kylinLang.query.latency_th')}}:</span>
                     <span class="text">
                       <el-popover
                         placement="bottom"
@@ -526,10 +526,12 @@ export default class QueryHistoryTable extends Vue {
   }
 
   created () {
-    if (this.queryHistoryFilter.includes('filterActions')) {
-      this.loadFilterSubmitterList()
+    if (this.currentSelectedProject) {
+      if (this.queryHistoryFilter.includes('filterActions')) {
+        this.loadFilterSubmitterList()
+      }
+      this.loadFilterHitModelsList() // 普通用户也支持筛选查询对象
     }
-    this.loadFilterHitModelsList() // 普通用户也支持筛选查询对象
   }
 
   // 清除查询开始事件筛选项

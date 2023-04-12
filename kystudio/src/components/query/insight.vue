@@ -223,6 +223,7 @@ export default class NewQuery extends Vue {
       })
     }, (res) => {
       this.savedSize = 0
+      handleError(res)
     })
   }
   loadSavedQuery (pageIndex) {
@@ -417,7 +418,9 @@ export default class NewQuery extends Vue {
         index: 0,
         cancelQuery: false
       }]
-    this.loadSavedQuerySize()
+    if (this.currentSelectedProject) {
+      this.loadSavedQuerySize()
+    }
   }
 }
 </script>
