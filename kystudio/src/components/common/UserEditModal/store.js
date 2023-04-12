@@ -102,8 +102,8 @@ function setTotalGroups (payload, state) {
     .filter(groupName => groupName !== defaultGroup.key)
     .map(value => {
       return {
-        key: value,
-        label: value,
+        key: value.key,
+        label: value.label,
         disabled: false
       }
     })

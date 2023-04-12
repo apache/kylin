@@ -304,6 +304,7 @@ export default class GroupEditModal extends Vue {
     text-align: left;
     cursor: pointer;
     margin-left: 15px;
+    line-height: 30px;
     &:hover {
       color: @base-color;
     }
