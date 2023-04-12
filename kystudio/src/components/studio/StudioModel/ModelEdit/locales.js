@@ -21,7 +21,7 @@ export default {
     'systemMaintainedTip3': 'System can delete this model',
     'avoidSysChange': 'Avoid system change semantics',
     'allowSysChange': 'Allow system change semantics',
-    'delTableTip': 'All dimensions, measures and joins using this table would be deleted. Are you sure you want to delete this table?',
+    'delTableTip': 'All dimensions, measures,joins and computed columns using this table would be deleted. Are you sure you want to delete this table?',
     'noFactTable': 'Please select a fact table.',
     switchLookup: 'Set as Dimension Table',
     switchFact: 'Set as Fact Table',
