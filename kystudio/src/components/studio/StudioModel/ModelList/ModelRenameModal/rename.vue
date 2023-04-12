@@ -5,6 +5,9 @@
         <el-form-item :label="$t('modelName')" prop="newName">
           <el-input v-focus="isShow" v-model="modelEdit.newName" auto-complete="off" size="medium"></el-input>
         </el-form-item>
+        <el-form-item :label="$t('modelDescription')" prop="description">
+          <el-input type="textarea" v-model.trim="modelEdit.description"></el-input>
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer ky-no-br-space">
         <el-button @click="closeModal" size="medium">{{$t('kylinLang.common.cancel')}}</el-button>
@@ -51,7 +54,8 @@
   export default class ModelRenameModal extends Vue {
     btnLoading = false
     modelEdit = {
-      newName: ''
+      newName: '',
+      description: ''
     }
     rules = {
       newName: [
@@ -61,6 +65,7 @@
     @Watch('modelDesc')
     initModelName () {
       this.modelEdit.newName = this.modelDesc.alias
+      this.modelEdit.description = this.modelDesc.description
     }
     checkName (rule, value, callback) {
       if (!NamedRegex.test(value)) {
@@ -77,6 +82,7 @@
       setTimeout(() => {
         this.callback && this.callback({isSubmit, newName: name})
         this.modelEdit.newName = ''
+        this.modelEdit.description = ''
         this.resetModalForm()
       }, 200)
     }
@@ -84,7 +90,7 @@
       this.$refs.renameForm.validate((valid) => {
         if (!valid) { return }
         this.btnLoading = true
-        this.renameModel({model: this.modelDesc.uuid, new_model_name: this.modelEdit.newName, project: this.currentSelectedProject}).then(() => {
+        this.renameModel({model: this.modelDesc.uuid, new_model_name: this.modelEdit.newName, description: this.modelEdit.description, project: this.currentSelectedProject}).then(() => {
           this.btnLoading = false
           kylinMessage(this.$t('updateSuccessful'))
           this.closeModal(true, this.modelEdit.newName)
