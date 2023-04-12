@@ -218,7 +218,7 @@ export default class Diagnostic extends Vue {
       {text: this.$t('lastHour'), label: 'lastHour'},
       {text: this.$t('lastDay'), label: 'lastDay'},
       {text: this.$t('lastThreeDay'), label: 'lastThreeDay'},
-      {text: this.$t('lastMonth'), label: 'lastMonth'},
+      {text: this.$t('lastThirtyDay'), label: 'lastThirtyDay'},
       {text: this.$t('custom'), label: 'custom'}
     ]
   }
@@ -263,7 +263,7 @@ export default class Diagnostic extends Vue {
   }
   // 日期在5分钟～1个月内
   get getDateTimeValid () {
-    return !this.dateTime.prev || !this.dateTime.next || this.getTimes(this.dateTime.prev) > this.getTimes(this.dateTime.next) || (this.getTimes(this.dateTime.next) - this.getTimes(this.dateTime.prev)) < 300000 || (this.getTimes(getPrevTimeValue({ date: this.dateTime.next, m: 1 })) - this.getTimes(this.dateTime.prev)) > 0
+    return !this.dateTime.prev || !this.dateTime.next || this.getTimes(this.dateTime.prev) > this.getTimes(this.dateTime.next) || (this.getTimes(this.dateTime.next) - this.getTimes(this.dateTime.prev)) < 300000 || (this.getTimes(this.dateTime.next) - this.getTimes(this.dateTime.prev)) > 30 * 24 * 60 * 60 * 1000
   }
   // 是否展示手动下载提示
   // get showManualDownloadLayout () {
@@ -349,8 +349,9 @@ export default class Diagnostic extends Vue {
         this.dateTime.prev = new Date(t)
         this.dateTime.next = date
         break
-      case 'lastMonth':
-        this.dateTime.prev = new Date(getPrevTimeValue({ date, m: 1 }))
+        case 'lastThirtyDay':
+        t = dt - 30 * 24 * 60 * 60 * 1000
+        this.dateTime.prev = new Date(t)
         this.dateTime.next = date
         break
       case 'custom':
