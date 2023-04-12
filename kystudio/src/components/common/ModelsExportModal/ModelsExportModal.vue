@@ -23,24 +23,9 @@
         </div>
       </div>
       <p class="export-tips">{{$t('exportOneModelTip')}}</p>
-      <!-- <p v-if="choosedModelsArr.length > 0" class="choosed-block">{{choosedModelsArr.join(', ')}}</p> -->
-      <!-- <el-tree
-        highlight-current
-        v-if="type === 'all'"
-        check-strictly
-        class="model-tree"
-        ref="tree"
-        node-key="id"
-        v-show="!isTreeEmpty"
-        :data="models"
-        :props="{ label: 'name', isLeaf: true }"
-        :show-checkbox="getIsNodeShowCheckbox"
-        :render-content="renderContent"
-        :filter-node-method="handleFilterNode"
-        @check="handleSelectModels"
-      /> -->
       <div class="export-model-list" v-if="type === 'all'">
         <el-checkbox-group v-model="selectedModals" @change="handleSelectModels">
+          <el-checkbox label="all" :disabled="allModelItems.status === 'BROKEN'" v-if="type === 'all'"><span>{{$t(allModelItems.name)}}</span></el-checkbox>
           <el-checkbox v-for="item in exportModal.list" :disabled="item.status === 'BROKEN'" :label="item.id" :key="item.id">
             <el-tooltip :content="$t('exportBrokenModelCheckboxTip')" effect="dark" placement="top" :disabled="item.status !== 'BROKEN'">
               <span>{{item.name}}</span>
@@ -82,6 +67,7 @@ import vuex, { actionTypes } from '../../../store'
 import locales from './locales'
 import store from './store'
 import OverflowTextTooltip from '../OverflowTextTooltip/OverflowTextTooltip.vue'
+import { objectClone } from '../../../util'
 
 vuex.registerModule(['modals', 'ModelsExportModal'], store)
 
@@ -148,15 +134,26 @@ export default class ModelsExportModal extends Vue {
     newVal && !oldVal && (this.exportModalList = this.models)
   }
 
+  get allModelItems () {
+    return {
+      has_multiple_partition_values: this.models.filter(it => it.has_multiple_partition_values).length > 0,
+      has_override_props: this.models.filter(it => it.has_override_props).length > 0,
+      has_recommendations: this.models.filter(it => it.has_recommendations).length > 0,
+      name: 'selectAll',
+      id: 'all',
+      status: this.models.filter(it => it.status === 'BROKEN').length === this.models.length ? 'BROKEN' : 'ONLINE'
+    }
+  }
+
   getIsNodeShowCheckbox (data) {
     return data.nodeType === 'model'
   }
 
   changeCheckboxType (type) {
     if (type === 'ops') {
-      return this.models.filter(it => this.selectedModals.includes(it.id) && !it.has_override_props).length
+      return (this.type === 'all' ? [...this.models, this.allModelItems] : this.models).filter(it => this.selectedModals.includes(it.id) && !it.has_override_props).length
     } else if (type === 'mult-partition') {
-      return this.models.filter(it => this.selectedModals.includes(it.id) && !it.has_multiple_partition_values).length
+      return (this.type === 'all' ? [...this.models, this.allModelItems] : this.models).filter(it => this.selectedModals.includes(it.id) && !it.has_multiple_partition_values).length
     }
   }
 
@@ -206,8 +203,8 @@ export default class ModelsExportModal extends Vue {
   }
 
   handleSelectModels (data) {
-    const hasOverrideProps = this.models.filter(it => data.includes(it.id) && it.has_override_props)
-    const hasMultPartitions = this.models.filter(it => data.includes(it.id) && it.has_multiple_partition_values)
+    const hasOverrideProps = (this.type === 'all' ? [...this.models, this.allModelItems] : this.models).filter(it => data.includes(it.id) && it.has_override_props)
+    const hasMultPartitions = (this.type === 'all' ? [...this.models, this.allModelItems] : this.models).filter(it => data.includes(it.id) && it.has_multiple_partition_values)
     this.setModalForm({
       ids: data,
       exportOverProps: !hasOverrideProps.length && this.form.exportOverProps ? false : this.form.exportOverProps,
@@ -251,9 +248,13 @@ export default class ModelsExportModal extends Vue {
   async handleSubmit () {
     const { project, form } = this
     this.isSubmiting = true
+    const formData = objectClone(form)
+    if (formData.ids.includes('all')) {
+      formData.ids = this.models.map(it => it.uuid)
+    }
     try {
       // if (this.type !== 'all') {
-      await this.downloadModelsMetadata({ project, form })
+      await this.downloadModelsMetadata({ project, form: formData })
       // } else {}
       this.handleClose(true)
       this.$message.success(this.$t('exportSuccess'))
