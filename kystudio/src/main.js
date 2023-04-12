@@ -43,7 +43,13 @@ Vue.component('kylin-editor', kylinEditor)
 Vue.component('kylin-tab', tab)
 Vue.component('kylin-loading', kylinLoading)
 Vue.component('kylin-empty-data', emptyData)
+import { isIE } from './util'
 import { pageRefTags } from 'config'
+
+if (!isIE()) {
+  const { format } = require('sql-formatter')
+  Vue.prototype._formatSql = format
+}
 
 Vue.use(ElementUI, {
   closeOtherMessages: true,

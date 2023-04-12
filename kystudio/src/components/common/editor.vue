@@ -26,8 +26,9 @@
   </div>
 </template>
 <script>
-import { format } from 'sql-formatter'
+// import { format } from 'sql-formatter'
 import { sqlRowsLimit, sqlStrLenLimit, formatSQLConfig } from '../../config/index'
+import { isIE } from '../../util'
 import { mapState } from 'vuex'
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator'
@@ -141,12 +142,12 @@ import { Component } from 'vue-property-decorator'
     abridgeData () {
       const splitData = this.editorData.split('\n')
       // 需要截断的默认都是已经格式化后的，如果传入需要格式化，就再手动格式化，且格式化方式是通过字符串长度判断
-      if (this.needFormater && (splitData.length === 1 || (splitData.length === 2 && /^LIMIT (\d+)/.test(splitData[1])))) {
+      if (!isIE() && this.needFormater && (splitData.length === 1 || (splitData.length === 2 && /^LIMIT (\d+)/.test(splitData[1])))) {
         const data = this.editorData.length > sqlStrLenLimit ? `${this.editorData.slice(0, sqlStrLenLimit)}...` : this.editorData
         // 是否显示 tips 取决于填入的 sql 字符数是否超过全局配置的
         this.showLimitTip = this.editorData.length > sqlStrLenLimit
-        this.formatData = format(data, formatSQLConfig)
-        this.fullFormatData = format(this.editorData, formatSQLConfig)
+        this.formatData = this._formatSql(data, formatSQLConfig)
+        this.fullFormatData = this._formatSql(this.editorData, formatSQLConfig)
       } else {
         const data = this.editorData.split('\n')
         // 是否显示 tips 取决于填入的 sql 行数是否超过全局配置的
