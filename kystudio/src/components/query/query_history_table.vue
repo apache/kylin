@@ -178,8 +178,8 @@
       </el-table-column>
       <el-table-column :renderHeader="renderColumn2" prop="duration" align="right" width="100">
         <template slot-scope="props">
-          <span v-if="props.row.duration < 1000 && props.row.query_status === 'SUCCEEDED'">&lt; 1s</span>
-          <span v-if="props.row.duration >= 1000 && props.row.query_status === 'SUCCEEDED'">{{props.row.duration / 1000 | fixed(2)}}s</span>
+          <span v-if="props.row.duration < 1000">&lt; 1s</span>
+          <span v-if="props.row.duration >= 1000">{{props.row.duration / 1000 | fixed(2)}}s</span>
           <!-- <span v-if="props.row.query_status === 'FAILED'">Failed</span> -->
         </template>
       </el-table-column>
