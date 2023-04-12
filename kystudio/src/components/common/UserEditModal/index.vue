@@ -127,12 +127,15 @@
       <el-form-item v-if="isFieldShow('group')">
         <el-transfer
           filterable
-          :data="totalGroups"
+          :data="totalGroupsData"
           :value="form.authorities"
+          :before-query="queryHandler"
           :filter-placeholder="$t('userGroupFilter')"
           :titles="[$t('willCheckGroup'), $t('checkedGroup')]"
+          :total-elements="totalSizes"
           :show-overflow-tip="true"
-          @change="value => inputHandler('authorities', value)">
+          @change="value => transferInputHandler('authorities', value)">
+            <div class="load-more-uers" slot="left-remote-load-more" v-if="isShowLoadMore" @click="loadMoreUserGroups(searchValueLeft)">{{$t('kylinLang.common.loadMore')}}</div>
           </el-transfer>
       </el-form-item>
     </el-form>
@@ -210,6 +213,19 @@ export default class UserEditModal extends Vue {
     char: '',
     letter: ''
   }
+  // 获取userGroup分页页码
+  page_offset = 0
+  // 每页请求数量
+  pageSize = 100
+  // 用户组总数
+  totalUserGroupsSize = 0
+  // 返回的数据总数
+  totalSizes = [0, 10]
+  searchValueLeft = ''
+  searchValueRight = ''
+  autoLoadLimit = 100
+  clickLoadMore = false
+  timer = null
 
   // Computed: Modal宽度
   get modalWidth () {
@@ -221,6 +237,13 @@ export default class UserEditModal extends Vue {
   // Computed: Modal标题
   get modalTitle () {
     return titleMaps[this.editType]
+  }
+
+  get isShowLoadMore () {
+    return this.page_offset < Math.ceil(this.totalUserGroupsSize / this.pageSize) - 1
+  }
+  get totalGroupsData () {
+    return this.totalGroups.length ? this.totalGroups : []
   }
 
   get rules () {
@@ -254,7 +277,7 @@ export default class UserEditModal extends Vue {
   onModalShow (newVal, oldVal) {
     if (newVal) {
       this.isFormShow = true
-      this.editType === 'group' && this.fetchUserGroups()
+      this.editType === 'group' && this.fetchGroups('')
       document.addEventListener('keyup', this.handlerKeyEvent)
     } else {
       // 密码规则出错信息重置
@@ -332,6 +355,74 @@ export default class UserEditModal extends Vue {
       }
     }
   }
+  queryHandler (title, query) {
+    const that = this
+    return new Promise(async (resolve, reject) => {
+      if (title === that.$t('willCheckGroup')) {
+        this.page_offset = 0
+        clearTimeout(this.timer)
+        this.timer = setTimeout(async function () {
+          await that.setModal({totalGroups: []})
+          await that.fetchGroups(query)
+          resolve()
+        }, 500)
+      } else if (title === that.$t('checkedGroup')) {
+        try {
+          that.searchValueRight = query
+          that.$set(that.totalSizes, 1, that.searchResults(query).length)
+          resolve()
+        } catch (e) {
+          console.error(e)
+          reject(e)
+        }
+      }
+    })
+  }
+  // 匹配搜索结果的用户
+  searchResults (content) {
+    return this.form.authorities.filter(group => group.toLowerCase().indexOf(content.toString().toLowerCase()) >= 0)
+  }
+  transferInputHandler (key, value) {
+    this.setModalForm({[key]: value})
+    this.totalSizes[0] = this.totalUserGroupsSize - (!this.searchValueLeft.length ? value.length : this.searchResults(this.searchValueLeft).length)
+    const surplusUserGroups = this.totalGroups.filter(group => !value.includes(group.key))
+    surplusUserGroups.length < this.autoLoadLimit && (!this.searchValueLeft.length ? this.loadMoreUserGroups() : this.loadMoreUserGroups(this.searchValueLeft))
+  }
+  // Helper: 从后台获取用户
+  async fetchGroups (value) {
+    this.searchValueLeft = typeof value === 'undefined' ? '' : value
+    const { data: { data } } = await this.getGroupList({
+      page_size: this.pageSize,
+      page_offset: this.page_offset,
+      // project: this.currentSelectedProject, // 处理资源组时，发现这个接口不用传 project 参数
+      name: value
+    })
+    const remoteUserGroups = data.value
+      .map(group => ({ key: group, label: group }))
+    const selectedUserGroupsNotInRemote = this.form.authorities
+      .map(sItem => ({key: sItem, label: sItem}))
+      .filter(sItem => ![...(this.page_offset === 0 ? [] : this.totalGroups), ...remoteUserGroups].some(user => user.key === sItem.key))
+    const searchUserGroupIsSelected = (typeof value !== 'undefined' && value) ? this.form.authorities.filter(group => group.toLowerCase().indexOf(value.toString().toLowerCase()) >= 0) : [...this.totalGroups, ...remoteUserGroups].filter(group => this.form.authorities.includes(group.key))
+    this.totalUserGroupsSize = data.total_size
+    typeof value !== 'undefined' && value ? (this.totalSizes = [this.totalUserGroupsSize - searchUserGroupIsSelected.length]) : (this.totalSizes = [this.totalUserGroupsSize - this.form.authorities.length])
+    const userGroups = [...new Set([ ...(this.page_offset === 0 ? [] : this.totalGroups), ...remoteUserGroups, ...selectedUserGroupsNotInRemote ].map(it => it.key))].map(item => ({key: item, label: item}))
+    this.autoLoadMoreData(userGroups, value)
+    this.setModal({totalGroups: userGroups})
+  }
+  // 判断是否自动加载更多的数据
+  autoLoadMoreData (userGroups, value) {
+    this.clickLoadMore = false
+    const len = userGroups.filter(group => this.form.authorities.includes(group.key)).length
+    if (userGroups.length - len < this.autoLoadLimit && this.isShowLoadMore) {
+      typeof value !== 'undefined' && !value.length ? this.loadMoreUserGroups() : this.loadMoreUserGroups(value)
+      return
+    }
+  }
+  loadMoreUserGroups (value) {
+    if (this.clickLoadMore) return
+    this.clickLoadMore = true
+    this.isShowLoadMore && (this.page_offset += 1, this.fetchGroups(value))
+  }
 
   // Action: Form递交函数
   async submit () {
@@ -384,14 +475,6 @@ export default class UserEditModal extends Vue {
       return validate[type].bind(this)
     }
   }
-
-  // Helper: 从后台获取用户组
-  async fetchUserGroups () {
-    // const project = this.currentSelectedProject // 处理资源组时，发现这个接口不用传 project 参数
-    const { data: { data: totalGroups } } = await this.getGroupList()
-
-    this.setModal({ totalGroups: totalGroups.value })
-  }
 }
 </script>
 
@@ -413,6 +496,17 @@ export default class UserEditModal extends Vue {
   .el-transfer__buttons {
     .button-text {
       min-width: initial;
+    }
+  }
+  .load-more-uers {
+    color: @text-title-color;
+    font-size: @text-assist-size;
+    text-align: left;
+    cursor: pointer;
+    margin-left: 15px;
+    line-height: 30px;
+    &:hover {
+      color: @base-color;
     }
   }
   .change-system-password-tip {
