@@ -18,6 +18,7 @@ export default {
     disabledOverrideTip: 'No overrides for the selected model(s)',
     exportBrokenModelCheckboxTip: 'Can\'t export model file at the moment as the model is BROKEN',
     subPartitionValues: 'Sub partition values',
-    disabledMultPartitionTip: 'No subpartitions included in the selected model(s)'
+    disabledMultPartitionTip: 'No subpartitions included in the selected model(s)',
+    selectAll: 'Select All'
   }
 }
