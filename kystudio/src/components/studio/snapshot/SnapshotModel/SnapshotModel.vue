@@ -715,7 +715,7 @@ export default class SnapshotModel extends Vue {
           partitions_to_build: item.partition_column ? item.partition_values : null
         }
       })
-      const incrementalBuildErrorList = Object.keys(options).filter(key => options[key].incremental_build && options[key].partitions_to_build.length === 0)
+      const incrementalBuildErrorList = Object.keys(options).filter(key => options[key].incremental_build && options[key].partitions_to_build && options[key].partitions_to_build.length === 0)
       this.incrementalBuildErrorList = incrementalBuildErrorList
       if (incrementalBuildErrorList.length > 0) return
       this.submitLoading = true
