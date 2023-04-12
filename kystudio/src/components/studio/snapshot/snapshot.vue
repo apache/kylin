@@ -285,32 +285,36 @@
                   :disabled="!scope.row.select_partition_col"
                   multiple
                   @change="changePartitionValues(scope)"
-                  :placeholder="scope.row.select_partition_col && (scope.row.readyPartitions.length > 0 || scope.row.notReadyPartitions.length > 0) ? $t('kylinLang.common.pleaseSelect') : ''"
+                  :placeholder="scope.row.select_partition_col && (scope.row.readyPartitionsFilter.length > 0 || scope.row.notReadyPartitionsFilter.length > 0) ? $t('kylinLang.common.pleaseSelect') : ''"
                   collapse-tags
+                  :loading="scope.row.loadPatitionValues"
+                  remote
+                  :remote-method="query => filterPartitionValues(scope.row, query)"
+                  @blur="filterPartitionValues(scope.row, '')"
                   filterable>
                   <el-option-group
                     class="group-partitions"
                     :label="$t('readyPartitions')">
-                    <span class="partition-count">{{scope.row.readyPartitions.length}}</span>
+                    <span class="partition-count">{{scope.row.readyPartitionsFilter.length}}</span>
                     <el-option
-                      v-for="item in scope.row.readyPartitions.slice(0, scope.row.pageReadyPartitionsSize * scope.row.pageSize)"
+                      v-for="item in scope.row.readyPartitionsFilter.slice(0, scope.row.pageReadyPartitionsSize * scope.row.pageSize)"
                       :key="item.value"
                       :label="item.label"
                       :value="item.value">
                     </el-option>
-                    <p class="page-value-more" v-show="scope.row.pageReadyPartitionsSize * scope.row.pageSize < scope.row.readyPartitions.length" @click.stop="scope.row.pageReadyPartitionsSize += 1">{{$t('kylinLang.common.loadMore')}}</p>
+                    <p class="page-value-more" v-show="scope.row.pageReadyPartitionsSize * scope.row.pageSize < scope.row.readyPartitionsFilter.length" @click.stop="scope.row.pageReadyPartitionsSize += 1">{{$t('kylinLang.common.loadMore')}}</p>
                   </el-option-group>
                   <el-option-group
                     class="group-partitions"
                     :label="$t('notReadyPartitions')">
-                    <span class="partition-count">{{scope.row.notReadyPartitions.length}}</span>
+                    <span class="partition-count">{{scope.row.notReadyPartitionsFilter.length}}</span>
                     <el-option
-                      v-for="item in scope.row.notReadyPartitions.slice(0, scope.row.pageNotReadyPartitions * scope.row.pageSize)"
+                      v-for="item in scope.row.notReadyPartitionsFilter.slice(0, scope.row.pageNotReadyPartitions * scope.row.pageSize)"
                       :key="item.value"
                       :label="item.label"
                       :value="item.value">
                     </el-option>
-                    <p class="page-value-more" v-show="scope.row.pageNotReadyPartitions * scope.row.pageSize < scope.row.notReadyPartitions.length" @click.stop="scope.row.pageNotReadyPartitions += 1">{{$t('kylinLang.common.loadMore')}}</p>
+                    <p class="page-value-more" v-show="scope.row.pageNotReadyPartitions * scope.row.pageSize < scope.row.notReadyPartitionsFilter.length" @click.stop="scope.row.pageNotReadyPartitions += 1">{{$t('kylinLang.common.loadMore')}}</p>
                   </el-option-group>
                 </el-select>
                 <p class="error-tip" v-if="incrementalBuildErrorList.includes(`${scope.row.database}.${scope.row.table}`)">{{$t('noPartitionValuesError')}}</p>
@@ -343,7 +347,7 @@ import { mapGetters, mapActions } from 'vuex'
 import { Component } from 'vue-property-decorator'
 
 import locales from './locales'
-import { handleSuccessAsync, handleError, kylinConfirm, sliceNumber } from '../../../util'
+import { handleSuccessAsync, handleError, kylinConfirm, sliceNumber, objectClone } from '../../../util'
 import { pageRefTags, bigPageCount } from 'config'
 import SnapshotModel from './SnapshotModel/SnapshotModel.vue'
 
@@ -452,6 +456,7 @@ export default class Snapshot extends Vue {
     this.refreshNewPartition = true
     this.incrementalBuildErrorList = []
     this.loadSnapshotValues = false
+    this.refreshType = 'full'
   }
 
   // 刷新 snapshot
@@ -678,11 +683,14 @@ export default class Snapshot extends Vue {
       ...it,
       partition_values: [],
       readyPartitions: [],
+      readyPartitionsFilter: [],
       notReadyPartitions: [],
+      notReadyPartitionsFilter: [],
       pageReadyPartitionsSize: 1,
       pageNotReadyPartitions: 1,
       pageSize: 100,
-      values: []
+      values: [],
+      loadPatitionValues: false
     }))
   }
   async refreshSnapshot () {
@@ -707,6 +715,8 @@ export default class Snapshot extends Vue {
             item.partition_values = []
             item['readyPartitions'] = partitionValues[`${item.database}.${item.table}`].ready_partitions.map(it => ({label: it, value: it}))
             item['notReadyPartitions'] = partitionValues[`${item.database}.${item.table}`].not_ready_partitions.map(it => ({label: it, value: it}))
+            item['readyPartitionsFilter'] = objectClone(item.readyPartitions)
+            item['notReadyPartitionsFilter'] = objectClone(item.notReadyPartitions)
           }
         })
       }
@@ -791,6 +801,24 @@ export default class Snapshot extends Vue {
     const isSubmit = await this.showSnapshotModelDialog({type: 'repair', data})
     if (isSubmit) {
       this.getSnapshotList()
+    }
+  }
+
+  filterPartitionValues (item, query) {
+    if (query !== '') {
+      item.loadPatitionValues = true
+      this.$nextTick(() => {
+        item.readyPartitionsFilter = item.readyPartitions.filter(p => {
+          return p.value.indexOf(query) !== -1
+        })
+        item.notReadyPartitionsFilter = item.notReadyPartitions.filter(p => {
+          return p.value.indexOf(query) !== -1
+        })
+        item.loadPatitionValues = false
+      })
+    } else {
+      item.readyPartitionsFilter = objectClone(item.readyPartitions)
+      item.notReadyPartitionsFilter = objectClone(item.notReadyPartitions)
     }
   }
 
