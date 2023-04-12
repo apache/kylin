@@ -562,7 +562,7 @@ export default class DimensionsModal extends Vue {
     const tableValue = Object.values(this.tables)
     const names = []
     tableValue.forEach(item => {
-      names.push(...item.columns.map(it => it.alias || it.name))
+      names.push(...item.columns.map(it => it.alias || it.name.trim()))
     })
     tableValue.forEach((table, idx) => {
       if (table.kind === 'FACT') {
@@ -577,6 +577,7 @@ export default class DimensionsModal extends Vue {
       let others = this.otherColumns.length ? this.otherColumns : this.modelDesc.all_named_columns.filter(item => !selectedColumns.includes(item.column))
       // 将已经选上的dimension回显到界面上
       table.columns && table.columns.forEach((col, index) => {
+        col.name = col.name.trim()
         this.$set(col, 'tableName', table.alias)
         this.$set(col, 'alias', this.getUniqueAlias(this.uniqueAliasObj, col.name.replace(unIncludedNameRegex, ''))) // 去除不符合维度命名的字符)
         this.$set(col, 'isSelected', false)
