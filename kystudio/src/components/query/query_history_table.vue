@@ -337,7 +337,7 @@ import Diagnostic from 'components/admin/Diagnostic/index'
     'en': {
       queryDetails: 'Query Details',
       ruleDesc: 'Favorite Condition:<br/>Query Frequency (default by daily);<br/>Query Duration;<br/>From user/ user group;<br/>Pushdown Query.',
-      searchSQL: 'Search one keyword or query ID',
+      searchSQL: 'Search Query ID or SQL Statement',
       noSpaceTips: 'Invalide entering: cannot search space',
       sqlDetailTip: 'Please click sql to get more informations',
       taskStatus: 'Task Status',
