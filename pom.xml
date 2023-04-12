@@ -14,9 +14,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
         <!-- https://infra.apache.org/publishing-maven-artifacts.html -->
@@ -30,7 +28,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>5.0.0-alpha-SNAPSHOT</version>
+    <version>5.0.0-alpha</version>
 
     <name>Apache Kylin</name>
     <url>http://kylin.apache.org</url>
@@ -47,7 +45,7 @@
         <!-- developerConnection is using in maven-release-plugin  https://maven.apache.org/guides/mini/guide-releasing.html-->
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/kylin.git</developerConnection>
         <url>scm:git:https://gitbox.apache.org/repos/asf/kylin.git</url>
-        <tag>HEAD</tag>
+        <tag>kylin-5.0.0-alpha</tag>
     </scm>
 
     <issueManagement>
