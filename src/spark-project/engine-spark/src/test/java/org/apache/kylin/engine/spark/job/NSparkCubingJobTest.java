@@ -50,6 +50,7 @@ import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.engine.spark.builder.SnapshotBuilder;
 import org.apache.kylin.engine.spark.merger.AfterBuildResourceMerger;
 import org.apache.kylin.engine.spark.storage.ParquetStorage;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.dao.JobStatistics;
 import org.apache.kylin.job.dao.JobStatisticsManager;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -96,8 +97,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.sparkproject.guava.collect.Sets;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 import scala.Option;
@@ -624,9 +623,11 @@ public class NSparkCubingJobTest extends NLocalWithSparkSessionTest {
         NProjectManager.getInstance(getTestConfig()).updateProject(project, copyForWrite -> {
             LinkedHashMap<String, String> overrideKylinProps = copyForWrite.getOverrideKylinProps();
             overrideKylinProps.put("kylin.engine.spark-conf.spark.locality.wait", "10");
+            overrideKylinProps.put("kylin.engine.spark-conf.spark.kubernetes.file.upload.path", "/tmp");
         });
         // get SparkConfigOverride from project overrideProps
         KylinConfig config = executable.getConfig();
+        Assert.assertEquals("/tmp/" + executable.getId(), config.getKubernetesUploadPath());
         Assert.assertEquals(getTestConfig(), config.base());
         Assert.assertNull(getTestConfig().getSparkConfigOverride().get("spark.locality.wait"));
         Assert.assertEquals("10", config.getSparkConfigOverride().get("spark.locality.wait"));

@@ -71,8 +71,11 @@ import org.apache.kylin.engine.spark.job.RestfulJobProgressReport;
 import org.apache.kylin.engine.spark.job.SparkJobConstants;
 import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.kylin.engine.spark.scheduler.ClusterMonitor;
+import org.apache.kylin.engine.spark.utils.HDFSUtils;
 import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
 import org.apache.kylin.engine.spark.utils.SparkConfHelper;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.model.NDataModel;
@@ -417,6 +420,14 @@ public abstract class SparkApplication implements Application {
     }
 
     public void extraDestroy() {
+        if (config != null && StringUtils.isNotEmpty(config.getKubernetesUploadPath())) {
+            logger.info("uploadPath={}", config.getKubernetesUploadPath());
+            try {
+                HDFSUtils.deleteMarkFile(config.getKubernetesUploadPath());
+            } catch (Exception e) {
+                logger.warn("Failed to delete " + config.getKubernetesUploadPath(), e);
+            }
+        }
         if (clusterMonitor != null) {
             clusterMonitor.shutdown();
         }
