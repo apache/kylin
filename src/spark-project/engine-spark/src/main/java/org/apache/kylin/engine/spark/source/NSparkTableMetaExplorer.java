@@ -28,17 +28,17 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.jnet.Installer;
 import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.catalyst.TableIdentifier;
 import org.apache.spark.sql.catalyst.catalog.CatalogTable;
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType;
 import org.apache.spark.sql.catalyst.catalog.SessionCatalog;
+import org.apache.spark.sql.delta.DeltaTableUtils;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import scala.Option;
 import scala.collection.JavaConversions;
@@ -111,7 +111,11 @@ public class NSparkTableMetaExplorer implements Serializable {
     private NSparkTableMeta getSparkTableMeta(String tableName, CatalogTable tableMetadata) {
         NSparkTableMetaBuilder builder = new NSparkTableMetaBuilder();
         builder.setTableName(tableName);
-        builder.setAllColumns(getColumns(tableMetadata, tableMetadata.schema()));
+        StructType allColSchema = tableMetadata.schema();
+        if (DeltaTableUtils.isDeltaTable(tableMetadata)) {
+            allColSchema = SparderEnv.getSparkSession().table(tableMetadata.identifier()).schema();
+        }
+        builder.setAllColumns(getColumns(tableMetadata, allColSchema));
         builder.setOwner(tableMetadata.owner());
         builder.setCreateTime(tableMetadata.createTime() + "");
         builder.setLastAccessTime(tableMetadata.lastAccessTime() + "");
