@@ -55,6 +55,11 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.engine.spark.merger.MetadataMerger;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.JobStoppedException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -70,17 +75,11 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin;
 import org.apache.kylin.metadata.view.LogicalView;
 import org.apache.kylin.metadata.view.LogicalViewManager;
+import org.apache.kylin.plugin.asyncprofiler.BuildAsyncProfilerSparkPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 
@@ -372,6 +371,11 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
                 jobOverrides.put("kylin.engine.spark-conf." + SPARK_YARN_QUEUE, yarnQueue);
             }
         }
+        String path = kylinConfigExt.getKubernetesUploadPath();
+        if (StringUtils.isNotEmpty(path)) {
+            jobOverrides.put(kylinConfigExt.getKubernetesUploadPathKey(),
+                    path + "/" + StringUtils.defaultIfBlank(parentId, getId()));
+        }
         return KylinConfigExt.createInstance(kylinConfigExt, jobOverrides);
     }
 
@@ -481,10 +485,8 @@ public class NSparkExecutable extends AbstractExecutable implements ChainedStage
         String dataflowId = getDataflowId();
         LogicalViewManager viewManager = LogicalViewManager.getInstance(config);
         if (StringUtils.isNotBlank(dataflowId)) {
-            Set<String> viewsMeta = viewManager
-                .findLogicalViewsInModel(getProject(), getDataflowId())
-                .stream().map(LogicalView::getResourcePath)
-                .collect(Collectors.toSet());
+            Set<String> viewsMeta = viewManager.findLogicalViewsInModel(getProject(), getDataflowId()).stream()
+                    .map(LogicalView::getResourcePath).collect(Collectors.toSet());
             dumpList.addAll(viewsMeta);
         }
         if (StringUtils.isNotBlank(table)) {

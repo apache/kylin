@@ -3962,4 +3962,12 @@ public abstract class KylinConfigBase implements Serializable {
         return TimeUtil.timeStringAs(getOptional("kylin.multi-tenant.route-task-timeout", "30min"),
                 TimeUnit.MILLISECONDS);
     }
+
+    public String getKubernetesUploadPath() {
+        return getOptional(getKubernetesUploadPathKey());
+    }
+
+    public String getKubernetesUploadPathKey() {
+        return "kylin.engine.spark-conf.spark.kubernetes.file.upload.path";
+    }
 }
