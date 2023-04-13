@@ -31,6 +31,7 @@ import org.apache.curator.test.TestingServer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.DDLRequest;
@@ -42,6 +43,8 @@ import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.TableIdentifier;
+import org.apache.spark.sql.catalyst.catalog.CatalogTable;
+import org.apache.spark.sql.execution.command.DDLUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,7 +52,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import scala.Option;
 
 public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
 
@@ -62,7 +65,10 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         createTestMetadata();
-        ss = SparkSession.builder().appName("local").master("local[1]").enableHiveSupport().getOrCreate();
+        ss = SparkSession.builder().appName("local").master("local[1]")
+                .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+                .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+                .enableHiveSupport().getOrCreate();
         ss.sparkContext().hadoopConfiguration().set("javax.jdo.option.ConnectionURL",
                 "jdbc:derby:memory:db;create=true");
         SparderEnv.setSparkSession(ss);
@@ -200,11 +206,14 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testListColumns() {
         Assert.assertEquals(4, sparkSourceService.listColumns("default", "COUNTRY").size());
+        sparkSourceService.executeSQL(
+                "CREATE EXTERNAL TABLE delta_bigints_2(id bigint,str string) USING DELTA LOCATION '/tmp/delta_data_spark_2'");
+        Assert.assertEquals(2, sparkSourceService.listColumns("default", "delta_bigints_2").size());
 
     }
 
     @Test
-    public void testExportTables() {
+    public void testExportTables() throws Exception {
         // hive data source
         String expectedTableStructure = "CREATE EXTERNAL TABLE `default`.`hive_bigints`(   `id` BIGINT) "
                 + "ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe' "
@@ -218,22 +227,38 @@ public class SparkSourceServiceTest extends NLocalFileMetadataTestCase {
                 .getTables().get("hive_bigints");
         Assert.assertEquals(actureTableStructure.substring(0, actureTableStructure.lastIndexOf("TBLPROPERTIES")),
                 expectedTableStructure);
-        Assert.assertTrue(DdlOperation.isHiveTable("default", "hive_bigints"));
+        CatalogTable tableMetadata = SparderEnv.getSparkSession().sessionState().catalog()
+                .getTableRawMetadata(new TableIdentifier("hive_bigints", Option.apply("default")));
+        Assert.assertTrue(DDLUtils.isHiveTable(tableMetadata));
 
         // spark datasource
         sparkSourceService.executeSQL(
                 "CREATE EXTERNAL TABLE spark_bigints(id bigint) USING PARQUET LOCATION '/tmp/parquet_data_spark'");
-        Assert.assertFalse(DdlOperation.isHiveTable("default", "spark_bigints"));
+        tableMetadata = SparderEnv.getSparkSession().sessionState().catalog()
+                .getTableRawMetadata(new TableIdentifier("spark_bigints", Option.apply("default")));
+        Assert.assertFalse(DDLUtils.isHiveTable(tableMetadata));
         String sparkDDL = sparkSourceService.exportTables("default", new String[] { "spark_bigints" }).getTables()
                 .get("spark_bigints");
         Assert.assertFalse(sparkDDL.isEmpty());
         Assert.assertTrue(StringUtils.containsIgnoreCase(sparkDDL, "USING PARQUET"));
+
+        // delta datasource
+        sparkSourceService.executeSQL(
+                "CREATE EXTERNAL TABLE delta_bigints(id bigint) USING DELTA LOCATION '/tmp/delta_data_spark'");
+        tableMetadata = SparderEnv.getSparkSession().sessionState().catalog()
+                .getTableRawMetadata(new TableIdentifier("delta_bigints", Option.apply("default")));
+        Assert.assertFalse(DDLUtils.isHiveTable(tableMetadata));
+        String deltaDDL = sparkSourceService.exportTables("default", new String[] { "delta_bigints" }).getTables()
+                .get("delta_bigints");
+        Assert.assertFalse(deltaDDL.isEmpty());
+        Assert.assertTrue(StringUtils.containsIgnoreCase(deltaDDL, "USING DELTA"));
 
         // view
         sparkSourceService.executeSQL("CREATE VIEW view_bigints as select id from default.spark_bigints");
         String viewDDL = DdlOperation.collectDDL(TableIdentifier.apply("view_bigints"),
                 "show create view default.view_bigints");
         Assert.assertFalse(StringUtils.isEmpty(viewDDL));
+
     }
 
     @Test

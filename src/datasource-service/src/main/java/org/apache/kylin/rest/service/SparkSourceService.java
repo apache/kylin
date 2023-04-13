@@ -35,6 +35,9 @@ import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringHelper;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.rest.request.DDLRequest;
@@ -54,14 +57,12 @@ import org.apache.spark.sql.catalog.Database;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.catalyst.TableIdentifier;
 import org.apache.spark.sql.catalyst.catalog.CatalogTable;
+import org.apache.spark.sql.delta.DeltaTableUtils;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.guava30.shaded.common.base.Strings;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.Data;
 import lombok.val;
@@ -165,6 +166,9 @@ public class SparkSourceService extends BasicService {
         CatalogTable catalogTable = sparkSession.sessionState().catalog()
                 .getTempViewOrPermanentTableMetadata(new TableIdentifier(table, Option.apply(db)));
         scala.collection.immutable.List<StructField> structFieldList = catalogTable.schema().toList();
+        if (DeltaTableUtils.isDeltaTable(catalogTable)) {
+            structFieldList = sparkSession.table(catalogTable.identifier()).schema().toList();
+        }
         Iterator<StructField> structFieldIterator = structFieldList.iterator();
 
         List<ColumnModel> columnModels = Lists.newArrayList();
