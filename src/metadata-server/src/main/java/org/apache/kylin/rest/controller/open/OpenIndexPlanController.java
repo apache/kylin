@@ -31,6 +31,7 @@ import org.apache.kylin.rest.request.OpenUpdateRuleBasedCuboidRequest;
 import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
 import org.apache.kylin.rest.response.DiffRuleBasedIndexResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.OpenAddAggGroupResponse;
 import org.apache.kylin.rest.service.FusionIndexService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -47,6 +48,8 @@ public class OpenIndexPlanController extends NBasicController {
 
     private static final String MODEL_ALIAS = "model";
 
+    private static final String AGGREGATION_GROUPS = "aggregation_groups";
+
     @Autowired
     @Qualifier("fusionIndexService")
     private FusionIndexService fusionIndexService;
@@ -55,10 +58,10 @@ public class OpenIndexPlanController extends NBasicController {
     NIndexPlanController indexPlanController;
 
     @PutMapping(value = "/agg_groups")
-    public EnvelopeResponse<DiffRuleBasedIndexResponse> updateRule(
-            @RequestBody OpenUpdateRuleBasedCuboidRequest request) {
+    public EnvelopeResponse<OpenAddAggGroupResponse> updateRule(@RequestBody OpenUpdateRuleBasedCuboidRequest request) {
         String projectName = checkProjectName(request.getProject());
         checkRequiredArg(MODEL_ALIAS, request.getModelAlias());
+        checkListRequiredArg(AGGREGATION_GROUPS, request.getAggregationGroups());
         request.setProject(projectName);
         val modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), projectName);
         NDataModel model = modelManager.getDataModelDescByAlias(request.getModelAlias());
@@ -69,6 +72,16 @@ public class OpenIndexPlanController extends NBasicController {
         EnvelopeResponse<DiffRuleBasedIndexResponse> response = indexPlanController
                 .calculateDiffRuleBasedIndex(internalRequest);
         indexPlanController.updateRule(internalRequest);
-        return response;
+        return convertResponse(response);
+    }
+
+    private EnvelopeResponse<OpenAddAggGroupResponse> convertResponse(
+            EnvelopeResponse<DiffRuleBasedIndexResponse> internal) {
+        if (internal != null && internal.getData() != null) {
+            val response = new OpenAddAggGroupResponse(internal.getData().getDecreaseLayouts(),
+                    internal.getData().getIncreaseLayouts(), internal.getData().getRollbackLayouts());
+            return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, response, "");
+        }
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, null, "");
     }
 }
