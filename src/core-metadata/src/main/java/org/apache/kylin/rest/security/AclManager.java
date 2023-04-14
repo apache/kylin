@@ -164,9 +164,11 @@ public class AclManager {
             if (record.isEntriesInheriting() && record.getParentDomainObjectInfo() != null)
                 parentAcl = readAclById(record.getParentDomainObjectInfo());
 
-            record.init(parentAcl, aclPermissionFactory, permissionGrantingStrategy);
+            // Caution: Using a copied object before doing init, otherwise the original one will be polluted
+            AclRecord recordCopy = crud.copyForWrite(record);
+            recordCopy.init(parentAcl, aclPermissionFactory, permissionGrantingStrategy);
 
-            aclMaps.put(oid, new MutableAclRecord(record));
+            aclMaps.put(oid, new MutableAclRecord(recordCopy));
         }
         return aclMaps;
     }
