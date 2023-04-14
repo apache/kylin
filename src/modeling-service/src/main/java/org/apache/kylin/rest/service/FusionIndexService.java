@@ -25,11 +25,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -506,7 +506,7 @@ public class FusionIndexService extends BasicService {
         }
         Set<String> set = Arrays.stream(dimOrMeaNames)
                 .map(str -> aggGroupParams == AggGroupParams.MEASURE ? str : StringUtils.upperCase(str, Locale.ROOT))
-                .collect(Collectors.toCollection(TreeSet::new));
+                .collect(Collectors.toCollection(LinkedHashSet::new));
         if (set.size() < dimOrMeaNames.length) {
             throw new IllegalStateException(
                     "Dimension or measure in agg group must not contain duplication: " + Arrays.asList(dimOrMeaNames));
