@@ -3365,6 +3365,7 @@ export default class ModelEdit extends Vue {
     .column-list-box {
       overflow: auto;
       overflow-x: hidden;
+      transform: perspective(10px);
       flex: 1;
       border-radius: 0 0 5px 5px;
       &.ksd-drag-box *[draggable="true"]:not(.is-link):hover {
