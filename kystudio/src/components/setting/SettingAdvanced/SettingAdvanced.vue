@@ -160,40 +160,6 @@
         </div>
       </el-form>
     </EditableBlock>
-    <!-- 分层存储 -->
-    <!-- <EditableBlock
-      :header-content="$t('secondaryStorage')"
-      :is-keep-editing="true"
-      :is-edited="!form.second_storage_enabled&&isFormEdited(form, 'sec-storage') || (form.second_storage_enabled && new_nodes.length > 0)"
-      :is-reset="false"
-      v-if="isShowSecondStorage"
-      @submit="(scb, ecb) => handleSubmit('sec-storage', scb, ecb)">
-      <div class="setting-item">
-        <span class="setting-label font-medium">{{$t('supportSecStorage')}}</span><span class="setting-value fixed ksd-fs-12">
-          <el-switch
-            v-model="form.second_storage_enabled"
-            :active-text="$t('kylinLang.common.OFF')"
-            :inactive-text="$t('kylinLang.common.ON')">
-          </el-switch>
-        </span>
-        <div class="setting-desc">{{$t('supportSecStorageDesc')}}</div>
-      </div>
-      <div class="setting-item">
-        <span class="setting-label font-medium">{{$t('storageNode')}}</span>
-        <ul class="sec-nodes" v-if="form.second_storage_nodes&&form.second_storage_nodes.length">
-          <li v-for="n in form.second_storage_nodes" :key="n.name">
-            <span class="node-name">{{n.name}}</span>
-            <span class="node-ip">{{n.ip}}:{{n.port}}</span>
-          </li>
-        </ul>
-        <el-select class="setting-desc secondary-storage-nodes" value-key="name" multiple v-model="new_nodes" :placeholder="$t('chooseNode')">
-          <el-option v-for="item in nodes" :label="`${item.name} ${item.ip}:${item.port}`" :key="item.name" :value="item">
-            <span class="node-name">{{item.name}}</span>
-            <span class="node-ip">{{item.ip}}:{{item.port}}</span>
-          </el-option>
-        </el-select>
-      </div>
-    </EditableBlock> -->
     <!-- 多级分区 -->
     <EditableBlock
       :header-content="$t('mulPartitionSettings')"
@@ -227,6 +193,43 @@
           </el-switch>
         </span>
         <div class="setting-desc">{{$t('snapshotDesc')}}</div>
+      </div>
+      <div class="setting-item" v-if="form.snapshot_manual_management_enabled">
+        <span class="setting-label font-medium">{{$t('snapshotAutoRefresh')}}</span><span class="setting-value fixed ksd-fs-12">
+          <el-switch
+            v-model="form.snapshot_automatic_refresh_enabled"
+            :active-text="$t('kylinLang.common.OFF')"
+            :inactive-text="$t('kylinLang.common.ON')"
+            @input="value => handleSnapshotSwitchAutoRefresh(value)">
+          </el-switch>
+        </span>
+      </div>
+      <div class="setting-item" v-if="form.snapshot_manual_management_enabled&&form.snapshot_automatic_refresh_enabled">
+        <span class="setting-label font-medium">{{$t('frequency')}}</span><span class="setting-value fixed ksd-fs-12">
+          <el-input-number style="width:100px" size="small" @change="handleChangeRefreshTimeInterval" v-model.trim="form.snapshot_automatic_refresh_time_interval" v-number4="form.snapshot_automatic_refresh_time_interval" controls-position="right" :min="1" content-align="left">
+          </el-input-number><el-select
+            class="ksd-ml-16"
+            size="small"
+            style="width: 100px;"
+            v-model="form.snapshot_automatic_refresh_time_mode"
+            @change="handleChangeRefreshTimeMode"
+            :placeholder="$t('kylinLang.common.pleaseChoose')">
+            <el-option
+              v-for="frequencyType in frequencyTypes"
+              :key="frequencyType"
+              :label="$t(frequencyType.toLowerCase())"
+              :value="frequencyType">
+            </el-option>
+          </el-select>
+        </span><span v-if="form.snapshot_automatic_refresh_time_mode==='DAY'" class="setting-label font-medium ksd-ml-16">{{$t('timed')}}</span><span v-if="form.snapshot_automatic_refresh_time_mode==='DAY'" class="setting-value fixed ksd-fs-12">
+          <el-time-picker
+            style="width: 136px;"
+            size="small"
+            align="right"
+            @change="handleChangeRefreshTime"
+            v-model="form.snapshot_timed">
+          </el-time-picker>
+        </span>
       </div>
     </EditableBlock>
     <!-- 可计算列 -->
@@ -325,6 +328,7 @@ import { kylinConfirm } from 'util/business'
 import { apiUrl } from '../../../config'
 import {
   validate,
+  frequencyTypes,
   _getJobAlertSettings,
   _getDefaultDBSettings,
   _getYarnNameSetting,
@@ -402,6 +406,7 @@ export default class SettingAdvanced extends Vue {
   pageSize = pageCount
   convertedProperties = []
   pageRefTags = pageRefTags
+  frequencyTypes = frequencyTypes
   jobNotificationStateTypes=jobNotificationStateTypes
 
   dbList = []
@@ -422,6 +427,10 @@ export default class SettingAdvanced extends Vue {
     fileList: [],
     file: null,
     snapshot_manual_management_enabled: this.project.snapshot_manual_management_enabled,
+    snapshot_automatic_refresh_enabled: this.project.snapshot_automatic_refresh_enabled,
+    snapshot_automatic_refresh_time_interval: this.project.snapshot_automatic_refresh_time_interval || 1,
+    snapshot_automatic_refresh_time_mode: this.project.snapshot_automatic_refresh_time_mode || 'DAY',
+    snapshot_timed: new Date(new Date().setHours(+this.project.snapshot_automatic_refresh_trigger_hours, +this.project.snapshot_automatic_refresh_trigger_minute, +this.project.snapshot_automatic_refresh_trigger_second, 0)),
     multi_partition_enabled: this.project.multi_partition_enabled,
     scd2_enabled: this.project.scd2_enabled,
     second_storage_enabled: true,
@@ -551,6 +560,63 @@ export default class SettingAdvanced extends Vue {
         this.form.snapshot_manual_management_enabled = !value
       }
     } catch (e) {
+      handleError(e)
+    }
+  }
+  async handleSnapshotSwitchAutoRefresh (value) {
+    const submitData = _getSnapshotSetting(this.project)
+    submitData.snapshot_automatic_refresh_enabled = value
+    try {
+      await this.updateSnapshotConfig(submitData)
+      this.$emit('reload-setting')
+      this.$message({ type: 'success', message: this.$t('kylinLang.common.updateSuccess') })
+    } catch (e) {
+      this.form.snapshot_snapshot_automatic_refresh_enabled = !value
+      handleError(e)
+    }
+  }
+  async handleChangeRefreshTimeInterval (value) {
+    const submitData = _getSnapshotSetting(this.project)
+    const oldValue = submitData.snapshot_automatic_refresh_time_interval
+    submitData.snapshot_automatic_refresh_time_interval = value
+    try {
+      await this.updateSnapshotConfig(submitData)
+      this.$emit('reload-setting')
+      this.$message({ type: 'success', message: this.$t('kylinLang.common.updateSuccess') })
+    } catch (e) {
+      submitData.snapshot_automatic_refresh_time_interval = oldValue
+      handleError(e)
+    }
+  }
+  async handleChangeRefreshTimeMode (value) {
+    const submitData = _getSnapshotSetting(this.project)
+    const oldValue = submitData.snapshot_automatic_refresh_time_mode
+    submitData.snapshot_automatic_refresh_time_mode = value
+    try {
+      await this.updateSnapshotConfig(submitData)
+      this.$emit('reload-setting')
+      this.$message({ type: 'success', message: this.$t('kylinLang.common.updateSuccess') })
+    } catch (e) {
+      submitData.snapshot_automatic_refresh_time_mode = oldValue
+      handleError(e)
+    }
+  }
+  async handleChangeRefreshTime (value) {
+    const submitData = _getSnapshotSetting(this.project)
+    const oldHoures = submitData.snapshot_automatic_refresh_trigger_hours
+    const oldMinute = submitData.snapshot_automatic_refresh_trigger_minute
+    const oldSecond = submitData.snapshot_automatic_refresh_trigger_second
+    submitData.snapshot_automatic_refresh_trigger_hours = new Date(value).getHours()
+    submitData.snapshot_automatic_refresh_trigger_minute = new Date(value).getMinutes()
+    submitData.snapshot_automatic_refresh_trigger_second = new Date(value).getSeconds()
+    try {
+      await this.updateSnapshotConfig(submitData)
+      this.$emit('reload-setting')
+      this.$message({ type: 'success', message: this.$t('kylinLang.common.updateSuccess') })
+    } catch (e) {
+      submitData.snapshot_automatic_refresh_trigger_hours = oldHoures
+      submitData.snapshot_automatic_refresh_trigger_minute = oldMinute
+      submitData.snapshot_automatic_refresh_trigger_second = oldSecond
       handleError(e)
     }
   }

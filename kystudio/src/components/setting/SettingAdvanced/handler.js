@@ -65,10 +65,22 @@ export function _getSecStorageSetting (data) {
   }
 }
 
+export const frequencyTypes = [
+  'DAY',
+  'HOURS',
+  'MINUTE'
+]
+
 export function _getSnapshotSetting (data) {
   return {
     project: data.project,
-    snapshot_manual_management_enabled: data.snapshot_manual_management_enabled
+    snapshot_manual_management_enabled: data.snapshot_manual_management_enabled,
+    snapshot_automatic_refresh_enabled: data.snapshot_automatic_refresh_enabled,
+    snapshot_automatic_refresh_time_mode: data.snapshot_automatic_refresh_time_mode,
+    snapshot_automatic_refresh_time_interval: data.snapshot_automatic_refresh_time_interval,
+    snapshot_automatic_refresh_trigger_hours: data.snapshot_automatic_refresh_trigger_hours,
+    snapshot_automatic_refresh_trigger_minute: data.snapshot_automatic_refresh_trigger_minute,
+    snapshot_automatic_refresh_trigger_second: data.snapshot_automatic_refresh_trigger_second
   }
 }
 
