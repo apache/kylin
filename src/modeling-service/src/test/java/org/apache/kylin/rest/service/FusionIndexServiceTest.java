@@ -21,7 +21,12 @@ import static org.hamcrest.Matchers.is;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.exception.ServerErrorCode;
@@ -864,6 +869,45 @@ public class FusionIndexServiceTest extends SourceTestCase {
         Assert.assertEquals(64, indexResponses2.size());
     }
 
+    private Integer[] toIntegerArray(Map<String, Integer> dimMap, String[] dimensions) {
+        return Arrays.stream(dimensions).map(dimMap::get).toArray(Integer[]::new);
+    }
+
+    private void testDimsOrder(OpenUpdateRuleBasedCuboidRequest open, UpdateRuleBasedCuboidRequest internal,
+            NDataModel model) {
+        List<OpenUpdateRuleBasedCuboidRequest.OpenAggGroupRequest> openGroups = open.getAggregationGroups();
+        int from = internal.getAggregationGroups().size() - openGroups.size();
+        int to = internal.getAggregationGroups().size();
+        List<NAggregationGroup> internalGroups = internal.getAggregationGroups().subList(from, to);
+        val dimMap = model.getEffectiveDimensions().entrySet().stream().collect(Collectors
+                .toMap(e -> e.getValue().getAliasDotName(), Map.Entry::getKey, (u, v) -> v, LinkedHashMap::new));
+        for (int i = 0; i < openGroups.size(); i++) {
+            val openGroup = openGroups.get(i);
+            val internalGroup = internalGroups.get(i);
+            Assert.assertArrayEquals(toIntegerArray(dimMap, openGroup.getDimensions()), internalGroup.getIncludes());
+            if (openGroup.getMandatoryDims() != null) {
+                Assert.assertArrayEquals(toIntegerArray(dimMap, openGroup.getMandatoryDims()),
+                        internalGroup.getSelectRule().getMandatoryDims());
+            }
+            if (!ArrayUtils.isEmpty(openGroup.getJointDims())) {
+                for (int j = 0; j < openGroup.getJointDims().length; j++) {
+                    if (!ArrayUtils.isEmpty(openGroup.getJointDims()[j])) {
+                        Assert.assertArrayEquals(toIntegerArray(dimMap, openGroup.getJointDims()[j]),
+                                internalGroup.getSelectRule().getJointDims()[j]);
+                    }
+                }
+            }
+            if (!ArrayUtils.isEmpty(openGroup.getHierarchyDims())) {
+                for (int j = 0; j < openGroup.getHierarchyDims().length; j++) {
+                    if (!ArrayUtils.isEmpty(openGroup.getHierarchyDims()[j])) {
+                        Assert.assertArrayEquals(toIntegerArray(dimMap, openGroup.getHierarchyDims()[j]),
+                                internalGroup.getSelectRule().getHierarchyDims()[j]);
+                    }
+                }
+            }
+        }
+    }
+
     @Test
     public void testNormalConvertOpenToInternal() {
         OpenUpdateRuleBasedCuboidRequest request = new OpenUpdateRuleBasedCuboidRequest();
@@ -881,6 +925,7 @@ public class FusionIndexServiceTest extends SourceTestCase {
             aggGroup.setJointDims(jointDims);
             UpdateRuleBasedCuboidRequest internal = fusionIndexService.convertOpenToInternal(request, model);
             Assert.assertEquals(2, internal.getAggregationGroups().size());
+            testDimsOrder(request, internal, model);
         }
 
         {
@@ -892,6 +937,7 @@ public class FusionIndexServiceTest extends SourceTestCase {
             aggGroup.setJointDims(jointDims);
             UpdateRuleBasedCuboidRequest internal = fusionIndexService.convertOpenToInternal(request, model);
             Assert.assertEquals(2, internal.getAggregationGroups().size());
+            testDimsOrder(request, internal, model);
         }
 
         {
@@ -902,6 +948,7 @@ public class FusionIndexServiceTest extends SourceTestCase {
             aggGroup.setMandatoryDims(new String[] {"TEST_BANK_INCOME.NAME"});
             UpdateRuleBasedCuboidRequest internal = fusionIndexService.convertOpenToInternal(request, model);
             Assert.assertEquals(2, internal.getAggregationGroups().size());
+            testDimsOrder(request, internal, model);
         }
     }
 
