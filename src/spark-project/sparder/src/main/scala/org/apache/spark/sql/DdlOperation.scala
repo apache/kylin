@@ -113,8 +113,7 @@ object DdlOperation extends Logging {
     var tableMetadata = SparderEnv.getSparkSession.sessionState.catalog
       .getTableRawMetadata(TableIdentifier(table, Some(database)))
     if (DeltaTableUtils.isDeltaTable(tableMetadata)) {
-      return  new ShowCreateTableCommand(TableIdentifier(table, Some(database)), Seq.empty).
-        run(SparderEnv.getSparkSession).toList.take(1).head.getString(0);
+      return generateDeltaTableDDL(tableMetadata);
     }
     sql = if (DDLUtils.isHiveTable(tableMetadata)) sql + " AS SERDE" else sql
     val logicalPlan = SparderEnv.getSparkSession.sessionState.sqlParser.parsePlan(sql)
@@ -124,6 +123,10 @@ object DdlOperation extends Logging {
       case ExecutedCommandExec(show: ShowCreateTableCommand) => collectDDL(show.table, sql)
       case ExecutedCommandExec(show: ShowCreateTableAsSerdeCommand) => collectDDL(show.table, sql)
     }
+  }
+
+  def generateDeltaTableDDL(tableMetadata: CatalogTable): String = {
+    s"CREATE TABLE ${tableMetadata.identifier.quotedString} USING delta LOCATION '${tableMetadata.location}'"
   }
 
 
