@@ -417,14 +417,14 @@ export default class DataSourceBar extends Vue {
     })
   }
   async loadTables (params) {
-    const { tableName = null, databaseId = null, isReset = false } = params || {}
+    const { tableName = null, databaseId = null, isReset = false, isFuzzy = false } = params || {}
     const currentDatabases = this.databaseArray.filter(database => {
       return database.id === databaseId || !databaseId
     })
     const responses = await Promise.all(currentDatabases.map((database) => {
       const { projectName, label: databaseName, pagination, datasource } = database
       isReset ? this.clearPagination(database) : null
-      return this.fetchTables({ projectName, databaseName, tableName, isExt: true, ...pagination, sourceType: datasource })
+      return this.fetchTables({ projectName, databaseName, tableName, isExt: true, isFuzzy: isFuzzy, ...pagination, sourceType: datasource })
     }))
     const results = await handleSuccessAsync(responses)
     currentDatabases.forEach((database, index) => {
@@ -510,7 +510,7 @@ export default class DataSourceBar extends Vue {
       let idx = this.filterText.indexOf('.')
       tableName = idx === -1 ? this.filterText : this.filterText.substring(idx + 1, this.filterText.length)
     }
-    await this.loadTables({ databaseId, tableName })
+    await this.loadTables({ databaseId, tableName, isFuzzy: true })
     this.freshAutoCompleteWords()
   }
   handleClick (data, node) {
