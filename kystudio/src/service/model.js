@@ -328,6 +328,6 @@ export default {
     return Vue.resource(apiUrl + 'query/query_history/tired_storage_metrics').get(para)
   },
   validateExportTds: (para) => {
-    return Vue.resource(apiUrl + 'models/validate_export?project=' + para.project + '&model=' + para.modelId).get()
+    return Vue.resource(apiUrl + 'models/validate_export?project=' + para.project + '&model=' + para.modelId + '&element=' + para.element).get()
   }
 }
