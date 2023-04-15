@@ -41,6 +41,9 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.engine.spark.IndexDataConstructor;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 import org.apache.kylin.job.SecondStorageJobParamUtil;
 import org.apache.kylin.job.common.ExecutableUtil;
 import org.apache.kylin.job.execution.DefaultExecutable;
@@ -51,7 +54,9 @@ import org.apache.kylin.job.handler.SecondStorageSegmentLoadJobHandler;
 import org.apache.kylin.job.model.JobParam;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.util.ExecAndComp;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -69,10 +74,6 @@ import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.testcontainers.containers.JdbcDatabaseContainer;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 
 import io.kyligence.kap.newten.clickhouse.ClickHouseUtils;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
@@ -161,6 +162,18 @@ public class TDVTTest implements JobWaiter {
                 triggerClickHouseLoad(project, AUTO_MODEL_STAPLES_1, "ADMIN",
                         dataflowManager.getDataflow(AUTO_MODEL_STAPLES_1).getSegments().stream()
                                 .map(NDataSegment::getId).collect(Collectors.toList())));
+
+        // For historical reasons, the innerExpression of ComputedColumn is not standardized
+        modelManager.listAllModels().forEach(model -> {
+            if (model.isBroken()) {
+                return;
+            }
+            List<ComputedColumnDesc> ccList = model.getComputedColumnDescs();
+            for (ComputedColumnDesc ccDesc : ccList) {
+                String innerExp = PushDownUtil.massageComputedColumn(model, model.getProject(), ccDesc, null);
+                ccDesc.setInnerExpression(innerExp);
+            }
+        });
 
         // check
         test.checkHttpServer();

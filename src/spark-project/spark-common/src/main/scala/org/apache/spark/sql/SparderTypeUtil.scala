@@ -34,7 +34,6 @@ import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.springframework.util.Base64Utils
 
 import java.lang.{Boolean => JBoolean, Byte => JByte, Double => JDouble, Float => JFloat, Long => JLong, Short => JShort}
 import java.math.BigDecimal
@@ -297,13 +296,15 @@ object SparderTypeUtil extends Logging {
       case (ts: java.sql.Timestamp, _) => DateFormat.castTimestampToString(ts.getTime)
       case (dt: java.sql.Date, _) => DateFormat.formatToDateStr(dt.getTime)
       case (str: java.lang.String, _) => formatStringValue(str)
-      case (value: mutable.WrappedArray.ofRef[Any], _) =>
+      case (value: mutable.WrappedArray.ofRef[AnyRef], _) =>
+        value.array.map(v => convertToStringWithCalciteType(v, relType, true)).mkString("[", ",", "]")
+      case (value: mutable.WrappedArray[Any], _) =>
         value.array.map(v => convertToStringWithCalciteType(v, relType, true)).mkString("[", ",", "]")
       case (value: immutable.Map[Any, Any], _) =>
         value
           .map(v => convertToStringWithCalciteType(v._1, relType, true) + ":" + convertToStringWithCalciteType(v._2, relType, true))
           .mkString("{", ",", "}")
-      case (value: Array[Byte], _) => Base64Utils.encodeToString(value)
+      case (value: Array[Byte], _) => new String(value)
       case (other, _) => other.toString
     }
   }

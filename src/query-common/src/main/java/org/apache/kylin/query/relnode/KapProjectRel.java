@@ -20,6 +20,7 @@ package org.apache.kylin.query.relnode;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,13 +40,12 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.query.schema.OLAPTable;
-import org.apache.kylin.query.util.ICutContextStrategy;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.query.schema.OLAPTable;
+import org.apache.kylin.query.util.ICutContextStrategy;
 
 import lombok.Setter;
 import lombok.val;
@@ -162,6 +162,7 @@ public class KapProjectRel extends OLAPProjectRel implements KapRel {
                 || !(this.context.hasPrecalculatedFields())
                 || (this.getContext().isHasJoin() && this.beforeTopPreCalcJoin)) {
             this.columnRowType = this.buildColumnRowType();
+            this.rewriteProjects();
             return;
         }
 
@@ -189,7 +190,55 @@ public class KapProjectRel extends OLAPProjectRel implements KapRel {
 
         // rebuild columns
         this.columnRowType = this.buildColumnRowType();
+        this.rewriteProjects();
         this.rewriting = false;
+    }
+
+    private void rewriteProjects() {
+        OLAPRel olapChild = (OLAPRel) getInput();
+        ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
+        List<TblColRef> allColumns = inputColumnRowType.getAllColumns();
+        List<TblColRef> ccColRefList = allColumns.stream() //
+                .filter(col -> col.getColumnDesc().isComputedColumn()) //
+                .collect(Collectors.toList());
+
+        Map<TblColRef, Integer> columnToIdMap = Maps.newHashMap();
+        for (int i = 0; i < allColumns.size(); i++) {
+            TblColRef colRef = allColumns.get(i);
+            if (TblColRef.UNKNOWN_ALIAS.equalsIgnoreCase(colRef.getTableAlias())) {
+                continue;
+            } else if (columnToIdMap.containsKey(colRef)) {
+                logger.warn("duplicate TblColRef {} of computed column.", colRef);
+            }
+            columnToIdMap.putIfAbsent(colRef, i);
+        }
+        List<RexNode> newRewriteProjList = Lists.newArrayList();
+        Map<String, TblColRef> map = Maps.newHashMap();
+        for (TblColRef tblColRef : ccColRefList) {
+            map.putIfAbsent(tblColRef.getDoubleQuoteExp(), tblColRef);
+        }
+        Map<RexNode, TblColRef> nodeAndTblColMap = new HashMap<>();
+        for (int i = 0; i < this.rewriteProjects.size(); i++) {
+            RexNode rex = this.rewriteProjects.get(i);
+            RelDataTypeField columnField = this.rowType.getFieldList().get(i);
+            String fieldName = columnField.getName();
+            Set<TblColRef> sourceCollector = Sets.newHashSet();
+            TblColRef column = translateRexNode(rex, inputColumnRowType, fieldName, sourceCollector, nodeAndTblColMap);
+            if (column == null)
+                throw new IllegalStateException("No TblColRef found in " + rex);
+            TblColRef existColRef = map.get(column.toString());
+            if (existColRef != null && getContext().allColumns.contains(existColRef)) {
+                column = existColRef;
+                List<RelDataTypeField> inputFieldList = getInput().getRowType().getFieldList();
+                RelDataTypeField inputField = inputFieldList.get(columnToIdMap.get(column));
+                RexNode newRef = inputField == null ? rex
+                        : new RexInputRef(inputField.getIndex(), inputField.getType());
+                newRewriteProjList.add(newRef);
+            } else {
+                newRewriteProjList.add(rex);
+            }
+        }
+        this.rewriteProjects = newRewriteProjList;
     }
 
     private void updateSubContexts(Set<OLAPContext> subContexts) {

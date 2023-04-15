@@ -1,0 +1,161 @@
+{
+  "uuid" : "8dc395fb-f201-310e-feaa-d4000a7e16cb",
+  "last_modified" : 1678511175928,
+  "create_time" : 1676951354863,
+  "version" : "4.0.0.0",
+  "alias" : "aggindex_priority_answer_withccexpr",
+  "owner" : "ADMIN",
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "description" : "",
+  "fact_table" : "SSB.DATES",
+  "fact_table_alias" : null,
+  "management_type" : "MODEL_BASED",
+  "join_tables" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : null,
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null,
+    "create_empty_segment_enabled" : false
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "storage_type" : 0,
+  "model_type" : "BATCH",
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "D_WEEKNUMINYEAR",
+    "column" : "DATES.D_WEEKNUMINYEAR"
+  }, {
+    "id" : 1,
+    "name" : "D_LASTDAYINWEEKFL",
+    "column" : "DATES.D_LASTDAYINWEEKFL"
+  }, {
+    "id" : 2,
+    "name" : "D_LASTDAYINMONTHFL",
+    "column" : "DATES.D_LASTDAYINMONTHFL"
+  }, {
+    "id" : 3,
+    "name" : "D_DAYOFWEEK",
+    "column" : "DATES.D_DAYOFWEEK",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 4,
+    "name" : "D_MONTHNUMINYEAR",
+    "column" : "DATES.D_MONTHNUMINYEAR"
+  }, {
+    "id" : 5,
+    "name" : "D_YEARMONTHNUM",
+    "column" : "DATES.D_YEARMONTHNUM"
+  }, {
+    "id" : 6,
+    "name" : "D_YEARMONTH",
+    "column" : "DATES.D_YEARMONTH"
+  }, {
+    "id" : 7,
+    "name" : "D_DAYNUMINMONTH",
+    "column" : "DATES.D_DAYNUMINMONTH"
+  }, {
+    "id" : 8,
+    "name" : "D_SELLINGSEASON",
+    "column" : "DATES.D_SELLINGSEASON"
+  }, {
+    "id" : 9,
+    "name" : "D_WEEKDAYFL",
+    "column" : "DATES.D_WEEKDAYFL"
+  }, {
+    "id" : 10,
+    "name" : "D_YEAR",
+    "column" : "DATES.D_YEAR",
+    "status" : "DIMENSION"
+  }, {
+    "id" : 11,
+    "name" : "D_HOLIDAYFL",
+    "column" : "DATES.D_HOLIDAYFL"
+  }, {
+    "id" : 12,
+    "name" : "D_DAYNUMINWEEK",
+    "column" : "DATES.D_DAYNUMINWEEK"
+  }, {
+    "id" : 13,
+    "name" : "D_DAYNUMINYEAR",
+    "column" : "DATES.D_DAYNUMINYEAR"
+  }, {
+    "id" : 14,
+    "name" : "D_DATE",
+    "column" : "DATES.D_DATE"
+  }, {
+    "id" : 15,
+    "name" : "D_MONTH",
+    "column" : "DATES.D_MONTH"
+  }, {
+    "id" : 16,
+    "name" : "D_DATEKEY",
+    "column" : "DATES.D_DATEKEY"
+  }, {
+    "id" : 17,
+    "name" : "CC_1",
+    "column" : "DATES.CC_1",
+    "status" : "DIMENSION"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : null,
+    "id" : 100000,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  }, {
+    "name" : "COUNT(1)",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "column",
+        "value" : "DATES.CC_1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "column" : null,
+    "comment" : "",
+    "id" : 100001,
+    "type" : "NORMAL",
+    "internal_ids" : [ ]
+  } ],
+  "recommendations_count" : 0,
+  "computed_columns" : [ {
+    "tableIdentity" : "SSB.DATES",
+    "tableAlias" : "DATES",
+    "columnName" : "CC_1",
+    "expression" : "CASE WHEN DATES.D_DAYOFWEEK IN ('1') THEN 1 ELSE NULL END",
+    "innerExpression" : "CASE WHEN `DATES`.`D_DAYOFWEEK` IN ('1') THEN 1 ELSE NULL END",
+    "datatype" : "INTEGER",
+    "comment" : null,
+    "rec_uuid" : null
+  } ],
+  "canvas" : {
+    "coordinate" : {
+      "DATES" : {
+        "x" : 691.3332790798611,
+        "y" : 155.33331976996527,
+        "width" : 200.0,
+        "height" : 230.0
+      }
+    },
+    "zoom" : 9.0
+  },
+  "multi_partition_desc" : null,
+  "multi_partition_key_mapping" : null,
+  "fusion_id" : null
+}

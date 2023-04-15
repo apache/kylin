@@ -350,14 +350,9 @@ public class RealizationChooser {
             return null;
         }
 
-        candidate.setRewrittenCtx(preserveRewriteProps(olapContext));
         logger.info("The realizations remaining: {}, and the final chosen one for current olap context {} is {}",
                 candidate.realization.getCanonicalName(), olapContext.id, candidate.realization.getCanonicalName());
         return candidate;
-    }
-
-    static OLAPContextProp preserveRewriteProps(OLAPContext rewrittenOLAContext) {
-        return preservePropsBeforeRewrite(rewrittenOLAContext);
     }
 
     static OLAPContextProp preservePropsBeforeRewrite(OLAPContext oriOLAPContext) {
@@ -378,9 +373,13 @@ public class RealizationChooser {
     static void restoreOLAPContextProps(OLAPContext oriOLAPContext, OLAPContextProp preservedOLAPContext) {
         oriOLAPContext.allColumns = preservedOLAPContext.allColumns;
         oriOLAPContext.setSortColumns(preservedOLAPContext.getSortColumns());
+        // By creating a new hashMap, the containsKey method can obtain appropriate results.
+        // This is necessary because the aggregations have changed during the query matching process,
+        // therefore changed hash of the same object would be put into different bucket of the LinkedHashMap.
+        Map<FunctionDesc, FunctionDesc> map = Maps.newHashMap(preservedOLAPContext.getReservedMap());
         oriOLAPContext.aggregations.forEach(agg -> {
-            if (preservedOLAPContext.getReservedMap().containsKey(agg)) {
-                final FunctionDesc functionDesc = preservedOLAPContext.getReservedMap().get(agg);
+            if (map.containsKey(agg)) {
+                final FunctionDesc functionDesc = map.get(agg);
                 agg.setExpression(functionDesc.getExpression());
                 agg.setParameters(functionDesc.getParameters());
                 agg.setReturnType(functionDesc.getReturnType());

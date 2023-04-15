@@ -24,12 +24,15 @@ import java.util.List;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.junit.annotation.MetadataInfo;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+@MetadataInfo
 class CandidateSortTest {
 
     @Test
@@ -81,7 +84,8 @@ class CandidateSortTest {
         Comparator<Candidate> comparator = Candidate.realizationCostSorter();
         NDataflow df1 = Mockito.mock(NDataflow.class);
         NDataflow df2 = Mockito.mock(NDataflow.class);
-        OLAPContext olapContext = Mockito.mock(OLAPContext.class);
+        OLAPContext olapContext = new OLAPContext(0);
+        olapContext.allColumns = Sets.newHashSet();
         Candidate c1 = new Candidate(df1, olapContext, Maps.newHashMap());
         Candidate c2 = new Candidate(df2, olapContext, Maps.newHashMap());
         Mockito.when(c1.getRealization().getCost()).thenReturn(1);

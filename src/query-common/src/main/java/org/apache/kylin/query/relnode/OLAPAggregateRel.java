@@ -58,6 +58,9 @@ import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.measure.percentile.PercentileMeasureType;
@@ -67,10 +70,6 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.schema.OLAPTable;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 /**
  */
@@ -315,7 +314,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     }
 
     public boolean needRewrite() {
-        return this.context.realization != null && !this.afterAggregate && !context.isAnsweredByTableIndex();
+        return this.context.realization != null && !this.afterAggregate;
     }
 
     @Override

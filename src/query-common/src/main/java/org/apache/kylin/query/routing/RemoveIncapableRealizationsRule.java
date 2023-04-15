@@ -25,6 +25,7 @@ import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.HybridRealization;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.query.relnode.OLAPContextProp;
 import org.apache.kylin.query.util.ComputedColumnRewriter;
 import org.apache.kylin.query.util.QueryAliasMatchInfo;
 
@@ -39,22 +40,29 @@ public class RemoveIncapableRealizationsRule extends PruningRule {
         if (candidate.getCapability() != null) {
             return;
         }
-        candidate.getCtx().resetSQLDigest();
-        CapabilityResult capability = getCapabilityResult(candidate);
+
+        // Preserve the initial OlapContext and initialize the matching result of Candidate as false.
+        OLAPContextProp propsBeforeRewrite = RealizationChooser.preservePropsBeforeRewrite(candidate.getCtx());
+        CapabilityResult capabilityResult = new CapabilityResult();
 
         IRealization realization = candidate.getRealization();
-        if (!capability.isCapable() && !realization.getModel().getComputedColumnDescs().isEmpty()) {
-            log.info("{}({}/{}): try rewrite computed column and then check whether the realization is capable.",
-                    this.getClass().getName(), realization.getProject(), realization.getCanonicalName());
-            BiMap<String, String> aliasMapping = HashBiMap.create();
-            aliasMapping.putAll(candidate.getMatchedJoinsGraphAliasMap());
+        if (!realization.getModel().getComputedColumnDescs().isEmpty()) {
+            BiMap<String, String> aliasMapping = HashBiMap.create(candidate.getMatchedJoinsGraphAliasMap());
             ComputedColumnRewriter.rewriteCcInnerCol(candidate.getCtx(), realization.getModel(),
                     new QueryAliasMatchInfo(aliasMapping, null));
             candidate.getCtx().resetSQLDigest();
-            capability = getCapabilityResult(candidate);
+            capabilityResult = getCapabilityResult(candidate);
+            candidate.recordRewrittenCtxProps();
         }
 
-        candidate.setCapability(capability);
+        if (!capabilityResult.isCapable()) {
+            RealizationChooser.restoreOLAPContextProps(candidate.getCtx(), propsBeforeRewrite);
+            candidate.getCtx().resetSQLDigest();
+            capabilityResult = getCapabilityResult(candidate);
+            candidate.recordRewrittenCtxProps();
+        }
+
+        candidate.setCapability(capabilityResult);
     }
 
     private CapabilityResult getCapabilityResult(Candidate candidate) {
@@ -67,6 +75,11 @@ public class RemoveIncapableRealizationsRule extends PruningRule {
         } else {
             capability = DataflowCapabilityChecker.check((NDataflow) realization, candidate, sqlDigest);
         }
+
+        // The matching process may modify the dimensions and measures info of the  OlapContext, 
+        // so we need these properties to be recorded in the candidate's rewrittenCtx. It is important
+        // that once the OlapContext matched an index, no further matching will be performed.
+        candidate.recordRewrittenCtxProps();
         return capability;
     }
 }

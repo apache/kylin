@@ -100,6 +100,12 @@ public class Candidate {
         this.realization = realization;
         this.ctx = ctx;
         this.matchedJoinsGraphAliasMap = matchedJoinsGraphAliasMap;
+        // Initialize OlapContext's rewritten properties to avoid NPE errors
+        this.recordRewrittenCtxProps();
+    }
+
+    void recordRewrittenCtxProps() {
+        this.rewrittenCtx = RealizationChooser.preservePropsBeforeRewrite(ctx);
     }
 
     @Override
