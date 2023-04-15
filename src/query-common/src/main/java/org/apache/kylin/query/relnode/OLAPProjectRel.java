@@ -91,9 +91,9 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     }
 
     /**
-     * Since the project under aggregate maybe reduce expressions by {@link org.apache.kylin.query.optrule.AggregateProjectReduceRule},
+     * Since the project under aggregate maybe reduce expressions by AggregateProjectReduceRule,
      * consider the count of expressions into cost, the reduced project will be used.
-     *
+     * <p>
      * Made RexOver much more expensive so we can transform into {@link OLAPWindowRel}
      * by rules in {@link org.apache.calcite.rel.rules.ProjectToWindowRule}
      */

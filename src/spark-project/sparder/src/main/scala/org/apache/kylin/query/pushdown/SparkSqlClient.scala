@@ -164,7 +164,7 @@ object SparkSqlClient {
       QueryContext.current().getMetrics.setQueryStageCount(stageCount)
       QueryContext.current().getMetrics.setQueryTaskCount(taskCount)
       // return result
-      (readPushDownResultRow(resultRows, true), resultSize, fieldList)
+      (readPushDownResultRow(resultRows, checkInterrupt = true), resultSize, fieldList)
     } catch {
       case e: Throwable =>
         if (e.isInstanceOf[InterruptedException]) {
@@ -212,6 +212,7 @@ object SparkSqlClient {
     case value: mutable.WrappedArray.ofRef[AnyRef] => value.array.map(v => rawValueToString(v, true)).mkString("[", ",", "]")
     case value: immutable.Map[Any, Any] =>
       value.map(p => rawValueToString(p._1, true) + ":" + rawValueToString(p._2, true)).mkString("{", ",", "}")
+    case value: Array[Byte] => new String(value)
     case value: Any => value.toString
   }
 }

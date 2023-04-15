@@ -1,0 +1,18 @@
+{
+  "uuid" : "78d326e5-e194-aa38-781c-f328226a8952",
+  "last_modified" : 1676345088349,
+  "create_time" : 1673592427751,
+  "version" : "4.0.0.0",
+  "name" : "project1",
+  "owner" : "ADMIN",
+  "status" : "ENABLED",
+  "create_time_utc" : 1673592427751,
+  "default_database" : "DEFAULT",
+  "description" : "",
+  "principal" : null,
+  "keytab" : null,
+  "maintain_model_type" : "MANUAL_MAINTAIN",
+  "override_kylin_properties" : {
+    "kylin.source.default" : "9"
+  }
+}

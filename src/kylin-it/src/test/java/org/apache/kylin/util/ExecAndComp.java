@@ -40,10 +40,14 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.data.QueryResult;
+import org.apache.kylin.query.pushdown.SparkSqlClient;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryParams;
@@ -54,9 +58,6 @@ import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.SparderTypeUtil;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -190,22 +191,11 @@ public class ExecAndComp {
         } catch (Exception e) {
             log.warn("persist {} failed", sqlPath, e);
         }
-        val rows = ds.collectAsList();
         val structs = Arrays.stream(ds.schema().fields()).map(SparderTypeUtil::convertSparkFieldToJavaField)
                 .collect(Collectors.toList());
-        return new QueryResult(rows.stream().map(r -> {
-            List<String> result = Lists.newArrayList();
-            for (int i = 0; i < r.size(); i++) {
-                val structField = structs.get(i);
-                val node = r.get(i);
-                if (node == null) {
-                    result.add(null);
-                } else {
-                    result.add(node.toString());
-                }
-            }
-            return result;
-        }).collect(Collectors.toList()), rows.size(), structs);
+        val dsIter = ds.toIterator();
+        Iterable<List<String>> listIter = SparkSqlClient.readPushDownResultRow(dsIter._1(), false);
+        return new QueryResult(Lists.newArrayList(listIter), (int) dsIter._2(), structs);
     }
 
     public static String removeDataBaseInSql(String originSql) {
