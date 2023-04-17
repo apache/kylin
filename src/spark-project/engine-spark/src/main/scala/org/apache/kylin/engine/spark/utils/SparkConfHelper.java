@@ -18,15 +18,14 @@
 
 package org.apache.kylin.engine.spark.utils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.kylin.cluster.IClusterManager;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.cluster.IClusterManager;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.spark.SparkConf;
 import org.apache.spark.conf.rule.ExecutorCoreRule;
 import org.apache.spark.conf.rule.ExecutorInstancesRule;
@@ -36,12 +35,13 @@ import org.apache.spark.conf.rule.ShufflePartitionsRule;
 import org.apache.spark.conf.rule.SparkConfRule;
 import org.apache.spark.conf.rule.StandaloneConfRule;
 import org.apache.spark.conf.rule.YarnConfRule;
+import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SparkConfHelper {
     protected static final Logger logger = LoggerFactory.getLogger(SparkConfHelper.class);
@@ -114,5 +114,17 @@ public class SparkConfHelper {
 
     public boolean hasCountDistinct() {
         return "true".equalsIgnoreCase(getConf(COUNT_DISTICT));
+    }
+
+    public static void setLocalPropertyIfNeeded(SparkSession ss, boolean config, String key, String value) {
+        if (config) {
+            ss.sessionState().conf().setLocalProperty(key, value);
+        }
+    }
+
+    public static void resetLocalPropertyIfNeeded(SparkSession ss, boolean config, String key) {
+        if (config) {
+            ss.sessionState().conf().setLocalProperty(key, "");
+        }
     }
 }
