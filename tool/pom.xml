@@ -32,7 +32,7 @@
     </parent>
 
     <properties>
-        <spring.framework.version>5.2.23.RELEASE</spring.framework.version>
+        <spring.framework.version>5.2.24.RELEASE</spring.framework.version>
     </properties>
 
     <dependencies>
