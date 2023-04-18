@@ -590,7 +590,8 @@ public abstract class SparkApplication implements Application {
         }
     }
 
-    private void exchangeSparkConf(SparkConf sparkConf) throws Exception {
+    @VisibleForTesting
+    void exchangeSparkConf(SparkConf sparkConf) throws Exception {
         if (isJobOnCluster(sparkConf) && !(this instanceof ResourceDetect)) {
             Map<String, String> baseSparkConf = getSparkConfigOverride(config);
             if (!baseSparkConf.isEmpty()) {
@@ -605,6 +606,16 @@ public abstract class SparkApplication implements Application {
                 } catch (Exception e) {
                     logger.warn("Auto set spark conf failed. Load spark conf from system properties", e);
                 }
+            }
+
+        }
+        val eventLogEnabled = sparkConf.getBoolean("spark.eventLog.enabled", false);
+        val logDir = sparkConf.get("spark.eventLog.dir", "");
+        if (eventLogEnabled && !logDir.isEmpty()) {
+            val logPath = new Path(new URI(logDir).getPath());
+            val fs = HadoopUtil.getWorkingFileSystem();
+            if (!fs.exists(logPath)) {
+                fs.mkdirs(logPath);
             }
         }
 

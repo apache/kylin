@@ -25,9 +25,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import lombok.val;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
@@ -43,6 +45,7 @@ import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.spark.SparkConf;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -202,6 +205,40 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTest {
         ReflectionTestUtils.setField(application, "config", config);
         application.extraDestroy();
         Assert.assertFalse(upload.exists());
+    }
+
+    @Test
+    public void testMkHistoryEventLog() throws Exception {
+        KylinConfig config = getTestConfig();
+        SparkApplication application = new SparkApplication() {
+            @Override
+            protected void doExecute() {
+            }
+        };
+        application.config = config;
+        SparkConf sparkConf = new SparkConf();
+
+        Path existedLogDir = new Path("/tmp/ke/testMkHistoryEventLog-existed-" + System.currentTimeMillis());
+        Path notExistedLogDir = new Path("/tmp/ke/testMkHistoryEventLog-not-existed-" + System.currentTimeMillis());
+        val fs = HadoopUtil.getWorkingFileSystem();
+        if (!fs.exists(existedLogDir)) {
+            fs.mkdirs(existedLogDir);
+        }
+        if (fs.exists(notExistedLogDir)) {
+            fs.delete(existedLogDir);
+        }
+        sparkConf.set("spark.eventLog.enabled", "false");
+        sparkConf.set("spark.eventLog.dir", notExistedLogDir.toString());
+        application.exchangeSparkConf(sparkConf);
+        assert !fs.exists(notExistedLogDir);
+        sparkConf.set("spark.eventLog.enabled", "true");
+        application.exchangeSparkConf(sparkConf);
+        assert fs.exists(notExistedLogDir);
+        sparkConf.set("spark.eventLog.dir", existedLogDir.toString());
+        application.exchangeSparkConf(sparkConf);
+        assert fs.exists(existedLogDir);
+        sparkConf.set("spark.eventLog.dir", "");
+        application.exchangeSparkConf(sparkConf);
     }
 
 }
