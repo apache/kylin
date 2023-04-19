@@ -127,16 +127,17 @@ public class DateFormat {
     }
 
     public static FastDateFormat getDateFormat(String datePattern) {
-        FastDateFormat r = formatMap.get(datePattern);
-        if (r == null) {
-            r = FastDateFormat.getInstance(datePattern, TimeZone.getDefault());
-            formatMap.put(datePattern, r);
-        }
-        return r;
+        return getDateFormat(datePattern, TimeZone.getDefault());
     }
 
     public static FastDateFormat getDateFormat(String datePattern, TimeZone timeZone) {
-        return FastDateFormat.getInstance(datePattern, timeZone);
+        String key = datePattern + timeZone.getID();
+        FastDateFormat r = formatMap.get(key);
+        if (r == null) {
+            r = FastDateFormat.getInstance(datePattern, timeZone);
+            formatMap.put(key, r);
+        }
+        return r;
     }
 
     public static String formatToCompactDateStr(long millis) {
@@ -197,20 +198,30 @@ public class DateFormat {
         return stringToDate(str, DEFAULT_DATE_PATTERN);
     }
 
+
     public static Date stringToDate(String str, String pattern) {
+        return stringToDate(str, pattern, TimeZone.getDefault());
+    }
+
+    public static Date stringToDate(String str, String pattern, TimeZone timeZone) {
         Date date;
         try {
-            date = getDateFormat(pattern).parse(str);
+            date = getDateFormat(pattern, timeZone).parse(str);
         } catch (ParseException e) {
             throw new IllegalArgumentException("'" + str + "' is not a valid date of pattern '" + pattern + "'", e);
         }
         return date;
     }
 
+
     public static long stringToMillis(String str) {
+        return stringToMillis(str, TimeZone.getDefault());
+    }
+
+    public static long stringToMillis(String str, TimeZone timeZone) {
         for (Map.Entry<String, String> regexToPattern : dateFormatRegex.entrySet()) {
             if (str.matches(regexToPattern.getKey()))
-                return stringToDate(str, regexToPattern.getValue()).getTime();
+                return stringToDate(str, regexToPattern.getValue(), timeZone).getTime();
         }
 
         try {
