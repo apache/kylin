@@ -131,6 +131,9 @@ public class DateFormat {
     }
 
     public static FastDateFormat getDateFormat(String datePattern, TimeZone timeZone) {
+        if(timeZone == null){
+            timeZone = TimeZone.getDefault();
+        }
         String key = datePattern + timeZone.getID();
         FastDateFormat r = formatMap.get(key);
         if (r == null) {
@@ -179,7 +182,7 @@ public class DateFormat {
     }
 
     public static String castTimestampToString(long millis) {
-        return castTimestampToString(millis, null);
+        return castTimestampToString(millis, TimeZone.getDefault());
     }
 
     public static String formatToTimeStr(long millis, String pattern) {
