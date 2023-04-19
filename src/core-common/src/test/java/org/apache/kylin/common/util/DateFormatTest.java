@@ -23,6 +23,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.junit.annotation.MultiTimezoneTest;
@@ -196,43 +197,45 @@ public class DateFormatTest {
     public void testStringToMillis() {
         // 2022-12-01 00:00:00
         long expectedMillis = 1669824000000L;
+        TimeZone timeZone = TimeZone.getTimeZone("GMT+8");
 
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("202212"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00:00"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00:00:000"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00:00:000"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00:00.000"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00:00:000"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00:00:000"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00:00"));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("202212", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00:00", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00:00:000", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00:00:000", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00:00.000", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00:00:000", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00:00:000", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00:00", timeZone));
     }
 
     @Test
     public void testStringToMillisSupplement() {
         long expectedMillis = 1669824000000L;
 
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00:00"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201T00:00:00.000Z"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01T00:00:00.000Z"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00:00"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00:00.000"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01T00:00:00.000Z"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01T00:00:00.000Z"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00:00.000"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01T00:00:00.000+08:00"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00:00.000"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("1669824000000000"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("1669824000000"));
-        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("1669824000"));
+        TimeZone timeZone = TimeZone.getTimeZone("GMT+8");
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00:00", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201T00:00:00.000Z", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01T00:00:00.000Z", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01 00:00:00", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("20221201 00:00:00.000", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01T00:00:00.000Z", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01T00:00:00.000Z", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022.12.01 00:00:00.000", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022-12-01T00:00:00.000+08:00", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("2022/12/01 00:00:00.000", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("1669824000000000", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("1669824000000", timeZone));
+        Assert.assertEquals(expectedMillis, DateFormat.stringToMillis("1669824000", timeZone));
     }
 
     @Test
