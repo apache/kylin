@@ -27,7 +27,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>5.0.0-alpha</version>
+        <version>5.0.0-beta-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
