@@ -28,7 +28,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>5.0.0-beta-SNAPSHOT</version>
+    <version>5.0.0-alpha</version>
 
     <name>Apache Kylin</name>
     <url>http://kylin.apache.org</url>
@@ -45,7 +45,7 @@
         <!-- developerConnection is using in maven-release-plugin  https://maven.apache.org/guides/mini/guide-releasing.html-->
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/kylin.git</developerConnection>
         <url>scm:git:https://gitbox.apache.org/repos/asf/kylin.git</url>
-        <tag>HEAD</tag>
+        <tag>kylin-5.0.0-alpha</tag>
     </scm>
 
     <issueManagement>
