@@ -213,4 +213,16 @@ public class StringUtil {
         return str.split(splitBy);
     }
 
+    public static String extractSubStringIgnoreSensitive(String origin, String sub) {
+        String s1 = origin.toLowerCase(Locale.ROOT);
+        String s2 = sub.toLowerCase(Locale.ROOT);
+        int i = s1.indexOf(s2);
+        if (i != -1) {
+            return origin.substring(i, i + sub.length());
+        } else {
+            return null;
+        }
+
+    }
+
 }
