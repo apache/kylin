@@ -38,7 +38,7 @@ import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.TypeSystem;
 import org.apache.kylin.query.engine.meta.SimpleDataContext;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.util.OlapContextUtil;
+import org.apache.kylin.util.OlapContextTestUtil;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
@@ -105,7 +105,7 @@ public class QueryLayoutFilterTest extends NLocalWithSparkSessionTest {
                 + "and TEST_BANK_INCOME.DT = '2021-11-02'\n" //
                 + "and TEST_BANK_INCOME.COUNTRY in ('INDONESIA')\n" //
                 + "and TEST_BANK_INCOME.COUNTRY in ('KENYA')";
-        List<OLAPContext> contexts = OlapContextUtil.getOlapContexts(project, sql);
+        List<OLAPContext> contexts = OlapContextTestUtil.getOlapContexts(project, sql);
         OLAPContext context = contexts.get(0);
 
         CalciteSchema rootSchema = new QueryExec(project, kylinConfig).getRootSchema();

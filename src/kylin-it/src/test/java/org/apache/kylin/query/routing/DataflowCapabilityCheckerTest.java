@@ -32,7 +32,7 @@ import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.util.OlapContextUtil;
+import org.apache.kylin.util.OlapContextTestUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -43,8 +43,8 @@ public class DataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
         NDataflow dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject())
                 .getDataflow("abe3bf1a-c4bc-458d-8278-7ea8b00f5e96");
         String sql = "SELECT seller_ID FROM TEST_KYLIN_FACT LEFT JOIN TEST_ACCOUNT ON SELLER_ID = ACCOUNT_ID";
-        OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
-        Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
+        OLAPContext olapContext = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
+        Map<String, String> sqlAlias2ModelNameMap = OlapContextTestUtil.matchJoins(dataflow.getModel(), olapContext);
         olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
         Candidate candidate = new Candidate(dataflow, olapContext, sqlAlias2ModelNameMap);
         CapabilityResult result = DataflowCapabilityChecker.check(dataflow, candidate, olapContext.getSQLDigest());
@@ -64,8 +64,8 @@ public class DataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
         // case 1. raw-query answered by Lookup
         {
             String sql = "select SITE_ID from EDW.TEST_SITES";
-            OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
-            Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
+            OLAPContext olapContext = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
+            Map<String, String> sqlAlias2ModelNameMap = OlapContextTestUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
             Candidate candidate = new Candidate(dataflow, olapContext, sqlAlias2ModelNameMap);
             CapabilityResult result = DataflowCapabilityChecker.check(dataflow, candidate, olapContext.getSQLDigest());
@@ -78,8 +78,8 @@ public class DataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
         // case 2. aggregate-query answered by lookup
         {
             String sql = "select sum(SITE_ID) from EDW.TEST_SITES";
-            OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
-            Map<String, String> sqlAlias2ModelNameMap = OlapContextUtil.matchJoins(dataflow.getModel(), olapContext);
+            OLAPContext olapContext = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
+            Map<String, String> sqlAlias2ModelNameMap = OlapContextTestUtil.matchJoins(dataflow.getModel(), olapContext);
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
             Candidate candidate = new Candidate(dataflow, olapContext, sqlAlias2ModelNameMap);
             CapabilityResult result = DataflowCapabilityChecker.check(dataflow, candidate, olapContext.getSQLDigest());
@@ -92,7 +92,7 @@ public class DataflowCapabilityCheckerTest extends NLocalWithSparkSessionTest {
         {
             // case 3. cannot answer when there are no ready segment
             String sql = "select sum(SITE_ID) from EDW.TEST_SITES";
-            OLAPContext olapContext = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
+            OLAPContext olapContext = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
             removeAllSegments(dataflow);
             dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject())
                     .getDataflow("89af4ee2-2cdb-4b07-b39e-4c29856309aa");

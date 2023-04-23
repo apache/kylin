@@ -47,7 +47,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.engine.SchemaMetaData;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.util.OlapContextUtil;
+import org.apache.kylin.util.OlapContextTestUtil;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
@@ -99,11 +99,11 @@ public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
     public void testTableIndexAnswerSelectStarPartialMatch() throws Exception {
         String sql = "select * from kylin_sales";
         overwriteSystemProp("kylin.query.use-tableindex-answer-select-star.enabled", "true");
-        OLAPContext context = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
+        OLAPContext context = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
         NDataflow dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject())
                 .getDataflow("ccb82d81-1497-ca6d-f226-3258a0f0ba4f");
         Assert.assertEquals(dataflow.getAllColumns().size(), context.allColumns.size());
-        Map<String, String> sqlAlias2ModelName = OlapContextUtil.matchJoins(dataflow.getModel(), context);
+        Map<String, String> sqlAlias2ModelName = OlapContextTestUtil.matchJoins(dataflow.getModel(), context);
         context.fixModel(dataflow.getModel(), sqlAlias2ModelName);
         NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), context.getSQLDigest(), null);
@@ -115,11 +115,11 @@ public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
     public void testTableIndexAnswerSelectStarBaseTableIndex() throws Exception {
         String sql = "select * from test_kylin_fact \n";
         overwriteSystemProp("kylin.query.use-tableindex-answer-select-star.enabled", "true");
-        OLAPContext context = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
+        OLAPContext context = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
         NDataflow dataflow = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject())
                 .getDataflow("c7a44f37-8481-e78b-5cac-faa7d76767db");
         Assert.assertEquals(dataflow.getAllColumns().size(), context.allColumns.size());
-        Map<String, String> sqlAlias2ModelName = OlapContextUtil.matchJoins(dataflow.getModel(), context);
+        Map<String, String> sqlAlias2ModelName = OlapContextTestUtil.matchJoins(dataflow.getModel(), context);
         context.fixModel(dataflow.getModel(), sqlAlias2ModelName);
         NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), context.getSQLDigest(), null);
@@ -180,13 +180,13 @@ public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
         dataflowManager.updateDataflow(updateOps);
 
         String sql = "select cal_dt, new_cc from test_kylin_fact";
-        OLAPContext context = OlapContextUtil.getOlapContexts(getProject(), sql).get(0);
+        OLAPContext context = OlapContextTestUtil.getOlapContexts(getProject(), sql).get(0);
         Set<TblColRef> allColumns = context.realization.getAllColumns();
         Assert.assertEquals(13, allColumns.size());
         SchemaMetaData schemaMetaData = new SchemaMetaData(getProject(), KylinConfig.getInstanceFromEnv());
         Assert.assertEquals(26, schemaMetaData.getTables().get(1).getFields().size());
 
-        Map<String, String> sqlAlias2ModelName = OlapContextUtil.matchJoins(dataflow.getModel(), context);
+        Map<String, String> sqlAlias2ModelName = OlapContextTestUtil.matchJoins(dataflow.getModel(), context);
         context.fixModel(dataflow.getModel(), sqlAlias2ModelName);
         NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                 dataflow.getQueryableSegments(), context.getSQLDigest(), null);
