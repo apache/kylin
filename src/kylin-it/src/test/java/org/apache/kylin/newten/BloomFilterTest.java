@@ -121,7 +121,7 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
         Assert.assertNotNull(layout);
         populateSSWithCSVData(getTestConfig(), getProject(), SparderEnv.getSparkSession());
 
-        overwriteSystemProp("kylin.bloom.build.column", "0#10000#1#10000");
+        overwriteSystemProp("kylin.bloom.build.column-ids", "0#1");
         indexDataConstructor.buildIndex(dfID, SegmentRange.TimePartitionedSegmentRange.createInfinite(),
                 Sets.newHashSet(
                         dataflow.getIndexPlan().getLayoutEntity(20000000001L)), true);
@@ -174,7 +174,7 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
             return true;
         });
 
-        overwriteSystemProp("kylin.bloom.build.column", "");
+        overwriteSystemProp("kylin.bloom.build.column-ids", "");
         overwriteSystemProp("kylin.bloom.build.column.max-size", "1");
         ParquetBloomFilter.resetParquetBloomFilter();
         indexDataConstructor.buildIndex(dfID, SegmentRange.TimePartitionedSegmentRange.createInfinite(),

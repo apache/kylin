@@ -3942,6 +3942,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.bloom.build.column", "");
     }
 
+    public String getBloomBuildColumnIds() {
+        return getOptional("kylin.bloom.build.column-ids", "");
+    }
+
     public int getBloomBuildColumnNvd() {
         return Integer.parseInt(getOptional("kylin.bloom.build.column.nvd", "200000"));
     }

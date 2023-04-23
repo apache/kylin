@@ -106,6 +106,7 @@ public class ParquetBloomFilter {
             return;
         }
         String manualColumn = config.getBloomBuildColumn();
+        String bloomColumnIds= config.getBloomBuildColumnIds();
         if (StringUtils.isNotBlank(manualColumn)) {
             String[] blooms = manualColumn.split("#");
             for (int i = 0; i < blooms.length; i += 2) {
@@ -113,6 +114,17 @@ public class ParquetBloomFilter {
                 dataWriter.option("parquet.bloom.filter.enabled#" + blooms[i], "true");
                 dataWriter.option("parquet.bloom.filter.expected.ndv#" + blooms[i], nvd);
                 LOGGER.info("build BloomFilter info: columnId is {}, nvd is {}", blooms[i], nvd);
+                buildBloomColumns.add(blooms[i]);
+            }
+            return;
+        }
+        dataWriter.option("parquet.bloom.filter.dynamic.enabled", "true");
+        dataWriter.option("parquet.bloom.filter.candidate.size", "10");
+        if (StringUtils.isNotBlank(bloomColumnIds)) {
+            String[] blooms = bloomColumnIds.split("#");
+            for (int i = 0; i < blooms.length; i++) {
+                dataWriter.option("parquet.bloom.filter.enabled#" + blooms[i], "true");
+                LOGGER.info("build dynamic BloomFilter info: columnIds is {}", blooms[i]);
                 buildBloomColumns.add(blooms[i]);
             }
             return;
@@ -126,10 +138,8 @@ public class ParquetBloomFilter {
                 break;
             }
             dataWriter.option("parquet.bloom.filter.enabled#" + columnFilter.columnId, "true");
-            dataWriter.option("parquet.bloom.filter.expected.ndv#" + columnFilter.columnId, config.getBloomBuildColumnNvd());
             buildBloomColumns.add(columnFilter.columnId);
-            LOGGER.info("building BloomFilter : columnId is {}; nvd is {}",
-                    columnFilter.columnId, config.getBloomBuildColumnNvd());
+            LOGGER.info("building BloomFilter : columnId is {}", columnFilter.columnId);
             count++;
         }
     }
