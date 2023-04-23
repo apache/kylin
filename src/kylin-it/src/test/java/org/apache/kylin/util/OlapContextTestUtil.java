@@ -21,21 +21,22 @@ package org.apache.kylin.util;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
+import org.apache.kylin.metadata.realization.NoStreamingRealizationFoundException;
 import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RealizationChooser;
 import org.apache.kylin.query.util.QueryContextCutter;
 
-import com.clearspring.analytics.util.Lists;
-
-public class OlapContextUtil {
+public class OlapContextTestUtil {
 
     public static List<OLAPContext> getOlapContexts(String project, String sql) throws SqlParseException {
         return getOlapContexts(project, sql, false);
@@ -44,14 +45,26 @@ public class OlapContextUtil {
     public static List<OLAPContext> getOlapContexts(String project, String sql, boolean reCutBanned)
             throws SqlParseException {
         QueryExec queryExec = new QueryExec(project, KylinConfig.getInstanceFromEnv());
-        RelNode rel = queryExec.parseAndOptimize(sql);
         try {
+            RelNode rel = queryExec.parseAndOptimize(sql);
             QueryContextCutter.selectRealization(rel, reCutBanned);
-        } catch (NoRealizationFoundException e) {
+        } catch (NoRealizationFoundException | NoStreamingRealizationFoundException e) {
             // When NoRealizationFoundException occurs, do nothing
             // because we only need to obtain OlapContexts.
         }
 
+        return getOlapContexts();
+    }
+
+    public static List<OLAPContext> getOlapContexts(String project, String sql, boolean reCutBanned,
+            Consumer<NoRealizationFoundException> consumer) throws SqlParseException {
+        QueryExec queryExec = new QueryExec(project, KylinConfig.getInstanceFromEnv());
+        try {
+            RelNode rel = queryExec.parseAndOptimize(sql);
+            QueryContextCutter.selectRealization(rel, reCutBanned);
+        } catch (NoRealizationFoundException e) {
+            consumer.accept(e);
+        }
         return getOlapContexts();
     }
 

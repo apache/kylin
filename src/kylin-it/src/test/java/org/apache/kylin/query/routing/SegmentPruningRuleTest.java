@@ -38,7 +38,7 @@ import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.TypeSystem;
 import org.apache.kylin.query.engine.meta.SimpleDataContext;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.util.OlapContextUtil;
+import org.apache.kylin.util.OlapContextTestUtil;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
@@ -94,7 +94,7 @@ public class SegmentPruningRuleTest extends NLocalWithSparkSessionTest {
     private List<NDataSegment> startRealizationPruner(NDataflowManager dataflowManager, String dataflowId, String sql,
             String project, KylinConfig kylinConfig) throws Exception {
         NDataflow dataflow = dataflowManager.getDataflow(dataflowId);
-        List<OLAPContext> olapContexts = OlapContextUtil.getOlapContexts(getProject(), sql);
+        List<OLAPContext> olapContexts = OlapContextTestUtil.getOlapContexts(getProject(), sql);
         OLAPContext context = olapContexts.get(0);
         CalciteSchema rootSchema = new QueryExec(project, kylinConfig).getRootSchema();
         SimpleDataContext dataContext = new SimpleDataContext(rootSchema.plus(), TypeSystem.javaTypeFactory(),

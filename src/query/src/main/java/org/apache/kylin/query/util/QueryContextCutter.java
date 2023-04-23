@@ -47,12 +47,14 @@ public class QueryContextCutter {
     }
 
     /**
-     * For a parser tree of one query, there are 3 steps to get it matched with pre-calculated realizations
-     *      1. first-round cut the tree off several parts correspond to OLAPContext, which make the part as big as possible
-     *      2. collect contexts' info and choose lowest-cost realization according to the context's info. if there are contexts cannot match realizations, goto 3
-     *      3. seek proper context-cut methods to ensure as many contexts as possible match a realization, then goto 2.
-     *
-     * @return The cut OLAPContext with selected realizations, which is a subset of OLAPContext.getThreadLocalContexts().
+     * For each query parse tree, the following steps are used for generating OlapContexts 
+     * and matching the precomputed indexes.
+     * <p> 1. The larger the OlapContext for the first cut, the better;</p>
+     * <p> 2. Traverse the RelNode operator tree to collect all attributes for each split OlapContext;</p>
+     * <p> 3. Choose the most appropriate index for each OlapContext;</p>
+     * <p> 4. If there exists an OlapContext that does not match any index, then use the re-cut strategy
+     *         to get multiple smaller OlapContexts and use the previous steps to continue matching.
+     * @return Each of the returned OlapContexts matches an index, or throws an exception.
      */
     public static List<OLAPContext> selectRealization(RelNode root, boolean isReCutBanned) {
         ContextInitialCutStrategy firstRoundStrategy = new ContextInitialCutStrategy();
@@ -62,11 +64,16 @@ public class QueryContextCutter {
         int retryCutTimes = 0;
         while (retryCutTimes++ < MAX_RETRY_TIMES_OF_CONTEXT_CUT) {
             try {
-                return collectContextInfoAndSelectRealization(root);
+                fillOlapContextPropertiesWithRelTree(root);
+                List<OLAPContext> olapContexts = chooseCandidate();
+                if (isReCutBanned) {
+                    throw new NoRealizationFoundException("There is no need to select realizations for OlapContexts.");
+                }
+                return olapContexts;
             } catch (NoRealizationFoundException | NoStreamingRealizationFoundException e) {
                 if (isReCutBanned && e instanceof NoStreamingRealizationFoundException) {
                     checkStreamingTableWithAutoModeling();
-                } else if (isReCutBanned) {
+                } else if (isReCutBanned || e instanceof NoStreamingRealizationFoundException) {
                     throw e;
                 }
                 reCutStrategy.tryCutToSmallerContexts(root, e);
@@ -88,18 +95,19 @@ public class QueryContextCutter {
         throw new NoRealizationFoundException(errorMsg);
     }
 
-    private static List<OLAPContext> collectContextInfoAndSelectRealization(RelNode queryRoot) {
+    private static void fillOlapContextPropertiesWithRelTree(RelNode queryRoot) {
         // post-order travel children
         OLAPRel.OLAPImplementor kapImplementor = new OLAPRel.OLAPImplementor();
         kapImplementor.visitChild(queryRoot.getInput(0), queryRoot);
         QueryContext.current().record("collect_olap_context_info");
-        // identify model
-        List<OLAPContext> contexts = ContextUtil.listContextsHavingScan();
+    }
 
-        for (OLAPContext olapContext : contexts) {
+    private static List<OLAPContext> chooseCandidate() {
+        List<OLAPContext> contexts = ContextUtil.listContextsHavingScan();
+        contexts.forEach(olapContext -> {
             olapContext.setHasSelected(true);
             log.info("Context for realization matching: {}", olapContext);
-        }
+        });
 
         long selectLayoutStartTime = System.currentTimeMillis();
         if (contexts.size() > 1) {
