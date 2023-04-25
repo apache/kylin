@@ -223,7 +223,7 @@ public class NIndexPlanController extends NBasicController {
     }
 
     @ApiOperation(value = "batch deleteIndex", tags = { "AI" })
-    @DeleteMapping(value = "/index")
+    @DeleteMapping(value = "/index", produces = HTTP_VND_APACHE_KYLIN_JSON)
     public EnvelopeResponse<String> batchDeleteIndex(@RequestParam(value = "layout_ids") Set<Long> layoutIds,
             @RequestParam(value = "project") String project, @RequestParam(value = "model") String modelId) {
         checkProjectName(project);

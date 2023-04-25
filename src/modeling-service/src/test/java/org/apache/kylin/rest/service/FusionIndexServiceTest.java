@@ -34,6 +34,7 @@ import org.apache.kylin.common.exception.code.ErrorCodeServer;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.model.SelectRule;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexEntity.Range;
@@ -42,6 +43,8 @@ import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
+import org.apache.kylin.metadata.model.FusionModel;
+import org.apache.kylin.metadata.model.FusionModelManager;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -820,6 +823,52 @@ public class FusionIndexServiceTest extends SourceTestCase {
         fusionIndexService.removeIndexes("streaming_test", batchId, batchIndexPlan.getAllLayoutIds(false));
 
         Assert.assertEquals(0, indexPlanManager.getIndexPlan(batchId).getAllLayouts().size());
+    }
+
+    @Test
+    public void testBatchRemoveIndex() {
+        val project = "streaming_test";
+        val model = "4965c827-fbb4-4ea1-a744-3f341a3b030d";
+
+        val indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
+        val dfMgr = NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv(), "streaming_test");
+        val df = dfMgr.getDataflow(model);
+        val segRange = new SegmentRange.KafkaOffsetPartitionedSegmentRange(10L, 100L,
+                createKafkaPartitionOffset(0, 200L), createKafkaPartitionOffset(0, 400L));
+        dfMgr.appendSegmentForStreaming(df, segRange, RandomUtil.randomUUIDStr());
+        try {
+            fusionIndexService.batchRemoveIndex("streaming_test", model,
+                    indexPlanManager.getIndexPlan(model).getAllLayoutIds(false), Range.STREAMING);
+        } catch (KylinException e) {
+            Assert.assertEquals(ServerErrorCode.STREAMING_INDEX_UPDATE_DISABLE.toErrorCode().getCodeString(),
+                    e.getErrorCode().getCodeString());
+        }
+
+        val modelId = "b05034a8-c037-416b-aa26-9e6b4a41ee40";
+        Assert.assertEquals(5, indexPlanManager.getIndexPlan(modelId).getAllLayouts().size());
+        fusionIndexService.batchRemoveIndex(project, modelId, Sets.newHashSet(20000040001L), Range.STREAMING);
+        FusionModel fusionModel = KylinConfig.getInstanceFromEnv()
+                .getManager("streaming_test", FusionModelManager.class).getFusionModel(modelId);
+        String batchId = fusionModel.getBatchModel().getUuid();
+        Assert.assertEquals(4, indexPlanManager.getIndexPlan(modelId).getAllLayouts().size());
+
+        Assert.assertEquals(3, indexPlanManager.getIndexPlan(batchId).getAllLayouts().size());
+        fusionIndexService.batchRemoveIndex(project, modelId, Sets.newHashSet(10001L), Range.BATCH);
+        Assert.assertEquals(4, indexPlanManager.getIndexPlan(modelId).getAllLayouts().size());
+        Assert.assertEquals(2, indexPlanManager.getIndexPlan(batchId).getAllLayouts().size());
+
+        fusionIndexService.batchRemoveIndex(project, batchId, Sets.newHashSet(1L), Range.BATCH);
+        Assert.assertEquals(1, indexPlanManager.getIndexPlan(batchId).getAllLayouts().size());
+
+        Assert.assertTrue(
+                indexPlanManager.getIndexPlan(modelId).getAllLayouts().stream().anyMatch(e -> e.getId() == 20001L));
+        Assert.assertTrue(
+                indexPlanManager.getIndexPlan(batchId).getAllLayouts().stream().anyMatch(e -> e.getId() == 20001L));
+        fusionIndexService.batchRemoveIndex(project, modelId, Sets.newHashSet(20001L), Range.HYBRID);
+        Assert.assertFalse(
+                indexPlanManager.getIndexPlan(modelId).getAllLayouts().stream().anyMatch(e -> e.getId() == 20001L));
+        Assert.assertFalse(
+                indexPlanManager.getIndexPlan(batchId).getAllLayouts().stream().anyMatch(e -> e.getId() == 20001L));
     }
 
     @Test
