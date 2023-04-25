@@ -263,6 +263,11 @@
             <artifactId>kylin-metadata-server</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-spark-common</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

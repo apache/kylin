@@ -101,7 +101,8 @@ public class ClickHouseUtils {
     private static final Pattern _extraQuotes = Pattern.compile("([\"]*)([^\"]*)([\"]*)");
     static public String DEFAULT_VERSION = "22.5.2.53";//"20.8.2.3"; //"20.10.3.30";"20.10.2.20";
     static public String DEFAULT_TAG = "clickhouse/clickhouse-server:" + DEFAULT_VERSION;
-    static public DockerImageName CLICKHOUSE_IMAGE = DockerImageName.parse(DEFAULT_TAG);
+    static public DockerImageName CLICKHOUSE_IMAGE = DockerImageName.parse(DEFAULT_TAG)
+            .asCompatibleSubstituteFor("yandex/clickhouse-server");
 
     static public JdbcDatabaseContainer<?> startClickHouse() {
         int tryTimes = 3;
