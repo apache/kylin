@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -78,6 +79,7 @@ import org.apache.kylin.streaming.metadata.StreamingJobMeta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.kyligence.kap.secondstorage.SecondStorageUtil;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -277,18 +279,14 @@ public class FusionIndexService extends BasicService {
         checkStreamingIndexEnabled(project, modelDesc);
 
         if (modelDesc.fusionModelStreamingPart()) {
-            if (!indexChangeEnable(project, model, indexRange,
-                    Lists.newArrayList(IndexEntity.Range.HYBRID, Range.STREAMING, Range.EMPTY))) {
-                throw new KylinException(ServerErrorCode.STREAMING_INDEX_UPDATE_DISABLE,
-                        String.format(Locale.ROOT, MsgPicker.getMsg().getStreamingIndexesDelete()));
-            }
+            checkStreamingIndexDeleteEnabledWithIndexRange(project, model, indexRange);
             FusionModel fusionModel = getManager(FusionModelManager.class, project).getFusionModel(model);
             String batchId = fusionModel.getBatchModel().getUuid();
             if (IndexEntity.Range.BATCH == indexRange) {
                 indexPlanService.removeIndex(project, batchId, id);
                 return;
             } else if (IndexEntity.Range.HYBRID == indexRange) {
-                removeHybridIndex(project, batchId, id);
+                removeHybridIndex(project, batchId, Sets.newHashSet(id));
             }
         }
         indexPlanService.removeIndex(project, model, id);
@@ -305,11 +303,42 @@ public class FusionIndexService extends BasicService {
         indexPlanService.removeIndexes(project, modelId, ids);
     }
 
-    private void removeHybridIndex(String project, String model, final long id) {
-        val indexPlan = getManager(NIndexPlanManager.class, project).getIndexPlan(model);
-        if (indexPlan.getLayoutEntity(id) != null) {
-            indexPlanService.removeIndex(project, model, id);
+    @Transaction(project = 0)
+    public void batchRemoveIndex(String project, String modelId, Set<Long> ids, IndexEntity.Range indexRange) {
+        NDataModel modelDesc = getManager(NDataModelManager.class, project).getDataModelDesc(modelId);
+        checkSecondStorageBaseTableIndexEnabled(project, modelDesc, ids);
+        checkStreamingIndexEnabled(project, modelDesc);
+        if (!modelDesc.fusionModelStreamingPart()) {
+            indexPlanService.removeIndexes(project, modelId, ids);
+            return;
         }
+        checkStreamingIndexDeleteEnabledWithIndexRange(project, modelId, indexRange);
+        FusionModel fusionModel = getManager(FusionModelManager.class, project).getFusionModel(modelId);
+        String batchId = fusionModel.getBatchModel().getUuid();
+        if (IndexEntity.Range.BATCH == indexRange) {
+            indexPlanService.removeIndexes(project, batchId, ids);
+            return;
+        }
+
+        indexPlanService.removeIndexes(project, modelId, ids);
+        if (IndexEntity.Range.HYBRID == indexRange) {
+            removeHybridIndex(project, batchId, ids);
+        }
+    }
+
+    private void checkStreamingIndexDeleteEnabledWithIndexRange(String project, String modelId,
+            IndexEntity.Range indexRange) {
+        if (!indexChangeEnable(project, modelId, indexRange,
+                Lists.newArrayList(IndexEntity.Range.HYBRID, Range.STREAMING, Range.EMPTY))) {
+            throw new KylinException(ServerErrorCode.STREAMING_INDEX_UPDATE_DISABLE,
+                    String.format(Locale.ROOT, MsgPicker.getMsg().getStreamingIndexesDelete()));
+        }
+    }
+
+    private void removeHybridIndex(String project, String model, final Set<Long> ids) {
+        val indexPlan = getManager(NIndexPlanManager.class, project).getIndexPlan(model);
+        ids.stream().filter(id -> indexPlan.getLayoutEntity(id) != null)
+                .forEach(id -> indexPlanService.removeIndex(project, model, id));
     }
 
     public AggIndexResponse calculateAggIndexCount(UpdateRuleBasedCuboidRequest request) {
@@ -590,6 +619,18 @@ public class FusionIndexService extends BasicService {
                 && checkStreamingJobAndSegments(project, model.getUuid())) {
             throw new KylinException(ServerErrorCode.STREAMING_INDEX_UPDATE_DISABLE,
                     MsgPicker.getMsg().getStreamingIndexesDelete());
+        }
+    }
+
+    private static void checkSecondStorageBaseTableIndexEnabled(String project, NDataModel model, Set<Long> ids)
+            throws KylinException {
+        IndexPlan indexPlan = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getIndexPlan(model.getUuid());
+        boolean checkCannotDeleteEnabled = SecondStorageUtil.isModelEnable(project, model.getUuid())
+                && ids.stream().map(indexPlan::getLayoutEntity).filter(Objects::nonNull)
+                        .anyMatch(layout -> layout.isBase() && layout.getIndex().isTableIndex());
+        if (checkCannotDeleteEnabled) {
+            throw new KylinException(ErrorCodeServer.BASE_TABLE_INDEX_DELETE_DISABLE);
         }
     }
 

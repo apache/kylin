@@ -19,10 +19,15 @@
 package org.apache.kylin.rest.controller.open;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_LIST_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NOT_EXIST;
 
+import java.util.Set;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.rest.controller.NBasicController;
@@ -35,11 +40,14 @@ import org.apache.kylin.rest.response.OpenAddAggGroupResponse;
 import org.apache.kylin.rest.service.FusionIndexService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.annotations.ApiOperation;
 import lombok.val;
 
 @RestController
@@ -47,6 +55,8 @@ import lombok.val;
 public class OpenIndexPlanController extends NBasicController {
 
     private static final String MODEL_ALIAS = "model";
+
+    private static final String MODEL_NAME = "model_name";
 
     private static final String AGGREGATION_GROUPS = "aggregation_groups";
 
@@ -73,6 +83,28 @@ public class OpenIndexPlanController extends NBasicController {
                 .calculateDiffRuleBasedIndex(internalRequest);
         indexPlanController.updateRule(internalRequest);
         return convertResponse(response);
+    }
+
+    @ApiOperation(value = "batch deleteIndex", tags = { "AI" })
+    @DeleteMapping(value = "/index")
+    public EnvelopeResponse<String> batchDeleteIndex(@RequestParam(value = "index_ids") Set<Long> layoutIds,
+            @RequestParam(value = "project") String project, @RequestParam(value = "model_name") String modelName,
+            @RequestParam(value = "index_range", required = false) IndexEntity.Range indexRange) {
+        checkProjectName(project);
+        checkRequiredArg(MODEL_NAME, modelName);
+        if (null == indexRange) {
+            indexRange = IndexEntity.Range.BATCH;
+        }
+        NDataModel dataModel = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project)
+                .getDataModelDescByAlias(modelName);
+        if (null == dataModel) {
+            throw new KylinException(MODEL_NOT_EXIST);
+        }
+        if (CollectionUtils.isEmpty(layoutIds)) {
+            throw new KylinException(LAYOUT_LIST_EMPTY);
+        }
+        fusionIndexService.batchRemoveIndex(project, dataModel.getUuid(), layoutIds, indexRange);
+        return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }
 
     private EnvelopeResponse<OpenAddAggGroupResponse> convertResponse(

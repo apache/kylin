@@ -29,6 +29,7 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.rest.constant.Constant;
@@ -155,5 +156,32 @@ public class OpenIndexPlanControllerTest extends NLocalFileMetadataTestCase {
                 .andExpect(MockMvcResultMatchers.status().is5xxServerError()).andReturn();
         Assert.assertTrue(mvcResult.getResponse().getContentAsString().contains("KE-010043201"));
         Mockito.verify(openIndexPlanController).updateRule(openRequest);
+    }
+
+    @Test
+    public void testBatchDeleteIndex() throws Exception {
+        String project = "default";
+        String modelName = "nmodel_basic";
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/index_plans/index").contentType(MediaType.APPLICATION_JSON)
+                .param("project", project).param("model_name", modelName).param("index_ids", "1,1001")
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Mockito.doNothing().when(fusionIndexService).batchRemoveIndex(project, modelName, Sets.newHashSet(1L, 1001L),
+                null);
+        Mockito.verify(openIndexPlanController).batchDeleteIndex(Sets.newHashSet(1L, 1001L), project, modelName, null);
+
+        MvcResult result = mockMvc
+                .perform(MockMvcRequestBuilders.delete("/api/index_plans/index").contentType(MediaType.APPLICATION_JSON)
+                        .param("project", project).param("model_name", "no_exist_model").param("index_ids", "1,1001")
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError()).andReturn();
+        Assert.assertTrue(result.getResponse().getContentAsString().contains("KE-010002201"));
+
+        MvcResult mvcResult = mockMvc
+                .perform(MockMvcRequestBuilders.delete("/api/index_plans/index").contentType(MediaType.APPLICATION_JSON)
+                        .param("project", project).param("model_name", modelName).param("index_ids", "")
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError()).andReturn();
+        Assert.assertTrue(mvcResult.getResponse().getContentAsString().contains("KE-010043212"));
     }
 }
