@@ -21,7 +21,6 @@ import java.io.{DataInputStream, File}
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.util.Locale
-
 import com.google.common.base.Preconditions
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.StringUtils
@@ -30,7 +29,7 @@ import org.apache.kylin.common.util.TempMetadataBuilder
 import org.apache.kylin.metadata.cube.model.{IndexPlan, NDataflowManager, NIndexPlanManager}
 import org.apache.kylin.metadata.model.{NDataModel, NDataModelManager, NTableMetadataManager}
 import org.apache.kylin.metadata.project.NProjectManager
-import org.apache.kylin.query.util.{QueryParams, QueryUtil}
+import org.apache.kylin.query.util.{PushDownUtil, QueryParams}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession}
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.scalatest.Suite
@@ -84,7 +83,7 @@ trait SSSource extends SharedSparkSession with LocalMetadata {
       .replaceAll("\"DEFAULT\"\\.", "")
     val queryParams = new QueryParams("default", sqlForSpark, "DEFAULT", false)
     queryParams.setKylinConfig(NProjectManager.getProjectConfig("default"))
-    QueryUtil.massagePushDownSql(queryParams)
+    PushDownUtil.massagePushDownSql(queryParams)
   }
 
   def addModels(resourcePath: String, modelIds: Seq[String]): Unit = {
