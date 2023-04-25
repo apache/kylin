@@ -1906,7 +1906,7 @@ public class JobServiceTest extends NLocalFileMetadataTestCase {
     }
 
     @Test
-    public void testJobSubdirectoryPermission() throws IOException {
+    public void testJobSubdirectoryPermission() throws IOException, PersistentException {
         String jobId = "e1ad7bb0-522e-456a-859d-2eab1df448de";
         NExecutableManager manager = NExecutableManager.getInstance(jobService.getConfig(), "default");
         ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();
