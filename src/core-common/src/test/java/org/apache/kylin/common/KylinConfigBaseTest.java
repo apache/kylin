@@ -1488,6 +1488,15 @@ class KylinConfigBaseTest {
         config.setProperty("kylin.env.zookeeper.zk-auth", EncryptUtil.encryptWithPrefix("digest:ADMIN:KYLIN"));
         assertEquals("digest:ADMIN:KYLIN", config.getZKAuths());
     }
+
+    @Test
+    void testGetMetadataAuditLogMaxSize() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals(500000, config.getMetadataAuditLogMaxSize());
+
+        config.setProperty("kylin.metadata.audit-log.max-size", "3000000");
+        assertEquals(3000000, config.getMetadataAuditLogMaxSize());
+    }
 }
 
 class EnvironmentUpdateUtils {
