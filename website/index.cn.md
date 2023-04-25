@@ -31,24 +31,24 @@ title: 大数据分析型数据仓库
                   </ol>
               </div>  
               <p class="title_text">Kylin 提供与多种数据可视化工具的整合能力，如 Tableau，PowerBI 等，令用户可以使用 BI 工具对 Hadoop 数据进行分析。</p>
-              <img id="diagram" src="{{ "/assets/images/kylin_diagram.png"| prepend: site.baseurl }}"> </div>
-              <p class="title_text"> Kylin 5.0 早期预览版已经发布！（https://kylin.apache.org/5.0/docs/development/roadmap） 👈 </p>
+              <p class="title_text"> 👏👏 <a href="https://kylin.apache.org/5.0/docs/development/roadmap"> Kylin 5.0 早期预览版已经发布！</a> 👈</p>
               <div align="left">
                 <ol class="none-icon">
                   <li>
-                    <span class="li-circle-blue">1</span>
+                    <span class="li-circle">1</span>
                     全新的建模 Web 界面，简化用户操作
                   </li>
                   <li>
-                    <span class="li-circle-blue">2</span>
+                    <span class="li-circle">2</span>
                     全新升级的元数据和建模引擎，增加明细索引、可计算列、屏蔽列等特性
                   </li>
                   <li>
-                    <span class="li-circle-blue">3</span>
+                    <span class="li-circle">3</span>
                     即将到来的 Native 向量化计算引擎，可以提升查询性能一倍
                   </li>
                   </ol>
               </div> 
+              <img id="diagram" src="{{ "/assets/images/kylin_diagram.png"| prepend: site.baseurl }}"> </div>
           </div>
         </div>
         <!-- /container --> 
