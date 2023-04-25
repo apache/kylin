@@ -5,6 +5,9 @@ title: 下载
 
 您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](https://www.apache.org/dist/kylin/KEYS)来验证下载文件的有效性.
 
+#### v5.0
+请访问 [download page](https://kylin.apache.org/5.0/docs/download) 获取 Kylin 5.x 的源代码和安装包
+
 #### v4.0.3
 - 这是 Kylin 4.0.2 版本之后的一个 bug-fix 版本，包含 4 个新功能和改进，以及 4 个问题的修复。关于具体内容请查看发布说明。
 - [发布说明](/docs/release_notes.html), [安装指南](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [升级指南](/docs/howto/howto_upgrade.html)

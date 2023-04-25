@@ -31,7 +31,7 @@ title: 大数据分析型数据仓库
                   </ol>
               </div>  
               <p class="title_text">Kylin 提供与多种数据可视化工具的整合能力，如 Tableau，PowerBI 等，令用户可以使用 BI 工具对 Hadoop 数据进行分析。</p>
-              <p class="title_text"> 👏👏 <a href="https://kylin.apache.org/5.0/docs/development/roadmap"> Kylin 5.0 早期预览版已经发布！</a> 👈</p>
+              <p style="font-weight:bold;color:#87CEFF;text-decoration:underline;text-align:center;"> 👏👏 请访问全新的 <a href="https://kylin.apache.org/5.0"> Kylin 5.0 官网</a>！Kylin 5 已经发布 👈 主要特性如下</p>
               <div align="left">
                 <ol class="none-icon">
                   <li>

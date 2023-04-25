@@ -31,7 +31,7 @@ title: Analytical Data Warehouse for Big Data
                 </ol>
               </div>  
               <p class="title_text">Apache Kylin™ can also integrate with your favorite BI tools like Tableau and PowerBI etc., to enable <b>BI on Hadoop</b>.</p>
-              <p class="title_text"> 👏👏 <a href="https://kylin.apache.org/5.0/docs/development/roadmap">Kylin 5.0 is released! </a> 👈 </p>
+              <p style="font-weight: bold;color: #87CEFF;text-decoration: underline;text-align: center;"> 👏👏 Please visit Kylin 5 at <a href="https://kylin.apache.org/5.0">Kylin 5.0 Home page</a>! Kylin 5 is now released. 👈 Some new features are following:</p>
               <div align="left">
                 <ol class="none-icon">
                   <li>
@@ -48,7 +48,6 @@ title: Analytical Data Warehouse for Big Data
                   </li>
                  </ol>
               </div>
-              <p class="title_text">Kylin is originally contributed from eBay Inc. in 2015.</p>
             </div>
           </div>
         </div>

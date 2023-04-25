@@ -6,6 +6,9 @@ permalink: /download/index.html
 
 You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://www.apache.org/dist/kylin/KEYS).
 
+#### v5.0
+For source and binary for Kylin 5.x, please visit [download page](https://kylin.apache.org/5.0/docs/download) .
+
 #### v4.0.3
 - This is a bug-fix release after Kylin 4.0.2, with 4 new features/improvements and 4 bug fixes. Check the release notes.
 - [Release notes](/docs/release_notes.html), [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [upgrade guide](/docs/howto/howto_upgrade.html)
