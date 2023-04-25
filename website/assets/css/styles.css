@@ -556,6 +556,20 @@ a:hover, a:focus {
     color: #fff;
     background: #f3982a;
 }
+.li-circle-blue {
+	float: left;
+	border: 1px solid #004C99;
+	border-radius: 100%;
+	height: 24px;
+	width: 24px;
+	line-height: 24px;
+	font-size: 16px;
+	display: inline-block;
+	text-align: center;
+	margin-right: 10px;
+	color: #fff;
+	background: #004C99;
+}
 .version:hover {
 	opacity: .7;
 	-webkit-transition: 0.25s;
