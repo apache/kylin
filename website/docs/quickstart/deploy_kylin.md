@@ -18,13 +18,13 @@ In this guide, we will explain how to quickly install and start Kylin 5.
 
 Before proceeding, please make sure the [Prerequisite](../deployment/on-premises/prerequisite.md) is met.
 
-### Pull docker for learning
+### Try Kylin in one command
 
 If we want to learn what new features did Kylin 5 provided, and you only have a laptop,
 we recommend you to pulling the docker image and check the [standalone image in dockerhub](https://hub.docker.com/r/apachekylin/apache-kylin-standalone) .
 
 ```shell
-docker pull apachekylin/apache-kylin-standalone:5.0.0
+docker pull apachekylin/apache-kylin-standalone:5.0.0-alpha
 ```
 
 
@@ -49,6 +49,13 @@ docker pull apachekylin/apache-kylin-standalone:5.0.0
    ```
    The decompressed directory is referred to as **$KYLIN_HOME** or **root directory**.
 
+4. Download Spark
+
+   ```shell
+   bash $KYLIN_HOME/sbin/download-spark-user.sh
+   ```
+   After executing above script, there will be a `spark` directory under `$KYLIN_HOME` .
+
 5. Prepare RDBMS metastore.
 
    If PostgreSQL or MySQL has been installed already in your environment, you can choose one of them as the metastore. 
@@ -62,7 +69,7 @@ docker pull apachekylin/apache-kylin-standalone:5.0.0
    * [Use PostgreSQL as Metastore](../deployment/on-premises/rdbms_metastore/postgresql/default_metastore.md).
    * [Use MySQL as Metastore](../deployment/on-premises/rdbms_metastore/mysql/mysql_metastore.md).
    
-6. (optional) Install InfluxDB.
+6. (out-dated) Install InfluxDB.
   
    Kylin uses InfluxDB to save various system monitoring information. If you do not need to view related information, you can skip this step. It is strongly recommended to complete this step in a production environment and use related monitoring functions.
    
@@ -78,7 +85,7 @@ docker pull apachekylin/apache-kylin-standalone:5.0.0
    
    For more details, please refer to [Use InfluxDB as Time-Series Database](../operations/monitoring/influxdb/influxdb.md).
    
-6. Create a working directory on HDFS and grant permissions.
+7. Create a working directory on HDFS and grant permissions.
 
    The default working directory is `/kylin`. Also ensure the Linux account has access to its home directory on HDFS. Meanwhile, create directory `/kylin/spark-history` to store the spark log files.
 

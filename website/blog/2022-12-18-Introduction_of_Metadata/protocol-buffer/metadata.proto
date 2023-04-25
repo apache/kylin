@@ -69,18 +69,14 @@ message ProjectInstance {
   string defaultDatabase = 6;
   string description = 7;
 
-  /**
-   * TODO
-   */
+  // [TODO]
   string principal = 8;
 
-  /**
-   * TODO
-   */
+  // [TODO]
   string keytab = 9;
 
-
-  MaintainModelType maintain_model_type = 10; // [Trivial]
+  // [Trivial]
+  MaintainModelType maintain_model_type = 10;
 
   /**
    * 项目级别的配置(键值对), 可以覆盖全局的配置
@@ -93,16 +89,12 @@ message ProjectInstance {
   SegmentConfig segment_config = 12;
 
   enum ProjectStatusEnum {
-    /**
-     * TODO:项目 Disable 有什么影响
-     */
+    // [TODO]
     DISABLED = 0;
     ENABLED = 1;
   };
 
-  /**
-   * TODO
-   */
+  // [TODO]
   enum MaintainModelType {
     MANUAL_MAINTAIN = 0;
   }
@@ -121,13 +113,13 @@ message TableDesc {
    */
   CatalogTableType tableType = 5;
 
-  bool isTop = 6; // [Trivial] for front end only
+  // [Trivial] for front end only
+  bool isTop = 6;
 
-  string data_gen = 7; // [Trivial]
+  // [Trivial]
+  string data_gen = 7;
 
-  /**
-   * TODO
-   */
+  // [TODO]
   string increment_loading = 8;
 
   string last_snapshot_path = 9;
@@ -183,9 +175,6 @@ message TableDesc {
  */
 message NDataModel {
 
-  /**
-   * common properties(from RootPersistentEntity)
-   */
   RootPersistentEntity basicProp = 1;
 
   // model basic properties
@@ -210,7 +199,7 @@ message NDataModel {
   string filterCondition = 23;
   PartitionDesc partitionDesc = 24;
 
-  // dimension and other columns
+  // all dimension and deleted column
   repeated NamedColumn allNamedColumns = 25;
   repeated Measure allMeasures = 26;
   repeated ComputedColumnDesc computedColumnDescs = 27;
@@ -224,6 +213,7 @@ message NDataModel {
   // check https://kylin.apache.org/5.0/blog/introduction_of_metadata_cn#significant-change
   int32 semanticVersion = 42;
 
+  // [Trivial]
   int32 storageType = 43;
 
   // [Trivial]
@@ -237,15 +227,20 @@ message NDataModel {
 
   // Broken reason because of schema change
   BrokenReason brokenReason = 47;
-  RealizationCapacity capacity = 48; // [Trivial]
 
+  // [Trivial]
+  RealizationCapacity capacity = 48;
+
+  // TODO
   string multiPartitionDesc = 49;
+
+  // TODO
   string multiPartitionKeyMapping = 50;
 
   // [Trivial] for streaming feature
   string fusionId = 51;
 
-  // Some configuration
+  // Some configuration of auto segment merge
   SegmentConfig segmentConfig = 61;
 
   enum ModelType {
@@ -254,7 +249,7 @@ message NDataModel {
     HYBRID = 2; // Source is Kafka and Hive, still under developing
     UNKNOWN = 3;
   }
-  enum RealizationCapacity {// Useless
+  enum RealizationCapacity {
     SMALL = 0;
     MEDIUM = 1;
     LARGE = 2;
@@ -273,19 +268,45 @@ message NDataModel {
 message IndexPlan {
   string description = 1;
   int64 retentionRange = 8;
+
+  // [Trivial]
   int32 engineType = 9;
   repeated int64 autoMergeTimeRanges = 7;
 
-  RuleBasedIndex ruleBasedIndex = 3; // agg group
+  /**
+   * 静态 Index 剪枝策略, 例如聚合组规则
+   */
+  RuleBasedIndex ruleBasedIndex = 3;
+
+  /**
+   * Indexes 属性用于管理用户
+   * 1. 自定义明细索引
+   * 2. 基础明细索引、基础聚合索引
+   * 3. 以及用户通过扩展 Kylin 自动生成的索引, 例如 CubePlanner
+   */
   repeated IndexEntity indexes = 4;
+
+  /**
+   * 全局字典相关的属性
+   */
   repeated DictionaryDesc dictionaries = 10;
 
+  /**
+   * 因为 Schema Change 而需要删除的索引
+   */
   repeated IndexEntity toBeDeletedIndexes = 6;
-  int64 nextAggregationIndexId = 11;
-  int64 nextTableIndexId = 12;
+
+  // TODO
+  map<int32, string> indexPlanOverrideIndexes = 10;
+
+  // TODO
   repeated int32 aggShardByColumns = 13;
+
+  // TODO
   map<int64, int32> layoutBucketNumMapping = 15;
 
+  int64 nextAggregationIndexId = 11;
+  int64 nextTableIndexId = 12;
   map<string, string> overrideProps = 5;
 }
 
@@ -333,7 +354,6 @@ message NamedColumn {
   string name = 2;
   string aliasDotColumn = 3;
 
-  // logical delete symbol
   ColumnStatus status = 4;
   enum ColumnStatus {
     TOMB = 0;
@@ -541,11 +561,12 @@ message PartitionDesc {
   string partitionDateColumn = 1;
   string partitionDateFormat = 2;
   PartitionType partitionType = 3;
+  string partitionConditionBuilderClz = 4;
+
   enum PartitionType {
     APPEND = 0;
     UPDATE_INSERT = 1;
   }
-  string partitionConditionBuilderClz = 4;
 }
 
 message ColumnDesc {

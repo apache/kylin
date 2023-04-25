@@ -18,4 +18,4 @@ last_update:
 
 # How to release
 
-to be continued
+Please check [How to release in docker container](https://github.com/apache/kylin/tree/kylin5/build/release/release-pipeline-docker) guide. 

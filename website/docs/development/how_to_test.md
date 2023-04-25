@@ -16,8 +16,21 @@ last_update:
   date: 08/24/2022
 ---
 
-# How to test
+# How to run tests
 
 ```shell
-sh dev-support/unit_testing.sh
+bash dev-support/unit_testing.sh
+```
+
+This scripts will finish in about 1~1.5 hour. The output will be saved in ci-results-YYYY-mm-dd.txt .
+
+If all testes passed, console will print:
+
+```text
+...
+[INFO] --- maven-surefire-plugin:3.0.0-M5:test (default-test) @ kylin-sparder ---
+[INFO] --- maven-surefire-plugin:3.0.0-M5:test (default-test) @ kylin-spark-common ---
+[INFO] --- maven-surefire-plugin:3.0.0-M5:test (default-test) @ kylin-spark-it ---
+<Failed test on following module>
+<Failed cases statistics>
 ```
