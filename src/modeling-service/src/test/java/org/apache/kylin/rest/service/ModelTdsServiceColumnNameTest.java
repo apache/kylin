@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import lombok.extern.slf4j.Slf4j;
-import com.google.common.collect.ImmutableList;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
 import org.apache.kylin.junit.rule.TransactionExceptedException;
