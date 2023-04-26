@@ -45,6 +45,6 @@ last_update:
 | CHR(str)                             | Convert ascii code to corresponding character| ` CHR(97)` = a| ✔️ | ❌| ✔️              | ✔️              |
 | SPACE(len)                             | Generate `len` number of continuous space | space(2) =`  ` | ✔️ | ❌| ❌                | ❌                |
 | SPLIT_PART(str, separator, index)  | Split `str` with `separator` and return the `index`-th token. `index` counts from 1. when `index` is negative, tokens are counted starting from the right. | `split_part('a-b-c', '-', 1)` = a, <br /> `split_part('a-b-c', '-', -1)` = c,| ✔️ | ❌| ✔️              | ✔️              |
-| CONCAT(str1, str2) | Concatenate the strings `str1` and `str2` into one string    | `concat('Kyl', 'in') `= Kylin                        | ✔️ | ✔️ | ✔️              | ✔️              |
+| CONCAT(any, [any]*) | Concatenates multiple data of any type into a string    | `concat('Kyl', 'in') `= Kylin                        | ✔️ | ✔️ | ✔️              | ✔️              |
 | REPEAT(str,n)| Repeat `str` `n` times and return string. When querying the model, `str` supports passing in constants, columns and expressions, and `n` only supports passing in constants | `repeat('kylin',2)` ='kylinkylin' | ✔️ | ✔️ | ✔️ | ✔️ |
 | LEFT(str,n)| Return the `n` characters from the left of `str`. When querying the model, `str` supports passing in constants, columns, and `n` only supports passing in constants | `left('kylin',2)` ='ky' | ✔️ | ✔️ | ✔️ | ✔️ |
