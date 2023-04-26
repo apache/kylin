@@ -81,6 +81,7 @@ import org.apache.kylin.common.exception.ServerErrorCode;
 import org.apache.kylin.common.msg.Message;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.transaction.TransactionException;
+import org.apache.kylin.common.util.EncryptUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.JobStatusEnum;
@@ -643,7 +644,8 @@ public class NBasicController {
             if (StringUtils.isBlank(host) || host.startsWith("http://")) {
                 return host;
             }
-            return new String(Base64.decodeBase64(host), Charset.defaultCharset());
+            String decryptValue = EncryptUtil.decrypt(new String(Base64.decodeBase64(host), Charset.defaultCharset()));
+            return StringUtils.isBlank(decryptValue) ? host : decryptValue;
         } catch (Exception e) {
             logger.error("Failed to decode host, will use the original host name");
         }
@@ -659,7 +661,7 @@ public class NBasicController {
             if (!host.toLowerCase().startsWith("http")) {
                 host = "http://" + host;
             }
-            return Base64.encodeBase64String(host.getBytes(Charset.defaultCharset()));
+            return Base64.encodeBase64String(EncryptUtil.encrypt(host).getBytes(Charset.defaultCharset()));
         } catch (Exception e) {
             logger.error("Failed to encode host, will use the original host name");
         }
