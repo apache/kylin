@@ -108,8 +108,12 @@ last_update:
   - `description` -  `optional` `string`, model description
   - `capacity` -  `optional` `string`, model capacity, including: SMALL,MEDIUM,LARGE, default: MEDIUM
   - `filter_condition` -  `optional` `string`, data filter condition. Data filter condition is an additional data filter during data loading.
-  - `with_base_index` -  `optional` `boolean`, adding base indexes or not. Base indexes include all dimensions and measures of the model and automatically update as the model changes by default. default: false
-
+  - `with_base_index` -  `optional` `boolean`, adding base indexes or not, including base aggregate index and base table index. Base indexes include all dimensions and measures of the model and automatically update as the model changes by default. default: false; It is recommended to use `base_index_type` after version 4.6.6, `with_base_index` does not take effect after configuring `base_index_type`
+  - `base_index_type` - `optional` `Array[String]`, select the base index type to be added, optional values `BASE_AGG_INDEX`, `BASE_TABLE_INDEX`, effective version: 4.6.6
+    - `[BASE_AGG_INDEX, BASE_TABLE_INDEX]` Both the base aggregate index and the base table index are added
+    - `[BASE_AGG_INDEX]` only add the base aggregate index
+    - `[BASE_TABLE_INDEX]` only add the base table index
+    - `[]` does not add base indexes
 - Curl Request Example
 
   ```sh
@@ -214,7 +218,8 @@ last_update:
               "join_relation_type": "MANY_TO_ONE"
           }
       ],
-      "with_base_index": true
+      "with_base_index": true,
+      "base_index_type": ["BASE_AGG_INDEX", "BASE_TABLE_INDEX"]
     }'
   ```
 
