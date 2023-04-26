@@ -311,5 +311,17 @@ public class NBasicControllerTest extends NLocalFileMetadataTestCase {
         }
         Assert.assertEquals(3, mockDataResponse.get("size"));
     }
+    
+    @Test
+    public void testEncodeAndDecodeHost() {
+        Assert.assertTrue(nBasicController.encodeHost("").isEmpty());
+        String host = "localhost:7070";
+        String encodeHost = nBasicController.encodeHost(host);
+        Assert.assertNotNull(encodeHost);
+        Assert.assertNotEquals(host, encodeHost);
+        String decodeHost = nBasicController.decodeHost(encodeHost);
+        Assert.assertEquals("http://" + host, decodeHost);
+        Assert.assertEquals("ip", nBasicController.decodeHost("ip"));
+    }
 
 }
