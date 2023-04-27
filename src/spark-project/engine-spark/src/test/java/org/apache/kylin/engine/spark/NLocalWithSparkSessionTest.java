@@ -19,11 +19,11 @@ package org.apache.kylin.engine.spark;
 
 import java.io.File;
 import java.io.Serializable;
+import java.net.BindException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -36,6 +36,7 @@ import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -66,8 +67,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.sparkproject.guava.collect.Sets;
-
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -150,8 +149,14 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
                 "org.apache.kylin.engine.spark.job.MockJobProgressReport");
         this.createTestMetadata();
         SparkJobFactoryUtils.initJobFactory();
-        Random r = new Random(10000);
-        zkTestServer = new TestingServer(r.nextInt(), true);
+        for (int i = 0; i < 100; i++) {
+            try {
+                zkTestServer = new TestingServer(RandomUtil.nextInt(7100, 65530), true);
+                break;
+            } catch (BindException e) {
+                log.warn(e.getMessage());
+            }
+        }
         overwriteSystemProp("kylin.env.zookeeper-connect-string", zkTestServer.getConnectString());
         overwriteSystemProp("kylin.source.provider.9", "org.apache.kylin.engine.spark.mockup.CsvSource");
         indexDataConstructor = new IndexDataConstructor(getProject());
@@ -187,7 +192,7 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
         for (String table : projectInstance.getTables()) {
 
             if ("DEFAULT.STREAMING_TABLE".equals(table) || "DEFAULT.TEST_SNAPSHOT_TABLE".equals(table)
-             || table.contains(kylinConfig.getDDLLogicalViewDB())) {
+                    || table.contains(kylinConfig.getDDLLogicalViewDB())) {
                 continue;
             }
 

@@ -32,7 +32,7 @@ class TestSparkDataSource extends SparderBaseFunSuite
   with Logging {
 
   test("test spark data source") {
-    val kylinBuildEnv = KylinBuildEnv.getOrCreate(KylinConfig.getInstanceFromEnv);
+    KylinBuildEnv.getOrCreate(KylinConfig.getInstanceFromEnv)
     val tableDesc = new TableDesc
     tableDesc.setName("test_country")
     val columnDescs = spark.table("test_country").schema

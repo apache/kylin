@@ -1,1 +1,0 @@
-`min(1)` INT,`max(1)` INT,`max(3.0)` DECIMAL(2,1),`count(1)` BIGINT NOT NULL

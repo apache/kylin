@@ -24,12 +24,12 @@ import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.query.StructField;
 import org.apache.kylin.query.engine.data.QueryResult;
 import org.apache.spark.sql.common.SparderQueryTest;
 import org.junit.Assert;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -104,7 +104,7 @@ public class QueryResultComparator {
                 } else if (column.getDataTypeName().equals("ANY")) {
                     // bround udf return ANY
                     try {
-                        normalizedRow.append(new BigDecimal(row.get(i)).setScale(2, RoundingMode.HALF_UP).toString());
+                        normalizedRow.append(new BigDecimal(row.get(i)).setScale(2, RoundingMode.HALF_UP));
                     } catch (Exception e) {
                         log.warn("try to cast to decimal failed", e);
                         normalizedRow.append(row.get(i));

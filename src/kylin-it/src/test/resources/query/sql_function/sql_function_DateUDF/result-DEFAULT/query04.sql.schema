@@ -1,1 +1,0 @@
-`unix_timestamp(CAL_DT, yyyy-MM-dd HH:mm:ss)` BIGINT,`unix_timestamp(CAL_DT, yyyy-MM-dd)` BIGINT

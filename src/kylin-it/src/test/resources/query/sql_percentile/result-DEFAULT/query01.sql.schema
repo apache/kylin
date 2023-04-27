@@ -1,1 +1,0 @@
-`SELLER_ID` INT,`round(percentile(PRICE, CAST(0.5 AS DOUBLE), 1), 0)` DOUBLE

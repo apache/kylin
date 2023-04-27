@@ -1,5 +1,0 @@
-{"sum(CAST(length(substring(LSTG_FORMAT_NAME, 1, 4)) AS DOUBLE))":7964.0}
-{"sum(CAST(length(substring(LSTG_FORMAT_NAME, 1, 4)) AS DOUBLE))":8116.0}
-{"sum(CAST(length(substring(LSTG_FORMAT_NAME, 1, 4)) AS DOUBLE))":8148.0}
-{"sum(CAST(length(substring(LSTG_FORMAT_NAME, 1, 4)) AS DOUBLE))":7916.0}
-{"sum(CAST(length(substring(LSTG_FORMAT_NAME, 1, 4)) AS DOUBLE))":7856.0}

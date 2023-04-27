@@ -1,1 +1,0 @@
-`date_format(CAL_DT, y)` STRING,`date_format(CAL_DT, M)` STRING,`date_format(CAL_DT, d)` STRING,`datediff(CAL_DT, DATE '2019-08-03')` INT,`hour(CAL_DT)` INT

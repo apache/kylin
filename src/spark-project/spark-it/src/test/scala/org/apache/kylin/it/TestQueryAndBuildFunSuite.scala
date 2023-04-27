@@ -17,8 +17,10 @@
 
 package org.apache.kylin.it
 
+import java.io.File
+
 import io.netty.util.internal.ThrowableUtil
-import org.apache.kylin.common._
+import org.apache.kylin.common.{KylinConfig, _}
 import org.apache.kylin.common.util.TestUtils
 import org.apache.kylin.engine.spark.IndexDataWarehouse
 import org.apache.kylin.metadata.cube.model.NDataflowManager.NDataflowUpdater
@@ -31,9 +33,6 @@ import org.apache.spark.sql.execution.adaptive.AdaptiveSparkPlanHelper
 import org.apache.spark.sql.execution.utils.SchemaProcessor
 import org.apache.spark.sql.execution.{KylinFileSourceScanExec, LayoutFileSourceScanExec}
 import org.apache.spark.sql.{DataFrame, SparderEnv}
-
-import java.io.File
-import java.util.TimeZone
 
 class TestQueryAndBuildFunSuite
   extends SparderBaseFunSuite
@@ -49,9 +48,7 @@ class TestQueryAndBuildFunSuite
 
   case class FolderInfo(folder: String, filter: List[String] = List(), checkOrder: Boolean = false)
 
-  val defaultTimeZone: TimeZone = TimeZone.getDefault
-
-  val queryFolders = List(
+  val queryFolders: List[FolderInfo] = List(
     FolderInfo("sql", List("query105.sql", "query131.sql", "query138.sql")),
     FolderInfo("sql_cache"),
     FolderInfo("sql_casewhen", List("query08.sql", "query09.sql", "query11.sql", "query12.sql", "query13.sql")),
@@ -72,31 +69,31 @@ class TestQueryAndBuildFunSuite
     FolderInfo("sql_subquery", List("query19.sql", "query25.sql")),
     FolderInfo("sql_orderby", List(), checkOrder = true),
     FolderInfo("sql_powerbi"),
-    // FolderInfo("sql_raw"),
-    // FolderInfo("sql_rawtable", List("query26.sql", "query32.sql", "query33.sql", "query34.sql", "query37.sql", "query38.sql")),
+    FolderInfo("sql_raw"),
+    FolderInfo("sql_rawtable", List("query26.sql", "query32.sql", "query33.sql", "query34.sql", "query37.sql", "query38.sql")),
     FolderInfo("sql_tableau", List("query00.sql", "query24.sql", "query25.sql")),
     FolderInfo("sql_topn"),
-    // FolderInfo("sql_union", List("query07.sql")),
+    FolderInfo("sql_union", List("query07.sql")),
     FolderInfo("sql_value"),
     FolderInfo("sql_udf", List("query02.sql")),
     FolderInfo("sql_tableau", List("query00.sql", "query24.sql", "query25.sql"))
   )
 
-  val onlyLeft = List(
+  val onlyLeft: List[FolderInfo] = List(
     FolderInfo("sql_computedcolumn"),
     FolderInfo("sql_computedcolumn/sql_computedcolumn_common"),
     FolderInfo("sql_computedcolumn/sql_computedcolumn_leftjoin")
   )
 
-  val onlyInner = List(
+  val onlyInner: List[FolderInfo] = List(
     FolderInfo("sql_join/sql_inner_join")
   )
 
-  val isNotDistinctFrom = List(
+  val isNotDistinctFrom: List[FolderInfo] = List(
     FolderInfo("sql_join/sql_is_not_distinct_from")
   )
 
-  val noneCompare = List(
+  val noneCompare: List[FolderInfo] = List(
     FolderInfo("sql_current_date"),
     FolderInfo("sql_distinct"),
     FolderInfo("sql_grouping", List("query07.sql", "query08.sql")),
@@ -105,11 +102,11 @@ class TestQueryAndBuildFunSuite
     FolderInfo("sql_window")
   )
 
-  val tempQuery = List(
+  val tempQuery: List[FolderInfo] = List(
     FolderInfo("temp")
   )
 
-  val joinTypes = List(
+  val joinTypes: List[String] = List(
     "left",
     "inner"
   )
@@ -128,18 +125,16 @@ class TestQueryAndBuildFunSuite
     overwriteSystemProp("calcite.keep-in-clause", "true")
     overwriteSystemProp("kylin.dictionary.null-encoding-opt-threshold", "1")
     overwriteSystemProp("kylin.query.spark-job-trace-enabled", "false")
-    val timeZoneStr = "GMT+8"
-    TimeZone.setDefault(TimeZone.getTimeZone(timeZoneStr))
-    logInfo(s"Current time zone set to $timeZoneStr")
+    overwriteSystemProp("kylin.web.timezone", "GMT+8")
     NDataflowManager.getInstance(KylinConfig.getInstanceFromEnv, DEFAULT_PROJECT)
       .updateDataflow(DF_NAME, Updater(RealizationStatusEnum.OFFLINE))
-    KylinConfig.getInstanceFromEnv.setProperty("kylin.query.pushdown.runner-class-name", "")
-    KylinConfig.getInstanceFromEnv.setProperty("kylin.query.pushdown-enabled", "false")
-    KylinConfig.getInstanceFromEnv.setProperty("kylin.snapshot.parallel-build-enabled", "true")
+    overwriteSystemProp("kylin.query.pushdown.runner-class-name", "")
+    overwriteSystemProp("kylin.query.pushdown-enabled", "false")
+    overwriteSystemProp("kylin.snapshot.parallel-build-enabled", "true")
     // test for snapshot cleanup
-    KylinConfig.getInstanceFromEnv.setProperty("kylin.snapshot.version-ttl", "0")
-    KylinConfig.getInstanceFromEnv.setProperty("kylin.snapshot.max-versions", "1")
-    KylinConfig.getInstanceFromEnv.setProperty("kylin.engine.persist-flat-use-snapshot-enabled", "false")
+    overwriteSystemProp("kylin.snapshot.version-ttl", "0")
+    overwriteSystemProp("kylin.snapshot.max-versions", "1")
+    overwriteSystemProp("kylin.engine.persist-flat-use-snapshot-enabled", "false")
     build()
   }
 
@@ -148,7 +143,6 @@ class TestQueryAndBuildFunSuite
       .updateDataflow(DF_NAME, Updater(RealizationStatusEnum.ONLINE))
     super.afterAll()
     SparderEnv.cleanCompute()
-    TimeZone.setDefault(defaultTimeZone)
   }
 
   test("buildKylinFact") {

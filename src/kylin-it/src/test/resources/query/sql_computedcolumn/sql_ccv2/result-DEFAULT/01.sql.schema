@@ -1,1 +1,0 @@
-`sum(CAST(length(substring(LSTG_FORMAT_NAME, 1, 4)) AS DOUBLE))` DOUBLE
