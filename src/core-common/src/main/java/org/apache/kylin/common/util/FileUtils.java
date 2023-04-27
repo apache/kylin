@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
-
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
@@ -53,6 +52,14 @@ public final class FileUtils {
         File[] files = new File(dir).listFiles();
         if (files != null) {
             return Arrays.stream(files).filter(f -> f.getName().matches(ptn)).collect(Collectors.toList());
+        }
+        return Lists.newArrayList();
+    }
+
+    public static List<File> findFiles(String dir) {
+        File[] files = new File(dir).listFiles();
+        if (files != null) {
+            return Lists.newArrayList(files);
         }
         return Lists.newArrayList();
     }

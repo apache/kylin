@@ -1520,6 +1520,14 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.engine.spark-conf.spark.submit.deployMode", "client").toLowerCase(Locale.ROOT);
     }
 
+    public String getSparkSqlHiveMetastoreJarsPath() {
+        return getOptional("kylin.engine.spark-conf.spark.sql.hive.metastore.jars.path", "");
+    }
+
+    public boolean getHiveClientJarUploadEnable() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.hive-client-jar-upload.enable", FALSE));
+    }
+
     public String getSparkBuildClassName() {
         return getOptional("kylin.engine.spark.build-class-name", "org.apache.kylin.engine.spark.job.SegmentBuildJob");
     }
