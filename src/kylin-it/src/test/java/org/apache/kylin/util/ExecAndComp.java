@@ -21,7 +21,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,15 +31,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
@@ -139,35 +142,27 @@ public class ExecAndComp {
             resultFilePath = sqlPath.substring(0, index) + "/result-" + joinType + sqlPath.substring(index) + ".json";
             schemaFilePath = sqlPath.substring(0, index) + "/result-" + joinType + sqlPath.substring(index) + ".schema";
         }
+
+        // query with cache
         try {
             if (index > 0 && Files.exists(Paths.get(resultFilePath)) && Files.exists(Paths.get(schemaFilePath))) {
                 StructType schema = StructType.fromDDL(new String(Files.readAllBytes(Paths.get(schemaFilePath))));
-                val structs = Arrays.stream(schema.fields()).map(SparderTypeUtil::convertSparkFieldToJavaField)
-                        .collect(Collectors.toList());
-                val lines = Files.readAllLines(Paths.get(resultFilePath)).stream().map(s -> {
-                    List<String> result = Lists.newArrayList();
-                    try {
-                        val tree = JsonUtil.readValueAsTree(s);
-                        for (StructField structField : structs) {
-                            val node = tree.get(structField.getName());
-                            if (node == null) {
-                                result.add(null);
-                            } else if (structField.getDataTypeName().startsWith("ARRAY")) {
-                                result.add(node.toString());
-                            } else {
-                                result.add(node.asText());
-                            }
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    return result;
-                }).collect(Collectors.toList());
-                return new QueryResult(lines, lines.size(), structs);
+                List<StructField> structs = Arrays.stream(schema.fields())
+                        .map(SparderTypeUtil::convertSparkFieldToJavaField).collect(Collectors.toList());
+                Dataset<Row> ds = SparderEnv.getSparkSession().read().schema(schema).json(resultFilePath);
+                val dsIter = ds.toIterator();
+                Iterable<List<String>> listIter = SparkSqlClient.readPushDownResultRow(dsIter._1(), false);
+                return new QueryResult(Lists.newArrayList(listIter), (int) dsIter._2(), structs);
             }
         } catch (Exception e) {
             log.warn("try to use cache failed, compare with spark {}", sqlPath, e);
         }
+        // query with spark and cache result
+        return queryWithSpark(prj, originSql, joinType, sqlPath, resultFilePath, schemaFilePath);
+    }
+
+    private static QueryResult queryWithSpark(String prj, String originSql, String joinType, String sqlPath,
+            String resultFilePath, String schemaFilePath) {
         String compareSql = getCompareSql(sqlPath);
         if (StringUtils.isEmpty(compareSql)) {
             compareSql = changeJoinType(originSql, joinType);
@@ -182,12 +177,7 @@ public class ExecAndComp {
         String sqlForSpark = removeDataBaseInSql(afterConvert);
         val ds = querySparkSql(sqlForSpark);
         try {
-            if (StringUtils.isNotEmpty(resultFilePath)) {
-                Files.deleteIfExists(Paths.get(resultFilePath));
-                ds.coalesce(1).write().json(resultFilePath);
-                Files.deleteIfExists(Paths.get(schemaFilePath));
-                Files.write(Paths.get(schemaFilePath), ds.schema().toDDL().getBytes());
-            }
+            addLocalCache(resultFilePath, schemaFilePath, ds);
         } catch (Exception e) {
             log.warn("persist {} failed", sqlPath, e);
         }
@@ -196,6 +186,32 @@ public class ExecAndComp {
         val dsIter = ds.toIterator();
         Iterable<List<String>> listIter = SparkSqlClient.readPushDownResultRow(dsIter._1(), false);
         return new QueryResult(Lists.newArrayList(listIter), (int) dsIter._2(), structs);
+    }
+
+    private static void addLocalCache(String resultFilePath, String schemaFilePath, Dataset<Row> ds)
+            throws IOException {
+        if (StringUtils.isEmpty(resultFilePath)) {
+            return;
+        }
+
+        Path resultDirPath = Paths.get(resultFilePath);
+        Path schemaPath = Paths.get(schemaFilePath);
+        // delete cached result
+        Files.deleteIfExists(resultDirPath);
+        ds.coalesce(1).write().json(resultFilePath);
+        try (Stream<Path> pathStream = Files.list(resultDirPath)) {
+            Optional<Path> jsonFile = pathStream.filter(file -> file.getFileName().toString().startsWith("part-"))
+                    .findFirst();
+            if (jsonFile.isPresent()) {
+                Path targetFilePath = Paths.get(resultFilePath + ".json");
+                Files.move(jsonFile.get(), targetFilePath, StandardCopyOption.REPLACE_EXISTING);
+                FileUtils.forceDelete(resultDirPath.toFile());
+                Files.move(targetFilePath, resultDirPath);
+            }
+        }
+        // delete cached schema
+        Files.deleteIfExists(schemaPath);
+        Files.write(schemaPath, ds.schema().toDDL().getBytes());
     }
 
     public static String removeDataBaseInSql(String originSql) {

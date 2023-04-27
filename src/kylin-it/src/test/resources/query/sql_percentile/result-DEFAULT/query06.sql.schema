@@ -1,1 +1,0 @@
-`percentile_approx(SELLER_ID, CAST(0.5 AS DOUBLE), 10000)` INT

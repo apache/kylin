@@ -27,6 +27,9 @@ import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBa
 
 import scala.collection.JavaConverters._
 
+import io.kyligence.kap.common.{JobSupport, QuerySupport}
+import io.kyligence.kap.query.{QueryConstants, QueryFetcher}
+
 class TestTPCHQuery
   extends SparderBaseFunSuite
     with LocalMetadata
@@ -63,7 +66,7 @@ class TestTPCHQuery
       .map { tp =>
         val df = singleQuery(tp._2, DEFAULT_PROJECT)
         val start = System.currentTimeMillis()
-        Range.apply(0, 1).foreach(t => df.count())
+        Range.apply(0, 1).foreach(_ => df.count())
         System.currentTimeMillis() - start
         OLAPContext.getThreadLocalContexts.asScala
           .map(_.realization.getUuid)
@@ -71,10 +74,8 @@ class TestTPCHQuery
             _.storageContext.getLayoutId))
           .mkString(",")
       }
-    val kylinEnd = System.currentTimeMillis()
 
     val tuples = sqlTime.zip(kylinTim)
-    tuples.foreach(println)
     Thread.sleep(1000000000)
   }
 
@@ -84,11 +85,9 @@ class TestTPCHQuery
     buildAll()
     QueryFetcher
       .fetchQueries(QueryConstants.KYLIN_SQL_BASE_DIR + "sql_tpch")
-      //      .filter(_._1.contains("22"))
       .map { tp =>
         print(tp._1)
         print(tp._2)
-        //        val df = sql(cleanSql(tp._2))
         val df = sql(tp._2)
         df.show(10)
         val kylinDf = singleQuery(tp._2, DEFAULT_PROJECT)

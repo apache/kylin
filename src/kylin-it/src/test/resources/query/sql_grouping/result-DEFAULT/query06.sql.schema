@@ -1,1 +1,0 @@
-`DT` STRING,`avg(GMV)` DECIMAL(33,8),`NAME` STRING,`grouping(DT)` TINYINT

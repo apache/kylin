@@ -1,1 +1,0 @@
-`CAL_DT` DATE,`date_format(CAL_DT, y)` STRING

@@ -17,8 +17,10 @@
 
 package org.apache.kylin.it
 
+import java.sql.SQLException
+import java.util.TimeZone
+
 import org.apache.kylin.common._
-import org.apache.kylin.common.util.Unsafe
 import org.apache.kylin.engine.spark.utils.LogEx
 import org.apache.kylin.metadata.realization.NoRealizationFoundException
 import org.apache.kylin.query.QueryFetcher
@@ -26,8 +28,6 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.common.{LocalMetadata, SparderBaseFunSuite}
 import org.apache.spark.sql.execution.adaptive.AdaptiveSparkPlanHelper
 
-import java.sql.SQLException
-import java.util.TimeZone
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 // scalastyle:off
@@ -45,7 +45,7 @@ class TestModelViewQuery
 
   override val DEFAULT_PROJECT = "tpch"
 
-  case class FloderInfo(floder: String, filter: List[String] = List(), checkOrder: Boolean = false)
+  case class FolderInfo(folder: String, filter: List[String] = List(), checkOrder: Boolean = false)
 
   val defaultTimeZone: TimeZone = TimeZone.getDefault
 
@@ -59,14 +59,13 @@ class TestModelViewQuery
   override protected def getProject: String = DEFAULT_PROJECT
 
   override def beforeAll(): Unit = {
-    Unsafe.setProperty("calcite.keep-in-clause", "true")
-    Unsafe.setProperty("kylin.dictionary.null-encoding-opt-threshold", "1")
-    TimeZone.setDefault(TimeZone.getTimeZone("GMT"))
-
     super.beforeAll()
-    KylinConfig.getInstanceFromEnv.setProperty("kylin.query.pushdown.runner-class-name", "")
-    KylinConfig.getInstanceFromEnv.setProperty("kylin.query.pushdown-enabled", "false")
-    KylinConfig.getInstanceFromEnv.setProperty("kylin.snapshot.parallel-build-enabled", "true")
+    overwriteSystemProp("calcite.keep-in-clause", "true")
+    overwriteSystemProp("kylin.dictionary.null-encoding-opt-threshold", "1")
+    overwriteSystemProp("kylin.web.timezone", "GMT+8")
+    overwriteSystemProp("kylin.query.pushdown.runner-class-name", "")
+    overwriteSystemProp("kylin.query.pushdown-enabled", "false")
+    overwriteSystemProp("kylin.snapshot.parallel-build-enabled", "true")
 
     addModels("src/test/resources/view/", modelIds)
 
@@ -76,12 +75,12 @@ class TestModelViewQuery
   override def afterAll(): Unit = {
     super.afterAll()
     SparderEnv.cleanCompute()
-    TimeZone.setDefault(defaultTimeZone)
-    Unsafe.clearProperty("calcite.keep-in-clause")
   }
 
   private val modelIds = Seq(
-    "fc883850-60a2-01c7-d9a1-f8782211bf87", "b0fab5a2-7c65-03e6-0dc8-8a396b05d833", "98d390ef-66ae-8acb-f57a-fe0bfb4fdf13");
+    "fc883850-60a2-01c7-d9a1-f8782211bf87",
+    "b0fab5a2-7c65-03e6-0dc8-8a396b05d833",
+    "98d390ef-66ae-8acb-f57a-fe0bfb4fdf13")
 
   def build(): Unit = logTime("Build Time: ", debug = true) {
     modelIds.foreach { id => fullBuildCube(id) }
@@ -119,7 +118,7 @@ class TestModelViewQuery
   test("test no real found on view model") {
     overwriteSystemProp("kylin.query.auto-model-view-enabled", "true")
     val caught = intercept[SQLException] {
-      singleQuery("select\nsum(O_CUSTKEY)\nfrom TPCH.orders_join_customer", getProject);
+      singleQuery("select\nsum(O_CUSTKEY)\nfrom TPCH.orders_join_customer", getProject)
     }
     assert(caught.getCause.isInstanceOf[NoRealizationFoundException])
   }
