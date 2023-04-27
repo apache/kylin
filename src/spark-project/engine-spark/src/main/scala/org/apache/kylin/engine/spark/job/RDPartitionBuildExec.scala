@@ -69,8 +69,8 @@ class RDPartitionBuildExec(private val jobContext: SegmentJob, //
       ).asJava
 
       logInfo(s"Detected source: $sourceName $leaves ${paths.asScala.mkString(",")}")
-      sourceSize.put(sourceName, ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(),
-        config.isConcurrencyFetchDataSourceSize, paths.asScala.map(path => new Path(path)): _*))
+      sourceSize.put(sourceName, ResourceDetectUtils.getResourceSize(config, SparderEnv.getHadoopConfiguration(),
+        paths.asScala.map(path => new Path(path)): _*))
       sourceLeaves.put(sourceName, leaves)
     }
 

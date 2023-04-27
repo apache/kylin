@@ -18,16 +18,17 @@
 
 package org.apache.kylin.engine.spark.job
 
-import org.apache.kylin.guava30.shaded.common.collect.Maps
+import java.io.IOException
+
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.engine.spark.job.stage.BuildParam
 import org.apache.kylin.engine.spark.job.stage.build.FlatTableAndDictBase
+import org.apache.kylin.guava30.shaded.common.collect.Maps
 import org.apache.kylin.metadata.cube.model.NDataSegment
 import org.apache.spark.sql.SparderEnv
 import org.apache.spark.sql.datasource.storage.StorageStoreUtils
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 
-import java.io.IOException
 import scala.collection.JavaConverters._
 
 class RDSegmentBuildExec(private val jobContext: SegmentJob, //
@@ -64,7 +65,7 @@ class RDSegmentBuildExec(private val jobContext: SegmentJob, //
       val paths = ResourceDetectUtils.getPaths(execution.sparkPlan, true).map(_.toString).asJava
       logInfo(s"Detected source: $sourceName $leaves ${paths.asScala.mkString(",")}")
       val startTime = System.currentTimeMillis()
-      val resourceSize = ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(), config.isConcurrencyFetchDataSourceSize,
+      val resourceSize = ResourceDetectUtils.getResourceSize(config, SparderEnv.getHadoopConfiguration(),
         paths.asScala.map(path => new Path(path)): _*)
       val endTime = System.currentTimeMillis()
       logInfo(s"Detect source size cost time is ${endTime - startTime} ms.")
