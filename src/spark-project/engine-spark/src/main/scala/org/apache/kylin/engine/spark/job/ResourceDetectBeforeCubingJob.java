@@ -101,7 +101,7 @@ public class ResourceDetectBeforeCubingJob extends SparkApplication {
                 List<Path> paths = JavaConversions
                         .seqAsJavaList(ResourceDetectUtils.getPaths(dataset.queryExecution().sparkPlan(), true));
                 resourceSize.put(String.valueOf(source.getLayoutId()),
-                        getResourceSize(SparderEnv.getHadoopConfiguration(), config.isConcurrencyFetchDataSourceSize(),
+                        getResourceSize(config, SparderEnv.getHadoopConfiguration(),
                                 asScalaIteratorConverter(paths.iterator()).asScala().toSeq()));
 
                 layoutLeafTaskNums.put(String.valueOf(source.getLayoutId()), Integer.parseInt(leafNodeNum));

@@ -18,11 +18,14 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.engine.spark.application.SparkApplication;
 import org.apache.kylin.engine.spark.builder.DFLayoutMergeAssist;
-import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
@@ -33,12 +36,9 @@ import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import scala.collection.JavaConversions;
 import scala.collection.JavaConverters;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 public class ResourceDetectBeforeMergingJob extends SparkApplication implements ResourceDetect {
     protected static final Logger logger = LoggerFactory.getLogger(ResourceDetectBeforeMergingJob.class);
@@ -67,7 +67,7 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication implements 
             List<Path> paths = JavaConversions
                     .seqAsJavaList(ResourceDetectUtils.getPaths(afterMerge.queryExecution().sparkPlan(), true));
             resourceSize.put(String.valueOf(entry.getKey()),
-                    ResourceDetectUtils.getResourceSize(SparderEnv.getHadoopConfiguration(), config.isConcurrencyFetchDataSourceSize(),
+                    ResourceDetectUtils.getResourceSize(config, SparderEnv.getHadoopConfiguration(),
                             JavaConverters.asScalaIteratorConverter(paths.iterator()).asScala().toSeq()));
         }
         ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId),

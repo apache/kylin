@@ -19,15 +19,15 @@
 package org.apache.spark.sql.hive.utils
 
 import java.io.FileOutputStream
+import java.nio.charset.Charset
 import java.util.{List => JList, Map => JMap}
-import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps}
+
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase
+import org.apache.kylin.guava30.shaded.common.collect.{Lists, Maps}
 import org.apache.spark.sql.common.SparderBaseFunSuite
 import org.apache.spark.util.Utils
-
-import java.nio.charset.Charset
 
 class TestResourceDetectUtils extends SparderBaseFunSuite {
   private var config: KylinConfig = _
@@ -71,16 +71,26 @@ class TestResourceDetectUtils extends SparderBaseFunSuite {
     val contents = List("test", "test_test_test")
     val tempDir = Utils.createTempDir()
     val files = List(new Path(tempDir.getPath, "test1"), new Path(tempDir.getPath, "test2"))
+    val files2 = List(new Path(tempDir.getPath, "test3"))
     try {
       for (i <- 0 to 1) {
         val out = new FileOutputStream(files.apply(i).toString)
         out.write(contents.apply(i).getBytes(Charset.defaultCharset()))
         out.close()
       }
-      var l = ResourceDetectUtils.getResourceSize(false, files.head, files.last)
+      var l = ResourceDetectUtils.getResourceSize(config, files.head, files.last)
       assert(l == contents.map(_.getBytes(Charset.defaultCharset()).length).sum)
-      l = ResourceDetectUtils.getResourceSize(true, files.head, files.last)
+
+      // test file not exist
+      l = ResourceDetectUtils.getResourceSize(config, files2.head)
+      assert(l == 0)
+
+      config.setProperty("kylin.job.concurrency-fetch-datasource-size-enabled", "false")
+      l = ResourceDetectUtils.getResourceSize(config, files.head, files.last)
       assert(l == contents.map(_.getBytes(Charset.defaultCharset()).length).sum)
+
+      l = ResourceDetectUtils.getResourceSize(config, files2.head)
+      assert(l == 0)
     } finally {
       Utils.deleteRecursively(tempDir)
     }
@@ -103,7 +113,7 @@ class TestResourceDetectUtils extends SparderBaseFunSuite {
       }
       import scala.collection.JavaConverters._
 
-      val l = resourcePaths.values().asScala.map(path => ResourceDetectUtils.getResourceSize(false,
+      val l = resourcePaths.values().asScala.map(path => ResourceDetectUtils.getResourceSize(config,
         new Path(path.get(0)))).max
       assert(l == contents.last.getBytes(Charset.defaultCharset()).length)
     } finally {
