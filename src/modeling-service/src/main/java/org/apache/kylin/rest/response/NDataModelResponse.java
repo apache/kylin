@@ -170,14 +170,14 @@ public class NDataModelResponse extends NDataModel {
                 .collect(Collectors.toList()));
     }
 
-    @JsonIgnore
+    @JsonProperty("empty_model")
     public boolean isEmptyModel() {
         List<SimplifiedMeasure> simplifiedMeasures = getSimplifiedMeasures();
         return getNamedColumns().isEmpty() && simplifiedMeasures.size() == 1
                 && "COUNT_ALL".equals(simplifiedMeasures.get(0).getName());
     }
 
-    @JsonIgnore
+    @JsonProperty("partition_column_in_dims")
     public boolean isPartitionColumnInDims() {
         PartitionDesc partitionDesc = getPartitionDesc();
         if (partitionDesc == null || partitionDesc.getPartitionDateColumn() == null) {
