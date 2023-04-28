@@ -91,8 +91,9 @@ public class UpdateMetadataUtil {
         Path statisticsFile = new Path(statisticsDir, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         if (fs.exists(statisticsFile)) {
-            FSDataInputStream is = fs.open(statisticsFile);
-            ResourceStore.getStore(config).putBigResource(resKey, is, System.currentTimeMillis());
+            try (FSDataInputStream is = fs.open(statisticsFile)) {
+                ResourceStore.getStore(config).putBigResource(resKey, is, System.currentTimeMillis());
+            }
         }
 
         CubeUpdate update = new CubeUpdate(currentInstanceCopy);
