@@ -160,6 +160,46 @@ class NSparkTableMetaExplorerTest extends SparderBaseFunSuite with SharedSparkSe
     importUnsupportedCol(BinaryType)
   }
 
+
+  test("Test load hive table and get table comment") {
+    SparderEnv.setSparkSession(spark)
+
+    val view = CatalogTable(
+      identifier = TableIdentifier("hive_table_comment"),
+      comment = Option("Table Comment"),
+      tableType = CatalogTableType.MANAGED,
+      storage = CatalogStorageFormat.empty,
+      schema = new StructType()
+        .add("a", "string", nullable = true, new MetadataBuilder().putString("__CHAR_VARCHAR_TYPE_STRING", "char(10)").build())
+        .add("b", "string", nullable = true, new MetadataBuilder().putString("__CHAR_VARCHAR_TYPE_STRING", "varchar(33)").build())
+        .add("c", "int"),
+      properties = Map()
+    )
+    spark.sessionState.catalog.createTable(view, ignoreIfExists = false, false)
+
+    withTable("hive_table_comment") {
+      val meta = new NSparkTableMetaExplorer().getSparkTableMeta("", "hive_table_comment")
+      assert(meta.tableComment.equals("Table Comment"))
+    }
+
+    val view2 = CatalogTable(
+      identifier = TableIdentifier("hive_no_table_comment"),
+      tableType = CatalogTableType.MANAGED,
+      storage = CatalogStorageFormat.empty,
+      schema = new StructType()
+        .add("a", "string", nullable = true, new MetadataBuilder().putString("__CHAR_VARCHAR_TYPE_STRING", "char(10)").build())
+        .add("b", "string", nullable = true, new MetadataBuilder().putString("__CHAR_VARCHAR_TYPE_STRING", "varchar(33)").build())
+        .add("c", "int"),
+      properties = Map()
+    )
+    spark.sessionState.catalog.createTable(view2, ignoreIfExists = false, false)
+
+    withTable("hive_no_table_comment") {
+      val meta = new NSparkTableMetaExplorer().getSparkTableMeta("", "hive_no_table_comment")
+      assert(meta.tableComment == null)
+    }
+  }
+
   def createTmpCatalog(st: StructType): CatalogTable = {
     CatalogTable(
       identifier = TableIdentifier("hive_table_types"),

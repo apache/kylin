@@ -1207,6 +1207,23 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
+    public void testReloadAddTableComment() throws Exception {
+        val tableManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
+        val tableDesc = tableManager.getTableDesc("EDW.TEST_CAL_DT");
+        Assert.assertNull(tableDesc.getTableComment());
+
+        String resPath = KylinConfig.getInstanceFromEnv().getMetadataUrl().getIdentifier();
+        String tablePath = resPath + "/../data/tableDesc/" + "EDW.TEST_CAL_DT" + ".json";
+        val tableMeta = JsonUtil.readValue(new File(tablePath), TableDesc.class);
+        tableMeta.setTableComment("Table Comment");
+        JsonUtil.writeValueIndent(new FileOutputStream(tablePath), tableMeta);
+
+        tableService.innerReloadTable(PROJECT, "EDW.TEST_CAL_DT", true, null);
+        val newTableDesc = tableManager.getTableDesc("EDW.TEST_CAL_DT");
+        Assert.assertEquals("Table Comment", newTableDesc.getTableComment());
+    }
+
+    @Test
     public void testReloadChangeColumn() throws Exception {
         removeColumn("EDW.TEST_CAL_DT", "CAL_DT_UPD_USER");
         tableService.innerReloadTable(PROJECT, "EDW.TEST_CAL_DT", true, null);

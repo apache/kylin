@@ -251,6 +251,7 @@ public class NSparkMetadataExplorer implements ISourceMetadataExplorer, ISampleD
         tableDesc.setSourceType(ISourceAware.ID_SPARK);
         tableDesc.setTransactional(tableMeta.isTransactional);
         tableDesc.setRangePartition(tableMeta.isRangePartition);
+        tableDesc.setTableComment(tableMeta.tableComment);
 
         Set<String> partColumnSet = Optional.ofNullable(tableMeta.partitionColumns) //
                 .orElseGet(Collections::emptyList).stream().map(field -> field.name) //

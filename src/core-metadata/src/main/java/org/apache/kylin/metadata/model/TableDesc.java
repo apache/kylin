@@ -199,6 +199,11 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
     @JsonProperty("partition_desc")
     private PartitionDesc partitionDesc;
 
+    @Getter
+    @Setter
+    @JsonProperty("table_comment")
+    private String tableComment;
+
     public TableDesc() {
     }
 
@@ -234,6 +239,7 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         this.isTransactional = other.isTransactional;
         this.isRangePartition = other.isRangePartition;
         this.partitionDesc = other.partitionDesc;
+        this.tableComment = other.tableComment;
         setMvcc(other.getMvcc());
     }
 
