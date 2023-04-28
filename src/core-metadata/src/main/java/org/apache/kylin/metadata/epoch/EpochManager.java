@@ -54,6 +54,7 @@ import org.apache.kylin.common.scheduler.EpochStartedNotifier;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.scheduler.ProjectControlledNotifier;
 import org.apache.kylin.common.scheduler.ProjectEscapedNotifier;
+import org.apache.kylin.common.scheduler.ProjectSerialEventBus;
 import org.apache.kylin.common.scheduler.SourceUsageVerifyNotifier;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
@@ -95,6 +96,7 @@ public class EpochManager {
     private final KylinConfig config;
     private String identity;
     private final EventBusFactory eventBusFactory;
+    private final ProjectSerialEventBus projectSerialEventBus;
     private final String serverMode;
     private final boolean epochCheckEnabled;
     private final long epochExpiredTime;
@@ -111,6 +113,7 @@ public class EpochManager {
         this.config = KylinConfig.readSystemKylinConfig();
         this.identity = EpochOrchestrator.getOwnerIdentity();
         this.eventBusFactory = EventBusFactory.getInstance();
+        this.projectSerialEventBus = ProjectSerialEventBus.getInstance();
         this.epochStore = EpochStore.getEpochStore(config);
         this.serverMode = config.getServerMode();
         this.epochCheckEnabled = config.getEpochCheckerEnabled();
@@ -358,7 +361,7 @@ public class EpochManager {
             }
 
             for (String project : escapedProjects) {
-                eventBusFactory.postAsync(new ProjectEscapedNotifier(project));
+                projectSerialEventBus.postAsync(new ProjectEscapedNotifier(project));
             }
 
             try (SetLogCategory ignored = new SetLogCategory(LogConstant.METADATA_CATEGORY)) {
@@ -379,7 +382,7 @@ public class EpochManager {
                         logger.debug("after {} controlled projects: {}", updateTypeName,
                             String.join(",", newControlledProjects));
                     }
-                    newControlledProjects.forEach(p -> eventBusFactory.postAsync(new ProjectControlledNotifier(p)));
+                    newControlledProjects.forEach(p -> projectSerialEventBus.postAsync(new ProjectControlledNotifier(p)));
                 }
             }
 
@@ -680,7 +683,7 @@ public class EpochManager {
     public void updateEpochWithNotifier(String epochTarget, boolean force) {
         EpochUpdateLockManager.executeEpochWithLock(epochTarget, () -> {
             if (tryUpdateEpoch(epochTarget, force)) {
-                eventBusFactory.postAsync(new ProjectControlledNotifier(epochTarget));
+                projectSerialEventBus.postAsync(new ProjectControlledNotifier(epochTarget));
             }
             return null;
         });

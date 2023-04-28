@@ -19,6 +19,7 @@
 package org.apache.kylin.common.scheduler;
 
 import java.util.Locale;
+import java.util.function.Consumer;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,13 +34,21 @@ public class SchedulerEventNotifier {
 
     protected String project;
     protected String subject;
+    protected Consumer<SchedulerEventNotifier> callback;
 
     public String getEventType() {
         return this.getClass().getSimpleName();
     }
 
+    public void invokeCallbackIfExists() {
+        if (callback != null) {
+            callback.accept(this);
+        }
+    }
+
     @Override
     public String toString() {
-        return String.format(Locale.ROOT, "%s {project=%s, subject=%s}", getEventType(), project, subject);
+        return String.format(Locale.ROOT, "%s {project=%s, subject=%s, callback=%s}", getEventType(), project,
+                subject, callback);
     }
 }

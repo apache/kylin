@@ -33,6 +33,7 @@ import org.apache.kylin.common.persistence.metadata.EpochStore;
 import org.apache.kylin.common.persistence.metadata.JdbcAuditLogStore;
 import org.apache.kylin.common.persistence.transaction.EventListenerRegistry;
 import org.apache.kylin.common.scheduler.EventBusFactory;
+import org.apache.kylin.common.scheduler.ProjectSerialEventBus;
 import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HostInfoFetcher;
 import org.apache.kylin.engine.spark.filter.QueryFiltersCollector;
@@ -185,6 +186,8 @@ public class AppInitializer {
                     new Date(System.currentTimeMillis() + kylinConfig.getGuardianHACheckInitDelay() * Constant.SECOND),
                     kylinConfig.getGuardianHACheckInterval() * Constant.SECOND);
         }
+
+        taskScheduler.scheduleAtFixedRate(new ProjectSerialEventBus.TimingDispatcher(), ProjectSerialEventBus.TimingDispatcher.INTERVAL);
     }
 
     private void postInit() {
