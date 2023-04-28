@@ -18,9 +18,11 @@
 
 package org.apache.spark.dict;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -29,6 +31,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
 import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,20 +102,19 @@ public class NGlobalDictHDFSStore implements NGlobalDictStore {
                 path -> path.getName().startsWith(DICT_METADATA_NAME));
 
         if (metaFiles.length == 0) {
-            logger.info("because metaFiles.length is 0, metaInfo is null");
-            return null;
-        }
-
-        String metaFile = metaFiles[0].getPath().getName();
-        Path metaPath = new Path(versionDir, metaFile);
-        if (!fileSystem.exists(metaPath)) {
-            logger.info("because metaPath[{}] is not exists, metaInfo is null", metaPath);
-            return null;
+            FileStatus[] allFilesUnderVersionDir = fileSystem.listStatus(versionDir);
+            StringBuilder dictFiles = new StringBuilder();
+            for (FileStatus file : allFilesUnderVersionDir) {
+                dictFiles.append("\t-> ").append(file.getPath().toString()).append("\n");
+            }
+            logger.warn(
+                    "Because metaFiles.length is 0, metaInfo is null. Only the following files exist in the current version folder:\n{}",
+                    dictFiles);
         }
 
         NGlobalDictMetaInfo metaInfo;
-
-        try (FSDataInputStream is = fileSystem.open(metaPath)) {
+        Path metaPath = new Path(versionDir, DICT_METADATA_NAME);
+        try (FSDataInputStream is = getMetaFileInputStream(fileSystem, metaPath, "Meta file not exists.")) {
             int bucketSize = is.readInt();
             long[] bucketOffsets = new long[bucketSize];
             long[] bucketCount = new long[bucketSize];
@@ -128,6 +130,36 @@ public class NGlobalDictHDFSStore implements NGlobalDictStore {
 
         return metaInfo;
     }
+
+    public FSDataInputStream getMetaFileInputStream(FileSystem fs, Path fp, String errorMsg) throws IOException {
+        if (fs.exists(fp)) {
+            return fs.open(fp);
+        } else if (!fs.getScheme().startsWith("s3")) {
+            throw new FileNotFoundException(
+                    String.format("%s. No Retry, file[%s] not found.", errorMsg, fp.toString()));
+        } else {
+            logger.info("Try to open {}", fp);
+            int retryTimes = 0;
+            // Retry once per second. The default timeout is 5 minutes
+            while (retryTimes < 300) {
+                logger.info("Open file operation will retry after 1 s, file path: {}", fp);
+                try {
+                    TimeUnit.SECONDS.sleep(1L);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException(String.format(
+                            "unexpected things happened[%s] when sleeping for retry open file:", ie.getMessage()));
+                }
+                retryTimes += 1;
+                if (fs.exists(fp)) {
+                    return fs.open(fp);
+                }
+            }
+            throw new FileNotFoundException(
+                    String.format("%s. Retry timeout, file[%s] not found.", errorMsg, fp.toString()));
+        }
+    }
+
 
     @Override
     public Object2LongMap<String> getBucketDict(long version, NGlobalDictMetaInfo metaInfo, int bucketId)
