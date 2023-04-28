@@ -19,12 +19,10 @@
 package org.apache.kylin.rest.controller.open;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.LAYOUT_LIST_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NOT_EXIST;
 
 import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
@@ -92,6 +90,7 @@ public class OpenIndexPlanController extends NBasicController {
             @RequestParam(value = "index_range", required = false) IndexEntity.Range indexRange) {
         checkProjectName(project);
         checkRequiredArg(MODEL_NAME, modelName);
+        checkCollectionRequiredArg("index_ids", layoutIds);
         if (null == indexRange) {
             indexRange = IndexEntity.Range.BATCH;
         }
@@ -99,9 +98,6 @@ public class OpenIndexPlanController extends NBasicController {
                 .getDataModelDescByAlias(modelName);
         if (null == dataModel) {
             throw new KylinException(MODEL_NOT_EXIST);
-        }
-        if (CollectionUtils.isEmpty(layoutIds)) {
-            throw new KylinException(LAYOUT_LIST_EMPTY);
         }
         fusionIndexService.batchRemoveIndex(project, dataModel.getUuid(), layoutIds, indexRange);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");

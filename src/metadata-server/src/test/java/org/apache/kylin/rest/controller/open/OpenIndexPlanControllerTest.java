@@ -182,6 +182,6 @@ public class OpenIndexPlanControllerTest extends NLocalFileMetadataTestCase {
                         .param("project", project).param("model_name", modelName).param("index_ids", "")
                         .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().is5xxServerError()).andReturn();
-        Assert.assertTrue(mvcResult.getResponse().getContentAsString().contains("KE-010043212"));
+        Assert.assertTrue(mvcResult.getResponse().getContentAsString().contains("KE-010043201"));
     }
 }
