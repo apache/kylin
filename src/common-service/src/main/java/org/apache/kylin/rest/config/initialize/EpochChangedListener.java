@@ -19,13 +19,17 @@ package org.apache.kylin.rest.config.initialize;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinRuntimeException;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EpochStartedNotifier;
 import org.apache.kylin.common.scheduler.ProjectControlledNotifier;
 import org.apache.kylin.common.scheduler.ProjectEscapedNotifier;
+import org.apache.kylin.common.scheduler.SchedulerEventNotifier;
+import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
@@ -44,7 +48,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import org.apache.kylin.guava30.shaded.common.eventbus.Subscribe;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,81 +73,37 @@ public class EpochChangedListener {
     RecommendationTopNUpdateScheduler recommendationUpdateScheduler;
 
     @Subscribe
-    public void onProjectControlled(ProjectControlledNotifier notifier) throws IOException {
-        String project = notifier.getProject();
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
-        val epochManager = EpochManager.getInstance();
-        if (!GLOBAL.equals(project)) {
-
-            if (!EpochManager.getInstance().checkEpochValid(project)) {
-                log.warn("epoch:{} is invalid in project controlled", project);
-                return;
+    public void onProjectControlled(ProjectControlledNotifier notifier) {
+        wrapForCallbackInvocation(notifier, eventNotifier -> {
+            String project = notifier.getProject();
+            val kylinConfig = KylinConfig.getInstanceFromEnv();
+            val epochManager = EpochManager.getInstance();
+            if (!GLOBAL.equals(project)) {
+                doOnProjectControlled(project, kylinConfig, epochManager);
+            } else {
+                doOnGlobalControlled();
             }
-
-            val oldScheduler = NDefaultScheduler.getInstance(project);
-
-            if (oldScheduler.hasStarted()
-                    && epochManager.checkEpochId(oldScheduler.getContext().getEpochId(), project)) {
-                return;
-            }
-
-            // if epoch id check failed, shutdown first
-            if (oldScheduler.hasStarted()) {
-                oldScheduler.forceShutdown();
-            }
-
-            log.info("start thread of project: {}", project);
-            NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project);
-            EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-                scheduler.init(new JobEngineConfig(kylinConfig));
-                if (!scheduler.hasStarted()) {
-                    throw new RuntimeException("Scheduler for " + project + " has not been started");
-                }
-                StreamingScheduler ss = StreamingScheduler.getInstance(project);
-                ss.init();
-                if (!ss.getHasStarted().get()) {
-                    throw new RuntimeException("Streaming Scheduler for " + project + " has not been started");
-                }
-                QueryHistoryTaskScheduler qhAccelerateScheduler = QueryHistoryTaskScheduler.getInstance(project);
-                qhAccelerateScheduler.init();
-
-                if (!qhAccelerateScheduler.hasStarted()) {
-                    throw new RuntimeException(
-                            "Query history accelerate scheduler for " + project + " has not been started");
-                }
-                recommendationUpdateScheduler.addProject(project);
-                return 0;
-            }, project, 1);
-            scheduler.setHasFinishedTransactions(new AtomicBoolean(true));
-        } else {
-            //TODO need global leader
-            CreateAdminUserUtils.createAllAdmins(userService, env);
-            InitUserGroupUtils.initUserGroups(env);
-            UnitOfWork.doInTransactionWithRetry(() -> {
-                ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv()).createMetaStoreUuidIfNotExist();
-                return null;
-            }, "", 1);
-            InitResourceGroupUtils.initResourceGroup();
-            userAclService.syncAdminUserAcl();
-        }
+        });
     }
 
     @Subscribe
     public void onProjectEscaped(ProjectEscapedNotifier notifier) {
-        String project = notifier.getProject();
-        val kylinConfig = KylinConfig.getInstanceFromEnv();
-        if (!GLOBAL.equals(project)) {
-            log.info("Shutdown related thread: {}", project);
-            try {
-                NExecutableManager.getInstance(kylinConfig, project).destoryAllProcess();
-                QueryHistoryTaskScheduler.shutdownByProject(project);
-                NDefaultScheduler.shutdownByProject(project);
-                StreamingScheduler.shutdownByProject(project);
-                recommendationUpdateScheduler.removeProject(project);
-            } catch (Exception e) {
-                log.warn("error when shutdown " + project + " thread", e);
+        wrapForCallbackInvocation(notifier, eventNotifier -> {
+            String project = eventNotifier.getProject();
+            val kylinConfig = KylinConfig.getInstanceFromEnv();
+            if (!GLOBAL.equals(project)) {
+                log.info("Shutdown related thread: {}", project);
+                try {
+                    NExecutableManager.getInstance(kylinConfig, project).destoryAllProcess();
+                    QueryHistoryTaskScheduler.shutdownByProject(project);
+                    NDefaultScheduler.shutdownByProject(project);
+                    StreamingScheduler.shutdownByProject(project);
+                    recommendationUpdateScheduler.removeProject(project);
+                } catch (Exception e) {
+                    log.warn("error when shutdown " + project + " thread", e);
+                }
             }
-        }
+        });
     }
 
     @Subscribe
@@ -152,5 +111,72 @@ public class EpochChangedListener {
         val kylinConfig = KylinConfig.getInstanceFromEnv();
         val resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
         resourceStore.leaderCatchup();
+    }
+
+    private void wrapForCallbackInvocation(SchedulerEventNotifier notifier, Consumer<SchedulerEventNotifier> consumer) {
+        try {
+            consumer.accept(notifier);
+        } finally {
+            notifier.invokeCallbackIfExists();
+        }
+    }
+
+    private void doOnGlobalControlled() {
+        //TODO need global leader
+        try {
+            CreateAdminUserUtils.createAllAdmins(userService, env);
+        } catch (IOException e) {
+            throw new KylinRuntimeException(e);
+        }
+        InitUserGroupUtils.initUserGroups(env);
+        UnitOfWork.doInTransactionWithRetry(() -> {
+            ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv()).createMetaStoreUuidIfNotExist();
+            return null;
+        }, "", 1);
+        InitResourceGroupUtils.initResourceGroup();
+        userAclService.syncAdminUserAcl();
+    }
+
+    private void doOnProjectControlled(String project, KylinConfig kylinConfig, EpochManager epochManager) {
+        if (!EpochManager.getInstance().checkEpochValid(project)) {
+            log.warn("epoch:{} is invalid in project controlled", project);
+            return;
+        }
+
+        val oldScheduler = NDefaultScheduler.getInstance(project);
+
+        if (oldScheduler.hasStarted()
+                && epochManager.checkEpochId(oldScheduler.getContext().getEpochId(), project)) {
+            return;
+        }
+
+        // if epoch id check failed, shutdown first
+        if (oldScheduler.hasStarted()) {
+            oldScheduler.forceShutdown();
+        }
+
+        log.info("start thread of project: {}", project);
+        NDefaultScheduler scheduler = NDefaultScheduler.getInstance(project);
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            scheduler.init(new JobEngineConfig(kylinConfig));
+            if (!scheduler.hasStarted()) {
+                throw new KylinRuntimeException("Scheduler for " + project + " has not been started");
+            }
+            StreamingScheduler ss = StreamingScheduler.getInstance(project);
+            ss.init();
+            if (!ss.getHasStarted().get()) {
+                throw new KylinRuntimeException("Streaming Scheduler for " + project + " has not been started");
+            }
+            QueryHistoryTaskScheduler qhAccelerateScheduler = QueryHistoryTaskScheduler.getInstance(project);
+            qhAccelerateScheduler.init();
+
+            if (!qhAccelerateScheduler.hasStarted()) {
+                throw new KylinRuntimeException(
+                        "Query history accelerate scheduler for " + project + " has not been started");
+            }
+            recommendationUpdateScheduler.addProject(project);
+            return 0;
+        }, project, 1);
+        scheduler.setHasFinishedTransactions(new AtomicBoolean(true));
     }
 }
