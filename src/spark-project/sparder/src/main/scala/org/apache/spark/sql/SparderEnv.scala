@@ -218,6 +218,7 @@ object SparderEnv extends Logging {
       SparkSession.clearActiveSession
       val hostInfoFetcher = new DefaultHostInfoFetcher
       val appName = "sparder-" + UserGroupInformation.getCurrentUser.getShortUserName + "-" + hostInfoFetcher.getHostname
+      logInfo(s"sparder init user:${UserGroupInformation.getCurrentUser.getUserName}")
 
       val isLocalMode = KylinConfig.getInstanceFromEnv.isJobNodeOnly ||
         "true".equals(System.getenv("SPARK_LOCAL")) ||
