@@ -26,6 +26,7 @@ import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.TaskContext
 import org.apache.spark.application.NoRetryException
 import org.apache.spark.dict.NGlobalDictionaryV2
+import org.apache.spark.sql.execution.{ExplainMode, ExtendedMode}
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
@@ -94,6 +95,17 @@ class DFDictionaryBuilder(
     originalAQE.toBoolean
   }
 
+  def dictBuilderInfo(bucketPartitionSize: Int, df: Dataset[Row] ) : String = {
+      s"""
+         |==========================[DICT REPARTITION INFO]===============================
+         |Partition Size :${df.rdd.getNumPartitions}
+         |Bucket Partition Size: $bucketPartitionSize
+         |AQE Enabled: ${ss.conf.get(AQE)}
+         |Physical Plan:\n ${df.queryExecution.explainString(ExplainMode.fromString(ExtendedMode.name))}
+         |==========================[DICT REPARTITION INFO]===============================
+      """.stripMargin
+  }
+
   @throws[IOException]
   private[builder] def build(ref: TblColRef, bucketPartitionSize: Int,
                              afterDistinct: Dataset[Row]): Unit = logTime(s"building global dictionaries V2 for ${ref.getIdentity}") {
@@ -105,10 +117,13 @@ class DFDictionaryBuilder(
     ss.sparkContext.setJobDescription("Build dict " + ref.getIdentity)
 
     val dictCol = col(afterDistinct.schema.fields.head.name)
-    afterDistinct.filter(dictCol.isNotNull)
+    // https://issues.apache.org/jira/browse/SPARK-32051
+    val afterDistinctRepartition = afterDistinct.filter(dictCol.isNotNull)
       .repartition(bucketPartitionSize, dictCol)
-      // https://issues.apache.org/jira/browse/SPARK-32051
-      .foreachPartition((iter: Iterator[Row]) => {
+
+    logInfo(dictBuilderInfo(bucketPartitionSize, afterDistinctRepartition))
+
+    afterDistinctRepartition.foreachPartition((iter: Iterator[Row]) => {
         val partitionID = TaskContext.get().partitionId()
         logInfo(s"Build partition dict col: ${ref.getIdentity}, partitionId: $partitionID")
         val broadcastGlobalDict = broadcastDict.value
