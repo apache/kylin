@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JDBCResourceStore;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
@@ -138,7 +139,10 @@ public class CubeManager implements IRealizationProvider {
 
         // touch lower level metadata before registering my listener
         crud.reloadAll();
-        Broadcaster.getInstance(config).registerListener(new CubeSyncListener(), "cube");
+
+        if (JDBCResourceStore.JDBC_SCHEME.equals(config.getMetadataUrl().getScheme())) {
+            Broadcaster.getInstance(config).registerListener(new CubeSyncListener(), "cube");
+        }
     }
 
     private class CubeSyncListener extends Broadcaster.Listener {
