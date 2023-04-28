@@ -54,6 +54,8 @@ public class ReloadTableContext {
 
     private Set<String> effectedJobs = Sets.newHashSet();
 
+    private boolean isTableCommentChanged = false;
+
     private TableDesc tableDesc;
 
     private TableExtDesc tableExtDesc;
@@ -100,6 +102,6 @@ public class ReloadTableContext {
 
     public boolean isNeedProcess() {
         return CollectionUtils.isNotEmpty(addColumns) || CollectionUtils.isNotEmpty(removeColumns)
-                || CollectionUtils.isNotEmpty(changeTypeColumns);
+                || CollectionUtils.isNotEmpty(changeTypeColumns) || isTableCommentChanged;
     }
 }

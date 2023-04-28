@@ -306,6 +306,7 @@ public class TableService extends BasicService {
                 nTableDesc.setUuid(origTable.getUuid());
                 nTableDesc.setLastModified(origTable.getLastModified());
                 nTableDesc.setIncrementLoading(origTable.isIncrementLoading());
+                nTableDesc.setTableComment(tableDesc.getTableComment());
             }
 
             tableMetaMgr.saveSourceTable(nTableDesc);
@@ -1125,6 +1126,7 @@ public class TableService extends BasicService {
         result.setRemoveDimCount(context.getRemoveAffectedModels().values().stream()
                 .map(AffectedModelContext::getDimensions).mapToLong(Set::size).sum());
         result.setDataTypeChangeColumnCount(context.getChangeTypeColumns().size());
+        result.setTableCommentChanged(context.isTableCommentChanged());
 
         val schemaChanged = result.getAddColumnCount() > 0 || result.getRemoveColumnCount() > 0
                 || result.getDataTypeChangeColumnCount() > 0;
@@ -1605,6 +1607,8 @@ public class TableService extends BasicService {
         context.setAddColumns(diff.entriesOnlyOnLeft().keySet());
         context.setRemoveColumns(diff.entriesOnlyOnRight().keySet());
         context.setChangeTypeColumns(diff.entriesDiffering().keySet());
+        context.setTableCommentChanged(!Objects.equals(originTableDesc.getTableComment(), newTableDesc.getTableComment()));
+
         if (!context.isNeedProcess()) {
             return context;
         }

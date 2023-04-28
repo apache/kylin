@@ -41,6 +41,12 @@ public class NSparkTableMetaBuilder {
     private boolean isRangePartition = false;
     private String s3Role;
     private String s3Endpoint;
+    private String tableComment;
+
+    public NSparkTableMetaBuilder setTableComment(String tableComment) {
+        this.tableComment = tableComment;
+        return this;
+    }
 
     public NSparkTableMetaBuilder setTableName(String tableName) {
         this.tableName = tableName;
@@ -135,6 +141,6 @@ public class NSparkTableMetaBuilder {
     public NSparkTableMeta createSparkTableMeta() {
         return new NSparkTableMeta(tableName, sdLocation, sdInputFormat, sdOutputFormat, owner, provider, tableType,
                 createTime, lastAccessTime, fileSize, fileNum, isNative, allColumns, partitionColumns, isTransactional,
-                isRangePartition, s3Role, s3Endpoint);
+                isRangePartition, s3Role, s3Endpoint, tableComment);
     }
 }

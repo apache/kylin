@@ -61,6 +61,9 @@ public class PreReloadTableResponse {
     @JsonProperty("snapshot_deleted")
     private boolean snapshotDeleted = false;
 
+    @JsonProperty("table_comment_changed")
+    private boolean tableCommentChanged = false;
+
     @JsonProperty("update_base_index_count")
     private int updateBaseIndexCount;
 
@@ -81,6 +84,7 @@ public class PreReloadTableResponse {
         this.addLayoutsCount = otherResponse.addLayoutsCount;
         this.refreshLayoutsCount = otherResponse.refreshLayoutsCount;
         this.snapshotDeleted = otherResponse.snapshotDeleted;
+        this.tableCommentChanged = otherResponse.tableCommentChanged;
         this.details = otherResponse.details;
     }
 

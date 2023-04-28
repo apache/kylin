@@ -122,6 +122,10 @@ public class NSparkTableMetaExplorer implements Serializable {
         builder.setTableType(tableMetadata.tableType().name());
         builder.setPartitionColumns(getColumns(tableMetadata, tableMetadata.partitionSchema()));
         builder.setIsRangePartition(isRangePartition(tableMetadata));
+
+        if (tableMetadata.comment().isDefined()) {
+            builder.setTableComment(tableMetadata.comment().get());
+        }
         if (tableMetadata.storage().inputFormat().isDefined()) {
             builder.setSdInputFormat(tableMetadata.storage().inputFormat().get());
         }
