@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -72,6 +73,7 @@ import org.apache.kylin.engine.spark.job.SegmentBuildJob;
 import org.apache.kylin.engine.spark.job.SparkJobConstants;
 import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.kylin.engine.spark.scheduler.ClusterMonitor;
+import org.apache.kylin.engine.spark.scheduler.JobFailed;
 import org.apache.kylin.engine.spark.utils.HDFSUtils;
 import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
 import org.apache.kylin.engine.spark.utils.SparkConfHelper;
@@ -106,6 +108,8 @@ import org.apache.spark.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import lombok.val;
 import scala.runtime.AbstractFunction1;
 import scala.runtime.BoxedUnit;
@@ -114,7 +118,8 @@ public abstract class SparkApplication implements Application {
     private static final Logger logger = LoggerFactory.getLogger(SparkApplication.class);
     private Map<String, String> params = Maps.newHashMap();
     public static final String JOB_NAME_PREFIX = "job_step_";
-    private IJobProgressReport report;
+    private static final String JOB_ERROR_API = "/kylin/api/jobs/error";
+    protected IJobProgressReport report;
 
     protected volatile KylinConfig config;
     protected volatile String jobId;
@@ -298,7 +303,7 @@ public abstract class SparkApplication implements Application {
             TimeZoneUtils.setDefaultTimeZone(config);
 
             /// wait until resource is enough
-            waiteForResource(atomicSparkConf.get(), buildEnv);
+            waiteForResource();
 
             ///
             logger.info("Prepare job environment");
@@ -461,7 +466,7 @@ public abstract class SparkApplication implements Application {
         helper.applySparkConf(sparkConf);
     }
 
-    private void waiteForResource(SparkConf sparkConf, KylinBuildEnv buildEnv) throws Exception {
+    protected void waiteForResource() {
         val waiteForResource = WAITE_FOR_RESOURCE.create(this, null, null);
         infos.recordStageId(waiteForResource.getId());
         waiteForResource.execute();
@@ -528,6 +533,31 @@ public abstract class SparkApplication implements Application {
         } catch (Exception e) {
             logger.warn("Error occurred when generate job info.", e);
         }
+    }
+
+    public void updateJobErrorInfo(JobFailed jobFailed) throws JsonProcessingException {
+        val stageId = infos.getStageId();
+        val jobStepId = StringUtils.replace(infos.getJobStepId(), SparkApplication.JOB_NAME_PREFIX, "");
+
+        val failedStepId = StringUtils.isBlank(stageId) ? jobStepId : stageId;
+        val failedSegmentId = infos.getSegmentId();
+        val failedStack = ExceptionUtils.getStackTrace(jobFailed.throwable());
+        val failedReason = this.getAtomicUnreachableSparkMaster().get()
+                ? "Unable connect spark master to reach timeout maximum time"
+                : jobFailed.reason();
+
+        val payload = new HashMap<String, Object>(5);
+        payload.put("project", project);
+        payload.put("job_id", jobId);
+        payload.put("failed_step_id", failedStepId);
+        payload.put("failed_segment_id", failedSegmentId);
+        payload.put("failed_stack", failedStack);
+        payload.put("failed_reason", failedReason);
+        val json = JsonUtil.writeValueAsString(payload);
+        val paramsMap = new HashMap<String, String>();
+        paramsMap.put(ParamsConstants.TIME_OUT, String.valueOf(config.getUpdateJobInfoTimeout()));
+        paramsMap.put(ParamsConstants.JOB_TMP_DIR, config.getJobTmpDir(project, true));
+        this.getReport().updateSparkJobInfo(paramsMap, JOB_ERROR_API, json);
     }
 
     private Map<String, String> getReportParams() {

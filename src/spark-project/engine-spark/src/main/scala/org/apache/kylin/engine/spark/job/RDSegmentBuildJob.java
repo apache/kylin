@@ -49,6 +49,11 @@ public class RDSegmentBuildJob extends SegmentJob implements ResourceDetect {
         }
     }
 
+    @Override
+    protected void waiteForResourceSuccess() {
+        // do nothing 
+    }
+
     private void detectPartition() throws IOException {
         for (NDataSegment dataSegment : readOnlySegments) {
             val buildParam = new BuildParam();
