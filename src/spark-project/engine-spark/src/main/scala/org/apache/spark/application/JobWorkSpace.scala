@@ -18,17 +18,15 @@
 
 package org.apache.spark.application
 
-import org.apache.commons.lang.StringUtils
-import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.kylin.common.util.{JsonUtil, Unsafe}
+import java.util
+import java.util.concurrent.CountDownLatch
+
+import org.apache.kylin.common.util.Unsafe
 import org.apache.kylin.engine.spark.application.SparkApplication
-import org.apache.kylin.engine.spark.job.{KylinBuildEnv, ParamsConstants}
+import org.apache.kylin.engine.spark.job.KylinBuildEnv
 import org.apache.kylin.engine.spark.scheduler._
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.KylinJobEventLoop
-
-import java.util
-import java.util.concurrent.CountDownLatch
 
 /**
  * Spark driver part, construct the real spark job [SparkApplication]
@@ -103,7 +101,7 @@ class JobWorkSpace(eventLoop: KylinJobEventLoop, monitor: JobMonitor, worker: Jo
     try {
       logError(s"Job failed eventually. Reason: ${jf.reason}", jf.throwable)
       KylinBuildEnv.get().buildJobInfos.recordJobRetryInfos(RetryInfo(new util.HashMap, jf.throwable))
-      updateJobErrorInfo(jf)
+      worker.getApplication.updateJobErrorInfo(jf)
       stop()
     } finally {
       statusCode = 1
@@ -115,38 +113,5 @@ class JobWorkSpace(eventLoop: KylinJobEventLoop, monitor: JobMonitor, worker: Jo
     monitor.stop()
     worker.stop()
     eventLoop.stop()
-  }
-
-  def updateJobErrorInfo(jf: JobFailed): Unit = {
-    val infos = KylinBuildEnv.get().buildJobInfos
-    val context = worker.getApplication
-
-    val project = context.getProject
-    val jobId = context.getJobId
-
-    val stageId = infos.getStageId
-    val jobStepId = StringUtils.replace(infos.getJobStepId, SparkApplication.JOB_NAME_PREFIX, "")
-    val failedStepId = if (StringUtils.isBlank(stageId)) jobStepId else stageId
-
-    val failedSegmentId = infos.getSegmentId
-    val failedStack = ExceptionUtils.getStackTrace(jf.throwable)
-    val failedReason =
-      if (context.getAtomicUnreachableSparkMaster.get()) "Unable connect spark master to reach timeout maximum time"
-      else jf.reason
-    val url = "/kylin/api/jobs/error"
-
-    val payload: util.HashMap[String, Object] = new util.HashMap[String, Object](5)
-    payload.put("project", project)
-    payload.put("job_id", jobId)
-    payload.put("failed_step_id", failedStepId)
-    payload.put("failed_segment_id", failedSegmentId)
-    payload.put("failed_stack", failedStack)
-    payload.put("failed_reason", failedReason)
-    val json = JsonUtil.writeValueAsString(payload)
-    val params = new util.HashMap[String, String]()
-    val config = KylinBuildEnv.get().kylinConfig
-    params.put(ParamsConstants.TIME_OUT, config.getUpdateJobInfoTimeout.toString)
-    params.put(ParamsConstants.JOB_TMP_DIR, config.getJobTmpDir(project, true))
-    context.getReport.updateSparkJobInfo(params, url, json);
   }
 }

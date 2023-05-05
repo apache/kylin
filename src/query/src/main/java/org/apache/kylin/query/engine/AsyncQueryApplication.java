@@ -32,14 +32,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.query.util.AsyncQueryUtil;
-import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.engine.spark.application.SparkApplication;
+import org.apache.kylin.engine.spark.scheduler.JobFailed;
 import org.apache.kylin.metadata.query.QueryHistorySql;
 import org.apache.kylin.metadata.query.QueryHistorySqlParam;
 import org.apache.kylin.metadata.query.QueryMetricsContext;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
 import org.apache.kylin.metadata.query.util.QueryHistoryUtil;
+import org.apache.kylin.query.util.AsyncQueryUtil;
+import org.apache.kylin.query.util.QueryParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,6 +90,21 @@ public class AsyncQueryApplication extends SparkApplication {
     @Override
     protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
         return config.getAsyncQuerySparkConfigOverride();
+    }
+
+    @Override
+    protected void waiteForResourceSuccess() {
+        // do nothing
+    }
+
+    @Override
+    public void logJobInfo() {
+        // do nothing
+    }
+
+    @Override
+    public void updateJobErrorInfo(JobFailed jobFailed) {
+        // do nothing
     }
 
     private void saveQueryHistory(QueryContext queryContext, QueryParams queryParams) {

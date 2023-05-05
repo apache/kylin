@@ -74,4 +74,9 @@ public class ResourceDetectBeforeSampling extends SparkApplication implements Re
         ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId),
                 tableName + "_" + ResourceDetectUtils.samplingDetectItemFileSuffix()), tableLeafTaskNums);
     }
+
+    @Override
+    protected void waiteForResourceSuccess() {
+        // do nothing
+    }
 }
