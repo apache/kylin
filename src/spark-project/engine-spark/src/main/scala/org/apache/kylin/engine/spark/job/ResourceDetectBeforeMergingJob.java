@@ -79,6 +79,11 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication implements 
         return LogJobInfoUtils.resourceDetectBeforeMergingJobInfo();
     }
 
+    @Override
+    protected void waiteForResourceSuccess() {
+        // do nothing
+    }
+
     public static void main(String[] args) {
         ResourceDetectBeforeMergingJob resourceDetectJob = new ResourceDetectBeforeMergingJob();
         resourceDetectJob.execute(args);

@@ -25,16 +25,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import lombok.val;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.engine.spark.job.BuildJobInfos;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
+import org.apache.kylin.engine.spark.job.MockJobProgressReport;
 import org.apache.kylin.engine.spark.job.ParamsConstants;
 import org.apache.kylin.engine.spark.job.RestfulJobProgressReport;
+import org.apache.kylin.engine.spark.scheduler.JobFailed;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -51,8 +54,13 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import lombok.val;
 
 public class SparkApplicationTest extends NLocalWithSparkSessionTest {
 
@@ -241,4 +249,45 @@ public class SparkApplicationTest extends NLocalWithSparkSessionTest {
         application.exchangeSparkConf(sparkConf);
     }
 
+    @Test
+    public void testUpdateJobErrorInfo() throws JsonProcessingException {
+        val config = getTestConfig();
+        val project = "test_project";
+        SparkApplication application = Mockito.spy(new SparkApplication() {
+            @Override
+            protected void doExecute() {
+            }
+        });
+
+        application.config = config;
+        application.jobId = "job_id";
+        application.project = project;
+
+        BuildJobInfos infos = new BuildJobInfos();
+        infos.recordStageId("stage_id");
+        infos.recordJobStepId("job_step_id");
+        infos.recordSegmentId("segment_id");
+
+        application.infos = infos;
+        MockJobProgressReport mockJobProgressReport = Mockito.spy(new MockJobProgressReport());
+        Mockito.when(application.getReport()).thenReturn(mockJobProgressReport);
+
+        JobFailed jobFailed = Mockito.mock(JobFailed.class);
+        Mockito.when(jobFailed.reason()).thenReturn("test job failed");
+        try (MockedStatic<ExceptionUtils> exceptionUtilsMockedStatic = Mockito.mockStatic(ExceptionUtils.class)) {
+            exceptionUtilsMockedStatic.when(() -> ExceptionUtils.getStackTrace(jobFailed.throwable()))
+                    .thenReturn("test stack trace");
+            application.updateJobErrorInfo(jobFailed);
+        }
+
+        val paramsMap = new HashMap<String, String>();
+        paramsMap.put(ParamsConstants.TIME_OUT, String.valueOf(config.getUpdateJobInfoTimeout()));
+        paramsMap.put(ParamsConstants.JOB_TMP_DIR, config.getJobTmpDir(project, true));
+
+        val json = "{\"project\":\"test_project\",\"failed_segment_id\":\"segment_id\",\"failed_stack\":\"test stack "
+                + "trace\",\"job_id\":\"job_id\",\"failed_reason\":\"test job failed\",\"failed_step_id\":\"stage_id\"}";
+
+        Mockito.verify(application.getReport(), Mockito.times(1)).updateSparkJobInfo(paramsMap, "/kylin/api/jobs/error",
+                json);
+    }
 }
