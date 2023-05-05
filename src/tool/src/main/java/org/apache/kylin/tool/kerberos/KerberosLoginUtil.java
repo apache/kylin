@@ -30,6 +30,7 @@ import java.util.Map;
 
 import javax.security.auth.login.AppConfigurationEntry;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
@@ -203,12 +204,9 @@ public class KerberosLoginUtil {
     }
 
     public static void setJaasConf(String loginContextName, String principal, String keytabFile) throws IOException {
-        Preconditions.checkArgument((loginContextName == null) || (loginContextName.length() <= 0),
-                "input loginContextName is invalid.");
-        Preconditions.checkArgument((principal == null) || (principal.length() <= 0),
-                "input principal is invalid.");
-        Preconditions.checkArgument((keytabFile == null) || (keytabFile.length() <= 0),
-                "input keytabFile is invalid.");
+        Preconditions.checkArgument(StringUtils.isNotEmpty(loginContextName), "input loginContextName is invalid.");
+        Preconditions.checkArgument(StringUtils.isNotEmpty(principal), "input principal is invalid.");
+        Preconditions.checkArgument(StringUtils.isNotEmpty(keytabFile), "input keytabFile is invalid.");
 
         File userKeytabFile = new File(keytabFile);
         if (!userKeytabFile.exists()) {
@@ -271,10 +269,10 @@ public class KerberosLoginUtil {
     public static void setZookeeperServerPrincipal(String zkServerPrincipal) throws IOException {
         setZookeeperServerPrincipal(ZOOKEEPER_SERVER_PRINCIPAL_KEY, zkServerPrincipal);
     }
+
     public static void setKrb5Config(String krb5ConfFile) throws IOException {
         setZookeeperServerPrincipal(JAVA_SECURITY_KRB5_CONF_KEY, krb5ConfFile);
     }
-
 
     public static void setZookeeperServerPrincipal(String zkServerPrincipalKey, String zkServerPrincipal)
             throws IOException {
