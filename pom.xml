@@ -124,7 +124,7 @@
 
         <!-- Spark versions -->
         <delta.version>2.0.2</delta.version>
-        <spark.version>3.2.0-kylin-4.6.8.0-SNAPSHOT</spark.version>
+        <spark.version>3.2.0-kylin-4.6.9.0-SNAPSHOT</spark.version>
 
         <roaring.version>0.9.2-kylin-r4</roaring.version>
 
@@ -315,7 +315,7 @@
         <zkclient.version>0.8</zkclient.version>
         <grpc.version>1.0.2</grpc.version>
         <fastPFOR.version>0.0.13</fastPFOR.version>
-        <parquet.version>1.12.2-kylin-r4</parquet.version>
+        <parquet.version>1.12.2-kylin-r5</parquet.version>
         <quartz.version>2.1.1</quartz.version>
         <janino.version>3.0.9</janino.version>
 

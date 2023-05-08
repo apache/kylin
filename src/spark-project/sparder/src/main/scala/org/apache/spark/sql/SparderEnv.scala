@@ -31,7 +31,7 @@ import org.apache.kylin.common.exception.{KylinException, KylinTimeoutException,
 import org.apache.kylin.common.msg.MsgPicker
 import org.apache.kylin.common.util.{DefaultHostInfoFetcher, HadoopUtil, S3AUtil}
 import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext}
-import org.apache.kylin.engine.spark.filter.BloomFilterSkipCollector
+import org.apache.kylin.engine.spark.filter.{BloomFilterSkipCollector, ParquetPageFilterCollector}
 import org.apache.kylin.metadata.model.{NTableMetadataManager, TableExtDesc}
 import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.kylin.query.runtime.plan.QueryToExecutionIDCache
@@ -326,6 +326,8 @@ object SparderEnv extends Logging {
               inputMetrics.totalBloomBlocks, inputMetrics.totalSkipBloomBlocks,
               inputMetrics.totalSkipBloomRows, inputMetrics.footerReadTime,
               inputMetrics.footerReadNumber)
+            ParquetPageFilterCollector.addQueryMetrics(taskEnd.queryId, inputMetrics.totalPagesCount,
+              inputMetrics.filteredPagesCount, inputMetrics.afterFilterPagesCount)
           }
         } catch {
           case e: Throwable => logWarning("error when add metrics for query", e)

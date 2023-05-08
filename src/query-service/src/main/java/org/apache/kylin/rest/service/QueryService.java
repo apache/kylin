@@ -81,6 +81,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.engine.spark.filter.BloomFilterSkipCollector;
+import org.apache.kylin.engine.spark.filter.ParquetPageFilterCollector;
 import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 import org.apache.kylin.guava30.shaded.common.base.Joiner;
 import org.apache.kylin.guava30.shaded.common.collect.Collections2;
@@ -438,6 +439,7 @@ public class QueryService extends BasicService implements CacheSignatureQuerySup
         }
 
         BloomFilterSkipCollector.logAndCleanStatus(QueryContext.current().getQueryId());
+        ParquetPageFilterCollector.logParquetPages(QueryContext.current().getQueryId());
         LogReport report = new LogReport().put(LogReport.QUERY_ID, QueryContext.current().getQueryId())
                 .put(LogReport.SQL, sql).put(LogReport.USER, user)
                 .put(LogReport.SUCCESS, null == response.getExceptionMessage()).put(LogReport.DURATION, duration)

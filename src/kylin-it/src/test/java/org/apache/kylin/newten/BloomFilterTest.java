@@ -115,6 +115,11 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
 
     @Test
     public void testBuildBloomFilter() throws Exception {
+        Path projectFilterPath = getProjectFiltersFile(SERVER_HOST, getProject());
+        FileSystem fs = HadoopUtil.getFileSystem(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
+        if (fs.exists(projectFilterPath)) {
+            fs.delete(projectFilterPath, true);
+        }
         String dfID = "c41390c5-b93d-4db3-b167-029874b85a2c";
         NDataflow dataflow = dfMgr.getDataflow(dfID);
         LayoutEntity layout = dataflow.getIndexPlan().getLayoutEntity(20000000001L);
@@ -137,8 +142,6 @@ public class BloomFilterTest extends NLocalWithSparkSessionTest implements Adapt
         String sql1 = "select * from SSB.P_LINEORDER where LO_CUSTKEY in (13,8) and LO_SHIPPRIOTITY = 0 ";
         query.add(Pair.newPair("bloomfilter", sql1));
         ExecAndComp.execAndCompare(query, getProject(), ExecAndComp.CompareLevel.NONE, "inner");
-        Path projectFilterPath = getProjectFiltersFile(SERVER_HOST, getProject());
-        FileSystem fs = HadoopUtil.getFileSystem(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
         // wait until `QueryFiltersCollector` record filter info
         await().atMost(120, TimeUnit.SECONDS).until(() -> {
             try {
