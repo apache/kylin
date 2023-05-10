@@ -257,6 +257,12 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-query-server</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>spring-boot-starter-validation</artifactId>
+                    <groupId>org.springframework.boot</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
