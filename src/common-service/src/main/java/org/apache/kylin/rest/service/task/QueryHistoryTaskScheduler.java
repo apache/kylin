@@ -130,6 +130,21 @@ public class QueryHistoryTaskScheduler {
         log.info("Query history task scheduler is started for [{}] ", project);
     }
 
+    public void resetOffsetId() {
+        EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
+            long maxId = queryHistoryDAO.getQueryHistoryMaxId(project);
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            QueryHistoryIdOffsetManager manager = QueryHistoryIdOffsetManager.getInstance(config, project);
+            QueryHistoryIdOffset queryHistoryIdOffset = manager.get();
+            if (queryHistoryIdOffset.getOffset() > maxId || queryHistoryIdOffset.getStatMetaUpdateOffset() > maxId) {
+                queryHistoryIdOffset.setOffset(maxId);
+                queryHistoryIdOffset.setStatMetaUpdateOffset(maxId);
+                manager.save(queryHistoryIdOffset);
+            }
+            return 0;
+        }, project);
+    }
+
     public Future scheduleImmediately(QueryHistoryTask runner) {
         return taskScheduler.schedule(runner, 10L, TimeUnit.SECONDS);
     }
@@ -174,10 +189,8 @@ public class QueryHistoryTaskScheduler {
         protected List<QueryHistory> getQueryHistories(int batchSize) {
             QueryHistoryIdOffsetManager qhIdOffsetManager = QueryHistoryIdOffsetManager
                     .getInstance(KylinConfig.getInstanceFromEnv(), project);
-            List<QueryHistory> queryHistoryList = queryHistoryDAO.queryQueryHistoriesByIdOffset(
-                    qhIdOffsetManager.get().getStatMetaUpdateOffset(), batchSize, project);
-            resetIdOffset(queryHistoryList);
-            return queryHistoryList;
+            return queryHistoryDAO.queryQueryHistoriesByIdOffset(qhIdOffsetManager.get().getStatMetaUpdateOffset(),
+                    batchSize, project);
         }
 
         @Override
@@ -350,10 +363,8 @@ public class QueryHistoryTaskScheduler {
         protected List<QueryHistory> getQueryHistories(int batchSize) {
             QueryHistoryIdOffsetManager qhIdOffsetManager = QueryHistoryIdOffsetManager
                     .getInstance(KylinConfig.getInstanceFromEnv(), project);
-            List<QueryHistory> queryHistoryList = queryHistoryDAO
-                    .queryQueryHistoriesByIdOffset(qhIdOffsetManager.get().getOffset(), batchSize, project);
-            resetIdOffset(queryHistoryList);
-            return queryHistoryList;
+            return queryHistoryDAO.queryQueryHistoriesByIdOffset(qhIdOffsetManager.get().getOffset(), batchSize,
+                    project);
         }
 
         @Override
@@ -427,31 +438,6 @@ public class QueryHistoryTaskScheduler {
     private abstract class QueryHistoryTask implements Runnable {
 
         protected abstract String name();
-
-        private volatile boolean needResetOffset = true;
-
-        protected void resetIdOffset(List<QueryHistory> queryHistories) {
-            if (needResetOffset && CollectionUtils.isEmpty(queryHistories)) {
-                long maxId = queryHistoryDAO.getQueryHistoryMaxId(project);
-                resetIdOffset(maxId);
-            }
-        }
-
-        private void resetIdOffset(long maxId) {
-            EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
-                KylinConfig config = KylinConfig.getInstanceFromEnv();
-                QueryHistoryIdOffsetManager manager = QueryHistoryIdOffsetManager.getInstance(config, project);
-                QueryHistoryIdOffset queryHistoryIdOffset = manager.get();
-                if (queryHistoryIdOffset.getOffset() > maxId
-                        || queryHistoryIdOffset.getStatMetaUpdateOffset() > maxId) {
-                    queryHistoryIdOffset.setOffset(maxId);
-                    queryHistoryIdOffset.setStatMetaUpdateOffset(maxId);
-                    manager.save(queryHistoryIdOffset);
-                }
-                needResetOffset = false;
-                return 0;
-            }, project);
-        }
 
         public void batchHandle(int batchSize, int maxSize, Consumer<List<QueryHistory>> consumer) {
             if (!(batchSize > 0 && maxSize >= batchSize)) {
