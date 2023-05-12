@@ -38,6 +38,7 @@ import org.apache.kylin.common.util.AddressUtil;
 import org.apache.kylin.common.util.HostInfoFetcher;
 import org.apache.kylin.engine.spark.filter.QueryFiltersCollector;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.epoch.EpochOrchestrator;
 import org.apache.kylin.metadata.project.NProjectLoader;
 import org.apache.kylin.metadata.project.NProjectManager;
@@ -55,6 +56,7 @@ import org.apache.kylin.rest.config.initialize.SparderStartEvent;
 import org.apache.kylin.rest.config.initialize.TableSchemaChangeListener;
 import org.apache.kylin.rest.config.initialize.UserAclListener;
 import org.apache.kylin.rest.service.CommonQueryCacheSupporter;
+import org.apache.kylin.rest.service.task.QueryHistoryTaskScheduler;
 import org.apache.kylin.rest.util.JStackDumpTask;
 import org.apache.kylin.streaming.jobs.StreamingJobListener;
 import org.apache.kylin.tool.daemon.KapGuardianHATask;
@@ -175,12 +177,24 @@ public class AppInitializer {
         log.info("The system cache is warmed up.");
     }
 
+    private void resetProjectOffsetId() {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        List<ProjectInstance> prjInstances = NProjectManager.getInstance(kylinConfig).listAllProjects();
+        EpochManager epochManager = EpochManager.getInstance();
+        prjInstances.forEach(project -> {
+            if (epochManager.checkEpochOwner(project.getName())) {
+                QueryHistoryTaskScheduler.getInstance(project.getName()).resetOffsetId();
+            }
+        });
+    }
+
     @EventListener(ApplicationReadyEvent.class)
     public void afterReady(ApplicationReadyEvent ignoredEvent) {
         val kylinConfig = KylinConfig.getInstanceFromEnv();
         setFsUrlStreamHandlerFactory();
         if (kylinConfig.isJobNode()) {
             new EpochOrchestrator(kylinConfig);
+            resetProjectOffsetId();
         }
         if (kylinConfig.getJStackDumpTaskEnabled()) {
             taskScheduler.scheduleAtFixedRate(new JStackDumpTask(),
@@ -193,7 +207,9 @@ public class AppInitializer {
                     kylinConfig.getGuardianHACheckInterval() * Constant.SECOND);
         }
 
-        taskScheduler.scheduleAtFixedRate(new ProjectSerialEventBus.TimingDispatcher(), ProjectSerialEventBus.TimingDispatcher.INTERVAL);
+        taskScheduler.scheduleAtFixedRate(new ProjectSerialEventBus.TimingDispatcher(),
+                ProjectSerialEventBus.TimingDispatcher.INTERVAL);
+
     }
 
     private void postInit() {

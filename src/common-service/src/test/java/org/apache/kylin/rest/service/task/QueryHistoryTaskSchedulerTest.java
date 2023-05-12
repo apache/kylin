@@ -150,9 +150,7 @@ public class QueryHistoryTaskSchedulerTest extends NLocalFileMetadataTestCase {
         idOffsetManager.save(queryHistoryIdOffset);
         Assert.assertEquals(999L, idOffsetManager.get().getOffset());
         // run update
-        QueryHistoryTaskScheduler.QueryHistoryAccelerateRunner queryHistoryAccelerateRunner = //
-                qhAccelerateScheduler.new QueryHistoryAccelerateRunner(false);
-        queryHistoryAccelerateRunner.run();
+        qhAccelerateScheduler.resetOffsetId();
         // after auto reset offset
         Assert.assertEquals(0L, idOffsetManager.get().getOffset());
     }
@@ -173,10 +171,7 @@ public class QueryHistoryTaskSchedulerTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(9L, idOffsetManager.get().getOffset());
 
         // run update
-        QueryHistoryTaskScheduler.QueryHistoryAccelerateRunner queryHistoryAccelerateRunner = //
-                qhAccelerateScheduler.new QueryHistoryAccelerateRunner(false);
-        queryHistoryAccelerateRunner.run();
-        // after auto reset offset
+        qhAccelerateScheduler.resetOffsetId();
         Assert.assertEquals(9L, idOffsetManager.get().getOffset());
     }
 
