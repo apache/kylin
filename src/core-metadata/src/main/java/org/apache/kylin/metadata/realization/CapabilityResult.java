@@ -72,6 +72,11 @@ public class CapabilityResult {
     private boolean isVacant;
 
     /**
+     * Match partial segments.
+     */
+    private boolean isPartialResult;
+
+    /**
      * Marker objects to indicate all special features
      * (dimension-as-measure, topN etc.) that have influenced the capability check.
      */
