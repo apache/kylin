@@ -49,6 +49,19 @@ public class CandidateTestUtils {
         return candidate;
     }
 
+    static Candidate mockCandidate(String modelId, String modelName, double candidateCost, boolean partialResult) {
+        IRealization realization = mockRealization(modelId, modelName, 1);
+        OLAPContext olapContext = mockOlapContext();
+        val candidate = new Candidate(realization, olapContext, Maps.newHashMap());
+        val cap = new CapabilityResult();
+        cap.setSelectedCandidate(() -> candidateCost);
+        cap.setCost(cap.getSelectedCandidate().getCost());
+        cap.setLayoutUnmatchedColsSize(0);
+        cap.setPartialResult(partialResult);
+        candidate.setCapability(cap);
+        return candidate;
+    }
+
     static OLAPContext mockOlapContext() {
         return new OLAPContext(-1);
     }

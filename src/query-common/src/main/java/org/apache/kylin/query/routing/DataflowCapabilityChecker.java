@@ -86,6 +86,9 @@ public class DataflowCapabilityChecker {
                 log.debug("select the layout candidate with high data integrity.");
                 candidateAndInfluence = QueryLayoutChooser.selectHighIntegrityCandidate(dataflow, prunedSegments,
                         digest);
+                if (candidateAndInfluence != null) {
+                    result.setPartialResult(true);
+                }
             }
             if (candidateAndInfluence != null) {
                 chosenCandidate = candidateAndInfluence;
