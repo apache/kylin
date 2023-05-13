@@ -96,6 +96,17 @@ class CandidateSortTest {
     }
 
     @Test
+    void partialResultSorter() {
+        Candidate c1 = CandidateTestUtils.mockCandidate("model0001", "modelA", 2, false);
+        Candidate c2 = CandidateTestUtils.mockCandidate("model0002", "modelB", 2, true);
+        Candidate c3 = CandidateTestUtils.mockCandidate("model0003", "modelC", 1, false);
+        Comparator<Candidate> comparator = Candidate.partialResultSorter();
+        assertSortResult(c1, comparator, Lists.newArrayList(c1, c2));
+        assertSortResult(c3, comparator, Lists.newArrayList(c2, c3));
+        assertSortResult(c1, comparator, Lists.newArrayList(c1, c3));
+    }
+
+    @Test
     void realizationCapabilityCostSorter() {
         Candidate c1 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 1);
         Candidate c2 = CandidateTestUtils.mockCandidate("model0001", "modelA", 1, 2);

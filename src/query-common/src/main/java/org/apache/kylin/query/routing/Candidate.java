@@ -138,6 +138,10 @@ public class Candidate {
         return Comparator.comparingInt(c -> c.getRealization().getCost());
     }
 
+    public static Comparator<Candidate> partialResultSorter() {
+        return Comparator.comparing(c -> c.getCapability().isPartialResult());
+    }
+
     public static Comparator<Candidate> realizationCapabilityCostSorter() {
         return Comparator.comparingDouble(c -> c.getCapability().getCost());
     }

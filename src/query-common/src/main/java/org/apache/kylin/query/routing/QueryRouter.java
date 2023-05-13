@@ -101,6 +101,7 @@ public class QueryRouter {
             }
             sorters.add(Candidate.modelPrioritySorter());
             sorters.add(Candidate.realizationCostSorter());
+            sorters.add(Candidate.partialResultSorter());
             sorters.add(Candidate.realizationCapabilityCostSorter());
             sorters.add(Candidate.modelUuidSorter());
         }
