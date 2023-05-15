@@ -27,7 +27,5 @@ public interface UserAclServiceSupporter {
 
     boolean canAdminUserQuery(String username);
 
-    void checkAdminUserPermission(String project);
-
     boolean hasUserAclPermissionInProject(String project);
 }

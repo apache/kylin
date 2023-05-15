@@ -61,7 +61,6 @@ public class AclEvaluate {
         if (userAclService.canAdminUserQuery() || userAclService.hasUserAclPermissionInProject(projectName)) {
             return;
         }
-        userAclService.checkAdminUserPermission(projectName);
         aclUtil.hasProjectDataQueryPermission(getProjectInstance(projectName));
     }
 

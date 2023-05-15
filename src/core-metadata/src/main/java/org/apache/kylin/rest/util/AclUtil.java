@@ -18,12 +18,21 @@
 
 package org.apache.kylin.rest.util;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.security.AclPermissionFactory;
+import org.apache.kylin.rest.security.KylinAclPermissionEvaluator;
+import org.apache.kylin.rest.service.AclService;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import com.alibaba.nacos.api.utils.StringUtils;
 
 @Lazy
 @Component("aclUtil")
@@ -41,6 +50,15 @@ public class AclUtil {
 
     @PreAuthorize(Constant.ACCESS_POST_FILTER_READ_FOR_DATA_PERMISSION_SEPARATE)
     public boolean hasProjectDataQueryPermission(ProjectInstance project) {
+        if (KylinConfig.getInstanceFromEnv().isUTEnv()) {
+            // PreAuthorize does not work in UT. So let's make an equivalent implementation for it.
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            KylinAclPermissionEvaluator evaluator = new KylinAclPermissionEvaluator(new AclService(),
+                    new AclPermissionFactory());
+            if (!evaluator.hasPermission(auth, project, AclPermission.DATA_QUERY)) {
+                throw new AccessDeniedException(StringUtils.EMPTY);
+            }
+        }
         return true;
     }
 

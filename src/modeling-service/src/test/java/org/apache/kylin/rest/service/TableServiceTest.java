@@ -22,6 +22,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NO
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
 import static org.apache.kylin.metadata.model.NTableMetadataManager.getInstance;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.io.DataInputStream;
@@ -57,6 +58,9 @@ import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.S3AUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.metadata.acl.AclTCR;
 import org.apache.kylin.metadata.acl.AclTCRManager;
@@ -76,6 +80,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.streaming.KafkaConfig;
+import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AutoMergeRequest;
@@ -110,9 +115,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.var;
@@ -154,6 +156,9 @@ public class TableServiceTest extends CSVSourceTestCase {
     @Mock
     private KafkaService kafkaServiceMock = Mockito.mock(KafkaService.class);
 
+    @Mock
+    private AclService aclService = Mockito.mock(AclService.class);
+
     @InjectMocks
     private FusionModelService fusionModelService = Mockito.spy(new FusionModelService());
 
@@ -177,6 +182,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         ReflectionTestUtils.setField(userAclService, "userService", userService);
         ReflectionTestUtils.setField(accessService, "userAclService", userAclService);
         ReflectionTestUtils.setField(accessService, "userService", userService);
+        ReflectionTestUtils.setField(accessService, "aclService", aclService);
         ReflectionTestUtils.setField(tableService, "accessService", accessService);
         NProjectManager projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
         ProjectInstance projectInstance = projectManager.getProject("default");
@@ -328,6 +334,7 @@ public class TableServiceTest extends CSVSourceTestCase {
         Mockito.when(userService.isGlobalAdmin(Mockito.anyString())).thenReturn(true);
         Mockito.when(userAclService.hasUserAclPermissionInProject(Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(false);
+        Mockito.when(userService.loadUserByUsername(eq("test"))).thenReturn(new ManagedUser());
 
         List<TableDesc> tableExtList = tableService
                 .getTableDesc("newten", true, "TEST_COUNTRY", "DEFAULT", true, Collections.emptyList(), 10).getFirst();
