@@ -55,7 +55,6 @@ import org.apache.kylin.rest.security.UserAcl;
 import org.apache.kylin.rest.security.UserAclManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -249,16 +248,6 @@ public class UserAclService extends BasicService implements UserAclServiceSuppor
     private String getLoginUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getName();
-    }
-
-    @Override
-    @SneakyThrows(IOException.class)
-    public void checkAdminUserPermission(String projectName) {
-        String username = getLoginUsername();
-        if (userService.isGlobalAdmin(username) && !hasUserAclPermission(username, AclPermission.DATA_QUERY)
-                && !hasUserAclPermissionInProject(username, projectName)) {
-            throw new AccessDeniedException(StringUtils.EMPTY);
-        }
     }
 
     @Transaction

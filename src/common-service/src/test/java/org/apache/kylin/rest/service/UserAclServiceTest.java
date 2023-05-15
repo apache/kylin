@@ -37,6 +37,7 @@ import org.apache.kylin.rest.request.GlobalBatchAccessRequest;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.UserAclManager;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,6 +45,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
@@ -67,6 +69,9 @@ public class UserAclServiceTest extends ServiceTestBase {
     @Mock
     AclEvaluate aclEvaluate = Mockito.spy(new AclEvaluate());
 
+    @Spy
+    AclUtil aclUtil = Mockito.spy(new AclUtil());
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
@@ -76,6 +81,7 @@ public class UserAclServiceTest extends ServiceTestBase {
         getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "true");
         ReflectionTestUtils.setField(userAclService, "userService", userService);
         ReflectionTestUtils.setField(aclEvaluate, "userAclService", userAclService);
+        ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
     }
 
     @Test
@@ -180,8 +186,6 @@ public class UserAclServiceTest extends ServiceTestBase {
         Assert.assertThrows(MsgPicker.getMsg().getGrantPermissionFailedByIllegalAuthorizingUser(), KylinException.class,
                 () -> ReflectionTestUtils.invokeMethod(userAclService, "checkLoginUserPermissionInPrj", "default"));
         Assert.assertFalse(userAclService.hasUserAclPermissionInProject("default"));
-        Assert.assertThrows(AccessDeniedException.class,
-                () -> ReflectionTestUtils.invokeMethod(userAclService, "checkAdminUserPermission", "default"));
         Assert.assertThrows(AccessDeniedException.class,
                 () -> ReflectionTestUtils.invokeMethod(aclEvaluate, "checkProjectQueryPermission", "default"));
     }
