@@ -31,6 +31,7 @@ import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.model.AntiFlatChecker;
 import org.apache.kylin.metadata.model.ColExcludedChecker;
 import org.apache.kylin.metadata.model.DeriveInfo;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -66,6 +67,10 @@ public class TableIndexMatcher extends IndexMatcher {
         if (NProjectManager.getProjectConfig(project).useTableIndexAnswerSelectStarEnabled()) {
             penaltyFactor = unmatchedCols.size();
             unmatchedCols.removeAll(dataflow.getAllColumnsIndex());
+            TableRef tableRef = dataflow.getModel().getTableNameMap().get(sqlDigest.factTable);
+            if (sqlDigest.isRawQuery && (sqlDigest.allColumns.size() == tableRef.getColumns().size())) {
+                unmatchedCols.clear();
+            }
         }
         goThruDerivedDims(layout.getIndex(), needDerive, unmatchedCols);
         boolean isMatch = unmatchedCols.isEmpty();
