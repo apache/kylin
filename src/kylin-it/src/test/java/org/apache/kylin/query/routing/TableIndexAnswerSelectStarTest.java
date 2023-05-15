@@ -30,6 +30,7 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.guava30.shaded.common.base.Throwables;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
@@ -45,6 +46,7 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.query.engine.QueryExec;
 import org.apache.kylin.query.engine.SchemaMetaData;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.util.OlapContextTestUtil;
@@ -155,7 +157,8 @@ public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
             copyForWrite.getAllNamedColumns().add(newCol);
         });
 
-        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject());
+        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(),
+                getProject());
         IndexPlan indexPlan = indexPlanManager.getIndexPlan(modelId);
         Long oldBaseAggLayout = indexPlan.getBaseAggLayoutId();
         indexPlanManager.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> copyForWrite
@@ -192,6 +195,46 @@ public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
                 dataflow.getQueryableSegments(), context.getSQLDigest(), null);
         Assert.assertNotNull(layoutCandidate);
         Assert.assertEquals(20000010001L, layoutCandidate.getLayoutEntity().getId());
+    }
+
+    @Test
+    public void testNonSelectStarAndNestedQuery() throws Exception {
+        NDataflowManager dfMgr = NDataflowManager.getInstance(getTestConfig(), getProject());
+        dfMgr.updateDataflowStatus("ccb82d81-1497-ca6d-f226-3258a0f0ba4f", RealizationStatusEnum.OFFLINE);
+        dfMgr.updateDataflowStatus("c7a44f37-8481-e78b-5cac-faa7d76767db", RealizationStatusEnum.OFFLINE);
+        String dfID = "baa44f37-8481-e78b-5cac-faa7d76767db";
+        NDataflow dataflow = dfMgr.getDataflow(dfID);
+
+        overwriteSystemProp("kylin.query.use-tableindex-answer-select-star.enabled", "true");
+
+        String sql1 = "select * from (select trans_id from test_kylin_fact)";
+        OLAPContext context = OlapContextTestUtil.getOlapContexts(getProject(), sql1).get(0);
+        Map<String, String> sqlAlias2ModelName = OlapContextTestUtil.matchJoins(dataflow.getModel(), context);
+        context.fixModel(dataflow.getModel(), sqlAlias2ModelName);
+        NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
+                dataflow.getQueryableSegments(), context.getSQLDigest(), null);
+        Assert.assertNotNull(layoutCandidate);
+        Assert.assertEquals(20000010001L, layoutCandidate.getLayoutEntity().getId());
+
+        QueryExec queryExec = new QueryExec(getProject(), getTestConfig());
+        String sql2 = "select price from test_kylin_fact";
+        try {
+            queryExec.executeQuery(sql2);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(Throwables.getRootCause(e.getCause()).getMessage()
+                    .contains("No realization found for OLAPContext"));
+        }
+
+        String sql3 = "select * from (select price from test_kylin_fact)";
+        try {
+            queryExec.executeQuery(sql3);
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(Throwables.getRootCause(e.getCause()).getMessage()
+                    .contains("No realization found for OLAPContext"));
+        }
+
     }
 
     @Override

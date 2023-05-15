@@ -58,8 +58,6 @@ import org.apache.kylin.common.util.CollectionUtil;
 import org.apache.kylin.guava30.shaded.common.collect.Iterables;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.measure.topn.TopNMeasureType;
-import org.apache.kylin.metadata.cube.model.NDataflow;
-import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
@@ -69,7 +67,6 @@ import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.util.ComputedColumnUtil;
 import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.QueryExtension;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPTableScan;
@@ -254,28 +251,6 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
 
         if (!modelsMap.containsKey(sourceTable.getIdentity())) {
             return allColumns;
-        }
-
-        KylinConfig projectConfig = NProjectManager.getProjectConfig(sourceTable.getProject());
-        NDataflowManager dataflowManager = NDataflowManager.getInstance(olapSchema.getConfig(),
-                sourceTable.getProject());
-        if (projectConfig.useTableIndexAnswerSelectStarEnabled()) {
-            Set<ColumnDesc> exposeColumnDescSet = new HashSet<>();
-            String tableName = sourceTable.getIdentity();
-            List<NDataModel> modelList = modelsMap.get(tableName);
-            for (NDataModel dataModel : modelList) {
-                NDataflow dataflow = dataflowManager.getDataflow(dataModel.getId());
-                if (dataflow.getStatus() == RealizationStatusEnum.ONLINE) {
-                    dataflow.getAllColumns().forEach(tblColRef -> {
-                        if (tblColRef.getTable().equalsIgnoreCase(tableName)) {
-                            exposeColumnDescSet.add(tblColRef.getColumnDesc());
-                        }
-                    });
-                }
-            }
-            if (!exposeColumnDescSet.isEmpty()) {
-                allColumns = Lists.newArrayList(exposeColumnDescSet);
-            }
         }
 
         val authorizedCC = getAuthorizedCC();
