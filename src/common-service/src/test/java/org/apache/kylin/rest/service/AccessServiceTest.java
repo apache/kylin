@@ -46,12 +46,13 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AccessRequest;
-import org.apache.kylin.rest.request.GlobalAccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermission;
@@ -67,7 +68,6 @@ import org.apache.kylin.rest.util.SpringContext;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
@@ -80,6 +80,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PermissionFactory;
@@ -94,10 +95,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SpringContext.class, UserGroupInformation.class, KylinConfig.class, NProjectManager.class })
@@ -144,6 +141,7 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
+        ReflectionTestUtils.setField(aclEvaluate, "userAclService", userAclService);
         ReflectionTestUtils.setField(userAclService, "userService", userService);
         getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "false");
 
@@ -390,22 +388,6 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
         return request;
     }
 
-    @Ignore("just ignore")
-    @Test
-    public void test100000Entries() throws JsonProcessingException {
-        AclServiceTest.MockAclEntity ae = new AclServiceTest.MockAclEntity("100000Entries");
-        long time = System.currentTimeMillis();
-        for (int i = 0; i < 100000; i++) {
-            if (i % 10 == 0) {
-                long now = System.currentTimeMillis();
-                System.out.println((now - time) + " ms for last 10 entries, total " + i);
-                time = now;
-            }
-            Sid sid = accessService.getSid("USER" + i, true);
-            accessService.grant(ae, AclPermission.OPERATION, sid);
-        }
-    }
-
     @Test(expected = KylinException.class)
     public void testCheckGlobalAdminException() throws IOException {
         accessService.checkGlobalAdmin("ADMIN");
@@ -512,14 +494,42 @@ public class AccessServiceTest extends NLocalFileMetadataTestCase {
 
     @Test
     public void testAdminUserExtPermissionInProject() {
+        // super admin
         assertTrue(accessService.getUserNormalExtPermissions("default").contains("DATA_QUERY"));
-        GlobalAccessRequest globalAccessRequest = new GlobalAccessRequest();
-        globalAccessRequest.setUsername("ADMIN");
-        globalAccessRequest.setProject("default");
+        aclEvaluate.checkProjectQueryPermission("default");
+
+        // set admin as a non-super admin
         Mockito.when(userService.listSuperAdminUsers()).thenReturn(Collections.emptyList());
+
+        // system admin without data query permission
+        assertFalse(accessService.getUserNormalExtPermissions("default").contains("DATA_QUERY"));
+        Assert.assertThrows(AccessDeniedException.class, ()-> aclEvaluate.checkProjectQueryPermission("default"));
+
+        // system admin with global data query permission
+        userAclService.getManager(UserAclManager.class).addPermission("ADMIN", AclPermission.DATA_QUERY);
+        assertTrue(accessService.getUserNormalExtPermissions("default").contains("DATA_QUERY"));
+        aclEvaluate.checkProjectQueryPermission("default");
+        userAclService.getManager(UserAclManager.class).deletePermission("ADMIN", AclPermission.DATA_QUERY);
+
+        // system admin with data query permission for special project
+        assertFalse(accessService.getUserNormalExtPermissions("default").contains("DATA_QUERY"));
+
         userAclService.getManager(UserAclManager.class).addDataQueryProject("ADMIN", "default");
         Mockito.when(userAclService.canAdminUserQuery(Mockito.anyString())).thenReturn(false);
         assertTrue(accessService.getUserNormalExtPermissions("default").contains("DATA_QUERY"));
+        aclEvaluate.checkProjectQueryPermission("default");
+        userAclService.getManager(UserAclManager.class).deleteDataQueryProject("ADMIN", "default");
+
+        // system admin with group which has query permission for special project
+        assertFalse(accessService.getUserNormalExtPermissions("default").contains("DATA_QUERY"));
+
+        String projectUuid = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject("default")
+                .getUuid();
+        AclEntity ae = accessService.getAclEntity(AclEntityType.PROJECT_INSTANCE, projectUuid);
+        getTestConfig().setProperty("kylin.security.acl.data-permission-default-enabled", "true");
+        accessService.grant(ae, AclPermission.READ, new GrantedAuthoritySid("ROLE_ADMIN"));
+        assertTrue(accessService.getUserNormalExtPermissions("default").contains("DATA_QUERY"));
+        aclEvaluate.checkProjectQueryPermission("default");
     }
 
     @Test

@@ -1010,7 +1010,6 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
     @Test
     public void testHasProjectAdminPermission() {
         Assert.assertTrue(aclEvaluate.hasProjectAdminPermission(PROJECT));
-        aclEvaluate.checkProjectQueryPermission(PROJECT);
     }
 
     @Test

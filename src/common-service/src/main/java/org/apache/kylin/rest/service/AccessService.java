@@ -742,7 +742,11 @@ public class AccessService extends BasicService {
     private Map<Sid, Set<Integer>> getProjectExtPermissions(String projectUuid) {
         Map<Sid, Set<Integer>> sidWithPermissions = new HashMap<>();
         AclEntity ae = getAclEntity(AclEntityType.PROJECT_INSTANCE, projectUuid);
-        AclRecord aclRecord = getAcl(ae).getAclRecord();
+        MutableAclRecord acl = getAcl(ae);
+        if (acl == null) {
+            return sidWithPermissions;
+        }
+        AclRecord aclRecord = acl.getAclRecord();
         if (aclRecord != null && aclRecord.getEntries() != null) {
             List<AccessControlEntry> aces = aclRecord.getEntries();
             sidWithPermissions = aces.stream().filter(ace -> AclPermissionUtil.hasExtPermission(ace.getPermission()))
@@ -762,9 +766,9 @@ public class AccessService extends BasicService {
             if (userAclService.canAdminUserQuery(userName)) {
                 return Collections.singleton(AclConstants.DATA_QUERY);
             }
-            if (userService.isGlobalAdmin(userName)) {
-                val hasDataQueryPermission = userAclService.hasUserAclPermissionInProject(userName, project);
-                return hasDataQueryPermission ? Collections.singleton(AclConstants.DATA_QUERY) : Collections.emptySet();
+            if (userService.isGlobalAdmin(userName)
+                    && userAclService.hasUserAclPermissionInProject(userName, project)) {
+                return Collections.singleton(AclConstants.DATA_QUERY);
             }
             return getUserNormalExtPermissions(projectUuid, userName).stream()
                     .map(ExternalAclProvider::convertToExternalPermission).collect(Collectors.toSet());
