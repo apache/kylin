@@ -121,6 +121,9 @@ spring:
   cloud:
     zookeeper:
       enabled: false
+  web:
+    resources:
+      static-locations: "file://${KYLIN_HOME}/kystudio/dist"
 
 ---
 spring:

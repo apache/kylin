@@ -107,7 +107,9 @@ public class AppInitializer {
                 String localIdentify = EpochOrchestrator.getOwnerIdentity().split("\\|")[0];
                 return localIdentify.equalsIgnoreCase(instance);
             });
-            streamingJobStatsStore = new JdbcStreamingJobStatsStore(kylinConfig);
+
+            if (kylinConfig.streamingEnabled())
+                streamingJobStatsStore = new JdbcStreamingJobStatsStore(kylinConfig);
 
             // register scheduler listener
             EventBusFactory.getInstance().register(new JobSchedulerListener(), false);
@@ -156,7 +158,11 @@ public class AppInitializer {
         EventBusFactory.getInstance().register(new UserAclListener(), true);
 
         postInit();
-        log.info("Application metadata initialization is complete.");
+
+        log.info("Kylin initialization completed.");
+        log.info("KylinConfig in env, ID is {}", kylinConfig.hashCode());
+        log.info("KylinConfig in env, metadata is {}", kylinConfig.getMetadataUrl());
+        log.info("KylinConfig in env, working dir is {}", kylinConfig.getHdfsWorkingDirectory());
     }
 
     private void warmUpSystemCache() {
@@ -170,7 +176,7 @@ public class AppInitializer {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void afterReady(ApplicationReadyEvent event) {
+    public void afterReady(ApplicationReadyEvent ignoredEvent) {
         val kylinConfig = KylinConfig.getInstanceFromEnv();
         setFsUrlStreamHandlerFactory();
         if (kylinConfig.isJobNode()) {

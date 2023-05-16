@@ -32,6 +32,7 @@ import org.apache.kylin.rest.cluster.ClusterManager;
 import org.apache.kylin.rest.cluster.DefaultClusterManager;
 import org.apache.kylin.rest.handler.KapNoOpResponseErrorHandler;
 import org.apache.kylin.rest.interceptor.ReloadAuthoritiesInterceptor;
+import org.apache.kylin.rest.service.QuerySmartSupporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -146,6 +147,14 @@ public class AppConfig implements WebMvcConfigurer {
     @ConditionalOnMissingBean(ClusterManager.class)
     public ClusterManager clusterManager() {
         return new DefaultClusterManager(port);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(QuerySmartSupporter.class)
+    public QuerySmartSupporter querySmartSupporter() {
+        return (project, queries, manual) -> {
+            // noop
+        };
     }
 
     @Bean(name = "normalRestTemplate")

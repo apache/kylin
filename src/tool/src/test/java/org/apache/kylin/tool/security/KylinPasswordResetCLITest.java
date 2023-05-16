@@ -66,6 +66,7 @@ public class KylinPasswordResetCLITest extends LogOutputTestCase {
     @Test
     public void testResetAdminPassword() throws Exception {
         val pwdEncoder = new BCryptPasswordEncoder();
+        overwriteSystemProp("kylin.metadata.random-admin-password.enabled", "true");
         overwriteSystemProp("kylin.security.user-password-encoder", pwdEncoder.getClass().getName());
         overwriteSystemProp("kylin.metadata.random-admin-password.enabled", "true");
         val user = new ManagedUser("ADMIN", "KYLIN", true, Constant.ROLE_ADMIN, Constant.GROUP_ALL_USERS);
