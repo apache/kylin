@@ -258,7 +258,6 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <!-- mysql -->
@@ -492,6 +491,16 @@
         </pluginRepository>
     </pluginRepositories>
     <profiles>
+        <profile>
+            <id>dev</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.h2database</groupId>
+                    <artifactId>h2</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>sandbox</id>
             <dependencies>

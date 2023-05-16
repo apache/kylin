@@ -66,7 +66,10 @@ public class KylinPrepareEnvListener implements EnvironmentPostProcessor, Ordere
                 setSandboxEnvs("../examples/test_case_data/sandbox");
             }
         } else if (env.acceptsProfiles(Profiles.of("dev"))) {
-            setLocalEnvs();
+            if (env.getSystemEnvironment().containsKey(KylinConfig.KYLIN_CONF))
+                ClassUtil.addClasspath(env.getSystemEnvironment().get(KylinConfig.KYLIN_CONF).toString());
+            if (!StringUtils.equals("true", env.getProperty("dev.diag-meta")))
+                setLocalEnvs();
         }
         // enable CC check
         Unsafe.setProperty("needCheckCC", "true");
@@ -133,7 +136,10 @@ public class KylinPrepareEnvListener implements EnvironmentPostProcessor, Ordere
 
         // Load H2 Tables (inner join) for pushdown to rdbms in local debug mode
         try {
-            Connection h2Connection = DriverManager.getConnection("jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1", "sa", "");
+            String username = System.getProperty("kylin.query.pushdown.jdbc.username");
+            String password = System.getProperty("kylin.query.pushdown.jdbc.password");
+            Connection h2Connection = DriverManager.getConnection("jdbc:h2:mem:db_default;DB_CLOSE_DELAY=-1", username,
+                    password);
             H2Database h2DB = new H2Database(h2Connection, KylinConfig.getInstanceFromEnv(), "default");
             h2DB.loadAllTables();
         } catch (SQLException ex) {
