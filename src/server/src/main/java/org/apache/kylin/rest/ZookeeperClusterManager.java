@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-@ConditionalOnZookeeperEnabled
+@ConditionalOnZookeeperEnabled // if missing, a default impl will be filled by AppConfig.clusterManager()
 @Component
 @Slf4j
 public class ZookeeperClusterManager implements ClusterManager {

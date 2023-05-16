@@ -21,12 +21,14 @@ import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.rest.service.QueryHistoryScheduler;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@Profile("!dev")
 public class QueryAppInitializer implements InitializingBean {
 
     @Autowired
