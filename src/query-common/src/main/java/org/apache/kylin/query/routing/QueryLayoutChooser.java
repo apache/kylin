@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -157,8 +158,9 @@ public class QueryLayoutChooser {
         return rangeAndLatest;
     }
 
-    public static NLayoutCandidate selectHighIntegrityCandidate(NDataflow dataflow, List<NDataSegment> prunedSegments,
+    public static NLayoutCandidate selectHighIntegrityCandidate(NDataflow dataflow, Candidate candidate,
             SQLDigest digest) {
+        List<NDataSegment> prunedSegments = candidate.getPrunedSegments(dataflow);
         if (!QueryRouter.isVacantIndexPruningEnabled(NProjectManager.getProjectConfig(dataflow.getProject()))) {
             return null;
         }
@@ -172,14 +174,8 @@ public class QueryLayoutChooser {
             return null;
         }
 
-        Map<Long, List<NDataLayout>> idToDataLayoutsMap = Maps.newHashMap();
-        for (NDataSegment segment : prunedSegments) {
-            segment.getLayoutsMap().forEach((id, dataLayout) -> {
-                idToDataLayoutsMap.putIfAbsent(id, Lists.newArrayList());
-                idToDataLayoutsMap.get(id).add(dataLayout);
-            });
-        }
-
+        Map<Long, List<NDataLayout>> idToDataLayoutsMap = getCommonLayouts(dataflow, chooserContext, candidate,
+                prunedSegments);
         List<NLayoutCandidate> allLayoutCandidates = QueryLayoutChooser.collectAllLayoutCandidates(dataflow,
                 chooserContext, idToDataLayoutsMap);
         return chooseBestLayoutCandidate(dataflow, digest, chooserContext, allLayoutCandidates,
@@ -203,6 +199,47 @@ public class QueryLayoutChooser {
         return allLayoutCandidates.get(0);
     }
 
+    private static Map<Long, List<NDataLayout>> getCommonLayouts(NDataflow dataflow, ChooserContext chooserContext,
+            Candidate candidate, List<NDataSegment> prunedSegments) {
+        Map<Long, List<NDataLayout>> idToDataLayoutsMap = Maps.newHashMap();
+        for (NDataSegment segment : prunedSegments) {
+            segment.getLayoutsMap().forEach((id, dataLayout) -> {
+                idToDataLayoutsMap.putIfAbsent(id, Lists.newArrayList());
+                idToDataLayoutsMap.get(id).add(dataLayout);
+            });
+        }
+
+        KylinConfig projectConfig = NProjectManager.getProjectConfig(dataflow.getProject());
+        String segmentOnlineMode = projectConfig.getKylinEngineSegmentOnlineMode();
+        Map<String, Set<Long>> chSegToLayoutsMap = candidate.getChSegToLayoutsMap(dataflow);
+        if (SegmentOnlineMode.ANY.toString().equalsIgnoreCase(segmentOnlineMode)
+                && MapUtils.isNotEmpty(chSegToLayoutsMap)) {
+            Map<Long, List<NDataLayout>> chLayoutsMap = Maps.newHashMap();
+            chSegToLayoutsMap.forEach((segId, chLayoutIds) -> chLayoutIds.forEach(id -> {
+                NDataLayout dataLayout = NDataLayout.newDataLayout(dataflow, segId, id);
+                chLayoutsMap.putIfAbsent(id, Lists.newArrayList());
+                chLayoutsMap.get(id).add(dataLayout);
+            }));
+            chLayoutsMap.forEach((layoutId, chLayouts) -> {
+                if (!idToDataLayoutsMap.containsKey(layoutId)) {
+                    idToDataLayoutsMap.put(layoutId, chLayouts);
+                } else {
+                    List<NDataLayout> normalLayouts = idToDataLayoutsMap.get(layoutId);
+                    long[] normalRangeAndMax = calcSegRangeAndMaxEnd(chooserContext, dataflow, normalLayouts);
+                    long[] chRangeAndMax = calcSegRangeAndMaxEnd(chooserContext, dataflow, chLayouts);
+                    // CH Layouts is more preferred: 
+                    // 1. with bigger built data range
+                    // 2. have the latest build data
+                    if ((normalRangeAndMax[0] < chRangeAndMax[0])
+                            || (normalRangeAndMax[0] == chRangeAndMax[0] && normalRangeAndMax[1] <= chRangeAndMax[1])) {
+                        idToDataLayoutsMap.put(layoutId, chLayouts);
+                    }
+                }
+            });
+        }
+        return idToDataLayoutsMap;
+    }
+
     private static Collection<NDataLayout> getCommonLayouts(List<NDataSegment> segments, NDataflow dataflow,
             Map<String, Set<Long>> chSegmentToLayoutsMap) {
         KylinConfig projectConfig = NProjectManager.getProjectConfig(dataflow.getProject());
@@ -221,10 +258,11 @@ public class QueryLayoutChooser {
             var layoutIdMapToDataLayout = dataSegment.getLayoutsMap();
             if (SegmentOnlineMode.ANY.toString().equalsIgnoreCase(segmentOnlineMode)
                     && MapUtils.isNotEmpty(chSegmentToLayoutsMap)) {
+                // Only the basic TableIndex is built in the CH storage
                 Set<Long> chLayouts = chSegmentToLayoutsMap.getOrDefault(dataSegment.getId(), Sets.newHashSet());
                 Map<Long, NDataLayout> nDataLayoutMap = chLayouts.stream()
                         .map(id -> NDataLayout.newDataLayout(dataflow, dataSegment.getId(), id))
-                        .collect(Collectors.toMap(NDataLayout::getLayoutId, nDataLayout -> nDataLayout));
+                        .collect(Collectors.toMap(NDataLayout::getLayoutId, Function.identity()));
 
                 nDataLayoutMap.putAll(layoutIdMapToDataLayout);
                 layoutIdMapToDataLayout = nDataLayoutMap;
