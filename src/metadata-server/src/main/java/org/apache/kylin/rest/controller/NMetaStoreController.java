@@ -22,6 +22,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import static org.apache.kylin.common.exception.ServerErrorCode.EMPTY_MODEL_ID;
 import static org.apache.kylin.common.exception.ServerErrorCode.FILE_FORMAT_ERROR;
 import static org.apache.kylin.common.exception.ServerErrorCode.FILE_NOT_EXIST;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_TOO_LONG;
 import static org.apache.kylin.rest.request.ModelImportRequest.ImportType.NEW;
 import static org.apache.kylin.rest.request.ModelImportRequest.ImportType.OVERWRITE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -39,6 +40,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.kylin.common.constant.Constant;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.ZipFileUtils;
@@ -142,6 +144,11 @@ public class NMetaStoreController extends NBasicController {
         if (request.getModels().stream().noneMatch(modelImport -> IMPORT_TYPE.contains(modelImport.getImportType()))) {
             throw new KylinException(EMPTY_MODEL_ID, "At least one model should be selected to import!");
         }
+        if (request.getModels().stream().filter(modelImport -> modelImport.getImportType().equals(NEW))
+                .anyMatch(modelImport -> modelImport.getTargetName().length() > Constant.MODEL_ALIAS_LEN_LIMIT)) {
+            throw new KylinException(MODEL_NAME_TOO_LONG);
+        }
+
         metaStoreService.importModelMetadata(project, metadataFile, request);
         return new EnvelopeResponse<>(KylinException.CODE_SUCCESS, "", "");
     }

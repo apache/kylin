@@ -55,6 +55,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.DATETIME_FO
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_DUPLICATE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_NOT_EXIST;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_TOO_LONG;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PARAMETER_INVALID_SUPPORT_LIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PROJECT_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_LOCKED;
@@ -108,6 +109,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.constant.Constant;
 import org.apache.kylin.common.event.ModelAddEvent;
 import org.apache.kylin.common.event.ModelDropEvent;
 import org.apache.kylin.common.exception.JobErrorCode;
@@ -1340,6 +1342,12 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         return relatedModel;
     }
 
+    private void checkAliasIsExceededLimit(String newAlias) {
+        if (newAlias.length() > Constant.MODEL_ALIAS_LEN_LIMIT) {
+            throw new KylinException(MODEL_NAME_TOO_LONG);
+        }
+    }
+
     private void checkAliasExist(String modelId, String newAlias, String project) {
         if (!checkModelAliasUniqueness(modelId, newAlias, project)) {
             throw new KylinException(MODEL_NAME_DUPLICATE, newAlias);
@@ -1426,6 +1434,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     public void cloneModel(String modelId, String newModelName, String project) {
         aclEvaluate.checkProjectWritePermission(project);
         checkAliasExist("", newModelName, project);
+        checkAliasIsExceededLimit(newModelName);
         EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
             NDataModelManager dataModelManager = getManager(NDataModelManager.class, project);
             NDataModel dataModelDesc = getModelById(modelId, project);
@@ -1473,6 +1482,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             nDataModel.setDescription(description);
         } else {
             checkAliasExist(modelId, newAlias, project);
+            checkAliasIsExceededLimit(newAlias);
             nDataModel.setAlias(newAlias);
             if (StringUtils.isNotBlank(description)) {
                 nDataModel.setDescription(description);
@@ -2016,6 +2026,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
     private NDataModel doCheckBeforeModelSave(String project, ModelRequest modelRequest) {
         checkAliasExist(modelRequest.getUuid(), modelRequest.getAlias(), project);
+        checkAliasIsExceededLimit(modelRequest.getAlias());
         modelRequest.setOwner(AclPermissionUtil.getCurrentUsername());
         modelRequest.setLastModified(modelRequest.getCreateTime());
         checkModelRequest(modelRequest);
