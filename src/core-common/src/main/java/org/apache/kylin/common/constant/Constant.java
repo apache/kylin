@@ -27,4 +27,6 @@ public class Constant {
     public static final long MINUTE = 60 * SECOND;
 
     public static final int AUDIT_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
+
+    public static final int MODEL_ALIAS_LEN_LIMIT = 127;
 }

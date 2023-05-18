@@ -32,6 +32,7 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NO
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_DUPLICATE;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_EMPTY;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_INVALID;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_TOO_LONG;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.PARAMETER_INVALID_SUPPORT_LIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.SEGMENT_LOCKED;
@@ -1298,6 +1299,15 @@ public class ModelServiceTest extends SourceTestCase {
         String nmodel_basic_inner = "nmodel_basic_inner";
         thrown.expectMessage(MODEL_NAME_DUPLICATE.getMsg(nmodel_basic_inner));
         modelService.cloneModel("89af4ee2-2cdb-4b07-b39e-4c29856309aa", nmodel_basic_inner, "default");
+    }
+
+    @Test
+    public void testCloneModelNameTooLongException() {
+        thrown.expect(KylinException.class);
+        String longModelName = "Long_Long_Long_Long_Long_Long_Long_Long_Long_Long_Long_Long_Long"
+                + "_Long_Long_Long_Long_Long_Long_Long_Long_Long_Long_Long_Long_Long_Long_Long_Long";
+        thrown.expectMessage(MODEL_NAME_TOO_LONG.getMsg());
+        modelService.cloneModel("89af4ee2-2cdb-4b07-b39e-4c29856309aa", longModelName, "default");
     }
 
     @Test

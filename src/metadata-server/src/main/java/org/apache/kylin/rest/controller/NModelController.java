@@ -23,6 +23,7 @@ import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLI
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CREATE_MODEL;
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_UPDATE_MODEL;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_INVALID;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_TOO_LONG;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -36,6 +37,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.constant.Constant;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.PartitionDesc;
@@ -491,6 +493,9 @@ public class NModelController extends NBasicController {
         String description = modelRenameRequest.getDescription();
         if (!StringUtils.containsOnly(newAlias, AbstractModelService.VALID_NAME_FOR_MODEL)) {
             throw new KylinException(MODEL_NAME_INVALID, newAlias);
+        }
+        if (newAlias.length() > Constant.MODEL_ALIAS_LEN_LIMIT) {
+            throw new KylinException(MODEL_NAME_TOO_LONG);
         }
 
         fusionModelService.renameDataModel(modelRenameRequest.getProject(), modelId, newAlias, description);
