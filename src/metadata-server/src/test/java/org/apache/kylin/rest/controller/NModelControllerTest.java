@@ -299,6 +299,22 @@ public class NModelControllerTest extends NLocalFileMetadataTestCase {
                 Mockito.any(ModelUpdateRequest.class));
     }
 
+
+    @Test
+    public void testRenameModelWithVeryLongNewName() throws Exception {
+        ModelUpdateRequest modelUpdateRequest = mockModelUpdateRequest();
+        modelUpdateRequest.setNewModelName("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
+        Mockito.doNothing().when(modelService).renameDataModel("default", "89af4ee2-2cdb-4b07-b39e-4c29856309aa",
+                "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz", "");
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/models/{model}/name", "89af4ee2-2cdb-4b07-b39e-4c29856309aa")
+                .contentType(MediaType.APPLICATION_JSON).content(JsonUtil.writeValueAsString(modelUpdateRequest))
+                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
+        Mockito.verify(nModelController).updateModelName(eq("89af4ee2-2cdb-4b07-b39e-4c29856309aa"),
+                Mockito.any(ModelUpdateRequest.class));
+    }
+
+
     @Test
     public void testUpdateModelStatus() throws Exception {
         ModelUpdateRequest modelUpdateRequest = mockModelUpdateRequest();
