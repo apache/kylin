@@ -212,8 +212,8 @@
         <!--metric-->
         <dropwizard.version>4.1.1</dropwizard.version>
 
-        <spring.cloud.version>2021.0.0</spring.cloud.version>
-        <spring.boot.version>2.6.14</spring.boot.version>
+        <spring.cloud.version>2021.0.6</spring.cloud.version>
+        <spring.boot.version>2.7.12</spring.boot.version>
         <spring-boot-admin.version>2.6.10</spring-boot-admin.version>
         <spring-session.version>2.6.1-kylin-r4</spring-session.version>
         <spring.framework.security.extensions.version>1.0.10.RELEASE</spring.framework.security.extensions.version>
@@ -854,6 +854,12 @@
                 <artifactId>kylin-soft-affinity-cache</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+            </dependency>
+
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${nimbus-jose-jwt.version}</version>
             </dependency>
 
             <!-- Hadoop2 dependencies -->
