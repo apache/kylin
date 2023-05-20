@@ -27,6 +27,7 @@ import java.util.Properties;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModelManager;
 import org.apache.kylin.query.IQueryTransformer;
@@ -37,8 +38,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 public class QueryUtilTest extends NLocalFileMetadataTestCase {
 
@@ -431,6 +430,7 @@ public class QueryUtilTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals("CEIL(col to year)", QueryUtil.adaptCalciteSyntax("ceil_datetime(col, 'year')"));
         Assert.assertEquals("CEIL(\"t\".\"col\" to year)",
                 QueryUtil.adaptCalciteSyntax("ceil_datetime(`t`.`col`, 'year')"));
+        Assert.assertEquals("TIMESTAMPDIFF(day, t1, t2)", QueryUtil.adaptCalciteSyntax("timestampdiff('day', t1, t2)"));
     }
 
     @Test
