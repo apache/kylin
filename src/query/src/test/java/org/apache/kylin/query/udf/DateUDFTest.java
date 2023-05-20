@@ -32,7 +32,8 @@ public class DateUDFTest {
     @MultiTimezoneTest(timezones = { "GMT+8", "GMT+12", "GMT+0" })
     public void testDateDiffUDF() throws Exception {
         DateDiffUDF dateDiffUDF = new DateDiffUDF();
-        assertEquals(-35, (long) dateDiffUDF.DATEDIFF(Date.valueOf("2019-06-28"), Date.valueOf("2019-08-02")));
+        assertEquals(-35, (long) dateDiffUDF.dateDiff(Date.valueOf("2019-06-28"), Date.valueOf("2019-08-02")));
+        assertEquals(-35, (long) dateDiffUDF.dateDiff("2019-06-28", "2019-08-02"));
     }
 
     @MultiTimezoneTest(timezones = { "GMT+8", "GMT+12", "GMT+0" })

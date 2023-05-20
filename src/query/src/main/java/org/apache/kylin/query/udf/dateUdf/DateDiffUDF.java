@@ -24,7 +24,11 @@ import org.apache.calcite.linq4j.function.Parameter;
 
 public class DateDiffUDF {
 
-    public Long DATEDIFF(@Parameter(name = "date") Date date1, @Parameter(name = "date") Date date2) {
+    public Long dateDiff(@Parameter(name = "date") Date date1, @Parameter(name = "date") Date date2) {
         return (date1.getTime() - date2.getTime()) / (1000 * 60 * 60 * 24);
+    }
+
+    public Long dateDiff(@Parameter(name = "date") String date1, @Parameter(name = "date") String date2){
+        return (Date.valueOf(date1).getTime() - Date.valueOf(date2).getTime()) / (1000 * 60 * 60 * 24);
     }
 }
