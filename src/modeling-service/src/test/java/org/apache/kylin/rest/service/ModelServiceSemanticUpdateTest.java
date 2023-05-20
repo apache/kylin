@@ -45,6 +45,10 @@ import org.apache.kylin.cube.model.SelectRule;
 import org.apache.kylin.engine.spark.job.ExecutableAddCuboidHandler;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.engine.spark.utils.SparkJobFactoryUtils;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.NExecutableManager;
@@ -95,11 +99,6 @@ import org.mockito.Mockito;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import lombok.val;
 import lombok.var;
@@ -474,6 +473,66 @@ public class ModelServiceSemanticUpdateTest extends NLocalFileMetadataTestCase {
         } catch (KylinException e) {
             Assert.assertEquals(SIMPLIFIED_MEASURES_MISSING_ID.getErrorCode().getCode(), e.getErrorCodeString());
         }
+    }
+
+    @Test
+    public void testModifyNestedComputedColumn() throws IOException {
+        NDataModelManager modelManager = NDataModelManager.getInstance(getTestConfig(), getProject());
+        modelManager.listAllModels().forEach(modelManager::dropModel);
+        ModelRequest request = JsonUtil.readValue(
+                getClass().getResourceAsStream("/ut_request/model_update/model_with_measure.json"), ModelRequest.class);
+        request.setAlias("model_with_measure");
+        NDataModel newModel = modelService.createModel(request.getProject(), request);
+
+        NDataModel model = modelManager.getDataModelDesc(newModel.getId());
+        List<ComputedColumnDesc> ccList = model.getComputedColumnDescs();
+        ComputedColumnDesc cc1 = new ComputedColumnDesc();
+        cc1.setExpression("TEST_ORDER.BUYER_ID + 1");
+        cc1.setInnerExpression("`TEST_ORDER`.`BUYER_ID` + 1");
+        cc1.setColumnName("CC1");
+        cc1.setDatatype("bigint");
+        cc1.setTableAlias("TEST_ORDER");
+        cc1.setTableIdentity("DEFAULT.TEST_ORDER");
+        ComputedColumnDesc cc2 = new ComputedColumnDesc();
+        cc2.setExpression("TEST_ORDER.BUYER_ID + TEST_ORDER.CC3");
+        cc2.setInnerExpression("`TEST_ORDER`.`BUYER_ID` + (`TEST_ORDER`.`BUYER_ID` + 3)");
+        cc2.setColumnName("CC2");
+        cc2.setDatatype("bigint");
+        cc2.setTableAlias("TEST_ORDER");
+        cc2.setTableIdentity("DEFAULT.TEST_ORDER");
+        ComputedColumnDesc cc3 = new ComputedColumnDesc();
+        cc3.setExpression("TEST_ORDER.BUYER_ID + 3");
+        cc3.setInnerExpression("`TEST_ORDER`.`BUYER_ID` + 3");
+        cc3.setColumnName("CC3");
+        cc3.setDatatype("bigint");
+        cc3.setTableAlias("TEST_ORDER");
+        cc3.setTableIdentity("DEFAULT.TEST_ORDER");
+        ccList.add(cc1);
+        ccList.add(cc2);
+        ccList.add(cc3);
+        List<NamedColumn> allNamedColumns = model.getAllNamedColumns();
+        NamedColumn col1 = new NamedColumn();
+        col1.setStatus(ColumnStatus.DIMENSION);
+        col1.setName("CC1");
+        col1.setAliasDotColumn("TEST_ORDER.CC1");
+        col1.setId(10);
+        NamedColumn col2 = new NamedColumn();
+        col2.setStatus(ColumnStatus.DIMENSION);
+        col2.setName("CC2");
+        col2.setAliasDotColumn("TEST_ORDER.CC2");
+        col2.setId(11);
+        NamedColumn col3 = new NamedColumn();
+        col3.setStatus(ColumnStatus.DIMENSION);
+        col3.setName("CC3");
+        col3.setAliasDotColumn("TEST_ORDER.CC3");
+        col3.setId(12);
+        allNamedColumns.add(col1);
+        allNamedColumns.add(col2);
+        allNamedColumns.add(col3);
+
+        ModelSemanticHelper modelSemanticHelper = new ModelSemanticHelper();
+        modelSemanticHelper.discardInvalidColsAndMeasForBrokenModel(getProject(), model);
+        Assert.assertEquals(3, model.getComputedColumnDescs().size());
     }
 
     @Test
