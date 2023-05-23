@@ -143,7 +143,10 @@ public class Candidate {
     }
 
     public static Comparator<Candidate> realizationCapabilityCostSorter() {
-        return Comparator.comparingDouble(c -> c.getCapability().getCost());
+        return Comparator.comparingDouble(c -> {
+            boolean isPartialCompare = c.getCapability().isPartialResult();
+            return isPartialCompare ? -1 * c.getCapability().getCost() : c.getCapability().getCost();
+        });
     }
 
     public static Comparator<Candidate> modelUuidSorter() {
