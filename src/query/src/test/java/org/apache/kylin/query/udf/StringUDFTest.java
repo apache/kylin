@@ -57,7 +57,7 @@ public class StringUDFTest {
     }
 
     @Test
-    public void testInitCapbUDF() throws Exception {
+    public void testInitCapbUDF() {
         InitCapbUDF icu = new InitCapbUDF();
         String str1 = icu.INITCAPB("abc DEF 123aVC 124Btd,lAsT");
         assertEquals("Abc Def 123avc 124btd,Last", str1);
