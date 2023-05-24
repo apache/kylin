@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.util.NamedThreadFactory;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.metadata.view.LogicalView;
 import org.apache.kylin.metadata.view.LogicalViewManager;
 import org.apache.kylin.source.SourceFactory;
@@ -156,8 +157,9 @@ public class LogicalViewLoader {
   }
 
   private static void dropLogicalViewIfExist(String tableName, SparkSession spark) {
-    String logicalViewDatabase = KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB();
-    spark.sql("DROP LOGICAL VIEW IF EXISTS " + logicalViewDatabase + "." + tableName);
+    String quotedDatabase = StringHelper.backtickQuote(KylinConfig.getInstanceFromEnv().getDDLLogicalViewDB());
+    String quotedTableName = StringHelper.backtickQuote(tableName);
+    spark.sql("DROP LOGICAL VIEW IF EXISTS " + quotedDatabase + "." + quotedTableName);
   }
 
   public static void checkConfigIfNeed() {
