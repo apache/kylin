@@ -69,7 +69,7 @@ public class NSparkCubingSourceInput implements NSparkCubingEngine.NSparkCubingS
 
     private List<ColumnDesc> extractEffectiveColumns(TableDesc table, SparkSession ss) {
         List<ColumnDesc> ret = new ArrayList<>();
-        Dataset<Row> sourceTableDS = ss.table(table.getTableAlias());
+        Dataset<Row> sourceTableDS = ss.table(table.getBackTickIdentity());
         Set<String> sourceTableColumns = Arrays.stream(sourceTableDS.columns()).map(String::toUpperCase)
                 .collect(Collectors.toSet());
         for (ColumnDesc col : table.getColumns()) {
