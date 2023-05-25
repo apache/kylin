@@ -35,7 +35,7 @@ import org.apache.kylin.metadata.project.NProjectManager
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.analysis.Resolver
 import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeSet, EmptyRow, Expression, Literal}
-import org.apache.spark.sql.catalyst.{InternalRow, expressions}
+import org.apache.spark.sql.catalyst.{CatalystTypeConverters, InternalRow, expressions}
 import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types.StructType
@@ -236,7 +236,7 @@ class FilePruner(val session: SparkSession,
     val project = dataflow.getProject
     val projectKylinConfig = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv).getProject(project).getConfig
 
-    var selected = prunedSegmentDirs;
+    var selected = prunedSegmentDirs
     if (projectKylinConfig.isSkipEmptySegments) {
       selected = afterPruning("pruning empty segment", null, selected) {
         (_, segDirs) => pruneEmptySegments(segDirs)
@@ -376,17 +376,17 @@ class FilePruner(val session: SparkSession,
 
   private def pruneSegments(filters: Seq[Expression],
                             segDirs: Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
-
-    val filteredStatuses = if (filters.isEmpty) {
+    val reducedFilter = filters.map(filter => convertCastFilter(filter))
+      .flatMap(f => DataSourceStrategy.translateFilter(f, true))
+      .reduceLeftOption(And)
+    if (reducedFilter.isEmpty) {
       segDirs
     } else {
-      val reducedFilter = filters.toList.map(filter => convertCastFilter(filter))
-        .flatMap(f => DataSourceStrategy.translateFilter(f, true)).reduceLeft(And)
       segDirs.filter {
         e => {
           if (dataflow.getSegment(e.segmentID).isOffsetCube) {
             val ksRange = dataflow.getSegment(e.segmentID).getKSRange
-            SegFilters(ksRange.getStart, ksRange.getEnd, pattern).foldStreamingFilter(reducedFilter) match {
+            SegFilters(ksRange.getStart, ksRange.getEnd, pattern).foldStreamingFilter(reducedFilter.get) match {
               case Trivial(true) => true
               case Trivial(false) => false
             }
@@ -394,7 +394,7 @@ class FilePruner(val session: SparkSession,
             val tsRange = dataflow.getSegment(e.segmentID).getTSRange
             val start = DateFormat.getFormatTimeStamp(tsRange.getStart.toString, pattern)
             val end = DateFormat.getFormatTimeStamp(tsRange.getEnd.toString, pattern)
-            SegFilters(start, end, pattern).foldFilter(reducedFilter) match {
+            SegFilters(start, end, pattern).foldFilter(reducedFilter.get) match {
               case Trivial(true) => true
               case Trivial(false) => false
             }
@@ -402,25 +402,23 @@ class FilePruner(val session: SparkSession,
         }
       }
     }
-    filteredStatuses
   }
 
   private def pruneSegmentsDimRange(filters: Seq[Expression],
                                     segDirs: Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
     val hitColumns = Sets.newHashSet[String]()
     val project = options.getOrElse("project", "")
-    val filteredStatuses = if (filters.isEmpty) {
+    val reducedFilters = translateToSourceFilter(filters)
+
+    val filteredStatuses = if (reducedFilters.isEmpty) {
       segDirs
     } else {
-      val reducedFilter = filters.toList.map(filter => convertCastFilter(filter))
-        .flatMap(f => DataSourceStrategy.translateFilter(f, true)).reduceLeft(And)
-
       segDirs.filter {
         e => {
           val dimRange = dataflow.getSegment(e.segmentID).getDimensionRangeInfoMap
           if (dimRange != null && !dimRange.isEmpty) {
             SegDimFilters(dimRange, dataflow.getIndexPlan.getEffectiveDimCols, dataflow.getId, project, hitColumns)
-              .foldFilter(reducedFilter) match {
+              .foldFilter(reducedFilters.get) match {
               case Trivial(true) => true
               case Trivial(false) => false
             }
@@ -434,18 +432,39 @@ class FilePruner(val session: SparkSession,
     filteredStatuses
   }
 
+  private def translateToSourceFilter(filters: Seq[Expression]): Option[Filter] = {
+    filters.map(filter => convertCastFilter(filter))
+      .flatMap(f => {
+        DataSourceStrategy.translateFilter(f, true) match {
+          case v @ Some(_) => v
+          case None =>
+            // special cases which are forced pushed down by Kylin
+            f match {
+              case expressions.In(e @ expressions.Cast(a: Attribute, _, _, _), list)
+                if list.forall(_.isInstanceOf[Literal]) =>
+                val hSet = list.map(_.eval(EmptyRow))
+                val toScala = CatalystTypeConverters.createToScalaConverter(e.dataType)
+                Some(In(a.name, hSet.toArray.map(toScala)))
+              case expressions.InSet(e @ expressions.Cast(a: Attribute, _, _, _), set) =>
+                val toScala = CatalystTypeConverters.createToScalaConverter(e.dataType)
+                Some(In(a.name, set.toArray.map(toScala)))
+              case _ => None
+            }
+        }
+      }).reduceLeftOption(And)
+  }
+
   private def pruneShards(filters: Seq[Expression],
                           segDirs: Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
-    val filteredStatuses = if (layout.getShardByColumns.size() != 1) {
+    val normalizedFiltersAndExpr = filters.reduceOption(expressions.And)
+    if (layout.getShardByColumns.size() != 1 || normalizedFiltersAndExpr.isEmpty) {
       segDirs
     } else {
-      val normalizedFiltersAndExpr = filters.reduce(expressions.And)
-
       val pruned = segDirs.map { case SegmentDirectory(segID, partitions, files) =>
         val partitionNumber = dataflow.getSegment(segID).getLayout(layout.getId).getPartitionNum
         require(partitionNumber > 0, "Shards num with shard by col should greater than 0.")
 
-        val bitSet = getExpressionShards(normalizedFiltersAndExpr, shardByColumn.name, partitionNumber)
+        val bitSet = getExpressionShards(normalizedFiltersAndExpr.get, shardByColumn.name, partitionNumber)
 
         val selected = files.filter(f => {
           val partitionId = FilePruner.getPartitionId(f.getPath)
@@ -455,7 +474,6 @@ class FilePruner(val session: SparkSession,
       }
       pruned
     }
-    filteredStatuses
   }
 
   override lazy val inputFiles: Array[String] = Array.empty[String]
@@ -517,7 +535,10 @@ class FilePruner(val session: SparkSession,
     }
   }
 
-  //  translate for filter type match
+  /**
+   * Note: This is a dangerous method to extract Cast value in comparison expressions, without considering
+   * precision losing for numerics etc, which will produce a different semantic expression.
+   */
   private def convertCastFilter(filter: Expression): Expression = {
     filter match {
       case expressions.EqualTo(expressions.Cast(a: Attribute, _, _, _), Literal(v, t)) =>
