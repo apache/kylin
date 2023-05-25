@@ -124,7 +124,7 @@ import org.apache.kylin.common.persistence.transaction.TransactionException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.persistence.transaction.UnitOfWorkContext;
 import org.apache.kylin.common.scheduler.EventBusFactory;
-import org.apache.kylin.common.util.AddTableNameSqlVisitor;
+import org.apache.kylin.common.util.SqlIdentifierFormatterVisitor;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
@@ -3659,28 +3659,8 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
     @VisibleForTesting
     String addTableNameIfNotExist(final String expr, final NDataModel model) {
-        Map<String, String> colToTable = Maps.newHashMap();
-        Set<String> ambiguityCol = Sets.newHashSet();
-        Set<String> allColumn = Sets.newHashSet();
-        for (val col : model.getAllNamedColumns()) {
-            if (col.getStatus() == NDataModel.ColumnStatus.TOMB) {
-                continue;
-            }
-            String aliasDotColumn = col.getAliasDotColumn();
-            allColumn.add(aliasDotColumn);
-            String table = aliasDotColumn.split("\\.")[0];
-            String column = aliasDotColumn.split("\\.")[1];
-            if (colToTable.containsKey(column)) {
-                ambiguityCol.add(column);
-            } else {
-                colToTable.put(column, table);
-            }
-        }
-
         SqlNode sqlNode = CalciteParser.getExpNode(expr);
-
-        SqlVisitor<Object> sqlVisitor = new AddTableNameSqlVisitor(expr, colToTable, ambiguityCol, allColumn);
-
+        SqlVisitor<Void> sqlVisitor = new SqlIdentifierFormatterVisitor(expr, model.getAllNamedColumns());
         sqlNode.accept(sqlVisitor);
 
         if (!NProjectManager.getProjectConfig(model.getProject()).isBuildExcludedTableEnabled()) {
