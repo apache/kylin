@@ -3300,7 +3300,7 @@ public class ModelServiceTest extends SourceTestCase {
         modelRequest.setUuid(null);
 
         String filterCond = "\"day\" = 0 and \"123TABLE\".\"day#\" = 1 and \"中文列\" = 1";
-        String expectedFilterCond = "(((`123TABLE`.`DAY` = 0) AND (`123TABLE`.`day#` = 1)) AND (`123TABLE`.`中文列` = 1))";
+        String expectedFilterCond = "(((`123TABLE`.`DAY` = 0) AND (`123TABLE`.`DAY#` = 1)) AND (`123TABLE`.`中文列` = 1))";
         modelRequest.setFilterCondition(filterCond);
 
         val newModel = modelService.createModel(modelRequest.getProject(), modelRequest);
@@ -3546,12 +3546,18 @@ public class ModelServiceTest extends SourceTestCase {
         NDataModelManager modelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
         NDataModel model = modelManager
                 .copyForWrite(modelManager.getDataModelDesc("89af4ee2-2cdb-4b07-b39e-4c29856309aa"));
-        String originSql = "trans_id = 0 and TEST_KYLIN_FACT.order_id < 100 and DEAL_AMOUNT > 123";
+        String originSql = "`trans_id` = 0 and test_kylin_fact.TRANS_ID > 0 and `test_kylin_fact`.trans_id > 0 "
+                + "and TEST_KYLIN_FACT.order_id < 100 and DEAL_AMOUNT > 123";
         model.setFilterCondition(originSql);
         modelService.massageModelFilterCondition(model);
-        Assert.assertEquals("(((`TEST_KYLIN_FACT`.`TRANS_ID` = 0) "
-                + "AND (`TEST_KYLIN_FACT`.`ORDER_ID` < 100)) AND ((`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`) > 123))",
+        Assert.assertEquals("(((((`TEST_KYLIN_FACT`.`TRANS_ID` = 0) AND (`TEST_KYLIN_FACT`.`TRANS_ID` > 0)) "
+                        + "AND (`TEST_KYLIN_FACT`.`TRANS_ID` > 0)) AND (`TEST_KYLIN_FACT`.`ORDER_ID` < 100)) "
+                        + "AND ((`TEST_KYLIN_FACT`.`PRICE` * `TEST_KYLIN_FACT`.`ITEM_COUNT`) > 123))",
                 model.getFilterCondition());
+
+        originSql = "badColumn is null";
+        model.setFilterCondition(originSql);
+        Assert.assertThrows(KylinException.class, () -> modelService.massageModelFilterCondition(model));
     }
 
     @Test
