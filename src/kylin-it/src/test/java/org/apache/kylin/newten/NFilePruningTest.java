@@ -19,6 +19,8 @@
 
 package org.apache.kylin.newten;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +33,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
 import org.apache.kylin.junit.TimeZoneTestRunner;
@@ -60,8 +63,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sparkproject.guava.collect.Sets;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.val;
 import scala.runtime.AbstractFunction1;
@@ -510,9 +511,19 @@ public class NFilePruningTest extends NLocalWithSparkSessionTest implements Adap
         String modelId = "3f152495-44de-406c-9abf-b11d4132aaed";
         overwriteSystemProp("kylin.engine.persist-flattable-enabled", "true");
         buildMultiSegAndMerge("3f152495-44de-406c-9abf-b11d4132aaed");
-        populateSSWithCSVData(getTestConfig(), getProject(), SparderEnv.getSparkSession());
+        val ss = SparderEnv.getSparkSession();
+        populateSSWithCSVData(getTestConfig(), getProject(), ss);
 
         val lessThanEquality = base + "where TEST_KYLIN_FACT.ORDER_ID <= 10";
+        val castIn = base + "where test_date_enc in ('2014-12-20', '2014-12-21')";
+
+        Instant startDate = DateFormat.stringToDate("2014-12-20").toInstant();
+        String[] dates = new String[ss.sqlContext().conf().optimizerInSetConversionThreshold() + 1];
+        for (int i = 0; i < dates.length; i++) {
+            dates[i] = "'" + DateFormat.formatToDateStr(startDate.plus(i, ChronoUnit.DAYS).toEpochMilli()) + "'";
+        }
+        val largeCastIn = base + "where test_date_enc in (" + String.join(",", dates) + ")";
+
         val in = base + "where TEST_KYLIN_FACT.ORDER_ID in (4998, 4999)";
         val lessThan = base + "where TEST_KYLIN_FACT.ORDER_ID < 10";
         val and = base + "where PRICE < -99 AND TEST_KYLIN_FACT.ORDER_ID = 1";
@@ -526,7 +537,9 @@ public class NFilePruningTest extends NLocalWithSparkSessionTest implements Adap
         expectedRanges.add(segmentRange1);
         expectedRanges.add(segmentRange2);
 
+        assertResultsAndScanFiles(modelId, largeCastIn, 1, false, expectedRanges);
         assertResultsAndScanFiles(modelId, lessThanEquality, 2, false, expectedRanges);
+        assertResultsAndScanFiles(modelId, castIn, 1, false, expectedRanges);
         assertResultsAndScanFiles(modelId, in, 1, false, expectedRanges);
         assertResultsAndScanFiles(modelId, lessThan, 1, false, expectedRanges);
         assertResultsAndScanFiles(modelId, and, 1, false, expectedRanges);
