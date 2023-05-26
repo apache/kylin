@@ -23,9 +23,10 @@ import static org.apache.kylin.common.exception.ServerErrorCode.USER_DATA_SOURCE
 import static org.apache.kylin.common.exception.ServerErrorCode.USER_LOCKED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_LOGIN_FAILED;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.USER_UNAUTHORIZED;
+import static org.apache.kylin.rest.util.HttpUtil.formatRequest;
+import static org.apache.kylin.rest.util.HttpUtil.setErrorResponse;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.ConnectException;
 import java.util.Optional;
 
@@ -35,9 +36,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.rest.response.ErrorResponse;
-import org.springframework.http.MediaType;
 import org.springframework.ldap.CommunicationException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -46,6 +44,9 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component(value = "nUnauthorisedEntryPoint")
 public class NUnauthorisedEntryPoint implements AuthenticationEntryPoint {
 
@@ -58,10 +59,12 @@ public class NUnauthorisedEntryPoint implements AuthenticationEntryPoint {
         } else if (exception instanceof InsufficientAuthenticationException) {
             setErrorResponse(request, response, HttpServletResponse.SC_UNAUTHORIZED,
                     new KylinException(USER_UNAUTHORIZED));
+            logRequest(request);
             return;
         } else if (exception instanceof DisabledException) {
             setErrorResponse(request, response, HttpServletResponse.SC_UNAUTHORIZED,
                     new KylinException(LOGIN_FAILED, MsgPicker.getMsg().getDisabledUser()));
+            logRequest(request);
             return;
         }
         boolean present = Optional.ofNullable(exception).map(Throwable::getCause)
@@ -89,17 +92,9 @@ public class NUnauthorisedEntryPoint implements AuthenticationEntryPoint {
         setErrorResponse(request, response, HttpServletResponse.SC_UNAUTHORIZED, new KylinException(USER_LOGIN_FAILED));
     }
 
-    public void setErrorResponse(HttpServletRequest request, HttpServletResponse response, int statusCode, Exception ex)
-            throws IOException {
-        response.setStatus(statusCode);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        ErrorResponse errorResponse = new ErrorResponse(request.getRequestURL().toString(), ex);
-        String errorStr = JsonUtil.writeValueAsIndentString(errorResponse);
-        response.setCharacterEncoding("UTF-8");
-        PrintWriter writer = response.getWriter();
-        writer.print(errorStr);
-        writer.flush();
-        writer.close();
+    private void logRequest(HttpServletRequest request) {
+        if (log.isDebugEnabled()) {
+            log.debug("Detail http request for authentication:\n" + formatRequest(request));
+        }
     }
-
 }
