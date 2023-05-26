@@ -78,6 +78,5 @@ public class NUnauthorisedEntryPointTest {
                 new org.springframework.ldap.AuthenticationException(new javax.naming.AuthenticationException())) {
         });
         Assertions.assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, response.getStatus());
-
     }
 }
