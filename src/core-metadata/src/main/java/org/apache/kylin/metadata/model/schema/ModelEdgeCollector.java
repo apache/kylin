@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.cube.cuboid.NAggregationGroup;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
@@ -67,8 +68,10 @@ class ModelEdgeCollector {
         effectiveNamedColumns = model.getEffectiveNamedColumns();
         effectiveCols = model.getEffectiveCols();
         effectiveMeasures = model.getEffectiveMeasures();
-        nameColumnIdMap = effectiveNamedColumns.entrySet().stream()
-                .collect(Collectors.toMap(e -> e.getValue().getAliasDotColumn(), Map.Entry::getValue));
+
+        Map<String, NDataModel.NamedColumn> fullQualifiedName2ColumnMap = new CaseInsensitiveStringMap<>();
+        effectiveNamedColumns.forEach((k, v) -> fullQualifiedName2ColumnMap.put(v.getAliasDotColumn(), v));
+        nameColumnIdMap = fullQualifiedName2ColumnMap;
 
         modelColumnMeasureIdNameMap.putAll(model.getAllMeasures().stream().filter(measure -> !measure.isTomb())
                 .collect(Collectors.toMap(NDataModel.Measure::getId, NDataModel.Measure::getName)));
