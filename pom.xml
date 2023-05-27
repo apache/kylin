@@ -100,6 +100,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <arthas.version>3.6.7-kyarthas-r3</arthas.version>
+        <tomcat-embed.version>9.0.74</tomcat-embed.version>
 
         <!-- Keep same order with dependencyManagement -->
 
@@ -124,7 +125,8 @@
 
         <!-- Spark versions -->
         <delta.version>2.0.2</delta.version>
-        <spark.version>3.2.0-kylin-4.6.10.0-SNAPSHOT</spark.version>
+
+        <spark.version>3.2.0-kylin-4.6.10.0</spark.version>
 
         <roaring.version>0.9.2-kylin-r4</roaring.version>
 
@@ -2382,7 +2384,7 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
-                <version>9.0.71</version>
+                <version>${tomcat-embed.version}</version>
             </dependency>
 
             <dependency>
