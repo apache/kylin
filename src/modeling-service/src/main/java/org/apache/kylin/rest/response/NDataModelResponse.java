@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.HashCodeExclude;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.acl.NDataModelAclParams;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -55,7 +56,6 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import io.kyligence.kap.secondstorage.response.SecondStorageNode;
 import lombok.Data;
@@ -419,23 +419,30 @@ public class NDataModelResponse extends NDataModel {
         for (NamedColumn namedColumn : getAllSelectedColumns()) {
             SimplifiedNamedColumn simplifiedNamedColumn = new SimplifiedNamedColumn(namedColumn);
             TblColRef colRef = findColumnByAlias(simplifiedNamedColumn.getAliasDotColumn());
-            if (simplifiedNamedColumn.getStatus() == DIMENSION && colRef != null && tableMetadata != null) {
-                if (excludedChecker.isExcludedCol(colRef)
-                        && !colRef.getTableRef().getTableIdentity().equals(getLazyModel().getRootFactTableName())) {
-                    simplifiedNamedColumn.setExcluded(true);
-                }
-                TableExtDesc tableExt = tableMetadata.getTableExtIfExists(colRef.getTableRef().getTableDesc());
-                TableExtDesc.ColumnStats columnStats = Objects.isNull(tableExt) ? null
-                        : tableExt.getColumnStatsByName(colRef.getName());
-                if (columnStats != null) {
-                    simplifiedNamedColumn.setCardinality(columnStats.getCardinality());
-                }
-
+            if (colRef != null) {
+                innerProcessSimplifiedNamedColumn(tableMetadata, excludedChecker, simplifiedNamedColumn, colRef);
             }
             selectedColumns.add(simplifiedNamedColumn);
         }
 
         return selectedColumns;
+    }
+
+    private void innerProcessSimplifiedNamedColumn(NTableMetadataManager tableMetadata,
+            ColExcludedChecker excludedChecker, SimplifiedNamedColumn simplifiedNamedColumn, TblColRef colRef) {
+        simplifiedNamedColumn.setType(colRef.getColumnDesc().getType().toString());
+        if (simplifiedNamedColumn.getStatus() == DIMENSION && tableMetadata != null) {
+            if (excludedChecker.isExcludedCol(colRef)
+                    && !colRef.getTableRef().getTableIdentity().equals(getLazyModel().getRootFactTableName())) {
+                simplifiedNamedColumn.setExcluded(true);
+            }
+            TableExtDesc tableExt = tableMetadata.getTableExtIfExists(colRef.getTableRef().getTableDesc());
+            TableExtDesc.ColumnStats columnStats = Objects.isNull(tableExt) ? null
+                    : tableExt.getColumnStatsByName(colRef.getName());
+            if (columnStats != null) {
+                simplifiedNamedColumn.setCardinality(columnStats.getCardinality());
+            }
+        }
     }
 
     public void computedInfo(long inconsistentCount, ModelStatusToDisplayEnum status, boolean isScd2,

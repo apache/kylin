@@ -70,6 +70,7 @@ class NDataModelResponseTest {
         modelResponse.setProject(PROJECT);
         List<NDataModelResponse.SimplifiedNamedColumn> selectedColumns = modelResponse.getSelectedColumns();
         Assertions.assertEquals(1, selectedColumns.size());
+        Assertions.assertEquals("decimal(19,4)", selectedColumns.get(0).getType());
         List<NDataModelResponse.SimplifiedNamedColumn> namedColumns = modelResponse.getNamedColumns();
         Assertions.assertEquals(1, namedColumns.size());
     }
