@@ -156,7 +156,7 @@ class DFDictionaryBuilder(
   private def getLockPath(pathName: String) = s"/${seg.getProject}${HadoopUtil.GLOBAL_DICT_STORAGE_ROOT}/$pathName/lock"
 
   def wrapCol(ref: TblColRef): Column = {
-    val colName = NSparkCubingUtil.convertFromDot(ref.getBackTickIdentity)
+    val colName = NSparkCubingUtil.convertFromDotWithBackTick(ref.getBackTickIdentity)
     expr(colName).cast(StringType)
   }
 
