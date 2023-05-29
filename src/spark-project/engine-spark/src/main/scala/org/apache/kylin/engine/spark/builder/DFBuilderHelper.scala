@@ -51,7 +51,7 @@ object DFBuilderHelper extends Logging {
 
   def selectColumnsInTable(table: Dataset[Row], columns: Set[TblColRef]): Set[TblColRef] = {
     columns.filter(col =>
-      isColumnInTable(NSparkCubingUtil.convertFromDot(col.getBackTickExp), table))
+      isColumnInTable(NSparkCubingUtil.convertFromDotWithBackTick(col.getBackTickExp), table))
   }
 
   // ============================= Used by {@link DFBuildJob}.Functions are deprecated. ========================= //
@@ -66,7 +66,7 @@ object DFBuilderHelper extends Logging {
       isColumnInTable(NSparkCubingUtil.convertFromDot(cc.getBackTickExp), table))
   }
 
-  def isColumnInTable(colExpr: String, table: Dataset[Row]): Boolean = {
+  private def isColumnInTable(colExpr: String, table: Dataset[Row]): Boolean = {
     Try(table.select(expr(colExpr))) match {
       case Success(_) =>
         true
@@ -77,7 +77,7 @@ object DFBuilderHelper extends Logging {
 
   def chooseSuitableCols(ds: Dataset[Row], needCheckCols: Iterable[TblColRef]): Seq[Column] = {
     needCheckCols
-      .filter(ref => isColumnInTable(ref.getExpressionInSourceDB, ds))
+      .filter(ref => isColumnInTable(ref.getBackTickExp, ds))
       .map(ref => expr(NSparkCubingUtil.convertFromDotWithBackTick(ref.getBackTickExp))
         .alias(NSparkCubingUtil.convertFromDot(ref.getBackTickIdentity)))
       .toSeq
