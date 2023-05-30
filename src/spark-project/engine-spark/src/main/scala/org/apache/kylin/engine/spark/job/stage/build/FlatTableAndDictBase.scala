@@ -26,7 +26,7 @@ import org.apache.kylin.engine.spark.application.SparkApplication
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
 import org.apache.kylin.engine.spark.builder._
 import org.apache.kylin.engine.spark.builder.v3dict.DictionaryBuilder
-import org.apache.kylin.engine.spark.job.NSparkCubingUtil.convertFromDot
+import org.apache.kylin.engine.spark.job.NSparkCubingUtil.{convertFromDot, convertFromDotWithBackTick}
 import org.apache.kylin.engine.spark.job.stage.{BuildParam, StageExec}
 import org.apache.kylin.engine.spark.job.{FiltersUtil, SegmentJob, TableMetaManager}
 import org.apache.kylin.engine.spark.model.SegmentFlatTableDesc
@@ -625,7 +625,7 @@ abstract class FlatTableAndDictBase(private val jobContext: SegmentJob,
     var tableWithCcs = table
     matchedCols.foreach(m =>
       tableWithCcs = tableWithCcs.withColumn(convertFromDot(m.getBackTickIdentity),
-        expr(convertFromDot(m.getBackTickExp))))
+        expr(convertFromDotWithBackTick(m.getBackTickExp))))
     tableWithCcs
   }
 
