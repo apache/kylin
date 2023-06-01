@@ -248,10 +248,7 @@ public class StringHelper {
                 throw new IllegalArgumentException("Unexpected args found: " + Arrays.toString(args));
             }
             // a'b'c -> a b c -> 'a'\''b'\''c'
-            // ''a'b'c'' -> 'a'b'c' -> _ a b c _ -> \\''a'\\''b'\\''c'\\'
-            if (value.startsWith("'") && value.endsWith("'") && value.length() >= 2) {
-                value = value.substring(1, value.length() - 1);
-            }
+            // ''a'b'c'' -> _ _ a b c _ _ -> \\'\\''a'\\''b'\\''c'\\'\\'
             String[] splitValues = value.split("'", -1);
             value = Arrays.stream(splitValues).map(v -> v.isEmpty() ? v : "'" + v + "'")
                     .collect(Collectors.joining("\\'"));
