@@ -45,7 +45,7 @@ object ExpressionConverter {
     "explode"
   )
 
-  val ternaryParameterFunc = mutable.HashSet("replace", "substring_index", "lpad", "rpad", "conv")
+  val ternaryParameterFunc = mutable.HashSet("replace", "substring_index", "lpad", "rpad", "conv", "regexp_extract")
   val binaryParameterFunc =
     mutable.HashSet("decode", "encode", "find_in_set", "levenshtein", "sha2",
       "trunc", "add_months", "date_add", "date_sub", "from_utc_timestamp", "to_utc_timestamp",
@@ -74,7 +74,7 @@ object ExpressionConverter {
         if (children.length == 3) {
           if (!children.last.isInstanceOf[java.lang.String] || children.last.asInstanceOf[java.lang.String].length != 1) {
             throw new UnsupportedOperationException(
-            s"Invalid paramters for LIKE ESCAPE, expecting a single char for ESCAPE")
+              s"Invalid paramters for LIKE ESCAPE, expecting a single char for ESCAPE")
           }
           val escapeChar = children.last.asInstanceOf[java.lang.String].charAt(0)
           k_like(k_lit(children.head), k_lit(children(1)), escapeChar)
