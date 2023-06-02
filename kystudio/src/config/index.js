@@ -730,3 +730,10 @@ export const formatSQLConfig = {
 }
 
 export { projectCfgs } from './projectCfgs'
+
+export const AGGREGATE_TYPE = {
+  INCLUDE: 'includes',
+  MANDATORY: 'mandatory',
+  HIERARCHY: 'hierarchyArray',
+  JOINT: 'jointArray'
+}

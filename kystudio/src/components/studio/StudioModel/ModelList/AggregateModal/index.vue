@@ -94,6 +94,18 @@
                         <div class="ksd-mb-10">
                           <span class="title font-medium include-title"><span class="is-required">*</span> {{$t('include')}}</span>
                           <div class="row ksd-fright ky-no-br-space">
+                            <common-tip placement="top" :content="(model.model_type === 'HYBRID' && !form.aggregateArray[aggregateIdx].index_range) ? $t('disableAddDim') : $t('refuseAddIndexTip')"
+                              :disabled="!(model.model_type === 'HYBRID' && !form.aggregateArray[aggregateIdx].index_range) || (!indexUpdateEnabled && ['HYBRID', 'STREAMING'].includes(aggregate.index_range))">
+                              <el-button
+                                plain
+                                class="ksd-ml-10"
+                                size="mini"
+                                :disabled="(model.model_type === 'HYBRID' && !form.aggregateArray[aggregateIdx].index_range) || (!indexUpdateEnabled && ['HYBRID', 'STREAMING'].includes(aggregate.index_range))"
+                                @click="handleIncludesRecognize(AGGREGATE_TYPE.INCLUDE, aggregateIdx)"
+                              >
+                                {{$t('textRecognition')}}
+                              </el-button>
+                            </common-tip>
                             <common-tip placement="top" :content="$t('refuseAddIndexTip')"
                               :disabled="!(!indexUpdateEnabled && ['HYBRID', 'STREAMING'].includes(aggregate.index_range))">
                               <el-button
@@ -140,6 +152,20 @@
                             <common-tip placement="right" :content="$t('mandatoryDesc')">
                               <i class="el-ksd-icon-more_info_16"></i>
                             </common-tip>
+                            <span class="row ksd-fright ky-no-br-space">
+                              <common-tip placement="top" v-if="form.aggregateArray[aggregateIdx].includes.length" :content="(model.model_type === 'HYBRID' && !form.aggregateArray[aggregateIdx].index_range) ? $t('disableAddDim') : $t('refuseAddIndexTip')"
+                                :disabled="!(model.model_type === 'HYBRID' && !form.aggregateArray[aggregateIdx].index_range) || (!indexUpdateEnabled && ['HYBRID', 'STREAMING'].includes(aggregate.index_range))">
+                                <el-button
+                                  plain
+                                  class="ksd-ml-10"
+                                  size="mini"
+                                  :disabled="(model.model_type === 'HYBRID' && !form.aggregateArray[aggregateIdx].index_range) || (!indexUpdateEnabled && ['HYBRID', 'STREAMING'].includes(aggregate.index_range))"
+                                  @click="handleMandatoryRecognize(AGGREGATE_TYPE.MANDATORY, aggregateIdx)"
+                                >
+                                  {{$t('textRecognition')}}
+                                </el-button>
+                              </common-tip>
+                            </span>
                           </h2>
                           <el-select
                             multiple
@@ -541,6 +567,7 @@ import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
 
 import vuex from 'store'
 import locales from './locales'
+import { AGGREGATE_TYPE } from 'config'
 import { BuildIndexStatus } from 'config/model'
 import store, { types, initialAggregateData } from './store'
 import { titleMaps, getPlaintDimensions, findIncludeDimension } from './handler'
@@ -591,6 +618,9 @@ vuex.registerModule(['modals', 'AggregateModal'], store)
     ...mapMutations({
       setChangedForm: 'SET_CHANGED_FORM',
       setProject: 'SET_PROJECT'
+    }),
+    ...mapActions('RecognizeAggregateModal', {
+      callRecognizeAggregateModal: types.CALL_MODAL
     })
   },
   locales
@@ -666,6 +696,7 @@ export default class AggregateModal extends Vue {
       width: [50, 1000]
     }
   }
+  AGGREGATE_TYPE = AGGREGATE_TYPE
 
   @Watch('$lang')
   changeCurrentLang (newVal, oldVal) {
@@ -1094,6 +1125,22 @@ export default class AggregateModal extends Vue {
         this.handleInput(jointKey, joint.filter(item => item !== removedValue), id)
       }
     })
+  }
+  async handleIncludesRecognize (type, aggregateIdx, groupIdx = 0) {
+    const { model, form } = this
+    const { aggregateArray = [] } = form
+    const aggregate = aggregateArray[aggregateIdx]
+    const selectedColumns = await this.callRecognizeAggregateModal({ type, model, aggregate, groupIdx })
+    const value = [...aggregate.includes, ...selectedColumns]
+    this.handleInput(`aggregateArray.${aggregateIdx}.includes`, value, aggregate.id)
+  }
+  async handleMandatoryRecognize (type, aggregateIdx, groupIdx = 0) {
+    const { model, form } = this
+    const { aggregateArray = [] } = form
+    const aggregate = aggregateArray[aggregateIdx]
+    const selectedColumns = await this.callRecognizeAggregateModal({ type, model, aggregate, groupIdx })
+    const value = [...aggregate.mandatory, ...selectedColumns]
+    this.handleInput(`aggregateArray.${aggregateIdx}.mandatory`, value, aggregate.id)
   }
   handleRemoveAllIncludes (aggregateIdx, titleId, id) {
     kylinConfirm(this.$t('clearAllAggregateTip', {aggId: titleId}), {type: 'warning'}, this.$t('clearAggregateTitle')).then(() => {

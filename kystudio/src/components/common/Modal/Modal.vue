@@ -8,6 +8,7 @@
     <ModelsImportModal />
     <ModelERDiagramModal />
     <EditProjectConfigDialog />
+    <RecognizeAggregateModal />
   </div>
 </template>
 
@@ -23,6 +24,7 @@ import ModelsExportModal from '../ModelsExportModal/ModelsExportModal.vue'
 import ModelsImportModal from '../ModelsImportModal/ModelsImportModal.vue'
 import ModelERDiagramModal from '../ModelERDiagramModal/ModelERDiagramModal'
 import EditProjectConfigDialog from '../EditProjectConfigDialog'
+import RecognizeAggregateModal from '../RecognizeAggregateModal/RecognizeAggregateModal'
 
 @Component({
   computed: {
@@ -38,7 +40,8 @@ import EditProjectConfigDialog from '../EditProjectConfigDialog'
     ModelsImportModal,
     ProjectEditModal,
     ModelERDiagramModal,
-    EditProjectConfigDialog
+    EditProjectConfigDialog,
+    RecognizeAggregateModal
   }
 })
 export default class Modal extends Vue {
