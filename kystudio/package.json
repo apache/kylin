@@ -42,6 +42,7 @@
     "vue-property-decorator": "7.0.0",
     "vue-resource": "1.5.1",
     "vue-router": "2.8.1",
+    "vue-virtual-scroller": "^1.0.10",
     "vue2-ace-editor": "0.0.3",
     "vuex": "2.5.0"
   },
