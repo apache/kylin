@@ -113,4 +113,9 @@ public class SparkStringUDF implements NotConstant {
         throw new CalciteNotSupportException();
     }
 
+    public String REGEXP_EXTRACT(@Parameter(name = "str1") String exp1, @Parameter(name = "str2") String exp2,
+            @Parameter(name = "num3") Integer exp3) throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
 }
