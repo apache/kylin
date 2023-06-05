@@ -24,7 +24,6 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -35,6 +34,7 @@ import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.ShellException;
 import org.apache.kylin.cluster.SchedulerInfoCmdHelper;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.tool.util.HadoopConfExtractor;
 import org.slf4j.Logger;
@@ -88,9 +88,8 @@ public class KapGetClusterInfo {
     }
 
     public void extractYarnMasterHost() {
-        Pattern pattern = Pattern.compile("(http://)([^:]*):([^/])*.*");
         if (yarnMasterUrlBase != null) {
-            Matcher m = pattern.matcher(yarnMasterUrlBase);
+            Matcher m = HadoopConfExtractor.URL_PATTERN.matcher(yarnMasterUrlBase);
             if (m.matches()) {
                 return;
             }
@@ -106,6 +105,9 @@ public class KapGetClusterInfo {
     public void getYarnMetrics() throws IOException, ShellException, YarnException {
         extractYarnMasterHost();
         String url = yarnMasterUrlBase + YARN_METRICS_SUFFIX;
+        if (!StringHelper.validateUrl(url)) {
+            throw new IllegalArgumentException("Url contains disallowed chars, url: " + url);
+        }
         String command = "curl -s -k --negotiate -u : " + url;
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         val patternedLogger = new BufferedLogger(logger);

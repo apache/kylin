@@ -20,8 +20,11 @@ package org.apache.kylin.common.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -195,6 +198,72 @@ public class StringHelper {
 
     public static String[] split(String str, String splitBy) {
         return str.split(splitBy);
+    }
+
+    public static boolean validateUrl(String s) {
+        return Pattern.compile("^(http(s)?://)?[a-zA-Z0-9._-]+(:[0-9]+)?(/[a-zA-Z0-9._-]+)*/?$").matcher(s).matches();
+    }
+
+    public static boolean validateDbName(String s) {
+        return Pattern.compile("^[0-9a-zA-Z_-]+$").matcher(s).matches();
+    }
+
+    public static boolean validateShellArgument(String s) {
+        return Pattern.compile("^[a-zA-Z0-9_./-]+$").matcher(s).matches();
+    }
+
+    public static String escapeShellArguments(String args) {
+        String[] expandArgs = Arrays.stream(args.split(" ")).filter(arg -> !arg.isEmpty()).toArray(String[]::new);
+        return String.join(" ", escapeShellArguments(expandArgs));
+    }
+
+    /**
+     * support cases:
+     * -u root
+     * --user root
+     * --user=root
+     */
+    public static String[] escapeShellArguments(String[] args) {
+        Pattern keyPattern = Pattern.compile("^[a-zA-Z0-9-]+$");
+        String key;
+        String value;
+        Iterator<String> argsIterator = Arrays.stream(args).iterator();
+        List<String> newArgs = new ArrayList<>();
+        while (argsIterator.hasNext()) {
+            String cur = argsIterator.next();
+            if (!cur.startsWith("-")) {
+                throw new IllegalArgumentException("Unexpected args found: " + Arrays.toString(args));
+            }
+            boolean useEqual = false;
+            if (cur.contains("=")) {
+                useEqual = true;
+                int index = cur.indexOf('=');
+                key = cur.substring(0, index);
+                value = cur.substring(index + 1);
+            } else {
+                key = cur;
+                value = argsIterator.next();
+            }
+            if (!keyPattern.matcher(key).matches()) {
+                throw new IllegalArgumentException("Unexpected args found: " + Arrays.toString(args));
+            }
+            // a'b'c -> a b c -> 'a'\''b'\''c'
+            // ''a'b'c'' -> 'a'b'c' -> _ a b c _ -> \\''a'\\''b'\\''c'\\'
+            if (value.startsWith("'") && value.endsWith("'") && value.length() >= 2) {
+                value = value.substring(1, value.length() - 1);
+            }
+            String[] splitValues = value.split("'", -1);
+            value = Arrays.stream(splitValues).map(v -> v.isEmpty() ? v : "'" + v + "'")
+                    .collect(Collectors.joining("\\'"));
+
+            if (useEqual) {
+                newArgs.add(key + "=" + value);
+            } else {
+                newArgs.add(key);
+                newArgs.add(value);
+            }
+        }
+        return newArgs.toArray(new String[0]);
     }
 
     public static String backtickToDoubleQuote(String expression) {

@@ -25,6 +25,7 @@ import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.metrics.service.MonitorDao;
+import org.apache.kylin.common.util.StringHelper;
 import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +73,10 @@ public class InfluxDBTool {
                 influxd = new File(influxDBHome + INFLUXD_PATH);
             }
 
+            if (!(StringHelper.validateDbName(database) && StringHelper.validateUrl(host))) {
+                throw new IllegalArgumentException(
+                        "Something is wrong with Influx database and host: " + database + ", " + host);
+            }
             String cmd = String.format(Locale.ROOT, "%s backup -portable -database %s -host %s %s",
                     influxd.getAbsolutePath(), database, host, destDir.getAbsolutePath());
             logger.info("InfluxDB backup cmd is {}.", cmd);
