@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.interceptor;
 
+import static org.apache.kylin.common.constant.Constants.TRACE_ID;
+
 import java.io.IOException;
 
 import javax.servlet.FilterChain;
@@ -63,14 +65,14 @@ public class KEFilter extends OncePerRequestFilter {
 
         // Set traceId for KE
         String traceId = RandomUtil.randomUUIDStr();
-        ThreadContext.put("traceId", String.format("traceId: %s ", traceId));
+        ThreadContext.put(TRACE_ID, String.format(TRACE_ID + ": %s ", traceId));
 
         filterChain.doFilter(request, response);
 
         // clean ThreadContext
         ThreadContext.clearAll();
         // set `traceId` attribute for accesslog
-        request.setAttribute("traceId", traceId);
+        request.setAttribute(TRACE_ID, traceId);
     }
 
 }

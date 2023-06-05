@@ -543,8 +543,8 @@ public class KylinLogToolTest extends NLocalFileMetadataTestCase {
         String jobId = "d0f45b72-db2f-407b-9d6f-7cfe6f6624e8";
         String patternString = KylinLogTool.getJobLogPattern(jobId);
         String log;
-        Assert.assertEquals(
-                "^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})(.*JobWorker.*jobid:d0f45b72.*)|^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}).*d0f45b72-db2f-407b-9d6f-7cfe6f6624e8",
+        Assert.assertEquals("^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})(.*JobWorker.*jobid:d0f45b72.*)"
+                + "|^(traceId: ([0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}) )?([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}).*d0f45b72-db2f-407b-9d6f-7cfe6f6624e8",
                 patternString);
         Pattern pattern = Pattern.compile(patternString);
         log = "2019-09-02T02:38:16,868 INFO  [FetchJobWorker(project:a_test)-p-9-t-9] runners.FetcherRunner : fetcher schedule d0f45b72-db2f-407b-9d6f-7cfe6f6624e8";
@@ -555,6 +555,17 @@ public class KylinLogToolTest extends NLocalFileMetadataTestCase {
         matcher = pattern.matcher(log);
         Assert.assertTrue(matcher.find());
         Assert.assertEquals("2019-09-02T02:40:07", KylinLogTool.getJobTimeString(matcher));
+        log = "traceId: ae0c0172-54b0-973f-de6c-3aab18289649 2019-09-02T02:38:16,868 INFO  [FetchJobWorker(project:a_test)-p-9-t-9] runners.FetcherRunner : fetcher schedule d0f45b72-db2f-407b-9d6f-7cfe6f6624e8";
+        matcher = pattern.matcher(log);
+        Assert.assertTrue(matcher.find());
+        Assert.assertEquals("2019-09-02T02:38:16", KylinLogTool.getJobTimeString(matcher));
+        log = "traceId: 4b8324bb-6467-d0b6-8087-9c71c28cc443 2023-05-31T13:51:57,945 INFO  [test2] [http-nio-17971-exec-5] handler.AbstractJobHandler : Job JobParam(jobId=d0f45b72-db2f-407b-9d6f-7cfe6f6624e8, "
+                + "targetSegments=[edbd2366-f8b3-0f29-39c1-dcf03895a295], targetLayouts=[], owner=ADMIN, model=4b0a4399-0903-18ec-5d7f-52eb6c96df31, project=test2, jobTypeEnum=IN"
+                + "C_BUILD, ignoredSnapshotTables=null, targetPartitions=[], targetBuckets=[], priority=3, yarnQueue=null, tag=null, condition={}, "
+                + "processLayouts=[LayoutEntity{id=160001}, LayoutEntity{id=170001}], deleteLayouts=null, secondStorageDeleteLayoutIds=null) creates job NSparkCubingJob{id=d0f45b72-db2f-407b-9d6f-7cfe6f6624e8, name=INC_BUILD, state=READY}";
+        matcher = pattern.matcher(log);
+        Assert.assertTrue(matcher.find());
+        Assert.assertEquals("2023-05-31T13:51:57", KylinLogTool.getJobTimeString(matcher));
     }
 
     @Test
