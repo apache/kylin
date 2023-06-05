@@ -34,6 +34,7 @@ import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 public class HadoopConfExtractor {
     private static final Logger logger = LoggerFactory.getLogger(HadoopConfExtractor.class);
+    public static final Pattern URL_PATTERN = Pattern.compile("(http[s]?://)([^:]*):([^/]*).*");
 
     private HadoopConfExtractor() {
     }
@@ -41,9 +42,8 @@ public class HadoopConfExtractor {
     public static String extractYarnMasterUrl(Configuration conf) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         final String yarnStatusCheckUrl = config.getYarnStatusCheckUrl();
-        Pattern pattern = Pattern.compile("(http(s)?://)([^:]*):([^/])*.*");
         if (yarnStatusCheckUrl != null) {
-            Matcher m = pattern.matcher(yarnStatusCheckUrl);
+            Matcher m = URL_PATTERN.matcher(yarnStatusCheckUrl);
             if (m.matches()) {
                 return m.group(1) + m.group(2) + ":" + m.group(3);
             }
@@ -77,7 +77,7 @@ public class HadoopConfExtractor {
         if (!rmWebHost.startsWith("http://") && !rmWebHost.startsWith("https://")) {
             rmWebHost = (YarnConfiguration.useHttps(conf) ? "https://" : "http://") + rmWebHost;
         }
-        Matcher m = pattern.matcher(rmWebHost);
+        Matcher m = URL_PATTERN.matcher(rmWebHost);
         Preconditions.checkArgument(m.matches(), "Yarn master URL not found.");
         logger.info("yarn master url: {} ", rmWebHost);
         return rmWebHost;
