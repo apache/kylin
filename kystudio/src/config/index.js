@@ -57,7 +57,8 @@ export const menusData = [
     children: [
       { name: 'source', path: '/studio/source' },
       { name: 'modelList', path: '/studio/model' },
-      { name: 'snapshot', path: '/studio/snapshot' }
+      { name: 'snapshot', path: '/studio/snapshot' },
+      { name: 'ddl', path: '/studio/ddl' }
     ]
   },
   {

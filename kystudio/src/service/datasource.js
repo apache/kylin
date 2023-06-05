@@ -315,5 +315,11 @@ export default {
   },
   exportCSV (data) {
     return Vue.http.post(apiUrl + 'query/format/csv', data, {emulateJSON: true})
+  },
+  getDDLDescrition (data) {
+    return Vue.resource(apiUrl + 'spark_source/ddl/description').get(data)
+  },
+  runDDL (data) {
+    return Vue.resource(apiUrl + 'spark_source/ddl').save(data)
   }
 }

@@ -19,6 +19,9 @@ export default {
     databases: 'Database',
     tables: 'Table',
     cloudHive: 'Object Storage',
-    factTable: 'Fact Table'
+    factTable: 'Fact Table',
+    importFromDatasource: 'Import from Data Source',
+    createByDDL: 'DDL Create',
+    createDDLTip: 'Data Definition Language Create Table'
   }
 }

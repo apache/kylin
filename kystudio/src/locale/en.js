@@ -68,6 +68,7 @@ exports.default = {
     jobs: 'Jobs',
     cubes: 'Cubes',
     dataSource: 'Data Source',
+    dataSourceTable: 'Data Source Table',
     fact: 'Fact Table',
     limitfact: 'Lookup Table(limited)',
     lookup: 'Lookup Table',
@@ -490,6 +491,7 @@ exports.default = {
     index: 'Index',
     modeledit: 'Model Edit',
     snapshot: 'Snapshot',
+    ddl: 'DDL',
     refresh: 'Refresh',
     systemcapacity: 'Capacity'
   },
