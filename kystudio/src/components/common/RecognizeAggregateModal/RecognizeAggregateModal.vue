@@ -301,8 +301,8 @@
       const dimensions = []
       this.clearupErrors()
       let formattedText = ''
-      for (const text of form.text.replace(/^\n|\n$/g, '').split(/,\n*/g)) {
-        const columnText = text.trim()
+      for (const text of form.text.replace(/\n*/g, '').split(/,\n*/g)) {
+        const columnText = text.trim().toLocaleUpperCase()
         if (columnText) {
           const dimension = modelDimensions.find(d => d.column === columnText)
           if (dimension) {
