@@ -50,6 +50,7 @@ public class Constants {
     public static final String KYLIN_SOURCE_JDBC_DRIVER_KEY = "kylin.source.jdbc.driver";
 
     public static final String UNLIMITED = "Unlimited";
+    public static final String TRACE_ID = "traceId";
 
     public static final String SNAPSHOT_AUTO_REFRESH = "snapshot_auto_refresh";
     public static final String VIEW_MAPPING = "view_mapping";

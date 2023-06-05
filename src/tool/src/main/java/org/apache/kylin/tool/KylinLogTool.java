@@ -18,6 +18,7 @@
 package org.apache.kylin.tool;
 
 import static org.apache.kylin.common.constant.Constants.KE_LICENSE;
+import static org.apache.kylin.common.constant.Constants.TRACE_ID;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -79,12 +80,18 @@ public class KylinLogTool {
 
     public static final String SECOND_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
-    private static final String LOG_TIME_PATTERN = "^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})";
+    private static final String TIME_PATTERN = "([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})";
+
+    private static final String LOG_TIME_PATTERN = "^" + TIME_PATTERN;
+
+    private static final String UUID_PATTERN = "([0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12})";
+
+    private static final String LOG_TIME_PATTERN_WITH_TRACE_ID = "^(" + TRACE_ID + ": " + UUID_PATTERN + " )?" + TIME_PATTERN;
 
     // 2019-11-11 09:30:04,628 INFO  [FetchJobWorker(project:test_fact)-p-94-t-94] threadpool.NDefaultScheduler : start check project test_fact
     private static final String LOG_PATTERN = "([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}) ([^ ]*)[ ]+\\[(.*)\\] ([^: ]*) :([\\n\\r. ]*)";
 
-    private static final String QUERY_LOG_PATTERN = "Query ([0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12})";
+    private static final String QUERY_LOG_PATTERN = "Query " + UUID_PATTERN;
 
     private static final int EXTRA_LINES = 100;
 
@@ -106,17 +113,19 @@ public class KylinLogTool {
     public static String getJobLogPattern(String jobId) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(jobId));
         return String.format(Locale.ROOT, "%s(.*JobWorker.*jobid:%s.*)|%s.*%s", LOG_TIME_PATTERN, jobId.substring(0, 8),
-                LOG_TIME_PATTERN, jobId);
+                LOG_TIME_PATTERN_WITH_TRACE_ID, jobId);
     }
 
     // group(1) is first  ([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})
     // group(2) is (.*JobWorker.*jobid:%s.*)
-    // group(3) is second ([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})
+    // group(3) is first 'traceId: ([0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}) '
+    // group(4) is first '([0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12})'
+    // group(5) is second  ([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})
     @VisibleForTesting
     public static String getJobTimeString(Matcher matcher) {
         String result = matcher.group(1);
         if (StringUtils.isEmpty(result)) {
-            result = matcher.group(3);
+            result = matcher.group(5);
         }
         return result;
     }

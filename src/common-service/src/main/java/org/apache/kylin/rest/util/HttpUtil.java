@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.util;
 
+import static org.apache.kylin.common.constant.Constants.TRACE_ID;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.response.ErrorResponse;
@@ -73,7 +75,7 @@ public class HttpUtil {
         sb.append("RemoteAddr: ").append(request.getRemoteAddr()).append("\n");
         sb.append("RemoteUser: ").append(request.getRemoteUser()).append("\n");
         sb.append("Session: ").append(formatSession(request.getSession(false))).append("\n");
-        Object attr = request.getAttribute("traceId");
+        Object attr = request.getAttribute(TRACE_ID);
         if (attr != null) {
             sb.append("TraceId: ").append(attr).append("\n");
         }
