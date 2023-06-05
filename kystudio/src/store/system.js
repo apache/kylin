@@ -59,7 +59,8 @@ export default {
     isShowSecondStorage: false,
     isNonAdminGenQueryDiagPackage: 'true',
     streamingEnabled: 'false',
-    storageQuery: 'true'
+    storageQuery: 'true',
+    ddlEnabled: 'false'
   },
   mutations: {
     [types.COLLECT_MESSAGE_DIRECTIVES]: (state, directive) => {
@@ -183,6 +184,7 @@ export default {
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.model.measure-name-check-enabled', key: 'enableCheckName', defaultValue: 'true'})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.streaming.enabled', key: 'streamingEnabled', defaultValue: 'false'})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.second-storage.query-metric-collect', key: 'storageQuery', defaultValue: 'true'})
+          commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.enabled', key: 'ddlEnabled', defaultValue: 'false'})
           resolve(response)
         }, () => {
           reject()

@@ -6,6 +6,7 @@
         <DataSourceBar
           :ignore-node-types="['column']"
           ref="datasource-bar"
+          :showDDL="true"
           :project-name="currentSelectedProject"
           :is-show-load-source="true"
           :is-show-load-table="datasourceActions.includes('loadSource')"

@@ -329,15 +329,16 @@ export default class LayoutLeftRightTop extends Vue {
     }
   }
   showMenuByRole (menuName) {
-    let isShowSnapshot = true
-    let isShowStreamingJob = true
-    if (menuName === 'snapshot') {
-      isShowSnapshot = this.$store.state.project.snapshot_manual_management_enabled
+    switch (menuName) {
+      case 'snapshot':
+        return this.availableMenus.includes(menuName.toLowerCase()) && this.$store.state.project.snapshot_manual_management_enabled
+      case 'streamingjob':
+        return this.availableMenus.includes(menuName.toLowerCase()) && this.$store.state.system.streamingEnabled === 'true'
+      case 'ddl':
+        return this.availableMenus.includes(menuName.toLowerCase()) && this.$store.state.system.ddlEnabled === 'true'
+      default:
+        return this.availableMenus.includes(menuName.toLowerCase())
     }
-    if (menuName === 'streamingjob') {
-      isShowStreamingJob = this.$store.state.system.streamingEnabled === 'true'
-    }
-    return this.availableMenus.includes(menuName.toLowerCase()) && isShowSnapshot && isShowStreamingJob
   }
   defaultVal (obj) {
     if (!obj) {

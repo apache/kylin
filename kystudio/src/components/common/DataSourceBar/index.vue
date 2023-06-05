@@ -1,21 +1,32 @@
 <template>
 <div style="height: 100%;" class="clearfix">
   <aside class="data-source-bar" :style="dataSourceStyle">
-    <section class="header clearfix" v-if="isShowActionGroup && !hideBarTitle">
+    <section class="header" v-if="isShowActionGroup && !hideBarTitle">
       <div class="header-text ksd-title-module">
-        <span>{{$t('kylinLang.common.dataSource')}}</span>
+        <span>{{$t('kylinLang.common.dataSourceTable')}}</span>
       </div>
-      <div class="icon-btns clearfix">
+      <div class="icon-btns">
         <!-- <div :class="['header-icons', 'clearfix', {selected: isSwitchSource}]" v-if="isShowSourceSwitch">
           <el-tooltip :content="$t('sourceManagement')" effect="dark" placement="top">
             <i class="ksd-fs-14 el-icon-ksd-setting" @click="handleSwitchSource"></i>
           </el-tooltip>
         </div> -->
-        <div class="add-source-table-icon" v-if="isShowLoadTable">
+        <!-- <div class="add-source-table-icon" v-if="isShowLoadTable">
           <el-tooltip :content="$t('addDatasource')" effect="dark" placement="top">
             <i class="ksd-fs-14 el-icon-ksd-project_add"  @click="importDataSource('selectSource', currentProjectData)"></i>
           </el-tooltip>
-        </div>
+        </div> -->
+        <el-dropdown @command="addDataSource">
+          <el-button text type="primary" icon-button-mini icon="el-ksd-n-icon-plus-outlined"></el-button>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item command="default" :disabled="!isShowLoadTable">{{$t('importFromDatasource')}}</el-dropdown-item>
+            <!-- <el-tooltip effect="dark" placement="top" :disabled="!hasSecData || hasOrderbyOrSkipIndex('orderBy', 'current')">
+              <span slot="content">{{$t('disableAddOrderByIndexTip')}}<a href="javascript:void(0)" @click="$emit('jumpToSegment')">{{$t('goToDelete')}}</a></span>
+              <span><el-dropdown-item command="orderBy" :disabled="hasSecData || hasOrderbyOrSkipIndex('orderBy', 'current')">{{$t('orderByIndex')}}</el-dropdown-item></span>
+            </el-tooltip> -->
+            <el-dropdown-item command="ddl" v-if="$store.state.config.platform !== 'iframe' && datasourceActions.includes('ddl') && showDDL && $store.state.system.ddlEnabled === 'true'">{{$t('createByDDL')}} <el-tooltip effect="dark" :content="$t('createDDLTip')" placement="bottom"><i class="info-icon el-ksd-n-icon-info-circle-filled"></i></el-tooltip></el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
       </div>
     </section>
     <section class="body">
@@ -173,6 +184,10 @@ import { handleSuccessAsync, handleError, objectClone } from '../../../util'
     isSecondStorageEnabled: {
       type: Boolean,
       default: false
+    },
+    showDDL: {
+      type: Boolean,
+      default: false
     }
   },
   components: {
@@ -182,7 +197,8 @@ import { handleSuccessAsync, handleError, objectClone } from '../../../util'
     ...mapGetters([
       'isAdminRole',
       'isProjectAdmin',
-      'currentProjectData'
+      'currentProjectData',
+      'datasourceActions'
     ])
   },
   methods: {
@@ -330,6 +346,16 @@ export default class DataSourceBar extends Vue {
   hideLoading (data) {
     data.isLoading = false
   }
+  addDataSource (command) {
+    switch (command) {
+      case 'default':
+        this.importDataSource('selectSource', this.currentProjectData)
+        break
+      case 'ddl':
+        this.$router.push('/studio/ddl')
+        break
+    }
+  }
   async initTree () {
     try {
       this.isSearchIng = false
@@ -476,7 +502,7 @@ export default class DataSourceBar extends Vue {
       !isNotResetDefaultExpandedKeys && this.resetDefaultExpandedKeys()
       this.filterText = filterText
       freshTreeOrder(this)
-      this.selectFirstTable()
+      // this.selectFirstTable()
       resolve()
     })
   }
@@ -729,12 +755,13 @@ export default class DataSourceBar extends Vue {
     padding: 24px 16px 16px 16px;
     font-size: 16px;
     color: @text-title-color;
+    display: flex;
+    justify-content: space-between;
   }
   .body {
     padding: 0px 16px 16px;
   }
   .header-text {
-    float: left;
     span {
       line-height: 20px;
     }
@@ -742,7 +769,7 @@ export default class DataSourceBar extends Vue {
   .icon-btns {
     position: relative;
     height: 22px;
-    top: 2px;
+    // top: 2px;
   }
   .header-icons {
     float: right;
@@ -958,5 +985,8 @@ export default class DataSourceBar extends Vue {
     top: 0;
     left: 0;
   }
+}
+.info-icon {
+  color: @text-placeholder-color;
 }
 </style>

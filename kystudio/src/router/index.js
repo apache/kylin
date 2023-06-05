@@ -81,6 +81,10 @@ let routerOptions = {
         path: 'studio/snapshot',
         component: () => import('../components/studio/snapshot/snapshot.vue')
       }, {
+        name: 'DDL',
+        path: 'studio/ddl',
+        component: () => import('../components/studio/DDL/ddl.vue')
+      }, {
         name: 'Project',
         path: 'admin/project',
         component: projectList

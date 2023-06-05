@@ -394,6 +394,14 @@ export default {
     },
     [types.EXPORT_CSV]: function ({commit}, data) {
       return api.datasource.exportCSV(data)
+    },
+    // 获取 ddl 规则
+    [types.DDL_DESCRIPTION]: function (_, data) {
+      return api.datasource.getDDLDescrition(data)
+    },
+    // 执行 ddl 语句
+    [types.RUN_DDL]: function (_, data) {
+      return api.datasource.runDDL(data)
     }
   }
 }
