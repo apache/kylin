@@ -69,6 +69,9 @@ export function scrollToLineAndHighlight (editor, line) {
 export function searchColumnInEditor (editor, column) {
   const { $search: editorSearch } = editor
   const session = editor.getSession()
+  column = column.replace(/[\\$|\\/|\\^|\\?]/g, ($1) => {
+    return `\\${$1}`
+  })
 
   editorSearch.setOptions({
     needle: `^${column},\n`,
