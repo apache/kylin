@@ -68,7 +68,7 @@ public class HiveCmdBuilderTest {
 
     private void assertBeelineCmd(String cmd) {
         String beelineCmd = cmd.substring(cmd.indexOf("EOL\n", cmd.indexOf("EOL\n") + 1) + 4);
-        assertTrue(beelineCmd.startsWith("beeline -u jdbc_url"));
+        assertTrue(beelineCmd.startsWith("beeline -u 'jdbc_url'"));
     }
 
 }

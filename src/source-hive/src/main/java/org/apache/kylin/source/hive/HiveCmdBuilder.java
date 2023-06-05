@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,7 @@ public class HiveCmdBuilder {
     }
 
     public String build() {
-        String beelineParams = kylinConfig.getHiveBeelineParams();
+        String beelineParams = StringHelper.escapeShellArguments(kylinConfig.getHiveBeelineParams());
         StringBuilder buf = new StringBuilder();
         String tmpBeelineHqlPath = null;
         StringBuilder beelineHql = new StringBuilder();

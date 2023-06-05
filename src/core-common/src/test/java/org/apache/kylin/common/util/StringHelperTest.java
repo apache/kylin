@@ -101,4 +101,69 @@ class StringHelperTest {
         Assertions.assertEquals("b", arr[1]);
         Assertions.assertEquals("c", arr[2]);
     }
+
+    @Test
+    void testValidateUrl() {
+        Assertions.assertTrue(StringHelper.validateUrl("127.0.0.1"));
+        Assertions.assertTrue(StringHelper.validateUrl("kylin.apache.org"));
+        Assertions.assertTrue(StringHelper.validateUrl("kylin"));
+        Assertions.assertTrue(StringHelper.validateUrl("http://127.0.0.1"));
+        Assertions.assertTrue(StringHelper.validateUrl("https://kylin.apache.org"));
+        Assertions.assertTrue(StringHelper.validateUrl("http://kylin"));
+        Assertions.assertTrue(StringHelper.validateUrl("http://127.0.0.1/a_p.i"));
+        Assertions.assertTrue(StringHelper.validateUrl("https://kylin.apache.org/api/te-st/"));
+        Assertions.assertTrue(StringHelper.validateUrl("http://kylin/"));
+    }
+
+    @Test
+    void testValidIllegalUrl() {
+        Assertions.assertFalse(StringHelper.validateUrl("http://kylin/$(rm -rf /)"));
+        Assertions.assertFalse(StringHelper.validateUrl("http://kylin/`rm -rf`"));
+        Assertions.assertFalse(StringHelper.validateUrl("http://kylin/'&ls"));
+        Assertions.assertFalse(StringHelper.validateUrl("http://kylin/;ls"));
+        Assertions.assertFalse(StringHelper.validateUrl("http://kylin/>ls"));
+        Assertions.assertFalse(StringHelper.validateUrl(""));
+    }
+
+    @Test
+    void testValidateDB() {
+        Assertions.assertTrue(StringHelper.validateDbName("db_TEST-01"));
+        Assertions.assertFalse(StringHelper.validateDbName("db&&ls"));
+    }
+
+    @Test
+    void testValidateArgument() {
+        Assertions.assertTrue(StringHelper.validateShellArgument("-job"));
+        Assertions.assertTrue(StringHelper.validateShellArgument("uuid-uuid-uuid-uuid"));
+        Assertions.assertTrue(StringHelper.validateShellArgument("-JobId"));
+        Assertions.assertTrue(StringHelper.validateShellArgument("/o-pt.5.0-3/kylin/te_st"));
+
+        Assertions.assertFalse(StringHelper.validateShellArgument("`ls`"));
+        Assertions.assertFalse(StringHelper.validateShellArgument("$(ls)"));
+        Assertions.assertFalse(StringHelper.validateShellArgument("&&"));
+    }
+
+    @Test
+    void testEscapeArguments() {
+        Assertions.assertEquals("", StringHelper.escapeShellArguments(""));
+        Assertions.assertEquals("-u 'root'", StringHelper.escapeShellArguments("-u   root  "));
+        Assertions.assertEquals("-u 'root'", StringHelper.escapeShellArguments("-u   'root'  "));
+        Assertions.assertEquals("-u \\''root'\\'", StringHelper.escapeShellArguments("-u   ''root''  "));
+        Assertions.assertEquals("-u \\'", StringHelper.escapeShellArguments("-u '"));
+        Assertions.assertEquals("-u ", StringHelper.escapeShellArguments("-u ''"));
+        Assertions.assertEquals("-u 'root'", StringHelper.escapeShellArguments("-u root"));
+        Assertions.assertEquals("-UserName 'root'", StringHelper.escapeShellArguments("-UserName root"));
+        Assertions.assertEquals("-user='root'", StringHelper.escapeShellArguments("-user=root"));
+        Assertions.assertEquals("-user='ro=ot'", StringHelper.escapeShellArguments("-user=ro=ot"));
+
+        Assertions.assertEquals("-u 'root'\\''$(ls)'", StringHelper.escapeShellArguments("-u root'$(ls)"));
+        Assertions.assertEquals("-UserName 'root'\\''$(ls)'",
+                StringHelper.escapeShellArguments("-UserName root'$(ls)"));
+        Assertions.assertEquals("-user='roo'\\''$(ls)t'", StringHelper.escapeShellArguments("-user=roo'$(ls)t"));
+        Assertions.assertEquals("-user='roo'\\''$(ls)'\\''t'",
+                StringHelper.escapeShellArguments("-user='roo'$(ls)'t'"));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> StringHelper.escapeShellArguments("u root"));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> StringHelper.escapeShellArguments("-u.ser root"));
+    }
 }
