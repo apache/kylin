@@ -4,10 +4,11 @@
     <el-alert
       :title="noModelRangeTips"
       type="warning"
-      class="ksd-mb-10"
+      class="ksd-mb-8"
       v-if="isShowNotModelRangeTips"
       show-icon>
     </el-alert>
+    <el-alert v-if="!realizations.length && !snapshots && !isShowNotModelRangeTips && !includeFilterIndexType" type="warning" show-icon class="ksd-mb-8" :closable="false"><span slot="title">{{$t('buildIndexAlertTip')}}<span class="jump-link" @click="jumpRouter('/studio/model')">{{$t('gotoBuild')}}</span></span></el-alert>
     <div class="resultTipsLine">
       <el-row :gutter="24">
         <el-col :span="12">
@@ -276,7 +277,9 @@ import echarts from 'echarts'
       refreshManual: 'No data, please click to refresh',
       loading: 'Loading...',
       refreshLater: 'No results, please try again later',
-      fetchError: 'Can\'t get the result as the record is missing'
+      fetchError: 'Can\'t get the result as the record is missing',
+      buildIndexAlertTip: 'No model index built. Build model index to speed up query.',
+      gotoBuild: 'Go to build'
     }
   },
   filters: {
@@ -327,6 +330,7 @@ export default class queryResult extends Vue {
   model = {
     uuid: ''
   }
+
   // 增加可视化按钮
   get insightBtnGroups () {
     return [
@@ -483,7 +487,7 @@ export default class queryResult extends Vue {
     if (this.extraoption.realizations && this.extraoption.realizations.length) {
       let realizations = []
       for (let i of this.extraoption.realizations) {
-        if (!((i.layoutId === -1 || i.layoutId === null || i.layoutId === 0) && i.indexType !== null)) {
+        if (!((i.layoutId === -1 || i.layoutId === null || i.layoutId === 0) && (i.indexType !== null && i.indexType !== 'Filter Conflict'))) {
           realizations.push(i)
         }
       }
@@ -531,8 +535,24 @@ export default class queryResult extends Vue {
     }
     return isAnyNull
   }
+  get includeFilterIndexType () {
+    let flag = false
+    if (this.extraoption.realizations && this.extraoption.realizations.length) {
+      for (let i in this.extraoption.realizations) {
+        if (this.extraoption.realizations[i].layoutId === -1 && this.extraoption.realizations[i].indexType === 'Filter Conflict') {
+          flag = true
+          break
+        }
+      }
+    }
+    return flag
+  }
   get noModelRangeTips () {
     return this.$store.state.project.multi_partition_enabled ? this.$t('noModelRangeTips2') : this.$t('noModelRangeTips')
+  }
+
+  jumpRouter (path) {
+    this.$router.push(path)
   }
 
   // 展示 layout 详情
@@ -827,6 +847,10 @@ export default class queryResult extends Vue {
         right: 0px;
         top: 0px;
       }
+    }
+    .jump-link {
+      color: @ke-color-primary;
+      cursor: pointer;
     }
     .el-table .cell{
        word-break: break-all!important;
