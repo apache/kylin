@@ -147,6 +147,10 @@ class StringHelperTest {
     void testEscapeArguments() {
         Assertions.assertEquals("", StringHelper.escapeShellArguments(""));
         Assertions.assertEquals("-u 'root'", StringHelper.escapeShellArguments("-u   root  "));
+        Assertions.assertEquals("-u 'root'", StringHelper.escapeShellArguments("-u   'root'  "));
+        Assertions.assertEquals("-u \\''root'\\'", StringHelper.escapeShellArguments("-u   ''root''  "));
+        Assertions.assertEquals("-u \\'", StringHelper.escapeShellArguments("-u '"));
+        Assertions.assertEquals("-u ", StringHelper.escapeShellArguments("-u ''"));
         Assertions.assertEquals("-u 'root'", StringHelper.escapeShellArguments("-u root"));
         Assertions.assertEquals("-UserName 'root'", StringHelper.escapeShellArguments("-UserName root"));
         Assertions.assertEquals("-user='root'", StringHelper.escapeShellArguments("-user=root"));
@@ -156,7 +160,7 @@ class StringHelperTest {
         Assertions.assertEquals("-UserName 'root'\\''$(ls)'",
                 StringHelper.escapeShellArguments("-UserName root'$(ls)"));
         Assertions.assertEquals("-user='roo'\\''$(ls)t'", StringHelper.escapeShellArguments("-user=roo'$(ls)t"));
-        Assertions.assertEquals("-user=\\''roo'\\''$(ls)'\\''t'\\'",
+        Assertions.assertEquals("-user='roo'\\''$(ls)'\\''t'",
                 StringHelper.escapeShellArguments("-user='roo'$(ls)'t'"));
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> StringHelper.escapeShellArguments("u root"));
