@@ -63,7 +63,7 @@
       </div>
       <div :class="['single-modal-detail', {'no-conflict': !(activeModalObj && activeModalObj.differences > 0)}]">
         <div :class="['model-detail-tips', getCurrentModelDetails().key]" v-if="getCurrentModelDetails && activeModalObj && activeModalObj.differences > 0">
-          <p class="title">{{$t(activeModalObj.has_same_name ? `${getCurrentModelDetails().title}SameName` : `${getCurrentModelDetails().title}DiffName`)}}<span v-if="!(getCurrentModelDetails().key === 'new' && !activeModalObj.has_same_name)" class="detail-btn" @click="showModelDetails = !showModelDetails">{{$t('detailBtn')}}<i :class="['el-icon-ksd-more_01', 'ksd-ml-5', {'open': showModelDetails}]"></i></span></p>
+          <p class="title">{{$t(activeModalObj.has_same_name ? `${getCurrentModelDetails().title}SameName` : `${getCurrentModelDetails().title}DiffName`)}}<span v-if="!(getCurrentModelDetails().key === 'new' && !(activeModalObj.has_same_name && !activeModalObj.has_same_name_broken))" class="detail-btn" @click="showModelDetails = !showModelDetails">{{$t('detailBtn')}}<i :class="['el-icon-ksd-more_01', 'ksd-ml-5', {'open': showModelDetails}]"></i></span></p>
           <div class="detail-content" v-if="showModelDetails">
             <p>{{$t(activeModalObj.has_same_name ? `${getCurrentModelDetails().details}SameName` : `${getCurrentModelDetails().details}DiffName`)}}</p>
             <div class="ksd-pl-10" v-if="getCurrentDefaultStatus() === 'noImport'">
@@ -75,7 +75,7 @@
               <p v-for="(item, index) in noOverWriteReason" :key="index">* {{$t(item)}}</p>
             </div>
           </div>
-          <p>{{$t(activeModalObj.has_same_name ? `${getCurrentModelDetails().msg}SameName` : `${getCurrentModelDetails().msg}DiffName`)}}</p>
+          <p>{{$t(activeModalObj.has_same_name && !activeModalObj.has_same_name_broken ? `${getCurrentModelDetails().msg}SameName` : `${getCurrentModelDetails().msg}DiffName`)}}</p>
         </div>
         <el-tabs v-model="activeTabName" @tab-click="handleClick" v-if="activeModalObj && activeModalObj.differences > 0">
           <el-tab-pane :name="it.name" v-for="(it, index) in tabPaneList" :key="index">
