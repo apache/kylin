@@ -935,7 +935,11 @@ export default class QueryHistoryTable extends Vue {
       const index = this.filterTags.map(item => item.key).indexOf('server')
       this.filterTags.splice(index, 1)
     } else {
-      const index = this.filterData[tag.key].indexOf(tag.label)
+      let delLabel = tag.label
+      if (tag.key === 'realization' && tag.label === 'allModels') {
+        delLabel = 'modelName'
+      }
+      const index = this.filterData[tag.key].indexOf(delLabel)
       index > -1 && this.filterData[tag.key].splice(index, 1)
       this.filterTags = this.filterTags.filter(item => item.key !== tag.key || item.key === tag.key && tag.label !== item.label)
     }
