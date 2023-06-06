@@ -107,7 +107,7 @@
   })
   export default class DDL extends Vue {
     content = ''
-    activeType = ''
+    activeType = 'result'
     rules = []
     ddlError = false
     errorMsg = ''
