@@ -105,7 +105,7 @@ public class KapGetClusterInfo {
     public void getYarnMetrics() throws IOException, ShellException, YarnException {
         extractYarnMasterHost();
         String url = yarnMasterUrlBase + YARN_METRICS_SUFFIX;
-        if (StringHelper.validateUrl(url)) {
+        if (!StringHelper.validateUrl(url)) {
             throw new IllegalArgumentException("Url contains disallowed chars, url: " + url);
         }
         String command = "curl -s -k --negotiate -u : " + url;
