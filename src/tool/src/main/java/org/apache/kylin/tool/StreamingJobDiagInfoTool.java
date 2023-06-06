@@ -104,7 +104,7 @@ public class StreamingJobDiagInfoTool extends AbstractInfoExtractorTool {
         final boolean includeClient = getBooleanOption(optionsHelper, OPTION_STREAMING_INCLUDE_CLIENT, true);
         final boolean includeConf = getBooleanOption(optionsHelper, OPTION_STREAMING_INCLUDE_CONF, true);
         final boolean includeMeta = getBooleanOption(optionsHelper, OPTION_STREAMING_META, true);
-        final boolean includeAuditLog = getBooleanOption(optionsHelper, OPTION_STREAMING_AUDIT_LOG, true);
+        final boolean includeAuditLog = getBooleanOption(optionsHelper, OPTION_STREAMING_AUDIT_LOG, false);
         final boolean includeBin = true;
 
         final long diagStartTime = System.currentTimeMillis();
