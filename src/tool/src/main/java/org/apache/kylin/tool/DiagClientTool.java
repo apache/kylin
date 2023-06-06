@@ -117,7 +117,7 @@ public class DiagClientTool extends AbstractInfoExtractorTool {
         final boolean includeLog = getBooleanOption(optionsHelper, OPTION_LOG,
                 getBooleanOption(optionsHelper, OPTION_CATE_BASE, true));
         final boolean includeAuditLog = getBooleanOption(optionsHelper, OPTION_AUDIT_LOG,
-                getBooleanOption(optionsHelper, OPTION_CATE_BASE, true));
+                getBooleanOption(optionsHelper, OPTION_CATE_BASE, false));
         final boolean includeBin = true;
 
         final long startTime = getLongOption(optionsHelper, OPTION_START_TIME, getDefaultStartTime());

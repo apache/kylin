@@ -111,7 +111,7 @@ public class JobDiagInfoTool extends AbstractInfoExtractorTool {
         final boolean includeConf = getBooleanOption(optionsHelper, OPTION_INCLUDE_CONF, true);
         final boolean includeMeta = getBooleanOption(optionsHelper, OPTION_META, true);
         final boolean isCloud = getKapConfig().isCloud();
-        final boolean includeAuditLog = getBooleanOption(optionsHelper, OPTION_AUDIT_LOG, true);
+        final boolean includeAuditLog = getBooleanOption(optionsHelper, OPTION_AUDIT_LOG, false);
         final boolean includeBin = true;
 
         final long start = System.currentTimeMillis();
