@@ -24,12 +24,13 @@
           </div>
           <AceEditor :key="isShow" :placeholder="'123'" class="text-input" ref="editorRef" :value="form.text" @input="handleInputText" />
           <div class="actions">
-            <el-tooltip :content="$t('dexecute')" placement="left">
-              <el-button icon-button class="recognize" size="small" type="primary" icon="el-icon-caret-right" :disabled="!form.text" @click="handleRecognize" />
+            <el-tooltip placement="left">
+              <div slot="content">{{$t('dexecute')}}<span class="accelerator-key">{{$t('acceleratorKey')}}</span></div>
+              <el-button icon-button class="recognize" size="small" type="primary" icon="el-ksd-n-icon-play-filled" :disabled="!form.text" @click="handleRecognize" />
             </el-tooltip>
           </div>
         </div>
-        <div class="recognize-results">
+        <div class="recognize-results" v-loading="loadingRecognize">
           <template v-if="form.dimensions.length">
             <div class="results-header">
               {{$tc('selectedDimensionCount', selectedDimensionCount, { count: selectedDimensionCount })}}
@@ -67,7 +68,7 @@
           {{$t('kylinLang.common.cancel')}}
         </el-button>
         <el-button type="primary" size="medium" :disabled="!selectedDimensionCount" @click="handleSubmit">
-          {{$t('kylinLang.common.submit')}}
+          {{$t('kylinLang.common.save')}}
         </el-button>
       </div>
     </el-dialog>
@@ -126,6 +127,8 @@
   })
   export default class RecognizeAggregateModal extends Vue {
     ALERT_STATUS = ALERT_STATUS
+    loadingRecognize = false
+
     @Watch('$lang')
     onLocaleChanged () {
       this.updatePlaceHolder()
@@ -279,8 +282,8 @@
       this.$nextTick(() => refreshEditor(editor))
     }
     handleDexecute (event) {
-      const { metaKey, key, keyCode } = event
-      if (metaKey && (keyCode === 13 || key === 'Enter')) {
+      const { metaKey, ctrlKey, key, keyCode } = event
+      if ((metaKey || ctrlKey) && (keyCode === 13 || key === 'Enter')) {
         this.handleRecognize()
       }
     }
@@ -301,6 +304,7 @@
       const dimensions = []
       this.clearupErrors()
       let formattedText = ''
+      this.loadingRecognize = true
       for (const text of form.text.replace(/\n*/g, '').split(/,\n*/g)) {
         const columnText = text.trim().toLocaleUpperCase()
         if (columnText) {
@@ -331,6 +335,9 @@
       this.setModalForm({ text: formattedText, dimensions })
       this.$nextTick(() => {
         this.showErrors()
+        setTimeout(() => {
+          this.loadingRecognize = false
+        }, 500)
       })
     }
     handlePrevious () {
@@ -570,6 +577,9 @@
     ul {
       margin-left: 15px;
     }
+  }
+  .accelerator-key {
+    color: @text-disabled-color;
   }
   </style>
   
