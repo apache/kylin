@@ -153,7 +153,7 @@
         const resultData = await handleSuccessAsync(res)
         this.running = false
         this.showCreateSuccessAlert = this.content.toLocaleLowerCase().indexOf('create view') > -1
-        this.showCreateSuccessAlert && this.insertEditorContent(`\n\n${resultData}`)
+        resultData && this.insertEditorContent(`\n\n${resultData}`)
         this.resetErrorMsg()
         this.$message({ type: 'success', message: this.$t('runSuccess') })
       } catch (e) {
