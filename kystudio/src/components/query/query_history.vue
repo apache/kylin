@@ -87,8 +87,12 @@ import { pageRefTags, apiUrl, bigPageCount } from 'config'
         vm.filterDirectData.startTimeFrom = tm - 1000 * 60 * 60 * 24 * 7
         vm.filterDirectData.startTimeTo = tm
         return
+      } else {
+        let tm = new Date(new Date().toDateString()).getTime()
+        vm.filterDirectData.startTimeFrom = tm
+        vm.filterDirectData.startTimeTo = tm + 1000 * 60 * 60 * 24 * 1
       }
-      vm.currentSelectedProject && vm.loadHistoryList()
+      // vm.currentSelectedProject && vm.loadHistoryList()
     })
   },
   methods: {
