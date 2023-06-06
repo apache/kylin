@@ -34,6 +34,9 @@
           <template v-if="form.dimensions.length">
             <div class="results-header">
               {{$tc('selectedDimensionCount', selectedDimensionCount, { count: selectedDimensionCount })}}
+              <template>
+                <span class="divide ksd-ml-8 ksd-mr-8">|</span><span>{{$t('usedDimensionCount', {count: usedDimensionCount})}}</span>
+              </template>
             </div>
             <div class="list-actions">
               <el-checkbox :key="isSelectAll" :indeterminate="isIndeterminate" :checked="isSelectAll" @change="handleSelectAll" />
@@ -42,7 +45,7 @@
             </div>
             <RecycleScroller
               class="dimension-list"
-              :items="form.dimensions"
+              :items="dimensionList"
               :item-size="37"
               key-field="value"
             >
@@ -138,6 +141,12 @@
       this.updatePlaceHolder()
       this.updateRecognizeShortcut(newVal, oldVal)
     }
+    get dimensionList () {
+      const { dimensions } = this.form
+      const usedItems = dimensions.filter(it => it.isDisabled)
+      const selectedItems = dimensions.filter(it => !it.isDisabled)
+      return [...selectedItems, ...usedItems]
+    }
     get errorCount () {
       const { errorInEditor } = this
       return errorInEditor.filter(line => [ERROR_TYPE.COLUMN_NOT_IN_MODEL, ERROR_TYPE.COLUMN_NOT_IN_INCLUDES].includes(line.type)).length
@@ -149,6 +158,10 @@
     get selectedDimensionCount () {
       const { form: { dimensions } } = this
       return dimensions.filter(dimension => dimension.isChecked).length
+    }
+    get usedDimensionCount () {
+      const { form: { dimensions } } = this
+      return dimensions.filter(dimension => dimension.isDisabled).length
     }
     get isSelectAll () {
       const { form: { dimensions } } = this
@@ -475,6 +488,9 @@
       font-weight: 400;
       font-size: 12px;
       line-height: 16px;
+      .divide {
+        color: @text-placeholder-color;
+      }
     }
     .actions {
       position: absolute;
