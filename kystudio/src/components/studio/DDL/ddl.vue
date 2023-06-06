@@ -9,7 +9,7 @@
           <editor class="ddl-editor" v-model="content" ref="ddlEditor" lang="sql" theme="chrome" @keydown.meta.enter.native="runSql" @keydown.ctrl.enter.native="runSql"></editor>
           <div class="run-btn">
             <el-tooltip effect="dark" placement="left">
-              <div slot="content">{{$t('runBtnTip')}}<span class="accelerator-key">⌃/⌘ enter</span></div>
+              <div slot="content">{{$t('runBtnTip')}}<span class="accelerator-key">{{$t('acceleratorKey')}}</span></div>
               <el-button :loading="running" type="primary" icon-button size="big" icon="el-ksd-n-icon-play-filled" @click="runSql"></el-button>
             </el-tooltip>
           </div>
@@ -94,25 +94,14 @@
         newDDLTable: 'New DDL Table',
         datasourceTable: 'Data Source Table',
         syntaxRules: 'Syntax Rules',
-        createDDLSuggestionTitle: '在 KE 中创建 DDL Table 需要遵循 KE 的语法规则。',
+        createDDLSuggestionTitle: 'To create a DDL Table in KE, you need to follow the syntax rules of KE.',
         importDataSource: 'Import',
-        runBtnTip: '执行 ',
-        runSuccess: 'Dexecute succeed.',
-        runFailed: 'Execute Failed，Please check and try again.',
+        runBtnTip: 'Execute ',
+        acceleratorKey: '⌃/⌘ enter',
+        runSuccess: 'Execute succeed.',
+        runFailed: 'Execute Failed, Please check and try again.',
         createViewSuccessAlert: 'The DDL Table is created to hive after executing "Create View". Please importing the table to data source to be available.',
         goToImport: 'Go to Import'
-      },
-      'zh-cn': {
-        newDDLTable: '新的 DDL 表',
-        datasourceTable: '数据源表',
-        syntaxRules: '语法规则',
-        createDDLSuggestionTitle: '在 KE 中创建 DDL Table 需要遵循 KE 的语法规则。',
-        importDataSource: '导入',
-        runBtnTip: 'Dexecute ',
-        runSuccess: '执行成功',
-        runFailed: '执行失败，请检查后重试',
-        createViewSuccessAlert: '“Create View” 执行后 DDL Table 创建至 Hive，需从数据源导入后可用。',
-        goToImport: '立即导入'
       }
     }
   })
