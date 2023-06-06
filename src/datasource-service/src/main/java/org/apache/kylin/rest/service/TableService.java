@@ -1482,8 +1482,8 @@ public class TableService extends BasicService {
                     .collect(Collectors.toMap(ColumnDesc::getName, Function.identity()));
             val newColMap = Stream.of(context.getTableDesc().getColumns())
                     .collect(Collectors.toMap(ColumnDesc::getName, Function.identity()));
-            for (String changedTypeColumn : context.getChangeTypeColumns()) {
-                originColMap.put(changedTypeColumn, newColMap.get(changedTypeColumn));
+            for (String changedColumn : context.getChangedColumns()) {
+                originColMap.put(changedColumn, newColMap.get(changedColumn));
             }
             for (String addColumn : context.getAddColumns()) {
                 originColMap.put(addColumn, newColMap.get(addColumn));
@@ -1600,14 +1600,22 @@ public class TableService extends BasicService {
         handleExcludedColumns(project, context, newTableDesc, tableIdentity);
 
         TableDesc originTableDesc = getManager(NTableMetadataManager.class, project).getTableDesc(tableIdentity);
-        val collector = Collectors.toMap(ColumnDesc::getName, col -> Pair.newPair(col.getName(), col.getDatatype()));
-        val originCols = Stream.of(originTableDesc.getColumns()).collect(collector);
-        val newCols = Stream.of(newTableDesc.getColumns()).collect(collector);
-        val diff = Maps.difference(newCols, originCols);
-        context.setAddColumns(diff.entriesOnlyOnLeft().keySet());
-        context.setRemoveColumns(diff.entriesOnlyOnRight().keySet());
-        context.setChangeTypeColumns(diff.entriesDiffering().keySet());
+        val collector = Collectors.toMap(ColumnDesc::getName, col -> Pair.newPair(col.getDatatype(), col.getComment()));
+        val diff = Maps.difference(Stream.of(originTableDesc.getColumns()).collect(collector),
+                Stream.of(newTableDesc.getColumns()).collect(collector));
+        val dataTypeCollector = Collectors.toMap(ColumnDesc::getName, ColumnDesc::getDatatype);
+        val originCols = Stream.of(originTableDesc.getColumns()).collect(dataTypeCollector);
+        val newCols = Stream.of(newTableDesc.getColumns()).collect(dataTypeCollector);
+        val dataTypeDiff = Maps.difference(newCols, originCols);
+
+        assert diff.entriesDiffering().keySet().containsAll(dataTypeDiff.entriesDiffering().keySet());
+
+        context.setAddColumns(dataTypeDiff.entriesOnlyOnLeft().keySet());
+        context.setRemoveColumns(dataTypeDiff.entriesOnlyOnRight().keySet());
+        context.setChangedColumns(diff.entriesDiffering().keySet());
+        context.setChangeTypeColumns(dataTypeDiff.entriesDiffering().keySet());
         context.setTableCommentChanged(!Objects.equals(originTableDesc.getTableComment(), newTableDesc.getTableComment()));
+
 
         if (!context.isNeedProcess()) {
             return context;
@@ -1633,7 +1641,7 @@ public class TableService extends BasicService {
 
         val dependencyGraph = SchemaUtil.dependencyGraph(project, tableIdentity);
         Map<String, Set<Pair<NDataModel.Measure, NDataModel.Measure>>> suitableColumnTypeChangedMeasuresMap = getSuitableColumnTypeChangedMeasures(
-                dependencyGraph, project, originTableDesc, diff.entriesDiffering());
+                dependencyGraph, project, originTableDesc, dataTypeDiff.entriesDiffering());
 
         BiFunction<Set<String>, Boolean, Map<String, AffectedModelContext>> toAffectedModels = (cols, isDelete) -> {
             Set<SchemaNode> affectedNodes = Sets.newHashSet();
@@ -1712,16 +1720,19 @@ public class TableService extends BasicService {
      */
     private Map<String, Set<Pair<NDataModel.Measure, NDataModel.Measure>>> getSuitableColumnTypeChangedMeasures(
             Graph<SchemaNode> dependencyGraph, String project, TableDesc tableDesc,
-            Map<String, MapDifference.ValueDifference<Pair<String, String>>> changeTypeDifference) {
+            Map<String, MapDifference.ValueDifference<String>> changeTypeDifference) {
         Map<String, Set<Pair<NDataModel.Measure, NDataModel.Measure>>> result = Maps.newHashMap();
 
         NDataModelManager dataModelManager = NDataModelManager.getInstance(KylinConfig.getInstanceFromEnv(), project);
 
         val columnMap = Arrays.stream(tableDesc.getColumns())
                 .collect(Collectors.toMap(ColumnDesc::getName, Function.identity()));
-        for (MapDifference.ValueDifference<Pair<String, String>> value : changeTypeDifference.values()) {
+        for (val value : changeTypeDifference.entrySet()) {
+            val colName = value.getKey();
+            val colDiff = value.getValue();
+
             Graphs.reachableNodes(dependencyGraph,
-                    SchemaNode.ofTableColumn(columnMap.get(value.leftValue().getFirst()))).stream()
+                    SchemaNode.ofTableColumn(columnMap.get(colName))).stream()
                     .filter(node -> node.getType() == SchemaNodeType.MODEL_MEASURE).forEach(node -> {
                         String modelAlias = node.getSubject();
                         String measureId = node.getDetail();
@@ -1735,7 +1746,7 @@ public class TableService extends BasicService {
 
                                 FunctionDesc originalFunction = measure.getFunction();
 
-                                String newColumnType = value.leftValue().getSecond();
+                                String newColumnType = colDiff.leftValue();
 
                                 boolean datatypeSuitable = originalFunction
                                         .isDatatypeSuitable(DataType.getType(newColumnType));

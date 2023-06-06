@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 //import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,9 @@ import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.guava30.shaded.common.base.Joiner;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.engine.spark.job.NTableSamplingJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -94,10 +98,6 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import org.apache.kylin.guava30.shaded.common.base.Joiner;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 //import io.kyligence.kap.clickhouse.MockSecondStorage;
 import io.kyligence.kap.secondstorage.SecondStorageUtil;
@@ -1207,6 +1207,35 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
     }
 
     @Test
+    public void testReloadColumnCommentChanged() throws Exception {
+        val tableManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
+        val tableName = "DEFAULT.TEST_COUNTRY";
+        val dimColName = "COUNTRY";
+        val measureColName = "LATITUDE";
+
+        prepareTableExt(tableName);
+        changeTypeColumn(tableName, Collections.emptyMap(), new HashMap<String, String>() {
+            {
+                put("COUNTRY", "a new comment for dimension column");
+                put("LATITUDE", "a new comment for measure column");
+            }
+        }, true);
+        tableService.innerReloadTable(PROJECT, tableName, true, null);
+
+        val newTableDesc = tableManager.getTableDesc(tableName);
+        Assert.assertEquals("a new comment for dimension column",
+                findColumn(newTableDesc.getColumns(), dimColName).get().getComment());
+        Assert.assertEquals("a new comment for measure column",
+                findColumn(newTableDesc.getColumns(), measureColName).get().getComment());
+    }
+
+    private Optional<ColumnDesc> findColumn(ColumnDesc[] columns, String name) {
+        return Stream.of(columns)
+                .filter(col -> col.getName().equalsIgnoreCase(name))
+                .findFirst();
+    }
+
+    @Test
     public void testReloadAddTableComment() throws Exception {
         val tableManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
         val tableDesc = tableManager.getTableDesc("EDW.TEST_CAL_DT");
@@ -1889,6 +1918,11 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
 
     private void changeTypeColumn(String tableIdentity, Map<String, String> columns, boolean useMeta)
             throws IOException {
+        changeTypeColumn(tableIdentity, columns, Collections.emptyMap(), useMeta);
+    }
+
+    private void changeTypeColumn(String tableIdentity, Map<String, String> columns, Map<String, String> comments, boolean useMeta)
+            throws IOException {
         val tableManager = NTableMetadataManager.getInstance(getTestConfig(), PROJECT);
         val factTable = tableManager.getTableDesc(tableIdentity);
         String resPath = KylinConfig.getInstanceFromEnv().getMetadataUrl().getIdentifier();
@@ -1898,6 +1932,9 @@ public class TableReloadServiceTest extends CSVSourceTestCase {
                 .peek(col -> {
                     if (columns.containsKey(col.getName())) {
                         col.setDatatype(columns.get(col.getName()));
+                    }
+                    if (comments.containsKey(col.getName())) {
+                        col.setComment(comments.get(col.getName()));
                     }
                 }).toArray(ColumnDesc[]::new);
         tableMeta.setColumns(newColumns);
