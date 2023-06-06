@@ -191,6 +191,7 @@
   </script>
   
   <style lang="less" scoped>
+  @import '../../../assets/styles/variables.less';
   .ddl-container {
     width: 100%;
     height: 100%;
@@ -234,13 +235,13 @@
         flex-direction: column;
         align-items: center;
         gap: 8px;
-        border-left: 1px solid #E6EBF4;
+        border-left: 1px solid @ke-border-secondary;
         padding: 8px 8px;
         box-sizing: border-box;
         .el-button {
-          color: #8B99AE;
+          color: @text-disabled-color;
           &.is-active {
-            background: #ECF0F8 !important;
+            background: @ke-background-color-hover !important;
           }
         }
       }
@@ -251,20 +252,21 @@
           .label {
             font-size: 14px;
             font-weight: 400;
-            color: #8B99AE;
+            color: @text-disabled-color;
             line-height: 22px;
             margin-bottom: 16px;
           }
           .item {
             font-size: 14px;
-            color: #2F374C;
+            color: @text-title-color;
             line-height: 22px;
+            word-break: break-all;
           }
           .trance-msg {
             height: 270px;
             overflow: auto;
-            background: #F8F9FB;
-            border: 1px solid #E6EBF4;
+            background: @ke-background-color-secondary;
+            border: 1px solid @ke-border-secondary;
             border-radius: 4px;
             margin-bottom: 16px;
             padding: 8px 16px;
@@ -319,7 +321,7 @@
       align-items: center;
       padding: 0 16px;
       box-sizing: border-box;
-      border-bottom: 1px solid #E6EBF4;
+      border-bottom: 1px solid @ke-border-secondary;
       .title {
         font-weight: 600;
         font-size: 16px;
@@ -328,6 +330,7 @@
   }
   </style>
   <style lang="less">
+  @import '../../../assets/styles/variables.less';
   .ddl-editor {
     .ace_content {
       width: 100% !important;
@@ -361,6 +364,6 @@
     }
   }
   .accelerator-key {
-    color: #8B99AE;
+    color: @text-disabled-color;
   }
   </style>
