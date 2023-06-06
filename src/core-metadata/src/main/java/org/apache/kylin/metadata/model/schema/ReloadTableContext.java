@@ -44,6 +44,8 @@ public class ReloadTableContext {
 
     private Set<String> favoriteQueries = Sets.newHashSet();
 
+    private Set<String> changedColumns = Sets.newHashSet();
+
     private Set<String> addColumns = Sets.newHashSet();
 
     private Set<String> removeColumns = Sets.newHashSet();
@@ -97,11 +99,11 @@ public class ReloadTableContext {
     }
 
     public boolean isOnlyAddCols() {
-        return removeColumns.isEmpty() && changeTypeColumns.isEmpty();
+        return removeColumns.isEmpty() && changedColumns.isEmpty();
     }
 
     public boolean isNeedProcess() {
         return CollectionUtils.isNotEmpty(addColumns) || CollectionUtils.isNotEmpty(removeColumns)
-                || CollectionUtils.isNotEmpty(changeTypeColumns) || isTableCommentChanged;
+                || CollectionUtils.isNotEmpty(changedColumns) || isTableCommentChanged;
     }
 }
