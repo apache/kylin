@@ -54,7 +54,7 @@ public class JdbcShareStateStore {
     }
 
     private JdbcShareStateStore() throws Exception {
-        StorageURL url = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        StorageURL url = KylinConfig.getInstanceFromEnv().getJdbcShareStateUrl();
         Properties props = JdbcUtil.datasourceParameters(url);
         dataSource = JdbcDataSource.getDataSource(props);
         ssTableName = StorageURL.replaceUrl(url) + "_" + "share_state";

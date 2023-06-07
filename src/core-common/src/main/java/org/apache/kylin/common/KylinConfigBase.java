@@ -117,6 +117,7 @@ public abstract class KylinConfigBase implements Serializable {
     public static final String POWER_BI_CONVERTER = "org.apache.kylin.query.util.PowerBIConverter";
     public static final String KYLIN_STREAMING_STATS_URL = "kylin.streaming.stats.url";
     public static final String KYLIN_QUERY_HISTORY_URL = "kylin.query.queryhistory.url";
+    public static final String KYLIN_JDBC_SHARE_STATE_URL = "kylin.jdbc.share.state.url";
     public static final String KYLIN_METADATA_DISTRIBUTED_LOCK_JDBC_URL = "kylin.metadata.distributed-lock.jdbc.url";
 
     private static final String METRICS = "_metrics/";
@@ -3967,5 +3968,16 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getKubernetesUploadPathKey() {
         return "kylin.engine.spark-conf.spark.kubernetes.file.upload.path";
+    }
+
+    public StorageURL getJdbcShareStateUrl() {
+        if (StringUtils.isEmpty(getOptional(KYLIN_JDBC_SHARE_STATE_URL))) {
+            return getMetadataUrl();
+        }
+        return StorageURL.valueOf(getOptional(KYLIN_JDBC_SHARE_STATE_URL));
+    }
+
+    public void setJdbcShareStateUrl(String jdbcShareStateUrl) {
+        setProperty(KYLIN_JDBC_SHARE_STATE_URL, jdbcShareStateUrl);
     }
 }
