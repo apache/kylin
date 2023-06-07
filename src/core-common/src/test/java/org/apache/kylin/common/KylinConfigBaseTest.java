@@ -1122,6 +1122,8 @@ class KylinConfigBaseTest {
         assertEquals(pgUrl, config.getStreamingStatsUrl().toString());
         config.setQueryHistoryUrl(pgUrl);
         assertEquals(pgUrl, config.getQueryHistoryUrl().toString());
+        config.setJdbcShareStateUrl(pgUrl);
+        assertEquals(pgUrl, config.getJdbcShareStateUrl().toString());
     }
 
     @Test
