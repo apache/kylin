@@ -35,7 +35,7 @@ import scala.collection.mutable
 
 object ExpressionConverter {
 
-  val unaryParameterFunc = mutable.HashSet("ucase", "lcase", "base64",
+  private val unaryParameterFunc = mutable.HashSet("ucase", "lcase", "base64",
     "sentences", "unbase64", "crc32", "md5", "sha", "sha1",
     // time
     "weekofyear",
@@ -45,21 +45,21 @@ object ExpressionConverter {
     "explode"
   )
 
-  val ternaryParameterFunc = mutable.HashSet("replace", "substring_index", "lpad", "rpad", "conv", "regexp_extract")
-  val binaryParameterFunc =
+  private val ternaryParameterFunc = mutable.HashSet("replace", "substring_index", "lpad", "rpad", "conv", "regexp_extract")
+  private val binaryParameterFunc =
     mutable.HashSet("decode", "encode", "find_in_set", "levenshtein", "sha2",
       "trunc", "add_months", "date_add", "date_sub", "from_utc_timestamp", "to_utc_timestamp",
       // math function
       "bround", "hypot", "log"
     )
 
-  val noneParameterfunc = mutable.HashSet("current_database", "input_file_block_length", "input_file_block_start",
+  private val noParameterFunc = mutable.HashSet("current_database", "input_file_block_length", "input_file_block_start",
     "input_file_name", "monotonically_increasing_id", "now", "spark_partition_id", "uuid"
   )
 
-  val varArgsFunc = mutable.HashSet("months_between", "locate", "rtrim", "from_unixtime")
+  private val varArgsFunc = mutable.HashSet("months_between", "locate", "rtrim", "from_unixtime", "to_date", "to_timestamp")
 
-  val bitmapUDF = mutable.HashSet("intersect_count_by_col", "subtract_bitmap_value", "subtract_bitmap_uuid");
+  private val bitmapUDF = mutable.HashSet("intersect_count_by_col", "subtract_bitmap_value", "subtract_bitmap_uuid");
 
   // scalastyle:off
   def convert(sqlTypeName: SqlTypeName, relDataType: RelDataType, op: SqlKind, opName: String, children: Seq[Any]): Any = {
@@ -295,15 +295,6 @@ object ExpressionConverter {
             current_date()
           case "current_timestamp" =>
             current_timestamp()
-          case "to_timestamp" =>
-            if (children.length == 1) {
-              to_timestamp(k_lit(children.head))
-            } else if (children.length == 2) {
-              to_timestamp(k_lit(children.head), k_lit(children.apply(1)).toString())
-            } else {
-              throw new UnsupportedOperationException(
-                s"to_timestamp must provide one or two parameters under sparder")
-            }
           case "unix_timestamp" =>
             if (children.isEmpty) {
               unix_timestamp
@@ -314,15 +305,6 @@ object ExpressionConverter {
             } else {
               throw new UnsupportedOperationException(
                 s"unix_timestamp only supports two or fewer parameters")
-            }
-          case "to_date" =>
-            if (children.length == 1) {
-              to_date(k_lit(children.head))
-            } else if (children.length == 2) {
-              to_date(k_lit(children.head), k_lit(children.apply(1)).toString())
-            } else {
-              throw new UnsupportedOperationException(
-                s"to_date must provide one or two parameters under sparder")
             }
           case "to_char" | "date_format" =>
             var part = k_lit(children.apply(1)).toString().toUpperCase match {
@@ -375,16 +357,16 @@ object ExpressionConverter {
             tan(k_lit(children.head))
           case "sin" =>
             sin(k_lit(children.head))
-          case func if (noneParameterfunc.contains(func)) =>
-            callUDF(func)
+          case func if (noParameterFunc.contains(func)) =>
+            call_udf(func)
           case func if (unaryParameterFunc.contains(func)) =>
-            callUDF(func, k_lit(children.head))
+            call_udf(func, k_lit(children.head))
           case func if (binaryParameterFunc.contains(func)) =>
-            callUDF(func, k_lit(children.head), k_lit(children.apply(1)))
+            call_udf(func, k_lit(children.head), k_lit(children.apply(1)))
           case func if (ternaryParameterFunc.contains(func)) =>
-            callUDF(func, k_lit(children.head), k_lit(children.apply(1)), k_lit(children.apply(2)))
+            call_udf(func, k_lit(children.head), k_lit(children.apply(1)), k_lit(children.apply(2)))
           case func if (varArgsFunc.contains(func)) => {
-            callUDF(func, children.map(k_lit(_)): _*)
+            call_udf(func, children.map(k_lit(_)): _*)
           }
           case "date_part" =>
             var part = k_lit(children.head).toString().toUpperCase match {
@@ -454,7 +436,7 @@ object ExpressionConverter {
         if (children.length == 1) {
           ceil(k_lit(children.head))
         } else if (children.length == 2) {
-          callUDF("ceil_datetime", children.map(k_lit): _*)
+          call_udf("ceil_datetime", children.map(k_lit): _*)
         } else {
           throw new UnsupportedOperationException(
             s"ceil must provide one or two parameters under sparder")

@@ -56,6 +56,24 @@ public class SparkTimeUDF implements NotConstant {
         throw new CalciteNotSupportException();
     }
 
+    public Date TO_DATE(@Parameter(name = "left") Object left) throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Date TO_DATE(@Parameter(name = "left") Object left, @Parameter(name = "format") String fmt)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Timestamp TO_TIMESTAMP(@Parameter(name = "left") Object left, @Parameter(name = "format") String fmt)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
+    public Timestamp TO_TIMESTAMP(@Parameter(name = "left") Object left) throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
+
     public String FROM_UNIXTIME(@Parameter(name = "long1") Object exp1, @Parameter(name = "str2") String exp2)
             throws CalciteNotSupportException {
         throw new CalciteNotSupportException();

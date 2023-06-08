@@ -2059,8 +2059,6 @@ public abstract class KylinConfigBase implements Serializable {
         udfMap.put("unix_timestamp", "org.apache.kylin.query.udf.dateUdf.UnixTimestampUDF");
         udfMap.put("length", "org.apache.kylin.query.udf.stringUdf.LengthUDF");
         udfMap.put("repeat", "org.apache.kylin.query.udf.stringUdf.RepeatUDF");
-        udfMap.put("to_timestamp", "org.apache.kylin.query.udf.formatUdf.ToTimestampUDF");
-        udfMap.put("to_date", "org.apache.kylin.query.udf.formatUdf.ToDateUDF");
         udfMap.put("to_char", "org.apache.kylin.query.udf.formatUdf.ToCharUDF");
         udfMap.put("date_format", "org.apache.kylin.query.udf.formatUdf.DateFormatUDF");
         udfMap.put("instr", "org.apache.kylin.query.udf.stringUdf.InStrUDF");
