@@ -591,6 +591,7 @@ public class OpenModelControllerTest extends NLocalFileMetadataTestCase {
         ModelRequest modelRequest = new ModelRequest();
         modelRequest.setProject(project);
         modelRequest.setAlias(modelName);
+        modelRequest.setRootFactTableName("test_table");
 
         Mockito.when(modelService.checkCCConflict(modelRequest))
                 .thenReturn(new Pair<>(modelRequest, new ComputedColumnConflictResponse()));

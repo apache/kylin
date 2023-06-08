@@ -19,11 +19,16 @@
 package org.apache.kylin.rest.request;
 
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.cube.model.IndexEntity;
 import org.apache.kylin.metadata.cube.model.IndexPlan;
 import org.apache.kylin.metadata.insensitive.ModelInsensitiveRequest;
@@ -38,7 +43,6 @@ import org.apache.kylin.rest.util.SCD2SimplificationConvertUtil;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -136,6 +140,38 @@ public class ModelRequest extends NDataModel implements ModelInsensitiveRequest 
         super(dataModel);
         this.setSimplifiedJoinTableDescs(
                 SCD2SimplificationConvertUtil.simplifiedJoinTablesConvert(dataModel.getJoinTables()));
+    }
+
+    private String[] toUpperCase(String[] arr) {
+        if (ArrayUtils.isEmpty(arr)) {
+            return arr;
+        }
+        return Arrays.stream(arr).map(StringUtils::toRootUpperCase).toArray(String[]::new);
+    }
+
+    public void toUpperCaseModelRequest() {
+        this.setRootFactTableName(StringUtils.toRootUpperCase(this.getRootFactTableName()));
+        this.getSimplifiedDimensions()
+                .forEach(dim -> dim.setAliasDotColumn(StringUtils.toRootUpperCase(dim.getAliasDotColumn())));
+        if (CollectionUtils.isEmpty(this.getJoinTables())) {
+            return;
+        }
+        this.getJoinTables().forEach(join -> {
+            join.setTable(StringUtils.toRootUpperCase(join.getTable()));
+            join.getJoin().setForeignKey(toUpperCase(join.getJoin().getForeignKey()));
+            join.getJoin().setPrimaryKey(toUpperCase(join.getJoin().getPrimaryKey()));
+        });
+        this.getSimplifiedJoinTableDescs().forEach(join -> {
+            join.setTable(StringUtils.toRootUpperCase(join.getTable()));
+            join.getSimplifiedJoinDesc().setForeignKey(toUpperCase(join.getSimplifiedJoinDesc().getForeignKey()));
+            join.getSimplifiedJoinDesc().setPrimaryKey(toUpperCase(join.getSimplifiedJoinDesc().getPrimaryKey()));
+            if (CollectionUtils.isNotEmpty(join.getSimplifiedJoinDesc().getSimplifiedNonEquiJoinConditions())) {
+                join.getSimplifiedJoinDesc().getSimplifiedNonEquiJoinConditions().forEach(nonEqual -> {
+                    nonEqual.setForeignKey(StringUtils.toRootUpperCase(nonEqual.getForeignKey()));
+                    nonEqual.setPrimaryKey(StringUtils.toRootUpperCase(nonEqual.getPrimaryKey()));
+                });
+            }
+        });
     }
 
 }
