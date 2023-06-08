@@ -17,6 +17,9 @@
 # limitations under the License.
 #
 
+LC_ALL="en_US.UTF-8"
+LANGUAGE="en_US"
+
 function help() {
     echo "Usage: upgrade.sh <OLD_KYLIN_HOME> [--silent]"
     echo
@@ -171,7 +174,7 @@ function upgrade() {
     logging "Copy Customize Directory"
     OLDIFS=$IFS
     IFS=$'\n'
-    for diff_log in $(diff -qr $OLD_KYLIN_HOME $NEW_KYLIN_HOME); do
+    for diff_log in $(env -i - LC_ALL="en_US.UTF-8" diff -qr $OLD_KYLIN_HOME $NEW_KYLIN_HOME); do
         if [[ $diff_log =~ (^Only in ${OLD_KYLIN_HOME}: )(.*) ]]; then
             diff_file=${BASH_REMATCH[2]}
             if [[ $diff_file == "meta_backups" || $diff_file == "appid" || $diff_file == "work" ]]; then
