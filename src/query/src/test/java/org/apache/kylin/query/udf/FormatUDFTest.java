@@ -25,36 +25,9 @@ import java.sql.Timestamp;
 
 import org.apache.kylin.query.udf.formatUdf.DateFormatUDF;
 import org.apache.kylin.query.udf.formatUdf.ToCharUDF;
-import org.apache.kylin.query.udf.formatUdf.ToDateUDF;
-import org.apache.kylin.query.udf.formatUdf.ToTimestampUDF;
 import org.junit.Test;
 
 public class FormatUDFTest {
-
-    @Test
-    public void testToTimestampUDF() throws Exception {
-        ToTimestampUDF toTimestampUDF = new ToTimestampUDF();
-        assertEquals(toTimestampUDF.TO_TIMESTAMP("2019-08-05 10:54:23"), Timestamp.valueOf("2019-08-05 10:54:23"));
-        assertEquals(toTimestampUDF.TO_TIMESTAMP("2019-08-05 10:54:23", "yyyy-MM-dd hh:mm"),
-                Timestamp.valueOf("2019-08-05 10:54:00"));
-        assertEquals(toTimestampUDF.TO_TIMESTAMP("2019-08-05 10:54:23", "yyyy-MM-dd hh"),
-                Timestamp.valueOf("2019-08-05 10:00:00"));
-        assertEquals(toTimestampUDF.TO_TIMESTAMP("2019-08-05 10:54:23", "yyyy-MM-dd"),
-                Timestamp.valueOf("2019-08-05 00:00:00"));
-        assertEquals(toTimestampUDF.TO_TIMESTAMP("2019-08-05 10:54:23", "yyyy-MM"),
-                Timestamp.valueOf("2019-08-01 00:00:00"));
-        assertEquals(toTimestampUDF.TO_TIMESTAMP("2019-08-05 10:54:23", "yyyy"),
-                Timestamp.valueOf("2019-01-01 00:00:00"));
-    }
-
-    @Test
-    public void testToDateUDF() throws Exception {
-        ToDateUDF toDateUDF = new ToDateUDF();
-        assertEquals(toDateUDF.TO_DATE("2019-08-05"), Date.valueOf("2019-08-05"));
-        assertEquals(toDateUDF.TO_DATE("2019-08-05", "yyyy-MM-dd"), Date.valueOf("2019-08-05"));
-        assertEquals(toDateUDF.TO_DATE("2019-08-05", "yyyy-MM"), Date.valueOf("2019-08-01"));
-        assertEquals(toDateUDF.TO_DATE("2019-08-05", "yyyy"), Date.valueOf("2019-01-01"));
-    }
 
     @Test
     public void testToCharUDF() throws Exception {
