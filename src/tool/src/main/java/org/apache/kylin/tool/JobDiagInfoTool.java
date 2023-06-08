@@ -30,26 +30,27 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.commons.cli.Option;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.common.util.OptionBuilder;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.common.util.OptionBuilder;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.snapshot.SnapshotSourceTableStatsTool;
 import org.apache.kylin.tool.util.DiagnosticFilesChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
 
 import lombok.val;
 
@@ -238,7 +239,8 @@ public class JobDiagInfoTool extends AbstractInfoExtractorTool {
             if (job instanceof DefaultExecutable) {
                 recordTaskStartTime(JOB_EVENTLOGS);
                 val appIds = NExecutableManager.getInstance(getKylinConfig(), project).getYarnApplicationJobs(jobId);
-                Map<String, String> sparkConf = getKylinConfig().getSparkConfigOverride();
+                KylinConfig config = getConfigForModelOrProjectLevel(job.getTargetModelId(), project);
+                Map<String, String> sparkConf = config.getSparkConfigOverride();
                 KylinLogTool.extractJobEventLogs(exportDir, appIds, sparkConf);
                 recordTaskExecutorTimeToFile(JOB_EVENTLOGS, recordTime);
             }
@@ -267,5 +269,17 @@ public class JobDiagInfoTool extends AbstractInfoExtractorTool {
             }
         }
         return null;
+    }
+
+    protected KylinConfig getConfigForModelOrProjectLevel(String modelId, String project) {
+        KylinConfig config = null;
+        IndexPlan indexPlan = NIndexPlanManager.getInstance(getKylinConfig(), project).getIndexPlan(modelId);
+        if (indexPlan != null) {
+            config = indexPlan.getConfig();
+        }
+        if (config == null) {
+            config = NProjectManager.getProjectConfig(project);
+        }
+        return config;
     }
 }

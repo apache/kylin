@@ -20,6 +20,7 @@ package org.apache.kylin.tool;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -37,6 +38,7 @@ import org.apache.kylin.common.util.ZipFileUtils;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.job.execution.DefaultExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.tool.constant.SensitiveConfigKeysConstant;
 import org.apache.kylin.tool.obf.KylinConfObfuscatorTest;
@@ -233,5 +235,36 @@ public class JobDiagInfoToolTest extends NLocalFileMetadataTestCase {
                 ExecutorServiceUtil.shutdownGracefully(jobDiagInfoTool.executorService, 60);
             }
         }
+    }
+
+    @Test
+    public void testGetDifferentConfigLevel() {
+        final String PROJECT = "default";
+        final String KYLIN_SPARK_EVENTLOG_DIR = "kylin.engine.spark-conf.spark.eventLog.dir";
+        final String SPARK_EVENTLOG_DIR = "spark.eventLog.dir";
+        JobDiagInfoTool tool = new JobDiagInfoTool();
+
+        // Update model config
+        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), PROJECT);
+        indexPlanManager.updateIndexPlan("82fa7671-a935-45f5-8779-85703601f49a", copyForWrite -> {
+            LinkedHashMap<String, String> overrideProps = new LinkedHashMap<>();
+            overrideProps.put(KYLIN_SPARK_EVENTLOG_DIR, "/path/to/dir1");
+            copyForWrite.setOverrideProps(overrideProps);
+        });
+        // Update project config
+        NProjectManager projectManager = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+        projectManager.updateProject(PROJECT, copyForWrite -> {
+            LinkedHashMap<String, String> overrideProps = new LinkedHashMap<>();
+            overrideProps.put(KYLIN_SPARK_EVENTLOG_DIR, "/path/to/dir2");
+            copyForWrite.setOverrideKylinProps(overrideProps);
+        });
+
+        // For jobs related to model: index build, index refresh etc.
+        KylinConfig modelConfig = tool.getConfigForModelOrProjectLevel("82fa7671-a935-45f5-8779-85703601f49a", PROJECT);
+        Assert.assertEquals("/path/to/dir1", modelConfig.getSparkConfigOverride().get(SPARK_EVENTLOG_DIR));
+
+        // For jobs without model: snapshot build, sampling etc.
+        KylinConfig projectConfig = tool.getConfigForModelOrProjectLevel("SSB.LINEORDER", PROJECT);
+        Assert.assertEquals("/path/to/dir2", projectConfig.getSparkConfigOverride().get(SPARK_EVENTLOG_DIR));
     }
 }
