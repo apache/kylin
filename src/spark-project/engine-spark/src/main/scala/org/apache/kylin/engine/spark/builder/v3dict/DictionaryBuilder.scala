@@ -30,6 +30,7 @@ import org.apache.spark.sql.SparkInternalAgent._
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.catalyst.expressions.{Alias, EqualTo}
 import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, Project, Window}
+import org.apache.spark.sql.delta.DeltaLog
 import org.apache.spark.sql.functions.{col, lit, row_number}
 import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType}
 import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
@@ -43,18 +44,18 @@ import scala.concurrent.duration.DurationInt
 object DictionaryBuilder extends Logging {
 
   implicit val retryStrategy: RetryStrategyProducer =
-    RetryStrategy.fixedBackOff(retryDuration = 10.seconds, maxAttempts = 5)
+    RetryStrategy.randomBackOff(5.seconds, 15.seconds, maxAttempts = 20)
 
   def buildGlobalDict(
-     project: String,
-     spark: SparkSession,
-     plan: LogicalPlan): LogicalPlan = transformCountDistinct(spark, plan) transform {
+                       project: String,
+                       spark: SparkSession,
+                       plan: LogicalPlan): LogicalPlan = transformCountDistinct(spark, plan) transform {
 
     case GlobalDictionaryPlaceHolder(expr: String, child: LogicalPlan, dbName: String) =>
       spark.sparkContext.setJobDescription(s"Build v3 dict $expr")
       val catalog = expr.split(NSparkCubingUtil.SEPARATOR)
-      val tableName = catalog.apply(0)
-      val columnName = catalog.apply(1)
+      val tableName = catalog(0)
+      val columnName = catalog(1)
       val context = new DictionaryContext(project, dbName, tableName, columnName, expr)
 
       // concurrent commit may cause delta ConcurrentAppendException.
@@ -79,13 +80,15 @@ object DictionaryBuilder extends Logging {
    * Use Left anti join to process raw data and dictionary tables.
    */
   private def transformerDictPlan(
-     spark: SparkSession,
-     context: DictionaryContext,
-     plan: LogicalPlan): LogicalPlan = {
+                                   spark: SparkSession,
+                                   context: DictionaryContext,
+                                   plan: LogicalPlan): LogicalPlan = {
 
     val dictPath = getDictionaryPath(context)
     val dictTable: DeltaTable = DeltaTable.forPath(dictPath)
     val maxOffset = dictTable.toDF.count()
+    logInfo(s"Dict $dictPath item count $maxOffset")
+
     plan match {
       case Project(_, Project(_, Window(_, _, _, windowChild))) =>
         val column = context.expr
@@ -101,7 +104,9 @@ object DictionaryBuilder extends Logging {
             "left_anti")
           .select(col(column).cast(StringType) as "dict_key",
             (row_number().over(windowSpec) + lit(maxOffset)).cast(LongType) as "dict_value")
+        logInfo(s"Dict logical plan : ${antiJoinDF.queryExecution.logical.treeString}")
         getLogicalPlan(antiJoinDF)
+
       case _ => plan
     }
   }
@@ -121,30 +126,39 @@ object DictionaryBuilder extends Logging {
    * Build an incremental dictionary
    */
   private def incrementBuildDict(
-    spark: SparkSession,
-    plan: LogicalPlan,
-    context: DictionaryContext): Unit = {
+                                  spark: SparkSession,
+                                  plan: LogicalPlan,
+                                  context: DictionaryContext): Unit = {
     val dictMode = chooseDictBuildMode(context)
     logInfo(s"V3 Dict build mode is $dictMode")
     dictMode match {
       case V3INIT =>
         val dictDF = getDataFrame(spark, plan)
-        initAndSaveDictDF(dictDF, context)
+        initAndSaveDict(dictDF, context)
+
       case V3APPEND =>
         mergeIncrementDict(spark, context, plan)
-      // To be delete
+        optimizeDictTable(spark, context)
+
       case V3UPGRADE =>
+        // To be delete
         val v3OrigDict = upgradeFromOriginalV3(spark, context)
-        initAndSaveDictDF(v3OrigDict, context)
+        initAndSaveDict(v3OrigDict, context)
         mergeIncrementDict(spark, context, plan)
+
       case V2UPGRADE =>
         val v2Dict = upgradeFromV2(spark, context)
-        initAndSaveDictDF(v2Dict, context)
+        initAndSaveDict(v2Dict, context)
         mergeIncrementDict(spark, context, plan)
     }
+
+    val dictPath = getDictionaryPath(context)
+    val dictDeltaLog = DeltaLog.forTable(spark, dictPath)
+    val version = dictDeltaLog.snapshot.version
+    logInfo(s"Completed the construction of dictionary version $version for dict $dictPath")
   }
 
-  private def initAndSaveDictDF(dictDF: Dataset[Row], context: DictionaryContext): Unit = {
+  private def initAndSaveDict(dictDF: Dataset[Row], context: DictionaryContext): Unit = {
     val dictPath = getDictionaryPath(context)
     logInfo(s"Save dict values into path $dictPath.")
     dictDF.write.mode(SaveMode.Overwrite).format("delta").save(dictPath)
@@ -162,6 +176,43 @@ object DictionaryBuilder extends Logging {
           "and incre_dict.dict_value != dict.dict_value")
       .whenNotMatched().insertAll()
       .execute()
+  }
+
+  /**
+   * In order to prevent the number of generated dictionary files from increasing with the
+   * continuous construction of dictionaries, which will lead to too many small files and reduce
+   * the build performance, it is necessary to periodically merge dictionary files.
+   *
+   * Currently, according to the configuration
+   * `kylin.build.v3dict-file-num-limit=10`
+   * to control whether file merging is required. When the number of dictionary files exceeds
+   * this limit, the dictionary files will be merged. By merging files, the total number of
+   * files can be controlled to improve build performance.
+   */
+  private def optimizeDictTable(spark: SparkSession, context: DictionaryContext): Unit = {
+    val dictPath = getDictionaryPath(context)
+    val deltaLog = DeltaLog.forTable(spark, dictPath)
+    val numFile = deltaLog.snapshot.numOfFiles
+
+    val config = KylinConfig.getInstanceFromEnv
+    val v3DictFileNumLimit = config.getV3DictFileNumLimit
+    if (numFile > v3DictFileNumLimit) {
+      val optimizeStartTime = System.nanoTime()
+      val dictTable = DeltaTable.forPath(dictPath)
+      logInfo(s"Optimize the storage of dict $dictPath, " +
+        s"dict file num: $numFile, " +
+        s"spark.build.v3dict-file-num-limit: $v3DictFileNumLimit")
+      dictTable.optimize().executeCompaction()
+
+      logInfo(s"Clean up dict $dictPath files via delta vacuum")
+      val v3DictRetention = config.getV3DictFileRetentionHours
+      dictTable.vacuum(v3DictRetention)
+
+      val optimizeTaken = (System.nanoTime() - optimizeStartTime) / 1000 / 1000
+      logInfo(s"It took ${optimizeTaken}ms to optimize dict $dictPath")
+    } else {
+      logInfo(s"No need to optimize dict: $dictPath, dict file num: $numFile")
+    }
   }
 
   private def isExistsV2Dict(context: DictionaryContext): Boolean = {
@@ -260,11 +311,11 @@ object DictionaryBuilder extends Logging {
 }
 
 class DictionaryContext(
-   val project: String,
-   val dbName: String,
-   val tableName: String,
-   val columnName: String,
-   val expr: String)
+                         val project: String,
+                         val dbName: String,
+                         val tableName: String,
+                         val columnName: String,
+                         val expr: String)
 
 object DictBuildMode extends Enumeration {
 

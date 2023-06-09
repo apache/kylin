@@ -19,18 +19,33 @@
 package org.apache.kylin.engine.spark.builder.v3dict
 
 import io.delta.tables.DeltaTable
+import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.builder.v3dict.GlobalDictionaryBuilderHelper.{checkAnswer, genDataWithWrapEncodeCol, genRandomData}
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.spark.sql.KapFunctions.dict_encode_v3
-import org.apache.spark.sql.Row
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
+import org.apache.spark.sql.delta.DeltaLog
+import org.apache.spark.sql.delta.util.DeltaFileOperations
 import org.apache.spark.sql.functions.{col, count, countDistinct}
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.util.SerializableConfiguration
 
-import java.util.concurrent.{Executors, TimeUnit}
+import java.util.concurrent.{ExecutorService, Executors, TimeUnit}
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 
 class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with SharedSparkSession {
+
+  private var pool: ExecutorService = Executors.newFixedThreadPool(10)
+  implicit var ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(pool)
+
+  protected override def beforeEach(): Unit = {
+    super.beforeEach()
+    if (pool.isShutdown) {
+      pool = Executors.newFixedThreadPool(10)
+      ec = ExecutionContext.fromExecutorService(pool)
+    }
+  }
 
   test("KE-35145 Test Continuously Build Dictionary") {
     val project = "p1"
@@ -70,33 +85,23 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
     val colName = "c2"
     val encodeColName: String = tableName + NSparkCubingUtil.SEPARATOR + colName
     val context = new DictionaryContext(project, dbName, tableName, colName, null)
-    val pool = Executors.newFixedThreadPool(10)
-    implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(pool)
 
     DeltaTable.createIfNotExists()
-      .tableName("original_c2")
+      .tableName("original")
       .addColumn(encodeColName, StringType).execute()
 
-    val buildDictTask = new Runnable {
-      override def run(): Unit = {
-        val originalDF = genRandomData(spark, encodeColName, 100, 1)
-        val dictDF = genDataWithWrapEncodeCol(dbName, encodeColName, originalDF)
-        DeltaTable.forName("original_c2")
-          .merge(originalDF, "1 != 1")
-          .whenNotMatched()
-          .insertAll()
-          .execute()
-        DictionaryBuilder.buildGlobalDict(project, spark, dictDF.queryExecution.analyzed)
-      }
-    }
+    val buildDictTask = genBuildDictTask(spark, context)
 
-    for (_ <- 0 until 10) {ec.submit(buildDictTask)}
+    for (_ <- 0 until 10) {
+      ec.submit(buildDictTask)
+    }
+    ec.shutdown()
     ec.awaitTermination(2, TimeUnit.MINUTES)
 
     val originalDF = spark.sql(
       """
         |SELECT count(DISTINCT t1_0_DOT_0_c2)
-        |   FROM default.original_c2
+        |   FROM default.original
       """.stripMargin)
 
     val dictPath: String = DictionaryBuilder.getDictionaryPath(context)
@@ -182,5 +187,57 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
     val dictPath: String = DictionaryBuilder.getDictionaryPath(context)
     val dictResultDF = DeltaTable.forPath(dictPath).toDF.agg(count(col("dict_key")))
     checkAnswer(originalDF, dictResultDF)
+  }
+
+  test("KE-41744 Optimize the dict files to avoid too many small files") {
+    overwriteSystemProp("kylin.build.v3dict-file-num-limit", "5")
+    overwriteSystemProp("kylin.build.v3dict-file-retention", "0h")
+    val project = "p1"
+    val dbName = "db1"
+    val tableName = "t1"
+    val colName = "c2"
+
+    val context = new DictionaryContext(project, dbName, tableName, colName, null)
+    val encodeColName: String = tableName + NSparkCubingUtil.SEPARATOR + colName
+    DeltaTable.createIfNotExists()
+      .tableName("original")
+      .addColumn(encodeColName, StringType).execute()
+
+    val buildDictTask = genBuildDictTask(spark, context)
+
+    for (_ <- 0 until 11) {
+      ec.execute(buildDictTask)
+    }
+    ec.shutdown()
+    ec.awaitTermination(10, TimeUnit.MINUTES)
+
+    val dictPath: String = DictionaryBuilder.getDictionaryPath(context)
+    val deltaLog = DeltaLog.forTable(spark, dictPath)
+    val numOfFiles = deltaLog.snapshot.numOfFiles
+    logInfo(s"Dict file num $numOfFiles")
+    assert(numOfFiles <= KylinConfig.getInstanceFromEnv.getV3DictFileNumLimit)
+
+    val numFileRemaining = DeltaFileOperations.recursiveListDirs(
+      spark,
+      Seq(dictPath),
+      spark.sparkContext.broadcast(new SerializableConfiguration(deltaLog.newDeltaHadoopConf()))
+    ).count()
+    assert(numFileRemaining < numOfFiles + deltaLog.snapshot.numOfRemoves)
+  }
+
+  def genBuildDictTask(spark: SparkSession, context: DictionaryContext): Runnable = {
+    new Runnable {
+      override def run(): Unit = {
+        val encodeColName: String = context.tableName + NSparkCubingUtil.SEPARATOR + context.columnName
+        val originalDF = genRandomData(spark, encodeColName, 100, 1)
+        val dictDF = genDataWithWrapEncodeCol(context.dbName, encodeColName, originalDF)
+        DeltaTable.forName("original")
+          .merge(originalDF, "1 != 1")
+          .whenNotMatched()
+          .insertAll()
+          .execute()
+        DictionaryBuilder.buildGlobalDict(context.project, spark, dictDF.queryExecution.analyzed)
+      }
+    }
   }
 }
