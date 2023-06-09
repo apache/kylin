@@ -3298,6 +3298,14 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.build.is-convert-v3dict-enable", FALSE));
     }
 
+    public long getV3DictFileNumLimit() {
+        return Long.parseLong(getOptional("kylin.build.v3dict-file-num-limit", "10"));
+    }
+
+    public long getV3DictFileRetentionHours() {
+        return TimeUtil.timeStringAs(getOptional("kylin.build.v3dict-file-retention", "3d"), TimeUnit.HOURS);
+    }
+
     public String getV3DictDBName() {
         return getOptional("kylin.build.v3dict-db-name", DEFAULT);
     }

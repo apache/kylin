@@ -123,6 +123,8 @@ public class NLocalWithSparkSessionTest extends NLocalFileMetadataTestCase imple
             sparkConf.set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension");
         }
         sparkConf.set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog");
+        sparkConf.set("spark.databricks.delta.retentionDurationCheck.enabled", "false");
+        sparkConf.set("spark.databricks.delta.vacuum.parallelDelete.enabled", "true");
         ss = SparkSession.builder().withExtensions(ext -> {
             ext.injectOptimizerRule(ss -> new ConvertInnerJoinToSemiJoin());
             return null;

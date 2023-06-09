@@ -55,7 +55,7 @@ class PreCountDistinctTransformer(spark: SparkSession) extends Rule[LogicalPlan]
             val key = dictPlan.output.head
             val value = dictPlan.output(1)
             val valueAlias = Alias(value, encodedAttr.name)(encodedAttr.exprId)
-            (Project(Seq(key, valueAlias), dictPlan), (childExpr, encodedAttr), dbName)
+            (Project(Seq(key, valueAlias), dictPlan), (childExpr, encodedAttr))
         }
 
         val result = dictionaries.foldLeft(child) {
