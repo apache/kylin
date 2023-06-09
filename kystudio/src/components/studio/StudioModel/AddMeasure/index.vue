@@ -25,6 +25,16 @@
             :value="item.value">
           </el-option>
         </el-select>
+        <template v-if="measure.expression ==='SUM_LC'">
+          <div class="ksd-title-label-mini ksd-mtb-8">{{$t('semiAdditive')}}</div>
+          <div class="semi-additive-desc ksd-fs-12">
+            <ol>
+              <li><i class="point">•</i>{{$t('semiAdditiveMsg1')}}</li>
+              <li><i class="point">•</i>{{$t('semiAdditiveMsg2')}}</li>
+              <li><i class="point">•</i>{{$t('semiAdditiveMsg3')}}</li>
+            </ol>
+          </div>
+        </template>
       </el-form-item>
       <el-form-item v-if="measure.expression === 'TOP_N'|| measure.expression === 'PERCENTILE_APPROX' || measure.expression === 'COUNT_DISTINCT'" :label="$t('return_type')" >
         <el-select
@@ -45,8 +55,9 @@
         {{$t('paramValue')}}
       </div>
       <el-form-item :class="{'is-error': corrColumnError || (ccValidateError&&ccVisible), 'cc-item': ccVisible, 'corr-item': measure.expression ==='CORR'}" prop="parameterValue.value" key="parameterItem">
-        <span slot="label" class="withIconLabel"><span>{{isOrderBy}}</span>
-          <el-tooltip effect="dark" placement="top" v-if="measure.expression ==='CORR'"><span slot="content" v-html="$t('corrTips')"></span><i class="el-ksd-icon-more_info_22 icon ksd-ml-5"></i></el-tooltip>
+        <span slot="label" class="withIconLabel"><span>{{isOrderBy}}</span><el-tooltip
+        effect="dark" placement="right" v-if="measure.expression ==='CORR'"><span slot="content" v-html="$t('corrTips')"></span><i class="el-ksd-icon-more_info_16 icon ksd-ml-2"></i></el-tooltip><el-tooltip
+        effect="dark" placement="right" v-if="measure.expression ==='SUM_LC'"><span slot="content" v-html="$t('sumLcTips')"></span><i class="el-ksd-icon-more_info_16 icon ksd-ml-2"></i></el-tooltip>
         </span>
         <el-tag type="info" class="measures-width" v-if="measure.expression === 'SUM(constant)' || measure.expression === 'COUNT(constant)'">1</el-tag>
         <div class="measure-flex-row" v-else>
@@ -129,13 +140,56 @@
            type="primary" icon="el-icon-minus" size="mini" circle @click="deleteProperty(index)" class="del-pro" :class="[measure.expression === 'COUNT_DISTINCT' ? 'ksd-ml-10' : 'ksd-ml-5', {'del-margin-more': measure.expression === 'TOP_N' && index > 0}]" :disabled="measure.expression === 'TOP_N' && measure.convertedColumns.length == 1"></el-button>
         </div>
       </el-form-item>
-      <el-form-item v-if="measure.expression ==='CORR'" :class="{'is-error': corrColumnError || (ccValidateError&&corrCCVisible), 'cc-item': corrCCVisible}" prop="convertedColumns[0].value" :rules="rules.convertedColValidate" key="corrItem">
-        <div>
-          <el-select class="measures-addCC" size="medium" v-model="measure.convertedColumns[0].value" :placeholder="$t('kylinLang.common.pleaseSelectOrSearch')" filterable @change="(v) => changeCORRParamValue(v, measure)" :disabled="isCorrCCEdit">
+      <template v-if="measure.expression ==='CORR'">
+        <el-form-item :class="{'is-error': corrColumnError || (ccValidateError&&ccVisible2), 'cc-item': ccVisible2}" prop="convertedColumns[0].value" :rules="rules.convertedColValidate" key="corrItem">
+          <div>
+            <el-select class="measures-addCC" size="medium" v-model="measure.convertedColumns[0].value" :placeholder="$t('kylinLang.common.pleaseSelectOrSearch')" filterable @change="(v) => changeCORRParamValue(v, measure)" :disabled="isCCEdit2">
+              <i slot="prefix" class="el-input__icon el-ksd-icon-search_22" v-if="!measure.convertedColumns[0].value"></i>
+              <el-option-group key="column" :label="$t('columns')">
+                <el-option
+                  v-for="(item, index) in getParameterValue"
+                  :key="index"
+                  :label="item.name"
+                  :value="item.name">
+                  <el-tooltip :content="item.name" effect="dark" placement="top"><span>{{item.name.split('.')[item.name.split('.').length - 1] | omit(30, '...')}}</span></el-tooltip>
+                  <span class="ky-option-sub-info">{{item.datatype.toLocaleLowerCase()}}</span>
+                </el-option>
+              </el-option-group>
+              <el-option-group key="ccolumn" :label="$t('ccolumns')" v-if="getCCGroups().length || newCCList.length">
+                <el-option
+                  v-for="item in getCCGroups()"
+                  :key="item.guid"
+                  :label="item.tableAlias + '.' + item.columnName"
+                  :value="item.tableAlias + '.' + item.columnName">
+                  <el-tooltip :content="`${item.tableAlias}.${item.columnName}`" effect="dark" placement="top"><span>{{item.columnName | omit(30, '...')}}</span></el-tooltip>
+                  <span class="ky-option-sub-info">{{item.datatype.toLocaleLowerCase()}}</span>
+                </el-option>
+                <el-option
+                    v-for="item in newCCList"
+                    :key="item.table_guid"
+                    :label="item.tableAlias + '.' + item.columnName"
+                    :value="item.tableAlias + '.' + item.columnName">
+                    <el-tooltip :content="`${item.tableAlias}.${item.columnName}`" effect="dark" placement="top"><span>{{item.columnName | omit(30, '...')}}</span></el-tooltip>
+                    <span class="ky-option-sub-info">{{item.datatype.toLocaleLowerCase()}}</span>
+                  </el-option>
+              </el-option-group>
+            </el-select>
+            <common-tip :content="$t('addCCTip')"><el-button size="medium" icon="el-ksd-icon-auto_computed_column_old" type="primary" plain class="ksd-ml-6" @click="newCC2" :disabled="(isCCEdit2 && ccVisible2) || !!isHybridModel"></el-button></common-tip>
+          </div>
+        </el-form-item>
+        <CCEditForm class="ksd-mb-8" :class="{'error-tips': corrColumnError}" key="corrEditForm" ref="corrEditForm" v-if="ccVisible2" @checkSuccess="saveCC2" @delSuccess="delCC2" :hideCancel="isEditMeasure" :isEditMeasureCC="!isCCEdit2" source="createMeasure" :ccDesc="ccObject2" :modelInstance="modelInstance" @resetSubmitLoading="resetSubmitType" @saveError="resetSubmitType"></CCEditForm>
+        <div class="error-tips" v-if="corrColumnError">{{$t('corrColDatatypeError')}}</div>
+      </template>
+      <template v-if="measure.expression ==='SUM_LC'">
+        <el-form-item prop="convertedColumns[0].value" :rules="rules.convertedColValidate" key="SUM_LCItem">
+          <span slot="label" class="withIconLabel"><span>{{$t('timeDim')}}</span><el-tooltip
+            effect="dark" placement="right"><span slot="content" v-html="$t('timeDimTips')"></span><i class="el-ksd-icon-more_info_16 icon ksd-ml-2"></i></el-tooltip>
+          </span>
+          <el-select class="measures-addCC" size="medium" v-model="measure.convertedColumns[0].value" :placeholder="$t('kylinLang.common.pleaseSelectOrSearch')" filterable>
             <i slot="prefix" class="el-input__icon el-ksd-icon-search_22" v-if="!measure.convertedColumns[0].value"></i>
             <el-option-group key="column" :label="$t('columns')">
               <el-option
-                v-for="(item, index) in getParameterValue"
+                v-for="(item, index) in getParameterValue2"
                 :key="index"
                 :label="item.name"
                 :value="item.name">
@@ -162,11 +216,13 @@
                 </el-option>
             </el-option-group>
           </el-select>
-          <common-tip :content="$t('addCCTip')"><el-button size="medium" icon="el-ksd-icon-auto_computed_column_old" type="primary" plain class="ksd-ml-6" @click="newCorrCC" :disabled="(isCorrCCEdit && corrCCVisible) || !!isHybridModel"></el-button></common-tip>
-        </div>
-      </el-form-item>
-      <CCEditForm class="ksd-mb-8" :class="{'error-tips': corrColumnError}" key="corrEditForm" ref="corrEditForm" v-if="corrCCVisible" @checkSuccess="saveCorrCC" @delSuccess="delCorrCC" :hideCancel="isEditMeasure" :isEditMeasureCC="!isCorrCCEdit" source="createMeasure" :ccDesc="corrCCObject" :modelInstance="modelInstance" @resetSubmitLoading="resetSubmitType" @saveError="resetSubmitType"></CCEditForm>
-      <div class="error-tips" v-if="corrColumnError">{{$t('corrColDatatypeError')}}</div>
+          <common-tip :content="$t('addCCTip')"><el-button size="medium" icon="el-ksd-icon-auto_computed_column_old" type="primary" plain class="ksd-ml-6" @click="newCC2" :disabled="(isCCEdit2 && ccVisible2) || !!isHybridModel"></el-button></common-tip>
+        </el-form-item>
+        <CCEditForm class="ksd-mb-8" :class="{'error-tips': corrColumnError}" key="corrEditForm" ref="corrEditForm" v-if="ccVisible2" @checkSuccess="saveCC2" @delSuccess="delCC2" :hideCancel="isEditMeasure" :isEditMeasureCC="!isCCEdit2" source="createMeasure" :ccDesc="ccObject2" :modelInstance="modelInstance" @resetSubmitLoading="resetSubmitType" @saveError="resetSubmitType"></CCEditForm>
+        <el-form-item :label="$t('AggreFunc')">
+          <el-input value="LastChild" disabled></el-input>
+        </el-form-item>
+      </template>
       <el-form-item :label="$t('comment')" prop="comment">
         <div>
           <el-input class="measures-width measure-comment-input" size="medium" v-model.trim="measure.comment" :placeholder="$t('kylinLang.common.pleaseInput')"></el-input>
@@ -244,6 +300,13 @@ import $ from 'jquery'
       addCCTip: 'Create Computed Column',
       editMeasureTitle: 'Edit Measure',
       addMeasureTitle: 'Add Measure',
+      semiAdditive: 'Semi-additive(Beta)',
+      semiAdditiveMsg1: 'Support Last Child semi-additive measure.For example, when a bank uses account transaction record data to count savings account balances, the normal summation is used for the non-time dimension, and for the time dimension, the value of the last record needs to be taken. Please refer to product manual for details.',
+      semiAdditiveMsg2: 'Two parameters need to be set.Column 1 represents aggregation value and Column 2 represents time dimension.',
+      semiAdditiveMsg3: 'When query,you need to use SUM_LC(column1,column2) function in SQL.',
+      timeDim: 'Time Dimension',
+      AggreFunc: 'Semi-Additive Function',
+      requiredTimeColumn: 'Time Dimension is required.',
       sameColumn: 'Column has been defined as a measure by the same function',
       selectMutipleColumnsTip: 'The {expression} function supports only one column when the function parameter is {params}.',
       createCCMeasureTips: 'This column’s type is {datatype}. It couldn’t be referenced by the selected function {expression}.',
@@ -253,7 +316,9 @@ import $ from 'jquery'
       syncContent: 'sync to the comment',
       corrTips: '* The supported column data types are: bigint, integer, tinyint, smallint, decimal, double and float.<br/>* If the data type of one of the columns is decimal, the other one\'s also needs to be decimal.',
       corrColDatatypeError: 'The data type of one of the columns is decimal, the other one\'s also needs to be decimal.',
-      nameValid: 'Only supports Chinese or English characters, numbers, spaces and symbol（_ -()%?.）'
+      nameValid: 'Only supports Chinese or English characters, numbers, spaces and symbol（_ -()%?.）',
+      sumLcTips: 'The first column is used for aggregation and it supports all numeric data types.',
+      timeDimTips: 'Time dimension supports Timestamp,INT,BIGINT, String,Varchar and Char'
     }
   }
 })
@@ -272,11 +337,11 @@ export default class AddMeasure extends Vue {
   }
   syncComment = false
   ccObject = null
-  corrCCObject = null
+  ccObject2 = null
   isEdit = false
-  isCorrCCEdit = false
+  isCCEdit2 = false
   ccVisible = false
-  corrCCVisible = false
+  ccVisible2 = false
   ccGroups = []
   newCCList = []
   allTableColumns = []
@@ -312,6 +377,7 @@ export default class AddMeasure extends Vue {
     const config = [
       {label: 'SUM (column)', value: 'SUM(column)'},
       {label: 'SUM (constant)', value: 'SUM(constant)'},
+      {label: 'SUM_LC (column1, column2)', value: 'SUM_LC'},
       {label: 'MIN', value: 'MIN'},
       {label: 'MAX', value: 'MAX'},
       {label: 'TOP_N', value: 'TOP_N'},
@@ -444,11 +510,10 @@ export default class AddMeasure extends Vue {
     this.measure.return_type = ''
     this.measure.parameterValue.value = ''
     this.measure.comment = ''
-    this.corrCCVisible = false
+    this.ccVisible2 = false
     this.ccVisible = false
-    this.corrCCVisible = false
     this.isEdit = false
-    this.isCorrCCEdit = false
+    this.isCCEdit2 = false
     this.showMutipleColumnsTip = false
     this.measureError = ''
     this.$refs['measureForm'].clearValidate('parameterValue.value')
@@ -470,7 +535,7 @@ export default class AddMeasure extends Vue {
     if (this.measure.expression === 'TOP_N') {
       this.measure.return_type = 'topn(100)'
     }
-    if (this.measure.expression === 'CORR' || this.measure.expression === 'TOP_N') {
+    if (['CORR', 'TOP_N', 'SUM_LC'].indexOf(this.measure.expression) >= 0) {
       this.measure.convertedColumns = [{type: 'column', value: '', table_guid: null}]
     } else {
       this.measure.convertedColumns = []
@@ -542,12 +607,12 @@ export default class AddMeasure extends Vue {
     measure.convertedColumns[0].table_guid = nTable && nTable.guid
     const ccObj = this.getCCObj(value)
     if (ccObj) {
-      this.corrCCObject = ccObj
-      this.corrCCVisible = true
-      this.isCorrCCEdit = false
+      this.ccObject2 = ccObj
+      this.ccVisible2 = true
+      this.isCCEdit2 = false
     } else {
-      this.corrCCVisible = false
-      this.isCorrCCEdit = false
+      this.ccVisible2 = false
+      this.isCCEdit2 = false
     }
     this.corrColumnError = false
     this.measureError = ''
@@ -567,11 +632,11 @@ export default class AddMeasure extends Vue {
 
   resetCCVisble () {
     this.isEdit = false
-    this.isCorrCCEdit = false
+    this.isCCEdit2 = false
     this.ccVisible = false
-    this.corrCCVisible = false
+    this.ccVisible2 = false
     this.ccObject = null
-    this.corrCCObject = null
+    this.ccObject2 = null
     this.ccValidateError = false
     this.corrColumnError = false
   }
@@ -583,11 +648,11 @@ export default class AddMeasure extends Vue {
     this.isEdit = true
     this.ccVisible = true
   }
-  newCorrCC () {
+  newCC2 () {
     this.resetCCVisble()
     this.measure.convertedColumns[0].value = ''
-    this.isCorrCCEdit = true
-    this.corrCCVisible = true
+    this.isCCEdit2 = true
+    this.ccVisible2 = true
   }
   saveCC (cc) {
     this.ccObject = cc
@@ -595,10 +660,10 @@ export default class AddMeasure extends Vue {
     // this.isEdit = false
     this.checkNewCC(cc, 'ccEditForm')
   }
-  saveCorrCC (cc) {
+  saveCC2 (cc) {
     this.measure.convertedColumns[0].value = cc.tableAlias + '.' + cc.columnName
-    this.corrCCObject = cc
-    // this.isCorrCCEdit = false
+    this.ccObject2 = cc
+    // this.isCCEdit2 = false
     this.checkNewCC(cc, 'corrEditForm')
   }
   checkNewCC (cc, ref) {
@@ -628,10 +693,10 @@ export default class AddMeasure extends Vue {
     this.isEdit = false
     this.corrColumnError = false
   }
-  delCorrCC (cc) {
+  delCC2 (cc) {
     this.measure.convertedColumns[0].value = ''
-    this.corrCCVisible = false
-    this.isCorrCCEdit = false
+    this.ccVisible2 = false
+    this.isCCEdit2 = false
     this.corrColumnError = false
   }
 
@@ -666,7 +731,7 @@ export default class AddMeasure extends Vue {
     let targetColumns = []
     let filterType = []
     if (this.allTableColumns) {
-      if (['SUM(column)', 'TOP_N', 'CORR'].includes(this.measure.expression)) {
+      if (['SUM(column)', 'SUM_LC', 'TOP_N', 'CORR'].includes(this.measure.expression)) {
         filterType = measureSumAndTopNDataType
       } else if (this.measure.expression === 'PERCENTILE_APPROX') {
         filterType = measurePercenDataType
@@ -782,7 +847,7 @@ export default class AddMeasure extends Vue {
           const measureClone = objectClone(this.measure)
           // 判断该操作是否属于搜索入口进来
           let isFromSearchAciton = measureClone.fromSearch
-          if (measureClone.expression.indexOf('SUM') !== -1) {
+          if (measureClone.expression.indexOf('SUM(') !== -1) {
             measureClone.expression = 'SUM'
           }
           if (measureClone.expression.indexOf('COUNT(constant)') !== -1 || measureClone.expression.indexOf('COUNT(column)') !== -1) {
@@ -847,8 +912,8 @@ export default class AddMeasure extends Vue {
     this.syncComment = false
     this.ccVisible = false
     this.isEdit = false
-    this.corrCCVisible = false
-    this.isCorrCCEdit = false
+    this.ccVisible2 = false
+    this.isCCEdit2 = false
     this.showMutipleColumnsTip = false
     this.measureError = ''
   }
@@ -939,6 +1004,15 @@ export default class AddMeasure extends Vue {
     }
   }
   .add-measure {
+    .semi-additive-desc {
+      background: @ke-background-color-base-1;
+      padding: 10px;
+      box-sizing: border-box;
+      line-height: 1.2;
+      .point {
+        margin-right: 5px;
+      }
+    }
     .el-form-item.cc-item,
     .el-form-item.is-error {
       margin-bottom: 8px;
