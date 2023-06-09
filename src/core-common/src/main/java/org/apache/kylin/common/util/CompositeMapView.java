@@ -54,10 +54,11 @@ public class CompositeMapView<K, V> extends AbstractMap<K, V> {
     private final Map<K, V>[] composite;
 
     @SuppressWarnings("unchecked")
-    public CompositeMapView(@NotNull Map<K, V> one, @NotNull Map<K, V> two) {
-        Preconditions.checkNotNull(one);
-        Preconditions.checkNotNull(two);
-        this.composite = new Map[] { one, two };
+    public CompositeMapView(@NotNull Map<K, V>... maps) {
+        for (Map<K, V> map : maps) {
+            Preconditions.checkNotNull(map);
+        }
+        this.composite = maps;
     }
 
     @Override
