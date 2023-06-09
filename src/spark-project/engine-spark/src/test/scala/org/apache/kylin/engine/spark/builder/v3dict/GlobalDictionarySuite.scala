@@ -19,7 +19,10 @@
 package org.apache.kylin.engine.spark.builder.v3dict
 
 import io.delta.tables.DeltaTable
+import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.common.exception.KylinRuntimeException
+import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.builder.v3dict.GlobalDictionaryBuilderHelper.{checkAnswer, genDataWithWrapEncodeCol, genRandomData}
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.spark.sql.KapFunctions.dict_encode_v3
@@ -28,8 +31,9 @@ import org.apache.spark.sql.delta.DeltaLog
 import org.apache.spark.sql.delta.util.DeltaFileOperations
 import org.apache.spark.sql.functions.{col, count, countDistinct}
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 import org.apache.spark.util.SerializableConfiguration
+import org.mockito.Mockito.{spy, when}
 
 import java.util.concurrent.{ExecutorService, Executors, TimeUnit}
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
@@ -223,6 +227,35 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
       spark.sparkContext.broadcast(new SerializableConfiguration(deltaLog.newDeltaHadoopConf()))
     ).count()
     assert(numFileRemaining < numOfFiles + deltaLog.snapshot.numOfRemoves)
+  }
+  test("KE-41980 Test failure to initialize dictionary file") {
+    val project = "project"
+    val dbName = "db"
+    val tableName = "table"
+    val colName = "col"
+    val encodeColName: String = tableName + NSparkCubingUtil.SEPARATOR + colName
+
+    val context = new DictionaryContext(project, dbName, tableName, colName, null)
+    val dictPath = DictionaryBuilder.getDictionaryPath(context)
+    val dictDF = spy(genRandomData(spark, encodeColName, 10, 2))
+
+    // mock write delta table failed and throw a Exception
+    when(dictDF.write.mode(SaveMode.Overwrite).format("delta").save(dictPath))
+      .thenThrow(new RuntimeException())
+
+    intercept[RuntimeException] {
+      DictionaryBuilder.initAndSaveDict(dictDF, context)
+    }
+
+    // after mock throw RuntimeException, dictPath will be delete
+    assert(HadoopUtil.getWorkingFileSystem().exists(new Path(dictPath)) == false)
+
+    // write temp file to dictPath, which is not a delta table
+    // so that getDictionaryPathAndCheck will throw KylinRuntimeException
+    HadoopUtil.writeStringToHdfs("tempString4Test", new Path(dictPath))
+    intercept[KylinRuntimeException] {
+      DictionaryBuilder.getDictionaryPathAndCheck(context)
+    }
   }
 
   def genBuildDictTask(spark: SparkSession, context: DictionaryContext): Runnable = {

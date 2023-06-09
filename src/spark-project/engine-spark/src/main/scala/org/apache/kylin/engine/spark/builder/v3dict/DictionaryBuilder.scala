@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark.builder.v3dict
 import io.delta.tables.DeltaTable
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.common.exception.KylinRuntimeException
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.builder.v3dict.DictBuildMode.{V2UPGRADE, V3APPEND, V3INIT, V3UPGRADE}
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
@@ -40,6 +41,7 @@ import util.retry.blocking.{Failure, Retry, RetryStrategy, Success}
 import java.nio.file.Paths
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.DurationInt
+import scala.util.control.NonFatal
 
 object DictionaryBuilder extends Logging {
 
@@ -62,11 +64,12 @@ object DictionaryBuilder extends Logging {
       // so need retry commit incremental dict to delta table.
       Retry(incrementBuildDict(spark, child, context)) match {
         case Success(_) => logInfo(s"Incremental persist global dictionary for: $expr success.")
-        case Failure(e) => logInfo(s"Incremental persist global dictionary for: $expr failure.", e)
+        case Failure(e) =>
+          throw new KylinRuntimeException(s"Incremental persist global dictionary for: $expr failure.", e)
       }
       spark.sparkContext.setJobDescription(null)
 
-      val dictPath = getDictionaryPath(context)
+      val dictPath = getDictionaryPathAndCheck(context)
       val dictPlan = getLogicalPlan(spark.read.format("delta").load(dictPath))
       val (key, value) = (dictPlan.output.head, dictPlan.output(1))
       val (existKey, existValue) = (child.output.head, child.output(1))
@@ -84,7 +87,7 @@ object DictionaryBuilder extends Logging {
                                    context: DictionaryContext,
                                    plan: LogicalPlan): LogicalPlan = {
 
-    val dictPath = getDictionaryPath(context)
+    val dictPath = getDictionaryPathAndCheck(context)
     val dictTable: DeltaTable = DeltaTable.forPath(dictPath)
     val maxOffset = dictTable.toDF.count()
     logInfo(s"Dict $dictPath item count $maxOffset")
@@ -152,22 +155,28 @@ object DictionaryBuilder extends Logging {
         mergeIncrementDict(spark, context, plan)
     }
 
-    val dictPath = getDictionaryPath(context)
+    val dictPath = getDictionaryPathAndCheck(context)
     val dictDeltaLog = DeltaLog.forTable(spark, dictPath)
     val version = dictDeltaLog.snapshot.version
     logInfo(s"Completed the construction of dictionary version $version for dict $dictPath")
   }
 
-  private def initAndSaveDict(dictDF: Dataset[Row], context: DictionaryContext): Unit = {
+  def initAndSaveDict(dictDF: Dataset[Row], context: DictionaryContext): Unit = {
     val dictPath = getDictionaryPath(context)
     logInfo(s"Save dict values into path $dictPath.")
-    dictDF.write.mode(SaveMode.Overwrite).format("delta").save(dictPath)
+    try {
+      dictDF.write.mode(SaveMode.Overwrite).format("delta").save(dictPath)
+    } catch {
+      case NonFatal(e) =>
+        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration, new Path(dictPath))
+        throw e
+    }
   }
 
   private def mergeIncrementDict(spark: SparkSession, context: DictionaryContext, plan: LogicalPlan): Unit = {
     val dictPlan = transformerDictPlan(spark, context, plan)
     val incrementDictDF = getDataFrame(spark, dictPlan)
-    val dictPath = getDictionaryPath(context)
+    val dictPath = getDictionaryPathAndCheck(context)
     logInfo(s"increment build global dict $dictPath")
     val dictTable = DeltaTable.forPath(dictPath)
     dictTable.alias("dict")
@@ -190,7 +199,7 @@ object DictionaryBuilder extends Logging {
    * files can be controlled to improve build performance.
    */
   private def optimizeDictTable(spark: SparkSession, context: DictionaryContext): Unit = {
-    val dictPath = getDictionaryPath(context)
+    val dictPath = getDictionaryPathAndCheck(context)
     val deltaLog = DeltaLog.forTable(spark, dictPath)
     val numFile = deltaLog.snapshot.numOfFiles
 
@@ -231,12 +240,12 @@ object DictionaryBuilder extends Logging {
 
   private def isExistsV3Dict(context: DictionaryContext): Boolean = {
     val dictPath = getDictionaryPath(context)
-    HadoopUtil.getWorkingFileSystem.exists(new Path(dictPath))
+    DeltaTable.isDeltaTable(dictPath)
   }
 
   private def isExistsOriginalV3Dict(context: DictionaryContext): Boolean = {
     val dictPath = getOriginalDictionaryPath(context)
-    HadoopUtil.getWorkingFileSystem.exists(new Path(dictPath))
+    DeltaTable.isDeltaTable(dictPath)
   }
 
   private def fetchExistsOriginalV3Dict(context: DictionaryContext): Dataset[Row] = {
@@ -303,6 +312,14 @@ object DictionaryBuilder extends Logging {
       context.tableName,
       context.columnName)
     workingDir + dictDir
+  }
+
+  def getDictionaryPathAndCheck(context: DictionaryContext): String = {
+    val v3ditPath = getDictionaryPath(context)
+    if (!DeltaTable.isDeltaTable(v3ditPath)) {
+      throw new KylinRuntimeException(s"This v3dict path: {$v3ditPath} is not a delta table.")
+    }
+    v3ditPath
   }
 
   def wrapCol(ref: TblColRef): String = {
