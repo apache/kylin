@@ -34,7 +34,7 @@ public class KylinConfigExt extends KylinConfig {
 
     private final Map<String, String> overrides;
     final KylinConfig base;
-    private final transient StrSubstitutor substitutor;
+    private final transient StrSubstitutor strSubstitutor;
 
     public static KylinConfigExt createInstance(KylinConfig kylinConfig, Map<String, String> overrides) {
         if (kylinConfig instanceof KylinConfigExt) {
@@ -52,7 +52,7 @@ public class KylinConfigExt extends KylinConfig {
         this.base = base;
         this.overrides = BCC.check(overrides);
         // overrides > env > properties
-        this.substitutor = new StrSubstitutor(new CompositeMapView(this.properties, STATIC_SYSTEM_ENV, this.overrides));
+        this.strSubstitutor = new StrSubstitutor(new CompositeMapView(this.properties, STATIC_SYSTEM_ENV, this.overrides));
     }
 
     private KylinConfigExt(KylinConfigExt ext, Map<String, String> overrides) {
@@ -81,14 +81,14 @@ public class KylinConfigExt extends KylinConfig {
     public Map<String, String> getReadonlyProperties() {
         HashMap<String, String> config = Maps.newHashMap();
         for (Map.Entry<String, String> entry : this.overrides.entrySet()) {
-            config.put(entry.getKey(), substitutor.replace(entry.getValue()));
+            config.put(entry.getKey(), strSubstitutor.replace(entry.getValue()));
         }
         return config;
     }
 
     @Override
     protected StrSubstitutor getSubstitutor() {
-        return this.substitutor;
+        return this.strSubstitutor;
     }
 
     public Map<String, String> getExtendedOverrides() {
