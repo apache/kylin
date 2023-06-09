@@ -71,6 +71,7 @@ import org.springframework.scheduling.TaskScheduler;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.session.web.http.CookieSerializer;
 
 @Slf4j
 @Configuration
@@ -92,6 +93,14 @@ public class AppInitializer {
 
     @Autowired
     ApplicationContext context;
+
+    // https://github.com/spring-projects/spring-boot/issues/35240
+    // since spring-boot-autoconfigure:2.7.12, the commit will
+    // prevent early initialization of SessionRepository beans.
+    // But we want the cookieSerializer to be initialized before init,
+    // so we autowired it here.
+    @Autowired
+    CookieSerializer cookieSerializer;
 
     JdbcStreamingJobStatsStore streamingJobStatsStore;
 
