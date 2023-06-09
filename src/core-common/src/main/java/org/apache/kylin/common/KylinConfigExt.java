@@ -22,9 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import lombok.val;
 import org.apache.commons.lang3.text.StrSubstitutor;
-
+import org.apache.kylin.common.util.CompositeMapView;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 /**
@@ -35,6 +34,7 @@ public class KylinConfigExt extends KylinConfig {
 
     private final Map<String, String> overrides;
     final KylinConfig base;
+    private final transient StrSubstitutor substitutor;
 
     public static KylinConfigExt createInstance(KylinConfig kylinConfig, Map<String, String> overrides) {
         if (kylinConfig instanceof KylinConfigExt) {
@@ -51,12 +51,12 @@ public class KylinConfigExt extends KylinConfig {
         }
         this.base = base;
         this.overrides = BCC.check(overrides);
+        // overrides > env > properties
+        this.substitutor = new StrSubstitutor(new CompositeMapView(this.properties, STATIC_SYSTEM_ENV, this.overrides));
     }
 
     private KylinConfigExt(KylinConfigExt ext, Map<String, String> overrides) {
-        super(ext.base.getRawAllProperties(), true);
-        this.base = ext.base;
-        this.overrides = BCC.check(overrides);
+        this(ext.base, overrides);
     }
 
     @Override
@@ -79,7 +79,6 @@ public class KylinConfigExt extends KylinConfig {
 
     @Override
     public Map<String, String> getReadonlyProperties() {
-        val substitutor = getSubstitutor();
         HashMap<String, String> config = Maps.newHashMap();
         for (Map.Entry<String, String> entry : this.overrides.entrySet()) {
             config.put(entry.getKey(), substitutor.replace(entry.getValue()));
@@ -89,15 +88,7 @@ public class KylinConfigExt extends KylinConfig {
 
     @Override
     protected StrSubstitutor getSubstitutor() {
-        // overrides > env > properties
-        final Map<String, Object> all = Maps.newHashMap();
-        // all.putAll((Map) properties); // use putAll will call CompositeMapView.size()sss
-        for(Map.Entry<Object, Object> e: properties.entrySet()) {
-            all.put(e.getKey().toString(), e.getValue());
-        }
-        all.putAll(STATIC_SYSTEM_ENV);
-        all.putAll(overrides);
-        return new StrSubstitutor(all);
+        return this.substitutor;
     }
 
     public Map<String, String> getExtendedOverrides() {
