@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.spark.builder.v3dict
 
+import io.delta.exceptions.ConcurrentWriteException
 import io.delta.tables.DeltaTable
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
@@ -228,34 +229,49 @@ class GlobalDictionarySuite extends SparderBaseFunSuite with LocalMetadata with 
     ).count()
     assert(numFileRemaining < numOfFiles + deltaLog.snapshot.numOfRemoves)
   }
+
   test("KE-41980 Test failure to initialize dictionary file") {
+    def isDirectory(path: String): Boolean = {
+      HadoopUtil.getWorkingFileSystem.isDirectory(new Path(path))
+    }
+
     val project = "project"
     val dbName = "db"
     val tableName = "table"
     val colName = "col"
     val encodeColName: String = tableName + NSparkCubingUtil.SEPARATOR + colName
-
     val context = new DictionaryContext(project, dbName, tableName, colName, null)
     val dictPath = DictionaryBuilder.getDictionaryPath(context)
-    val dictDF = spy(genRandomData(spark, encodeColName, 10, 2))
 
-    // mock write delta table failed and throw a Exception
-    when(dictDF.write.mode(SaveMode.Overwrite).format("delta").save(dictPath))
-      .thenThrow(new RuntimeException())
-
-    intercept[RuntimeException] {
-      DictionaryBuilder.initAndSaveDict(dictDF, context)
-    }
-
-    // after mock throw RuntimeException, dictPath will be delete
-    assert(HadoopUtil.getWorkingFileSystem().exists(new Path(dictPath)) == false)
-
-    // write temp file to dictPath, which is not a delta table
+    // make dictPath an empty dir, which is not a delta table
     // so that getDictionaryPathAndCheck will throw KylinRuntimeException
-    HadoopUtil.writeStringToHdfs("tempString4Test", new Path(dictPath))
+    HadoopUtil.mkdirIfNotExist(dictPath)
+    assert(isDirectory(dictPath) == true)
+    assert(DeltaTable.isDeltaTable(dictPath) == false)
     intercept[KylinRuntimeException] {
       DictionaryBuilder.getDictionaryPathAndCheck(context)
     }
+
+    // When writing Delta Table throw `RuntimeException`
+    // `dictPath` will be delete if it is not an Delta Table
+    val dictDF1 = spy(genRandomData(spark, encodeColName, 5, 2))
+    when(dictDF1.write).thenThrow(new RuntimeException())
+    intercept[RuntimeException] {
+      DictionaryBuilder.initAndSaveDict(dictDF1, context)
+    }
+    assert(isDirectory(dictPath) == false)
+
+
+    // write a Delta Table for testing `ConcurrentWriteException`
+    // Delta Table will not be deleted after `ConcurrentWriteException`
+    val dictDF2 = spy(genRandomData(spark, encodeColName, 5, 2))
+    dictDF2.write.mode(SaveMode.Overwrite).format("delta").save(dictPath)
+    assert(DeltaTable.isDeltaTable(dictPath) == true)
+    when(dictDF2.write).thenThrow(new ConcurrentWriteException(""))
+    intercept[ConcurrentWriteException] {
+      DictionaryBuilder.initAndSaveDict(dictDF2, context)
+    }
+    assert(DeltaTable.isDeltaTable(dictPath) == true)
   }
 
   def genBuildDictTask(spark: SparkSession, context: DictionaryContext): Runnable = {

@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.engine.spark.builder.v3dict
 
+import io.delta.exceptions.DeltaConcurrentModificationException
 import io.delta.tables.DeltaTable
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
@@ -167,8 +168,14 @@ object DictionaryBuilder extends Logging {
     try {
       dictDF.write.mode(SaveMode.Overwrite).format("delta").save(dictPath)
     } catch {
+      case e: DeltaConcurrentModificationException =>
+        logWarning(s"Concurrent modifications occurred: $dictPath", e)
+        throw e
       case NonFatal(e) =>
-        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration, new Path(dictPath))
+        if (!DeltaTable.isDeltaTable(dictPath)) {
+          logWarning(s"Try to delete v3dict: $dictPath", e)
+          HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration, new Path(dictPath))
+        }
         throw e
     }
   }
