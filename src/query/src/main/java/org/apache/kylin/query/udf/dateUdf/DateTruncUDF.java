@@ -36,4 +36,9 @@ public class DateTruncUDF implements NotConstant {
             throws CalciteNotSupportException {
         throw new CalciteNotSupportException();
     }
+
+    public Date DATE_TRUNC(@Parameter(name = "part") String part, @Parameter(name = "date") String date)
+            throws CalciteNotSupportException {
+        throw new CalciteNotSupportException();
+    }
 }
