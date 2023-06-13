@@ -454,7 +454,7 @@ public class ProjectService extends BasicService {
         if (request.getJobStatesNotification() != null) {
             overrideKylinProps.put("kylin.job.notification-enable-states",
                     String.join(",", Sets.newHashSet(request.getJobStatesNotification())));
-            overrideKylinProps.put("kylin.job.notification-on-job-error", null);
+            overrideKylinProps.put("kylin.job.notification-on-job-error", "false");
         } else {
             overrideKylinProps.put("kylin.job.notification-on-job-error",
                     String.valueOf(request.getJobErrorNotificationEnabled()));

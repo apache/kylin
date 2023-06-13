@@ -378,6 +378,15 @@ public class ProjectServiceTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(3, response.getJobStatesNotification().size());
         Assert.assertFalse(response.isDataLoadEmptyNotificationEnabled());
 
+        val jobNotificationConfigRequest2 = new JobNotificationConfigRequest();
+        jobNotificationConfigRequest2.setJobStatesNotification(Lists.newArrayList("discarded"));
+        jobNotificationConfigRequest2.setJobErrorNotificationEnabled(true);
+        jobNotificationConfigRequest2.setJobNotificationEmails(Lists.newArrayList("user2@kyligence.io"));
+        projectService.updateJobNotificationConfig(project, jobNotificationConfigRequest2);
+        response = projectService.getProjectConfig(project);
+        Assert.assertEquals(1, response.getJobStatesNotification().size());
+        Assert.assertEquals("discarded", response.getJobStatesNotification().get(0));
+
         jobNotificationConfigRequest
                 .setJobNotificationEmails(Lists.newArrayList("@Kylin.io", "user2@.io", "user2@Kylin.io"));
         thrown.expect(KylinException.class);
