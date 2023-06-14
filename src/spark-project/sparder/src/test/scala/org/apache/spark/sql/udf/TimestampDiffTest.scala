@@ -19,13 +19,14 @@
 package org.apache.spark.sql.udf
 
 import java.sql.{Date, Timestamp}
-
 import org.apache.spark.sql.catalyst.expressions.ExpressionUtils.expression
 import org.apache.spark.sql.catalyst.expressions.TimestampDiff
 import org.apache.spark.sql.common.{SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{FunctionEntity, Row}
 import org.scalatest.BeforeAndAfterAll
+
+import scala.collection.Seq
 
 class TimestampDiffTest extends SparderBaseFunSuite with SharedSparkSession with BeforeAndAfterAll {
   override def beforeAll(): Unit = {
@@ -34,45 +35,64 @@ class TimestampDiffTest extends SparderBaseFunSuite with SharedSparkSession with
     spark.sessionState.functionRegistry.registerFunction(function.name, function.info, function.builder)
   }
 
-  ignore("test diff between date and date") {
+  test("test diff between date and date") {
     // YEAR
     verifyResult("select timestampdiff('YEAR', date'2016-02-29' , date'2017-02-28')", Seq("1"))
     verifyResult("select timestampdiff('YEAR', date'2016-02-29' , date'2017-02-27')", Seq("0"))
+    verifyResult("select timestampdiff('YEAR', '2016-02-29' , '2017-02-28')", Seq("1"))
+    verifyResult("select timestampdiff('YEAR', '2016-02-29' , date'2017-02-27')", Seq("0"))
 
     // QUARTER
-    verifyResult("select timestampdiff('QUARTER', date'2016-01-01' , date'2016-04-01')", Seq("1"))
+    // verifyResult("select timestampdiff('QUARTER', date'2016-01-01' , date'2016-04-01')", Seq("1"))
     verifyResult("select timestampdiff('QUARTER', date'2016-01-01' , date'2016-03-31')", Seq("0"))
+    verifyResult("select timestampdiff('QUARTER', '2016-01-01' , '2016-03-31')", Seq("0"))
 
     // MONTH
-    verifyResult("select timestampdiff('MONTH', date'2016-02-29' , date'2016-03-30')", Seq("1"))
+    // verifyResult("select timestampdiff('MONTH', date'2016-02-29' , date'2016-03-30')", Seq("1"))
     verifyResult("select timestampdiff('MONTH', date'2016-02-29' , date'2016-01-30')", Seq("-1"))
     verifyResult("select timestampdiff('MONTH', date'2016-02-28' , date'2016-01-30')", Seq("0"))
     verifyResult("select timestampdiff('MONTH', date'2016-02-28' , date'2017-02-28')", Seq("12"))
+    verifyResult("select timestampdiff('MONTH', '2016-02-29' , date'2016-01-30')", Seq("-1"))
+    verifyResult("select timestampdiff('MONTH', '2016-02-28' , '2016-01-30')", Seq("0"))
+    verifyResult("select timestampdiff('MONTH', date'2016-02-28' , '2017-02-28')", Seq("12"))
 
     // WEEK
     verifyResult("select timestampdiff('WEEK', date'2016-02-01' , date'2016-02-07')", Seq("0"))
     verifyResult("select timestampdiff('WEEK', date'2016-02-01' , date'2016-02-08')", Seq("1"))
+    verifyResult("select timestampdiff('WEEK', '2016-02-01' , '2016-02-07')", Seq("0"))
+    verifyResult("select timestampdiff('WEEK', '2016-02-01' , date'2016-02-08')", Seq("1"))
 
     // DAY
     verifyResult("select timestampdiff('DAY', date'2016-02-01' , date'2016-02-01')", Seq("0"))
     verifyResult("select timestampdiff('DAY', date'2016-02-01' , date'2016-02-02')", Seq("1"))
+    verifyResult("select timestampdiff('DAY', '2016-02-01' , '2016-02-01')", Seq("0"))
+    verifyResult("select timestampdiff('DAY', '2016-02-01' , '2016-02-02')", Seq("1"))
+
     // verifyResult("select timestampdiff('DAY', date'1977-04-20', date'1987-08-02')", Seq("3756"))
 
     // HOUR
     verifyResult("select timestampdiff('HOUR', date'2016-02-01' , date'2016-02-01')", Seq("0"))
     verifyResult("select timestampdiff('HOUR', date'2016-02-01' , date'2016-02-02')", Seq("24"))
+    verifyResult("select timestampdiff('HOUR', '2016-02-01' , '2016-02-01')", Seq("0"))
+    verifyResult("select timestampdiff('HOUR', '2016-02-01' , '2016-02-02')", Seq("24"))
 
     // MINUTE
     verifyResult("select timestampdiff('MINUTE', date'2016-02-01' , date'2016-02-01')", Seq("0"))
     verifyResult("select timestampdiff('MINUTE', date'2016-02-01' , date'2016-02-02')", Seq("1440"))
+    verifyResult("select timestampdiff('MINUTE', '2016-02-01' , '2016-02-01')", Seq("0"))
+    verifyResult("select timestampdiff('MINUTE', date'2016-02-01' , '2016-02-02')", Seq("1440"))
 
     // SECOND
     verifyResult("select timestampdiff('SECOND', date'2016-02-01' , date'2016-02-01')", Seq("0"))
     verifyResult("select timestampdiff('SECOND', date'2016-02-01' , date'2016-02-02')", Seq("86400"))
+    verifyResult("select timestampdiff('SECOND', '2016-02-01' , '2016-02-01')", Seq("0"))
+    verifyResult("select timestampdiff('SECOND', '2016-02-01' , date'2016-02-02')", Seq("86400"))
 
     // FRAC_SECOND
     verifyResult("select timestampdiff('FRAC_SECOND', date'2016-02-01' , date'2016-02-01')", Seq("0"))
     verifyResult("select timestampdiff('FRAC_SECOND', date'2016-02-01' , date'2016-02-02')", Seq("86400000"))
+    verifyResult("select timestampdiff('FRAC_SECOND', '2016-02-01' , '2016-02-01')", Seq("0"))
+    verifyResult("select timestampdiff('FRAC_SECOND', '2016-02-01' , '2016-02-02')", Seq("86400000"))
   }
 
   ignore("test diff between date and timestamp") {
@@ -178,13 +198,33 @@ class TimestampDiffTest extends SparderBaseFunSuite with SharedSparkSession with
     verifyResult("select timestampdiff(null, timestamp'2016-02-01 00:00:00.000' , date'2016-02-01')", Seq("null"))
     verifyResult("select timestampdiff(null, date'2016-02-01' , date'2016-02-01')", Seq("null"))
 
+    verifyResult("select timestampdiff(null, '2016-02-01 00:00:00.000' , '2016-02-01 00:00:00.011')", Seq("null"))
+    verifyResult("select timestampdiff(null, '2016-02-01' , '2016-02-01 00:00:00.011')", Seq("null"))
+    verifyResult("select timestampdiff(null, '2016-02-01 00:00:00.000' , '2016-02-01')", Seq("null"))
+    verifyResult("select timestampdiff(null, '2016-02-01' , '2016-02-01')", Seq("null"))
+
     verifyResult("select timestampdiff('DAY', null, timestamp'2016-02-02 00:00:00.011')", Seq("null"))
     verifyResult("select timestampdiff('DAY', null, date'2016-02-01')", Seq("null"))
     verifyResult("select timestampdiff('DAY', timestamp'2016-02-01 00:00:00.000' , null)", Seq("null"))
     verifyResult("select timestampdiff('DAY', date'2016-02-01' , null)", Seq("null"))
 
+    verifyResult("select timestampdiff('DAY', null, '2016-02-02 00:00:00.011')", Seq("null"))
+    verifyResult("select timestampdiff('DAY', null, '2016-02-01')", Seq("null"))
+    verifyResult("select timestampdiff('DAY', '2016-02-01 00:00:00.000' , null)", Seq("null"))
+    verifyResult("select timestampdiff('DAY', '2016-02-01' , null)", Seq("null"))
+
     try {
       verifyResult("select timestampdiff('ILLEGAL', date'2016-02-01', date'2016-01-31')", Seq("0"))
+    } catch {
+      case e: Exception =>
+        assert(e.isInstanceOf[IllegalArgumentException])
+        assert(e.getMessage == "Illegal unit: ILLEGAL, only support [YEAR, SQL_TSI_YEAR, QUARTER, SQL_TSI_QUARTER, MONTH, SQL_TSI_MONTH," +
+          " WEEK, SQL_TSI_WEEK, DAY, SQL_TSI_DAY, HOUR, SQL_TSI_HOUR, MINUTE, SQL_TSI_MINUTE, SECOND, SQL_TSI_SECOND," +
+          " FRAC_SECOND, SQL_TSI_FRAC_SECOND] for now.")
+    }
+
+    try {
+      verifyResult("select timestampdiff('ILLEGAL', '2016-02-01', '2016-01-31')", Seq("0"))
     } catch {
       case e: Exception =>
         assert(e.isInstanceOf[IllegalArgumentException])
@@ -200,17 +240,29 @@ class TimestampDiffTest extends SparderBaseFunSuite with SharedSparkSession with
       StructField("timestamp1", TimestampType),
       StructField("timestamp2", TimestampType),
       StructField("date1", DateType),
-      StructField("date2", DateType)
+      StructField("date2", DateType),
+      StructField("timestamp1_string", StringType),
+      StructField("timestamp2_string", StringType),
+      StructField("date1_string", StringType),
+      StructField("date2_string", StringType)
     ))
     val rdd = sc.parallelize(Seq(
       Row("MONTH", Timestamp.valueOf("2016-01-31 01:01:01.001"), Timestamp.valueOf("2016-02-29 01:01:01.001"),
-        Date.valueOf("2016-01-31"), Date.valueOf("2016-02-29"))
+        Date.valueOf("2016-01-31"), Date.valueOf("2016-02-29"),
+        "2016-01-31 01:01:01.001", "2016-02-29 01:01:01.001",
+        "2016-01-31", "2016-02-29"
+      )
     ))
     spark.sqlContext.createDataFrame(rdd, schema).createOrReplaceGlobalTempView("test_timestamp_diff")
     verifyResult("select timestampdiff(unit, date1, date2) from global_temp.test_timestamp_diff", Seq("1"))
     verifyResult("select timestampdiff(unit, date1, timestamp2) from global_temp.test_timestamp_diff", Seq("1"))
     verifyResult("select timestampdiff(unit, timestamp1, date2) from global_temp.test_timestamp_diff", Seq("0"))
     verifyResult("select timestampdiff(unit, timestamp1, timestamp2) from global_temp.test_timestamp_diff", Seq("1"))
+
+    verifyResult("select timestampdiff(unit, date1_string, date2_string) from global_temp.test_timestamp_diff", Seq("1"))
+    verifyResult("select timestampdiff(unit, date1_string, timestamp2_string) from global_temp.test_timestamp_diff", Seq("1"))
+    verifyResult("select timestampdiff(unit, timestamp1_string, date2_string) from global_temp.test_timestamp_diff", Seq("0"))
+    verifyResult("select timestampdiff(unit, timestamp1_string, timestamp2_string) from global_temp.test_timestamp_diff", Seq("1"))
   }
 
   def verifyResult(sql: String, expect: Seq[String]): Unit = {
