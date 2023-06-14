@@ -486,6 +486,12 @@ public class PushDownUtil {
                     QueryContext.current().getMetrics().getCorrectedSql(), sqlException);
             return true;
         }
+
+        //SqlValidatorException about TIMESTAMPADD and TIMESTAMPDIFF is expected
+        if (rootCause.getMessage().contains("TIMESTAMPADD") || rootCause.getMessage().contains("TIMESTAMPDIFF")) {
+            return true;
+        }
+
         return false;
     }
 

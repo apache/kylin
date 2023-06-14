@@ -194,12 +194,12 @@ case class Sum0(child: Expression)
     super.legacyWithNewChildren(newChildren)
 }
 
-case class TimestampAdd(left: Expression, mid: Expression, right: Expression) extends TernaryExpression with ExpectsInputTypes {
+case class TimestampAdd(left: Expression, mid: Expression, right: Expression) extends TernaryExpression with ImplicitCastInputTypes {
 
   override def dataType: DataType = getResultDataType
 
   override def inputTypes: Seq[AbstractDataType] =
-    Seq(StringType, TypeCollection(IntegerType, LongType), TypeCollection(DateType, TimestampType))
+    Seq(StringType, TypeCollection(IntegerType, LongType), TypeCollection(TimestampType, DateType))
 
   def getResultDataType(): DataType = {
     if (canConvertTimestamp()) {
@@ -273,10 +273,10 @@ case class TimestampAdd(left: Expression, mid: Expression, right: Expression) ex
 }
 
 case class TimestampDiff(left: Expression, mid: Expression, right: Expression) extends TernaryExpression
-  with ExpectsInputTypes {
+  with ImplicitCastInputTypes {
 
   override def inputTypes: Seq[AbstractDataType] =
-    Seq(StringType, TypeCollection(DateType, TimestampType), TypeCollection(DateType, TimestampType))
+    Seq(StringType, TypeCollection(TimestampType, DateType), TypeCollection(TimestampType, DateType))
 
 
   override protected def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
