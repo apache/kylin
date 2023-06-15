@@ -676,6 +676,7 @@ export default class TableJoinModal extends Vue {
   }
   compareJoinCondition (data) {
     // if (!this.joinConditionBackUp && data.joinType === 'LEFT') return false
+    if (!data) return false
     let newData = JSON.parse(JSON.stringify(data))
     delete newData.anti_flatten_lookups
     delete newData.anti_flatten_cc
