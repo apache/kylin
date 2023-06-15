@@ -203,6 +203,10 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
     }
 
     public TableDesc(TableDesc other) {
+        this(other, true);
+    }
+
+    public TableDesc(TableDesc other, boolean copyMvcc) {
         this.uuid = other.uuid;
         this.lastModified = other.lastModified;
         this.createTime = other.createTime;
@@ -234,7 +238,9 @@ public class TableDesc extends RootPersistentEntity implements Serializable, ISo
         this.isTransactional = other.isTransactional;
         this.isRangePartition = other.isRangePartition;
         this.partitionDesc = other.partitionDesc;
-        setMvcc(other.getMvcc());
+        if (copyMvcc) {
+            setMvcc(other.getMvcc());
+        }
     }
 
     /**

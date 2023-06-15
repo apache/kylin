@@ -531,6 +531,13 @@ public class NDataSegment implements ISegment, Serializable {
         return isCachedAndShared() ? ImmutableMap.copyOf(dictionaries) : dictionaries;
     }
 
+    public Map<String, String> getSnapshots() {
+        if (snapshots == null)
+            snapshots = Maps.newConcurrentMap();
+
+        return isCachedAndShared() ? ImmutableMap.copyOf(snapshots) : snapshots;
+    }
+
     public void putDictResPath(TblColRef col, String dictResPath) {
         checkIsNotCachedAndShared();
         getDictionaries(); // touch to create
@@ -541,6 +548,11 @@ public class NDataSegment implements ISegment, Serializable {
     public void setDictionaries(Map<String, String> dictionaries) {
         checkIsNotCachedAndShared();
         this.dictionaries = dictionaries;
+    }
+
+    public void setSnapshots(Map<String, String> snapshots) {
+        checkIsNotCachedAndShared();
+        this.snapshots = snapshots;
     }
 
     public long getCreateTimeUTC() {

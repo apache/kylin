@@ -23,9 +23,12 @@ import static org.apache.kylin.common.exception.ServerErrorCode.COLUMN_NOT_EXIST
 import static org.apache.kylin.common.exception.ServerErrorCode.DUPLICATED_COLUMN_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_IMPORT_SSB_DATA;
 import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_REFRESH_CATALOG_CACHE;
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_UPDATE_MODEL;
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_UPDATE_TABLE_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.FILE_NOT_EXIST;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_COMPUTED_COLUMN_EXPRESSION;
 import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PARTITION_COLUMN;
+import static org.apache.kylin.common.exception.ServerErrorCode.INVALID_PROJECT_NAME;
 import static org.apache.kylin.common.exception.ServerErrorCode.PERMISSION_DENIED;
 import static org.apache.kylin.common.exception.ServerErrorCode.TABLE_NOT_EXIST;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
@@ -98,7 +101,9 @@ import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataLoadingRange;
 import org.apache.kylin.metadata.cube.model.NDataLoadingRangeManager;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
+import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
 import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.cube.model.NSegmentConfigHelper;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -157,6 +162,8 @@ import org.apache.kylin.rest.response.TableRefresh;
 import org.apache.kylin.rest.response.TableRefreshAll;
 import org.apache.kylin.rest.response.TablesAndColumnsResponse;
 import org.apache.kylin.rest.security.KerberosLoginManager;
+import org.apache.kylin.rest.service.update.TableSchemaUpdateMapping;
+import org.apache.kylin.rest.service.update.TableSchemaUpdater;
 import org.apache.kylin.rest.source.DataSourceState;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
@@ -2085,5 +2092,117 @@ public class TableService extends BasicService {
 
     public TableExtDesc getOrCreateTableExt(String project, TableDesc t) {
         return getManager(NTableMetadataManager.class, project).getOrCreateTableExt(t);
+    }
+
+    /**
+     * 1. Check whether it's able to do the change
+     *      - related model should be offline
+     * 2. Get all influenced metadata
+     *      - table
+     *      - model
+     *      - dataflow
+     * 3. Update the metadata
+     * 4. Save the updated metadata
+     *      - table
+     *      - model
+     *      - dataflow
+     * 5. Delete dirty table metadata
+     */
+    @Transaction(project = 0)
+    public void updateHiveTable(String projectName, Map<String, TableSchemaUpdateMapping> mapping0, Set<String> modelSetToAffect, boolean isUseExisting) throws IOException {
+        final ProjectInstance prjInstance = getProjectManager().getProject(projectName);
+        val kylinConfig = KylinConfig.getInstanceFromEnv();
+        if (prjInstance == null) {
+            throw new KylinException(INVALID_PROJECT_NAME, "Project " + projectName + " does not exist");
+        }
+        // To deal with case-sensitive issue for table resource path
+        final String project = prjInstance.getName();
+        aclEvaluate.checkProjectWritePermission(project);
+
+        boolean ifAllModelUpdate = true;
+
+        // Normalize mapping
+        Map<String, TableSchemaUpdateMapping> mapping = mapping0.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().toUpperCase(Locale.ROOT), Map.Entry::getValue));
+
+        // Check whether it's able to do the change
+        Set<NDataModel> infModels = NDataModelManager.getInstance(kylinConfig, project)
+                .listAllModels().stream().filter(model -> isTablesUsed(model, mapping.keySet())).collect(Collectors.toSet());
+        if (modelSetToAffect != null && !modelSetToAffect.isEmpty()) {
+            int nModel = infModels.size();
+            final Set<String> modelSetToInf = modelSetToAffect.stream().map(model -> model.toUpperCase(Locale.ROOT)).collect(Collectors.toSet());
+            infModels = infModels.stream().filter(model -> modelSetToInf.contains(model.getAlias().toUpperCase(Locale.ROOT))).collect(Collectors.toSet());
+            ifAllModelUpdate = nModel == infModels.size();
+        }
+        // Currently, only model with offline status is supported to update with mappings.
+        Set<NDataModel> offlineModelSet = infModels.stream().filter(model -> NDataflowManager.getInstance(kylinConfig, project)
+                .getDataflowByModelAlias(model.getAlias()).getStatus() == RealizationStatusEnum.OFFLINE)
+                .collect(Collectors.toSet());
+        ifAllModelUpdate = (ifAllModelUpdate && offlineModelSet.size() == infModels.size());
+        // At least 1 model should be update here, otherwise it will throw BadRequestException.
+        if (offlineModelSet.isEmpty()) {
+            throw new KylinException(FAILED_UPDATE_MODEL, "Affected models " + infModels + " should be OFFLINE");
+        }
+        logger.info("Should affected models {}", infModels);
+        logger.info("Actually affected offline models {}", offlineModelSet);
+
+        // Get influenced metadata and update the metadata
+        NTableMetadataManager tableManager = NTableMetadataManager.getInstance(kylinConfig, project);
+        // -- 1. table
+        Map<String, TableDesc> newTables = mapping.keySet().stream()
+                .map(tableManager::getTableDesc).collect(Collectors.toMap(TableDesc::getIdentity,
+                        t -> TableSchemaUpdater.dealWithMappingForTable(t, mapping)));
+        Map<String, String> existingTables = newTables.entrySet().stream()
+                .filter(t -> tableManager.getTableDesc(t.getValue().getIdentity()) != null)
+                .collect(Collectors.toMap(Map.Entry::getKey, t -> t.getValue().getIdentity()));
+        if (!existingTables.isEmpty()) {
+            if (isUseExisting) {
+                logger.info("Will use existing tables {}", existingTables.values());
+            } else {
+                throw new KylinException(FAILED_UPDATE_TABLE_NAME, "Tables " + existingTables.values() + " already exist");
+            }
+        }
+        // -- 2. model
+        Map<String, NDataModel> newModels = offlineModelSet.stream().map(model -> TableSchemaUpdater
+                .dealWithMappingForModel(kylinConfig, project, model, mapping))
+                .collect(Collectors.toMap(NDataModel::getAlias, model -> model));
+        // -- 3. dataflow
+        Map<String, NDataflow> newDataflow = offlineModelSet.stream()
+                .map(model -> NDataflowManager.getInstance(kylinConfig, project).getDataflowByModelAlias(model.getAlias()))
+                .map(dataflow -> TableSchemaUpdater.dealWithMappingForDataFlow(kylinConfig, project, dataflow, mapping))
+                .collect(Collectors.toMap(NDataflow::resourceName, dataflow -> dataflow));
+
+        // Save the updated metadata
+        // -- 1. table & table_ext
+        for (Map.Entry<String, TableDesc> entry : newTables.entrySet()) {
+            if (existingTables.containsKey(entry.getKey())) {
+                continue;
+            }
+            NTableMetadataManager.getInstance(kylinConfig, project).saveSourceTable(entry.getValue());
+            NTableMetadataManager.getInstance(kylinConfig, project).saveNewTableExtFromOld(entry.getKey(), project, entry.getValue().getIdentity());
+        }
+        // -- 2. model
+        for (Map.Entry<String, NDataModel> entry : newModels.entrySet()) {
+            NDataModelManager.getInstance(kylinConfig, project).updateDataModelDesc(entry.getValue());
+        }
+        // -- 3. dataflow
+        for (Map.Entry<String, NDataflow> entry : newDataflow.entrySet()) {
+            NDataflowUpdate update = new NDataflowUpdate(entry.getValue().getId());
+            NDataflowManager.getInstance(kylinConfig, project).updateDataflow(update);
+        }
+
+        if (ifAllModelUpdate) {
+            // Delete dirty table metadata
+            for (String entry : newTables.keySet()) {
+                NTableMetadataManager.getInstance(kylinConfig, project).removeTableExt(entry);
+                NTableMetadataManager.getInstance(kylinConfig, project).removeSourceTable(entry);
+            }
+        }
+    }
+
+    private static boolean isTablesUsed(NDataModel model, Set<String> tables) {
+        Set<String> usingTables = model.getAllTables().stream().map(TableRef::getTableIdentity)
+                .collect(Collectors.toSet());
+        usingTables.retainAll(tables);
+        return !usingTables.isEmpty();
     }
 }

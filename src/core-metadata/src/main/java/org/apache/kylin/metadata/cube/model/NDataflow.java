@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -603,4 +604,31 @@ public class NDataflow extends RootPersistentEntity implements Serializable, IRe
         getSegments(segmentIdList).forEach(NDataSegment::getLayoutInfo);
     }
 
+
+    public boolean equalsRaw(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        NDataflow that = (NDataflow) o;
+
+        if (!Objects.equals(uuid, that.uuid))
+            return false;
+        if (!Objects.equals(status, that.status))
+            return false;
+        if (!Objects.equals(lastStatus, that.lastStatus))
+            return false;
+        if (!Objects.equals(cost, that.cost))
+            return false;
+        if (!Objects.equals(queryHitCount, that.queryHitCount))
+            return false;
+        if (!Objects.equals(lastQueryTime, that.lastQueryTime))
+            return false;
+        return !getSegmentMaps(segments).equals(getSegmentMaps(that.segments));
+    }
+
+    private Map<String, NDataSegment> getSegmentMaps(Segments<NDataSegment> segments) {
+        return segments.stream().collect(Collectors.toMap(NDataSegment::getId, segment -> segment));
+    }
 }
