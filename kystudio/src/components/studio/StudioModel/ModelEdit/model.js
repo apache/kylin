@@ -125,7 +125,7 @@ class NModel extends Schama {
       const foreignKeys = joinInfo && joinInfo.join.foreign_key
       const isBrokenLine = this.checkIsBrokenModelLink(targetId, sourceId, primaryKeys, foreignKeys)
 
-      this.vm.listenTableLink(info)
+      // this.vm.listenTableLink(info)
 
       setTimeout(() => {
         source && (source.className += isBrokenLine ? ' is-broken is-focus' : ' is-focus')
