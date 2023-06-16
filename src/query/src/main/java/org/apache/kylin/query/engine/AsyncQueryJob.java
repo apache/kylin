@@ -23,6 +23,7 @@ import static org.apache.kylin.query.util.AsyncQueryUtil.ASYNC_QUERY_JOB_ID_PRE;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -30,6 +31,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.exception.KylinRuntimeException;
+import org.apache.kylin.common.extension.KylinInfoExtension;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.metadata.MetadataStore;
 import org.apache.kylin.common.util.BufferedLogger;
@@ -38,6 +40,9 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.spark.job.DefaultSparkBuildJobHandler;
 import org.apache.kylin.engine.spark.job.NSparkExecutable;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.JobTypeEnum;
@@ -49,9 +54,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
 
 import lombok.val;
 
@@ -196,5 +198,14 @@ public class AsyncQueryJob extends NSparkExecutable {
             return kylinconfig.getAsyncQueryHadoopConfDir();
         }
         return HadoopUtil.getHadoopConfDir();
+    }
+
+    @Override
+    public void modifyDump(Properties props) {
+        super.modifyDump(props);
+        if (!KylinInfoExtension.getFactory().checkKylinInfo()) {
+            props.setProperty("kylin.streaming.enabled", KylinConfig.FALSE);
+            props.remove("kylin.second-storage.class");
+        }
     }
 }
