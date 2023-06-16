@@ -57,6 +57,11 @@ class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
   var tableRefreshInterval: Long = -1L
 
   def generateStreamingDataset(config: KylinConfig): Dataset[Row] = {
+    val streamingDataset = generateStreamingDatasetFromKafka(config)
+    generateFlatTableFromStreamingDataset(streamingDataset, config)
+  }
+
+  def generateStreamingDatasetFromKafka(config: KylinConfig): Dataset[Row] = {
     val model = flatTable.getDataModel
     val tableDesc = model.getRootFactTable.getTableDesc
     val kafkaParam = tableDesc.getKafkaConfig.getKafkaParam
@@ -94,19 +99,25 @@ class CreateStreamingFlatTable(entry: CreateFlatTableEntry) extends
           StructField(columnDescs.getName, SparderTypeUtil.toSparkType(columnDescs.getType))
         }
       )
-    val rootFactTable = changeSchemaToAliasDotName(
-      CreateStreamingFlatTable.castDF(originFactTable, schema, partitionColumn(), entry.parserName).alias(model.getRootFactTable.getAlias),
+
+    changeSchemaToAliasDotName(
+      CreateStreamingFlatTable.castDF(
+        originFactTable, schema, partitionColumn(), entry.parserName).alias(model.getRootFactTable.getAlias),
       model.getRootFactTable.getAlias)
+  }
+
+  def generateFlatTableFromStreamingDataset(streamingDataset: Dataset[Row], config: KylinConfig): Dataset[Row] = {
+    val filtered = streamingDataset.filter(model().getPartitionDesc.getPartitionDateColumn + " IS NOT NULL")
 
     factTableDataset =
       if (!StringUtils.isEmpty(entry.watermark)) {
         import org.apache.spark.sql.functions._
-        val cols = model.getRootFactTable.getColumns.asScala.map(item => {
+        val cols = model().getRootFactTable.getColumns.asScala.map(item => {
           col(NSparkCubingUtil.convertFromDot(item.getBackTickIdentity))
         }).toList
-        rootFactTable.withWatermark(partitionColumn(), entry.watermark).groupBy(cols: _*).count()
+        filtered.withWatermark(partitionColumn(), entry.watermark).groupBy(cols: _*).count()
       } else {
-        rootFactTable
+        filtered
       }
     tableRefreshInterval = StreamingUtils.parseTableRefreshInterval(config.getStreamingTableRefreshInterval)
     loadLookupTables()
