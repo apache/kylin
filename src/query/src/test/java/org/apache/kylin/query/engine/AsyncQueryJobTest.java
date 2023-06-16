@@ -41,12 +41,16 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.extension.KylinInfoExtension;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.NLocalFileMetadataTestCase;
 import org.apache.kylin.common.util.ShellException;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.query.util.QueryParams;
@@ -57,10 +61,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 
 public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
@@ -314,6 +315,45 @@ public class AsyncQueryJobTest extends NLocalFileMetadataTestCase {
             Assert.assertTrue(executeResult.succeed());
             Assert.assertTrue(executeResult.output().contains("--conf 'spark.executor.memory=513m'"));
             Assert.assertTrue(executeResult.output().contains("--conf 'spark.executor.cores=3'"));
+        }
+    }
+
+    @Test
+    public void testModifyDump() {
+        AsyncQueryJob asyncQueryJob = new AsyncQueryJob() {
+            @Override
+            protected ExecuteResult runSparkSubmit(String hadoopConf, String kylinJobJar, String appArgs) {
+                return ExecuteResult.createSucceed();
+            }
+        };
+
+        val properties = new Properties();
+        properties.setProperty("kylin.extension.info.factory",
+                "org.apache.kylin.common.extension.KylinInfoExtension$Factory");
+        properties.setProperty("kylin.second-storage.class",
+                "org.apache.kylin.common.extension.KylinInfoExtension$Factory");
+        properties.setProperty("kylin.streaming.enabled", "true");
+        try (val mockedStatic = Mockito.mockStatic(KylinInfoExtension.class)) {
+            val kylinInfoExtensionFactory = Mockito.mock(KylinInfoExtension.Factory.class);
+            mockedStatic.when(KylinInfoExtension::getFactory).thenReturn(kylinInfoExtensionFactory);
+
+            Mockito.when(kylinInfoExtensionFactory.checkKylinInfo()).thenReturn(false);
+            val properties1 = new Properties();
+            properties1.putAll(properties);
+            asyncQueryJob.modifyDump(properties1);
+            Assert.assertNull(properties1.get("kylin.extension.info.factory"));
+            Assert.assertNull(properties1.get("kylin.second-storage.class"));
+            Assert.assertEquals("false", properties1.get("kylin.streaming.enabled"));
+
+            Mockito.when(kylinInfoExtensionFactory.checkKylinInfo()).thenReturn(true);
+            val properties2 = new Properties();
+            properties2.putAll(properties);
+            asyncQueryJob.modifyDump(properties2);
+            Assert.assertNull(properties2.get("kylin.extension.info.factory"));
+            Assert.assertEquals(properties.getProperty("kylin.second-storage.class"),
+                    properties2.get("kylin.second-storage.class"));
+            Assert.assertEquals(properties.getProperty("kylin.streaming.enabled"),
+                    properties2.get("kylin.streaming.enabled"));
         }
     }
 }
