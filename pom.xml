@@ -371,6 +371,7 @@
         <jackson-databind.version>2.13.4.2</jackson-databind.version>
         <nimbus-jose-jwt.version>9.23</nimbus-jose-jwt.version>
         <system-lambda.version>1.2.1</system-lambda.version>
+        <snappy-java.version>1.1.10.1</snappy-java.version>
     </properties>
 
     <modules>
@@ -2954,6 +2955,13 @@
                 <version>${system-lambda.version}</version>
                 <scope>test</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy-java.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
