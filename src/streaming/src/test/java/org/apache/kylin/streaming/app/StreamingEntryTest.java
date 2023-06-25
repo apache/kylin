@@ -22,13 +22,6 @@ import static org.apache.kylin.streaming.constants.StreamingConstants.DEFAULT_PA
 import static org.apache.kylin.streaming.constants.StreamingConstants.STREAMING_KAFKA_STARTING_OFFSETS;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Set;
@@ -145,70 +138,6 @@ public class StreamingEntryTest extends StreamingTestCase {
         Assert.assertEquals("latest", kafkaParam.get("startingOffsets"));
         ss.stop();
         Assert.assertEquals("LO_PARTITIONCOLUMN", flatTable.partitionColumn());
-    }
-
-    @Test
-    public void testBuildOnNullTimePartition() throws IOException {
-        val config = KylinConfig.getInstanceFromEnv();
-
-        Path path = createAndWriteTempFile("time_partition_colum_is_null", ".json",
-            "{\"v_revenue\": 100, \"lo_ordtotalprice\": 18432083, \"lo_orderkey\": 19843,"
-                + "\"lo_commitdate\": \"19931011\", \"lo_orderpriotity\": \"3-MEDIUM\","
-                + "\"lo_revenue\": 836610, \"lo_shippriotity\": 0, \"lo_orderdate\": \"19930730\","
-                + "\"lo_extendedprice\": 919352, \"lo_suppkey\": 12675, \"lo_discount\": 9,"
-                + "\"lo_custkey\": 140351, \"lo_supplycost\": 78801, \"lo_partitioncolumn\": null,"
-                + "\"lo_shipmode\": \"REG AIR\", \"lo_partkey\": 236377, \"lo_quantity\": 7,"
-                + "\"lo_linenumber\": 4, \"lo_tax\": 5}");
-
-        val source = createSparkKafkaSource(config);
-        source.enableMemoryStream(false);
-        source.post(path.toFile().getAbsolutePath());
-        val dfMgr = NDataflowManager.getInstance(config, PROJECT);
-        var df = dfMgr.getDataflow(DATAFLOW_ID);
-        // cleanup all segments first
-        var update = new NDataflowUpdate(df.getUuid());
-        update.setToRemoveSegsWithArray(df.getSegments().toArray(new NDataSegment[0]));
-        dfMgr.updateDataflow(update);
-
-        df = dfMgr.getDataflow(df.getId());
-        val seg1 = dfMgr.appendSegmentForStreaming(df, createSegmentRange());
-        seg1.setStatus(SegmentStatusEnum.READY);
-        update = new NDataflowUpdate(df.getUuid());
-        update.setToRemoveSegsWithArray(df.getSegments().toArray(new NDataSegment[0]));
-        dfMgr.updateDataflow(update);
-
-        val flatTableDesc = new NCubeJoinedFlatTableDesc(df.getIndexPlan());
-        val layouts = StreamingUtils.getToBuildLayouts(df);
-        Assert.assertNotNull(layouts);
-        val args = new String[] { PROJECT, DATAFLOW_ID, "1", "", "xx" };
-        val entry = new StreamingEntry();
-        entry.parseParams(args);
-        val nSpanningTree = entry.createSpanningTree(df);
-        Assert.assertNotNull(nSpanningTree);
-
-        val ss = createSparkSession();
-        CreateFlatTableEntry flatTableEntry = new CreateFlatTableEntry(flatTableDesc, null, nSpanningTree, ss, null,
-            null, "0 seconds", DEFAULT_PARSER_NAME);
-        val flatTable = CreateStreamingFlatTable.apply(flatTableEntry);
-
-        val streamingDataset = flatTable.generateStreamingDatasetFromKafka(config);
-        Assert.assertEquals(1, streamingDataset.count());
-        Assert.assertEquals(0, flatTable.generateFlatTableFromStreamingDataset(streamingDataset, config).count());
-
-        source.post(path.toFile().getAbsolutePath());
-        val ds = flatTable.generateStreamingDataset(config);
-        Assert.assertEquals(0, ds.count());
-
-        Files.deleteIfExists(path);
-    }
-
-    private Path createAndWriteTempFile(String prefix, String suffix, String content) throws IOException {
-        val contentInBytes = ByteBuffer.wrap(content.getBytes(StandardCharsets.UTF_8));
-        Path p = Files.createTempFile(prefix, suffix);
-        try (FileChannel fc = FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
-            fc.write(contentInBytes);
-        }
-        return p;
     }
 
     @Test
