@@ -112,7 +112,6 @@ public class AppInitializer {
             EventBusFactory.getInstance().register(new JobSchedulerListener(), false);
             EventBusFactory.getInstance().register(new ModelBrokenListener(), false);
             EventBusFactory.getInstance().register(epochChangedListener, false);
-            EventBusFactory.getInstance().register(new ProcessStatusListener(), true);
             EventBusFactory.getInstance().register(new StreamingJobListener(), true);
 
             SparkJobFactoryUtils.initJobFactory();
