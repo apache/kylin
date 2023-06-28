@@ -50,6 +50,7 @@ public class ExecutableThread extends Thread {
         try (SetThreadName ignored = new SetThreadName("JobWorker(project:%s,jobid:%s)", project, jobIdSimple);
                 SetLogCategory logCategory = new SetLogCategory("schedule")) {
             context.addRunningJob(executable);
+            context.addRunningJobThread(executable);
             dagExecutable.executeDagExecutable(dagExecutablesMap, executable, context);
         } finally {
             context.removeRunningJob(executable);

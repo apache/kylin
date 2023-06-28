@@ -27,6 +27,8 @@ import org.apache.kylin.common.exception.KylinException;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.engine.spark.job.NSparkExecutable;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.job.constant.JobActionEnum;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -54,8 +56,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import lombok.val;
 
 @MetadataInfo
@@ -275,7 +275,7 @@ class DagJobServiceTest {
     }
 
     @Test
-    void updateStepStatus() throws Exception {
+    void updateStepStatus() {
         val config = KylinConfig.getInstanceFromEnv();
         val sparkMaster = config.getSparkMaster();
         val scheduler = NDefaultScheduler.getInstance(DEFAULT_PROJECT);
@@ -290,7 +290,7 @@ class DagJobServiceTest {
                 executable.killApplicationIfExistsOrUpdateStepStatus();
                 Assertions.assertNull(context.getRunningJobThread(executable));
 
-                context.addRunningJob(executable);
+                context.addRunningJobThread(executable);
                 Assertions.assertNotNull(context.getRunningJobThread(executable));
                 executable.killApplicationIfExistsOrUpdateStepStatus();
                 Assertions.assertNull(context.getRunningJobThread(executable));
