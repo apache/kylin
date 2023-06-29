@@ -2533,6 +2533,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.calcite.bindable.cache.concurrencyLevel", "5"));
     }
 
+    public boolean isCalciteCompatibleWithMsSqlPlusEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.calcite.compatible-with-mssql-plus-enabled", FALSE));
+    }
+
     public int getEventPollIntervalSecond() {
         return Integer.parseInt(getOptional("kylin.job.event.poll-interval-second", "60"));
     }
@@ -2821,6 +2825,14 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean getSkipCorrReduceRule() {
         return Boolean.parseBoolean(getOptional("kylin.smart.conf.skip-corr-reduce-rule", FALSE));
+    }
+
+    public int getOptimizeTransformerMaxIterations() {
+        return Integer.parseInt(getOptional("kylin.smart.conf.optimize-transformer-max-iterations", "2"));
+    }
+
+    public int getOptimizeTransformerConditionCountThreshold() {
+        return Integer.parseInt(getOptional("kylin.smart.conf.optimize-transformer-condition-count-threshold", "200"));
     }
 
     public String getEngineWriteFs() {
