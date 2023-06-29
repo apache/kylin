@@ -107,8 +107,8 @@ public class JobControllerV2Test extends NLocalFileMetadataTestCase {
     public void testGetJobs() throws Exception {
         List<ExecutableResponse> jobs = new ArrayList<>();
         List<String> jobNames = Lists.newArrayList();
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList("NEW"), jobNames, 4, "", "", "default", "job_name",
-                false);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList("NEW"), jobNames, 4, "", "", false, "default",
+                "job_name", false);
         Mockito.when(jobService.listJobs(jobFilter)).thenReturn(jobs);
         mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs").contentType(MediaType.APPLICATION_JSON)
                 .param("projectName", "default").param("pageOffset", "0").param("pageSize", "10")
@@ -124,7 +124,8 @@ public class JobControllerV2Test extends NLocalFileMetadataTestCase {
     public void testGetJobsWithoutProjectAndSortby() throws Exception {
         List<ExecutableResponse> jobs = new ArrayList<>();
         List<String> jobNames = Lists.newArrayList();
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, null, null, null, "job_name", true);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList(), jobNames, 4, null, null, false, null, "job_name",
+                true);
         Mockito.when(jobService.listGlobalJobs(jobFilter, 0, Integer.MAX_VALUE))
                 .thenReturn(new DataResult<>(jobs, 0, 0, 0));
         mockMvc.perform(
@@ -171,8 +172,8 @@ public class JobControllerV2Test extends NLocalFileMetadataTestCase {
     public void testGetJobsException_pageOffset_pageSize() throws Exception {
         List<ExecutableResponse> jobs = new ArrayList<>();
         List<String> jobNames = Lists.newArrayList();
-        JobFilter jobFilter = new JobFilter(Lists.newArrayList("NEW"), jobNames, 4, "", "", "default", "job_name",
-                false);
+        JobFilter jobFilter = new JobFilter(Lists.newArrayList("NEW"), jobNames, 4, "", "", false, "default",
+                "job_name", false);
         Mockito.when(jobService.listJobs(jobFilter)).thenReturn(jobs);
         mockMvc.perform(MockMvcRequestBuilders.get("/api/jobs").contentType(MediaType.APPLICATION_JSON)
                 .param("projectName", "default").param("pageOffset", "a").param("pageSize", "10")
