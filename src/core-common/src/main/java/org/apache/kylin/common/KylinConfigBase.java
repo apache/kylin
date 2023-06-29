@@ -2823,6 +2823,14 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.smart.conf.skip-corr-reduce-rule", FALSE));
     }
 
+    public int getOptimizeTransformerMaxIterations() {
+        return Integer.parseInt(getOptional("kylin.smart.conf.optimize-transformer-max-iterations", "2"));
+    }
+
+    public int getOptimizeTransformerConditionCountThreshold() {
+        return Integer.parseInt(getOptional("kylin.smart.conf.optimize-transformer-condition-count-threshold", "200"));
+    }
+
     public String getEngineWriteFs() {
         String engineWriteFs = getOptional("kylin.env.engine-write-fs", "");
         return StringHelper.dropSuffix(engineWriteFs, File.separator);
