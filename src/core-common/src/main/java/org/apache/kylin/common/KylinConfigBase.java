@@ -1734,7 +1734,7 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public boolean isRouteToMetadataEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.using-metadata-answer-minmax-of-dimension", FALSE));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.using-metadata-answer-minmax-of-dimension", TRUE));
     }
 
     public boolean partialMatchNonEquiJoins() {
