@@ -94,6 +94,7 @@ public class JobController extends BaseController {
             @RequestParam(value = "time_filter") Integer timeFilter,
             @RequestParam(value = "subject", required = false) String subject,
             @RequestParam(value = "key", required = false) String key,
+            @RequestParam(value = "exact", required = false, defaultValue = "false") boolean exactMatch,
             @RequestParam(value = "project", required = false) String project,
             @RequestParam(value = "page_offset", required = false, defaultValue = "0") Integer pageOffset,
             @RequestParam(value = "page_size", required = false, defaultValue = "10") Integer pageSize,
@@ -101,7 +102,8 @@ public class JobController extends BaseController {
             @RequestParam(value = "reverse", required = false, defaultValue = "true") boolean reverse) {
         jobService.checkJobStatus(statuses);
         checkRequiredArg("time_filter", timeFilter);
-        JobFilter jobFilter = new JobFilter(statuses, jobNames, timeFilter, subject, key, project, sortBy, reverse);
+        JobFilter jobFilter = new JobFilter(statuses, jobNames, timeFilter, subject, key, exactMatch, project, sortBy,
+                reverse);
         DataResult<List<ExecutableResponse>> executables;
         if (!StringUtils.isEmpty(project)) {
             executables = jobService.listJobs(jobFilter, pageOffset, pageSize);

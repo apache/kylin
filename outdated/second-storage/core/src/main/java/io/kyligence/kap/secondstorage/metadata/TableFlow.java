@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cube.model.LayoutEntity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -71,6 +72,8 @@ public class TableFlow extends RootPersistentEntity
     public static Builder builder() {
         return new Builder();
     }
+
+    public static final String TABLEFLOW_RESOURCE_ROOT = "/clickhouse_data";
 
     protected transient Manager<TableFlow> manager;
     @Override
@@ -169,6 +172,16 @@ public class TableFlow extends RootPersistentEntity
                 tableData.updateSecondaryIndex(addColumns, removeColumns);
             }
         });
+    }
+
+    @Override
+    public String getResourcePath() {
+        return concatResourcePath(getUuid(), manager.project);
+    }
+
+    public static String concatResourcePath(String name, String project) {
+        return new StringBuilder().append("/").append(project).append(TABLEFLOW_RESOURCE_ROOT)
+                .append("/").append(name).append(MetadataConstants.FILE_SURFIX).toString();
     }
 
     @Override

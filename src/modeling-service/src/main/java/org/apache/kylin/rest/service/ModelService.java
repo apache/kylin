@@ -372,11 +372,10 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
     private void addOldSegmentParams(NDataModel model, NDataModelOldParams oldParams,
             List<AbstractExecutable> executables) {
-        List<NDataSegmentResponse> segments = getSegmentsResponse(model.getId(), model.getProject(), "1",
-                String.valueOf(Long.MAX_VALUE - 1), null, executables, LAST_MODIFY, true);
-        calculateRecordSizeAndCount(segments, oldParams);
-
-        if (model instanceof NDataModelResponse) {
+        if (((model instanceof NDataModelResponse) && !(model instanceof NDataModelLiteResponse)) || model.isFusionModel()) {
+            List<NDataSegmentResponse> segments = getSegmentsResponse(model.getId(), model.getProject(), "1",
+                    String.valueOf(Long.MAX_VALUE - 1), null, executables, LAST_MODIFY, true);
+            calculateRecordSizeAndCount(segments, oldParams);
             ((NDataModelResponse) model).setSegments(segments);
             ((NDataModelResponse) model).setHasSegments(
                     ((NDataModelResponse) model).isHasSegments() || CollectionUtils.isNotEmpty(segments));
