@@ -96,21 +96,26 @@ public class NEpochControllerTest extends NLocalFileMetadataTestCase {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch")
                 .content(JsonUtil.writeValueAsString(mapRequest2))
                 .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
-                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+                .andExpect(MockMvcResultMatchers.status().isOk());
         request.setProjects(Lists.newArrayList());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch")
                 .content(JsonUtil.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
-                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
-        request.setProjects(Lists.newArrayList());
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch")
-                .content(JsonUtil.writeValueAsString(request))
-                .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
-                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+                .andExpect(MockMvcResultMatchers.status().isOk());
         request.setProjects(Arrays.asList("DEFAULT"));
         mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch")
                 .content(JsonUtil.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testUpdateEpochOwnerWithEmptyProjects() throws Exception {
+        val request = new EpochRequest();
+        request.setForce(false);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/epoch")
+                        .content(JsonUtil.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON).accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
