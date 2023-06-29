@@ -129,7 +129,7 @@ object SparderTypeUtil extends Logging {
         case "decimal" => new java.math.BigDecimal(s.toString)
         case "date" => new java.sql.Date(DateFormat.stringToMillis(s.toString))
         case "time" | "timestamp" | "datetime" =>
-          val l = java.lang.Long.parseLong(s.toString)
+          val l = DateFormat.stringToMillis(s.toString)
           Timestamp.valueOf(DateFormat.castTimestampToString(l))
         case "tinyint" => s.toString.toByte
         case "smallint" => s.toString.toShort
