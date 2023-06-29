@@ -230,7 +230,7 @@ public class QueryExecWithMetaTest extends NLocalWithSparkSessionTest {
         List<String> result = iterator.next();
         Assert.assertEquals("2147483648,21474836483289,2132,2147483647,-128,127,0,9,0.0,10000.0,"
                 + "0.3255242,85208.3241,10.0000,201.3235,abc,xyz,aaaaaaaa,xxxxxxxxxxxxxxxxxxxxx,abcd,zzzz,"
-                + "2000-12-31,2004-04-16,2004-04-01 00:00:00,2004-04-17 00:32:23.032,false,true,"
+                + "2001-01-01,2004-04-17,2004-04-01 00:00:00,2004-04-17 00:32:23.032,false,true,"
                 + "null,null,null,null,null,null,null,null,null,null,null,null", String.join(",", result));
     }
 

@@ -34,6 +34,7 @@ import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
@@ -47,6 +48,7 @@ import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
 import org.apache.kylin.metadata.cube.model.DimensionRangeInfo;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -60,11 +62,12 @@ import org.apache.kylin.metadata.query.QueryMetrics;
 import org.apache.kylin.metadata.realization.HybridRealization;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.query.routing.RealizationCheck;
 import org.apache.kylin.query.schema.OLAPSchema;
+import org.apache.kylin.query.schema.OLAPTable;
 import org.apache.kylin.storage.StorageContext;
+import org.apache.spark.sql.util.SparderTypeUtil;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -681,6 +684,7 @@ public class OLAPContext {
             List<TblColRef> colRefs = tableScan.getColumnRowType().getAllColumns();
             allFields.addAll(colRefs);
         });
+        RelDataTypeFactory typeFactory = this.getTopNode().getCluster().getTypeFactory();
         List<Object[]> result = new ArrayList<>();
         for (NDataSegment segment : ((NDataflow) realization).getSegments()) {
             if (segment.getStatus() != SegmentStatusEnum.READY) {
@@ -690,16 +694,17 @@ public class OLAPContext {
             Object[] minList = new Object[allFields.size()];
             Object[] maxList = new Object[allFields.size()];
             for (TblColRef col : cols) {
-                String dataType = col.getColumnDesc().getUpgradedType().getName();
                 int colId = allFields.indexOf(col);
                 String tblColRefIndex = getTblColRefIndex(col, realization);
-                DimensionRangeInfo dimensionRangeInfo = infoMap.get(tblColRefIndex);
-                if (dimensionRangeInfo == null) {
+                DimensionRangeInfo rangeInfo = infoMap.get(tblColRefIndex);
+                if (rangeInfo == null) {
                     minList[colId] = null;
                     maxList[colId] = null;
                 } else {
-                    minList[colId] = Tuple.convertOptiqCellValue(dimensionRangeInfo.getMin(), dataType);
-                    maxList[colId] = Tuple.convertOptiqCellValue(dimensionRangeInfo.getMax(), dataType);
+                    ColumnDesc c = col.getColumnDesc();
+                    RelDataType sqlType = OLAPTable.createSqlType(typeFactory, c.getUpgradedType(), c.isNullable());
+                    minList[colId] = SparderTypeUtil.convertToStringWithCalciteType(rangeInfo.getMin(), sqlType, false);
+                    maxList[colId] = SparderTypeUtil.convertToStringWithCalciteType(rangeInfo.getMax(), sqlType, false);
                 }
             }
 
