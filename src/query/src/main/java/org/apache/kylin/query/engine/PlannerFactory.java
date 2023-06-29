@@ -65,10 +65,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KapConfig;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.guava30.shaded.common.base.Function;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.query.engine.meta.PlannerContext;
+import org.apache.kylin.query.relnode.OLAPContext;
+
 import io.kyligence.kap.query.optrule.AggregateMultipleExpandRule;
 import io.kyligence.kap.query.optrule.AggregateProjectReduceRule;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.engine.meta.PlannerContext;
 import io.kyligence.kap.query.optrule.CorrReduceFunctionRule;
 import io.kyligence.kap.query.optrule.KAPValuesRule;
 import io.kyligence.kap.query.optrule.KapAggregateReduceFunctionsRule;
@@ -88,9 +91,6 @@ import io.kyligence.kap.query.optrule.KapUnionRule;
 import io.kyligence.kap.query.optrule.KapWindowRule;
 import io.kyligence.kap.query.optrule.RightJoinToLeftJoinRule;
 import io.kyligence.kap.query.optrule.SumConstantConvertRule;
-
-import org.apache.kylin.guava30.shaded.common.base.Function;
-import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 /**
  * factory that create optimizers and register opt rules
@@ -240,7 +240,9 @@ public class PlannerFactory {
         // UnionMergeRule may slow volcano planner optimization on large number of union clause
         planner.removeRule(UnionMergeRule.INSTANCE);
 
-        planner.addRule(KapProjectJoinTransposeRule.INSTANCE);
+        if (!kylinConfig.isConvertSumExpressionEnabled()) {
+            planner.addRule(KapProjectJoinTransposeRule.INSTANCE);
+        }
         planner.removeRule(ProjectRemoveRule.INSTANCE);
 
         // skip corr expandsion during model suggestion

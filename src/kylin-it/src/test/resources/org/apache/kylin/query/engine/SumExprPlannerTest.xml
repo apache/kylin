@@ -1377,6 +1377,38 @@ KapOLAPToEnumerableConverter
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testSumExpressionSkipProjectJoinTransposeRule">
+        <Resource name="planBefore">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[SUM($0)], ctx=[])
+    KapProjectRel($f0=[CASE(=($0, 20230501), $1, null)], ctx=[])
+      KapJoinRel(condition=[=($0, $3)], joinType=[inner], ctx=[])
+        KapProjectRel(LO_COMMITDATE=[$15], LO_DISCOUNT=[$11], LO_ORDERDATE=[$5], ctx=[])
+          KapTableScan(table=[[SSB, P_LINEORDER]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]])
+        KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[MAX($0)], ctx=[])
+          KapProjectRel(LO_COMMITDATE=[$15], ctx=[])
+            KapTableScan(table=[[SSB, P_LINEORDER]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+KapOLAPToEnumerableConverter
+  KapAggregateRel(group-set=[[]], groups=[null], AGG$0=[SUM($0)], ctx=[])
+    KapProjectRel($f0=[CASE(=($0, 20230501), $1, null)], ctx=[])
+      KapAggregateRel(group-set=[[0]], groups=[null], TOP_AGG$0=[SUM($1)], TOP_AGG$1=[SUM($2)], ctx=[])
+        KapProjectRel(LO_COMMITDATE=[$0], SUM_CASE$0$0=[$1], $f2=[*(0, $2)], ctx=[])
+          KapAggregateRel(group-set=[[0]], groups=[null], SUM_CASE$0$0=[SUM($1)], SUM_CONST$1=[COUNT()], ctx=[])
+            KapProjectRel(LO_COMMITDATE=[$0], LO_DISCOUNT=[$1], ctx=[])
+              KapJoinRel(condition=[=($0, $3)], joinType=[inner], ctx=[])
+                KapProjectRel(LO_COMMITDATE=[$15], LO_DISCOUNT=[$11], LO_ORDERDATE=[$5], ctx=[])
+                  KapTableScan(table=[[SSB, P_LINEORDER]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]])
+                KapAggregateRel(group-set=[[]], groups=[null], EXPR$0=[MAX($0)], ctx=[])
+                  KapProjectRel(LO_COMMITDATE=[$15], ctx=[])
+                    KapTableScan(table=[[SSB, P_LINEORDER]], ctx=[], fields=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]])
+]]>
+        </Resource>
+    </TestCase>
 
     <TestCase name="testAggPushdownWithCrossJoin2">
         <Resource name="planBefore">
