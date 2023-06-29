@@ -443,6 +443,7 @@
                                 net.sf.py4j,
                                 com.h2database,
                                 jdk.tools,
+                                io.netty
                             </excludeGroupIds>
                             <excludeArtifactIds>
                                 unused
