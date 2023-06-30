@@ -18,15 +18,15 @@
 
 package org.apache.kylin.rest.service;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.response.MetricsResponse;
 import org.apache.kylin.engine.spark.utils.ComputedColumnEvalUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.metadata.model.util.ExpandableMeasureUtil;
 import org.apache.kylin.metadata.query.QueryStatistics;
 import org.apache.kylin.metadata.query.RDBMSQueryHistoryDAO;
-import org.apache.kylin.query.util.QueryUtil;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.response.JobStatisticsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
@@ -107,7 +107,7 @@ public class DashboardServiceTest extends SourceTestCase{
         ReflectionTestUtils.setField(modelBuildService, "userGroupService", userGroupService);
         ReflectionTestUtils.setField(semanticService, "expandableMeasureUtil",
                 new ExpandableMeasureUtil((model, ccDesc) -> {
-                    String ccExpression = QueryUtil.massageComputedColumn(model, model.getProject(), ccDesc,
+                    String ccExpression = PushDownUtil.massageComputedColumn(model, model.getProject(), ccDesc,
                             AclPermissionUtil.createAclInfo(model.getProject(),
                                     semanticService.getCurrentUserGroups()));
                     ccDesc.setInnerExpression(ccExpression);
