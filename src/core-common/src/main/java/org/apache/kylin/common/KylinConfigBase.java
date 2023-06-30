@@ -2533,6 +2533,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.calcite.bindable.cache.concurrencyLevel", "5"));
     }
 
+    public boolean isCalciteCompatibleWithMsSqlPlusEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.calcite.compatible-with-mssql-plus-enabled", FALSE));
+    }
+
     public int getEventPollIntervalSecond() {
         return Integer.parseInt(getOptional("kylin.job.event.poll-interval-second", "60"));
     }
