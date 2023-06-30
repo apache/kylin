@@ -47,6 +47,8 @@ public class Message {
     private static final String PROFILING_COLLECT_TIMEOUT = "Async profiler timeout";
 
     private static final String PARAMETER_EMPTY = "Please enter the value for the parameter '%s'.";
+    private static final String PARAMETER_MUST_BE_POSITIVE_NUMBER = "The value of %s must be a positive number.";
+
     private static final String DDL_UNSUPPORTED = "Unsupported DDL syntax, only support single `create view`, `drop view`,  `alter view`, `show create table`";
     private static final String DDL_VIEW_NAME_ERROR = "View names need to start with KYLIN_";
     private static final String DDL_VIEW_NAME_DUPLICATE_ERROR = "Logical View names is duplicate";
@@ -1619,6 +1621,11 @@ public class Message {
 
     public String getQueryNotRunningError() {
         return "Query is not running, please check.";
+    }
+
+    public String getIllegalNegative(String parameter) {
+        return String.format(PARAMETER_MUST_BE_POSITIVE_NUMBER, parameter);
+
     }
 
 }

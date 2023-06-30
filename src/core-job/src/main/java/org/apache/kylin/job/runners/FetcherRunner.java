@@ -80,7 +80,6 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
         }
         return false;
     }
-
     private boolean markErrorJob(String jobId) {
         try {
             return EnhancedUnitOfWork.doInTransactionWithCheckAndRetry(() -> {
@@ -252,7 +251,7 @@ public class FetcherRunner extends AbstractDefaultSchedulerRunner {
     private void checkAndUpdateJobPoolNum() {
         final ThreadPoolExecutor pool = (ThreadPoolExecutor) jobPool;
         int maximumPoolSize = pool.getMaximumPoolSize();
-        int maxConcurrentJobLimit = nDefaultScheduler.getMaxConcurrentJobLimitByProject(context.getConfig(),
+        int maxConcurrentJobLimit = nDefaultScheduler.getMaxConcurrentJobLimitByProjectForInitThread(context.getConfig(),
                 nDefaultScheduler.getJobEngineConfig(), project);
         int activeCount = pool.getActiveCount();
         if (maximumPoolSize == maxConcurrentJobLimit) {

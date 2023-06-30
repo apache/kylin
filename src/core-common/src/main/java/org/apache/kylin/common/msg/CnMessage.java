@@ -32,6 +32,7 @@ public class CnMessage extends Message {
     private static final String TASK_TIMEOUT = "执行超时";
 
     private static final String PARAMETER_EMPTY = "请输入参数 “%s” 的值。";
+    private static final String PARAMETER_MUST_BE_POSITIVE_NUMBER= "参数 %s 的值必须为非负数.";
 
     protected CnMessage() {
 
@@ -1718,5 +1719,10 @@ public class CnMessage extends Message {
     @Override
     public String getQueryNotRunningError() {
         return "该查询没有在运行，请检查";
+    }
+
+    @Override
+    public String getIllegalNegative(String parameter) {
+        return String.format(PARAMETER_MUST_BE_POSITIVE_NUMBER, parameter);
     }
 }
