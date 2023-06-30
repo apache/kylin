@@ -133,15 +133,14 @@ public class AppInitializer {
         warmUpSystemCache();
         context.publishEvent(new AfterMetadataReadyEvent(context));
 
-        if (kylinConfig.isQueryNode()) {
-            if (kylinConfig.isSparderAsync()) {
-                context.publishEvent(new SparderStartEvent.AsyncEvent(context));
-            } else {
-                context.publishEvent(new SparderStartEvent.SyncEvent(context));
-            }
-            if (kylinConfig.isBloomCollectFilterEnabled()) {
-                QueryFiltersCollector.initScheduler();
-            }
+        if (kylinConfig.isSparderAsync()) {
+            context.publishEvent(new SparderStartEvent.AsyncEvent(context));
+        } else {
+            context.publishEvent(new SparderStartEvent.SyncEvent(context));
+        }
+
+        if (kylinConfig.isQueryNode() && kylinConfig.isBloomCollectFilterEnabled()) {
+            QueryFiltersCollector.initScheduler();
         }
         EventBusFactory.getInstance().register(new ProcessStatusListener(), true);
         // register acl update listener
