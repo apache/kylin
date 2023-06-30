@@ -43,6 +43,7 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
     String PROJECT = "default";
     public static final String WEEK = "week";
     public static final String DAY = "day";
+    public static final String MONTH = "month";
     public static final String NORMAL_USER = "normal_user";
     public static final String ADMIN = "ADMIN";
 
@@ -281,6 +282,48 @@ public class RDBMSQueryHistoryDaoTest extends NLocalFileMetadataTestCase {
         Assert.assertEquals(3, monthQueryStatistics.get(0).getCount());
         fillZeroForQueryStatistics(monthQueryStatistics, 1580052311000L, 1580484313000L, "month");
         Assert.assertEquals(3, monthQueryStatistics.get(0).getCount());
+    }
+
+    @Test
+    public void testGetQueryRealizationByTime() {
+        // 2020-01-29 23:25:12
+        queryHistoryDAO.insert(createQueryMetrics(1580311512000L, 1L, true, PROJECT, true));
+        // 2020-01-30 23:25:12
+        queryHistoryDAO.insert(createQueryMetrics(1580397912000L, 1L, false, PROJECT, true));
+        // 2020-01-31 23:25:12
+        queryHistoryDAO.insert(createQueryMetrics(1580484312000L, 1L, false, PROJECT, true));
+        // 2021-01-29 23:25:12
+        queryHistoryDAO.insert(createQueryMetrics(1611933912000L, 1L, false, PROJECT, true));
+
+        // filter from 2020-01-26 23:25:11 to 2020-01-31 23:25:13
+        List<QueryStatistics> dayQueryStatistics = queryHistoryDAO.getQueryCountRealizationByTime(1580052311000L,
+                1580484313000L, DAY, PROJECT);
+        Assert.assertEquals(0, dayQueryStatistics.size());
+
+        List<QueryStatistics> weekQueryStatistics = queryHistoryDAO.getQueryCountRealizationByTime(1580052311000L,
+                1580484313000L, WEEK, PROJECT);
+        Assert.assertEquals(0, weekQueryStatistics.size());
+
+        List<QueryStatistics> monthQueryStatistics = queryHistoryDAO.getQueryCountRealizationByTime(1580052311000L,
+                1580484313000L, MONTH, PROJECT);
+        Assert.assertEquals(0, monthQueryStatistics.size());
+
+
+        dayQueryStatistics = queryHistoryDAO.getAvgDurationRealizationByTime(1580052311000L, 1580484313000L,
+                DAY, PROJECT);
+        Assert.assertEquals(0, dayQueryStatistics.size());
+        weekQueryStatistics = queryHistoryDAO.getAvgDurationRealizationByTime(1580052311000L, 1580484313000L,
+                WEEK, PROJECT);
+        Assert.assertEquals(0, weekQueryStatistics.size());
+        monthQueryStatistics = queryHistoryDAO.getAvgDurationRealizationByTime(1580052311000L, 1580484313000L,
+                WEEK, PROJECT);
+        Assert.assertEquals(0, monthQueryStatistics.size());
+
+        QueryStatistics statistics = queryHistoryDAO.getQueryCountAndAvgDurationRealization(1580052311000L, 1580484313000L,
+                PROJECT);
+        Assert.assertEquals(0, statistics.getCount());
+        Assert.assertEquals(0, statistics.getMeanDuration(), 0.1);
+
     }
 
     @Test

@@ -10,6 +10,7 @@ import Insight from 'components/query/insight'
 import queryHistory from 'components/query/query_history'
 import jobs from 'components/monitor/batchJobs/jobs'
 import streamingJobs from 'components/monitor/streamingJobs/streamingJobs'
+import dashboard from 'components/dashboard/dashboard'
 import { bindRouterGuard } from './routerGuard.js'
 
 Vue.use(Router)
@@ -54,6 +55,10 @@ let routerOptions = {
         name: 'Setting',
         path: '/setting',
         component: () => import('../components/setting/setting.vue')
+      }, {
+        name: 'Dashboard',
+        path: '/dashboard',
+        component: dashboard
       }, {
         name: 'Source',
         path: 'studio/source',

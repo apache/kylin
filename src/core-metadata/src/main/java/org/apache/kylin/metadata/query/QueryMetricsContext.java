@@ -242,6 +242,9 @@ public class QueryMetricsContext extends QueryMetrics {
             realizationMetrics.setDuration(queryDuration);
             realizationMetrics.setQueryTime(queryTime);
             realizationMetrics.setProjectName(projectName);
+            realizationMetrics.setQueryDay(queryDay);
+            realizationMetrics.setQueryFirstDayOfWeek(queryFirstDayOfWeek);
+            realizationMetrics.setQueryFirstDayOfMonth(queryFirstDayOfMonth);
             realizationMetrics.setStreamingLayout(realization.isStreamingLayout());
             realizationMetrics.setSnapshots(realization.getSnapshots());
             realizationMetricList.add(realizationMetrics);

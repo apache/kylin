@@ -29,6 +29,8 @@ public interface QueryHistoryDAO {
 
     QueryStatistics getQueryCountAndAvgDuration(long startTime, long endTime, String project);
 
+    QueryStatistics getQueryCountAndAvgDurationRealization(long startTime, long endTime, String project);
+
     QueryStatistics getQueryCountByRange(long startTime, long endTime, String project);
 
     long getQueryHistoryCountBeyondOffset(long offset, String project);
@@ -37,9 +39,15 @@ public interface QueryHistoryDAO {
 
     List<QueryStatistics> getQueryCountByTime(long startTime, long endTime, String timeDimension, String project);
 
+    List<QueryStatistics> getQueryCountRealizationByTime(long startTime, long endTime, String timeDimension,
+            String project);
+
     List<QueryStatistics> getAvgDurationByModel(long startTime, long endTime, String project);
 
     List<QueryStatistics> getAvgDurationByTime(long startTime, long endTime, String timeDimension, String project);
+
+    List<QueryStatistics> getAvgDurationRealizationByTime(long startTime, long endTime, String timeDimension,
+            String project);
 
     String getQueryMetricMeasurement();
 

@@ -32,6 +32,11 @@ public class QueryHistoryRealizationTable extends SqlTable {
     public final SqlColumn<String> model = column("model", JDBCType.VARCHAR);
     public final SqlColumn<String> layoutId = column("layout_id", JDBCType.VARCHAR);
     public final SqlColumn<String> indexType = column("index_type", JDBCType.VARCHAR);
+    public final SqlColumn<Long> queryFirstDayOfMonth = column("query_first_day_of_month", JDBCType.BIGINT);
+    public final SqlColumn<Long> queryFirstDayOfWeek = column("query_first_day_of_week", JDBCType.BIGINT);
+    public final SqlColumn<Long> queryDay = column("query_day", JDBCType.BIGINT);
+
+    public final SqlColumn<Long> id = column("id", JDBCType.BIGINT);
 
     public QueryHistoryRealizationTable(String tableName) {
         super(tableName);

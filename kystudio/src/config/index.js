@@ -89,6 +89,11 @@ export const menusData = [
     name: 'group',
     path: '/admin/group',
     icon: 'el-ksd-icon-nav_user_group_24'
+  },
+  {
+    name: 'dashboard',
+    path: '/dashboard',
+    icon: 'el-ksd-icon-nav_dashboard_24'
   }
 ]
 

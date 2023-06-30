@@ -143,6 +143,12 @@ public class QueryMetrics extends SchedulerEventNotifier {
 
         protected List<String> snapshots;
 
+        protected long queryFirstDayOfMonth;
+
+        protected long queryFirstDayOfWeek;
+
+        protected long queryDay;
+
         // For serialize
         public RealizationMetrics() {
         }
