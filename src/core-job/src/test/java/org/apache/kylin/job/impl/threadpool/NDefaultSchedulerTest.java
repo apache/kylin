@@ -1445,6 +1445,27 @@ public class NDefaultSchedulerTest extends BaseSchedulerTest {
 
         scheduler.shutdown();
         Assert.assertEquals(memory, NDefaultScheduler.getMemoryRemaining().availablePermits());
+
+        config.setProperty("kylin.job.max-concurrent-jobs", "0");
+        scheduler.init(new JobEngineConfig(config));
+        val memory2 = NDefaultScheduler.getMemoryRemaining().availablePermits();
+        val df2 = NDataflowManager.getInstance(getTestConfig(), project).getDataflow(modelId);
+        val job3 = generateJob(df2, project);
+        val job4 = generatePartial(df2, project);
+        executableManager.addJob(job3);
+        executableManager.addJob(job4);
+        val runningExecutables2 = executableManager.getRunningExecutables(project, modelId);
+        runningExecutables.sort(Comparator.comparing(AbstractExecutable::getCreateTime));
+        Assert.assertEquals(ExecutableState.READY, runningExecutables2.get(0).getStatus());
+        Assert.assertEquals(ExecutableState.READY, runningExecutables2.get(1).getStatus());
+        config.setProperty("kylin.job.max-concurrent-jobs", "2");
+        waitForJobByStatus(job3.getId(), 60000, null, executableManager);
+        waitForJobByStatus(job4.getId(), 60000, null, executableManager);
+        Assert.assertEquals(ExecutableState.SUCCEED, executableManager.getOutput(job1.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, executableManager.getOutput(job2.getId()).getState());
+
+        scheduler.shutdown();
+        Assert.assertEquals(memory, NDefaultScheduler.getMemoryRemaining().availablePermits());
     }
 
     @Test

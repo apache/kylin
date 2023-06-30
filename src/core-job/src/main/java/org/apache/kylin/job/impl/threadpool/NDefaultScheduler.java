@@ -153,7 +153,7 @@ public class NDefaultScheduler implements Scheduler<AbstractExecutable> {
         //load all executable, set them to a consistent status
         fetcherPool = Executors.newScheduledThreadPool(1,
                 new NamedThreadFactory("FetchJobWorker(project:" + project + ")"));
-        int corePoolSize = getMaxConcurrentJobLimitByProject(config, jobEngineConfig, project);
+        int corePoolSize = getMaxConcurrentJobLimitByProjectForInitThread(config, jobEngineConfig, project);
         if (config.getAutoSetConcurrentJob()) {
             val availableMemoryRate = config.getMaxLocalConsumptionRatio();
             synchronized (NDefaultScheduler.class) {
@@ -230,6 +230,12 @@ public class NDefaultScheduler implements Scheduler<AbstractExecutable> {
 
     public static double currentAvailableMem() {
         return 1.0 * memoryRemaining.availablePermits();
+    }
+
+    public int getMaxConcurrentJobLimitByProjectForInitThread(KylinConfig config, JobEngineConfig jobEngineConfig,
+                                                               String project) {
+        int jobLimit = getMaxConcurrentJobLimitByProject(config, jobEngineConfig, project);
+        return jobLimit <= 0 ? 1 : jobLimit;
     }
 
     public int getMaxConcurrentJobLimitByProject(KylinConfig config, JobEngineConfig jobEngineConfig, String project) {
