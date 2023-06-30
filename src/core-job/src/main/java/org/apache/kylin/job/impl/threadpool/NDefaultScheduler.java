@@ -29,13 +29,16 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import lombok.Setter;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.util.ExecutorServiceUtil;
 import org.apache.kylin.common.util.NamedThreadFactory;
 import org.apache.kylin.common.util.SystemInfoCollector;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -43,18 +46,14 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.runners.FetcherRunner;
 import org.apache.kylin.job.runners.JobCheckRunner;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.base.Strings;
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
-import org.apache.kylin.metadata.epoch.EpochManager;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -153,7 +152,7 @@ public class NDefaultScheduler implements Scheduler<AbstractExecutable> {
         //load all executable, set them to a consistent status
         fetcherPool = Executors.newScheduledThreadPool(1,
                 new NamedThreadFactory("FetchJobWorker(project:" + project + ")"));
-        int corePoolSize = getMaxConcurrentJobLimitByProject(config, jobEngineConfig, project);
+        int corePoolSize = getMaxConcurrentJobLimitByProjectForInitThread(config, jobEngineConfig, project);
         if (config.getAutoSetConcurrentJob()) {
             val availableMemoryRate = config.getMaxLocalConsumptionRatio();
             synchronized (NDefaultScheduler.class) {
@@ -230,6 +229,12 @@ public class NDefaultScheduler implements Scheduler<AbstractExecutable> {
 
     public static double currentAvailableMem() {
         return 1.0 * memoryRemaining.availablePermits();
+    }
+
+    public int getMaxConcurrentJobLimitByProjectForInitThread(KylinConfig config, JobEngineConfig jobEngineConfig,
+            String project) {
+        int jobLimit = getMaxConcurrentJobLimitByProject(config, jobEngineConfig, project);
+        return jobLimit <= 0 ? 1 : jobLimit;
     }
 
     public int getMaxConcurrentJobLimitByProject(KylinConfig config, JobEngineConfig jobEngineConfig, String project) {
