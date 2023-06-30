@@ -43,6 +43,7 @@ import org.apache.kylin.metadata.model.NTableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
+import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.util.MetadataTestUtils;
 import org.apache.kylin.util.OlapContextTestUtil;
@@ -461,9 +462,9 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
             olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
 
             // hit layout 1010002
-            // 1. shardby layout are has higher priority over non-shardby layout, 
+            // 1. shardby layout are has higher priority over non-shardby layout,
             // so 1010001 is skipped, although it has a better dim order
-            // 2. trans_id has a higher cardinality, so 1010002 with shard on trans_id 
+            // 2. trans_id has a higher cardinality, so 1010002 with shard on trans_id
             // is preferred over 1010003 with shard on cal_dt
             NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
@@ -746,6 +747,48 @@ public class QueryLayoutChooserTest extends NLocalWithSparkSessionTest {
                     dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
             Assert.assertNotNull(layoutCandidate);
             Assert.assertEquals(20000010001L, layoutCandidate.getLayoutEntity().getId());
+        }
+    }
+
+    /**
+     * Start with an empty project to get the OlapContexts not pollute is very important.
+     */
+    @Test
+    public void testMatchDimAsMeasure() throws SqlParseException {
+        String emptyProject = "newten";
+        overwriteSystemProp("kylin.query.use-tableindex-answer-non-raw-query", "true");
+        String project = "dim_as_measure";
+        String modelId = "f29d1a92-c115-ec68-5575-9cfcc0d65890";
+        NDataflow dataflow = NDataflowManager.getInstance(getTestConfig(), project).getDataflow(modelId);
+
+        {
+            String sql = "select max(BIG_REGION_NAME) max1, max(case when 1=1 then BIG_REGION_NAME end) max2 from TEST_DIM_AS_MEASURE";
+            OLAPContext olapContext = OlapContextTestUtil.getOlapContexts(emptyProject, sql).get(0);
+            Map<String, String> sqlAlias2ModelNameMap = OlapContextTestUtil.matchJoins(dataflow.getModel(),
+                    olapContext);
+            olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
+                    dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
+            Assert.assertNotNull(layoutCandidate);
+            Assert.assertFalse(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
+            for (CapabilityResult.CapabilityInfluence inf : layoutCandidate.getCapabilityResult().influences) {
+                Assert.assertTrue(inf instanceof CapabilityResult.DimensionAsMeasure);
+            }
+        }
+
+        {
+            String sql = "select max(REGION_NAME) max1, max(case when 1=1 then BIG_REGION_NAME end) max2 from TEST_DIM_AS_MEASURE";
+            OLAPContext olapContext = OlapContextTestUtil.getOlapContexts(emptyProject, sql).get(0);
+            Map<String, String> sqlAlias2ModelNameMap = OlapContextTestUtil.matchJoins(dataflow.getModel(),
+                    olapContext);
+            olapContext.fixModel(dataflow.getModel(), sqlAlias2ModelNameMap);
+            NLayoutCandidate layoutCandidate = QueryLayoutChooser.selectLayoutCandidate(dataflow,
+                    dataflow.getQueryableSegments(), olapContext.getSQLDigest(), null);
+            Assert.assertNotNull(layoutCandidate);
+            Assert.assertFalse(layoutCandidate.getLayoutEntity().getIndex().isTableIndex());
+            for (CapabilityResult.CapabilityInfluence inf : layoutCandidate.getCapabilityResult().influences) {
+                Assert.assertTrue(inf instanceof CapabilityResult.DimensionAsMeasure);
+            }
         }
     }
 

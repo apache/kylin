@@ -89,7 +89,7 @@ public class AggIndexMatcher extends IndexMatcher {
             return new MatchResult();
         }
         log.trace("Matching agg index");
-        Set<FunctionDesc> unmatchedMetrics = Sets.newHashSet(sqlDigest.aggregations);
+        Collection<FunctionDesc> unmatchedMetrics = Lists.newArrayList(sqlDigest.aggregations);
         Set<Integer> unmatchedCols = initUnmatchedColumnIds(layout);
         final Map<Integer, DeriveInfo> needDerive = Maps.newHashMap();
         goThruDerivedDims(layout.getIndex(), needDerive, unmatchedCols);
@@ -140,9 +140,8 @@ public class AggIndexMatcher extends IndexMatcher {
             functionDescs.addAll(cuboidLayout.getStreamingMeasures().values());
         }
         functionDescs.addAll(cuboidLayout.getOrderedMeasures().values());
-
         for (MeasureDesc measureDesc : functionDescs) {
-            aggregations.remove(measureDesc.getFunction());
+            aggregations.removeIf(functionDesc -> measureDesc.getFunction().equals(functionDesc));
         }
     }
 
@@ -154,8 +153,15 @@ public class AggIndexMatcher extends IndexMatcher {
             Map<Integer, DeriveInfo> needDeriveCollector, List<CapabilityResult.CapabilityInfluence> influences) {
         IndexEntity indexEntity = layoutEntity.getIndex();
         Iterator<FunctionDesc> it = unmatchedAggs.iterator();
+        Set<FunctionDesc> matchedAggs = Sets.newHashSet();
         while (it.hasNext()) {
             FunctionDesc functionDesc = it.next();
+            if (matchedAggs.contains(functionDesc)) {
+                influences.add(new CapabilityResult.DimensionAsMeasure(functionDesc));
+                it.remove();
+                continue;
+            }
+
             if (functionDesc.isCountConstant()) {
                 it.remove();
                 continue;
@@ -180,6 +186,7 @@ public class AggIndexMatcher extends IndexMatcher {
 
             if (FunctionDesc.DIMENSION_AS_MEASURES.contains(functionDesc.getExpression())) {
                 influences.add(new CapabilityResult.DimensionAsMeasure(functionDesc));
+                matchedAggs.add(functionDesc);
                 it.remove();
             }
         }
