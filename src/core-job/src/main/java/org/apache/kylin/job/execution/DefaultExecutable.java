@@ -18,8 +18,11 @@
 
 package org.apache.kylin.job.execution;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -35,10 +38,15 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.transaction.UnitOfWork;
 import org.apache.kylin.common.scheduler.EventBusFactory;
 import org.apache.kylin.common.scheduler.JobFinishedNotifier;
+import org.apache.kylin.common.util.StringHelper;
+import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.ExecuteRuntimeException;
 import org.apache.kylin.job.exception.JobStoppedException;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.job.metrics.JobMetrics;
+import org.apache.kylin.job.metrics.RDBMJobMetricsDAO;
+import org.apache.kylin.job.util.MailNotificationUtil;
 import org.apache.kylin.metadata.project.EnhancedUnitOfWork;
 
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
@@ -229,15 +237,15 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
             switch (state) {
             case SUCCEED:
                 updateToFinalState(ExecutableState.SUCCEED, this::afterUpdateOutput, result.getShortErrMsg());
-                onStatusChange(ExecutableState.SUCCEED);
+                onStatusChange(ExecutableState.SUCCEED, context, result);
                 break;
             case DISCARDED:
                 updateToFinalState(ExecutableState.DISCARDED, this::onExecuteDiscardHook, result.getShortErrMsg());
-                onStatusChange(ExecutableState.DISCARDED);
+                onStatusChange(ExecutableState.DISCARDED, context, result);
                 break;
             case SUICIDAL:
                 updateToFinalState(ExecutableState.SUICIDAL, this::onExecuteSuicidalHook, result.getShortErrMsg());
-                onStatusChange(ExecutableState.SUICIDAL);
+                onStatusChange(ExecutableState.SUICIDAL, context, result);
                 break;
             case ERROR:
             case PAUSED:
@@ -260,7 +268,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
                 }
                 updateJobOutput(getProject(), getId(), state, info, output, shortErrMsg, hook);
                 if (state == ExecutableState.ERROR) {
-                    onStatusChange(ExecutableState.ERROR);
+                    onStatusChange(ExecutableState.ERROR, context, result);
                 }
                 break;
             default:
@@ -411,7 +419,69 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
         // just implement it
     }
 
-    protected void onStatusChange(ExecutableState state) {
+    protected void onStatusChange(ExecutableState state, ExecutableContext context, ExecuteResult result) {
         super.notifyUserStatusChange(state);
+        updateJobMetrics(state, context, result);
+    }
+
+    protected void updateJobMetrics(ExecutableState state, ExecutableContext context, ExecuteResult result) {
+        JobMetrics jobMetrics = new JobMetrics();
+        jobMetrics.setJobId(getId());
+        jobMetrics.setJobType(getJobType().toString());
+        jobMetrics.setJobState(state.toStringState());
+        jobMetrics.setProjectName(getProject());
+        jobMetrics.setModel(getTargetSubjectAlias());
+        jobMetrics.setSubmitter(StringHelper.noBlank(getSubmitter(), "missing submitter"));
+        jobMetrics.setJobEngine(MailNotificationUtil.getLocalHostName());
+
+        jobMetrics.setBuildTime(getJobEndTime());
+        long dayStart = TimeUtil.getDayStart(getJobEndTime());
+        Date date = new Date(dayStart);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault(Locale.Category.FORMAT));
+        String buildDate = sdf.format(date);
+        try {
+            jobMetrics.setBuildDate(sdf.parse(buildDate));
+        } catch (ParseException e) {
+            logger.error("time format is error");
+        }
+        jobMetrics.setBuildDay(dayStart);
+        jobMetrics.setBuildFirstDayOfWeek(TimeUtil.getWeekStart(getJobEndTime()));
+        jobMetrics.setBuildFirstDayOfMonth(TimeUtil.getMonthStart(getJobEndTime()));
+
+        if (state == ExecutableState.SUCCEED) {
+            jobMetrics.setDuration(getDuration());
+            jobMetrics.setWaitTime(getWaitTime());
+            jobMetrics.setModelSize(getByteSize());
+            jobMetrics.setPerBytesTimeCost(getPerBytesTimeCost(getByteSize(), getDuration()));
+        } else if (state == ExecutableState.ERROR) {
+            AbstractExecutable errorTask = null;
+            Output errorOutput;
+            List<AbstractExecutable> tasks = getTasks();
+            for (AbstractExecutable task : tasks) {
+                errorOutput = getManager().getOutput(task.getId());
+                if (errorOutput.getState() == ExecutableState.ERROR) {
+                    errorTask = task;
+                    break;
+                }
+            }
+            if (errorTask != null) {
+                jobMetrics.setErrorType(errorTask.getName());
+                jobMetrics.setErrorInfo(result.getShortErrMsg());
+            }
+        }
+        updateJobMetrics(jobMetrics);
+    }
+
+    private void updateJobMetrics(JobMetrics jobMetrics) {
+        RDBMJobMetricsDAO jobMetricsDAO = RDBMJobMetricsDAO.getInstance();
+        jobMetricsDAO.insert(jobMetrics);
+
+    }
+
+    private static double getPerBytesTimeCost(long byteSize, long time) {
+        if (byteSize <= 0) {
+            return 0;
+        }
+        return time * 1.0 / byteSize;
     }
 }

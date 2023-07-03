@@ -23,10 +23,15 @@ import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_NOT_EXI
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_RESTART_CHECK_SEGMENT_STATUS;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_STATUS_ILLEGAL;
 import static org.apache.kylin.common.exception.code.ErrorCodeServer.JOB_UPDATE_STATUS_FAILED;
+import static org.apache.kylin.job.metrics.JdbcJobMetricsStore.fillZeroForJobStatistics;
 import static org.apache.kylin.query.util.AsyncQueryUtil.ASYNC_QUERY_JOB_ID_PRE;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -77,6 +82,7 @@ import org.apache.kylin.common.scheduler.JobReadyNotifier;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringHelper;
+import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.job.common.JobUtil;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -96,6 +102,9 @@ import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.NExecutableManager;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.execution.StageBase;
+import org.apache.kylin.job.metrics.JobMetricsDao;
+import org.apache.kylin.job.metrics.JobMetricsStatistics;
+import org.apache.kylin.job.metrics.RDBMJobMetricsDAO;
 import org.apache.kylin.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.metadata.cube.model.NDataSegment;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
@@ -173,6 +182,10 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
     public static final String EXCEPTION_CODE_PATH = "exception_to_code.json";
     public static final String EXCEPTION_CODE_DEFAULT = "KE-030001000";
 
+    private static final String COUNT = "count";
+    private static final String MODEL = "model";
+    private static final String MONTH = "month";
+
     public static final String JOB_STEP_PREFIX = "job_step_";
     public static final String YARN_APP_SEPARATOR = "_";
     public static final String BUILD_JOB_PROFILING_PARAMETER = "kylin.engine.async-profiler-enabled";
@@ -187,6 +200,10 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
         jobTypeMap.put("INDEX_BUILD", "Build Index");
         jobTypeMap.put("INC_BUILD", "Load Data");
         jobTypeMap.put("TABLE_SAMPLING", "Sample Table");
+    }
+
+    private JobMetricsDao getJobMetricsDao() {
+        return RDBMJobMetricsDAO.getInstance();
     }
 
     @Autowired
@@ -1106,6 +1123,124 @@ public class JobService extends BasicService implements JobSupporter, ISmartAppl
         }
 
         return manager.getDurationPerByteByTime(startTime, endTime, dimension);
+    }
+
+    public JobStatisticsResponse getJobMetricsStats(String project, long startTime, long endTime) {
+        aclEvaluate.checkProjectOperationPermission(project);
+        JobMetricsDao jobMetricsDao = getJobMetricsDao();
+        JobMetricsStatistics metrics = jobMetricsDao.getJobCountAndTotalBuildCost(startTime, endTime, project);
+        return new JobStatisticsResponse(metrics.getCount(), metrics.getDuration(), metrics.getModelSize());
+    }
+
+    public Map<String, Integer> getJobMetricsCount(String project, long startTime, long endTime, String dimension) {
+        aclEvaluate.checkProjectOperationPermission(project);
+        JobMetricsDao jobMetricsDao = getJobMetricsDao();
+        List<JobMetricsStatistics> jobMetricsStatistics;
+
+        if (dimension.equals(MODEL)) {
+            jobMetricsStatistics = jobMetricsDao.getJobCountByModel(startTime, endTime, project);
+            return transformJobStatisticsByModel(jobMetricsStatistics, COUNT);
+        }
+        jobMetricsStatistics = jobMetricsDao.getJobCountByTime(startTime, endTime, dimension, project);
+        fillZeroForJobStatistics(jobMetricsStatistics, startTime, endTime, dimension);
+        return transformJobStatisticsByTime(jobMetricsStatistics, COUNT, dimension);
+    }
+
+    public Map<String, Double> getJobMetricsBuildCostPerBytes(String project, long startTime, long endTime, String dimension) {
+        aclEvaluate.checkProjectOperationPermission(project);
+        JobMetricsDao jobMetricsDao = getJobMetricsDao();
+        List<JobMetricsStatistics> jobMetricsStatistics;
+
+        if (dimension.equals(MODEL)) {
+            jobMetricsStatistics = jobMetricsDao.getJobBuildCostByModel(startTime, endTime, project);
+            return transformJobBuildCostByModel(jobMetricsStatistics);
+        }
+        jobMetricsStatistics = jobMetricsDao.getJobBuildCostByTime(startTime, endTime, dimension, project);
+        fillZeroForJobStatistics(jobMetricsStatistics, startTime, endTime, dimension);
+        return transformJobBuildCostByTime(jobMetricsStatistics, dimension);
+    }
+
+    private Map<String, Integer> transformJobStatisticsByModel(List<JobMetricsStatistics> statistics, String fieldName) {
+        Map<String, Integer> result = Maps.newHashMap();
+        statistics.forEach(singleStatistics -> result.put(singleStatistics.getModel(),
+                (Integer) getValueByField(singleStatistics, fieldName)));
+
+        return result;
+    }
+
+    private Map<String, Double> transformJobBuildCostByModel(List<JobMetricsStatistics> statistics) {
+        Map<String, Double> result = Maps.newHashMap();
+        for (JobMetricsStatistics jobMetricsStatistics : statistics) {
+            String modelName = jobMetricsStatistics.getModel();
+            double modelSize = jobMetricsStatistics.getModelSize();
+            double duration = jobMetricsStatistics.getDuration();
+            if (modelSize == 0) {
+                result.put(modelName, .0);
+            } else {
+                result.put(modelName, duration / modelSize);
+            }
+        }
+        return result;
+    }
+
+    private Map<String, Double> transformJobBuildCostByTime(List<JobMetricsStatistics> statistics, String dimension) {
+        Map<String, Double> result = Maps.newHashMap();
+
+        statistics.forEach(singleStatistics -> {
+            double modelSize = singleStatistics.getModelSize();
+            double duration = singleStatistics.getDuration();
+            double cost = modelSize == 0 ? .0 : duration / modelSize;
+
+            if (dimension.equals(MONTH)) {
+                TimeZone timeZone = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone());
+                LocalDate date = singleStatistics.getTime().atZone(timeZone.toZoneId()).toLocalDate();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM",
+                        Locale.getDefault(Locale.Category.FORMAT));
+                result.put(date.withDayOfMonth(1).format(formatter), cost);
+                return;
+            }
+            long time = singleStatistics.getTime().toEpochMilli();
+            Date date = new Date(time);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault(Locale.Category.FORMAT));
+            result.put(sdf.format(date), cost);
+        });
+
+        return result;
+    }
+
+    private Map<String, Integer> transformJobStatisticsByTime(List<JobMetricsStatistics> statistics, String fieldName,
+                                                               String dimension) {
+        Map<String, Integer> result = Maps.newHashMap();
+
+        statistics.forEach(singleStatistics -> {
+            if (dimension.equals(MONTH)) {
+                TimeZone timeZone = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone());
+                LocalDate date = singleStatistics.getTime().atZone(timeZone.toZoneId()).toLocalDate();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM",
+                        Locale.getDefault(Locale.Category.FORMAT));
+                result.put(date.withDayOfMonth(1).format(formatter), (Integer) getValueByField(singleStatistics, fieldName));
+                return;
+            }
+            long time = singleStatistics.getTime().toEpochMilli();
+            Date date = new Date(time);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault(Locale.Category.FORMAT));
+            result.put(sdf.format(date), (Integer) getValueByField(singleStatistics, fieldName));
+        });
+
+        return result;
+    }
+
+    private Object getValueByField(JobMetricsStatistics statistics, String fieldName) {
+        Object object = null;
+        try {
+            Field field = statistics.getClass().getDeclaredField(fieldName);
+            Unsafe.changeAccessibleObject(field, true);
+            object = field.get(statistics);
+        } catch (Exception e) {
+            logger.error("Error caught when get value from Job statistics {}", e.getMessage());
+        }
+
+        return object;
     }
 
     public Map<String, Object> getEventsInfoGroupByModel(String project) {

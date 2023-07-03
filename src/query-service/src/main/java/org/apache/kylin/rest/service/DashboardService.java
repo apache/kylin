@@ -118,7 +118,7 @@ public class DashboardService extends BasicService {
 
     public MetricsResponse getJobMetrics(String projectName, String startTime, String endTime) {
         MetricsResponse jobMetrics = new MetricsResponse();
-        JobStatisticsResponse jobStats = jobService.getJobStats(projectName, convertToTimestamp(startTime),
+        JobStatisticsResponse jobStats = jobService.getJobMetricsStats(projectName, convertToTimestamp(startTime),
                 convertToTimestamp(endTime));
         Float jobCount = (float) jobStats.getCount();
         Float jobTotalByteSize = (float) jobStats.getTotalByteSize();
@@ -151,18 +151,18 @@ public class DashboardService extends BasicService {
         }
         case JOB: {
             switch (metric) {
-            case JOB_COUNT:
-                Map<String, Integer> jobCounts = jobService.getJobCount(projectName, _startTime, _endTime,
-                        dimension.toLowerCase());
-                MetricsResponse counts = new MetricsResponse();
-                jobCounts.forEach((k, v) -> counts.increase(k, Float.valueOf(v)));
-                return counts;
-            case AVG_JOB_BUILD_TIME:
-                Map<String, Double> jobDurationPerByte = jobService.getJobDurationPerByte(projectName, _startTime,
-                        _endTime, dimension.toLowerCase());
-                MetricsResponse avgBuild = new MetricsResponse();
-                jobDurationPerByte.forEach((k, v) -> avgBuild.increase(k, Float.valueOf(String.valueOf(v))));
-                return avgBuild;
+                case JOB_COUNT:
+                    Map<String, Integer> jobCounts = jobService.getJobMetricsCount(projectName, _startTime, _endTime,
+                            dimension.toLowerCase());
+                    MetricsResponse counts = new MetricsResponse();
+                    jobCounts.forEach((k, v) -> counts.increase(k, Float.valueOf(v)));
+                    return counts;
+                case AVG_JOB_BUILD_TIME:
+                    Map<String, Double> jobDurationPerByte = jobService.getJobMetricsBuildCostPerBytes(projectName,
+                            _startTime, _endTime, dimension.toLowerCase());
+                    MetricsResponse avgBuild = new MetricsResponse();
+                    jobDurationPerByte.forEach((k, v) -> avgBuild.increase(k, Float.valueOf(String.valueOf(v))));
+                    return avgBuild;
             default:
                 throw new UnsupportedQueryException("Metric should be JOB_COUNT or AVG_JOB_BUILD_TIME");
             }
