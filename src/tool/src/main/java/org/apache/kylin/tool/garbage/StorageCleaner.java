@@ -98,6 +98,8 @@ public class StorageCleaner {
 
     private final boolean cleanup;
     private final boolean timeMachineEnabled;
+
+    @Getter
     private final Collection<String> projectNames;
     private final KylinConfig kylinConfig;
 
@@ -107,6 +109,16 @@ public class StorageCleaner {
     @Getter
     private final Map<String, String> trashRecord;
     private final ResourceStore resourceStore;
+
+    public enum CleanerTag {
+        ROUTINE, CLI, SERVICE
+    }
+
+    @Getter
+    private CleanerTag tag = CleanerTag.ROUTINE;
+
+    @Getter
+    private String traceId = "";
 
     public StorageCleaner() throws Exception {
         this(true);
@@ -136,6 +148,16 @@ public class StorageCleaner {
         if (tRetryTimes > 0) {
             FileSystemDecorator.retryTimes = tRetryTimes;
         }
+    }
+
+    public StorageCleaner withTag(CleanerTag tag) {
+        this.tag = tag;
+        return this;
+    }
+
+    public StorageCleaner withTraceId(String id) {
+        this.traceId = id;
+        return this;
     }
 
     @Getter
