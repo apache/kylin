@@ -60,6 +60,8 @@ import org.apache.kylin.rest.service.task.QueryHistoryTaskScheduler;
 import org.apache.kylin.rest.util.JStackDumpTask;
 import org.apache.kylin.streaming.jobs.StreamingJobListener;
 import org.apache.kylin.tool.daemon.KapGuardianHATask;
+import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
+import org.apache.kylin.tool.garbage.PriorityExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
@@ -175,6 +177,11 @@ public class AppInitializer {
         log.info("KylinConfig in env, ID is {}", kylinConfig.hashCode());
         log.info("KylinConfig in env, metadata is {}", kylinConfig.getMetadataUrl());
         log.info("KylinConfig in env, working dir is {}", kylinConfig.getHdfsWorkingDirectory());
+
+        // Init global static class
+        CleanTaskExecutorService.getInstance().bindWorkingPool(
+            PriorityExecutor.newWorkingThreadPool(
+                "clean-storages-pool", kylinConfig.getStorageCleanTaskConcurrency()));
     }
 
     private void warmUpSystemCache() {

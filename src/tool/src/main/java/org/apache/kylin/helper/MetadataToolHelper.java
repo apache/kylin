@@ -36,8 +36,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.sql.DataSource;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
@@ -57,18 +55,19 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.MetadataChecker;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.HDFSMetadataTool;
 import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.base.Preconditions;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
 import lombok.val;
 import lombok.var;
+
+import javax.sql.DataSource;
 
 /*
 * this class is only for removing dependency of kylin-tool module, and should be refactor later
@@ -374,7 +373,7 @@ public class MetadataToolHelper {
     }
 
     public void cleanStorage(boolean storageCleanup, List<String> projects, double requestFSRate,
-            int retryTimes) {
+                             int retryTimes) {
         try {
             StorageCleaner storageCleaner = new StorageCleaner(storageCleanup, projects, requestFSRate, retryTimes);
             System.out.println("Start to cleanup HDFS");

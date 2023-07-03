@@ -2576,6 +2576,14 @@ public abstract class KylinConfigBase implements Serializable {
                 * 1024)).longValue();
     }
 
+    public long getStorageCleanTaskTimeout() {
+        return TimeUtil.timeStringAs(getOptional("kylin.storage.clean-timeout", "4h"), TimeUnit.MILLISECONDS);
+    }
+
+    public int getStorageCleanTaskConcurrency() {
+        return Integer.parseInt(getOptional("kylin.storage.clean-tasks-concurrency", "5"));
+    }
+
     public long getSourceUsageQuota() {
         Double d = Double.parseDouble(getOptional("kylin.storage.source-quota-in-giga-bytes", "-1"));
 

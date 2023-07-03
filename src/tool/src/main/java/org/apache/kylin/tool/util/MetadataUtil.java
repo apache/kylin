@@ -36,18 +36,17 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.logging.LogOutputStream;
+import org.apache.kylin.common.persistence.metadata.JdbcDataSource;
 import org.apache.kylin.common.persistence.metadata.jdbc.JdbcUtil;
-import org.apache.kylin.helper.MetadataToolHelper;
-
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MetadataUtil {
 
     private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
-    private static MetadataToolHelper metadataToolHelper = new MetadataToolHelper();
 
     private MetadataUtil() {
     }
@@ -60,7 +59,9 @@ public class MetadataUtil {
     }
 
     public static DataSource getDataSource(KylinConfig kylinConfig) throws Exception {
-        return metadataToolHelper.getDataSource(kylinConfig);
+        val url = kylinConfig.getMetadataUrl();
+        val props = JdbcUtil.datasourceParameters(url);
+        return JdbcDataSource.getDataSource(props);
     }
 
     public static void createTableIfNotExist(BasicDataSource dataSource, String tableName, String tableSql,

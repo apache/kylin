@@ -30,11 +30,16 @@ import org.apache.kylin.metadata.query.util.QueryHisStoreUtil;
 import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
 import org.apache.kylin.metadata.streaming.util.StreamingJobRecordStoreUtil;
 import org.apache.kylin.metadata.streaming.util.StreamingJobStatsStoreUtil;
+import org.apache.kylin.tool.garbage.AbstractComparableCleanTask;
+import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
 import org.apache.kylin.tool.garbage.GarbageCleaner;
 import org.apache.kylin.tool.garbage.SourceUsageCleaner;
 import org.apache.kylin.tool.garbage.StorageCleaner;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /*
@@ -46,8 +51,33 @@ public class RoutineToolHelper {
     private RoutineToolHelper() {
     }
 
-    public static void cleanQueryHistories() {
-        QueryHisStoreUtil.cleanQueryHistory();
+    public static CompletableFuture<Void> cleanQueryHistoriesAsync(long timeout, TimeUnit timeUnit) {
+        return CleanTaskExecutorService.getInstance().submit(
+                new AbstractComparableCleanTask() {
+                    @Override
+                    public String getName() {
+                        return "cleanQueryHistoriesForAllProjects";
+                    }
+
+                    @Override
+                    protected void doRun() {
+                        QueryHisStoreUtil.cleanQueryHistory();
+                    }
+
+                    @Override
+                    public StorageCleaner.CleanerTag getCleanerTag() {
+                        return StorageCleaner.CleanerTag.ROUTINE;
+                    }
+                }, timeout, timeUnit);
+    }
+
+    public static CompletableFuture<Void> cleanQueryHistoriesAsync() {
+        return cleanQueryHistoriesAsync(
+                KylinConfig.getInstanceFromEnv().getStorageCleanTaskTimeout(), TimeUnit.MILLISECONDS);
+    }
+
+    public static void cleanStorageForRoutine() {
+        CleanTaskExecutorService.getInstance().cleanStorageForRoutine(true, Collections.emptyList(), 0, 0);
     }
 
     public static void cleanStreamingStats() {
@@ -100,7 +130,7 @@ public class RoutineToolHelper {
             for (String projName : projectsToCleanup) {
                 cleanMetaByProject(projName);
             }
-            cleanQueryHistories();
+            cleanQueryHistoriesAsync();
             cleanStreamingStats();
             deleteRawRecItems();
             System.out.println("Metadata cleanup finished");

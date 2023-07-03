@@ -109,7 +109,7 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
         return jdbcQueryHisStore.queryByQueryId(queryId);
     }
 
-    public void deleteQueryHistoriesIfMaxSizeReached() {
+    public void deleteQueryHistoriesIfMaxSizeReached() throws InterruptedException {
         long maxSize = KylinConfig.getInstanceFromEnv().getQueryHistoryMaxSize();
         long totalCount = jdbcQueryHisStore.getCountOnQueryHistory();
         if (totalCount > maxSize) {
@@ -117,14 +117,14 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
         }
     }
 
-    public void deleteQueryHistoriesIfRetainTimeReached() {
+    public void deleteQueryHistoriesIfRetainTimeReached() throws InterruptedException {
         long rangeOutCount = jdbcQueryHisStore.getCountOnQueryHistory(getRetainTime());
         if (rangeOutCount > 0) {
             deleteQueryHistoryAndRealization((int) rangeOutCount);
         }
     }
 
-    public void deleteQueryHistoryAndRealization(int deleteCount) {
+    public void deleteQueryHistoryAndRealization(int deleteCount) throws InterruptedException {
         int singleLimit = KylinConfig.getInstanceFromEnv().getQueryHistorySingleDeletionSize();
         largeSplitToSmallTask(deleteCount, singleLimit, currentCount -> {
             QueryHistory queryHistory = jdbcQueryHisStore.getOldestQueryHistory(currentCount);
@@ -134,7 +134,7 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
         }, "Cleanup all query history");
     }
 
-    public void deleteOldestQueryHistoriesByProject(String project, int deleteCount) {
+    public void deleteOldestQueryHistoriesByProject(String project, int deleteCount) throws InterruptedException {
         int singleLimit = KylinConfig.getInstanceFromEnv().getQueryHistorySingleDeletionSize();
         largeSplitToSmallTask(deleteCount, singleLimit, currentCount -> {
             QueryHistory queryHistory = jdbcQueryHisStore.getOldestQueryHistory(project, currentCount);
@@ -280,9 +280,12 @@ public class RDBMSQueryHistoryDAO implements QueryHistoryDAO {
     }
 
     public static void largeSplitToSmallTask(int totalCount, int singleSize, IntFunction<Integer> function,
-            String description) {
+            String description) throws InterruptedException {
         int retainCount = totalCount;
         while (retainCount > 0) {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException("Interrupted during splitting a large query task!");
+            }
             int currentCount = Math.min(retainCount, singleSize);
             int actualCount = function.apply(currentCount);
             if (currentCount != actualCount && logger.isWarnEnabled()) {

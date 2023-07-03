@@ -19,17 +19,18 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.response.RestResponse;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroup;
 import org.apache.kylin.metadata.resourcegroup.ResourceGroupManager;
 import org.apache.kylin.metadata.streaming.ReflectionUtils;
 import org.apache.kylin.rest.request.StorageCleanupRequest;
+import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -63,8 +64,6 @@ public class MetaStoreTenantServiceTest {
     private ResourceGroupManager rgManager = Mockito.mock(ResourceGroupManager.class);
     @Mock
     private KylinConfig kylinConfig = Mockito.mock(KylinConfig.class);
-    @Mock
-    private MetadataToolHelper metadataToolHelper = Mockito.spy(MetadataToolHelper.class);
 
     @Test
     public void cleanupStorageMultiTenantMode() throws IOException {
@@ -76,7 +75,6 @@ public class MetaStoreTenantServiceTest {
         Mockito.when(kylinConfig.isKylinMultiTenantEnabled()).thenReturn(false);
 
         ReflectionUtils.setField(metaStoreService, "routeService", routeService);
-        ReflectionUtils.setField(metaStoreService, "metadataToolHelper", metadataToolHelper);
         ReflectionUtils.setField(routeService, "restTemplate", restTemplate);
 
         val restResult = JsonUtil.writeValueAsBytes(RestResponse.ok(true));
@@ -89,8 +87,8 @@ public class MetaStoreTenantServiceTest {
         Mockito.when(rgManager.getResourceGroup())
                 .thenReturn(JsonUtil.readValue(resourceGroupJson, new TypeReference<ResourceGroup>() {
                 }));
-        Mockito.doNothing().when(metadataToolHelper).cleanStorage(ArgumentMatchers.anyBoolean(), ArgumentMatchers.any(),
-                ArgumentMatchers.anyDouble(), ArgumentMatchers.anyInt());
+        CleanTaskExecutorService.getInstance().cleanStorageForRoutine(ArgumentMatchers.anyBoolean(), Collections.emptyList(),
+            ArgumentMatchers.anyDouble(), ArgumentMatchers.anyInt());
 
         val storageCleanupRequest = new StorageCleanupRequest();
         storageCleanupRequest.setCleanupStorage(false);

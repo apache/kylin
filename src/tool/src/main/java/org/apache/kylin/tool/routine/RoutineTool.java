@@ -32,6 +32,7 @@ import org.apache.kylin.helper.RoutineToolHelper;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.MaintainModeTool;
+import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
 import org.apache.kylin.tool.util.ToolMainWrapper;
 import org.apache.kylin.metadata.epoch.EpochManager;
 
@@ -69,7 +70,7 @@ public class RoutineTool extends ExecutableApplication {
     }
 
     public static void cleanQueryHistories() {
-        RoutineToolHelper.cleanQueryHistories();
+        RoutineToolHelper.cleanQueryHistoriesAsync();
     }
 
     public static void cleanStreamingStats() {
@@ -128,7 +129,8 @@ public class RoutineTool extends ExecutableApplication {
     }
 
     public void cleanStorage() {
-        helper.cleanStorage(storageCleanup, Arrays.asList(projects), requestFSRate, retryTimes);
+        CleanTaskExecutorService.getInstance().cleanStorageForRoutine(
+            storageCleanup, Arrays.asList(projects), requestFSRate, retryTimes);
     }
 
     protected boolean printUsage(OptionsHelper optionsHelper) {

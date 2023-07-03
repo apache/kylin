@@ -18,20 +18,80 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.common.constant.Constants.KE_VERSION;
-import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CREATE_MODEL;
-import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_EXPORT_ERROR;
-import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_IMPORT_ERROR;
-import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_METADATA_FILE_ERROR;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_DUPLICATE;
-import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_INVALID;
-import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_TAG;
-import static org.apache.kylin.common.persistence.ResourceStore.VERSION_FILE;
-import static org.apache.kylin.metadata.model.schema.ImportModelContext.MODEL_REC_PATH;
-import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_DIM;
-import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_FACT;
+import lombok.Setter;
+import lombok.val;
+import lombok.var;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exception.KylinException;
+import org.apache.kylin.common.msg.Message;
+import org.apache.kylin.common.msg.MsgPicker;
+import org.apache.kylin.common.persistence.InMemResourceStore;
+import org.apache.kylin.common.persistence.RawResource;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.metadata.MetadataStore;
+import org.apache.kylin.common.persistence.transaction.UnitOfWork;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.MetadataChecker;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Maps;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.io.ByteSource;
+import org.apache.kylin.helper.RoutineToolHelper;
+import org.apache.kylin.metadata.cube.model.IndexEntity;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
+import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
+import org.apache.kylin.metadata.model.JoinTableDesc;
+import org.apache.kylin.metadata.model.MultiPartitionDesc;
+import org.apache.kylin.metadata.model.NDataModel;
+import org.apache.kylin.metadata.model.NDataModelManager;
+import org.apache.kylin.metadata.model.SegmentConfig;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
+import org.apache.kylin.metadata.model.schema.ImportModelContext;
+import org.apache.kylin.metadata.model.schema.ModelImportChecker;
+import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
+import org.apache.kylin.metadata.model.schema.SchemaNodeType;
+import org.apache.kylin.metadata.model.schema.SchemaUtil;
+import org.apache.kylin.metadata.project.NProjectManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
+import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
+import org.apache.kylin.metadata.recommendation.candidate.RawRecManager;
+import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
+import org.apache.kylin.metadata.view.LogicalView;
+import org.apache.kylin.metadata.view.LogicalViewManager;
+import org.apache.kylin.rest.aspect.Transaction;
+import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
+import org.apache.kylin.rest.request.ModelImportRequest;
+import org.apache.kylin.rest.request.ModelImportRequest.ImportType;
+import org.apache.kylin.rest.request.StorageCleanupRequest;
+import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
+import org.apache.kylin.rest.response.LoadTableResponse;
+import org.apache.kylin.rest.response.ModelPreviewResponse;
+import org.apache.kylin.rest.response.SimplifiedTablePreviewResponse;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclPermissionUtil;
+import org.apache.kylin.source.ISourceMetadataExplorer;
+import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
+import org.apache.kylin.tool.util.HashFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -56,84 +116,19 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.xml.bind.DatatypeConverter;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.exception.KylinException;
-import org.apache.kylin.common.msg.Message;
-import org.apache.kylin.common.msg.MsgPicker;
-import org.apache.kylin.common.persistence.InMemResourceStore;
-import org.apache.kylin.common.persistence.RawResource;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.metadata.MetadataStore;
-import org.apache.kylin.common.persistence.transaction.UnitOfWork;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.MetadataChecker;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.helper.MetadataToolHelper;
-import org.apache.kylin.helper.RoutineToolHelper;
-import org.apache.kylin.metadata.cube.model.IndexEntity;
-import org.apache.kylin.metadata.cube.model.IndexPlan;
-import org.apache.kylin.metadata.cube.model.NDataflowManager;
-import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
-import org.apache.kylin.metadata.cube.model.RuleBasedIndex;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.MultiPartitionDesc;
-import org.apache.kylin.metadata.model.NDataModel;
-import org.apache.kylin.metadata.model.NDataModelManager;
-import org.apache.kylin.metadata.model.SegmentConfig;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.model.schema.ImportModelContext;
-import org.apache.kylin.metadata.model.schema.ModelImportChecker;
-import org.apache.kylin.metadata.model.schema.SchemaChangeCheckResult;
-import org.apache.kylin.metadata.model.schema.SchemaNodeType;
-import org.apache.kylin.metadata.model.schema.SchemaUtil;
-import org.apache.kylin.metadata.project.NProjectManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.query.util.QueryHisStoreUtil;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metadata.view.LogicalView;
-import org.apache.kylin.metadata.view.LogicalViewManager;
-import org.apache.kylin.rest.aspect.Transaction;
-import org.apache.kylin.rest.constant.ModelStatusToDisplayEnum;
-import org.apache.kylin.rest.request.ModelImportRequest;
-import org.apache.kylin.rest.request.ModelImportRequest.ImportType;
-import org.apache.kylin.rest.request.StorageCleanupRequest;
-import org.apache.kylin.rest.request.UpdateRuleBasedCuboidRequest;
-import org.apache.kylin.rest.response.LoadTableResponse;
-import org.apache.kylin.rest.response.ModelPreviewResponse;
-import org.apache.kylin.rest.response.SimplifiedTablePreviewResponse;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.AclPermissionUtil;
-import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.source.SourceFactory;
-import org.apache.kylin.tool.util.HashFunction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
-
-import org.apache.kylin.guava30.shaded.common.collect.Lists;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.guava30.shaded.common.collect.Sets;
-import org.apache.kylin.guava30.shaded.common.io.ByteSource;
-
-import org.apache.kylin.metadata.recommendation.candidate.JdbcRawRecStore;
-import org.apache.kylin.metadata.recommendation.candidate.RawRecItem;
-import org.apache.kylin.metadata.recommendation.candidate.RawRecManager;
-import org.apache.kylin.metadata.recommendation.ref.OptRecManagerV2;
-
-import lombok.Setter;
-import lombok.val;
-import lombok.var;
+import static org.apache.kylin.common.constant.Constants.KE_VERSION;
+import static org.apache.kylin.common.exception.ServerErrorCode.FAILED_CREATE_MODEL;
+import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_EXPORT_ERROR;
+import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_IMPORT_ERROR;
+import static org.apache.kylin.common.exception.ServerErrorCode.MODEL_METADATA_FILE_ERROR;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_ID_NOT_EXIST;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_DUPLICATE;
+import static org.apache.kylin.common.exception.code.ErrorCodeServer.MODEL_NAME_INVALID;
+import static org.apache.kylin.common.persistence.ResourceStore.METASTORE_UUID_TAG;
+import static org.apache.kylin.common.persistence.ResourceStore.VERSION_FILE;
+import static org.apache.kylin.metadata.model.schema.ImportModelContext.MODEL_REC_PATH;
+import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_DIM;
+import static org.apache.kylin.metadata.model.schema.SchemaNodeType.MODEL_FACT;
 
 @Component("metaStoreService")
 public class MetaStoreService extends BasicService {
@@ -162,8 +157,6 @@ public class MetaStoreService extends BasicService {
     @Setter
     @Autowired(required = false)
     private List<ModelChangeSupporter> modelChangeSupporters = Lists.newArrayList();
-
-    MetadataToolHelper metadataToolHelper = new MetadataToolHelper();
 
     public List<ModelPreviewResponse> getPreviewModels(String project, List<String> ids) {
         aclEvaluate.checkProjectWritePermission(project);
@@ -808,14 +801,14 @@ public class MetaStoreService extends BasicService {
     public void cleanupMeta(String project) {
         if (project.equals(UnitOfWork.GLOBAL_UNIT)) {
             RoutineToolHelper.cleanGlobalSourceUsage();
-            QueryHisStoreUtil.cleanQueryHistory();
+            RoutineToolHelper.cleanQueryHistoriesAsync().join();
         } else {
             RoutineToolHelper.cleanMetaByProject(project);
         }
     }
 
     public void cleanupStorage(String[] projectsToClean, boolean cleanupStorage) {
-        metadataToolHelper.cleanStorage(cleanupStorage, Arrays.asList(projectsToClean), 0D, 0);
+        CleanTaskExecutorService.getInstance().cleanStorageForService(cleanupStorage, Arrays.asList(projectsToClean), 0D, 0);
     }
 
     public void cleanupStorage(StorageCleanupRequest request, HttpServletRequest servletRequest) {

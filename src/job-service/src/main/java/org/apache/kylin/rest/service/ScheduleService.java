@@ -22,7 +22,6 @@ import static org.apache.kylin.common.constant.Constants.METADATA_FILE;
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_V4_PUBLIC_JSON;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -55,7 +54,6 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.guava30.shaded.common.collect.Lists;
 import org.apache.kylin.guava30.shaded.common.collect.Maps;
-import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.helper.RoutineToolHelper;
 import org.apache.kylin.metadata.resourcegroup.KylinInstance;
 import org.apache.kylin.metadata.resourcegroup.RequestTypeEnum;
@@ -107,7 +105,7 @@ public class ScheduleService {
     private String tmpMetadataBackupFilePath;
 
     private static final ThreadLocal<Future<?>> CURRENT_FUTURE = new ThreadLocal<>();
-    private MetadataToolHelper metadataToolHelper = new MetadataToolHelper();
+
     private static final Map<Future<?>, Long> ASYNC_FUTURES = Maps.newConcurrentMap();
 
     @Scheduled(cron = "${kylin.metadata.ops-cron:0 0 0 * * *}")
@@ -126,7 +124,8 @@ public class ScheduleService {
                     AtomicReference<Pair<String, String>> backupFolder = new AtomicReference<>(null);
                     executeTask(() -> backupFolder.set(backupService.backupAll()), "MetadataBackup", startTime);
                     executeMetadataBackupInTenantMode(kylinConfig, startTime, backupFolder);
-                    executeTask(RoutineToolHelper::cleanQueryHistories, "QueryHistoriesCleanup", startTime);
+                    executeTask(() -> RoutineToolHelper.cleanQueryHistoriesAsync(getRemainingTime(startTime),
+                            TimeUnit.MILLISECONDS), "QueryHistoriesCleanup", startTime);
                     executeTask(RoutineToolHelper::cleanStreamingStats, "StreamingStatsCleanup", startTime);
                     executeTask(RoutineToolHelper::deleteRawRecItems, "RawRecItemsDeletion", startTime);
                     executeTask(RoutineToolHelper::cleanGlobalSourceUsage, "SourceUsageCleanup", startTime);
@@ -134,8 +133,7 @@ public class ScheduleService {
                 }
                 executeTask(() -> projectService.garbageCleanup(getRemainingTime(startTime)), "ProjectGarbageCleanup",
                         startTime);
-                executeTask(() -> metadataToolHelper.cleanStorage(true, Collections.emptyList(), 0, 0), "HdfsCleanup",
-                        startTime);
+                executeTask(RoutineToolHelper::cleanStorageForRoutine, "HdfsCleanup", startTime);
                 log.info("Finish to work, cost {}ms", System.currentTimeMillis() - startTime);
             }
         } catch (InterruptedException e) {
