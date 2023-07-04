@@ -372,10 +372,10 @@ public class ModelService extends AbstractModelService implements TableModelSupp
 
     private void addOldSegmentParams(NDataModel model, NDataModelOldParams oldParams,
             List<AbstractExecutable> executables) {
-        if (((model instanceof NDataModelResponse) && !(model instanceof NDataModelLiteResponse)) || model.isFusionModel()) {
-            List<NDataSegmentResponse> segments = getSegmentsResponse(model.getId(), model.getProject(), "1",
-                    String.valueOf(Long.MAX_VALUE - 1), null, executables, LAST_MODIFY, true);
-            calculateRecordSizeAndCount(segments, oldParams);
+        List<NDataSegmentResponse> segments = getSegmentsResponse(model.getId(), model.getProject(), "1",
+                String.valueOf(Long.MAX_VALUE - 1), null, executables, LAST_MODIFY, true, (model instanceof NDataModelLiteResponse));
+        calculateRecordSizeAndCount(segments, oldParams);
+        if (model instanceof NDataModelResponse) {
             ((NDataModelResponse) model).setSegments(segments);
             ((NDataModelResponse) model).setHasSegments(
                     ((NDataModelResponse) model).isHasSegments() || CollectionUtils.isNotEmpty(segments));
@@ -387,7 +387,7 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             NDataModel batchModel = fusionModel.getBatchModel();
             if (!batchModel.isBroken()) {
                 List<NDataSegmentResponse> batchSegments = getSegmentsResponse(batchModel.getUuid(), model.getProject(),
-                        "1", String.valueOf(Long.MAX_VALUE - 1), null, executables, LAST_MODIFY, true);
+                        "1", String.valueOf(Long.MAX_VALUE - 1), null, executables, LAST_MODIFY, true, false);
                 calculateRecordSizeAndCount(batchSegments, oldParams);
                 if (model instanceof FusionModelResponse) {
                     ((FusionModelResponse) model).setBatchSegments(batchSegments);
@@ -925,9 +925,9 @@ public class ModelService extends AbstractModelService implements TableModelSupp
     }
 
     public List<NDataSegmentResponse> getSegmentsResponse(String modelId, String project, String start, String end,
-            String status, List<AbstractExecutable> executables, String sortBy, boolean reverse) {
+            String status, List<AbstractExecutable> executables, String sortBy, boolean reverse, boolean lite) {
         return getSegmentsResponse(modelId, project, start, end, status, null, null, executables, false, sortBy,
-                reverse, null, null);
+                reverse, lite, null, null);
     }
 
     private List<AbstractExecutable> getAllRunningExecutable(String project) {
@@ -949,12 +949,12 @@ public class ModelService extends AbstractModelService implements TableModelSupp
             String sortBy, boolean reverse, List<String> statuses, List<String> secondStorageStatuses) {
         val executables = getPartialRunningExecutable(project, modelId);
         return getSegmentsResponse(modelId, project, start, end, status, withAllIndexes, withoutAnyIndexes, executables,
-                allToComplement, sortBy, reverse, statuses, secondStorageStatuses);
+                allToComplement, sortBy, reverse, false, statuses, secondStorageStatuses);
     }
 
     public List<NDataSegmentResponse> getSegmentsResponse(String modelId, String project, String start, String end,
             String status, Collection<Long> withAllIndexes, Collection<Long> withoutAnyIndexes,
-            List<AbstractExecutable> executables, boolean allToComplement, String sortBy, boolean reverse,
+            List<AbstractExecutable> executables, boolean allToComplement, String sortBy, boolean reverse, boolean lite,
             List<String> statuses, List<String> secondStorageStatuses) {
         aclEvaluate.checkProjectReadPermission(project);
         NDataflowManager dataflowManager = getManager(NDataflowManager.class, project);
@@ -962,7 +962,9 @@ public class ModelService extends AbstractModelService implements TableModelSupp
         List<NDataSegmentResponse> segmentResponseList = getSegmentsResponseCore(modelId, project, start, end, status,
                 withAllIndexes, withoutAnyIndexes, executables, allToComplement, dataflow);
         addSecondStorageResponse(modelId, project, segmentResponseList, dataflow);
-        addSecondStorageDisplayStatus(modelId, project, segmentResponseList);
+        if (!lite) {
+            addSecondStorageDisplayStatus(modelId, project, segmentResponseList);
+        }
         changeSegmentDisplayStatus(modelId, project, segmentResponseList);
         segmentResponseList = segmentResponseFilter(statuses, secondStorageStatuses, segmentResponseList, modelId,
                 project);
