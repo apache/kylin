@@ -238,6 +238,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
             case SUCCEED:
                 updateToFinalState(ExecutableState.SUCCEED, this::afterUpdateOutput, result.getShortErrMsg());
                 onStatusChange(ExecutableState.SUCCEED, context, result);
+                updateJobMetrics(state, context, result);
                 break;
             case DISCARDED:
                 updateToFinalState(ExecutableState.DISCARDED, this::onExecuteDiscardHook, result.getShortErrMsg());
@@ -269,6 +270,7 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
                 updateJobOutput(getProject(), getId(), state, info, output, shortErrMsg, hook);
                 if (state == ExecutableState.ERROR) {
                     onStatusChange(ExecutableState.ERROR, context, result);
+                    updateJobMetrics(state, context, result);
                 }
                 break;
             default:
@@ -421,7 +423,6 @@ public class DefaultExecutable extends AbstractExecutable implements ChainedExec
 
     protected void onStatusChange(ExecutableState state, ExecutableContext context, ExecuteResult result) {
         super.notifyUserStatusChange(state);
-        updateJobMetrics(state, context, result);
     }
 
     protected void updateJobMetrics(ExecutableState state, ExecutableContext context, ExecuteResult result) {
