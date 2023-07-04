@@ -480,7 +480,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getZKAuths() {
-        return getOptional("kylin.env.zookeeper.zk-auth", "digest:ADMIN:KYLIN");
+        return EncryptUtil.getDecryptedValue(getOptional("kylin.env.zookeeper.zk-auth", ""));
     }
 
     public String getZKAcls() {
