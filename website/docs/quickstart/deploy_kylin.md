@@ -130,6 +130,25 @@ In the `conf` directory under the root directory of the installation package, yo
    kylin.env.zookeeper-connect-string=10.1.2.1:2181,10.1.2.2:2181,10.1.2.3:2181
    ```
    
+   If you use ACL for Zookeeper, need setting the follow configuration
+
+   | Properties                                                  | Description                                                                                                          |
+      | ------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+   | kylin.env.zookeeper-acl-enabled                             | Whether to enable Zookeeper ACL. The default value is disabled.                                                      |
+   | kylin.env.zookeeper.zk-auth                                 | The user password and authentication method used by Zookeeper. The default value is empty.                           |
+   | kylin.env.zookeeper.zk-acl                                  | ACL permission setting. The default value is `world:anyone:rwcda`. By default, all users can perform all operations. |
+
+   If you need to encrypt kylin.env.zookeeper.zk-auth , you can do it like this：
+
+   **i.** run following commands in ${KYLIN_HOME}, it will print encrypted value
+    ```
+    ./bin/kylin.sh org.apache.kylin.tool.general.CryptTool -e AES -s <value>
+    ```
+   **ii.** config  kylin.env.zookeeper.zk-auth like this
+    ```
+    kylin.env.zookeeper.zk-auth=ENC('${encrypted_value}')
+    ```
+
 4. (optional) Configure Spark Client node information
    Since Spark is started in yarn-client mode, if the IP information of Kylin is not configured in the hosts file of the Hadoop cluster, please add the following configurations in `kylin.properties`:
     `kylin.storage.columnar.spark-conf.spark.driver.host={hostIp}`
