@@ -177,7 +177,10 @@ public class ZKUtil {
         }
         int sessionTimeout = ZookeeperConfig.geZKClientSessionTimeoutMs();
         int connectionTimeout = ZookeeperConfig.geZKClientConnectionTimeoutMs();
-        return CuratorFrameworkFactory.newClient(zkString, sessionTimeout, connectionTimeout, retryPolicy);
+        ZookeeperAclBuilder aclBuilder = new ZookeeperAclBuilder().invoke();
+        return aclBuilder.setZKAclBuilder(CuratorFrameworkFactory.builder()).connectString(zkString)
+                .sessionTimeoutMs(sessionTimeout).connectionTimeoutMs(connectionTimeout).retryPolicy(retryPolicy)
+                .build();
     }
 
     public static boolean pathExisted(String path, KylinConfig kylinConfig) throws Exception {

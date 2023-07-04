@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.job.lock;
+package org.apache.kylin.common.util;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,31 +27,62 @@ import org.apache.hadoop.util.ZKUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.annotation.ThirdPartyDependencies;
 import org.apache.zookeeper.data.ACL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by peng.jianhua on 17-6-5.
  */
+@Slf4j
 @ThirdPartyDependencies({ @ThirdPartyDependencies.ThirdPartyDependent(repository = "static-user-manager", classes = {
         "AuthenticationClient" }) })
 public class ZookeeperAclBuilder {
-
-    private static Logger logger = LoggerFactory.getLogger(ZookeeperAclBuilder.class);
-
     private List<ACL> zkAcls;
     private List<ZKUtil.ZKAuthInfo> zkAuthInfo;
     private boolean isNeedAcl = KylinConfig.getInstanceFromEnv().isZookeeperAclEnabled();
 
-    public Builder setZKAclBuilder(Builder builder) {
-        Builder aclBuilder;
-        ACLProvider aclProvider;
-
+    /**
+     * Global Dict V2 Distributed Lock use this CuratorFrameworkFactory.Builder:
+     *   org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory.Builder
+     */
+    public org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory.Builder setZKAclBuilder(
+            org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory.Builder builder) {
         if (!isNeedAcl()) {
             return builder;
         }
 
-        aclProvider = new ACLProvider() {
+        org.apache.kylin.shaded.curator.org.apache.curator.framework.api.ACLProvider aclProvider = //
+                new org.apache.kylin.shaded.curator.org.apache.curator.framework.api.ACLProvider() {
+                    private List<ACL> acl;
+
+                    @Override
+                    public List<ACL> getDefaultAcl() {
+                        if (acl == null) {
+                            this.acl = zkAcls;
+                        }
+                        return acl;
+                    }
+
+                    @Override
+                    public List<ACL> getAclForPath(String path) {
+                        return acl;
+                    }
+                };
+
+        org.apache.kylin.shaded.curator.org.apache.curator.framework.CuratorFrameworkFactory.Builder aclBuilder = //
+                builder.aclProvider(aclProvider);
+        for (ZKUtil.ZKAuthInfo auth : zkAuthInfo) {
+            aclBuilder = aclBuilder.authorization(auth.getScheme(), auth.getAuth());
+        }
+        return aclBuilder;
+    }
+
+    public Builder setZKAclBuilder(Builder builder) {
+        if (!isNeedAcl()) {
+            return builder;
+        }
+
+        ACLProvider aclProvider = new ACLProvider() {
             private List<ACL> acl;
 
             @Override
@@ -68,7 +99,7 @@ public class ZookeeperAclBuilder {
             }
         };
 
-        aclBuilder = builder.aclProvider(aclProvider);
+        Builder aclBuilder = builder.aclProvider(aclProvider);
         for (ZKUtil.ZKAuthInfo auth : zkAuthInfo) {
             aclBuilder = aclBuilder.authorization(auth.getScheme(), auth.getAuth());
         }
@@ -99,7 +130,7 @@ public class ZookeeperAclBuilder {
                 return Collections.emptyList();
             }
         } catch (Exception e) {
-            logger.error("Couldn't read Auth based on 'kylin.env.zookeeper.zk-auth' in kylin.properties");
+            log.error("Couldn't read Auth based on 'kylin.env.zookeeper.zk-auth' in kylin.properties");
             throw e;
         }
     }
@@ -111,7 +142,7 @@ public class ZookeeperAclBuilder {
             zkAclConf = ZKUtil.resolveConfIndirection(zkAclConf);
             return ZKUtil.parseACLs(zkAclConf);
         } catch (Exception e) {
-            logger.error("Couldn't read ACLs based on 'kylin.env.zookeeper.zk-acl' in kylin.properties");
+            log.error("Couldn't read ACLs based on 'kylin.env.zookeeper.zk-acl' in kylin.properties");
             throw e;
         }
     }

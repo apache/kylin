@@ -36,7 +36,32 @@
 
 package org.apache.kylin.common;
 
-import lombok.val;
+import static org.apache.kylin.common.KylinConfigBase.PATH_DELIMITER;
+import static org.apache.kylin.common.KylinConfigBase.WRITING_CLUSTER_WORKING_DIR;
+import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_ENABLE_KEY;
+import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_NAME_KEY;
+import static org.apache.kylin.common.constant.Constants.SNAPSHOT_AUTO_REFRESH;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.constant.NonCustomProjectLevelConfig;
@@ -57,30 +82,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TimeZone;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import static org.apache.kylin.common.KylinConfigBase.PATH_DELIMITER;
-import static org.apache.kylin.common.KylinConfigBase.WRITING_CLUSTER_WORKING_DIR;
-import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_ENABLE_KEY;
-import static org.apache.kylin.common.constant.Constants.KYLIN_SOURCE_JDBC_SOURCE_NAME_KEY;
-import static org.apache.kylin.common.constant.Constants.SNAPSHOT_AUTO_REFRESH;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import lombok.val;
 
 @MetadataInfo(onlyProps = true)
 class KylinConfigBaseTest {
@@ -631,6 +633,9 @@ class KylinConfigBaseTest {
 
         map.put("getJobMetadataPersistNotificationEnabled",
                 new PropertiesEntity("kylin.job.notification-on-metadata-persist", "false", false));
+
+        map.put("getJobErrorNotificationEnabled",
+                new PropertiesEntity("kylin.job.notification-on-job-error", "false", false));
 
         map.put("getStorageResourceSurvivalTimeThreshold",
                 new PropertiesEntity("kylin.storage.resource-survival-time-threshold", "7d", 7L * 24 * 60 * 60 * 1000));
@@ -1334,6 +1339,16 @@ class KylinConfigBaseTest {
     }
 
     @Test
+    void testGetWriteClusterWorkingDir() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertTrue(config.getWriteClusterWorkingDir().isEmpty());
+        config.setProperty("kylin.env.write-hdfs-working-dir", "hdfs://writecluster/kylin");
+        assertEquals("hdfs://writecluster/kylin", config.getWriteClusterWorkingDir());
+        // Reset to prevent impacting other tests
+        config.setProperty("kylin.env.write-hdfs-working-dir", "");
+    }
+
+    @Test
     void testGetWritingClusterWorkingDirWithSuffix() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         // path empty
@@ -1465,6 +1480,14 @@ class KylinConfigBaseTest {
         assertEquals(10 * 60 * 1000, config.getKylinMultiTenantRouteTaskTimeOut());
     }
 
+    @Test
+    void testGetZKAuths() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertTrue(StringUtils.isBlank(config.getZKAuths()));
+
+        config.setProperty("kylin.env.zookeeper.zk-auth", EncryptUtil.encryptWithPrefix("digest:ADMIN:KYLIN"));
+        assertEquals("digest:ADMIN:KYLIN", config.getZKAuths());
+    }
 }
 
 class EnvironmentUpdateUtils {
