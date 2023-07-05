@@ -434,7 +434,7 @@ export default class QueryHistoryTable extends Vue {
       const sql = element.sql_text
       const sql_limit = this.sqlOverLimit(sql) ? `${sql.slice(0, this.sqlLimitRows)}...` : sql
       const sqlTextArr = sql.split('\n') // 换行符超过一个，说明用户查询行自定义过format格式，则保留
-      element['sql_limit'] = (sqlTextArr.length > 1 || isIE()) ? sql_limit : this._formatSql(sql_limit, formatSQLConfig)
+      element['sql_limit'] = (sqlTextArr.length > 1 || isIE()) ? sql_limit : this.handleFormatSql(sql_limit, formatSQLConfig)
       element['server'] = [element['server']]
       element['flexHeight'] = 0
       element['editorH'] = 0
@@ -467,6 +467,15 @@ export default class QueryHistoryTable extends Vue {
 
   getRealizations2 (row) {
     return row.filter(item => !((item.layoutId === 0 || item.layoutId === -1 || item.layoutId === null) && item.indexType !== null))
+  }
+
+  handleFormatSql (sql_limit) {
+    try {
+      const sql = this._formatSql(sql_limit, formatSQLConfig)
+      return sql ?? sql_limit
+    } catch (e) {
+      return sql_limit
+    }
   }
 
   dateRangeChange () {
