@@ -1,6 +1,6 @@
 <template>
   <div class="table-sample">
-    <div v-if="table.last_build_job_id || pagedColumns.length">
+    <div v-if="(table.last_build_job_id || pagedColumns.length) && extPermissions">
       <div class="columns-header">
         <div class="left font-medium">
           {{$t('version')}}{{table.create_time | toGMTDate}}
@@ -25,15 +25,22 @@
         </el-table-column>
       </el-table>
     </div>
-    <kylin-empty-data v-if="!table.last_build_job_id&&!pagedColumns.length" :content="$t('noSampling')">
-    </kylin-empty-data>
-    <kylin-nodata v-if="(table.last_build_job_id || pagedColumns.length)&&!headers.length&&this.filterText" :content="$t('kylinLang.common.noResults')"></kylin-nodata>
-  </div>
+    <template v-if="extPermissions">
+      <kylin-empty-data v-if="!table.last_build_job_id&&!pagedColumns.length" :content="$t('noSampling')">
+      </kylin-empty-data>
+      <kylin-nodata v-if="(table.last_build_job_id || pagedColumns.length)&&!headers.length&&this.filterText" :content="$t('kylinLang.common.noResults')"></kylin-nodata>
+    </template>
+    <template v-else>
+      <kylin-empty-data v-if="table.last_build_job_id" :content="$t('noExtPermissions')" />
+      <kylin-empty-data v-else :content="$t('noSampling')" />
+    </template>
+    </div>
 </template>
 
 <script>
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator'
+import { mapState } from 'vuex'
 
 import locales from './locales'
 
@@ -42,6 +49,11 @@ import locales from './locales'
     table: {
       type: Object
     }
+  },
+  computed: {
+    ...mapState({
+      extPermissions: state => state.user.ext_permissions
+    })
   },
   locales
 })
