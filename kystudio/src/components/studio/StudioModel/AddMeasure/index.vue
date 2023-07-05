@@ -489,9 +489,9 @@ export default class AddMeasure extends Vue {
   }
 
   checkColumn (rule, value, callback) {
-    // TOP_N 度量无需判断列是否已经被使用过了
+    // TOP_N, SUM_LC 度量无需判断列是否已经被使用过了
     // CORR 度量需要判断两个列都选择重复后报错
-    if (this.measure.expression === 'TOP_N' || this.measure.expression === 'CORR' && (!this.measure.parameterValue.value || !this.measure.convertedColumns[0].value)) {
+    if (this.measure.expression === 'TOP_N' || this.measure.expression === 'SUM_LC' || this.measure.expression === 'CORR' && (!this.measure.parameterValue.value || !this.measure.convertedColumns[0].value)) {
       callback()
       return
     }
