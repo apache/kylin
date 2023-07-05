@@ -75,14 +75,14 @@
         </template>
       </el-table-column>
     </el-table>
-    <kap-pager
+    <kylin-pager
       class="ksd-center ksd-mt-16" ref="columnPager"
       :refTag="pageRefTags.exclusionColumnsPager"
       :totalSize="columnsTotalSize"
       :curPage="pagination.page_offset + 1"
       :perPageSize="pagination.page_size"
       @handleCurrentChange="handleCurrentChange">
-    </kap-pager>
+    </kylin-pager>
     <div slot="footer" class="dialog-footer">
       <el-popover
         ref="popover"

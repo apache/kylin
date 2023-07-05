@@ -149,6 +149,9 @@ export default {
   getDefaultConfig () {
     return Vue.resource(apiUrl + 'projects/default_configs').get()
   },
+  changeProjectUserDataPermission (params) {
+    return Vue.resource(apiUrl + `access/extension/ProjectInstance/${params.projectId}`).update(params.data)
+  },
   loadExcludeTables (params) {
     return Vue.resource(apiUrl + `tables/excluded_tables`).get(params)
   },

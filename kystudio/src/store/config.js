@@ -85,8 +85,9 @@ export default {
         const groupRole = rootGetters.userAuthorities
         const projectRole = rootState.user.currentUserAccess
         const menu = rootState.route.name.toLowerCase()
+        const dataPermission = rootState.user.ext_permissions ? 'dataPermission' : 'noDataPermission'
 
-        return getAvailableOptions('menu', { groupRole, projectRole, menu })
+        return getAvailableOptions('menu', { groupRole, projectRole, dataPermission, menu })
       } else {
         return []
       }

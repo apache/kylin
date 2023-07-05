@@ -322,6 +322,9 @@ export default {
     },
     [types.UPDATE_EXCLUDE_COLUMN_CONFIG]: function ({ commit }, para) {
       return api.project.updateExcludeColumnConfig(para)
+    },
+    [types.CHANGE_PROJECT_USER_DATA_PERMISSION]: function ({ commit }, para) {
+      return api.project.changeProjectUserDataPermission(para)
     }
   },
   getters: {

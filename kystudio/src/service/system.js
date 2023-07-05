@@ -38,8 +38,8 @@ export default {
   },
   // 生成诊断包相关api接口
   getDumpRemote: (para) => {
-    const { host, start, end, job_id } = para
-    return Vue.http.post(apiUrl + `system/diag?host=${host}`, { start, end, job_id })
+    const { host, start, end, job_id, project } = para
+    return Vue.http.post(apiUrl + `system/diag?host=${host}`, { start, end, job_id, project })
   },
   // 获取诊断包生成进度
   getStatusRemote: (para) => {

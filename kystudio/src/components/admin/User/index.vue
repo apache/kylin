@@ -14,8 +14,7 @@
           type="primary"
           size="medium"
           icon="el-ksd-icon-add_22"
-          v-if="userActions.includes('addUser')"
-          :disabled="!isTestingSecurityProfile"
+          v-if="userActions.includes('addUser')&&isTestingSecurityProfile"
           @click="editUser('new')">
           {{$t('user')}}
         </el-button>
@@ -55,6 +54,12 @@
           </common-tip>
         </template>
       </el-table-column>
+      <!-- 表：是否有数据权限 -->
+      <el-table-column :label="$t('dataPermission')" align="center" :width="120">
+        <template slot-scope="scope">
+          <i class="el-icon-ksd-good_health admin-svg" v-if="scope.row.hasQueryPermission"></i>
+        </template>
+      </el-table-column>
       <!-- 表：是否系统管理员列 -->
       <el-table-column :label="$t('admin')" align="center" :width="120">
         <template slot-scope="scope">
@@ -69,24 +74,32 @@
         </template>
       </el-table-column>
       <!-- 表：action列 -->
-      <el-table-column v-if="isActionShow" :label="$t('action')" :width="87">
+      <el-table-column v-if="isActionShow&&isTestingSecurityProfile" :label="$t('action')" :width="87">
         <template slot-scope="scope">
           <el-tooltip :content="$t('resetPassword')" effect="dark" placement="top">
-            <i class="el-icon-ksd-table_reset_password ksd-fs-14 ksd-mr-10" :class="{'is-disabled': !isTestingSecurityProfile}" v-if="userActions.includes('changePassword') || scope.row.uuid === currentUser.uuid" @click="editUser(scope.row.uuid === currentUser.uuid ? 'password' : 'resetUserPassword', scope.row)"></i>
+            <i class="el-icon-ksd-table_reset_password ksd-fs-14 ksd-mr-10" v-if="userActions.includes('changePassword') || scope.row.uuid === currentUser.uuid" @click="editUser(scope.row.uuid === currentUser.uuid ? 'password' : 'resetUserPassword', scope.row)"></i>
           </el-tooltip><span>
           </span><el-tooltip :content="$t('groupMembership')" effect="dark" placement="top">
-            <i class="el-icon-ksd-table_group ksd-fs-14 ksd-mr-10" :class="{'is-disabled': !isTestingSecurityProfile}" v-if="userActions.includes('assignGroup')" @click="editUser('group', scope.row)"></i>
+            <i class="el-icon-ksd-table_group ksd-fs-14 ksd-mr-10" v-if="userActions.includes('assignGroup')" @click="editUser('group', scope.row)"></i>
           </el-tooltip><span>
           </span><common-tip :content="$t('kylinLang.common.moreActions')" v-if="isMoreActionShow"><el-dropdown trigger="click">
-            <i class="el-icon-ksd-table_others" :class="{'is-disabled': !isTestingSecurityProfile}"></i>
+            <i class="el-icon-ksd-table_others"></i>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item :disabled="!isTestingSecurityProfile" v-if="userActions.includes('editUser')&&scope.row.uuid !== currentUser.uuid" @click.native="editUser('edit', scope.row)">{{$t('editRole')}}</el-dropdown-item>
-              <el-dropdown-item :disabled="!isTestingSecurityProfile" v-if="userActions.includes('deleteUser')" @click.native="dropUser(scope.row)">{{$t('drop')}}</el-dropdown-item>
-              <el-dropdown-item :disabled="!isTestingSecurityProfile" v-if="userActions.includes('disableUser') && scope.row.disabled" @click.native="changeStatus(scope.row)">{{$t('enable')}}</el-dropdown-item>
-              <el-dropdown-item :disabled="!isTestingSecurityProfile" v-if="userActions.includes('disableUser') && !scope.row.disabled" @click.native="changeStatus(scope.row)">{{$t('disable')}}</el-dropdown-item>
+              <el-dropdown-item v-if="userActions.includes('editUser')&&scope.row.uuid !== currentUser.uuid" @click.native="editUser('edit', scope.row)">{{$t('editRole')}}</el-dropdown-item>
+              <el-dropdown-item :disabled="!hasQueryPermission" v-if="userActions.includes('editUserDataPermission')&&scope.row.uuid !== currentUser.uuid&&scope.row.admin&&!scope.row.isSuperAdmin" @click.native="editUserDataPermission(scope.row)">{{$t('dataPermission')}}</el-dropdown-item>
+              <el-dropdown-item v-if="userActions.includes('deleteUser')" @click.native="dropUser(scope.row)">{{$t('drop')}}</el-dropdown-item>
+              <el-dropdown-item v-if="userActions.includes('disableUser') && scope.row.disabled" @click.native="changeStatus(scope.row)">{{$t('enable')}}</el-dropdown-item>
+              <el-dropdown-item v-if="userActions.includes('disableUser') && !scope.row.disabled" @click.native="changeStatus(scope.row)">{{$t('disable')}}</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
           </common-tip>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="isActionShow&&!isTestingSecurityProfile" :label="$t('action')" :width="87">
+        <template slot-scope="scope">
+          <el-tooltip :content="$t('dataPermission')" effect="dark" placement="top">
+            <i class="el-ksd-n-icon-acl-data-outlined ksd-fs-14 ksd-mr-10" v-if="userActions.includes('editUserDataPermission')&&scope.row.uuid !== currentUser.uuid&&scope.row.admin&&!scope.row.isSuperAdmin" @click="editUserDataPermission(scope.row)"></i>
+          </el-tooltip>
         </template>
       </el-table-column>
     </el-table>
@@ -99,6 +112,7 @@
       :curPage="pagination.page_offset+1"
       @handleCurrentChange="handleCurrentChange">
     </kylin-pager>
+    <UserDataPermission/>
   </div>
 </template>
 
@@ -109,7 +123,8 @@ import { Component } from 'vue-property-decorator'
 
 import locales from './locales'
 import { pageRefTags, bigPageCount } from 'config'
-import { handleError, kylinConfirm } from '../../../util'
+import { handleError, handleSuccessAsync, kylinConfirm } from '../../../util'
+import UserDataPermission from './UserDataPermission/UserDataPermission'
 
 @Component({
   computed: {
@@ -127,11 +142,18 @@ import { handleError, kylinConfirm } from '../../../util'
       removeUser: 'REMOVE_USER',
       loadUsersList: 'LOAD_USERS_LIST',
       loadUserListByGroupName: 'GET_USERS_BY_GROUPNAME',
-      updateStatus: 'UPDATE_STATUS'
+      updateStatus: 'UPDATE_STATUS',
+      getCurrentUserDataPermission: 'GET_CURRENT_USER_DATA_PERMISSION'
     }),
     ...mapActions('UserEditModal', {
       callUserEditModal: 'CALL_MODAL'
+    }),
+    ...mapActions('UserDataPermission', {
+      callDataPermission: 'CALL_MODAL'
     })
+  },
+  components: {
+    UserDataPermission
   },
   locales,
   beforeRouteEnter: (to, from, next) => {
@@ -157,6 +179,7 @@ export default class SecurityUser extends Vue {
     page_offset: 0
   }
   isLoadingUsers = false
+  hasQueryPermission = false
   get currentGroup () {
     const current = this.$store.state.user.usersGroupList.filter((g) => {
       return g.group_name === this.$route.params.groupName
@@ -178,6 +201,8 @@ export default class SecurityUser extends Vue {
       analyst: user.authorities.some(role => role.authority === 'ROLE_ANALYST'),
       default_password: user.default_password,
       authorities: user.authorities,
+      hasQueryPermission: user.has_query_permission,
+      isSuperAdmin: user.is_super_admin,
       groups: user.authorities.map(role => role.authority),
       uuid: user.uuid
     }))
@@ -232,6 +257,13 @@ export default class SecurityUser extends Vue {
     isSubmit && this.loadUsers(this.filterName)
   }
 
+  async editUserDataPermission (row) {
+    const isSubmit = await this.callDataPermission({ dataPermission: row.hasQueryPermission, userName: row.username })
+    if (isSubmit) {
+      this.loadUsers()
+    }
+  }
+
   async dropUser (userDetail) {
     if (!this.isTestingSecurityProfile) return
     try {
@@ -263,8 +295,15 @@ export default class SecurityUser extends Vue {
     }
   }
 
-  mounted () {
+  async mounted () {
     this.loadUsers()
+    try {
+      const res = await this.getCurrentUserDataPermission({ username: this.currentUser.username })
+      const { enabled } = await handleSuccessAsync(res)
+      this.hasQueryPermission = enabled
+    } catch (e) {
+      handleError(e)
+    }
   }
 }
 </script>
@@ -279,6 +318,10 @@ export default class SecurityUser extends Vue {
     cursor: default;
   }
   .user-table {
+    i {
+      cursor: pointer;
+    }
+    .el-ksd-n-icon-acl-data-outlined:hover,
     .el-icon-ksd-table_reset_password:hover,
     .el-icon-ksd-table_group:hover,
     .el-icon-ksd-table_others:hover {

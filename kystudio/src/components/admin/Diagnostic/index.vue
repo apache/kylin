@@ -393,7 +393,8 @@ export default class Diagnostic extends Vue {
     let data = {}
     if (this.isJobDiagnosis) {
       data = {
-        job_id: this.jobId
+        job_id: this.jobId,
+        project: this.currentSelectedProject
       }
     } else if (this.isQueryHistory) {
       data = {
@@ -440,7 +441,7 @@ export default class Diagnostic extends Vue {
   retryJob (item) {
     const { host, start, end, id } = item
     this.delDumpid(id)
-    this.getDumpRemote({ host, start, end, job_id: this.jobId || '', tm: this.getTimes() })
+    this.getDumpRemote({ host, start, end, job_id: this.jobId || '', project: this.currentSelectedProject, tm: this.getTimes() })
   }
   changeCheckAllType (val) {
     this.indeterminate = false
