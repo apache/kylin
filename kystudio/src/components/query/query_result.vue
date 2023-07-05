@@ -73,16 +73,16 @@
                       <i class="el-icon-ksd-more_01" :class="{'up': isShowDetail}" v-if="step.name==='PREPARATION'" @click.stop="isShowDetail = !isShowDetail"></i>
                     </el-col>
                     <el-col :span="4">
-                      <span class="step-duration ksd-fright" :class="{'font-medium': index === 0, 'sub-step': step.group === 'PREPARATION'}">{{Math.round(step.duration / 1000 * 100) / 100}}s</span>
+                      <span class="step-duration ksd-fright" :class="{'font-medium': index === 0, 'sub-step': step.group === 'PREPARATION'}">{{step.duration / 1000 | fixed(2) }}s</span>
                     </el-col>
                     <el-col :span="6" v-if="querySteps&&querySteps[0].duration>0">
                       <el-progress :stroke-width="6" :percentage="getProgress(step.duration, querySteps[0].duration)" color="#A6D6F6" :show-text="false"></el-progress>
                     </el-col>
                   </el-row>
-                  <span slot="reference" class="duration">{{Math.round(extraoption.duration / 1000 * 100)/100||0.00}}s</span>
+                  <span slot="reference" class="duration">{{extraoption.duration / 1000 | fixed(2)}}s</span>
                 </el-popover>
               </span>
-              <span class="text" v-else>{{Math.round(extraoption.duration / 1000 * 100) / 100 || 0.00}}s</span>
+              <span class="text" v-else>{{extraoption.duration / 1000 | fixed(2)}}s</span>
             </p>
             <p class="resultText" v-if="!extraoption.pushDown">
               <span class="label">{{$t('kylinLang.query.total_scan_count')}}: </span>
