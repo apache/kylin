@@ -1190,7 +1190,7 @@ curl -X GET \
   - `Accept-Language: en`
   - `Content-Type: application/json;charset=utf-8`
 
-- HTT`P Body: JSON Object`
+- HTTP Body: JSON Object
 
   - `project` - `required` `string`, project name
   - `model` - `required` `string`, model name
@@ -1253,7 +1253,7 @@ curl -X GET \
   - added_layouts_size - The number of indexes to add
   - recovered_layouts_size - The number of deleted indexes in the generated indexes, when restore_deleted_index = true, these indexes will be added
 
-- Response Details
+- Response Example
 
   ```json
   {
