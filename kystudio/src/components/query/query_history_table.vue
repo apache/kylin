@@ -90,15 +90,15 @@
                               @click.stop="toggleDetail(step.name)"></i>
                           </el-col>
                           <el-col :span="4">
-                            <span class="step-duration ksd-fright" :class="{'font-medium': index === 0, 'sub-step': ['PREPARATION', 'JOB_EXECUTION'].includes(step.group)}">{{Math.round(step.duration / 1000 * 100) / 100}}s</span>
+                            <span class="step-duration ksd-fright" :class="{'font-medium': index === 0, 'sub-step': ['PREPARATION', 'JOB_EXECUTION'].includes(step.group)}">{{step.duration / 1000 | fixed(2)}}s</span>
                           </el-col>
                           <el-col :span="6" v-if="props.row.query_steps&&props.row.query_steps[0].duration>0">
                             <el-progress :stroke-width="6" :percentage="getProgress(step.duration, props.row.query_steps[0].duration)" color="#A6D6F6" :show-text="false"></el-progress>
                           </el-col>
                         </el-row>
-                        <span slot="reference" class="duration">{{Math.round(props.row.duration / 1000 * 100) / 100}}s</span>
+                        <span slot="reference" class="duration">{{props.row.duration / 1000 | fixed(2)}}s</span>
                       </el-popover>
-                      <span v-else>{{Math.round(props.row.duration / 1000 * 100) / 100}}s</span>
+                      <span v-else>{{props.row.duration / 1000 | fixed(2)}}s</span>
                     </span>
                   </p>
                   <template v-if="props.row.query_status === 'SUCCEEDED'">
