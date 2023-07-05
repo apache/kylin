@@ -488,6 +488,7 @@ import { NamedRegex, columnTypeIcon } from '../../../../config'
       vm.extraoption = {
         project: vm.currentSelectedProject,
         modelName: to.params.modelName,
+        modelDesc: to.params.modelDesc,
         action: to.params.action
       }
       // 在添加模型页面刷新，跳转到列表页面
