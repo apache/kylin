@@ -125,7 +125,7 @@ export default {
           if (state.isReset) return
           const { data } = res.data
           await commit(types.UPDATE_DUMP_IDS, { host, start, end, id: data, tm })
-          dispatch(types.POLLING_STATUS_MSG, { host, id: data })
+          dispatch(types.POLLING_STATUS_MSG, { host, id: data, project })
           resolve(data)
         }).catch((err) => {
           handleError(err)
@@ -134,10 +134,10 @@ export default {
       })
     },
     // 生成诊断包
-    [types.GET_DUMP_REMOTE] ({ state, commit, dispatch }, { host = '', start = '', end = '', job_id = '', tm }) {
+    [types.GET_DUMP_REMOTE] ({ state, commit, dispatch }, { host = '', start = '', end = '', job_id = '', project, tm }) {
       if (!host) return
       return new Promise((resolve, reject) => {
-        api.system.getDumpRemote({ host, start, end, job_id }).then(async (res) => {
+        api.system.getDumpRemote({ host, start, end, job_id, project }).then(async (res) => {
           if (state.isReset) return
           const { data } = res.data
           await commit(types.UPDATE_DUMP_IDS, { host, start, end, id: data, tm })
@@ -167,9 +167,9 @@ export default {
       })
     },
     // 获取诊断报生成进度
-    [types.GET_STATUS_REMOTE] ({ commit }, { host, id }) {
+    [types.GET_STATUS_REMOTE] ({ commit }, { host, id, project }) {
       return new Promise((resolve, reject) => {
-        api.system.getStatusRemote({ host, id }).then(res => {
+        api.system.getStatusRemote({ host, id, project }).then(res => {
           const { data } = res.data
           commit(types.SET_DUMP_PROGRESS, {...data, id})
           resolve(res)
@@ -179,16 +179,16 @@ export default {
       })
     },
     // 轮询接口获取信息
-    [types.POLLING_STATUS_MSG] ({ state, commit, dispatch }, { host, id }) {
+    [types.POLLING_STATUS_MSG] ({ state, commit, dispatch }, { host, id, project }) {
       if (state.isReset) return
-      dispatch(types.GET_STATUS_REMOTE, { host, id }).then((res) => {
+      dispatch(types.GET_STATUS_REMOTE, { host, id, project }).then((res) => {
         timer[id] = setTimeout(() => {
-          dispatch(types.POLLING_STATUS_MSG, { host, id })
+          dispatch(types.POLLING_STATUS_MSG, { host, id, project })
         }, pollingTime)
         const { data } = res.data
         if (data.status === '000' && data.stage === 'DONE') {
           clearTimeout(timer[id])
-          dispatch(types.DOWNLOAD_DUMP_DIAG, {host, id})
+          dispatch(types.DOWNLOAD_DUMP_DIAG, {host, id, project})
         } else if (['001', '002', '999'].includes(data.status)) {
           clearTimeout(timer[id])
         }
@@ -199,11 +199,15 @@ export default {
       })
     },
     // 下载诊断包
-    [types.DOWNLOAD_DUMP_DIAG] (_, { host, id }) {
+    [types.DOWNLOAD_DUMP_DIAG] (_, { host, id, project }) {
       let dom = document.createElement('a')
       dom.download = true
       // 兼容IE 10以下 无origin属性问题，此处用protocol和host拼接
-      dom.href = `${location.protocol}//${location.host}${apiUrl}system/diag?host=${host}&id=${id}`
+      let href = `${location.protocol}//${location.host}${apiUrl}system/diag?host=${host}&id=${id}`
+      if (project) {
+        href = href + `&project=${project}`
+      }
+      dom.href = href
       document.body.appendChild(dom)
       dom.click()
       document.body.removeChild(dom)

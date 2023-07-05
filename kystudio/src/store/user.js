@@ -11,6 +11,7 @@ export default {
     usersGroupSize: 0,
     currentUser: null,
     currentUserAccess: 'DEFAULT',
+    ext_permissions: false,
     userDetail: null,
     isShowAdminTips: !cacheLocalStorage('isHideAdminTips')
   },
@@ -27,7 +28,8 @@ export default {
       state.currentUser = result.user
     },
     [types.SAVE_CURRENT_USER_ACCESS]: function (state, result) {
-      state.currentUserAccess = result.access
+      state.currentUserAccess = result.data.permission
+      state.ext_permissions = result.data.ext_permissions[0] === 'DATA_QUERY'
     },
     [types.RESET_CURRENT_USER]: function (state) {
       state.currentUser = null
@@ -110,7 +112,7 @@ export default {
       return new Promise((resolve, reject) => {
         api.user.userAccess({project: para.project}).then((res) => {
           if (!para.not_cache) {
-            commit(types.SAVE_CURRENT_USER_ACCESS, {access: res.data.data})
+            commit(types.SAVE_CURRENT_USER_ACCESS, {data: res.data.data})
           }
           resolve(res)
         }, () => {
@@ -120,6 +122,12 @@ export default {
     },
     [types.GET_ACCESS_DETAILS_BY_USER]: function ({ commit }, para) {
       return api.user.getAccessDetailsByUser(para.projectName, para.roleOrName, para.data, para.type)
+    },
+    [types.GET_CURRENT_USER_DATA_PERMISSION]: function ({ commit }, para) {
+      return api.user.getCurrentUserDataPermission(para)
+    },
+    [types.UPDATE_USER_DATA_PERMISSION]: function ({ commit }, para) {
+      return api.user.updataUserDataPermission(para)
     }
   },
   getters: {
@@ -159,6 +167,9 @@ export default {
         permissions.ADMINISTRATION.value,
         permissions.MANAGEMENT.value
       ].includes(state.currentUserAccess)
+    },
+    isDataPermission (state) {
+      return state.ext_permissions
     }
   }
 }

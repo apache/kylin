@@ -34,7 +34,7 @@ export default {
     return Vue.resource(apiUrl + 'user/authentication').get()
   },
   userAccess: (para) => {
-    return Vue.resource(apiUrl + 'access/permission/project_permission').get(para)
+    return Vue.resource(apiUrl + 'access/permission/project_ext_permission').get(para)
   },
   // user goup
   addGroupsToUser: (para) => {
@@ -60,5 +60,11 @@ export default {
   },
   getAccessDetailsByUser: (projectName, roleOrName, data, type) => {
     return Vue.resource(apiUrl + `acl/${type}/${roleOrName}`).get(data)
+  },
+  getCurrentUserDataPermission: (para) => {
+    return Vue.resource(apiUrl + `access/global/permission/data_query/${para.username}`).get()
+  },
+  updataUserDataPermission: (para) => {
+    return Vue.resource(apiUrl + 'access/global/permission/data_query').update(para)
   }
 }

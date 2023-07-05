@@ -29,7 +29,12 @@
       </el-col>
     </el-row>
     <div>
-      <el-table :data="userAccessList" :empty-text="emptyText" class="user-access-table" key="user">
+      <el-table ref="userAccessTable" @expand-change="expandChange" :data="userAccessList" :empty-text="emptyText" class="user-access-table" key="user">
+        <el-table-column type="expand" :width="36">
+          <template slot-scope="props">
+            <user_access @reload="loadAccess" :projectName="currentProject" :row="props.row"></user_access>
+          </template>
+        </el-table-column>
         <el-table-column :label="$t('userOrGroup')" prop="role_or_name" class-name="role-name-cell" show-overflow-tooltip>
           <template slot-scope="props">
             <i :class="{'el-icon-ksd-table_admin': props.row.type === 'User', 'el-icon-ksd-table_group': props.row.type === 'Group'}"></i>
@@ -66,9 +71,9 @@
     <el-dialog :title="authorTitle" width="960px" class="user-access-dialog" :close-on-press-escape="false" :close-on-click-modal="false" :visible.sync="authorizationVisible" @close="initAccessData">
       <div class="content-container">
         <div class="author-tips">
-          <div class="item-point">{{$t('authorTips')}}</div>
-          <div class="item-point">{{$t('authorTips1')}}</div>
           <div class="item-point" v-html="$t('authorTips2')"></div>
+          <div class="item-point ksd-mt-16">{{$t('authorTips')}}</div>
+          <div class="item-point">{{$t('authorTips1')}}</div>
         </div>
         <div class="ksd-title-label-small">{{$t('selectUserAccess')}}</div>
         <div v-for="(accessMeta, index) in accessMetas" :key="index" class="user-group-select ksd-mt-10 ky-no-br-space">
@@ -138,10 +143,11 @@
 <script>
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator'
-import { objectClone } from '../../util'
+import { objectClone, indexOfObjWithSomeKey } from '../../util'
 import { handleSuccess, handleError, kylinConfirm, hasRole, hasPermissionOfProjectAccess } from '../../util/business'
 import { mapActions, mapGetters } from 'vuex'
 import { permissions, pageRefTags, pageCount } from 'config'
+import userAccess from './user_access'
 @Component({
   methods: {
     ...mapActions({
@@ -161,6 +167,9 @@ import { permissions, pageRefTags, pageCount } from 'config'
     ...mapGetters([
       'projectActions'
     ])
+  },
+  components: {
+    'user_access': userAccess
   },
   locales: {
     'en': {
@@ -184,7 +193,7 @@ import { permissions, pageRefTags, pageCount } from 'config'
       Group: 'User Group',
       User: 'User',
       Query: 'Query',
-      Admin: 'Admin',
+      Admin: 'Project Admin',
       Management: 'Management',
       Operation: 'Operation',
       tableName: 'Table Name',
@@ -193,14 +202,13 @@ import { permissions, pageRefTags, pageCount } from 'config'
       deleteAccessTip: 'Are you sure you want to delete the authorization of "{userName}" in this project?',
       access: 'Role',
       deleteAccessTitle: 'Delete Authorization',
-      authorTips: 'Can\'t add system admin to the list, as this role already has full access to all projects.',
+      authorTips: 'Can\'t add System Admin to the list, as this role already has full access to all projects.',
       authorTips1: 'By default, the added user/user group would be granted full access to all the tables in the project.',
-      authorTips2: `What roles does Kylin provide?<br>
-      The relationship of each role is: Admin > Management > Operation > Query. For example, Admin includes all the permissions of the other three roles. Management includes all the permissions of Operation and Query. Operation includes all the permissions of Query.<br>
-      1. Query: For business analyst who would need permissions to query tables or indexes.<br>
-      2. Operation: For the operator who need permissions to build indexes and monitor job status.<br>
-      3. Management: For the model designer who would need permissions to load tables and design models.<br>
-      4. Admin: For the project admin who would need all permissions and could manage and maintain this project, including loading tables, authorizing user access permissions, etc.`,
+      authorTips2: `<div class="ksd-mb-8">What roles does Kyligence Enterprise provide?</div>
+      <p><span>Project Admin</span><span>For the project admin who needs all permission and could manage and maintain this project, including loading tables, authorizing user access permission, etc.</span></p>
+      <p><span>Management</span><span>For the model designer who needs permission to load tables, design models, build indexes and monitor job status.</span></p>
+      <p><span>Operation</span><span>For the operator who needs permission to build indexes and monitor job status.</span></p>
+      <p><span>Query</span><span>For the business analyst who needs permission to query tables or indexes.</span></p>`,
       noAuthorityTip: 'Access denied. Please try again after logging in.'
     }
   }
@@ -223,6 +231,7 @@ export default class ProjectAuthority extends Vue {
   authorizationVisible = false
   authorForm = {name: [], editName: '', role: 'Admin'}
   isEditAuthor = false
+  expandedRows = []
   showMask = {
     1: 'Query',
     16: 'Admin',
@@ -314,6 +323,14 @@ export default class ProjectAuthority extends Vue {
         }
       })
       return flag
+    }
+  }
+  expandChange (row) {
+    const index = indexOfObjWithSomeKey(this.expandedRows, 'id', row.id)
+    if (index !== -1) {
+      this.expandedRows.splice(index, 1)
+    } else {
+      this.expandedRows.push(row)
     }
   }
   showLimitTips (val) {
@@ -500,6 +517,18 @@ export default class ProjectAuthority extends Vue {
           access.accessDetails = []
           return access
         }) || []
+        if (this.expandedRows.length && this.$refs.userAccessTable) {
+          const expandedRows = objectClone(this.expandedRows)
+          this.expandedRows = []
+          expandedRows.forEach((item, i) => {
+            const index = indexOfObjWithSomeKey(this.userAccessList, 'id', item.id)
+            if (index !== -1) {
+              this.$nextTick(() => {
+                this.$refs.userAccessTable.toggleRowExpansion(this.userAccessList[index], true)
+              })
+            }
+          })
+        }
       })
     }, (res) => {
       handleError(res)
@@ -585,6 +614,19 @@ export default class ProjectAuthority extends Vue {
           position: absolute;
           top: 8px;
           left: -10px;
+        }
+        p {
+          margin-left: -8px;
+          border-bottom: 1px solid @ke-color-secondary;
+          span {
+            padding: 8px;
+            display: table-cell;
+            &:first-child {
+              width: 130px;
+              box-sizing: border-box;
+              vertical-align: middle;
+            }
+          }
         }
       }
     }

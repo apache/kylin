@@ -16,6 +16,7 @@ export default {
     cofirmDelUser: 'Are you sure you want to delete the user {userName} ?',
     delUserTitle: 'Delete User',
     userList: 'User List',
-    changeUserTips: 'Are you sure you want to {status} the user {userName} ?'
+    changeUserTips: 'Are you sure you want to {status} the user {userName} ?',
+    dataPermission: 'Data Permission'
   }
 }

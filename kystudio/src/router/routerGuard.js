@@ -55,8 +55,9 @@ export function bindRouterGuard (router) {
       // 判断用户是否有当前所要进入的页面权限
       let getRouteAuthority = (source) => {
         // 获取该用户所有有权限的菜单
-        const defaultMenus = getAvailableOptions('menu', { groupRole: store.getters.userAuthorities, projectRole: store.state.user.currentUserAccess, menu: 'dashboard' })
-        const adminMenus = getAvailableOptions('menu', { groupRole: store.getters.userAuthorities, projectRole: store.state.user.currentUserAccess, menu: 'project' })
+        const dataPermission = store.state.user.ext_permissions ? 'dataPermission' : 'noDataPermission'
+        const defaultMenus = getAvailableOptions('menu', { groupRole: store.getters.userAuthorities, projectRole: store.state.user.currentUserAccess, dataPermission, menu: 'dashboard' })
+        const adminMenus = getAvailableOptions('menu', { groupRole: store.getters.userAuthorities, projectRole: store.state.user.currentUserAccess, dataPermission, menu: 'project' })
         let availableMenus = [...defaultMenus, ...adminMenus]
         let auth = to.name && availableMenus.includes(to.name.toLowerCase())
 
