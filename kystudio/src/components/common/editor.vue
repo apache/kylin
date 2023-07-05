@@ -146,14 +146,23 @@ import { Component } from 'vue-property-decorator'
         const data = this.editorData.length > sqlStrLenLimit ? `${this.editorData.slice(0, sqlStrLenLimit)}...` : this.editorData
         // 是否显示 tips 取决于填入的 sql 字符数是否超过全局配置的
         this.showLimitTip = this.editorData.length > sqlStrLenLimit
-        this.formatData = this._formatSql(data, formatSQLConfig)
-        this.fullFormatData = this._formatSql(this.editorData, formatSQLConfig)
+        this.formatData = this.handleFormatSql(data, formatSQLConfig)
+        this.fullFormatData = this.handleFormatSql(this.editorData, formatSQLConfig)
       } else {
         const data = this.editorData.split('\n')
         // 是否显示 tips 取决于填入的 sql 行数是否超过全局配置的
         this.showLimitTip = data.length > sqlRowsLimit
         this.formatData = data.length > sqlRowsLimit ? data.slice(0, sqlRowsLimit).join('\n') + '...' : this.editorData
         this.fullFormatData = this.editorData
+      }
+    },
+    handleFormatSql (sql) {
+      try {
+        const fsql = this._formatSql(sql, formatSQLConfig)
+        return fsql ?? sql
+      } catch (e) {
+        console.warn('The browser version is too low, please update the version.')
+        return sql
       }
     },
     getAbridgeType () {
