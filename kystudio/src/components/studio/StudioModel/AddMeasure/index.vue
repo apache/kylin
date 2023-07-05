@@ -197,9 +197,9 @@
                 <span class="ky-option-sub-info">{{item.datatype.toLocaleLowerCase()}}</span>
               </el-option>
             </el-option-group>
-            <el-option-group key="ccolumn" :label="$t('ccolumns')" v-if="getCCGroups().length || newCCList.length">
+            <el-option-group key="ccolumn" :label="$t('ccolumns')" v-if="getCCGroups(null, true).length || newCCList.length">
               <el-option
-                v-for="item in getCCGroups()"
+                v-for="item in getCCGroups(null, true)"
                 :key="item.guid"
                 :label="item.tableAlias + '.' + item.columnName"
                 :value="item.tableAlias + '.' + item.columnName">
@@ -240,7 +240,7 @@
 <script>
 import Vue from 'vue'
 import { Component, Watch } from 'vue-property-decorator'
-import { measuresDataType, measureSumAndTopNDataType, measurePercenDataType } from '../../../../config'
+import { measuresDataType, measureSumAndTopNDataType, measurePercenDataType, measuresDateTimeDataType } from '../../../../config'
 import { objectClone, sampleGuid, indexOfObjWithSomeKey, handleSuccessAsync } from '../../../../util/index'
 import { measureNameRegex } from 'config'
 import CCEditForm from '../ComputedColumnForm/ccform.vue'
@@ -416,9 +416,9 @@ export default class AddMeasure extends Vue {
       expression: [{ required: true, message: this.$t('requiredExpress'), trigger: 'change' }]
     }
   }
-  getCCGroups (isGroupBy) {
+  getCCGroups (isGroupBy, isSumlc) {
     if (this.ccGroups.length) {
-      if (this.measure.expression === 'SUM(column)' || this.measure.expression === 'CORR') {
+      if (this.measure.expression === 'SUM(column)' || (this.measure.expression === 'SUM_LC' && !isSumlc) || this.measure.expression === 'CORR') {
         return this.ccGroups.filter(it => measureSumAndTopNDataType.includes(it.datatype.toLocaleLowerCase().match(/^(\w+)\(?/)[1]))
       } else if (this.measure.expression === 'TOP_N') {
         if (isGroupBy && isGroupBy === 'Group by') {
@@ -428,6 +428,8 @@ export default class AddMeasure extends Vue {
         }
       } else if (this.measure.expression === 'PERCENTILE_APPROX') {
         return this.ccGroups.filter(item => measurePercenDataType.includes(item.datatype.toLocaleLowerCase().match(/^(\w+)\(?/)[1]))
+      } else if (this.measure.expression === 'SUM_LC' && isSumlc) {
+        return this.ccGroups.filter(it => measuresDateTimeDataType.includes(it.datatype.toLocaleLowerCase().match(/^(\w+)\(?/)[1]))
       } else {
         return this.ccGroups
       }
@@ -753,10 +755,14 @@ export default class AddMeasure extends Vue {
   // 支持measure的任意类型
   get getParameterValue2 () {
     let targetColumns = []
+    let filterType = measuresDataType
+    if (this.measure.expression === 'SUM_LC') {
+      filterType = measuresDateTimeDataType
+    }
     $.each(this.allTableColumns, (index, column) => {
       const returnRegex = new RegExp('(\\w+)(?:\\((\\w+?)(?:\\,(\\w+?))?\\))?')
       const returnValue = returnRegex.exec(column.datatype)
-      if (measuresDataType.indexOf(returnValue[1]) >= 0 && !this.flattenLookupTables.includes(column.table_alias)) {
+      if (filterType.indexOf(returnValue[1]) >= 0 && !this.flattenLookupTables.includes(column.table_alias)) {
         const columnObj = {name: column.table_alias + '.' + column.name, datatype: column.datatype}
         targetColumns.push(columnObj)
       }
