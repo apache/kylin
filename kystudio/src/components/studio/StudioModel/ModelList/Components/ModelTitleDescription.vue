@@ -24,7 +24,7 @@
             <span>{{$t('modelMetadataChangedTips')}}</span><span
               v-if="!['modelEdit'].includes(source)"
               style="color:#0988DE;cursor: pointer;"
-              @click="openComplementSegment(model, true)">{{$t('seeDetail')}}</span>
+              @click="openComplementSegment(modelData, true)">{{$t('seeDetail')}}</span>
           </div>
           <div v-if="modelData.status === 'OFFLINE' && modelData.forbidden_online">
             <span>{{$t('SCD2ModalOfflineTip')}}</span>
