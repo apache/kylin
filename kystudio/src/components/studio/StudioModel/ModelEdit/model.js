@@ -25,10 +25,10 @@ class NModel extends Schama {
     this.vm && this.vm.$nextTick(() => {
       this._renderLinks()
       // 如果没有布局信息，就走自动布局程序
-      if (!this.canvas) {
-        this.renderPosition()
-      }
       setTimeout(() => {
+        if (!this.canvas) {
+          this.renderPosition()
+        }
         this.getBrokenLinkedTable()
         // this._renderLabels()
       }, 1)
