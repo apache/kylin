@@ -51,11 +51,11 @@ public interface QueryHistoryDAO {
 
     String getQueryMetricMeasurement();
 
-    void deleteQueryHistoriesIfMaxSizeReached() throws InterruptedException;
+    void deleteQueryHistoriesIfMaxSizeReached();
 
-    void deleteQueryHistoriesIfRetainTimeReached() throws InterruptedException;
+    void deleteQueryHistoriesIfRetainTimeReached();
 
-    void deleteOldestQueryHistoriesByProject(String project, int deleteCount) throws InterruptedException;
+    void deleteOldestQueryHistoriesByProject(String project, int deleteCount);
 
     long getQueryHistoriesSize(QueryHistoryRequest request, String project);
 

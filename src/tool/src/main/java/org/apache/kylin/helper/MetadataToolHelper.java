@@ -18,24 +18,8 @@
 
 package org.apache.kylin.helper;
 
-import static org.apache.kylin.common.exception.code.ErrorCodeTool.FILE_ALREADY_EXISTS;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.FileSystems;
-import java.nio.file.Paths;
-import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.NavigableSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import lombok.val;
+import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
@@ -64,14 +48,28 @@ import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import lombok.val;
-import lombok.var;
-
 import javax.sql.DataSource;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.FileSystems;
+import java.nio.file.Paths;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.NavigableSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.apache.kylin.common.exception.code.ErrorCodeTool.FILE_ALREADY_EXISTS;
 
 /*
-* this class is only for removing dependency of kylin-tool module, and should be refactor later
-*/
+ * this class is only for removing dependency of kylin-tool module, and should be refactor later
+ */
 public class MetadataToolHelper {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = HelperConstants.DATE_TIME_FORMATTER;
@@ -97,7 +95,7 @@ public class MetadataToolHelper {
     }
 
     public Pair<String, String> backup(KylinConfig kylinConfig, String project, String path, String folder,
-            boolean compress, boolean excludeTableExd) throws Exception {
+                                       boolean compress, boolean excludeTableExd) throws Exception {
         boolean isGlobal = null == project;
         long startAt = System.currentTimeMillis();
         try {
@@ -123,7 +121,7 @@ public class MetadataToolHelper {
     }
 
     Pair<String, String> doBackup(KylinConfig kylinConfig, String project, String path, String folder, boolean compress,
-            boolean excludeTableExd) throws Exception {
+                                  boolean excludeTableExd) throws Exception {
         ResourceStore resourceStore = ResourceStore.getKylinMetaStore(kylinConfig);
         boolean isUTEnv = kylinConfig.isUTEnv();
 
@@ -203,7 +201,7 @@ public class MetadataToolHelper {
     }
 
     private void backupProjects(NavigableSet<String> projectFolders, ResourceStore resourceStore,
-            ResourceStore backupResourceStore, boolean excludeTableExd) throws InterruptedException {
+                                ResourceStore backupResourceStore, boolean excludeTableExd) throws InterruptedException {
         for (String projectPath : projectFolders) {
             if (projectPath.equals(ResourceStore.METASTORE_UUID_TAG)
                     || projectPath.equals(ResourceStore.METASTORE_IMAGE)) {
@@ -218,7 +216,7 @@ public class MetadataToolHelper {
     }
 
     private void copyResourceStore(String projectPath, ResourceStore srcResourceStore,
-            ResourceStore destResourceStore, boolean isProjectLevel, boolean excludeTableExd) {
+                                   ResourceStore destResourceStore, boolean isProjectLevel, boolean excludeTableExd) {
         if (excludeTableExd) {
             String tableExdPath = projectPath + ResourceStore.TABLE_EXD_RESOURCE_ROOT;
             var projectItems = srcResourceStore.listResources(projectPath);
@@ -286,7 +284,7 @@ public class MetadataToolHelper {
     }
 
     public void restore(ResourceStore currentResourceStore, ResourceStore restoreResourceStore, String project,
-            boolean delete) {
+                        boolean delete) {
         if (StringUtils.isBlank(project)) {
             logger.info("start to restore all projects");
             var srcProjectFolders = restoreResourceStore.listResources("/");
@@ -340,7 +338,7 @@ public class MetadataToolHelper {
     }
 
     private int doRestore(ResourceStore currentResourceStore, ResourceStore restoreResourceStore,
-            Set<String> destResources, Set<String> srcResources, boolean delete) throws IOException {
+                          Set<String> destResources, Set<String> srcResources, boolean delete) throws IOException {
         val threadViewRS = ResourceStore.getKylinMetaStore(KylinConfig.getInstanceFromEnv());
 
         //check destResources and srcResources are null,because  Sets.difference(srcResources, destResources) will report NullPointerException
