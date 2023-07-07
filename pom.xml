@@ -135,7 +135,7 @@
         <scala-retry>0.3.0</scala-retry>
 
         <!-- Calcite Version -->
-        <calcite.version>1.116.0-kylin-4.x-r031</calcite.version>
+        <calcite.version>1.116.0-kylin-4.x-r032</calcite.version>
         <avatica.version>4.x_1.10-r01</avatica.version>
 
         <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
