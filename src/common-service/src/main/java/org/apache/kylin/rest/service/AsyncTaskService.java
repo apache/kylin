@@ -27,7 +27,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletOutputStream;
@@ -51,7 +50,6 @@ import org.apache.kylin.metadata.query.QueryHistoryInfo;
 import org.apache.kylin.metadata.query.QueryHistoryRequest;
 import org.apache.kylin.metadata.query.QueryHistorySql;
 import org.apache.kylin.metadata.query.util.QueryHistoryUtil;
-import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
 import org.apache.kylin.tool.garbage.StorageCleaner;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
@@ -71,11 +69,8 @@ public class AsyncTaskService implements AsyncTaskServiceSupporter {
 
         long startAt = System.currentTimeMillis();
         try {
-            CleanTaskExecutorService.getInstance()
-                .submit(
-                    new StorageCleaner().withTag(StorageCleaner.CleanerTag.SERVICE),
-                    KylinConfig.getInstanceFromEnv().getStorageCleanTaskTimeout(), TimeUnit.MILLISECONDS)
-                .get();
+            val storageCleaner = new StorageCleaner();
+            storageCleaner.execute();
         } catch (Exception e) {
             MetricsGroup.hostTagCounterInc(MetricsName.STORAGE_CLEAN_FAILED, MetricsCategory.GLOBAL, GLOBAL);
             throw e;

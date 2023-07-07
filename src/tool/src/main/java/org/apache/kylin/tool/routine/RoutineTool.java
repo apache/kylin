@@ -17,10 +17,8 @@
  */
 package org.apache.kylin.tool.routine;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.kylin.common.KylinConfig;
@@ -29,15 +27,15 @@ import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.helper.MetadataToolHelper;
 import org.apache.kylin.helper.RoutineToolHelper;
+import org.apache.kylin.metadata.epoch.EpochManager;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.tool.MaintainModeTool;
-import org.apache.kylin.tool.garbage.CleanTaskExecutorService;
 import org.apache.kylin.tool.util.ToolMainWrapper;
-import org.apache.kylin.metadata.epoch.EpochManager;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Slf4j
@@ -70,7 +68,7 @@ public class RoutineTool extends ExecutableApplication {
     }
 
     public static void cleanQueryHistories() {
-        RoutineToolHelper.cleanQueryHistoriesAsync();
+        RoutineToolHelper.cleanQueryHistories();
     }
 
     public static void cleanStreamingStats() {
@@ -129,8 +127,7 @@ public class RoutineTool extends ExecutableApplication {
     }
 
     public void cleanStorage() {
-        CleanTaskExecutorService.getInstance().cleanStorageForRoutine(
-            storageCleanup, Arrays.asList(projects), requestFSRate, retryTimes);
+        helper.cleanStorage(storageCleanup, Arrays.asList(projects), requestFSRate, retryTimes);
     }
 
     protected boolean printUsage(OptionsHelper optionsHelper) {

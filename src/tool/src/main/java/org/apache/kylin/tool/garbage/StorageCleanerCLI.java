@@ -17,11 +17,9 @@
  */
 package org.apache.kylin.tool.garbage;
 
-import java.util.concurrent.TimeUnit;
-
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Unsafe;
 
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -29,12 +27,9 @@ public class StorageCleanerCLI {
 
     public static void main(String[] args) {
         try {
-            StorageCleaner cleaner = new StorageCleaner().withTag(StorageCleaner.CleanerTag.CLI);
-            CleanTaskExecutorService.getInstance()
-                .submit(
-                    cleaner,
-                    KylinConfig.getInstanceFromEnv().getStorageCleanTaskTimeout(), TimeUnit.MILLISECONDS)
-                .get();
+            val storageCleaner = new StorageCleaner();
+            log.info("Start cleanup HDFS.");
+            storageCleaner.execute();
         } catch (Exception e) {
             log.warn("cleanup HDFS failed.", e);
         }
