@@ -593,9 +593,6 @@ public class OLAPContext {
 
     public String genExecFunc(OLAPRel rel, String tableName) {
         setReturnTupleInfo(rel.getRowType(), rel.getColumnRowType());
-        if (canMinMaxDimAnsweredByMetadata(rel)) {
-            return "executeMetadataQuery";
-        }
 
         if (isConstantQueryWithAggregations()) {
             return "executeSimpleAggregationQuery";
@@ -604,6 +601,10 @@ public class OLAPContext {
         // If the table being scanned is not a fact table, then it is a lookup table.
         if (realization.getModel().isLookupTable(tableName)) {
             return "executeLookupTableQuery";
+        }
+
+        if (canMinMaxDimAnsweredByMetadata(rel)) {
+            return "executeMetadataQuery";
         }
 
         return "executeOLAPQuery";
