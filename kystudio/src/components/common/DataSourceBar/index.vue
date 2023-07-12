@@ -31,7 +31,7 @@
     </section>
     <section class="body">
       <div v-if="isShowLoadTable" class="btn-group">
-        <el-button plain size="medium" v-if="!isLoadingTreeData && showAddDatasourceBtn" type="primary" icon="el-ksd-icon-add_data_source_old" @click="importDataSource('selectSource', currentProjectData)">
+        <el-button plain size="medium" v-if="!isLoadingTreeData && showAddDatasourceBtn && !isLogicalView" type="primary" v-guide.addDatasource icon="el-ksd-icon-add_data_source_old" @click="importDataSource('selectSource', currentProjectData)">
           {{$t('addDatasource')}}
         </el-button>
       </div>
@@ -188,6 +188,10 @@ import { handleSuccessAsync, handleError, objectClone } from '../../../util'
     showDDL: {
       type: Boolean,
       default: false
+    },
+    isLogicalView: {
+      type: Boolean,
+      default: false
     }
   },
   components: {
@@ -198,7 +202,8 @@ import { handleSuccessAsync, handleError, objectClone } from '../../../util'
       'isAdminRole',
       'isProjectAdmin',
       'currentProjectData',
-      'datasourceActions'
+      'datasourceActions',
+      'logicalViewDatabaseName'
     ])
   },
   methods: {
@@ -212,7 +217,8 @@ import { handleSuccessAsync, handleError, objectClone } from '../../../util'
       fetchDatabases: 'FETCH_DATABASES',
       fetchTables: 'FETCH_TABLES',
       updateTopTable: 'UPDATE_TOP_TABLE',
-      fetchDBandTables: 'FETCH_DB_AND_TABLES'
+      fetchDBandTables: 'FETCH_DB_AND_TABLES',
+      fetchLogicalViewTables: 'FETCH_LOGICAL_VIEW_TABLES'
     }),
     ...mapMutations({
       cacheDatasource: 'CACHE_DATASOURCE'
@@ -359,27 +365,42 @@ export default class DataSourceBar extends Vue {
   async initTree () {
     try {
       this.isSearchIng = false
-      // await this.loadDatasources()
-      // await this.loadDataBases()
-      // await this.loadTables({ isReset: true })
-      // 有加载数据源的情况，才去加载db 和 table，否则就处理loading字段
-      // if (this.datasources.length > 0) {
-      //   await this.loadTreeData()
-      //   this.freshAutoCompleteWords()
-      // } else {
-      //   this.isLoadingTreeData = false
-      // }
-      // freshTreeOrder(this)
-      // this.selectFirstTable()
-      // this.isLoadingTreeData = false
-      await this.loadTreeData()
+      if (this.isLogicalView) {
+        await this.loadLogicalViewData()
+      } else {
+        await this.loadTreeData()
+      }
     } catch (e) {
       handleError(e)
     }
   }
-  // async loadDatasources () {
-  //   this.datasources = this.currentSourceTypes.map(sourceType => getDatasourceObj(this, sourceType))
-  // }
+  async loadLogicalViewData (filter) {
+    if (this.$store.state.system.logicalViewEnabled === 'true') {
+      try {
+        this.datasources = []
+        const res = await this.fetchLogicalViewTables({ project: this.currentProjectData.name, table: filter })
+        const logicalData = await handleSuccessAsync(res)
+        if (logicalData.length) {
+          const datasource = getDatasourceObj(this, 'L')
+          const resultDatabse = {
+            dbname: this.logicalViewDatabaseName,
+            size: logicalData.length,
+            tables: logicalData
+          }
+          datasource.children.push(getDatabaseTablesObj(this, datasource, resultDatabse))
+          datasource.children.forEach((database, index) => {
+            database.children = database.originTables.map(resultTable => getTableObj(this, database, resultTable, this.ignoreNodeTypes.indexOf('column') >= 0))
+            this.addPagination(database)
+          })
+          this.datasources.push(datasource)
+          this.defaultExpandedKeys.push(datasource.id)
+        }
+      } catch (e) {
+        handleError(e)
+      }
+    }
+  }
+
   async loadTreeData (filterText) { // 根据数据源获取dbs 和tables
     this.isLoadingTreeData = true
     this.treeKey = 'pageTree_' + filterText + Number(new Date())
@@ -493,6 +514,10 @@ export default class DataSourceBar extends Vue {
   }
   async handleFilter (filterText, isNotResetDefaultExpandedKeys) {
     this.isSearchIng = true
+    if (this.isLogicalView) {
+      await this.loadLogicalViewData(filterText)
+      return
+    }
     const scrollDom = this.$el.querySelector('.scroll-content')
     const scrollBarY = this.$el.querySelector('.scrollbar-thumb.scrollbar-thumb-y')
     scrollDom && (scrollDom.style.transform = null)
@@ -567,6 +592,9 @@ export default class DataSourceBar extends Vue {
       }
     })
     this.defaultExpandedKeys = defaultExpandedKeysClone
+  }
+  edit (data, node, event) {
+    this.$emit('edit', data, node, event)
   }
   async handleToggleTop (data, node, event) {
     event && event.stopPropagation()
@@ -852,6 +880,9 @@ export default class DataSourceBar extends Vue {
           font-size: 12px;
         }
       }
+      .is-disabled {
+        color: @text-disabled-color;
+      }
       .datatype {
         color: @text-placeholder-color !important;
       }
@@ -909,19 +940,23 @@ export default class DataSourceBar extends Vue {
     }
     // .el-tree-node {
     //   .el-tree-node__content:hover > .tree-item {
-    //     color: #087AC8;
+    //     color: @base-color-11;
     //   }
     // }
     .table-date-tip {
       color: #8E9FA8;
       &:hover {
-        color: #087AC8;
+        color: @base-color-11;
+      }
+      &.is-disabled:hover {
+        color: @text-disabled-color;
+        cursor: not-allowed;
       }
     }
     .table-action {
       color: #000000;
       &:hover {
-        color: #087AC8;
+        color: @base-color-11;
       }
     }
     .table-tag {
@@ -935,7 +970,7 @@ export default class DataSourceBar extends Vue {
     .column-tag {
       display: inline-block;
       font-size: 16px;
-      color: #087AC8;
+      color: @base-color-11;
       margin-right: 2px;
       font-style: normal;
     }

@@ -1,10 +1,10 @@
 <template>
-    <div class="ddl-container">
+    <div class="logical-view-container">
       <div class="left-layout">
         <div class="header">
-          <span class="title">{{$t('newDDLTable')}}</span>
+          <span class="title">{{$t('newLogicalView')}}</span>
         </div>
-        <el-alert type="warning" show-icon v-if="showCreateSuccessAlert"><span slot="title">{{$t('createViewSuccessAlert')}} <a class="import-link" href="javascript:void(0);" @click="importDataSource">{{$t('goToImport')}}</a></span></el-alert>
+        <el-alert type="warning" show-icon v-if="showCreateSuccessAlert"><span slot="title">{{$t('createViewSuccessAlert', {databaseName: logicalViewDatabaseName})}} <a class="import-link" href="javascript:void(0);" @click="importDataSource">{{$t('goToImport')}}</a></span></el-alert>
         <div class="editor-content">
           <editor class="ddl-editor" v-model="content" ref="ddlEditor" lang="sql" theme="chrome" @keydown.meta.enter.native="runSql" @keydown.ctrl.enter.native="runSql"></editor>
           <div class="run-btn">
@@ -17,6 +17,11 @@
       </div>
       <div :class="['right-layout', {'expand': !!activeType}]">
         <div class="action-btns">
+          <el-tooltip :content="$t('logicalView')" effect="dark" placement="left">
+            <el-badge is-dot class="sign-item" :hidden="true">
+              <el-button :class="{'is-active': activeType === 'logicalView'}" text type="primary" icon-button-mini icon="el-ksd-n-icon-symbol-l-filled" @click="activeType = 'logicalView'"></el-button>
+            </el-badge>
+          </el-tooltip>
           <el-tooltip :content="$t('datasourceTable')" effect="dark" placement="left">
             <el-badge is-dot class="sign-item" :hidden="true">
               <el-button :class="{'is-active': activeType === 'database'}" text type="primary" icon-button-mini icon="icon el-ksd-n-icon-node-database-filled" @click="activeType = 'database'"></el-button>
@@ -30,11 +35,34 @@
         </div>
         <div class="panel-content-layout">
           <div class="panel-header" v-if="activeType">
-            <span class="title">{{activeType === 'database' ? $t('datasourceTable') : $t('syntaxRules')}}</span>
+            <span class="title">{{expandBlockTitle}}</span>
             <i class="el-ksd-n-icon-close-L-outlined close-btn" @click="activeType = ''"></i>
+          </div>
+          <div class="datasource-layout" v-if="activeType === 'logicalView'">
+            <data-source-bar
+              key="logicalView"
+              ref="logicalViewDataSource"
+              class="data-source-layout"
+              :project-name="currentSelectedProject"
+              :is-show-action-group="false"
+              :is-show-load-source="false"
+              :is-show-load-table="datasourceActions.includes('loadSource') && $store.state.config.platform !== 'iframe'"
+              :is-expand-on-click-node="false"
+              :is-show-drag-width-bar="true"
+              :default-width="240"
+              :expand-node-types="['datasource', 'database']"
+              :ignore-node-types="['column']"
+              :is-logical-view="true"
+              :hide-bar-title="$store.state.config.platform === 'iframe'"
+              :custom-tree-title="$store.state.config.platform !== 'iframe' ? '' : 'kylinLang.common.dataDirectory'"
+              @autoComplete="handleAutoComplete"
+              @click="clickTable"
+              @edit="editLogicalSql">
+            </data-source-bar>
           </div>
           <div class="datasource-layout" v-show="activeType === 'database'">
             <data-source-bar
+              key="database"
               ref="ddlDataSource"
               class="data-source-layout"
               :project-name="currentSelectedProject"
@@ -64,6 +92,7 @@
           </template>
         </div>
       </div>
+      <EditLogicalDialog />
     </div>
   </template>
   <script>
@@ -72,36 +101,59 @@
   import DataSourceBar from '../../common/DataSourceBar'
   import { insightKeyword } from '../../../config'
   import { handleSuccessAsync, handleError } from '../../../util'
+  import EditLogicalDialog from './EditLogicalDialog/EditLogicalDialog'
   @Component({
     computed: {
       ...mapGetters([
         'currentSelectedProject',
         'datasourceActions',
-        'currentProjectData'
+        'currentProjectData',
+        'logicalViewDatabaseName'
       ])
     },
     methods: {
       ...mapActions({
         getDDLDescription: 'DDL_DESCRIPTION',
         runDDL: 'RUN_DDL'
+      }),
+      ...mapActions('EditLogicalDialog', {
+        callEditLogicalDialog: 'CALL_MODAL'
       })
     },
     components: {
-      DataSourceBar
+      DataSourceBar,
+      EditLogicalDialog
     },
     locales: {
       en: {
-        newDDLTable: 'New DDL Table',
+        newLogicalView: 'New Logical View',
+        logicalView: 'Logical View',
+        logicalViewTable: 'Logical View Table',
         datasourceTable: 'Data Source Table',
         syntaxRules: 'Syntax Rules',
-        createDDLSuggestionTitle: 'To create a DDL Table in KE, you need to follow the syntax rules of KE.',
+        createDDLSuggestionTitle: 'To create a Logical View in KE, you need to follow the syntax rules of KE.',
         importDataSource: 'Import',
         runBtnTip: 'Execute ',
         acceleratorKey: '⌃/⌘ enter',
         runSuccess: 'Execute succeed.',
-        runFailed: 'Execute Failed, Please check and try again.',
-        createViewSuccessAlert: 'The DDL Table is created to hive after executing "Create View". Please importing the table to data source to be available.',
+        runFailed: 'Execute Failed，Please check and try again.',
+        createViewSuccessAlert: 'The Logical View is created in virtual database {databaseName}  after executing "Create Logical View". Please import it from the data source to use it.',
         goToImport: 'Go to Import'
+      },
+      'zh-cn': {
+        newLogicalView: '新的逻辑视图',
+        logicalView: '逻辑视图',
+        logicalViewTable: '逻辑视图表',
+        datasourceTable: '数据源表',
+        syntaxRules: '语法规则',
+        createDDLSuggestionTitle: '在 KE 中创建 Logical View 需要遵循 KE 的语法规则。',
+        importDataSource: '导入',
+        runBtnTip: '执行 ',
+        acceleratorKey: '⌃/⌘ 回车',
+        runSuccess: '执行成功',
+        runFailed: '执行失败，请检查后重试',
+        createViewSuccessAlert: '“Create Logical View” 执行后逻辑视图创建至虚拟库 {databaseName}，需要从数据源导入后可用。',
+        goToImport: '立即导入'
       }
     }
   })
@@ -114,8 +166,19 @@
     stacktrace = ''
     running = false
     showCreateSuccessAlert = false
+    get expandBlockTitle () {
+      switch (this.activeType) {
+        case 'logicalView':
+          return this.$t('logicalViewTable')
+        case 'database':
+          return this.$t('datasourceTable')
+        default:
+          return this.$t('syntaxRules')
+      }
+    }
     setOption (option) {
       let editor = this.$refs.ddlEditor.editor
+      if (!editor) return
       editor.setOptions(Object.assign({
         wrap: 'free',
         enableBasicAutocompletion: true,
@@ -133,6 +196,14 @@
         }
       })
     }
+    async editLogicalSql (data, node, event) {
+      event.stopPropagation()
+      if (!data.isCurrentProLogicalTable) return
+      const isSubmit = await this.callEditLogicalDialog({ sql: data.__data.created_sql })
+      if (isSubmit) {
+        this.$refs.logicalViewDataSource.initTree()
+      }
+    }
     importDataSource () {
       this.$refs.ddlDataSource && this.$refs.ddlDataSource.importDataSource('selectSource', this.currentProjectData)
     }
@@ -149,11 +220,11 @@
         const res = await this.runDDL({
           sql: this.content,
           ddl_project: this.currentSelectedProject,
-          restrict: 'hive'
+          restrict: 'logic'
         })
         const resultData = await handleSuccessAsync(res)
         this.running = false
-        this.showCreateSuccessAlert = this.content.toLocaleLowerCase().indexOf('create view') > -1
+        this.showCreateSuccessAlert = this.content.toLocaleLowerCase().indexOf('create logical view') > -1
         resultData && this.insertEditorContent(`\n\n${resultData}`)
         this.resetErrorMsg()
         this.$message({ type: 'success', message: this.$t('runSuccess') })
@@ -175,7 +246,7 @@
     }
     async getDDLRules () {
       try {
-        const result = await this.getDDLDescription({project: this.currentSelectedProject, page_type: 'hive'})
+        const result = await this.getDDLDescription({project: this.currentSelectedProject, page_type: 'logic'})
         const rules = await handleSuccessAsync(result)
         this.rules = rules
       } catch (e) {
@@ -193,7 +264,7 @@
   
   <style lang="less" scoped>
   @import '../../../assets/styles/variables.less';
-  .ddl-container {
+  .logical-view-container {
     width: 100%;
     height: 100%;
     display: flex;
@@ -368,3 +439,4 @@
     color: @text-disabled-color;
   }
   </style>
+  
