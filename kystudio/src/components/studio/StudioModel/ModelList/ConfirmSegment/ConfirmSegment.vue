@@ -220,7 +220,7 @@ export default class ConfirmSegmentModal extends Vue {
     }
   }
   handleSortChange ({ column, prop, order }) {
-    if (order === 'ascending') {
+    if (order !== 'ascending') {
       this.filter.reverse = false
     } else {
       this.filter.reverse = true
