@@ -28,7 +28,7 @@
         <el-row class="table-header table-row ksd-mt-10">
           <el-col :span="18">{{$t('dimension')}}</el-col>
           <el-col :span="3" class="ksd-left">{{$t('cardinality')}}</el-col>
-          <el-col :span="3">Shard by</el-col>
+          <el-col :span="3">ShardBy</el-col>
         </el-row>
         <div class="table-content" v-scroll.observe.reactive @scroll-bottom="scrollLoad">
           <transition-group name="flip-list" tag="div">

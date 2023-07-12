@@ -36,7 +36,7 @@
           </template>
         </el-table-column>
         <el-table-column
-          label="Shard by"
+          label="ShardBy"
           align="center"
           width="80">
           <template slot-scope="scope">
@@ -72,7 +72,7 @@
         </template>
           </el-table-column>
         <el-table-column
-        label="Shard by"
+        label="ShardBy"
         align="center"
         width="80">
           <template slot-scope="scope">
