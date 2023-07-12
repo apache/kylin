@@ -41,7 +41,7 @@ export default {
     purgeSegmentDataTips: 'Model definition has changed. Once saving the model, all data in the segments will be deleted. As a result, this model CAN\'T be used to serve queries. We strongly recommend to reload all data (in total {storageSize}).\r\n Do you want to continue?',
     onlyAddLeftJoinTip: 'The model definition relationship has changed and the current change only affects incremental data. To overwrite the stock data, go to the Segment page to clear the old data and rebuild.',
     changeSegmentTips: 'With partition setting changed, all segments and data would be deleted. The model couldn\'t serve queries. Meanwhile, the related ongoing jobs for building index would be discarded.<br/>Do you want to continue?',
-    saveAndLoad: 'Save and Build Index',
+    saveAndLoad: 'Save and Build',
     partitionDateTable: 'Partition Table',
     multilevelPartition: 'Subpartition Column',
     multilevelPartitionDesc: 'A column from the selected table could be chosen. The models under this project could be partitioned by this column in addition to time partitioning. ',

@@ -45,7 +45,7 @@ export default {
     segmentTips: 'Segment is used to define model\'s data range (served for queries). The data range of segments in total equals the model\'s data range. Queries within the range could be answered by indexes or pushdown engine. Queries out of the range would have no results.',
     addRangeTitle: 'Please select a segment\'s data range',
     willAddSegmentTips: 'A segment for full build would be added and served for queries.',
-    saveAndBuild: 'Save and Build Index',
+    saveAndBuild: 'Save and Build',
     saveAndAddIndex: 'Save and Add Index',
     onlySaveTip1: 'An empty segment (with no index) would be created after saving. Please note that queries would be answered by the pushdown engine when  they hit empty segments. ',
     onlySaveTip2: 'Do you want to continue?',

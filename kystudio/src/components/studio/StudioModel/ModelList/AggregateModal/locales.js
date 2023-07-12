@@ -64,7 +64,7 @@ export default {
     mandatoryDesc: 'If a dimension is set to a mandatory dimension, only the index with this dimension will be calculated.',
     hierarchyDesc: 'If there is a hierarchical relationship between the dimensions, you can set it as a hierarchy dimension.',
     jointDesc: 'For dimensions which are often used together and the possible combination in between doesn\'t really matter, you may add them as joint dimension. If sampling for the source table has been done, the product of cardinalities of joint dimensions would be calculated as a reference.',
-    saveAndBuild: 'Save and Build Index',
+    saveAndBuild: 'Save and Build',
     colon: ': ',
     edit: 'Edit',
     column: 'Column',
