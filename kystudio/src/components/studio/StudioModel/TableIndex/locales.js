@@ -12,7 +12,7 @@ export default {
     sort: 'Order',
     ConfigRawTable: 'Config Table Index',
     sortBy: 'Sort By',
-    shardBy: 'Shard By',
+    shardBy: 'ShardBy',
     checkRowkeyInt: 'Integer encoding column length should between 1 and 8.',
     fixedLengthTip:
       'The length parameter of Fixed Length encoding is required.',
