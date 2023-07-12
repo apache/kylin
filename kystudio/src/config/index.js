@@ -58,7 +58,8 @@ export const menusData = [
       { name: 'source', path: '/studio/source' },
       { name: 'modelList', path: '/studio/model' },
       { name: 'snapshot', path: '/studio/snapshot' },
-      { name: 'ddl', path: '/studio/ddl' }
+      { name: 'ddl', path: '/studio/ddl' },
+      { name: 'logicalView', path: '/studio/logicalview' }
     ]
   },
   {
@@ -709,7 +710,8 @@ export const sourceTypes = getFullMapping({
   RDBMS: 16,
   KAFKA: 1,
   CSV: 13,
-  GBASE: 8
+  GBASE: 8,
+  LOGIC: 'L'
 })
 
 export const sourceNameMapping = {
@@ -718,7 +720,8 @@ export const sourceNameMapping = {
   KAFKA: 'Kafka',
   RDBMS2: 'RDBMS',
   CSV: 'CSV',
-  GBASE: 'GBASE'
+  GBASE: 'GBASE',
+  LOGIC: 'logicalView'
 }
 
 export const pageSizeMapping = {

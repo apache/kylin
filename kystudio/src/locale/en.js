@@ -493,6 +493,7 @@ exports.default = {
     modeledit: 'Model Edit',
     snapshot: 'Snapshot',
     ddl: 'DDL',
+    logicalView: 'Logical View',
     refresh: 'Refresh',
     systemcapacity: 'Capacity'
   },

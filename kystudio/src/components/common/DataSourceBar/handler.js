@@ -26,7 +26,7 @@ export const render = {
   },
   table: {
     render (h, { node, data, store }) {
-      const { label, tags, dateRange, isTopSet } = data
+      const { label, tags, dateRange, isTopSet, datasource, isCurrentProLogicalTable } = data // datasource 为L 是逻辑视图表
       const dataRangeTitle = this.$t('dataRange')
       const nodeClass = {
         class: [
@@ -40,14 +40,22 @@ export const render = {
       return (
         <div>
           <div {...nodeClass}>
-            <span title={label}>{label}</span>
+            <span title={label} class={datasource === 'L' && !isCurrentProLogicalTable ? 'is-disabled' : ''}>{label}</span>
             <div class="right">
-              <span class="tree-icon" slot="reference">
-                <el-tooltip effect="dark" enterable={false} content={isTopSet ? this.$t('cancelTopSet') : this.$t('topSet')} placement="top">
-                  <i class="table-date-tip top" onClick={event => this.handleToggleTop(data, node, event)}
-                    { ...{class: data.isTopSet ? ['el-icon-ksd-arrow_up_clean'] : ['el-icon-ksd-arrow_up']} }></i>
-                </el-tooltip>
-              </span>
+              { datasource === 'L' ? (
+                <span class="tree-icon" slot="reference">
+                  <el-tooltip effect="dark" enterable={false} content={isCurrentProLogicalTable ? this.$t('editLogicalSql') : this.$t('disabledEditLogicalSql') } placement="top">
+                    <i class="table-date-tip top" onClick={event => this.edit(data, node, event)}
+                      { ...{class: isCurrentProLogicalTable ? ['el-ksd-n-icon-edit-outlined'] : ['el-ksd-n-icon-edit-outlined', 'is-disabled']} }></i>
+                  </el-tooltip>
+                </span>
+              ) : (
+                <span class="tree-icon" slot="reference">
+                  <el-tooltip effect="dark" enterable={false} content={isTopSet ? this.$t('cancelTopSet') : this.$t('topSet')} placement="top">
+                    <i class="table-date-tip top" onClick={event => this.handleToggleTop(data, node, event)}
+                      { ...{class: data.isTopSet ? ['el-icon-ksd-arrow_up_clean'] : ['el-icon-ksd-arrow_up']} }></i>
+                  </el-tooltip>
+                </span>) }
               { dateRange ? (
                 <el-popover
                   placement="right"
@@ -123,7 +131,7 @@ export function getDatasourceObj (that, sourceType) {
   const sourceName = sourceTypes[sourceType]
   let sourceNameStr = 'kylin.source.jdbc.source.enable' in override_kylin_properties && override_kylin_properties['kylin.source.jdbc.source.enable'] === 'true' && override_kylin_properties['kylin.source.default'] === '8'
     ? override_kylin_properties['kylin.source.jdbc.source.name'] || sourceNameMapping[sourceName]
-    : sourceNameMapping[sourceName]
+    : that.$t(sourceNameMapping[sourceName])
   return {
     id: sourceType,
     label: customTreeTitle !== '' ? `${that.$t(customTreeTitle)}` : `${that.$t('source')}${sourceNameStr}`,
@@ -191,7 +199,7 @@ export function getTableObj (that, database, table, ignoreColumn) {
   const dateRangeStr = _getDateRangeStr(that, dataRange)
   const tableObj = {
     id: table.uuid,
-    label: table.name,
+    label: table.name || table.table_name,
     children: [],
     render: render.table.render.bind(that),
     tags,
@@ -200,6 +208,7 @@ export function getTableObj (that, database, table, ignoreColumn) {
     datasource,
     isCentral: table.increment_loading,
     isTopSet: table.top,
+    isCurrentProLogicalTable: table.created_project === that.currentProjectData.name, // 逻辑视图表是否是当前项目的
     isHideFactIcon: that.hideFactIcon,
     dateRange: dateRangeStr,
     isSelected: false,

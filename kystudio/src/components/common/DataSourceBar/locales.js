@@ -22,6 +22,15 @@ export default {
     factTable: 'Fact Table',
     importFromDatasource: 'Import from Data Source',
     createByDDL: 'DDL Create',
-    createDDLTip: 'Data Definition Language Create Table'
+    createDDLTip: 'Data Definition Language Create Table',
+    Hive: 'Hive',
+    RDBMS: 'RDBMS',
+    Kafka: 'Kafka',
+    RDBMS2: 'RDBMS',
+    CSV: 'CSV',
+    GBASE: 'GBASE',
+    logicalView: 'Logical View',
+    editLogicalSql: 'Edit/View',
+    disabledEditLogicalSql: 'Not current project Logical View Table'
   }
 }

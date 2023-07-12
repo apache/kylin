@@ -321,5 +321,8 @@ export default {
   },
   runDDL (data) {
     return Vue.resource(apiUrl + 'spark_source/ddl').save(data)
+  },
+  fetchLogicalViewTables (data) {
+    return Vue.resource(apiUrl + 'spark_source/ddl/view_list').get(data)
   }
 }

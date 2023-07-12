@@ -402,6 +402,9 @@ export default {
     // 执行 ddl 语句
     [types.RUN_DDL]: function (_, data) {
       return api.datasource.runDDL(data)
+    },
+    [types.FETCH_LOGICAL_VIEW_TABLES]: function ({ commit }, data) {
+      return api.datasource.fetchLogicalViewTables(data)
     }
   }
 }

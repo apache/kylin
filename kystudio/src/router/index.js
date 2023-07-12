@@ -90,6 +90,10 @@ let routerOptions = {
         path: 'studio/ddl',
         component: () => import('../components/studio/DDL/ddl.vue')
       }, {
+        name: 'LogicalView',
+        path: 'studio/logicalview',
+        component: () => import('../components/studio/LogicalView/LogicalView.vue')
+      }, {
         name: 'Project',
         path: 'admin/project',
         component: projectList

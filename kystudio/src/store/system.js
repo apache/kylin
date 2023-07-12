@@ -60,7 +60,9 @@ export default {
     isNonAdminGenQueryDiagPackage: 'true',
     streamingEnabled: 'false',
     storageQuery: 'true',
-    ddlEnabled: 'false'
+    ddlEnabled: 'false',
+    logicalViewEnabled: 'false',
+    logicalViewDatabase: 'KYLIN_LOGICAL_VIEW'
   },
   mutations: {
     [types.COLLECT_MESSAGE_DIRECTIVES]: (state, directive) => {
@@ -184,7 +186,9 @@ export default {
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.model.measure-name-check-enabled', key: 'enableCheckName', defaultValue: 'true'})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.streaming.enabled', key: 'streamingEnabled', defaultValue: 'false'})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.second-storage.query-metric-collect', key: 'storageQuery', defaultValue: 'true'})
-          commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.enabled', key: 'ddlEnabled', defaultValue: 'false'})
+          commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.hive.enabled', key: 'ddlEnabled', defaultValue: 'false'})
+          commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.logical-view.enabled', key: 'logicalViewEnabled', defaultValue: 'false'})
+          commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.logical-view-database', key: 'logicalViewDatabase', defaultValue: 'KYLIN_LOGICAL_VIEW'})
           resolve(response)
         }, () => {
           reject()
@@ -239,8 +243,8 @@ export default {
     isNonAdminGenQueryDiagPackage: (state) => {
       return state.isNonAdminGenQueryDiagPackage === 'true'
     },
-    isStreamingEnabled: (state) => {
-      return state.streamingEnabled === 'true'
+    logicalViewDatabaseName: (state) => {
+      return state.logicalViewDatabase
     }
   }
 }
