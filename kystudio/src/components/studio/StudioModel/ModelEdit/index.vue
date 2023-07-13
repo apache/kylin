@@ -2287,6 +2287,7 @@ export default class ModelEdit extends Vue {
     // 如果未选择partition 把partition desc 设置为null
     if (!(data && data.partition_desc && data.partition_desc.partition_date_column)) {
       para.partition_desc = null
+      para.multi_partition_desc = null
       this.isFullLoad = true
     }
     this[this.saveModelType](para).then((res) => {
