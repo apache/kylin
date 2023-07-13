@@ -9,7 +9,10 @@
       <div class="clearfix operatorBox">
         <p class="tips_box">
           <el-button type="primary" text size="small" @click.native="openSaveQueryDialog" :disabled="!sourceSchema">{{$t('kylinLang.common.save')}}</el-button><el-button
-          size="small" type="primary" text @click.native="resetQuery" :disabled="!sourceSchema" v-if="isWorkspace" style="display:inline-block">{{$t('clear')}}</el-button>
+          size="small" type="primary" text @click.native="resetQuery" :disabled="!sourceSchema" v-if="isWorkspace" style="display:inline-block">{{$t('clear')}}</el-button><el-tooltip
+          placement="top" :disabled="!sourceSchema" :content="$t('formatTips')">
+            <el-button size="small" type="primary" text @click.native="format" :disabled="!sourceSchema" v-if="isWorkspace" style="display:inline-block">{{$t('format')}}</el-button>
+          </el-tooltip>
         </p>
         <p class="operator" v-if="isWorkspace">
           <el-form :model="queryForm" :inline="true" ref="queryForm" @submit.native.prevent class="demo-form-inline">
@@ -93,6 +96,8 @@ import { kylinConfirm, handleSuccess, handleError } from '../../util/business'
       resetTips: 'Are you sure you want to clear the SQL Editor?',
       queryTips: 'You can enter a SQL query in the SQL editor, and the results will be displayed here after the query runs',
       clear: 'Clear',
+      format: 'Reformat',
+      formatTips: 'Reformatting for easy reading',
       runQuery: 'Run Query',
       stopQuery: 'Stop Query',
       overIntegerLength: 'Please enter a value no larger than 2,147,483,647.',
@@ -202,6 +207,10 @@ export default class QueryTab extends Vue {
       const editor = this.$refs.insightBox
       editor.$emit('setValue', '')
     })
+  }
+  format () {
+    const editor = this.$refs.insightBox
+    this.sourceSchema = editor.handleFormatSql(this.sourceSchema)
   }
   async submitQuery (querySql) {
     try {

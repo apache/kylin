@@ -35,7 +35,7 @@
       <!-- 去除了智能模式的，直接显示下面这个div 即可 end -->
       <!-- 表单：项目名 -->
       <el-form-item :label="$t('projectName')" prop="name" v-if="isFieldShow('name')" class="js_projectname">
-        <el-input v-guide.addProjectInput
+        <el-input
           :disabled="editType !== 'new'"
           auto-complete="off"
           :value="form.name"
@@ -45,7 +45,7 @@
       </el-form-item>
       <!-- 表单：项目描述 -->
       <el-form-item :label="$t('description')" prop="description" v-if="isFieldShow('description')" class="js_project_desc">
-        <el-input v-guide.addProjectDesc
+        <el-input
           type="textarea"
           auto-complete="off"
           :value="form.description"
@@ -110,7 +110,7 @@
 
     <div slot="footer" class="dialog-footer ky-no-br-space" v-if="isFormShow">
       <el-button size="medium" @click="closeHandler(false)">{{$t('cancel')}}</el-button>
-      <el-button type="primary" size="medium" :loading="saveLoading" @click="submit" v-guide.saveProjectBtn class="js_addproject_submit">{{$t('kylinLang.common.ok')}}</el-button>
+      <el-button type="primary" size="medium" :loading="saveLoading" @click="submit" class="js_addproject_submit">{{$t('kylinLang.common.ok')}}</el-button>
     </div>
   </el-dialog>
 </template>

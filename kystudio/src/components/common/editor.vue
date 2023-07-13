@@ -15,14 +15,20 @@
       v-model="showCopyStatus">
       <i class="el-icon-circle-check"></i> <span>{{$t('kylinLang.common.copySuccess')}}</span>
     </el-popover>
-    <i class="el-ksd-icon-dup_16 edit-copy-btn ksd-fs-16"
-      @click.stop
-      v-if="readOnly"
-      :class="{'is-show': editorData, 'alwaysShow': alwaysShowCopyBtn}"
-      v-clipboard:copy="fullFormatData || editorData"
-      v-clipboard:success="onCopy"
-      v-clipboard:error="onError">
-    </i>
+    <el-tooltip placement="top" :disabled="isFormat==='origin'" :content="$t('kylinLang.common.formatTips')">
+      <i class="el-ksd-icon-dup_16 edit-copy-btn ksd-fs-16"
+        @click.stop
+        v-if="readOnly"
+        :class="{'is-show': editorData, 'alwaysShow': alwaysShowCopyBtn}"
+        v-clipboard:copy="fullFormatData || editorData"
+        v-clipboard:success="onCopy"
+        v-clipboard:error="onError">
+      </i>
+    </el-tooltip>
+    <el-tabs v-model="isFormat" v-if="isFormatSwitch" class="format-switch" type="button" :class="{'en-model': $lang==='en'}" @tab-click="changeFormatType">
+      <el-tab-pane :label="$t('kylinLang.common.origin')" name="origin"></el-tab-pane>
+      <el-tab-pane :label="$t('kylinLang.common.format')" name="format"></el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 <script>
@@ -53,6 +59,9 @@ import { Component } from 'vue-property-decorator'
       default: true
     },
     isFormatter: {
+      default: false
+    },
+    isFormatSwitch: {
       default: false
     },
     readOnly: {
@@ -139,10 +148,10 @@ import { Component } from 'vue-property-decorator'
       this.$message(this.$t('kylinLang.common.copyfail'))
     },
     // 截取前100行sql
-    abridgeData () {
+    abridgeData (format) {
       const splitData = this.editorData.split('\n')
       // 需要截断的默认都是已经格式化后的，如果传入需要格式化，就再手动格式化，且格式化方式是通过字符串长度判断
-      if (!isIE() && this.needFormater && (splitData.length === 1 || (splitData.length === 2 && /^LIMIT (\d+)/.test(splitData[1])))) {
+      if (!isIE() && (this.needFormater || format) && (splitData.length === 1 || (splitData.length === 2 && /^LIMIT (\d+)/.test(splitData[1])))) {
         const data = this.editorData.length > sqlStrLenLimit ? `${this.editorData.slice(0, sqlStrLenLimit)}...` : this.editorData
         // 是否显示 tips 取决于填入的 sql 字符数是否超过全局配置的
         this.showLimitTip = this.editorData.length > sqlStrLenLimit
@@ -155,6 +164,9 @@ import { Component } from 'vue-property-decorator'
         this.formatData = data.length > sqlRowsLimit ? data.slice(0, sqlRowsLimit).join('\n') + '...' : this.editorData
         this.fullFormatData = this.editorData
       }
+    },
+    changeFormatType (type) {
+      this.isAbridge && this.abridgeData(type.name === 'format')
     },
     handleFormatSql (sql) {
       try {
@@ -221,7 +233,8 @@ export default class KapEditor extends Vue {
         height: +this.height || 0,
         width: this.width
       },
-      showLimitTip: false
+      showLimitTip: false,
+      isFormat: 'origin'
     }
   }
   mounted () {
@@ -288,6 +301,14 @@ export default class KapEditor extends Vue {
     box-sizing: border-box;
     // background-color: @aceditor-bg-color;
     border-radius: 6px;
+    .format-switch {
+      position: absolute;
+      bottom: 0px;
+      right: 10px;
+      .el-tabs__header {
+        margin: 0;
+      }
+    }
     .ace_print-margin {
       visibility: hidden !important;
     }
