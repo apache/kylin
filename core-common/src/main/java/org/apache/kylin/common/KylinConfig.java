@@ -551,6 +551,9 @@ public class KylinConfig extends KylinConfigBase {
         for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
             String key = entry.getKey().toString();
             String value = entry.getValue().toString();
+            if (key.contains("password") || value.contains("password")) {
+                continue;
+            }
             orderedProperties.setProperty(key, value);
         }
         // Reset some properties which might be overriden by system properties
