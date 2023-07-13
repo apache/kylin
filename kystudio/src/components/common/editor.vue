@@ -15,7 +15,11 @@
       v-model="showCopyStatus">
       <i class="el-icon-circle-check"></i> <span>{{$t('kylinLang.common.copySuccess')}}</span>
     </el-popover>
-    <el-tooltip placement="top" :disabled="isFormat==='origin'" :content="$t('kylinLang.common.formatTips')">
+    <el-tooltip placement="top" :disabled="isFormat==='origin'">
+      <div slot="content">{{$t('kylinLang.common.notice')}}<br/>
+        <span class="tooltips-cont"><i class="el-ksd-n-icon-warning-filled ksd-mb-2"></i>
+        <span>{{$t('kylinLang.common.formatTips')}}</span></span>
+      </div>
       <i class="el-ksd-icon-dup_16 edit-copy-btn ksd-fs-16"
         @click.stop
         v-if="readOnly"
@@ -303,8 +307,9 @@ export default class KapEditor extends Vue {
     border-radius: 6px;
     .format-switch {
       position: absolute;
-      bottom: 0px;
+      bottom: -5px;
       right: 10px;
+      z-index: 1;
       .el-tabs__header {
         margin: 0;
       }
@@ -391,5 +396,8 @@ export default class KapEditor extends Vue {
         background: @ke-color-info-secondary-bg;
       }
     }
+  }
+  .tooltips-cont {
+    color: @text-disabled-color;
   }
 </style>
