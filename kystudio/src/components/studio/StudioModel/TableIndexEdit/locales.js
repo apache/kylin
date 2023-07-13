@@ -29,6 +29,7 @@ export default {
     indexTimeRange: 'Index’s Time Range',
     indexTimeRangeTips: 'The data range that the indexes will be built in. With "Batch and Streaming" selected, there will be generated batch indexes and streaming indexes with same content respectively. ',
     noIndexRangeByHybrid: 'Select index’s data range to display available columns.',
+    textRecognition: 'Text Recognition',
     refuseAddIndexTip: 'Can\'t add streaming indexes. Please stop the streaming job and then delete all the streaming segments.'
   }
 }

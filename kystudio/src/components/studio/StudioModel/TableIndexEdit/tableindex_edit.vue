@@ -29,6 +29,9 @@
           </el-alert>
           <template v-if="modelInstance.model_type !== 'HYBRID' || modelInstance.model_type === 'HYBRID' && tableIndexMeta.index_range">
             <p class="anit-table-tips" v-if="hasManyToManyAndAntiTable">{{$t('manyToManyAntiTableTip')}}</p>
+            <el-button plain class="ksd-ml-10" size="mini" @click="handleTableIndexRecognize">
+              {{$t('textRecognition')}}
+            </el-button>
             <el-input v-model="searchColumn" size="medium" prefix-icon="el-ksd-icon-search_22" style="width:200px" :placeholder="$t('filterByColumns')"></el-input>
           </template>
         </div>
@@ -118,6 +121,9 @@
         hideModal: types.HIDE_MODAL,
         setModalForm: types.SET_MODAL_FORM,
         resetModalForm: types.RESET_MODAL_FORM
+      }),
+      ...mapActions('RecognizeAggregateModal', {
+        callRecognizeAggregateModal: types.CALL_MODAL
       })
     },
     locales
@@ -348,6 +354,19 @@
       } else {
         this.$message({message: tipMsg, type: 'success'})
       }
+    }
+    async handleTableIndexRecognize () {
+      const selectedColumns = await this.callRecognizeAggregateModal({
+        type: 'TABLE_INDEX',
+        allColumns: this.allColumns,
+        model: this.modelInstance
+      })
+      this.allColumns.forEach((col) => {
+        if (selectedColumns.includes(col.fullName)) {
+          col.isUsed = true
+        }
+      })
+      this.selectTableIndex()
     }
     confirmSubmit (isLoadData) {
       this.isLoadDataLoading = isLoadData

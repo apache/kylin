@@ -8,7 +8,8 @@ const dom = acequire('ace/lib/dom')
 export const ERROR_TYPE = {
   COLUMN_NOT_IN_MODEL: 'columnNotInModel',
   COLUMN_NOT_IN_INCLUDES: 'columnNotInIncludes',
-  COLUMN_DUPLICATE: 'columnDuplicate'
+  COLUMN_DUPLICATE: 'columnDuplicate',
+  COLUMN_USED_IN_OTHER: 'columnUsedInOther'
 }
 
 export function $updatePlaceholder (editor, renderPlaceholder) {
@@ -83,7 +84,7 @@ export function searchColumnInEditor (editor, column) {
 }
 
 export function collectErrorsInEditor (errors, editor) {
-  const { notInModel, duplicate, notInIncludes } = errors
+  const { notInModel, duplicate, notInIncludes, usedInOthers } = errors
 
   let errorInEditor = []
   let errorLines = []
@@ -109,6 +110,14 @@ export function collectErrorsInEditor (errors, editor) {
     errorInEditor = [...errorInEditor, ...duplicateRanges.map(r => {
       errorLines.push(r.start.row)
       return { row: r.start.row, column, type: ERROR_TYPE.COLUMN_DUPLICATE }
+    })]
+  }
+
+  for (const column of usedInOthers) {
+    const usedInOtherRanges = searchColumnInEditor(editor, column)
+    errorInEditor = [...errorInEditor, ...usedInOtherRanges.map(r => {
+      errorLines.push(r.start.row)
+      return { row: r.start.row, column, type: ERROR_TYPE.COLUMN_USED_IN_OTHER }
     })]
   }
 
