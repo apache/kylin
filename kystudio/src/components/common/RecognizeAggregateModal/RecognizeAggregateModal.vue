@@ -90,6 +90,9 @@
   import { collectErrorsInEditor, refreshEditor, scrollToLineAndHighlight, updatePlaceHolder, ERROR_TYPE } from './handler'
   import { AGGREGATE_TYPE } from '../../../config'
   vuex.registerModule(['modals', 'RecognizeAggregateModal'], store)
+
+  const TABLE_INDEX = 'TABLE_INDEX'
+
   @Component({
     components: {
       AceEditor,
@@ -115,7 +118,8 @@
         'hierarchies',
         'hierarchyItems',
         'joints',
-        'jointItems'
+        'jointItems',
+        'tableIndexCols'
       ])
     },
     methods: {
@@ -149,7 +153,11 @@
     }
     get errorCount () {
       const { errorInEditor } = this
-      return errorInEditor.filter(line => [ERROR_TYPE.COLUMN_NOT_IN_MODEL, ERROR_TYPE.COLUMN_NOT_IN_INCLUDES].includes(line.type)).length
+      return errorInEditor.filter(line => [
+        ERROR_TYPE.COLUMN_NOT_IN_MODEL,
+        ERROR_TYPE.COLUMN_NOT_IN_INCLUDES,
+        ERROR_TYPE.COLUMN_USED_IN_OTHER
+      ].includes(line.type)).length
     }
     get repeatCount () {
       const { errorInEditor } = this
@@ -176,12 +184,13 @@
       return selectedDimensionCount && !isSelectAll
     }
     isColumnUsedInCurrent (column) {
-      const { type, includes, mandatories, hierarchyItems, jointItems } = this
+      const { type, includes, mandatories, hierarchyItems, jointItems, tableIndexCols } = this
       switch (type) {
         case AGGREGATE_TYPE.INCLUDE: return includes.includes(column)
         case AGGREGATE_TYPE.MANDATORY: return mandatories.includes(column)
         case AGGREGATE_TYPE.HIERARCHY: return hierarchyItems.includes(column)
         case AGGREGATE_TYPE.JOINT: return jointItems.includes(column)
+        case TABLE_INDEX: return tableIndexCols.includes(column)
         default: return false
       }
     }
@@ -223,6 +232,8 @@
           return this.$t('columnNotInIncludes', { column })
         case ERROR_TYPE.COLUMN_DUPLICATE:
           return this.$t('columnDuplicate', { column })
+        case ERROR_TYPE.COLUMN_USED_IN_OTHER:
+          return this.$t('columnUsedInOther', { column })
         default: return 'Unknow Error'
       }
     }
@@ -262,14 +273,12 @@
               {this.$t('inputPlaceholder1')}
               <el-tooltip
                 popperClass="recognize-aggregate-placeholder-tooltip"
-                content={(
-                  <ul>
-                    <li>{this.$t('inputPlaceholderTooltip1')}</li>
-                    <li>{this.$t('inputPlaceholderTooltip2')}</li>
-                  </ul>
-                )}
                 placement="top"
               >
+                <ul slot="content">
+                  <li>{this.$t('inputPlaceholderTooltip1')}</li>
+                  <li>{this.$t('inputPlaceholderTooltip2')}</li>
+                </ul>
                 <span class="how-to-use">{this.$t('inputPlaceholderTooltipTrigger')}</span>
               </el-tooltip>
             </div>
@@ -323,7 +332,7 @@
         if (columnText) {
           const dimension = modelDimensions.find(d => d.column === columnText)
           if (dimension) {
-            if (type !== AGGREGATE_TYPE.INCLUDE && !this.isColumnInIncludes(dimension.column)) {
+            if (![AGGREGATE_TYPE.INCLUDE, TABLE_INDEX].includes(type) && !this.isColumnInIncludes(dimension.column)) {
               this.setNotInIncludesError(dimension.column)
             } else if (!this.isColumnUsedInOther(dimension.column)) {
               const duplicate = dimensions.some(d => d.value === dimension.column)

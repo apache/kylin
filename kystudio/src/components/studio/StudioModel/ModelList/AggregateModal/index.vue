@@ -191,6 +191,14 @@
                             <common-tip placement="right" :content="$t('hierarchyDesc')">
                               <i class="el-ksd-icon-more_info_16"></i>
                             </common-tip>
+                            <span class="row ksd-fright ky-no-br-space">
+                              <el-button
+                                plain class="ksd-ml-10" size="mini"
+                                @click="handleHierarchyRecognize(AGGREGATE_TYPE.HIERARCHY, aggregateIdx)"
+                              >
+                                {{$t('textRecognition')}}
+                              </el-button>
+                            </span>
                           </h2>
                           <div class="list"
                             v-for="(hierarchy, hierarchyRowIdx) in aggregate.hierarchyArray"
@@ -229,6 +237,14 @@
                             <common-tip placement="right" :content="$t('jointDesc')">
                               <i class="el-ksd-icon-more_info_16"></i>
                             </common-tip>
+                            <span class="row ksd-fright ky-no-br-space">
+                              <el-button
+                                plain class="ksd-ml-10" size="mini"
+                                @click="handleJointRecognize(AGGREGATE_TYPE.JOINT, aggregateIdx)"
+                              >
+                                {{$t('textRecognition')}}
+                              </el-button>
+                            </span>
                           </h2>
                           <div class="list"
                             v-for="(joint, jointRowIdx) in aggregate.jointArray"
@@ -1033,11 +1049,11 @@ export default class AggregateModal extends Vue {
       this.aggregateStyle = []
     })
   }
-  handleAddDimensionRow (path, id) {
+  handleAddDimensionRow (path, id, items = []) {
     const rootKey = path.split('.')[0]
     const dimensionRows = get(this.form, path)
     const newId = dimensionRows.length
-    const newDimensionRow = { id: newId, items: [] }
+    const newDimensionRow = { id: newId, items }
     this.setModalForm({[rootKey]: push(this.form, path, newDimensionRow)[rootKey]})
     this.isWaitingCheckCuboids[id] = true
     this.isWaitingCheckAllCuboids = true
@@ -1126,21 +1142,45 @@ export default class AggregateModal extends Vue {
       }
     })
   }
-  async handleIncludesRecognize (type, aggregateIdx, groupIdx = 0) {
+  async handleIncludesRecognize (type, aggregateIdx) {
     const { model, form } = this
     const { aggregateArray = [] } = form
     const aggregate = aggregateArray[aggregateIdx]
-    const selectedColumns = await this.callRecognizeAggregateModal({ type, model, aggregate, groupIdx })
+    const selectedColumns = await this.callRecognizeAggregateModal({ type, model, aggregate })
     const value = [...aggregate.includes, ...selectedColumns]
     this.handleInput(`aggregateArray.${aggregateIdx}.includes`, value, aggregate.id)
   }
-  async handleMandatoryRecognize (type, aggregateIdx, groupIdx = 0) {
+  async handleMandatoryRecognize (type, aggregateIdx) {
     const { model, form } = this
     const { aggregateArray = [] } = form
     const aggregate = aggregateArray[aggregateIdx]
-    const selectedColumns = await this.callRecognizeAggregateModal({ type, model, aggregate, groupIdx })
+    const selectedColumns = await this.callRecognizeAggregateModal({ type, model, aggregate })
     const value = [...aggregate.mandatory, ...selectedColumns]
     this.handleInput(`aggregateArray.${aggregateIdx}.mandatory`, value, aggregate.id)
+  }
+  async handleHierarchyRecognize (type, aggregateIdx) {
+    const { model, form } = this
+    const { aggregateArray = [] } = form
+    const aggregate = aggregateArray[aggregateIdx]
+    const value = await this.callRecognizeAggregateModal({ type, model, aggregate })
+    const emptyArrayIdx = aggregate.hierarchyArray.findIndex(array => array.items.length === 0)
+    if (emptyArrayIdx !== -1) {
+      this.handleInput(`aggregateArray.${aggregateIdx}.hierarchyArray.${emptyArrayIdx}.items`, value, aggregate.id)
+    } else {
+      this.handleAddDimensionRow(`aggregateArray.${aggregateIdx}.hierarchyArray`, aggregate.id, value)
+    }
+  }
+  async handleJointRecognize (type, aggregateIdx) {
+    const { model, form } = this
+    const { aggregateArray = [] } = form
+    const aggregate = aggregateArray[aggregateIdx]
+    const value = await this.callRecognizeAggregateModal({ type, model, aggregate })
+    const emptyArrayIdx = aggregate.jointArray.findIndex(array => array.items.length === 0)
+    if (emptyArrayIdx !== -1) {
+      this.handleInput(`aggregateArray.${aggregateIdx}.jointArray.${emptyArrayIdx}.items`, value, aggregate.id)
+    } else {
+      this.handleAddDimensionRow(`aggregateArray.${aggregateIdx}.jointArray`, aggregate.id, value)
+    }
   }
   handleRemoveAllIncludes (aggregateIdx, titleId, id) {
     kylinConfirm(this.$t('clearAllAggregateTip', {aggId: titleId}), {type: 'warning'}, this.$t('clearAggregateTitle')).then(() => {
@@ -2210,7 +2250,7 @@ export default class AggregateModal extends Vue {
     position: absolute;
     right: 6px;
     top: 0;
-    transform: translateY(2px);
+    transform: translateY(12px);
     .is-text {
       font-size: 24px;
       border: 0;
