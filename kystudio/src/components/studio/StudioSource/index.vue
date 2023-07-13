@@ -365,12 +365,12 @@ export default class StudioSource extends Vue {
       let isHaveFirstTable = true
       // 3016 临时修复方案，sprint1 修复后，以修复后的代码为准
       if (isSetToDefault) {
-        await this.$refs['datasource-bar'].reloadTables(true) // true 表示不改变树开合情况
+        this.$refs['datasource-bar'] && await this.$refs['datasource-bar'].reloadTables(true) // true 表示不改变树开合情况
       } else {
-        await this.$refs['datasource-bar'].refreshTables()
+        this.$refs['datasource-bar'] && await this.$refs['datasource-bar'].refreshTables()
       }
       isSetToDefault
-        ? isHaveFirstTable = this.$refs['datasource-bar'].selectFirstTable()
+        ? isHaveFirstTable = this.$refs['datasource-bar'] && this.$refs['datasource-bar'].selectFirstTable()
         : await this.fetchTableDetail({ tableName, databaseName, sourceType: datasource })
       if (!isHaveFirstTable) {
         this.selectedTableData = null
