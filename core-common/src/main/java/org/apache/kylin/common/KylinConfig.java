@@ -25,6 +25,7 @@ import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.apache.kylin.common.util.VersionUtil;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.zookeeper.Shell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,11 +44,14 @@ import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.shaded.com.google.common.base.Preconditions;
@@ -75,7 +79,7 @@ public class KylinConfig extends KylinConfigBase {
     // thread-local instances, will override SYS_ENV_INSTANCE
     private static transient InternalThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new InternalThreadLocal<>();
 
-    public static final Set<String> BLACK_LIST = new HashSet<>();
+    public static final Set<String> BLACK_LIST = new LinkedHashSet<>(ImmutableList.of("kylin.metadata.url", "password"));
 
     static {
         /*
@@ -95,8 +99,6 @@ public class KylinConfig extends KylinConfigBase {
         System.setProperty("saffron.default.charset", NATIVE_UTF16_CHARSET_NAME);
         System.setProperty("saffron.default.nationalcharset", NATIVE_UTF16_CHARSET_NAME);
         System.setProperty("saffron.default.collation.name", NATIVE_UTF16_CHARSET_NAME + "$en_US");
-
-        BLACK_LIST.add("kylin.metadata.url");
     }
 
     public static File getKylinHomeAtBestEffort() {
@@ -551,12 +553,9 @@ public class KylinConfig extends KylinConfigBase {
         for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
             String key = entry.getKey().toString();
             String value = entry.getValue().toString();
-            if (key.contains("password") || value.contains("password")) {
-                continue;
-            }
             orderedProperties.setProperty(key, value);
         }
-        // Reset some properties which might be overriden by system properties
+        // Reset some properties which might be overridden by system properties
         String[] systemProps = { "kylin.server.cluster-servers", "kylin.server.cluster-servers-with-mode" };
         for (String sysProp : systemProps) {
             String sysPropValue = System.getProperty(sysProp);
@@ -565,14 +564,18 @@ public class KylinConfig extends KylinConfigBase {
             }
         }
 
+        // filter out sensitive entries according to a black list
+        List<Pattern> patterns = BLACK_LIST.stream().map(ptn -> Pattern.compile(ptn)).collect(Collectors.toList());
         final StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
-            if (BLACK_LIST.contains(entry.getKey()) == false) {
+            String k = entry.getKey();
+            String v = entry.getValue();
+            long blackHits = patterns.stream().filter(ptn -> ptn.matcher(k).find() || ptn.matcher(v).find()).count();
+            if (blackHits == 0) {
                 sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
             }
         }
         return sb.toString();
-
     }
 
     public String exportToString(Collection<String> propertyKeys) {
