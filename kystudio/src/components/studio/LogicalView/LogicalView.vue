@@ -224,7 +224,8 @@
         })
         const resultData = await handleSuccessAsync(res)
         this.running = false
-        this.showCreateSuccessAlert = this.content.toLocaleLowerCase().indexOf('create logical view') > -1
+        const logicalRule = /create\s+logical\s+view/i
+        this.showCreateSuccessAlert = logicalRule.test(this.content)
         resultData && this.insertEditorContent(`\n\n${resultData}`)
         this.resetErrorMsg()
         this.$message({ type: 'success', message: this.$t('runSuccess') })
