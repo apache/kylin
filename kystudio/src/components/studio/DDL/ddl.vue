@@ -153,7 +153,8 @@
         })
         const resultData = await handleSuccessAsync(res)
         this.running = false
-        this.showCreateSuccessAlert = this.content.toLocaleLowerCase().indexOf('create view') > -1
+        const ddlRule = /create\s+view/i
+        this.showCreateSuccessAlert = ddlRule.test(this.content)
         resultData && this.insertEditorContent(`\n\n${resultData}`)
         this.resetErrorMsg()
         this.$message({ type: 'success', message: this.$t('runSuccess') })
