@@ -432,11 +432,17 @@
       this.allColumns.forEach(item => {
         if (v && this.getDisabledTableType(item)) return
         item.isUsed = v
+        if (!v) {
+          item.isShared = v
+        }
       })
     }
     selectTableIndex (status, col) {
       const selectedColumns = this.getSelectedColumns
       const unSelected = this.allColumns.filter(it => !it.isUsed)
+      if (!status) { // 如果取消选择，isSorted重置成false
+        col.isShared = status
+      }
       this.allColumns = [...selectedColumns, ...unSelected]
       selectedColumns.length === this.allColumns.length && (this.isSelectAllTableIndex = true)
       unSelected.length === this.allColumns.length && (this.isSelectAllTableIndex = false)
