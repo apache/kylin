@@ -754,7 +754,7 @@ export default class ModelPartitionModal extends Vue {
     } else {
       this.modelDesc.partition_desc.partition_date_column = ''
     }
-    if (this.partitionMeta.multiPartition) {
+    if (this.partitionMeta.multiPartition && this.buildType === 'incremental') {
       this.modelDesc.multi_partition_desc = {
         ...this.modelInstance.multi_partition_desc || {},
         columns: [this.partitionMeta.table + '.' + this.partitionMeta.multiPartition]
