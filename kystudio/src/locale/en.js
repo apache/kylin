@@ -226,7 +226,10 @@ exports.default = {
     jobNode: 'Job node',
     BATCH: 'Batch',
     STREAMING: 'Streaming',
-    HYBRID: 'Fusion'
+    HYBRID: 'Fusion',
+    format: 'Reformat',
+    origin: 'Default Format',
+    formatTips: 'It is recommended to copying the SQL using the default format. The current format may cause query errors.'
   },
   model: {
     draft: 'Draft',

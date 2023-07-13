@@ -59,7 +59,7 @@
                   :ref="'historySqlEditor' + props.row.query_id"
                   :key="props.row.query_id"
                   :readOnly="true"
-                  :needFormater="true"
+                  :isFormatSwitch="true"
                   :dragable="false"
                   :isAbridge="true"
                   :value="props.row.sql_text">
@@ -176,7 +176,7 @@
           {{transToGmtTime(props.row.query_time)}}
         </template>
       </el-table-column>
-      <el-table-column :renderHeader="renderColumn2" prop="duration" align="right" width="100">
+      <el-table-column :renderHeader="renderColumn2" prop="duration" align="right" width="120">
         <template slot-scope="props">
           <span v-if="props.row.duration < 1000">&lt; 1s</span>
           <span v-if="props.row.duration >= 1000">{{props.row.duration / 1000 | fixed(2)}}s</span>

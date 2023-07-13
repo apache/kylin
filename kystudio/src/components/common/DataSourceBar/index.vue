@@ -31,7 +31,7 @@
     </section>
     <section class="body">
       <div v-if="isShowLoadTable" class="btn-group">
-        <el-button plain size="medium" v-if="!isLoadingTreeData && showAddDatasourceBtn && !isLogicalView" type="primary" v-guide.addDatasource icon="el-ksd-icon-add_data_source_old" @click="importDataSource('selectSource', currentProjectData)">
+        <el-button plain size="medium" v-if="!isLoadingTreeData && showAddDatasourceBtn && !isLogicalView" type="primary" icon="el-ksd-icon-add_data_source_old" @click="importDataSource('selectSource', currentProjectData)">
           {{$t('addDatasource')}}
         </el-button>
       </div>
