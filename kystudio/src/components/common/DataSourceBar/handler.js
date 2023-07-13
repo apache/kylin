@@ -27,6 +27,7 @@ export const render = {
   table: {
     render (h, { node, data, store }) {
       const { label, tags, dateRange, isTopSet, datasource, isCurrentProLogicalTable } = data // datasource 为L 是逻辑视图表
+      const labelTitle = datasource === 'L' ? label + ' ' + this.$t('project') + data.__data.created_project : label
       const dataRangeTitle = this.$t('dataRange')
       const nodeClass = {
         class: [
@@ -40,7 +41,7 @@ export const render = {
       return (
         <div>
           <div {...nodeClass}>
-            <span title={label} class={datasource === 'L' && !isCurrentProLogicalTable ? 'is-disabled' : ''}>{label}</span>
+            <span title={labelTitle} class={datasource === 'L' && !isCurrentProLogicalTable ? 'is-disabled' : ''}>{label}</span>
             <div class="right">
               { datasource === 'L' ? (
                 <span class="tree-icon" slot="reference">

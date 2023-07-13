@@ -86,7 +86,7 @@
                 <div class="label">{{$t('createDDLSuggestionTitle')}}</div>
                 <el-alert v-if="errorMsg" class="ksd-mb-16" :title="errorMsg" type="error" show-icon :closable="false"></el-alert>
                 <div v-if="stacktrace" class="trance-msg">{{stacktrace}}</div>
-                <div class="item" v-for="(item, index) in ($lang === 'en' ? rules[0] : rules[1])" :key="index">{{index + 1}}. {{item}}</div>
+                <div class="item" v-for="(item, index) in ($lang === 'en' ? rules[0] : rules[1])" :key="index">{{index + 1}}. <span v-html="item.replace(/\n/g, '<br/>')"></span></div>
               </div>
             </div>
           </template>
@@ -131,29 +131,14 @@
         logicalViewTable: 'Logical View Table',
         datasourceTable: 'Data Source Table',
         syntaxRules: 'Syntax Rules',
-        createDDLSuggestionTitle: 'To create a Logical View in KE, you need to follow the syntax rules of KE.',
+        createDDLSuggestionTitle: 'Logical View is a special view which only exists in Kylin,you can create or drop Logical View on this page. Create Logical View in Kylin needs to follow the following  rules.',
         importDataSource: 'Import',
         runBtnTip: 'Execute ',
         acceleratorKey: '⌃/⌘ enter',
         runSuccess: 'Execute succeed.',
-        runFailed: 'Execute Failed，Please check and try again.',
-        createViewSuccessAlert: 'The Logical View is created in virtual database {databaseName}  after executing "Create Logical View". Please import it from the data source to use it.',
+        runFailed: 'Execute Failed, Please check and try again.',
+        createViewSuccessAlert: 'After creating logical view, the view is created in virtual database {databaseName}, you need click the "refresh now" link in datasource and then can see the new Logical View. Then you should load it into data source.',
         goToImport: 'Go to Import'
-      },
-      'zh-cn': {
-        newLogicalView: '新的逻辑视图',
-        logicalView: '逻辑视图',
-        logicalViewTable: '逻辑视图表',
-        datasourceTable: '数据源表',
-        syntaxRules: '语法规则',
-        createDDLSuggestionTitle: '在 KE 中创建 Logical View 需要遵循 KE 的语法规则。',
-        importDataSource: '导入',
-        runBtnTip: '执行 ',
-        acceleratorKey: '⌃/⌘ 回车',
-        runSuccess: '执行成功',
-        runFailed: '执行失败，请检查后重试',
-        createViewSuccessAlert: '“Create Logical View” 执行后逻辑视图创建至虚拟库 {databaseName}，需要从数据源导入后可用。',
-        goToImport: '立即导入'
       }
     }
   })
