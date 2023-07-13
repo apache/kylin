@@ -188,7 +188,7 @@ export default {
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.second-storage.query-metric-collect', key: 'storageQuery', defaultValue: 'true'})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.hive.enabled', key: 'ddlEnabled', defaultValue: 'false'})
           commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.logical-view.enabled', key: 'logicalViewEnabled', defaultValue: 'false'})
-          commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.logical-view-database', key: 'logicalViewDatabase', defaultValue: 'KYLIN_LOGICAL_VIEW'})
+          commit(types.GET_CONF_BY_NAME, {name: 'kylin.source.ddl.logical-view.database', key: 'logicalViewDatabase', defaultValue: 'KYLIN_LOGICAL_VIEW'})
           resolve(response)
         }, () => {
           reject()
