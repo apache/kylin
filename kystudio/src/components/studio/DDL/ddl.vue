@@ -94,7 +94,7 @@
         newDDLTable: 'New DDL Table',
         datasourceTable: 'Data Source Table',
         syntaxRules: 'Syntax Rules',
-        createDDLSuggestionTitle: 'To create a DDL Table in KE, you need to follow the syntax rules of KE.',
+        createDDLSuggestionTitle: 'To create a DDL Table in Kylin, you need to follow the syntax rules of Kylin.',
         importDataSource: 'Import',
         runBtnTip: 'Execute ',
         acceleratorKey: '⌃/⌘ enter',
