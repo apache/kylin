@@ -68,6 +68,7 @@ import org.apache.kylin.engine.spark.job.NSparkCubingUtil;
 import org.apache.kylin.engine.spark.job.ParamsConstants;
 import org.apache.kylin.engine.spark.job.ResourceDetect;
 import org.apache.kylin.engine.spark.job.RestfulJobProgressReport;
+import org.apache.kylin.engine.spark.job.SegmentBuildJob;
 import org.apache.kylin.engine.spark.job.SparkJobConstants;
 import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.kylin.engine.spark.scheduler.ClusterMonitor;
@@ -105,10 +106,6 @@ import org.apache.spark.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
-import org.apache.kylin.guava30.shaded.common.collect.Maps;
-
-import org.apache.kylin.engine.spark.job.SegmentBuildJob;
 import lombok.val;
 import scala.runtime.AbstractFunction1;
 import scala.runtime.BoxedUnit;

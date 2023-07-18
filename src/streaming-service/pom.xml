@@ -24,7 +24,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <name>Kylin - Streaming Service</name>
-    <groupId>org.apache.kylin</groupId>
     <artifactId>kylin-streaming-service</artifactId>
 
     <properties>
@@ -55,24 +54,6 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-common-service</artifactId>
             <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-data-loading-service</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-job-service</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-query-service</artifactId>
             <scope>test</scope>
         </dependency>
 

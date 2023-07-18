@@ -19,6 +19,7 @@
 package org.apache.kylin.query.routing;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,13 +30,16 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.common.util.Unsafe;
 import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
-import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 import org.apache.kylin.metadata.cube.cuboid.NLayoutCandidate;
+import org.apache.kylin.metadata.cube.model.IndexPlan;
+import org.apache.kylin.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.metadata.cube.model.NDataLayout;
 import org.apache.kylin.metadata.cube.model.NDataflow;
 import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.cube.model.NDataflowUpdate;
+import org.apache.kylin.metadata.cube.model.NIndexPlanManager;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.NDataModel;
 import org.apache.kylin.metadata.model.NDataModelManager;
@@ -43,12 +47,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.engine.SchemaMetaData;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.request.CreateBaseIndexRequest;
-import org.apache.kylin.rest.service.IndexPlanService;
-import org.apache.kylin.rest.service.ModelService;
-import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.util.OlapContextUtil;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparderEnv;
@@ -59,26 +57,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
-
-    @InjectMocks
-    private final IndexPlanService indexPlanService = Mockito.spy(new IndexPlanService());
-
-    @Mock
-    private AclEvaluate aclEvaluate = Mockito.spy(AclEvaluate.class);
-
-    @Mock
-    private AclUtil aclUtil = Mockito.spy(AclUtil.class);
-
-    @InjectMocks
-    private final ModelService modelService = Mockito.spy(new ModelService());
 
     @BeforeClass
     public static void initSpark() {
@@ -108,21 +88,10 @@ public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
     public void setup() throws Exception {
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         this.createTestMetadata("src/test/resources/ut_meta/tableindex_answer_selectstart");
-        ReflectionTestUtils.setField(aclEvaluate, "aclUtil", aclUtil);
-        ReflectionTestUtils.setField(indexPlanService, "aclEvaluate", aclEvaluate);
-        ReflectionTestUtils.setField(modelService, "aclEvaluate", aclEvaluate);
-        TestingAuthenticationToken auth = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        NDefaultScheduler scheduler = NDefaultScheduler.getInstance(getProject());
-        scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
-        if (!scheduler.hasStarted()) {
-            throw new RuntimeException("scheduler has not been started");
-        }
     }
 
     @After
     public void after() throws Exception {
-        NDefaultScheduler.destroyInstance();
         cleanupTestMetadata();
     }
 
@@ -186,10 +155,16 @@ public class TableIndexAnswerSelectStarTest extends NLocalWithSparkSessionTest {
             copyForWrite.getAllNamedColumns().add(newCol);
         });
 
-        CreateBaseIndexRequest request = new CreateBaseIndexRequest();
-        request.setProject(getProject());
-        request.setModelId(modelId);
-        indexPlanService.updateBaseIndex(getProject(), request, false, false, false);
+        NIndexPlanManager indexPlanManager = NIndexPlanManager.getInstance(KylinConfig.getInstanceFromEnv(), getProject());
+        IndexPlan indexPlan = indexPlanManager.getIndexPlan(modelId);
+        Long oldBaseAggLayout = indexPlan.getBaseAggLayoutId();
+        indexPlanManager.updateIndexPlan(indexPlan.getUuid(), copyForWrite -> copyForWrite
+                .markWhiteIndexToBeDelete(indexPlan.getUuid(), Sets.newHashSet(oldBaseAggLayout), new HashMap<>()));
+        NDataModel model = modelManager.getDataModelDesc(modelId);
+        LayoutEntity newBaseAggLayout = indexPlan.createBaseAggIndex(model);
+        indexPlanManager.updateIndexPlan(indexPlan.getUuid(),
+                copyForWrite -> copyForWrite.createAndAddBaseIndex(Lists.newArrayList(newBaseAggLayout)));
+
         NDataflow dataflow = dataflowManager.getDataflow(modelId);
         String segId = "87d65498-b922-225c-1db7-13de001beba8";
         NDataLayout baseAggLayout = dataflow.getSegment(segId).getLayout(1L);

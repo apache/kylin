@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.server;
+package org.apache.kylin.rest.controller;
 
 import static org.apache.kylin.common.constant.HttpConstant.HTTP_VND_APACHE_KYLIN_JSON;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.hamcrest.core.StringContains.containsString;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import java.io.File;
 import java.sql.Connection;
@@ -27,20 +28,25 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
+import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.metadata.user.ManagedUser;
 import org.apache.kylin.query.KylinTestBase;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.service.UserGrantedAuthority;
 import org.apache.kylin.rest.service.UserService;
+import org.apache.kylin.server.AbstractMVCIntegrationTestCase;
 import org.apache.kylin.source.jdbc.H2Database;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -69,7 +75,7 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
     @Test
     public void testQuery() throws Exception {
         final PrepareSqlRequest sqlRequest = new PrepareSqlRequest();
-        sqlRequest.setProject("default");
+        sqlRequest.setProject("DEFAULT");
         sqlRequest.setSql("-- This is comment" + '\n' + "SELECT * FROM TEST_KYLIN_FACT");
         sqlRequest.setUser_defined_tag("user_tag");
         overwriteSystemProp("kylin.query.pushdown-enabled", "false");
@@ -90,26 +96,9 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
         Assert.assertTrue(StringUtils.contains(exceptionMsg, "No realization found for OLAPContext"));
     }
 
-    @Ignore("TODO: remove or adapt")
-    public void testUserTagExceedLimitation() throws Exception {
-        final PrepareSqlRequest sqlRequest = new PrepareSqlRequest();
-        sqlRequest.setProject("default");
-        sqlRequest.setSql("-- This is comment" + '\n' + "SELECT * FROM TEST_KYLIN_FACT");
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i <= 256; i++) {
-            builder.append('a');
-        }
-        sqlRequest.setUser_defined_tag(builder.toString());
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/query").contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtil.writeValueAsString(sqlRequest))
-                .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest()).andExpect(jsonPath("$.code").value("999"))
-                .andExpect(jsonPath("$.msg").value(
-                        "Can’t add the tag, as the length exceeds the maximum 256 characters. Please modify it."));
-    }
-
     @Test
     public void testPushDownQuery() throws Exception {
+        Class.forName("org.h2.Driver");
         overwriteSystemProp("kylin.query.pushdown.runner-class-name",
                 "org.apache.kylin.query.pushdown.PushDownRunnerJdbcImpl");
         overwriteSystemProp("kylin.query.pushdown-enabled", "true");
@@ -127,9 +116,9 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
         overwriteSystemProp("kylin.query.pushdown.jdbc.password", "");
 
         final PrepareSqlRequest sqlRequest = new PrepareSqlRequest();
-        sqlRequest.setProject("default");
+        sqlRequest.setProject("Default");
 
-        String queryFileName = "src/test/resources/query/sql_pushdown/query04.sql";
+        String queryFileName = "src/test/resources/query/sql_pushdown.sql";
         File sqlFile = new File(queryFileName);
         String sql = KylinTestBase.getTextFromFile(sqlFile);
         sqlRequest.setSql(sql);
@@ -167,7 +156,7 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
     @Test
     public void testPrepareQuery() throws Exception {
         final PrepareSqlRequest sqlRequest = new PrepareSqlRequest();
-        sqlRequest.setProject("default");
+        sqlRequest.setProject("Default");
         sqlRequest.setSql("SELECT * FROM test_country");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/query/prestate").contentType(MediaType.APPLICATION_JSON)
@@ -180,11 +169,57 @@ public class NQueryControllerTest extends AbstractMVCIntegrationTestCase {
     @Test
     public void testGetMetadata() throws Exception {
         final val mvcResult = mockMvc
-                .perform(MockMvcRequestBuilders.get("/api/query/tables_and_columns").param("project", "default")
+                .perform(MockMvcRequestBuilders.get("/api/query/tables_and_columns").param("project", "DEFAULT")
                         .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
                 .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
         final JsonNode jsonNode = JsonUtil.readValueAsTree(mvcResult.getResponse().getContentAsString());
         final JsonNode data = jsonNode.get("data");
-        Assert.assertTrue(!data.toString().contains(ComputedColumnDesc.getComputedColumnInternalNamePrefix()));
+        Assert.assertFalse(data.toString().contains(ComputedColumnDesc.getComputedColumnInternalNamePrefix()));
+    }
+
+    @Test
+    public void testGetQueryHistoryTableNames() throws Exception {
+        List<String> projects = Arrays.asList("DEfault", "SSb");
+        MvcResult mvcResult = mockMvc
+                .perform(MockMvcRequestBuilders.get("/api/query/history_queries/table_names")
+                        .param("projects", StringUtils.join(projects, ","))
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        JsonNode jsonNode = JsonUtil.readValueAsTree(mvcResult.getResponse().getContentAsString());
+        Map data = JsonUtil.readValue(jsonNode.get("data").toString(), Map.class);
+        Set<String> actualProjects = data.keySet();
+        Assert.assertEquals(2, actualProjects.size());
+        Assert.assertTrue(actualProjects.contains("default"));
+        Assert.assertTrue(actualProjects.contains("ssb"));
+
+        mvcResult = mockMvc
+                .perform(MockMvcRequestBuilders.get("/api/query/history_queries/table_names")
+                        .accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+
+        jsonNode = JsonUtil.readValueAsTree(mvcResult.getResponse().getContentAsString());
+        data = JsonUtil.readValue(jsonNode.get("data").toString(), Map.class);
+        actualProjects = data.keySet();
+
+        int allProjectsSize = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects().size();
+        Assert.assertEquals(allProjectsSize, actualProjects.size());
+    }
+
+    @Test
+    public void testDownloadQueryResultWithQueryException() throws Exception {
+        MvcResult result = mockMvc
+                .perform(MockMvcRequestBuilders.post("/api/query/format/{format}", "csv")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE).param("project", "Default")
+                        .param("sql", "SELECT error").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        Assert.assertEquals(1, content.length());
+        Assert.assertEquals('\uFEFF', content.charAt(0));
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/query/format/{format}", "csv")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE).param("project", "Default")
+                .param("sql", "SELECT 1").accept(MediaType.parseMediaType(HTTP_VND_APACHE_KYLIN_JSON)))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andExpect(content().string(containsString("1")));
     }
 }

@@ -25,6 +25,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.project.NProjectManager;
 import org.apache.kylin.query.engine.PrepareSqlStateParam;
 import org.apache.kylin.query.engine.QueryExec;
+import org.apache.kylin.query.util.PrepareSQLUtils;
 import org.apache.kylin.query.util.QueryParams;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.util.TempStatementUtil;

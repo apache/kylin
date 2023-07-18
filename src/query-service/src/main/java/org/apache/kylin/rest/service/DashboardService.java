@@ -20,7 +20,7 @@ package org.apache.kylin.rest.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kylin.common.response.MetricsResponse;
-import org.apache.kylin.metadata.cube.realization.HybridRealization;
+import org.apache.kylin.metadata.realization.HybridRealization;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.exception.UnsupportedQueryException;
 import org.apache.kylin.rest.constant.Constant;

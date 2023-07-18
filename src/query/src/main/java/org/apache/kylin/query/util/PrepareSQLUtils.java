@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.query.util;
 
 import java.math.BigDecimal;
 import java.sql.Date;

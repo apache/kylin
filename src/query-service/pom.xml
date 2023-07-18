@@ -44,6 +44,10 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-query</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-metadata</artifactId>
+        </dependency>
 
         <!-- hadoop -->
         <dependency>
@@ -93,14 +97,6 @@
         </dependency>
 
         <!-- Test & Env -->
-
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-core-metadata</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-modeling-service</artifactId>
@@ -109,13 +105,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-common-service</artifactId>
+            <artifactId>kylin-core-metadata</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-datasource-service</artifactId>
+            <artifactId>kylin-common-service</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

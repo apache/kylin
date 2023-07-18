@@ -1,21 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
--->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
@@ -24,8 +10,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kylin-it</artifactId>
-    <name>Kylin - Integration Test</name>
+    <artifactId>kylin-server-it</artifactId>
+    <name>Kylin - Server Integration Test</name>
 
     <properties>
         <beanutils.version>1.9.4</beanutils.version>
@@ -48,17 +34,34 @@
             <artifactId>commons-io</artifactId>
             <scope>compile</scope>
         </dependency>
-
+        <!--yinglong-->
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-it</artifactId>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-query-server</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>spring-boot-starter-validation</artifactId>
+                    <groupId>org.springframework.boot</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-metadata-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-common-server</artifactId>
+        </dependency>
         <!--KAP-->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-metadata</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-query</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -67,14 +70,6 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-core-storage</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-streaming</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -194,26 +189,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-query</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-spark</artifactId>
             <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-streaming</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.parquet</groupId>
-            <artifactId>parquet-hadoop-bundle</artifactId>
-            <version>${parquet.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

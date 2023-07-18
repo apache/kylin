@@ -1108,10 +1108,10 @@ public class IndexPlanService extends BasicService implements TableIndexPlanSupp
 
     @Transaction(project = 0)
     public BuildBaseIndexResponse updateBaseIndex(String project, CreateBaseIndexRequest request,
-            boolean createIfNotExistTableLayout, boolean createIfNotExistAggLayout, boolean isAuo) {
+            boolean createIfNotExistTableLayout, boolean createIfNotExistAggLayout, boolean isAuto) {
         aclEvaluate.checkProjectOperationDesignPermission(project);
         // update = delete + create
-        Set<Long> needDelete = checkNeedUpdateBaseIndex(project, request, isAuo);
+        Set<Long> needDelete = checkNeedUpdateBaseIndex(project, request, isAuto);
         List<LayoutEntity> needRetainAggLayout = getNeedRetainAggLayout(project, request, needDelete);
         deleteOrMarkTobeDelete(project, request.getModelId(), needDelete);
         removeFromBlackList(project, request, needDelete, needRetainAggLayout);

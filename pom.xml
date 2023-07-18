@@ -406,6 +406,7 @@
         <module>src/job-service</module>
         <module>src/streaming-service</module>
         <module>src/kylin-it</module>
+        <module>src/kylin-server-it</module>
 
         <!-- controller  -->
         <module>src/common-server</module>
@@ -760,6 +761,12 @@
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-it</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-server-it</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
@@ -1327,6 +1334,10 @@
                     </exclusion>
                     <exclusion>
                         <groupId>com.twitter</groupId>
+                         <artifactId>parquet-hadoop-bundle</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.parquet</groupId>
                         <artifactId>parquet-hadoop-bundle</artifactId>
                     </exclusion>
                     <exclusion>

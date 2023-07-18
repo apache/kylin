@@ -115,7 +115,7 @@ class BroadcasterTest {
     void testBroadcastAddS3Conf() throws Exception {
         BroadcastListener broadcastListener = new BroadcastListener();
         broadcastListener.handle(new AddS3CredentialToSparkBroadcastEventNotifier("aa", "bb", "cc"));
-        assert SparderEnv.getSparkSession().conf().contains(String.format("fs.s3a.bucket.%s.assumed.role.arn", "aa"));
+        Assert.assertTrue(SparderEnv.getSparkSession().conf().contains(String.format("fs.s3a.bucket.%s.assumed.role.arn", "aa")));
     }
 
     @Test
