@@ -52,6 +52,13 @@
 
         <dependency>
             <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-metadata</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-spark</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -244,6 +251,16 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-data-loading-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-query-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-metadata-server</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -24,7 +24,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <name>Kylin - Job Service</name>
-    <groupId>org.apache.kylin</groupId>
     <artifactId>kylin-job-service</artifactId>
 
     <properties>
@@ -39,11 +38,6 @@
         </dependency>
 
         <!-- test -->
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-core-metadata</artifactId>
-            <type>test-jar</type>
-        </dependency>
         <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>

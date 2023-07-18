@@ -34,6 +34,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.kylin.common.util.Unsafe;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.log4j.Logger;
 
 import sun.security.krb5.internal.ktab.KeyTab;
@@ -202,20 +203,12 @@ public class KerberosLoginUtil {
     }
 
     public static void setJaasConf(String loginContextName, String principal, String keytabFile) throws IOException {
-        if ((loginContextName == null) || (loginContextName.length() <= 0)) {
-            LOG.error("input loginContextName is invalid.");
-            throw new IOException("input loginContextName is invalid.");
-        }
-
-        if ((principal == null) || (principal.length() <= 0)) {
-            LOG.error("input principal is invalid.");
-            throw new IOException("input principal is invalid.");
-        }
-
-        if ((keytabFile == null) || (keytabFile.length() <= 0)) {
-            LOG.error("input keytabFile is invalid.");
-            throw new IOException("input keytabFile is invalid.");
-        }
+        Preconditions.checkArgument((loginContextName == null) || (loginContextName.length() <= 0),
+                "input loginContextName is invalid.");
+        Preconditions.checkArgument((principal == null) || (principal.length() <= 0),
+                "input principal is invalid.");
+        Preconditions.checkArgument((keytabFile == null) || (keytabFile.length() <= 0),
+                "input keytabFile is invalid.");
 
         File userKeytabFile = new File(keytabFile);
         if (!userKeytabFile.exists()) {

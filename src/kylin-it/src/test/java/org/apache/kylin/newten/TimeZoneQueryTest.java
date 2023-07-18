@@ -44,7 +44,7 @@ import org.apache.kylin.metadata.cube.model.NDataflowManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.query.engine.PrepareSqlStateParam;
 import org.apache.kylin.query.pushdown.SparkSqlClient;
-import org.apache.kylin.rest.util.PrepareSQLUtils;
+import org.apache.kylin.query.util.PrepareSQLUtils;
 import org.apache.kylin.util.ExecAndComp;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Row;

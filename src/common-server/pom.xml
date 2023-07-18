@@ -44,10 +44,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-datasource-service</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-data-loading-service</artifactId>
         </dependency>
         <dependency>

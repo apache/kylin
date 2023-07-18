@@ -147,11 +147,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-soft-affinity-cache</artifactId>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-common</artifactId>
             <type>test-jar</type>
         </dependency>

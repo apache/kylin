@@ -153,7 +153,7 @@ import org.apache.kylin.rest.response.TableMetaCacheResultV2;
 import org.apache.kylin.rest.security.MutableAclRecord;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
-import org.apache.kylin.rest.util.PrepareSQLUtils;
+import org.apache.kylin.query.util.PrepareSQLUtils;
 import org.apache.kylin.rest.util.QueryCacheSignatureUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
 import org.apache.kylin.rest.util.QueryUtils;
