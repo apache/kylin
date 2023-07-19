@@ -312,11 +312,11 @@ export default class Diagnostic extends Vue {
       if (data) {
         if (this.isQueryHistory) {
           const hostItem = data.find((item) => item.host === this.queryServer)
-          Object.prototype.toString.call(hostItem) === '[object Object]' && this.serverOptions.push({label: `${hostItem.host}(${hostItem.mode && hostItem.mode.toLocaleUpperCase()})`, value: hostItem.host})
+          Object.prototype.toString.call(hostItem) === '[object Object]' && this.serverOptions.push({label: `${hostItem.host}(${hostItem.mode && hostItem.mode.toLocaleUpperCase()})`, value: hostItem.secretName})
           this.servers = this.serverOptions.length ? [this.serverOptions[0].value] : []
         } else {
           data.forEach(item => {
-            Object.prototype.toString.call(item) === '[object Object]' && this.serverOptions.push({label: `${item.host}(${item.mode && item.mode.toLocaleUpperCase()})`, value: item.host})
+            Object.prototype.toString.call(item) === '[object Object]' && this.serverOptions.push({label: `${item.host}(${item.mode && item.mode.toLocaleUpperCase()})`, value: item.secretName})
           })
           this.servers = this.serverOptions.length ? [this.serverOptions[0].value] : []
         }
@@ -407,10 +407,10 @@ export default class Diagnostic extends Vue {
         end: new Date(this.dateTime.next).getTime()
       }
     }
-    this.servers.forEach(async (host) => {
+    this.servers.forEach(async (secretName) => {
       if (this.isQueryHistory) {
         await this.getQueryDiagnostic({
-          host: `http://${host.trim()}`,
+          host: secretName,
           ...data,
           tm: this.getTimes()
         }).then(() => {
@@ -423,7 +423,7 @@ export default class Diagnostic extends Vue {
         })
       } else {
         await this.getDumpRemote({
-          host: `http://${host.trim()}`,
+          host: secretName,
           ...data,
           tm: this.getTimes()
         }).then(() => {
