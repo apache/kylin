@@ -3,7 +3,7 @@ exports.default = {
   common: {
     // 常规操作
     dialogHiveTreeNoData: 'Please click data source to load source tables',
-    noProjectTips: 'You can click the button above to add a project',
+    noProjectTips: 'You can click the button above to new a project',
     seconds: 'seconds',
     minutes: 'minutes',
     hours: 'hours',
@@ -26,6 +26,8 @@ exports.default = {
     load: 'Load',
     loadMetadata: 'Load metadata',
     ok: 'OK',
+    create: 'Create',
+    new: 'New',
     confirmClose: 'Turn Off',
     exit: 'Exit',
     retry: 'Retry',
@@ -236,7 +238,7 @@ exports.default = {
     modelName: 'Model Name',
     computedColumn: 'Computed Column',
     modelNameGrid: 'Model Name',
-    modelList: 'Model List',
+    modelList: 'Model',
     index: 'index',
     indexGroup: 'Index Group',
     tableIndex: 'table index',
@@ -297,7 +299,7 @@ exports.default = {
     sameCCExpression1: 'In this model, there has been a computed column "',
     sameCCExpression2: '" defined as expression.Please define another one.',
     ccWrongPosition: 'The computed column should be defined in table "',
-    addModel: 'Add Model',
+    addModel: 'New Model',
     hasNoFact: 'Fact Table is mandatory for model',
     cycleLinkTip: 'The join may lead some tables joining in a circle.',
     aloneTableTip: '{aloneCount} tables haven\'t been joined with the fact table directly or via other dimension tables. The model may lose them if you continue to save the model anyway.',
@@ -364,7 +366,7 @@ exports.default = {
     mustSelectProject: 'Please select a project first',
     selectProject: 'Please select a project',
     projectList: 'Project List',
-    addProject: 'Add Project'
+    addProject: 'New Project'
   },
   query: {
     saveQuery: 'Save Query',
@@ -484,7 +486,6 @@ exports.default = {
     acceleration: 'Acceleration',
     design: 'Studio',
     job: 'Batch Job',
-    streamingjob: 'Streaming Job',
     cluster: 'Cluster',
     admin: 'Admin',
     user: 'User',
@@ -511,7 +512,7 @@ exports.default = {
     notOtherChars: 'Not support special symbols (/:\\*?"<>|\')'
   },
   guide: {
-    addProjectTip: 'When you add a new project, choose a proper project type is essential. To analysis based on multi-dimensional models, you may choose the AI augmented mode.',
+    addProjectTip: 'When you create a new project, choose a proper project type is essential. To analysis based on multi-dimensional models, you may choose the AI augmented mode.',
     // loadTableTipAuto: 'The Kylin platform may need to connect with your source data. Choose your desired dataset and sync its schema. Here we use the SSB dataset to do further tasks.',
     queryTipAuto: 'Once source tables synced, you can explore data among the SSB dataset.',
     speedTipAuto: 'SQL statements in the Waiting List are filtered by the system. You can adjust these rules to manage accelerating workload.',

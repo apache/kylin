@@ -1,21 +1,11 @@
 <template>
   <div class="mode-list" :class="{'full-cell': showFull}" id="modelListPage">
-    <div class="ksd-title-page ksd-mt-32">{{$t('kylinLang.model.modelList')}}</div>
-    <div class="model-list-contain ksd-mt-16">
-      <div class="clearfix">
-        <div class="ksd-fright">
-          <el-input :placeholder="$t('filterModelOrOwner')" style="width:250px" size="medium" :prefix-icon="searchLoading? 'el-ksd-icon-loading_22':'el-ksd-icon-search_22'" :value="filterArgs.model_alias_or_owner" @input="handleFilterInput" v-global-key-event.enter.debounce="searchModels" @clear="searchModels()" class="show-search-btn" >
-          </el-input>
-          <el-button
-            text
-            class="filter-button"
-            type="primary"
-            @click="handleToggleFilters">
-            <span>{{$t('filterButton')}}</span>
-            <i :class="['el-ksd-icon-arrow_up_22', isShowFilters && 'reverse']" />
-          </el-button>
-        </div>
-        <div class="ky-no-br-space model-list-header clearfix">
+    <div class="clearfix ksd-mt-32">
+      <div class="ksd-fleft">
+        <div class="ksd-title-page">{{$t('kylinLang.model.modelList')}}</div>
+      </div>
+      <div class="ksd-fright">
+        <div class="ky-no-br-space model-list-header">
           <el-dropdown
             split-button
             class="ksd-fleft"
@@ -25,7 +15,7 @@
             placement="bottom-start"
             btn-icon="el-ksd-icon-add_22"
             v-if="datasourceActions.includes('modelActions')"
-            @click="showAddModelDialog">{{$t('kylinLang.common.model')}}
+            @click="showAddModelDialog">{{$t('kylinLang.common.new')}}
             <el-dropdown-menu slot="dropdown" class="model-actions-dropdown">
               <el-dropdown-item
                 v-if="metadataActions.includes('executeModelMetadata')"
@@ -41,49 +31,58 @@
           </common-tip>
         </div>
       </div>
-      <div class="table-filters clearfix ksd-mt-24" v-show="isShowFilters">
-        <DropdownFilter
-          type="checkbox"
-          trigger="click"
-          :value="filterArgs.status"
-          hideArrow
-          @input="v => filterContent(v, 'status')"
-          :options="[
-            { renderLabel: renderStatusLabel, value: 'ONLINE' },
-            { renderLabel: renderStatusLabel, value: 'OFFLINE' },
-            { renderLabel: renderStatusLabel, value: 'BROKEN' },
-            { renderLabel: renderStatusLabel, value: 'WARNING' },
-          ]">
-          <el-button text type="primary" iconr="el-ksd-icon-arrow_down_22">{{$t('status_c')}}{{selectedStatus}}</el-button>
-        </DropdownFilter>
-        <DropdownFilter
-          class="ksd-ml-8"
-          type="datetimerange"
-          trigger="click"
-          :value="filterArgs.last_modify"
-          hideArrow
-          :shortcuts="['lastDay', 'lastWeek', 'lastMonth']"
-          @input="v => filterContent(v, 'last_modify')">
-          <el-button text type="primary" iconr="el-ksd-icon-arrow_down_22">{{$t('lastModifyTime_c')}}{{selectedRange}}</el-button>
-        </DropdownFilter>
-        <DropdownFilter
-          class="ksd-ml-8"
-          type="checkbox"
-          trigger="click"
-          hideArrow
-          :value="filterArgs.model_attributes"
-          :options="modelAttributesOptions"
-          @input="v => filterContent(v, 'model_attributes')">
-          <el-button text type="primary" iconr="el-ksd-icon-arrow_down_22">{{$t('modelType_c')}}{{selectedModelAttributes}}</el-button>
-        </DropdownFilter>
-        <div class="actions">
-          <el-button
-            text
-            type="primary"
-            icon="el-ksd-icon-resure_22"
-            class="reset-filters-btn"
-            :disabled="isResetFilterDisabled"
-            @click="handleResetFilters">{{$t('reset')}}</el-button>
+    </div>
+    <div class="model-list-contain ksd-mt-16">
+      <!-- <div class="layout-mask" v-if="loadingModels"></div> -->
+      <div class="clearfix">
+        <div class="table-filters ksd-fleft">
+          <DropdownFilter
+            type="checkbox"
+            trigger="click"
+            :value="filterArgs.status"
+            hideArrow
+            @input="v => filterContent(v, 'status')"
+            :options="[
+              { renderLabel: renderStatusLabel, value: 'ONLINE' },
+              { renderLabel: renderStatusLabel, value: 'OFFLINE' },
+              { renderLabel: renderStatusLabel, value: 'BROKEN' },
+              { renderLabel: renderStatusLabel, value: 'WARNING' },
+            ]">
+            <el-button text type="primary" iconr="el-ksd-icon-arrow_down_22">{{$t('status_c')}}{{selectedStatus.length > 1 ? `${selectedStatus[0]} +${selectedStatus.length - 1}` : selectedStatus.join('')}}</el-button>
+          </DropdownFilter>
+          <DropdownFilter
+            class="ksd-ml-8"
+            type="datetimerange"
+            trigger="click"
+            :value="filterArgs.last_modify"
+            hideArrow
+            :shortcuts="['lastDay', 'lastWeek', 'lastMonth']"
+            @input="v => filterContent(v, 'last_modify')">
+            <el-button text type="primary" iconr="el-ksd-icon-arrow_down_22">{{$t('lastModifyTime_c')}}{{selectedRange}}</el-button>
+          </DropdownFilter>
+          <DropdownFilter
+            class="ksd-ml-8"
+            type="checkbox"
+            trigger="click"
+            hideArrow
+            :value="filterArgs.model_attributes"
+            :options="modelAttributesOptions"
+            @input="v => filterContent(v, 'model_attributes')">
+            <el-button text type="primary" iconr="el-ksd-icon-arrow_down_22">{{$t('modelType_c')}}{{selectedModelAttributes.length > 1 ? `${selectedModelAttributes[0]} +${selectedModelAttributes.length - 1}` : selectedModelAttributes.join('')}}</el-button>
+          </DropdownFilter>
+          <div class="actions">
+            <el-button
+              text
+              type="primary"
+              icon="el-ksd-icon-resure_22"
+              class="reset-filters-btn"
+              :disabled="isResetFilterDisabled"
+              @click="handleResetFilters">{{$t('reset')}}</el-button>
+          </div>
+        </div>
+        <div class="ksd-fright">
+          <el-input :placeholder="$t('filterModelOrOwner')" style="width:250px" size="medium" :prefix-icon="searchLoading? 'el-ksd-icon-loading_22':'el-ksd-icon-search_22'" :value="filterArgs.model_alias_or_owner" @input="handleFilterInput" v-global-key-event.enter.debounce="searchModels" @clear="searchModels()" class="show-search-btn" >
+          </el-input>
         </div>
       </div>
       <el-table class="model_list_table"
@@ -513,9 +512,7 @@ export default class ModelList extends Vue {
   }
   get selectedStatus () {
     const { filterArgs } = this
-    return filterArgs.status.length && this.statusList.length !== filterArgs.status.length
-      ? filterArgs.status.map(status => this.$t(status)).join(', ')
-      : this.$t('ALL')
+    return filterArgs.status
   }
   get selectedRange () {
     const { filterArgs } = this
@@ -525,13 +522,11 @@ export default class ModelList extends Vue {
       const endDate = dayjs(endTime).format('YYYY-MM-DD HH:mm:ss')
       return `${startDate} - ${endDate}`
     }
-    return this.$t('allTimeRange')
+    return ''
   }
   get selectedModelAttributes () {
     const { filterArgs } = this
-    return filterArgs.model_attributes.length && this.modelTypeList.length !== filterArgs.model_attributes.length
-      ? filterArgs.model_attributes.map(attributes => this.$t(attributes)).join(', ')
-      : this.$t('ALL')
+    return filterArgs.model_attributes
   }
   get isResetFilterDisabled () {
     return !this.filterArgs.last_modify.length && !this.filterArgs.status.length && !this.filterArgs.model_attributes.length

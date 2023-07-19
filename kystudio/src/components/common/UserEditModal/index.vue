@@ -141,7 +141,7 @@
     </el-form>
     <div slot="footer" class="dialog-footer ky-no-br-space">
       <el-button size="medium" v-if="showCancelBtn" @click="closeHandler(false)">{{$t('cancel')}}</el-button>
-      <el-button type="primary" size="medium" @click="submit" :loading="isLoading">{{$t('ok')}}</el-button>
+      <el-button type="primary" size="medium" @click="submit" :loading="isLoading">{{$t(editType !== 'new' ? 'ok' : 'kylinLang.common.create')}}</el-button>
     </div>
   </el-dialog>
 </template>

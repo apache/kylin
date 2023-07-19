@@ -44,15 +44,6 @@ export default {
     [types.LOAD_JOB_BULID_CHART_DATA]: function ({ commit }, para) {
       return api.monitor.loadJobBulidChartData(para)
     },
-    [types.LOAD_STREAMING_JOBS_LIST]: function ({ commit }, para) {
-      return api.monitor.loadStreamingJobsList(para)
-    },
-    [types.GET_STREAMING_JOB_RECORDS]: function ({ commit }, para) {
-      return api.monitor.getStreamingJobRecords(para)
-    },
-    [types.UPDATE_STREAMING_JOBS]: function ({ commit }, para) {
-      return api.monitor.updateStreamingJobs(para)
-    },
     [types.GET_STREAMING_CHART_DATA]: function ({ commit }, para) {
       return api.monitor.getStreamingChartData(para)
     },

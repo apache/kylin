@@ -9,7 +9,6 @@ import login from 'components/user/login'
 import Insight from 'components/query/insight'
 import queryHistory from 'components/query/query_history'
 import jobs from 'components/monitor/batchJobs/jobs'
-import streamingJobs from 'components/monitor/streamingJobs/streamingJobs'
 import dashboard from 'components/dashboard/dashboard'
 import { bindRouterGuard } from './routerGuard.js'
 
@@ -121,11 +120,6 @@ let routerOptions = {
         name: 'Job',
         path: 'monitor/job',
         component: jobs
-      },
-      {
-        name: 'StreamingJob',
-        path: 'monitor/streamingJob',
-        component: streamingJobs
       },
       {
         name: 'Insight',

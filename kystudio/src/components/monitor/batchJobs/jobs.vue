@@ -14,9 +14,8 @@
         </div>
       </el-col>
       <el-col :span="8">
-        <el-button type="primary" text size="medium" class="ksd-ml-2 ksd-fright" icon="el-ksd-icon-refresh_22" @click="manualRefreshJobs">{{$t('refreshList')}}</el-button><el-input
-        :placeholder="$t('pleaseSearch')" v-model="filter.key" v-global-key-event.enter.debounce="filterChange" @clear="filterChange()" class="show-search-btn ksd-fright" size="medium" prefix-icon="el-icon-search">
-        </el-input>
+        <el-input :placeholder="$t('pleaseSearch')" v-model="filter.key" v-global-key-event.enter.debounce="filterChange" @clear="filterChange()" class="show-search-btn ksd-fright" size="medium" prefix-icon="el-icon-search">
+        </el-input><el-button type="primary" text size="medium" class="ksd-ml-2 ksd-fright" icon="el-ksd-icon-refresh_22" @click="manualRefreshJobs">{{$t('refreshList')}}</el-button>
       </el-col>
     </el-row>
     <el-row class="filter-status-list" v-show="filterTags.length">
