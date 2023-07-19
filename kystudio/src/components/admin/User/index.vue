@@ -16,7 +16,7 @@
           icon="el-ksd-icon-add_22"
           v-if="userActions.includes('addUser')&&isTestingSecurityProfile"
           @click="editUser('new')">
-          {{$t('user')}}
+          {{$t('kylinLang.common.new')}}
         </el-button>
         <div style="width:240px;" class="ksd-fright">
           <el-input class="show-search-btn"

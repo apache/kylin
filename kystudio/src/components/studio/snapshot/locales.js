@@ -1,6 +1,6 @@
 export default {
   'en': {
-    snapshotList: 'Snapshot List',
+    snapshotList: 'Snapshot',
     snapshotDesc: 'The snapshot is a read-only static view of a source table. Snapshot could reduce costs for building costs in some cases.',
     snapshotDesc1: 'Support independent query of dimension table. The snapshot will be used first to answer such queries.',
     snapshotDesc2: 'The dimensions on the dimension table can also serve the query by adding the join key to the aggregate group without generating an index, thereby avoiding the problem of dimension explosion.',

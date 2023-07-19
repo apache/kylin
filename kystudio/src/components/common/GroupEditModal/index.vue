@@ -29,7 +29,7 @@
     </el-form>
     <div slot="footer" class="dialog-footer">
       <el-button size="medium" @click="closeHandler(false)">{{$t('kylinLang.common.cancel')}}</el-button>
-      <el-button type="primary" size="medium" :loading="submitLoading" :disabled="submitLoading" @click="submit">{{$t('ok')}}</el-button>
+      <el-button type="primary" size="medium" :loading="submitLoading" :disabled="submitLoading" @click="submit">{{$t(this.editType === 'assign' ? 'ok' : 'kylinLang.common.create')}}</el-button>
     </div>
   </el-dialog>
 </template>

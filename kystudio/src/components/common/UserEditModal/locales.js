@@ -1,6 +1,6 @@
 export default {
   'en': {
-    addUser: 'Add User',
+    addUser: 'New User',
     editRole: 'Edit Role',
     resetPassword: 'Change Password',
     username: 'Username',

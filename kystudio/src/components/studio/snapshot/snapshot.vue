@@ -3,18 +3,18 @@
     <div class="ksd-title-page">{{$t('snapshotList')}}
       <common-tip placement="bottom-start">
         <div slot="content" class="snapshot-desc">
+          <div class="ksd-mb-8 snapshot-desc">{{$t('snapshotDesc')}}</div>
           <p>*&nbsp;{{$t('snapshotDesc1')}}</p>
           <p>*&nbsp;{{$t('snapshotDesc2')}}</p>
           <p>*&nbsp;{{$t('snapshotDesc3')}}</p>
         </div>
         <i class="el-ksd-icon-more_info_22 snapshot-icon ksd-fs-22"></i>
       </common-tip>
+      <el-button type="primary" class="ksd-fright" icon="el-ksd-icon-add_22" @click="addSnapshot">{{$t('kylinLang.common.add')}}</el-button>
     </div>
-    <div class="ksd-mb-16 snapshot-desc">{{$t('snapshotDesc')}}</div>
 
-    <div class="clearfix">
+    <div class="ksd-mt-8 clearfix">
       <div class="ksd-fleft ky-no-br-space" v-if="datasourceActions.includes('snapshotAction')">
-        <el-button type="primary" class="ksd-mr-8 ksd-fleft" icon="el-ksd-icon-add_22" @click="addSnapshot">{{$t('snapshot')}}</el-button>
         <div class="ke-it-other_actions ksd-fleft">
           <el-button type="primary" text icon="el-ksd-icon-refresh_22" :disabled="!multipleSelection.length || hasEventAuthority('refresh')" @click="refreshSnapshot">{{$t('kylinLang.common.refresh')}}</el-button>
           <el-button type="primary" text icon="el-ksd-icon-table_delete_22" :disabled="!multipleSelection.length || hasEventAuthority('delete')" @click="deleteSnap">{{$t('kylinLang.common.delete')}}</el-button>

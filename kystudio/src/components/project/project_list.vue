@@ -2,7 +2,7 @@
   <div class="paddingbox" id="project-list">
  <div class="ksd-title-label ksd-mt-20">{{$t('projectsList')}}</div>
   <div>
-    <el-button type="primary" size="medium" class="ksd-mb-10 ksd-mt-10" icon="el-ksd-icon-add_22" v-if="projectActions.includes('addProject')" @click="newProject">{{$t('kylinLang.common.project')}}</el-button>
+    <el-button type="primary" size="medium" class="ksd-mb-10 ksd-mt-10" icon="el-ksd-icon-add_22" v-if="projectActions.includes('addProject')" @click="newProject">{{$t('kylinLang.common.new')}}</el-button>
     <div style="width:240px;" class="ksd-fright ksd-mtb-10">
       <el-input class="show-search-btn"
         size="medium"
@@ -182,13 +182,13 @@ import { Component } from 'vue-property-decorator'
       delProjectTitle: 'Delete Project',
       cancel: 'Cancel',
       yes: 'Ok',
-      saveSuccessful: 'Added the project successfully.',
-      saveFailed: 'Can\'t add the project at the moment.',
+      saveSuccessful: 'Created the project successfully.',
+      saveFailed: 'Can\'t create the project at the moment.',
       deleteProjectTip: 'The project "{projectName}" cannot be restored after deletion. Are you sure you want to delete?',
       projectConfig: 'Configuration',
       backupProject: 'Are you sure you want to backup this project ?',
-      noProject: 'No project was found. Please click the button to add a project.',
-      projectsList: 'Project List',
+      noProject: 'No project was found. Please click the button to new a project.',
+      projectsList: 'Project',
       projectFilter: 'Search by project name',
       backupPro: 'Backup Project',
       author: 'Authorization',

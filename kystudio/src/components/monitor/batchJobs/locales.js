@@ -63,7 +63,7 @@ export default {
     triggerTime: 'Trigger Time',
     order: 'Order',
     jobTarget: 'Job Target: ',
-    jobsList: 'Batch Job List',
+    jobsList: 'Batch Job',
     sparkJobTip: 'Spark Job',
     logInfoTip: 'Log Output',
     openJobSteps: 'Open Job Steps',
