@@ -206,6 +206,7 @@
         flex: 1;
         position: relative;
         .run-btn {
+          z-index: 1;
           width: 40px;
           height: 38px;
           position: absolute;
