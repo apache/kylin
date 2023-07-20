@@ -172,15 +172,15 @@ EOF"
         docker compose -f "${WORKDIR}/docker-compose.yml" exec hiveserver bash -c "hive -e 'CREATE DATABASE IF NOT EXISTS SSB' \
             && hive --hivevar hdfs_tmp_dir=/tmp --database SSB -f /tmp/create_sample_ssb_tables.sql"
 
-        info "* Loading TPC-DS data to HDFS..."
-        docker compose -f "${WORKDIR}/docker-compose.yml" cp ${PROJECT_DIR}/src/examples/sample_cube/tpcds/data datanode:/tmp/tpcds
-        docker compose -f "${WORKDIR}/docker-compose.yml" exec datanode bash -c "hdfs dfs -mkdir -p /tmp/sample_cube/tpcds \
-            && hdfs dfs -put /tmp/tpcds/* /tmp/sample_cube/tpcds/"
-
-        info "* Loading TPC-DS data to Hive..."
-        docker compose -f "${WORKDIR}/docker-compose.yml" cp ${PROJECT_DIR}/src/examples/sample_cube/tpcds/create_sample_tpcds_tables.sql hiveserver:/tmp/
-        docker compose -f "${WORKDIR}/docker-compose.yml" exec hiveserver bash -c "hive -e 'CREATE DATABASE IF NOT EXISTS TPCDS' \
-            && hive --hivevar hdfs_tmp_dir=/tmp --database TPCDS -f /tmp/create_sample_tpcds_tables.sql"
+#        info "* Loading TPC-DS data to HDFS..."
+#        docker compose -f "${WORKDIR}/docker-compose.yml" cp ${PROJECT_DIR}/src/examples/sample_cube/tpcds/data datanode:/tmp/tpcds
+#        docker compose -f "${WORKDIR}/docker-compose.yml" exec datanode bash -c "hdfs dfs -mkdir -p /tmp/sample_cube/tpcds \
+#            && hdfs dfs -put /tmp/tpcds/* /tmp/sample_cube/tpcds/"
+#
+#        info "* Loading TPC-DS data to Hive..."
+#        docker compose -f "${WORKDIR}/docker-compose.yml" cp ${PROJECT_DIR}/src/examples/sample_cube/tpcds/create_sample_tpcds_tables.sql hiveserver:/tmp/
+#        docker compose -f "${WORKDIR}/docker-compose.yml" exec hiveserver bash -c "hive -e 'CREATE DATABASE IF NOT EXISTS TPCDS' \
+#            && hive --hivevar hdfs_tmp_dir=/tmp --database TPCDS -f /tmp/create_sample_tpcds_tables.sql"
 
 #        info "* Loading streaming data to Kafka"
 #        docker compose -f "${WORKDIR}/docker-compose.yml" cp ${WORKDIR}/streaming_data kafka:/tmp/streaming_data
