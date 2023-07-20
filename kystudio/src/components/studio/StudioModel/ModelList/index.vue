@@ -98,6 +98,8 @@
         :expand-row-keys="expandedRows"
         :row-key="renderRowKey"
         @expand-change="expandRow"
+        virtual-cell-height="64.57px"
+        :scroll-ancestors="() => ['#scrollContent']"
         ref="modelListTable"
         style="width: 100%">
         <el-table-column
@@ -123,7 +125,7 @@
                 @after-enter="(e) => afterPoppoverEnter(e, scope.row)"
                 popper-class="er-popover-layout"
               >
-              <div class="model-ER-layout"><ModelERDiagram v-if="scope.row.showER" ref="erDiagram" source="modelList"  :show-shortcuts-group="false" :show-change-alert="false" :model="dataGenerator.generateModel(scope.row)" /></div>
+              <div class="model-ER-layout"><ModelERDiagram v-if="scope.row.showER" ref="erDiagram" source="modelList" :show-shortcuts-group="false" :show-change-alert="false" :model="scope.row" /></div>
               </el-popover>
               <span class="model-ER" v-popover="`${scope.row.alias}-ERPopover`">
                 <el-icon name="el-ksd-icon-table_er_diagram_22" class="ksd-fs-22" type="mult"></el-icon>
@@ -209,10 +211,6 @@
     <ModelCloneModal/>
     <!-- 模型添加 -->
     <ModelAddModal/>
-    <!-- 聚合索引编辑 -->
-    <AggregateModal v-on:needShowBuildTips="needShowBuildTips" v-on:openBuildDialog="setModelBuldRange" v-on:openComplementAllIndexesDialog="openComplementSegment"/>
-    <!-- 表索引编辑 -->
-    <TableIndexEdit v-on:needShowBuildTips="needShowBuildTips" v-on:openBuildDialog="setModelBuldRange" v-on:openComplementAllIndexesDialog="openComplementSegment"/>
     <!-- 选择去构建的segment -->
     <ConfirmSegment v-on:reloadModelAndSegment="reloadModelAndSegment"/>
   </div>
@@ -226,12 +224,10 @@ import { NamedRegex, pageRefTags, pageCount } from '../../../../config'
 import { ModelStatusTagType } from '../../../../config/model.js'
 import locales from './locales'
 import { handleError, kylinMessage, jumpToJobs } from 'util/business'
-import { handleSuccessAsync, dataGenerator, sliceNumber, transToServerGmtTime } from 'util'
+import { sliceNumber, transToServerGmtTime } from 'util'
 import TableIndex from '../TableIndex/index.vue'
 import ModelSegment from './ModelSegment/index.vue'
 import SegmentTabs from './ModelSegment/SegmentTabs.vue'
-import ModelAggregate from './ModelAggregate/index.vue'
-import ModelAggregateView from './ModelAggregateView/index.vue'
 import TableIndexView from './TableIndexView/index.vue'
 import ModelRenameModal from './ModelRenameModal/rename.vue'
 import ModelCloneModal from './ModelCloneModal/clone.vue'
@@ -246,8 +242,6 @@ import ModelStreamingJob from './ModelStreamingJob/ModelStreamingJob.vue'
 import { mockSQL } from './mock'
 import DropdownFilter from '../../../common/DropdownFilter/DropdownFilter.vue'
 import ModelOverview from './ModelOverview/ModelOverview.vue'
-import AggregateModal from './AggregateModal/index.vue'
-import TableIndexEdit from '../TableIndexEdit/tableindex_edit'
 import ModelActions from './ModelActions/modelActions'
 import ModelERDiagram from '../../../common/ModelERDiagram/ModelERDiagram'
 import ModelTitleDescription from './Components/ModelTitleDescription'
@@ -265,7 +259,8 @@ function getDefaultFilters (that) {
     model_alias_or_owner: '',
     last_modify: [],
     owner: '',
-    model_attributes: []
+    model_attributes: [],
+    lite: true
   }
 }
 
@@ -350,8 +345,6 @@ function getDefaultFilters (that) {
     TableIndex,
     ModelSegment,
     SegmentTabs,
-    ModelAggregate,
-    ModelAggregateView,
     TableIndexView,
     ModelRenameModal,
     ModelCloneModal,
@@ -363,8 +356,6 @@ function getDefaultFilters (that) {
     ModelSql,
     ModelStreamingJob,
     DropdownFilter,
-    AggregateModal,
-    TableIndexEdit,
     ModelOverview,
     ModelActions,
     ModelERDiagram,
@@ -375,7 +366,6 @@ function getDefaultFilters (that) {
 export default class ModelList extends Vue {
   pageRefTags = pageRefTags
   mockSQL = mockSQL
-  dataGenerator = dataGenerator
   sliceNumber = sliceNumber
   transToServerGmtTime = transToServerGmtTime
   filterArgs = getDefaultFilters(this)
@@ -598,29 +588,7 @@ export default class ModelList extends Vue {
       )
     }
   }
-  async setModelBuldRange (modelDesc, isNeedBuildGuild) {
-    if (!modelDesc.total_indexes && !isNeedBuildGuild || (!this.$store.state.project.multi_partition_enabled && modelDesc.multi_partition_desc)) return
-    const projectName = this.currentSelectedProject
-    const modelName = modelDesc.uuid
-    const res = await this.fetchSegments({ projectName, modelName })
-    const { total_size, value } = await handleSuccessAsync(res)
-    let type = 'incremental'
-    if (!(modelDesc.partition_desc && modelDesc.partition_desc.partition_date_column) && modelDesc.model_type !== 'STREAMING') {
-      type = 'fullLoad'
-    }
-    this.isModelListOpen = true
-    this.$nextTick(async () => {
-      await this.callModelBuildDialog({
-        modelDesc: modelDesc,
-        type: type,
-        title: this.$t('build'),
-        isHaveSegment: !!total_size,
-        disableFullLoad: type === 'fullLoad' && value.length > 0 && value[0].status_to_display !== 'ONLINE' // 已存在全量加载任务时，屏蔽
-      })
-      await this.refreshSegment(modelDesc.alias)
-      this.isModelListOpen = false
-    })
-  }
+
   async refreshSegment (alias) {
     this.$refs['segmentComp' + alias] && await this.$refs['segmentComp' + alias].$emit('refresh')
     this.prevExpendContent = this.modelArray.filter(item => this.expandedRows.includes(item.alias))
@@ -875,6 +843,26 @@ export default class ModelList extends Vue {
         this.$refs.erDiagram && this.$refs.erDiagram.exchangePosition()
       })
     })
+  }
+  handleAnimateChanged (event) {
+    const { className } = event.target
+    const isValidClass = className.indexOf('mode-list') !== -1 || className.indexOf('el-loading-mask') !== -1 || className.indexOf('el-button') !== -1
+    if (isValidClass) {
+      const $table = this.$refs['modelListTable']
+      if ($table) $table.verifyPosition()
+    }
+  }
+  mounted () {
+    const $contentPage = document.querySelector('.main-content .mode-list')
+    if ($contentPage) {
+      $contentPage.addEventListener('transitionend', this.handleAnimateChanged)
+    }
+  }
+  beforeDestroy () {
+    const $contentPage = document.querySelector('.main-content .mode-list')
+    if ($contentPage) {
+      $contentPage.removeEventListener('transitionend', this.handleAnimateChanged)
+    }
   }
 }
 </script>

@@ -200,8 +200,6 @@ import { scToFloat, showNull, handleSuccessAsync } from '../../util/index'
 import { hasRole, transToGmtTime, handleError } from '../../util/business'
 import { pageRefTags, pageCount } from 'config'
 import { getOptions, compareDataSize } from './handler'
-import IndexDetails from '../studio/StudioModel/ModelList/ModelAggregate/indexDetails'
-import ModelAggregate from '../studio/StudioModel/ModelList/ModelAggregate/index.vue'
 import echarts from 'echarts'
 @Component({
   props: ['extraoption', 'isWorkspace', 'queryExportData', 'isStop', 'tabsItem'],
@@ -222,10 +220,6 @@ import echarts from 'echarts'
       'insightActions',
       'datasourceActions'
     ])
-  },
-  components: {
-    IndexDetails,
-    ModelAggregate
   },
   locales: {
     'en': {

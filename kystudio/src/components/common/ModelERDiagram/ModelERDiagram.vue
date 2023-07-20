@@ -45,7 +45,7 @@
 <script>
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator'
-import { handleSuccessAsync, objectClone } from 'util'
+import { handleSuccessAsync, objectClone, dataGenerator } from 'util'
 import { columnTypeIcon } from '../../../config'
 import { mapActions, mapGetters, mapState, mapMutations } from 'vuex'
 import { initPlumb, drawLines, customCanvasPosition, createAndUpdateSvgGroup } from './handler'
@@ -78,13 +78,14 @@ import locales from './locales'
       modelList: state => state.model.modelsList
     }),
     ...mapGetters([
-      'currentProjectData',
+      'currentSelectedProject',
       'isFullScreen'
     ])
   },
   methods: {
     ...mapActions({
-      loadColumnOfModel: 'LOAD_DATASOURCE_OF_MODEL'
+      loadColumnOfModel: 'LOAD_DATASOURCE_OF_MODEL',
+      getModelByModelName: 'LOAD_MODEL_INFO'
     }),
     ...mapMutations({
       toggleFullScreen: 'TOGGLE_SCREEN'
@@ -97,6 +98,7 @@ import locales from './locales'
 })
 export default class ModelERDiagram extends Vue {
   currentModel = null
+  modelData = null
   columnTypeIconMap = columnTypeIcon
   plumbTool = null
   plumbInstance = null
@@ -137,6 +139,9 @@ export default class ModelERDiagram extends Vue {
   }
   async created () {
     this.loadingER = true
+    const res = await this.getModelByModelName({model_name: this.model.alias, project: this.currentSelectedProject})
+    const { value } = await handleSuccessAsync(res)
+    this.modelData = dataGenerator.generateModel(value[0])
     await this.getTableColumns()
     this.$nextTick(() => {
       const { plumbInstance, plumbTool } = initPlumb(this.$el.querySelector('.er-layout'), this.currentModel.canvas ?? this.defaultZoom)
@@ -180,13 +185,12 @@ export default class ModelERDiagram extends Vue {
   }
   getTableColumns () {
     return new Promise((resolve, reject) => {
-      const { name } = this.currentProjectData
       const [{ canvas }] = this.modelList.filter(item => item.alias === this.model.name)
-      this.loadColumnOfModel({project: name, model_name: this.model.name}).then(async (result) => {
+      this.loadColumnOfModel({project: this.currentSelectedProject, model_name: this.model.name}).then(async (result) => {
         const values = await handleSuccessAsync(result)
         this.currentModel = {
-          ...this.model,
-          tables: this.model.tables.map(table => {
+          ...this.modelData,
+          tables: this.modelData.tables.map(table => {
             const [{ columns }] = values.filter(v => table.name === `${v.database}.${v.name}`)
             return {
               ...table,
