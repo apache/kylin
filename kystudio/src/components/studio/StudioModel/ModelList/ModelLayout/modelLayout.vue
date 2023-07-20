@@ -133,6 +133,7 @@ import { Component } from 'vue-property-decorator'
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { handleError, jumpToJobs } from 'util/business'
 import { transToServerGmtTime, handleSuccessAsync } from 'util'
+import { pageRefTags, pageCount } from 'config'
 import locales from './locales'
 import ModelOverview from '../ModelOverview/ModelOverview.vue'
 import ModelSegment from '../ModelSegment/index.vue'
@@ -225,6 +226,7 @@ import ModelTitleDescription from '../Components/ModelTitleDescription'
   locales
 })
 export default class ModelLayout extends Vue {
+  pageRefTags = pageRefTags
   randomKey = Date.now().toString(32)
   initData = false
   currentModelRow = null
@@ -303,7 +305,7 @@ export default class ModelLayout extends Vue {
       this.showSearchResult = true
       this.loadModels({
         page_offset: modelPageOffest || 0,
-        page_size: 10,
+        page_size: +localStorage.getItem(this.pageRefTags.modelListPager) || pageCount,
         exact: false,
         model_name: modelName || '',
         sort_by: 'last_modify',
