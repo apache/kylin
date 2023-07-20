@@ -1,12 +1,6 @@
 <template>
   <div class="model-aggregate ksd-mb-15" v-if="model" v-loading="isLoading">
     <div class="aggregate-view">
-      <div class="btn-groups" v-if="showModelTypeSwitch">
-        <el-tabs class="btn-group-tabs" v-model="switchModelType" type="button" @tab-click="changeModelTab">
-          <el-tab-pane :label="$t('kylinLang.common.BATCH')" name="BATCH" />
-          <el-tab-pane :label="$t('kylinLang.common.STREAMING')" name="STREAMING" />
-        </el-tabs>
-      </div>
       <div class="index-group">
         <el-card class="agg-detail-card agg-detail">
           <div class="detail-content" v-loading="indexLoading">
@@ -24,9 +18,9 @@
                 </div>
               </el-popover>
               <div class="date-range ksd-mb-16 ksd-fs-12 ksd-fleft">
-                {{$t('dataRange')}}: {{getDataRange}}<span class="data-range-tips"><i v-if="!isRealTimeMode" v-popover:indexPopover class="el-icon-ksd-info ksd-fs-12 ksd-ml-8"></i></span>
+                {{$t('dataRange')}}: {{getDataRange}}<span class="data-range-tips"><i v-popover:indexPopover class="el-icon-ksd-info ksd-fs-12 ksd-ml-8"></i></span>
               </div>
-              <div v-if="isShowAggregateAction && isHaveComplementSegs && !isRealTimeMode" @click="complementedIndexes('allIndexes')" class="text-btn-like ksd-fleft ksd-ml-6">
+              <div v-if="isShowAggregateAction && isHaveComplementSegs" @click="complementedIndexes('allIndexes')" class="text-btn-like ksd-fleft ksd-ml-6">
                 <el-tooltip :content="$t('viewIncomplete')" effect="dark" placement="top">
                   <i class="el-ksd-icon-view_range_22"></i>
                 </el-tooltip>
@@ -39,10 +33,21 @@
               </div>
             </div>
             <div class="clearfix" v-if="isShowAggregateAction">
-              <el-alert class="ksd-mb-8" :title="$t('realTimeModelActionTips')" type="tip" show-icon v-if="isRealTimeMode&&isShowRealTimeModelActionTips" @close="isShowRealTimeModelActionTips = false" />
               <el-dropdown style="margin-left:-14px !important;" class="ksd-ml-5 ksd-fleft" v-if="isShowAggregateAction && isShowIndexActions && !indexLoading">
                 <el-button icon="el-ksd-icon-add_22" type="primary" text>{{$t('index')}}</el-button>
                 <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item class="dropdown-group-title" v-if="model.model_type === 'HYBRID' ? switchModelType !== 'STREAMING' : model.model_type !== 'STREAMING'">
+                    <span>{{$t('base')}}</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item :class="{'action-disabled': Object.keys(indexStat).length && !indexStat.need_create_base_agg_index}" v-if="model.model_type === 'HYBRID' ? switchModelType !== 'STREAMING' : model.model_type !== 'STREAMING'">
+                    <span :title="Object.keys(indexStat).length && !indexStat.need_create_base_agg_index ? $t('unCreateBaseAggIndexTip') : ''" @click="createBaseIndex('BASE_AGG_INDEX')">{{$t('BASE_AGG_INDEX')}}</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item :class="{'action-disabled': Object.keys(indexStat).length && !indexStat.need_create_base_table_index}" v-if="model.model_type === 'HYBRID' ? switchModelType !== 'STREAMING' : model.model_type !== 'STREAMING'">
+                    <span :title="Object.keys(indexStat).length && !indexStat.need_create_base_table_index ? $t('unCreateBaseTableIndexTip') : ''" @click="createBaseIndex('BASE_TABLE_INDEX')">{{$t('BASE_TABLE_INDEX')}}</span>
+                  </el-dropdown-item>
+                  <el-dropdown-item class="dropdown-group-title" divided v-if="isShowEditAgg || (isShowTableIndexActions&&!isHideEdit)">
+                    <span>{{$t('custom')}}</span>
+                  </el-dropdown-item>
                   <el-dropdown-item :class="{'action-disabled': !indexUpdateEnabled && model.model_type === 'STREAMING'}" @click.native="handleAggregateGroup" v-if="isShowEditAgg">
                     <el-tooltip :content="$t('refuseAddIndexTip')" effect="dark" placement="top" :disabled="indexUpdateEnabled || model.model_type !== 'STREAMING'">
                       <span>{{$t('aggregateGroup')}}</span>
@@ -53,21 +58,10 @@
                       <span>{{$t('tableIndex')}}</span>
                     </el-tooltip>
                   </el-dropdown-item>
-                  <el-dropdown-item :class="{'action-disabled': Object.keys(indexStat).length && !indexStat.need_create_base_agg_index && !indexStat.need_create_base_table_index}" v-if="model.model_type === 'HYBRID' ? switchModelType !== 'STREAMING' : model.model_type !== 'STREAMING'">
-                    <span :title="Object.keys(indexStat).length && !indexStat.need_create_base_agg_index && !indexStat.need_create_base_table_index ? $t('unCreateBaseIndexTip') : ''" @click="createBaseIndex">{{$t('baseIndex')}}</span>
-                  </el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
-                <el-button icon="el-ksd-icon-build_index_22" :disabled="!checkedList.length || isHaveLockedIndex" text type="primary" class="ksd-ml-2 ksd-fleft" v-if="datasourceActions.includes('buildIndex') && !isRealTimeMode" @click="complementedIndexes('batchIndexes')">{{$t('buildIndex')}}</el-button>
-              <template v-if="isRealTimeMode">
-                <el-tooltip placement="top" :content="!indexUpdateEnabled ? $t('refuseRemoveIndexTip') : $t('disabledDelBaseIndexTips')" v-if="datasourceActions.includes('delAggIdx') && (isDisableDelBaseIndex || !indexUpdateEnabled)">
-                  <div class="ksd-fleft">
-                    <el-button v-if="datasourceActions.includes('delAggIdx') && (isDisableDelBaseIndex || !indexUpdateEnabled)" :disabled="isDisableDelBaseIndex || !indexUpdateEnabled" type="primary" icon="el-ksd-icon-table_delete_22" @click="removeIndexes" text>{{$t('kylinLang.common.delete')}}</el-button>
-                  </div>
-                </el-tooltip>
-                <el-button v-if="datasourceActions.includes('delAggIdx') && !isDisableDelBaseIndex &&  indexUpdateEnabled" :disabled="!checkedList.length" type="primary" icon="el-ksd-icon-table_delete_22" class="ksd-fleft" @click="removeIndexes" text>{{$t('kylinLang.common.delete')}}</el-button>
-              </template>
-              <template v-else>
+                <el-button icon="el-ksd-icon-build_index_22" :disabled="!checkedList.length || isHaveLockedIndex" text type="primary" class="ksd-ml-2 ksd-fleft" v-if="datasourceActions.includes('buildIndex')" @click="complementedIndexes('batchIndexes')">{{$t('buildIndex')}}</el-button>
+              <template>
                 <el-tooltip placement="top" :content="$t('disabledDelBaseIndexTips')" v-if="datasourceActions.includes('delAggIdx')&&isDisableDelBaseIndex">
                   <div class="ksd-fleft">
                     <el-dropdown
@@ -117,7 +111,7 @@
               <div class="filter-tags-layout"><el-tag size="mini" closable v-for="(item, index) in filterTags" :key="index" @close="handleClose(item)">{{`${$t(item.source)}：${$t(item.label)}`}}</el-tag></div>
               <span class="clear-all-filters" @click="clearAllTags">{{$t('clearAll')}}</span>
             </div>
-            <div class="index-table-list" :class="{'is-show-filter': filterTags.length, 'is-show-tips' :isRealTimeMode&&isShowRealTimeModelActionTips, 'is-show-tab-button': showModelTypeSwitch, 'is-show-tips--tab-button': isRealTimeMode&&isShowRealTimeModelActionTips&&showModelTypeSwitch}">
+            <div class="index-table-list" :class="{'is-show-filter': filterTags.length}">
               <el-table
                 ref="indexesTable"
                 :data="indexDatas"
@@ -176,7 +170,7 @@
                 </el-table-column>
                 <el-table-column :label="$t('kylinLang.common.action')" fixed="right" width="83" v-if="isShowAggregateAction">
                   <template slot-scope="scope">
-                    <common-tip :content="$t('buildIndex')" :disabled="scope.row.status === 'LOCKED'" v-if="isShowAggregateAction&&datasourceActions.includes('buildIndex')&&!isRealTimeMode">
+                    <common-tip :content="$t('buildIndex')" :disabled="scope.row.status === 'LOCKED'" v-if="isShowAggregateAction&&datasourceActions.includes('buildIndex')">
                       <i class="el-ksd-icon-build_index_22 ksd-ml-5" :class="{'is-disabled': scope.row.status === 'LOCKED'}" @click="complementedIndexes('', scope.row.id)"></i>
                     </common-tip>
                     <common-tip :content="$t('editIndex')" v-if="isShowAggregateAction&&datasourceActions.includes('editAggGroup')">
@@ -322,26 +316,11 @@ export default class ModelAggregate extends Vue {
   filterTags = []
   checkedList = []
   removeLoading = false
-  indexRangeMap = {
-    BATCH: ['HYBRID', 'BATCH'],
-    STREAMING: ['HYBRID', 'STREAMING']
-  }
   switchIndexValue = 'index'
   switchModelType = 'BATCH' // 默认批数据 - BATCH, 流数据 - STREAMING
   isHaveComplementSegs = false
   indexesByQueryHistory = true // 是否获取查询相关的索引
-  isShowRealTimeModelActionTips = true
   indexStat = {}
-
-  // 控制显示流数据，批数据选项
-  get showModelTypeSwitch () {
-    return this.model && this.model.model_type === 'HYBRID'
-  }
-
-  // 判断是否时流数据模式
-  get isRealTimeMode () {
-    return (this.showModelTypeSwitch && this.switchModelType === 'STREAMING') || (this.model.model_type === 'STREAMING')
-  }
 
   get modelId () {
     if (this.model.model_type !== 'HYBRID') {
@@ -349,23 +328,6 @@ export default class ModelAggregate extends Vue {
     } else {
       return this.switchModelType === 'BATCH' ? this.model.batch_id : this.model.uuid
     }
-  }
-
-  // 标识是融合数据模型下的批数据模式
-  get isHybridBatch () {
-    return this.model.model_type === 'HYBRID' && this.switchModelType === 'BATCH'
-  }
-
-  async changeModelTab (name) {
-    // 切换tab 时需要重刷列表
-    this.filterArgs.page_offset = 0
-    this.filterArgs.page_size = +localStorage.getItem(this.pageRefTags.indexPager) || pageCount
-    this.filterArgs.key = ''
-    this.indexLoading = true
-    await this.freshIndexGraph()
-    await this.loadAggIndices()
-    this.getIndexInfo()
-    this.indexLoading = false
   }
 
   formatDataSize (dataSize) {
@@ -425,7 +387,6 @@ export default class ModelAggregate extends Vue {
       indexes: indexes,
       submitText: submitText,
       isRemoveIndex: isRemoveIndex,
-      isHybridBatch: this.isHybridBatch,
       model: this.model
     })
     this.refreshIndexGraphAfterSubmitSetting()
@@ -531,11 +492,10 @@ export default class ModelAggregate extends Vue {
   editTableIndex (indexDesc) {
     const { projectName, model } = this
     this.showTableIndexEditModal({
-      isHybridBatch: this.isHybridBatch,
       modelInstance: this.modelInstance,
       tableIndexDesc: indexDesc || {name: 'TableIndex_1'},
       indexUpdateEnabled: this.indexUpdateEnabled,
-      indexType: this.showModelTypeSwitch ? this.switchModelType : '',
+      indexType: '',
       projectName,
       model
     }).then((res) => {
@@ -735,11 +695,7 @@ export default class ModelAggregate extends Vue {
   }
   async loadAggIndices (ids) {
     try {
-      // this.indexLoading = true
       const params = {}
-      if (this.showModelTypeSwitch) {
-        params.range = this.indexRangeMap[this.switchModelType]
-      }
       if (this.indexesByQueryHistory && !this.layoutId && !this.isShowAggregateAction) {
         this.indexDatas = []
         this.totalSize = 0
@@ -755,10 +711,8 @@ export default class ModelAggregate extends Vue {
       this.indexDatas = data.value
       this.totalSize = data.total_size
       this.indexUpdateEnabled = data.index_update_enabled
-      // this.indexLoading = false
     } catch (e) {
       handleError(e)
-      // this.indexLoading = false
     }
   }
   created () {
@@ -780,7 +734,7 @@ export default class ModelAggregate extends Vue {
   async handleAggregateGroup () {
     if (!this.indexUpdateEnabled && this.model.model_type === 'STREAMING') return
     const { projectName, model } = this
-    const { isSubmit } = await this.callAggregateModal({ editType: 'new', model, projectName, indexUpdateEnabled: this.indexUpdateEnabled, indexType: this.showModelTypeSwitch ? this.switchModelType : '' })
+    const { isSubmit } = await this.callAggregateModal({ editType: 'new', model, projectName, indexUpdateEnabled: this.indexUpdateEnabled, indexType: '' })
     isSubmit && await this.refreshIndexGraphAfterSubmitSetting()
     isSubmit && await this.$emit('refreshModel')
   }
@@ -844,18 +798,16 @@ export default class ModelAggregate extends Vue {
   }
 
   // 创建 base index
-  createBaseIndex () {
-    if (Object.keys(this.indexStat).length && !this.indexStat.need_create_base_agg_index && !this.indexStat.need_create_base_table_index) return
+  createBaseIndex (type) {
+    if (Object.keys(this.indexStat).length && (!this.indexStat.need_create_base_agg_index && type === 'BASE_AGG_INDEX' || !this.indexStat.need_create_base_table_index && type === 'BASE_TABLE_INDEX')) return
     this.loadBaseIndex({
       model_id: this.modelId,
       project: this.projectName,
       load_data: false,
-      source_type: ['BASE_TABLE_INDEX', 'BASE_AGG_INDEX']
+      source_types: [type]
     }).then(async (res) => {
       const result = await handleSuccessAsync(res)
       const layoutIds = []
-      // const baseAggIndexNum = result.agg_index ? result.agg_index.dimension_count + result.agg_index.measure_count : 0
-      // const baseTableIndexNum = result.table_index ? result.table_index.dimension_count + result.table_index.measure_count : 0
       result.base_agg_index && layoutIds.push(result.base_agg_index.layout_id)
       result.base_table_index && layoutIds.push(result.base_table_index.layout_id)
       this.$message({
@@ -1258,6 +1210,19 @@ export default class ModelAggregate extends Vue {
   &.action-disabled {
     color: @text-disabled-color;
     cursor: not-allowed;
+    &:focus {
+      color: @text-disabled-color;
+      cursor: not-allowed;
+    }
+  }
+  &.dropdown-group-title {
+    font-size: 12px;
+    color: @text-disabled-color;
+    line-height: 30px;
+    cursor: default;
+    &:hover {
+      background-color: @fff !important;
+    }
   }
 }
 

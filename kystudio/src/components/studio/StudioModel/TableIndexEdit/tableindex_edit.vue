@@ -104,7 +104,6 @@
       ]),
       ...mapState('TableIndexEditModal', {
         isShow: state => state.isShow,
-        isHybridBatch: state => state.isHybridBatch,
         modelInstance: state => state.form.data.modelInstance,
         tableIndexDesc: state => objectClone(state.form.data.tableIndexDesc),
         indexUpdateEnabled: state => state.form.data.indexUpdateEnabled,
@@ -403,7 +402,7 @@
         }
       })
       this.tableIndexMeta.project = this.currentSelectedProject
-      this.tableIndexMeta.model_id = this.isHybridBatch ? this.modelInstance.batch_id : this.modelInstance.uuid
+      this.tableIndexMeta.model_id = this.modelInstance.uuid
       'name' in this.tableIndexMeta && delete this.tableIndexMeta.name
       if (this.tableIndexMeta.id) {
         this.editTableIndex({...this.tableIndexMeta, index_range: this.tableIndexMeta.index_range || 'EMPTY'}).then(successCb, errorCb)
