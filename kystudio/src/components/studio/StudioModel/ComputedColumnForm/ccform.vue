@@ -144,7 +144,7 @@ export default class CCForm extends Vue {
   }
   errorMsg = ''
   checkRemoteCC (cb) {
-    this.modelInstance.generateMetadata().then((data) => {
+    this.modelInstance.generateMetadata(true).then((data) => {
       // 组装带cc的模型功校验cc接口使用
       let resData = objectClone(data)
       if (!this.isEdited) {

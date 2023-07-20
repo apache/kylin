@@ -310,6 +310,9 @@ vuex.registerModule(['modals', 'ModelSaveConfig'], store)
       setModalForm: types.SET_MODAL_FORM,
       resetModalForm: types.RESET_MODAL_FORM
     }),
+    ...mapMutations({
+      resetOtherColumns: 'RESET_OTHER_COLUMNS'
+    }),
     ...mapActions('DetailDialogModal', {
       callGlobalDetailDialog: 'CALL_MODAL'
     }),
@@ -469,7 +472,13 @@ export default class ModelPartitionModal extends Vue {
   async handleLoadFormat () {
     try {
       this.isLoadingFormat = true
-      const response = await this.fetchPartitionFormat({ project: this.currentSelectedProject, table: this.selectedTable.name, partition_column: this.partitionMeta.column })
+      const ccColumns = this.modelInstance.getComputedColumns()
+      const index = indexOfObjWithSomeKey(ccColumns, 'columnName', this.partitionMeta.column)
+      const data = { project: this.currentSelectedProject, table: this.selectedTable.name, partition_column: this.partitionMeta.column }
+      if (index !== -1) { // 分区列是CC列
+        data.expression = ccColumns[index].innerExpression
+      }
+      const response = await this.fetchPartitionFormat(data)
       this.partitionMeta.format = await handleSuccessAsync(response)
       this.changeColumn('format', this.partitionMeta.format)
       this.isLoadingFormat = false
@@ -566,15 +575,15 @@ export default class ModelPartitionModal extends Vue {
       })
     }
     // 暂不支持CC列做分区列
-    // let ccColumns = this.modelInstance.getComputedColumns()
-    // let cloneCCList = objectClone(ccColumns)
-    // cloneCCList.forEach((x) => {
-    //   let cc = {
-    //     name: x.columnName,
-    //     datatype: x.datatype
-    //   }
-    //   result.push(cc)
-    // })
+    let ccColumns = this.modelInstance.getComputedColumns()
+    let cloneCCList = objectClone(ccColumns)
+    cloneCCList.forEach((x) => {
+      let cc = {
+        name: x.columnName,
+        datatype: x.datatype
+      }
+      result.push(cc)
+    })
     return result
   }
   getColumnInfo (column) {

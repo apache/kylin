@@ -188,7 +188,7 @@ export default {
     return window.kylinVm.$http.post(apiUrl + 'models/job_error_status', body, { headers })
   },
   getModelDataNewestRange: (para) => {
-    return Vue.resource(apiUrl + `models/${para.model}/data_range/latest_data`).save({project: para.project, partition_desc: para.partition_desc})
+    return Vue.resource(apiUrl + `models/${para.model}/data_range/latest_data`).save(para)
   },
   loadModelConfigList: (para) => {
     return Vue.resource(apiUrl + 'models/config').get(para)

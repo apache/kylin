@@ -208,6 +208,7 @@ class NModel extends Schama {
         if (!primaryKeys || primaryKeys && primaryKeys.length === 1 && primaryKeys[0] === '') {
           this.removeRenderLink(hasConn)
         } else {
+          this.vm.removeBrokenStatus(hasConn, isBrokenLine)
           !isBrokenLine && this.plumbTool.setLineStyle('default')
           this.setOverLayLabel(hasConn, isBrokenLine)
           this.plumbTool.refreshPlumbInstance()
@@ -246,17 +247,29 @@ class NModel extends Schama {
   checkIsBrokenModelLink (pid, fid, primaryKeys, foreignKeys) {
     let ptable = this.getTableByGuid(pid)
     let primaryKeysLen = primaryKeys.length
+
+    let ftable = this.getTableByGuid(fid)
+    let foreignKeysLen = foreignKeys.length
+
+    const primaryTableComputeColumns = []
+    const foreignTableComputeColumns = []
+    this.computed_columns.forEach(col => {
+      if (col.tableAlias === ptable.alias) {
+        primaryTableComputeColumns.push({...col, name: col.columnName})
+      } else if (col.tableAlias === ftable.alias) {
+        foreignTableComputeColumns.push({...col, name: col.columnName})
+      }
+    })
     for (let i = 0; i < primaryKeysLen; i++) {
       let column = primaryKeys[i] && primaryKeys[i].replace(/^.*?\./, '')
-      if (indexOfObjWithSomeKey(ptable.columns, 'name', column) < 0) {
+      if (indexOfObjWithSomeKey([...ptable.columns, ...primaryTableComputeColumns], 'name', column) < 0) {
         return true
       }
     }
-    let ftable = this.getTableByGuid(fid)
-    let foreignKeysLen = foreignKeys.length
+
     for (let i = 0; i < foreignKeysLen; i++) {
       let column = foreignKeys[i] && foreignKeys[i].replace(/^.*?\./, '')
-      if (indexOfObjWithSomeKey(ftable.columns, 'name', column) < 0) {
+      if (indexOfObjWithSomeKey([...ftable.columns, ...foreignTableComputeColumns], 'name', column) < 0) {
         return true
       }
     }
@@ -269,7 +282,8 @@ class NModel extends Schama {
     if (table) {
       for (let i = 0; i < keysLen; i++) {
         let column = keys[i] && keys[i].replace(/^.*?\./, '')
-        if (indexOfObjWithSomeKey(table.columns, 'name', column) < 0) {
+        const ccColumns = this.computed_columns ? this.computed_columns.map(it => ({...it, name: it.columnName})) : []
+        if (indexOfObjWithSomeKey([...table.columns, ...ccColumns], 'name', column) < 0) {
           result.push(keys[i])
         }
       }
@@ -379,13 +393,14 @@ class NModel extends Schama {
       }
       setTimeout(() => {
         Object.values(this.tables).forEach(t => {
-          const pfkLinkColumns = t.columns.filter(it => it.isPK && it.isFK).sort((a, b) => a - b)
-          const pkLinkColumns = t.columns.filter(it => it.isPK && !it.isFK).sort((a, b) => a - b)
-          const fkLinkColumns = t.columns.filter(it => it.isFK && !it.isPK).sort((a, b) => a - b)
-          const unlinkColumns = t.columns.filter(it => !it.isPK && !it.isFK)
-          t.columns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns]
+          const pfkLinkColumns = t.all_columns.filter(it => it.isPK && it.isFK).sort((a, b) => a - b)
+          const pkLinkColumns = t.all_columns.filter(it => it.isPK && !it.isFK).sort((a, b) => a - b)
+          const fkLinkColumns = t.all_columns.filter(it => it.isFK && !it.isPK).sort((a, b) => a - b)
+          const unlinkColumns = t.all_columns.filter(it => !it.isPK && !it.isFK)
+          t.columns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns].filter(it => !it.is_computed_column)
           t.showColumns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns].slice(0, t.columnPerSize)
-          t._cache_search_columns = t.columns
+          t._cache_search_columns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns]
+          t.all_columns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns]
           this.$set(this._mount, 'tables', this.tables)
         })
       }, 0)
@@ -835,17 +850,18 @@ class NModel extends Schama {
       // 删除对应的 tableindex
       this._delTableIndexByAlias(alias)
       // 删除对应的 cc
-      this._delCCByAlias(alias)
+      this._delCCByAlias(ntable)
       // 删除对应的partition
       this._delTableRelatedPartitionInfo(ntable)
     }
   }
-  _delCCByAlias (tableAlias) {
-    const ccList = this._mount.computed_columns.filter(it => it.tableAlias !== tableAlias)
-    this._mount.computed_columns = ccList
+  _delCCByAlias (ntable) {
+    const ccList = this._mount.computed_columns.filter(it => it.tableAlias === ntable.alias)
     ccList.forEach(cc => {
+      const index = indexOfObjWithSomeKey(this._mount.computed_columns, 'guid', cc.guid)
+      this._mount.computed_columns.splice(index, 1)
       let ccColumnName = typeof cc === 'object' ? cc.columnName : cc
-      this._delCCRelated(tableAlias, ccColumnName)
+      this._delCCRelated(ntable, ccColumnName)
     })
   }
   getTable (key, val) {
@@ -941,6 +957,13 @@ class NModel extends Schama {
       this.partition_desc.partition_date_column = null
       this.partition_desc.partition_time_column = null
     }
+  }
+  _delCCInTableAllColumns (t, column) {
+    const index = t.all_columns.findIndex(it => it.column === column)
+    t.all_columns.splice(index, 1)
+    t.columnCurrentPage = 1
+    t.filterColumns()
+    // this.$set(this._mount.tables, t.guid, t)
   }
   changeTableType (t) {
     t.kind = t.kind === modelRenderConfig.tableKind.fact ? modelRenderConfig.tableKind.lookup : modelRenderConfig.tableKind.fact
@@ -1098,6 +1121,7 @@ class NModel extends Schama {
         getAllConnectsByGuid: this.getAllConnectsByGuid.bind(this),
         createAndUpdateSvgGroup: this.createAndUpdateSvgGroup.bind(this)
       }
+      options.computed_columns = this.computed_columns
       if (tableInfo.source_type === 1 && !options.isSecStorageEnabled) {
         if (!this.getFactTable()) {
           options.kind = modelRenderConfig.tableKind.fact
@@ -1367,6 +1391,10 @@ class NModel extends Schama {
       if (this.checkSameCCName(ccObj.columnName)) {
         let ccMeta = this.generateCCMeta(ccObj)
         this._mount.computed_columns.push(ccMeta)
+        // 更新事实表的columns
+        const factTable = this.getFactTable()
+        factTable.all_columns.push({...ccMeta, name: ccMeta.columnName, column: ccMeta.columnName, is_computed_column: true})
+        factTable.filterColumns()
         resolve(ccMeta)
       } else {
         reject()
@@ -1378,6 +1406,15 @@ class NModel extends Schama {
     return new Promise((resolve, reject) => {
       let hasEdit = false
       this._mount.computed_columns.forEach((c) => {
+        if (c.guid === ccObj.guid) {
+          Object.assign(c, ccObj)
+          hasEdit = true
+          resolve(c)
+        }
+      })
+      // 更新事实表的columns
+      const factTable = this.getFactTable()
+      factTable.all_columns.forEach((c) => {
         if (c.guid === ccObj.guid) {
           Object.assign(c, ccObj)
           hasEdit = true
@@ -1399,6 +1436,8 @@ class NModel extends Schama {
     this._delTableIndexByAlias(alias, column)
     // 删除partition里的cc
     this._delTableRelatedPartitionInfo(t, column)
+    // 删除 all_columns 里相关 cc
+    this._delCCInTableAllColumns(t, column)
   }
   // 删除可计算列
   delCC (cc) {
@@ -1586,7 +1625,7 @@ class NModel extends Schama {
           const firstPathLine = paths[0].getAttribute('d')
           paths[1].setAttribute('d', firstPathLine)
         } else {
-          this.createAndUpdateSvgGroup(line, this.allConnInfo[item].isBroken, 'create')
+          this.createAndUpdateSvgGroup(line, {...this.allConnInfo[item], type: 'create'})
         }
       })
     }
