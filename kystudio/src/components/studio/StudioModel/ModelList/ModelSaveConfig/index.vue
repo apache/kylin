@@ -9,8 +9,7 @@
     @close="isShow && handleClose(false)"
     :close-on-press-escape="false"
     :close-on-click-modal="false">
-    <!-- <div class="ky-list-title" v-if="!(modelInstance && modelInstance.uuid) && partitionMeta.table && partitionMeta.column">{{$t('partitionSet')}}</div> -->
-    <div class="partition-set ksd-mb-10" v-if="mode === 'saveModel'">
+    <div class="partition-set" v-if="mode === 'saveModel'">
       <el-alert
         :title="cannotSaveModelTips"
         type="error"
@@ -27,22 +26,24 @@
         v-if="isShowWarning"
         show-icon>
       </el-alert>
-      <div class="ksd-title-label-mini">{{$t('chooseBuildType')}}</div>
-      <el-select v-model="buildType" class="ksd-mtb-10" @change="handChangeBuildType" :disabled="!datasourceActions.includes('changeBuildType')" style="width:100%">
-        <el-option :label="$t('incremental')" value="incremental"></el-option>
-        <el-option v-if="!isNotBatchModel" :label="$t('fullLoad')" value="fullLoad"></el-option>
-      </el-select>
-      <el-alert
-        class="ksd-pt-0"
-        :title="buildTips"
-        type="info"
-        :show-background="false"
-        :closable="false"
-        show-icon>
-      </el-alert>
+      <el-tabs v-model="buildType" class="buildType-switch" type="button" @tab-click="handChangeBuildType">
+        <el-tab-pane name="incremental" :disabled="!datasourceActions.includes('changeBuildType')">
+          <span slot="label">
+            <el-tooltip :content="$t('incrementalTips')" placement="top">
+              <span>{{$t('incremental')}}<el-tag class="ksd-ml-5" size="mini" type="success">{{$t('recommend')}}</el-tag></span>
+            </el-tooltip>
+          </span>
+        </el-tab-pane>
+        <el-tab-pane :disabled="isNotBatchModel || !datasourceActions.includes('changeBuildType')" name="fullLoad">
+          <span slot="label">
+            <el-tooltip :content="!isNotBatchModel&&datasourceActions.includes('changeBuildType') ? $t('fullLoadTips', {storageSize: dataSize(modelDesc.storage)}) : this.$t('isNotBatchModel')" placement="top">
+              <span>{{$t('fullLoad')}}</span>
+            </el-tooltip>
+          </span>
+        </el-tab-pane>
+      </el-tabs>
     </div>
     <el-form v-if="mode === 'saveModel'&&buildType=== 'incremental'" :model="partitionMeta" ref="partitionForm" :rules="partitionRules"  label-width="85px" label-position="top">
-      <div class="ksd-title-label-mini ksd-mb-10">{{$t('partitionSet')}}</div>
       <!-- 新建流数据、融合数据模型时提示 -->
       <el-alert
         class="ksd-mb-8"
@@ -57,7 +58,6 @@
           <el-col :span="24">
             <el-tooltip effect="dark" :content="$t('disableChangePartitionTips')" :disabled="!(isNotBatchModel&&!!modelDesc.uuid&&isAlreadyHavePartition)" placement="bottom">
               <el-select :disabled="isLoadingNewRange||(isNotBatchModel&&!!modelDesc.uuid&&isAlreadyHavePartition)" v-model="partitionMeta.table" @change="partitionTableChange" :placeholder="$t('kylinLang.common.pleaseSelectOrSearch')" style="width:100%">
-                <!-- <el-option :label="$t('noPartition')" value=""></el-option> -->
                 <el-option :label="t.alias" :value="t.alias" v-for="t in partitionTables" :key="t.alias">{{t.alias}}</el-option>
               </el-select>
             </el-tooltip>
@@ -108,11 +108,7 @@
                 <el-option-group>
                   <el-option v-if="dateFormatsOptions.map(it => it.value).indexOf(prevPartitionMeta.format) === -1 && prevPartitionMeta.format" :label="prevPartitionMeta.format" :value="prevPartitionMeta.format"></el-option>
                   <el-option :label="f.label" :value="f.value" v-for="f in dateFormatsOptions" :key="f.label"></el-option>
-                  <!-- <el-option label="" value="" v-if="partitionMeta.column && timeDataType.indexOf(getColumnInfo(partitionMeta.column).datatype)===-1"></el-option> -->
                 </el-option-group>
-                <!-- <el-option-group>
-                  <el-option :label="f.label" :value="f.value" v-for="f in dateTimestampFormats" :key="f.label"></el-option>
-                </el-option-group> -->
               </el-select>
             </el-tooltip>
           </el-col>
@@ -132,8 +128,8 @@
         <div class="error-format" v-if="errorFormat">{{errorFormat}}</div>
         <div class="pre-format" v-if="formatedDate">{{$t('previewFormat')}}{{formatedDate}}</div>
         <div class="format">{{$t('formatRule')}}
-          <span v-if="isExpandFormatRule" @click="isExpandFormatRule = false">{{$t('viewDetail')}}<i class="el-icon-ksd-more_01-copy arrow"></i></span>
-          <span v-else @click="isExpandFormatRule = true">{{$t('viewDetail')}}<i class="el-icon-ksd-more_02 arrow"></i></span>
+          <span v-if="isExpandFormatRule" @click="isExpandFormatRule = false">{{$t('viewDetail')}}<i class="el-ksd-icon-arrow_up_16 arrow ksd-fs-16"></i></span>
+          <span v-else @click="isExpandFormatRule = true">{{$t('viewDetail')}}<i class="el-ksd-icon-arrow_down_16 arrow ksd-fs-16"></i></span>
         </div>
         <div class="detail-content" v-if="isExpandFormatRule">
           <p><span class="ksd-mr-2">1. </span><span>{{$t('rule1')}}</span></p>
@@ -146,7 +142,7 @@
         <span slot="label">
           <span>{{$t('multilevelPartition')}}</span>
           <el-tooltip effect="dark" :content="$t('multilevelPartitionDesc')" placement="right">
-            <i class="el-icon-ksd-what"></i>
+            <i class="el-icon-ksd-what ksd-fs-14"></i>
           </el-tooltip>
         </span>
         <el-row>
@@ -173,13 +169,37 @@
       </el-form-item>
     </el-form>
     <template v-if="mode === 'saveModel'">
-      <div class="divide-block">
-        <div class="divider"></div>
-        <span v-if="isExpand" @click="toggleShowPartition">{{$t('advanceSetting')}}<i class="el-ksd-icon-arrow_up_16 arrow ksd-fs-16"></i></span>
-        <span v-else @click="toggleShowPartition">{{$t('advanceSetting')}}<i class="el-ksd-icon-arrow_down_16 arrow ksd-fs-16"></i></span>
+      <div v-if="modelInstance && modelInstance.status !== 'BROKEN' && !isStreamModel && !this.isHaveNoDimMeas && !modelDesc.with_second_storage && !(modelInstance.has_base_table_index && modelInstance.has_base_agg_index)">
+        <div class="divide-block">
+          <div class="divider">
+            <span>{{$t('indexSetting')}}</span>
+          </div>
+        </div>
+        <div class="base-index-block ksd-ptb-16">
+          <el-checkbox-group v-model="source_types">
+            <el-checkbox label="BASE_AGG_INDEX" size="small" v-if="!modelInstance.has_base_agg_index">
+              <span>{{$t('addBaseAggIndexCheckBox')}}</span>
+              <el-tooltip effect="dark" :content="$t('baseAggIndexTips')" placement="top">
+                <i class="el-icon-ksd-what ksd-fs-14"></i>
+              </el-tooltip>
+            </el-checkbox>
+            <el-checkbox size="small" label="BASE_TABLE_INDEX" :disabled="modelDesc.with_second_storage" v-if="!modelInstance.has_base_table_index">
+              <span>{{$t('addBaseTableIndexCheckBox')}}</span>
+              <el-tooltip effect="dark" :content="$t('baseTableIndexTips')" placement="top">
+                <i class="el-icon-ksd-what ksd-fs-14"></i>
+              </el-tooltip>
+            </el-checkbox>
+          </el-checkbox-group>
+        </div>
+      </div>
+      <div class="divide-block advance-setting">
+        <div class="divider">
+          <span v-if="isExpand" @click="toggleShowPartition">{{$t('advanceSetting')}}<i class="el-ksd-icon-arrow_up_16 arrow ksd-fs-16"></i></span>
+          <span v-else @click="toggleShowPartition">{{$t('advanceSetting')}}<i class="el-ksd-icon-arrow_down_16 arrow ksd-fs-16"></i></span>
+        </div>
       </div>
       <div v-show="isExpand">
-        <div class="ksd-mb-24" v-if="$store.state.project.second_storage_enabled">
+        <div class="second-setting ksd-mb-16" v-if="$store.state.project.second_storage_enabled">
           <el-alert v-if="modelDesc.with_second_storage" show-icon type="warning" class="ksd-mb-8" :closable="false">
             <span v-html="$t('forbidenComputedColumnTips')" class="ksd-fs-12"></span>
           </el-alert>
@@ -209,7 +229,13 @@
             v-if="isShowSecStorageTips"
             show-icon>
           </el-alert>
-          <span class="ksd-title-label-mini">{{$t('secStorage')}}</span>
+          <span class="ksd-title-label-mini">
+            <span>{{$t('secStorage')}}</span>
+            <el-tooltip effect="dark" placement="right">
+              <span slot="content" v-html="$t('secStorageDesc')"></span>
+              <i class="el-icon-ksd-what ksd-fs-14"></i>
+            </el-tooltip>
+          </span>
           <span class="sec-switch">
             <common-tip :content="disableSecStorageTips" :disabled="!isNotBatchModel && !isHaveNoDimMeas">
               <el-switch
@@ -221,13 +247,11 @@
               </el-switch>
             </common-tip>
           </span>
-          <div class="secStorage-desc ksd-mt-8" v-html="$t('secStorageDesc')"></div>
         </div>
-        <!-- <div class="divider"></div> -->
-        <div class="ksd-title-label-mini ksd-mb-8">
+        <div class="data-filter ksd-title-label-mini ksd-mb-8">
           {{$t('dataFilterCond')}}
           <el-tooltip effect="dark" :content="$t('dataFilterCondTips')" placement="right">
-            <i class="el-ksd-icon-more_info_16 ksd-fs-16 ksd-mb-2"></i>
+            <i class="el-icon-ksd-what ksd-fs-14"></i>
           </el-tooltip>
         </div>
         <el-alert
@@ -245,16 +269,8 @@
       </div>
     </template>
     <div slot="footer" class="dialog-footer ky-no-br-space">
-      <div class="ksd-fleft" style="display: flex;" v-if="modelInstance && modelInstance.status !== 'BROKEN' && !isStreamModel && !modelDesc.with_second_storage && !this.isHaveNoDimMeas && !(modelInstance.has_base_table_index && modelInstance.has_base_agg_index)">
-        <el-checkbox v-model="addBaseIndex">
-          <span>{{$t('addBaseIndexCheckBox')}}</span>
-        </el-checkbox>
-        <el-tooltip effect="dark" :content="$t('baseIndexTips')" placement="top">
-          <i class="el-ksd-icon-more_info_22 ksd-fs-22"></i>
-        </el-tooltip>
-      </div>
       <el-button size="medium" @click="isShow && handleClose(false)">{{$t('kylinLang.common.cancel')}}</el-button>
-      <el-button type="primary" v-if="isShow" :disabled="isLoadingNewRange||disabledSave" :loading="isLoadingSave" @click="savePartitionConfirm" size="medium">{{$t('kylinLang.common.submit')}}</el-button>
+      <el-button type="primary" v-if="isShow" :disabled="isLoadingNewRange||disabledSave" :loading="isLoadingSave" @click="savePartitionConfirm" size="medium">{{mode === 'saveModel' ? $t('modelSaveSet') : $t('kylinLang.common.submit')}}</el-button>
     </div>
   </el-dialog>
 </template>
@@ -269,7 +285,6 @@ import locales from './locales'
 import store, { types } from './store'
 import { timeDataType, dateFormats, timestampFormats, dateTimestampFormats } from '../../../../../config'
 import NModel from '../../ModelEdit/model.js'
-// import { titleMaps, cancelMaps, confirmMaps, getSubmitData } from './handler'
 import { objectClone, isSubPartitionType, indexOfObjWithSomeKey, isStreamingPartitionType } from '../../../../../util'
 import { handleSuccess, transToUTCMs } from 'util/business'
 import { handleSuccessAsync, handleError } from 'util/index'
@@ -292,12 +307,6 @@ vuex.registerModule(['modals', 'ModelSaveConfig'], store)
       exchangeJoinTableList: state => state.form.exchangeJoinTableList,
       callback: state => state.callback
     }),
-    // ...mapState('DimensionsModal', {
-    //   otherColumns: state => state.otherColumns
-    // }),
-    // ...mapState('BatchMeasureModal', {
-    //   otherMeasureColumns: state => state.otherColumns
-    // }),
     ...mapState({
       otherColumns: state => state.model.otherColumns
     })
@@ -366,7 +375,7 @@ export default class ModelPartitionModal extends Vue {
   importantChange = false
   isExpand = false
   defaultBuildType = 'incremental'
-  addBaseIndex = false
+  source_types = []
   isShowSecStorageTips = false
   isShowSecStorageTips2 = false
   isShowSecondStoragePartitionTips = false
@@ -399,17 +408,14 @@ export default class ModelPartitionModal extends Vue {
       return true
     }
   }
-  get buildTips () {
-    if (this.buildType === 'incremental') {
-      return this.$t('incrementalTips')
-    } else if (this.buildType === 'fullLoad') {
-      return this.$t('fullLoadTips', {storageSize: Vue.filter('dataSize')(this.modelDesc.storage)})
-    }
-  }
 
   get factTableType () {
     const obj = this.modelInstance.getFactTable()
     return obj.source_type
+  }
+
+  dataSize (storage) {
+    return Vue.filter('dataSize')(storage)
   }
 
   handChangeBuildType (val) {
@@ -489,7 +495,7 @@ export default class ModelPartitionModal extends Vue {
   }
   get partitionTitle () {
     if (this.mode === 'saveModel') {
-      return this.$t('modelSaveSet')
+      return this.$t('saveModel')
     } else {
       return this.$t('modelPartitionSet')
     }
@@ -505,13 +511,7 @@ export default class ModelPartitionModal extends Vue {
     }
     return result
   }
-  // get showDataRange () {
-  //   // 分区列有空值或者和历史值一样
-  //   if (!this.partitionMeta.table || !this.partitionMeta.column || this.partitionMeta.table + '.' + this.partitionMeta.column === this.modelInstance.his_partition_desc.partition_date_column) {
-  //     return false
-  //   }
-  //   return true
-  // }
+
   // 获取破损的partition keys
   get brokenPartitionColumns () {
     if (this.partitionMeta.table) {
@@ -606,7 +606,10 @@ export default class ModelPartitionModal extends Vue {
       // })
       const partition_desc = this.modelDesc.partition_desc
       this.isExpand = !this.modelDesc.uuid && !this.isNotBatchModel
-      this.addBaseIndex = this.modelInstance && !(this.isStreamModel || this.modelDesc.with_second_storage || this.isHaveNoDimMeas || (this.modelInstance.has_base_table_index && this.modelInstance.has_base_agg_index))
+      // 新建模型是，默认添加基础索引。编辑时已添加基础索引不显示，未添加索引是未勾选状态，用户可选择勾选
+      if (!this.modelDesc.uuid) {
+        this.source_types = ['BASE_TABLE_INDEX', 'BASE_AGG_INDEX']
+      }
       if (this.modelDesc.uuid && !(partition_desc && partition_desc.partition_date_column) && !this.isNotBatchModel) {
         this.buildType = 'fullLoad'
         this.defaultBuildType = 'fullLoad'
@@ -643,12 +646,7 @@ export default class ModelPartitionModal extends Vue {
     this.partitionMeta.column = ''
     this.partitionMeta.format = ''
     this.partitionMeta.multiPartition = ''
-    // this.$refs.partitionForm.validate()
   }
-  // partitionColumnChange () {
-  //   this.partitionMeta.format = 'yyyy-MM-dd'
-  //   this.$refs.partitionForm.validate()
-  // }
   resetForm () {
     this.partitionMeta = {
       table: '',
@@ -698,14 +696,8 @@ export default class ModelPartitionModal extends Vue {
     }
     let isOnlySave = true
     if (typeof this.modelDesc.available_indexes_count === 'number' && this.modelDesc.available_indexes_count > 0) {
-      // if (this.prevPartitionMeta.table && this.buildType === 'fullLoad') {
-      //   await kylinConfirm(this.$t('changeSegmentTip2', {modelName: this.modelDesc.name}), '', this.$t('kylinLang.common.tip'))
-      // } else if ((this.prevPartitionMeta.table !== this.partitionMeta.table || this.prevPartitionMeta.column !== this.partitionMeta.column || this.prevPartitionMeta.format !== this.partitionMeta.format) && this.buildType === 'incremental') {
-      //   await kylinConfirm(this.$t('changeSegmentTip1', {tableColumn: `${this.partitionMeta.table}.${this.partitionMeta.column}`, dateType: this.partitionMeta.format, modelName: this.modelDesc.name}), '', this.$t('kylinLang.common.tip'))
-      // }
       if (this.isChangeToFullLoad || this.isChangePartition) {
         this.importantChange = true
-        // await kylinConfirm(this.$t('changeSegmentTips'), {confirmButtonText: this.$t('kylinLang.common.save'), type: 'warning', dangerouslyUseHTMLString: true}, this.$t('kylinLang.common.tip'))
         const res = await this.callGlobalDetailDialog({
           msg: this.$t('changeSegmentTips'),
           title: this.$t('kylinLang.common.tip'),
@@ -786,13 +778,9 @@ export default class ModelPartitionModal extends Vue {
       if (!(checkData && checkData.partition_desc && checkData.partition_desc.partition_date_column) || this.buildType === 'fullLoad') {
         checkData.partition_desc = null
       }
-      // if (this.isHybridModel) {
-      //   checkData.batch_partition_desc = checkData.partition_desc
-      // }
       this.checkFilterConditon(checkData).then((res) => {
         handleSuccess(res, async (data) => {
           // TODO HA 模式时 post 等接口需要等待同步完去刷新列表
-          // await handleWaiting()
           if (!this.importantChange && 'rebuild_index' in data && data.rebuild_index) {
             try {
               const res = await this.callGlobalDetailDialog({
@@ -833,15 +821,12 @@ export default class ModelPartitionModal extends Vue {
     this.filterErrorMsg = ''
     // 不把这个信息记录下来的话，300 延迟后，modelDesc 就 undefined 了
     let temp = objectClone(this.modelDesc)
-    // if (this.isHybridModel) {
-    //   temp.batch_partition_desc = temp.partition_desc
-    // }
     setTimeout(() => {
       this.callback && this.callback({
         isSubmit: isSubmit,
         isPurgeSegment: this.isChangePartition,
         data: temp,
-        with_base_index: this.modelDesc.with_second_storage ? false : this.addBaseIndex
+        base_index_type: this.source_types
       })
       this.hideModal()
       this.resetModalForm()
@@ -894,9 +879,34 @@ export default class ModelPartitionModal extends Vue {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
 @import '../../../../../assets/styles/variables.less';
 .model-partition-dialog {
+  .buildType-switch {
+    .el-tabs__header {
+      width: 100%;
+      .el-tabs__nav {
+        width: 97.8%;
+        .el-tabs__item {
+          width: 50%;
+          .el-tag {
+            position: relative;
+            bottom: 1px;
+          }
+        }
+      }
+    }
+  }
+  .el-tabs__item.is-disabled {
+    cursor: not-allowed;
+  }
+  .second-setting,
+  .data-filter {
+    .el-icon-ksd-what {
+      position: relative;
+      top: 1px;
+    }
+  }
   .error-format {
     color: @error-color-1;
     font-size: 12px;
@@ -906,7 +916,9 @@ export default class ModelPartitionModal extends Vue {
     color: @text-normal-color;
     font-size: 14px;
     margin-top: 4px;
-    background-color: @base-background-color;
+    background-color: @ke-background-color-secondary;
+    border: 1px solid @ke-border-divider-color;
+    border-radius: 6px;
     height: 26px;
     line-height: 26px;
     border-radius: 4px;
@@ -922,13 +934,14 @@ export default class ModelPartitionModal extends Vue {
       color: @base-color;
       cursor: pointer;
       .arrow {
-        transform: rotate( 90deg );
         margin-left: 3px;
       }
     }
   }
   .detail-content {
-    background-color: @base-background-color-1;
+    background-color: @ke-background-color-secondary;
+    border: 1px solid @ke-border-divider-color;
+    border-radius: 6px;
     padding: 8px 16px;
     box-sizing: border-box;
     font-size: 12px;
@@ -954,26 +967,37 @@ export default class ModelPartitionModal extends Vue {
       color: @error-color-1;
     }
   }
+  .base-index-block {
+    .el-icon-ksd-what {
+      position: relative;
+      top: 1px;
+    }
+  }
   .divide-block {
-    color: @text-title-color;
+    color: @text-placeholder-color;
     position: relative;
     text-align: center;
-    margin-top: 5px;
+    margin-top: 16px;
     font-size: 12px;
     span {
-      cursor: pointer;
+      cursor: default;
+      position: absolute;
+      display: inline-block;
+      top: -8px;
+      background-color: #fff;
+      padding: 0 10px;
+      left: 44%;
     }
-    // .arrow {
-    //   transform: rotate(90deg);
-    //   margin-left: 3px;
-    //   font-size: 5px;
-    //   color: @base-color;
-    //   position: absolute;
-    //   top: 15px;
-    // }
     .divider {
       margin: 10px 0;
-      border-bottom: 1px solid @ke-color-secondary;
+      border-bottom: 1px solid @ke-border-secondary;
+      position: relative;
+    }
+    &.advance-setting {
+      color: @ke-color-primary;
+      span {
+        cursor: pointer;
+      }
     }
   }
   .item-desc {
@@ -983,16 +1007,6 @@ export default class ModelPartitionModal extends Vue {
   .where-area {
     margin-top:20px;
   }
-  // .error-msg {display:none}
-  // .is-broken {
-  //   .el-input__inner{
-  //     border:solid 1px @color-danger;
-  //   }
-  //   .error-msg {
-  //     color:@color-danger;
-  //     display:block;
-  //   }
-  // }
   .up-performance{
     i {
       color:@normal-color-1;

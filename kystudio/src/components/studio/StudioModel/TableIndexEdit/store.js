@@ -12,7 +12,6 @@ const initialState = JSON.stringify({
   isShow: false,
   form: {
     data: {
-      isHybridBatch: false,
       modelInstance: null,
       tableIndexDesc: null,
       indexUpdateEnabled: true

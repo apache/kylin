@@ -2046,7 +2046,7 @@ export default class ModelEdit extends Vue {
           this.isPurgeSegment = res.isPurgeSegment // 修改分区列会清空所有segment，该字段引导用户去添加segment
         }
         if (res.isSubmit) {
-          this.handleSaveModel({data, modelSaveConfigData: res.data, createBaseIndex: this.modelInstance.has_base_table_index && this.modelInstance.has_base_agg_index ? false : res.with_base_index})
+          this.handleSaveModel({data, modelSaveConfigData: res.data, createBaseIndex: res.base_index_type})
         } else {
           this.saveBtnLoading = false
         }
@@ -2326,7 +2326,7 @@ export default class ModelEdit extends Vue {
   }
   handleSaveModel ({data, modelSaveConfigData, createBaseIndex}) {
     this.saveModelType = 'saveModel'
-    let para = {...data, with_base_index: createBaseIndex}
+    let para = {...data, base_index_type: createBaseIndex}
     if (data.uuid) {
       this.saveModelType = 'updataModel'
     }
