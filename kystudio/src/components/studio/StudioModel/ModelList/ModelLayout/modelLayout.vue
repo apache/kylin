@@ -250,16 +250,12 @@ export default class ModelLayout extends Vue {
     this.initModelData()
   }
 
-  initModelData () {
+  async initModelData () {
     const { modelName, searchModelName, tabTypes } = this.$route.params
     this.modelName = modelName
     this.searchModelName = searchModelName || ''
-    if (!this.modelList.filter(it => it.alias === this.modelName).length) {
-      // 没有匹配到相应的 model
-      this.$router.replace({name: 'ModelList'})
-      return
-    }
-    this.currentModelRow = {...this.modelList.filter(it => it.alias === this.modelName)[0], tabTypes: typeof tabTypes !== 'undefined' ? tabTypes : 'overview'}
+    await this.refreshModelData()
+    this.currentModelRow = {...this.currentModelRow, tabTypes: typeof tabTypes !== 'undefined' ? tabTypes : 'overview'}
     if (this.currentModelRow.tabTypes === 'second' && localStorage.getItem('isFirstSaveModel') === 'true') {
       this.showGuide()
     }
@@ -284,18 +280,6 @@ export default class ModelLayout extends Vue {
     this.$nextTick(() => {
       this.$router.replace({name: 'ModelDetails', params: {modelName: model.alias, searchModelName: this.searchModelName, ...args}, query: {modelPageOffest: this.modelPageOffest}})
     })
-  }
-
-  selectModel ({model, ...args}) {
-    let data = {searchModelName: this.searchModelName, ...args}
-    let modelData = this.modelList.filter(it => it.alias === this.modelName)
-    this.modelName = model.alias
-    if (!modelData.length) {
-      this.$router.replace({name: 'ModelList'})
-      return
-    }
-    this.$set(this, 'currentModelRow', {...modelData[0], tabTypes: typeof data.tabTypes !== 'undefined' ? data.tabTypes : 'overview'})
-    this.randomKey = Date.now().toString(32)
   }
 
   loadModelList (name = '') {
@@ -331,6 +315,9 @@ export default class ModelLayout extends Vue {
     const { value } = await handleSuccessAsync(response)
     if (value.length) {
       this.currentModelRow = {...this.currentModelRow, ...value[0]}
+    } else {
+      // 没有匹配到相应的 model
+      this.$router.replace({ name: 'ModelList', params: {searchModelName: this.searchModelName} })
     }
   }
 
@@ -470,8 +457,8 @@ export default class ModelLayout extends Vue {
 
   // 重新加载模型数据
   async reloadModel () {
-    await this.loadModelList()
-    this.selectModel({model: this.currentModelRow, tabTypes: this.currentModelRow.tabTypes})
+    await this.refreshModelData()
+    this.randomKey = Date.now().toString(32)
   }
 
   // 首次创建模型引导

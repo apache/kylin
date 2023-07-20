@@ -272,7 +272,8 @@ import locales from './locales'
       disableModel: 'DISABLE_MODEL',
       enableModel: 'ENABLE_MODEL',
       delModel: 'DELETE_MODEL',
-      exportValidation: 'VALIDATE_EXPORT_TDS'
+      exportValidation: 'VALIDATE_EXPORT_TDS',
+      loadDataSourceByModel: 'LOAD_DATASOURCE_OF_MODEL'
     }),
     ...mapActions('DetailDialogModal', {
       callGlobalDetailDialog: 'CALL_MODAL'
@@ -425,9 +426,19 @@ export default class ModelActions extends Vue {
     if (!(modelDesc.partition_desc && modelDesc.partition_desc.partition_date_column)) {
       type = 'fullLoad'
     }
+    let modelInfo = objectClone(modelDesc)
+    if (!modelDesc.simplified_tables) {
+      const result = await this.loadDataSourceByModel({ project: projectName, model_name: modelDesc.alias })
+      const datasource = await handleSuccessAsync(result)
+      datasource.forEach((item) => {
+        item.table = item.database + '.' + item.name
+      })
+      modelInfo.global_datasource = {}
+      modelInfo.global_datasource[this.currentSelectedProject] = datasource
+    }
     this.$nextTick(async () => {
       await this.callModelBuildDialog({
-        modelDesc: modelDesc,
+        modelDesc: modelInfo,
         type: type,
         title: this.$t('build'),
         isHaveSegment: !!total_size,
@@ -596,7 +607,7 @@ export default class ModelActions extends Vue {
   }
 
   get isHaveNoDimMeas () {
-    return this.currentModel.simplified_dimensions.length === 0 && this.currentModel.simplified_measures.length === 1 && this.currentModel.simplified_measures[0].name === 'COUNT_ALL' // 没有设置维度，只有默认度量
+    return this.currentModel.empty_model // 没有设置维度，只有默认度量
   }
 
   get isHavePartitionColumn () {

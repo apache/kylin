@@ -901,7 +901,7 @@
             await (this.$refs.rangeForm && this.$refs.rangeForm.validate()) || Promise.resolve()
             await (this.$refs.partitionForm && this.$refs.partitionForm.validate()) || Promise.resolve()
             const { column, table } = this.partitionMeta
-            if (this.modelDesc.second_storage_enabled && !this.modelDesc.simplified_dimensions.map(it => it.column).includes(`${table}.${column}`)) {
+            if (this.modelDesc.second_storage_enabled && !(this.modelDesc.partition_column_in_dims || this.modelDesc.simplified_dimensions.map(it => it.column).includes(`${table}.${column}`))) {
               this.secondStoragePartitionTips = true
               this.btnLoading = false
               return
