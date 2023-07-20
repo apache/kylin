@@ -27,9 +27,6 @@ import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBa
 
 import scala.collection.JavaConverters._
 
-import io.kyligence.kap.common.{JobSupport, QuerySupport}
-import io.kyligence.kap.query.{QueryConstants, QueryFetcher}
-
 class TestTPCHQuery
   extends SparderBaseFunSuite
     with LocalMetadata
