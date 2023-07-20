@@ -10,6 +10,6 @@ export default {
     userGroupsList: 'User Group',
     groupFilter: 'Search by user group name',
     userGroup: 'User Group',
-    securityProfileTip: 'The current mode doesn\'t allow managing users/user groups, including operations such as creating, editing, deleting, assigning, and changing passwords.'
+    securityProfileTip: 'The current user/user group is managed using an external system as this page is read-only. Please go to the relevant management system if you need to edit it.'
   }
 }

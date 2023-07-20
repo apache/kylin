@@ -32,7 +32,7 @@
       </el-col>
     </el-row>
 
-    <el-alert class="ksd-mb-16" type="info"
+    <el-alert class="ksd-mb-16" type="tip" show-icon
       v-if="!isTestingSecurityProfile"
       :title="$t('securityProfileTip')"
       :closable="false">
