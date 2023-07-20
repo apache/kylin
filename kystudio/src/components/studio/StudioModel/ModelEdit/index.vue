@@ -134,7 +134,7 @@
                 </span>
               </li>
               <!-- 渲染可计算列 -->
-              <template v-if="t.kind=== 'FACT'">
+              <!-- <template v-if="t.kind=== 'FACT'">
                 <li :class="['column-li', 'column-li-cc', {'is-link': col.isPK || col.isFK}]"
                   @drop='(e) => {dropColumn(e, {name: col.columnName }, t)}'
                   @dragover="(e) => {dragColumnEnter(e, t, col)}"
@@ -153,7 +153,7 @@
                     <span :class="['col-name']" v-custom-tooltip="{text: col.columnName, w: 30, effect: 'dark', 'popper-class': 'popper--small', 'visible-arrow': false, position: 'bottom-start', observerId: t.guid}">{{col.columnName}}</span>
                   </span>
                 </li>
-              </template>
+              </template> -->
               <li class="li-load-more" v-if="t.hasMoreColumns && t.hasScrollEnd && !showOnlyConnectedColumn"><i class="el-ksd-icon-loading_16"></i></li>
             </ul>
           </div>
@@ -1165,23 +1165,34 @@ export default class ModelEdit extends Vue {
     if (tableBoxes.length > 0) {
       Array.prototype.slice.call(tableBoxes).forEach(item => {
         item.classList.remove('is-focus')
-        item.classList.remove('is-broken')
+        // item.classList.remove('is-broken')
       })
     }
     if (linkLabels.length > 0) {
       Array.prototype.slice.call(linkLabels).forEach(item => {
         item.classList.remove('is-focus')
-        item.classList.remove('is-broken')
+        // item.classList.remove('is-broken')
       })
     }
     if (svgLine.length > 0) {
       Array.prototype.slice.call(svgLine).forEach(item => {
-        item.setAttribute('class', `${item.className.baseVal.replace(/is-focus|is-broken/g, '')}`)
+        item.setAttribute('class', `${item.className.baseVal.replace(/is-focus/g, '')}`)
       })
     }
     this.blurTableActionDropdown()
     document.activeElement && document.activeElement.blur()
   }
+
+  removeBrokenStatus (conn, isBrokenLine) {
+    const { _jsPlumb, canvas, source, target } = conn
+    if (isBrokenLine) return
+    source.classList.remove('is-broken')
+    target.classList.remove('is-broken')
+    canvas.querySelector('g').setAttribute('id', 'use-group')
+    canvas.nextSibling.classList.remove('is-broken')
+    _jsPlumb.paintStyle.stroke = '#A5B2C5'
+  }
+
   // 隐藏下拉框
   blurTableActionDropdown () {
     if (this.$refs.tableActionsDropdown) {
@@ -1414,7 +1425,38 @@ export default class ModelEdit extends Vue {
   }
   // 单个删除CC
   delCC (name) {
-    this.modelInstance.delCC(name)
+    this.modelInstance.delCC(name).then((delCCValue) => {
+      const joinTables  = this.modelInstance.tables
+      const [ cc ] = delCCValue
+      const includeCurrentCCJoins = []
+      Object.values(joinTables).forEach(jt => {
+        const joinInfo = Object.values(jt.joinInfo)
+        if (!joinInfo.length) return
+        joinInfo.forEach(jc => {
+          if (jc.join.primary_key.includes(`${cc.tableAlias}.${cc.columnName}`) || jc.join.foreign_key.includes(`${cc.tableAlias}.${cc.columnName}`)) {
+            includeCurrentCCJoins.push({pid: jt.guid, fid: jc.foreignTable.guid})
+          }
+        })
+      })
+      includeCurrentCCJoins.forEach(it => {
+        // this.modelInstance.renderLink(it.pid, it.fid)
+        const conn = this.modelInstance.allConnInfo[`${it.pid}$${it.fid}`]
+        if (conn) {
+          const { _jsPlumb } = conn
+          conn.isBroken = true
+          conn.canvas.querySelector('g').setAttribute('id', 'broken-use-group')
+          _jsPlumb.paintStyle.stroke = '#E03B3B'
+          _jsPlumb.hoverPaintStyle.stroke = '#CA1616'
+          this.modelInstance.setOverLayLabel(conn, true)
+          // this.modelInstance.plumbTool.refreshPlumbInstance()
+          this.$nextTick(() => {
+            conn.source.className += ' is-broken'
+            conn.target.className += ' is-broken'
+          })
+        }
+      })
+      // this.modelInstance.createAndUpdateSvgGroup(null, {type: 'update'})
+    })
   }
   editCC (cc) {
     this.showAddCCDialog({
@@ -1441,6 +1483,9 @@ export default class ModelEdit extends Vue {
     if (this.modelRender.computed_columns.length === 0) {
       this.toggleCCCheckbox()
     }
+    this.$nextTick(() => {
+      this.modelInstance.plumbTool.refreshPlumbInstance()
+    })
   }
   editMeasure (m) {
     this.$nextTick(() => {
@@ -1741,13 +1786,14 @@ export default class ModelEdit extends Vue {
       this.$nextTick(() => {
         // const cloneTables = objectClone(this.modelRender.tables)
         Object.values(this.modelRender.tables).forEach(t => {
-          const pfkLinkColumns = t.columns.filter(it => it.isPK && it.isFK).sort((a, b) => a - b)
-          const pkLinkColumns = t.columns.filter(it => it.isPK && !it.isFK).sort((a, b) => a - b)
-          const fkLinkColumns = t.columns.filter(it => it.isFK && !it.isPK).sort((a, b) => a - b)
-          const unlinkColumns = t.columns.filter(it => !it.isPK && !it.isFK)
-          t.columns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns]
-          t._cache_search_columns = t.columns
+          const pfkLinkColumns = t.all_columns.filter(it => it.isPK && it.isFK).sort((a, b) => a - b)
+          const pkLinkColumns = t.all_columns.filter(it => it.isPK && !it.isFK).sort((a, b) => a - b)
+          const fkLinkColumns = t.all_columns.filter(it => it.isFK && !it.isPK).sort((a, b) => a - b)
+          const unlinkColumns = t.all_columns.filter(it => !it.isPK && !it.isFK)
+          t.columns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns].filter(it => !it.is_computed_column)
+          t._cache_search_columns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns]
           t.showColumns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns].slice(0, t.columnPerSize)
+          t.all_columns = [...pfkLinkColumns, ...pkLinkColumns, ...fkLinkColumns, ...unlinkColumns]
         })
         this.$set(this.modelInstance, 'tables', this.modelRender.tables)
         console.log(this.modelInstance.allConnInfo)
@@ -2445,6 +2491,11 @@ export default class ModelEdit extends Vue {
     &:hover {
       .join-type {
         color: @ke-color-danger-hover;
+      }
+    }
+    &.is-focus {
+      .join-type {
+        color: @ke-color-danger-hover !important;
       }
     }
   }
@@ -3169,6 +3220,12 @@ export default class ModelEdit extends Vue {
           stroke-width: 2;
         }
       }
+      #broken-use-group {
+        > path:not(#use) {
+          stroke: @ke-color-danger;
+          stroke-width: 2;
+        }
+      }
     }
   }
   .edit-table-layout {
@@ -3203,6 +3260,9 @@ export default class ModelEdit extends Vue {
     }
     &.link-hover:not(.is-focus) {
       border: 2px solid @base-color-6;
+    }
+    &.link-hover.is-broken:not(.is-focus) {
+      border: 2px solid @ke-color-danger;
     }
     &:hover:not(.is-focus) {
       // box-shadow: @fact-hover-shadow;

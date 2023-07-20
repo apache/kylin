@@ -24,6 +24,7 @@ class NTable {
     this.source_type = options.source_type
     this.batch_table_identity = options.batch_table_identity // kafka关联的hive表名
     this._cache_search_columns = this.columns // 搜索结果缓存
+    this.all_columns = [...this.columns, ...options.computed_columns.filter(col => col.tableAlias === this.alias).map(item => ({...item, name: item.columnName, column: item.columnName, is_computed_column: true}))] // 所有挂在该表上的列（包括 cc 列）
     // this._parent = options._parent
     this.ST = null
     this.spreadOut = true
@@ -85,7 +86,7 @@ class NTable {
   }
   filterColumns () {
     let reg = new RegExp(this.filterColumnChar, 'i')
-    this.showColumns = this.columns.filter((col) => {
+    this.showColumns = this.all_columns.filter((col) => {
       return this.filterColumnChar ? reg.test(col.name) : true
     })
     this._cache_search_columns = this.showColumns
@@ -252,8 +253,8 @@ class NTable {
     return this.joinInfo[this.guid] || {}
   }
   getColumnObj (columnName) {
-    for (let i = 0; i < this.columns.length; i++) {
-      const col = this.columns[i]
+    for (let i = 0; i < this.all_columns.length; i++) {
+      const col = this.all_columns[i]
       if (col.name === columnName) {
         return col
       }
@@ -268,16 +269,17 @@ class NTable {
         col[key] = val
       }
     }
+    this.columns = this.all_columns.filter(it => !it.is_computed_column)
   }
-  changeColumnsProperty (key, val, _) {
-    this.columns.forEach((col) => {
-      if (_) {
-        _.$set(col, key, val)
-      } else {
-        col[key] = val
-      }
-    })
-  }
+  // changeColumnsProperty (key, val, _) {
+  //   this.columns.forEach((col) => {
+  //     if (_) {
+  //       _.$set(col, key, val)
+  //     } else {
+  //       col[key] = val
+  //     }
+  //   })
+  // }
   // 可计算列处理
   // 维度处理
   // dimension处理

@@ -278,7 +278,7 @@
   import { mapState, mapMutations, mapActions, mapGetters } from 'vuex'
   import vuex from 'store'
   import { handleError, transToUTCMs, getGmtDateFromUtcLike, kylinMessage } from 'util/business'
-  import { handleSuccessAsync, transToServerGmtTime, isDatePartitionType, isStreamingPartitionType, isSubPartitionType, kylinConfirm, split_array } from 'util/index'
+  import { handleSuccessAsync, transToServerGmtTime, isDatePartitionType, isStreamingPartitionType, isSubPartitionType, kylinConfirm, split_array, objectClone, indexOfObjWithSomeKey } from 'util/index'
   import locales from './locales'
   import store, { types } from './store'
   import NModel from '../../ModelEdit/model.js'
@@ -530,7 +530,13 @@
     async handleLoadFormat () {
       try {
         this.isLoadingFormat = true
-        const response = await this.fetchPartitionFormat({ project: this.currentSelectedProject, table: this.selectedTable.name, partition_column: this.partitionMeta.column })
+        const ccColumns = this.modelInstance.getComputedColumns()
+        const index = indexOfObjWithSomeKey(ccColumns, 'columnName', this.partitionMeta.column)
+        const data = { project: this.currentSelectedProject, table: this.selectedTable.name, partition_column: this.partitionMeta.column }
+        if (index !== -1) { // 分区列是CC列
+          data.expression = ccColumns[index].innerExpression
+        }
+        const response = await this.fetchPartitionFormat(data)
         this.partitionMeta.format = await handleSuccessAsync(response)
         this.partitionColumnFormatChange(this.partitionMeta.format)
         this.isLoadingFormat = false
@@ -555,15 +561,15 @@
           }
         })
       }
-      // let ccColumns = this.modelInstance.getComputedColumns()
-      // let cloneCCList = objectClone(ccColumns)
-      // cloneCCList.forEach((x) => {
-      //   let cc = {
-      //     name: x.columnName,
-      //     datatype: x.datatype
-      //   }
-      //   result.push(cc)
-      // })
+      let ccColumns = this.modelInstance.getComputedColumns()
+      let cloneCCList = objectClone(ccColumns)
+      cloneCCList.forEach((x) => {
+        let cc = {
+          name: x.columnName,
+          datatype: x.datatype
+        }
+        result.push(cc)
+      })
       return result
     }
 
@@ -775,11 +781,16 @@
         partition_date_column: this.partitionMeta.table + '.' + this.partitionMeta.column,
         partition_date_format: this.partitionMeta.format
       }
+      const ccColumns = this.modelInstance.getComputedColumns()
+      const index = indexOfObjWithSomeKey(ccColumns, 'columnName', this.partitionMeta.column)
       try {
         const submitData = {
           project: this.currentSelectedProject,
           model: this.modelId,
           partition_desc: partition_desc
+        }
+        if (index !== -1) { // 分区列是CC列
+          submitData.expression = ccColumns[index].innerExpression
         }
         const response = await this.fetchNewestModelRange(submitData)
         if (submitData.model !== this.modelId) { // 避免ajax耗时太长导致会覆盖新的model的load range数据

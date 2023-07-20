@@ -145,7 +145,7 @@ import locales from './locales'
 import store, { types } from './store'
 import { timeDataType, dateFormats, timestampFormats, dateTimestampFormats } from 'config'
 import NModel from '../../ModelEdit/model.js'
-import { isDatePartitionType, isStreamingPartitionType, isSubPartitionType, kylinConfirm } from 'util'
+import { isDatePartitionType, isStreamingPartitionType, isSubPartitionType, kylinConfirm, objectClone } from 'util'
 import { handleSuccessAsync, handleError } from 'util/index'
 vuex.registerModule(['modals', 'ModelPartition'], store)
 
@@ -262,15 +262,15 @@ export default class ModelPartition extends Vue {
         }
       })
     }
-    // let ccColumns = this.modelInstance.getComputedColumns()
-    // let cloneCCList = objectClone(ccColumns)
-    // cloneCCList.forEach((x) => {
-    //   let cc = {
-    //     name: x.columnName,
-    //     datatype: x.datatype
-    //   }
-    //   result.push(cc)
-    // })
+    let ccColumns = this.modelInstance.getComputedColumns()
+    let cloneCCList = objectClone(ccColumns)
+    cloneCCList.forEach((x) => {
+      let cc = {
+        name: x.columnName,
+        datatype: x.datatype
+      }
+      result.push(cc)
+    })
     return result
   }
   get subPartitionColumnOtions () {

@@ -327,15 +327,15 @@ export default class TableJoinModal extends Vue {
   }
   get fColumns () {
     let ntable = this.fTable
-    if (ntable) {
-      return ntable.columns
+    if (ntable && !Array.isArray(ntable)) {
+      return ntable.kind === 'FACT' ? [...ntable.columns, ...this.ccColumns] : ntable.columns
     }
     return []
   }
   get pColumns () {
     let ntable = this.pTable
-    if (ntable) {
-      return ntable.columns
+    if (ntable && !Array.isArray(ntable)) {
+      return ntable.kind === 'FACT' ? [...ntable.columns, ...this.ccColumns] : ntable.columns
     }
     return []
   }
@@ -344,6 +344,9 @@ export default class TableJoinModal extends Vue {
   }
   get pTable () {
     return this.form.tables && this.form.tables[this.selectP] || []
+  }
+  get ccColumns () {
+    return this.form.modelInstance && this.form.modelInstance.computed_columns && this.form.modelInstance.computed_columns.length > 0 ? this.form.modelInstance.computed_columns.map(it => ({...it, column: it.columnName, name: it.columnName, table_alias: it.tableAlias})) : []
   }
   checkIsBrokenPrimaryKey (rule, value, callback) {
     if (value) {
