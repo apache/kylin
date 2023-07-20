@@ -2,7 +2,7 @@
   <div class="security-group" v-loading="isLoadingUserGroups">
     <div class="ksd-title-label ksd-mt-20 ksd-mrl-20">{{$t('userGroupsList')}}</div>
     <el-row class="ksd-mb-10 ksd-mt-10 ksd-mrl-20">
-      <el-button type="primary" size="medium" v-if="groupActions.includes('addGroup')" :disabled="!isTestingSecurityProfile" icon="el-ksd-icon-add_22" @click="editGroup('new')">{{$t('kylinLang.common.new')}}</el-button>
+      <el-button type="primary" size="medium" v-if="groupActions.includes('addGroup')&&isTestingSecurityProfile" icon="el-ksd-icon-add_22" @click="editGroup('new')">{{$t('kylinLang.common.new')}}</el-button>
       <div style="width:240px;" class="ksd-fright">
         <el-input class="show-search-btn"
           size="medium"
@@ -14,7 +14,7 @@
         </el-input>
       </div>
     </el-row>
-    <el-alert class="ksd-mb-16 ksd-ml-20" type="info"
+    <el-alert class="ksd-mb-16 ksd-ml-20" type="tip" show-icon
       v-if="!isTestingSecurityProfile"
       :title="$t('securityProfileTip')"
       :closable="false">
@@ -42,14 +42,14 @@
             {{scope.row.users && scope.row.users.length || 0}}
           </template>
         </el-table-column>
-        <el-table-column v-if="groupActions.includes('editGroup') && groupActions.includes('deleteGroup')"
+        <el-table-column v-if="(groupActions.includes('editGroup') || groupActions.includes('deleteGroup')) && isTestingSecurityProfile"
           :label="$t('kylinLang.common.action')" :width="83">
           <template slot-scope="scope">
             <el-tooltip :content="$t('assignUsers')" effect="dark" placement="top" v-show="scope.row.group_name!=='ALL_USERS' && groupActions.includes('editGroup')">
-              <i class="el-icon-ksd-table_assign ksd-fs-14 ksd-mr-10" :class="{'is-disabled': !isTestingSecurityProfile}" @click="editGroup('assign', scope.row)"></i>
+              <i class="el-icon-ksd-table_assign ksd-fs-14 ksd-mr-10" @click="editGroup('assign', scope.row)"></i>
             </el-tooltip><span>
             </span><el-tooltip :content="$t('kylinLang.common.drop')" effect="dark" placement="top" v-show="(scope.row.group_name!=='ROLE_ADMIN' && scope.row.group_name!=='ALL_USERS') && groupActions.includes('deleteGroup')">
-              <i class="el-icon-ksd-table_delete ksd-fs-14" :class="{'is-disabled': !isTestingSecurityProfile}" @click="dropGroup(scope.row)"></i>
+              <i class="el-icon-ksd-table_delete ksd-fs-14" @click="dropGroup(scope.row)"></i>
             </el-tooltip>
           </template>
         </el-table-column>

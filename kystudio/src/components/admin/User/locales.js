@@ -3,7 +3,7 @@ export default {
     back: 'Back',
     user: 'User',
     userName: 'Search by username',
-    securityProfileTip: 'The current mode doesn\'t allow managing users/user groups, including operations such as adding, editing, deleting, assigning, and changing passwords.',
+    securityProfileTip: 'The current user/user group is managed using an external system as this page is read-only. Please go to the relevant management system if you need to edit it.',
     admin: 'System Admin',
     status: 'Status',
     action: 'Actions',
