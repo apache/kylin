@@ -6,7 +6,7 @@
         </div>
         <el-alert type="warning" show-icon v-if="showCreateSuccessAlert"><span slot="title">{{$t('createViewSuccessAlert', {databaseName: logicalViewDatabaseName})}} <a class="import-link" href="javascript:void(0);" @click="importDataSource">{{$t('goToImport')}}</a></span></el-alert>
         <div class="editor-content">
-          <editor class="ddl-editor" v-model="content" ref="ddlEditor" lang="sql" theme="chrome" @keydown.meta.enter.native="runSql" @keydown.ctrl.enter.native="runSql"></editor>
+          <editor class="ddl-editor" v-model="content" :height="editorHeight" ref="ddlEditor" lang="sql" theme="chrome" @keydown.meta.enter.native="runSql" @keydown.ctrl.enter.native="runSql"></editor>
           <div class="run-btn">
             <el-tooltip effect="dark" placement="left">
               <div slot="content">{{$t('runBtnTip')}}<span class="accelerator-key">{{$t('acceleratorKey')}}</span></div>
@@ -161,6 +161,13 @@
           return this.$t('syntaxRules')
       }
     }
+    get editorHeight () {
+      if (this.showCreateSuccessAlert) {
+        return 'calc(100% + 37px)'
+      }
+      return '100%'
+    }
+
     setOption (option) {
       let editor = this.$refs.ddlEditor.editor
       if (!editor) return
@@ -258,10 +265,13 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      position: relative;
       .editor-content {
         flex: 1;
-        position: relative;
+        height: calc(~'100% - 60px');
+        overflow: auto;
         .run-btn {
+          z-index: 1;
           width: 40px;
           height: 38px;
           position: absolute;

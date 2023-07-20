@@ -18,7 +18,6 @@
         ref="logicalSql"
         theme="chrome"
         :dragable="false"
-        :isAbridge="true"
         :value="sql"
         @input="handleChangeSql">
       </kap-editor>
