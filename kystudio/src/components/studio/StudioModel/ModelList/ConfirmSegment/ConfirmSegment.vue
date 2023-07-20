@@ -114,7 +114,6 @@ vuex.registerModule(['modals', 'ConfirmSegment'], store)
       indexes: state => state.indexes,
       isRemoveIndex: state => state.isRemoveIndex,
       submitText: state => state.submitText,
-      isHybridBatch: state => state.isHybridBatch,
       model: state => state.model,
       callback: state => state.callback
     })
@@ -166,7 +165,7 @@ export default class ConfirmSegmentModal extends Vue {
     try {
       const { sortBy, reverse } = this.filter
       const projectName = this.currentSelectedProject
-      const modelName = this.isHybridBatch ? this.model.batch_id : this.model.uuid
+      const modelName = this.model.uuid
       // const startTime = startDate && transToUTCMs(startDate)
       // const endTime = endDate && transToUTCMs(endDate)
       const data = { projectName, modelName, sortBy, reverse, ...this.pagination }
@@ -273,7 +272,7 @@ export default class ConfirmSegmentModal extends Vue {
       // 有值说明是刷新segment list
       if (this.refrashWarningSegment) {
         const segmentIds = this.selectedSegmentIds
-        const modelId = this.isHybridBatch ? this.model.batch_id : this.model.uuid
+        const modelId = this.model.uuid
         const projectName = this.currentSelectedProject
         const isSubmit = await this.refreshSegments({ projectName, modelId, segmentIds })
         if (isSubmit) {
@@ -283,7 +282,7 @@ export default class ConfirmSegmentModal extends Vue {
       } else {
         if (this.indexes.length > 0 && !this.isRemoveIndex) {
           const res = await this.complementBatchIndex({
-            modelId: this.isHybridBatch ? this.model.batch_id : this.model.uuid,
+            modelId: this.model.uuid,
             data: {
               project: this.currentSelectedProject,
               segment_ids: this.selectedSegmentIds,
@@ -299,7 +298,7 @@ export default class ConfirmSegmentModal extends Vue {
           }
         } else if (this.indexes.length > 0 && this.isRemoveIndex) {
           await this.deleteBatchIndex({
-            modelId: this.isHybridBatch ? this.model.batch_id : this.model.uuid,
+            modelId: this.model.uuid,
             data: {
               project: this.currentSelectedProject,
               segment_ids: this.selectedSegmentIds,
@@ -309,7 +308,7 @@ export default class ConfirmSegmentModal extends Vue {
           this.$message({ type: 'success', message: this.$t('kylinLang.common.delSuccess') })
         } else {
           const res = await this.complementAllIndex({
-            modelId: this.isHybridBatch ? this.model.batch_id : this.model.uuid,
+            modelId: this.model.uuid,
             data: {
               project: this.currentSelectedProject,
               segment_ids: this.selectedSegmentIds,
