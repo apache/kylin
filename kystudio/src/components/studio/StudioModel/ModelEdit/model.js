@@ -943,11 +943,13 @@ class NModel extends Schama {
   _updateCCToNewFactTable () {
     let factTable = this.getFactTable()
     if (factTable) {
-      this._mount.computed_columns.forEach((x) => {
-        x.table_guid = factTable.guid
-        x.tableIdentity = factTable.name
-        x.tableAlias = factTable.tableAlias
+      this._mount.computed_columns.forEach((cc) => {
+        cc.table_guid = factTable.guid
+        cc.tableIdentity = factTable.name
+        cc.tableAlias = factTable.tableAlias
+        factTable.all_columns.push({...cc, name: cc.columnName, column: cc.columnName, is_computed_column: true})
       })
+      factTable.filterColumns()
     }
   }
   // 移除和某个表相关的partition信息
@@ -960,9 +962,11 @@ class NModel extends Schama {
   }
   _delCCInTableAllColumns (t, column) {
     const index = t.all_columns.findIndex(it => it.column === column)
-    t.all_columns.splice(index, 1)
-    t.columnCurrentPage = 1
-    t.filterColumns()
+    if (index !== -1) {
+      t.all_columns.splice(index, 1)
+      t.columnCurrentPage = 1
+      t.filterColumns()
+    }
     // this.$set(this._mount.tables, t.guid, t)
   }
   changeTableType (t) {
@@ -978,6 +982,10 @@ class NModel extends Schama {
       // this._arrangeLinks()
     } else if (t.name === this.fact_table) {
       this.fact_table = '' // fact 改为 lookup 需要将它设置为空
+      // 删除 all_columns 里相关 cc
+      this._mount.computed_columns.forEach((c) => {
+        this._delCCInTableAllColumns(t, c.columnName)
+      })
     }
     // 删除对应的partition
     this._delTableRelatedPartitionInfo(t)
