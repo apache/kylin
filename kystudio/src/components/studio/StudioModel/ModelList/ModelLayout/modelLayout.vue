@@ -315,8 +315,11 @@ export default class ModelLayout extends Vue {
     const { value } = await handleSuccessAsync(response)
     if (value.length) {
       this.currentModelRow = {...this.currentModelRow, ...value[0]}
+      if (!this.modelList.filter(it => it.alias === this.modelName).length) {
+        // 没有匹配到相应的 model
+        this.jumpBack()
+      }
     } else {
-      // 没有匹配到相应的 model
       this.$router.replace({ name: 'ModelList', params: {searchModelName: this.searchModelName} })
     }
   }
