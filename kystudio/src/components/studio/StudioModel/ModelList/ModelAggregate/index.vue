@@ -43,7 +43,7 @@
                     <span :title="Object.keys(indexStat).length && !indexStat.need_create_base_agg_index ? $t('unCreateBaseAggIndexTip') : ''" @click="createBaseIndex('BASE_AGG_INDEX')">{{$t('BASE_AGG_INDEX')}}</span>
                   </el-dropdown-item>
                   <el-dropdown-item :class="{'action-disabled': Object.keys(indexStat).length && !indexStat.need_create_base_table_index}" v-if="model.model_type === 'HYBRID' ? switchModelType !== 'STREAMING' : model.model_type !== 'STREAMING'">
-                    <span :title="Object.keys(indexStat).length && !indexStat.need_create_base_table_index ? $t('unCreateBaseTableIndexTip') : ''" @click="createBaseIndex('BASE_TABLE_INDEX')">{{$t('BASE_TABLE_INDEX')}}</span>
+                    <span :title="Object.keys(indexStat).length && !indexStat.need_create_base_table_index ? showBaseAggIndexTip : ''" @click="createBaseIndex('BASE_TABLE_INDEX')">{{$t('BASE_TABLE_INDEX')}}</span>
                   </el-dropdown-item>
                   <el-dropdown-item class="dropdown-group-title" divided v-if="isShowEditAgg || (isShowTableIndexActions&&!isHideEdit)">
                     <span>{{$t('custom')}}</span>
@@ -420,6 +420,14 @@ export default class ModelAggregate extends Vue {
 
   handleSelectionChange (val) {
     this.checkedList = val
+  }
+
+  get showBaseAggIndexTip () {
+    if (this.model?.simplified_dimensions?.length > 0) {
+      return this.$t('unCreateBaseTableIndexTip')
+    } else {
+      return this.$t('unCreateBaseAggIndexNoDimensionTip')
+    }
   }
 
   get isDisableDelBaseIndex () {
