@@ -36,7 +36,7 @@ export default {
     recommend: 'Recommend',
     isNotBatchModel: 'Can’t load the stream model in full.',
     incrementalTips: 'It will load data incrementally based on the selected partition column, which is more resource-efficient.',
-    fullLoadTips: 'The system will load all data.',
+    fullLoadTips: 'The system will load all data',
     changeBuildTypeTips: 'With partition setting changed, all segments and data would be deleted. The model couldn\'t serve queries. Meanwhile, the related ongoing jobs for building index would be discarded.',
     editCCBuildTip: 'The modified expression of computed column would be effective until all the related indexes have been built. Do you want to save and build index now? ',
     saveAndBuild: 'Save and Build',
