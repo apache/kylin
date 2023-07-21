@@ -85,6 +85,6 @@ export default {
     disabledDelBaseIndexTips: 'To delete the base table index, please turn off tiered storage for the model.',
     refuseAddIndexTip: 'Can\'t add streaming indexes. Please stop the streaming job and then delete all the streaming segments.',
     refuseRemoveIndexTip: 'Can\'t delete streaming indexes. Please stop the streaming job and then delete all the streaming segments.',
-    disabledBuildIndexTips: 'disabledBuildIndexTips'
+    unCreateBaseAggIndexNoDimensionTip: 'Can\'t add the base table index, as there are no dimensions in the model. Please add and try again.'
   }
 }
