@@ -1208,18 +1208,24 @@ export default class ModelAggregate extends Vue {
 }
 .el-dropdown-menu__item {
   &.action-disabled {
-    color: @text-disabled-color;
+    color: @text-disabled-color1;
     cursor: not-allowed;
-    &:focus {
-      color: @text-disabled-color;
+    &:focus,
+    &:not(.is-disabled):active {
+      color: @text-disabled-color1;
       cursor: not-allowed;
     }
   }
   &.dropdown-group-title {
     font-size: 12px;
-    color: @text-disabled-color;
+    color: @text-disabled-color1;
     line-height: 30px;
     cursor: default;
+    &:focus,
+    &:not(.is-disabled):active {
+      color: @text-disabled-color1;
+      cursor: default;
+    }
     &:hover {
       background-color: @fff !important;
     }

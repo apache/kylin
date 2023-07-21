@@ -30,7 +30,7 @@
         <el-tab-pane name="incremental" :disabled="!datasourceActions.includes('changeBuildType')">
           <span slot="label">
             <el-tooltip :content="$t('incrementalTips')" placement="top">
-              <span>{{$t('incremental')}}<el-tag class="ksd-ml-5" size="mini" type="success">{{$t('recommend')}}</el-tag></span>
+              <span>{{$t('incremental')}}<el-tag class="ksd-ml-5" is-light size="mini" type="success">{{$t('recommend')}}</el-tag></span>
             </el-tooltip>
           </span>
         </el-tab-pane>
@@ -885,13 +885,17 @@ export default class ModelPartitionModal extends Vue {
   .buildType-switch {
     .el-tabs__header {
       width: 100%;
+      height: 32px;
       .el-tabs__nav {
         width: 97.8%;
         .el-tabs__item {
           width: 50%;
+          height: 26px;
+          line-height: 26px;
           .el-tag {
             position: relative;
             bottom: 1px;
+            padding: 0 7px;
           }
         }
       }
@@ -913,8 +917,8 @@ export default class ModelPartitionModal extends Vue {
     line-height: 16px;
   }
   .pre-format {
-    color: @text-normal-color;
-    font-size: 14px;
+    color: @text-disabled-color;
+    font-size: 12px;
     margin-top: 4px;
     background-color: @ke-background-color-secondary;
     border: 1px solid @ke-border-divider-color;
@@ -945,8 +949,8 @@ export default class ModelPartitionModal extends Vue {
     padding: 8px 16px;
     box-sizing: border-box;
     font-size: 12px;
-    color: @text-normal-color;
-    line-height: 16px;
+    color: @text-disabled-color;
+    line-height: 20px;
     margin-top: 4px;
     p {
       display: flex;
