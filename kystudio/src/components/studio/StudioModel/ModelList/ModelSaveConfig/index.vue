@@ -169,7 +169,7 @@
       </el-form-item>
     </el-form>
     <template v-if="mode === 'saveModel'">
-      <div v-if="modelInstance && modelInstance.status !== 'BROKEN' && !isStreamModel && !this.isHaveNoDimMeas && !modelDesc.with_second_storage && !(modelInstance.has_base_table_index && modelInstance.has_base_agg_index)">
+      <div v-if="modelInstance && modelInstance.status !== 'BROKEN' && !isStreamModel && !isHaveNoDimMeas && !modelDesc.with_second_storage && !(modelInstance.has_base_table_index && modelInstance.has_base_agg_index)">
         <div class="divide-block">
           <div class="divider">
             <span>{{$t('indexSetting')}}</span>
@@ -607,7 +607,7 @@ export default class ModelPartitionModal extends Vue {
       const partition_desc = this.modelDesc.partition_desc
       this.isExpand = !this.modelDesc.uuid && !this.isNotBatchModel
       // 新建模型是，默认添加基础索引。编辑时已添加基础索引不显示，未添加索引是未勾选状态，用户可选择勾选
-      if (!this.modelDesc.uuid) {
+      if (!this.modelDesc.uuid && !this.isHaveNoDimMeas && !this.modelDesc.with_second_storage) { // 新建模型&非无维度度量模型&非开启分层存储模型默认勾选基础索引
         this.source_types = ['BASE_TABLE_INDEX', 'BASE_AGG_INDEX']
       }
       if (this.modelDesc.uuid && !(partition_desc && partition_desc.partition_date_column) && !this.isNotBatchModel) {
@@ -826,7 +826,7 @@ export default class ModelPartitionModal extends Vue {
         isSubmit: isSubmit,
         isPurgeSegment: this.isChangePartition,
         data: temp,
-        base_index_type: this.source_types
+        base_index_type: this.modelDesc.with_second_storage ? [] : this.source_types
       })
       this.hideModal()
       this.resetModalForm()
