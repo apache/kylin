@@ -33,7 +33,7 @@ if [[ -d ${KYLIN_HOME}/spark ]]; then
     exit 1
 fi
 
-spark_version_in_binary=3.2.0-4.6.3.0
+spark_version_in_binary=3.2.0-kylin-4.6.9.0
 spark_pkg_name=spark-newten-"`echo ${spark_version_in_binary}| sed "s/-kylin//g"`"
 spark_pkg_file_name="${spark_pkg_name}.tgz"
 
