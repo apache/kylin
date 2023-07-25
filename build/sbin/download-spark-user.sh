@@ -52,7 +52,7 @@ rm -rf ${KYLIN_HOME}/spark/R
 rm -rf ${KYLIN_HOME}/spark/hive_1_2_2
 
 # Temp fix of "Cannot find catalog plugin class for catalog 'spark_catalog': org.apache.spark.sql.delta.catalog.DeltaCatalog"
-cp ${KYLIN_HOME}/server/jars/delta-core_2.12-1.2.1.jar ${KYLIN_HOME}/spark/jars/
+cp ${KYLIN_HOME}/server/jars/delta-core_2.12-2.0.2.jar ${KYLIN_HOME}/spark/jars/
 cp -r ${KYLIN_HOME}/server/jars/alluxio-shaded-client-*.jar ${KYLIN_HOME}/spark/jars/
 cp -r ${KYLIN_HOME}/server/jars/kylin-soft-affinity-cache-*.jar ${KYLIN_HOME}/spark/jars/
 cp -r ${KYLIN_HOME}/server/jars/kylin-external-guava*.jar ${KYLIN_HOME}/spark/jars/
