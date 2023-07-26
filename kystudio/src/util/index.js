@@ -198,6 +198,15 @@ export function objectClone (obj) {
   }
   return s
 }
+// 从对象数组里获取制定key的对象 等待删除
+export function getObjectBySomeKeys (objectArr, key, equalVal) {
+  for (var i = 0; i < objectArr.length; i++) {
+    var filterObj = objectArr[i]
+    if (filterObj[key] === equalVal) {
+      return filterObj
+    }
+  }
+}
 // 改变对象数组里对象的某个属性
 export function changeObjectArrProperty (objectArr, key, val, newKey, newVal, _this) {
   var arr = objectArr

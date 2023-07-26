@@ -238,7 +238,6 @@ import ConfirmSegment from './ConfirmSegment/ConfirmSegment.vue'
 import ModelPartition from './ModelPartition/index.vue'
 import ModelJson from './ModelJson/modelJson.vue'
 import ModelSql from './ModelSql/ModelSql.vue'
-import ModelStreamingJob from './ModelStreamingJob/ModelStreamingJob.vue'
 import { mockSQL } from './mock'
 import DropdownFilter from '../../../common/DropdownFilter/DropdownFilter.vue'
 import ModelOverview from './ModelOverview/ModelOverview.vue'
@@ -354,7 +353,6 @@ function getDefaultFilters (that) {
     ModelPartition,
     ModelJson,
     ModelSql,
-    ModelStreamingJob,
     DropdownFilter,
     ModelOverview,
     ModelActions,
