@@ -496,6 +496,10 @@ import { NamedRegex, columnTypeIcon } from '../../../../config'
         vm.$router.replace({name: 'ModelList', params: { ignoreIntercept: true }})
         return
       }
+      // 切换过系统管理界面，默认回退为上一次的fromRoute，如果fromRoute没有，则返回模型列表页
+      if (from.path.indexOf('/admin') !== -1) {
+        vm.fromRoute = vm.$store.state.model.fromRoute || {name: 'ModelList', params: { ignoreIntercept: true }}
+      }
       vm.initEditModel()
     })
   },
@@ -517,6 +521,10 @@ import { NamedRegex, columnTypeIcon } from '../../../../config'
                 this.$router.replace({name: 'ModelList', params: { refresh: true }})
               })
               return
+            }
+            // 如果跳去系统管理界面缓存一下上一次的fromRoute
+            if (to.path.indexOf('/admin') !== -1) {
+              this.cacheFromRoute(this.fromRoute)
             }
             next()
           }).catch(() => {
@@ -556,7 +564,8 @@ import { NamedRegex, columnTypeIcon } from '../../../../config'
   methods: {
     ...mapMutations({
       clearDatasourceCache: 'CLEAR_DATASOURCE_CACHE',
-      resetOtherColumns: 'RESET_OTHER_COLUMNS'
+      resetOtherColumns: 'RESET_OTHER_COLUMNS',
+      cacheFromRoute: 'CACHE_FROM_ROUTE'
     }),
     ...mapActions({
       getModelByModelName: 'LOAD_MODEL_INFO',
@@ -2120,7 +2129,7 @@ export default class ModelEdit extends Vue {
   goModelList () {
     this.toggleFullScreen(false)
     if (this.fromRoute && this.fromRoute.name) {
-      this.$router.push({name: this.fromRoute.name, params: {modelName: this.currentModel}})
+      this.$router.push({name: this.fromRoute.name, params: {modelName: this.currentModel || this.extraoption.modelName}})
       return
     }
     this.$router.push({name: 'ModelList'})

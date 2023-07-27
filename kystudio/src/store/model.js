@@ -15,7 +15,8 @@ export default {
     reachThreshold: false,
     circleSpeedInfoLock: false,
     otherColumns: [],
-    filterModelNameByKC: ''
+    filterModelNameByKC: '',
+    fromRoute: null
   },
   mutations: {
     [types.SAVE_MODEL_LIST]: function (state, result) {
@@ -54,6 +55,9 @@ export default {
     },
     [types.UPDATE_FILTER_MODEL_NAME_CLOUD]: (state, name) => {
       state.filterModelNameByKC = name
+    },
+    [types.CACHE_FROM_ROUTE]: (state, fromRoute) => {
+      state.fromRoute = fromRoute
     }
   },
   actions: {
