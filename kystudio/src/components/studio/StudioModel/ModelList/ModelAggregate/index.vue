@@ -62,7 +62,7 @@
               </el-dropdown>
                 <el-button icon="el-ksd-icon-build_index_22" :disabled="!checkedList.length || isHaveLockedIndex" text type="primary" class="ksd-ml-2 ksd-fleft" v-if="datasourceActions.includes('buildIndex')" @click="complementedIndexes('batchIndexes')">{{$t('buildIndex')}}</el-button>
               <template>
-                <el-tooltip placement="top" :content="$t('disabledDelBaseIndexTips')" v-if="datasourceActions.includes('delAggIdx')&&isDisableDelBaseIndex">
+                <el-tooltip placement="top" :content="$t('disabledDelBaseIndexTips')" v-if="isHaveDelIndexActionSpec&&isDisableDelBaseIndex">
                   <div class="ksd-fleft">
                     <el-dropdown
                       split-button
@@ -73,7 +73,7 @@
                       :class="{'is-disabled': isDisableDelBaseIndex}"
                       placement="bottom-start"
                       :loading="removeLoading"
-                      v-if="datasourceActions.includes('delAggIdx')&&isDisableDelBaseIndex">{{$t('kylinLang.common.delete')}}
+                      v-if="isHaveDelIndexActionSpec&&isDisableDelBaseIndex">{{$t('kylinLang.common.delete')}}
                       <el-dropdown-menu slot="dropdown" class="model-actions-dropdown">
                         <el-dropdown-item
                           :disabled="isDisableDelBaseIndex">
@@ -93,7 +93,7 @@
                   placement="bottom-start"
                   :loading="removeLoading"
                   @click="removeIndexes"
-                  v-if="datasourceActions.includes('delAggIdx')&&!isDisableDelBaseIndex">{{$t('kylinLang.common.delete')}}
+                  v-if="isHaveDelIndexActionSpec&&!isDisableDelBaseIndex">{{$t('kylinLang.common.delete')}}
                   <el-dropdown-menu slot="dropdown" class="model-actions-dropdown">
                     <el-dropdown-item
                       :disabled="!checkedList.length"
@@ -238,6 +238,9 @@ import IndexDetails from './indexDetails'
       default: ''
     }
   },
+  inject: [
+    'isAdvancedOperatorUser'
+  ],
   computed: {
     ...mapGetters([
       'currentProjectData',
@@ -328,6 +331,10 @@ export default class ModelAggregate extends Vue {
     } else {
       return this.switchModelType === 'BATCH' ? this.model.batch_id : this.model.uuid
     }
+  }
+
+  get isHaveDelIndexActionSpec () {
+    return this.datasourceActions.includes('delAggIdx') || this.isAdvancedOperatorUser()
   }
 
   formatDataSize (dataSize) {

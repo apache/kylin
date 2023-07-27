@@ -71,7 +71,8 @@
     <el-dialog :title="authorTitle" width="960px" class="user-access-dialog" :close-on-press-escape="false" :close-on-click-modal="false" :visible.sync="authorizationVisible" @close="initAccessData">
       <div class="content-container">
         <div class="author-tips">
-          <div class="item-point" v-html="$t('authorTips2')"></div>
+          <div class="item-point" v-if="!isAdvancedOperatorUser()" v-html="$t('authorTips2')"></div>
+          <div class="item-point" v-else v-html="$t('authorTips3')"></div>
           <div class="item-point ksd-mt-16">{{$t('authorTips')}}</div>
           <div class="item-point">{{$t('authorTips1')}}</div>
         </div>
@@ -168,6 +169,9 @@ import userAccess from './user_access'
       'projectActions'
     ])
   },
+  inject: [
+    'isAdvancedOperatorUser'
+  ],
   components: {
     'user_access': userAccess
   },
@@ -206,8 +210,13 @@ import userAccess from './user_access'
       authorTips1: 'By default, the added user/user group would be granted full access to all the tables in the project.',
       authorTips2: `<div class="ksd-mb-8">What roles does Kyligence Enterprise provide?</div>
       <p><span>Project Admin</span><span>For the project admin who needs all permission and could manage and maintain this project, including loading tables, authorizing user access permission, etc.</span></p>
-      <p><span>Management</span><span>For the model designer who needs permission to load tables, design models, build indexes and monitor job status.</span></p>
+      <p><span>Management</span><span>For the model designer who needs permission to load tables, design models and indexes, build indexes and monitor job status.</span></p>
       <p><span>Operation</span><span>For the operator who needs permission to build indexes and monitor job status.</span></p>
+      <p><span>Query</span><span>For the business analyst who needs permission to query tables or indexes.</span></p>`,
+      authorTips3: `<div class="ksd-mb-8">What roles does Kyligence Enterprise provide?</div>
+      <p><span>Project Admin</span><span>For the project admin who needs all permission and could manage and maintain this project, including loading tables, authorizing user access permission, etc.</span></p>
+      <p><span>Management</span><span>For the model designer who needs permission to load tables, design models and indexes, build indexes and monitor job status.</span></p>
+      <p><span>Operation</span><span>For the operator who needs permission to design indexes, build indexes and monitor job status.</span></p>
       <p><span>Query</span><span>For the business analyst who needs permission to query tables or indexes.</span></p>`,
       noAuthorityTip: 'Access denied. Please try again after logging in.'
     }

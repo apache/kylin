@@ -18,6 +18,6 @@ export default {
     needAttachedHiveTableInfo: 'Please select an attached Hive table.',
     needTimestampColumnInfo: 'Can\'t load. Please ensure the table has at least a timestamp column.',
     hiveTableErrorTips: 'Can\'t attach. Please ensure that the columns of the Kafka table and the Hive table are identical.',
-    tableNumOver: 'Up to 1000 tables could be loaded per time, please modify and try again.'
+    tableNumOver: 'Up to 1000 tables could be loaded per time, please modify and resubmit.'
   }
 }

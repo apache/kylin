@@ -43,11 +43,15 @@
 <script>
 import Vue from 'vue'
 import { Component, Watch } from 'vue-property-decorator'
-import { mapState } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 import Modal from '../common/Modal/Modal'
 import { filterInjectScript } from 'util'
 @Component({
   computed: {
+    ...mapGetters([
+      'isProjectOperator',
+      'isAdvancedOperator'
+    ]),
     ...mapState({
       showErrorMsgBox: state => state.config.errorMsgBox.isShow,
       enableStackTrace: state => state.system.enableStackTrace
@@ -55,7 +59,8 @@ import { filterInjectScript } from 'util'
   },
   provide () {
     return {
-      forceUpdateRoute: this.forceUpdateRoute
+      forceUpdateRoute: this.forceUpdateRoute,
+      isAdvancedOperatorUser: () => this.isProjectOperator && this.isAdvancedOperator // 高级运维人员，可以设计索引
     }
   },
   components: {

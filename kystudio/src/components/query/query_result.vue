@@ -185,9 +185,9 @@
         :project-name="currentSelectedProject"
         :layout-id="aggIndexLayoutId"
         :is-show-aggregate-action="false"
-        :isShowEditAgg="datasourceActions.includes('editAggGroup')"
-        :isShowBulidIndex="datasourceActions.includes('buildIndex')"
-        :isShowTableIndexActions="datasourceActions.includes('tableIndexActions')">
+        :isShowEditAgg="datasourceActions.includes('editAggGroup') || isAdvancedOperatorUser()"
+        :isShowBulidIndex="datasourceActions.includes('buildIndex') || isAdvancedOperatorUser()"
+        :isShowTableIndexActions="datasourceActions.includes('tableIndexActions') || isAdvancedOperatorUser()">
       </ModelAggregate>
     </el-dialog>
   </div>
@@ -214,6 +214,9 @@ import echarts from 'echarts'
       callGlobalDetailDialog: 'CALL_MODAL'
     })
   },
+  inject: [
+    'isAdvancedOperatorUser'
+  ],
   computed: {
     ...mapGetters([
       'currentSelectedProject',
